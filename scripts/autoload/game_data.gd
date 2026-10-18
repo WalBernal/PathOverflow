@@ -4,6 +4,8 @@ extends Node
 
 const CLASSES_PATH := "res://data/classes.json"
 const PASSIVE_TREE_PATH := "res://data/passive_tree.json"
+const ACT_PATH := "res://data/act1.json"
+const TITLE_SCENE := "res://scenes/menu/title_screen.tscn"
 const MAIN_MENU_SCENE := "res://scenes/menu/main_menu.tscn"
 const CREATION_SCENE := "res://scenes/menu/character_creation.tscn"
 const WORLD_SCENE := "res://scenes/game/world.tscn"
@@ -11,6 +13,9 @@ const WORLD_SCENE := "res://scenes/game/world.tscn"
 var classes: Array = []
 var passive_tree: PassiveTree
 var items: ItemDatabase
+## Acto actual (data/act1.json) y sus zonas por id.
+var act: Dictionary = {}
+var zones: Dictionary = {}
 ## Personaje elegido en la pantalla de inicio (null = ninguno todavía).
 var current_character: CharacterData
 
@@ -21,6 +26,14 @@ func _ready() -> void:
 		classes = data.get("classes", [])
 	passive_tree = PassiveTree.load_from_json(PASSIVE_TREE_PATH)
 	items = ItemDatabase.load_from_dir()
+	var migrated := CharacterSaves.migrate_from_old_project_names()
+	if migrated > 0:
+		print("Guardados copiados desde el nombre antiguo del proyecto: %d archivos" % migrated)
+	var act_data = DataLoader.load_json(ACT_PATH)
+	if act_data is Dictionary:
+		act = act_data
+		for z in act.get("zones", []):
+			zones[z["id"]] = z
 
 
 func get_class_def(class_id: StringName) -> Dictionary:
@@ -40,6 +53,8 @@ func create_character(char_name: String, class_id: StringName, appearance: Dicti
 	if items.bases.has(weapon_id):
 		c.inventory.set_equipped("weapon", ItemGenerator.new(items).generate(1, Rarity.Item.NORMAL, weapon_id))
 	give_starter_skills(c)
+	# Los personajes nuevos empiezan en la zona tutorial.
+	c.flags["zone"] = act.get("start_zone", "tutorial")
 	if persistent:
 		c.id = CharacterSaves.new_id()
 		c.created_at = int(Time.get_unix_time_from_system())

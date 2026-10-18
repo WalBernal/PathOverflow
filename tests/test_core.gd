@@ -36,6 +36,10 @@ func _initialize() -> void:
 	_test_camp_and_tutorial_data()
 	_test_item_transfer()
 	_test_item_icons()
+	_test_tree_clusters()
+	_test_conditions()
+	_test_tree_version_refund()
+	_test_save_dir_migration()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
 	else:
@@ -490,10 +494,11 @@ func _test_enemy_hit_one() -> void:
 
 
 func _test_camp_and_tutorial_data() -> void:
-	var camp: Dictionary = DataLoader.load_json("res://data/camp.json")
-	var dialogues: Dictionary = camp["dialogues"]
-	for npc in camp["npcs"]:
-		_check(dialogues.has(npc["dialogue"]), "diálogo de %s" % npc["id"])
+	var npc_data: Dictionary = DataLoader.load_json("res://data/npcs.json")
+	var dialogues: Dictionary = npc_data["dialogues"]
+	for npc_id in npc_data["npcs"]:
+		_check(dialogues.has(npc_data["npcs"][npc_id]["dialogue"]), "diálogo de %s" % npc_id)
+	_test_act(npc_data)
 	for id in dialogues:
 		var d: Dictionary = dialogues[id]
 		_check(d["nodes"].has(d["start"]), "nodo inicial de %s" % id)
@@ -506,9 +511,75 @@ func _test_camp_and_tutorial_data() -> void:
 					var pool: Dictionary = _db.skills.skills if action["kind"] == "motherboard" else _db.skills.rams
 					_check(pool.has(action["id"]), "regalo desconocido '%s'" % action["id"])
 	var tutorial: Dictionary = DataLoader.load_json("res://data/tutorial.json")
-	var known := ["move", "talk_ada", "install_ram", "kevin", "leave_camp", "use_skill", "kill", "flask", "loot", "equip", "passives"]
+	var known := ["move", "talk_ada", "install_ram", "kevin", "reach_camp", "leave_camp", "use_skill", "kill", "flask", "loot", "equip", "passives"]
 	for step in tutorial["steps"]:
 		_check(known.has(step["id"]), "paso de tutorial sin condición: %s" % step["id"])
+
+
+func _test_act(npc_data: Dictionary) -> void:
+	var act: Dictionary = DataLoader.load_json("res://data/act1.json")
+	var zones := {}
+	for z in act["zones"]:
+		zones[z["id"]] = z
+	_check(zones.has(act["start_zone"]) and zones.has(act["town"]), "zona inicial y pueblo existen")
+	_check(zones[act["town"]].has("waypoint"), "el campamento tiene waypoint (reaparición)")
+	var type_ids := []
+	for t in EnemyManager.enemy_types():
+		type_ids.append(t["id"])
+	var bosses := 0
+	for z in act["zones"]:
+		for e in z.get("exits", []):
+			_check(zones.has(e["target"]), "%s: salida a zona inexistente %s" % [z["id"], e["target"]])
+			if zones.has(e["target"]):
+				_check(zones[e["target"]]["entries"].has(e["entry"]), "%s: la entrada %s no existe en %s" % [z["id"], e["entry"], e["target"]])
+		if z.has("waypoint"):
+			_check(z["entries"].has("waypoint"), "%s tiene waypoint pero no entrada 'waypoint'" % z["id"])
+		for n in z.get("npcs", []):
+			_check(npc_data["npcs"].has(n["id"]), "%s: NPC desconocido %s" % [z["id"], n["id"]])
+		var cfg = z.get("enemies")
+		if cfg is Dictionary:
+			for t in cfg.get("types", []):
+				_check(type_ids.has(t), "%s: tipo de enemigo desconocido %s" % [z["id"], t])
+		if z.has("boss"):
+			bosses += 1
+			_check(type_ids.has(z["boss"]["type"]), "tipo del jefe")
+
+		# Construye la zona y comprueba que el diseño es jugable.
+		var zone := Zone.new()
+		zone.setup(z, null, null)
+		for k in zone.key_points():
+			for o in zone.obstacles:
+				_check(k.distance_to(o["pos"]) > o["radius"] + 60.0, "%s: obstáculo encima de un punto de interés" % z["id"])
+			_check(zone.rect.grow(-10.0).has_point(k), "%s: punto de interés fuera del mapa" % z["id"])
+		if cfg is Dictionary:
+			var rng := RandomNumberGenerator.new()
+			rng.seed = 7
+			var packs := zone.pack_centers(int(cfg["packs"]), rng)
+			_check(packs.size() >= int(cfg["packs"]) * 0.8, "%s: solo caben %d de %d grupos" % [z["id"], packs.size(), cfg["packs"]])
+			for p in packs:
+				for k in zone.key_points():
+					_check(p.distance_to(k) >= 450.0, "%s: grupo demasiado cerca de una entrada/NPC" % z["id"])
+		zone.free()
+	_check(bosses == 1, "el acto tiene un jefe")
+	_check(act["zones"].size() >= 8, "tutorial + campamento + 5 zonas + jefe")
+
+
+func _test_save_dir_migration() -> void:
+	# Simula la carpeta del nombre antiguo junto a la actual y comprueba la copia.
+	var parent := OS.get_user_data_dir().get_base_dir()
+	var old_dir := parent.path_join("Exile Overflow").path_join("characters")
+	var existed := DirAccess.dir_exists_absolute(old_dir)
+	_check(not existed or CharacterSaves.list_all("user://__vacio__").is_empty(), "directorio vacío de prueba")
+	var dir := "user://test_migracion"
+	for f in DirAccess.get_files_at(dir) if DirAccess.dir_exists_absolute(dir) else PackedStringArray():
+		DirAccess.remove_absolute(dir + "/" + f)
+	if existed:
+		var copied := CharacterSaves.migrate_from_old_project_names(dir)
+		_check(copied > 0 and not CharacterSaves.list_all(dir).is_empty(), "copia los guardados del nombre antiguo")
+		_check(CharacterSaves.migrate_from_old_project_names(dir) == 0, "no vuelve a copiar si ya hay personajes")
+		for f in DirAccess.get_files_at(dir):
+			DirAccess.remove_absolute(dir + "/" + f)
+		DirAccess.remove_absolute(dir)
 
 func _test_item_transfer() -> void:
 	var c := _new_character()
@@ -560,3 +631,63 @@ func _test_item_icons() -> void:
 	var gen := ItemGenerator.new(_db, 2)
 	_check(ItemIcons.icon_id(gen.generate_ram(1, "ecc")) == "ram_DDR5", "icono de RAM según su generación")
 	_check(ItemIcons.texture() != null, "atlas de iconos cargado")
+
+func _test_tree_clusters() -> void:
+	_check(_tree.nodes.size() >= 450 and _tree.clusters.size() >= 40, "árbol grande con clusters (%d nodos, %d clusters)" % [_tree.nodes.size(), _tree.clusters.size()])
+	var themes_in_cluster := {}
+	for id in _tree.nodes:
+		var n: PassiveNode = _tree.nodes[id]
+		if n.kind == PassiveNode.Kind.NOTABLE or n.kind == PassiveNode.Kind.KEYSTONE:
+			_check(PassiveIcons.has_icon(n.icon), "sin icono para %s (%s)" % [n.title, n.icon])
+		if n.cluster != "":
+			_check(_tree.clusters.has(n.cluster), "cluster inexistente %s" % n.cluster)
+			if not themes_in_cluster.has(n.cluster):
+				themes_in_cluster[n.cluster] = {}
+			themes_in_cluster[n.cluster][n.theme] = true
+		if n.theme != "":
+			_check(_tree.themes.has(n.theme), "temática desconocida '%s'" % n.theme)
+	for cid in themes_in_cluster:
+		_check(themes_in_cluster[cid].size() == 1, "el cluster %s mezcla temáticas" % cid)
+		var has_notable := false
+		for id in _tree.nodes:
+			if _tree.nodes[id].cluster == cid and _tree.nodes[id].kind == PassiveNode.Kind.NOTABLE:
+				has_notable = true
+		_check(has_notable, "el cluster %s no tiene notable" % cid)
+
+
+func _test_conditions() -> void:
+	var c := _new_character()
+	var gen := ItemGenerator.new(_db, 30)
+	var board := gen.generate_motherboard(1, "barrido")
+	var low_life_node := -1
+	for id in _tree.nodes:
+		if _tree.nodes[id].title == "Hasta el Último Byte":
+			low_life_node = id
+	_check(low_life_node != -1, "existe el notable de vida baja")
+	var before := SkillCalc.compute(board, c)
+	c.passives.allocate_path(low_life_node, 999)
+	var full := SkillCalc.compute(board, c)
+	c.set_condition(Stat.COND_LOW_LIFE, true)
+	var low := SkillCalc.compute(board, c)
+	c.set_condition(Stat.COND_LOW_LIFE, false)
+	_check(is_equal_approx(SkillCalc.compute(board, c)["max_damage"], full["max_damage"]), "sin vida baja, el notable no da daño")
+	_check(full["max_damage"] >= before["max_damage"], "el camino no resta daño")
+	c.set_condition(Stat.COND_LOW_LIFE, true)
+	_check(low["max_damage"] > full["max_damage"] * 1.3, "con vida baja, +40%% de daño (%.1f → %.1f)" % [full["max_damage"], low["max_damage"]])
+	var signals := [0]
+	c.conditions_changed.connect(func() -> void: signals[0] += 1)
+	c.set_condition(Stat.COND_LOW_LIFE, true)
+	c.set_condition(Stat.COND_LOW_LIFE, false)
+	_check(signals[0] == 1, "conditions_changed solo cuando cambia algo")
+
+
+func _test_tree_version_refund() -> void:
+	var c := _new_character()
+	var start := c.passives.start_node_id
+	c.passives.allocate_path(_tree.neighbors(start)[0], 5)
+	var data = JSON.parse_string(JSON.stringify(c.to_dict()))
+	var same := CharacterData.from_dict(data, _classes[0], _tree, _db)
+	_check(same.passives.spent_points() == 1 and not same.flags.has("passives_refunded"), "misma versión del árbol: se conservan")
+	data["passive_tree_version"] = _tree.version - 1
+	var old := CharacterData.from_dict(data, _classes[0], _tree, _db)
+	_check(old.passives.spent_points() == 0 and old.flags.has("passives_refunded"), "versión antigua: puntos devueltos y aviso")

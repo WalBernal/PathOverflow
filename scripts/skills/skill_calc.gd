@@ -12,6 +12,8 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 	var tags: Array = []
 	for t in skill.get("tags", []):
 		tags.append(StringName(t))
+	# Condiciones activas (vida baja, muerte reciente...): activan sus modificadores.
+	tags.append_array(character.condition_tags())
 
 	var extra: Array[Modifier] = []
 	var cost_mult := 1.0

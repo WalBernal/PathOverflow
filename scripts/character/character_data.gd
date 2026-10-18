@@ -5,6 +5,9 @@ extends RefCounted
 
 signal stats_changed
 signal leveled_up(new_level: int)
+## Cambió alguna condición (vida baja, muerte reciente...): las cifras de las
+## habilidades pueden cambiar aunque las stats base no.
+signal conditions_changed
 
 const MAX_LEVEL := 100
 ## Puntos extra que dan las misiones (en PoE son 24).
@@ -36,6 +39,24 @@ var flags: Dictionary = {}
 var passives: PassiveAllocation
 var inventory := Inventory.new()
 var stats := StatBlock.new()
+## Condiciones activas en este momento (las pone Player): StringName -> true.
+var conditions: Dictionary = {}
+
+
+## Activa o desactiva una condición (Stat.COND_*). Emite conditions_changed si cambia.
+func set_condition(condition: StringName, active: bool) -> void:
+	if conditions.has(condition) == active:
+		return
+	if active:
+		conditions[condition] = true
+	else:
+		conditions.erase(condition)
+	conditions_changed.emit()
+
+
+## Tags de las condiciones activas, para añadirlas a las consultas de stats.
+func condition_tags() -> Array:
+	return conditions.keys()
 
 
 func _init(p_class_def: Dictionary, tree: PassiveTree) -> void:
@@ -237,6 +258,7 @@ func to_dict() -> Dictionary:
 		"experience": experience,
 		"appearance": appearance,
 		"passives": passive_ids,
+		"passive_tree_version": passives.tree.version,
 		"inventory": inventory.to_dict(),
 		"created_at": created_at,
 		"last_played": last_played,
@@ -263,7 +285,12 @@ static func from_dict(d: Dictionary, p_class_def: Dictionary, tree: PassiveTree,
 		if a["id"] == d.get("ascendancy_id", ""):
 			c.ascendancy_def = a
 	c.inventory.load_dict(d.get("inventory", {}), db)
-	c.passives.load_ids(d.get("passives", []))  # también recalcula las stats
+	if int(d.get("passive_tree_version", 1)) == tree.version:
+		c.passives.load_ids(d.get("passives", []))  # también recalcula las stats
+	elif not d.get("passives", []).is_empty():
+		# El árbol cambió: los ids antiguos apuntarían a otros nodos. Se devuelven los puntos.
+		c.flags["passives_refunded"] = true
+		c.recalculate()
 	return c
 
 

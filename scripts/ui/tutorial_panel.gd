@@ -7,12 +7,12 @@ extends PanelContainer
 signal step_completed(text: String)
 
 const DATA_PATH := "res://data/tutorial.json"
-const KILLS_NEEDED := 10
 const CHECK_INTERVAL := 0.25
 
 var character: CharacterData
 var player: Player
-var camp: Camp
+## Zona actual (la pone GameUI al cambiar de zona).
+var zone: Zone
 ## Oculto temporalmente (otro panel ocupa su sitio); el progreso sigue.
 var suppressed := false:
 	set(value):
@@ -29,6 +29,8 @@ var _steps: Array = []
 var _done_text := ""
 var _events := {}
 var _check_timer := 0.0
+## Dónde estaba el jugador al empezar el paso actual (para «muévete»).
+var _step_origin := Vector2.INF
 var _header: Label
 var _text: RichTextLabel
 
@@ -65,11 +67,31 @@ func _ready() -> void:
 	box.add_child(_text)
 
 
-func setup(p_character: CharacterData, p_player: Player, p_camp: Camp) -> void:
+func setup(p_character: CharacterData, p_player: Player) -> void:
 	character = p_character
 	player = p_player
-	camp = p_camp
+	_migrate()
 	_refresh()
+
+
+## Personajes del tutorial antiguo (sin zona tutorial): siguen desde la parte
+## del campamento, o lo dan por terminado si ya lo habían acabado.
+func _migrate() -> void:
+	if character.flags.has("tutorial_step") and not character.flags.has("tutorial_version"):
+		var old := int(character.flags["tutorial_step"])
+		character.flags["tutorial_step"] = _steps.size() if old >= 11 else _index_of("talk_ada")
+	character.flags["tutorial_version"] = 2
+
+
+func _index_of(step_id: String) -> int:
+	for i in _steps.size():
+		if _steps[i]["id"] == step_id:
+			return i
+	return 0
+
+
+func _needed() -> int:
+	return int(_steps[current_step()].get("count", 1)) if not is_finished() else 1
 
 
 func current_step() -> int:
@@ -100,6 +122,7 @@ func _process(delta: float) -> void:
 	if _condition(_steps[current_step()]["id"]):
 		character.flags["tutorial_step"] = current_step() + 1
 		_events.clear()
+		_step_origin = Vector2.INF
 		step_completed.emit("Paso completado." if not is_finished() else _done_text)
 		_refresh()
 	elif _steps[current_step()]["id"] == "kill":
@@ -120,14 +143,16 @@ func _refresh() -> void:
 	_header.text = "%s  ·  %d / %d" % [_title, current_step() + 1, _steps.size()]
 	var text: String = step["text"]
 	if step["id"] == "kill":
-		text += "  [color=#d9a441](%d / %d)[/color]" % [mini(int(_events.get("kill", 0)), KILLS_NEEDED), KILLS_NEEDED]
+		text += "  [color=#d9a441](%d / %d)[/color]" % [mini(int(_events.get("kill", 0)), _needed()), _needed()]
 	_text.text = text
 
 
 func _condition(step_id: String) -> bool:
 	match step_id:
 		"move":
-			return player.global_position.distance_to(camp.spawn_point) > 120.0
+			if _step_origin == Vector2.INF:
+				_step_origin = player.global_position
+			return player.global_position.distance_to(_step_origin) > 150.0
 		"talk_ada":
 			return character.flags.has("talked_ada")
 		"install_ram":
@@ -137,12 +162,14 @@ func _condition(step_id: String) -> bool:
 			return false
 		"kevin":
 			return character.flags.has("talked_kevin")
+		"reach_camp":
+			return zone != null and zone.id == GameData.act.get("town", "campamento")
 		"leave_camp":
-			return not camp.contains(player.global_position)
+			return zone != null and zone.id == "zona1"
 		"use_skill":
 			return _events.has("skill_used")
 		"kill":
-			return int(_events.get("kill", 0)) >= KILLS_NEEDED
+			return int(_events.get("kill", 0)) >= _needed()
 		"flask":
 			return _events.has("flask_used")
 		"loot":

@@ -5,18 +5,52 @@
       "id": "guerrero",
       "name": "Guerrero",
       "starter_weapon": "hacha_de_lenador",
-      "starter_skills": ["barrido", "teleport_tcp"],
+      "starter_skills": [
+        "barrido",
+        "teleport_tcp"
+      ],
       "description": "Resuelve los problemas a golpes. Los bugs también. Sobre todo los bugs.",
-      "base_attributes": { "strength": 32, "dexterity": 14, "intelligence": 14 },
+      "base_attributes": {
+        "strength": 32,
+        "dexterity": 14,
+        "intelligence": 14
+      },
       "ascendancies": [
         {
           "id": "berserker_hotfix",
           "name": "Berserker del Hotfix",
           "description": "Despliega los viernes a las 18:00. Sin tests. Sin miedo. Sin fin de semana.",
           "passives": [
-            { "name": "Directo a producción", "mods": [ { "stat": "physical_damage", "type": "more", "value": 15 } ] },
-            { "name": "¿Quién necesita QA?", "mods": [ { "stat": "attack_speed", "type": "increased", "value": 15 } ] },
-            { "name": "Logs en rojo", "mods": [ { "stat": "life_regen", "type": "flat", "value": 25 } ] }
+            {
+              "name": "Directo a producción",
+              "mods": [
+                {
+                  "stat": "physical_damage",
+                  "type": "more",
+                  "value": 15
+                }
+              ]
+            },
+            {
+              "name": "¿Quién necesita QA?",
+              "mods": [
+                {
+                  "stat": "attack_speed",
+                  "type": "increased",
+                  "value": 15
+                }
+              ]
+            },
+            {
+              "name": "Logs en rojo",
+              "mods": [
+                {
+                  "stat": "life_regen",
+                  "type": "flat",
+                  "value": 25
+                }
+              ]
+            }
           ]
         },
         {
@@ -24,12 +58,46 @@
           "name": "Guardián del Firewall",
           "description": "Bloquea todo el tráfico entrante. Incluido el que necesitabas.",
           "passives": [
-            { "name": "Reglas de denegación", "mods": [ { "stat": "armour", "type": "more", "value": 25 } ] },
-            { "name": "Puerto 22 cerrado", "mods": [ { "stat": "block_chance", "type": "flat", "value": 15 } ] },
-            { "name": "DMZ personal", "mods": [
-              { "stat": "fire_res", "type": "flat", "value": 10 },
-              { "stat": "cold_res", "type": "flat", "value": 10 },
-              { "stat": "lightning_res", "type": "flat", "value": 10 } ] }
+            {
+              "name": "Reglas de denegación",
+              "mods": [
+                {
+                  "stat": "armour",
+                  "type": "more",
+                  "value": 25
+                }
+              ]
+            },
+            {
+              "name": "Puerto 22 cerrado",
+              "mods": [
+                {
+                  "stat": "block_chance",
+                  "type": "flat",
+                  "value": 15
+                }
+              ]
+            },
+            {
+              "name": "DMZ personal",
+              "mods": [
+                {
+                  "stat": "fire_res",
+                  "type": "flat",
+                  "value": 10
+                },
+                {
+                  "stat": "cold_res",
+                  "type": "flat",
+                  "value": 10
+                },
+                {
+                  "stat": "lightning_res",
+                  "type": "flat",
+                  "value": 10
+                }
+              ]
+            }
           ]
         },
         {
@@ -37,31 +105,98 @@
           "name": "Señor del Monolito",
           "description": "Un único proceso de 4 GB que nadie se atreve a reiniciar.",
           "passives": [
-            { "name": "Acoplamiento total", "mods": [ { "stat": "life", "type": "increased", "value": 25 } ] },
-            { "name": "Dependencias circulares", "mods": [ { "stat": "area_of_effect", "type": "increased", "value": 25 } ] },
-            { "name": "Tiempo de arranque", "mods": [
-              { "stat": "strength", "type": "flat", "value": 30 },
-              { "stat": "movement_speed", "type": "increased", "value": -5 } ] }
+            {
+              "name": "Acoplamiento total",
+              "mods": [
+                {
+                  "stat": "life",
+                  "type": "increased",
+                  "value": 25
+                }
+              ]
+            },
+            {
+              "name": "Dependencias circulares",
+              "mods": [
+                {
+                  "stat": "area_of_effect",
+                  "type": "increased",
+                  "value": 25
+                }
+              ]
+            },
+            {
+              "name": "Tiempo de arranque",
+              "mods": [
+                {
+                  "stat": "strength",
+                  "type": "flat",
+                  "value": 30
+                },
+                {
+                  "stat": "movement_speed",
+                  "type": "increased",
+                  "value": -5
+                }
+              ]
+            }
           ]
         }
-      ]
+      ],
+      "playstyle": "Cuerpo a cuerpo y aguante. Recibe golpes, los devuelve más fuertes y no pregunta por qué.",
+      "difficulty": 1,
+      "color": "c84b4b"
     },
     {
       "id": "duelista",
       "name": "Duelista",
       "starter_weapon": "espada_oxidada",
-      "starter_skills": ["barrido", "rafaga_de_paquetes"],
+      "starter_skills": [
+        "barrido",
+        "rafaga_de_paquetes"
+      ],
       "description": "Lucha por la gloria, el público y las estrellas en GitHub.",
-      "base_attributes": { "strength": 23, "dexterity": 23, "intelligence": 14 },
+      "base_attributes": {
+        "strength": 23,
+        "dexterity": 23,
+        "intelligence": 14
+      },
       "ascendancies": [
         {
           "id": "gladiador_review",
           "name": "Gladiador del Code Review",
           "description": "Deja 87 comentarios por pull request. Todos sobre nombres de variables.",
           "passives": [
-            { "name": "Nit:", "mods": [ { "stat": "crit_chance", "type": "increased", "value": 40 } ] },
-            { "name": "Request changes", "mods": [ { "stat": "crit_multiplier", "type": "flat", "value": 30 } ] },
-            { "name": "LGTM", "mods": [ { "stat": "life", "type": "flat", "value": 40 } ] }
+            {
+              "name": "Nit:",
+              "mods": [
+                {
+                  "stat": "crit_chance",
+                  "type": "increased",
+                  "value": 40
+                }
+              ]
+            },
+            {
+              "name": "Request changes",
+              "mods": [
+                {
+                  "stat": "crit_multiplier",
+                  "type": "flat",
+                  "value": 30
+                }
+              ]
+            },
+            {
+              "name": "LGTM",
+              "mods": [
+                {
+                  "stat": "life",
+                  "type": "flat",
+                  "value": 40
+                }
+              ]
+            }
           ]
         },
         {
@@ -69,9 +204,36 @@
           "name": "Campeón del Sprint",
           "description": "Completa 40 puntos de historia en dos semanas. Los otros 39 son deuda.",
           "passives": [
-            { "name": "Velocidad del equipo", "mods": [ { "stat": "movement_speed", "type": "increased", "value": 15 } ] },
-            { "name": "Daily de 45 minutos", "mods": [ { "stat": "attack_speed", "type": "increased", "value": 10 } ] },
-            { "name": "Burndown", "mods": [ { "stat": "damage", "type": "increased", "value": 20 } ] }
+            {
+              "name": "Velocidad del equipo",
+              "mods": [
+                {
+                  "stat": "movement_speed",
+                  "type": "increased",
+                  "value": 15
+                }
+              ]
+            },
+            {
+              "name": "Daily de 45 minutos",
+              "mods": [
+                {
+                  "stat": "attack_speed",
+                  "type": "increased",
+                  "value": 10
+                }
+              ]
+            },
+            {
+              "name": "Burndown",
+              "mods": [
+                {
+                  "stat": "damage",
+                  "type": "increased",
+                  "value": 20
+                }
+              ]
+            }
           ]
         },
         {
@@ -79,29 +241,99 @@
           "name": "Asesino de Deadlines",
           "description": "Las fechas límite le temen. Hacen bien.",
           "passives": [
-            { "name": "Entrega a las 23:59", "mods": [ { "stat": "damage", "type": "more", "value": 12 } ] },
-            { "name": "Scope creep", "mods": [ { "stat": "area_of_effect", "type": "increased", "value": 20 } ] },
-            { "name": "Horas extra", "mods": [ { "stat": "life_leech", "type": "flat", "value": 1 } ] }
+            {
+              "name": "Entrega a las 23:59",
+              "mods": [
+                {
+                  "stat": "damage",
+                  "type": "more",
+                  "value": 12
+                }
+              ]
+            },
+            {
+              "name": "Scope creep",
+              "mods": [
+                {
+                  "stat": "area_of_effect",
+                  "type": "increased",
+                  "value": 20
+                }
+              ]
+            },
+            {
+              "name": "Horas extra",
+              "mods": [
+                {
+                  "stat": "life_leech",
+                  "type": "flat",
+                  "value": 1
+                }
+              ]
+            }
           ]
         }
-      ]
+      ],
+      "playstyle": "Ataques rápidos, críticos y robo de vida. Elegante, arrogante y casi siempre a dos píxeles de morir.",
+      "difficulty": 2,
+      "color": "d9a441"
     },
     {
       "id": "exploradora",
       "name": "Exploradora",
       "starter_weapon": "espada_oxidada",
-      "starter_skills": ["rafaga_de_paquetes", "teleport_tcp"],
+      "starter_skills": [
+        "rafaga_de_paquetes",
+        "teleport_tcp"
+      ],
       "description": "Recorre los rincones del mapa que el diseñador de niveles juró que nadie visitaría.",
-      "base_attributes": { "strength": 14, "dexterity": 32, "intelligence": 14 },
+      "base_attributes": {
+        "strength": 14,
+        "dexterity": 32,
+        "intelligence": 14
+      },
       "ascendancies": [
         {
           "id": "francotiradora_bugs",
           "name": "Francotiradora de Bugs",
           "description": "Encuentra el bug en una línea entre un millón. Luego descubre que lo escribió ella.",
           "passives": [
-            { "name": "Breakpoint certero", "mods": [ { "stat": "crit_chance", "type": "increased", "value": 50, "tags": ["projectile"] } ] },
-            { "name": "Stack trace", "mods": [ { "stat": "projectile_speed", "type": "increased", "value": 30 } ] },
-            { "name": "Reproducible", "mods": [ { "stat": "physical_damage", "type": "more", "value": 10, "tags": ["projectile"] } ] }
+            {
+              "name": "Breakpoint certero",
+              "mods": [
+                {
+                  "stat": "crit_chance",
+                  "type": "increased",
+                  "value": 50,
+                  "tags": [
+                    "projectile"
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Stack trace",
+              "mods": [
+                {
+                  "stat": "projectile_speed",
+                  "type": "increased",
+                  "value": 30
+                }
+              ]
+            },
+            {
+              "name": "Reproducible",
+              "mods": [
+                {
+                  "stat": "physical_damage",
+                  "type": "more",
+                  "value": 10,
+                  "tags": [
+                    "projectile"
+                  ]
+                }
+              ]
+            }
           ]
         },
         {
@@ -109,9 +341,36 @@
           "name": "Rastreadora de Memory Leaks",
           "description": "Sigue el rastro de la memoria perdida hasta su origen. Siempre es el navegador.",
           "passives": [
-            { "name": "Heap dump", "mods": [ { "stat": "evasion", "type": "more", "value": 20 } ] },
-            { "name": "Referencias débiles", "mods": [ { "stat": "chaos_damage", "type": "increased", "value": 40 } ] },
-            { "name": "Profiler", "mods": [ { "stat": "dexterity", "type": "flat", "value": 30 } ] }
+            {
+              "name": "Heap dump",
+              "mods": [
+                {
+                  "stat": "evasion",
+                  "type": "more",
+                  "value": 20
+                }
+              ]
+            },
+            {
+              "name": "Referencias débiles",
+              "mods": [
+                {
+                  "stat": "chaos_damage",
+                  "type": "increased",
+                  "value": 40
+                }
+              ]
+            },
+            {
+              "name": "Profiler",
+              "mods": [
+                {
+                  "stat": "dexterity",
+                  "type": "flat",
+                  "value": 30
+                }
+              ]
+            }
           ]
         },
         {
@@ -119,29 +378,96 @@
           "name": "Danzarina de Hilos",
           "description": "Ejecuta veinte tareas en paralelo. Ninguna termina, pero todas empiezan muy rápido.",
           "passives": [
-            { "name": "Race condition", "mods": [ { "stat": "attack_speed", "type": "more", "value": 10 } ] },
-            { "name": "Sin mutex", "mods": [ { "stat": "movement_speed", "type": "increased", "value": 12 } ] },
-            { "name": "Deadlock evitado", "mods": [ { "stat": "evasion", "type": "increased", "value": 40 } ] }
+            {
+              "name": "Race condition",
+              "mods": [
+                {
+                  "stat": "attack_speed",
+                  "type": "more",
+                  "value": 10
+                }
+              ]
+            },
+            {
+              "name": "Sin mutex",
+              "mods": [
+                {
+                  "stat": "movement_speed",
+                  "type": "increased",
+                  "value": 12
+                }
+              ]
+            },
+            {
+              "name": "Deadlock evitado",
+              "mods": [
+                {
+                  "stat": "evasion",
+                  "type": "increased",
+                  "value": 40
+                }
+              ]
+            }
           ]
         }
-      ]
+      ],
+      "playstyle": "Proyectiles y evasión. Dispara desde lejos y no deja que nadie se acerque. Como a su código.",
+      "difficulty": 2,
+      "color": "5cb85c"
     },
     {
       "id": "hechicero",
       "name": "Hechicero",
       "starter_weapon": "maza_de_depuracion",
-      "starter_skills": ["ping_letal", "stack_overflow"],
+      "starter_skills": [
+        "ping_letal",
+        "stack_overflow"
+      ],
       "description": "Estudió magia arcana durante años. Ahora la copia de foros sin leer la pregunta.",
-      "base_attributes": { "strength": 14, "dexterity": 14, "intelligence": 32 },
+      "base_attributes": {
+        "strength": 14,
+        "dexterity": 14,
+        "intelligence": 32
+      },
       "ascendancies": [
         {
           "id": "archimago_recursivo",
           "name": "Archimago Recursivo",
           "description": "Sus hechizos se lanzan a sí mismos. Hasta que dejan de hacerlo.",
           "passives": [
-            { "name": "Caso base", "mods": [ { "stat": "cast_speed", "type": "increased", "value": 15 } ] },
-            { "name": "Pila profunda", "mods": [ { "stat": "mana", "type": "more", "value": 20 } ] },
-            { "name": "Memoización", "mods": [ { "stat": "elemental_damage", "type": "more", "value": 12, "tags": ["spell"] } ] }
+            {
+              "name": "Caso base",
+              "mods": [
+                {
+                  "stat": "cast_speed",
+                  "type": "increased",
+                  "value": 15
+                }
+              ]
+            },
+            {
+              "name": "Pila profunda",
+              "mods": [
+                {
+                  "stat": "mana",
+                  "type": "more",
+                  "value": 20
+                }
+              ]
+            },
+            {
+              "name": "Memoización",
+              "mods": [
+                {
+                  "stat": "elemental_damage",
+                  "type": "more",
+                  "value": 12,
+                  "tags": [
+                    "spell"
+                  ]
+                }
+              ]
+            }
           ]
         },
         {
@@ -149,15 +475,56 @@
           "name": "Elementalista de Stack Overflow",
           "description": "Domina los elementos copiando la respuesta aceptada. Marcado como duplicado.",
           "passives": [
-            { "name": "Respuesta aceptada", "mods": [
-              { "stat": "fire_damage", "type": "increased", "value": 30 },
-              { "stat": "cold_damage", "type": "increased", "value": 30 },
-              { "stat": "lightning_damage", "type": "increased", "value": 30 } ] },
-            { "name": "Pregunta duplicada", "mods": [ { "stat": "area_of_effect", "type": "increased", "value": 20 } ] },
-            { "name": "Un millón de reputación", "mods": [
-              { "stat": "fire_res", "type": "flat", "value": 10 },
-              { "stat": "cold_res", "type": "flat", "value": 10 },
-              { "stat": "lightning_res", "type": "flat", "value": 10 } ] }
+            {
+              "name": "Respuesta aceptada",
+              "mods": [
+                {
+                  "stat": "fire_damage",
+                  "type": "increased",
+                  "value": 30
+                },
+                {
+                  "stat": "cold_damage",
+                  "type": "increased",
+                  "value": 30
+                },
+                {
+                  "stat": "lightning_damage",
+                  "type": "increased",
+                  "value": 30
+                }
+              ]
+            },
+            {
+              "name": "Pregunta duplicada",
+              "mods": [
+                {
+                  "stat": "area_of_effect",
+                  "type": "increased",
+                  "value": 20
+                }
+              ]
+            },
+            {
+              "name": "Un millón de reputación",
+              "mods": [
+                {
+                  "stat": "fire_res",
+                  "type": "flat",
+                  "value": 10
+                },
+                {
+                  "stat": "cold_res",
+                  "type": "flat",
+                  "value": 10
+                },
+                {
+                  "stat": "lightning_res",
+                  "type": "flat",
+                  "value": 10
+                }
+              ]
+            }
           ]
         },
         {
@@ -165,29 +532,93 @@
           "name": "Nigromante de Procesos Zombi",
           "description": "kill -9 no funciona con sus siervos. Lo intentaron.",
           "passives": [
-            { "name": "fork()", "mods": [ { "stat": "minion_damage", "type": "more", "value": 20 } ] },
-            { "name": "Proceso huérfano", "mods": [ { "stat": "minion_life", "type": "increased", "value": 40 } ] },
-            { "name": "PID 1", "mods": [ { "stat": "energy_shield", "type": "increased", "value": 25 } ] }
+            {
+              "name": "fork()",
+              "mods": [
+                {
+                  "stat": "minion_damage",
+                  "type": "more",
+                  "value": 20
+                }
+              ]
+            },
+            {
+              "name": "Proceso huérfano",
+              "mods": [
+                {
+                  "stat": "minion_life",
+                  "type": "increased",
+                  "value": 40
+                }
+              ]
+            },
+            {
+              "name": "PID 1",
+              "mods": [
+                {
+                  "stat": "energy_shield",
+                  "type": "increased",
+                  "value": 25
+                }
+              ]
+            }
           ]
         }
-      ]
+      ],
+      "playstyle": "Hechizos elementales y escudo de energía. Mucho daño, poca vida y una fe ciega en el maná.",
+      "difficulty": 3,
+      "color": "4b8bd6"
     },
     {
       "id": "templario",
       "name": "Templario",
       "starter_weapon": "maza_de_depuracion",
-      "starter_skills": ["fork_bomb", "barrido"],
+      "starter_skills": [
+        "fork_bomb",
+        "barrido"
+      ],
       "description": "Fanático de las buenas prácticas. Las impone con fuego sagrado y pull requests bloqueados.",
-      "base_attributes": { "strength": 23, "dexterity": 14, "intelligence": 23 },
+      "base_attributes": {
+        "strength": 23,
+        "dexterity": 14,
+        "intelligence": 23
+      },
       "ascendancies": [
         {
           "id": "inquisidor_linter",
           "name": "Inquisidor del Linter",
           "description": "Toda línea de más de 80 caracteres será purgada por el fuego.",
           "passives": [
-            { "name": "Falta un punto y coma", "mods": [ { "stat": "fire_damage", "type": "increased", "value": 40 } ] },
-            { "name": "Warnings como errores", "mods": [ { "stat": "lightning_damage", "type": "increased", "value": 40 } ] },
-            { "name": "Reglas estrictas", "mods": [ { "stat": "armour", "type": "increased", "value": 30 } ] }
+            {
+              "name": "Falta un punto y coma",
+              "mods": [
+                {
+                  "stat": "fire_damage",
+                  "type": "increased",
+                  "value": 40
+                }
+              ]
+            },
+            {
+              "name": "Warnings como errores",
+              "mods": [
+                {
+                  "stat": "lightning_damage",
+                  "type": "increased",
+                  "value": 40
+                }
+              ]
+            },
+            {
+              "name": "Reglas estrictas",
+              "mods": [
+                {
+                  "stat": "armour",
+                  "type": "increased",
+                  "value": 30
+                }
+              ]
+            }
           ]
         },
         {
@@ -195,11 +626,41 @@
           "name": "Hierofante de la Documentación",
           "description": "El único que escribe documentación. Nadie la lee, pero existe.",
           "passives": [
-            { "name": "README sagrado", "mods": [ { "stat": "mana", "type": "increased", "value": 25 } ] },
-            { "name": "Comentarios en el código", "mods": [
-              { "stat": "energy_shield", "type": "increased", "value": 20 },
-              { "stat": "life", "type": "increased", "value": 10 } ] },
-            { "name": "Wiki desactualizada", "mods": [ { "stat": "area_of_effect", "type": "increased", "value": 15 } ] }
+            {
+              "name": "README sagrado",
+              "mods": [
+                {
+                  "stat": "mana",
+                  "type": "increased",
+                  "value": 25
+                }
+              ]
+            },
+            {
+              "name": "Comentarios en el código",
+              "mods": [
+                {
+                  "stat": "energy_shield",
+                  "type": "increased",
+                  "value": 20
+                },
+                {
+                  "stat": "life",
+                  "type": "increased",
+                  "value": 10
+                }
+              ]
+            },
+            {
+              "name": "Wiki desactualizada",
+              "mods": [
+                {
+                  "stat": "area_of_effect",
+                  "type": "increased",
+                  "value": 15
+                }
+              ]
+            }
           ]
         },
         {
@@ -207,12 +668,42 @@
           "name": "Profeta del Rollback",
           "description": "Ha visto el futuro. En el futuro, todo vuelve a la versión anterior.",
           "passives": [
-            { "name": "git revert", "mods": [ { "stat": "life_regen", "type": "flat", "value": 30 } ] },
-            { "name": "Copia de seguridad", "mods": [ { "stat": "block_chance", "type": "flat", "value": 10 } ] },
-            { "name": "Punto de restauración", "mods": [ { "stat": "life", "type": "more", "value": 10 } ] }
+            {
+              "name": "git revert",
+              "mods": [
+                {
+                  "stat": "life_regen",
+                  "type": "flat",
+                  "value": 30
+                }
+              ]
+            },
+            {
+              "name": "Copia de seguridad",
+              "mods": [
+                {
+                  "stat": "block_chance",
+                  "type": "flat",
+                  "value": 10
+                }
+              ]
+            },
+            {
+              "name": "Punto de restauración",
+              "mods": [
+                {
+                  "stat": "life",
+                  "type": "more",
+                  "value": 10
+                }
+              ]
+            }
           ]
         }
-      ]
+      ],
+      "playstyle": "Hechizos de área con armadura. Quema todo lo que no cumple el linter. Que es todo.",
+      "difficulty": 2,
+      "color": "b04ad9"
     }
   ]
 }

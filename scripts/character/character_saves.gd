@@ -11,6 +11,30 @@ const NAME_MIN := 2
 const NAME_MAX := 20
 
 
+## Nombres anteriores del proyecto: Godot guarda en app_userdata/<nombre>, así
+## que al renombrar el juego hay que traer los personajes de la carpeta antigua.
+const OLD_PROJECT_NAMES := ["Exile Overflow"]
+
+
+## Copia (sin borrar nada) los guardados de una carpeta de un nombre anterior
+## del proyecto si la actual no tiene ninguno. Devuelve cuántos copió.
+static func migrate_from_old_project_names(dir := SAVE_DIR) -> int:
+	if not list_all(dir).is_empty():
+		return 0
+	var copied := 0
+	var parent := OS.get_user_data_dir().get_base_dir()
+	for old_name in OLD_PROJECT_NAMES:
+		var old_dir := parent.path_join(old_name).path_join("characters")
+		if not DirAccess.dir_exists_absolute(old_dir):
+			continue
+		DirAccess.make_dir_recursive_absolute(dir)
+		for file_name in DirAccess.get_files_at(old_dir):
+			if file_name.ends_with(".json") or file_name.ends_with(".json.bak"):
+				if DirAccess.copy_absolute(old_dir.path_join(file_name), ProjectSettings.globalize_path(dir).path_join(file_name)) == OK:
+					copied += 1
+	return copied
+
+
 static func new_id() -> String:
 	return "%d_%04d" % [Time.get_unix_time_from_system(), randi() % 10000]
 
