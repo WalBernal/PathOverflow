@@ -66,8 +66,16 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 	var average := (min_damage + max_damage) / 2.0 * (1.0 + crit_chance / 100.0 * (crit_multiplier / 100.0 - 1.0))
 	var projectiles := int(skill.get("projectiles", 0)) + (extra_projectiles if skill.has("projectiles") else 0)
 	var mana_cost := roundf((float(skill.get("mana_cost", 0)) + float(skill.get("mana_per_level", 0)) * (board.level - 1)) * cost_mult)
-	var cooldown := float(skill.get("cooldown", 0.0))
+	var cooldown := float(skill.get("cooldown", 0.0)) / maxf(0.1, stats.total_multiplier(Stat.COOLDOWN_RECOVERY, tags))
+	var duration_mult := stats.total_multiplier(Stat.SKILL_DURATION, tags)
+	var duration := float(skill.get("duration", 0.0)) * duration_mult
+	var tick := float(skill.get("tick", 0.0))
 	var hits_per_use := float(repeats + 1)
+	match String(skill["kind"]):
+		"spin":
+			hits_per_use *= maxf(1.0, floorf(duration / maxf(0.05, tick)))
+		"boomerang":
+			hits_per_use *= 2.0   # ida y vuelta contra el mismo objetivo
 	var dps := average * minf(uses_per_second, 1.0 / maxf(cooldown, 0.0001)) * hits_per_use
 
 	return {
@@ -92,6 +100,15 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 		"range": float(skill.get("range", 0.0)),
 		"delay": float(skill.get("delay", 0.0)),
 		"repeats": repeats,
+		"width": float(skill.get("width", 0.0)) * sqrt(stats.total_multiplier(Stat.AREA_OF_EFFECT, tags)) * area_mult,
+		"angle": float(skill.get("angle", 0.0)),
+		"duration": duration,
+		"tick": tick,
+		"stun": float(skill.get("stun", 0.0)) * duration_mult,
+		"trigger_radius": float(skill.get("trigger_radius", 0.0)),
+		"max_active": int(skill.get("max_active", 0)),
+		"chains": int(skill.get("chains", 0)),
+		"chain_range": float(skill.get("chain_range", 0.0)),
 		"life_leech": stats.get_value(Stat.LIFE_LEECH, tags),
 		"dps": dps,
 	}

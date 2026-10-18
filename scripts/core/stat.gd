@@ -41,6 +41,8 @@ const AREA_OF_EFFECT := &"area_of_effect"
 const PROJECTILE_SPEED := &"projectile_speed"
 const MOVEMENT_SPEED := &"movement_speed"
 const LIFE_LEECH := &"life_leech"
+const COOLDOWN_RECOVERY := &"cooldown_recovery"
+const SKILL_DURATION := &"skill_duration"
 
 # --- Tags (condiciones de los modificadores) ---
 const TAG_ATTACK := &"attack"
@@ -90,6 +92,8 @@ const NAMES := {
 	PROJECTILE_SPEED: "Velocidad de proyectiles",
 	MOVEMENT_SPEED: "Velocidad de movimiento",
 	LIFE_LEECH: "Robo de vida",
+	COOLDOWN_RECOVERY: "Recuperación de enfriamientos",
+	SKILL_DURATION: "Duración de habilidades",
 }
 
 ## Los aumentos/más de los padres también aplican al hijo:

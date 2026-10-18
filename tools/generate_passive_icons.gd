@@ -25,6 +25,8 @@ func _initialize() -> void:
 		["resistencias", _prism], ["robo_vida", _fangs], ["atributos", _gear],
 		["ks_guerrero", _tower], ["ks_duelista", _git_branch], ["ks_exploradora", _bomb],
 		["ks_hechicero", _alarm_clock], ["ks_templario", _monitor],
+		["versatil", _layers], ["tiempos", _hourglass], ["movilidad", _boot],
+		["ks_hacker", _key], ["ks_full_stack", _tower_of_stacks],
 	]
 	var rows := ceili(float(icons.size()) / COLUMNS)
 	img = Image.create_empty(S * COLUMNS, S * rows, false, Image.FORMAT_RGBA8)
@@ -313,3 +315,51 @@ func _monitor() -> void:
 	_line(12, 16, 18, 10, Color("3cff6a"), 1)
 	_rect(14, 22, 18, 25, Color("8a8a80"))
 	_rect(10, 26, 22, 27, Color("8a8a80"))
+
+
+## Versatilidad: capas de una pila (front, back, base de datos).
+func _layers() -> void:
+	var colors := [Color("c84b4b"), Color("5cb85c"), Color("4b8bd6")]
+	for k in 3:
+		var y := 7 + k * 7
+		_poly([Vector2(16, y), Vector2(28, y + 4), Vector2(16, y + 8), Vector2(4, y + 4)], colors[k])
+		_line(4, y + 4, 16, y + 8, colors[k].lightened(0.3))
+
+
+## Enfriamientos y duración: reloj de arena.
+func _hourglass() -> void:
+	var glass := Color("6fd3c8")
+	_rect(7, 3, 25, 5, Color("8a6d3b"))
+	_rect(7, 27, 25, 29, Color("8a6d3b"))
+	_poly([Vector2(9, 6), Vector2(23, 6), Vector2(17, 16), Vector2(15, 16)], Color(glass, 0.6))
+	_poly([Vector2(15, 16), Vector2(17, 16), Vector2(23, 26), Vector2(9, 26)], Color(glass, 0.6))
+	_poly([Vector2(12, 22), Vector2(20, 22), Vector2(22, 26), Vector2(10, 26)], Color("e8d070"))
+	_line(16, 14, 16, 22, Color("e8d070"))
+
+
+## Movilidad: bota con alas.
+func _boot() -> void:
+	var leather := Color("9ad06a").darkened(0.4)
+	_rect(10, 6, 17, 22, leather)
+	_rect(10, 20, 26, 26, leather)
+	_rect(10, 26, 26, 27, Color("2a2a30"))
+	_line(4, 10, 10, 13, Color("e8e8e8"), 2)
+	_line(3, 14, 10, 16, Color("e8e8e8"), 2)
+	_line(5, 18, 10, 19, Color("e8e8e8"), 2)
+
+
+## Root Sin Contraseña: llave.
+func _key() -> void:
+	var gold := Color("e0b040")
+	_ring(10, 12, 6.5, 3.0, gold)
+	_line(15, 16, 27, 27, gold, 2)
+	_line(22, 22, 25, 19, gold, 2)
+	_line(25, 25, 28, 22, gold, 2)
+
+
+## Hola Mundo en 40 Lenguajes: torre de llaves {} de colores.
+func _tower_of_stacks() -> void:
+	for k in 5:
+		var c := Color.from_hsv(k / 5.0, 0.6, 0.95)
+		_rect(8 + k, 26 - k * 5, 24 - k, 29 - k * 5, c)
+		_px(9 + k, 27 - k * 5, Color.WHITE)

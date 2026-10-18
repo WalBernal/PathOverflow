@@ -32,6 +32,10 @@ func _initialize() -> void:
 		["hacha_de_lenador", _axe.bind(false)],
 		["hacha_de_guerra", _axe.bind(true)],
 		["maza_de_depuracion", _mace],
+		["daga_de_root", _dagger.bind(STEEL)],
+		["punal_de_dia_cero", _dagger.bind(Color("b04ad9"))],
+		["teclado_mecanico", _keyboard.bind(Color("2a2a30"))],
+		["teclado_rgb", _keyboard.bind(Color("3a2a50"))],
 		["casco_de_hierro", _helmet],
 		["capucha_de_cuero", _hood],
 		["diadema_de_seda", _circlet],
@@ -166,6 +170,26 @@ func _mace() -> void:
 		_px(20 + d.x, 11 + d.y, STEEL)
 	_px(18, 10, Color("ff4040"))  # ojitos de bug
 	_px(22, 10, Color("ff4040"))
+
+
+func _dagger(blade: Color) -> void:
+	_line(5, 27, 8, 24, Color("2a2a30"), 2)        # empuñadura de cinta aislante
+	_line(5, 21, 11, 27, GOLD, 1)                  # guarda
+	_line(9, 22, 22, 9, blade, 2)                  # hoja corta
+	_line(10, 21, 23, 8, blade.lightened(0.4))
+	_px(24, 7, blade.lightened(0.6))
+
+
+## Teclado mecánico: el arma definitiva del Full Stack.
+func _keyboard(base: Color) -> void:
+	_rect(3, 11, 28, 22, base)
+	_rect(3, 11, 28, 12, base.lightened(0.25))
+	for row in 3:
+		for col in 7:
+			var hue := fmod((col + row) / 9.0, 1.0)
+			var key := Color.from_hsv(hue, 0.6, 0.95) if base.b > base.r else Color("c8c8c8")
+			_rect(5 + col * 3, 14 + row * 3, 6 + col * 3, 15 + row * 3, key)
+	_rect(9, 23, 22, 24, base.darkened(0.3))   # barra espaciadora (rota)
 
 
 # --- Armaduras ---

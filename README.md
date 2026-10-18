@@ -60,6 +60,21 @@ La versión informática de las gemas de PoE:
 
 Se definen en `data/skills/skills.json` y `data/skills/ram_modules.json`. Cada clase empieza con dos placas (`starter_skills` en `classes.json`).
 
+**Habilidades inspiradas en League of Legends** (sencillas de leer y de esquivar):
+
+| Habilidad | Inspirada en | Qué hace |
+|---|---|---|
+| Despliegue Continuo | Irelia Q / Yasuo E | Embestida hacia el cursor que golpea todo lo que hay en la línea (no atraviesa paredes) |
+| Flamewar | Annie W | Cono de fuego delante |
+| Rayo de Producción | Lux R | Se carga medio segundo (línea telegrafiada) y dispara un rayo larguísimo |
+| Rollback | Sivir Q | El arma va y vuelve, golpeando a la ida y a la vuelta |
+| Bucle Infinito | Garen E | Giras golpeando alrededor durante 2,4 s y puedes moverte |
+| Deadlock | Amumu R | Onda de frío que aturde (candados sobre los enemigos; los jefes, la mitad) |
+| Bomba Lógica | Teemo R | Trampa que explota cuando se acerca un enemigo (hasta 3 a la vez) |
+| Excepción en Cadena | Brand R | Rayo que salta de enemigo en enemigo |
+
+Stats nuevas para ellas: **Recuperación de enfriamientos** (acorta los enfriamientos) y **Duración de habilidades** (giros, trampas y aturdimientos).
+
 ## Acto I: El Último Commit
 
 El acto está definido en `data/act1.json` y lo construye `Zone` (`scripts/game/zone.gd`).
@@ -123,9 +138,37 @@ El **registro de misiones** está debajo del minimapa (L para plegarlo): la prin
 - **Hoja de personaje** (C): retrato animado de pecho hacia arriba que respira, parpadea, te sigue con la mirada, toma café, piensa (con spinner de carga), bosteza, se pone gafas de sol si su DPS es alto y suda con poca vida. Incluye atributos, defensas con su efecto real (reducción de la armadura, probabilidad de esquivar), resistencias con comentarios, ofensiva de la habilidad principal, muertes, enemigos eliminados y un estado de ánimo calculado.
 - **Iconos de objetos**: atlas `assets/sprites/items/items.png` generado con `tools/generate_item_icons.gd` (un icono por base, placas base, RAM por generación y pociones). Para usar arte propio, sustituye el PNG respetando la cuadrícula (mapa en `data/item_icons.json`).
 
+## Clases
+
+| Clase | Atributos | Arma | Habilidades iniciales |
+|---|---|---|---|
+| Guerrero | FUE | Hacha de leñador | Barrido, Teletransporte TCP |
+| Duelista | FUE/DES | Espada oxidada | Barrido, Ráfaga de Paquetes |
+| Exploradora | DES | Espada oxidada | Ráfaga de Paquetes, Teletransporte TCP |
+| **Hacker** | DES/INT | Daga de root | Rollback, Excepción en Cadena |
+| Hechicero | INT | Maza de depuración | Ping Letal, Stack Overflow |
+| Templario | INT/FUE | Maza de depuración | Fork Bomb, Barrido |
+| **Full Stack** | las tres | Teclado mecánico | Bucle Infinito, Flamewar |
+
+Cada una con 3 ascendencias. El Full Stack empieza en el **centro** del árbol.
+
 ## Enemigos
 
-Cinco tipos con sprites animados: Bug, Proceso zombi, Memory leak, Gusano de red y Daemon (para jefes). Están en `data/enemies.json` y `assets/sprites/enemies/enemies.png`.
+Nueve tipos con sprites animados (`data/enemies.json`, `assets/sprites/enemies/enemies.png`). Los nuevos tienen ataques **telegrafiados en rojo** (se ve la forma del golpe antes de que llegue) y cuerpos de distinto tamaño:
+
+| Enemigo | Ataque | Forma del golpe |
+|---|---|---|
+| Bug, Proceso zombi, Memory leak, Gusano | Cuerpo a cuerpo | Contacto |
+| Bot de spam | A distancia: dispara correos y mantiene la distancia | Proyectil esquivable |
+| Hilo desbocado | Embestida | Rectángulo en línea recta (se para al chocar) |
+| node_modules | Golpe pesado, cuerpo enorme y lento | Círculo alrededor |
+| Troll de foro | Teclado en llamas | Cono delante |
+| Daemon | Solo jefes | — |
+
+**Jefe del acto (El Arquitecto del Monolito)**: menos vida que antes (×2,6 en vez de ×4) y dos habilidades, con el nombre en grande y una barra de lanzamiento:
+- *git push --force*: onda de 14 proyectiles en todas direcciones (hay huecos entre ellos).
+- *Merge Conflict*: cinco círculos en el suelo, uno donde estás, que explotan al segundo.
+- Por debajo de la mitad de vida se recargan un 40 % más rápido.
 - El atlas se genera con `tools/generate_enemy_sprites.gd` (pixel art procedural, "arte de programador"). Para usar sprites dibujados a mano, sustituye el PNG respetando la cuadrícula: columnas = 4 fotogramas, filas = tipos.
 - Un shader (`assets/shaders/enemy_sprite.gdshader`) se encarga de la animación, el volteo, el contorno del color de rareza y el destello al recibir daño, todo por instancia del `MultiMesh`.
 
@@ -207,8 +250,10 @@ GDScript va sobrado para densidades tipo PoE (300-600). Por encima de unos 800, 
 
 ## Árbol pasivo
 
-- **505 pasivas en 45 clusters temáticos**: cada anillo o rueda es de un solo tipo (vida, armadura, fuego, crítico, maná, robo de vida…). Sus pasivas menores son variaciones de ese tema (p. ej. vida plana, vida + regeneración, vida + armadura, % de vida) y su notable tiene nombre, texto sarcástico e icono propio. Entre clusters hay caminos de atributos, puentes temáticos entre clases vecinas y un anillo central de atributos.
-- **Temáticas** en `data/passive_themes.json` (19). Para añadir pasivas o cambiar valores, edita ese archivo y regenera el árbol con `python tools/generate_passive_tree.py`.
+- **774 pasivas en 67 clusters temáticos** (7 clases: 6 alrededor y el Full Stack en el centro): cada anillo o rueda es de un solo tipo (vida, armadura, fuego, crítico, maná, robo de vida…). Sus pasivas menores son variaciones de ese tema (p. ej. vida plana, vida + regeneración, vida + armadura, % de vida) y su notable tiene nombre, texto sarcástico e icono propio. Entre clusters hay caminos de atributos, puentes temáticos entre clases vecinas y un anillo central de atributos.
+- **Inicios limpios**: el inicio de cada clase solo se conecta hacia delante, a sus 4 ramas; nada llega a él por detrás ni pasa junto a él. Cada región se une al centro por sus lados, a través de los clusters *puerta* entre clases vecinas, y hay un cluster interior por clase entre el anillo central y la clase.
+- **Centro**: el inicio del Full Stack, el anillo de *Versatilidad* (3 notables y su piedra angular) y el anillo central de atributos.
+- **Temáticas** en `data/passive_themes.json` (21, nuevas: Versatilidad, Enfriamientos y duración, Movilidad). Para añadir pasivas o cambiar valores, edita ese archivo y regenera el árbol con `python tools/generate_passive_tree.py`.
 - **Condiciones**: algunas pasivas solo cuentan con **vida baja** (≤ 50 %), **vida al máximo** o **si has matado recientemente** (4 s). Se reflejan en el tooltip ("con la vida baja") y en el combate en tiempo real.
 - **Interfaz**: halo de color y nombre por cluster (con zoom intermedio), pasivas menores del color de su tema, notables y piedras angulares con icono (apagado hasta asignarlo), nombres de notables al acercar, **buscador** (resalta coincidencias; Enter salta a la siguiente; no distingue tildes) y **resumen de bonificaciones** totales en el panel lateral.
 - **Iconos**: `assets/sprites/passives/passives.png`, generado con `tools/generate_passive_icons.gd` (mapa en `data/passive_icons.json`).
