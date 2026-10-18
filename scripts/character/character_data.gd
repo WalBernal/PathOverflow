@@ -14,20 +14,23 @@ const BASE_ATTACK_RADIUS := 95.0
 ## Sin arma: puños.
 const UNARMED := {"physical": [2.0, 5.0], "aps": 1.2, "crit": 5.0}
 
+## Versión del formato de guardado. Súbela si cambia la estructura de to_dict()
+## y añade la migración correspondiente en from_dict().
+const SAVE_VERSION := 1
+
+## Identificador del archivo de guardado ("" = personaje temporal, no se guarda).
+var id := ""
 var character_name := "Exiliado sin nombre"
 var class_def: Dictionary
 var ascendancy_def: Dictionary = {}
 var level := 1
 var experience := 0
-## Datos para el creador de personaje: índices de capas de sprite y colores.
-## Se rellenarán cuando existan los sprites por capas.
-var appearance := {
-	"body": 0,
-	"head": 0,
-	"hair": 0,
-	"skin_tone": "c99a7a",
-	"hair_color": "2b2118",
-}
+## Apariencia elegida en el creador (ver CharacterAppearance).
+var appearance := CharacterAppearance.default()
+var created_at := 0
+var last_played := 0
+## Segundos jugados.
+var play_time := 0.0
 var passives: PassiveAllocation
 var inventory := Inventory.new()
 var stats := StatBlock.new()
@@ -200,6 +203,49 @@ func summary() -> Dictionary:
 		"Res. al caos": minf(cap, stats.get_value(Stat.CHAOS_RES)),
 		"Velocidad de movimiento": stats.get_value(Stat.MOVEMENT_SPEED),
 	}
+
+
+func to_dict() -> Dictionary:
+	var passive_ids: Array = []
+	for pid in passives.get_allocated_ids():
+		if pid != passives.start_node_id:
+			passive_ids.append(pid)
+	passive_ids.sort()
+	return {
+		"save_version": SAVE_VERSION,
+		"id": id,
+		"name": character_name,
+		"class_id": class_def["id"],
+		"ascendancy_id": ascendancy_def.get("id", ""),
+		"level": level,
+		"experience": experience,
+		"appearance": appearance,
+		"passives": passive_ids,
+		"inventory": inventory.to_dict(),
+		"created_at": created_at,
+		"last_played": last_played,
+		"play_time": play_time,
+	}
+
+
+## Reconstruye un personaje guardado. `class_def` es la definición de su clase
+## (GameData.get_class_def(d.class_id)).
+static func from_dict(d: Dictionary, p_class_def: Dictionary, tree: PassiveTree, db: ItemDatabase) -> CharacterData:
+	var c := CharacterData.new(p_class_def, tree)
+	c.id = d.get("id", "")
+	c.character_name = d.get("name", c.character_name)
+	c.level = clampi(int(d.get("level", 1)), 1, MAX_LEVEL)
+	c.experience = maxi(0, int(d.get("experience", 0)))
+	c.appearance = CharacterAppearance.sanitize(d.get("appearance", {}))
+	c.created_at = int(d.get("created_at", 0))
+	c.last_played = int(d.get("last_played", 0))
+	c.play_time = float(d.get("play_time", 0.0))
+	for a in p_class_def.get("ascendancies", []):
+		if a["id"] == d.get("ascendancy_id", ""):
+			c.ascendancy_def = a
+	c.inventory.load_dict(d.get("inventory", {}), db)
+	c.passives.load_ids(d.get("passives", []))  # también recalcula las stats
+	return c
 
 
 ## summary() como si el objeto estuviera equipado. No cambia nada ni emite señales.

@@ -5,7 +5,7 @@
       "weapon": { "physical": [6, 12], "aps": 1.45, "crit": 5.0 } },
     { "id": "hacha_de_lenador", "name": "Hacha de leñador", "slot": "weapon", "level": 1, "tags": ["weapon", "axe"],
       "weapon": { "physical": [9, 16], "aps": 1.25, "crit": 5.0 } },
-    { "id": "maza_de_depuracion", "name": "Maza de depuración", "slot": "weapon", "level": 3, "tags": ["weapon", "mace"],
+    { "id": "maza_de_depuracion", "name": "Maza de depuración", "slot": "weapon", "level": 1, "tags": ["weapon", "mace"],
       "weapon": { "physical": [8, 15], "aps": 1.3, "crit": 5.0 },
       "implicits": [ { "stat": "life_regen", "type": "flat", "value": 2 } ] },
     { "id": "espada_bastarda", "name": "Espada bastarda", "slot": "weapon", "level": 12, "tags": ["weapon", "sword"],

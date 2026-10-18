@@ -23,6 +23,11 @@ func _initialize() -> void:
 	_test_local_mods()
 	_test_inventory_and_equipment()
 	_test_sets()
+	_test_character_round_trip()
+	_test_passive_load_validation()
+	_test_save_files()
+	_test_name_validation()
+	_test_appearance()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
 	else:
@@ -254,3 +259,108 @@ func _test_sets() -> void:
 	_check(c.stats.get_breakdown(Stat.ATTACK_SPEED)["increased"] >= 15.0, "bonus de 3 piezas activo")
 	var saved := Item.from_dict(c.inventory.equipped("body").to_dict(), _db)
 	_check(saved.display_name() == c.inventory.equipped("body").display_name() and saved.evasion == c.inventory.equipped("body").evasion, "to_dict/from_dict de una pieza de conjunto")
+
+
+func _test_character_round_trip() -> void:
+	var c := _new_character()
+	var gen := ItemGenerator.new(_db, 21)
+	c.id = "test_1"
+	c.character_name = "Bobby Tables"
+	c.set_level(12)
+	c.add_experience(37)
+	c.appearance = CharacterAppearance.random(gen.rng)
+	c.set_ascendancy(StringName(_classes[0]["ascendancies"][1]["id"]))
+	c.passives.allocate_path(_find_notable_near(c), 20)
+	c.inventory.set_equipped("weapon", gen.generate(12, Rarity.Item.RARE, "espada_oxidada"))
+	c.inventory.set_equipped("body", gen.generate(12, Rarity.Item.UNIQUE))
+	c.inventory.add_item(gen.generate(12, Rarity.Item.ULTRA_RARE))
+	c.inventory.bag[7] = gen.generate(12, Rarity.Item.SET)
+	c.play_time = 3725.5
+
+	# Pasa por texto JSON, como en disco (los números vuelven como float).
+	var data = JSON.parse_string(JSON.stringify(c.to_dict()))
+	var loaded := CharacterData.from_dict(data, _classes[0], _tree, _db)
+	_check(loaded.id == "test_1" and loaded.character_name == "Bobby Tables", "id y nombre")
+	_check(loaded.level == 12 and loaded.experience == c.experience, "nivel y experiencia")
+	_check(loaded.ascendancy_def.get("id") == c.ascendancy_def.get("id"), "ascendencia")
+	_check(loaded.appearance == c.appearance, "apariencia")
+	_check(loaded.passives.get_allocated_ids().size() == c.passives.get_allocated_ids().size() and loaded.passives.spent_points() > 0, "pasivas")
+	_check(loaded.inventory.bag[7] != null and loaded.inventory.bag[7].display_name() == c.inventory.bag[7].display_name(), "bolsa, hueco 7")
+	for key in c.summary():
+		_check(is_equal_approx(loaded.summary()[key], c.summary()[key]), "stat '%s' tras cargar: %s vs %s" % [key, loaded.summary()[key], c.summary()[key]])
+	_check(is_equal_approx(loaded.play_time, 3725.5), "tiempo jugado")
+
+
+func _find_notable_near(c: CharacterData) -> int:
+	var best := -1
+	for id in _tree.nodes:
+		if _tree.nodes[id].kind == PassiveNode.Kind.NOTABLE:
+			var cost := c.passives.find_path(id).size()
+			if cost > 0 and (best == -1 or cost < c.passives.find_path(best).size()):
+				best = id
+	return best
+
+
+func _test_passive_load_validation() -> void:
+	var start := _tree.get_start_node_for_class(&"guerrero")
+	var alloc := PassiveAllocation.new(_tree, start)
+	var neighbor: int = _tree.neighbors(start)[0]
+	var far_start := _tree.get_start_node_for_class(&"hechicero")
+	var isolated := -1
+	for id in _tree.nodes:
+		if not alloc.find_path(id).is_empty() and alloc.find_path(id).size() > 5:
+			isolated = id
+			break
+	# Válido + inexistente + inicio ajeno + desconectado.
+	var dropped := alloc.load_ids([float(neighbor), 99999.0, float(far_start), float(isolated)])
+	_check(alloc.is_allocated(neighbor), "conserva el nodo conectado")
+	_check(not alloc.is_allocated(99999) and not alloc.is_allocated(far_start) and not alloc.is_allocated(isolated), "descarta los inválidos")
+	_check(dropped == 3 and alloc.spent_points() == 1, "devuelve los puntos descartados (%d)" % dropped)
+
+
+func _test_save_files() -> void:
+	var dir := "user://test_saves"
+	for f in DirAccess.get_files_at(dir) if DirAccess.dir_exists_absolute(dir) else PackedStringArray():
+		DirAccess.remove_absolute(dir + "/" + f)
+	var older := {"id": "a", "class_id": "guerrero", "name": "Viejo", "last_played": 100}
+	var newer := {"id": "b", "class_id": "duelista", "name": "Nuevo", "last_played": 200}
+	_check(CharacterSaves.write(older, dir) == OK and CharacterSaves.write(newer, dir) == OK, "escribir guardados")
+	var listed := CharacterSaves.list_all(dir)
+	_check(listed.size() == 2 and listed[0]["id"] == "b", "lista ordenada por última partida")
+	_check(not FileAccess.file_exists(CharacterSaves.path_for("a", dir) + ".tmp"), "no quedan temporales")
+
+	# Segundo guardado: el anterior pasa a .bak; si el principal se corrompe, se usa el .bak.
+	older["name"] = "Viejo 2"
+	CharacterSaves.write(older, dir)
+	_check(FileAccess.file_exists(CharacterSaves.path_for("a", dir) + ".bak"), "copia .bak creada")
+	var f := FileAccess.open(CharacterSaves.path_for("a", dir), FileAccess.WRITE)
+	f.store_string("{ esto no es json")
+	f.close()
+	_check(CharacterSaves.read("a", dir).get("name") == "Viejo", "recupera la copia .bak si el principal está dañado")
+
+	var junk := FileAccess.open(dir + "/basura.json", FileAccess.WRITE)
+	junk.store_string("[]")
+	junk.close()
+	_check(CharacterSaves.list_all(dir).size() == 2, "ignora archivos que no son personajes")
+
+	CharacterSaves.delete("a", dir)
+	CharacterSaves.delete("b", dir)
+	DirAccess.remove_absolute(dir + "/basura.json")
+	_check(CharacterSaves.list_all(dir).is_empty(), "borrar elimina principal y copias")
+	DirAccess.remove_absolute(dir)
+
+
+func _test_name_validation() -> void:
+	var existing := ["Segfault"]
+	_check(CharacterSaves.validate_name("Ñandú_del-Kernel 2", existing) == "", "acepta letras con tilde, ñ, números, _ y -")
+	_check(CharacterSaves.validate_name(" a ", existing) != "", "demasiado corto")
+	_check(CharacterSaves.validate_name("x".repeat(21), existing) != "", "demasiado largo")
+	_check(CharacterSaves.validate_name("Drop; Table", existing) != "", "caracteres no permitidos")
+	_check(CharacterSaves.validate_name("SEGFAULT", existing) != "", "nombre repetido sin distinguir mayúsculas")
+
+
+func _test_appearance() -> void:
+	var fixed := CharacterAppearance.sanitize({"body": 99, "hair": -3, "skin_tone": "no-es-color", "hair_color": "ff0000"})
+	_check(fixed["body"] == CharacterAppearance.BODY_NAMES.size() - 1 and fixed["hair"] == 0, "índices fuera de rango corregidos")
+	_check(fixed["skin_tone"] == CharacterAppearance.default()["skin_tone"] and fixed["hair_color"] == "ff0000", "colores validados")
+	_check(fixed.has("outfit_color"), "rellena claves que faltan")

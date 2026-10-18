@@ -16,8 +16,6 @@ const ES_RECHARGE_PERCENT := 20.0
 const MAX_EVADE_CHANCE := 0.75
 const MAX_BLOCK_CHANCE := 75.0
 
-const BODY_COLOR := Color("d9a441")
-
 var character: CharacterData
 var enemies: EnemyManager
 var life := 1.0
@@ -175,13 +173,10 @@ func _draw() -> void:
 		var alpha := _swing_time / 0.15
 		draw_circle(Vector2.ZERO, _swing_radius, Color(1.0, 0.85, 0.5, 0.12 * alpha))
 		draw_arc(Vector2.ZERO, _swing_radius, 0.0, TAU, 48, Color(1.0, 0.85, 0.5, 0.6 * alpha), 3.0, true)
-	# Sombra + cuerpo provisional, hasta tener sprites.
-	draw_set_transform(Vector2(0, RADIUS * 0.7), 0.0, Vector2(1.0, 0.45))
-	draw_circle(Vector2.ZERO, RADIUS * 1.2, Color(0, 0, 0, 0.45))
-	draw_set_transform(Vector2.ZERO)
-	var body := BODY_COLOR.lerp(Color.RED, 0.7) if _hurt_time > 0.0 else BODY_COLOR
+	# Figura provisional con la apariencia elegida en el creador, hasta tener sprites.
+	var tint := Color(0, 0, 0, 0)
 	if not is_alive():
-		body = Color("444444")
-	draw_circle(Vector2.ZERO, RADIUS, body)
-	draw_arc(Vector2.ZERO, RADIUS, 0.0, TAU, 32, Color("2b2118"), 2.0, true)
-	draw_line(Vector2.ZERO, _facing * (RADIUS + 8.0), Color("f5e6c0"), 3.0, true)
+		tint = Color("444444")
+	elif _hurt_time > 0.0:
+		tint = Color.RED
+	CharacterAppearance.draw(self, Vector2(0.0, RADIUS * 0.6), 0.9, character.appearance, _facing, tint)

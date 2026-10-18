@@ -12,6 +12,10 @@ var tree_screen: PassiveTreeScreen
 var item_tooltip: ItemTooltip
 var _character: CharacterData
 var _death_panel: PanelContainer
+var _pause_panel: Control
+
+signal return_to_menu_requested
+signal quit_requested
 
 
 func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot: LootManager) -> void:
@@ -58,13 +62,57 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	add_child(_death_panel)
 	_death_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 
+	_pause_panel = _build_pause_menu()
+	add_child(_pause_panel)
+	_pause_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
 	add_child(item_tooltip)
 	loot.hovered_item_changed.connect(_on_ground_item_hovered)
 	loot.pickup_failed.connect(hud.flash)
 
 
+func _build_pause_menu() -> Control:
+	# Capa oscura a pantalla completa con un panel centrado.
+	var overlay := ColorRect.new()
+	overlay.color = Color(0, 0, 0, 0.6)
+	overlay.visible = false
+	overlay.theme = UiStyle.make_theme()
+	var center := CenterContainer.new()
+	overlay.add_child(center)
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var panel := PanelContainer.new()
+	center.add_child(panel)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 12)
+	panel.add_child(box)
+	var title := UiStyle.label("Pausa", 32, UiStyle.ACCENT)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(title)
+	var hint := UiStyle.label("La partida se guarda sola. Pero por si acaso.", 14, UiStyle.MUTED)
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(hint)
+	box.add_child(UiStyle.button("Continuar", toggle_pause_menu, 320))
+	box.add_child(UiStyle.button("Guardar y volver al menú", func() -> void: return_to_menu_requested.emit(), 320))
+	box.add_child(UiStyle.button("Guardar y salir del juego", func() -> void: quit_requested.emit(), 320))
+	return overlay
+
+
+func toggle_pause_menu() -> void:
+	_pause_panel.visible = not _pause_panel.visible
+	item_tooltip.hide()
+	get_tree().paused = _pause_panel.visible
+
+
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed(&"toggle_passives") \
+	if _pause_panel.visible:
+		if event.is_action_pressed(&"ui_cancel"):
+			toggle_pause_menu()
+			get_viewport().set_input_as_handled()
+		return
+	if event.is_action_pressed(&"ui_cancel") and not tree_screen.visible and not inventory_panel.visible:
+		toggle_pause_menu()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(&"toggle_passives") \
 			or (tree_screen.visible and event.is_action_pressed(&"ui_cancel")):
 		toggle_passive_tree()
 		get_viewport().set_input_as_handled()

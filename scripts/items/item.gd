@@ -166,7 +166,11 @@ func to_dict() -> Dictionary:
 	}
 
 
+## Devuelve null si la base ya no existe (datos cambiados entre versiones).
 static func from_dict(d: Dictionary, db: ItemDatabase) -> Item:
+	if not db.bases.has(d.get("base", "")):
+		push_warning("Objeto guardado con base desconocida '%s': se descarta" % d.get("base", ""))
+		return null
 	var item := Item.new(db.bases[d["base"]], int(d["rarity"]), int(d["item_level"]))
 	item.rare_name = d.get("rare_name", "")
 	if d.get("unique_id", "") != "":
@@ -175,6 +179,11 @@ static func from_dict(d: Dictionary, db: ItemDatabase) -> Item:
 		var entry := db.get_set_piece(d["unique_id"])
 		item.unique_def = entry.get("piece", {})
 		item.set_def = entry.get("set", {})
+	if (item.rarity == Rarity.Item.UNIQUE or item.rarity == Rarity.Item.SET) and item.unique_def.is_empty():
+		# El único o el conjunto se eliminó de los datos: se conserva como raro.
+		item.rarity = Rarity.Item.RARE
+		item.rare_name = "%s olvidado" % item.base["name"]
+		item.set_def = {}
 	item.affixes.assign(d.get("affixes", []))
 	item.fixed_mods.assign(d.get("fixed_mods", []))
 	item.compute_properties()

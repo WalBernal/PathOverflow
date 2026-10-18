@@ -80,6 +80,34 @@ func equip_from_bag(index: int) -> bool:
 	return true
 
 
+func to_dict() -> Dictionary:
+	var equip := {}
+	for slot in equipment:
+		equip[slot] = equipment[slot].to_dict()
+	var bag_data: Array = []
+	for item in bag:
+		bag_data.append(item.to_dict() if item else null)
+	return {"equipment": equip, "bag": bag_data}
+
+
+## Restaura equipo y bolsa. Los objetos que ya no se pueden cargar se descartan.
+func load_dict(d: Dictionary, db: ItemDatabase) -> void:
+	equipment.clear()
+	bag.clear()
+	bag.resize(BAG_SIZE)
+	var equip: Dictionary = d.get("equipment", {})
+	for slot in equip:
+		if EQUIP_SLOTS.has(slot):
+			var item := Item.from_dict(equip[slot], db)
+			if item:
+				equipment[slot] = item
+	var bag_data: Array = d.get("bag", [])
+	for i in mini(bag_data.size(), BAG_SIZE):
+		if bag_data[i] is Dictionary:
+			bag[i] = Item.from_dict(bag_data[i], db)
+	changed.emit()
+
+
 func unequip(slot: String) -> bool:
 	var i := free_bag_index()
 	if i == -1 or not equipment.has(slot):

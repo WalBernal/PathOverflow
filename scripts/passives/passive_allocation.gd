@@ -118,6 +118,31 @@ func reset() -> void:
 	changed.emit()
 
 
+## Restaura una partida guardada. Descarta los ids que ya no existen (el árbol
+## cambió entre versiones) y los que quedan desconectados del inicio.
+## Devuelve cuántos nodos se descartaron (= puntos devueltos al jugador).
+func load_ids(ids: Array) -> int:
+	_allocated = {start_node_id: true}
+	var wanted := {}
+	var requested := 0
+	for raw in ids:
+		var id := int(raw)  # JSON devuelve floats
+		if id == start_node_id:
+			continue
+		requested += 1
+		if tree.nodes.has(id) and not is_blocked(id):
+			wanted[id] = true
+	var stack: Array[int] = [start_node_id]
+	while not stack.is_empty():
+		var cur: int = stack.pop_back()
+		for nb in tree.neighbors(cur):
+			if wanted.has(nb) and not _allocated.has(nb):
+				_allocated[nb] = true
+				stack.append(nb)
+	changed.emit()
+	return requested - spent_points()
+
+
 func collect_modifiers() -> Array[Modifier]:
 	var mods: Array[Modifier] = []
 	for id in _allocated:

@@ -6,7 +6,8 @@ Por ahora es solo para un jugador en local, pero la lógica está escrita para p
 ## Cómo abrirlo
 
 1. Abre Godot 4.7.2 → **Importar** → selecciona `project.godot`.
-2. Pulsa **F5**. Se abre la escena de juego de prueba (`scenes/game/world.tscn`).
+2. Pulsa **F5**. Se abre la pantalla de inicio: crea un personaje (clase, apariencia y nombre) o elige uno guardado.
+3. En el juego, **Esc** abre el menú de pausa (volver al menú o salir, guardando).
 
 | Tecla | Acción |
 |---|---|
@@ -21,7 +22,16 @@ Por ahora es solo para un jugador en local, pero la lógica está escrita para p
 
 Todas las teclas están en *Proyecto → Configuración del proyecto → Mapa de entrada*.
 
-`scenes/ui/passive_tree_screen.tscn` también funciona sola (F6) para probar builds de cualquier clase y nivel.
+`scenes/ui/passive_tree_screen.tscn` también funciona sola (F6) para probar builds de cualquier clase y nivel, y `scenes/game/world.tscn` (F6) arranca con un personaje temporal que no se guarda.
+
+## Guardado de personajes
+
+- Un archivo JSON por personaje en `user://characters/<id>.json`. En Windows es `%APPDATA%\Godot\app_userdata\Exile Overflow\characters`.
+- Se guarda **todo el personaje**: nombre, clase, ascendencia, nivel, experiencia, apariencia, pasivas, equipo, bolsa y tiempo jugado.
+- **Autoguardado**: unos segundos después de cada cambio (subir de nivel, objetos, pasivas), cada minuto, al volver al menú y al cerrar la ventana.
+- **Seguro ante cortes**: se escribe en un `.tmp` y luego se sustituye el archivo; la versión anterior queda como `.bak` y se usa si el principal está dañado.
+- **Tolerante a cambios de datos**: si un nodo del árbol u objeto deja de existir, se descarta al cargar (los puntos de pasiva vuelven al jugador) en lugar de romper la partida. El campo `save_version` permite migrar formatos antiguos.
+- La apariencia se guarda como índices de estilo + colores, el mismo formato que usarán los sprites por capas.
 
 ## Estructura
 
@@ -30,10 +40,11 @@ data/                 Datos de diseño (JSON): clases, ascendencias, árbol pasi
 data/items/           Bases, afijos (con tiers), únicos y conjuntos
 scripts/core/         Stat, Modifier, StatBlock (fórmula de PoE), DataLoader
 scripts/passives/     PassiveTree (datos), PassiveAllocation (por personaje), PassiveTreeView (dibujo)
-scripts/character/    CharacterData: clase, ascendencia, nivel, experiencia, equipo, stats
+scripts/character/    CharacterData (personaje), CharacterSaves (archivos), CharacterAppearance
 scripts/items/        Rarity, ItemDatabase, Item, ItemGenerator, Inventory
 scripts/game/         World, Player, EnemyManager, LootManager, IsoGround
-scripts/ui/           HUD, inventario, tooltips, árbol pasivo
+scripts/ui/           Menú de inicio, creador, HUD, inventario, tooltips, árbol pasivo, UiStyle
+scenes/menu/          Pantalla de inicio y creación de personaje
 scripts/autoload/     GameData: carga los datos estáticos una vez
 scenes/               Escenas (.tscn)
 tools/                Scripts externos (generador del árbol de prueba)
@@ -106,8 +117,8 @@ Añade `*.json` en *Exportar → Recursos → Filtros para exportar archivos no-
 
 ## Próximos pasos sugeridos
 
-1. Guardado y carga del personaje: pasivas, equipo y bolsa en JSON en `user://`.
-2. Habilidades activas (gemas) que consulten `StatBlock` con sus tags, y coste de maná.
-3. Creador de personaje (decidir antes: sprites 2D a mano o 3D prerenderizado).
+1. Habilidades activas (gemas) que consulten `StatBlock` con sus tags, y coste de maná.
+2. Sprites del personaje por capas (decidir antes: 2D a mano o 3D prerenderizado); el formato de apariencia ya está preparado.
+3. Ascendencia mediante pruebas (ahora se elige libremente en el árbol pasivo).
 4. Iconos de objetos e inventario por cuadrícula con tamaños (2×3, 1×1…) como en PoE.
 5. Editor del árbol pasivo dentro de Godot.

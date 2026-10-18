@@ -4,6 +4,7 @@
     {
       "id": "guerrero",
       "name": "Guerrero",
+      "starter_weapon": "hacha_de_lenador",
       "description": "Resuelve los problemas a golpes. Los bugs también. Sobre todo los bugs.",
       "base_attributes": { "strength": 32, "dexterity": 14, "intelligence": 14 },
       "ascendancies": [
@@ -47,6 +48,7 @@
     {
       "id": "duelista",
       "name": "Duelista",
+      "starter_weapon": "espada_oxidada",
       "description": "Lucha por la gloria, el público y las estrellas en GitHub.",
       "base_attributes": { "strength": 23, "dexterity": 23, "intelligence": 14 },
       "ascendancies": [
@@ -85,6 +87,7 @@
     {
       "id": "exploradora",
       "name": "Exploradora",
+      "starter_weapon": "espada_oxidada",
       "description": "Recorre los rincones del mapa que el diseñador de niveles juró que nadie visitaría.",
       "base_attributes": { "strength": 14, "dexterity": 32, "intelligence": 14 },
       "ascendancies": [
@@ -123,6 +126,7 @@
     {
       "id": "hechicero",
       "name": "Hechicero",
+      "starter_weapon": "maza_de_depuracion",
       "description": "Estudió magia arcana durante años. Ahora la copia de foros sin leer la pregunta.",
       "base_attributes": { "strength": 14, "dexterity": 14, "intelligence": 32 },
       "ascendancies": [
@@ -167,6 +171,7 @@
     {
       "id": "templario",
       "name": "Templario",
+      "starter_weapon": "maza_de_depuracion",
       "description": "Fanático de las buenas prácticas. Las impone con fuego sagrado y pull requests bloqueados.",
       "base_attributes": { "strength": 23, "dexterity": 14, "intelligence": 23 },
       "ascendancies": [

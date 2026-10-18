@@ -1,14 +1,19 @@
 class_name World
 extends Node2D
 ## Escena de juego de prueba: suelo, personaje, enemigos, botín y UI.
+## Juega con GameData.current_character (elegido en la pantalla de inicio) y lo
+## guarda automáticamente. Ejecutada sola (F6) usa un personaje temporal.
 ## Teclas de depuración: F1 +100 enemigos, F2 limpiar, F3 jefe único,
 ## F4 soltar botín de prueba, R reaparecer.
 
 const PLAYER_SCENE := preload("res://scenes/game/player.tscn")
-## Hasta que exista el creador de personaje, se juega con esta clase.
-const START_CLASS := &"guerrero"
-const START_WEAPON := "espada_oxidada"
+## Clase del personaje temporal al ejecutar esta escena sola.
+const DEV_CLASS := &"guerrero"
 const INITIAL_ENEMIES := 60
+## Tras un cambio (nivel, objetos, pasivas), se guarda como mucho cada X segundos.
+const AUTOSAVE_DELAY := 5.0
+## Y, aunque no cambie nada, cada X segundos (para el tiempo jugado).
+const AUTOSAVE_INTERVAL := 60.0
 
 var character: CharacterData
 var player: Player
@@ -17,13 +22,20 @@ var loot: LootManager
 var item_generator: ItemGenerator
 var ui: GameUI
 
+var _dirty := false
+var _since_save := 0.0
+
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color("121016"))
-	character = CharacterData.new(GameData.get_class_def(START_CLASS), GameData.passive_tree)
+	character = GameData.current_character
+	if character == null:
+		character = GameData.create_character("Desarrollador", DEV_CLASS, CharacterAppearance.default(), false)
 	item_generator = ItemGenerator.new(GameData.items)
-	character.inventory.set_equipped("weapon", item_generator.generate(1, Rarity.Item.NORMAL, START_WEAPON))
 	character.leveled_up.connect(_on_leveled_up)
+	character.inventory.changed.connect(_mark_dirty)
+	character.passives.changed.connect(_mark_dirty)
+	character.stats_changed.connect(_mark_dirty)  # incluye cambio de ascendencia
 
 	add_child(IsoGround.new())
 	enemies = EnemyManager.new()
@@ -43,8 +55,46 @@ func _ready() -> void:
 	add_child(ui)
 	ui.setup(player, enemies, character, loot)
 	player.died.connect(ui.show_death)
+	ui.return_to_menu_requested.connect(_return_to_menu)
+	ui.quit_requested.connect(_quit_game)
 
+	enemies.area_level = character.level
 	spawn_wave(INITIAL_ENEMIES)
+
+
+func _process(delta: float) -> void:
+	character.play_time += delta
+	_since_save += delta
+	if (_dirty and _since_save >= AUTOSAVE_DELAY) or _since_save >= AUTOSAVE_INTERVAL:
+		save_now()
+
+
+## Cerrar la ventana también guarda.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		save_now()
+
+
+func save_now() -> void:
+	GameData.save_character(character)
+	_dirty = false
+	_since_save = 0.0
+
+
+func _mark_dirty() -> void:
+	_dirty = true
+
+
+func _return_to_menu() -> void:
+	save_now()
+	get_tree().paused = false
+	GameData.current_character = null
+	get_tree().change_scene_to_file(GameData.MAIN_MENU_SCENE)
+
+
+func _quit_game() -> void:
+	save_now()
+	get_tree().quit()
 
 
 func _unhandled_input(event: InputEvent) -> void:
