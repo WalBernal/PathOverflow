@@ -1,0 +1,125 @@
+class_name PassiveAllocation
+extends RefCounted
+## Los nodos que ha asignado UN personaje sobre el árbol compartido.
+## Reglas: solo se asigna un nodo adyacente a otro asignado; no se puede
+## pasar por el inicio de otra clase; quitar un nodo no puede desconectar otros.
+
+signal changed
+
+var tree: PassiveTree
+var start_node_id := -1
+var _allocated: Dictionary = {}  # int -> true
+
+
+func _init(p_tree: PassiveTree, p_start_node_id: int) -> void:
+	tree = p_tree
+	start_node_id = p_start_node_id
+	_allocated[start_node_id] = true
+
+
+func is_allocated(id: int) -> bool:
+	return _allocated.has(id)
+
+
+func spent_points() -> int:
+	return _allocated.size() - 1
+
+
+func get_allocated_ids() -> Array[int]:
+	var ids: Array[int] = []
+	ids.assign(_allocated.keys())
+	return ids
+
+
+## Nodos de inicio de otras clases: no se pueden asignar ni atravesar.
+func is_blocked(id: int) -> bool:
+	var n := tree.get_node_data(id)
+	return n == null or (n.kind == PassiveNode.Kind.CLASS_START and id != start_node_id)
+
+
+func can_allocate(id: int) -> bool:
+	if _allocated.has(id) or is_blocked(id):
+		return false
+	for nb in tree.neighbors(id):
+		if _allocated.has(nb):
+			return true
+	return false
+
+
+## Camino más corto (BFS) desde cualquier nodo asignado hasta `target`.
+## Devuelve los nodos que habría que asignar, en orden. Vacío si no hay camino.
+func find_path(target: int) -> Array[int]:
+	var result: Array[int] = []
+	if _allocated.has(target) or is_blocked(target):
+		return result
+	var came_from := {}
+	var queue: Array[int] = []
+	for id in _allocated:
+		came_from[id] = -1
+		queue.append(id)
+	var head := 0
+	while head < queue.size():
+		var cur := queue[head]
+		head += 1
+		if cur == target:
+			break
+		for nb in tree.neighbors(cur):
+			if came_from.has(nb) or is_blocked(nb):
+				continue
+			came_from[nb] = cur
+			queue.append(nb)
+	if not came_from.has(target):
+		return result
+	var step := target
+	while not _allocated.has(step):
+		result.push_front(step)
+		step = came_from[step]
+	return result
+
+
+## Asigna el camino hasta `target` si cuesta como mucho `max_points`.
+## Devuelve los puntos gastados (0 si no se pudo).
+func allocate_path(target: int, max_points: int) -> int:
+	var path := find_path(target)
+	if path.is_empty() or path.size() > max_points:
+		return 0
+	for id in path:
+		_allocated[id] = true
+	changed.emit()
+	return path.size()
+
+
+func can_refund(id: int) -> bool:
+	if id == start_node_id or not _allocated.has(id):
+		return false
+	# ¿Siguen todos los demás nodos conectados al inicio sin este?
+	var seen := {start_node_id: true}
+	var stack: Array[int] = [start_node_id]
+	while not stack.is_empty():
+		var cur: int = stack.pop_back()
+		for nb in tree.neighbors(cur):
+			if nb == id or seen.has(nb) or not _allocated.has(nb):
+				continue
+			seen[nb] = true
+			stack.append(nb)
+	return seen.size() == _allocated.size() - 1
+
+
+func refund(id: int) -> bool:
+	if not can_refund(id):
+		return false
+	_allocated.erase(id)
+	changed.emit()
+	return true
+
+
+func reset() -> void:
+	_allocated = {start_node_id: true}
+	changed.emit()
+
+
+func collect_modifiers() -> Array[Modifier]:
+	var mods: Array[Modifier] = []
+	for id in _allocated:
+		mods.append_array(tree.get_node_data(id).mods)
+	return mods

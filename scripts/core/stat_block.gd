@@ -1,0 +1,88 @@
+class_name StatBlock
+extends RefCounted
+## Conjunto de stats con la fórmula de Path of Exile:
+##   valor = (base + Σplanos) × (1 + Σaumentos / 100) × Π(1 + más / 100)
+## Los "aumentos" se suman entre sí; los "más" se multiplican entre sí.
+## Los aumentos/más de los stats padre también aplican (ver Stat.PARENTS).
+##
+## Lógica pura (RefCounted, sin nodos): se puede mover a un servidor en el futuro.
+
+var _base: Dictionary = {}           # StringName -> float
+var _modifiers: Array[Modifier] = []
+var _cache: Dictionary = {}          # "stat|tags" -> float
+
+
+func clear() -> void:
+	_base.clear()
+	_modifiers.clear()
+	_cache.clear()
+
+
+func set_base(stat: StringName, value: float) -> void:
+	_base[stat] = value
+	_cache.clear()
+
+
+func add_modifier(mod: Modifier) -> void:
+	_modifiers.append(mod)
+	_cache.clear()
+
+
+func add_modifiers(mods: Array[Modifier]) -> void:
+	_modifiers.append_array(mods)
+	_cache.clear()
+
+
+func remove_source(source: String) -> void:
+	var kept: Array[Modifier] = []
+	for m in _modifiers:
+		if m.source != source:
+			kept.append(m)
+	_modifiers = kept
+	_cache.clear()
+
+
+func get_value(stat: StringName, tags: Array = []) -> float:
+	var key := _cache_key(stat, tags)
+	if _cache.has(key):
+		return _cache[key]
+	var b := get_breakdown(stat, tags)
+	var value: float = (b.base + b.flat) * maxf(0.0, 1.0 + b.increased / 100.0) * b.more
+	_cache[key] = value
+	return value
+
+
+## Desglose para tooltips/UI: {base, flat, increased (en %), more (multiplicador)}.
+func get_breakdown(stat: StringName, tags: Array = []) -> Dictionary:
+	var related: Array = [stat]
+	related.append_array(Stat.PARENTS.get(stat, []))
+	var flat := 0.0
+	var increased := 0.0
+	var more := 1.0
+	for mod in _modifiers:
+		if not mod.applies_to(tags):
+			continue
+		if mod.type == Modifier.Type.FLAT:
+			if mod.stat == stat:
+				flat += mod.value
+		elif related.has(mod.stat):
+			if mod.type == Modifier.Type.INCREASED:
+				increased += mod.value
+			else:
+				more *= 1.0 + mod.value / 100.0
+	return {
+		"base": float(_base.get(stat, 0.0)),
+		"flat": flat,
+		"increased": increased,
+		"more": more,
+	}
+
+
+static func _cache_key(stat: StringName, tags: Array) -> String:
+	if tags.is_empty():
+		return String(stat)
+	var parts := PackedStringArray()
+	for t in tags:
+		parts.append(String(t))
+	parts.sort()
+	return String(stat) + "|" + ",".join(parts)

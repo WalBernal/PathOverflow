@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "_doc": "Conjuntos: piezas con mods fijos (rango [min, max]) y bonificaciones por número de piezas equipadas.",
+  "sets": [
+    { "id": "atuendo_del_senior", "name": "Atuendo del Senior",
+      "bonuses": {
+        "2": [ { "stat": "damage", "type": "increased", "value": 15 } ],
+        "3": [ { "stat": "attack_speed", "type": "increased", "value": 15 },
+               { "stat": "life", "type": "flat", "value": 40 } ]
+      },
+      "pieces": [
+        { "id": "gorra_del_senior", "name": "Gorra del Senior", "base": "capucha_de_cuero",
+          "mods": [ { "stat": "life", "type": "flat", "min": 15, "max": 25 },
+                    { "stat": "dexterity", "type": "flat", "min": 10, "max": 15 } ] },
+        { "id": "sudadera_del_senior", "name": "Sudadera del Senior", "base": "chaleco_de_cuero",
+          "mods": [ { "stat": "life", "type": "flat", "min": 30, "max": 45 },
+                    { "stat": "local_defence_increased", "type": "increased", "min": 40, "max": 60 } ] },
+        { "id": "zapatillas_del_senior", "name": "Zapatillas del Senior", "base": "botas_de_cuero",
+          "mods": [ { "stat": "movement_speed", "type": "increased", "min": 15, "max": 20 } ] }
+      ] },
+    { "id": "legado_del_arquitecto", "name": "Legado del Arquitecto",
+      "bonuses": {
+        "2": [ { "stat": "armour", "type": "increased", "value": 30 },
+               { "stat": "fire_res", "type": "flat", "value": 20 } ]
+      },
+      "pieces": [
+        { "id": "guanteletes_del_arquitecto", "name": "Guanteletes del Arquitecto", "base": "guanteletes_de_hierro",
+          "mods": [ { "stat": "strength", "type": "flat", "min": 15, "max": 25 },
+                    { "stat": "local_armour", "type": "flat", "min": 20, "max": 30 } ] },
+        { "id": "medallon_del_arquitecto", "name": "Medallón del Arquitecto", "base": "amuleto_de_ambar",
+          "mods": [ { "stat": "life", "type": "flat", "min": 25, "max": 35 },
+                    { "stat": "physical_damage", "type": "increased", "min": 10, "max": 15, "tags": ["melee"] } ] }
+      ] }
+  ]
+}

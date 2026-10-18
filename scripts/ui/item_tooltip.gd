@@ -1,0 +1,140 @@
+class_name ItemTooltip
+extends PanelContainer
+## Tooltip flotante de objetos que sigue al ratón. Con `compare`, muestra cómo
+## cambiarían las cifras del personaje al equiparlo (verde mejora, rojo empeora).
+
+const WIDTH := 360.0
+const GREY := "8a8293"
+const MOD_COLOR := "8888ff"
+const FLAVOR_COLOR := "af6025"
+const SET_ACTIVE := "1ba01b"
+const UP := "6fb36b"
+const DOWN := "e06c6c"
+
+var _label: RichTextLabel
+
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	visible = false
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("0d0b10f5")
+	style.set_border_width_all(1)
+	style.border_color = Color("3a3442")
+	style.set_content_margin_all(10)
+	add_theme_stylebox_override("panel", style)
+	_label = RichTextLabel.new()
+	_label.bbcode_enabled = true
+	_label.fit_content = true
+	_label.custom_minimum_size = Vector2(WIDTH, 0)
+	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_label)
+
+
+func _process(_delta: float) -> void:
+	if not visible:
+		return
+	var view := get_viewport_rect().size
+	var pos := get_viewport().get_mouse_position() + Vector2(20, 20)
+	if pos.x + size.x > view.x:
+		pos.x = get_viewport().get_mouse_position().x - size.x - 20.0
+	pos.y = clampf(pos.y, 4.0, maxf(4.0, view.y - size.y - 4.0))
+	pos.x = clampf(pos.x, 4.0, maxf(4.0, view.x - size.x - 4.0))
+	position = pos
+
+
+func show_item(item: Item, character: CharacterData, compare: bool) -> void:
+	if item == null:
+		hide()
+		return
+	var border: StyleBoxFlat = get_theme_stylebox("panel")
+	border.border_color = Rarity.item_color(item.rarity).darkened(0.3)
+	_label.text = build_text(item, character, compare)
+	reset_size()
+	show()
+
+
+static func build_text(item: Item, character: CharacterData, compare: bool) -> String:
+	var color := Rarity.item_color(item.rarity).to_html(false)
+	var t := "[center][color=#%s][b]%s[/b][/color]\n" % [color, item.display_name()]
+	if item.rarity != Rarity.Item.NORMAL and item.rarity != Rarity.Item.MAGIC:
+		t += "[color=#%s]%s[/color]\n" % [color, item.base["name"]]
+	t += "[color=#%s]%s · %s[/color][/center]\n" % [GREY, Rarity.item_name(item.rarity), Inventory.SLOT_NAMES.get(_slot_key(item), item.slot())]
+
+	t += _section(_base_lines(item))
+	t += "[color=#%s]Nivel de objeto: %d   ·   Requiere nivel %d[/color]\n" % [GREY, item.item_level, item.required_level()]
+	if character and not character.can_equip(item):
+		t += "[color=#%s]Nivel insuficiente[/color]\n" % DOWN
+
+	var implicits := PackedStringArray()
+	for m in item.implicit_mods():
+		implicits.append(Item.describe_mod(m))
+	t += _section("\n".join(implicits))
+
+	var mods := PackedStringArray()
+	for a in item.affixes:
+		mods.append("%s  [color=#%s](%s T%d)[/color]" % [Item.describe_mod(a), GREY,
+			"P" if a["kind"] == "prefix" else "S", a["tier_rank"]])
+	for m in item.fixed_mods:
+		mods.append(Item.describe_mod(m))
+	t += _section("[color=#%s]%s[/color]" % [MOD_COLOR, "\n".join(mods)] if not mods.is_empty() else "")
+
+	if not item.set_def.is_empty():
+		t += _section(_set_lines(item, character))
+	if item.unique_def.has("flavor"):
+		t += _section("[i][color=#%s]%s[/color][/i]" % [FLAVOR_COLOR, item.unique_def["flavor"]])
+	if compare and character:
+		t += _section(_comparison(item, character))
+	return t.strip_edges()
+
+
+static func _slot_key(item: Item) -> String:
+	return "ring_left" if item.slot() == "ring" else item.slot()
+
+
+static func _section(body: String) -> String:
+	if body.strip_edges() == "":
+		return ""
+	return "[color=#3a3442]────────────────────[/color]\n%s\n" % body
+
+
+static func _base_lines(item: Item) -> String:
+	var lines := PackedStringArray()
+	if item.is_weapon():
+		lines.append("Daño físico: [color=#e8d9b0]%d-%d[/color]" % [item.physical_min, item.physical_max])
+		lines.append("Ataques por segundo: [color=#e8d9b0]%.2f[/color]" % item.attacks_per_second)
+		lines.append("Prob. de crítico: [color=#e8d9b0]%.1f%%[/color]" % item.crit_chance)
+	if item.armour > 0.0:
+		lines.append("Armadura: [color=#e8d9b0]%d[/color]" % item.armour)
+	if item.evasion > 0.0:
+		lines.append("Evasión: [color=#e8d9b0]%d[/color]" % item.evasion)
+	if item.energy_shield > 0.0:
+		lines.append("Escudo de energía: [color=#e8d9b0]%d[/color]" % item.energy_shield)
+	return "\n".join(lines)
+
+
+static func _set_lines(item: Item, character: CharacterData) -> String:
+	var set_def := item.set_def
+	var count: int = character.equipped_set_counts().get(set_def["id"], 0) if character else 0
+	var lines := PackedStringArray()
+	lines.append("[color=#%s]%s (%d/%d equipadas)[/color]" % [SET_ACTIVE, set_def["name"], count, set_def["pieces"].size()])
+	for threshold in set_def["bonuses"]:
+		var active := count >= int(threshold)
+		for md in set_def["bonuses"][threshold]:
+			lines.append("[color=#%s](%s) %s[/color]" % [SET_ACTIVE if active else GREY, threshold, Modifier.from_dict(md).describe()])
+	return "\n".join(lines)
+
+
+static func _comparison(item: Item, character: CharacterData) -> String:
+	var before := character.summary()
+	var after := character.preview_equip(item)
+	var lines := PackedStringArray()
+	for key in before:
+		var delta: float = after[key] - before[key]
+		if absf(delta) < 0.05:
+			continue
+		var amount := "%.1f" % absf(delta) if absf(delta) < 10.0 and not is_equal_approx(delta, roundf(delta)) else "%d" % roundi(absf(delta))
+		lines.append("[color=#%s]%s%s %s[/color]" % [UP if delta > 0.0 else DOWN, "+" if delta > 0.0 else "-", amount, key])
+	if lines.is_empty():
+		return "[color=#%s]Al equiparlo: sin cambios en las cifras principales[/color]" % GREY
+	return "[color=#%s]Al equiparlo:[/color]\n%s" % [GREY, "\n".join(lines)]

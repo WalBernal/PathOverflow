@@ -1,0 +1,3810 @@
+{
+ "version": 1,
+ "nodes": [
+  {
+   "id": 0,
+   "kind": "minor",
+   "name": "Área de efecto",
+   "x": 0.0,
+   "y": -160.0,
+   "mods": [
+    {
+     "stat": "area_of_effect",
+     "type": "increased",
+     "value": 6
+    }
+   ]
+  },
+  {
+   "id": 1,
+   "kind": "notable",
+   "name": "Caché invalidada",
+   "x": 94.0,
+   "y": -129.4,
+   "mods": [
+    {
+     "stat": "cast_speed",
+     "type": "increased",
+     "value": 5
+    },
+    {
+     "stat": "attack_speed",
+     "type": "increased",
+     "value": 5
+    }
+   ],
+   "flavor": "Uno de los dos problemas difíciles. El otro es ponerle nombre a las cosas."
+  },
+  {
+   "id": 2,
+   "kind": "minor",
+   "name": "Resistencia al frío",
+   "x": 152.2,
+   "y": -49.4,
+   "mods": [
+    {
+     "stat": "cold_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "kind": "notable",
+   "name": "404: Dolor no encontrado",
+   "x": 152.2,
+   "y": 49.4,
+   "mods": [
+    {
+     "stat": "block_chance",
+     "type": "flat",
+     "value": 5
+    },
+    {
+     "stat": "life",
+     "type": "increased",
+     "value": 10
+    }
+   ],
+   "flavor": "El recurso solicitado no existe en este servidor."
+  },
+  {
+   "id": 4,
+   "kind": "minor",
+   "name": "Vida",
+   "x": 94.0,
+   "y": 129.4,
+   "mods": [
+    {
+     "stat": "life",
+     "type": "flat",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "kind": "notable",
+   "name": "sudo",
+   "x": 0.0,
+   "y": 160.0,
+   "mods": [
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 12
+    },
+    {
+     "stat": "area_of_effect",
+     "type": "increased",
+     "value": 8
+    }
+   ],
+   "flavor": "Un gran poder conlleva una gran responsabilidad. O no."
+  },
+  {
+   "id": 6,
+   "kind": "minor",
+   "name": "Resistencia al frío",
+   "x": -94.0,
+   "y": 129.4,
+   "mods": [
+    {
+     "stat": "cold_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "kind": "minor",
+   "name": "Vida",
+   "x": -152.2,
+   "y": 49.4,
+   "mods": [
+    {
+     "stat": "life",
+     "type": "flat",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 8,
+   "kind": "minor",
+   "name": "Vida",
+   "x": -152.2,
+   "y": -49.4,
+   "mods": [
+    {
+     "stat": "life",
+     "type": "flat",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 9,
+   "kind": "minor",
+   "name": "Daño",
+   "x": -94.0,
+   "y": -129.4,
+   "mods": [
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 10,
+   "kind": "start",
+   "name": "Guerrero",
+   "x": 0.0,
+   "y": -440.0,
+   "mods": [],
+   "class_id": "guerrero"
+  },
+  {
+   "id": 11,
+   "kind": "minor",
+   "name": "Golpe pesado",
+   "x": 0.0,
+   "y": -350.0,
+   "mods": [
+    {
+     "stat": "physical_damage",
+     "type": "increased",
+     "value": 10,
+     "tags": [
+      "melee"
+     ]
+    }
+   ]
+  },
+  {
+   "id": 12,
+   "kind": "minor",
+   "name": "Regeneración",
+   "x": 0.0,
+   "y": -255.0,
+   "mods": [
+    {
+     "stat": "life_regen",
+     "type": "flat",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": 13,
+   "kind": "minor",
+   "name": "Golpe pesado",
+   "x": -43.1,
+   "y": -495.2,
+   "mods": [
+    {
+     "stat": "physical_damage",
+     "type": "increased",
+     "value": 10,
+     "tags": [
+      "melee"
+     ]
+    }
+   ]
+  },
+  {
+   "id": 14,
+   "kind": "minor",
+   "name": "Fuerza",
+   "x": -86.2,
+   "y": -550.3,
+   "mods": [
+    {
+     "stat": "strength",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 15,
+   "kind": "minor",
+   "name": "Armadura",
+   "x": -129.3,
+   "y": -605.5,
+   "mods": [
+    {
+     "stat": "armour",
+     "type": "increased",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 16,
+   "kind": "minor",
+   "name": "Armadura",
+   "x": -158.8,
+   "y": -643.3,
+   "mods": [
+    {
+     "stat": "armour",
+     "type": "increased",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 17,
+   "kind": "minor",
+   "name": "Golpe pesado",
+   "x": -220.2,
+   "y": -634.7,
+   "mods": [
+    {
+     "stat": "physical_damage",
+     "type": "increased",
+     "value": 10,
+     "tags": [
+      "melee"
+     ]
+    }
+   ]
+  },
+  {
+   "id": 18,
+   "kind": "minor",
+   "name": "Vida",
+   "x": -258.4,
+   "y": -683.5,
+   "mods": [
+    {
+     "stat": "life",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 19,
+   "kind": "notable",
+   "name": "Café como dependencia",
+   "x": -235.2,
+   "y": -741.0,
+   "mods": [
+    {
+     "stat": "life_regen",
+     "type": "flat",
+     "value": 10
+    },
+    {
+     "stat": "attack_speed",
+     "type": "increased",
+     "value": 6
+    }
+   ],
+   "flavor": "npm install cafeína --save"
+  },
+  {
+   "id": 20,
+   "kind": "minor",
+   "name": "Vida",
+   "x": -173.8,
+   "y": -749.6,
+   "mods": [
+    {
+     "stat": "life",
+     "type": "flat",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 21,
+   "kind": "minor",
+   "name": "Área de efecto",
+   "x": -135.6,
+   "y": -700.8,
+   "mods": [
+    {
+     "stat": "area_of_effect",
+     "type": "increased",
+     "value": 6
+    }
+   ]
+  },
+  {
+   "id": 22,
+   "kind": "minor",
+   "name": "Vida",
+   "x": 0.0,
+   "y": -510.0,
+   "mods": [
+    {
+     "stat": "life",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 23,
+   "kind": "minor",
+   "name": "Fuerza",
+   "x": 0.0,
+   "y": -580.0,
+   "mods": [
+    {
+     "stat": "strength",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 24,
+   "kind": "minor",
+   "name": "Regeneración",
+   "x": 0.0,
+   "y": -650.0,
+   "mods": [
+    {
+     "stat": "life_regen",
+     "type": "flat",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": 25,
+   "kind": "minor",
+   "name": "Fuerza",
+   "x": 0.0,
+   "y": -698.0,
+   "mods": [
+    {
+     "stat": "strength",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 26,
+   "kind": "minor",
+   "name": "Vida",
+   "x": -53.7,
+   "y": -729.0,
+   "mods": [
+    {
+     "stat": "life",
+     "type": "flat",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 27,
+   "kind": "minor",
+   "name": "Fuerza",
+   "x": -53.7,
+   "y": -791.0,
+   "mods": [
+    {
+     "stat": "strength",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 28,
+   "kind": "notable",
+   "name": "Rubber Duck de guerra",
+   "x": 0.0,
+   "y": -822.0,
+   "mods": [
+    {
+     "stat": "life",
+     "type": "increased",
+     "value": 15
+    },
+    {
+     "stat": "armour",
+     "type": "increased",
+     "value": 20
+    }
+   ],
+   "flavor": "El pato escucha. El pato juzga."
+  },
+  {
+   "id": 29,
+   "kind": "minor",
+   "name": "Vida",
+   "x": 53.7,
+   "y": -791.0,
+   "mods": [
+    {
+     "stat": "life",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 30,
+   "kind": "minor",
+   "name": "Armadura",
+   "x": 53.7,
+   "y": -729.0,
+   "mods": [
+    {
+     "stat": "armour",
+     "type": "increased",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 31,
+   "kind": "minor",
+   "name": "Golpe pesado",
+   "x": 43.1,
+   "y": -495.2,
+   "mods": [
+    {
+     "stat": "physical_damage",
+     "type": "increased",
+     "value": 10,
+     "tags": [
+      "melee"
+     ]
+    }
+   ]
+  },
+  {
+   "id": 32,
+   "kind": "minor",
+   "name": "Fuerza",
+   "x": 86.2,
+   "y": -550.3,
+   "mods": [
+    {
+     "stat": "strength",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 33,
+   "kind": "minor",
+   "name": "Fuerza",
+   "x": 129.3,
+   "y": -605.5,
+   "mods": [
+    {
+     "stat": "strength",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 34,
+   "kind": "minor",
+   "name": "Resistencia al rayo",
+   "x": 158.8,
+   "y": -643.3,
+   "mods": [
+    {
+     "stat": "lightning_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 35,
+   "kind": "minor",
+   "name": "Regeneración",
+   "x": 135.6,
+   "y": -700.8,
+   "mods": [
+    {
+     "stat": "life_regen",
+     "type": "flat",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": 36,
+   "kind": "minor",
+   "name": "Regeneración",
+   "x": 173.8,
+   "y": -749.6,
+   "mods": [
+    {
+     "stat": "life_regen",
+     "type": "flat",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": 37,
+   "kind": "notable",
+   "name": "Es una feature, no un bug",
+   "x": 235.2,
+   "y": -741.0,
+   "mods": [
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 15
+    },
+    {
+     "stat": "fire_res",
+     "type": "flat",
+     "value": 8
+    },
+    {
+     "stat": "cold_res",
+     "type": "flat",
+     "value": 8
+    },
+    {
+     "stat": "lightning_res",
+     "type": "flat",
+     "value": 8
+    }
+   ],
+   "flavor": "Documentado. Con orgullo."
+  },
+  {
+   "id": 38,
+   "kind": "minor",
+   "name": "Resistencia al fuego",
+   "x": 258.4,
+   "y": -683.5,
+   "mods": [
+    {
+     "stat": "fire_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 39,
+   "kind": "minor",
+   "name": "Regeneración",
+   "x": 220.2,
+   "y": -634.7,
+   "mods": [
+    {
+     "stat": "life_regen",
+     "type": "flat",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": 40,
+   "kind": "minor",
+   "name": "Fuerza",
+   "x": 0.0,
+   "y": -902.0,
+   "mods": [
+    {
+     "stat": "strength",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 41,
+   "kind": "minor",
+   "name": "Regeneración",
+   "x": 0.0,
+   "y": -982.0,
+   "mods": [
+    {
+     "stat": "life_regen",
+     "type": "flat",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": 42,
+   "kind": "keystone",
+   "name": "Monolito legacy",
+   "x": 0.0,
+   "y": -1082.0,
+   "mods": [
+    {
+     "stat": "armour",
+     "type": "more",
+     "value": 100
+    },
+    {
+     "stat": "movement_speed",
+     "type": "more",
+     "value": -15
+    }
+   ],
+   "flavor": "Nadie sabe cómo funciona. Nadie se atreve a tocarlo."
+  },
+  {
+   "id": 43,
+   "kind": "start",
+   "name": "Duelista",
+   "x": 418.5,
+   "y": -136.0,
+   "mods": [],
+   "class_id": "duelista"
+  },
+  {
+   "id": 44,
+   "kind": "minor",
+   "name": "Destreza",
+   "x": 332.9,
+   "y": -108.2,
+   "mods": [
+    {
+     "stat": "dexterity",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 45,
+   "kind": "minor",
+   "name": "Crítico",
+   "x": 242.5,
+   "y": -78.8,
+   "mods": [
+    {
+     "stat": "crit_chance",
+     "type": "increased",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 46,
+   "kind": "minor",
+   "name": "Crítico",
+   "x": 457.6,
+   "y": -194.0,
+   "mods": [
+    {
+     "stat": "crit_chance",
+     "type": "increased",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 47,
+   "kind": "minor",
+   "name": "Fuerza",
+   "x": 496.8,
+   "y": -252.0,
+   "mods": [
+    {
+     "stat": "strength",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 48,
+   "kind": "minor",
+   "name": "Velocidad de ataque",
+   "x": 535.9,
+   "y": -310.1,
+   "mods": [
+    {
+     "stat": "attack_speed",
+     "type": "increased",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": 49,
+   "kind": "minor",
+   "name": "Vida",
+   "x": 562.7,
+   "y": -349.9,
+   "mods": [
+    {
+     "stat": "life",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 50,
+   "kind": "minor",
+   "name": "Vida",
+   "x": 535.6,
+   "y": -405.6,
+   "mods": [
+    {
+     "stat": "life",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 51,
+   "kind": "minor",
+   "name": "Destreza",
+   "x": 570.2,
+   "y": -457.0,
+   "mods": [
+    {
+     "stat": "dexterity",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 52,
+   "kind": "notable",
+   "name": "Hotfix en caliente",
+   "x": 632.1,
+   "y": -452.7,
+   "mods": [
+    {
+     "stat": "physical_damage",
+     "type": "increased",
+     "value": 25,
+     "tags": [
+      "melee"
+     ]
+    },
+    {
+     "stat": "life",
+     "type": "flat",
+     "value": 20
+    }
+   ],
+   "flavor": "Directo a producción, como los valientes."
+  },
+  {
+   "id": 53,
+   "kind": "minor",
+   "name": "Golpe pesado",
+   "x": 659.3,
+   "y": -396.9,
+   "mods": [
+    {
+     "stat": "physical_damage",
+     "type": "increased",
+     "value": 10,
+     "tags": [
+      "melee"
+     ]
+    }
+   ]
+  },
+  {
+   "id": 54,
+   "kind": "minor",
+   "name": "Resistencia al frío",
+   "x": 624.6,
+   "y": -345.5,
+   "mods": [
+    {
+     "stat": "cold_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 55,
+   "kind": "minor",
+   "name": "Regeneración",
+   "x": 485.0,
+   "y": -157.6,
+   "mods": [
+    {
+     "stat": "life_regen",
+     "type": "flat",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": 56,
+   "kind": "minor",
+   "name": "Destreza",
+   "x": 551.6,
+   "y": -179.2,
+   "mods": [
+    {
+     "stat": "dexterity",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 57,
+   "kind": "minor",
+   "name": "Golpe pesado",
+   "x": 618.2,
+   "y": -200.9,
+   "mods": [
+    {
+     "stat": "physical_damage",
+     "type": "increased",
+     "value": 10,
+     "tags": [
+      "melee"
+     ]
+    }
+   ]
+  },
+  {
+   "id": 58,
+   "kind": "minor",
+   "name": "Crítico",
+   "x": 663.8,
+   "y": -215.7,
+   "mods": [
+    {
+     "stat": "crit_chance",
+     "type": "increased",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 59,
+   "kind": "minor",
+   "name": "Daño",
+   "x": 676.7,
+   "y": -276.3,
+   "mods": [
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 60,
+   "kind": "minor",
+   "name": "Velocidad de ataque",
+   "x": 735.7,
+   "y": -295.5,
+   "mods": [
+    {
+     "stat": "attack_speed",
+     "type": "increased",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": 61,
+   "kind": "notable",
+   "name": "Off-by-one",
+   "x": 781.8,
+   "y": -254.0,
+   "mods": [
+    {
+     "stat": "crit_chance",
+     "type": "increased",
+     "value": 30
+    },
+    {
+     "stat": "crit_multiplier",
+     "type": "flat",
+     "value": 15
+    }
+   ],
+   "flavor": "Fallaste por uno. Siempre por uno."
+  },
+  {
+   "id": 62,
+   "kind": "minor",
+   "name": "Resistencia al fuego",
+   "x": 768.9,
+   "y": -193.4,
+   "mods": [
+    {
+     "stat": "fire_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 63,
+   "kind": "minor",
+   "name": "Golpe pesado",
+   "x": 709.9,
+   "y": -174.2,
+   "mods": [
+    {
+     "stat": "physical_damage",
+     "type": "increased",
+     "value": 10,
+     "tags": [
+      "melee"
+     ]
+    }
+   ]
+  },
+  {
+   "id": 64,
+   "kind": "minor",
+   "name": "Proyectiles",
+   "x": 484.2,
+   "y": -112.0,
+   "mods": [
+    {
+     "stat": "projectile_speed",
+     "type": "increased",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 65,
+   "kind": "minor",
+   "name": "Fuerza",
+   "x": 550.0,
+   "y": -88.1,
+   "mods": [
+    {
+     "stat": "strength",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 66,
+   "kind": "minor",
+   "name": "Vida",
+   "x": 615.8,
+   "y": -64.1,
+   "mods": [
+    {
+     "stat": "life",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 67,
+   "kind": "minor",
+   "name": "Crítico",
+   "x": 660.9,
+   "y": -47.7,
+   "mods": [
+    {
+     "stat": "crit_chance",
+     "type": "increased",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 68,
+   "kind": "minor",
+   "name": "Evasión",
+   "x": 708.4,
+   "y": -87.6,
+   "mods": [
+    {
+     "stat": "evasion",
+     "type": "increased",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 69,
+   "kind": "minor",
+   "name": "Vida",
+   "x": 766.7,
+   "y": -66.4,
+   "mods": [
+    {
+     "stat": "life",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 70,
+   "kind": "notable",
+   "name": "Tests en verde",
+   "x": 777.4,
+   "y": -5.3,
+   "mods": [
+    {
+     "stat": "fire_res",
+     "type": "flat",
+     "value": 15
+    },
+    {
+     "stat": "cold_res",
+     "type": "flat",
+     "value": 15
+    },
+    {
+     "stat": "lightning_res",
+     "type": "flat",
+     "value": 15
+    }
+   ],
+   "flavor": "Los tests pasan. Nadie pregunta qué testean."
+  },
+  {
+   "id": 71,
+   "kind": "minor",
+   "name": "Proyectiles",
+   "x": 729.9,
+   "y": 34.5,
+   "mods": [
+    {
+     "stat": "projectile_speed",
+     "type": "increased",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 72,
+   "kind": "minor",
+   "name": "Resistencia al rayo",
+   "x": 671.7,
+   "y": 13.3,
+   "mods": [
+    {
+     "stat": "lightning_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 73,
+   "kind": "minor",
+   "name": "Evasión",
+   "x": 857.9,
+   "y": -278.7,
+   "mods": [
+    {
+     "stat": "evasion",
+     "type": "increased",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 74,
+   "kind": "minor",
+   "name": "Armadura",
+   "x": 933.9,
+   "y": -303.5,
+   "mods": [
+    {
+     "stat": "armour",
+     "type": "increased",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 75,
+   "kind": "keystone",
+   "name": "git push --force",
+   "x": 1029.0,
+   "y": -334.4,
+   "mods": [
+    {
+     "stat": "attack_speed",
+     "type": "more",
+     "value": 20
+    },
+    {
+     "stat": "armour",
+     "type": "more",
+     "value": -40
+    },
+    {
+     "stat": "evasion",
+     "type": "more",
+     "value": -40
+    }
+   ],
+   "flavor": "La historia la escriben quienes la sobrescriben."
+  },
+  {
+   "id": 76,
+   "kind": "start",
+   "name": "Exploradora",
+   "x": 258.6,
+   "y": 356.0,
+   "mods": [],
+   "class_id": "exploradora"
+  },
+  {
+   "id": 77,
+   "kind": "minor",
+   "name": "Crítico",
+   "x": 205.7,
+   "y": 283.2,
+   "mods": [
+    {
+     "stat": "crit_chance",
+     "type": "increased",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 78,
+   "kind": "minor",
+   "name": "Crítico",
+   "x": 149.9,
+   "y": 206.3,
+   "mods": [
+    {
+     "stat": "crit_chance",
+     "type": "increased",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 79,
+   "kind": "minor",
+   "name": "Evasión",
+   "x": 325.9,
+   "y": 375.3,
+   "mods": [
+    {
+     "stat": "evasion",
+     "type": "increased",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 80,
+   "kind": "minor",
+   "name": "Destreza",
+   "x": 393.2,
+   "y": 394.6,
+   "mods": [
+    {
+     "stat": "dexterity",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 81,
+   "kind": "minor",
+   "name": "Crítico",
+   "x": 460.5,
+   "y": 413.9,
+   "mods": [
+    {
+     "stat": "crit_chance",
+     "type": "increased",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 82,
+   "kind": "minor",
+   "name": "Daño",
+   "x": 506.6,
+   "y": 427.1,
+   "mods": [
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 83,
+   "kind": "minor",
+   "name": "Crítico",
+   "x": 551.2,
+   "y": 384.0,
+   "mods": [
+    {
+     "stat": "crit_chance",
+     "type": "increased",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 84,
+   "kind": "minor",
+   "name": "Proyectiles",
+   "x": 610.8,
+   "y": 401.1,
+   "mods": [
+    {
+     "stat": "projectile_speed",
+     "type": "increased",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 85,
+   "kind": "notable",
+   "name": "Async/Await",
+   "x": 625.8,
+   "y": 461.3,
+   "mods": [
+    {
+     "stat": "attack_speed",
+     "type": "increased",
+     "value": 10
+    },
+    {
+     "stat": "movement_speed",
+     "type": "increased",
+     "value": 5
+    }
+   ],
+   "flavor": "Prometo que volveré. Promise pending."
+  },
+  {
+   "id": 86,
+   "kind": "minor",
+   "name": "Área de efecto",
+   "x": 581.2,
+   "y": 504.3,
+   "mods": [
+    {
+     "stat": "area_of_effect",
+     "type": "increased",
+     "value": 6
+    }
+   ]
+  },
+  {
+   "id": 87,
+   "kind": "minor",
+   "name": "Resistencia al rayo",
+   "x": 521.6,
+   "y": 487.2,
+   "mods": [
+    {
+     "stat": "lightning_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 88,
+   "kind": "minor",
+   "name": "Evasión",
+   "x": 299.8,
+   "y": 412.6,
+   "mods": [
+    {
+     "stat": "evasion",
+     "type": "increased",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 89,
+   "kind": "minor",
+   "name": "Destreza",
+   "x": 340.9,
+   "y": 469.2,
+   "mods": [
+    {
+     "stat": "dexterity",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 90,
+   "kind": "minor",
+   "name": "Proyectiles",
+   "x": 382.1,
+   "y": 525.9,
+   "mods": [
+    {
+     "stat": "projectile_speed",
+     "type": "increased",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 91,
+   "kind": "minor",
+   "name": "Vida",
+   "x": 410.3,
+   "y": 564.7,
+   "mods": [
+    {
+     "stat": "life",
+     "type": "flat",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 92,
+   "kind": "minor",
+   "name": "Resistencia al fuego",
+   "x": 471.9,
+   "y": 558.2,
+   "mods": [
+    {
+     "stat": "fire_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 93,
+   "kind": "minor",
+   "name": "Vida",
+   "x": 508.4,
+   "y": 608.4,
+   "mods": [
+    {
+     "stat": "life",
+     "type": "flat",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 94,
+   "kind": "notable",
+   "name": "Regex que nadie entiende",
+   "x": 483.2,
+   "y": 665.0,
+   "mods": [
+    {
+     "stat": "projectile_speed",
+     "type": "increased",
+     "value": 20
+    },
+    {
+     "stat": "physical_damage",
+     "type": "increased",
+     "value": 15,
+     "tags": [
+      "projectile"
+     ]
+    }
+   ],
+   "flavor": "^(?:(?!esperanza).)*$"
+  },
+  {
+   "id": 95,
+   "kind": "minor",
+   "name": "Proyectiles",
+   "x": 421.5,
+   "y": 671.5,
+   "mods": [
+    {
+     "stat": "projectile_speed",
+     "type": "increased",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 96,
+   "kind": "minor",
+   "name": "Proyectiles",
+   "x": 385.1,
+   "y": 621.3,
+   "mods": [
+    {
+     "stat": "projectile_speed",
+     "type": "increased",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 97,
+   "kind": "minor",
+   "name": "Velocidad de ataque",
+   "x": 256.2,
+   "y": 425.9,
+   "mods": [
+    {
+     "stat": "attack_speed",
+     "type": "increased",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": 98,
+   "kind": "minor",
+   "name": "Destreza",
+   "x": 253.7,
+   "y": 495.9,
+   "mods": [
+    {
+     "stat": "dexterity",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 99,
+   "kind": "minor",
+   "name": "Velocidad de ataque",
+   "x": 251.3,
+   "y": 565.8,
+   "mods": [
+    {
+     "stat": "attack_speed",
+     "type": "increased",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": 100,
+   "kind": "minor",
+   "name": "Área de efecto",
+   "x": 249.6,
+   "y": 613.8,
+   "mods": [
+    {
+     "stat": "area_of_effect",
+     "type": "increased",
+     "value": 6
+    }
+   ]
+  },
+  {
+   "id": 101,
+   "kind": "minor",
+   "name": "Resistencia al fuego",
+   "x": 302.2,
+   "y": 646.7,
+   "mods": [
+    {
+     "stat": "fire_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 102,
+   "kind": "minor",
+   "name": "Crítico",
+   "x": 300.0,
+   "y": 708.6,
+   "mods": [
+    {
+     "stat": "crit_chance",
+     "type": "increased",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 103,
+   "kind": "notable",
+   "name": "Commit a las 3 AM",
+   "x": 245.3,
+   "y": 737.7,
+   "mods": [
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 20
+    },
+    {
+     "stat": "life",
+     "type": "increased",
+     "value": -5
+    }
+   ],
+   "flavor": "Mensaje: 'arreglos'. Archivos cambiados: 47."
+  },
+  {
+   "id": 104,
+   "kind": "minor",
+   "name": "Resistencia al fuego",
+   "x": 192.7,
+   "y": 704.9,
+   "mods": [
+    {
+     "stat": "fire_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 105,
+   "kind": "minor",
+   "name": "Daño",
+   "x": 194.9,
+   "y": 642.9,
+   "mods": [
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 106,
+   "kind": "minor",
+   "name": "Velocidad de ataque",
+   "x": 530.2,
+   "y": 729.7,
+   "mods": [
+    {
+     "stat": "attack_speed",
+     "type": "increased",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": 107,
+   "kind": "minor",
+   "name": "Proyectiles",
+   "x": 577.2,
+   "y": 794.5,
+   "mods": [
+    {
+     "stat": "projectile_speed",
+     "type": "increased",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 108,
+   "kind": "keystone",
+   "name": "Deuda técnica",
+   "x": 636.0,
+   "y": 875.4,
+   "mods": [
+    {
+     "stat": "damage",
+     "type": "more",
+     "value": 30
+    },
+    {
+     "stat": "life",
+     "type": "more",
+     "value": -20
+    }
+   ],
+   "flavor": "Ya la pagarás. Con intereses."
+  },
+  {
+   "id": 109,
+   "kind": "start",
+   "name": "Hechicero",
+   "x": -258.6,
+   "y": 356.0,
+   "mods": [],
+   "class_id": "hechicero"
+  },
+  {
+   "id": 110,
+   "kind": "minor",
+   "name": "Maná",
+   "x": -205.7,
+   "y": 283.2,
+   "mods": [
+    {
+     "stat": "mana",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 111,
+   "kind": "minor",
+   "name": "Maná",
+   "x": -149.9,
+   "y": 206.3,
+   "mods": [
+    {
+     "stat": "mana",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 112,
+   "kind": "minor",
+   "name": "Escudo de energía",
+   "x": -256.2,
+   "y": 425.9,
+   "mods": [
+    {
+     "stat": "energy_shield",
+     "type": "increased",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 113,
+   "kind": "minor",
+   "name": "Inteligencia",
+   "x": -253.7,
+   "y": 495.9,
+   "mods": [
+    {
+     "stat": "intelligence",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 114,
+   "kind": "minor",
+   "name": "Lanzamiento",
+   "x": -251.3,
+   "y": 565.8,
+   "mods": [
+    {
+     "stat": "cast_speed",
+     "type": "increased",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": 115,
+   "kind": "minor",
+   "name": "Resistencia al frío",
+   "x": -249.6,
+   "y": 613.8,
+   "mods": [
+    {
+     "stat": "cold_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 116,
+   "kind": "minor",
+   "name": "Escudo de energía",
+   "x": -194.9,
+   "y": 642.9,
+   "mods": [
+    {
+     "stat": "energy_shield",
+     "type": "increased",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 117,
+   "kind": "minor",
+   "name": "Hechicería",
+   "x": -192.7,
+   "y": 704.9,
+   "mods": [
+    {
+     "stat": "elemental_damage",
+     "type": "increased",
+     "value": 10,
+     "tags": [
+      "spell"
+     ]
+    }
+   ]
+  },
+  {
+   "id": 118,
+   "kind": "notable",
+   "name": "Copiado de Stack Overflow",
+   "x": -245.3,
+   "y": 737.7,
+   "mods": [
+    {
+     "stat": "elemental_damage",
+     "type": "increased",
+     "value": 25,
+     "tags": [
+      "spell"
+     ]
+    },
+    {
+     "stat": "mana",
+     "type": "flat",
+     "value": 30
+    }
+   ],
+   "flavor": "Pegado con la máxima convicción y cero comprensión."
+  },
+  {
+   "id": 119,
+   "kind": "minor",
+   "name": "Lanzamiento",
+   "x": -300.0,
+   "y": 708.6,
+   "mods": [
+    {
+     "stat": "cast_speed",
+     "type": "increased",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": 120,
+   "kind": "minor",
+   "name": "Resistencia al rayo",
+   "x": -302.2,
+   "y": 646.7,
+   "mods": [
+    {
+     "stat": "lightning_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 121,
+   "kind": "minor",
+   "name": "Escudo de energía",
+   "x": -299.8,
+   "y": 412.6,
+   "mods": [
+    {
+     "stat": "energy_shield",
+     "type": "increased",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 122,
+   "kind": "minor",
+   "name": "Inteligencia",
+   "x": -340.9,
+   "y": 469.2,
+   "mods": [
+    {
+     "stat": "intelligence",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 123,
+   "kind": "minor",
+   "name": "Escudo de energía",
+   "x": -382.1,
+   "y": 525.9,
+   "mods": [
+    {
+     "stat": "energy_shield",
+     "type": "increased",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 124,
+   "kind": "minor",
+   "name": "Escudo de energía",
+   "x": -410.3,
+   "y": 564.7,
+   "mods": [
+    {
+     "stat": "energy_shield",
+     "type": "increased",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 125,
+   "kind": "minor",
+   "name": "Hechicería",
+   "x": -385.1,
+   "y": 621.3,
+   "mods": [
+    {
+     "stat": "elemental_damage",
+     "type": "increased",
+     "value": 10,
+     "tags": [
+      "spell"
+     ]
+    }
+   ]
+  },
+  {
+   "id": 126,
+   "kind": "minor",
+   "name": "Vida",
+   "x": -421.5,
+   "y": 671.5,
+   "mods": [
+    {
+     "stat": "life",
+     "type": "flat",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 127,
+   "kind": "notable",
+   "name": "Recursión",
+   "x": -483.2,
+   "y": 665.0,
+   "mods": [
+    {
+     "stat": "cast_speed",
+     "type": "increased",
+     "value": 8
+    },
+    {
+     "stat": "intelligence",
+     "type": "flat",
+     "value": 20
+    }
+   ],
+   "flavor": "Para entender la recursión, primero hay que entender la recursión."
+  },
+  {
+   "id": 128,
+   "kind": "minor",
+   "name": "Vida",
+   "x": -508.4,
+   "y": 608.4,
+   "mods": [
+    {
+     "stat": "life",
+     "type": "flat",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 129,
+   "kind": "minor",
+   "name": "Resistencia al frío",
+   "x": -471.9,
+   "y": 558.2,
+   "mods": [
+    {
+     "stat": "cold_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 130,
+   "kind": "minor",
+   "name": "Hechicería",
+   "x": -325.9,
+   "y": 375.3,
+   "mods": [
+    {
+     "stat": "elemental_damage",
+     "type": "increased",
+     "value": 10,
+     "tags": [
+      "spell"
+     ]
+    }
+   ]
+  },
+  {
+   "id": 131,
+   "kind": "minor",
+   "name": "Inteligencia",
+   "x": -393.2,
+   "y": 394.6,
+   "mods": [
+    {
+     "stat": "intelligence",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 132,
+   "kind": "minor",
+   "name": "Inteligencia",
+   "x": -460.5,
+   "y": 413.9,
+   "mods": [
+    {
+     "stat": "intelligence",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 133,
+   "kind": "minor",
+   "name": "Inteligencia",
+   "x": -506.6,
+   "y": 427.1,
+   "mods": [
+    {
+     "stat": "intelligence",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 134,
+   "kind": "minor",
+   "name": "Maná",
+   "x": -521.6,
+   "y": 487.2,
+   "mods": [
+    {
+     "stat": "mana",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 135,
+   "kind": "minor",
+   "name": "Escudo de energía",
+   "x": -581.2,
+   "y": 504.3,
+   "mods": [
+    {
+     "stat": "energy_shield",
+     "type": "increased",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 136,
+   "kind": "notable",
+   "name": "Merge conflict",
+   "x": -625.8,
+   "y": 461.3,
+   "mods": [
+    {
+     "stat": "area_of_effect",
+     "type": "increased",
+     "value": 15
+    },
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 10
+    }
+   ],
+   "flavor": "<<<<<<< HEAD"
+  },
+  {
+   "id": 137,
+   "kind": "minor",
+   "name": "Inteligencia",
+   "x": -610.8,
+   "y": 401.1,
+   "mods": [
+    {
+     "stat": "intelligence",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 138,
+   "kind": "minor",
+   "name": "Escudo de energía",
+   "x": -551.2,
+   "y": 384.0,
+   "mods": [
+    {
+     "stat": "energy_shield",
+     "type": "increased",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 139,
+   "kind": "minor",
+   "name": "Lanzamiento",
+   "x": -530.2,
+   "y": 729.7,
+   "mods": [
+    {
+     "stat": "cast_speed",
+     "type": "increased",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": 140,
+   "kind": "minor",
+   "name": "Inteligencia",
+   "x": -577.2,
+   "y": 794.5,
+   "mods": [
+    {
+     "stat": "intelligence",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 141,
+   "kind": "keystone",
+   "name": "Programación orientada a deadlines",
+   "x": -636.0,
+   "y": 875.4,
+   "mods": [
+    {
+     "stat": "cast_speed",
+     "type": "more",
+     "value": 25
+    },
+    {
+     "stat": "mana",
+     "type": "more",
+     "value": -30
+    }
+   ],
+   "flavor": "El código más rápido es el que nadie revisa."
+  },
+  {
+   "id": 142,
+   "kind": "start",
+   "name": "Templario",
+   "x": -418.5,
+   "y": -136.0,
+   "mods": [],
+   "class_id": "templario"
+  },
+  {
+   "id": 143,
+   "kind": "minor",
+   "name": "Vida",
+   "x": -332.9,
+   "y": -108.2,
+   "mods": [
+    {
+     "stat": "life",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 144,
+   "kind": "minor",
+   "name": "Armadura",
+   "x": -242.5,
+   "y": -78.8,
+   "mods": [
+    {
+     "stat": "armour",
+     "type": "increased",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 145,
+   "kind": "minor",
+   "name": "Golpe pesado",
+   "x": -484.2,
+   "y": -112.0,
+   "mods": [
+    {
+     "stat": "physical_damage",
+     "type": "increased",
+     "value": 10,
+     "tags": [
+      "melee"
+     ]
+    }
+   ]
+  },
+  {
+   "id": 146,
+   "kind": "minor",
+   "name": "Inteligencia",
+   "x": -550.0,
+   "y": -88.1,
+   "mods": [
+    {
+     "stat": "intelligence",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 147,
+   "kind": "minor",
+   "name": "Inteligencia",
+   "x": -615.8,
+   "y": -64.1,
+   "mods": [
+    {
+     "stat": "intelligence",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 148,
+   "kind": "minor",
+   "name": "Inteligencia",
+   "x": -660.9,
+   "y": -47.7,
+   "mods": [
+    {
+     "stat": "intelligence",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 149,
+   "kind": "minor",
+   "name": "Vida",
+   "x": -671.7,
+   "y": 13.3,
+   "mods": [
+    {
+     "stat": "life",
+     "type": "flat",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 150,
+   "kind": "minor",
+   "name": "Maná",
+   "x": -729.9,
+   "y": 34.5,
+   "mods": [
+    {
+     "stat": "mana",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 151,
+   "kind": "notable",
+   "name": "Null Pointer",
+   "x": -777.4,
+   "y": -5.3,
+   "mods": [
+    {
+     "stat": "chaos_damage",
+     "type": "increased",
+     "value": 30
+    },
+    {
+     "stat": "chaos_res",
+     "type": "flat",
+     "value": 15
+    }
+   ],
+   "flavor": "Apunta al vacío. El vacío devuelve el golpe."
+  },
+  {
+   "id": 152,
+   "kind": "minor",
+   "name": "Regeneración",
+   "x": -766.7,
+   "y": -66.4,
+   "mods": [
+    {
+     "stat": "life_regen",
+     "type": "flat",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": 153,
+   "kind": "minor",
+   "name": "Fuerza",
+   "x": -708.4,
+   "y": -87.6,
+   "mods": [
+    {
+     "stat": "strength",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 154,
+   "kind": "minor",
+   "name": "Escudo de energía",
+   "x": -485.0,
+   "y": -157.6,
+   "mods": [
+    {
+     "stat": "energy_shield",
+     "type": "increased",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 155,
+   "kind": "minor",
+   "name": "Fuerza",
+   "x": -551.6,
+   "y": -179.2,
+   "mods": [
+    {
+     "stat": "strength",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 156,
+   "kind": "minor",
+   "name": "Lanzamiento",
+   "x": -618.2,
+   "y": -200.9,
+   "mods": [
+    {
+     "stat": "cast_speed",
+     "type": "increased",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": 157,
+   "kind": "minor",
+   "name": "Daño",
+   "x": -663.8,
+   "y": -215.7,
+   "mods": [
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 158,
+   "kind": "minor",
+   "name": "Resistencia al rayo",
+   "x": -709.9,
+   "y": -174.2,
+   "mods": [
+    {
+     "stat": "lightning_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 159,
+   "kind": "minor",
+   "name": "Regeneración",
+   "x": -768.9,
+   "y": -193.4,
+   "mods": [
+    {
+     "stat": "life_regen",
+     "type": "flat",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": 160,
+   "kind": "notable",
+   "name": "Código espagueti",
+   "x": -781.8,
+   "y": -254.0,
+   "mods": [
+    {
+     "stat": "strength",
+     "type": "flat",
+     "value": 20
+    },
+    {
+     "stat": "physical_damage",
+     "type": "increased",
+     "value": 15
+    }
+   ],
+   "flavor": "Todo está conectado. Literalmente todo."
+  },
+  {
+   "id": 161,
+   "kind": "minor",
+   "name": "Resistencia al frío",
+   "x": -735.7,
+   "y": -295.5,
+   "mods": [
+    {
+     "stat": "cold_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 162,
+   "kind": "minor",
+   "name": "Inteligencia",
+   "x": -676.7,
+   "y": -276.3,
+   "mods": [
+    {
+     "stat": "intelligence",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 163,
+   "kind": "minor",
+   "name": "Armadura",
+   "x": -457.6,
+   "y": -194.0,
+   "mods": [
+    {
+     "stat": "armour",
+     "type": "increased",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 164,
+   "kind": "minor",
+   "name": "Inteligencia",
+   "x": -496.8,
+   "y": -252.0,
+   "mods": [
+    {
+     "stat": "intelligence",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 165,
+   "kind": "minor",
+   "name": "Armadura",
+   "x": -535.9,
+   "y": -310.1,
+   "mods": [
+    {
+     "stat": "armour",
+     "type": "increased",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 166,
+   "kind": "minor",
+   "name": "Maná",
+   "x": -562.7,
+   "y": -349.9,
+   "mods": [
+    {
+     "stat": "mana",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 167,
+   "kind": "minor",
+   "name": "Lanzamiento",
+   "x": -624.6,
+   "y": -345.5,
+   "mods": [
+    {
+     "stat": "cast_speed",
+     "type": "increased",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": 168,
+   "kind": "minor",
+   "name": "Inteligencia",
+   "x": -659.3,
+   "y": -396.9,
+   "mods": [
+    {
+     "stat": "intelligence",
+     "type": "flat",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": 169,
+   "kind": "notable",
+   "name": "Kernel Panic",
+   "x": -632.1,
+   "y": -452.7,
+   "mods": [
+    {
+     "stat": "crit_multiplier",
+     "type": "flat",
+     "value": 25
+    }
+   ],
+   "flavor": "Tu sistema operativo y tú tenéis algo en común."
+  },
+  {
+   "id": 170,
+   "kind": "minor",
+   "name": "Maná",
+   "x": -570.2,
+   "y": -457.0,
+   "mods": [
+    {
+     "stat": "mana",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 171,
+   "kind": "minor",
+   "name": "Regeneración",
+   "x": -535.6,
+   "y": -405.6,
+   "mods": [
+    {
+     "stat": "life_regen",
+     "type": "flat",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": 172,
+   "kind": "minor",
+   "name": "Golpe pesado",
+   "x": -857.9,
+   "y": -278.7,
+   "mods": [
+    {
+     "stat": "physical_damage",
+     "type": "increased",
+     "value": 10,
+     "tags": [
+      "melee"
+     ]
+    }
+   ]
+  },
+  {
+   "id": 173,
+   "kind": "minor",
+   "name": "Vida",
+   "x": -933.9,
+   "y": -303.5,
+   "mods": [
+    {
+     "stat": "life",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 174,
+   "kind": "keystone",
+   "name": "Funciona en mi máquina",
+   "x": -1029.0,
+   "y": -334.4,
+   "mods": [
+    {
+     "stat": "energy_shield",
+     "type": "more",
+     "value": 60
+    },
+    {
+     "stat": "life",
+     "type": "more",
+     "value": -40
+    }
+   ],
+   "flavor": "En producción es otra historia."
+  },
+  {
+   "id": 175,
+   "kind": "minor",
+   "name": "Resistencia al rayo",
+   "x": 320.8,
+   "y": -638.2,
+   "mods": [
+    {
+     "stat": "lightning_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 176,
+   "kind": "minor",
+   "name": "Resistencia al fuego",
+   "x": 383.1,
+   "y": -592.9,
+   "mods": [
+    {
+     "stat": "fire_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 177,
+   "kind": "minor",
+   "name": "Resistencia al rayo",
+   "x": 445.5,
+   "y": -547.6,
+   "mods": [
+    {
+     "stat": "lightning_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 178,
+   "kind": "minor",
+   "name": "Daño",
+   "x": 507.8,
+   "y": -502.3,
+   "mods": [
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 179,
+   "kind": "minor",
+   "name": "Resistencia al rayo",
+   "x": 706.1,
+   "y": 107.8,
+   "mods": [
+    {
+     "stat": "lightning_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 180,
+   "kind": "minor",
+   "name": "Área de efecto",
+   "x": 682.3,
+   "y": 181.1,
+   "mods": [
+    {
+     "stat": "area_of_effect",
+     "type": "increased",
+     "value": 6
+    }
+   ]
+  },
+  {
+   "id": 181,
+   "kind": "minor",
+   "name": "Resistencia al fuego",
+   "x": 658.4,
+   "y": 254.5,
+   "mods": [
+    {
+     "stat": "fire_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 182,
+   "kind": "minor",
+   "name": "Resistencia al rayo",
+   "x": 634.6,
+   "y": 327.8,
+   "mods": [
+    {
+     "stat": "lightning_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 183,
+   "kind": "minor",
+   "name": "Resistencia al rayo",
+   "x": 115.6,
+   "y": 704.9,
+   "mods": [
+    {
+     "stat": "lightning_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 184,
+   "kind": "minor",
+   "name": "Daño",
+   "x": 38.5,
+   "y": 704.9,
+   "mods": [
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 185,
+   "kind": "minor",
+   "name": "Resistencia al frío",
+   "x": -38.5,
+   "y": 704.9,
+   "mods": [
+    {
+     "stat": "cold_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 186,
+   "kind": "minor",
+   "name": "Vida",
+   "x": -115.6,
+   "y": 704.9,
+   "mods": [
+    {
+     "stat": "life",
+     "type": "flat",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 187,
+   "kind": "minor",
+   "name": "Resistencia al frío",
+   "x": -634.6,
+   "y": 327.8,
+   "mods": [
+    {
+     "stat": "cold_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 188,
+   "kind": "minor",
+   "name": "Daño",
+   "x": -658.4,
+   "y": 254.5,
+   "mods": [
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 189,
+   "kind": "minor",
+   "name": "Área de efecto",
+   "x": -682.3,
+   "y": 181.1,
+   "mods": [
+    {
+     "stat": "area_of_effect",
+     "type": "increased",
+     "value": 6
+    }
+   ]
+  },
+  {
+   "id": 190,
+   "kind": "minor",
+   "name": "Vida",
+   "x": -706.1,
+   "y": 107.8,
+   "mods": [
+    {
+     "stat": "life",
+     "type": "flat",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 191,
+   "kind": "minor",
+   "name": "Daño",
+   "x": -507.8,
+   "y": -502.3,
+   "mods": [
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": 192,
+   "kind": "minor",
+   "name": "Vida",
+   "x": -445.5,
+   "y": -547.6,
+   "mods": [
+    {
+     "stat": "life",
+     "type": "flat",
+     "value": 15
+    }
+   ]
+  },
+  {
+   "id": 193,
+   "kind": "minor",
+   "name": "Resistencia al rayo",
+   "x": -383.1,
+   "y": -592.9,
+   "mods": [
+    {
+     "stat": "lightning_res",
+     "type": "flat",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": 194,
+   "kind": "minor",
+   "name": "Daño",
+   "x": -320.8,
+   "y": -638.2,
+   "mods": [
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 8
+    }
+   ]
+  }
+ ],
+ "edges": [
+  [
+   0,
+   1
+  ],
+  [
+   1,
+   2
+  ],
+  [
+   2,
+   3
+  ],
+  [
+   3,
+   4
+  ],
+  [
+   4,
+   5
+  ],
+  [
+   5,
+   6
+  ],
+  [
+   6,
+   7
+  ],
+  [
+   7,
+   8
+  ],
+  [
+   8,
+   9
+  ],
+  [
+   9,
+   0
+  ],
+  [
+   10,
+   11
+  ],
+  [
+   11,
+   12
+  ],
+  [
+   12,
+   0
+  ],
+  [
+   10,
+   13
+  ],
+  [
+   13,
+   14
+  ],
+  [
+   14,
+   15
+  ],
+  [
+   16,
+   17
+  ],
+  [
+   17,
+   18
+  ],
+  [
+   18,
+   19
+  ],
+  [
+   19,
+   20
+  ],
+  [
+   20,
+   21
+  ],
+  [
+   21,
+   16
+  ],
+  [
+   15,
+   16
+  ],
+  [
+   10,
+   22
+  ],
+  [
+   22,
+   23
+  ],
+  [
+   23,
+   24
+  ],
+  [
+   25,
+   26
+  ],
+  [
+   26,
+   27
+  ],
+  [
+   27,
+   28
+  ],
+  [
+   28,
+   29
+  ],
+  [
+   29,
+   30
+  ],
+  [
+   30,
+   25
+  ],
+  [
+   24,
+   25
+  ],
+  [
+   10,
+   31
+  ],
+  [
+   31,
+   32
+  ],
+  [
+   32,
+   33
+  ],
+  [
+   34,
+   35
+  ],
+  [
+   35,
+   36
+  ],
+  [
+   36,
+   37
+  ],
+  [
+   37,
+   38
+  ],
+  [
+   38,
+   39
+  ],
+  [
+   39,
+   34
+  ],
+  [
+   33,
+   34
+  ],
+  [
+   21,
+   26
+  ],
+  [
+   30,
+   35
+  ],
+  [
+   28,
+   40
+  ],
+  [
+   40,
+   41
+  ],
+  [
+   41,
+   42
+  ],
+  [
+   43,
+   44
+  ],
+  [
+   44,
+   45
+  ],
+  [
+   45,
+   2
+  ],
+  [
+   43,
+   46
+  ],
+  [
+   46,
+   47
+  ],
+  [
+   47,
+   48
+  ],
+  [
+   49,
+   50
+  ],
+  [
+   50,
+   51
+  ],
+  [
+   51,
+   52
+  ],
+  [
+   52,
+   53
+  ],
+  [
+   53,
+   54
+  ],
+  [
+   54,
+   49
+  ],
+  [
+   48,
+   49
+  ],
+  [
+   43,
+   55
+  ],
+  [
+   55,
+   56
+  ],
+  [
+   56,
+   57
+  ],
+  [
+   58,
+   59
+  ],
+  [
+   59,
+   60
+  ],
+  [
+   60,
+   61
+  ],
+  [
+   61,
+   62
+  ],
+  [
+   62,
+   63
+  ],
+  [
+   63,
+   58
+  ],
+  [
+   57,
+   58
+  ],
+  [
+   43,
+   64
+  ],
+  [
+   64,
+   65
+  ],
+  [
+   65,
+   66
+  ],
+  [
+   67,
+   68
+  ],
+  [
+   68,
+   69
+  ],
+  [
+   69,
+   70
+  ],
+  [
+   70,
+   71
+  ],
+  [
+   71,
+   72
+  ],
+  [
+   72,
+   67
+  ],
+  [
+   66,
+   67
+  ],
+  [
+   54,
+   59
+  ],
+  [
+   63,
+   68
+  ],
+  [
+   61,
+   73
+  ],
+  [
+   73,
+   74
+  ],
+  [
+   74,
+   75
+  ],
+  [
+   76,
+   77
+  ],
+  [
+   77,
+   78
+  ],
+  [
+   78,
+   4
+  ],
+  [
+   76,
+   79
+  ],
+  [
+   79,
+   80
+  ],
+  [
+   80,
+   81
+  ],
+  [
+   82,
+   83
+  ],
+  [
+   83,
+   84
+  ],
+  [
+   84,
+   85
+  ],
+  [
+   85,
+   86
+  ],
+  [
+   86,
+   87
+  ],
+  [
+   87,
+   82
+  ],
+  [
+   81,
+   82
+  ],
+  [
+   76,
+   88
+  ],
+  [
+   88,
+   89
+  ],
+  [
+   89,
+   90
+  ],
+  [
+   91,
+   92
+  ],
+  [
+   92,
+   93
+  ],
+  [
+   93,
+   94
+  ],
+  [
+   94,
+   95
+  ],
+  [
+   95,
+   96
+  ],
+  [
+   96,
+   91
+  ],
+  [
+   90,
+   91
+  ],
+  [
+   76,
+   97
+  ],
+  [
+   97,
+   98
+  ],
+  [
+   98,
+   99
+  ],
+  [
+   100,
+   101
+  ],
+  [
+   101,
+   102
+  ],
+  [
+   102,
+   103
+  ],
+  [
+   103,
+   104
+  ],
+  [
+   104,
+   105
+  ],
+  [
+   105,
+   100
+  ],
+  [
+   99,
+   100
+  ],
+  [
+   87,
+   92
+  ],
+  [
+   96,
+   101
+  ],
+  [
+   94,
+   106
+  ],
+  [
+   106,
+   107
+  ],
+  [
+   107,
+   108
+  ],
+  [
+   109,
+   110
+  ],
+  [
+   110,
+   111
+  ],
+  [
+   111,
+   6
+  ],
+  [
+   109,
+   112
+  ],
+  [
+   112,
+   113
+  ],
+  [
+   113,
+   114
+  ],
+  [
+   115,
+   116
+  ],
+  [
+   116,
+   117
+  ],
+  [
+   117,
+   118
+  ],
+  [
+   118,
+   119
+  ],
+  [
+   119,
+   120
+  ],
+  [
+   120,
+   115
+  ],
+  [
+   114,
+   115
+  ],
+  [
+   109,
+   121
+  ],
+  [
+   121,
+   122
+  ],
+  [
+   122,
+   123
+  ],
+  [
+   124,
+   125
+  ],
+  [
+   125,
+   126
+  ],
+  [
+   126,
+   127
+  ],
+  [
+   127,
+   128
+  ],
+  [
+   128,
+   129
+  ],
+  [
+   129,
+   124
+  ],
+  [
+   123,
+   124
+  ],
+  [
+   109,
+   130
+  ],
+  [
+   130,
+   131
+  ],
+  [
+   131,
+   132
+  ],
+  [
+   133,
+   134
+  ],
+  [
+   134,
+   135
+  ],
+  [
+   135,
+   136
+  ],
+  [
+   136,
+   137
+  ],
+  [
+   137,
+   138
+  ],
+  [
+   138,
+   133
+  ],
+  [
+   132,
+   133
+  ],
+  [
+   120,
+   125
+  ],
+  [
+   129,
+   134
+  ],
+  [
+   127,
+   139
+  ],
+  [
+   139,
+   140
+  ],
+  [
+   140,
+   141
+  ],
+  [
+   142,
+   143
+  ],
+  [
+   143,
+   144
+  ],
+  [
+   144,
+   8
+  ],
+  [
+   142,
+   145
+  ],
+  [
+   145,
+   146
+  ],
+  [
+   146,
+   147
+  ],
+  [
+   148,
+   149
+  ],
+  [
+   149,
+   150
+  ],
+  [
+   150,
+   151
+  ],
+  [
+   151,
+   152
+  ],
+  [
+   152,
+   153
+  ],
+  [
+   153,
+   148
+  ],
+  [
+   147,
+   148
+  ],
+  [
+   142,
+   154
+  ],
+  [
+   154,
+   155
+  ],
+  [
+   155,
+   156
+  ],
+  [
+   157,
+   158
+  ],
+  [
+   158,
+   159
+  ],
+  [
+   159,
+   160
+  ],
+  [
+   160,
+   161
+  ],
+  [
+   161,
+   162
+  ],
+  [
+   162,
+   157
+  ],
+  [
+   156,
+   157
+  ],
+  [
+   142,
+   163
+  ],
+  [
+   163,
+   164
+  ],
+  [
+   164,
+   165
+  ],
+  [
+   166,
+   167
+  ],
+  [
+   167,
+   168
+  ],
+  [
+   168,
+   169
+  ],
+  [
+   169,
+   170
+  ],
+  [
+   170,
+   171
+  ],
+  [
+   171,
+   166
+  ],
+  [
+   165,
+   166
+  ],
+  [
+   153,
+   158
+  ],
+  [
+   162,
+   167
+  ],
+  [
+   160,
+   172
+  ],
+  [
+   172,
+   173
+  ],
+  [
+   173,
+   174
+  ],
+  [
+   38,
+   175
+  ],
+  [
+   175,
+   176
+  ],
+  [
+   176,
+   177
+  ],
+  [
+   177,
+   178
+  ],
+  [
+   178,
+   51
+  ],
+  [
+   71,
+   179
+  ],
+  [
+   179,
+   180
+  ],
+  [
+   180,
+   181
+  ],
+  [
+   181,
+   182
+  ],
+  [
+   182,
+   84
+  ],
+  [
+   104,
+   183
+  ],
+  [
+   183,
+   184
+  ],
+  [
+   184,
+   185
+  ],
+  [
+   185,
+   186
+  ],
+  [
+   186,
+   117
+  ],
+  [
+   137,
+   187
+  ],
+  [
+   187,
+   188
+  ],
+  [
+   188,
+   189
+  ],
+  [
+   189,
+   190
+  ],
+  [
+   190,
+   150
+  ],
+  [
+   170,
+   191
+  ],
+  [
+   191,
+   192
+  ],
+  [
+   192,
+   193
+  ],
+  [
+   193,
+   194
+  ],
+  [
+   194,
+   18
+  ]
+ ]
+}

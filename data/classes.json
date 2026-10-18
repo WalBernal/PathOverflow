@@ -1,0 +1,208 @@
+{
+  "version": 1,
+  "classes": [
+    {
+      "id": "guerrero",
+      "name": "Guerrero",
+      "description": "Resuelve los problemas a golpes. Los bugs también. Sobre todo los bugs.",
+      "base_attributes": { "strength": 32, "dexterity": 14, "intelligence": 14 },
+      "ascendancies": [
+        {
+          "id": "berserker_hotfix",
+          "name": "Berserker del Hotfix",
+          "description": "Despliega los viernes a las 18:00. Sin tests. Sin miedo. Sin fin de semana.",
+          "passives": [
+            { "name": "Directo a producción", "mods": [ { "stat": "physical_damage", "type": "more", "value": 15 } ] },
+            { "name": "¿Quién necesita QA?", "mods": [ { "stat": "attack_speed", "type": "increased", "value": 15 } ] },
+            { "name": "Logs en rojo", "mods": [ { "stat": "life_regen", "type": "flat", "value": 25 } ] }
+          ]
+        },
+        {
+          "id": "guardian_firewall",
+          "name": "Guardián del Firewall",
+          "description": "Bloquea todo el tráfico entrante. Incluido el que necesitabas.",
+          "passives": [
+            { "name": "Reglas de denegación", "mods": [ { "stat": "armour", "type": "more", "value": 25 } ] },
+            { "name": "Puerto 22 cerrado", "mods": [ { "stat": "block_chance", "type": "flat", "value": 15 } ] },
+            { "name": "DMZ personal", "mods": [
+              { "stat": "fire_res", "type": "flat", "value": 10 },
+              { "stat": "cold_res", "type": "flat", "value": 10 },
+              { "stat": "lightning_res", "type": "flat", "value": 10 } ] }
+          ]
+        },
+        {
+          "id": "senor_monolito",
+          "name": "Señor del Monolito",
+          "description": "Un único proceso de 4 GB que nadie se atreve a reiniciar.",
+          "passives": [
+            { "name": "Acoplamiento total", "mods": [ { "stat": "life", "type": "increased", "value": 25 } ] },
+            { "name": "Dependencias circulares", "mods": [ { "stat": "area_of_effect", "type": "increased", "value": 25 } ] },
+            { "name": "Tiempo de arranque", "mods": [
+              { "stat": "strength", "type": "flat", "value": 30 },
+              { "stat": "movement_speed", "type": "increased", "value": -5 } ] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "duelista",
+      "name": "Duelista",
+      "description": "Lucha por la gloria, el público y las estrellas en GitHub.",
+      "base_attributes": { "strength": 23, "dexterity": 23, "intelligence": 14 },
+      "ascendancies": [
+        {
+          "id": "gladiador_review",
+          "name": "Gladiador del Code Review",
+          "description": "Deja 87 comentarios por pull request. Todos sobre nombres de variables.",
+          "passives": [
+            { "name": "Nit:", "mods": [ { "stat": "crit_chance", "type": "increased", "value": 40 } ] },
+            { "name": "Request changes", "mods": [ { "stat": "crit_multiplier", "type": "flat", "value": 30 } ] },
+            { "name": "LGTM", "mods": [ { "stat": "life", "type": "flat", "value": 40 } ] }
+          ]
+        },
+        {
+          "id": "campeon_sprint",
+          "name": "Campeón del Sprint",
+          "description": "Completa 40 puntos de historia en dos semanas. Los otros 39 son deuda.",
+          "passives": [
+            { "name": "Velocidad del equipo", "mods": [ { "stat": "movement_speed", "type": "increased", "value": 15 } ] },
+            { "name": "Daily de 45 minutos", "mods": [ { "stat": "attack_speed", "type": "increased", "value": 10 } ] },
+            { "name": "Burndown", "mods": [ { "stat": "damage", "type": "increased", "value": 20 } ] }
+          ]
+        },
+        {
+          "id": "asesino_deadlines",
+          "name": "Asesino de Deadlines",
+          "description": "Las fechas límite le temen. Hacen bien.",
+          "passives": [
+            { "name": "Entrega a las 23:59", "mods": [ { "stat": "damage", "type": "more", "value": 12 } ] },
+            { "name": "Scope creep", "mods": [ { "stat": "area_of_effect", "type": "increased", "value": 20 } ] },
+            { "name": "Horas extra", "mods": [ { "stat": "life_leech", "type": "flat", "value": 1 } ] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "exploradora",
+      "name": "Exploradora",
+      "description": "Recorre los rincones del mapa que el diseñador de niveles juró que nadie visitaría.",
+      "base_attributes": { "strength": 14, "dexterity": 32, "intelligence": 14 },
+      "ascendancies": [
+        {
+          "id": "francotiradora_bugs",
+          "name": "Francotiradora de Bugs",
+          "description": "Encuentra el bug en una línea entre un millón. Luego descubre que lo escribió ella.",
+          "passives": [
+            { "name": "Breakpoint certero", "mods": [ { "stat": "crit_chance", "type": "increased", "value": 50, "tags": ["projectile"] } ] },
+            { "name": "Stack trace", "mods": [ { "stat": "projectile_speed", "type": "increased", "value": 30 } ] },
+            { "name": "Reproducible", "mods": [ { "stat": "physical_damage", "type": "more", "value": 10, "tags": ["projectile"] } ] }
+          ]
+        },
+        {
+          "id": "rastreadora_leaks",
+          "name": "Rastreadora de Memory Leaks",
+          "description": "Sigue el rastro de la memoria perdida hasta su origen. Siempre es el navegador.",
+          "passives": [
+            { "name": "Heap dump", "mods": [ { "stat": "evasion", "type": "more", "value": 20 } ] },
+            { "name": "Referencias débiles", "mods": [ { "stat": "chaos_damage", "type": "increased", "value": 40 } ] },
+            { "name": "Profiler", "mods": [ { "stat": "dexterity", "type": "flat", "value": 30 } ] }
+          ]
+        },
+        {
+          "id": "danzarina_hilos",
+          "name": "Danzarina de Hilos",
+          "description": "Ejecuta veinte tareas en paralelo. Ninguna termina, pero todas empiezan muy rápido.",
+          "passives": [
+            { "name": "Race condition", "mods": [ { "stat": "attack_speed", "type": "more", "value": 10 } ] },
+            { "name": "Sin mutex", "mods": [ { "stat": "movement_speed", "type": "increased", "value": 12 } ] },
+            { "name": "Deadlock evitado", "mods": [ { "stat": "evasion", "type": "increased", "value": 40 } ] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hechicero",
+      "name": "Hechicero",
+      "description": "Estudió magia arcana durante años. Ahora la copia de foros sin leer la pregunta.",
+      "base_attributes": { "strength": 14, "dexterity": 14, "intelligence": 32 },
+      "ascendancies": [
+        {
+          "id": "archimago_recursivo",
+          "name": "Archimago Recursivo",
+          "description": "Sus hechizos se lanzan a sí mismos. Hasta que dejan de hacerlo.",
+          "passives": [
+            { "name": "Caso base", "mods": [ { "stat": "cast_speed", "type": "increased", "value": 15 } ] },
+            { "name": "Pila profunda", "mods": [ { "stat": "mana", "type": "more", "value": 20 } ] },
+            { "name": "Memoización", "mods": [ { "stat": "elemental_damage", "type": "more", "value": 12, "tags": ["spell"] } ] }
+          ]
+        },
+        {
+          "id": "elementalista_so",
+          "name": "Elementalista de Stack Overflow",
+          "description": "Domina los elementos copiando la respuesta aceptada. Marcado como duplicado.",
+          "passives": [
+            { "name": "Respuesta aceptada", "mods": [
+              { "stat": "fire_damage", "type": "increased", "value": 30 },
+              { "stat": "cold_damage", "type": "increased", "value": 30 },
+              { "stat": "lightning_damage", "type": "increased", "value": 30 } ] },
+            { "name": "Pregunta duplicada", "mods": [ { "stat": "area_of_effect", "type": "increased", "value": 20 } ] },
+            { "name": "Un millón de reputación", "mods": [
+              { "stat": "fire_res", "type": "flat", "value": 10 },
+              { "stat": "cold_res", "type": "flat", "value": 10 },
+              { "stat": "lightning_res", "type": "flat", "value": 10 } ] }
+          ]
+        },
+        {
+          "id": "nigromante_zombis",
+          "name": "Nigromante de Procesos Zombi",
+          "description": "kill -9 no funciona con sus siervos. Lo intentaron.",
+          "passives": [
+            { "name": "fork()", "mods": [ { "stat": "minion_damage", "type": "more", "value": 20 } ] },
+            { "name": "Proceso huérfano", "mods": [ { "stat": "minion_life", "type": "increased", "value": 40 } ] },
+            { "name": "PID 1", "mods": [ { "stat": "energy_shield", "type": "increased", "value": 25 } ] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "templario",
+      "name": "Templario",
+      "description": "Fanático de las buenas prácticas. Las impone con fuego sagrado y pull requests bloqueados.",
+      "base_attributes": { "strength": 23, "dexterity": 14, "intelligence": 23 },
+      "ascendancies": [
+        {
+          "id": "inquisidor_linter",
+          "name": "Inquisidor del Linter",
+          "description": "Toda línea de más de 80 caracteres será purgada por el fuego.",
+          "passives": [
+            { "name": "Falta un punto y coma", "mods": [ { "stat": "fire_damage", "type": "increased", "value": 40 } ] },
+            { "name": "Warnings como errores", "mods": [ { "stat": "lightning_damage", "type": "increased", "value": 40 } ] },
+            { "name": "Reglas estrictas", "mods": [ { "stat": "armour", "type": "increased", "value": 30 } ] }
+          ]
+        },
+        {
+          "id": "hierofante_docs",
+          "name": "Hierofante de la Documentación",
+          "description": "El único que escribe documentación. Nadie la lee, pero existe.",
+          "passives": [
+            { "name": "README sagrado", "mods": [ { "stat": "mana", "type": "increased", "value": 25 } ] },
+            { "name": "Comentarios en el código", "mods": [
+              { "stat": "energy_shield", "type": "increased", "value": 20 },
+              { "stat": "life", "type": "increased", "value": 10 } ] },
+            { "name": "Wiki desactualizada", "mods": [ { "stat": "area_of_effect", "type": "increased", "value": 15 } ] }
+          ]
+        },
+        {
+          "id": "profeta_rollback",
+          "name": "Profeta del Rollback",
+          "description": "Ha visto el futuro. En el futuro, todo vuelve a la versión anterior.",
+          "passives": [
+            { "name": "git revert", "mods": [ { "stat": "life_regen", "type": "flat", "value": 30 } ] },
+            { "name": "Copia de seguridad", "mods": [ { "stat": "block_chance", "type": "flat", "value": 10 } ] },
+            { "name": "Punto de restauración", "mods": [ { "stat": "life", "type": "more", "value": 10 } ] }
+          ]
+        }
+      ]
+    }
+  ]
+}
