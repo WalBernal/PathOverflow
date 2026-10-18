@@ -87,7 +87,7 @@ func _physics_process(delta: float) -> void:
 		cooldowns[i] = maxf(0.0, cooldowns[i] - delta)
 	_mana_warning_cooldown = maxf(0.0, _mana_warning_cooldown - delta)
 	_busy = maxf(0.0, _busy - delta)
-	if player.is_alive() and _busy <= 0.0:
+	if player.is_alive() and _busy <= 0.0 and not player.controls_locked:
 		for i in ACTIONS.size():
 			if Input.is_action_pressed(ACTIONS[i]) and try_use(i):
 				break

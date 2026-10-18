@@ -528,12 +528,19 @@ func _test_camp_and_tutorial_data() -> void:
 
 
 func _test_act(npc_data: Dictionary) -> void:
-	var act: Dictionary = DataLoader.load_json("res://data/act1.json")
+	var all_zones: Array = []
 	var zones := {}
-	for z in act["zones"]:
-		zones[z["id"]] = z
-	_check(zones.has(act["start_zone"]) and zones.has(act["town"]), "zona inicial y pueblo existen")
-	_check(zones[act["town"]].has("waypoint"), "el campamento tiene waypoint (reaparición)")
+	for path in ["res://data/act1.json", "res://data/act2.json"]:
+		var a: Dictionary = DataLoader.load_json(path)
+		for z in a["zones"]:
+			zones[z["id"]] = z
+			all_zones.append(z)
+	for path in ["res://data/act1.json", "res://data/act2.json"]:
+		var a: Dictionary = DataLoader.load_json(path)
+		_check(zones.has(a["start_zone"]) and zones.has(a["town"]), "%s: zona inicial y pueblo existen" % a["id"])
+		_check(zones[a["town"]].has("waypoint"), "%s: el pueblo tiene waypoint (reaparición)" % a["id"])
+		_check(zones[a["town"]].get("safe", false), "%s: el pueblo es zona segura" % a["id"])
+	var act := {"zones": all_zones}
 	var type_ids := []
 	for t in EnemyManager.enemy_types():
 		type_ids.append(t["id"])
@@ -576,7 +583,42 @@ func _test_act(npc_data: Dictionary) -> void:
 		zone.free()
 	_check(bosses == 1, "el acto tiene un jefe")
 	_test_quest_data(zones, npc_data)
-	_check(act["zones"].size() >= 8, "tutorial + campamento + 5 zonas + jefe")
+	_test_cutscenes(zones, npc_data)
+	_check(act["zones"].size() >= 10, "acto I completo + inicio del acto II")
+
+
+func _test_cutscenes(zones: Dictionary, npc_data: Dictionary) -> void:
+	var cutscenes: Dictionary = DataLoader.load_json("res://data/cutscenes.json")["cutscenes"]
+	var referenced := []
+	for z in zones.values():
+		if z.has("boss") and z["boss"].has("death_cutscene"):
+			referenced.append(z["boss"]["death_cutscene"])
+		if z.get("cutscene_on_enter") is Dictionary:
+			referenced.append(z["cutscene_on_enter"]["id"])
+		for e in z.get("exits", []):
+			if e.has("cutscene"):
+				referenced.append(e["cutscene"])
+	for id in referenced:
+		_check(cutscenes.has(id), "escena inexistente: %s" % id)
+	for id in cutscenes:
+		for step in cutscenes[id]["steps"]:
+			if step.has("speaker"):
+				_check(npc_data["npcs"].has(step["speaker"]), "%s: hablante desconocido %s" % [id, step["speaker"]])
+			if step.has("effect"):
+				_check(step["effect"] in ["glitch", "shake", "blackout", "fade_in", "dino"], "%s: efecto desconocido" % id)
+			else:
+				_check(step.has("text") and (step.has("speaker") or step.has("name")), "%s: línea sin texto o sin hablante" % id)
+		var travel: Dictionary = cutscenes[id].get("on_finish", {}).get("travel", {})
+		if not travel.is_empty():
+			_check(zones.has(travel["zone"]) and zones[travel["zone"]]["entries"].has(travel["entry"]), "%s: viaje a una entrada inexistente" % id)
+	# La transición del acto I al II.
+	_check(referenced.has("arquitecto_muere") and referenced.has("reunion_campamento") and referenced.has("red_lince"), "transición al acto II")
+	var red_lince: Dictionary = cutscenes["red_lince"]
+	_check(red_lince["steps"].any(func(s: Dictionary) -> bool: return s.get("effect", "") == "dino"), "La Red Lince muestra al dinosaurio")
+	var reunion_text := ""
+	for s in cutscenes["reunion_campamento"]["steps"]:
+		reunion_text += s.get("text", "")
+	_check(reunion_text.contains("El Pepe") and reunion_text.contains("prestador de servicios retirado"), "culpan a El Pepe")
 
 
 func _test_quest_data(zones: Dictionary, npc_data: Dictionary) -> void:
@@ -640,10 +682,11 @@ func _test_quests() -> void:
 	# Saltar hasta un paso de bandera ya cumplido (personaje que ya mató al jefe).
 	c.flags["act1_complete"] = true
 	log.refresh()
-	_check(log.step_text("main_act1").contains("Aida"), "salta a 'cuéntaselo a Aida' si ya mató al jefe")
-	c.flags["ada_victoria"] = true
-	c.flags["root_reinicio"] = true
+	_check(log.step_text("main_act1").contains("Vuelve al campamento"), "salta a 'vuelve al campamento' si ya mató al jefe")
+	c.flags["act1_reunion"] = true
 	log.refresh()
+	_check(log.step_text("main_act1").contains("Portal al Kernel"), "tras la reunión: cruzar el portal")
+	log.notify_zone("brecha_503")
 	_check(log.is_done("main_act1") and completed.has("main_act1"), "principal completada")
 	_check(log.is_active("main_act2"), "la del acto II empieza al terminar la del I")
 

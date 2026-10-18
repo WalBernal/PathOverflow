@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "_doc": "Escenas cortas (el jugador no se mueve; click, Espacio o Enter avanzan; Esc las salta). Pasos: {speaker: id de NPC de npcs.json} o {name, style: boss | console | system} con text = una línea de diálogo (espera al jugador). {effect: glitch | shake | blackout | fade_in | dino, strength, time}: efecto; time = segundos de espera antes del siguiente paso (dino espera al jugador y muestra text). on_finish: {set_flag, travel: {zone, entry}}.",
+  "cutscenes": {
+    "arquitecto_muere": {
+      "steps": [
+        { "effect": "shake", "strength": 1.0, "time": 0.2 },
+        { "effect": "glitch", "strength": 1.0, "time": 0.9 },
+        { "name": "El Arquitecto del Monolito", "style": "boss", "text": "kill -9... ¿Sin un SIGTERM... de cortesía...?" },
+        { "name": "El Arquitecto del Monolito", "style": "boss", "text": "Veinte años... sosteniendo el Monolito... con cinta americana... y fe." },
+        { "name": "El Arquitecto del Monolito", "style": "boss", "text": "No lo entendéis... El Monolito no era el problema. Era la [i]tapa[/i]." },
+        { "name": "El Arquitecto del Monolito", "style": "boss", "text": "Cuando yo caiga... el Servidor no arrancará. Se congelará. Y el Padre... despertará. Él no deja que nada... muera." },
+        { "effect": "glitch", "strength": 1.5, "time": 0.4 },
+        { "effect": "shake", "strength": 1.6, "time": 0.6 },
+        { "name": "dmesg", "style": "console", "text": "[ 4021.337 ] arquitecto[1337]: terminado por la señal 9 (SIGKILL)\n[ 4021.338 ] servidor-principal: intentando arrancar..." },
+        { "name": "dmesg", "style": "console", "text": "[ 4021.900 ] servidor-principal: [color=#e06c6c]ERROR: no responde. Estado: CONGELADO[/color]\n[ 4021.901 ] kernel: init[1]: adoptando 8192 procesos huérfanos..." },
+        { "effect": "blackout", "time": 0.8 },
+        { "effect": "fade_in", "time": 0.6 },
+        { "name": "Sistema", "style": "system", "text": "El Arquitecto ha caído, pero el Servidor sigue congelado. Se ha abierto un portal al campamento." }
+      ],
+      "on_finish": {}
+    },
+    "reunion_campamento": {
+      "steps": [
+        { "speaker": "ada", "text": "¡Has vuelto! Lo hemos visto en los logs: el Arquitecto, fuera. Y el Servidor... congelado. Ni arranca ni se apaga. Como el portátil de Mario." },
+        { "speaker": "kevin", "text": "¡Oye! Mi portátil arranca. A veces. Si no lo miras directamente." },
+        { "speaker": "root", "text": "Aaah... a ver..... esto no es culpa mía.... ¿vale?..... Yo heredé el servidor así......" },
+        { "speaker": "ada", "text": "¿Heredado de quién?" },
+        { "speaker": "root", "text": "De El Pepe..... prestador de servicios retirado..... mi antecesor en el cargo.... Se jubiló... dejó una nota que decía «todo documentado»..... y un pósit con la contraseña de root......" },
+        { "speaker": "kevin", "text": "¿Y dónde está la documentación?" },
+        { "speaker": "root", "text": "El pósit..... era la documentación......" },
+        { "speaker": "ada", "text": "Clásico Pepe. Seguro que también dejó algún cron programado y se fue a pescar. Nadie se jubila sin dejar una bomba de relojería." },
+        { "speaker": "root", "text": "No digas eso..... que luego pasa.... Bueno..... el kernel está en pánico... pero he encontrado un puerto abierto..... el 2222.... Si lo fuerzo..... hay un túnel hasta el Espacio de Kernel......" },
+        { "effect": "glitch", "strength": 0.5, "time": 0.5 },
+        { "name": "Sistema", "style": "system", "text": "Rafa abre el puerto 2222. Un portal empieza a parpadear junto a la empalizada, al sureste." },
+        { "speaker": "ada", "text": "Adelántate tú. Nosotros te seguimos en cuanto Rafa termine de... lo que sea que esté haciendo." },
+        { "speaker": "root", "text": "Descargando la VPN...... 3 %......... vete yendo...... ya te alcanzo......" },
+        { "speaker": "kevin", "text": "¡Te guardo un café! Bueno, me lo tomo yo. Pero pensando en ti." }
+      ],
+      "on_finish": { "set_flag": "act1_reunion" }
+    },
+    "red_lince": {
+      "steps": [
+        { "effect": "glitch", "strength": 0.6, "time": 0.5 },
+        { "name": "Sistema", "style": "system", "text": "Conectando con el Espacio de Kernel por el puerto 2222..." },
+        { "effect": "dino", "text": "La Red Lince no responde" },
+        { "name": "Rafa (datos móviles)", "style": "phone", "speaker": "root", "text": "¿Me..... oyes....? La Red Lince se ha caído..... otra vez..... Aquí solo vemos al dinosaurio del Chrome......" },
+        { "name": "Rafa (datos móviles)", "style": "phone", "speaker": "root", "text": "Te paso por mis datos móviles...... me quedan 200 megas..... no hagas streaming..... El túnel aguanta..... a medias......" },
+        { "effect": "shake", "strength": 1.4, "time": 0.3 },
+        { "effect": "glitch", "strength": 1.6, "time": 0.6 },
+        { "name": "Sistema", "style": "system", "text": "El túnel se rompe. Caes a través de la tabla de procesos..." },
+        { "effect": "blackout", "time": 0.9 }
+      ],
+      "on_finish": { "travel": { "zone": "brecha_503", "entry": "start" } }
+    },
+    "llegada_brecha": {
+      "steps": [
+        { "effect": "fade_in", "time": 0.8 },
+        { "name": "kernel", "style": "console", "text": "[ 0.000000 ] Bienvenido al Espacio de Kernel.\n[ 0.000001 ] Privilegios del usuario: [color=#e06c6c]ninguno[/color].\n[ 0.000002 ] Procesos zombi detectados: demasiados." },
+        { "name": "Rafa (datos móviles)", "style": "phone", "speaker": "root", "text": "Sigues vivo..... bien..... Hay un enclave seguro más adelante..... un túnel SSH que aún aguanta..... Te espero allí..... con lo que me quede de batería......" }
+      ],
+      "on_finish": {}
+    }
+  }
+}

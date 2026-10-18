@@ -63,6 +63,8 @@ var obstacles: Array[Vector3] = []
 var bounds := Rect2(-1e6, -1e6, 2e6, 2e6)
 ## Opcional: (pos, radio) -> pos dentro de los bordes irregulares de la zona.
 var walk_clamp: Callable
+## Durante las escenas todo se congela (ni se mueven, ni atacan, ni disparan).
+var frozen := false
 
 var ids := PackedInt32Array()
 var positions := PackedVector2Array()
@@ -345,6 +347,8 @@ func is_in_safe_zone(pos: Vector2) -> bool:
 
 
 func _physics_process(delta: float) -> void:
+	if frozen:
+		return
 	var n := positions.size()
 	_update_projectiles(delta)
 	_update_hazards(delta)

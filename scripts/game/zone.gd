@@ -48,7 +48,15 @@ const STYLES := {
 	"catacombs": {"ground": "1a181e", "decal": "232029", "edge": "wall", "outside": "0b0a0e"},
 	"servers": {"ground": "13161c", "decal": "1b2029", "edge": "racks", "outside": "08090c"},
 	"boss": {"ground": "1a0f12", "decal": "2a1418", "edge": "lava", "outside": "2a0808"},
+	"kernel": {"ground": "11161a", "decal": "1c262c", "edge": "void", "outside": "030405"},
+	"terminal": {"ground": "0c1810", "decal": "15301f", "edge": "racks", "outside": "040906"},
 }
+const PHOSPHOR := Color("3cff6a")
+const TERMINAL_LINES := [
+	"$ ssh rafa@socket-seguro -p 2222", "Permission denied (publickey).", "$ sudo !!", "rafa no está en el archivo sudoers.",
+	"$ ping la-red-lince.net", "Request timeout for icmp_seq 0", "$ crontab -l -u pepe", "0 18 * * 5 /opt/pepe/limpieza_final.sh  # 🐟",
+	"$ ps aux | wc -l", "8193", "$ kill -9 1", "bash: kill: (1) - Operation not permitted",
+]
 const WOOD := Color("5b3f27")
 
 static var _npc_db: Dictionary = {}
@@ -538,6 +546,8 @@ func _draw_static() -> void:
 	_draw_decals(layer, Color(s["decal"]))
 	if style == "camp":
 		_draw_camp(layer)
+	elif style == "terminal":
+		_draw_hub_static(layer)
 	_draw_edge_band(layer, s)
 	for o in obstacles:
 		if o.get("feature", false):
@@ -564,6 +574,15 @@ func _draw_decals(ci: CanvasItem, c: Color) -> void:
 				ci.draw_set_transform(p, d["angle"], Vector2(1.0, 0.5))
 				ci.draw_circle(Vector2.ZERO, sz * 0.5, Color(c, 0.9))
 				ci.draw_set_transform(Vector2.ZERO)
+			"kernel":
+				# Bus de datos: líneas rectas con un bit encendido.
+				var q := p + Vector2(sz, 0).rotated(snappedf(d["angle"], PI / 2.0))
+				ci.draw_line(p, q, Color(c, 0.9), 2.0)
+				ci.draw_string(ThemeDB.fallback_font, p, "1" if int(d["seed"]) % 2 == 0 else "0", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.3, 0.6, 1.0, 0.25))
+			"terminal":
+				var tile := 64.0
+				var cell := (p / tile).floor() * tile
+				ci.draw_rect(Rect2(cell, Vector2(tile, tile)), Color(c, 0.9), false, 1.0)
 			"boss":
 				var q := p + Vector2(sz, 0).rotated(d["angle"])
 				ci.draw_line(p, q, Color(c, 0.9), 2.0)
@@ -721,6 +740,10 @@ func _draw() -> void:
 			_draw_obstacle(o)
 	if style == "camp":
 		_draw_campfire(rect.get_center() + Vector2(0, -20))
+	elif style == "terminal":
+		_draw_hub_terminal()
+	elif style == "kernel":
+		_draw_kernel_flicker()
 	for e in exits:
 		if exit_open(e):
 			_draw_exit(e)
@@ -871,6 +894,56 @@ func _draw_camp(ci: CanvasItem) -> void:
 		ci.draw_circle(c + Vector2(0, -20) + Vector2.from_angle(TAU * k / 8.0) * Vector2(26, 12), 5.0, Color("4a4550"))
 
 
+## Socket Seguro: cables por el suelo y armarios a los lados.
+func _draw_hub_static(ci: CanvasItem) -> void:
+	var c := rect.get_center()
+	for k in 6:
+		var a := c + Vector2(-700 + k * 260, -420)
+		ci.draw_polyline(PackedVector2Array([a, a + Vector2(40, 260), a + Vector2(-30, 520), a + Vector2(20, 760)]),
+			[Color("2a5a3a"), Color("3a3a6a"), Color("5a3a2a")][k % 3], 3.0, true)
+	for side in [-1.0, 1.0]:
+		for k in 3:
+			var p := c + Vector2(side * 620.0, -260.0 + k * 200.0)
+			ci.draw_rect(Rect2(p - Vector2(28, 50), Vector2(56, 100)), Color("16241b"))
+			ci.draw_rect(Rect2(p - Vector2(28, 50), Vector2(56, 100)), Color("2a4a35"), false, 2.0)
+
+
+## La gran terminal del Socket Seguro, con el historial de Rafa desplazándose.
+func _draw_hub_terminal() -> void:
+	var c := rect.get_center() + Vector2(0, -470)
+	var screen := Rect2(c - Vector2(260, 90), Vector2(520, 180))
+	draw_rect(screen.grow(10), Color("1a1f1a"))
+	draw_rect(screen, Color("031007"))
+	var font := ThemeDB.fallback_font
+	var first := int(_time * 0.8) % TERMINAL_LINES.size()
+	for k in 7:
+		var line: String = TERMINAL_LINES[(first + k) % TERMINAL_LINES.size()]
+		draw_string(font, screen.position + Vector2(10, 22 + k * 23), line, HORIZONTAL_ALIGNMENT_LEFT, screen.size.x - 20, 14,
+			Color(PHOSPHOR, 0.45 + 0.5 * float(k) / 7.0))
+	if fmod(_time, 1.0) < 0.5:
+		draw_rect(Rect2(screen.position + Vector2(10, 22 + 6 * 23 + 4), Vector2(9, 3)), PHOSPHOR)
+	# Líneas de barrido del CRT.
+	for y in range(int(screen.position.y), int(screen.end.y), 4):
+		draw_line(Vector2(screen.position.x, y), Vector2(screen.end.x, y), Color(0, 0, 0, 0.25), 1.0)
+	draw_string(font, screen.position + Vector2(0, -16), "SOCKET SEGURO · sesión ssh activa desde hace 2.913 días · NO ESCRIBIR «exit»",
+		HORIZONTAL_ALIGNMENT_CENTER, screen.size.x, 12, Color(PHOSPHOR, 0.7))
+
+
+## La Brecha del 503: el suelo parpadea a ratos entre binario y vacío.
+func _draw_kernel_flicker() -> void:
+	var font := ThemeDB.fallback_font
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(_time * 3.0)
+	for k in 14:
+		var p := Vector2(rng.randf() * rect.size.x, rng.randf() * rect.size.y)
+		if not is_walkable(p, 20.0):
+			continue
+		var w := rng.randf_range(60, 180)
+		draw_rect(Rect2(p, Vector2(w, 18)), Color(0, 0, 0, 0.55))
+		draw_string(font, p + Vector2(4, 14), "10110100 0503 ERR"[rng.randi() % 8] + "0".repeat(int(w / 12)),
+			HORIZONTAL_ALIGNMENT_LEFT, w, 13, Color(0.3, 0.6, 1.0, 0.35))
+
+
 func _draw_post(ci: CanvasItem, p: Vector2) -> void:
 	ci.draw_rect(Rect2(p + Vector2(-5, -26), Vector2(10, 26)), WOOD)
 	ci.draw_colored_polygon(PackedVector2Array([p + Vector2(-5, -26), p + Vector2(0, -34), p + Vector2(5, -26)]), WOOD.lightened(0.1))
@@ -964,6 +1037,19 @@ func _draw_quest_item(q: Dictionary) -> void:
 	draw_string(font, p + Vector2(-110, -26 + bob), q["name"], HORIZONTAL_ALIGNMENT_CENTER, 220, 13, UiStyle.ACCENT)
 
 
+## Un NPC que solo está "conectado": su cara en un monitor de fósforo verde.
+func _draw_terminal_npc(pos: Vector2, appearance: Dictionary) -> void:
+	draw_rect(Rect2(pos + Vector2(-34, -6), Vector2(68, 10)), Color("3a2e26"))          # mesa
+	var screen := Rect2(pos + Vector2(-28, -52), Vector2(56, 44))
+	draw_rect(screen.grow(4), Color("2a2a2e"))
+	draw_rect(screen, Color("031007"))
+	var flicker := 0.7 + 0.3 * sin(_time * 23.0) * sin(_time * 7.0)
+	CharacterAppearance.draw(self, screen.position + Vector2(28, 52), 0.75, appearance, Vector2.DOWN, Color(PHOSPHOR, flicker))
+	draw_rect(screen.grow(4), Color(0.03, 0.06, 0.04), false, 2.0)
+	for y in range(int(screen.position.y), int(screen.end.y), 3):
+		draw_line(Vector2(screen.position.x, y), Vector2(screen.end.x, y), Color(0, 0, 0, 0.3), 1.0)
+
+
 func _draw_npcs() -> void:
 	var font := ThemeDB.fallback_font
 	for i in npcs.size():
@@ -971,7 +1057,10 @@ func _draw_npcs() -> void:
 		var pos := npc_position(npc)
 		var appearance := CharacterAppearance.sanitize(npc.get("appearance", {}))
 		var to_player := player.global_position - pos if player else Vector2.DOWN
-		CharacterAppearance.draw(self, pos, 0.95, appearance, Vector2(signf(to_player.x) * 0.5, 1.0))
+		if npc.get("terminal", false):
+			_draw_terminal_npc(pos, appearance)
+		else:
+			CharacterAppearance.draw(self, pos, 0.95, appearance, Vector2(signf(to_player.x) * 0.5, 1.0))
 		var label_color := UiStyle.ACCENT if i == _hovered_npc else UiStyle.TEXT
 		var label_pos := pos + Vector2(-110.0, -52.0)
 		draw_string_outline(font, label_pos, npc["name"], HORIZONTAL_ALIGNMENT_CENTER, 220.0, 14, 5, Color(0, 0, 0, 0.8))
