@@ -77,6 +77,9 @@ func _ready() -> void:
 	add_child(ui)
 	ui.setup(player, enemies, character, loot, skills, camp)
 	player.died.connect(ui.show_death)
+	player.died.connect(func() -> void:
+		character.flags["stat_deaths"] = int(character.flags.get("stat_deaths", 0)) + 1
+		_mark_dirty())
 	ui.return_to_menu_requested.connect(_return_to_menu)
 	ui.quit_requested.connect(_quit_game)
 	ui.dialogue_action.connect(_on_dialogue_action)
@@ -197,6 +200,7 @@ func respawn() -> void:
 
 func _on_enemy_killed(rarity: int, experience: int, pos: Vector2) -> void:
 	character.add_experience(experience)
+	character.flags["stat_kills"] = int(character.flags.get("stat_kills", 0)) + 1
 	player.add_flask_charges(rarity)
 	ui.tutorial.notify("kill")
 	var info: Dictionary = Rarity.ENEMY_INFO[rarity]

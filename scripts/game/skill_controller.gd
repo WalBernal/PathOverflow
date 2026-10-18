@@ -10,6 +10,10 @@ signal not_enough_mana
 const ACTIONS := [&"skill_1", &"skill_2", &"skill_3", &"skill_4", &"skill_5", &"skill_6"]
 const KEY_LABELS := ["Der.", "Esp.", "Q", "E", "R", "F"]
 const REPEAT_DELAY := 0.15
+## El personaje solo se detiene un instante al lanzar (fracción del tiempo de
+## uso, con tope), para no quedarse vendido entre enemigos.
+const MOVE_LOCK_FRACTION := 0.25
+const MAX_MOVE_LOCK := 0.15
 const PROJECTILE_RADIUS := 8.0
 const DAMAGE_COLORS := {
 	"physical": Color("e8d9b0"),
@@ -30,6 +34,8 @@ var _projectiles: Array[Dictionary] = []
 var _effects: Array[Dictionary] = []      # visuales: anillos y destellos
 var _pending: Array[Dictionary] = []      # explosiones retardadas y repeticiones
 var _mana_warning_cooldown := 0.0
+## Tiempo hasta poder lanzar otra habilidad (el ritmo de ataque/lanzamiento).
+var _busy := 0.0
 
 
 func setup(p_player: Player, p_enemies: EnemyManager, p_character: CharacterData) -> void:
@@ -64,7 +70,8 @@ func _physics_process(delta: float) -> void:
 	for i in cooldowns.size():
 		cooldowns[i] = maxf(0.0, cooldowns[i] - delta)
 	_mana_warning_cooldown = maxf(0.0, _mana_warning_cooldown - delta)
-	if player.is_alive() and player.action_lock <= 0.0:
+	_busy = maxf(0.0, _busy - delta)
+	if player.is_alive() and _busy <= 0.0:
 		for i in ACTIONS.size():
 			if Input.is_action_pressed(ACTIONS[i]) and try_use(i):
 				break
@@ -85,7 +92,8 @@ func try_use(index: int) -> bool:
 		return false
 	player.mana -= p["mana_cost"]
 	cooldowns[index] = p["cooldown"]
-	player.action_lock = p["use_time"]
+	_busy = p["use_time"]
+	player.action_lock = minf(MAX_MOVE_LOCK, p["use_time"] * MOVE_LOCK_FRACTION)
 	var target := get_global_mouse_position()
 	player.face(target - player.global_position)
 	_execute(p, target)

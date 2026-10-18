@@ -18,8 +18,12 @@ var tree_screen: PassiveTreeScreen
 var dialogue_box: DialogueBox
 var tutorial: TutorialPanel
 var item_tooltip: ItemTooltip
+var minimap: Minimap
+var character_sheet: CharacterSheet
 var _character: CharacterData
 var _player: Player
+var _loot: LootManager
+var _minimap_enabled := true
 var _death_panel: PanelContainer
 var _pause_panel: Control
 
@@ -29,6 +33,7 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_character = character
 	_player = player
+	_loot = loot
 
 	hud = Hud.new()
 	hud.player = player
@@ -68,6 +73,27 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	skills_panel.position = Vector2(10, 170)
 	skills_panel.setup(character, item_tooltip)
 	skills_panel.message.connect(hud.flash)
+	skills_panel.drop_to_ground.connect(_on_drop_to_ground)
+	inventory_panel.drop_to_ground.connect(_on_drop_to_ground)
+
+	character_sheet = CharacterSheet.new()
+	character_sheet.visible = false
+	add_child(character_sheet)
+	character_sheet.position = Vector2(10, 34)
+	character_sheet.setup(character, player, skills)
+
+	minimap = Minimap.new()
+	minimap.player = player
+	minimap.enemies = enemies
+	minimap.loot = loot
+	minimap.camp = camp
+	add_child(minimap)
+	minimap.anchor_left = 1.0
+	minimap.anchor_right = 1.0
+	minimap.offset_left = -Minimap.RADIUS * 2.0 - 18.0
+	minimap.offset_right = -18.0
+	minimap.offset_top = 14.0
+	minimap.offset_bottom = 14.0 + minimap.custom_minimum_size.y
 
 	dialogue_box = DialogueBox.new()
 	dialogue_box.character = character
@@ -108,6 +134,8 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 func open_dialogue(npc: Dictionary, dialogue: Dictionary) -> void:
 	inventory_panel.visible = false
 	skills_panel.visible = false
+	character_sheet.visible = false
+	_update_minimap()
 	item_tooltip.hide()
 	dialogue_box.open(npc, dialogue)
 	tutorial.notify("talked:" + String(npc.get("id", "")))
@@ -165,9 +193,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			dialogue_box.close()
 		elif tree_screen.visible:
 			toggle_passive_tree()
-		elif inventory_panel.visible or skills_panel.visible:
+		elif inventory_panel.visible or skills_panel.visible or character_sheet.visible:
 			inventory_panel.visible = false
 			skills_panel.visible = false
+			character_sheet.visible = false
+			_update_minimap()
 			item_tooltip.hide()
 		else:
 			toggle_pause_menu()
@@ -181,31 +211,65 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed(&"toggle_skills"):
 		_on_menu_requested("skills")
 		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(&"toggle_character"):
+		_on_menu_requested("character")
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(&"toggle_minimap"):
+		_minimap_enabled = not _minimap_enabled
+		_update_minimap()
+		get_viewport().set_input_as_handled()
 
 
 func _on_menu_requested(menu: String) -> void:
+	if tree_screen.visible and menu != "passives":
+		return
+	item_tooltip.hide()
 	match menu:
 		"passives":
 			toggle_passive_tree()
 		"inventory":
-			if not tree_screen.visible:
-				inventory_panel.visible = not inventory_panel.visible
-				item_tooltip.hide()
+			inventory_panel.visible = not inventory_panel.visible
 		"skills":
-			if not tree_screen.visible:
-				skills_panel.visible = not skills_panel.visible
-				item_tooltip.hide()
+			# Habilidades y hoja de personaje ocupan el mismo sitio.
+			skills_panel.visible = not skills_panel.visible
+			character_sheet.visible = character_sheet.visible and not skills_panel.visible
+		"character":
+			character_sheet.visible = not character_sheet.visible
+			skills_panel.visible = skills_panel.visible and not character_sheet.visible
+	_update_minimap()
+
+
+## El minimapa comparte esquina con el inventario: se oculta mientras está abierto.
+## (Y el tutorial comparte esquina con la hoja de personaje.)
+func _update_minimap() -> void:
+	tutorial.suppressed = character_sheet.visible or tree_screen.visible
+	minimap.visible = _minimap_enabled and not inventory_panel.visible and not tree_screen.visible
+
+
+## Soltar un objeto fuera de los paneles: al suelo, junto al jugador.
+func _on_drop_to_ground(location: Dictionary) -> void:
+	var mouse := get_viewport().get_mouse_position()
+	for panel: Control in [inventory_panel, skills_panel, character_sheet, hud]:
+		if panel != hud and panel.visible and panel.get_global_rect().has_point(mouse):
+			return  # soltado sobre un panel, en un sitio que no admite objetos
+	if hud.is_over_hud(mouse):
+		return
+	var item := ItemTransfer.take(_character, location)
+	if item:
+		_loot.drop_item(item, _player.global_position + Vector2(randf_range(-40.0, 40.0), randf_range(20.0, 50.0)))
+		hud.flash("%s, al suelo. Alguien lo recogerá. O no." % item.display_name(), UiStyle.MUTED)
 
 
 func toggle_passive_tree() -> void:
 	tree_screen.visible = not tree_screen.visible
 	hud.visible = not tree_screen.visible
-	tutorial.visible = not tree_screen.visible and not tutorial.is_finished()
 	if tree_screen.visible:
 		inventory_panel.visible = false
 		skills_panel.visible = false
+		character_sheet.visible = false
 		dialogue_box.close()
 		item_tooltip.hide()
+	_update_minimap()
 	get_tree().paused = tree_screen.visible
 
 

@@ -1,0 +1,100 @@
+class_name ItemTransfer
+## Mover objetos entre ubicaciones (arrastrar y soltar). Una ubicación es un
+## diccionario:
+##   {"kind": "bag", "index": i}
+##   {"kind": "equip", "slot": "helmet"}
+##   {"kind": "board", "index": h}              (ranura de la barra de habilidades)
+##   {"kind": "dimm", "board": h, "dimm": d}    (ranura DIMM de una placa instalada)
+## Siempre es un intercambio: lo que hay en el destino vuelve al origen, así que
+## ambos objetos tienen que encajar donde acaban.
+
+
+static func get_at(inv: Inventory, loc: Dictionary) -> Item:
+	match loc.get("kind", ""):
+		"bag":
+			return inv.bag[loc["index"]]
+		"equip":
+			return inv.equipment.get(loc["slot"])
+		"board":
+			return inv.boards[loc["index"]]
+		"dimm":
+			var board: Motherboard = inv.boards[loc["board"]]
+			return board.rams[loc["dimm"]] if board else null
+	return null
+
+
+static func _set_at(inv: Inventory, loc: Dictionary, item: Item) -> void:
+	match loc["kind"]:
+		"bag":
+			inv.bag[loc["index"]] = item
+		"equip":
+			if item == null:
+				inv.equipment.erase(loc["slot"])
+			else:
+				inv.equipment[loc["slot"]] = item
+		"board":
+			inv.boards[loc["index"]] = item
+		"dimm":
+			inv.boards[loc["board"]].rams[loc["dimm"]] = item
+
+
+## "" si `item` puede quedarse en `loc`; si no, el motivo.
+static func fits(character: CharacterData, loc: Dictionary, item: Item) -> String:
+	if item == null:
+		return ""
+	match loc.get("kind", ""):
+		"bag":
+			return ""
+		"equip":
+			var slot: String = loc["slot"]
+			if not item.is_equipment():
+				return "Eso no se lleva puesto. Las placas y la RAM van en el menú de habilidades (K)."
+			var ok := item.slot() == slot or (item.slot() == "ring" and slot.begins_with("ring"))
+			if not ok:
+				return "Eso no va en esa ranura. Ni con cinta americana."
+			if not character.can_equip(item):
+				return "Requiere nivel %d. Vuelve cuando seas senior." % item.required_level()
+			return ""
+		"board":
+			return "" if item is Motherboard else "Ahí solo caben placas base."
+		"dimm":
+			var board: Motherboard = character.inventory.boards[loc["board"]]
+			if board == null:
+				return "No hay placa base en esa fila."
+			if not item is RamModule:
+				return "En una ranura DIMM solo cabe RAM. Por mucho que lo intentes."
+			var gen: String = board.slots[loc["dimm"]]
+			if (item as RamModule).generation() != gen:
+				return "Ranura %s, módulo %s. No encaja ni a martillazos." % [gen, (item as RamModule).generation()]
+			return ""
+	return "Destino desconocido."
+
+
+## Mueve (intercambia) lo que hay en `from` con lo que hay en `to`.
+## Devuelve "" si se hizo; si no, el motivo para mostrarlo.
+static func move(character: CharacterData, from: Dictionary, to: Dictionary) -> String:
+	if from == to:
+		return ""
+	var inv := character.inventory
+	var a := get_at(inv, from)
+	if a == null:
+		return ""
+	var b := get_at(inv, to)
+	var problem := fits(character, to, a)
+	if problem == "":
+		problem = fits(character, from, b)
+	if problem != "":
+		return problem
+	_set_at(inv, to, a)
+	_set_at(inv, from, b)
+	inv.changed.emit()
+	return ""
+
+
+## Saca el objeto de `from` (para tirarlo al suelo). Devuelve el objeto.
+static func take(character: CharacterData, from: Dictionary) -> Item:
+	var item := get_at(character.inventory, from)
+	if item:
+		_set_at(character.inventory, from, null)
+		character.inventory.changed.emit()
+	return item

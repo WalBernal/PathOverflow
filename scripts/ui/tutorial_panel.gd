@@ -13,6 +13,16 @@ const CHECK_INTERVAL := 0.25
 var character: CharacterData
 var player: Player
 var camp: Camp
+## Oculto temporalmente (otro panel ocupa su sitio); el progreso sigue.
+var suppressed := false:
+	set(value):
+		if value == suppressed:
+			return
+		suppressed = value
+		if character and not is_finished():
+			_refresh()
+		elif value:
+			visible = false
 
 var _title := ""
 var _steps: Array = []
@@ -98,14 +108,14 @@ func _process(delta: float) -> void:
 
 func _refresh() -> void:
 	if is_finished():
-		visible = not character.flags.has("tutorial_seen_done")
+		visible = not character.flags.has("tutorial_seen_done") and not suppressed
 		_header.text = _title
 		_text.text = "[color=#6fb36b]%s[/color]" % _done_text
 		if visible:
 			character.flags["tutorial_seen_done"] = true
 			get_tree().create_timer(10.0).timeout.connect(func() -> void: visible = false)
 		return
-	visible = true
+	visible = not suppressed
 	var step: Dictionary = _steps[current_step()]
 	_header.text = "%s  ·  %d / %d" % [_title, current_step() + 1, _steps.size()]
 	var text: String = step["text"]

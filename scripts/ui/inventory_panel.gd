@@ -1,11 +1,13 @@
 class_name InventoryPanel
 extends PanelContainer
 ## Panel de inventario (tecla I): equipo en forma de "muñeco" + bolsa.
-## Click izq. en la bolsa: equipar · Click izq. en el equipo: quitar ·
-## Click der. en la bolsa: destruir el objeto.
+## Arrastrar y soltar: mover entre la bolsa y el equipo (intercambia si hace
+## falta). Soltar fuera de los paneles: tirarlo al suelo.
+## Click: equipar (desde la bolsa) o quitar (desde el equipo).
 
 signal message(text: String)
 signal item_equipped
+signal drop_to_ground(location: Dictionary)
 
 const CELL := 46.0
 const BAG_COLUMNS := 10
@@ -38,22 +40,13 @@ func setup(p_character: CharacterData, tooltip: ItemTooltip) -> void:
 
 
 func _ready() -> void:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("16131bf2")
-	style.border_color = Color("3a3442")
-	style.set_border_width_all(1)
-	style.set_content_margin_all(14)
-	add_theme_stylebox_override("panel", style)
+	add_theme_stylebox_override("panel", UiStyle.panel_style())
+	theme = UiStyle.make_theme()
 
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 10)
 	add_child(box)
-
-	var title := Label.new()
-	title.text = "Inventario"
-	title.add_theme_font_size_override("font_size", 20)
-	title.add_theme_color_override("font_color", Color("e8d9b0"))
-	box.add_child(title)
+	box.add_child(UiStyle.label("Inventario", 20))
 
 	var doll := Control.new()
 	doll.custom_minimum_size = Vector2(CELL * BAG_COLUMNS, CELL * 5.3)
@@ -62,8 +55,7 @@ func _ready() -> void:
 	var doll_offset := Vector2((BAG_COLUMNS - 8.2) * CELL / 2.0, 0.0)
 	for slot in EQUIP_LAYOUT:
 		var r: Rect2 = EQUIP_LAYOUT[slot]
-		var cell := _make_cell()
-		cell.slot_key = slot
+		var cell := _make_cell({"kind": "equip", "slot": slot})
 		cell.placeholder = Inventory.SLOT_NAMES[slot]
 		cell.position = doll_offset + r.position * CELL
 		cell.size = r.size * CELL - Vector2(4, 4)
@@ -82,23 +74,21 @@ func _ready() -> void:
 	grid.add_theme_constant_override("v_separation", 2)
 	box.add_child(grid)
 	for i in Inventory.BAG_SIZE:
-		var cell := _make_cell()
-		cell.bag_index = i
+		var cell := _make_cell({"kind": "bag", "index": i})
 		cell.custom_minimum_size = Vector2(CELL - 2.0, CELL - 2.0)
 		grid.add_child(cell)
 		_bag_cells.append(cell)
 
-	var hint := Label.new()
-	hint.text = "Click izq.: equipar / quitar   ·   Click der.: destruir (rm -rf)"
-	hint.add_theme_font_size_override("font_size", 12)
-	hint.add_theme_color_override("font_color", Color("8a8293"))
-	box.add_child(hint)
+	box.add_child(UiStyle.label("Arrastra para mover o equipar  ·  Click: equipar / quitar\nArrastra fuera del panel para tirarlo al suelo", 12, UiStyle.MUTED))
 
 
-func _make_cell() -> ItemCell:
+func _make_cell(location: Dictionary) -> ItemCell:
 	var cell := ItemCell.new()
+	cell.location = location
 	cell.clicked.connect(_on_cell_clicked)
 	cell.hovered.connect(_on_cell_hovered)
+	cell.dropped.connect(_on_cell_dropped)
+	cell.released_outside.connect(func(c: ItemCell) -> void: drop_to_ground.emit(c.location))
 	return cell
 
 
@@ -117,7 +107,7 @@ func _refresh_summary() -> void:
 		return
 	var p := character.attack_profile()
 	var s := character.stats
-	_summary.text = "[color=#8a8293]DPS[/color] [color=#e8d9b0]%.1f[/color]   [color=#8a8293]Daño[/color] [color=#e8d9b0]%d-%d[/color]   [color=#8a8293]APS[/color] [color=#e8d9b0]%.2f[/color]   [color=#8a8293]Crít.[/color] [color=#e8d9b0]%.1f%%[/color]\n[color=#8a8293]Vida[/color] [color=#e8d9b0]%d[/color]   [color=#8a8293]ES[/color] [color=#e8d9b0]%d[/color]   [color=#8a8293]Armadura[/color] [color=#e8d9b0]%d[/color]   [color=#8a8293]Evasión[/color] [color=#e8d9b0]%d[/color]\n[color=#8a8293]Res.[/color] [color=#e06c6c]%d%%[/color] / [color=#7fb8e0]%d%%[/color] / [color=#e8d070]%d%%[/color] / [color=#b04ad9]%d%%[/color]" % [
+	_summary.text = "[color=#8a8293]DPS arma[/color] [color=#e8d9b0]%.1f[/color]   [color=#8a8293]Daño[/color] [color=#e8d9b0]%d-%d[/color]   [color=#8a8293]APS[/color] [color=#e8d9b0]%.2f[/color]   [color=#8a8293]Crít.[/color] [color=#e8d9b0]%.1f%%[/color]\n[color=#8a8293]Vida[/color] [color=#e8d9b0]%d[/color]   [color=#8a8293]ES[/color] [color=#e8d9b0]%d[/color]   [color=#8a8293]Armadura[/color] [color=#e8d9b0]%d[/color]   [color=#8a8293]Evasión[/color] [color=#e8d9b0]%d[/color]\n[color=#8a8293]Res.[/color] [color=#e06c6c]%d%%[/color] / [color=#7fb8e0]%d%%[/color] / [color=#e8d070]%d%%[/color] / [color=#b04ad9]%d%%[/color]" % [
 		p.dps, p.min_damage, p.max_damage, p.attacks_per_second, p.crit_chance,
 		s.get_value(Stat.LIFE), s.get_value(Stat.ENERGY_SHIELD), s.get_value(Stat.ARMOUR), s.get_value(Stat.EVASION),
 		minf(Stat.RESISTANCE_CAP, s.get_value(Stat.FIRE_RES)), minf(Stat.RESISTANCE_CAP, s.get_value(Stat.COLD_RES)),
@@ -125,24 +115,29 @@ func _refresh_summary() -> void:
 	]
 
 
+func _on_cell_dropped(target: ItemCell, payload: Dictionary) -> void:
+	var problem := ItemTransfer.move(character, payload["from"], target.location)
+	if problem != "":
+		message.emit(problem)
+	elif target.location["kind"] == "equip" or payload["from"].get("kind", "") == "equip":
+		item_equipped.emit()
+	_on_cell_hovered(target, true)
+
+
 func _on_cell_clicked(cell: ItemCell, button: MouseButton) -> void:
-	var inv := character.inventory
-	if cell.item == null:
+	if cell.item == null or button != MOUSE_BUTTON_LEFT:
 		return
-	if cell.bag_index >= 0:
-		if button == MOUSE_BUTTON_LEFT:
-			if not cell.item.is_equipment():
-				message.emit("Las placas base y la RAM se instalan en el menú de habilidades (K).")
-				return
-			if not character.can_equip(cell.item):
-				message.emit("Requiere nivel %d. Vuelve cuando seas senior." % cell.item.required_level())
-				return
-			if inv.equip_from_bag(cell.bag_index):
-				item_equipped.emit()
-		else:
-			var destroyed := inv.remove_bag_item(cell.bag_index)
-			message.emit("%s eliminado. No hay papelera de reciclaje." % destroyed.display_name())
-	elif button == MOUSE_BUTTON_LEFT and not inv.unequip(cell.slot_key):
+	var inv := character.inventory
+	if cell.location["kind"] == "bag":
+		if not cell.item.is_equipment():
+			message.emit("Las placas base y la RAM se instalan en el menú de habilidades (K).")
+			return
+		if not character.can_equip(cell.item):
+			message.emit("Requiere nivel %d. Vuelve cuando seas senior." % cell.item.required_level())
+			return
+		if inv.equip_from_bag(cell.location["index"]):
+			item_equipped.emit()
+	elif not inv.unequip(cell.location["slot"]):
 		message.emit("Inventario lleno. Como tu backlog.")
 	_on_cell_hovered(cell, true)
 
@@ -151,4 +146,4 @@ func _on_cell_hovered(cell: ItemCell, inside: bool) -> void:
 	if not inside or cell.item == null:
 		_tooltip.hide()
 		return
-	_tooltip.show_item(cell.item, character, cell.bag_index >= 0 and cell.item.is_equipment())
+	_tooltip.show_item(cell.item, character, cell.location["kind"] == "bag" and cell.item.is_equipment())

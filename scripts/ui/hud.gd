@@ -11,7 +11,7 @@ const ORB_RADIUS := 78.0
 const SLOT := 60.0
 const SLOT_GAP := 8.0
 const PLATE_HEIGHT := 92.0
-const FLASK_SIZE := Vector2(40, 58)
+const FLASK_SIZE := Vector2(60, 64)
 const LIFE_COLOR := Color("b3262b")
 const MANA_COLOR := Color("2a4fb3")
 const ES_COLOR := Color("7fb8e0")
@@ -56,7 +56,8 @@ func _ready() -> void:
 		spot.mouse_filter = Control.MOUSE_FILTER_STOP
 		add_child(spot)
 		_hotspots[key] = spot
-	for entry in [["I", "inventory", "Inventario (I): equipo y bolsa."],
+	for entry in [["C", "character", "Personaje (C): stats, resistencias y opiniones no solicitadas."],
+			["I", "inventory", "Inventario (I): equipo y bolsa."],
 			["K", "skills", "Habilidades (K): placas base y módulos RAM."],
 			["P", "passives", "Árbol pasivo (P): gasta tus puntos. O no, y quéjate en los foros."]]:
 		var b := Button.new()
@@ -87,6 +88,12 @@ func flash(text: String, color := Color("e06c6c")) -> void:
 	_message_tween.tween_property(_message, "modulate:a", 0.0, 0.6)
 
 
+## ¿Está el ratón sobre la placa o los orbes? (para no tirar objetos ahí)
+func is_over_hud(pos: Vector2) -> bool:
+	return pos.y >= _plate_rect().position.y - 12.0 or pos.distance_to(_life_center()) <= ORB_RADIUS + 10.0 \
+		or pos.distance_to(_mana_center()) <= ORB_RADIUS + 10.0
+
+
 # --- Geometría ---
 
 func _life_center() -> Vector2:
@@ -111,7 +118,7 @@ func _slot_rect(i: int) -> Rect2:
 
 func _flask_rect(i: int) -> Rect2:
 	var plate := _plate_rect()
-	return Rect2(plate.position.x + 20.0 + i * (FLASK_SIZE.x + 10.0), plate.position.y + 10.0, FLASK_SIZE.x, FLASK_SIZE.y)
+	return Rect2(plate.position.x + 20.0 + i * (FLASK_SIZE.x + 10.0), plate.position.y + 8.0, FLASK_SIZE.x, FLASK_SIZE.y)
 
 
 func _xp_rect() -> Rect2:
@@ -130,7 +137,7 @@ func _layout() -> void:
 		_place("skill_%d" % i, _slot_rect(i))
 	var plate := _plate_rect()
 	for i in _menu_buttons.size():
-		_menu_buttons[i].position = Vector2(plate.end.x - 3 * 40.0 - 12.0 + i * 40.0, plate.position.y + 32.0)
+		_menu_buttons[i].position = Vector2(plate.end.x - _menu_buttons.size() * 40.0 - 12.0 + i * 40.0, plate.position.y + 32.0)
 		_menu_buttons[i].size = Vector2(34, 30)
 
 
@@ -218,7 +225,7 @@ func _draw() -> void:
 	draw_rect(xp, TRIM, false, 1.0)
 	var level_text := "Nivel %d" % character.level
 	var plate := _plate_rect()
-	draw_string(font, Vector2(plate.end.x - 3 * 40.0 - 12.0, plate.position.y + 24.0), level_text,
+	draw_string(font, Vector2(plate.end.x - _menu_buttons.size() * 40.0 - 12.0, plate.position.y + 24.0), level_text,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 14, TEXT_COLOR)
 
 	# Pociones.
@@ -247,16 +254,36 @@ func _draw_flask(i: int, font: Font) -> void:
 	var f: Dictionary = Player.FLASKS[i]
 	var fill: float = player.flask_charges[i] / f["max_charges"]
 	var usable := player.can_use_flask(i)
-	# Cuello y cuerpo de la botella.
-	var neck := Rect2(r.position + Vector2(r.size.x * 0.3, 0.0), Vector2(r.size.x * 0.4, 10.0))
-	var body := Rect2(r.position + Vector2(0.0, 10.0), r.size - Vector2(0.0, 10.0))
-	draw_rect(body, Color(0, 0, 0, 0.6))
-	var liquid := Rect2(body.position + Vector2(0.0, body.size.y * (1.0 - fill)), Vector2(body.size.x, body.size.y * fill))
-	draw_rect(liquid, f["color"] if usable else Color(f["color"]).darkened(0.5))
-	draw_rect(body, TRIM, false, 1.5)
-	draw_rect(neck, TRIM, false, 1.5)
-	draw_string(font, r.position + Vector2(3.0, r.size.y - 4.0), str(i + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, TEXT_COLOR)
-	draw_string(font, r.position + Vector2(0.0, r.size.y + 13.0), "x%d" % floori(player.flask_charges[i] / f["cost"]),
+	var t := Time.get_ticks_msec() / 1000.0
+	draw_rect(r, Color(0, 0, 0, 0.55))
+	if player.is_recovering(f["resource"]):
+		draw_rect(r, Color(f["color"], 0.25 + 0.1 * sin(t * 8.0)))  # efecto activo
+	# El sprite (taza / lata), apagado si no hay cargas suficientes.
+	var icon_rect := Rect2(r.position + Vector2(2, 4), Vector2(r.size.x - 12.0, r.size.y - 8.0))
+	ItemIcons.draw(self, icon_rect, f["icon"], Color.WHITE if usable else Color(0.45, 0.45, 0.5), false)
+	# Barra de cargas a la derecha, con una marca por cada uso.
+	var bar := Rect2(r.end.x - 8.0, r.position.y + 4.0, 5.0, r.size.y - 8.0)
+	draw_rect(bar, Color(0, 0, 0, 0.8))
+	draw_rect(Rect2(bar.position + Vector2(0, bar.size.y * (1.0 - fill)), Vector2(bar.size.x, bar.size.y * fill)), f["color"])
+	var uses := int(f["max_charges"] / f["cost"])
+	for k in range(1, uses):
+		var y := bar.position.y + bar.size.y * k / uses
+		draw_line(Vector2(bar.position.x, y), Vector2(bar.end.x, y), Color(0, 0, 0, 0.9), 1.0)
+	# Vapor del café o burbujas de la lata cuando está lista.
+	if usable:
+		var top := icon_rect.position + Vector2(icon_rect.size.x * 0.45, 4.0)
+		if f["resource"] == "life":
+			for k in 2:
+				var phase := fmod(t * 0.8 + k * 0.5, 1.0)
+				var p0 := top + Vector2(k * 8.0 - 4.0 + sin(t * 3.0 + k) * 2.0, -phase * 10.0)
+				draw_line(p0, p0 + Vector2(sin(t * 4.0 + k) * 2.0, -5.0), Color(1, 1, 1, 0.5 * (1.0 - phase)), 1.5, true)
+		else:
+			for k in 3:
+				var phase := fmod(t * 0.7 + k * 0.33, 1.0)
+				draw_circle(top + Vector2(k * 5.0 - 5.0, 18.0 - phase * 22.0), 1.5, Color(0.8, 0.9, 1.0, 0.6 * (1.0 - phase)))
+	draw_rect(r, TRIM if usable else TRIM.darkened(0.5), false, 1.5)
+	draw_string(font, r.position + Vector2(4.0, r.size.y - 4.0), str(i + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, TEXT_COLOR)
+	draw_string(font, r.position + Vector2(0.0, r.size.y + 12.0), "x%d" % floori(player.flask_charges[i] / f["cost"]),
 		HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 11, MUTED)
 
 

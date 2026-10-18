@@ -34,6 +34,8 @@ func _initialize() -> void:
 	_test_boards_save()
 	_test_enemy_hit_one()
 	_test_camp_and_tutorial_data()
+	_test_item_transfer()
+	_test_item_icons()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
 	else:
@@ -137,7 +139,7 @@ func _test_enemies() -> void:
 
 
 func _test_input_map() -> void:
-	for action in [&"move_up", &"move_down", &"move_left", &"move_right", &"skill_1", &"skill_2", &"skill_3", &"skill_4", &"skill_5", &"skill_6", &"flask_1", &"flask_2", &"toggle_skills", &"toggle_passives",
+	for action in [&"move_up", &"move_down", &"move_left", &"move_right", &"skill_1", &"skill_2", &"skill_3", &"skill_4", &"skill_5", &"skill_6", &"flask_1", &"flask_2", &"toggle_skills", &"toggle_character", &"toggle_minimap", &"toggle_passives",
 			&"toggle_inventory", &"respawn", &"debug_spawn_wave", &"debug_clear_enemies", &"debug_spawn_boss",
 			&"debug_drop_items"]:
 		_check(InputMap.has_action(action) and not InputMap.action_get_events(action).is_empty(), "acción '%s'" % action)
@@ -507,3 +509,54 @@ func _test_camp_and_tutorial_data() -> void:
 	var known := ["move", "talk_ada", "install_ram", "kevin", "leave_camp", "use_skill", "kill", "flask", "loot", "equip", "passives"]
 	for step in tutorial["steps"]:
 		_check(known.has(step["id"]), "paso de tutorial sin condición: %s" % step["id"])
+
+func _test_item_transfer() -> void:
+	var c := _new_character()
+	c.set_level(30)
+	var inv := c.inventory
+	var gen := ItemGenerator.new(_db, 12)
+	inv.boards.fill(null)
+	var helmet := gen.generate(1, Rarity.Item.NORMAL, "casco_de_hierro")
+	var ring := gen.generate(1, Rarity.Item.NORMAL, "anillo_de_rubi")
+	var board := gen.generate_motherboard(1, "ping_letal")
+	board.slots.assign(["DDR4", "DDR5"])
+	board.rams.resize(2)
+	var ram4 := gen.generate_ram(1, "multicanal")
+	var ram5 := gen.generate_ram(1, "ecc")
+	inv.bag[0] = helmet
+	inv.bag[1] = ring
+	inv.bag[2] = board
+	inv.bag[3] = ram4
+	inv.bag[4] = ram5
+	var bag := func(i: int) -> Dictionary: return {"kind": "bag", "index": i}
+
+	_check(ItemTransfer.move(c, bag.call(0), {"kind": "equip", "slot": "helmet"}) == "" and inv.equipped("helmet") == helmet and inv.bag[0] == null, "bolsa → casco")
+	_check(ItemTransfer.move(c, bag.call(1), {"kind": "equip", "slot": "helmet"}) != "", "un anillo no va en la cabeza")
+	_check(ItemTransfer.move(c, bag.call(1), {"kind": "equip", "slot": "ring_right"}) == "", "anillo en la ranura derecha")
+	_check(ItemTransfer.move(c, {"kind": "equip", "slot": "ring_right"}, {"kind": "equip", "slot": "ring_left"}) == "" and inv.equipped("ring_left") == ring, "anillo de una mano a otra")
+	_check(ItemTransfer.move(c, bag.call(2), {"kind": "equip", "slot": "body"}) != "", "una placa no se viste")
+	_check(ItemTransfer.move(c, bag.call(2), {"kind": "board", "index": 3}) == "" and inv.boards[3] == board, "placa a la barra")
+	_check(ItemTransfer.move(c, bag.call(3), {"kind": "dimm", "board": 3, "dimm": 1}) != "", "DDR4 en ranura DDR5: no")
+	_check(ItemTransfer.move(c, bag.call(3), {"kind": "dimm", "board": 3, "dimm": 0}) == "" and board.rams[0] == ram4, "DDR4 en ranura DDR4")
+	_check(ItemTransfer.move(c, bag.call(4), {"kind": "dimm", "board": 0, "dimm": 0}) != "", "sin placa en esa fila")
+	_check(ItemTransfer.move(c, {"kind": "board", "index": 3}, {"kind": "board", "index": 0}) == "" and inv.boards[0] == board and inv.boards[3] == null, "mover la placa de tecla")
+	_check(ItemTransfer.move(c, {"kind": "dimm", "board": 0, "dimm": 0}, bag.call(9)) == "" and inv.bag[9] == ram4 and board.rams[0] == null, "RAM instalada → bolsa")
+	_check(ItemTransfer.move(c, {"kind": "equip", "slot": "helmet"}, bag.call(4)) != "", "intercambio inválido: la RAM no puede ir a la cabeza")
+	_check(inv.equipped("helmet") == helmet and inv.bag[4] == ram5, "un intercambio inválido no cambia nada")
+	var low := _new_character()
+	low.inventory.bag[0] = gen.generate(40, Rarity.Item.NORMAL, "hacha_de_guerra")
+	_check(ItemTransfer.move(low, {"kind": "bag", "index": 0}, {"kind": "equip", "slot": "weapon"}) != "", "nivel insuficiente")
+	var taken := ItemTransfer.take(c, {"kind": "equip", "slot": "helmet"})
+	_check(taken == helmet and inv.equipped("helmet") == null, "sacar un objeto para tirarlo al suelo")
+
+
+func _test_item_icons() -> void:
+	for b in _db.bases.values():
+		_check(ItemIcons.has_icon(b["id"]), "sin icono para la base %s" % b["id"])
+	for id in ["motherboard", "ram_DDR3", "ram_DDR4", "ram_DDR5", "flask_coffee", "flask_energy", "unknown"]:
+		_check(ItemIcons.has_icon(id), "sin icono '%s'" % id)
+	for f in Player.FLASKS:
+		_check(ItemIcons.has_icon(f["icon"]), "icono de la poción %s" % f["name"])
+	var gen := ItemGenerator.new(_db, 2)
+	_check(ItemIcons.icon_id(gen.generate_ram(1, "ecc")) == "ram_DDR5", "icono de RAM según su generación")
+	_check(ItemIcons.texture() != null, "atlas de iconos cargado")

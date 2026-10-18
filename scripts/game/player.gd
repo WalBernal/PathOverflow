@@ -19,9 +19,9 @@ const MAX_BLOCK_CHANCE := 75.0
 ## Pociones (como los frascos de PoE): se recargan matando enemigos.
 ## recover: fracción de la vida/maná máximos que devuelven en `duration` segundos.
 const FLASKS := [
-	{"name": "Café", "resource": "life", "max_charges": 45.0, "cost": 15.0, "recover": 0.45, "duration": 2.5,
+	{"name": "Café", "icon": "flask_coffee", "resource": "life", "max_charges": 45.0, "cost": 15.0, "recover": 0.45, "duration": 2.5,
 		"color": Color("8a5a2b"), "description": "Recupera vida poco a poco. Sin azúcar, como tu vida social."},
-	{"name": "Bebida energética", "resource": "mana", "max_charges": 45.0, "cost": 15.0, "recover": 0.5, "duration": 2.5,
+	{"name": "Bebida energética", "icon": "flask_energy", "resource": "mana", "max_charges": 45.0, "cost": 15.0, "recover": 0.5, "duration": 2.5,
 		"color": Color("3a7bd5"), "description": "Recupera maná poco a poco. Tu cardiólogo no lo aprueba."},
 ]
 ## Cargas por enemigo muerto, según su rareza.
@@ -93,6 +93,10 @@ func heal(amount: float) -> void:
 		life = minf(max_life(), life + amount)
 
 
+func facing_direction() -> Vector2:
+	return _facing
+
+
 func face(direction: Vector2) -> void:
 	if direction != Vector2.ZERO:
 		_facing = direction.normalized()
@@ -133,6 +137,10 @@ func use_flask(index: int) -> bool:
 	_recoveries.append({"resource": f["resource"], "per_second": total / f["duration"], "remaining": f["duration"]})
 	flask_used.emit(index)
 	return true
+
+
+func is_recovering(resource: String) -> bool:
+	return _recoveries.any(func(r: Dictionary) -> bool: return r["resource"] == resource)
 
 
 func add_flask_charges(enemy_rarity: int) -> void:

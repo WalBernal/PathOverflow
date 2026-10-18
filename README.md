@@ -15,14 +15,20 @@ Por ahora es solo para un jugador en local, pero la lógica está escrita para p
 | Click der. · Espacio · Q · E · R · F | Las 6 habilidades de la barra |
 | 1 / 2 | Café (vida) / Bebida energética (maná) |
 | Click en un objeto o NPC | Ir a recogerlo / hablar |
-| I | Inventario: click izq. equipa o quita, click der. destruye |
-| K | Habilidades: placas base y módulos RAM |
+| I | Inventario: arrastra para mover y equipar; click equipa o quita |
+| K | Habilidades: arrastra placas a la barra y RAM a sus ranuras |
+| C | Hoja de personaje (con retrato animado y opiniones no solicitadas) |
+| M | Mostrar u ocultar el minimapa |
 | P | Árbol pasivo (pausa el juego) |
 | Esc | Cierra lo abierto; si no hay nada, menú de pausa |
 | F1 / F2 / F3 / F4 | Depuración: +100 enemigos / limpiar / jefe único / botín de prueba |
 | R | Reaparecer en el campamento tras morir |
 
 Todas las teclas están en *Proyecto → Configuración del proyecto → Mapa de entrada*. Pasa el ratón por cualquier elemento del HUD para ver una ayuda.
+
+**Objetos**: arrastrar y soltar entre bolsa, equipo, barra de habilidades y ranuras DIMM (intercambia si hace falta; las reglas están en `ItemTransfer`). Soltar un objeto fuera de los paneles lo tira al suelo; ya no se pueden destruir con un click.
+
+**Al lanzar habilidades** el personaje solo se detiene un instante (25 % del tiempo de uso, máximo 0,15 s); el ritmo de ataque no cambia.
 
 `scenes/ui/passive_tree_screen.tscn` funciona sola (F6) para probar builds, y `scenes/game/world.tscn` (F6) arranca con un personaje temporal que no se guarda.
 
@@ -56,6 +62,13 @@ Se definen en `data/skills/skills.json` y `data/skills/ram_modules.json`. Cada c
 - **NPCs** (`data/camp.json`): Ada la Senior (te explica las habilidades y te da una RAM que encaja en tu primera placa), Kevin el Becario (rellena las pociones) y Root el SysAdmin (lore y una placa de regalo). Los diálogos tienen opciones con condiciones y acciones; los regalos se dan una sola vez (banderas guardadas en el personaje).
 - **Tutorial** (`data/tutorial.json`): 11 pasos con condiciones que se comprueban solas. El progreso se guarda por personaje y se puede saltar.
 
+## Interfaz
+
+- **HUD**: orbes de vida/ES y maná, café y bebida energética con cargas (vapor y burbujas cuando están listas), barra de 6 habilidades con enfriamiento y coste, experiencia y botones de menú (C, I, K, P).
+- **Minimapa** (arriba a la derecha): campamento, NPCs, enemigos por rareza, botín valioso y una flecha hacia el campamento cuando queda fuera de vista. Se oculta mientras el inventario está abierto.
+- **Hoja de personaje** (C): retrato animado de pecho hacia arriba que respira, parpadea, te sigue con la mirada, toma café, piensa (con spinner de carga), bosteza, se pone gafas de sol si su DPS es alto y suda con poca vida. Incluye atributos, defensas con su efecto real (reducción de la armadura, probabilidad de esquivar), resistencias con comentarios, ofensiva de la habilidad principal, muertes, enemigos eliminados y un estado de ánimo calculado.
+- **Iconos de objetos**: atlas `assets/sprites/items/items.png` generado con `tools/generate_item_icons.gd` (un icono por base, placas base, RAM por generación y pociones). Para usar arte propio, sustituye el PNG respetando la cuadrícula (mapa en `data/item_icons.json`).
+
 ## Enemigos
 
 Cinco tipos con sprites animados: Bug, Proceso zombi, Memory leak, Gusano de red y Daemon (para jefes). Están en `data/enemies.json` y `assets/sprites/enemies/enemies.png`.
@@ -80,14 +93,14 @@ data/skills/          Habilidades (placas base) y módulos RAM
 scripts/core/         Stat, Modifier, StatBlock (fórmula de PoE), DataLoader
 scripts/passives/     PassiveTree, PassiveAllocation, PassiveTreeView
 scripts/character/    CharacterData, CharacterSaves, CharacterAppearance
-scripts/items/        Rarity, ItemDatabase, Item, ItemGenerator, Inventory
+scripts/items/        Rarity, ItemDatabase, Item, ItemGenerator, Inventory, ItemTransfer, ItemIcons
 scripts/skills/       SkillDatabase, Motherboard, RamModule, SkillCalc
 scripts/game/         World, Player, SkillController, EnemyManager, LootManager, Camp, IsoGround
 scripts/ui/           Menús, HUD, inventario, habilidades, diálogos, tutorial, tooltips, UiStyle
 scripts/autoload/     GameData: datos estáticos y personaje actual
 scenes/               Escenas (.tscn)
 assets/               Sprites, shaders, UI, audio, fuentes
-tools/                Generadores (árbol, sprites) y comprobador de scripts
+tools/                Generadores (árbol, sprites de enemigos, iconos) y comprobador de scripts
 tests/                Pruebas de la lógica pura
 ```
 
@@ -143,7 +156,7 @@ Añade `*.json` en *Exportar → Recursos → Filtros para exportar archivos no-
 
 ## Próximos pasos sugeridos
 
-1. Sprites del jugador y de los NPCs (el formato de apariencia ya está preparado) e iconos de objetos.
+1. Sprites del jugador y de los NPCs (el formato de apariencia ya está preparado).
 2. Resistencias y tipos de daño en los enemigos, y enemigos con habilidades propias.
 3. Ascendencias mediante pruebas (ahora se eligen libremente en el árbol pasivo).
 4. Más zonas fuera del campamento (mapas con TileMapLayer isométrico).
