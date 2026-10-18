@@ -34,8 +34,20 @@ var _profiles: Array = []         # perfil de SkillCalc por ranura ({} si vacía
 var _projectiles: Array[Dictionary] = []
 var _effects: Array[Dictionary] = []      # visuales: anillos y destellos
 var _pending: Array[Dictionary] = []      # explosiones retardadas, rayos y repeticiones
-var _spin: Dictionary = {}                # giro activo (Bucle Infinito)
+var _spins: Array[Dictionary] = []        # giros activos (Bucle Infinito; también de torretas)
 var _traps: Array[Dictionary] = []        # trampas en el suelo (Bomba Lógica)
+## Trampas, minas y torretas de las RAM de despliegue: ejecutan la habilidad solas.
+var _devices: Array[Dictionary] = []
+var _minions: Array[Dictionary] = []      # esbirros (Proceso Hijo)
+var _clouds: Array[Dictionary] = []       # charcos de daño degenerativo (Fuga de Memoria)
+
+const DEVICE_RULES := {
+	"trap": {"range": 450.0, "armed": 0.4, "life": 16.0, "trigger": 50.0, "max": 3},
+	"mine": {"range": 350.0, "armed": 1.1, "life": 25.0, "trigger": 75.0, "max": 5},
+	"totem": {"range": 300.0, "armed": 0.3, "life": 8.0, "trigger": 650.0, "max": 1},
+}
+const MINION_SPEED := 240.0
+const MINION_SEARCH := 450.0
 var _mana_warning_cooldown := 0.0
 ## Tiempo hasta poder lanzar otra habilidad (el ritmo de ataque/lanzamiento).
 var _busy := 0.0
@@ -83,6 +95,9 @@ func _physics_process(delta: float) -> void:
 	_update_projectiles(delta)
 	_update_spin(delta)
 	_update_traps(delta)
+	_update_devices(delta)
+	_update_minions(delta)
+	_update_clouds(delta)
 	_update_effects(delta)
 	queue_redraw()
 
@@ -102,6 +117,10 @@ func try_use(index: int) -> bool:
 	player.action_lock = minf(MAX_MOVE_LOCK, p["use_time"] * MOVE_LOCK_FRACTION)
 	var target := get_global_mouse_position()
 	player.face(target - player.global_position)
+	if p["deploy"] != "":
+		_deploy(p, target)
+		skill_used.emit(index)
+		return true
 	_execute(p, target)
 	for r in int(p["repeats"]):
 		_pending.append({"type": "repeat", "time": REPEAT_DELAY * (r + 1), "profile": p, "target": target})
@@ -109,8 +128,10 @@ func try_use(index: int) -> bool:
 	return true
 
 
-func _execute(p: Dictionary, target: Vector2) -> void:
-	var origin := player.global_position
+## `from`: si se indica, la usa un dispositivo (trampa, mina, torreta) desde ahí.
+func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
+	var device := from != Vector2.INF
+	var origin := from if device else player.global_position
 	var color: Color = DAMAGE_COLORS.get(p["damage_type"], Color.WHITE)
 	var dir := (target - origin).normalized()
 	if dir == Vector2.ZERO:
@@ -125,9 +146,11 @@ func _execute(p: Dictionary, target: Vector2) -> void:
 		"dash":
 			# Embestida: se mueve con colisión (no atraviesa paredes) y golpea lo que hay en la línea.
 			var offset := (target - origin).limit_length(p["range"])
-			player.move_and_collide(offset)
-			player.stop_auto_move()
-			var end := player.global_position
+			var end := origin + offset
+			if not device:
+				player.move_and_collide(offset)
+				player.stop_auto_move()
+				end = player.global_position
 			enemies.hit_in_segment(origin, end, p["width"] * 0.5, p["min_damage"], p["max_damage"], p["crit_chance"], p["crit_multiplier"])
 			_leech(p)
 			_effects.append({"type": "trail", "pos": origin, "end": end, "radius": p["width"], "time": 0.0, "duration": 0.3, "color": color})
@@ -151,7 +174,18 @@ func _execute(p: Dictionary, target: Vector2) -> void:
 					"color": color, "boomerang": true, "returning": false, "spin": 0.0,
 				})
 		"spin":
-			_spin = {"time_left": p["duration"], "next_tick": 0.0, "profile": p, "color": color, "angle": 0.0}
+			_spins.append({"time_left": p["duration"], "next_tick": 0.0, "profile": p, "color": color, "angle": 0.0,
+				"center": origin if device else Vector2.INF})
+		"minion":
+			for k in maxi(1, p["count"]):
+				_minions.append({"pos": origin + Vector2.from_angle(TAU * k / maxf(1.0, p["count"])) * 30.0,
+					"life": p["duration"], "total": p["duration"], "cd": 0.3, "profile": p, "color": color, "phase": randf() * TAU})
+			while _minions.size() > maxi(1, p["max_active"]):
+				_minions.pop_front()
+			_effects.append({"type": "ring", "pos": origin, "radius": 50.0, "time": 0.0, "duration": 0.3, "color": color})
+		"degen_area":
+			var offset := (target - origin).limit_length(p["range"])
+			_clouds.append({"pos": origin + offset, "life": p["duration"], "next": 0.0, "profile": p, "color": color, "seed": randi()})
 		"trap":
 			var offset := (target - origin).limit_length(p["range"])
 			_traps.append({"pos": origin + offset, "armed_in": 0.5, "life": p["duration"], "profile": p, "color": color})
@@ -167,13 +201,15 @@ func _execute(p: Dictionary, target: Vector2) -> void:
 				_projectiles.append({
 					"pos": origin, "vel": dir.rotated(angle) * float(p["projectile_speed"]),
 					"distance_left": float(p["range"]), "pierce_left": int(p["pierce"]),
-					"hit_ids": {}, "profile": p, "color": color,
+					"hit_ids": {}, "profile": p, "color": color, "chains_left": int(p["projectile_chains"]),
 				})
 		"ground_aoe":
 			var offset := (target - origin).limit_length(p["range"])
 			_pending.append({"type": "blast", "time": p["delay"], "pos": origin + offset, "profile": p, "color": color})
 			_effects.append({"type": "marker", "pos": origin + offset, "radius": p["radius"], "time": 0.0, "duration": p["delay"], "color": color})
 		"blink":
+			if device:
+				return
 			var offset := (target - origin).limit_length(p["range"])
 			_effects.append({"type": "ring", "pos": origin, "radius": 30.0, "time": 0.0, "duration": 0.3, "color": color})
 			player.global_position = origin + offset
@@ -204,19 +240,119 @@ func _chain(p: Dictionary, origin: Vector2, target: Vector2, color: Color) -> vo
 
 
 func _update_spin(delta: float) -> void:
-	if _spin.is_empty():
-		return
-	_spin["time_left"] -= delta
-	_spin["next_tick"] -= delta
-	_spin["angle"] += delta * 14.0
-	var p: Dictionary = _spin["profile"]
-	if not player.is_alive() or _spin["time_left"] <= 0.0:
-		_spin = {}
-		return
-	if _spin["next_tick"] <= 0.0:
-		_spin["next_tick"] = p["tick"]
-		_damage_area(player.global_position, p["radius"], p)
+	var still: Array[Dictionary] = []
+	for spin in _spins:
+		spin["time_left"] -= delta
+		spin["next_tick"] -= delta
+		spin["angle"] += delta * 14.0
+		var p: Dictionary = spin["profile"]
+		var own: bool = spin["center"] == Vector2.INF
+		if spin["time_left"] <= 0.0 or (own and not player.is_alive()):
+			continue
+		if spin["next_tick"] <= 0.0:
+			spin["next_tick"] = p["tick"]
+			_damage_area(_spin_center(spin), p["radius"], p)
+		still.append(spin)
+	_spins = still
 
+
+func _spin_center(spin: Dictionary) -> Vector2:
+	return player.global_position if spin["center"] == Vector2.INF else spin["center"]
+
+
+# --- Trampas, minas y torretas (RAM de despliegue) ---
+
+func _deploy(p: Dictionary, target: Vector2) -> void:
+	var kind: String = p["deploy"]
+	var rules: Dictionary = DEVICE_RULES[kind]
+	var origin := player.global_position
+	var inner := p.duplicate()
+	inner["deploy"] = ""
+	var life: float = p["totem_duration"] if kind == "totem" else rules["life"]
+	_devices.append({"kind": kind, "pos": origin + (target - origin).limit_length(rules["range"]), "armed_in": rules["armed"],
+		"life": life, "total": life, "profile": inner, "next_use": 0.0,
+		"interval": maxf(0.35, float(p["use_time"]) * 1.25), "color": DAMAGE_COLORS.get(p["damage_type"], Color.WHITE)})
+	# Límite por tipo: se retira el más antiguo.
+	var same: Array = _devices.filter(func(d: Dictionary) -> bool: return d["kind"] == kind)
+	if same.size() > int(rules["max"]):
+		_devices.erase(same[0])
+
+
+func _update_devices(delta: float) -> void:
+	var still: Array[Dictionary] = []
+	for d in _devices:
+		d["life"] -= delta
+		d["armed_in"] -= delta
+		if d["life"] <= 0.0:
+			continue
+		var rules: Dictionary = DEVICE_RULES[d["kind"]]
+		if d["armed_in"] > 0.0:
+			still.append(d)
+			continue
+		var i := enemies.nearest_index(d["pos"], rules["trigger"])
+		if d["kind"] == "totem":
+			d["next_use"] -= delta
+			if i != -1 and d["next_use"] <= 0.0:
+				d["next_use"] = d["interval"]
+				_execute(d["profile"], enemies.positions[i], d["pos"])
+			still.append(d)
+		elif i != -1:
+			# Trampa o mina: se activa contra el enemigo que la pisa y desaparece.
+			_execute(d["profile"], enemies.positions[i], d["pos"])
+			_effects.append({"type": "burst", "pos": d["pos"], "radius": 26.0, "time": 0.0, "duration": 0.25, "color": d["color"]})
+		else:
+			still.append(d)
+	_devices = still
+
+
+# --- Esbirros ---
+
+func _update_minions(delta: float) -> void:
+	var still: Array[Dictionary] = []
+	for m in _minions:
+		m["life"] -= delta
+		m["cd"] -= delta
+		m["phase"] += delta * 8.0
+		if m["life"] <= 0.0:
+			continue
+		var p: Dictionary = m["profile"]
+		var pos: Vector2 = m["pos"]
+		var i := enemies.nearest_index(pos, MINION_SEARCH)
+		if i != -1 and enemies.positions[i].distance_to(player.global_position) < MINION_SEARCH * 1.6:
+			var to := enemies.positions[i] - pos
+			var reach := enemies.radii[i] + 14.0
+			if to.length() > reach:
+				m["pos"] = pos + to.normalized() * minf(MINION_SPEED * delta, to.length() - reach)
+			elif m["cd"] <= 0.0:
+				m["cd"] = SkillCalc.MINION_ATTACK_INTERVAL
+				enemies.hit_index(i, p["min_damage"], p["max_damage"], p["crit_chance"], p["crit_multiplier"])
+				_effects.append({"type": "burst", "pos": pos + to.normalized() * 14.0, "radius": 12.0, "time": 0.0, "duration": 0.15, "color": m["color"]})
+		else:
+			# Sin enemigos cerca: siguen al jugador.
+			var to_player := player.global_position - pos
+			if to_player.length() > 80.0:
+				m["pos"] = pos + to_player.normalized() * MINION_SPEED * delta
+		still.append(m)
+	_minions = still
+
+
+# --- Charcos degenerativos ---
+
+func _update_clouds(delta: float) -> void:
+	var still: Array[Dictionary] = []
+	for c in _clouds:
+		c["life"] -= delta
+		c["next"] -= delta
+		var p: Dictionary = c["profile"]
+		if c["next"] <= 0.0:
+			c["next"] = p["tick"]
+			# base_damage es por segundo: cada tick hace la parte proporcional.
+			var k: float = p["tick"]
+			enemies.hit_in_radius(c["pos"], p["radius"], p["min_damage"] * k, p["max_damage"] * k, 0.0, 100.0)
+			_leech(p)
+		if c["life"] > 0.0:
+			still.append(c)
+	_clouds = still
 
 func _update_traps(delta: float) -> void:
 	var still: Array[Dictionary] = []
@@ -288,7 +424,14 @@ func _update_projectiles(delta: float) -> void:
 		if hit != -1:
 			_leech(p)
 			pr["hit_ids"][hit] = true
-			pr["pierce_left"] -= 1
+			var next := enemies.nearest_index(pr["pos"], 260.0, pr["hit_ids"]) if pr.get("chains_left", 0) > 0 else -1
+			if next != -1:
+				# Encadenamiento: rebota hacia otro enemigo en vez de gastar perforación.
+				pr["chains_left"] -= 1
+				pr["vel"] = (enemies.positions[next] - pr["pos"]).normalized() * pr["vel"].length()
+				pr["distance_left"] = maxf(pr["distance_left"], 300.0)
+			else:
+				pr["pierce_left"] -= 1
 			_effects.append({"type": "burst", "pos": pr["pos"], "radius": 14.0, "time": 0.0, "duration": 0.15, "color": pr["color"]})
 		if pr.get("boomerang", false) or (pr["distance_left"] > 0.0 and pr["pierce_left"] >= 0):
 			still.append(pr)
@@ -311,13 +454,16 @@ func _draw() -> void:
 		draw_circle(trap["pos"], 9.0, Color("2a2a30"))
 		draw_circle(trap["pos"], 3.0, trap["color"] if blink else Color(trap["color"], 0.3))
 		draw_arc(trap["pos"], trap["profile"]["trigger_radius"], 0.0, TAU, 24, Color(trap["color"], 0.18), 1.0, true)
-	if not _spin.is_empty():
-		var p: Dictionary = _spin["profile"]
-		var c: Color = _spin["color"]
-		var center := player.global_position
+	_draw_clouds()
+	_draw_devices()
+	_draw_minions()
+	for spin in _spins:
+		var p: Dictionary = spin["profile"]
+		var c: Color = spin["color"]
+		var center := _spin_center(spin)
 		draw_circle(center, p["radius"], Color(c, 0.06))
 		for k in 3:
-			var a: float = _spin["angle"] + TAU * k / 3.0
+			var a: float = spin["angle"] + TAU * k / 3.0
 			draw_arc(center, p["radius"] * 0.8, a, a + 1.1, 12, Color(c, 0.85), 5.0, true)
 			draw_line(center + Vector2.from_angle(a + 1.1) * p["radius"] * 0.5, center + Vector2.from_angle(a + 1.1) * p["radius"], Color(c, 0.7), 3.0, true)
 	for e in _effects:
@@ -381,3 +527,72 @@ func _draw() -> void:
 		var dir: Vector2 = pr["vel"].normalized()
 		draw_line(pr["pos"] - dir * 18.0, pr["pos"], Color(pr["color"], 0.5), 4.0, true)
 		draw_circle(pr["pos"], 5.0, pr["color"])
+
+
+func _draw_devices() -> void:
+	var t := Time.get_ticks_msec() / 1000.0
+	for d in _devices:
+		var p: Vector2 = d["pos"]
+		var c: Color = d["color"]
+		var armed: bool = d["armed_in"] <= 0.0
+		match String(d["kind"]):
+			"trap":
+				# Cepo con una placa base encima.
+				draw_circle(p, 12.0, Color("3a2a1a"))
+				for k in 6:
+					var a := TAU * k / 6.0
+					draw_line(p + Vector2.from_angle(a) * 8.0, p + Vector2.from_angle(a) * 14.0, Color("8a8a8a"), 2.0)
+				draw_rect(Rect2(p - Vector2(5, 4), Vector2(10, 8)), Color("2f6a3a"))
+				draw_circle(p, 2.5, c if armed and fmod(t, 0.8) < 0.4 else Color(c, 0.3))
+			"mine":
+				# Casi invisible: solo un parpadeo cuando está armada.
+				var alpha := 0.25 if armed else 0.6
+				var hexagon := PackedVector2Array()
+				for k in 6:
+					hexagon.append(p + Vector2.from_angle(TAU * k / 6.0) * 9.0)
+				draw_colored_polygon(hexagon, Color(0.2, 0.2, 0.25, alpha))
+				if armed and fmod(t + p.x * 0.01, 1.5) < 0.15:
+					draw_circle(p, 3.0, Color(1.0, 0.3, 0.2))
+			"totem":
+				# Torreta: un mini servidor con antena y un aro de alcance.
+				var life: float = d["life"] / maxf(0.1, d["total"])
+				draw_arc(p, 30.0, -PI / 2.0, -PI / 2.0 + TAU * life, 32, Color(c, 0.7), 2.0, true)
+				draw_rect(Rect2(p + Vector2(-11, -30), Vector2(22, 32)), Color("23262e"))
+				draw_rect(Rect2(p + Vector2(-11, -30), Vector2(22, 32)), Color("4a4f5c"), false, 2.0)
+				for k in 3:
+					var on := fmod(t * 3.0 + k, 2.0) < 1.0
+					draw_circle(p + Vector2(6, -22 + k * 8), 2.0, c if on else Color("1a2a1a"))
+				draw_line(p + Vector2(0, -30), p + Vector2(0, -42), Color("8a8a8a"), 2.0)
+				draw_circle(p + Vector2(0, -43), 3.0, c)
+
+
+func _draw_minions() -> void:
+	for m in _minions:
+		var p: Vector2 = m["pos"]
+		var bob := sin(m["phase"]) * 1.5
+		draw_set_transform(p + Vector2(0, 8), 0.0, Vector2(1.0, 0.4))
+		draw_circle(Vector2.ZERO, 9.0, Color(0, 0, 0, 0.35))
+		draw_set_transform(Vector2.ZERO)
+		draw_rect(Rect2(p + Vector2(-6, -8 + bob), Vector2(12, 14)), Color("2f4a3a"))
+		draw_rect(Rect2(p + Vector2(-8, -20 + bob), Vector2(16, 12)), Color("b8b8b0"))
+		draw_rect(Rect2(p + Vector2(-6, -18 + bob), Vector2(12, 8)), Color("10200f"))
+		draw_string(ThemeDB.fallback_font, p + Vector2(-5, -11 + bob), ">_", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("3cff6a"))
+		var life: float = m["life"] / maxf(0.1, m["total"])
+		draw_rect(Rect2(p + Vector2(-10, -26), Vector2(20 * life, 2)), Color("7fd07f"))
+
+
+func _draw_clouds() -> void:
+	var t := Time.get_ticks_msec() / 1000.0
+	for c in _clouds:
+		var p: Vector2 = c["pos"]
+		var r: float = c["profile"]["radius"]
+		var fade := clampf(c["life"] / 0.4, 0.0, 1.0)
+		var col: Color = c["color"]
+		draw_set_transform(p, 0.0, Vector2(1.0, 0.7))
+		draw_circle(Vector2.ZERO, r, Color(col, 0.18 * fade))
+		draw_circle(Vector2.ZERO, r * 0.7, Color(col, 0.18 * fade))
+		draw_set_transform(Vector2.ZERO)
+		for k in 6:
+			var phase := fmod(t * 0.8 + k / 6.0 + (int(c["seed"]) % 7) * 0.1, 1.0)
+			var q := p + Vector2.from_angle(k * 1.7 + int(c["seed"])) * r * 0.55 + Vector2(0, -phase * 14.0)
+			draw_circle(q, 3.0 + 2.0 * (1.0 - phase), Color(col.lightened(0.3), 0.6 * (1.0 - phase) * fade))

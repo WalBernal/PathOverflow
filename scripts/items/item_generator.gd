@@ -29,6 +29,7 @@ func _init(p_db: ItemDatabase, seed_value := -1) -> void:
 ## Probabilidad de que un objeto de botín sea una placa base o un módulo RAM.
 const MOTHERBOARD_DROP_CHANCE := 0.08
 const RAM_DROP_CHANCE := 0.10
+const FLASK_DROP_CHANCE := 0.07
 ## Probabilidad relativa de cada número de ranuras DIMM (3..7).
 const SLOT_COUNT_WEIGHTS := {3: 50.0, 4: 30.0, 5: 13.0, 6: 5.0, 7: 2.0}
 ## Probabilidad de que una ranura sea de la generación del atributo de la habilidad.
@@ -42,6 +43,10 @@ func roll_drop(item_level: int, rarity_bonus := 0.0) -> Item:
 		return generate_motherboard(item_level)
 	if r < MOTHERBOARD_DROP_CHANCE + RAM_DROP_CHANCE:
 		return generate_ram(item_level)
+	if r < MOTHERBOARD_DROP_CHANCE + RAM_DROP_CHANCE + FLASK_DROP_CHANCE:
+		var flask := generate_flask(item_level)
+		if flask:
+			return flask
 	return generate(item_level, roll_rarity(rarity_bonus))
 
 
@@ -66,6 +71,23 @@ func generate_ram(item_level: int, ram_id := "") -> RamModule:
 	var defs: Dictionary = db.skills.rams
 	var def: Dictionary = defs[ram_id] if ram_id != "" else defs[_pick(defs.keys())]
 	return RamModule.new(def, item_level)
+
+
+## Poción aleatoria de nivel <= item_level. Las de nivel más cercano al de la
+## zona son más probables (las antiguas dejan de caer poco a poco).
+func generate_flask(item_level: int, flask_id := "") -> Flask:
+	if flask_id != "":
+		return Flask.new(db.flasks[flask_id], item_level) if db.flasks.has(flask_id) else null
+	var options: Array = []
+	var weights: Array = []
+	for def in db.flasks.values():
+		var lvl := int(def.get("level", 1))
+		if lvl <= item_level:
+			options.append(def)
+			weights.append(1.0 / (1.0 + (item_level - lvl) / 4.0))
+	if options.is_empty():
+		return null
+	return Flask.new(options[_weighted_index(weights)], item_level)
 
 
 func roll_rarity(rarity_bonus := 0.0) -> int:

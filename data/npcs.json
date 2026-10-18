@@ -3,7 +3,7 @@
   "_doc": "NPCs y sus diálogos. Nodos con texto y opciones. Opción: text, next ('' = cerrar), requires_flag / hides_if_flag, action {type: give_item | give_matching_ram | give_random | refill | set_flag | start_quest | quest_advance, flag, quest}. voice: tono de la voz (pitch, 1 = normal) y velocidad (rate) para el narrador y los pitidos. Las banderas se guardan en el personaje. Dónde aparece cada NPC lo dice data/act1.json.",
   "npcs": {
     "ada": {
-      "name": "Ada, la Senior",
+      "name": "Aida, la Senior",
       "dialogue": "ada",
       "appearance": {
         "body": 1,
@@ -18,7 +18,7 @@
       }
     },
     "kevin": {
-      "name": "Kevin, el Becario",
+      "name": "Mario, el Becario",
       "dialogue": "kevin",
       "appearance": {
         "body": 0,
@@ -33,7 +33,7 @@
       }
     },
     "root": {
-      "name": "Root, el SysAdmin",
+      "name": "Rafa, el SysAdmin",
       "dialogue": "root",
       "appearance": {
         "body": 2,
@@ -113,7 +113,7 @@
       "start": "hola",
       "nodes": {
         "hola": {
-          "text": "Vaya, otro exiliado. Te tiraron a producción sin pasar por staging, ¿eh? Soy Ada. Llevo aquí desde que esto era un monolito en COBOL.",
+          "text": "Vaya, otro exiliado. Te tiraron a producción sin pasar por staging, ¿eh? Soy Aida. Llevo aquí desde que esto era un monolito en COBOL.",
           "options": [
             {
               "text": "He derrotado al Arquitecto del Monolito.",
@@ -184,7 +184,7 @@
           "text": "Toma, un módulo que encaja en tu primera placa. Abre las habilidades con K, haz click en la RAM y luego en la ranura de su color. Si no encaja, es culpa del hardware. Siempre es culpa del hardware.",
           "options": [
             {
-              "text": "Gracias, Ada.",
+              "text": "Gracias, Aida.",
               "next": "",
               "action": {
                 "type": "give_matching_ram",
@@ -194,10 +194,10 @@
           ]
         },
         "victoria": {
-          "text": "¿En serio? Entonces el Servidor debería poder reiniciarse... ¿Lo ves? Sigue caído. Claro. Habla con Root: él lleva reiniciándolo desde 2019, sabrá qué ha pasado esta vez.",
+          "text": "¿En serio? Entonces el Servidor debería poder reiniciarse... ¿Lo ves? Sigue caído. Claro. Habla con Rafa: él lleva reiniciándolo desde 2019, sabrá qué ha pasado esta vez.",
           "options": [
             {
-              "text": "Iré a ver a Root.",
+              "text": "Iré a ver a Rafa.",
               "next": "",
               "action": {
                 "type": "set_flag",
@@ -221,7 +221,7 @@
       "start": "hola",
       "nodes": {
         "hola": {
-          "text": "¡Hola! Soy Kevin, el becario. Llevo tres meses aquí y todavía no tengo acceso a nada. Pero preparo un café increíble.",
+          "text": "¡Hola! Soy Mario, el becario. Llevo tres meses aquí y todavía no tengo acceso a nada. Pero preparo un café increíble.",
           "options": [
             {
               "text": "Traigo granos de café. De bicho.",
@@ -251,10 +251,10 @@
           ]
         },
         "cafe": {
-          "text": "¡Marchando! Te he rellenado las pociones: café para la vida (tecla 1) y bebida energética para el maná (tecla 2). Se recargan matando cosas. Como mi autoestima.",
+          "text": "¡Marchando! Te he rellenado todas las pociones del cinturón (teclas 1 a 5): cafés para la vida, refrescos para el maná y alguna rareza de utilidad. Se recargan matando cosas. Como mi autoestima. Y si encuentras un Cold Brew por ahí... es mío.",
           "options": [
             {
-              "text": "Gracias, Kevin.",
+              "text": "Gracias, Mario.",
               "next": "hola"
             }
           ]
@@ -289,7 +289,7 @@
           "text": "No voy a preguntar de dónde salen exactamente. Toma, te relleno las pociones y te doy esto que encontré en la cocina.",
           "options": [
             {
-              "text": "Disfrútalo, Kevin.",
+              "text": "Disfrútalo, Mario.",
               "next": "",
               "action": {
                 "type": "quest_advance",
@@ -304,10 +304,10 @@
       "start": "hola",
       "nodes": {
         "hola": {
-          "text": "...¿Qué. Quieres? Estoy reiniciando el servidor. Desde 2019.",
+          "text": "Aaah... ya voy en un momento.... si puedo..... Estoy reiniciando el servidor..... desde 2019... ¿Qué. Quieres....?",
           "options": [
             {
-              "text": "Ada dice que el Servidor sigue caído.",
+              "text": "Aida dice que el Servidor sigue caído.",
               "next": "reinicio",
               "requires_flag": "ada_victoria",
               "hides_if_flag": "root_reinicio"
@@ -333,7 +333,7 @@
           ]
         },
         "lore": {
-          "text": "La Gran Migración. Alguien desplegó un viernes a las seis de la tarde, sin tests, con un «git push --force». El Servidor se corrompió y todo lo que corría dentro cobró vida. Ahora los bugs tienen patas. Literalmente.",
+          "text": "La Gran Migración..... alguien desplegó un viernes... a las seis de la tarde.... sin tests..... con un «git push --force»... El Servidor se corrompió.... y todo lo que corría dentro cobró vida..... Ahora los bugs tienen patas... Literalmente.....",
           "options": [
             {
               "text": "¿Y quién fue?",
@@ -346,7 +346,7 @@
           ]
         },
         "culpable": {
-          "text": "Los logs dicen que fue «admin». Todos somos «admin». Esa es la tragedia.",
+          "text": "Los logs dicen que fue «admin»..... Todos somos «admin»... Esa es la tragedia.......",
           "options": [
             {
               "text": "...",
@@ -355,7 +355,7 @@
           ]
         },
         "placa": {
-          "text": "Toma. Ping Letal: un rayo que atraviesa enemigos. Instálala en la barra con K. Y no me des las gracias, dame un ticket.",
+          "text": "Toma..... Ping Letal... un rayo que atraviesa enemigos.... Instálala en la barra con K..... Y no me des las gracias... dame un ticket.... que lo miro mañana..... o el lunes....",
           "options": [
             {
               "text": "Abriré un ticket.",
@@ -370,7 +370,7 @@
           ]
         },
         "reinicio": {
-          "text": "Lo intenté. «sudo reboot». Kernel panic. El Arquitecto no era el problema: era un síntoma. Algo vive más abajo, en el Kernel, y no quiere que el Servidor vuelva. Escucha... los logs están llenos de un nombre: «init». El PID 1.",
+          "text": "Lo intenté..... «sudo reboot»... Kernel panic...... El Arquitecto no era el problema.... era un síntoma..... Algo vive más abajo... en el Kernel.... y no quiere que el Servidor vuelva..... Los logs están llenos de un nombre... «init»..... El PID 1......",
           "options": [
             {
               "text": "¿Y ahora qué?",
@@ -379,7 +379,7 @@
           ]
         },
         "reinicio2": {
-          "text": "He abierto un portal junto a la empalizada, al sureste. Lleva directo al Kernel. Bueno: lo llevará cuando alguien lo programe. Todo está «en desarrollo». Como siempre.",
+          "text": "He abierto un portal... junto a la empalizada.... al sureste..... Lleva directo al Kernel... Bueno..... lo llevará cuando alguien lo programe.... Todo está «en desarrollo»..... como siempre......",
           "options": [
             {
               "text": "Prepararé el viaje.",
@@ -392,7 +392,7 @@
           ]
         },
         "portal": {
-          "text": "El Portal al Kernel. Ahora mismo da un 503. Cuando el Acto II esté listo, será lo primero que cruces. Hasta entonces, farmea. Es lo que hacemos todos.",
+          "text": "El Portal al Kernel..... Ahora mismo da un 503... Cuando el Acto II esté listo.... será lo primero que cruces..... Hasta entonces... farmea..... Es lo que hacemos todos.......",
           "options": [
             {
               "text": "Vale.",
@@ -436,7 +436,7 @@
           ]
         },
         "lucha": {
-          "text": "Click derecho o Espacio usan tu primera habilidad; Q, E, R y F, las demás. Si te quedas sin maná, bebe (tecla 2). Si te quedas sin vida, café (tecla 1). Si te quedas sin ideas, Stack Overflow.",
+          "text": "Click derecho o Espacio usan tu primera habilidad; Q, E, R y F, las demás. Si te quedas sin vida, café (tecla 1). Sin maná, un refresco (tecla 2). Las teclas 3, 4 y 5 son para las pociones que encuentres. Si te quedas sin ideas, Stack Overflow.",
           "options": [
             {
               "text": "Entendido.",

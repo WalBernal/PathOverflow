@@ -21,21 +21,8 @@ const MAX_BLOCK_CHANCE := 75.0
 ## Condiciones (como en PoE): vida baja = 50 % o menos; muerte reciente = 4 s.
 const LOW_LIFE_FRACTION := 0.5
 const RECENT_KILL_TIME := 4.0
-## Pociones (como los frascos de PoE): se recargan matando enemigos.
-## recover: fracción de la vida/maná máximos que devuelven en `duration` segundos.
-const FLASKS := [
-	{"name": "Café", "icon": "flask_coffee", "resource": "life", "max_charges": 45.0, "cost": 15.0, "recover": 0.45, "duration": 2.5,
-		"color": Color("8a5a2b"), "description": "Recupera vida poco a poco. Sin azúcar, como tu vida social."},
-	{"name": "Bebida energética", "icon": "flask_energy", "resource": "mana", "max_charges": 45.0, "cost": 15.0, "recover": 0.5, "duration": 2.5,
-		"color": Color("3a7bd5"), "description": "Recupera maná poco a poco. Tu cardiólogo no lo aprueba."},
-]
-## Cargas por enemigo muerto, según su rareza.
-const FLASK_CHARGES_BY_RARITY := {
-	Rarity.Enemy.NORMAL: 1.0,
-	Rarity.Enemy.SPECIAL: 3.0,
-	Rarity.Enemy.ELITE: 6.0,
-	Rarity.Enemy.UNIQUE: 15.0,
-}
+## Teclas del cinturón de pociones (Inventory.FLASK_SLOTS).
+const FLASK_ACTIONS := [&"flask_1", &"flask_2", &"flask_3", &"flask_4", &"flask_5"]
 
 var character: CharacterData
 var enemies: EnemyManager
@@ -44,7 +31,6 @@ var mana := 1.0
 var energy_shield := 0.0
 ## Para depurar y para el benchmark.
 var invulnerable := false
-var flask_charges: Array[float] = []
 ## Mientras sea > 0, el personaje está lanzando una habilidad y no se mueve.
 var action_lock := 0.0
 
@@ -65,8 +51,6 @@ func setup(p_character: CharacterData, p_enemies: EnemyManager) -> void:
 	character = p_character
 	enemies = p_enemies
 	character.stats_changed.connect(_on_stats_changed)
-	for f in FLASKS:
-		flask_charges.append(f["max_charges"])
 	refill()
 
 
@@ -91,8 +75,9 @@ func refill() -> void:
 	mana = max_mana()
 	energy_shield = max_energy_shield()
 	_recoveries.clear()
-	for i in flask_charges.size():
-		flask_charges[i] = FLASKS[i]["max_charges"]
+	for f in character.inventory.flasks:
+		if f:
+			(f as Flask).refill()
 
 
 func heal(amount: float) -> void:
@@ -131,19 +116,38 @@ func has_auto_target() -> bool:
 
 # --- Pociones ---
 
+func flask_at(index: int) -> Flask:
+	return character.inventory.flasks[index] as Flask if index < character.inventory.flasks.size() else null
+
+
 func can_use_flask(index: int) -> bool:
-	return is_alive() and flask_charges[index] >= FLASKS[index]["cost"]
+	var f := flask_at(index)
+	return is_alive() and f != null and f.has_charges() and character.level >= f.required_level()
 
 
 func use_flask(index: int) -> bool:
 	if not can_use_flask(index):
 		return false
-	var f: Dictionary = FLASKS[index]
-	flask_charges[index] -= f["cost"]
-	var total: float = (max_life() if f["resource"] == "life" else max_mana()) * f["recover"]
-	_recoveries.append({"resource": f["resource"], "per_second": total / f["duration"], "remaining": f["duration"]})
+	var f := flask_at(index)
+	f.charges -= f.cost()
+	match f.kind():
+		"life", "mana":
+			_recoveries.append({"resource": f.kind(), "per_second": f.recover() / f.duration(), "remaining": f.duration(),
+				"flask": f.def["id"]})
+		_:
+			character.add_timed_effect("flask:" + String(f.def["id"]), f.timed_modifiers(), f.duration())
 	flask_used.emit(index)
 	return true
+
+
+## ¿Está haciendo efecto la poción de esa ranura? (para el brillo del HUD)
+func is_flask_active(index: int) -> bool:
+	var f := flask_at(index)
+	if f == null:
+		return false
+	if f.kind() == "utility":
+		return character.has_timed_effect("flask:" + String(f.def["id"]))
+	return _recoveries.any(func(r: Dictionary) -> bool: return r.get("flask", "") == f.def["id"])
 
 
 func is_recovering(resource: String) -> bool:
@@ -151,9 +155,10 @@ func is_recovering(resource: String) -> bool:
 
 
 func add_flask_charges(enemy_rarity: int) -> void:
-	var amount: float = FLASK_CHARGES_BY_RARITY.get(enemy_rarity, 1.0)
-	for i in flask_charges.size():
-		flask_charges[i] = minf(FLASKS[i]["max_charges"], flask_charges[i] + amount)
+	var amount: float = Flask.CHARGES_BY_RARITY.get(enemy_rarity, 1.0)
+	for f in character.inventory.flasks:
+		if f:
+			(f as Flask).add_charges(amount)
 
 
 ## Lo llama World al matar un enemigo (condición «has matado recientemente»).
@@ -179,10 +184,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	var mb := event as InputEventMouseButton
 	if mb and mb.button_index == MOUSE_BUTTON_LEFT:
 		_move_held = mb.pressed
-	elif event.is_action_pressed(&"flask_1"):
-		use_flask(0)
-	elif event.is_action_pressed(&"flask_2"):
-		use_flask(1)
+	else:
+		for i in FLASK_ACTIONS.size():
+			if event.is_action_pressed(FLASK_ACTIONS[i]):
+				use_flask(i)
+				break
 
 
 func _physics_process(delta: float) -> void:
@@ -191,6 +197,7 @@ func _physics_process(delta: float) -> void:
 		return
 	_update_conditions(delta)
 	_regenerate(delta)
+	character.tick_timed_effects(delta)
 	action_lock = maxf(0.0, action_lock - delta)
 
 	var dir := Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down")

@@ -3,6 +3,9 @@ class_name SkillCalc
 ## + RAM instalada + stats del personaje. Lógica pura: la usan el combate, el
 ## HUD y los tooltips, así que lo que lees es exactamente lo que pasa.
 
+## Segundos entre golpes de cada esbirro.
+const MINION_ATTACK_INTERVAL := 0.9
+
 ## Daño por nivel de los hechizos: base × (1 + growth × (nivel - 1)).
 ## Los ataques usan el arma × damage_effectiveness.
 
@@ -21,13 +24,25 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 	var pierce := int(skill.get("pierce", 0))
 	var repeats := 0
 	var area_mult := 1.0
+	var extra_chains := 0
+	var deploy := ""
+	var totem_duration := 0.0
 	for ram: RamModule in board.active_supports():
+		extra_chains += int(ram.special("extra_chains"))
+		# Solo cuenta el primer módulo de despliegue (una trampa no puede ser también una torreta).
+		if deploy == "" and ram.special_string("deploy") != "":
+			deploy = ram.special_string("deploy")
+			totem_duration = ram.special("totem_duration", 8.0)
 		extra.append_array(ram.skill_modifiers())
 		cost_mult *= ram.cost_multiplier()
 		extra_projectiles += int(ram.special("extra_projectiles"))
 		pierce += int(ram.special("pierce"))
 		repeats += int(ram.special("repeats"))
 		area_mult *= ram.special("area_multiplier", 1.0)
+	# Al convertirse en trampa, mina o torreta, la habilidad gana esa etiqueta
+	# (los modificadores "de trampas" le afectan).
+	if deploy != "" and not tags.has(StringName(deploy)):
+		tags.append(StringName(deploy))
 	var stats := character.stats.duplicate_with(extra)
 
 	var is_attack := tags.has(Stat.TAG_ATTACK)
@@ -38,6 +53,9 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 	var crit_base := 0.0
 	var damage_type: String = skill.get("damage_type", "none")
 	var damage_stat: StringName = Stat.DAMAGE_STAT_BY_TYPE.get(damage_type, &"")
+	# Los esbirros escalan con "daño de esbirros", no con el daño del personaje.
+	if tags.has(&"minion"):
+		damage_stat = Stat.MINION_DAMAGE
 	if is_attack:
 		var weapon := character.weapon_values()
 		var eff: float = skill["attack"].get("damage_effectiveness", 1.0)
@@ -76,6 +94,11 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 			hits_per_use *= maxf(1.0, floorf(duration / maxf(0.05, tick)))
 		"boomerang":
 			hits_per_use *= 2.0   # ida y vuelta contra el mismo objetivo
+		"minion":
+			# Cada esbirro golpea ~1 vez por segundo mientras dura.
+			hits_per_use *= float(skill.get("count", 1)) * maxf(1.0, duration / MINION_ATTACK_INTERVAL)
+		"degen_area":
+			hits_per_use *= maxf(1.0, duration)   # base_damage es por segundo
 	var dps := average * minf(uses_per_second, 1.0 / maxf(cooldown, 0.0001)) * hits_per_use
 
 	return {
@@ -107,7 +130,11 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 		"stun": float(skill.get("stun", 0.0)) * duration_mult,
 		"trigger_radius": float(skill.get("trigger_radius", 0.0)),
 		"max_active": int(skill.get("max_active", 0)),
-		"chains": int(skill.get("chains", 0)),
+		"chains": int(skill.get("chains", 0)) + (extra_chains if skill.get("kind", "") == "chain" else 0),
+		"projectile_chains": extra_chains if skill.has("projectiles") else 0,
+		"deploy": deploy,
+		"totem_duration": totem_duration * duration_mult,
+		"count": int(skill.get("count", 0)),
 		"chain_range": float(skill.get("chain_range", 0.0)),
 		"life_leech": stats.get_value(Stat.LIFE_LEECH, tags),
 		"dps": dps,

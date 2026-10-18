@@ -8,6 +8,8 @@ signal changed
 
 const BAG_SIZE := 60
 const HOTBAR_SIZE := 6
+## Cinturón de pociones (teclas 1-5).
+const FLASK_SLOTS := 5
 const EQUIP_SLOTS := ["weapon", "helmet", "body", "gloves", "boots", "amulet", "ring_left", "ring_right", "belt"]
 const SLOT_NAMES := {
 	"weapon": "Arma",
@@ -21,17 +23,47 @@ const SLOT_NAMES := {
 	"belt": "Cinturón",
 	"motherboard": "Placa base",
 	"ram": "Módulo RAM",
+	"flask": "Poción",
 }
 
 var equipment: Dictionary = {}  # ranura -> Item
 var bag: Array = []             # Item o null
 ## Placa base instalada en cada ranura de la barra de habilidades, o null.
 var boards: Array = []
+## Poción en cada ranura del cinturón, o null.
+var flasks: Array = []
 
 
 func _init() -> void:
 	bag.resize(BAG_SIZE)
 	boards.resize(HOTBAR_SIZE)
+	flasks.resize(FLASK_SLOTS)
+
+
+## Pone la poción de la bolsa en el cinturón (primera ranura libre, o
+## intercambia con la ranura indicada).
+func equip_flask(bag_index: int, flask_index := -1) -> bool:
+	var flask := bag[bag_index] as Flask
+	if flask == null:
+		return false
+	if flask_index == -1:
+		flask_index = flasks.find(null)
+		if flask_index == -1:
+			return false
+	bag[bag_index] = flasks[flask_index]
+	flasks[flask_index] = flask
+	changed.emit()
+	return true
+
+
+func unequip_flask(flask_index: int) -> bool:
+	var i := free_bag_index()
+	if i == -1 or flasks[flask_index] == null:
+		return false
+	bag[i] = flasks[flask_index]
+	flasks[flask_index] = null
+	changed.emit()
+	return true
 
 
 func equipped(slot: String) -> Item:
@@ -179,7 +211,10 @@ func to_dict() -> Dictionary:
 	var board_data: Array = []
 	for board in boards:
 		board_data.append(board.to_dict() if board else null)
-	return {"equipment": equip, "bag": bag_data, "boards": board_data}
+	var flask_data: Array = []
+	for f in flasks:
+		flask_data.append(f.to_dict() if f else null)
+	return {"equipment": equip, "bag": bag_data, "boards": board_data, "flasks": flask_data}
 
 
 ## Restaura equipo, bolsa y placas. Lo que ya no se puede cargar se descarta.
@@ -189,6 +224,8 @@ func load_dict(d: Dictionary, db: ItemDatabase) -> void:
 	bag.resize(BAG_SIZE)
 	boards.clear()
 	boards.resize(HOTBAR_SIZE)
+	flasks.clear()
+	flasks.resize(FLASK_SLOTS)
 	var equip: Dictionary = d.get("equipment", {})
 	for slot in equip:
 		if EQUIP_SLOTS.has(slot):
@@ -203,4 +240,14 @@ func load_dict(d: Dictionary, db: ItemDatabase) -> void:
 	for i in mini(board_data.size(), HOTBAR_SIZE):
 		if board_data[i] is Dictionary:
 			boards[i] = Item.from_dict(board_data[i], db) as Motherboard
+	if d.has("flasks"):
+		var flask_data: Array = d.get("flasks", [])
+		for i in mini(flask_data.size(), FLASK_SLOTS):
+			if flask_data[i] is Dictionary:
+				flasks[i] = Item.from_dict(flask_data[i], db) as Flask
+	else:
+		# Guardados de antes de las pociones-objeto: reciben las iniciales.
+		var starters := Flask.starter_set(db)
+		for i in mini(starters.size(), FLASK_SLOTS):
+			flasks[i] = starters[i]
 	changed.emit()

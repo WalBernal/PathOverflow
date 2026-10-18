@@ -10,7 +10,7 @@
       "steps": [
         { "type": "talk", "npc": "bot_onboarding", "text": "Habla con B.O.B. en el Sandbox" },
         { "type": "reach_zone", "zone": "campamento", "text": "Llega al Campamento del Último Commit" },
-        { "type": "talk", "npc": "ada", "text": "Habla con Ada, la Senior" },
+        { "type": "talk", "npc": "ada", "text": "Habla con Aida, la Senior" },
         { "type": "reach_zone", "zone": "zona1", "text": "Adéntrate en el Bosque de Cables" },
         { "type": "reach_zone", "zone": "zona2", "text": "Encuentra las Ruinas del Monolito" },
         { "type": "reach_zone", "zone": "zona3", "text": "Cruza al Pantano de Memory Leaks" },
@@ -18,8 +18,8 @@
         { "type": "reach_zone", "zone": "zona5", "text": "Llega a la Granja de Servidores" },
         { "type": "reach_zone", "zone": "jefe", "text": "Entra en la Sala del Servidor Principal" },
         { "type": "flag", "flag": "act1_complete", "text": "Derrota al Arquitecto del Monolito" },
-        { "type": "flag", "flag": "ada_victoria", "text": "Vuelve al campamento y cuéntaselo a Ada" },
-        { "type": "flag", "flag": "root_reinicio", "text": "Pregunta a Root por el reinicio del Servidor" }
+        { "type": "flag", "flag": "ada_victoria", "text": "Vuelve al campamento y cuéntaselo a Aida" },
+        { "type": "flag", "flag": "root_reinicio", "text": "Pregunta a Rafa por el reinicio del Servidor" }
       ],
       "experience": 2500,
       "rewards": [ { "type": "give_random", "rarity": "unique" } ]
@@ -28,7 +28,7 @@
       "name": "Kernel Panic",
       "main": true,
       "starts_after": "main_act1",
-      "description": "El reinicio falló. Algo vive debajo del Servidor, en el Kernel. Root ha abierto un portal en el campamento.",
+      "description": "El reinicio falló. Algo vive debajo del Servidor, en el Kernel. Rafa ha abierto un portal en el campamento.",
       "steps": [
         { "type": "flag", "flag": "act2_started", "text": "Cruza el Portal al Kernel (Acto II: próximamente)" }
       ]
@@ -69,10 +69,10 @@
     "kevin_cafe": {
       "name": "Granos de café",
       "giver": "kevin",
-      "description": "A Kevin se le acabó el café. Dice que los bichos sueltan granos al morir. No preguntes por qué.",
+      "description": "A Mario se le acabó el café. Dice que los bichos sueltan granos al morir. No preguntes por qué.",
       "steps": [
         { "type": "kill", "count": 40, "text": "Elimina bichos en cualquier zona" },
-        { "type": "turn_in", "npc": "kevin", "text": "Lleva los granos a Kevin" }
+        { "type": "turn_in", "npc": "kevin", "text": "Lleva los granos a Mario" }
       ],
       "experience": 250,
       "rewards": [ { "type": "refill" }, { "type": "give_random", "rarity": "magic" } ]

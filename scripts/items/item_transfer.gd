@@ -5,6 +5,7 @@ class_name ItemTransfer
 ##   {"kind": "equip", "slot": "helmet"}
 ##   {"kind": "board", "index": h}              (ranura de la barra de habilidades)
 ##   {"kind": "dimm", "board": h, "dimm": d}    (ranura DIMM de una placa instalada)
+##   {"kind": "flask", "index": f}              (ranura del cinturón de pociones)
 ## Siempre es un intercambio: lo que hay en el destino vuelve al origen, así que
 ## ambos objetos tienen que encajar donde acaban.
 
@@ -20,6 +21,8 @@ static func get_at(inv: Inventory, loc: Dictionary) -> Item:
 		"dimm":
 			var board: Motherboard = inv.boards[loc["board"]]
 			return board.rams[loc["dimm"]] if board else null
+		"flask":
+			return inv.flasks[loc["index"]]
 	return null
 
 
@@ -36,6 +39,8 @@ static func _set_at(inv: Inventory, loc: Dictionary, item: Item) -> void:
 			inv.boards[loc["index"]] = item
 		"dimm":
 			inv.boards[loc["board"]].rams[loc["dimm"]] = item
+		"flask":
+			inv.flasks[loc["index"]] = item
 
 
 ## "" si `item` puede quedarse en `loc`; si no, el motivo.
@@ -47,6 +52,8 @@ static func fits(character: CharacterData, loc: Dictionary, item: Item) -> Strin
 			return ""
 		"equip":
 			var slot: String = loc["slot"]
+			if item is Flask:
+				return "Las pociones van en el cinturón de pociones (abajo del inventario)."
 			if not item.is_equipment():
 				return "Eso no se lleva puesto. Las placas y la RAM van en el menú de habilidades (K)."
 			var ok := item.slot() == slot or (item.slot() == "ring" and slot.begins_with("ring"))
@@ -66,6 +73,12 @@ static func fits(character: CharacterData, loc: Dictionary, item: Item) -> Strin
 			var gen: String = board.slots[loc["dimm"]]
 			if (item as RamModule).generation() != gen:
 				return "Ranura %s, módulo %s. No encaja ni a martillazos." % [gen, (item as RamModule).generation()]
+			return ""
+		"flask":
+			if not item is Flask:
+				return "En el cinturón solo caben pociones. Café o bebidas, nada de placas."
+			if character.level < item.required_level():
+				return "Requiere nivel %d. Este café es demasiado fuerte para ti." % item.required_level()
 			return ""
 	return "Destino desconocido."
 

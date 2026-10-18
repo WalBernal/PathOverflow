@@ -45,6 +45,9 @@ func _initialize() -> void:
 	_test_tree_layout()
 	_test_new_skills()
 	_test_enemy_attacks()
+	_test_skill_tags()
+	_test_new_supports()
+	_test_flasks()
 	_test_walk_animation()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
@@ -135,9 +138,11 @@ func _test_enemies() -> void:
 	var em := EnemyManager.new()
 	var kills := [0]
 	em.enemy_killed.connect(func(_r: int, _xp: int, _pos: Vector2) -> void: kills[0] += 1)
-	em.spawn(Vector2(0, 0), Rarity.Enemy.NORMAL)
+	# Tipo fijo: con tipos aleatorios, un node_modules (mucha vida) podría sobrevivir.
+	var bug := em.type_index_of("bug")
+	em.spawn(Vector2(0, 0), Rarity.Enemy.NORMAL, bug)
 	em.spawn(Vector2(10, 0), Rarity.Enemy.UNIQUE)
-	em.spawn(Vector2(1000, 0), Rarity.Enemy.NORMAL)
+	em.spawn(Vector2(1000, 0), Rarity.Enemy.NORMAL, bug)
 	_check(em.max_lives[1] > em.max_lives[0], "el único tiene más vida que el normal")
 	var hits := em.hit_in_radius(Vector2.ZERO, 50.0, 100.0, 100.0, 0.0, 150.0)
 	_check(hits == 2, "golpea solo a los que están en el radio (%d)" % hits)
@@ -386,7 +391,7 @@ func _test_appearance() -> void:
 func _test_skill_data() -> void:
 	var skills := _db.skills
 	_check(skills.skills.size() >= 6 and skills.rams.size() >= 8, "carga de habilidades y RAM")
-	var kinds := ["melee_area", "nova", "projectile", "ground_aoe", "blink", "dash", "cone", "beam", "boomerang", "spin", "trap", "chain"]
+	var kinds := ["melee_area", "nova", "projectile", "ground_aoe", "blink", "dash", "cone", "beam", "boomerang", "spin", "trap", "chain", "minion", "degen_area"]
 	for def in skills.skills.values():
 		_check(kinds.has(def["kind"]), "tipo de habilidad desconocido en %s" % def["id"])
 		_check(def.has("attack") or def.has("spell"), "%s necesita 'attack' o 'spell'" % def["id"])
@@ -635,7 +640,7 @@ func _test_quests() -> void:
 	# Saltar hasta un paso de bandera ya cumplido (personaje que ya mató al jefe).
 	c.flags["act1_complete"] = true
 	log.refresh()
-	_check(log.step_text("main_act1").contains("Ada"), "salta a 'cuéntaselo a Ada' si ya mató al jefe")
+	_check(log.step_text("main_act1").contains("Aida"), "salta a 'cuéntaselo a Aida' si ya mató al jefe")
 	c.flags["ada_victoria"] = true
 	c.flags["root_reinicio"] = true
 	log.refresh()
@@ -799,6 +804,119 @@ func _test_enemy_attacks() -> void:
 				_check(a["kind"] in ["projectile_nova", "ground_marks", "summon"], "habilidad de jefe desconocida")
 
 
+func _test_skill_tags() -> void:
+	for def in _db.skills.skills.values():
+		var tags: Array = def.get("tags", [])
+		_check(tags.size() >= 2, "%s debe tener varias etiquetas" % def["id"])
+		_check(tags.has("attack") or tags.has("spell"), "%s: ataque o hechizo" % def["id"])
+		for t in tags:
+			_check(SkillTags.is_known(t), "%s: etiqueta desconocida %s" % [def["id"], t])
+		for implied in SkillTags.DAMAGE_TYPE_TAGS.get(def.get("damage_type", ""), []):
+			if def["kind"] != "blink":
+				_check(tags.has(implied), "%s: le falta la etiqueta %s por su tipo de daño" % [def["id"], implied])
+	_check(SkillTags.display_name("minion") == "esbirro" and SkillTags.display_name("degen") == "degenerativo", "nombres en español")
+	for ram in _db.skills.rams.values():
+		for t in ram.get("requires_tags", []) + ram.get("excludes_tags", []):
+			_check(SkillTags.is_known(t), "RAM %s: etiqueta desconocida %s" % [ram["id"], t])
+
+
+func _test_new_supports() -> void:
+	var c := _new_character()
+	var gen := ItemGenerator.new(_db, 9)
+	# Perforación.
+	var ping := gen.generate_motherboard(1, "ping_letal", 3)
+	var base_pierce: int = SkillCalc.compute(ping, c)["pierce"]
+	ping.slots[0] = "DDR4"
+	ping.install(gen.generate_ram(1, "bypass_firewall"), 0)
+	_check(SkillCalc.compute(ping, c)["pierce"] == base_pierce + 3, "Bypass de Firewall: +3 perforación")
+	# Cadenas: más saltos en las cadenas y rebotes en proyectiles.
+	var chain := gen.generate_motherboard(1, "excepcion_en_cadena", 3)
+	var base_chains: int = SkillCalc.compute(chain, c)["chains"]
+	chain.slots[0] = "DDR5"
+	chain.install(gen.generate_ram(1, "propagacion_excepciones"), 0)
+	_check(SkillCalc.compute(chain, c)["chains"] == base_chains + 2, "Propagación: +2 cadenas")
+	ping.slots[1] = "DDR5"
+	ping.install(gen.generate_ram(1, "propagacion_excepciones"), 1)
+	_check(SkillCalc.compute(ping, c)["projectile_chains"] == 2, "Propagación: los proyectiles rebotan")
+	# Trampa / mina / torreta: cambian el despliegue y añaden la etiqueta.
+	for entry in [["disparador_trampa", "DDR4", "trap"], ["detonador_mina", "DDR5", "mine"], ["servidor_torreta", "DDR3", "totem"]]:
+		var board := gen.generate_motherboard(1, "flamewar", 3)
+		board.slots[0] = entry[1]
+		var ram := gen.generate_ram(1, entry[0])
+		_check(ram.supports(board.skill_def), "%s funciona con Flamewar" % entry[0])
+		board.install(ram, 0)
+		var p := SkillCalc.compute(board, c)
+		_check(p["deploy"] == entry[2] and p["tags"].has(StringName(entry[2])), "%s: se despliega como %s" % [entry[0], entry[2]])
+		if entry[2] == "totem":
+			_check(p["totem_duration"] > 0.0, "la torreta dura un tiempo")
+	_check(not gen.generate_ram(1, "disparador_trampa").supports(_db.skills.skills["bomba_logica"]), "una trampa no se convierte en trampa")
+	_check(not gen.generate_ram(1, "servidor_torreta").supports(_db.skills.skills["teleport_tcp"]), "el movimiento no va en torreta")
+	# Esbirros y degenerativo.
+	var minion := SkillCalc.compute(gen.generate_motherboard(1, "proceso_hijo"), c)
+	_check(minion["count"] >= 2 and minion["duration"] > 0.0 and minion["max_damage"] > 0.0, "Proceso Hijo invoca esbirros")
+	c.stats.add_modifier(Modifier.new(Stat.MINION_DAMAGE, Modifier.Type.INCREASED, 100.0))
+	var stronger := SkillCalc.compute(gen.generate_motherboard(1, "proceso_hijo"), c)
+	_check(is_equal_approx(stronger["max_damage"], minion["max_damage"] * 2.0), "los esbirros escalan con daño de esbirros")
+	var degen := SkillCalc.compute(gen.generate_motherboard(1, "fuga_de_memoria"), c)
+	_check(degen["dps"] > 0.0 and degen["duration"] > 0.0, "Fuga de Memoria hace daño en el tiempo")
+
+
+func _test_flasks() -> void:
+	_check(_db.flasks.size() >= 20, "hay muchas pociones (%d)" % _db.flasks.size())
+	var kinds := {}
+	for def in _db.flasks.values():
+		kinds[def["kind"]] = true
+		_check(int(def["charges_per_use"]) <= int(def["max_charges"]), "%s: usos posibles" % def["id"])
+		if def["kind"] == "utility":
+			_check(not def.get("mods", []).is_empty(), "%s: efecto de utilidad" % def["id"])
+			for m in def["mods"]:
+				_check(Stat.exists(StringName(m["stat"])), "%s: stat desconocido" % def["id"])
+		else:
+			_check(float(def.get("recover", 0)) > 0.0, "%s: recupera algo" % def["id"])
+	_check(kinds.has("life") and kinds.has("mana") and kinds.has("utility"), "vida, maná y utilidad")
+	# Las de nivel alto recuperan más.
+	_check(_db.flasks["cafe_especialidad"]["recover"] > _db.flasks["cafe_maquina"]["recover"], "mejores cafés a más nivel")
+	_check(_db.flasks["yerba_turbo"]["recover"] > _db.flasks["pepsy"]["recover"], "mejores bebidas a más nivel")
+	# Cargas.
+	var f := Flask.new(_db.flasks["cafe_maquina"])
+	_check(f.charges == f.max_charges() and f.uses_left() == 5, "empieza llena: 30 cargas, 6 por uso")
+	f.charges -= f.cost()
+	f.add_charges(100.0)
+	_check(f.charges == f.max_charges(), "no pasa del máximo")
+	# Guardado y cinturón.
+	var c := _new_character()
+	c.inventory.flasks[0] = Flask.new(_db.flasks["latte"])
+	c.inventory.flasks[0].charges = 12.0
+	c.inventory.add_item(Flask.new(_db.flasks["kombucha"]))
+	var data = JSON.parse_string(JSON.stringify(c.to_dict()))
+	var loaded := CharacterData.from_dict(data, _classes[0], _tree, _db)
+	_check(loaded.inventory.flasks[0] is Flask and loaded.inventory.flasks[0].def["id"] == "latte", "cinturón guardado")
+	_check(is_equal_approx(loaded.inventory.flasks[0].charges, 12.0), "cargas guardadas")
+	_check(loaded.inventory.bag.any(func(i) -> bool: return i is Flask), "poción en la bolsa guardada")
+	# Guardados antiguos (sin cinturón) reciben las iniciales.
+	data["inventory"].erase("flasks")
+	var old := CharacterData.from_dict(data, _classes[0], _tree, _db)
+	_check(old.inventory.flasks[0] is Flask and old.inventory.flasks[1] is Flask, "pociones iniciales al migrar")
+	# Reglas del cinturón.
+	var bag_index := c.inventory.bag.find(c.inventory.bag.filter(func(i) -> bool: return i is Flask)[0])
+	_check(ItemTransfer.fits(c, {"kind": "flask", "index": 2}, c.inventory.bag[bag_index]) != "", "nivel insuficiente para la kombucha")
+	c.set_level(40)
+	_check(ItemTransfer.move(c, {"kind": "bag", "index": bag_index}, {"kind": "flask", "index": 2}) == "", "poción al cinturón")
+	_check(ItemTransfer.fits(c, {"kind": "flask", "index": 3}, ItemGenerator.new(_db).generate(1, Rarity.Item.NORMAL)) != "", "en el cinturón solo pociones")
+	# Efecto de utilidad: modifica las stats mientras dura.
+	var before := c.stats.get_value(Stat.CHAOS_RES)
+	var kombucha: Flask = c.inventory.flasks[2]
+	c.add_timed_effect("flask:kombucha", kombucha.timed_modifiers(), 5.0)
+	_check(c.stats.get_value(Stat.CHAOS_RES) == before + 25.0, "la kombucha da resistencia al caos")
+	c.tick_timed_effects(6.0)
+	_check(c.stats.get_value(Stat.CHAOS_RES) == before, "y se pasa")
+	# Botín: pociones de nivel adecuado.
+	var gen := ItemGenerator.new(_db, 4)
+	for k in 30:
+		var drop := gen.generate_flask(5)
+		_check(drop != null and drop.required_level() <= 5, "pociones de botín de nivel <= zona")
+
+
 func _test_walk_animation() -> void:
 	_check(RetroSfx.blip().data.size() > 0, "pitido generado")
 
@@ -865,8 +983,8 @@ func _test_item_icons() -> void:
 		_check(ItemIcons.has_icon(b["id"]), "sin icono para la base %s" % b["id"])
 	for id in ["motherboard", "ram_DDR3", "ram_DDR4", "ram_DDR5", "flask_coffee", "flask_energy", "unknown"]:
 		_check(ItemIcons.has_icon(id), "sin icono '%s'" % id)
-	for f in Player.FLASKS:
-		_check(ItemIcons.has_icon(f["icon"]), "icono de la poción %s" % f["name"])
+	for def in _db.flasks.values():
+		_check(ItemIcons.has_icon(Flask.new(def).icon()), "icono de la poción %s" % def["name"])
 	var gen := ItemGenerator.new(_db, 2)
 	_check(ItemIcons.icon_id(gen.generate_ram(1, "ecc")) == "ram_DDR5", "icono de RAM según su generación")
 	_check(ItemIcons.texture() != null, "atlas de iconos cargado")

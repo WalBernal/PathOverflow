@@ -8,12 +8,12 @@
     { "id": "kill", "count": 5, "text": "Elimina 5 bugs. Aquí son pequeños: perfectos para tu autoestima." },
     { "id": "loot", "text": "Recoge un objeto haciendo click en su etiqueta. Cuanto más chillón el color, mejor el objeto. Como en las ofertas de empleo." },
     { "id": "equip", "text": "Abre el inventario (I) y equípate algo: arrástralo a su ranura o haz click. Verde mejora, rojo empeora." },
-    { "id": "flask", "text": "Bebe un café (tecla 1). Las pociones se recargan matando enemigos. El café de verdad, no." },
+    { "id": "flask", "text": "Bebe un café (tecla 1). Las pociones gastan cargas y se recargan matando enemigos. Hasta 5 en el cinturón (teclas 1-5). El café de verdad, no." },
     { "id": "passives", "text": "Pulsa P y gasta un punto de pasiva. Tienes puntos sin gastar, como tu presupuesto de formación." },
     { "id": "reach_camp", "text": "Sigue hacia el este hasta el campamento. Pisa el portal de la salida. B.O.B. te echará de menos (no)." },
-    { "id": "talk_ada", "text": "Habla con Ada (click sobre ella). Es la única de aquí que lee la documentación." },
-    { "id": "install_ram", "text": "Pulsa K y mete la RAM que te dio Ada en una ranura de su color: arrástrala, o haz doble click para que se coloque sola." },
-    { "id": "kevin", "text": "Pídele un café a Kevin, el becario. No sirve de mucho, pero le hace ilusión." },
+    { "id": "talk_ada", "text": "Habla con Aida (click sobre ella). Es la única de aquí que lee la documentación." },
+    { "id": "install_ram", "text": "Pulsa K y mete la RAM que te dio Aida en una ranura de su color: arrástrala, o haz doble click para que se coloque sola." },
+    { "id": "kevin", "text": "Pídele un café a Mario, el becario. No sirve de mucho, pero le hace ilusión." },
     { "id": "leave_camp", "text": "Sal por el este al Bosque de Cables. El waypoint del campamento te traerá de vuelta (y al morir reapareces aquí)." }
   ],
   "done": "Tutorial completado. Ya sabes tanto como el equipo de QA. Que no es mucho. Buena suerte: la vas a necesitar."

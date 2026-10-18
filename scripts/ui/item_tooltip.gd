@@ -59,6 +59,8 @@ static func build_text(item: Item, character: CharacterData, compare: bool) -> S
 		return _motherboard_text(item as Motherboard, character)
 	if item is RamModule:
 		return _ram_text(item as RamModule)
+	if item is Flask:
+		return _flask_text(item as Flask, character)
 	var color := Rarity.item_color(item.rarity).to_html(false)
 	var t := "[center][color=#%s][b]%s[/b][/color]\n" % [color, item.display_name()]
 	if item.rarity != Rarity.Item.NORMAL and item.rarity != Rarity.Item.MAGIC:
@@ -93,15 +95,12 @@ static func build_text(item: Item, character: CharacterData, compare: bool) -> S
 
 
 static func _tag_list(tags: Array) -> String:
-	var names := PackedStringArray()
-	for t in tags:
-		names.append(String(t))
-	return ", ".join(names)
+	return SkillTags.bbcode(tags)
 
 
 static func _motherboard_text(board: Motherboard, character: CharacterData) -> String:
 	var skill := board.skill_def
-	var t := "[center][color=#%s][b]%s[/b][/color]\n[color=#%s]Placa base · Nivel %d · %s[/color][/center]\n" % [
+	var t := "[center][color=#%s][b]%s[/b][/color]\n[color=#%s]Placa base · Nivel %d[/color]\n%s[/center]\n" % [
 		Motherboard.COLOR.to_html(false), board.display_name(), GREY, board.level, _tag_list(skill.get("tags", []))]
 	t += _section("[i][color=#a08f6a]%s[/color][/i]" % skill.get("description", ""))
 	if character:
@@ -149,6 +148,19 @@ static func _ram_text(ram: RamModule) -> String:
 		compat.append("No funciona con: " + _tag_list(excluded))
 	compat.append("Se instala en ranuras %s de una placa base (K)." % ram.generation())
 	t += _section("[color=#%s]%s[/color]" % [GREY, "\n".join(compat)])
+	return t.strip_edges()
+
+
+static func _flask_text(flask: Flask, character: CharacterData) -> String:
+	var color := flask.display_color().to_html(false)
+	var t := "[center][color=#%s][b]%s[/b][/color]\n[color=#%s]%s · Requiere nivel %d[/color][/center]\n" % [
+		color, flask.display_name(), GREY, Flask.KIND_NAMES[flask.kind()], flask.required_level()]
+	if character and character.level < flask.required_level():
+		t += "[color=#%s]Nivel insuficiente[/color]\n" % DOWN
+	t += _section("[color=#%s]%s[/color]" % [MOD_COLOR, "\n".join(flask.effect_lines())])
+	t += _section("Cargas: [color=#e8d9b0]%d / %d[/color]  ·  Usos: [color=#e8d9b0]%d[/color]" % [flask.charges, flask.max_charges(), flask.uses_left()])
+	t += _section("[i][color=#a08f6a]%s[/color][/i]" % flask.def.get("description", ""))
+	t += _section("[color=#%s]Click o arrastra al cinturón de pociones (teclas 1-5). Matar enemigos recarga las cargas.[/color]" % GREY)
 	return t.strip_edges()
 
 

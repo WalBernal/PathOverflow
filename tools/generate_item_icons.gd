@@ -64,6 +64,31 @@ func _initialize() -> void:
 		["ram_DDR5", _ram.bind(Color("2f4f9a"))],
 		["flask_coffee", _coffee],
 		["flask_energy", _energy_drink],
+		# Cafés (vida).
+		["cafe_maquina", _plastic_cup],
+		["americano", _mug.bind(Color("2f6bd0"), Color("3a2010"), false)],
+		["espresso", _espresso],
+		["latte", _glass_layers.bind([Color("f0e6d6"), Color("c8a07a"), Color("5a3418")])],
+		["capuchino", _mug.bind(Color("c84b4b"), Color("e8d8c0"), true)],
+		["cold_brew", _jar.bind(Color("2a1608"), true)],
+		["moka", _moka_pot],
+		["cafe_especialidad", _dripper],
+		# Bebidas (maná).
+		["pepsy", _can.bind(Color("1c3fa8"), Color("e8e8f0"), Color("d02030"), "circle")],
+		["coca_cero", _can.bind(Color("1a1a1a"), Color("d02030"), Color("e8e8e8"), "wave")],
+		["vive_101", _small_bottle.bind(Color("f08a20"), Color("e8e8e8"))],
+		["monstruo", _can.bind(Color("101410"), Color("3cff3c"), Color("3cff3c"), "claw")],
+		["toro_rojo", _can.bind(Color("2a3a8a"), Color("c0c4cc"), Color("d02030"), "bull")],
+		["cola_2l", _big_bottle],
+		["yerba_turbo", _gourd],
+		# Utilidad.
+		["agua_con_gas", _water_bottle],
+		["te_matcha", _bowl.bind(Color("6fae4a"))],
+		["batido_proteinas", _shaker],
+		["infusion_jengibre", _tea_mug],
+		["isotonica", _sports_bottle],
+		["chocolate_caliente", _mug.bind(Color("8a5a3a"), Color("4a2410"), false, true)],
+		["kombucha", _jar.bind(Color("c89a40"), false)],
 		["unknown", _unknown],
 	]
 	var rows := ceili(float(icons.size()) / COLUMNS)
@@ -116,6 +141,14 @@ func _line(x0: int, y0: int, x1: int, y1: int, c: Color, width := 1) -> void:
 		for w in width:
 			_px(x + w, y, c)
 			_px(x, y - w, c)
+
+
+func _poly(points: Array, c: Color) -> void:
+	var pts := PackedVector2Array(points)
+	for y in S:
+		for x in S:
+			if Geometry2D.is_point_in_polygon(Vector2(x + 0.5, y + 0.5), pts):
+				_px(x, y, c)
 
 
 func _outline() -> void:
@@ -384,3 +417,199 @@ func _unknown() -> void:
 	_line(18, 11, 18, 15, Color.WHITE)
 	_line(18, 15, 15, 17, Color.WHITE)
 	_px(15, 21, Color.WHITE)
+
+
+# --- Pociones: cafés, bebidas y de utilidad ---
+
+func _cup_handle(x: int, y0: int, y1: int, c: Color) -> void:
+	for y in range(y0, y1 + 1):
+		_px(x, y, c)
+		_px(x + 3, y, c)
+	_rect(x, y0, x + 3, y0, c)
+	_rect(x, y1, x + 3, y1, c)
+
+
+## Vaso de plástico de máquina, con el borde ondulado.
+func _plastic_cup() -> void:
+	var white := Color("f0f0ec")
+	for y in range(10, 28):
+		var half := 6 + (y - 10) / 6
+		_rect(16 - half + (28 - y) / 6, y, 15 + half - (28 - y) / 6, y, white if y % 4 != 0 else Color("d8d8d0"))
+	_ellipse(15.5, 10, 7.5, 2, Color("6a4020"))
+	_rect(9, 18, 22, 21, Color("c84b4b"))                  # banda de la máquina
+
+
+## Taza con asa: americano, capuchino (espuma con corazón) o chocolate (nubes).
+func _mug(band: Color, liquid: Color, foam_heart: bool, marshmallow := false) -> void:
+	var mug := Color("ece4d8")
+	_rect(7, 11, 22, 27, mug)
+	_rect(8, 27, 21, 28, mug.darkened(0.2))
+	_rect(7, 19, 22, 21, band)
+	_cup_handle(23, 14, 22, mug)
+	_ellipse(14.5, 11, 7.5, 2.5, liquid)
+	if foam_heart:
+		_px(13, 11, Color("8a5a32"))
+		_px(15, 11, Color("8a5a32"))
+		_px(14, 12, Color("8a5a32"))
+	if marshmallow:
+		_rect(10, 8, 12, 10, Color("f8f0f0"))
+		_rect(15, 7, 17, 9, Color("f8e0e8"))
+		_rect(18, 9, 20, 10, Color("f8f0f0"))
+
+
+## Taza diminuta con platito.
+func _espresso() -> void:
+	_ellipse(15, 26, 11, 2.5, Color("e8e0d0"))                # plato
+	_rect(9, 15, 20, 24, Color("f4ece0"))
+	_ellipse(14.5, 15, 5.5, 1.8, Color("3a1a08"))
+	_ellipse(13, 14.6, 1.5, 0.6, Color("c8904a"))             # crema
+	_cup_handle(21, 17, 21, Color("f4ece0"))
+
+
+## Vaso de cristal con capas (latte).
+func _glass_layers(layers: Array) -> void:
+	var glass := Color(0.85, 0.9, 1.0, 0.9)
+	_rect(9, 6, 22, 28, glass)
+	for k in layers.size():
+		_rect(10, 8 + k * 7, 21, 13 + k * 7, layers[k])
+	_line(10, 7, 10, 27, Color(1, 1, 1))
+	_rect(19, 3, 20, 10, Color("e8e8e8"))                      # pajita
+
+
+## Tarro: cold brew (con hielo) o kombucha.
+func _jar(liquid: Color, ice: bool) -> void:
+	var glass := Color(0.8, 0.9, 1.0)
+	_rect(8, 8, 23, 28, glass)
+	_rect(9, 11, 22, 27, liquid)
+	_rect(8, 5, 23, 8, Color("a0a0a8"))                       # tapa
+	if ice:
+		_rect(11, 12, 14, 15, Color(0.85, 0.95, 1.0))
+		_rect(16, 14, 19, 17, Color(0.85, 0.95, 1.0))
+	else:
+		for k in 4:
+			_px(11 + k * 3, 24 - k * 3, liquid.lightened(0.4))  # burbujas de fermentación
+	_line(9, 11, 9, 26, Color(1, 1, 1))
+
+
+## Cafetera italiana.
+func _moka_pot() -> void:
+	var steel := Color("a8acb4")
+	_poly([Vector2(8, 28), Vector2(23, 28), Vector2(21, 18), Vector2(10, 18)], steel)
+	_poly([Vector2(10, 17), Vector2(21, 17), Vector2(23, 7), Vector2(8, 7)], steel.lightened(0.15))
+	_rect(14, 4, 17, 6, Color("2a2a30"))                      # pomo
+	_line(23, 9, 26, 13, Color("2a2a30"), 2)                  # asa
+	_line(26, 13, 23, 16, Color("2a2a30"), 2)
+	_px(7, 8, steel)                                          # pico
+
+
+## Café de especialidad: dripper V60 sobre una jarra.
+func _dripper() -> void:
+	_poly([Vector2(6, 6), Vector2(25, 6), Vector2(18, 15), Vector2(13, 15)], Color("f0f0f0"))
+	_line(8, 8, 23, 8, Color("c8c8c8"))
+	_rect(14, 15, 17, 16, Color("3a1a08"))
+	_rect(10, 17, 21, 28, Color(0.85, 0.9, 1.0))
+	_rect(11, 21, 20, 27, Color("4a2410"))
+	_px(15, 18, Color("3a1a08"))
+
+
+## Lata de refresco con su logo.
+func _can(body: Color, accent: Color, logo: Color, style: String) -> void:
+	_rect(10, 5, 21, 28, body)
+	_rect(11, 3, 20, 5, Color("c0c4cc"))
+	_rect(11, 28, 20, 29, Color("c0c4cc"))
+	_line(10, 6, 10, 27, body.lightened(0.3))
+	match style:
+		"circle":   # círculo rojo, blanco y azul
+			_ellipse(15.5, 16, 4.5, 4.5, accent)
+			_rect(11, 15, 20, 16, logo)
+			_ellipse(15.5, 18.5, 3.5, 1.5, body)
+		"wave":     # onda blanca y franja roja
+			_rect(10, 9, 21, 11, accent)
+			for x in range(10, 22):
+				_px(x, 18 + int(sin(x * 0.7) * 1.5), logo)
+		"claw":     # tres zarpazos verdes
+			for k in 3:
+				_line(12 + k * 3, 9, 13 + k * 3, 23, logo)
+		"bull":     # mitad plateada y dos toros rojos (círculo)
+			_rect(16, 6, 21, 27, accent)
+			_ellipse(15.5, 15, 3, 3, Color("f0c020"))
+			_px(12, 18, logo)
+			_px(13, 17, logo)
+			_px(18, 17, logo)
+			_px(19, 18, logo)
+
+
+## Botellita pequeña (Vive 101).
+func _small_bottle(liquid: Color, label: Color) -> void:
+	_rect(13, 4, 18, 8, Color("c8c8c8"))                      # tapón
+	_rect(12, 9, 19, 12, Color(0.9, 0.95, 1.0))
+	_rect(10, 12, 21, 28, liquid)
+	_rect(10, 17, 21, 22, label)
+	_line(13, 19, 18, 19, Color("2a2a30"))                   # "101"
+	_line(11, 13, 11, 27, liquid.lightened(0.3))
+
+
+## Botella de 2 litros de cola.
+func _big_bottle() -> void:
+	_rect(14, 2, 17, 4, Color("d02030"))
+	_poly([Vector2(13, 5), Vector2(18, 5), Vector2(22, 11), Vector2(9, 11)], Color(0.35, 0.15, 0.08))
+	_rect(9, 11, 22, 29, Color(0.35, 0.15, 0.08))
+	_rect(9, 15, 22, 20, Color("d02030"))
+	_line(10, 17, 21, 17, Color.WHITE)
+	_line(10, 12, 10, 28, Color(0.55, 0.3, 0.2))
+
+
+## Mate (yerba turbo) con bombilla.
+func _gourd() -> void:
+	_ellipse(15, 20, 9, 9, Color("8a5a2a"))
+	_rect(9, 10, 21, 14, Color("6a4020"))
+	_ellipse(15, 11, 6, 2, Color("5a8a2a"))                    # yerba
+	_line(17, 11, 24, 2, Color("d0d0d8"), 2)                  # bombilla
+	_rect(9, 21, 21, 22, Color("e0b040"))                     # virola
+
+
+## Botella de agua con gas: burbujas.
+func _water_bottle() -> void:
+	_rect(13, 3, 18, 6, Color("2f9ad0"))
+	_rect(11, 7, 20, 28, Color(0.75, 0.9, 1.0))
+	_rect(11, 15, 20, 19, Color("2f9ad0"))
+	for k in 5:
+		_px(13 + (k * 3) % 6, 25 - k * 2, Color.WHITE)
+
+
+## Cuenco de té matcha con batidor.
+func _bowl(tea: Color) -> void:
+	_ellipse(15, 20, 11, 7, Color("4a3a30"))
+	_rect(4, 13, 26, 20, Color("4a3a30"))
+	_ellipse(15, 13, 11, 3, tea)
+	_ellipse(13, 12.5, 4, 1, tea.lightened(0.3))
+	for k in 4:
+		_line(22 + k, 2, 21 + k, 10, Color("d8c890"))           # batidor de bambú
+
+
+## Vaso mezclador de proteínas.
+func _shaker() -> void:
+	_rect(10, 9, 21, 28, Color(0.9, 0.9, 0.95))
+	_rect(11, 14, 20, 27, Color("e8d8b0"))
+	_rect(9, 5, 22, 9, Color("2a2a30"))
+	_rect(14, 2, 17, 5, Color("2a2a30"))
+	_line(11, 20, 20, 20, Color("c8b890"))
+
+
+## Taza de infusión con rodaja de limón y etiqueta.
+func _tea_mug() -> void:
+	_rect(7, 11, 22, 27, Color("f0e8e0"))
+	_cup_handle(23, 14, 22, Color("f0e8e0"))
+	_ellipse(14.5, 11, 7.5, 2.5, Color("d0a040"))
+	_ellipse(11, 10.5, 2.5, 1.5, Color("f0e040"))              # limón
+	_line(18, 11, 20, 20, Color("e8e8e8"))                    # hilo de la bolsita
+	_rect(19, 20, 22, 23, Color("5cb85c"))
+
+
+## Botella deportiva isotónica.
+func _sports_bottle() -> void:
+	_rect(14, 2, 17, 5, Color("e8e8e8"))
+	_rect(12, 5, 19, 7, Color("2a2a30"))
+	_poly([Vector2(10, 8), Vector2(21, 8), Vector2(19, 17), Vector2(21, 28), Vector2(10, 28), Vector2(12, 17)], Color("40c0e0"))
+	_rect(11, 20, 20, 23, Color("f0f020"))
+	_line(11, 9, 12, 26, Color("80e0f0"))

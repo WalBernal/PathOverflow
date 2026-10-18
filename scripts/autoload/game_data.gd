@@ -53,6 +53,9 @@ func create_character(char_name: String, class_id: StringName, appearance: Dicti
 	if items.bases.has(weapon_id):
 		c.inventory.set_equipped("weapon", ItemGenerator.new(items).generate(1, Rarity.Item.NORMAL, weapon_id))
 	give_starter_skills(c)
+	var starters := Flask.starter_set(items)
+	for i in mini(starters.size(), Inventory.FLASK_SLOTS):
+		c.inventory.flasks[i] = starters[i]
 	# Los personajes nuevos empiezan en la zona tutorial.
 	c.flags["zone"] = act.get("start_zone", "tutorial")
 	if persistent:

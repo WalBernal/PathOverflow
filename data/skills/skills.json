@@ -1,96 +1,510 @@
 {
   "version": 1,
-  "_doc": "Habilidades activas (lo que hace cada placa base). kind: melee_area, nova (stun opcional), projectile, ground_aoe, blink, dash (embestida que golpea en línea), cone (cono delante), beam (rayo en línea tras un retardo), boomerang (va y vuelve golpeando en los dos sentidos), spin (gira golpeando durante duration cada tick), trap (trampa que explota al acercarse un enemigo; max_active), chain (salta entre enemigos chains veces). duration y stun escalan con skill_duration; cooldown con cooldown_recovery. lol: en qué habilidad de League of Legends se inspira. attack: usa el arma (damage_effectiveness). spell: daño propio (base_damage) que crece un damage_growth por nivel de la placa. attribute: generación de RAM más probable en sus ranuras (str=DDR3, dex=DDR4, int=DDR5).",
+  "_doc": "Habilidades activas (lo que hace cada placa base). kind: melee_area, nova (stun opcional), projectile, ground_aoe, blink, dash (embestida que golpea en línea), cone (cono delante), beam (rayo en línea tras un retardo), boomerang (va y vuelve golpeando en los dos sentidos), spin (gira golpeando durante duration cada tick), trap (trampa que explota al acercarse un enemigo; max_active), chain (salta entre enemigos chains veces), minion (invoca count esbirros durante duration; max_active a la vez), degen_area (charco que hace base_damage por segundo durante duration). tags: varias por habilidad (ver SkillTags): ataque/hechizo, forma (melee, projectile, area, chain), mecánica (duration, trap, mine, totem, minion, movement, degen) y tipo de daño (physical, fire, cold, lightning, chaos, elemental). duration y stun escalan con skill_duration; cooldown con cooldown_recovery. lol: en qué habilidad de League of Legends se inspira. attack: usa el arma (damage_effectiveness). spell: daño propio (base_damage) que crece un damage_growth por nivel de la placa. attribute: generación de RAM más probable en sus ranuras (str=DDR3, dex=DDR4, int=DDR5).",
   "skills": [
-    { "id": "barrido", "name": "Barrido", "kind": "melee_area", "damage_type": "physical", "attribute": "str",
-      "tags": ["attack", "melee", "area"],
+    {
+      "id": "barrido",
+      "name": "Barrido",
+      "kind": "melee_area",
+      "damage_type": "physical",
+      "attribute": "str",
+      "tags": [
+        "attack",
+        "melee",
+        "area",
+        "physical"
+      ],
       "description": "Gira con el arma y golpea todo alrededor. Refactorización a la vieja escuela.",
-      "attack": { "damage_effectiveness": 1.0 },
-      "radius": 95, "mana_cost": 4, "mana_per_level": 0.3, "cooldown": 0,
-      "icon": { "shape": "ring", "color": "d9a441" } },
-    { "id": "rafaga_de_paquetes", "name": "Ráfaga de Paquetes", "kind": "projectile", "damage_type": "physical", "attribute": "dex",
-      "tags": ["attack", "projectile"],
+      "attack": {
+        "damage_effectiveness": 1.0
+      },
+      "radius": 95,
+      "mana_cost": 4,
+      "mana_per_level": 0.3,
+      "cooldown": 0,
+      "icon": {
+        "shape": "ring",
+        "color": "d9a441"
+      }
+    },
+    {
+      "id": "rafaga_de_paquetes",
+      "name": "Ráfaga de Paquetes",
+      "kind": "projectile",
+      "damage_type": "physical",
+      "attribute": "dex",
+      "tags": [
+        "attack",
+        "projectile",
+        "physical"
+      ],
       "description": "Lanza varios paquetes afilados en abanico. Algunos llegan. Es UDP.",
-      "attack": { "damage_effectiveness": 0.75 },
-      "projectiles": 3, "spread_degrees": 24, "projectile_speed": 720, "range": 620,
-      "mana_cost": 6, "mana_per_level": 0.4, "cooldown": 0,
-      "icon": { "shape": "fan", "color": "c8c8c8" } },
-    { "id": "ping_letal", "name": "Ping Letal", "kind": "projectile", "damage_type": "lightning", "attribute": "int",
-      "tags": ["spell", "projectile"],
+      "attack": {
+        "damage_effectiveness": 0.75
+      },
+      "projectiles": 3,
+      "spread_degrees": 24,
+      "projectile_speed": 720,
+      "range": 620,
+      "mana_cost": 6,
+      "mana_per_level": 0.4,
+      "cooldown": 0,
+      "icon": {
+        "shape": "fan",
+        "color": "c8c8c8"
+      }
+    },
+    {
+      "id": "ping_letal",
+      "name": "Ping Letal",
+      "kind": "projectile",
+      "damage_type": "lightning",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "projectile",
+        "lightning",
+        "elemental"
+      ],
       "description": "Un rayo que atraviesa enemigos. 64 bytes de puro dolor, tiempo de respuesta: el tuyo.",
-      "spell": { "base_damage": [6, 15], "damage_growth": 0.15, "cast_time": 0.6, "crit": 6.0 },
-      "projectiles": 1, "pierce": 2, "projectile_speed": 950, "range": 700,
-      "mana_cost": 6, "mana_per_level": 0.4, "cooldown": 0,
-      "icon": { "shape": "bolt", "color": "e8d070" } },
-    { "id": "fork_bomb", "name": "Fork Bomb", "kind": "ground_aoe", "damage_type": "fire", "attribute": "int",
-      "tags": ["spell", "area"],
+      "spell": {
+        "base_damage": [
+          6,
+          15
+        ],
+        "damage_growth": 0.15,
+        "cast_time": 0.6,
+        "crit": 6.0
+      },
+      "projectiles": 1,
+      "pierce": 2,
+      "projectile_speed": 950,
+      "range": 700,
+      "mana_cost": 6,
+      "mana_per_level": 0.4,
+      "cooldown": 0,
+      "icon": {
+        "shape": "bolt",
+        "color": "e8d070"
+      }
+    },
+    {
+      "id": "fork_bomb",
+      "name": "Fork Bomb",
+      "kind": "ground_aoe",
+      "damage_type": "fire",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "area",
+        "fire",
+        "elemental"
+      ],
       "description": "Marca un punto y deja que se replique hasta explotar. :(){ :|:& };:",
-      "spell": { "base_damage": [13, 22], "damage_growth": 0.15, "cast_time": 0.8, "crit": 6.0 },
-      "radius": 85, "delay": 0.45, "range": 460,
-      "mana_cost": 9, "mana_per_level": 0.5, "cooldown": 0,
-      "icon": { "shape": "burst", "color": "e0652f" } },
-    { "id": "stack_overflow", "name": "Stack Overflow", "kind": "nova", "damage_type": "cold", "attribute": "int",
-      "tags": ["spell", "area"],
+      "spell": {
+        "base_damage": [
+          13,
+          22
+        ],
+        "damage_growth": 0.15,
+        "cast_time": 0.8,
+        "crit": 6.0
+      },
+      "radius": 85,
+      "delay": 0.45,
+      "range": 460,
+      "mana_cost": 9,
+      "mana_per_level": 0.5,
+      "cooldown": 0,
+      "icon": {
+        "shape": "burst",
+        "color": "e0652f"
+      }
+    },
+    {
+      "id": "stack_overflow",
+      "name": "Stack Overflow",
+      "kind": "nova",
+      "damage_type": "cold",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "area",
+        "cold",
+        "elemental"
+      ],
       "description": "Una onda helada a tu alrededor. La pila no da para más y congela todo.",
-      "spell": { "base_damage": [8, 14], "damage_growth": 0.15, "cast_time": 0.7, "crit": 5.0 },
+      "spell": {
+        "base_damage": [
+          8,
+          14
+        ],
+        "damage_growth": 0.15,
+        "cast_time": 0.7,
+        "crit": 5.0
+      },
       "radius": 140,
-      "mana_cost": 8, "mana_per_level": 0.5, "cooldown": 0,
-      "icon": { "shape": "nova", "color": "7fb8e0" } },
-    { "id": "teleport_tcp", "name": "Teletransporte TCP", "kind": "blink", "damage_type": "none", "attribute": "dex",
-      "tags": ["spell", "movement"],
+      "mana_cost": 8,
+      "mana_per_level": 0.5,
+      "cooldown": 0,
+      "icon": {
+        "shape": "nova",
+        "color": "7fb8e0"
+      }
+    },
+    {
+      "id": "teleport_tcp",
+      "name": "Teletransporte TCP",
+      "kind": "blink",
+      "damage_type": "none",
+      "attribute": "dex",
+      "tags": [
+        "spell",
+        "movement"
+      ],
       "description": "Te reenvía hacia el cursor. Con confirmación de entrega, a diferencia de ese correo.",
-      "spell": { "base_damage": [0, 0], "damage_growth": 0.0, "cast_time": 0.25, "crit": 0.0 },
+      "spell": {
+        "base_damage": [
+          0,
+          0
+        ],
+        "damage_growth": 0.0,
+        "cast_time": 0.25,
+        "crit": 0.0
+      },
       "range": 300,
-      "mana_cost": 8, "mana_per_level": 0.2, "cooldown": 2.5,
-      "icon": { "shape": "arrow", "color": "5cb85c" } },
-    { "id": "deploy_continuo", "name": "Despliegue Continuo", "kind": "dash", "damage_type": "physical", "attribute": "dex",
-      "tags": ["attack", "melee"], "lol": "Irelia Q / Yasuo E",
+      "mana_cost": 8,
+      "mana_per_level": 0.2,
+      "cooldown": 2.5,
+      "icon": {
+        "shape": "arrow",
+        "color": "5cb85c"
+      }
+    },
+    {
+      "id": "deploy_continuo",
+      "name": "Despliegue Continuo",
+      "kind": "dash",
+      "damage_type": "physical",
+      "attribute": "dex",
+      "tags": [
+        "attack",
+        "melee",
+        "physical"
+      ],
+      "lol": "Irelia Q / Yasuo E",
       "description": "Te lanzas hacia el cursor y golpeas a todo lo que hay en el camino. CI/CD: si algo se rompe, ya lo arreglará el siguiente commit.",
-      "attack": { "damage_effectiveness": 1.2 },
-      "range": 280, "width": 46, "mana_cost": 7, "mana_per_level": 0.3, "cooldown": 1.5,
-      "icon": { "shape": "dash", "color": "d9a441" } },
-    { "id": "flamewar", "name": "Flamewar", "kind": "cone", "damage_type": "fire", "attribute": "int",
-      "tags": ["spell", "area"], "lol": "Annie W",
+      "attack": {
+        "damage_effectiveness": 1.2
+      },
+      "range": 280,
+      "width": 46,
+      "mana_cost": 7,
+      "mana_per_level": 0.3,
+      "cooldown": 1.5,
+      "icon": {
+        "shape": "dash",
+        "color": "d9a441"
+      }
+    },
+    {
+      "id": "flamewar",
+      "name": "Flamewar",
+      "kind": "cone",
+      "damage_type": "fire",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "area",
+        "fire",
+        "elemental"
+      ],
+      "lol": "Annie W",
       "description": "Un cono de fuego delante de ti. Como un hilo de comentarios sobre tabuladores contra espacios.",
-      "spell": { "base_damage": [11, 19], "damage_growth": 0.15, "cast_time": 0.65, "crit": 6.0 },
-      "radius": 210, "angle": 70, "mana_cost": 8, "mana_per_level": 0.45, "cooldown": 0,
-      "icon": { "shape": "cone", "color": "e0652f" } },
-    { "id": "rayo_produccion", "name": "Rayo de Producción", "kind": "beam", "damage_type": "lightning", "attribute": "int",
-      "tags": ["spell", "area"], "lol": "Lux R",
+      "spell": {
+        "base_damage": [
+          11,
+          19
+        ],
+        "damage_growth": 0.15,
+        "cast_time": 0.65,
+        "crit": 6.0
+      },
+      "radius": 210,
+      "angle": 70,
+      "mana_cost": 8,
+      "mana_per_level": 0.45,
+      "cooldown": 0,
+      "icon": {
+        "shape": "cone",
+        "color": "e0652f"
+      }
+    },
+    {
+      "id": "rayo_produccion",
+      "name": "Rayo de Producción",
+      "kind": "beam",
+      "damage_type": "lightning",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "area",
+        "lightning",
+        "elemental"
+      ],
+      "lol": "Lux R",
       "description": "Se carga un instante y dispara un rayo larguísimo en línea recta. Desplegado directamente en main, sin revisión.",
-      "spell": { "base_damage": [30, 52], "damage_growth": 0.16, "cast_time": 0.9, "crit": 7.0 },
-      "range": 900, "width": 52, "delay": 0.45, "mana_cost": 16, "mana_per_level": 0.7, "cooldown": 5.0,
-      "icon": { "shape": "beam", "color": "e8d070" } },
-    { "id": "rollback", "name": "Rollback", "kind": "boomerang", "damage_type": "physical", "attribute": "dex",
-      "tags": ["attack", "projectile"], "lol": "Sivir Q",
+      "spell": {
+        "base_damage": [
+          30,
+          52
+        ],
+        "damage_growth": 0.16,
+        "cast_time": 0.9,
+        "crit": 7.0
+      },
+      "range": 900,
+      "width": 52,
+      "delay": 0.45,
+      "mana_cost": 16,
+      "mana_per_level": 0.7,
+      "cooldown": 5.0,
+      "icon": {
+        "shape": "beam",
+        "color": "e8d070"
+      }
+    },
+    {
+      "id": "rollback",
+      "name": "Rollback",
+      "kind": "boomerang",
+      "damage_type": "physical",
+      "attribute": "dex",
+      "tags": [
+        "attack",
+        "projectile",
+        "physical"
+      ],
+      "lol": "Sivir Q",
       "description": "Lanzas tu arma y vuelve a tus manos, golpeando a la ida y a la vuelta. Como un git revert: deshace todo lo que toca.",
-      "attack": { "damage_effectiveness": 0.9 },
-      "projectiles": 1, "projectile_speed": 760, "range": 520, "pierce": 99, "mana_cost": 7, "mana_per_level": 0.4, "cooldown": 0,
-      "icon": { "shape": "boomerang", "color": "c8c8c8" } },
-    { "id": "bucle_infinito", "name": "Bucle Infinito", "kind": "spin", "damage_type": "physical", "attribute": "str",
-      "tags": ["attack", "melee", "area"], "lol": "Garen E",
+      "attack": {
+        "damage_effectiveness": 0.9
+      },
+      "projectiles": 1,
+      "projectile_speed": 760,
+      "range": 520,
+      "pierce": 99,
+      "mana_cost": 7,
+      "mana_per_level": 0.4,
+      "cooldown": 0,
+      "icon": {
+        "shape": "boomerang",
+        "color": "c8c8c8"
+      }
+    },
+    {
+      "id": "bucle_infinito",
+      "name": "Bucle Infinito",
+      "kind": "spin",
+      "damage_type": "physical",
+      "attribute": "str",
+      "tags": [
+        "attack",
+        "melee",
+        "area",
+        "physical",
+        "duration"
+      ],
+      "lol": "Garen E",
       "description": "while (true) { girar(); } Golpeas a tu alrededor sin parar durante unos segundos y puedes moverte mientras tanto.",
-      "attack": { "damage_effectiveness": 0.45 },
-      "radius": 105, "duration": 2.4, "tick": 0.3, "mana_cost": 12, "mana_per_level": 0.5, "cooldown": 6.0,
-      "icon": { "shape": "spin", "color": "b8b8c8" } },
-    { "id": "deadlock", "name": "Deadlock", "kind": "nova", "damage_type": "cold", "attribute": "str",
-      "tags": ["spell", "area"], "lol": "Amumu R",
+      "attack": {
+        "damage_effectiveness": 0.45
+      },
+      "radius": 105,
+      "duration": 2.4,
+      "tick": 0.3,
+      "mana_cost": 12,
+      "mana_per_level": 0.5,
+      "cooldown": 6.0,
+      "icon": {
+        "shape": "spin",
+        "color": "b8b8c8"
+      }
+    },
+    {
+      "id": "deadlock",
+      "name": "Deadlock",
+      "kind": "nova",
+      "damage_type": "cold",
+      "attribute": "str",
+      "tags": [
+        "spell",
+        "area",
+        "cold",
+        "elemental",
+        "duration"
+      ],
+      "lol": "Amumu R",
       "description": "Todos los procesos a tu alrededor se quedan esperando a otro proceso que les espera a ellos. Daño de frío y aturdimiento.",
-      "spell": { "base_damage": [10, 18], "damage_growth": 0.15, "cast_time": 0.75, "crit": 5.0 },
-      "radius": 170, "stun": 1.6, "mana_cost": 15, "mana_per_level": 0.6, "cooldown": 9.0,
-      "icon": { "shape": "lock", "color": "7fb8e0" } },
-    { "id": "bomba_logica", "name": "Bomba Lógica", "kind": "trap", "damage_type": "chaos", "attribute": "dex",
-      "tags": ["spell", "area"], "lol": "Teemo R",
+      "spell": {
+        "base_damage": [
+          10,
+          18
+        ],
+        "damage_growth": 0.15,
+        "cast_time": 0.75,
+        "crit": 5.0
+      },
+      "radius": 170,
+      "stun": 1.6,
+      "mana_cost": 15,
+      "mana_per_level": 0.6,
+      "cooldown": 9.0,
+      "icon": {
+        "shape": "lock",
+        "color": "7fb8e0"
+      }
+    },
+    {
+      "id": "bomba_logica",
+      "name": "Bomba Lógica",
+      "kind": "trap",
+      "damage_type": "chaos",
+      "attribute": "dex",
+      "tags": [
+        "spell",
+        "area",
+        "chaos",
+        "trap",
+        "duration"
+      ],
+      "lol": "Teemo R",
       "description": "Escondes una bomba en el suelo. Explota cuando un enemigo cumple la condición: acercarse. Hasta 3 a la vez.",
-      "spell": { "base_damage": [22, 36], "damage_growth": 0.16, "cast_time": 0.5, "crit": 5.0 },
-      "radius": 110, "trigger_radius": 45, "range": 420, "duration": 20.0, "max_active": 3,
-      "mana_cost": 9, "mana_per_level": 0.45, "cooldown": 0.8,
-      "icon": { "shape": "trap", "color": "b04ad9" } },
-    { "id": "excepcion_en_cadena", "name": "Excepción en Cadena", "kind": "chain", "damage_type": "lightning", "attribute": "int",
-      "tags": ["spell"], "lol": "Brand R",
+      "spell": {
+        "base_damage": [
+          22,
+          36
+        ],
+        "damage_growth": 0.16,
+        "cast_time": 0.5,
+        "crit": 5.0
+      },
+      "radius": 110,
+      "trigger_radius": 45,
+      "range": 420,
+      "duration": 20.0,
+      "max_active": 3,
+      "mana_cost": 9,
+      "mana_per_level": 0.45,
+      "cooldown": 0.8,
+      "icon": {
+        "shape": "trap",
+        "color": "b04ad9"
+      }
+    },
+    {
+      "id": "excepcion_en_cadena",
+      "name": "Excepción en Cadena",
+      "kind": "chain",
+      "damage_type": "lightning",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "chain",
+        "lightning",
+        "elemental"
+      ],
+      "lol": "Brand R",
       "description": "Lanzas una excepción al enemigo más cercano al cursor; nadie la captura y va saltando de uno a otro.",
-      "spell": { "base_damage": [9, 20], "damage_growth": 0.15, "cast_time": 0.7, "crit": 6.0 },
-      "range": 500, "chains": 4, "chain_range": 230, "mana_cost": 9, "mana_per_level": 0.45, "cooldown": 0,
-      "icon": { "shape": "chain", "color": "8888ff" } }
+      "spell": {
+        "base_damage": [
+          9,
+          20
+        ],
+        "damage_growth": 0.15,
+        "cast_time": 0.7,
+        "crit": 6.0
+      },
+      "range": 500,
+      "chains": 4,
+      "chain_range": 230,
+      "mana_cost": 9,
+      "mana_per_level": 0.45,
+      "cooldown": 0,
+      "icon": {
+        "shape": "chain",
+        "color": "8888ff"
+      }
+    },
+    {
+      "id": "proceso_hijo",
+      "name": "Proceso Hijo",
+      "kind": "minion",
+      "damage_type": "physical",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "minion",
+        "duration",
+        "physical"
+      ],
+      "lol": "Yorick / Annie R (Tibbers)",
+      "description": "fork() y dos procesos hijos salen a pelear por ti durante un rato. No los has documentado, pero obedecen.",
+      "spell": {
+        "base_damage": [
+          6,
+          11
+        ],
+        "damage_growth": 0.16,
+        "cast_time": 0.8,
+        "crit": 5.0
+      },
+      "count": 2,
+      "duration": 14.0,
+      "max_active": 4,
+      "mana_cost": 14,
+      "mana_per_level": 0.6,
+      "cooldown": 1.0,
+      "icon": {
+        "shape": "minion",
+        "color": "7fd07f"
+      }
+    },
+    {
+      "id": "fuga_de_memoria",
+      "name": "Fuga de Memoria",
+      "kind": "degen_area",
+      "damage_type": "chaos",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "area",
+        "chaos",
+        "degen",
+        "duration"
+      ],
+      "lol": "Singed Q / Cassiopeia W",
+      "description": "Deja un charco de memoria sin liberar que corroe a quien lo pisa. Daño por segundo mientras estén dentro.",
+      "spell": {
+        "base_damage": [
+          9,
+          13
+        ],
+        "damage_growth": 0.16,
+        "cast_time": 0.7,
+        "crit": 0.0
+      },
+      "radius": 115,
+      "range": 450,
+      "duration": 4.5,
+      "tick": 0.25,
+      "mana_cost": 10,
+      "mana_per_level": 0.5,
+      "cooldown": 0,
+      "icon": {
+        "shape": "puddle",
+        "color": "9a5ad0"
+      }
+    }
   ]
 }

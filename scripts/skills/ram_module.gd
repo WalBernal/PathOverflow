@@ -56,7 +56,13 @@ func cost_multiplier() -> float:
 
 
 func special(key: String, default_value: float = 0.0) -> float:
-	return float(def.get("special", {}).get(key, default_value))
+	var value = def.get("special", {}).get(key, default_value)
+	return float(value) if (value is float or value is int) else default_value
+
+
+## Para valores de texto (deploy: "trap", "mine", "totem").
+func special_string(key: String) -> String:
+	return String(def.get("special", {}).get(key, ""))
 
 
 func skill_modifiers() -> Array[Modifier]:
@@ -78,6 +84,15 @@ func effect_lines() -> PackedStringArray:
 		lines.append("Los proyectiles atraviesan %d enemigos más" % sp["pierce"])
 	if sp.has("repeats"):
 		lines.append("La habilidad se repite %d vez más" % sp["repeats"])
+	if sp.has("extra_chains"):
+		lines.append("+%d encadenamientos (los proyectiles rebotan a otro enemigo)" % sp["extra_chains"])
+	match String(sp.get("deploy", "")):
+		"trap":
+			lines.append("Se lanza como trampa: se activa al acercarse un enemigo (máx. 3)")
+		"mine":
+			lines.append("Se entierra como mina: tarda en armarse, se activa al pasar un enemigo (máx. 5)")
+		"totem":
+			lines.append("La usa una torreta durante %d s contra el enemigo más cercano" % int(sp.get("totem_duration", 8)))
 	if sp.has("area_multiplier"):
 		lines.append("%d%% menos de área" % roundi((1.0 - float(sp["area_multiplier"])) * 100.0))
 	lines.append("Consumo de maná ×%.2f" % cost_multiplier())
