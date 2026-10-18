@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_doc": "NPCs y sus diálogos. Nodos con texto y opciones. Opción: text, next ('' = cerrar), requires_flag / hides_if_flag, action {type: give_item | give_matching_ram | refill | set_flag, flag}. Las banderas se guardan en el personaje. Dónde aparece cada NPC lo dice data/act1.json.",
+  "_doc": "NPCs y sus diálogos. Nodos con texto y opciones. Opción: text, next ('' = cerrar), requires_flag / hides_if_flag, action {type: give_item | give_matching_ram | give_random | refill | set_flag | start_quest | quest_advance, flag, quest}. voice: tono de la voz (pitch, 1 = normal) y velocidad (rate) para el narrador y los pitidos. Las banderas se guardan en el personaje. Dónde aparece cada NPC lo dice data/act1.json.",
   "npcs": {
     "ada": {
       "name": "Ada, la Senior",
@@ -11,6 +11,10 @@
         "skin_tone": "e0ac8a",
         "hair_color": "c8c8c8",
         "outfit_color": "5a3b6b"
+      },
+      "voice": {
+        "pitch": 0.9,
+        "rate": 1.0
       }
     },
     "kevin": {
@@ -22,6 +26,10 @@
         "skin_tone": "f1d2b6",
         "hair_color": "b5651d",
         "outfit_color": "2b6b45"
+      },
+      "voice": {
+        "pitch": 1.25,
+        "rate": 1.15
       }
     },
     "root": {
@@ -33,6 +41,10 @@
         "skin_tone": "7c4a2d",
         "hair_color": "0f0d0c",
         "outfit_color": "1f1f2e"
+      },
+      "voice": {
+        "pitch": 0.65,
+        "rate": 0.9
       }
     },
     "bot_onboarding": {
@@ -44,6 +56,10 @@
         "skin_tone": "c8c8c8",
         "hair_color": "3d5a80",
         "outfit_color": "2b4a6b"
+      },
+      "voice": {
+        "pitch": 1.6,
+        "rate": 1.2
       }
     },
     "iris": {
@@ -55,6 +71,10 @@
         "skin_tone": "e0ac8a",
         "hair_color": "6b4423",
         "outfit_color": "6b5a2b"
+      },
+      "voice": {
+        "pitch": 1.3,
+        "rate": 1.1
       }
     },
     "tomas": {
@@ -66,6 +86,10 @@
         "skin_tone": "a8714f",
         "hair_color": "c8c8c8",
         "outfit_color": "3a3a3a"
+      },
+      "voice": {
+        "pitch": 0.8,
+        "rate": 0.95
       }
     },
     "dba": {
@@ -77,6 +101,10 @@
         "skin_tone": "c8c8c8",
         "hair_color": "c8c8c8",
         "outfit_color": "1f1f2e"
+      },
+      "voice": {
+        "pitch": 0.55,
+        "rate": 0.85
       }
     }
   },
@@ -92,6 +120,11 @@
               "next": "victoria",
               "requires_flag": "act1_complete",
               "hides_if_flag": "ada_victoria"
+            },
+            {
+              "text": "¿Qué hay después del Servidor?",
+              "next": "acto2",
+              "requires_flag": "root_reinicio"
             },
             {
               "text": "¿Dónde estoy?",
@@ -161,15 +194,24 @@
           ]
         },
         "victoria": {
-          "text": "¿En serio? Entonces el Servidor debería poder reiniciarse... ¿Lo ves? Sigue caído. Claro. Esto era solo el Acto I. Siempre hay un Acto II. Igual que siempre hay otra reunión.",
+          "text": "¿En serio? Entonces el Servidor debería poder reiniciarse... ¿Lo ves? Sigue caído. Claro. Habla con Root: él lleva reiniciándolo desde 2019, sabrá qué ha pasado esta vez.",
           "options": [
             {
-              "text": "Genial.",
+              "text": "Iré a ver a Root.",
               "next": "",
               "action": {
                 "type": "set_flag",
                 "flag": "ada_victoria"
               }
+            }
+          ]
+        },
+        "acto2": {
+          "text": "El Kernel. Nadie baja ahí desde la última actualización de seguridad. Dicen que los procesos huérfanos forman sindicatos. Prepárate bien: sube de nivel, reparte pasivas y consigue resistencias.",
+          "options": [
+            {
+              "text": "Entendido.",
+              "next": "hola"
             }
           ]
         }
@@ -181,6 +223,16 @@
         "hola": {
           "text": "¡Hola! Soy Kevin, el becario. Llevo tres meses aquí y todavía no tengo acceso a nada. Pero preparo un café increíble.",
           "options": [
+            {
+              "text": "Traigo granos de café. De bicho.",
+              "next": "mision_entrega",
+              "requires_flag": "quest_kevin_cafe_ready"
+            },
+            {
+              "text": "¿Necesitas ayuda con algo?",
+              "next": "mision_oferta",
+              "hides_if_flag": "quest_kevin_cafe_started"
+            },
             {
               "text": "¿Me pones un café?",
               "next": "cafe",
@@ -215,6 +267,36 @@
               "next": "hola"
             }
           ]
+        },
+        "mision_oferta": {
+          "text": "Se ha acabado el café. Del todo. Dicen que los bichos sueltan granos al morir... no me preguntes cómo lo sé. ¿Me traes los de unos 40?",
+          "options": [
+            {
+              "text": "Marchando 40 bichos.",
+              "next": "",
+              "action": {
+                "type": "start_quest",
+                "quest": "kevin_cafe"
+              }
+            },
+            {
+              "text": "Ahora no.",
+              "next": "hola"
+            }
+          ]
+        },
+        "mision_entrega": {
+          "text": "No voy a preguntar de dónde salen exactamente. Toma, te relleno las pociones y te doy esto que encontré en la cocina.",
+          "options": [
+            {
+              "text": "Disfrútalo, Kevin.",
+              "next": "",
+              "action": {
+                "type": "quest_advance",
+                "quest": "kevin_cafe"
+              }
+            }
+          ]
         }
       }
     },
@@ -224,6 +306,17 @@
         "hola": {
           "text": "...¿Qué. Quieres? Estoy reiniciando el servidor. Desde 2019.",
           "options": [
+            {
+              "text": "Ada dice que el Servidor sigue caído.",
+              "next": "reinicio",
+              "requires_flag": "ada_victoria",
+              "hides_if_flag": "root_reinicio"
+            },
+            {
+              "text": "¿Qué es ese portal?",
+              "next": "portal",
+              "requires_flag": "root_reinicio"
+            },
             {
               "text": "¿Qué pasó aquí?",
               "next": "lore"
@@ -273,6 +366,37 @@
                 "id": "ping_letal",
                 "flag": "root_regalo"
               }
+            }
+          ]
+        },
+        "reinicio": {
+          "text": "Lo intenté. «sudo reboot». Kernel panic. El Arquitecto no era el problema: era un síntoma. Algo vive más abajo, en el Kernel, y no quiere que el Servidor vuelva. Escucha... los logs están llenos de un nombre: «init». El PID 1.",
+          "options": [
+            {
+              "text": "¿Y ahora qué?",
+              "next": "reinicio2"
+            }
+          ]
+        },
+        "reinicio2": {
+          "text": "He abierto un portal junto a la empalizada, al sureste. Lleva directo al Kernel. Bueno: lo llevará cuando alguien lo programe. Todo está «en desarrollo». Como siempre.",
+          "options": [
+            {
+              "text": "Prepararé el viaje.",
+              "next": "",
+              "action": {
+                "type": "set_flag",
+                "flag": "root_reinicio"
+              }
+            }
+          ]
+        },
+        "portal": {
+          "text": "El Portal al Kernel. Ahora mismo da un 503. Cuando el Acto II esté listo, será lo primero que cruces. Hasta entonces, farmea. Es lo que hacemos todos.",
+          "options": [
+            {
+              "text": "Vale.",
+              "next": "hola"
             }
           ]
         }
@@ -338,6 +462,16 @@
           "text": "¿Tú también te perdiste? Era mi primer día. Me dijeron: «haz un cambio pequeño y súbelo». Lo subí. Diez minutos después, alguien hizo push --force encima. Desde entonces, los cables de este bosque se mueven solos.",
           "options": [
             {
+              "text": "He limpiado el bosque de bichos.",
+              "next": "mision_entrega",
+              "requires_flag": "quest_iris_cables_ready"
+            },
+            {
+              "text": "¿Puedo ayudarte en algo?",
+              "next": "mision_oferta",
+              "hides_if_flag": "quest_iris_cables_started"
+            },
+            {
               "text": "¿Quién hizo el push?",
               "next": "push"
             },
@@ -381,6 +515,36 @@
               "next": "hola"
             }
           ]
+        },
+        "mision_oferta": {
+          "text": "Los bugs se están comiendo el aislamiento de los cables. Cada cortocircuito cambia el camino y ya no sé por dónde se sale. Si eliminas unos 25 por el bosque, a lo mejor consigo orientarme.",
+          "options": [
+            {
+              "text": "Yo me encargo de los bichos.",
+              "next": "",
+              "action": {
+                "type": "start_quest",
+                "quest": "iris_cables"
+              }
+            },
+            {
+              "text": "Ahora no.",
+              "next": "hola"
+            }
+          ]
+        },
+        "mision_entrega": {
+          "text": "¡Los cables han dejado de chisporrotear! Ya veo la salida. Toma esto: lo encontré en un cajón con la etiqueta «NO TOCAR». Nunca hago caso a esas etiquetas. Por eso estoy aquí.",
+          "options": [
+            {
+              "text": "Gracias, Iris.",
+              "next": "",
+              "action": {
+                "type": "quest_advance",
+                "quest": "iris_cables"
+              }
+            }
+          ]
         }
       }
     },
@@ -390,6 +554,16 @@
         "hola": {
           "text": "Soy Tomás. El último QA. Desactivaron los tests «temporalmente» en 2017. Yo me quedé, por si acaso. Alguien tenía que ver crecer los memory leaks.",
           "options": [
+            {
+              "text": "Tengo tus pruebas: tres bugs graves menos.",
+              "next": "mision_entrega",
+              "requires_flag": "quest_tomas_reporte_ready"
+            },
+            {
+              "text": "¿Necesitas algo para tus reportes?",
+              "next": "mision_oferta",
+              "hides_if_flag": "quest_tomas_reporte_started"
+            },
             {
               "text": "¿De dónde salen los memory leaks?",
               "next": "leaks"
@@ -434,6 +608,36 @@
               "next": "hola"
             }
           ]
+        },
+        "mision_oferta": {
+          "text": "Producto dice que los bugs graves «no se reproducen». Necesito pruebas. Elimina tres de los gordos del pantano, especiales o élite, y yo abro los tickets. Con capturas. Y con logs.",
+          "options": [
+            {
+              "text": "Te traeré pruebas.",
+              "next": "",
+              "action": {
+                "type": "start_quest",
+                "quest": "tomas_reporte"
+              }
+            },
+            {
+              "text": "Ahora no.",
+              "next": "hola"
+            }
+          ]
+        },
+        "mision_entrega": {
+          "text": "Perfecto. Ticket abierto, prioridad crítica, asignado a... «Sin asignar». Como siempre. Pero esta vez queda constancia. Toma, por las molestias.",
+          "options": [
+            {
+              "text": "Que alguien lo lea algún día.",
+              "next": "",
+              "action": {
+                "type": "quest_advance",
+                "quest": "tomas_reporte"
+              }
+            }
+          ]
         }
       }
     },
@@ -443,6 +647,16 @@
         "hola": {
           "text": "Hice copias de seguridad cada noche durante veinte años. Nadie las restauró nunca. Ahora soy una de ellas. Bienvenido a la Granja de Servidores, mortal.",
           "options": [
+            {
+              "text": "Traigo tu cinta de backup.",
+              "next": "mision_entrega",
+              "requires_flag": "quest_dba_backup_ready"
+            },
+            {
+              "text": "¿Puedo hacer algo por ti?",
+              "next": "mision_oferta",
+              "hides_if_flag": "quest_dba_backup_started"
+            },
             {
               "text": "¿Qué hay más allá?",
               "next": "sala"
@@ -489,6 +703,36 @@
               "action": {
                 "type": "give_matching_ram",
                 "flag": "dba_regalo"
+              }
+            }
+          ]
+        },
+        "mision_oferta": {
+          "text": "Mi última copia de seguridad está en una cinta, en las Catacumbas del Legacy. Si me la traes, podré descansar. O hacer un restore. Lo que salga primero.",
+          "options": [
+            {
+              "text": "Buscaré la cinta.",
+              "next": "",
+              "action": {
+                "type": "start_quest",
+                "quest": "dba_backup"
+              }
+            },
+            {
+              "text": "Ahora no.",
+              "next": "hola"
+            }
+          ]
+        },
+        "mision_entrega": {
+          "text": "¡Mi cinta! Etiquetada «backup_final_FINAL_v2_definitivo». Veinte años esperando a que alguien la restaurara. Toma, mortal. Esto es lo único que no estaba respaldado: el tesoro.",
+          "options": [
+            {
+              "text": "Descansa en paz, DBA.",
+              "next": "",
+              "action": {
+                "type": "quest_advance",
+                "quest": "dba_backup"
               }
             }
           ]

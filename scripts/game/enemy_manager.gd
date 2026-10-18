@@ -61,6 +61,8 @@ var last_damage_dealt := 0.0
 ## Obstáculos de la zona (x, y, radio) y límites del mapa: los enemigos no los atraviesan.
 var obstacles: Array[Vector3] = []
 var bounds := Rect2(-1e6, -1e6, 2e6, 2e6)
+## Opcional: (pos, radio) -> pos dentro de los bordes irregulares de la zona.
+var walk_clamp: Callable
 
 var ids := PackedInt32Array()
 var positions := PackedVector2Array()
@@ -273,7 +275,8 @@ func _physics_process(delta: float) -> void:
 			var min_d := o.z + r
 			if away.length_squared() < min_d * min_d:
 				new_pos = Vector2(o.x, o.y) + away.normalized() * min_d
-		positions[i] = new_pos.clamp(bounds.position + Vector2(r, r), bounds.end - Vector2(r, r))
+		new_pos = new_pos.clamp(bounds.position + Vector2(r, r), bounds.end - Vector2(r, r))
+		positions[i] = walk_clamp.call(new_pos, r) if walk_clamp.is_valid() else new_pos
 
 		cooldowns[i] -= delta
 		flashes[i] = maxf(0.0, flashes[i] - delta)

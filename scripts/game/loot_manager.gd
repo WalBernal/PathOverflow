@@ -10,10 +10,14 @@ signal pickup_failed(reason: String)
 const PICKUP_RANGE := 50.0
 const FONT_SIZE := 14
 const PADDING := Vector2(6.0, 3.0)
-const MAX_LABEL_SHIFTS := 30
+const MAX_LABEL_SHIFTS := 12
 
 var player: Player
 var inventory: Inventory
+## Opcionales (los pone World con la zona actual): ¿se puede llegar a este
+## punto? y, si no, el punto transitable más cercano.
+var placement_check: Callable
+var spot_fixer: Callable
 ## {item: Item, rect: Rect2, text: String}
 var drops: Array[Dictionary] = []
 
@@ -29,14 +33,29 @@ func drop_item(item: Item, pos: Vector2) -> void:
 	var font := ThemeDB.fallback_font
 	var text := item.display_name()
 	var label_size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE) + PADDING * 2.0
-	var rect := Rect2(pos - label_size / 2.0, label_size)
-	# Evita que las etiquetas se tapen entre sí, apilándolas hacia abajo.
-	var shifts := 0
-	while shifts < MAX_LABEL_SHIFTS and _overlaps(rect):
-		rect.position.y += label_size.y + 2.0
-		shifts += 1
-	drops.append({"item": item, "rect": rect, "text": text})
+	drops.append({"item": item, "rect": find_spot(pos, label_size), "text": text})
 	queue_redraw()
+
+
+## Busca, en espiral alrededor de `pos`, un hueco donde la etiqueta no tape a
+## otras y su centro sea alcanzable (dentro de la zona, fuera de obstáculos).
+func find_spot(pos: Vector2, label_size: Vector2) -> Rect2:
+	var start := pos
+	if placement_check.is_valid() and not placement_check.call(start):
+		start = spot_fixer.call(start) if spot_fixer.is_valid() else start
+	var fallback := Rect2(start - label_size / 2.0, label_size)
+	for ring in MAX_LABEL_SHIFTS:
+		var count := 1 if ring == 0 else 8 + ring * 2
+		for k in count:
+			var a := TAU * k / count + ring * 0.7
+			var center := start + Vector2(cos(a) * ring * 48.0, sin(a) * ring * (label_size.y + 4.0))
+			var rect := Rect2(center - label_size / 2.0, label_size)
+			if _overlaps(rect):
+				continue
+			if placement_check.is_valid() and not placement_check.call(center):
+				continue
+			return rect
+	return fallback
 
 
 func clear_all() -> void:
