@@ -46,6 +46,7 @@ func setup(p_player: Player, p_enemies: EnemyManager, p_character: CharacterData
 	cooldowns.fill(0.0)
 	character.stats_changed.connect(refresh_profiles)
 	character.inventory.changed.connect(refresh_profiles)
+	character.conditions_changed.connect(refresh_profiles)
 	refresh_profiles()
 
 

@@ -1,0 +1,29 @@
+{
+	"columns": 8,
+	"icons": {
+		"area": 14,
+		"armadura": 1,
+		"atributos": 17,
+		"caos": 13,
+		"critico": 6,
+		"escudo": 7,
+		"evasion": 3,
+		"fisico": 2,
+		"frio": 10,
+		"fuego": 9,
+		"ks_duelista": 19,
+		"ks_exploradora": 20,
+		"ks_guerrero": 18,
+		"ks_hechicero": 21,
+		"ks_templario": 22,
+		"lanzamiento": 12,
+		"mana": 8,
+		"proyectiles": 4,
+		"rayo": 11,
+		"resistencias": 15,
+		"robo_vida": 16,
+		"velocidad_ataque": 5,
+		"vida": 0
+	},
+	"size": 32
+}

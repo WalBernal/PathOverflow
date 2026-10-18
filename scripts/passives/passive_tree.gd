@@ -7,6 +7,8 @@ var nodes: Dictionary = {}       # int -> PassiveNode
 var adjacency: Dictionary = {}   # int -> Array (ids vecinos)
 var edges: Array[Vector2i] = []
 var bounds := Rect2()
+## Versión del árbol: si cambia, los ids de los nodos ya no significan lo mismo.
+var version := 1
 
 
 static func load_from_json(path: String) -> PassiveTree:
@@ -14,6 +16,7 @@ static func load_from_json(path: String) -> PassiveTree:
 	if not data is Dictionary:
 		return null
 	var tree := PassiveTree.new()
+	tree.version = int(data.get("version", 1))
 	var first := true
 	for nd in data.get("nodes", []):
 		var n := PassiveNode.from_dict(nd)

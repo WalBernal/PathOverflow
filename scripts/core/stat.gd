@@ -13,6 +13,7 @@ const LIFE := &"life"
 const MANA := &"mana"
 const ENERGY_SHIELD := &"energy_shield"
 const LIFE_REGEN := &"life_regen"
+const MANA_REGEN := &"mana_regen"
 const ARMOUR := &"armour"
 const EVASION := &"evasion"
 const BLOCK_CHANCE := &"block_chance"
@@ -48,6 +49,10 @@ const TAG_MELEE := &"melee"
 const TAG_PROJECTILE := &"projectile"
 const TAG_AREA := &"area"
 const TAG_MOVEMENT := &"movement"
+# Condiciones: modificadores que solo aplican mientras se cumplen (ver CharacterData.condition_tags).
+const COND_LOW_LIFE := &"low_life"
+const COND_FULL_LIFE := &"full_life"
+const COND_RECENT_KILL := &"recent_kill"
 
 const RESISTANCE_CAP := 75.0
 
@@ -59,6 +64,7 @@ const NAMES := {
 	MANA: "Maná máximo",
 	ENERGY_SHIELD: "Escudo de energía",
 	LIFE_REGEN: "Regeneración de vida por segundo",
+	MANA_REGEN: "Regeneración de maná",
 	ARMOUR: "Armadura",
 	EVASION: "Evasión",
 	BLOCK_CHANCE: "Probabilidad de bloqueo",
@@ -108,6 +114,9 @@ const TAG_NAMES := {
 	TAG_PROJECTILE: "de proyectiles",
 	TAG_AREA: "de área",
 	TAG_MOVEMENT: "de movimiento",
+	COND_LOW_LIFE: "con la vida baja",
+	COND_FULL_LIFE: "con la vida al máximo",
+	COND_RECENT_KILL: "si has matado recientemente",
 }
 
 ## Stat de daño de cada tipo de daño de las habilidades.

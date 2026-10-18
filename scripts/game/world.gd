@@ -87,6 +87,9 @@ func _ready() -> void:
 
 	enemies.area_level = character.level
 	spawn_wave(INITIAL_ENEMIES)
+	if character.flags.has("passives_refunded"):
+		character.flags.erase("passives_refunded")
+		ui.hud.flash.call_deferred("El árbol pasivo ha cambiado: te hemos devuelto todos los puntos (P).", UiStyle.ACCENT)
 
 
 func _process(delta: float) -> void:
@@ -202,6 +205,7 @@ func _on_enemy_killed(rarity: int, experience: int, pos: Vector2) -> void:
 	character.add_experience(experience)
 	character.flags["stat_kills"] = int(character.flags.get("stat_kills", 0)) + 1
 	player.add_flask_charges(rarity)
+	player.notify_kill()
 	ui.tutorial.notify("kill")
 	var info: Dictionary = Rarity.ENEMY_INFO[rarity]
 	for k in int(info["drop_count"]):

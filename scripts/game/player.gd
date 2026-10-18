@@ -16,6 +16,9 @@ const ES_RECHARGE_DELAY := 2.0
 const ES_RECHARGE_PERCENT := 20.0
 const MAX_EVADE_CHANCE := 0.75
 const MAX_BLOCK_CHANCE := 75.0
+## Condiciones (como en PoE): vida baja = 50 % o menos; muerte reciente = 4 s.
+const LOW_LIFE_FRACTION := 0.5
+const RECENT_KILL_TIME := 4.0
 ## Pociones (como los frascos de PoE): se recargan matando enemigos.
 ## recover: fracción de la vida/maná máximos que devuelven en `duration` segundos.
 const FLASKS := [
@@ -44,6 +47,7 @@ var flask_charges: Array[float] = []
 var action_lock := 0.0
 
 var _move_held := false
+var _since_kill := 99.0
 var _since_damage := 99.0
 var _hurt_time := 0.0
 var _facing := Vector2.RIGHT
@@ -149,6 +153,23 @@ func add_flask_charges(enemy_rarity: int) -> void:
 		flask_charges[i] = minf(FLASKS[i]["max_charges"], flask_charges[i] + amount)
 
 
+## Lo llama World al matar un enemigo (condición «has matado recientemente»).
+func notify_kill() -> void:
+	_since_kill = 0.0
+
+
+## Stat con las condiciones activas aplicadas (vida baja, etc.).
+func _stat(stat: StringName) -> float:
+	return character.stats.get_value(stat, character.condition_tags())
+
+
+func _update_conditions(delta: float) -> void:
+	_since_kill += delta
+	character.set_condition(Stat.COND_LOW_LIFE, is_alive() and life <= max_life() * LOW_LIFE_FRACTION)
+	character.set_condition(Stat.COND_FULL_LIFE, life >= max_life() - 0.5)
+	character.set_condition(Stat.COND_RECENT_KILL, _since_kill <= RECENT_KILL_TIME)
+
+
 # --- Bucle ---
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -165,6 +186,7 @@ func _physics_process(delta: float) -> void:
 	if not is_alive():
 		velocity = Vector2.ZERO
 		return
+	_update_conditions(delta)
 	_regenerate(delta)
 	action_lock = maxf(0.0, action_lock - delta)
 
@@ -187,7 +209,7 @@ func _physics_process(delta: float) -> void:
 		dir = Vector2.ZERO  # como en PoE: quieto mientras lanza
 	if dir != Vector2.ZERO:
 		_facing = dir
-	velocity = dir * BASE_MOVE_SPEED * character.stats.get_value(Stat.MOVEMENT_SPEED) / 100.0
+	velocity = dir * BASE_MOVE_SPEED * _stat(Stat.MOVEMENT_SPEED) / 100.0
 	move_and_slide()
 
 
@@ -197,8 +219,8 @@ func _process(delta: float) -> void:
 
 
 func _regenerate(delta: float) -> void:
-	var life_gain := character.stats.get_value(Stat.LIFE_REGEN)
-	var mana_gain := max_mana() * MANA_REGEN_PERCENT / 100.0
+	var life_gain := _stat(Stat.LIFE_REGEN)
+	var mana_gain := max_mana() * MANA_REGEN_PERCENT / 100.0 * character.stats.total_multiplier(Stat.MANA_REGEN, character.condition_tags())
 	for r in _recoveries:
 		var dt := minf(delta, r["remaining"])
 		if r["resource"] == "life":
@@ -218,14 +240,13 @@ func _regenerate(delta: float) -> void:
 func take_damage(amount: float) -> void:
 	if not is_alive() or invulnerable:
 		return
-	var s := character.stats
-	var evasion := s.get_value(Stat.EVASION)
+	var evasion := _stat(Stat.EVASION)
 	if randf() < minf(MAX_EVADE_CHANCE, evasion / (evasion + 600.0)):
 		return
-	if randf() * 100.0 < minf(MAX_BLOCK_CHANCE, s.get_value(Stat.BLOCK_CHANCE)):
+	if randf() * 100.0 < minf(MAX_BLOCK_CHANCE, _stat(Stat.BLOCK_CHANCE)):
 		return
 	# Fórmula de armadura de PoE: protege mucho contra golpes pequeños, poco contra grandes.
-	var armour := s.get_value(Stat.ARMOUR)
+	var armour := _stat(Stat.ARMOUR)
 	amount *= 1.0 - minf(0.9, armour / (armour + 5.0 * amount))
 	_since_damage = 0.0
 	_hurt_time = 0.12
