@@ -14,10 +14,13 @@ var affixes: Array = []           # Dictionary
 var uniques: Array = []           # Dictionary
 var sets: Dictionary = {}         # id -> Dictionary
 var set_pieces: Array = []        # {piece: Dictionary, set: Dictionary}
+## Placas base y módulos RAM también son objetos (caen como botín).
+var skills: SkillDatabase
 
 
-static func load_from_dir(dir := "res://data/items") -> ItemDatabase:
+static func load_from_dir(dir := "res://data/items", skills_dir := "res://data/skills") -> ItemDatabase:
 	var db := ItemDatabase.new()
+	db.skills = SkillDatabase.load_from_dir(skills_dir)
 	for base in _section(dir + "/bases.json", "bases"):
 		db.bases[base["id"]] = base
 	db.affixes = _section(dir + "/affixes.json", "affixes")

@@ -46,6 +46,8 @@ const TAG_ATTACK := &"attack"
 const TAG_SPELL := &"spell"
 const TAG_MELEE := &"melee"
 const TAG_PROJECTILE := &"projectile"
+const TAG_AREA := &"area"
+const TAG_MOVEMENT := &"movement"
 
 const RESISTANCE_CAP := 75.0
 
@@ -104,6 +106,17 @@ const TAG_NAMES := {
 	TAG_SPELL: "con hechizos",
 	TAG_MELEE: "cuerpo a cuerpo",
 	TAG_PROJECTILE: "de proyectiles",
+	TAG_AREA: "de área",
+	TAG_MOVEMENT: "de movimiento",
+}
+
+## Stat de daño de cada tipo de daño de las habilidades.
+const DAMAGE_STAT_BY_TYPE := {
+	"physical": PHYSICAL_DAMAGE,
+	"fire": FIRE_DAMAGE,
+	"cold": COLD_DAMAGE,
+	"lightning": LIGHTNING_DAMAGE,
+	"chaos": CHAOS_DAMAGE,
 }
 
 

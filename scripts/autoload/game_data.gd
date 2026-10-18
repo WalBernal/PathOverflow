@@ -39,6 +39,7 @@ func create_character(char_name: String, class_id: StringName, appearance: Dicti
 	var weapon_id: String = class_def.get("starter_weapon", "")
 	if items.bases.has(weapon_id):
 		c.inventory.set_equipped("weapon", ItemGenerator.new(items).generate(1, Rarity.Item.NORMAL, weapon_id))
+	give_starter_skills(c)
 	if persistent:
 		c.id = CharacterSaves.new_id()
 		c.created_at = int(Time.get_unix_time_from_system())
@@ -54,7 +55,22 @@ func load_character(id: String) -> CharacterData:
 	if class_def.is_empty():
 		push_error("Clase desconocida en el guardado: %s" % data["class_id"])
 		return null
-	return CharacterData.from_dict(data, class_def, passive_tree, items)
+	var c := CharacterData.from_dict(data, class_def, passive_tree, items)
+	# Migración v1 -> v2: los guardados de antes de las habilidades no tienen placas.
+	if int(data.get("save_version", 1)) < 2:
+		give_starter_skills(c)
+	return c
+
+
+## Placas base iniciales de la clase (3 ranuras de la generación de su atributo).
+func give_starter_skills(c: CharacterData) -> void:
+	var generator := ItemGenerator.new(items)
+	var skill_ids: Array = c.class_def.get("starter_skills", [])
+	for i in mini(skill_ids.size(), Inventory.HOTBAR_SIZE):
+		if items.skills.skills.has(skill_ids[i]) and c.inventory.boards[i] == null:
+			var def: Dictionary = items.skills.skills[skill_ids[i]]
+			var gen: String = RamModule.GENERATION_BY_ATTRIBUTE.get(def.get("attribute", "str"), "DDR3")
+			c.inventory.set_board(i, Motherboard.new(def, 1, [gen, gen, gen]))
 
 
 ## Guarda el personaje (no hace nada con personajes temporales sin id).

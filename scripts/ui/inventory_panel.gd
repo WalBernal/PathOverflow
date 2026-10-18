@@ -5,6 +5,7 @@ extends PanelContainer
 ## Click der. en la bolsa: destruir el objeto.
 
 signal message(text: String)
+signal item_equipped
 
 const CELL := 46.0
 const BAG_COLUMNS := 10
@@ -130,10 +131,14 @@ func _on_cell_clicked(cell: ItemCell, button: MouseButton) -> void:
 		return
 	if cell.bag_index >= 0:
 		if button == MOUSE_BUTTON_LEFT:
+			if not cell.item.is_equipment():
+				message.emit("Las placas base y la RAM se instalan en el menú de habilidades (K).")
+				return
 			if not character.can_equip(cell.item):
 				message.emit("Requiere nivel %d. Vuelve cuando seas senior." % cell.item.required_level())
 				return
-			inv.equip_from_bag(cell.bag_index)
+			if inv.equip_from_bag(cell.bag_index):
+				item_equipped.emit()
 		else:
 			var destroyed := inv.remove_bag_item(cell.bag_index)
 			message.emit("%s eliminado. No hay papelera de reciclaje." % destroyed.display_name())
@@ -146,4 +151,4 @@ func _on_cell_hovered(cell: ItemCell, inside: bool) -> void:
 	if not inside or cell.item == null:
 		_tooltip.hide()
 		return
-	_tooltip.show_item(cell.item, character, cell.bag_index >= 0)
+	_tooltip.show_item(cell.item, character, cell.bag_index >= 0 and cell.item.is_equipment())

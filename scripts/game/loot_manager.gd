@@ -53,9 +53,9 @@ func _draw() -> void:
 		var d := drops[i]
 		var item: Item = d["item"]
 		var rect: Rect2 = d["rect"]
-		var color := Rarity.item_color(item.rarity)
+		var color := item.display_color()
 		draw_rect(rect, Color(0.18, 0.16, 0.22, 0.95) if i == _hovered else Color(0, 0, 0, 0.8))
-		if item.rarity >= Rarity.Item.UNIQUE or i == _hovered:
+		if item.rarity >= Rarity.Item.UNIQUE or not item.is_equipment() or i == _hovered:
 			draw_rect(rect, color, false, 1.5)
 		draw_string(font, rect.position + Vector2(PADDING.x, PADDING.y + ascent), d["text"],
 			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)

@@ -26,9 +26,46 @@ func _init(p_db: ItemDatabase, seed_value := -1) -> void:
 		rng.randomize()
 
 
-## Objeto aleatorio para botín: elige rareza (con bonus de rareza) y base.
+## Probabilidad de que un objeto de botín sea una placa base o un módulo RAM.
+const MOTHERBOARD_DROP_CHANCE := 0.08
+const RAM_DROP_CHANCE := 0.10
+## Probabilidad relativa de cada número de ranuras DIMM (3..7).
+const SLOT_COUNT_WEIGHTS := {3: 50.0, 4: 30.0, 5: 13.0, 6: 5.0, 7: 2.0}
+## Probabilidad de que una ranura sea de la generación del atributo de la habilidad.
+const MAIN_GENERATION_CHANCE := 0.6
+
+
+## Objeto aleatorio para botín: placa base, RAM o equipo (con su rareza).
 func roll_drop(item_level: int, rarity_bonus := 0.0) -> Item:
+	var r := rng.randf()
+	if r < MOTHERBOARD_DROP_CHANCE:
+		return generate_motherboard(item_level)
+	if r < MOTHERBOARD_DROP_CHANCE + RAM_DROP_CHANCE:
+		return generate_ram(item_level)
 	return generate(item_level, roll_rarity(rarity_bonus))
+
+
+## Placa base de una habilidad (aleatoria si skill_id es ""). Su nivel sigue al
+## nivel del objeto; el número de ranuras y su generación son aleatorios.
+func generate_motherboard(item_level: int, skill_id := "", slot_count := 0) -> Motherboard:
+	var defs: Dictionary = db.skills.skills
+	var def: Dictionary = defs[skill_id] if skill_id != "" else defs[_pick(defs.keys())]
+	if slot_count <= 0:
+		var counts: Array = SLOT_COUNT_WEIGHTS.keys()
+		slot_count = counts[_weighted_index(SLOT_COUNT_WEIGHTS.values())]
+	var main_gen: String = RamModule.GENERATION_BY_ATTRIBUTE.get(def.get("attribute", "str"), "DDR3")
+	var slots: Array = []
+	for i in slot_count:
+		slots.append(main_gen if rng.randf() < MAIN_GENERATION_CHANCE else _pick(RamModule.GENERATIONS))
+	var board := Motherboard.new(def, clampi(item_level / 3 + 1, 1, Motherboard.MAX_LEVEL), slots)
+	board.item_level = item_level
+	return board
+
+
+func generate_ram(item_level: int, ram_id := "") -> RamModule:
+	var defs: Dictionary = db.skills.rams
+	var def: Dictionary = defs[ram_id] if ram_id != "" else defs[_pick(defs.keys())]
+	return RamModule.new(def, item_level)
 
 
 func roll_rarity(rarity_bonus := 0.0) -> int:

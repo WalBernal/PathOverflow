@@ -55,6 +55,10 @@ func show_item(item: Item, character: CharacterData, compare: bool) -> void:
 
 
 static func build_text(item: Item, character: CharacterData, compare: bool) -> String:
+	if item is Motherboard:
+		return _motherboard_text(item as Motherboard, character)
+	if item is RamModule:
+		return _ram_text(item as RamModule)
 	var color := Rarity.item_color(item.rarity).to_html(false)
 	var t := "[center][color=#%s][b]%s[/b][/color]\n" % [color, item.display_name()]
 	if item.rarity != Rarity.Item.NORMAL and item.rarity != Rarity.Item.MAGIC:
@@ -85,6 +89,66 @@ static func build_text(item: Item, character: CharacterData, compare: bool) -> S
 		t += _section("[i][color=#%s]%s[/color][/i]" % [FLAVOR_COLOR, item.unique_def["flavor"]])
 	if compare and character:
 		t += _section(_comparison(item, character))
+	return t.strip_edges()
+
+
+static func _tag_list(tags: Array) -> String:
+	var names := PackedStringArray()
+	for t in tags:
+		names.append(String(t))
+	return ", ".join(names)
+
+
+static func _motherboard_text(board: Motherboard, character: CharacterData) -> String:
+	var skill := board.skill_def
+	var t := "[center][color=#%s][b]%s[/b][/color]\n[color=#%s]Placa base · Nivel %d · %s[/color][/center]\n" % [
+		Motherboard.COLOR.to_html(false), board.display_name(), GREY, board.level, _tag_list(skill.get("tags", []))]
+	t += _section("[i][color=#a08f6a]%s[/color][/i]" % skill.get("description", ""))
+	if character:
+		var p := SkillCalc.compute(board, character)
+		var lines := PackedStringArray()
+		if p["max_damage"] > 0.0:
+			lines.append("Daño: [color=#e8d9b0]%d-%d[/color]  ·  Crítico: [color=#e8d9b0]%.1f%%[/color]" % [p["min_damage"], p["max_damage"], p["crit_chance"]])
+		lines.append("Coste: [color=#7fa8e0]%d de maná[/color]  ·  [color=#e8d9b0]%.2f[/color] usos/s" % [p["mana_cost"], p["uses_per_second"]])
+		if p["radius"] > 0.0:
+			lines.append("Radio: [color=#e8d9b0]%d[/color]" % p["radius"])
+		if p["projectiles"] > 0:
+			lines.append("Proyectiles: [color=#e8d9b0]%d[/color]  ·  Atraviesan: [color=#e8d9b0]%d[/color]" % [p["projectiles"], p["pierce"]])
+		if p["cooldown"] > 0.0:
+			lines.append("Enfriamiento: [color=#e8d9b0]%.1f s[/color]" % p["cooldown"])
+		if p["repeats"] > 0:
+			lines.append("Se repite [color=#e8d9b0]%d[/color] vez más" % p["repeats"])
+		t += _section("\n".join(lines))
+	var slots := PackedStringArray()
+	for i in board.slots.size():
+		var gen: String = board.slots[i]
+		var gen_color: String = RamModule.GENERATION_COLORS[gen].to_html(false)
+		var ram: RamModule = board.rams[i]
+		var content := "[color=#%s]vacía[/color]" % GREY
+		if ram:
+			var active := ram.supports(board.skill_def)
+			content = "[color=#%s]%s[/color]" % [gen_color if active else DOWN, ram.def["name"]]
+			if not active:
+				content += " [color=#%s](no compatible: no hace nada)[/color]" % GREY
+		slots.append("[color=#%s]%s[/color]  %s" % [gen_color, gen, content])
+	t += _section("[color=#%s]Ranuras DIMM (%d):[/color]\n%s" % [GREY, board.slots.size(), "\n".join(slots)])
+	return t.strip_edges()
+
+
+static func _ram_text(ram: RamModule) -> String:
+	var color := ram.display_color().to_html(false)
+	var t := "[center][color=#%s][b]%s[/b][/color]\n[color=#%s]Módulo RAM · %s[/color][/center]\n" % [
+		color, ram.def["name"], GREY, ram.generation()]
+	t += _section("[i][color=#a08f6a]%s[/color][/i]" % ram.def.get("description", ""))
+	t += _section("[color=#%s]%s[/color]" % [MOD_COLOR, "\n".join(ram.effect_lines())])
+	var compat := PackedStringArray()
+	var required: Array = ram.def.get("requires_tags", [])
+	compat.append("Funciona con: %s" % ("cualquier habilidad" if required.is_empty() else "habilidades con " + _tag_list(required)))
+	var excluded: Array = ram.def.get("excludes_tags", [])
+	if not excluded.is_empty():
+		compat.append("No funciona con: " + _tag_list(excluded))
+	compat.append("Se instala en ranuras %s de una placa base (K)." % ram.generation())
+	t += _section("[color=#%s]%s[/color]" % [GREY, "\n".join(compat)])
 	return t.strip_edges()
 
 

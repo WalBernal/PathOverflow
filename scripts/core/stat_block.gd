@@ -33,6 +33,22 @@ func add_modifiers(mods: Array[Modifier]) -> void:
 	_cache.clear()
 
 
+## Copia con modificadores extra (p. ej. los de la RAM de una habilidad), sin
+## tocar el original.
+func duplicate_with(extra: Array[Modifier]) -> StatBlock:
+	var copy := StatBlock.new()
+	copy._base = _base.duplicate()
+	copy._modifiers = _modifiers.duplicate()
+	copy._modifiers.append_array(extra)
+	return copy
+
+
+## Multiplicador total de aumentos y "más" (útil para velocidades, área...).
+func total_multiplier(stat: StringName, tags: Array = []) -> float:
+	var b := get_breakdown(stat, tags)
+	return maxf(0.0, 1.0 + b.increased / 100.0) * b.more
+
+
 func remove_source(source: String) -> void:
 	var kept: Array[Modifier] = []
 	for m in _modifiers:

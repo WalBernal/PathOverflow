@@ -28,6 +28,12 @@ func _initialize() -> void:
 	_test_save_files()
 	_test_name_validation()
 	_test_appearance()
+	_test_skill_data()
+	_test_motherboards_and_ram()
+	_test_skill_calc()
+	_test_boards_save()
+	_test_enemy_hit_one()
+	_test_camp_and_tutorial_data()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
 	else:
@@ -131,7 +137,7 @@ func _test_enemies() -> void:
 
 
 func _test_input_map() -> void:
-	for action in [&"move_up", &"move_down", &"move_left", &"move_right", &"attack", &"toggle_passives",
+	for action in [&"move_up", &"move_down", &"move_left", &"move_right", &"skill_1", &"skill_2", &"skill_3", &"skill_4", &"skill_5", &"skill_6", &"flask_1", &"flask_2", &"toggle_skills", &"toggle_passives",
 			&"toggle_inventory", &"respawn", &"debug_spawn_wave", &"debug_clear_enemies", &"debug_spawn_boss",
 			&"debug_drop_items"]:
 		_check(InputMap.has_action(action) and not InputMap.action_get_events(action).is_empty(), "acción '%s'" % action)
@@ -364,3 +370,140 @@ func _test_appearance() -> void:
 	_check(fixed["body"] == CharacterAppearance.BODY_NAMES.size() - 1 and fixed["hair"] == 0, "índices fuera de rango corregidos")
 	_check(fixed["skin_tone"] == CharacterAppearance.default()["skin_tone"] and fixed["hair_color"] == "ff0000", "colores validados")
 	_check(fixed.has("outfit_color"), "rellena claves que faltan")
+
+func _test_skill_data() -> void:
+	var skills := _db.skills
+	_check(skills.skills.size() >= 6 and skills.rams.size() >= 8, "carga de habilidades y RAM")
+	var kinds := ["melee_area", "nova", "projectile", "ground_aoe", "blink"]
+	for def in skills.skills.values():
+		_check(kinds.has(def["kind"]), "tipo de habilidad desconocido en %s" % def["id"])
+		_check(def.has("attack") or def.has("spell"), "%s necesita 'attack' o 'spell'" % def["id"])
+		_check(RamModule.GENERATION_BY_ATTRIBUTE.has(def.get("attribute", "")), "atributo de %s" % def["id"])
+	for def in skills.rams.values():
+		_check(RamModule.GENERATIONS.has(def["generation"]), "generación de %s" % def["id"])
+		for md in def.get("mods", []):
+			_check(Stat.exists(StringName(md["stat"])), "stat desconocido en RAM %s" % def["id"])
+	for c in _classes:
+		for s in c.get("starter_skills", []):
+			_check(skills.skills.has(s), "habilidad inicial desconocida '%s' en %s" % [s, c["id"]])
+
+
+func _test_motherboards_and_ram() -> void:
+	var gen := ItemGenerator.new(_db, 3)
+	for n in 300:
+		var board := gen.generate_motherboard(30)
+		_check(board.slots.size() >= Motherboard.MIN_SLOTS and board.slots.size() <= Motherboard.MAX_SLOTS, "3 a 7 ranuras")
+		_check(board.level == 11, "nivel de la placa según el nivel de objeto (%d)" % board.level)
+	var proj := gen.generate_motherboard(1, "ping_letal")
+	proj.slots.assign(["DDR4", "DDR5", "DDR3"])
+	proj.rams.resize(3)
+	var multi := gen.generate_ram(1, "multicanal")      # DDR4, requiere projectile
+	var cache := gen.generate_ram(1, "cache_l3")        # DDR5, requiere area
+	_check(proj.can_install(multi, 1) != "", "DDR4 no entra en ranura DDR5")
+	_check(proj.install(multi, 0) == "" and proj.rams[0] == multi, "DDR4 en ranura DDR4")
+	_check(proj.install(gen.generate_ram(1, "overclock"), 0) != "", "ranura ocupada")
+	_check(proj.install(cache, 1) == "", "caché en ranura DDR5")
+	_check(proj.active_supports().size() == 1, "la caché L3 no afecta a un proyectil sin área")
+	var blink := gen.generate_motherboard(1, "teleport_tcp")
+	_check(not gen.generate_ram(1, "pipeline").supports(blink.skill_def), "pipeline excluye movimiento")
+
+	var c := _new_character()
+	c.inventory.boards.fill(null)
+	c.inventory.add_item(proj)
+	_check(c.inventory.install_board(c.inventory.bag.find(proj)) and c.inventory.boards[0] == proj, "instalar placa desde la bolsa")
+	c.inventory.add_item(gen.generate_ram(1, "puntero_salvaje"))  # DDR4: no hay ranura DDR4 libre
+	var ram_index := c.inventory.bag.find(c.inventory.bag.filter(func(i) -> bool: return i is RamModule)[0])
+	_check(c.inventory.install_ram(ram_index, 0) != "", "sin ranuras libres de esa generación")
+	_check(c.inventory.remove_ram(0, 0) and proj.rams[0] == null, "quitar RAM a la bolsa")
+	_check(c.inventory.install_ram(ram_index, 0) == "", "ahora sí cabe")
+	_check(not c.inventory.equip_from_bag(c.inventory.bag.find(multi)), "la RAM no se 'equipa' como un casco")
+
+
+func _test_skill_calc() -> void:
+	var c := _new_character()
+	var gen := ItemGenerator.new(_db, 4)
+	var ping := gen.generate_motherboard(1, "ping_letal")
+	ping.slots.assign(["DDR4", "DDR4"])
+	ping.rams.resize(2)
+	var base := SkillCalc.compute(ping, c)
+	_check(base["projectiles"] == 1 and base["pierce"] == 2, "ping: 1 proyectil que atraviesa 2")
+	ping.install(gen.generate_ram(1, "multicanal"), 0)
+	var multi := SkillCalc.compute(ping, c)
+	_check(multi["projectiles"] == 3, "multicanal: +2 proyectiles")
+	_check(is_equal_approx(multi["max_damage"], base["max_damage"] * 0.75), "multicanal: 25% menos de daño")
+	_check(multi["mana_cost"] == roundf(base["mana_cost"] * 1.3), "multicanal: coste ×1.3")
+	ping.install(gen.generate_ram(1, "overclock"), 1)
+	var fast := SkillCalc.compute(ping, c)
+	_check(is_equal_approx(fast["uses_per_second"], multi["uses_per_second"] * 1.2), "overclock: 20% más velocidad")
+
+	var swing := gen.generate_motherboard(1, "barrido")
+	swing.slots.assign(["DDR3"])
+	swing.rams.resize(1)
+	var unarmed := SkillCalc.compute(swing, c)
+	c.inventory.set_equipped("weapon", gen.generate(1, Rarity.Item.NORMAL, "hacha_de_lenador"))
+	var armed := SkillCalc.compute(swing, c)
+	_check(armed["max_damage"] > unarmed["max_damage"], "los ataques usan el arma equipada")
+	swing.install(gen.generate_ram(1, "disipador"), 0)
+	var focused := SkillCalc.compute(swing, c)
+	_check(focused["radius"] < armed["radius"] and focused["max_damage"] > armed["max_damage"], "disipador: menos área, más daño")
+	var lvl1 := SkillCalc.compute(gen.generate_motherboard(1, "fork_bomb"), c)
+	var lvl10 := SkillCalc.compute(gen.generate_motherboard(28, "fork_bomb"), c)
+	_check(lvl10["max_damage"] > lvl1["max_damage"] * 2.0, "los hechizos escalan con el nivel de la placa")
+
+
+func _test_boards_save() -> void:
+	var c := _new_character()
+	var gen := ItemGenerator.new(_db, 8)
+	var board := gen.generate_motherboard(20, "fork_bomb", 6)
+	var ram := gen.generate_ram(20, "cache_l3")
+	board.slots[2] = ram.generation()
+	board.install(ram, 2)
+	c.inventory.set_board(4, board)
+	c.inventory.add_item(gen.generate_ram(5, "ecc"))
+	c.inventory.add_item(gen.generate_motherboard(5, "ping_letal", 3))
+	var data = JSON.parse_string(JSON.stringify(c.to_dict()))
+	var loaded := CharacterData.from_dict(data, _classes[0], _tree, _db)
+	var lb: Motherboard = loaded.inventory.boards[4]
+	_check(lb != null and lb.skill_def["id"] == "fork_bomb" and lb.slots == board.slots, "placa guardada con sus ranuras")
+	_check(lb.rams[2] != null and lb.rams[2].def["id"] == "cache_l3", "RAM instalada guardada")
+	_check(loaded.inventory.bag.any(func(i) -> bool: return i is RamModule) and loaded.inventory.bag.any(func(i) -> bool: return i is Motherboard), "placas y RAM en la bolsa guardadas")
+	_check(is_equal_approx(SkillCalc.compute(lb, loaded)["dps"], SkillCalc.compute(board, c)["dps"]), "mismo DPS tras cargar")
+
+
+func _test_enemy_hit_one() -> void:
+	var em := EnemyManager.new()
+	em.spawn(Vector2(0, 0), Rarity.Enemy.UNIQUE)
+	em.spawn(Vector2(5, 0), Rarity.Enemy.UNIQUE)
+	var first := em.hit_one(Vector2.ZERO, 10.0, {}, 1.0, 1.0, 0.0, 150.0)
+	var second := em.hit_one(Vector2.ZERO, 10.0, {first: true}, 1.0, 1.0, 0.0, 150.0)
+	_check(first != -1 and second != -1 and first != second, "hit_one ignora a los ya golpeados (atravesar)")
+	_check(em.hit_one(Vector2.ZERO, 10.0, {first: true, second: true}, 1.0, 1.0, 0.0, 150.0) == -1, "sin más objetivos")
+	_check(em.last_damage_dealt == 0.0, "daño registrado para el robo de vida")
+	em.safe_radius = 100.0
+	_check(em.is_in_safe_zone(Vector2(50, 0)) and not em.is_in_safe_zone(Vector2(150, 0)), "zona segura")
+	_check(EnemyManager.enemy_types().size() >= 5, "tipos de enemigo cargados")
+	var atlas := load("res://assets/sprites/enemies/enemies.png") as Texture2D
+	_check(atlas.get_height() / 32 >= EnemyManager.enemy_types().size(), "una fila del atlas por tipo")
+	em.free()
+
+
+func _test_camp_and_tutorial_data() -> void:
+	var camp: Dictionary = DataLoader.load_json("res://data/camp.json")
+	var dialogues: Dictionary = camp["dialogues"]
+	for npc in camp["npcs"]:
+		_check(dialogues.has(npc["dialogue"]), "diálogo de %s" % npc["id"])
+	for id in dialogues:
+		var d: Dictionary = dialogues[id]
+		_check(d["nodes"].has(d["start"]), "nodo inicial de %s" % id)
+		for node_id in d["nodes"]:
+			for option in d["nodes"][node_id].get("options", []):
+				var next: String = option.get("next", "")
+				_check(next == "" or d["nodes"].has(next), "%s/%s apunta a '%s', que no existe" % [id, node_id, next])
+				var action: Dictionary = option.get("action", {})
+				if action.get("type", "") == "give_item":
+					var pool: Dictionary = _db.skills.skills if action["kind"] == "motherboard" else _db.skills.rams
+					_check(pool.has(action["id"]), "regalo desconocido '%s'" % action["id"])
+	var tutorial: Dictionary = DataLoader.load_json("res://data/tutorial.json")
+	var known := ["move", "talk_ada", "install_ram", "kevin", "leave_camp", "use_skill", "kill", "flask", "loot", "equip", "passives"]
+	for step in tutorial["steps"]:
+		_check(known.has(step["id"]), "paso de tutorial sin condición: %s" % step["id"])

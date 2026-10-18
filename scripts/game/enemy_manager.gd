@@ -5,15 +5,27 @@ extends Node2D
 ## sola llamada. Un nodo con física por enemigo no escala igual en GDScript
 ## cuando hay cientos en pantalla, que es lo normal en un ARPG tipo PoE.
 ##
+## Los sprites salen de un atlas animado por un shader (enemy_sprite.gdshader):
+## fotograma, volteo, contorno de rareza y destello de daño van por instancia.
+##
 ## Si el benchmark se queda corto, este es el archivo a portar a C# o a
 ## GDExtension (C++): la interfaz pública no tendría que cambiar.
 
 signal enemy_killed(rarity: Rarity.Enemy, experience: int, position: Vector2)
 
+const TYPES_PATH := "res://data/enemies.json"
+const ATLAS := preload("res://assets/sprites/enemies/enemies.png")
+const SPRITE_SHADER := preload("res://assets/shaders/enemy_sprite.gdshader")
+const ATLAS_FRAMES := 4
+## Tamaño del sprite respecto al diámetro de colisión.
+const SPRITE_SCALE := 1.9
 const BASE_LIFE := 40.0
 const BASE_DAMAGE := 7.0
 const BASE_EXPERIENCE := 6.0
 const ATTACK_INTERVAL := 1.2
+## Más lejos que esto del jugador, los enemigos se quedan quietos.
+const AGGRO_RANGE := 850.0
+const FLASH_TIME := 0.12
 const GRID_CELL := 48.0
 const RADIUS_BY_RARITY := {
 	Rarity.Enemy.NORMAL: 11.0,
@@ -28,7 +40,7 @@ const SPEED_BY_RARITY := {
 	Rarity.Enemy.UNIQUE: 105.0,
 }
 const ELITE_PREFIXES := ["Excepción", "Segfault", "Proceso", "Demonio", "Hilo", "Cron"]
-const ELITE_SUFFIXES := ["no controlado", "del viernes", "huérfano", "zombi", "bloqueante", "de las 3 AM", "en producción"]
+const ELITE_SUFFIXES := ["sin control", "del viernes", "huérfano", "zombi", "bloqueante", "de las 3 AM", "en producción"]
 const UNIQUE_NAMES := [
 	"El Arquitecto del Monolito",
 	"El Backlog Infinito",
@@ -36,10 +48,18 @@ const UNIQUE_NAMES := [
 	"La Reunión Que Pudo Ser Un Email",
 ]
 
+static var _types: Array = []
+
 var player: Player
 ## Nivel de zona: escala vida, daño y experiencia.
 var area_level := 1
+## Zona segura (campamento): los enemigos no entran ni persiguen dentro.
+var safe_center := Vector2.ZERO
+var safe_radius := 0.0
+## Daño total del último golpe (para el robo de vida).
+var last_damage_dealt := 0.0
 
+var ids := PackedInt32Array()
 var positions := PackedVector2Array()
 var lives := PackedFloat32Array()
 var max_lives := PackedFloat32Array()
@@ -48,26 +68,44 @@ var speeds := PackedFloat32Array()
 var radii := PackedFloat32Array()
 var cooldowns := PackedFloat32Array()
 var rarities := PackedInt32Array()
+var types := PackedInt32Array()
+var facings := PackedFloat32Array()   # 1 = mira a la izquierda
+var phases := PackedFloat32Array()    # desfase de animación
+var flashes := PackedFloat32Array()   # tiempo restante de destello
 var names := PackedStringArray()
 
 ## Coste del último tick de simulación (IA + separación), en milisegundos.
 ## Presupuesto orientativo: < 4 ms para dejar sitio al resto del juego.
 var last_simulation_ms := 0.0
 
+var _next_id := 1
 var _multimesh: MultiMesh
 var _grid: Dictionary = {}  # Vector2i -> Array de índices
+
+
+static func enemy_types() -> Array:
+	if _types.is_empty():
+		var data = DataLoader.load_json(TYPES_PATH)
+		_types = data.get("types", []) if data is Dictionary else []
+	return _types
 
 
 func _ready() -> void:
 	_multimesh = MultiMesh.new()
 	_multimesh.transform_format = MultiMesh.TRANSFORM_2D
 	_multimesh.use_colors = true
+	_multimesh.use_custom_data = true
 	var quad := QuadMesh.new()
 	quad.size = Vector2.ONE
 	_multimesh.mesh = quad
 	var mm_instance := MultiMeshInstance2D.new()
 	mm_instance.multimesh = _multimesh
-	mm_instance.texture = _make_circle_texture()
+	mm_instance.texture = ATLAS
+	mm_instance.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var sprite_material := ShaderMaterial.new()
+	sprite_material.shader = SPRITE_SHADER
+	sprite_material.set_shader_parameter("grid", Vector2(ATLAS_FRAMES, enemy_types().size()))
+	mm_instance.material = sprite_material
 	mm_instance.show_behind_parent = true  # barras de vida y nombres encima
 	add_child(mm_instance)
 
@@ -76,41 +114,92 @@ func count() -> int:
 	return positions.size()
 
 
-func spawn(pos: Vector2, rarity: Rarity.Enemy) -> void:
+## type_index -1: un tipo aleatorio (los únicos usan los tipos de jefe).
+func spawn(pos: Vector2, rarity: Rarity.Enemy, type_index := -1) -> void:
+	if type_index < 0:
+		type_index = random_type(rarity == Rarity.Enemy.UNIQUE)
+	var t: Dictionary = enemy_types()[type_index] if not enemy_types().is_empty() else {}
 	var info: Dictionary = Rarity.ENEMY_INFO[rarity]
 	var level_mult := 1.0 + 0.15 * (area_level - 1)
-	var life: float = BASE_LIFE * info.life_mult * level_mult
+	var life: float = BASE_LIFE * info.life_mult * level_mult * t.get("life_mult", 1.0)
+	ids.append(_next_id)
+	_next_id += 1
 	positions.append(pos)
 	lives.append(life)
 	max_lives.append(life)
-	damages.append(BASE_DAMAGE * info.damage_mult * level_mult)
-	speeds.append(SPEED_BY_RARITY[rarity] * randf_range(0.9, 1.1))
+	damages.append(BASE_DAMAGE * info.damage_mult * level_mult * t.get("damage_mult", 1.0))
+	speeds.append(SPEED_BY_RARITY[rarity] * t.get("speed_mult", 1.0) * randf_range(0.9, 1.1))
 	radii.append(RADIUS_BY_RARITY[rarity])
 	cooldowns.append(randf() * ATTACK_INTERVAL)
 	rarities.append(rarity)
+	types.append(type_index)
+	facings.append(0.0)
+	phases.append(randf() * ATLAS_FRAMES)
+	flashes.append(0.0)
 	names.append(_random_name(rarity))
+
+
+func random_type(boss := false) -> int:
+	var options: Array = []
+	for i in enemy_types().size():
+		if bool(enemy_types()[i].get("boss_only", false)) == boss:
+			options.append(i)
+	return options.pick_random() if not options.is_empty() else 0
 
 
 func clear_all() -> void:
 	_resize_all(0)
 
 
-## Golpea a todos los enemigos dentro del radio. Devuelve cuántos golpeó.
+## Quita (sin contar como muertos) los enemigos más lejos que `distance`.
+func despawn_beyond(center: Vector2, distance: float) -> void:
+	for i in range(positions.size() - 1, -1, -1):
+		if positions[i].distance_to(center) > distance:
+			_remove(i)
+
+
+## Golpea a todos los enemigos dentro del radio. Devuelve cuántos golpeó y deja
+## el daño total en last_damage_dealt.
 func hit_in_radius(center: Vector2, radius: float, min_damage: float, max_damage: float,
 		crit_chance: float, crit_multiplier: float) -> int:
 	var hits := 0
+	last_damage_dealt = 0.0
 	# Hacia atrás: _kill() mueve el último al hueco, que ya está procesado.
 	for i in range(positions.size() - 1, -1, -1):
 		if positions[i].distance_to(center) > radius + radii[i]:
 			continue
 		hits += 1
-		var damage := randf_range(min_damage, max_damage)
-		if randf() * 100.0 < crit_chance:
-			damage *= crit_multiplier / 100.0
-		lives[i] -= damage
-		if lives[i] <= 0.0:
-			_kill(i)
+		_damage(i, min_damage, max_damage, crit_chance, crit_multiplier)
 	return hits
+
+
+## Golpea al primer enemigo dentro del radio que no esté en `ignore_ids`
+## (para proyectiles que atraviesan). Devuelve su id, o -1 si no hay nadie.
+func hit_one(center: Vector2, radius: float, ignore_ids: Dictionary, min_damage: float, max_damage: float,
+		crit_chance: float, crit_multiplier: float) -> int:
+	last_damage_dealt = 0.0
+	for i in positions.size():
+		if ignore_ids.has(ids[i]) or positions[i].distance_to(center) > radius + radii[i]:
+			continue
+		var id := ids[i]
+		_damage(i, min_damage, max_damage, crit_chance, crit_multiplier)
+		return id
+	return -1
+
+
+func _damage(i: int, min_damage: float, max_damage: float, crit_chance: float, crit_multiplier: float) -> void:
+	var damage := randf_range(min_damage, max_damage)
+	if randf() * 100.0 < crit_chance:
+		damage *= crit_multiplier / 100.0
+	last_damage_dealt += minf(damage, lives[i])
+	lives[i] -= damage
+	flashes[i] = FLASH_TIME
+	if lives[i] <= 0.0:
+		_kill(i)
+
+
+func is_in_safe_zone(pos: Vector2) -> bool:
+	return safe_radius > 0.0 and pos.distance_to(safe_center) < safe_radius
 
 
 func _physics_process(delta: float) -> void:
@@ -121,7 +210,8 @@ func _physics_process(delta: float) -> void:
 	var started := Time.get_ticks_usec()
 	_rebuild_grid()
 	var player_pos := player.global_position
-	var player_alive := player.is_alive()
+	# En el campamento el jugador es intocable: los enemigos ni le persiguen.
+	var hunting := player.is_alive() and not is_in_safe_zone(player_pos)
 	for i in n:
 		var pos := positions[i]
 		var r := radii[i]
@@ -129,8 +219,9 @@ func _physics_process(delta: float) -> void:
 		var dist := to_player.length()
 		var reach := r + Player.RADIUS + 2.0
 		var move := Vector2.ZERO
-		if player_alive and dist > reach:
+		if hunting and dist > reach and dist < AGGRO_RANGE:
 			move = to_player / dist * speeds[i]
+			facings[i] = 1.0 if move.x < 0.0 else 0.0
 
 		# Separación entre enemigos (rejilla espacial: solo celdas vecinas).
 		var push := Vector2.ZERO
@@ -152,10 +243,17 @@ func _physics_process(delta: float) -> void:
 		# No se meten dentro del jugador.
 		if dist < reach and dist > 0.001:
 			push -= to_player / dist * (reach - dist)
-		positions[i] = pos + move * delta + push * 0.5
+		var new_pos := pos + move * delta + push * 0.5
+		# Ni dentro del campamento.
+		if safe_radius > 0.0:
+			var from_safe := new_pos - safe_center
+			if from_safe.length() < safe_radius + r:
+				new_pos = safe_center + from_safe.normalized() * (safe_radius + r)
+		positions[i] = new_pos
 
 		cooldowns[i] -= delta
-		if player_alive and dist <= reach + 6.0 and cooldowns[i] <= 0.0:
+		flashes[i] = maxf(0.0, flashes[i] - delta)
+		if hunting and dist <= reach + 6.0 and cooldowns[i] <= 0.0:
 			cooldowns[i] = ATTACK_INTERVAL
 			player.take_damage(damages[i])
 	last_simulation_ms = (Time.get_ticks_usec() - started) / 1000.0
@@ -166,10 +264,16 @@ func _process(_delta: float) -> void:
 	if n > _multimesh.instance_count:
 		_multimesh.instance_count = maxi(n, _multimesh.instance_count * 2)
 	_multimesh.visible_instance_count = n
+	var all_types := enemy_types()
 	for i in n:
-		var d := radii[i] * 2.0
-		_multimesh.set_instance_transform_2d(i, Transform2D(0.0, Vector2(d, d), 0.0, positions[i]))
-		_multimesh.set_instance_color(i, Rarity.enemy_color(rarities[i]))
+		var t: Dictionary = all_types[types[i]] if types[i] < all_types.size() else {}
+		var size := radii[i] * 2.0 * SPRITE_SCALE * float(t.get("scale", 1.0))
+		_multimesh.set_instance_transform_2d(i,
+			Transform2D(0.0, Vector2(size, size), 0.0, positions[i] - Vector2(0.0, size * 0.22)))
+		var outline := Rarity.enemy_color(rarities[i])
+		outline.a = 0.0 if rarities[i] == Rarity.Enemy.NORMAL else 1.0
+		_multimesh.set_instance_color(i, outline)
+		_multimesh.set_instance_custom_data(i, Color(t.get("sprite_row", 0), phases[i], facings[i], flashes[i] / FLASH_TIME))
 	queue_redraw()
 
 
@@ -182,7 +286,7 @@ func _draw() -> void:
 			continue
 		var r := radii[i]
 		var w := maxf(r * 2.0, 30.0)
-		var top := positions[i] + Vector2(-w / 2.0, -r - 10.0)
+		var top := positions[i] + Vector2(-w / 2.0, -r * SPRITE_SCALE * 1.1 - 8.0)
 		draw_rect(Rect2(top, Vector2(w, 4.0)), Color(0, 0, 0, 0.7))
 		draw_rect(Rect2(top, Vector2(w * lives[i] / max_lives[i], 4.0)), Color("c83232"))
 		if rarity >= Rarity.Enemy.ELITE:
@@ -193,7 +297,9 @@ func _draw() -> void:
 func _kill(i: int) -> void:
 	var rarity := rarities[i]
 	var info: Dictionary = Rarity.ENEMY_INFO[rarity]
-	var xp := int(BASE_EXPERIENCE * info.xp_mult * (1.0 + 0.15 * (area_level - 1)))
+	var types_list := enemy_types()
+	var type_mult: float = types_list[types[i]].get("xp_mult", 1.0) if types[i] < types_list.size() else 1.0
+	var xp := int(BASE_EXPERIENCE * info.xp_mult * type_mult * (1.0 + 0.15 * (area_level - 1)))
 	var pos := positions[i]
 	_remove(i)
 	enemy_killed.emit(rarity, xp, pos)
@@ -203,6 +309,7 @@ func _kill(i: int) -> void:
 func _remove(i: int) -> void:
 	var last := positions.size() - 1
 	if i != last:
+		ids[i] = ids[last]
 		positions[i] = positions[last]
 		lives[i] = lives[last]
 		max_lives[i] = max_lives[last]
@@ -211,11 +318,16 @@ func _remove(i: int) -> void:
 		radii[i] = radii[last]
 		cooldowns[i] = cooldowns[last]
 		rarities[i] = rarities[last]
+		types[i] = types[last]
+		facings[i] = facings[last]
+		phases[i] = phases[last]
+		flashes[i] = flashes[last]
 		names[i] = names[last]
 	_resize_all(last)
 
 
 func _resize_all(n: int) -> void:
+	ids.resize(n)
 	positions.resize(n)
 	lives.resize(n)
 	max_lives.resize(n)
@@ -224,6 +336,10 @@ func _resize_all(n: int) -> void:
 	radii.resize(n)
 	cooldowns.resize(n)
 	rarities.resize(n)
+	types.resize(n)
+	facings.resize(n)
+	phases.resize(n)
+	flashes.resize(n)
 	names.resize(n)
 
 
@@ -249,20 +365,3 @@ func _random_name(rarity: Rarity.Enemy) -> String:
 		Rarity.Enemy.UNIQUE:
 			return UNIQUE_NAMES.pick_random()
 	return ""
-
-
-## Círculo blanco con borde oscuro; el color por instancia lo tiñe según rareza.
-static func _make_circle_texture() -> Texture2D:
-	var gradient := Gradient.new()
-	gradient.offsets = PackedFloat32Array([0.0, 0.72, 0.8, 0.95, 1.0])
-	gradient.colors = PackedColorArray([
-		Color(0.95, 0.95, 0.95), Color(0.8, 0.8, 0.8), Color(0.15, 0.12, 0.15),
-		Color(0.15, 0.12, 0.15), Color(0, 0, 0, 0)])
-	var tex := GradientTexture2D.new()
-	tex.gradient = gradient
-	tex.fill = GradientTexture2D.FILL_RADIAL
-	tex.fill_from = Vector2(0.5, 0.5)
-	tex.fill_to = Vector2(1.0, 0.5)
-	tex.width = 64
-	tex.height = 64
-	return tex

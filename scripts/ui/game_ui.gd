@@ -1,37 +1,53 @@
 class_name GameUI
 extends CanvasLayer
-## Capa de UI del juego: HUD, inventario (I), árbol pasivo (P, pausa el juego),
-## tooltip de objetos y pantalla de muerte.
+## Capa de UI del juego: HUD, inventario (I), habilidades (K), árbol pasivo
+## (P, pausa el juego), diálogos con NPCs, tutorial, tooltip de objetos,
+## menú de pausa (Esc) y pantalla de muerte.
 ## Funciona con el juego en pausa (PROCESS_MODE_ALWAYS).
+
+signal return_to_menu_requested
+signal quit_requested
+signal dialogue_action(action: Dictionary)
 
 const TREE_SCREEN := preload("res://scenes/ui/passive_tree_screen.tscn")
 
 var hud: Hud
 var inventory_panel: InventoryPanel
+var skills_panel: SkillsPanel
 var tree_screen: PassiveTreeScreen
+var dialogue_box: DialogueBox
+var tutorial: TutorialPanel
 var item_tooltip: ItemTooltip
 var _character: CharacterData
+var _player: Player
 var _death_panel: PanelContainer
 var _pause_panel: Control
 
-signal return_to_menu_requested
-signal quit_requested
 
-
-func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot: LootManager) -> void:
+func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot: LootManager,
+		skills: SkillController, camp: Camp) -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_character = character
+	_player = player
 
 	hud = Hud.new()
 	hud.player = player
 	hud.enemies = enemies
 	hud.character = character
+	hud.skills = skills
 	add_child(hud)
 	hud.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	hud.menu_requested.connect(_on_menu_requested)
 
-	# El tooltip se crea antes (lo usa el inventario) pero se añade al final,
+	# El tooltip se crea antes (lo usan los paneles) pero se añade al final,
 	# para que quede por encima de todo.
 	item_tooltip = ItemTooltip.new()
+
+	tutorial = TutorialPanel.new()
+	add_child(tutorial)
+	tutorial.position = Vector2(10, 34)
+	tutorial.setup(character, player, camp)
+	tutorial.step_completed.connect(func(text: String) -> void: hud.flash(text, Color("6fb36b")))
 
 	inventory_panel = InventoryPanel.new()
 	inventory_panel.visible = false
@@ -44,6 +60,19 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	inventory_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	inventory_panel.setup(character, item_tooltip)
 	inventory_panel.message.connect(hud.flash)
+	inventory_panel.item_equipped.connect(func() -> void: tutorial.notify("equipped"))
+
+	skills_panel = SkillsPanel.new()
+	skills_panel.visible = false
+	add_child(skills_panel)
+	skills_panel.position = Vector2(10, 170)
+	skills_panel.setup(character, item_tooltip)
+	skills_panel.message.connect(hud.flash)
+
+	dialogue_box = DialogueBox.new()
+	dialogue_box.character = character
+	add_child(dialogue_box)
+	dialogue_box.action_requested.connect(func(action: Dictionary) -> void: dialogue_action.emit(action))
 
 	tree_screen = TREE_SCREEN.instantiate() as PassiveTreeScreen
 	tree_screen.standalone = false
@@ -53,8 +82,9 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	tree_screen.closed.connect(toggle_passive_tree)
 
 	_death_panel = PanelContainer.new()
+	_death_panel.theme = UiStyle.make_theme()
 	var label := Label.new()
-	label.text = "HAS MUERTO\n\nStack trace:\n  en Player.take_damage()\n  en Enemy.attack()\n  en tu_decision_de_ir_sin_resistencias()\n\nPulsa R para reaparecer"
+	label.text = "HAS MUERTO\n\nStack trace:\n  en Player.take_damage()\n  en Enemy.attack()\n  en tu_decision_de_ir_sin_resistencias()\n\nPulsa R para reaparecer en el campamento"
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.add_theme_color_override("font_color", Color("e06c6c"))
 	_death_panel.add_child(label)
@@ -69,6 +99,26 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	add_child(item_tooltip)
 	loot.hovered_item_changed.connect(_on_ground_item_hovered)
 	loot.pickup_failed.connect(hud.flash)
+	loot.picked_up.connect(func(_item: Item) -> void: tutorial.notify("picked_up"))
+	skills.skill_used.connect(func(_i: int) -> void: tutorial.notify("skill_used"))
+	skills.not_enough_mana.connect(func() -> void: hud.flash("Sin maná. Bebe algo (tecla 2) o espera, como con el compilador."))
+	player.flask_used.connect(func(_i: int) -> void: tutorial.notify("flask_used"))
+
+
+func open_dialogue(npc: Dictionary, dialogue: Dictionary) -> void:
+	inventory_panel.visible = false
+	skills_panel.visible = false
+	item_tooltip.hide()
+	dialogue_box.open(npc, dialogue)
+	tutorial.notify("talked:" + String(npc.get("id", "")))
+
+
+func _process(_delta: float) -> void:
+	# Alejarse del NPC cierra la conversación.
+	if dialogue_box.visible and not dialogue_box.npc.is_empty():
+		var p: Array = dialogue_box.npc["position"]
+		if _player.global_position.distance_to(Vector2(p[0], p[1])) > 220.0:
+			dialogue_box.close()
 
 
 func _build_pause_menu() -> Control:
@@ -109,32 +159,59 @@ func _unhandled_input(event: InputEvent) -> void:
 			toggle_pause_menu()
 			get_viewport().set_input_as_handled()
 		return
-	if event.is_action_pressed(&"ui_cancel") and not tree_screen.visible and not inventory_panel.visible:
-		toggle_pause_menu()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed(&"toggle_passives") \
-			or (tree_screen.visible and event.is_action_pressed(&"ui_cancel")):
-		toggle_passive_tree()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed(&"toggle_inventory") \
-			or (inventory_panel.visible and event.is_action_pressed(&"ui_cancel")):
-		if not tree_screen.visible:
-			inventory_panel.visible = not inventory_panel.visible
+	if event.is_action_pressed(&"ui_cancel"):
+		# Esc cierra lo que esté abierto; si no hay nada, pausa.
+		if dialogue_box.visible:
+			dialogue_box.close()
+		elif tree_screen.visible:
+			toggle_passive_tree()
+		elif inventory_panel.visible or skills_panel.visible:
+			inventory_panel.visible = false
+			skills_panel.visible = false
 			item_tooltip.hide()
-			get_viewport().set_input_as_handled()
+		else:
+			toggle_pause_menu()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(&"toggle_passives"):
+		_on_menu_requested("passives")
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(&"toggle_inventory"):
+		_on_menu_requested("inventory")
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(&"toggle_skills"):
+		_on_menu_requested("skills")
+		get_viewport().set_input_as_handled()
+
+
+func _on_menu_requested(menu: String) -> void:
+	match menu:
+		"passives":
+			toggle_passive_tree()
+		"inventory":
+			if not tree_screen.visible:
+				inventory_panel.visible = not inventory_panel.visible
+				item_tooltip.hide()
+		"skills":
+			if not tree_screen.visible:
+				skills_panel.visible = not skills_panel.visible
+				item_tooltip.hide()
 
 
 func toggle_passive_tree() -> void:
 	tree_screen.visible = not tree_screen.visible
 	hud.visible = not tree_screen.visible
+	tutorial.visible = not tree_screen.visible and not tutorial.is_finished()
 	if tree_screen.visible:
 		inventory_panel.visible = false
+		skills_panel.visible = false
+		dialogue_box.close()
 		item_tooltip.hide()
 	get_tree().paused = tree_screen.visible
 
 
 func show_death() -> void:
 	_death_panel.visible = true
+	dialogue_box.close()
 	# Centrar tras calcular su tamaño.
 	_death_panel.set_anchors_and_offsets_preset.call_deferred(Control.PRESET_CENTER)
 
@@ -149,4 +226,4 @@ func _on_ground_item_hovered(item: Item) -> void:
 	if item == null:
 		item_tooltip.hide()
 	else:
-		item_tooltip.show_item(item, _character, true)
+		item_tooltip.show_item(item, _character, item.is_equipment())

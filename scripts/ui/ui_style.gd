@@ -33,6 +33,12 @@ static func make_theme() -> Theme:
 	theme.set_color("font_color", "LineEdit", TEXT)
 	theme.set_color("font_placeholder_color", "LineEdit", Color("5a5363"))
 	theme.set_color("caret_color", "LineEdit", ACCENT)
+
+	var tip := _box(Color("0d0b10f5"), ACCENT.darkened(0.4))
+	tip.set_content_margin_all(10)
+	theme.set_stylebox("panel", "TooltipPanel", tip)
+	theme.set_color("font_color", "TooltipLabel", TEXT)
+	theme.set_font_size("font_size", "TooltipLabel", 14)
 	return theme
 
 

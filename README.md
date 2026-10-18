@@ -7,59 +7,97 @@ Por ahora es solo para un jugador en local, pero la lógica está escrita para p
 
 1. Abre Godot 4.7.2 → **Importar** → selecciona `project.godot`.
 2. Pulsa **F5**. Se abre la pantalla de inicio: crea un personaje (clase, apariencia y nombre) o elige uno guardado.
-3. En el juego, **Esc** abre el menú de pausa (volver al menú o salir, guardando).
+3. Empiezas en el **Campamento del Último Commit**, una zona segura con NPCs. El tutorial (arriba a la izquierda) te guía; se puede saltar.
 
 | Tecla | Acción |
 |---|---|
 | WASD / mantener click izq. | Mover |
-| Espacio / click der. | Atacar ("Barrido", golpe en área con el arma equipada) |
-| Click en un objeto del suelo | Ir a recogerlo |
+| Click der. · Espacio · Q · E · R · F | Las 6 habilidades de la barra |
+| 1 / 2 | Café (vida) / Bebida energética (maná) |
+| Click en un objeto o NPC | Ir a recogerlo / hablar |
 | I | Inventario: click izq. equipa o quita, click der. destruye |
-| P / Esc | Árbol pasivo (pausa el juego) |
-| F1 / F2 / F3 | +100 enemigos / limpiar / jefe único |
-| F4 | Botín de prueba: una muestra de cada rareza |
-| R | Reaparecer tras morir |
+| K | Habilidades: placas base y módulos RAM |
+| P | Árbol pasivo (pausa el juego) |
+| Esc | Cierra lo abierto; si no hay nada, menú de pausa |
+| F1 / F2 / F3 / F4 | Depuración: +100 enemigos / limpiar / jefe único / botín de prueba |
+| R | Reaparecer en el campamento tras morir |
 
-Todas las teclas están en *Proyecto → Configuración del proyecto → Mapa de entrada*.
+Todas las teclas están en *Proyecto → Configuración del proyecto → Mapa de entrada*. Pasa el ratón por cualquier elemento del HUD para ver una ayuda.
 
-`scenes/ui/passive_tree_screen.tscn` también funciona sola (F6) para probar builds de cualquier clase y nivel, y `scenes/game/world.tscn` (F6) arranca con un personaje temporal que no se guarda.
+`scenes/ui/passive_tree_screen.tscn` funciona sola (F6) para probar builds, y `scenes/game/world.tscn` (F6) arranca con un personaje temporal que no se guarda.
+
+## Habilidades: placas base y RAM
+
+La versión informática de las gemas de PoE:
+
+- **Placa base** = habilidad activa. Es un objeto que cae como botín, con **3 a 7 ranuras DIMM**. Cada ranura es de una generación: **DDR3** (rojo, fuerza), **DDR4** (verde, destreza) o **DDR5** (azul, inteligencia). Su nivel sigue al nivel del objeto y escala el daño de los hechizos.
+- **Módulo RAM** = soporte. Solo encaja en ranuras de su generación, y solo hace efecto si la habilidad es compatible (p. ej. *RAM Multicanal* solo con proyectiles). Cada módulo multiplica el **consumo de maná**.
+- Las 6 placas instaladas forman la barra de habilidades. El orden se cambia con *Subir/Bajar* en el menú K.
+- Los ataques usan el arma equipada (daño × efectividad); los hechizos tienen daño propio. Todo pasa por `SkillCalc`, así que el tooltip muestra exactamente lo que ocurre en combate.
+
+| Habilidad | Tipo | | Módulo RAM | Efecto |
+|---|---|---|---|---|
+| Barrido | ataque, área | | Multicanal (DDR4) | +2 proyectiles, menos daño |
+| Ráfaga de Paquetes | ataque, proyectiles | | Overclock (DDR4) | más velocidad |
+| Ping Letal | hechizo, rayo que atraviesa | | ECC (DDR5) | más crítico |
+| Fork Bomb | hechizo, explosión en el suelo | | Caché L3 (DDR5) | más área |
+| Stack Overflow | hechizo, onda de frío | | Disipador (DDR3) | menos área, más daño |
+| Teletransporte TCP | movimiento | | Pipeline (DDR3) | la habilidad se repite |
+| | | | Puntero Salvaje (DDR4) | los proyectiles atraviesan |
+| | | | Fuerza Bruta (DDR3) | más daño físico |
+| | | | Alto Voltaje (DDR5) | más daño elemental de hechizos |
+| | | | Swap Vampírica (DDR3) | robo de vida |
+
+Se definen en `data/skills/skills.json` y `data/skills/ram_modules.json`. Cada clase empieza con dos placas (`starter_skills` en `classes.json`).
+
+## Campamento, NPCs y tutorial
+
+- **Zona segura**: los enemigos no entran ni persiguen dentro. Fuera aparecen grupos continuamente; los que quedan muy lejos desaparecen.
+- **NPCs** (`data/camp.json`): Ada la Senior (te explica las habilidades y te da una RAM que encaja en tu primera placa), Kevin el Becario (rellena las pociones) y Root el SysAdmin (lore y una placa de regalo). Los diálogos tienen opciones con condiciones y acciones; los regalos se dan una sola vez (banderas guardadas en el personaje).
+- **Tutorial** (`data/tutorial.json`): 11 pasos con condiciones que se comprueban solas. El progreso se guarda por personaje y se puede saltar.
+
+## Enemigos
+
+Cinco tipos con sprites animados: Bug, Proceso zombi, Memory leak, Gusano de red y Daemon (para jefes). Están en `data/enemies.json` y `assets/sprites/enemies/enemies.png`.
+- El atlas se genera con `tools/generate_enemy_sprites.gd` (pixel art procedural, "arte de programador"). Para usar sprites dibujados a mano, sustituye el PNG respetando la cuadrícula: columnas = 4 fotogramas, filas = tipos.
+- Un shader (`assets/shaders/enemy_sprite.gdshader`) se encarga de la animación, el volteo, el contorno del color de rareza y el destello al recibir daño, todo por instancia del `MultiMesh`.
 
 ## Guardado de personajes
 
 - Un archivo JSON por personaje en `user://characters/<id>.json`. En Windows es `%APPDATA%\Godot\app_userdata\Exile Overflow\characters`.
-- Se guarda **todo el personaje**: nombre, clase, ascendencia, nivel, experiencia, apariencia, pasivas, equipo, bolsa y tiempo jugado.
-- **Autoguardado**: unos segundos después de cada cambio (subir de nivel, objetos, pasivas), cada minuto, al volver al menú y al cerrar la ventana.
+- Se guarda **todo el personaje**: nombre, clase, ascendencia, nivel, experiencia, apariencia, pasivas, equipo, bolsa, placas y RAM, banderas (diálogos, tutorial) y tiempo jugado.
+- **Autoguardado**: unos segundos después de cada cambio, cada minuto, al volver al menú y al cerrar la ventana.
 - **Seguro ante cortes**: se escribe en un `.tmp` y luego se sustituye el archivo; la versión anterior queda como `.bak` y se usa si el principal está dañado.
-- **Tolerante a cambios de datos**: si un nodo del árbol u objeto deja de existir, se descarta al cargar (los puntos de pasiva vuelven al jugador) en lugar de romper la partida. El campo `save_version` permite migrar formatos antiguos.
-- La apariencia se guarda como índices de estilo + colores, el mismo formato que usarán los sprites por capas.
+- **Tolerante a cambios de datos**: lo que deja de existir (nodos, objetos, habilidades) se descarta al cargar en vez de romper la partida.
+- **Versiones**: `save_version` 2 añadió las placas base; los guardados v1 reciben las placas iniciales de su clase al cargarse.
 
 ## Estructura
 
 ```
-data/                 Datos de diseño (JSON): clases, ascendencias, árbol pasivo
+data/                 Datos de diseño (JSON): clases, árbol, enemigos, campamento, tutorial
 data/items/           Bases, afijos (con tiers), únicos y conjuntos
+data/skills/          Habilidades (placas base) y módulos RAM
 scripts/core/         Stat, Modifier, StatBlock (fórmula de PoE), DataLoader
-scripts/passives/     PassiveTree (datos), PassiveAllocation (por personaje), PassiveTreeView (dibujo)
-scripts/character/    CharacterData (personaje), CharacterSaves (archivos), CharacterAppearance
+scripts/passives/     PassiveTree, PassiveAllocation, PassiveTreeView
+scripts/character/    CharacterData, CharacterSaves, CharacterAppearance
 scripts/items/        Rarity, ItemDatabase, Item, ItemGenerator, Inventory
-scripts/game/         World, Player, EnemyManager, LootManager, IsoGround
-scripts/ui/           Menú de inicio, creador, HUD, inventario, tooltips, árbol pasivo, UiStyle
-scenes/menu/          Pantalla de inicio y creación de personaje
-scripts/autoload/     GameData: carga los datos estáticos una vez
+scripts/skills/       SkillDatabase, Motherboard, RamModule, SkillCalc
+scripts/game/         World, Player, SkillController, EnemyManager, LootManager, Camp, IsoGround
+scripts/ui/           Menús, HUD, inventario, habilidades, diálogos, tutorial, tooltips, UiStyle
+scripts/autoload/     GameData: datos estáticos y personaje actual
 scenes/               Escenas (.tscn)
-tools/                Scripts externos (generador del árbol de prueba)
+assets/               Sprites, shaders, UI, audio, fuentes
+tools/                Generadores (árbol, sprites) y comprobador de scripts
 tests/                Pruebas de la lógica pura
-assets/               Sprites, UI, audio, fuentes
 ```
 
 ## Decisiones de arquitectura
 
-- **Todo es un `Modifier`.** El árbol, las ascendencias, los objetos y, más adelante, las gemas y las auras de enemigos producen el mismo tipo de dato. Añadir contenido es añadir datos, no código.
-- **Fórmula de PoE** en `StatBlock`: `(base + planos) × (1 + Σaumentos) × Π(más)`. Los tags (`spell`, `melee`, `projectile`…) permiten modificadores condicionales. Los stats padre (`damage` → `elemental_damage` → `fire_damage`) heredan aumentos.
-- **Lógica separada de los nodos.** `StatBlock`, `PassiveAllocation`, `CharacterData`, `Item`, `ItemGenerator` e `Inventory` son `RefCounted` puros. Así se pueden probar sin escena y, si algún día hay servidor, moverlos allí.
-- **El árbol se dibuja en un solo `_draw()`**, con descarte por viewport y una rejilla espacial para el hover. Está pensado para más de 1000 nodos.
-- **Enemigos orientados a datos** (`EnemyManager`): un solo nodo con arrays empaquetados, una rejilla espacial para separarlos y un `MultiMesh` para dibujarlos en una sola llamada.
-- **Datos estáticos compartidos** (`PassiveTree`, `ItemDatabase`) frente a **estado por personaje** (`PassiveAllocation`, `Inventory`).
+- **Todo es un `Modifier`.** El árbol, las ascendencias, los objetos y la RAM producen el mismo tipo de dato. Añadir contenido es añadir datos, no código.
+- **Fórmula de PoE** en `StatBlock`: `(base + planos) × (1 + Σaumentos) × Π(más)`. Los tags (`spell`, `melee`, `projectile`, `area`…) permiten modificadores condicionales. Los stats padre (`damage` → `elemental_damage` → `fire_damage`) heredan aumentos. La RAM se aplica sobre una copia (`duplicate_with`) que solo afecta a su habilidad.
+- **Lógica separada de los nodos.** Stats, pasivas, personaje, objetos, inventario y cálculo de habilidades son `RefCounted` puros. Se prueban sin escena y podrían moverse a un servidor.
+- **El árbol se dibuja en un solo `_draw()`** y está pensado para más de 1000 nodos.
+- **Enemigos orientados a datos** (`EnemyManager`): arrays empaquetados, rejilla espacial y un `MultiMesh` con shader para dibujarlos en una sola llamada.
 
 ## Objetos
 
@@ -69,47 +107,35 @@ assets/               Sprites, UI, audio, fuentes
 | Mágico | 1-2 (máx. 1 prefijo + 1 sufijo) | Nombre: base + prefijo + sufijo |
 | Raro | 3-6 (máx. 3 + 3) | Nombre aleatorio ("Tormento del Kernel") |
 | Ultra-raro | 7-8 (máx. 4 + 4) | Siempre el mejor tier disponible para su nivel |
-| Único | Fijos, con rango | Definidos en `uniques.json`, con texto de ambientación |
-| De conjunto | Fijos + bonus por piezas | Definidos en `sets.json` |
+| Único | Fijos, con rango | `uniques.json`, con texto de ambientación |
+| De conjunto | Fijos + bonus por piezas | `sets.json` |
 
-- **Tiers**: cada afijo tiene tiers con nivel mínimo y peso; el nivel del objeto decide cuáles pueden salir. En el tooltip, `(P T1)` significa prefijo del mejor tier.
-- **Mods locales** (`local_*`): modifican la propia base (daño del arma, defensas de la armadura) en vez de sumarse al personaje, como en PoE.
-- **Botín**: cada enemigo tiene probabilidad y número de objetos según su rareza, y los élites y únicos tienen bonus de rareza (`Rarity.ENEMY_INFO`). El nivel de los monstruos, y con él el de los objetos, sigue al nivel del personaje.
-- **Comparación**: el tooltip de un objeto no equipado muestra cómo cambiarían el DPS, la vida, las defensas y las resistencias al equiparlo.
-- Los objetos ya tienen `to_dict()`/`from_dict()`, preparados para el sistema de guardado.
+Además, el botín incluye placas base (8 %) y módulos RAM (10 %). Los tooltips de equipo muestran la comparación con lo que llevas puesto.
 
-## Pruebas
+## Pruebas y comprobaciones
 
 ```bash
 Godot_v4.7.2-stable_win64_console.exe --headless --path . -s res://tests/test_core.gd
 ```
 
-Comprueban:
-- la fórmula de stats;
-- los caminos del árbol y los reembolsos;
-- la experiencia y los enemigos;
-- el mapa de entrada;
-- la integridad de todos los JSON;
-- la generación de 1200 objetos (límites de afijos, sin grupos repetidos, tiers según nivel, reproducibilidad con semilla);
-- los mods locales, el equipo y los anillos, la vista previa al equipar y los bonus de conjunto.
+```bash
+Godot_v4.7.2-stable_win64_console.exe --headless --path . -s res://tools/check_scripts.gd
+```
 
-## Rendimiento (benchmark, 18-10-2026)
+La primera ejecuta las pruebas de lógica: stats, árbol, objetos, guardado, placas base y RAM (compatibilidad, generaciones, cálculo de daño, coste, proyectiles, área) y la integridad de los JSON (diálogos que apuntan a nodos que existen, pasos del tutorial, regalos válidos...).
+La segunda carga todos los scripts, escenas y shaders para detectar errores de compilación sin abrir el editor.
 
-RTX 4050 Laptop, vsync desactivado, todos los enemigos amontonados alrededor del jugador (el peor caso):
+## Rendimiento
 
-| Enemigos | FPS medio | Peor frame | Simulación (GDScript) |
-|---|---|---|---|
-| 300 | ~1350 | 1.4 ms | 2.5 ms/tick |
-| 600 | ~790 | 2.1 ms | 6.3 ms/tick |
-| 1000 | ~190 | 26.5 ms | 12.3 ms/tick |
-| 1500 | ~8 | 144 ms | 20.9 ms/tick |
+Benchmark del 18-10-2026 (antes de los sprites), RTX 4050 Laptop, vsync desactivado, todos los enemigos amontonados alrededor del jugador:
 
-Conclusión: GDScript va sobrado para densidades tipo PoE (300-600 enemigos). Por encima de unos 800, la simulación pasa de 16 ms por tick y el juego colapsa. Si hace falta más, el siguiente paso es portar **solo** `EnemyManager` a C# o a GDExtension.
+| Enemigos | FPS medio | Simulación (GDScript) |
+|---|---|---|
+| 300 | ~1350 | 2.5 ms/tick |
+| 600 | ~790 | 6.3 ms/tick |
+| 1000 | ~190 | 12.3 ms/tick |
 
-## Árbol de prueba
-
-`data/passive_tree.json` se genera con `python tools/generate_passive_tree.py`. Son 195 nodos: 5 inicios, 18 notables y 5 piedras angulares.
-Es un generador de prototipo. El siguiente paso natural es un **editor del árbol dentro de Godot** (plugin `@tool`) para colocar nodos a mano.
+GDScript va sobrado para densidades tipo PoE (300-600). Por encima de unos 800, el siguiente paso sería portar **solo** `EnemyManager` a C# o GDExtension.
 
 ## Exportar
 
@@ -117,8 +143,8 @@ Añade `*.json` en *Exportar → Recursos → Filtros para exportar archivos no-
 
 ## Próximos pasos sugeridos
 
-1. Habilidades activas (gemas) que consulten `StatBlock` con sus tags, y coste de maná.
-2. Sprites del personaje por capas (decidir antes: 2D a mano o 3D prerenderizado); el formato de apariencia ya está preparado.
-3. Ascendencia mediante pruebas (ahora se elige libremente en el árbol pasivo).
-4. Iconos de objetos e inventario por cuadrícula con tamaños (2×3, 1×1…) como en PoE.
+1. Sprites del jugador y de los NPCs (el formato de apariencia ya está preparado) e iconos de objetos.
+2. Resistencias y tipos de daño en los enemigos, y enemigos con habilidades propias.
+3. Ascendencias mediante pruebas (ahora se eligen libremente en el árbol pasivo).
+4. Más zonas fuera del campamento (mapas con TileMapLayer isométrico).
 5. Editor del árbol pasivo dentro de Godot.

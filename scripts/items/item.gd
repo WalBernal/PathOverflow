@@ -49,6 +49,16 @@ func slot() -> String:
 	return base["slot"]
 
 
+## Color del nombre (etiquetas, casillas, tooltips). Placas base y RAM lo cambian.
+func display_color() -> Color:
+	return Rarity.item_color(rarity)
+
+
+## Equipo normal (casco, arma...) frente a placas base y módulos RAM.
+func is_equipment() -> bool:
+	return not (slot() == "motherboard" or slot() == "ram")
+
+
 func is_weapon() -> bool:
 	return base.has("weapon")
 
@@ -155,6 +165,7 @@ static func describe_mod(m: Dictionary) -> String:
 ## Para el futuro sistema de guardado.
 func to_dict() -> Dictionary:
 	return {
+		"kind": "equipment",
 		"base": base["id"],
 		"rarity": rarity,
 		"item_level": item_level,
@@ -168,6 +179,11 @@ func to_dict() -> Dictionary:
 
 ## Devuelve null si la base ya no existe (datos cambiados entre versiones).
 static func from_dict(d: Dictionary, db: ItemDatabase) -> Item:
+	match d.get("kind", "equipment"):
+		"motherboard":
+			return Motherboard.from_save(d, db)
+		"ram":
+			return RamModule.from_save(d, db)
 	if not db.bases.has(d.get("base", "")):
 		push_warning("Objeto guardado con base desconocida '%s': se descarta" % d.get("base", ""))
 		return null

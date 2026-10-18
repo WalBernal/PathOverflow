@@ -16,7 +16,7 @@ const UNARMED := {"physical": [2.0, 5.0], "aps": 1.2, "crit": 5.0}
 
 ## Versión del formato de guardado. Súbela si cambia la estructura de to_dict()
 ## y añade la migración correspondiente en from_dict().
-const SAVE_VERSION := 1
+const SAVE_VERSION := 2
 
 ## Identificador del archivo de guardado ("" = personaje temporal, no se guarda).
 var id := ""
@@ -31,6 +31,8 @@ var created_at := 0
 var last_played := 0
 ## Segundos jugados.
 var play_time := 0.0
+## Banderas de progreso: diálogos vistos, regalos recibidos, paso del tutorial...
+var flags: Dictionary = {}
 var passives: PassiveAllocation
 var inventory := Inventory.new()
 var stats := StatBlock.new()
@@ -151,6 +153,20 @@ func _apply_attribute_bonuses() -> void:
 	stats.add_modifier(Modifier.new(Stat.ENERGY_SHIELD, Modifier.Type.INCREASED, floorf(int_value / 5.0), [], src))
 
 
+## Valores base del arma equipada (o de los puños), para las habilidades de ataque.
+func weapon_values() -> Dictionary:
+	var weapon := inventory.equipped("weapon")
+	if weapon:
+		return {"min": weapon.physical_min, "max": weapon.physical_max, "aps": weapon.attacks_per_second, "crit": weapon.crit_chance}
+	return {"min": UNARMED["physical"][0], "max": UNARMED["physical"][1], "aps": UNARMED["aps"], "crit": UNARMED["crit"]}
+
+
+## Cifras finales de la habilidad instalada en esa ranura de la barra (o {}).
+func skill_profile(hotbar_index: int) -> Dictionary:
+	var board: Motherboard = inventory.boards[hotbar_index]
+	return SkillCalc.compute(board, self) if board else {}
+
+
 ## Cifras del ataque básico con el arma equipada (o los puños).
 func attack_profile() -> Dictionary:
 	var weapon := inventory.equipped("weapon")
@@ -225,6 +241,7 @@ func to_dict() -> Dictionary:
 		"created_at": created_at,
 		"last_played": last_played,
 		"play_time": play_time,
+		"flags": flags,
 	}
 
 
@@ -240,6 +257,8 @@ static func from_dict(d: Dictionary, p_class_def: Dictionary, tree: PassiveTree,
 	c.created_at = int(d.get("created_at", 0))
 	c.last_played = int(d.get("last_played", 0))
 	c.play_time = float(d.get("play_time", 0.0))
+	var saved_flags = d.get("flags", {})
+	c.flags = saved_flags if saved_flags is Dictionary else {}
 	for a in p_class_def.get("ascendancies", []):
 		if a["id"] == d.get("ascendancy_id", ""):
 			c.ascendancy_def = a

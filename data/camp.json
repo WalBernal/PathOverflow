@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "_doc": "Campamento seguro y sus NPCs. Diálogos: nodos con texto y opciones. Opción: text, next ('' = cerrar), requires_flag / hides_if_flag, action {type: give_item | give_matching_ram | refill | set_flag, flag}. Las banderas se guardan en el personaje.",
+  "camp": { "name": "Campamento del Último Commit", "radius": 380, "spawn": [0, 60] },
+  "npcs": [
+    { "id": "ada", "name": "Ada, la Senior", "position": [-170, -40], "dialogue": "ada",
+      "appearance": { "body": 1, "hair": 2, "skin_tone": "e0ac8a", "hair_color": "c8c8c8", "outfit_color": "5a3b6b" } },
+    { "id": "kevin", "name": "Kevin, el Becario", "position": [160, -70], "dialogue": "kevin",
+      "appearance": { "body": 0, "hair": 3, "skin_tone": "f1d2b6", "hair_color": "b5651d", "outfit_color": "2b6b45" } },
+    { "id": "root", "name": "Root, el SysAdmin", "position": [30, 170], "dialogue": "root",
+      "appearance": { "body": 2, "hair": 0, "skin_tone": "7c4a2d", "hair_color": "0f0d0c", "outfit_color": "1f1f2e" } }
+  ],
+  "dialogues": {
+    "ada": {
+      "start": "hola",
+      "nodes": {
+        "hola": {
+          "text": "Vaya, otro exiliado. Te tiraron a producción sin pasar por staging, ¿eh? Soy Ada. Llevo aquí desde que esto era un monolito en COBOL.",
+          "options": [
+            { "text": "¿Dónde estoy?", "next": "lugar" },
+            { "text": "¿Cómo funcionan las habilidades?", "next": "habilidades" },
+            { "text": "¿Tienes algo útil para mí?", "next": "regalo", "hides_if_flag": "ada_regalo" },
+            { "text": "Adiós.", "next": "" }
+          ]
+        },
+        "lugar": {
+          "text": "En el Campamento del Último Commit. Ahí fuera está el Servidor Caído: bugs, procesos zombi, memory leaks... todo lo que alguien prometió arreglar «en el siguiente sprint». Aquí no entran: el firewall del campamento todavía aguanta.",
+          "options": [ { "text": "Muy tranquilizador.", "next": "hola" }, { "text": "Adiós.", "next": "" } ]
+        },
+        "habilidades": {
+          "text": "Tus habilidades son placas base. Cada placa tiene ranuras DIMM: DDR3, DDR4 o DDR5. Mete módulos RAM de la misma generación y la habilidad mejora. Más RAM, más consumo de maná. Como todo en la vida.",
+          "options": [ { "text": "¿Y dónde consigo RAM?", "next": "ram" }, { "text": "Entendido.", "next": "hola" } ]
+        },
+        "ram": {
+          "text": "Cae de los enemigos, igual que las placas. A veces con 6 o 7 ranuras, si los dioses del RNG te quieren. Spoiler: no te quieren.",
+          "options": [ { "text": "Vale.", "next": "hola" } ]
+        },
+        "regalo": {
+          "text": "Toma, un módulo que encaja en tu primera placa. Abre las habilidades con K, haz click en la RAM y luego en la ranura de su color. Si no encaja, es culpa del hardware. Siempre es culpa del hardware.",
+          "options": [ { "text": "Gracias, Ada.", "next": "", "action": { "type": "give_matching_ram", "flag": "ada_regalo" } } ]
+        }
+      }
+    },
+    "kevin": {
+      "start": "hola",
+      "nodes": {
+        "hola": {
+          "text": "¡Hola! Soy Kevin, el becario. Llevo tres meses aquí y todavía no tengo acceso a nada. Pero preparo un café increíble.",
+          "options": [
+            { "text": "¿Me pones un café?", "next": "cafe", "action": { "type": "refill" } },
+            { "text": "¿Algún consejo?", "next": "consejo" },
+            { "text": "Adiós.", "next": "" }
+          ]
+        },
+        "cafe": {
+          "text": "¡Marchando! Te he rellenado las pociones: café para la vida (tecla 1) y bebida energética para el maná (tecla 2). Se recargan matando cosas. Como mi autoestima.",
+          "options": [ { "text": "Gracias, Kevin.", "next": "hola" } ]
+        },
+        "consejo": {
+          "text": "Si mueres, no pasa nada: vuelves aquí. Lo que sí duele es tener puntos de pasiva sin gastar. Pulsa P. Yo no puedo, no tengo permisos.",
+          "options": [ { "text": "Ánimo con los permisos.", "next": "hola" } ]
+        }
+      }
+    },
+    "root": {
+      "start": "hola",
+      "nodes": {
+        "hola": {
+          "text": "...¿Qué. Quieres? Estoy reiniciando el servidor. Desde 2019.",
+          "options": [
+            { "text": "¿Qué pasó aquí?", "next": "lore" },
+            { "text": "¿Te sobra alguna placa base?", "next": "placa", "hides_if_flag": "root_regalo" },
+            { "text": "Nada, perdón.", "next": "" }
+          ]
+        },
+        "lore": {
+          "text": "La Gran Migración. Alguien desplegó un viernes a las seis de la tarde, sin tests, con un «git push --force». El Servidor se corrompió y todo lo que corría dentro cobró vida. Ahora los bugs tienen patas. Literalmente.",
+          "options": [ { "text": "¿Y quién fue?", "next": "culpable" }, { "text": "Qué horror.", "next": "hola" } ]
+        },
+        "culpable": {
+          "text": "Los logs dicen que fue «admin». Todos somos «admin». Esa es la tragedia.",
+          "options": [ { "text": "...", "next": "hola" } ]
+        },
+        "placa": {
+          "text": "Toma. Ping Letal: un rayo que atraviesa enemigos. Instálala en la barra con K. Y no me des las gracias, dame un ticket.",
+          "options": [ { "text": "Abriré un ticket.", "next": "", "action": { "type": "give_item", "kind": "motherboard", "id": "ping_letal", "flag": "root_regalo" } } ]
+        }
+      }
+    }
+  }
+}
