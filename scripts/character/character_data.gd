@@ -39,6 +39,8 @@ var flags: Dictionary = {}
 var passives: PassiveAllocation
 var inventory := Inventory.new()
 var stats := StatBlock.new()
+## Efectos temporales (pociones de utilidad): {id, mods: Array[Modifier], time_left}.
+var timed_effects: Array[Dictionary] = []
 ## Condiciones activas en este momento (las pone Player): StringName -> true.
 var conditions: Dictionary = {}
 
@@ -139,6 +141,8 @@ func recalculate(emit := true) -> void:
 		for md in p.get("mods", []):
 			stats.add_modifier(Modifier.from_dict(md, "ascendancy"))
 	_apply_equipment()
+	for effect in timed_effects:
+		stats.add_modifiers(effect["mods"])
 	_apply_attribute_bonuses()
 	if emit:
 		stats_changed.emit()
@@ -158,6 +162,33 @@ func _apply_equipment() -> void:
 			if counts[id] >= int(threshold):
 				for md in bonuses[threshold]:
 					stats.add_modifier(Modifier.from_dict(md, "set:" + id))
+
+
+## Activa (o renueva) un efecto temporal con sus modificadores.
+func add_timed_effect(id: String, mods: Array[Modifier], seconds: float) -> void:
+	for effect in timed_effects:
+		if effect["id"] == id:
+			effect["time_left"] = seconds
+			return
+	timed_effects.append({"id": id, "mods": mods, "time_left": seconds, "total": seconds})
+	recalculate()
+
+
+## Lo llama Player cada frame: quita los efectos caducados.
+func tick_timed_effects(delta: float) -> void:
+	if timed_effects.is_empty():
+		return
+	var expired := false
+	for effect in timed_effects:
+		effect["time_left"] -= delta
+		expired = expired or effect["time_left"] <= 0.0
+	if expired:
+		timed_effects.assign(timed_effects.filter(func(e: Dictionary) -> bool: return e["time_left"] > 0.0))
+		recalculate()
+
+
+func has_timed_effect(id: String) -> bool:
+	return timed_effects.any(func(e: Dictionary) -> bool: return e["id"] == id)
 
 
 ## Como en PoE, los atributos dan bonus implícitos.

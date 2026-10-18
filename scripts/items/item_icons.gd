@@ -27,6 +27,8 @@ static func icon_id(item: Item) -> String:
 		return "motherboard"
 	if item is RamModule:
 		return "ram_" + (item as RamModule).generation()
+	if item is Flask:
+		return (item as Flask).icon()
 	return item.base.get("id", "unknown")
 
 

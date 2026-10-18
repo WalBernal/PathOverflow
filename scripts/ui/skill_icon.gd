@@ -71,5 +71,18 @@ static func draw(ci: CanvasItem, rect: Rect2, skill_def: Dictionary, dimmed := f
 			ci.draw_polyline(pts, color, 3.0, true)
 			for q in pts:
 				ci.draw_circle(q, r * 0.17, color.lightened(0.3))
+		"minion":
+			for k in 2:
+				var o := c + Vector2((k - 0.5) * r * 0.9, r * 0.1 * k)
+				ci.draw_rect(Rect2(o + Vector2(-r * 0.35, -r * 0.7), Vector2(r * 0.7, r * 0.5)), Color("b8b8b0"))
+				ci.draw_rect(Rect2(o + Vector2(-r * 0.25, -r * 0.6), Vector2(r * 0.5, r * 0.3)), color.darkened(0.5))
+				ci.draw_rect(Rect2(o + Vector2(-r * 0.25, -r * 0.18), Vector2(r * 0.5, r * 0.7)), color.darkened(0.2))
+		"puddle":
+			ci.draw_set_transform(c + Vector2(0, r * 0.25), 0.0, Vector2(1.0, 0.55))
+			ci.draw_circle(Vector2.ZERO, r, Color(color, 0.6))
+			ci.draw_circle(Vector2.ZERO, r * 0.6, color)
+			ci.draw_set_transform(Vector2.ZERO)
+			for k in 3:
+				ci.draw_circle(c + Vector2((k - 1) * r * 0.45, -r * 0.2 - k * r * 0.15), r * 0.12, color.lightened(0.4))
 		_:
 			ci.draw_circle(c, r * 0.5, color)

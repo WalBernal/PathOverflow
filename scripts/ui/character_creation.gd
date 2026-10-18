@@ -13,8 +13,6 @@ const ATTRIBUTES := [["strength", "FUE", Color("c84b4b")], ["dexterity", "DES", 
 	["intelligence", "INT", Color("4b8bd6")]]
 const ATTRIBUTE_MAX := 40.0
 const DIFFICULTY_NAMES := ["", "Amable (para estándares de producción)", "Media: lee los tooltips", "Alta: vive en el borde del stack"]
-const TAG_NAMES := {"attack": "ataque", "melee": "cuerpo a cuerpo", "area": "área", "spell": "hechizo",
-	"projectile": "proyectil", "movement": "movimiento"}
 const SNIPPETS := ["git init personaje", "new Exiliado()", "chmod +x heroe.sh", "// valores por defecto, como tú",
 	"npm install valor", "assert(vivo)", "CREATE TABLE heroe (...)", "docker build -t exiliado ."]
 
@@ -311,7 +309,7 @@ func _skill_card(def: Dictionary) -> Control:
 	row.add_child(texts)
 	var tags := PackedStringArray()
 	for tag: String in def.get("tags", []):
-		tags.append(TAG_NAMES.get(tag, tag))
+		tags.append(SkillTags.display_name(tag))
 	texts.add_child(UiStyle.label("%s   [%s]" % [def.get("name", "?"), ", ".join(tags)], 16, UiStyle.ACCENT))
 	var desc := UiStyle.label(def.get("description", ""), 13, UiStyle.TEXT)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

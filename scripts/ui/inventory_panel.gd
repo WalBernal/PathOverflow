@@ -1,6 +1,7 @@
 class_name InventoryPanel
 extends PanelContainer
-## Panel de inventario (tecla I): equipo en forma de "muñeco" + bolsa.
+## Panel de inventario (tecla I): equipo en forma de "muñeco", cinturón de
+## pociones (teclas 1-5) y bolsa.
 ## Arrastrar y soltar: mover entre la bolsa y el equipo (intercambia si hace
 ## falta). Soltar fuera de los paneles: tirarlo al suelo.
 ## Click: equipar (desde la bolsa) o quitar (desde el equipo).
@@ -27,6 +28,7 @@ const EQUIP_LAYOUT := {
 var character: CharacterData
 var _equip_cells: Dictionary = {}   # ranura -> ItemCell
 var _bag_cells: Array[ItemCell] = []
+var _flask_cells: Array[ItemCell] = []
 var _summary: RichTextLabel
 var _tooltip: ItemTooltip
 
@@ -62,6 +64,20 @@ func _ready() -> void:
 		doll.add_child(cell)
 		_equip_cells[slot] = cell
 
+	# Cinturón de pociones.
+	var belt := HBoxContainer.new()
+	belt.add_theme_constant_override("separation", 4)
+	box.add_child(belt)
+	var belt_label := UiStyle.label("Pociones\n(1-5)", 12, UiStyle.MUTED)
+	belt_label.custom_minimum_size.x = CELL * 1.6
+	belt.add_child(belt_label)
+	for i in Inventory.FLASK_SLOTS:
+		var cell := _make_cell({"kind": "flask", "index": i})
+		cell.placeholder = str(i + 1)
+		cell.custom_minimum_size = Vector2(CELL * 1.1, CELL * 1.3)
+		belt.add_child(cell)
+		_flask_cells.append(cell)
+
 	_summary = RichTextLabel.new()
 	_summary.bbcode_enabled = true
 	_summary.fit_content = true
@@ -79,7 +95,7 @@ func _ready() -> void:
 		grid.add_child(cell)
 		_bag_cells.append(cell)
 
-	box.add_child(UiStyle.label("Arrastra para mover o equipar  ·  Click: equipar / quitar\nArrastra fuera del panel para tirarlo al suelo", 12, UiStyle.MUTED))
+	box.add_child(UiStyle.label("Arrastra para mover o equipar  ·  Click: equipar / quitar (también pociones)\nArrastra fuera del panel para tirarlo al suelo", 12, UiStyle.MUTED))
 
 
 func _make_cell(location: Dictionary) -> ItemCell:
@@ -99,6 +115,8 @@ func _refresh() -> void:
 		_equip_cells[slot].set_item(character.inventory.equipped(slot))
 	for i in _bag_cells.size():
 		_bag_cells[i].set_item(character.inventory.bag[i])
+	for i in _flask_cells.size():
+		_flask_cells[i].set_item(character.inventory.flasks[i])
 	_refresh_summary()
 
 
@@ -128,6 +146,18 @@ func _on_cell_clicked(cell: ItemCell, button: MouseButton) -> void:
 	if cell.item == null or button != MOUSE_BUTTON_LEFT:
 		return
 	var inv := character.inventory
+	if cell.location["kind"] == "flask":
+		if not inv.unequip_flask(cell.location["index"]):
+			message.emit("Inventario lleno. Como tu backlog.")
+		_on_cell_hovered(cell, true)
+		return
+	if cell.location["kind"] == "bag" and cell.item is Flask:
+		if character.level < cell.item.required_level():
+			message.emit("Requiere nivel %d. Este café es demasiado fuerte para ti." % cell.item.required_level())
+		elif not inv.equip_flask(cell.location["index"]):
+			message.emit("El cinturón está lleno: arrastra la poción encima de otra para cambiarlas.")
+		_on_cell_hovered(cell, true)
+		return
 	if cell.location["kind"] == "bag":
 		if not cell.item.is_equipment():
 			message.emit("Las placas base y la RAM se instalan en el menú de habilidades (K).")

@@ -16,6 +16,9 @@ var sets: Dictionary = {}         # id -> Dictionary
 var set_pieces: Array = []        # {piece: Dictionary, set: Dictionary}
 ## Placas base y módulos RAM también son objetos (caen como botín).
 var skills: SkillDatabase
+## Pociones (data/items/flasks.json): id -> definición, y las iniciales.
+var flasks: Dictionary = {}
+var flask_starters: Array = []
 
 
 static func load_from_dir(dir := "res://data/items", skills_dir := "res://data/skills") -> ItemDatabase:
@@ -25,6 +28,11 @@ static func load_from_dir(dir := "res://data/items", skills_dir := "res://data/s
 		db.bases[base["id"]] = base
 	db.affixes = _section(dir + "/affixes.json", "affixes")
 	db.uniques = _section(dir + "/uniques.json", "uniques")
+	for f in _section(dir + "/flasks.json", "flasks"):
+		db.flasks[f["id"]] = f
+	var flask_data = DataLoader.load_json(dir + "/flasks.json")
+	if flask_data is Dictionary:
+		db.flask_starters = flask_data.get("starter", [])
 	for s in _section(dir + "/sets.json", "sets"):
 		db.sets[s["id"]] = s
 		for piece in s["pieces"]:

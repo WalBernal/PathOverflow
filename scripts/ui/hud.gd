@@ -11,7 +11,7 @@ const ORB_RADIUS := 78.0
 const SLOT := 60.0
 const SLOT_GAP := 8.0
 const PLATE_HEIGHT := 92.0
-const FLASK_SIZE := Vector2(60, 64)
+const FLASK_SIZE := Vector2(52, 60)
 const LIFE_COLOR := Color("b3262b")
 const MANA_COLOR := Color("2a4fb3")
 const ES_COLOR := Color("7fb8e0")
@@ -51,7 +51,7 @@ func _ready() -> void:
 	_message.anchor_right = 1.0
 	_message.offset_top = 90.0
 
-	for key in ["life", "mana", "xp", "flask_0", "flask_1", "skill_0", "skill_1", "skill_2", "skill_3", "skill_4", "skill_5"]:
+	for key in ["life", "mana", "xp", "flask_0", "flask_1", "flask_2", "flask_3", "flask_4", "skill_0", "skill_1", "skill_2", "skill_3", "skill_4", "skill_5"]:
 		var spot := Control.new()
 		spot.mouse_filter = Control.MOUSE_FILTER_STOP
 		add_child(spot)
@@ -118,7 +118,7 @@ func _slot_rect(i: int) -> Rect2:
 
 func _flask_rect(i: int) -> Rect2:
 	var plate := _plate_rect()
-	return Rect2(plate.position.x + 20.0 + i * (FLASK_SIZE.x + 10.0), plate.position.y + 8.0, FLASK_SIZE.x, FLASK_SIZE.y)
+	return Rect2(plate.position.x + 16.0 + i * (FLASK_SIZE.x + 6.0), plate.position.y + 8.0, FLASK_SIZE.x, FLASK_SIZE.y)
 
 
 func _xp_rect() -> Rect2:
@@ -131,7 +131,7 @@ func _layout() -> void:
 	_place("life", Rect2(_life_center() - Vector2(r, r), Vector2(r, r) * 2.0))
 	_place("mana", Rect2(_mana_center() - Vector2(r, r), Vector2(r, r) * 2.0))
 	_place("xp", _xp_rect().grow(3.0))
-	for i in 2:
+	for i in Inventory.FLASK_SLOTS:
 		_place("flask_%d" % i, _flask_rect(i))
 	for i in SkillController.ACTIONS.size():
 		_place("skill_%d" % i, _slot_rect(i))
@@ -166,10 +166,14 @@ func _update_tooltips() -> void:
 		player.mana, player.max_mana()]
 	_hotspots["xp"].tooltip_text = "Nivel %d · Experiencia %d / %d\nCada nivel da un punto de pasiva (P)." % [
 		character.level, character.experience, character.experience_to_next()]
-	for i in 2:
-		var f: Dictionary = Player.FLASKS[i]
-		_hotspots["flask_%d" % i].tooltip_text = "%s (tecla %d)\n%s\nCargas: %d / %d (cada uso gasta %d; matar enemigos las recarga)." % [
-			f["name"], i + 1, f["description"], player.flask_charges[i], f["max_charges"], f["cost"]]
+	for i in Inventory.FLASK_SLOTS:
+		var f := player.flask_at(i)
+		if f == null:
+			_hotspots["flask_%d" % i].tooltip_text = "Ranura de poción vacía (tecla %d).\nArrastra una poción desde el inventario (I)." % (i + 1)
+			continue
+		_hotspots["flask_%d" % i].tooltip_text = "%s (tecla %d) · %s\n%s\n%s\nCargas: %d / %d. Matar enemigos las recarga." % [
+			f.display_name(), i + 1, Flask.KIND_NAMES[f.kind()], f.def.get("description", ""), "\n".join(f.effect_lines()),
+			f.charges, f.max_charges()]
 	for i in SkillController.ACTIONS.size():
 		_hotspots["skill_%d" % i].tooltip_text = _skill_tooltip(i)
 
@@ -229,7 +233,7 @@ func _draw() -> void:
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 14, TEXT_COLOR)
 
 	# Pociones.
-	for i in 2:
+	for i in Inventory.FLASK_SLOTS:
 		_draw_flask(i, font)
 
 	# Habilidades.
@@ -251,28 +255,33 @@ func _draw_plate() -> void:
 
 func _draw_flask(i: int, font: Font) -> void:
 	var r := _flask_rect(i)
-	var f: Dictionary = Player.FLASKS[i]
-	var fill: float = player.flask_charges[i] / f["max_charges"]
+	var f := player.flask_at(i)
+	draw_rect(r, Color(0, 0, 0, 0.55))
+	if f == null:
+		draw_rect(r, TRIM.darkened(0.6), false, 1.0)
+		draw_string(font, r.position + Vector2(4.0, r.size.y - 4.0), str(i + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, MUTED)
+		return
+	var color := f.display_color()
+	var fill := f.charges / f.max_charges()
 	var usable := player.can_use_flask(i)
 	var t := Time.get_ticks_msec() / 1000.0
-	draw_rect(r, Color(0, 0, 0, 0.55))
-	if player.is_recovering(f["resource"]):
-		draw_rect(r, Color(f["color"], 0.25 + 0.1 * sin(t * 8.0)))  # efecto activo
-	# El sprite (taza / lata), apagado si no hay cargas suficientes.
-	var icon_rect := Rect2(r.position + Vector2(2, 4), Vector2(r.size.x - 12.0, r.size.y - 8.0))
-	ItemIcons.draw(self, icon_rect, f["icon"], Color.WHITE if usable else Color(0.45, 0.45, 0.5), false)
+	if player.is_flask_active(i):
+		draw_rect(r, Color(color, 0.25 + 0.1 * sin(t * 8.0)))  # efecto activo
+	# El sprite (taza, lata, botella), apagado si no hay cargas suficientes.
+	var icon_rect := Rect2(r.position + Vector2(1, 3), Vector2(r.size.x - 10.0, r.size.y - 8.0))
+	ItemIcons.draw(self, icon_rect, f.icon(), Color.WHITE if usable else Color(0.45, 0.45, 0.5), false)
 	# Barra de cargas a la derecha, con una marca por cada uso.
-	var bar := Rect2(r.end.x - 8.0, r.position.y + 4.0, 5.0, r.size.y - 8.0)
+	var bar := Rect2(r.end.x - 7.0, r.position.y + 4.0, 4.0, r.size.y - 8.0)
 	draw_rect(bar, Color(0, 0, 0, 0.8))
-	draw_rect(Rect2(bar.position + Vector2(0, bar.size.y * (1.0 - fill)), Vector2(bar.size.x, bar.size.y * fill)), f["color"])
-	var uses := int(f["max_charges"] / f["cost"])
+	draw_rect(Rect2(bar.position + Vector2(0, bar.size.y * (1.0 - fill)), Vector2(bar.size.x, bar.size.y * fill)), color)
+	var uses := int(f.max_charges() / f.cost())
 	for k in range(1, uses):
 		var y := bar.position.y + bar.size.y * k / uses
 		draw_line(Vector2(bar.position.x, y), Vector2(bar.end.x, y), Color(0, 0, 0, 0.9), 1.0)
-	# Vapor del café o burbujas de la lata cuando está lista.
+	# Vapor del café o burbujas de las bebidas cuando está lista.
 	if usable:
 		var top := icon_rect.position + Vector2(icon_rect.size.x * 0.45, 4.0)
-		if f["resource"] == "life":
+		if f.kind() == "life":
 			for k in 2:
 				var phase := fmod(t * 0.8 + k * 0.5, 1.0)
 				var p0 := top + Vector2(k * 8.0 - 4.0 + sin(t * 3.0 + k) * 2.0, -phase * 10.0)
@@ -280,12 +289,11 @@ func _draw_flask(i: int, font: Font) -> void:
 		else:
 			for k in 3:
 				var phase := fmod(t * 0.7 + k * 0.33, 1.0)
-				draw_circle(top + Vector2(k * 5.0 - 5.0, 18.0 - phase * 22.0), 1.5, Color(0.8, 0.9, 1.0, 0.6 * (1.0 - phase)))
+				draw_circle(top + Vector2(k * 5.0 - 5.0, 18.0 - phase * 22.0), 1.5, Color(color.lightened(0.5), 0.6 * (1.0 - phase)))
 	draw_rect(r, TRIM if usable else TRIM.darkened(0.5), false, 1.5)
-	draw_string(font, r.position + Vector2(4.0, r.size.y - 4.0), str(i + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, TEXT_COLOR)
-	draw_string(font, r.position + Vector2(0.0, r.size.y + 12.0), "x%d" % floori(player.flask_charges[i] / f["cost"]),
-		HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 11, MUTED)
-
+	draw_string(font, r.position + Vector2(3.0, r.size.y - 3.0), str(i + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, TEXT_COLOR)
+	draw_string(font, r.position + Vector2(0.0, r.size.y + 12.0), "%d/%d" % [f.charges, f.max_charges()],
+		HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 10, MUTED)
 
 func _draw_skill_slot(i: int, font: Font) -> void:
 	var r := _slot_rect(i)

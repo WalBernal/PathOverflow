@@ -13,7 +13,7 @@ Por ahora es solo para un jugador en local, pero la lógica está escrita para p
 |---|---|
 | WASD / mantener click izq. | Mover |
 | Click der. · Espacio · Q · E · R · F | Las 6 habilidades de la barra |
-| 1 / 2 | Café (vida) / Bebida energética (maná) |
+| 1 - 5 | Pociones del cinturón (cafés, bebidas y de utilidad) |
 | Click en un objeto o NPC | Ir a recogerlo / hablar |
 | I | Inventario: arrastra para mover y equipar; click equipa o quita |
 | K | Habilidades: arrastra placas a la barra y RAM a sus ranuras |
@@ -73,6 +73,23 @@ Se definen en `data/skills/skills.json` y `data/skills/ram_modules.json`. Cada c
 | Bomba Lógica | Teemo R | Trampa que explota cuando se acerca un enemigo (hasta 3 a la vez) |
 | Excepción en Cadena | Brand R | Rayo que salta de enemigo en enemigo |
 
+| Proceso Hijo | Yorick / Tibbers | Invoca 2 esbirros que pelean solos un rato (escalan con daño de esbirros) |
+| Fuga de Memoria | Singed Q / Cassiopeia W | Charco de caos que hace daño degenerativo por segundo |
+
+**Etiquetas**: cada placa base tiene varias (`SkillTags`): ataque o hechizo, forma (cuerpo a cuerpo, proyectil, área, cadena), mecánica (duración, trampa, mina, tótem, esbirro, movimiento, degenerativo) y tipo de daño (físico, fuego, frío, rayo, caos, elemental). Se ven en el tooltip con su color; las RAM las usan para saber con qué funcionan y los modificadores pueden depender de ellas.
+
+**RAM nuevas**:
+
+| Módulo RAM | Gen. | Efecto |
+|---|---|---|
+| Bypass de Firewall | DDR4 | +3 perforación y proyectiles más rápidos |
+| Propagación de Excepciones | DDR5 | +2 encadenamientos; en proyectiles, rebotan hacia otro enemigo al impactar |
+| Disparador de Trampa | DDR4 | La habilidad se lanza como trampa y se ejecuta cuando un enemigo se acerca (máx. 3) |
+| Detonador de Mina | DDR5 | Se entierra como mina casi invisible: tarda en armarse, más daño (máx. 5) |
+| Servidor Torreta | DDR3 | Una torreta usa la habilidad sola contra el enemigo más cercano durante 8 s |
+
+Trampa, mina y torreta añaden su etiqueta a la habilidad y no funcionan con movimiento, esbirros ni con otra trampa/mina/torreta (solo cuenta un módulo de despliegue).
+
 Stats nuevas para ellas: **Recuperación de enfriamientos** (acorta los enfriamientos) y **Duración de habilidades** (giros, trampas y aturdimientos).
 
 ## Acto I: El Último Commit
@@ -82,7 +99,7 @@ El acto está definido en `data/act1.json` y lo construye `Zone` (`scripts/game/
 | Zona | Nivel | Waypoint | Notas |
 |---|---|---|---|
 | El Sandbox | 1 | | Tutorial: pocos bugs, más botín y B.O.B., el bot de onboarding |
-| Campamento | 1 | ✔ | Zona segura, punto de reaparición; Ada, Kevin y Root |
+| Campamento | 1 | ✔ | Zona segura, punto de reaparición; Aida, Mario y Rafa |
 | El Bosque de Cables | 2 | | Iris, la becaria perdida |
 | Las Ruinas del Monolito | 4 | ✔ | |
 | El Pantano de Memory Leaks | 6 | | Tomás, el último QA |
@@ -96,9 +113,9 @@ El acto está definido en `data/act1.json` y lo construye `Zone` (`scripts/game/
 - **Salidas** en los bordes ("← Campamento", "Las Ruinas →"): basta con caminar hasta ellas.
 - **Waypoints**: se descubren al tocarlos y se guardan por personaje (`flags.waypoints`). Al hacer click se abre la lista del acto.
 - **Jefe**: al derrotarlo se completa el acto (bandera `act1_complete`), cae botín especial (siempre en suelo alcanzable) y se abre un portal al campamento.
-- **Después del jefe**: Ada te manda a hablar con Root, que cuenta que el reinicio falló con un *kernel panic* (algo llamado «init», el PID 1, vive en el Kernel) y abre el **Portal al Kernel** en el campamento. Al terminar la misión principal empieza la del Acto II (*Kernel Panic*); el portal responde con un 503 hasta que exista el Acto II.
-- **NPCs y lore** en `data/npcs.json`: diálogos con opciones, condiciones (`requires_flag`) y acciones (regalos que se dan una sola vez). Cuentan la historia del administrador que hizo `push --force` "por el Monolito".
-- **Tutorial** (`data/tutorial.json`, versión 2): 12 pasos. Empieza en el Sandbox (moverse, atacar, matar, recoger, equipar, pociones, pasivas) y sigue en el campamento (Ada, RAM, Kevin, salir al Bosque). Los personajes con el tutorial antiguo continúan donde corresponde.
+- **Después del jefe**: Aida te manda a hablar con Rafa, que cuenta que el reinicio falló con un *kernel panic* (algo llamado «init», el PID 1, vive en el Kernel) y abre el **Portal al Kernel** en el campamento. Al terminar la misión principal empieza la del Acto II (*Kernel Panic*); el portal responde con un 503 hasta que exista el Acto II.
+- **NPCs y lore** en `data/npcs.json` (en el campamento: Aida la Senior, Mario el Becario y Rafa el SysAdmin, que escribe con muchos puntos suspensivos...; sus ids internos siguen siendo `ada`, `kevin` y `root` para no romper los guardados): diálogos con opciones, condiciones (`requires_flag`) y acciones (regalos que se dan una sola vez). Cuentan la historia del administrador que hizo `push --force` "por el Monolito".
+- **Tutorial** (`data/tutorial.json`, versión 2): 12 pasos. Empieza en el Sandbox (moverse, atacar, matar, recoger, equipar, pociones, pasivas) y sigue en el campamento (Aida, RAM, Mario, salir al Bosque). Los personajes con el tutorial antiguo continúan donde corresponde.
 
 ## Misiones
 
@@ -107,17 +124,17 @@ El **registro de misiones** está debajo del minimapa (L para plegarlo): la prin
 
 | Misión | Quién | Qué |
 |---|---|---|
-| El Último Commit (principal) | — | Recorrer el acto, derrotar al Arquitecto, hablar con Ada y con Root |
+| El Último Commit (principal) | — | Recorrer el acto, derrotar al Arquitecto, hablar con Aida y con Rafa |
 | Kernel Panic (principal) | — | Empieza al acabar la anterior; preparada para el Acto II |
 | Bichos en el cableado | Iris (Bosque) | Eliminar 25 enemigos en el Bosque de Cables |
 | Reporte de incidencias | Tomás (Pantano) | Eliminar 3 enemigos especiales o élite en el Pantano |
 | La cinta de backup | Fantasma del DBA (Granja) | Recoger la cinta en las Catacumbas del Legacy |
-| Granos de café | Kevin (Campamento) | Eliminar 40 enemigos en cualquier zona |
+| Granos de café | Mario (Campamento) | Eliminar 40 enemigos en cualquier zona |
 
 - Tipos de paso: hablar, llegar a una zona, bandera, eliminar (con zona y rareza mínima), recoger un objeto de misión y entregar.
 - Las misiones se aceptan y se entregan en los diálogos (acciones `start_quest` y `quest_advance`). Sobre los NPCs aparece un **!** amarillo si ofrecen misión y un **?** verde si tienes algo que entregarles.
 - Recompensas: experiencia y objetos (`give_random` con rareza, RAM que encaja, placas…).
-- Los personajes de antes se ponen al día solos: si ya mataron al jefe, la principal salta a "cuéntaselo a Ada".
+- Los personajes de antes se ponen al día solos: si ya mataron al jefe, la principal salta a "cuéntaselo a Aida".
 
 ## Diálogos con voz
 
@@ -137,6 +154,18 @@ El **registro de misiones** está debajo del minimapa (L para plegarlo): la prin
 - **Minimapa** (arriba a la derecha): el suelo de la zona, obstáculos, salidas, waypoint, NPCs, enemigos por rareza y botín valioso, con flechas hacia las salidas que quedan fuera de vista. Debajo, el nombre y nivel de la zona. Se oculta mientras el inventario está abierto.
 - **Hoja de personaje** (C): retrato animado de pecho hacia arriba que respira, parpadea, te sigue con la mirada, toma café, piensa (con spinner de carga), bosteza, se pone gafas de sol si su DPS es alto y suda con poca vida. Incluye atributos, defensas con su efecto real (reducción de la armadura, probabilidad de esquivar), resistencias con comentarios, ofensiva de la habilidad principal, muertes, enemigos eliminados y un estado de ánimo calculado.
 - **Iconos de objetos**: atlas `assets/sprites/items/items.png` generado con `tools/generate_item_icons.gd` (un icono por base, placas base, RAM por generación y pociones). Para usar arte propio, sustituye el PNG respetando la cuadrícula (mapa en `data/item_icons.json`).
+
+## Pociones
+
+Las pociones son **objetos**: caen como botín (las de nivel cercano al de la zona son más probables) y se llevan en el **cinturón de pociones** (5 ranuras, teclas 1-5; en el inventario, I). Cada una tiene **cargas**: cada uso gasta unas (por ejemplo, 6 de 30) y matar enemigos las recarga (más con élites y jefes). Mario las rellena todas.
+
+| Tipo | Pociones (nivel) |
+|---|---|
+| Vida (cafés) | Café de máquina (1), Americano (5), Espresso (10, rapidísimo), Latte (15), Capuchino (20), Cold Brew (26, lento pero enorme), Café de moka (33), Café de especialidad (40) |
+| Maná (bebidas) | Pepsy (1), Coca Cero (6), Vive 101 (11), Monstruo Energy (17), Toro Rojo (23), Refresco de 2 litros (30), Yerba Turbo (38) |
+| Utilidad (efecto temporal) | Agua con gas (movimiento), Té matcha (evasión), Batido de proteínas (armadura y daño físico), Infusión de jengibre (resistencias), Bebida isotónica (velocidad de ataque y lanzamiento), Chocolate caliente (regeneración), Kombucha (resistencia al caos y crítico) |
+
+Las bebidas son parodias de marcas reales (nombres y latas inventados). Cada poción tiene su sprite. Se definen en `data/items/flasks.json`; los personajes antiguos reciben el Café de máquina y la Pepsy al cargar.
 
 ## Clases
 

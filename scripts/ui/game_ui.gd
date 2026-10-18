@@ -165,7 +165,7 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	loot.pickup_failed.connect(hud.flash)
 	loot.picked_up.connect(func(_item: Item) -> void: tutorial.notify("picked_up"))
 	skills.skill_used.connect(func(_i: int) -> void: tutorial.notify("skill_used"))
-	skills.not_enough_mana.connect(func() -> void: hud.flash("Sin maná. Bebe algo (tecla 2) o espera, como con el compilador."))
+	skills.not_enough_mana.connect(func() -> void: hud.flash("Sin maná. Bebe un refresco (teclas 1-5) o espera, como con el compilador."))
 	player.flask_used.connect(func(_i: int) -> void: tutorial.notify("flask_used"))
 
 
@@ -207,7 +207,7 @@ func _build_act_banner() -> PanelContainer:
 	title.name = "Title"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title)
-	var text := UiStyle.label("El Arquitecto del Monolito ha sido terminado (kill -9).\nEl Servidor Principal sigue caído, pero ahora es culpa de otro.\nSe ha abierto un portal al campamento: ve a contárselo a Ada.", 16)
+	var text := UiStyle.label("El Arquitecto del Monolito ha sido terminado (kill -9).\nEl Servidor Principal sigue caído, pero ahora es culpa de otro.\nSe ha abierto un portal al campamento: ve a contárselo a Aida.", 16)
 	text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(text)
 	return panel
