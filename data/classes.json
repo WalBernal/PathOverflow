@@ -416,6 +416,137 @@
       "color": "5cb85c"
     },
     {
+      "id": "hacker",
+      "name": "Hacker",
+      "starter_weapon": "daga_de_root",
+      "starter_skills": [
+        "rollback",
+        "excepcion_en_cadena"
+      ],
+      "description": "Entra donde no debe y sale antes de que salten las alertas. Su contraseña es «contraseña».",
+      "base_attributes": {
+        "strength": 14,
+        "dexterity": 23,
+        "intelligence": 23
+      },
+      "ascendancies": [
+        {
+          "id": "asesina_sesiones",
+          "name": "Asesina de Sesiones",
+          "description": "Roba cookies. No de las de chocolate.",
+          "passives": [
+            {
+              "name": "Token robado",
+              "mods": [
+                {
+                  "stat": "crit_chance",
+                  "type": "increased",
+                  "value": 40
+                }
+              ]
+            },
+            {
+              "name": "Sesión persistente",
+              "mods": [
+                {
+                  "stat": "crit_multiplier",
+                  "type": "flat",
+                  "value": 25
+                }
+              ]
+            },
+            {
+              "name": "Sin rastro en los logs",
+              "mods": [
+                {
+                  "stat": "evasion",
+                  "type": "increased",
+                  "value": 30
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ingeniera_social",
+          "name": "Ingeniera Social",
+          "description": "No hackea sistemas: hackea personas. Son más fáciles.",
+          "passives": [
+            {
+              "name": "Phishing elemental",
+              "mods": [
+                {
+                  "stat": "elemental_damage",
+                  "type": "more",
+                  "value": 15
+                }
+              ]
+            },
+            {
+              "name": "Llamada del soporte técnico",
+              "mods": [
+                {
+                  "stat": "cast_speed",
+                  "type": "increased",
+                  "value": 15
+                }
+              ]
+            },
+            {
+              "name": "Pretexto creíble",
+              "mods": [
+                {
+                  "stat": "energy_shield",
+                  "type": "increased",
+                  "value": 25
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "saboteadora",
+          "name": "Saboteadora de Dependencias",
+          "description": "Publica un paquete con un typo en el nombre y espera.",
+          "passives": [
+            {
+              "name": "Supply chain",
+              "mods": [
+                {
+                  "stat": "chaos_damage",
+                  "type": "more",
+                  "value": 25
+                }
+              ]
+            },
+            {
+              "name": "Dependencia transitiva",
+              "mods": [
+                {
+                  "stat": "area_of_effect",
+                  "type": "increased",
+                  "value": 20
+                }
+              ]
+            },
+            {
+              "name": "Versión fijada",
+              "mods": [
+                {
+                  "stat": "skill_duration",
+                  "type": "increased",
+                  "value": 30
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "playstyle": "Cadenas, trampas y armas que vuelven. Golpes críticos con daga y hechizos que saltan de enemigo en enemigo.",
+      "difficulty": 2,
+      "color": "2fd0a0"
+    },
+    {
       "id": "hechicero",
       "name": "Hechicero",
       "starter_weapon": "maza_de_depuracion",
@@ -704,6 +835,167 @@
       "playstyle": "Hechizos de área con armadura. Quema todo lo que no cumple el linter. Que es todo.",
       "difficulty": 2,
       "color": "b04ad9"
+    },
+    {
+      "id": "full_stack",
+      "name": "Full Stack",
+      "starter_weapon": "teclado_mecanico",
+      "starter_skills": [
+        "bucle_infinito",
+        "flamewar"
+      ],
+      "description": "Sabe un poco de todo y nada del todo. Empieza en el centro del árbol, como su ego.",
+      "base_attributes": {
+        "strength": 20,
+        "dexterity": 20,
+        "intelligence": 20
+      },
+      "ascendancies": [
+        {
+          "id": "arquitecto_soluciones",
+          "name": "Arquitecto de Soluciones",
+          "description": "Dibuja cajas y flechas. Otros escriben el código.",
+          "passives": [
+            {
+              "name": "Diagrama de todo",
+              "mods": [
+                {
+                  "stat": "strength",
+                  "type": "flat",
+                  "value": 15
+                },
+                {
+                  "stat": "dexterity",
+                  "type": "flat",
+                  "value": 15
+                },
+                {
+                  "stat": "intelligence",
+                  "type": "flat",
+                  "value": 15
+                }
+              ]
+            },
+            {
+              "name": "Patrón de diseño",
+              "mods": [
+                {
+                  "stat": "damage",
+                  "type": "increased",
+                  "value": 20
+                }
+              ]
+            },
+            {
+              "name": "Alta disponibilidad",
+              "mods": [
+                {
+                  "stat": "life",
+                  "type": "increased",
+                  "value": 12
+                },
+                {
+                  "stat": "energy_shield",
+                  "type": "increased",
+                  "value": 12
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "devops_integral",
+          "name": "DevOps Integral",
+          "description": "Si se cae, lo levanta. Si no se cae, lo tira para probar.",
+          "passives": [
+            {
+              "name": "Integración continua",
+              "mods": [
+                {
+                  "stat": "cooldown_recovery",
+                  "type": "increased",
+                  "value": 25
+                }
+              ]
+            },
+            {
+              "name": "Autoescalado",
+              "mods": [
+                {
+                  "stat": "attack_speed",
+                  "type": "increased",
+                  "value": 10
+                },
+                {
+                  "stat": "cast_speed",
+                  "type": "increased",
+                  "value": 10
+                }
+              ]
+            },
+            {
+              "name": "Monitorización 24/7",
+              "mods": [
+                {
+                  "stat": "life_regen",
+                  "type": "flat",
+                  "value": 15
+                },
+                {
+                  "stat": "mana_regen",
+                  "type": "increased",
+                  "value": 30
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "desarrollador_10x",
+          "name": "Desarrollador 10x",
+          "description": "Diez veces más código. Diez veces más bugs.",
+          "passives": [
+            {
+              "name": "Commits a las 4 AM",
+              "mods": [
+                {
+                  "stat": "damage",
+                  "type": "more",
+                  "value": 15
+                }
+              ]
+            },
+            {
+              "name": "Sin documentación",
+              "mods": [
+                {
+                  "stat": "skill_duration",
+                  "type": "increased",
+                  "value": 25
+                },
+                {
+                  "stat": "area_of_effect",
+                  "type": "increased",
+                  "value": 15
+                }
+              ]
+            },
+            {
+              "name": "Café intravenoso",
+              "mods": [
+                {
+                  "stat": "movement_speed",
+                  "type": "increased",
+                  "value": 10
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "playstyle": "Híbrido de verdad: mezcla ataques y hechizos, empieza en el centro y puede ir hacia cualquier rama del árbol.",
+      "difficulty": 3,
+      "color": "e8e8e8"
     }
   ]
 }

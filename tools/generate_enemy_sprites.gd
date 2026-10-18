@@ -20,7 +20,7 @@ var oy := 0
 
 
 func _initialize() -> void:
-	var rows: Array[Callable] = [_bug, _zombie_process, _memory_leak, _worm, _daemon]
+	var rows: Array[Callable] = [_bug, _zombie_process, _memory_leak, _worm, _daemon, _spam_bot, _thread, _node_modules, _troll]
 	img = Image.create_empty(S * FRAMES, S * rows.size(), false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
 	for row in rows.size():
@@ -175,3 +175,75 @@ func _daemon(f: int) -> void:
 	_px(15, 8 + bob, Color("ffcc00"))
 	_px(18, 8 + bob, Color("ffcc00"))
 	_line(10, 20, 5, 24 + bob, skin.darkened(0.2))  # cola
+
+
+## Bot de spam: sobre volador con alas de papel y una antena; dispara correos.
+func _spam_bot(f: int) -> void:
+	var bob: int = [0, -1, -2, -1][f]
+	var paper := Color("e8e4d8")
+	var flap := 1 if f % 2 == 0 else -2
+	_line(9, 15 + bob, 3, 10 + bob + flap, paper.darkened(0.15))   # ala izquierda
+	_line(9, 16 + bob, 4, 13 + bob + flap, paper.darkened(0.15))
+	_rect(8, 12 + bob, 24, 23 + bob, paper)
+	_line(8, 12 + bob, 16, 18 + bob, paper.darkened(0.3))        # solapa
+	_line(24, 12 + bob, 16, 18 + bob, paper.darkened(0.3))
+	_ellipse(16, 18 + bob, 2, 2, Color("d03030"))                 # sello
+	_line(16, 12 + bob, 16, 7 + bob, Color("5a5a62"))             # antena
+	_px(16, 6 + bob, Color("ffd84a") if f < 2 else Color("ff4040"))
+	_px(12, 20 + bob, Color("1a1a1a"))
+	_px(20, 20 + bob, Color("1a1a1a"))
+
+
+## Hilo desbocado: bobina de hilo con patas rápidas y una aguja delante.
+func _thread(f: int) -> void:
+	var legs: Array = [[-3, 3], [0, 0], [3, -3], [0, 0]][f]
+	_line(13, 22, 11 + legs[0], 28, Color("1a1a1a"))
+	_line(19, 22, 21 + legs[1], 28, Color("1a1a1a"))
+	_rect(10, 10, 22, 23, Color("8a5a3a"))                        # carrete
+	_rect(11, 12, 21, 21, Color("4b8bd6"))                        # hilo enrollado
+	for y in [13, 15, 17, 19]:
+		_line(11, y, 21, y + 1, Color("6fa8f0"))
+	_rect(9, 9, 23, 10, Color("6a4028"))
+	_rect(9, 23, 23, 24, Color("6a4028"))
+	_line(23, 16, 30, 15, Color("c8c8d0"))                        # aguja
+	_px(18, 14, Color.WHITE)
+	_px(20, 14, Color.WHITE)
+	_line(10, 17, 4 - f, 19 + (f % 2), Color("6fa8f0"))           # hilo suelto
+
+
+## node_modules: caja de cartón gigante, abultada, llena de dependencias.
+func _node_modules(f: int) -> void:
+	var squash: int = [0, 1, 0, -1][f]
+	var box := Color("9a7448")
+	_rect(4, 9 + squash, 27, 28, box)
+	_rect(4, 9 + squash, 27, 11 + squash, box.lightened(0.15))
+	_line(4, 9 + squash, 0, 5 + squash, box.lightened(0.1))      # solapas abiertas
+	_line(27, 9 + squash, 31, 5 + squash, box.lightened(0.1))
+	# Dependencias asomando por arriba (cajitas de colores).
+	_rect(8, 4 + squash, 12, 8 + squash, Color("5cb85c"))
+	_rect(14, 2 + squash, 19, 8 + squash, Color("c84b4b"))
+	_rect(21, 5 + squash, 25, 8 + squash, Color("4b8bd6"))
+	_rect(9, 15, 22, 17, box.darkened(0.35))                      # etiqueta
+	_px(12, 21, Color("ffcc00"))
+	_px(19, 21, Color("ffcc00"))
+	_line(11, 24, 20, 24, box.darkened(0.5))
+
+
+## Troll de foro: criatura verde con un teclado en llamas.
+func _troll(f: int) -> void:
+	var stride: int = [-2, 0, 2, 0][f]
+	var skin := Color("5f8a3a")
+	_rect(11 + stride, 22, 13 + stride, 28, skin.darkened(0.35))
+	_rect(18 - stride, 22, 20 - stride, 28, skin.darkened(0.35))
+	_ellipse(16, 17, 8, 7, Color("6a3a7a"))                       # sudadera
+	_ellipse(16, 8, 6, 5.5, skin)
+	_px(14, 7, Color("ffcc00"))
+	_px(18, 7, Color("ffcc00"))
+	_line(13, 11, 19, 11, Color("1a1a1a"))                        # sonrisa trol
+	_px(12, 10, Color("1a1a1a"))
+	_px(20, 10, Color("1a1a1a"))
+	_rect(21, 16, 29, 19, Color("2a2a30"))                        # teclado
+	var flame := [Color("e0652f"), Color("f0a030"), Color("ffe070")]
+	for k in 3:
+		_px(23 + k * 2, 15 - (f + k) % 3, flame[(f + k) % 3])
+		_px(23 + k * 2, 14 - (f + k) % 2, flame[k])

@@ -42,6 +42,9 @@ func _initialize() -> void:
 	_test_save_dir_migration()
 	_test_quests()
 	_test_loot_placement()
+	_test_tree_layout()
+	_test_new_skills()
+	_test_enemy_attacks()
 	_test_walk_animation()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
@@ -110,7 +113,7 @@ func _test_data_integrity() -> void:
 	for id in _tree.nodes:
 		for m in _tree.get_node_data(id).mods:
 			_check(Stat.exists(m.stat), "stat desconocido '%s' en nodo %d" % [m.stat, id])
-	_check(_classes.size() == 5, "deben existir 5 clases")
+	_check(_classes.size() == 7, "deben existir 7 clases")
 	for c in _classes:
 		_check(_tree.get_start_node_for_class(StringName(c["id"])) != -1, "inicio de %s" % c["id"])
 		_check(c["ascendancies"].size() == 3, "%s debe tener 3 ascendencias" % c["id"])
@@ -383,7 +386,7 @@ func _test_appearance() -> void:
 func _test_skill_data() -> void:
 	var skills := _db.skills
 	_check(skills.skills.size() >= 6 and skills.rams.size() >= 8, "carga de habilidades y RAM")
-	var kinds := ["melee_area", "nova", "projectile", "ground_aoe", "blink"]
+	var kinds := ["melee_area", "nova", "projectile", "ground_aoe", "blink", "dash", "cone", "beam", "boomerang", "spin", "trap", "chain"]
 	for def in skills.skills.values():
 		_check(kinds.has(def["kind"]), "tipo de habilidad desconocido en %s" % def["id"])
 		_check(def.has("attack") or def.has("spell"), "%s necesita 'attack' o 'spell'" % def["id"])
@@ -698,6 +701,102 @@ func _test_loot_placement() -> void:
 	_check(not overlaps, "las etiquetas del botín no se tapan")
 	loot.free()
 	zone.free()
+
+
+func _test_tree_layout() -> void:
+	var starts := {}
+	for id in _tree.nodes:
+		if _tree.nodes[id].kind == PassiveNode.Kind.CLASS_START:
+			starts[id] = _tree.nodes[id]
+	_check(starts.size() == 7, "7 inicios de clase")
+	var center := _tree.get_start_node_for_class(&"full_stack")
+	_check(_tree.nodes[center].position.length() < 1.0, "el Full Stack empieza en el centro")
+	for sid in starts:
+		var s: PassiveNode = starts[sid]
+		# El inicio solo se conecta hacia delante (hacia fuera del centro).
+		if sid != center:
+			for nb in _tree.neighbors(sid):
+				var out: Vector2 = _tree.nodes[nb].position - s.position
+				_check(out.dot(s.position) > 0.0, "%s: conexión por detrás del inicio" % s.title)
+		# Ninguna arista ajena pasa junto al inicio.
+		for a in _tree.nodes:
+			for b in _tree.neighbors(a):
+				if a < b and a != sid and b != sid:
+					var p := Geometry2D.get_closest_point_to_segment(s.position, _tree.nodes[a].position, _tree.nodes[b].position)
+					_check(p.distance_to(s.position) > 50.0, "%s: arista %d-%d pasa por detrás" % [s.title, a, b])
+	# Desde las clases nuevas se llega a todo.
+	for class_id in [&"hacker", &"full_stack"]:
+		var alloc := PassiveAllocation.new(_tree, _tree.get_start_node_for_class(class_id))
+		var unreachable := 0
+		for id in _tree.nodes:
+			if not starts.has(id) and alloc.find_path(id).is_empty():
+				unreachable += 1
+		_check(unreachable == 0, "%s: %d nodos inalcanzables" % [class_id, unreachable])
+	_check(_tree.nodes.size() >= 700, "más pasivas (%d)" % _tree.nodes.size())
+
+
+func _test_new_skills() -> void:
+	var c := _new_character()
+	var gen := ItemGenerator.new(_db, 5)
+	var spin := SkillCalc.compute(gen.generate_motherboard(1, "bucle_infinito"), c)
+	_check(spin["duration"] > 0.0 and spin["tick"] > 0.0, "el giro tiene duración y ticks")
+	_check(spin["dps"] > (spin["min_damage"] + spin["max_damage"]) / 2.0, "el giro cuenta varios golpes")
+	var deadlock_board := gen.generate_motherboard(1, "deadlock")
+	var before := SkillCalc.compute(deadlock_board, c)
+	_check(before["stun"] > 1.0 and before["cooldown"] > 0.0, "Deadlock aturde y tiene enfriamiento")
+	c.stats.add_modifier(Modifier.new(Stat.SKILL_DURATION, Modifier.Type.INCREASED, 50.0))
+	c.stats.add_modifier(Modifier.new(Stat.COOLDOWN_RECOVERY, Modifier.Type.INCREASED, 100.0))
+	var after := SkillCalc.compute(deadlock_board, c)
+	_check(is_equal_approx(after["stun"], before["stun"] * 1.5), "la duración alarga el aturdimiento")
+	_check(is_equal_approx(after["cooldown"], before["cooldown"] / 2.0), "la recuperación acorta el enfriamiento")
+	for id in ["deploy_continuo", "flamewar", "rayo_produccion", "rollback", "bomba_logica", "excepcion_en_cadena"]:
+		var p := SkillCalc.compute(gen.generate_motherboard(1, id), c)
+		_check(p["max_damage"] > 0.0, "%s hace daño" % id)
+	_check(SkillCalc.compute(gen.generate_motherboard(1, "rayo_produccion"), c)["width"] > 0.0, "el rayo tiene ancho")
+	for cdef in _classes:
+		for s in cdef["starter_skills"]:
+			_check(_db.skills.skills.has(s), "%s: habilidad inicial %s" % [cdef["id"], s])
+		_check(_db.bases.has(cdef["starter_weapon"]), "%s: arma inicial" % cdef["id"])
+
+
+func _test_enemy_attacks() -> void:
+	var em := EnemyManager.new()
+	var kinds := ["melee", "ranged", "charge", "slam", "cone"]
+	var rows := {}
+	for t in EnemyManager.enemy_types():
+		_check(kinds.has(t.get("attack", {}).get("kind", "melee")), "ataque desconocido en %s" % t["id"])
+		_check(not rows.has(t["sprite_row"]), "fila de sprite repetida en %s" % t["id"])
+		rows[t["sprite_row"]] = true
+	_check(EnemyManager.enemy_types().size() >= 9, "nueve tipos de enemigo")
+	# Formas de golpe del jugador.
+	em.spawn(Vector2(100, 0), Rarity.Enemy.NORMAL)     # delante
+	em.spawn(Vector2(-100, 0), Rarity.Enemy.NORMAL)    # detrás
+	em.spawn(Vector2(0, 300), Rarity.Enemy.NORMAL)     # lejos
+	_check(em.hit_in_cone(Vector2.ZERO, Vector2.RIGHT, 150.0, 0.5, 1.0, 1.0, 0.0, 150.0) == 1, "el cono solo golpea delante")
+	_check(em.hit_in_segment(Vector2(-200, 0), Vector2(200, 0), 20.0, 1.0, 1.0, 0.0, 150.0).size() == 2, "el segmento golpea a los de la línea")
+	em.stun_in_radius(Vector2.ZERO, 150.0, 2.0)
+	_check(em.stuns[0] > 0.0 and em.stuns[1] > 0.0 and em.stuns[2] == 0.0, "aturdimiento en área")
+	var far := em.nearest_index(Vector2(0, 280), 100.0)
+	_check(far == 2, "el más cercano para las cadenas")
+	em.spawn(Vector2(500, 500), Rarity.Enemy.UNIQUE, -1, "Jefe", 1.0, [{"kind": "projectile_nova", "count": 10}])
+	var boss := em.count() - 1
+	em.stun_index(boss, 2.0)
+	_check(is_equal_approx(em.stuns[boss], 1.0), "los únicos se aturden la mitad")
+	em._resolve_ability(boss, {"kind": "projectile_nova", "count": 10}, Vector2.ZERO)
+	_check(em.projectiles.size() == 10, "onda de proyectiles del jefe")
+	em._resolve_ability(boss, {"kind": "ground_marks", "count": 4}, Vector2.ZERO)
+	_check(em.hazards.size() == 4, "marcas en el suelo del jefe")
+	em.clear_all()
+	_check(em.projectiles.is_empty() and em.hazards.is_empty() and em.abilities.is_empty(), "limpieza completa")
+	em.free()
+	# El jefe del acto: menos vida y dos habilidades.
+	var act: Dictionary = DataLoader.load_json("res://data/act1.json")
+	for z in act["zones"]:
+		if z.has("boss"):
+			_check(float(z["boss"]["life_mult"]) < 4.0, "el jefe tiene menos vida")
+			_check(z["boss"].get("abilities", []).size() >= 2, "el jefe tiene habilidades especiales")
+			for a in z["boss"]["abilities"]:
+				_check(a["kind"] in ["projectile_nova", "ground_marks", "summon"], "habilidad de jefe desconocida")
 
 
 func _test_walk_animation() -> void:

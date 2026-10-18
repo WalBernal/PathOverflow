@@ -129,13 +129,13 @@ func _build() -> void:
 		b.button_group = group
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.text = "   " + c["name"]
-		b.custom_minimum_size.y = 40
+		b.custom_minimum_size.y = 34
 		b.pressed.connect(_select_class.bind(i))
 		var stripe := ColorRect.new()
 		stripe.color = Color(c.get("color", "d9a441"))
 		stripe.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		stripe.position = Vector2(4, 6)
-		stripe.size = Vector2(6, 28)
+		stripe.size = Vector2(6, 22)
 		b.add_child(stripe)
 		class_box.add_child(b)
 		_class_buttons.append(b)

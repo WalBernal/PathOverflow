@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_doc": "Acto I. Coordenadas en píxeles dentro de cada zona (0,0 = esquina superior izquierda). entries: puntos de llegada (los usan las salidas de otras zonas y el waypoint). exits: al pisarlas se viaja a target/entry. enemies.packs: grupos repartidos por la zona (lejos de entradas, salidas, NPCs y waypoint); se regeneran al volver a entrar. obstacles: cantidad y tipos (se colocan con una semilla fija por zona, sin tapar el camino entre entradas y salidas). style: aspecto del suelo y de los obstáculos. features: accidentes del terreno grandes (lagos, colinas, simas...). quest_items: objetos de misión (aparecen al aceptar su misión). Salidas con requires_flag: solo aparecen con esa bandera; portal: se dibuja como portal; target vacío + message: aún no lleva a ningún sitio.",
+  "_doc": "Acto I. Coordenadas en píxeles dentro de cada zona (0,0 = esquina superior izquierda). entries: puntos de llegada (los usan las salidas de otras zonas y el waypoint). exits: al pisarlas se viaja a target/entry. enemies.packs: grupos repartidos por la zona (lejos de entradas, salidas, NPCs y waypoint); se regeneran al volver a entrar. obstacles: cantidad y tipos (se colocan con una semilla fija por zona, sin tapar el camino entre entradas y salidas). style: aspecto del suelo y de los obstáculos. features: accidentes del terreno grandes (lagos, colinas, simas...). quest_items: objetos de misión (aparecen al aceptar su misión). Salidas con requires_flag: solo aparecen con esa bandera; portal: se dibuja como portal; target vacío + message: aún no lleva a ningún sitio. boss.abilities: habilidades especiales del jefe (projectile_nova: proyectiles en todas direcciones; ground_marks: círculos en el suelo que explotan tras delay; summon: invoca enemigos). first: segundos hasta el primer uso. Con menos de la mitad de vida se recargan más rápido.",
   "id": "act1",
   "name": "Acto I: El Último Commit",
   "start_zone": "tutorial",
@@ -216,7 +216,8 @@
         ],
         "types": [
           "bug",
-          "gusano"
+          "gusano",
+          "bot_spam"
         ],
         "special_chance": 0.12,
         "elite_chance": 0.06
@@ -291,7 +292,8 @@
         ],
         "types": [
           "proceso_zombi",
-          "bug"
+          "bug",
+          "hilo_desbocado"
         ],
         "special_chance": 0.15,
         "elite_chance": 0.08
@@ -367,7 +369,8 @@
         ],
         "types": [
           "memory_leak",
-          "gusano"
+          "gusano",
+          "troll_foro"
         ],
         "special_chance": 0.15,
         "elite_chance": 0.1
@@ -442,7 +445,9 @@
         ],
         "types": [
           "proceso_zombi",
-          "memory_leak"
+          "memory_leak",
+          "node_modules",
+          "hilo_desbocado"
         ],
         "special_chance": 0.18,
         "elite_chance": 0.1
@@ -537,8 +542,10 @@
         "types": [
           "bug",
           "proceso_zombi",
-          "memory_leak",
-          "gusano"
+          "bot_spam",
+          "troll_foro",
+          "node_modules",
+          "hilo_desbocado"
         ],
         "special_chance": 0.2,
         "elite_chance": 0.12
@@ -601,7 +608,37 @@
           1650,
           750
         ],
-        "life_mult": 4.0
+        "life_mult": 2.6,
+        "abilities": [
+          {
+            "id": "push_force",
+            "name": "git push --force",
+            "kind": "projectile_nova",
+            "cooldown": 6.5,
+            "first": 3.0,
+            "windup": 0.9,
+            "count": 14,
+            "speed": 290,
+            "damage_mult": 0.75,
+            "color": "ff5050",
+            "description": "Una onda de proyectiles en todas direcciones: busca un hueco entre ellos."
+          },
+          {
+            "id": "merge_conflict",
+            "name": "Merge Conflict",
+            "kind": "ground_marks",
+            "cooldown": 8.0,
+            "first": 6.0,
+            "windup": 0.6,
+            "count": 5,
+            "radius": 90,
+            "delay": 1.1,
+            "spread": 170,
+            "damage_mult": 1.5,
+            "color": "ff8c2a",
+            "description": "Marca el suelo donde estás y alrededor; explota al segundo. Sal de los círculos."
+          }
+        ]
       },
       "enemies": {
         "packs": 2,
@@ -610,7 +647,8 @@
           4
         ],
         "types": [
-          "proceso_zombi"
+          "proceso_zombi",
+          "bot_spam"
         ],
         "special_chance": 0.3,
         "elite_chance": 0.0

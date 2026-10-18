@@ -206,7 +206,7 @@ func _spawn_zone_enemies() -> void:
 	var boss: Dictionary = zone.def.get("boss", {}) if zone.def.get("boss") is Dictionary else {}
 	if not boss.is_empty() and not character.flags.has("act1_complete"):
 		enemies.spawn(Zone._v(boss["pos"]), Rarity.Enemy.UNIQUE, enemies.type_index_of(boss.get("type", "daemon")),
-			boss.get("name", ""), float(boss.get("life_mult", 1.0)))
+			boss.get("name", ""), float(boss.get("life_mult", 1.0)), boss.get("abilities", []))
 		_boss_alive = true
 
 
