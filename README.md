@@ -19,6 +19,7 @@ Por ahora es solo para un jugador en local, pero la lógica está escrita para p
 | K | Habilidades: arrastra placas a la barra y RAM a sus ranuras |
 | C | Hoja de personaje (con retrato animado y opiniones no solicitadas) |
 | M | Mostrar u ocultar el minimapa |
+| L | Plegar o desplegar el registro de misiones |
 | P | Árbol pasivo (pausa el juego) |
 | Esc | Cierra lo abierto; si no hay nada, menú de pausa |
 | F1 / F2 / F3 / F4 | Depuración: +30 enemigos / limpiar / jefe único / botín de prueba |
@@ -30,6 +31,8 @@ Todas las teclas están en *Proyecto → Configuración del proyecto → Mapa de
 **Objetos**: arrastrar y soltar entre bolsa, equipo, barra de habilidades y ranuras DIMM (intercambia si hace falta; las reglas están en `ItemTransfer`). Soltar un objeto fuera de los paneles lo tira al suelo; ya no se pueden destruir con un click.
 
 **Al lanzar habilidades** el personaje solo se detiene un instante (25 % del tiempo de uso, máximo 0,15 s); el ritmo de ataque no cambia.
+
+**Animación al caminar**: piernas alternas que se levantan, brazos en oposición y el cuerpo sube y baja con cada paso. El ciclo avanza con la distancia recorrida de verdad, así que los pies no "patinan" y, si choca contra algo, deja de andar en el sitio. De perfil, las piernas avanzan y retroceden y el cuerpo se inclina.
 
 `scenes/ui/passive_tree_screen.tscn` funciona sola (F6) para probar builds, y `scenes/game/world.tscn` (F6) arranca con un personaje temporal que no se guarda.
 
@@ -72,13 +75,40 @@ El acto está definido en `data/act1.json` y lo construye `Zone` (`scripts/game/
 | La Granja de Servidores | 10 | ✔ | El Fantasma del DBA (regala una RAM) |
 | Sala del Servidor Principal | 12 | | Jefe: **El Arquitecto del Monolito** |
 
+- **Terreno**: los bordes de cada zona son irregulares y temáticos (maleza y árboles de cables en el bosque, acantilados en las ruinas, agua en el pantano, muros en las catacumbas, paredes de racks en la granja, el vacío binario del Sandbox y datos corruptos al rojo en la sala del jefe). Dentro hay accidentes grandes (`features`): lagos, colinas, simas, lagos de datos, agujeros 404 y charcos de lava. Todo tiene colisión y se ve en el minimapa.
 - **Obstáculos** con colisión (árboles, rocas, racks, lápidas…), colocados con semilla fija para que cada zona sea siempre igual y dejando pasillos libres entre entradas, salidas, waypoint y NPCs.
 - **Enemigos controlados**: cada zona tiene un número fijo de grupos (`packs`, `pack_size`), repartidos por el mapa con distancia mínima entre ellos y a los puntos clave. No reaparecen hasta volver a entrar. Los enemigos chocan con los obstáculos y no salen del mapa.
 - **Salidas** en los bordes ("← Campamento", "Las Ruinas →"): basta con caminar hasta ellas.
 - **Waypoints**: se descubren al tocarlos y se guardan por personaje (`flags.waypoints`). Al hacer click se abre la lista del acto.
-- **Jefe**: al derrotarlo se completa el acto (bandera `act1_complete`), cae botín especial y Ada tiene diálogo nuevo.
+- **Jefe**: al derrotarlo se completa el acto (bandera `act1_complete`), cae botín especial (siempre en suelo alcanzable) y se abre un portal al campamento.
+- **Después del jefe**: Ada te manda a hablar con Root, que cuenta que el reinicio falló con un *kernel panic* (algo llamado «init», el PID 1, vive en el Kernel) y abre el **Portal al Kernel** en el campamento. Al terminar la misión principal empieza la del Acto II (*Kernel Panic*); el portal responde con un 503 hasta que exista el Acto II.
 - **NPCs y lore** en `data/npcs.json`: diálogos con opciones, condiciones (`requires_flag`) y acciones (regalos que se dan una sola vez). Cuentan la historia del administrador que hizo `push --force` "por el Monolito".
 - **Tutorial** (`data/tutorial.json`, versión 2): 12 pasos. Empieza en el Sandbox (moverse, atacar, matar, recoger, equipar, pociones, pasivas) y sigue en el campamento (Ada, RAM, Kevin, salir al Bosque). Los personajes con el tutorial antiguo continúan donde corresponde.
+
+## Misiones
+
+Definidas en `data/quests.json` y gestionadas por `QuestLog` (lógica pura, guardada en el personaje).
+El **registro de misiones** está debajo del minimapa (L para plegarlo): la principal arriba, en dorado, y las secundarias debajo, con su paso actual y el progreso.
+
+| Misión | Quién | Qué |
+|---|---|---|
+| El Último Commit (principal) | — | Recorrer el acto, derrotar al Arquitecto, hablar con Ada y con Root |
+| Kernel Panic (principal) | — | Empieza al acabar la anterior; preparada para el Acto II |
+| Bichos en el cableado | Iris (Bosque) | Eliminar 25 enemigos en el Bosque de Cables |
+| Reporte de incidencias | Tomás (Pantano) | Eliminar 3 enemigos especiales o élite en el Pantano |
+| La cinta de backup | Fantasma del DBA (Granja) | Recoger la cinta en las Catacumbas del Legacy |
+| Granos de café | Kevin (Campamento) | Eliminar 40 enemigos en cualquier zona |
+
+- Tipos de paso: hablar, llegar a una zona, bandera, eliminar (con zona y rareza mínima), recoger un objeto de misión y entregar.
+- Las misiones se aceptan y se entregan en los diálogos (acciones `start_quest` y `quest_advance`). Sobre los NPCs aparece un **!** amarillo si ofrecen misión y un **?** verde si tienes algo que entregarles.
+- Recompensas: experiencia y objetos (`give_random` con rareza, RAM que encaja, placas…).
+- Los personajes de antes se ponen al día solos: si ya mataron al jefe, la principal salta a "cuéntaselo a Ada".
+
+## Diálogos con voz
+
+- **Narrador**: si el sistema tiene una voz en español (en Windows: *Configuración → Hora e idioma → Voz*), los NPCs leen su texto en voz alta, cada uno con su tono y velocidad (`voice` en `npcs.json`), y el texto avanza al ritmo de la voz.
+- **Pitidos retro**: sin voz (o con el narrador desactivado), sale un pitido de 8 bits cada pocas letras, con el tono de cada NPC. El sonido se genera en código (`RetroSfx`), sin archivos.
+- Ambos se activan o desactivan en el menú de pausa (Esc) y se recuerdan en `user://settings.cfg`.
 
 ## Pantalla de título, menú y creador
 
@@ -111,14 +141,15 @@ Cinco tipos con sprites animados: Bug, Proceso zombi, Memory leak, Gusano de red
 ## Estructura
 
 ```
-data/                 Datos de diseño (JSON): clases, árbol, enemigos, acto y zonas, NPCs, tutorial
+data/                 Datos de diseño (JSON): clases, árbol, enemigos, acto y zonas, NPCs, misiones, tutorial
 data/items/           Bases, afijos (con tiers), únicos y conjuntos
 data/skills/          Habilidades (placas base) y módulos RAM
-scripts/core/         Stat, Modifier, StatBlock (fórmula de PoE), DataLoader
+scripts/core/         Stat, Modifier, StatBlock (fórmula de PoE), DataLoader, GameSettings, RetroSfx
 scripts/passives/     PassiveTree, PassiveAllocation, PassiveTreeView
 scripts/character/    CharacterData, CharacterSaves, CharacterAppearance
 scripts/items/        Rarity, ItemDatabase, Item, ItemGenerator, Inventory, ItemTransfer, ItemIcons
 scripts/skills/       SkillDatabase, Motherboard, RamModule, SkillCalc
+scripts/quests/       QuestLog
 scripts/game/         World, Player, SkillController, EnemyManager, LootManager, Zone
 scripts/ui/           Título, logo, menús, HUD, inventario, habilidades, waypoints, diálogos, tutorial, UiStyle
 scripts/autoload/     GameData (datos estáticos y personaje actual), MusicPlayer
@@ -192,5 +223,5 @@ Añade `*.json` en *Exportar → Recursos → Filtros para exportar archivos no-
 1. Sprites del jugador y de los NPCs (el formato de apariencia ya está preparado).
 2. Resistencias y tipos de daño en los enemigos, y enemigos (y jefe) con habilidades propias.
 3. Ascendencias mediante pruebas (ahora se eligen libremente en el árbol pasivo).
-4. Acto II, con mapas de TileMapLayer isométrico y misiones.
+4. **Acto II: Kernel Panic.** Ya está preparado el gancho (portal en el campamento, misión principal, bandera `act2_started`). Idea de zonas: Espacio de Usuario → Tabla de Procesos → Cementerio de Huérfanos (procesos zombi sindicados) → Scheduler (enemigos que se turnan) → Memoria Virtual (páginas que aparecen y desaparecen) → jefe **init (PID 1)**. Hace falta un `act2.json`, que `GameData` cargue varios actos y que el waypoint muestre los dos.
 5. Editor del árbol pasivo dentro de Godot.

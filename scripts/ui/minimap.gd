@@ -17,6 +17,11 @@ const ENEMY_COLORS := {
 	Rarity.Enemy.UNIQUE: Color("ff8c2a"),
 }
 
+const FEATURE_COLORS := {
+	"lake": Color("1c3a55"), "bog": Color("3a2a4a"), "data_lake": Color("0c3a40"), "hill": Color("2c3a24"),
+	"cliff": Color("4a4036"), "chasm": Color("050407"), "void": Color("020306"), "lava": Color("8a1a12"),
+}
+
 var player: Player
 var enemies: EnemyManager
 var loot: LootManager
@@ -53,18 +58,40 @@ func _draw() -> void:
 	var circle := PackedVector2Array()
 	for k in 48:
 		circle.append(center + Vector2.from_angle(TAU * k / 48.0) * RADIUS)
-	var r := zone.rect
-	var ground := PackedVector2Array([_to_map(r.position), _to_map(Vector2(r.end.x, r.position.y)), _to_map(r.end), _to_map(Vector2(r.position.x, r.end.y))])
+	var ground := PackedVector2Array()
+	if zone.walk_polygon.size() >= 3:
+		for q in zone.walk_polygon:
+			ground.append(_to_map(q))
+	else:
+		var r := zone.rect
+		ground = PackedVector2Array([_to_map(r.position), _to_map(Vector2(r.end.x, r.position.y)), _to_map(r.end), _to_map(Vector2(r.position.x, r.end.y))])
 	for poly in Geometry2D.intersect_polygons(ground, circle):
 		draw_colored_polygon(poly, Color("2a2530"))
 
 	for o in zone.obstacles:
 		var p := _to_map(o["pos"])
-		if _inside(p):
+		if o.get("feature", false):
+			if p.distance_to(center) > RADIUS + o["visual"] * SCALE:
+				continue
+			var blob := PackedVector2Array()
+			for q in Zone._blob_points(o, 1.0, Vector2.ZERO):
+				blob.append(_to_map(q))
+			for poly in Geometry2D.intersect_polygons(blob, circle):
+				draw_colored_polygon(poly, FEATURE_COLORS.get(o["kind"], Color("4a4352")))
+		elif _inside(p):
 			draw_circle(p, maxf(1.5, o["radius"] * SCALE), Color("4a4352"))
+	for q in zone.quest_items:
+		var p := _to_map(q["pos"])
+		if zone.quest_item_visible(q):
+			if _inside(p):
+				draw_circle(p, 3.5, Color("ffd84a"))
+			else:
+				_edge_arrow(center, p, Color("ffd84a"))
 
 	# Salidas: dentro, un rombo; fuera, una flecha en el borde hacia ellas.
 	for e in zone.exits:
+		if not zone.exit_open(e):
+			continue
 		var p := _to_map(e["pos"])
 		if _inside(p):
 			draw_colored_polygon(PackedVector2Array([p + Vector2(0, -5), p + Vector2(5, 0), p + Vector2(0, 5), p + Vector2(-5, 0)]), Color("7fc8ff"))

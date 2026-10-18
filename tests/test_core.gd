@@ -40,6 +40,9 @@ func _initialize() -> void:
 	_test_conditions()
 	_test_tree_version_refund()
 	_test_save_dir_migration()
+	_test_quests()
+	_test_loot_placement()
+	_test_walk_animation()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
 	else:
@@ -529,6 +532,9 @@ func _test_act(npc_data: Dictionary) -> void:
 	var bosses := 0
 	for z in act["zones"]:
 		for e in z.get("exits", []):
+			if e["target"] == "":
+				_check(e.has("message"), "%s: salida sin destino ni mensaje" % z["id"])
+				continue
 			_check(zones.has(e["target"]), "%s: salida a zona inexistente %s" % [z["id"], e["target"]])
 			if zones.has(e["target"]):
 				_check(zones[e["target"]]["entries"].has(e["entry"]), "%s: la entrada %s no existe en %s" % [z["id"], e["entry"], e["target"]])
@@ -561,7 +567,141 @@ func _test_act(npc_data: Dictionary) -> void:
 					_check(p.distance_to(k) >= 450.0, "%s: grupo demasiado cerca de una entrada/NPC" % z["id"])
 		zone.free()
 	_check(bosses == 1, "el acto tiene un jefe")
+	_test_quest_data(zones, npc_data)
 	_check(act["zones"].size() >= 8, "tutorial + campamento + 5 zonas + jefe")
+
+
+func _test_quest_data(zones: Dictionary, npc_data: Dictionary) -> void:
+	var quests := QuestLog.database()
+	_check(quests.has("main_act1"), "misión principal del acto I")
+	var quest_items := []
+	for z in zones.values():
+		for q in z.get("quest_items", []):
+			quest_items.append(q["id"])
+			_check(quests.has(q["quest"]), "objeto de misión de una misión inexistente: %s" % q["id"])
+	# Acciones de diálogo que nombran misiones.
+	var advanced := {}
+	for d in npc_data["dialogues"].values():
+		for node in d["nodes"].values():
+			for option in node.get("options", []):
+				var action: Dictionary = option.get("action", {})
+				if action.get("type", "") in ["start_quest", "quest_advance"]:
+					_check(quests.has(action.get("quest", "")), "diálogo con misión inexistente %s" % action.get("quest", ""))
+				if action.get("type", "") == "quest_advance":
+					advanced[action["quest"]] = true
+	for id in quests:
+		var q: Dictionary = quests[id]
+		if q.has("giver"):
+			_check(npc_data["npcs"].has(q["giver"]), "%s: quien la da no existe" % id)
+		if q.has("starts_after"):
+			_check(quests.has(q["starts_after"]), "%s: starts_after inexistente" % id)
+		for step in q["steps"]:
+			match step["type"]:
+				"talk", "turn_in":
+					_check(npc_data["npcs"].has(step["npc"]), "%s: NPC desconocido %s" % [id, step["npc"]])
+					if step["type"] == "turn_in":
+						_check(advanced.has(id), "%s: nadie acepta la entrega (falta quest_advance)" % id)
+				"reach_zone":
+					_check(zones.has(step["zone"]), "%s: zona desconocida %s" % [id, step["zone"]])
+				"kill":
+					_check(step.get("zone", "") == "" or zones.has(step["zone"]), "%s: zona desconocida" % id)
+					_check(QuestLog.RARITY_BY_NAME.has(step.get("min_rarity", "normal")), "%s: rareza desconocida" % id)
+				"collect":
+					_check(quest_items.has(step["item"]), "%s: objeto %s no está en ninguna zona" % [id, step["item"]])
+				"flag":
+					pass
+				_:
+					_check(false, "%s: tipo de paso desconocido %s" % [id, step["type"]])
+
+
+func _test_quests() -> void:
+	var c := _new_character()
+	var log := QuestLog.new(c)
+	var started: Array[String] = []
+	var completed: Array[String] = []
+	log.quest_started.connect(func(id: String) -> void: started.append(id))
+	log.quest_completed.connect(func(id: String) -> void: completed.append(id))
+	log.start_auto()
+	_check(log.is_active("main_act1") and started.has("main_act1"), "la principal empieza sola")
+	_check(log.active_ids()[0] == "main_act1", "la principal va primero")
+	c.flags["talked_bot_onboarding"] = true
+	log.refresh()
+	_check(int(log.state("main_act1")["step"]) == 1, "hablar con B.O.B. avanza")
+	log.notify_zone("campamento")
+	_check(int(log.state("main_act1")["step"]) == 2, "llegar al campamento avanza")
+	# Saltar hasta un paso de bandera ya cumplido (personaje que ya mató al jefe).
+	c.flags["act1_complete"] = true
+	log.refresh()
+	_check(log.step_text("main_act1").contains("Ada"), "salta a 'cuéntaselo a Ada' si ya mató al jefe")
+	c.flags["ada_victoria"] = true
+	c.flags["root_reinicio"] = true
+	log.refresh()
+	_check(log.is_done("main_act1") and completed.has("main_act1"), "principal completada")
+	_check(log.is_active("main_act2"), "la del acto II empieza al terminar la del I")
+
+	# Secundaria: eliminar en una zona concreta y entregar.
+	_check(log.npc_offers_quest("iris"), "Iris ofrece misión")
+	log.start("iris_cables")
+	_check(c.flags.has("quest_iris_cables_started") and not log.npc_offers_quest("iris"), "aceptada")
+	for k in 10:
+		log.notify_kill("zona3", Rarity.Enemy.NORMAL)   # zona equivocada: no cuenta
+	_check(int(log.state("iris_cables")["count"]) == 0, "solo cuentan las muertes en su zona")
+	for k in 25:
+		log.notify_kill("zona1", Rarity.Enemy.NORMAL)
+	_check(c.flags.has("quest_iris_cables_ready") and log.npc_has_turn_in("iris"), "lista para entregar")
+	_check(not log.advance("tomas_reporte"), "no se entrega una misión no aceptada")
+	_check(log.advance("iris_cables") and log.is_done("iris_cables"), "entregada")
+	_check(not c.flags.has("quest_iris_cables_ready") and c.flags.has("quest_iris_cables_done"), "banderas al terminar")
+
+	# Rareza mínima.
+	log.start("tomas_reporte")
+	log.notify_kill("zona3", Rarity.Enemy.NORMAL)
+	log.notify_kill("zona3", Rarity.Enemy.ELITE)
+	_check(int(log.state("tomas_reporte")["count"]) == 1, "solo cuentan los especiales o mejores")
+	_check(log.step_text("tomas_reporte").ends_with("(1/3)"), "progreso en el texto")
+
+	# Recoger un objeto.
+	log.start("dba_backup")
+	c.flags["item_cinta_backup"] = true
+	log.refresh()
+	_check(log.npc_has_turn_in("dba"), "objeto recogido: a entregar")
+
+	# Se guarda con el personaje.
+	var data = JSON.parse_string(JSON.stringify(c.to_dict()))
+	var loaded := CharacterData.from_dict(data, _classes[0], _tree, _db)
+	var log2 := QuestLog.new(loaded)
+	_check(log2.is_done("iris_cables") and log2.is_active("tomas_reporte") and int(log2.state("tomas_reporte")["count"]) == 1, "misiones guardadas")
+
+
+func _test_loot_placement() -> void:
+	var def := {"id": "prueba", "size": [1000, 800], "style": "ruins", "entries": {"a": [200, 400]},
+		"exits": [], "obstacles": {"count": 0, "kinds": []}}
+	var zone := Zone.new()
+	zone.setup(def, null, null)
+	var loot := LootManager.new()
+	loot.placement_check = func(p: Vector2) -> bool: return zone.is_walkable(p, 18.0)
+	loot.spot_fixer = func(p: Vector2) -> Vector2: return zone.free_spot_near(p, 24.0)
+	var gen := ItemGenerator.new(_db, 3)
+	# Muchos objetos junto al borde de abajo (como el botín del jefe).
+	for k in 12:
+		loot.drop_item(gen.generate(10, Rarity.Item.RARE), Vector2(500, 790))
+	var all_ok := true
+	for d in loot.drops:
+		if not zone.is_walkable(d["rect"].get_center(), 10.0):
+			all_ok = false
+	_check(all_ok, "el botín cae siempre en suelo alcanzable")
+	var overlaps := false
+	for i in loot.drops.size():
+		for j in range(i + 1, loot.drops.size()):
+			if loot.drops[i]["rect"].intersects(loot.drops[j]["rect"]):
+				overlaps = true
+	_check(not overlaps, "las etiquetas del botín no se tapan")
+	loot.free()
+	zone.free()
+
+
+func _test_walk_animation() -> void:
+	_check(RetroSfx.blip().data.size() > 0, "pitido generado")
 
 
 func _test_save_dir_migration() -> void:

@@ -20,6 +20,7 @@ var dialogue_box: DialogueBox
 var tutorial: TutorialPanel
 var item_tooltip: ItemTooltip
 var minimap: Minimap
+var quest_tracker: QuestTracker
 var character_sheet: CharacterSheet
 var _character: CharacterData
 var _player: Player
@@ -33,7 +34,7 @@ var _pause_panel: Control
 
 
 func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot: LootManager,
-		skills: SkillController) -> void:
+		skills: SkillController, quests: QuestLog = null) -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_character = character
 	_player = player
@@ -97,6 +98,20 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	minimap.offset_right = -18.0
 	minimap.offset_top = 14.0
 	minimap.offset_bottom = 14.0 + minimap.custom_minimum_size.y
+
+	# Registro de misiones, debajo del minimapa.
+	quest_tracker = QuestTracker.new()
+	add_child(quest_tracker)
+	quest_tracker.anchor_left = 1.0
+	quest_tracker.anchor_right = 1.0
+	quest_tracker.offset_left = -QuestTracker.WIDTH - 10.0
+	quest_tracker.offset_right = -10.0
+	quest_tracker.offset_top = minimap.offset_bottom + 6.0
+	quest_tracker.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	if quests:
+		quest_tracker.setup(quests)
+	else:
+		quest_tracker.visible = false
 
 	dialogue_box = DialogueBox.new()
 	dialogue_box.character = character
@@ -192,7 +207,7 @@ func _build_act_banner() -> PanelContainer:
 	title.name = "Title"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title)
-	var text := UiStyle.label("El Arquitecto del Monolito ha sido terminado (kill -9).\nEl Servidor Principal sigue caído, pero ahora es culpa de otro.\nVuelve al campamento y cuéntaselo a Ada.", 16)
+	var text := UiStyle.label("El Arquitecto del Monolito ha sido terminado (kill -9).\nEl Servidor Principal sigue caído, pero ahora es culpa de otro.\nSe ha abierto un portal al campamento: ve a contárselo a Ada.", 16)
 	text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(text)
 	return panel
@@ -237,6 +252,27 @@ func _build_pause_menu() -> Control:
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(hint)
 	box.add_child(UiStyle.button("Continuar", toggle_pause_menu, 320))
+	# Sonido de los diálogos.
+	var narrator := UiStyle.button("", func() -> void: pass, 320)
+	var refresh_narrator := func() -> void:
+		if not DialogueBox.narrator_available():
+			narrator.text = "Narrador: sin voz en español"
+			narrator.disabled = true
+			narrator.tooltip_text = "Instala una voz en español en el sistema (Windows: Configuración → Hora e idioma → Voz)."
+		else:
+			narrator.text = "Narrador (voz): " + ("sí" if DialogueBox.narrator_enabled() else "no")
+	refresh_narrator.call()
+	narrator.pressed.connect(func() -> void:
+		GameSettings.set_value("dialogue", "narrator", not DialogueBox.narrator_enabled())
+		refresh_narrator.call())
+	box.add_child(narrator)
+	var blips := UiStyle.button("", func() -> void: pass, 320)
+	blips.text = "Pitidos del texto: " + ("sí" if DialogueBox.blips_enabled() else "no")
+	blips.tooltip_text = "Sonido retro mientras se escribe el texto (cuando no habla el narrador)."
+	blips.pressed.connect(func() -> void:
+		GameSettings.set_value("dialogue", "blips", not DialogueBox.blips_enabled())
+		blips.text = "Pitidos del texto: " + ("sí" if DialogueBox.blips_enabled() else "no"))
+	box.add_child(blips)
 	box.add_child(UiStyle.button("Guardar y volver al menú", func() -> void: return_to_menu_requested.emit(), 320))
 	box.add_child(UiStyle.button("Guardar y salir del juego", func() -> void: quit_requested.emit(), 320))
 	return overlay
@@ -287,6 +323,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		_minimap_enabled = not _minimap_enabled
 		_update_minimap()
 		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(&"toggle_quests"):
+		quest_tracker.collapsed = not quest_tracker.collapsed
+		get_viewport().set_input_as_handled()
 
 
 func _on_menu_requested(menu: String) -> void:
@@ -313,6 +352,9 @@ func _on_menu_requested(menu: String) -> void:
 func _update_minimap() -> void:
 	tutorial.suppressed = character_sheet.visible or tree_screen.visible
 	minimap.visible = _minimap_enabled and not inventory_panel.visible and not tree_screen.visible
+	# Sin minimapa, el registro sube a su sitio.
+	quest_tracker.visible = quest_tracker.quests != null and not inventory_panel.visible and not tree_screen.visible
+	quest_tracker.offset_top = (minimap.offset_bottom + 6.0) if minimap.visible else 14.0
 
 
 ## Soltar un objeto fuera de los paneles: al suelo, junto al jugador.

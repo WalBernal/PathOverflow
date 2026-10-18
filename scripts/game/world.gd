@@ -10,6 +10,8 @@ extends Node2D
 const PLAYER_SCENE := preload("res://scenes/game/player.tscn")
 ## Clase del personaje temporal al ejecutar esta escena sola.
 const DEV_CLASS := &"guerrero"
+const RARITY_BY_NAME := {"normal": Rarity.Item.NORMAL, "magic": Rarity.Item.MAGIC, "rare": Rarity.Item.RARE,
+	"ultra_rare": Rarity.Item.ULTRA_RARE, "unique": Rarity.Item.UNIQUE, "set": Rarity.Item.SET}
 ## Tras un cambio (nivel, objetos, pasivas), se guarda como mucho cada X segundos.
 const AUTOSAVE_DELAY := 5.0
 ## Y, aunque no cambie nada, cada X segundos (para el tiempo jugado).
@@ -23,6 +25,7 @@ var skills: SkillController
 var zone: Zone
 var item_generator: ItemGenerator
 var ui: GameUI
+var quests: QuestLog
 
 var _dirty := false
 var _since_save := 0.0
@@ -57,10 +60,17 @@ func _ready() -> void:
 	loot.inventory = character.inventory
 	add_child(loot)
 	loot.picked_up.connect(_on_item_picked_up)
+	# El botín solo cae donde se puede llegar a recogerlo.
+	loot.placement_check = func(p: Vector2) -> bool: return zone == null or zone.is_walkable(p, 18.0)
+	loot.spot_fixer = func(p: Vector2) -> Vector2: return p if zone == null else zone.free_spot_near(p, 24.0)
+
+	quests = QuestLog.new(character)
+	quests.quest_started.connect(_on_quest_started)
+	quests.quest_completed.connect(_on_quest_completed)
 
 	ui = GameUI.new()
 	add_child(ui)
-	ui.setup(player, enemies, character, loot, skills)
+	ui.setup(player, enemies, character, loot, skills, quests)
 	player.died.connect(_on_player_died)
 	ui.return_to_menu_requested.connect(_return_to_menu)
 	ui.quit_requested.connect(_quit_game)
@@ -72,6 +82,7 @@ func _ready() -> void:
 	if not GameData.zones.has(start_zone):
 		start_zone = GameData.act.get("town", "campamento")
 	travel_to(start_zone, "waypoint" if GameData.zones[start_zone].get("waypoint") != null else "")
+	quests.start_auto()
 
 	if character.flags.has("passives_refunded"):
 		character.flags.erase("passives_refunded")
@@ -127,11 +138,12 @@ func travel_to(zone_id: String, entry := "") -> void:
 	enemies.clear_all()
 	loot.clear_all()
 	zone = Zone.new()
-	zone.setup(def, player, character)
+	zone.setup(def, player, character, quests)
 	add_child(zone)
 	move_child(zone, 0)  # debajo de todo lo demás
 	zone.npc_interacted.connect(_on_npc_interacted)
-	zone.exit_reached.connect(func(e: Dictionary) -> void: travel_to.call_deferred(e["target"], e["entry"]))
+	zone.exit_reached.connect(_on_exit_reached)
+	zone.quest_item_picked.connect(_on_quest_item_picked)
 	zone.waypoint_clicked.connect(func() -> void: ui.open_waypoints(zone.id))
 	zone.waypoint_touched.connect(_discover_waypoint)
 
@@ -146,6 +158,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 
 	enemies.area_level = zone.level
 	enemies.bounds = zone.rect
+	enemies.walk_clamp = zone.clamp_to_walkable
 	enemies.obstacles.clear()
 	for o in zone.obstacles:
 		enemies.obstacles.append(Vector3(o["pos"].x, o["pos"].y, o["radius"]))
@@ -153,6 +166,21 @@ func travel_to(zone_id: String, entry := "") -> void:
 
 	character.flags["zone"] = zone.id
 	ui.on_zone_changed(zone)
+	quests.notify_zone(zone.id)
+	_mark_dirty()
+
+
+func _on_exit_reached(e: Dictionary) -> void:
+	if e["target"] == "" or not GameData.zones.has(e["target"]):
+		ui.hud.flash(e.get("message", "Esta salida todavía no lleva a ningún sitio."), Color("c08aff"))
+		return
+	travel_to.call_deferred(e["target"], e["entry"])
+
+
+func _on_quest_item_picked(q: Dictionary) -> void:
+	character.flags["item_" + String(q["id"])] = true
+	ui.hud.flash("Objeto de misión: %s" % q["name"], UiStyle.ACCENT)
+	quests.refresh()
 	_mark_dirty()
 
 
@@ -241,6 +269,7 @@ func _on_enemy_killed(rarity: int, experience: int, pos: Vector2) -> void:
 	player.add_flask_charges(rarity)
 	player.notify_kill()
 	ui.tutorial.notify("kill")
+	quests.notify_kill(zone.id, rarity)
 	var info: Dictionary = Rarity.ENEMY_INFO[rarity]
 	var drop_mult := float(zone.def.get("drop_multiplier", 1.0))
 	for k in int(info["drop_count"]):
@@ -259,6 +288,7 @@ func _on_boss_defeated(pos: Vector2) -> void:
 		loot.drop_item(item_generator.generate(enemies.area_level, r), zone.free_spot_near(pos + Vector2(randf_range(-80, 80), randf_range(-60, 60))))
 	loot.drop_item(item_generator.generate_motherboard(enemies.area_level, "", 6), zone.free_spot_near(pos + Vector2(0, 70)))
 	ui.show_act_complete(GameData.act.get("name", "Acto I"))
+	quests.refresh()
 	save_now()
 
 
@@ -281,6 +311,7 @@ func _on_item_picked_up(item: Item) -> void:
 
 func _on_npc_interacted(npc: Dictionary) -> void:
 	character.flags["talked_" + String(npc["id"])] = true
+	quests.refresh()
 	ui.open_dialogue(npc, zone.dialogues.get(npc.get("dialogue", ""), {}))
 
 
@@ -298,12 +329,36 @@ func _on_dialogue_action(action: Dictionary) -> void:
 			_give(item)
 		"give_matching_ram":
 			_give(_matching_ram())
+		"give_random":
+			_give(item_generator.generate(maxi(1, enemies.area_level), RARITY_BY_NAME.get(action.get("rarity", "rare"), Rarity.Item.RARE)))
 		"refill":
 			player.refill()
+		"start_quest":
+			quests.start(action.get("quest", ""))
+		"quest_advance":
+			quests.advance(action.get("quest", ""))
 		"set_flag":
 			pass
 	if flag != "":
 		character.flags[flag] = true
+	quests.refresh()
+	_mark_dirty()
+
+
+# --- Misiones ---
+
+func _on_quest_started(id: String) -> void:
+	ui.hud.flash("Nueva misión: %s" % quests.defs[id].get("name", id), Color("ffd84a"))
+	_mark_dirty()
+
+
+func _on_quest_completed(id: String) -> void:
+	var def: Dictionary = quests.defs[id]
+	ui.hud.flash("Misión completada: %s" % def.get("name", id), Color("6fd36b"))
+	if def.has("experience"):
+		character.add_experience(int(def["experience"]))
+	for reward in def.get("rewards", []):
+		_on_dialogue_action(reward)
 	_mark_dirty()
 
 

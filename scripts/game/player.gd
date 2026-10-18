@@ -10,6 +10,8 @@ signal died
 signal flask_used(index: int)
 
 const RADIUS := 14.0
+## Píxeles que avanza el personaje en cada paso (medio ciclo de la animación).
+const STRIDE := 30.0
 const BASE_MOVE_SPEED := 260.0
 const MANA_REGEN_PERCENT := 1.75
 const ES_RECHARGE_DELAY := 2.0
@@ -51,6 +53,7 @@ var _since_kill := 99.0
 var _since_damage := 99.0
 var _hurt_time := 0.0
 var _facing := Vector2.RIGHT
+var _walk_phase := -1.0
 ## Recuperaciones activas de pociones: {resource, per_second, remaining}.
 var _recoveries: Array[Dictionary] = []
 ## Destino de un movimiento automático (por ejemplo, ir a recoger un objeto).
@@ -211,6 +214,13 @@ func _physics_process(delta: float) -> void:
 		_facing = dir
 	velocity = dir * BASE_MOVE_SPEED * _stat(Stat.MOVEMENT_SPEED) / 100.0
 	move_and_slide()
+	# Ciclo de paso: avanza con la distancia recorrida de verdad (si choca con
+	# algo, deja de "caminar en el sitio").
+	var moved := get_real_velocity().length()
+	if moved > 10.0:
+		_walk_phase = fmod(maxf(_walk_phase, 0.0) + moved * delta / STRIDE * PI, TAU)
+	else:
+		_walk_phase = -1.0
 
 
 func _process(delta: float) -> void:
@@ -266,4 +276,5 @@ func _draw() -> void:
 		tint = Color("444444")
 	elif _hurt_time > 0.0:
 		tint = Color.RED
-	CharacterAppearance.draw(self, Vector2(0.0, RADIUS * 0.6), 0.9, character.appearance, _facing, tint)
+	CharacterAppearance.draw(self, Vector2(0.0, RADIUS * 0.6), 0.9, character.appearance, _facing, tint,
+		_walk_phase if is_alive() else -1.0)

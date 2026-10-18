@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "_doc": "Misiones. main: misión principal (se muestra primero). auto_start: empieza sola al crear/cargar el personaje. starts_after: empieza al completar esa otra misión. giver: NPC que la ofrece (marca '!' amarilla). Pasos: talk {npc} (hablar con él), reach_zone {zone}, flag {flag} (bandera del personaje), kill {count, zone?, min_rarity?: normal|special|elite|unique}, collect {item} (objeto de misión de act1.json → quest_items), turn_in {npc} (se entrega con la acción de diálogo quest_advance; marca '?' verde). Banderas que pone el sistema: quest_<id>_started, quest_<id>_ready (esperando entrega) y quest_<id>_done. rewards: acciones como las de los diálogos (give_item, give_matching_ram, give_random {rarity}, refill) más experience.",
+  "quests": {
+    "main_act1": {
+      "name": "El Último Commit",
+      "main": true,
+      "auto_start": true,
+      "description": "Alguien hizo push --force un viernes por la tarde. Encuentra al responsable. Spoiler: es el Arquitecto.",
+      "steps": [
+        { "type": "talk", "npc": "bot_onboarding", "text": "Habla con B.O.B. en el Sandbox" },
+        { "type": "reach_zone", "zone": "campamento", "text": "Llega al Campamento del Último Commit" },
+        { "type": "talk", "npc": "ada", "text": "Habla con Ada, la Senior" },
+        { "type": "reach_zone", "zone": "zona1", "text": "Adéntrate en el Bosque de Cables" },
+        { "type": "reach_zone", "zone": "zona2", "text": "Encuentra las Ruinas del Monolito" },
+        { "type": "reach_zone", "zone": "zona3", "text": "Cruza al Pantano de Memory Leaks" },
+        { "type": "reach_zone", "zone": "zona4", "text": "Desciende a las Catacumbas del Legacy" },
+        { "type": "reach_zone", "zone": "zona5", "text": "Llega a la Granja de Servidores" },
+        { "type": "reach_zone", "zone": "jefe", "text": "Entra en la Sala del Servidor Principal" },
+        { "type": "flag", "flag": "act1_complete", "text": "Derrota al Arquitecto del Monolito" },
+        { "type": "flag", "flag": "ada_victoria", "text": "Vuelve al campamento y cuéntaselo a Ada" },
+        { "type": "flag", "flag": "root_reinicio", "text": "Pregunta a Root por el reinicio del Servidor" }
+      ],
+      "experience": 2500,
+      "rewards": [ { "type": "give_random", "rarity": "unique" } ]
+    },
+    "main_act2": {
+      "name": "Kernel Panic",
+      "main": true,
+      "starts_after": "main_act1",
+      "description": "El reinicio falló. Algo vive debajo del Servidor, en el Kernel. Root ha abierto un portal en el campamento.",
+      "steps": [
+        { "type": "flag", "flag": "act2_started", "text": "Cruza el Portal al Kernel (Acto II: próximamente)" }
+      ]
+    },
+    "iris_cables": {
+      "name": "Bichos en el cableado",
+      "giver": "iris",
+      "description": "Los bugs se comen el aislamiento de los cables del bosque. Iris no encuentra la salida con tanto cortocircuito.",
+      "steps": [
+        { "type": "kill", "count": 25, "zone": "zona1", "text": "Elimina bichos en el Bosque de Cables" },
+        { "type": "turn_in", "npc": "iris", "text": "Vuelve con Iris" }
+      ],
+      "experience": 300,
+      "rewards": [ { "type": "give_random", "rarity": "rare" } ]
+    },
+    "tomas_reporte": {
+      "name": "Reporte de incidencias",
+      "giver": "tomas",
+      "description": "Tomás necesita pruebas de que los bugs graves existen. Si no, Producto dirá que «funciona en su máquina».",
+      "steps": [
+        { "type": "kill", "count": 3, "zone": "zona3", "min_rarity": "special", "text": "Elimina enemigos especiales o élite en el Pantano" },
+        { "type": "turn_in", "npc": "tomas", "text": "Entrega el reporte a Tomás" }
+      ],
+      "experience": 600,
+      "rewards": [ { "type": "give_matching_ram" }, { "type": "give_random", "rarity": "rare" } ]
+    },
+    "dba_backup": {
+      "name": "La cinta de backup",
+      "giver": "dba",
+      "description": "El Fantasma del DBA dejó su última copia de seguridad en las Catacumbas del Legacy. Si la recupera, quizá descanse en paz. O quizá haga un restore.",
+      "steps": [
+        { "type": "collect", "item": "cinta_backup", "text": "Recupera la cinta de backup en las Catacumbas del Legacy" },
+        { "type": "turn_in", "npc": "dba", "text": "Lleva la cinta al Fantasma del DBA" }
+      ],
+      "experience": 900,
+      "rewards": [ { "type": "give_random", "rarity": "unique" } ]
+    },
+    "kevin_cafe": {
+      "name": "Granos de café",
+      "giver": "kevin",
+      "description": "A Kevin se le acabó el café. Dice que los bichos sueltan granos al morir. No preguntes por qué.",
+      "steps": [
+        { "type": "kill", "count": 40, "text": "Elimina bichos en cualquier zona" },
+        { "type": "turn_in", "npc": "kevin", "text": "Lleva los granos a Kevin" }
+      ],
+      "experience": 250,
+      "rewards": [ { "type": "refill" }, { "type": "give_random", "rarity": "magic" } ]
+    }
+  }
+}

@@ -51,45 +51,71 @@ static func sanitize(d: Dictionary) -> Dictionary:
 ## Dibuja la figura con los pies en `feet`. A escala 1 mide unos 40 px de alto.
 ## `facing`: hacia dónde mira (si mira hacia arriba, se ve de espaldas).
 ## `tint`: si su alfa > 0, tiñe toda la figura (daño, muerte).
+## `walk_phase`: fase del ciclo de paso en radianes (< 0 = quieto). Un ciclo
+## completo (TAU) son dos pasos: piernas alternas, brazos opuestos y el cuerpo
+## sube y baja con cada pisada, así que los pies no "patinan".
 static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
-		facing := Vector2.DOWN, tint := Color(0, 0, 0, 0)) -> void:
+		facing := Vector2.DOWN, tint := Color(0, 0, 0, 0), walk_phase := -1.0) -> void:
 	var skin := _tinted(Color(a["skin_tone"]), tint)
 	var hair := _tinted(Color(a["hair_color"]), tint)
 	var outfit := _tinted(Color(a["outfit_color"]), tint)
 	var width: float = BODY_WIDTH[int(a["body"])]
 	var back := facing.y < -0.5
 	var look := clampf(facing.x, -1.0, 1.0)
+	var profile := absf(look) > 0.6 and absf(facing.y) < 0.75   # de perfil
 
+	var walking := walk_phase >= 0.0
+	var swing := sin(walk_phase) if walking else 0.0          # -1..1, pierna izquierda delante
+	var bob := absf(cos(walk_phase)) * 1.3 if walking else 0.0  # el cuerpo sube entre pisadas
 	var p := func(x: float, y: float) -> Vector2: return feet + Vector2(x, y) * scale
+	# Parte superior del cuerpo, desplazada por el balanceo.
+	var u := func(x: float, y: float) -> Vector2: return feet + Vector2(x, y - bob) * scale
 
-	# Sombra.
+	# Sombra (se encoge un poco cuando el cuerpo sube).
 	ci.draw_set_transform(feet, 0.0, Vector2(1.0, 0.4))
-	ci.draw_circle(Vector2.ZERO, 11.0 * scale * width, Color(0, 0, 0, 0.4))
+	ci.draw_circle(Vector2.ZERO, (11.0 - bob * 0.6) * scale * width, Color(0, 0, 0, 0.4))
 	ci.draw_set_transform(Vector2.ZERO)
 
-	# Piernas.
+	# Piernas: cada una se levanta en su fase; de perfil, además, avanzan y retroceden.
 	var legs := outfit.darkened(0.35)
-	ci.draw_rect(Rect2(p.call(-5.0 * width, -9.0), Vector2(4.0 * width, 9.0) * scale), legs)
-	ci.draw_rect(Rect2(p.call(1.0 * width, -9.0), Vector2(4.0 * width, 9.0) * scale), legs)
+	var shoes := outfit.darkened(0.6)
+	for leg: float in [-1.0, 1.0]:
+		var phase := swing * leg                      # > 0: esta pierna va por delante
+		var lift := maxf(0.0, phase) * 2.6 if walking else 0.0
+		var x := (-5.0 if leg < 0.0 else 1.0) * width
+		var y_top := -9.0 - bob
+		if profile:
+			x = -2.0 * width + phase * 3.2 * signf(look)
+		var length := 9.0 + bob - lift
+		ci.draw_rect(Rect2(p.call(x, y_top), Vector2(4.0 * width, length) * scale), legs)
+		ci.draw_rect(Rect2(p.call(x - 0.3, y_top + length - 1.6), Vector2(4.6 * width, 1.8) * scale), shoes)
 
-	# Brazos (detrás del torso).
-	ci.draw_rect(Rect2(p.call(-10.5 * width, -23.0), Vector2(3.5 * width, 12.0) * scale), outfit.darkened(0.2))
-	ci.draw_rect(Rect2(p.call(7.0 * width, -23.0), Vector2(3.5 * width, 12.0) * scale), outfit.darkened(0.2))
-	ci.draw_circle(p.call(-8.75 * width, -10.5), 1.9 * scale * width, skin)
-	ci.draw_circle(p.call(8.75 * width, -10.5), 1.9 * scale * width, skin)
+	# Brazos (detrás del torso), en oposición a las piernas.
+	var arm_color := outfit.darkened(0.2)
+	for arm: float in [-1.0, 1.0]:
+		var arm_swing := -swing * arm * (2.2 if not profile else 0.0)
+		var ax := (-10.5 if arm < 0.0 else 7.0) * width
+		var hand_x := (-8.75 if arm < 0.0 else 8.75) * width
+		if profile:
+			ax = -1.75 * width + swing * arm * 3.0 * signf(look)
+			hand_x = ax + 1.75 * width
+		ci.draw_rect(Rect2(u.call(ax, -23.0 + arm_swing * 0.4), Vector2(3.5 * width, 12.0) * scale), arm_color)
+		ci.draw_circle(u.call(hand_x, -10.5 + arm_swing), 1.9 * scale * width, skin)
 
-	# Torso: trapecio de hombros a cintura.
+	# Torso: trapecio de hombros a cintura (más estrecho de perfil).
+	var tw := width * (0.75 if profile else 1.0)
+	var lean := 0.8 * signf(look) if profile and walking else 0.0
 	ci.draw_colored_polygon(PackedVector2Array([
-		p.call(-8.0 * width, -24.0), p.call(8.0 * width, -24.0),
-		p.call(6.0 * width, -8.0), p.call(-6.0 * width, -8.0)]), outfit)
-	ci.draw_rect(Rect2(p.call(-6.0 * width, -11.0), Vector2(12.0 * width, 2.0) * scale), outfit.darkened(0.5))
+		u.call(-8.0 * tw + lean, -24.0), u.call(8.0 * tw + lean, -24.0),
+		u.call(6.0 * tw, -8.0), u.call(-6.0 * tw, -8.0)]), outfit)
+	ci.draw_rect(Rect2(u.call(-6.0 * tw, -11.0), Vector2(12.0 * tw, 2.0) * scale), outfit.darkened(0.5))
 
 	# Cabeza.
-	var head: Vector2 = p.call(0.0, -31.0)
+	var head: Vector2 = u.call(lean, -31.0)
 	var r := 7.0 * scale
 	var style := int(a["hair"])
 	if style == 2:  # pelo largo: por detrás de la cabeza
-		ci.draw_rect(Rect2(p.call(-8.0, -33.0), Vector2(16.0, 15.0) * scale), hair)
+		ci.draw_rect(Rect2(u.call(lean - 8.0, -33.0), Vector2(16.0, 15.0) * scale), hair)
 	ci.draw_circle(head, r, skin)
 	if back:
 		if style != 0:
