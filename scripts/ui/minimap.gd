@@ -25,7 +25,7 @@ var zone: Zone
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	custom_minimum_size = Vector2(RADIUS * 2.0, RADIUS * 2.0 + 22.0)
+	custom_minimum_size = Vector2(RADIUS * 2.0, RADIUS * 2.0 + 38.0)
 	size = custom_minimum_size
 
 
@@ -106,10 +106,13 @@ func _draw() -> void:
 
 	draw_arc(center, RADIUS, 0.0, TAU, 64, RING, 2.5, true)
 	draw_arc(center, RADIUS + 3.0, 0.0, TAU, 64, RING.darkened(0.5), 1.5, true)
-	var label := zone.zone_name if zone.safe else "%s · nivel %d" % [zone.zone_name, zone.level]
+	var label := zone.zone_name
+	var sublabel := "Zona segura" if zone.safe else "Nivel de zona %d" % zone.level
 	var font := get_theme_default_font()
 	draw_string_outline(font, Vector2(0, RADIUS * 2.0 + 16.0), label, HORIZONTAL_ALIGNMENT_CENTER, RADIUS * 2.0, 12, 4, Color.BLACK)
 	draw_string(font, Vector2(0, RADIUS * 2.0 + 16.0), label, HORIZONTAL_ALIGNMENT_CENTER, RADIUS * 2.0, 12, UiStyle.TEXT)
+	draw_string_outline(font, Vector2(0, RADIUS * 2.0 + 32.0), sublabel, HORIZONTAL_ALIGNMENT_CENTER, RADIUS * 2.0, 11, 4, Color.BLACK)
+	draw_string(font, Vector2(0, RADIUS * 2.0 + 32.0), sublabel, HORIZONTAL_ALIGNMENT_CENTER, RADIUS * 2.0, 11, UiStyle.MUTED)
 
 
 func _edge_arrow(center: Vector2, target: Vector2, color: Color) -> void:

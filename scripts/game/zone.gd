@@ -500,7 +500,7 @@ func _draw_exit(e: Dictionary) -> void:
 	draw_arc(Vector2.ZERO, EXIT_RADIUS, 0.0, TAU, 40, Color(0.5, 0.8, 1.0, 0.6 + 0.4 * glow), 3.0, true)
 	draw_set_transform(Vector2.ZERO)
 	var font := ThemeDB.fallback_font
-	var label := "→ %s" % e["label"]
+	var label: String = ("← %s" if p.x < rect.get_center().x else "%s →") % e["label"]
 	draw_string_outline(font, p + Vector2(-110, -EXIT_RADIUS - 18), label, HORIZONTAL_ALIGNMENT_CENTER, 220, 15, 5, Color.BLACK)
 	draw_string(font, p + Vector2(-110, -EXIT_RADIUS - 18), label, HORIZONTAL_ALIGNMENT_CENTER, 220, 15, Color("a0d0ff"))
 

@@ -1,4 +1,4 @@
-# Exile Overflow (nombre provisional)
+# Path Overflow — El Último Commit
 
 ARPG estilo Path of Exile en **Godot 4.7**, de ambientación oscura y con sarcasmo de programador.
 Por ahora es solo para un jugador en local, pero la lógica está escrita para poder pasar a un modelo cliente-servidor en el futuro.
@@ -6,8 +6,8 @@ Por ahora es solo para un jugador en local, pero la lógica está escrita para p
 ## Cómo abrirlo
 
 1. Abre Godot 4.7.2 → **Importar** → selecciona `project.godot`.
-2. Pulsa **F5**. Se abre la pantalla de inicio: crea un personaje (clase, apariencia y nombre) o elige uno guardado.
-3. Empiezas en el **Campamento del Último Commit**, una zona segura con NPCs. El tutorial (arriba a la izquierda) te guía; se puede saltar.
+2. Pulsa **F5**. Aparece la pantalla de título (logo, música); cualquier tecla lleva a la lista de personajes.
+3. Un personaje nuevo empieza en **El Sandbox**, la zona tutorial. Desde ahí se llega al campamento y al resto del acto. El tutorial (arriba a la izquierda) te guía; se puede saltar.
 
 | Tecla | Acción |
 |---|---|
@@ -21,8 +21,9 @@ Por ahora es solo para un jugador en local, pero la lógica está escrita para p
 | M | Mostrar u ocultar el minimapa |
 | P | Árbol pasivo (pausa el juego) |
 | Esc | Cierra lo abierto; si no hay nada, menú de pausa |
-| F1 / F2 / F3 / F4 | Depuración: +100 enemigos / limpiar / jefe único / botín de prueba |
-| R | Reaparecer en el campamento tras morir |
+| F1 / F2 / F3 / F4 | Depuración: +30 enemigos / limpiar / jefe único / botín de prueba |
+| R | Reaparecer en el waypoint del campamento tras morir |
+| Click en un waypoint | Viajar a otro waypoint descubierto |
 
 Todas las teclas están en *Proyecto → Configuración del proyecto → Mapa de entrada*. Pasa el ratón por cualquier elemento del HUD para ver una ayuda.
 
@@ -56,16 +57,39 @@ La versión informática de las gemas de PoE:
 
 Se definen en `data/skills/skills.json` y `data/skills/ram_modules.json`. Cada clase empieza con dos placas (`starter_skills` en `classes.json`).
 
-## Campamento, NPCs y tutorial
+## Acto I: El Último Commit
 
-- **Zona segura**: los enemigos no entran ni persiguen dentro. Fuera aparecen grupos continuamente; los que quedan muy lejos desaparecen.
-- **NPCs** (`data/camp.json`): Ada la Senior (te explica las habilidades y te da una RAM que encaja en tu primera placa), Kevin el Becario (rellena las pociones) y Root el SysAdmin (lore y una placa de regalo). Los diálogos tienen opciones con condiciones y acciones; los regalos se dan una sola vez (banderas guardadas en el personaje).
-- **Tutorial** (`data/tutorial.json`): 11 pasos con condiciones que se comprueban solas. El progreso se guarda por personaje y se puede saltar.
+El acto está definido en `data/act1.json` y lo construye `Zone` (`scripts/game/zone.gd`).
+
+| Zona | Nivel | Waypoint | Notas |
+|---|---|---|---|
+| El Sandbox | 1 | | Tutorial: pocos bugs, más botín y B.O.B., el bot de onboarding |
+| Campamento | 1 | ✔ | Zona segura, punto de reaparición; Ada, Kevin y Root |
+| El Bosque de Cables | 2 | | Iris, la becaria perdida |
+| Las Ruinas del Monolito | 4 | ✔ | |
+| El Pantano de Memory Leaks | 6 | | Tomás, el último QA |
+| Las Catacumbas del Legacy | 8 | ✔ | |
+| La Granja de Servidores | 10 | ✔ | El Fantasma del DBA (regala una RAM) |
+| Sala del Servidor Principal | 12 | | Jefe: **El Arquitecto del Monolito** |
+
+- **Obstáculos** con colisión (árboles, rocas, racks, lápidas…), colocados con semilla fija para que cada zona sea siempre igual y dejando pasillos libres entre entradas, salidas, waypoint y NPCs.
+- **Enemigos controlados**: cada zona tiene un número fijo de grupos (`packs`, `pack_size`), repartidos por el mapa con distancia mínima entre ellos y a los puntos clave. No reaparecen hasta volver a entrar. Los enemigos chocan con los obstáculos y no salen del mapa.
+- **Salidas** en los bordes ("← Campamento", "Las Ruinas →"): basta con caminar hasta ellas.
+- **Waypoints**: se descubren al tocarlos y se guardan por personaje (`flags.waypoints`). Al hacer click se abre la lista del acto.
+- **Jefe**: al derrotarlo se completa el acto (bandera `act1_complete`), cae botín especial y Ada tiene diálogo nuevo.
+- **NPCs y lore** en `data/npcs.json`: diálogos con opciones, condiciones (`requires_flag`) y acciones (regalos que se dan una sola vez). Cuentan la historia del administrador que hizo `push --force` "por el Monolito".
+- **Tutorial** (`data/tutorial.json`, versión 2): 12 pasos. Empieza en el Sandbox (moverse, atacar, matar, recoger, equipar, pociones, pasivas) y sigue en el campamento (Ada, RAM, Kevin, salir al Bosque). Los personajes con el tutorial antiguo continúan donde corresponde.
+
+## Pantalla de título, menú y creador
+
+- **Pantalla de título** (`scenes/menu/title_screen.tscn`, escena principal): logo animado de *Path Overflow* (`GameLogo`) con efecto glitch y una pila desbordándose, lluvia de binario, `console.log`s flotando, un grafo de git que termina en `push --force`, bugs cruzando, un rack de servidores echando vapor y un café.
+- **Música**: `assets/audio/title_theme.wav`, generada con `tools/generate_music.gd` (bucle de ~37 s). El autoload `MusicPlayer` la mantiene sonando entre título, menú y creador; el botón "Música" la silencia y se recuerda en `user://settings.cfg`. Para usar otra música basta con sustituir el WAV.
+- **Creador de personaje**: barras de atributos, estilo de juego, dificultad, arma, ascendencias y las placas base iniciales con su icono y descripción. Vista previa animada sobre un pedestal del color de la clase. Esos datos están en `classes.json` (`playstyle`, `difficulty`, `color`).
 
 ## Interfaz
 
 - **HUD**: orbes de vida/ES y maná, café y bebida energética con cargas (vapor y burbujas cuando están listas), barra de 6 habilidades con enfriamiento y coste, experiencia y botones de menú (C, I, K, P).
-- **Minimapa** (arriba a la derecha): campamento, NPCs, enemigos por rareza, botín valioso y una flecha hacia el campamento cuando queda fuera de vista. Se oculta mientras el inventario está abierto.
+- **Minimapa** (arriba a la derecha): el suelo de la zona, obstáculos, salidas, waypoint, NPCs, enemigos por rareza y botín valioso, con flechas hacia las salidas que quedan fuera de vista. Debajo, el nombre y nivel de la zona. Se oculta mientras el inventario está abierto.
 - **Hoja de personaje** (C): retrato animado de pecho hacia arriba que respira, parpadea, te sigue con la mirada, toma café, piensa (con spinner de carga), bosteza, se pone gafas de sol si su DPS es alto y suda con poca vida. Incluye atributos, defensas con su efecto real (reducción de la armadura, probabilidad de esquivar), resistencias con comentarios, ofensiva de la habilidad principal, muertes, enemigos eliminados y un estado de ánimo calculado.
 - **Iconos de objetos**: atlas `assets/sprites/items/items.png` generado con `tools/generate_item_icons.gd` (un icono por base, placas base, RAM por generación y pociones). Para usar arte propio, sustituye el PNG respetando la cuadrícula (mapa en `data/item_icons.json`).
 
@@ -77,7 +101,7 @@ Cinco tipos con sprites animados: Bug, Proceso zombi, Memory leak, Gusano de red
 
 ## Guardado de personajes
 
-- Un archivo JSON por personaje en `user://characters/<id>.json`. En Windows es `%APPDATA%\Godot\app_userdata\Exile Overflow\characters`.
+- Un archivo JSON por personaje en `user://characters/<id>.json`. En Windows es `%APPDATA%\Godot\app_userdata\Path Overflow\characters`. Al renombrar el proyecto, los guardados de la carpeta antigua (`Exile Overflow`) se **copian** a la nueva la primera vez; la carpeta vieja no se toca.
 - Se guarda **todo el personaje**: nombre, clase, ascendencia, nivel, experiencia, apariencia, pasivas, equipo, bolsa, placas y RAM, banderas (diálogos, tutorial) y tiempo jugado.
 - **Autoguardado**: unos segundos después de cada cambio, cada minuto, al volver al menú y al cerrar la ventana.
 - **Seguro ante cortes**: se escribe en un `.tmp` y luego se sustituye el archivo; la versión anterior queda como `.bak` y se usa si el principal está dañado.
@@ -87,7 +111,7 @@ Cinco tipos con sprites animados: Bug, Proceso zombi, Memory leak, Gusano de red
 ## Estructura
 
 ```
-data/                 Datos de diseño (JSON): clases, árbol, enemigos, campamento, tutorial
+data/                 Datos de diseño (JSON): clases, árbol, enemigos, acto y zonas, NPCs, tutorial
 data/items/           Bases, afijos (con tiers), únicos y conjuntos
 data/skills/          Habilidades (placas base) y módulos RAM
 scripts/core/         Stat, Modifier, StatBlock (fórmula de PoE), DataLoader
@@ -95,12 +119,12 @@ scripts/passives/     PassiveTree, PassiveAllocation, PassiveTreeView
 scripts/character/    CharacterData, CharacterSaves, CharacterAppearance
 scripts/items/        Rarity, ItemDatabase, Item, ItemGenerator, Inventory, ItemTransfer, ItemIcons
 scripts/skills/       SkillDatabase, Motherboard, RamModule, SkillCalc
-scripts/game/         World, Player, SkillController, EnemyManager, LootManager, Camp, IsoGround
-scripts/ui/           Menús, HUD, inventario, habilidades, diálogos, tutorial, tooltips, UiStyle
-scripts/autoload/     GameData: datos estáticos y personaje actual
+scripts/game/         World, Player, SkillController, EnemyManager, LootManager, Zone
+scripts/ui/           Título, logo, menús, HUD, inventario, habilidades, waypoints, diálogos, tutorial, UiStyle
+scripts/autoload/     GameData (datos estáticos y personaje actual), MusicPlayer
 scenes/               Escenas (.tscn)
 assets/               Sprites, shaders, UI, audio, fuentes
-tools/                Generadores (árbol, sprites de enemigos, iconos) y comprobador de scripts
+tools/                Generadores (árbol, sprites, iconos, música) y comprobador de scripts
 tests/                Pruebas de la lógica pura
 ```
 
@@ -166,7 +190,7 @@ Añade `*.json` en *Exportar → Recursos → Filtros para exportar archivos no-
 ## Próximos pasos sugeridos
 
 1. Sprites del jugador y de los NPCs (el formato de apariencia ya está preparado).
-2. Resistencias y tipos de daño en los enemigos, y enemigos con habilidades propias.
+2. Resistencias y tipos de daño en los enemigos, y enemigos (y jefe) con habilidades propias.
 3. Ascendencias mediante pruebas (ahora se eligen libremente en el árbol pasivo).
-4. Más zonas fuera del campamento (mapas con TileMapLayer isométrico).
+4. Acto II, con mapas de TileMapLayer isométrico y misiones.
 5. Editor del árbol pasivo dentro de Godot.

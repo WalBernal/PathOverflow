@@ -1,7 +1,7 @@
 class_name CharacterCreation
 extends Control
 ## Creador de personaje: clase, apariencia y nombre. Al confirmar se guarda y
-## se entra al juego directamente.
+## se entra al juego directamente (empezando en la zona tutorial).
 
 const RANDOM_NAMES := [
 	"Segfault", "NullPointer", "Bobby Tables", "Sudo", "Deadlock", "Hotfix", "Legacy",
@@ -9,15 +9,28 @@ const RANDOM_NAMES := [
 	"Stack Smasher", "Regexorcista", "Async Await", "Kernel Sanders", "Monolito", "Cron Job",
 ]
 const FACINGS := [Vector2.DOWN, Vector2.LEFT, Vector2.UP, Vector2.RIGHT]
+const ATTRIBUTES := [["strength", "FUE", Color("c84b4b")], ["dexterity", "DES", Color("5cb85c")],
+	["intelligence", "INT", Color("4b8bd6")]]
+const ATTRIBUTE_MAX := 40.0
+const DIFFICULTY_NAMES := ["", "Amable (para estándares de producción)", "Media: lee los tooltips", "Alta: vive en el borde del stack"]
+const TAG_NAMES := {"attack": "ataque", "melee": "cuerpo a cuerpo", "area": "área", "spell": "hechizo",
+	"projectile": "proyectil", "movement": "movimiento"}
+const SNIPPETS := ["git init personaje", "new Exiliado()", "chmod +x heroe.sh", "// valores por defecto, como tú",
+	"npm install valor", "assert(vivo)", "CREATE TABLE heroe (...)", "docker build -t exiliado ."]
 
 var _class_index := 0
 var _appearance := CharacterAppearance.default()
 var _facing_index := 0
 var _rng := RandomNumberGenerator.new()
 var _existing_names: Array = []
+var _time := 0.0
+var _floaters: Array[Dictionary] = []
 
 var _class_buttons: Array[Button] = []
+var _class_title: Label
 var _class_info: RichTextLabel
+var _attribute_bars: Control
+var _skills_box: VBoxContainer
 var _preview: AppearancePreview
 var _option_labels := {}      # clave -> Label del valor (complexión, peinado)
 var _swatch_rows := {}        # clave -> Array[Button]
@@ -29,21 +42,46 @@ var _create_button: Button
 func _ready() -> void:
 	theme = UiStyle.make_theme()
 	_rng.randomize()
+	MusicPlayer.play_title()
 	for data in CharacterSaves.list_all():
 		_existing_names.append(data.get("name", ""))
 	_build()
 	_select_class(0)
 	_refresh_appearance()
 	_name_edit.grab_focus()
+	for k in 10:
+		_floaters.append(_new_floater(true))
+
+
+func _process(delta: float) -> void:
+	_time += delta
+	for i in _floaters.size():
+		_floaters[i]["y"] -= _floaters[i]["speed"] * delta
+		if _floaters[i]["y"] < -20.0:
+			_floaters[i] = _new_floater(false)
+	queue_redraw()
+
+
+func _new_floater(anywhere: bool) -> Dictionary:
+	var binary := _rng.randf() < 0.6
+	var text: String
+	if binary:
+		text = ""
+		for k in _rng.randi_range(4, 8):
+			text += "1" if _rng.randf() < 0.5 else "0"
+	else:
+		text = SNIPPETS[_rng.randi_range(0, SNIPPETS.size() - 1)]
+	return {"text": text, "x": _rng.randf_range(10.0, maxf(size.x - 260.0, 20.0)),
+		"y": _rng.randf_range(0.0, size.y) if anywhere else size.y + 10.0,
+		"speed": _rng.randf_range(10.0, 26.0), "alpha": _rng.randf_range(0.05, 0.14), "binary": binary}
 
 
 func _draw() -> void:
 	UiStyle.draw_background(self, size)
-
-
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_RESIZED:
-		queue_redraw()
+	var font := get_theme_default_font()
+	for f in _floaters:
+		var color := Color(0.25, 0.95, 0.45, f["alpha"]) if f["binary"] else Color(0.85, 0.8, 0.6, f["alpha"])
+		draw_string(font, Vector2(f["x"], f["y"]), f["text"], HORIZONTAL_ALIGNMENT_LEFT, -1, 15, color)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -53,50 +91,80 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _build() -> void:
 	var root := VBoxContainer.new()
-	root.add_theme_constant_override("separation", 16)
+	root.add_theme_constant_override("separation", 14)
 	add_child(root)
-	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 32)
-	root.add_child(UiStyle.label("Nuevo personaje", 40, UiStyle.ACCENT))
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 28)
+
+	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", 18)
+	root.add_child(header)
+	var logo := GameLogo.new()
+	logo.logo_scale = 0.3
+	logo.custom_minimum_size = Vector2(300, 84)
+	header.add_child(logo)
+	var titles := VBoxContainer.new()
+	titles.alignment = BoxContainer.ALIGNMENT_CENTER
+	header.add_child(titles)
+	titles.add_child(UiStyle.label("Nuevo exiliado", 36, UiStyle.ACCENT))
+	titles.add_child(UiStyle.label("$ git init personaje  —  elige clase, cara y un nombre que no dé vergüenza en los logs", 15, UiStyle.MUTED))
 
 	var columns := HBoxContainer.new()
-	columns.add_theme_constant_override("separation", 18)
+	columns.add_theme_constant_override("separation", 16)
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(columns)
 
 	# --- Clase ---
 	var class_panel := PanelContainer.new()
-	class_panel.custom_minimum_size = Vector2(440, 0)
+	class_panel.custom_minimum_size = Vector2(470, 0)
 	columns.add_child(class_panel)
 	var class_box := VBoxContainer.new()
-	class_box.add_theme_constant_override("separation", 8)
+	class_box.add_theme_constant_override("separation", 6)
 	class_panel.add_child(class_box)
 	class_box.add_child(UiStyle.label("Clase", 22, UiStyle.ACCENT))
 	var group := ButtonGroup.new()
 	for i in GameData.classes.size():
 		var c: Dictionary = GameData.classes[i]
-		var attrs: Dictionary = c["base_attributes"]
 		var b := Button.new()
 		b.toggle_mode = true
 		b.button_group = group
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		b.text = "%s      FUE %d · DES %d · INT %d" % [c["name"], attrs["strength"], attrs["dexterity"], attrs["intelligence"]]
-		b.custom_minimum_size.y = 42
+		b.text = "   " + c["name"]
+		b.custom_minimum_size.y = 40
 		b.pressed.connect(_select_class.bind(i))
+		var stripe := ColorRect.new()
+		stripe.color = Color(c.get("color", "d9a441"))
+		stripe.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		stripe.position = Vector2(4, 6)
+		stripe.size = Vector2(6, 28)
+		b.add_child(stripe)
 		class_box.add_child(b)
 		_class_buttons.append(b)
+	_attribute_bars = Control.new()
+	_attribute_bars.custom_minimum_size = Vector2(0, 84)
+	_attribute_bars.draw.connect(_draw_attribute_bars)
+	class_box.add_child(_attribute_bars)
+	var info_scroll := ScrollContainer.new()
+	info_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	info_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	class_box.add_child(info_scroll)
 	_class_info = RichTextLabel.new()
 	_class_info.bbcode_enabled = true
 	_class_info.fit_content = true
-	_class_info.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	class_box.add_child(_class_info)
+	_class_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info_scroll.add_child(_class_info)
 
-	# --- Vista previa ---
+	# --- Vista previa + habilidades iniciales ---
 	var preview_panel := PanelContainer.new()
 	preview_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	columns.add_child(preview_panel)
 	var preview_box := VBoxContainer.new()
+	preview_box.add_theme_constant_override("separation", 8)
 	preview_panel.add_child(preview_box)
+	_class_title = UiStyle.label("", 30, UiStyle.ACCENT)
+	_class_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	preview_box.add_child(_class_title)
 	_preview = AppearancePreview.new()
+	_preview.animated = true
 	_preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	preview_box.add_child(_preview)
 	var rotate_row := HBoxContainer.new()
@@ -106,10 +174,14 @@ func _build() -> void:
 	rotate_row.add_child(UiStyle.button("<", _rotate.bind(-1), 48))
 	rotate_row.add_child(UiStyle.label("Girar", 14, UiStyle.MUTED))
 	rotate_row.add_child(UiStyle.button(">", _rotate.bind(1), 48))
+	preview_box.add_child(UiStyle.label("Placas base iniciales", 18, UiStyle.ACCENT))
+	_skills_box = VBoxContainer.new()
+	_skills_box.add_theme_constant_override("separation", 6)
+	preview_box.add_child(_skills_box)
 
 	# --- Apariencia ---
 	var look_panel := PanelContainer.new()
-	look_panel.custom_minimum_size = Vector2(440, 0)
+	look_panel.custom_minimum_size = Vector2(430, 0)
 	columns.add_child(look_panel)
 	var look_box := VBoxContainer.new()
 	look_box.add_theme_constant_override("separation", 10)
@@ -126,6 +198,8 @@ func _build() -> void:
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	look_box.add_child(spacer)
+	var hint := UiStyle.label("La apariencia no da stats. Es puramente cosmética,\ncomo los comentarios del código.", 13, UiStyle.MUTED)
+	look_box.add_child(hint)
 	look_box.add_child(UiStyle.button("Apariencia aleatoria", _randomize_appearance))
 
 	# --- Nombre y confirmación ---
@@ -190,14 +264,77 @@ func _select_class(index: int) -> void:
 	_class_index = index
 	_class_buttons[index].button_pressed = true  # así el ButtonGroup suelta los demás
 	var c: Dictionary = GameData.classes[index]
+	var class_color := Color(c.get("color", "d9a441"))
+	_class_title.text = c["name"]
+	_class_title.add_theme_color_override("font_color", class_color)
+	_preview.glow_color = class_color
+	_attribute_bars.queue_redraw()
+
 	var asc_names := PackedStringArray()
 	for a in c.get("ascendancies", []):
 		asc_names.append(a["name"])
 	var weapon_name := "—"
 	if GameData.items.bases.has(c.get("starter_weapon", "")):
 		weapon_name = GameData.items.bases[c["starter_weapon"]]["name"]
-	_class_info.text = "\n[font_size=24][color=#d9a441]%s[/color][/font_size]\n[i][color=#a08f6a]%s[/color][/i]\n\n[color=#8a8293]Arma inicial:[/color] %s\n[color=#8a8293]Ascendencias:[/color] %s" % [
-		c["name"], c["description"], weapon_name, ", ".join(asc_names)]
+	var difficulty := clampi(int(c.get("difficulty", 2)), 1, 3)
+	var stars := "★".repeat(difficulty) + "☆".repeat(3 - difficulty)
+	_class_info.text = "[i][color=#a08f6a]%s[/color][/i]\n\n[color=#8a8293]Estilo de juego:[/color] %s\n[color=#8a8293]Dificultad:[/color] [color=#d9a441]%s[/color] %s\n[color=#8a8293]Arma inicial:[/color] %s\n[color=#8a8293]Ascendencias:[/color] %s" % [
+		c["description"], c.get("playstyle", "—"), stars, DIFFICULTY_NAMES[difficulty], weapon_name, ", ".join(asc_names)]
+
+	for child in _skills_box.get_children():
+		child.queue_free()
+	for skill_id in c.get("starter_skills", []):
+		if GameData.items.skills.skills.has(skill_id):
+			_skills_box.add_child(_skill_card(GameData.items.skills.skills[skill_id]))
+
+
+func _skill_card(def: Dictionary) -> Control:
+	var panel := PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = UiStyle.PANEL_LIGHT
+	style.border_color = UiStyle.BORDER
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.set_content_margin_all(8)
+	panel.add_theme_stylebox_override("panel", style)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	panel.add_child(row)
+	var icon := Control.new()
+	icon.custom_minimum_size = Vector2(48, 48)
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	icon.draw.connect(func() -> void: SkillIcon.draw(icon, Rect2(Vector2.ZERO, icon.size), def))
+	row.add_child(icon)
+	var texts := VBoxContainer.new()
+	texts.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	texts.add_theme_constant_override("separation", 0)
+	row.add_child(texts)
+	var tags := PackedStringArray()
+	for tag: String in def.get("tags", []):
+		tags.append(TAG_NAMES.get(tag, tag))
+	texts.add_child(UiStyle.label("%s   [%s]" % [def.get("name", "?"), ", ".join(tags)], 16, UiStyle.ACCENT))
+	var desc := UiStyle.label(def.get("description", ""), 13, UiStyle.TEXT)
+	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	texts.add_child(desc)
+	return panel
+
+
+func _draw_attribute_bars() -> void:
+	var c: Dictionary = GameData.classes[_class_index]
+	var attrs: Dictionary = c["base_attributes"]
+	var font := get_theme_default_font()
+	var width := _attribute_bars.size.x
+	for k in ATTRIBUTES.size():
+		var key: String = ATTRIBUTES[k][0]
+		var color: Color = ATTRIBUTES[k][2]
+		var value := float(attrs.get(key, 0))
+		var y := 8.0 + k * 26.0
+		_attribute_bars.draw_string(font, Vector2(0, y + 14), ATTRIBUTES[k][1], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, color)
+		var bar := Rect2(Vector2(44, y), Vector2(width - 90, 16))
+		_attribute_bars.draw_rect(bar, Color("0d0b10"))
+		_attribute_bars.draw_rect(Rect2(bar.position, Vector2(bar.size.x * clampf(value / ATTRIBUTE_MAX, 0.0, 1.0), bar.size.y)), Color(color, 0.85))
+		_attribute_bars.draw_rect(bar, UiStyle.BORDER, false, 1.0)
+		_attribute_bars.draw_string(font, Vector2(width - 38, y + 14), str(int(value)), HORIZONTAL_ALIGNMENT_RIGHT, 38, 14, UiStyle.TEXT)
 
 
 func _cycle(key: String, count: int, step: int) -> void:
