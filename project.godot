@@ -10,15 +10,16 @@ config_version=5
 
 [application]
 
-config/name="Exile Overflow"
+config/name="Path Overflow"
 config/description="ARPG oscuro con sarcasmo de programador."
-run/main_scene="res://scenes/menu/main_menu.tscn"
+run/main_scene="res://scenes/menu/title_screen.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
 
 GameData="*res://scripts/autoload/game_data.gd"
+MusicPlayer="*res://scripts/autoload/music_player.gd"
 
 [display]
 

@@ -1,19 +1,20 @@
 {
-  "version": 1,
-  "_doc": "Pasos del tutorial, en orden. La condición de cada paso está en scripts/ui/tutorial_panel.gd (por id).",
+  "version": 2,
+  "_doc": "Pasos del tutorial, en orden. La condición de cada paso está en scripts/ui/tutorial_panel.gd (por id). count: cantidad necesaria (p. ej. enemigos).",
   "title": "Daemon de Ayuda",
   "steps": [
     { "id": "move", "text": "Muévete con WASD o manteniendo pulsado el click izquierdo. Sí, como en todos los juegos desde 1998." },
-    { "id": "talk_ada", "text": "Habla con Ada (click sobre ella). Es la única de aquí que lee la documentación." },
-    { "id": "install_ram", "text": "Pulsa K y mete la RAM que te dio Ada en una ranura de su color: click en la RAM y luego en la ranura. Doble click la coloca sola, para los vagos." },
-    { "id": "kevin", "text": "Pídele un café a Kevin, el becario. No sirve de mucho, pero le hace ilusión." },
-    { "id": "leave_camp", "text": "Sal del campamento por cualquiera de las cuatro entradas. Fuera no hay firewall. Ni RR. HH." },
-    { "id": "use_skill", "text": "Usa tus habilidades: click derecho, Espacio, Q, E, R y F. Pasa el ratón por la barra para ver qué hace cada una." },
-    { "id": "kill", "text": "Elimina 10 enemigos. No son bugs, son features hostiles." },
-    { "id": "flask", "text": "Bebe un café (tecla 1) cuando te duela algo. Las pociones se recargan matando enemigos. El café no, ojalá." },
+    { "id": "use_skill", "text": "Ataca con click derecho o Espacio. Q, E, R y F son el resto de la barra. Pasa el ratón por la barra para ver qué hace cada una." },
+    { "id": "kill", "count": 5, "text": "Elimina 5 bugs. Aquí son pequeños: perfectos para tu autoestima." },
     { "id": "loot", "text": "Recoge un objeto haciendo click en su etiqueta. Cuanto más chillón el color, mejor el objeto. Como en las ofertas de empleo." },
-    { "id": "equip", "text": "Abre el inventario (I) y equípate algo. Pasa el ratón por encima para comparar: verde mejora, rojo empeora." },
-    { "id": "passives", "text": "Pulsa P y gasta un punto de pasiva. Tienes puntos sin gastar, como tu presupuesto de formación." }
+    { "id": "equip", "text": "Abre el inventario (I) y equípate algo: arrástralo a su ranura o haz click. Verde mejora, rojo empeora." },
+    { "id": "flask", "text": "Bebe un café (tecla 1). Las pociones se recargan matando enemigos. El café de verdad, no." },
+    { "id": "passives", "text": "Pulsa P y gasta un punto de pasiva. Tienes puntos sin gastar, como tu presupuesto de formación." },
+    { "id": "reach_camp", "text": "Sigue hacia el este hasta el campamento. Pisa el portal de la salida. B.O.B. te echará de menos (no)." },
+    { "id": "talk_ada", "text": "Habla con Ada (click sobre ella). Es la única de aquí que lee la documentación." },
+    { "id": "install_ram", "text": "Pulsa K y mete la RAM que te dio Ada en una ranura de su color: arrástrala, o haz doble click para que se coloque sola." },
+    { "id": "kevin", "text": "Pídele un café a Kevin, el becario. No sirve de mucho, pero le hace ilusión." },
+    { "id": "leave_camp", "text": "Sal por el este al Bosque de Cables. El waypoint del campamento te traerá de vuelta (y al morir reapareces aquí)." }
   ],
   "done": "Tutorial completado. Ya sabes tanto como el equipo de QA. Que no es mucho. Buena suerte: la vas a necesitar."
 }

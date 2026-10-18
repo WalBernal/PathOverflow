@@ -8,6 +8,7 @@ extends CanvasLayer
 signal return_to_menu_requested
 signal quit_requested
 signal dialogue_action(action: Dictionary)
+signal waypoint_selected(zone_id: String)
 
 const TREE_SCREEN := preload("res://scenes/ui/passive_tree_screen.tscn")
 
@@ -25,11 +26,14 @@ var _player: Player
 var _loot: LootManager
 var _minimap_enabled := true
 var _death_panel: PanelContainer
+var _waypoint_panel: WaypointPanel
+var _zone_banner: Label
+var _act_banner: PanelContainer
 var _pause_panel: Control
 
 
 func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot: LootManager,
-		skills: SkillController, camp: Camp) -> void:
+		skills: SkillController) -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_character = character
 	_player = player
@@ -51,7 +55,7 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	tutorial = TutorialPanel.new()
 	add_child(tutorial)
 	tutorial.position = Vector2(10, 34)
-	tutorial.setup(character, player, camp)
+	tutorial.setup(character, player)
 	tutorial.step_completed.connect(func(text: String) -> void: hud.flash(text, Color("6fb36b")))
 
 	inventory_panel = InventoryPanel.new()
@@ -86,7 +90,6 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	minimap.player = player
 	minimap.enemies = enemies
 	minimap.loot = loot
-	minimap.camp = camp
 	add_child(minimap)
 	minimap.anchor_left = 1.0
 	minimap.anchor_right = 1.0
@@ -118,6 +121,26 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	add_child(_death_panel)
 	_death_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 
+	_waypoint_panel = WaypointPanel.new()
+	_waypoint_panel.visible = false
+	add_child(_waypoint_panel)
+	_waypoint_panel.selected.connect(func(zone_id: String) -> void:
+		_waypoint_panel.visible = false
+		waypoint_selected.emit(zone_id))
+
+	_zone_banner = UiStyle.label("", 34, UiStyle.ACCENT)
+	_zone_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_zone_banner.add_theme_constant_override("outline_size", 8)
+	_zone_banner.add_theme_color_override("font_outline_color", Color.BLACK)
+	_zone_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_zone_banner)
+	_zone_banner.anchor_right = 1.0
+	_zone_banner.offset_top = 150.0
+	_zone_banner.modulate.a = 0.0
+
+	_act_banner = _build_act_banner()
+	add_child(_act_banner)
+
 	_pause_panel = _build_pause_menu()
 	add_child(_pause_panel)
 	_pause_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -129,6 +152,50 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	skills.skill_used.connect(func(_i: int) -> void: tutorial.notify("skill_used"))
 	skills.not_enough_mana.connect(func() -> void: hud.flash("Sin maná. Bebe algo (tecla 2) o espera, como con el compilador."))
 	player.flask_used.connect(func(_i: int) -> void: tutorial.notify("flask_used"))
+
+
+## Al entrar en una zona: minimapa, tutorial y el nombre de la zona en grande.
+func on_zone_changed(zone: Zone) -> void:
+	minimap.zone = zone
+	tutorial.zone = zone
+	dialogue_box.close()
+	_waypoint_panel.visible = false
+	_zone_banner.text = zone.zone_name if zone.safe else "%s\nNivel de zona %d" % [zone.zone_name, zone.level]
+	var tween := create_tween()
+	_zone_banner.modulate.a = 0.0
+	tween.tween_property(_zone_banner, "modulate:a", 1.0, 0.4)
+	tween.tween_interval(2.0)
+	tween.tween_property(_zone_banner, "modulate:a", 0.0, 0.8)
+
+
+func open_waypoints(current_zone: String) -> void:
+	_waypoint_panel.open(_character.flags.get("waypoints", []), current_zone)
+
+
+func show_act_complete(act_name: String) -> void:
+	_act_banner.get_node("Box/Title").text = "%s: COMPLETADO" % act_name
+	_act_banner.visible = true
+	_act_banner.set_anchors_and_offsets_preset.call_deferred(Control.PRESET_CENTER)
+	get_tree().create_timer(9.0).timeout.connect(func() -> void: _act_banner.visible = false)
+
+
+func _build_act_banner() -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.theme = UiStyle.make_theme()
+	panel.visible = false
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var box := VBoxContainer.new()
+	box.name = "Box"
+	box.add_theme_constant_override("separation", 8)
+	panel.add_child(box)
+	var title := UiStyle.label("", 32, UiStyle.ACCENT)
+	title.name = "Title"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(title)
+	var text := UiStyle.label("El Arquitecto del Monolito ha sido terminado (kill -9).\nEl Servidor Principal sigue caído, pero ahora es culpa de otro.\nVuelve al campamento y cuéntaselo a Ada.", 16)
+	text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(text)
+	return panel
 
 
 func open_dialogue(npc: Dictionary, dialogue: Dictionary) -> void:
@@ -189,7 +256,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed(&"ui_cancel"):
 		# Esc cierra lo que esté abierto; si no hay nada, pausa.
-		if dialogue_box.visible:
+		if _waypoint_panel.visible:
+			_waypoint_panel.visible = false
+		elif dialogue_box.visible:
 			dialogue_box.close()
 		elif tree_screen.visible:
 			toggle_passive_tree()

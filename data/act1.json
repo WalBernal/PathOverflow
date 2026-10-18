@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "_doc": "Acto I. Coordenadas en píxeles dentro de cada zona (0,0 = esquina superior izquierda). entries: puntos de llegada (los usan las salidas de otras zonas y el waypoint). exits: al pisarlas se viaja a target/entry. enemies.packs: grupos repartidos por la zona (lejos de entradas, salidas, NPCs y waypoint); se regeneran al volver a entrar. obstacles: cantidad y tipos (se colocan con una semilla fija por zona, sin tapar el camino entre entradas y salidas). style: aspecto del suelo y de los obstáculos.",
+  "id": "act1",
+  "name": "Acto I: El Último Commit",
+  "start_zone": "tutorial",
+  "town": "campamento",
+  "zones": [
+    {
+      "id": "tutorial", "name": "El Sandbox", "level": 1, "style": "sandbox", "size": [2200, 1400],
+      "entries": { "start": [250, 700], "from_camp": [1950, 700] },
+      "exits": [ { "pos": [2110, 700], "target": "campamento", "entry": "from_tutorial", "label": "Campamento" } ],
+      "npcs": [ { "id": "bot_onboarding", "pos": [430, 600] } ],
+      "enemies": { "packs": 5, "pack_size": [2, 3], "types": ["bug"], "special_chance": 0.0, "elite_chance": 0.0 },
+      "drop_multiplier": 3.0,
+      "obstacles": { "count": 10, "kinds": ["crate", "monitor"] }
+    },
+    {
+      "id": "campamento", "name": "Campamento del Último Commit", "level": 1, "style": "camp", "size": [1800, 1400], "safe": true,
+      "entries": { "from_tutorial": [190, 700], "from_zona1": [1610, 700], "waypoint": [900, 820] },
+      "exits": [
+        { "pos": [80, 700], "target": "tutorial", "entry": "from_camp", "label": "El Sandbox" },
+        { "pos": [1720, 700], "target": "zona1", "entry": "from_camp", "label": "Bosque de Cables" }
+      ],
+      "waypoint": [900, 900],
+      "npcs": [ { "id": "ada", "pos": [680, 560] }, { "id": "kevin", "pos": [1120, 540] }, { "id": "root", "pos": [1080, 1060] } ],
+      "obstacles": { "count": 0, "kinds": [] }
+    },
+    {
+      "id": "zona1", "name": "El Bosque de Cables", "level": 2, "style": "forest", "size": [3400, 2200],
+      "entries": { "from_camp": [190, 1100], "from_zona2": [3210, 700] },
+      "exits": [
+        { "pos": [80, 1100], "target": "campamento", "entry": "from_zona1", "label": "Campamento" },
+        { "pos": [3320, 700], "target": "zona2", "entry": "from_zona1", "label": "Ruinas del Monolito" }
+      ],
+      "npcs": [ { "id": "iris", "pos": [1700, 1600] } ],
+      "enemies": { "packs": 9, "pack_size": [3, 6], "types": ["bug", "gusano"], "special_chance": 0.12, "elite_chance": 0.06 },
+      "obstacles": { "count": 34, "kinds": ["cable_tree", "rock"] }
+    },
+    {
+      "id": "zona2", "name": "Las Ruinas del Monolito", "level": 4, "style": "ruins", "size": [3400, 2400],
+      "entries": { "from_zona1": [190, 700], "from_zona3": [3210, 1700], "waypoint": [1700, 1150] },
+      "exits": [
+        { "pos": [80, 700], "target": "zona1", "entry": "from_zona2", "label": "Bosque de Cables" },
+        { "pos": [3320, 1700], "target": "zona3", "entry": "from_zona2", "label": "Pantano de Memory Leaks" }
+      ],
+      "waypoint": [1700, 1250],
+      "enemies": { "packs": 10, "pack_size": [4, 7], "types": ["proceso_zombi", "bug"], "special_chance": 0.15, "elite_chance": 0.08 },
+      "obstacles": { "count": 34, "kinds": ["pillar", "rubble"] }
+    },
+    {
+      "id": "zona3", "name": "El Pantano de Memory Leaks", "level": 6, "style": "swamp", "size": [3600, 2400],
+      "entries": { "from_zona2": [190, 1700], "from_zona4": [3410, 900] },
+      "exits": [
+        { "pos": [80, 1700], "target": "zona2", "entry": "from_zona3", "label": "Ruinas del Monolito" },
+        { "pos": [3520, 900], "target": "zona4", "entry": "from_zona3", "label": "Catacumbas del Legacy" }
+      ],
+      "npcs": [ { "id": "tomas", "pos": [1800, 650] } ],
+      "enemies": { "packs": 11, "pack_size": [4, 7], "types": ["memory_leak", "gusano"], "special_chance": 0.15, "elite_chance": 0.1 },
+      "obstacles": { "count": 30, "kinds": ["puddle", "dead_tree"] }
+    },
+    {
+      "id": "zona4", "name": "Las Catacumbas del Legacy", "level": 8, "style": "catacombs", "size": [3600, 2400],
+      "entries": { "from_zona3": [190, 900], "from_zona5": [3410, 1500], "waypoint": [1800, 1200] },
+      "exits": [
+        { "pos": [80, 900], "target": "zona3", "entry": "from_zona4", "label": "Pantano de Memory Leaks" },
+        { "pos": [3520, 1500], "target": "zona5", "entry": "from_zona4", "label": "Granja de Servidores" }
+      ],
+      "waypoint": [1800, 1300],
+      "enemies": { "packs": 12, "pack_size": [4, 8], "types": ["proceso_zombi", "memory_leak"], "special_chance": 0.18, "elite_chance": 0.1 },
+      "obstacles": { "count": 36, "kinds": ["tomb", "pillar"] }
+    },
+    {
+      "id": "zona5", "name": "La Granja de Servidores", "level": 10, "style": "servers", "size": [3600, 2400],
+      "entries": { "from_zona4": [190, 1500], "from_jefe": [3410, 1200], "waypoint": [650, 1350] },
+      "exits": [
+        { "pos": [80, 1500], "target": "zona4", "entry": "from_zona5", "label": "Catacumbas del Legacy" },
+        { "pos": [3520, 1200], "target": "jefe", "entry": "from_zona5", "label": "Sala del Servidor Principal" }
+      ],
+      "waypoint": [650, 1250],
+      "npcs": [ { "id": "dba", "pos": [3080, 950] } ],
+      "enemies": { "packs": 13, "pack_size": [4, 8], "types": ["bug", "proceso_zombi", "memory_leak", "gusano"], "special_chance": 0.2, "elite_chance": 0.12 },
+      "obstacles": { "count": 40, "kinds": ["rack", "cable_coil"] }
+    },
+    {
+      "id": "jefe", "name": "Sala del Servidor Principal", "level": 12, "style": "boss", "size": [2200, 1500],
+      "entries": { "from_zona5": [190, 750] },
+      "exits": [ { "pos": [80, 750], "target": "zona5", "entry": "from_jefe", "label": "Granja de Servidores" } ],
+      "boss": { "type": "daemon", "name": "El Arquitecto del Monolito", "pos": [1650, 750], "life_mult": 4.0 },
+      "enemies": { "packs": 2, "pack_size": [3, 4], "types": ["proceso_zombi"], "special_chance": 0.3, "elite_chance": 0.0 },
+      "obstacles": { "count": 8, "kinds": ["rack"] }
+    }
+  ]
+}

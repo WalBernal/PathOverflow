@@ -20,6 +20,7 @@ var _card_group := ButtonGroup.new()
 
 func _ready() -> void:
 	theme = UiStyle.make_theme()
+	MusicPlayer.play_title()
 	_build()
 	_reload()
 
@@ -44,9 +45,10 @@ func _build() -> void:
 	add_child(root)
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 40)
 
-	var title := UiStyle.label("EXILE OVERFLOW", 64, UiStyle.ACCENT)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	root.add_child(title)
+	var logo := GameLogo.new()
+	logo.logo_scale = 0.55
+	logo.custom_minimum_size = Vector2(0, 150)
+	root.add_child(logo)
 	var subtitle := UiStyle.label("Un ARPG oscuro. Como tu código en producción.", 18, UiStyle.MUTED)
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	root.add_child(subtitle)
@@ -111,6 +113,9 @@ func _build() -> void:
 	root.add_child(footer)
 	_status = UiStyle.label("", 16, UiStyle.DANGER)
 	footer.add_child(_status)
+	var mute := UiStyle.button("Música: no" if MusicPlayer.muted else "Música: sí", func() -> void: pass, 140)
+	mute.pressed.connect(func() -> void: mute.text = "Música: no" if MusicPlayer.toggle_mute() else "Música: sí")
+	footer.add_child(mute)
 	footer.add_child(UiStyle.button("Salir", func() -> void: get_tree().quit(), 140))
 
 	_confirm = ConfirmationDialog.new()

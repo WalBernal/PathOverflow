@@ -1,12 +1,13 @@
 class_name Minimap
 extends Control
-## Minimapa circular centrado en el jugador: campamento, NPCs, enemigos (por
-## rareza), botín valioso y una flecha hacia el campamento si queda fuera.
+## Minimapa circular centrado en el jugador: suelo y obstáculos de la zona,
+## salidas, waypoint, NPCs, enemigos (por rareza) y botín valioso. Las salidas
+## y el waypoint fuera de vista se señalan con una flecha en el borde.
 ## Se dibuja entero en _draw(); con unos cientos de puntos sobra.
 
 const RADIUS := 100.0
 ## Píxeles del minimapa por píxel del mundo.
-const SCALE := 0.085
+const SCALE := 0.065
 const BG := Color("0d0b10e6")
 const RING := Color("8a6d3b")
 const ENEMY_COLORS := {
@@ -19,7 +20,7 @@ const ENEMY_COLORS := {
 var player: Player
 var enemies: EnemyManager
 var loot: LootManager
-var camp: Camp
+var zone: Zone
 
 
 func _ready() -> void:
@@ -46,22 +47,38 @@ func _draw() -> void:
 	var center := Vector2(RADIUS, RADIUS)
 	draw_circle(center, RADIUS, BG)
 
-	# Campamento.
-	var camp_pos := _to_map(Vector2.ZERO)
-	var camp_r := camp.radius * SCALE
-	if camp_pos.distance_to(center) - camp_r < RADIUS:
-		_draw_clipped_disc(camp_pos, camp_r, Color("3a2e22"))
-		if _inside(camp_pos):
-			draw_circle(camp_pos, 2.5, Color("f0a030"))
-	else:
-		# Flecha en el borde apuntando al campamento.
-		var dir := (camp_pos - center).normalized()
-		var tip := center + dir * (RADIUS - 6.0)
-		draw_colored_polygon(PackedVector2Array([tip, tip - dir * 10.0 + dir.orthogonal() * 5.0,
-			tip - dir * 10.0 - dir.orthogonal() * 5.0]), Color("f0a030"))
+	if zone == null:
+		return
+	# Suelo de la zona, recortado al círculo.
+	var circle := PackedVector2Array()
+	for k in 48:
+		circle.append(center + Vector2.from_angle(TAU * k / 48.0) * RADIUS)
+	var r := zone.rect
+	var ground := PackedVector2Array([_to_map(r.position), _to_map(Vector2(r.end.x, r.position.y)), _to_map(r.end), _to_map(Vector2(r.position.x, r.end.y))])
+	for poly in Geometry2D.intersect_polygons(ground, circle):
+		draw_colored_polygon(poly, Color("2a2530"))
 
-	for npc in camp.npcs:
-		var p := _to_map(camp.npc_position(npc))
+	for o in zone.obstacles:
+		var p := _to_map(o["pos"])
+		if _inside(p):
+			draw_circle(p, maxf(1.5, o["radius"] * SCALE), Color("4a4352"))
+
+	# Salidas: dentro, un rombo; fuera, una flecha en el borde hacia ellas.
+	for e in zone.exits:
+		var p := _to_map(e["pos"])
+		if _inside(p):
+			draw_colored_polygon(PackedVector2Array([p + Vector2(0, -5), p + Vector2(5, 0), p + Vector2(0, 5), p + Vector2(-5, 0)]), Color("7fc8ff"))
+		else:
+			_edge_arrow(center, p, Color("7fc8ff"))
+	if zone.has_waypoint:
+		var p := _to_map(zone.waypoint)
+		if _inside(p):
+			draw_circle(p, 4.0, Color("5cd0ff"))
+			draw_arc(p, 6.0, 0.0, TAU, 16, Color("5cd0ff"), 1.0)
+		else:
+			_edge_arrow(center, p, Color("5cd0ff"))
+	for npc in zone.npcs:
+		var p := _to_map(zone.npc_position(npc))
 		if _inside(p):
 			draw_circle(p, 2.5, UiStyle.ACCENT)
 
@@ -89,10 +106,17 @@ func _draw() -> void:
 
 	draw_arc(center, RADIUS, 0.0, TAU, 64, RING, 2.5, true)
 	draw_arc(center, RADIUS + 3.0, 0.0, TAU, 64, RING.darkened(0.5), 1.5, true)
-	var zone := camp.camp_name if camp.contains(player.global_position) else "Servidor Caído · nivel %d" % enemies.area_level
+	var label := zone.zone_name if zone.safe else "%s · nivel %d" % [zone.zone_name, zone.level]
 	var font := get_theme_default_font()
-	draw_string_outline(font, Vector2(0, RADIUS * 2.0 + 16.0), zone, HORIZONTAL_ALIGNMENT_CENTER, RADIUS * 2.0, 12, 4, Color.BLACK)
-	draw_string(font, Vector2(0, RADIUS * 2.0 + 16.0), zone, HORIZONTAL_ALIGNMENT_CENTER, RADIUS * 2.0, 12, UiStyle.TEXT)
+	draw_string_outline(font, Vector2(0, RADIUS * 2.0 + 16.0), label, HORIZONTAL_ALIGNMENT_CENTER, RADIUS * 2.0, 12, 4, Color.BLACK)
+	draw_string(font, Vector2(0, RADIUS * 2.0 + 16.0), label, HORIZONTAL_ALIGNMENT_CENTER, RADIUS * 2.0, 12, UiStyle.TEXT)
+
+
+func _edge_arrow(center: Vector2, target: Vector2, color: Color) -> void:
+	var dir := (target - center).normalized()
+	var tip := center + dir * (RADIUS - 6.0)
+	draw_colored_polygon(PackedVector2Array([tip, tip - dir * 10.0 + dir.orthogonal() * 5.0,
+		tip - dir * 10.0 - dir.orthogonal() * 5.0]), color)
 
 
 ## Disco recortado al círculo del minimapa (aproximado con puntos del borde).

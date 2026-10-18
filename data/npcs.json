@@ -1,0 +1,499 @@
+{
+  "version": 1,
+  "_doc": "NPCs y sus diálogos. Nodos con texto y opciones. Opción: text, next ('' = cerrar), requires_flag / hides_if_flag, action {type: give_item | give_matching_ram | refill | set_flag, flag}. Las banderas se guardan en el personaje. Dónde aparece cada NPC lo dice data/act1.json.",
+  "npcs": {
+    "ada": {
+      "name": "Ada, la Senior",
+      "dialogue": "ada",
+      "appearance": {
+        "body": 1,
+        "hair": 2,
+        "skin_tone": "e0ac8a",
+        "hair_color": "c8c8c8",
+        "outfit_color": "5a3b6b"
+      }
+    },
+    "kevin": {
+      "name": "Kevin, el Becario",
+      "dialogue": "kevin",
+      "appearance": {
+        "body": 0,
+        "hair": 3,
+        "skin_tone": "f1d2b6",
+        "hair_color": "b5651d",
+        "outfit_color": "2b6b45"
+      }
+    },
+    "root": {
+      "name": "Root, el SysAdmin",
+      "dialogue": "root",
+      "appearance": {
+        "body": 2,
+        "hair": 0,
+        "skin_tone": "7c4a2d",
+        "hair_color": "0f0d0c",
+        "outfit_color": "1f1f2e"
+      }
+    },
+    "bot_onboarding": {
+      "name": "B.O.B., Bot de Onboarding",
+      "dialogue": "bot_onboarding",
+      "appearance": {
+        "body": 1,
+        "hair": 0,
+        "skin_tone": "c8c8c8",
+        "hair_color": "3d5a80",
+        "outfit_color": "2b4a6b"
+      }
+    },
+    "iris": {
+      "name": "Iris, la Becaria Perdida",
+      "dialogue": "iris",
+      "appearance": {
+        "body": 0,
+        "hair": 4,
+        "skin_tone": "e0ac8a",
+        "hair_color": "6b4423",
+        "outfit_color": "6b5a2b"
+      }
+    },
+    "tomas": {
+      "name": "Tomás, el Último QA",
+      "dialogue": "tomas",
+      "appearance": {
+        "body": 2,
+        "hair": 1,
+        "skin_tone": "a8714f",
+        "hair_color": "c8c8c8",
+        "outfit_color": "3a3a3a"
+      }
+    },
+    "dba": {
+      "name": "El Fantasma del DBA",
+      "dialogue": "dba",
+      "appearance": {
+        "body": 1,
+        "hair": 2,
+        "skin_tone": "c8c8c8",
+        "hair_color": "c8c8c8",
+        "outfit_color": "1f1f2e"
+      }
+    }
+  },
+  "dialogues": {
+    "ada": {
+      "start": "hola",
+      "nodes": {
+        "hola": {
+          "text": "Vaya, otro exiliado. Te tiraron a producción sin pasar por staging, ¿eh? Soy Ada. Llevo aquí desde que esto era un monolito en COBOL.",
+          "options": [
+            {
+              "text": "He derrotado al Arquitecto del Monolito.",
+              "next": "victoria",
+              "requires_flag": "act1_complete",
+              "hides_if_flag": "ada_victoria"
+            },
+            {
+              "text": "¿Dónde estoy?",
+              "next": "lugar"
+            },
+            {
+              "text": "¿Cómo funcionan las habilidades?",
+              "next": "habilidades"
+            },
+            {
+              "text": "¿Tienes algo útil para mí?",
+              "next": "regalo",
+              "hides_if_flag": "ada_regalo"
+            },
+            {
+              "text": "Adiós.",
+              "next": ""
+            }
+          ]
+        },
+        "lugar": {
+          "text": "En el Campamento del Último Commit. Ahí fuera está el Servidor Caído: bugs, procesos zombi, memory leaks... todo lo que alguien prometió arreglar «en el siguiente sprint». Aquí no entran: el firewall del campamento todavía aguanta.",
+          "options": [
+            {
+              "text": "Muy tranquilizador.",
+              "next": "hola"
+            },
+            {
+              "text": "Adiós.",
+              "next": ""
+            }
+          ]
+        },
+        "habilidades": {
+          "text": "Tus habilidades son placas base. Cada placa tiene ranuras DIMM: DDR3, DDR4 o DDR5. Mete módulos RAM de la misma generación y la habilidad mejora. Más RAM, más consumo de maná. Como todo en la vida.",
+          "options": [
+            {
+              "text": "¿Y dónde consigo RAM?",
+              "next": "ram"
+            },
+            {
+              "text": "Entendido.",
+              "next": "hola"
+            }
+          ]
+        },
+        "ram": {
+          "text": "Cae de los enemigos, igual que las placas. A veces con 6 o 7 ranuras, si los dioses del RNG te quieren. Spoiler: no te quieren.",
+          "options": [
+            {
+              "text": "Vale.",
+              "next": "hola"
+            }
+          ]
+        },
+        "regalo": {
+          "text": "Toma, un módulo que encaja en tu primera placa. Abre las habilidades con K, haz click en la RAM y luego en la ranura de su color. Si no encaja, es culpa del hardware. Siempre es culpa del hardware.",
+          "options": [
+            {
+              "text": "Gracias, Ada.",
+              "next": "",
+              "action": {
+                "type": "give_matching_ram",
+                "flag": "ada_regalo"
+              }
+            }
+          ]
+        },
+        "victoria": {
+          "text": "¿En serio? Entonces el Servidor debería poder reiniciarse... ¿Lo ves? Sigue caído. Claro. Esto era solo el Acto I. Siempre hay un Acto II. Igual que siempre hay otra reunión.",
+          "options": [
+            {
+              "text": "Genial.",
+              "next": "",
+              "action": {
+                "type": "set_flag",
+                "flag": "ada_victoria"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "kevin": {
+      "start": "hola",
+      "nodes": {
+        "hola": {
+          "text": "¡Hola! Soy Kevin, el becario. Llevo tres meses aquí y todavía no tengo acceso a nada. Pero preparo un café increíble.",
+          "options": [
+            {
+              "text": "¿Me pones un café?",
+              "next": "cafe",
+              "action": {
+                "type": "refill"
+              }
+            },
+            {
+              "text": "¿Algún consejo?",
+              "next": "consejo"
+            },
+            {
+              "text": "Adiós.",
+              "next": ""
+            }
+          ]
+        },
+        "cafe": {
+          "text": "¡Marchando! Te he rellenado las pociones: café para la vida (tecla 1) y bebida energética para el maná (tecla 2). Se recargan matando cosas. Como mi autoestima.",
+          "options": [
+            {
+              "text": "Gracias, Kevin.",
+              "next": "hola"
+            }
+          ]
+        },
+        "consejo": {
+          "text": "Si mueres, no pasa nada: vuelves aquí. Lo que sí duele es tener puntos de pasiva sin gastar. Pulsa P. Yo no puedo, no tengo permisos.",
+          "options": [
+            {
+              "text": "Ánimo con los permisos.",
+              "next": "hola"
+            }
+          ]
+        }
+      }
+    },
+    "root": {
+      "start": "hola",
+      "nodes": {
+        "hola": {
+          "text": "...¿Qué. Quieres? Estoy reiniciando el servidor. Desde 2019.",
+          "options": [
+            {
+              "text": "¿Qué pasó aquí?",
+              "next": "lore"
+            },
+            {
+              "text": "¿Te sobra alguna placa base?",
+              "next": "placa",
+              "hides_if_flag": "root_regalo"
+            },
+            {
+              "text": "Nada, perdón.",
+              "next": ""
+            }
+          ]
+        },
+        "lore": {
+          "text": "La Gran Migración. Alguien desplegó un viernes a las seis de la tarde, sin tests, con un «git push --force». El Servidor se corrompió y todo lo que corría dentro cobró vida. Ahora los bugs tienen patas. Literalmente.",
+          "options": [
+            {
+              "text": "¿Y quién fue?",
+              "next": "culpable"
+            },
+            {
+              "text": "Qué horror.",
+              "next": "hola"
+            }
+          ]
+        },
+        "culpable": {
+          "text": "Los logs dicen que fue «admin». Todos somos «admin». Esa es la tragedia.",
+          "options": [
+            {
+              "text": "...",
+              "next": "hola"
+            }
+          ]
+        },
+        "placa": {
+          "text": "Toma. Ping Letal: un rayo que atraviesa enemigos. Instálala en la barra con K. Y no me des las gracias, dame un ticket.",
+          "options": [
+            {
+              "text": "Abriré un ticket.",
+              "next": "",
+              "action": {
+                "type": "give_item",
+                "kind": "motherboard",
+                "id": "ping_letal",
+                "flag": "root_regalo"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "bot_onboarding": {
+      "start": "hola",
+      "nodes": {
+        "hola": {
+          "text": "¡Bienvenido al Sandbox! Soy B.O.B., tu Bot de Onboarding. Mi trabajo es enseñarte lo básico antes de que te desplieguen en producción. Mi otro trabajo es mostrar mensajes que nadie lee.",
+          "options": [
+            {
+              "text": "¿Qué es este lugar?",
+              "next": "lugar"
+            },
+            {
+              "text": "¿Cómo se lucha aquí?",
+              "next": "lucha"
+            },
+            {
+              "text": "¿Y después qué?",
+              "next": "despues"
+            },
+            {
+              "text": "Adiós, B.O.B.",
+              "next": ""
+            }
+          ]
+        },
+        "lugar": {
+          "text": "Un entorno de pruebas que sobrevivió a la Gran Migración. Lo único que funciona es porque nadie lo ha tocado desde 2014. Los bugs de aquí son pequeños y casi no muerden. Casi.",
+          "options": [
+            {
+              "text": "Tranquilizador.",
+              "next": "hola"
+            }
+          ]
+        },
+        "lucha": {
+          "text": "Click derecho o Espacio usan tu primera habilidad; Q, E, R y F, las demás. Si te quedas sin maná, bebe (tecla 2). Si te quedas sin vida, café (tecla 1). Si te quedas sin ideas, Stack Overflow.",
+          "options": [
+            {
+              "text": "Entendido.",
+              "next": "hola"
+            }
+          ]
+        },
+        "despues": {
+          "text": "Sigue hacia el este. Hay un campamento de supervivientes: el Campamento del Último Commit. Huele a café recalentado y a desesperación. Te encantará.",
+          "options": [
+            {
+              "text": "Allá voy.",
+              "next": ""
+            }
+          ]
+        }
+      }
+    },
+    "iris": {
+      "start": "hola",
+      "nodes": {
+        "hola": {
+          "text": "¿Tú también te perdiste? Era mi primer día. Me dijeron: «haz un cambio pequeño y súbelo». Lo subí. Diez minutos después, alguien hizo push --force encima. Desde entonces, los cables de este bosque se mueven solos.",
+          "options": [
+            {
+              "text": "¿Quién hizo el push?",
+              "next": "push"
+            },
+            {
+              "text": "¿Qué cambiaste tú?",
+              "next": "cambio"
+            },
+            {
+              "text": "Suerte, Iris.",
+              "next": ""
+            }
+          ]
+        },
+        "push": {
+          "text": "El commit está firmado por «admin». Pero el mensaje decía: «Por el Monolito. Que nunca se reinicie». ¿Quién escribe eso en un commit? Alguien con muchos privilegios y ninguna supervisión.",
+          "options": [
+            {
+              "text": "El Monolito...",
+              "next": "monolito"
+            },
+            {
+              "text": "Inquietante.",
+              "next": "hola"
+            }
+          ]
+        },
+        "monolito": {
+          "text": "Dicen que en el corazón del Servidor vive el Arquitecto. Diseñó el Monolito hace veinte años y juró que nadie lo refactorizaría jamás. Al parecer, lo dijo en serio.",
+          "options": [
+            {
+              "text": "Iré a verlo.",
+              "next": ""
+            }
+          ]
+        },
+        "cambio": {
+          "text": "Cambié el color de un botón. De #333 a #333333. Técnicamente, no cambié nada. Y aun así, me culpan a mí en todas las retrospectivas.",
+          "options": [
+            {
+              "text": "Clásico.",
+              "next": "hola"
+            }
+          ]
+        }
+      }
+    },
+    "tomas": {
+      "start": "hola",
+      "nodes": {
+        "hola": {
+          "text": "Soy Tomás. El último QA. Desactivaron los tests «temporalmente» en 2017. Yo me quedé, por si acaso. Alguien tenía que ver crecer los memory leaks.",
+          "options": [
+            {
+              "text": "¿De dónde salen los memory leaks?",
+              "next": "leaks"
+            },
+            {
+              "text": "¿Por qué sigues aquí?",
+              "next": "porque"
+            },
+            {
+              "text": "Ánimo, Tomás.",
+              "next": ""
+            }
+          ]
+        },
+        "leaks": {
+          "text": "Del Monolito. El Arquitecto guarda todo en memoria para no olvidar nada... y para no morir nunca. Nada se libera jamás. Lo que sobra se escurre hasta aquí y cobra vida. Pisa con cuidado.",
+          "options": [
+            {
+              "text": "¿Se le puede vencer?",
+              "next": "vencer"
+            },
+            {
+              "text": "Qué asco.",
+              "next": "hola"
+            }
+          ]
+        },
+        "vencer": {
+          "text": "Todo proceso se puede matar. Hasta el PID 1, si tienes valor y permisos. Busca en la Granja de Servidores. Y llévate resistencias: el Arquitecto no juega limpio.",
+          "options": [
+            {
+              "text": "Gracias.",
+              "next": ""
+            }
+          ]
+        },
+        "porque": {
+          "text": "Porque si me voy, nadie reportará los bugs. Y si nadie los reporta... técnicamente no existen. Así funciona la calidad en esta empresa.",
+          "options": [
+            {
+              "text": "...",
+              "next": "hola"
+            }
+          ]
+        }
+      }
+    },
+    "dba": {
+      "start": "hola",
+      "nodes": {
+        "hola": {
+          "text": "Hice copias de seguridad cada noche durante veinte años. Nadie las restauró nunca. Ahora soy una de ellas. Bienvenido a la Granja de Servidores, mortal.",
+          "options": [
+            {
+              "text": "¿Qué hay más allá?",
+              "next": "sala"
+            },
+            {
+              "text": "¿Puedo restaurarte?",
+              "next": "restaurar"
+            },
+            {
+              "text": "¿Algo que me ayude?",
+              "next": "regalo",
+              "hides_if_flag": "dba_regalo"
+            },
+            {
+              "text": "Me voy despacito.",
+              "next": ""
+            }
+          ]
+        },
+        "sala": {
+          "text": "La Sala del Servidor Principal. El Arquitecto del Monolito se fusionó con él durante el Último Commit. Si cae el Arquitecto, el Servidor podrá reiniciarse. En teoría. Nunca he visto un reinicio que saliera bien a la primera.",
+          "options": [
+            {
+              "text": "Correré el riesgo.",
+              "next": "hola"
+            }
+          ]
+        },
+        "restaurar": {
+          "text": "Mi backup está en una cinta magnética en un armario cerrado con llave. La llave está en un correo de 2009. El correo, en un PST corrupto. Así que no.",
+          "options": [
+            {
+              "text": "Lo siento.",
+              "next": "hola"
+            }
+          ]
+        },
+        "regalo": {
+          "text": "Toma este módulo. Lo saqué de un servidor que nadie echará de menos. Bueno, sí lo echarán de menos. Pero tarde.",
+          "options": [
+            {
+              "text": "Gracias, fantasma.",
+              "next": "",
+              "action": {
+                "type": "give_matching_ram",
+                "flag": "dba_regalo"
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

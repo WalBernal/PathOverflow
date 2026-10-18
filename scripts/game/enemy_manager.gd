@@ -58,6 +58,9 @@ var safe_center := Vector2.ZERO
 var safe_radius := 0.0
 ## Daño total del último golpe (para el robo de vida).
 var last_damage_dealt := 0.0
+## Obstáculos de la zona (x, y, radio) y límites del mapa: los enemigos no los atraviesan.
+var obstacles: Array[Vector3] = []
+var bounds := Rect2(-1e6, -1e6, 2e6, 2e6)
 
 var ids := PackedInt32Array()
 var positions := PackedVector2Array()
@@ -115,13 +118,14 @@ func count() -> int:
 
 
 ## type_index -1: un tipo aleatorio (los únicos usan los tipos de jefe).
-func spawn(pos: Vector2, rarity: Rarity.Enemy, type_index := -1) -> void:
+## custom_name y life_mult: para jefes con nombre propio.
+func spawn(pos: Vector2, rarity: Rarity.Enemy, type_index := -1, custom_name := "", life_mult := 1.0) -> void:
 	if type_index < 0:
 		type_index = random_type(rarity == Rarity.Enemy.UNIQUE)
 	var t: Dictionary = enemy_types()[type_index] if not enemy_types().is_empty() else {}
 	var info: Dictionary = Rarity.ENEMY_INFO[rarity]
 	var level_mult := 1.0 + 0.15 * (area_level - 1)
-	var life: float = BASE_LIFE * info.life_mult * level_mult * t.get("life_mult", 1.0)
+	var life: float = BASE_LIFE * info.life_mult * level_mult * t.get("life_mult", 1.0) * life_mult
 	ids.append(_next_id)
 	_next_id += 1
 	positions.append(pos)
@@ -136,7 +140,22 @@ func spawn(pos: Vector2, rarity: Rarity.Enemy, type_index := -1) -> void:
 	facings.append(0.0)
 	phases.append(randf() * ATLAS_FRAMES)
 	flashes.append(0.0)
-	names.append(_random_name(rarity))
+	names.append(custom_name if custom_name != "" else _random_name(rarity))
+
+
+func type_index_of(type_id: String) -> int:
+	for i in enemy_types().size():
+		if enemy_types()[i]["id"] == type_id:
+			return i
+	return -1
+
+
+func count_rarity(rarity: int) -> int:
+	var n := 0
+	for r in rarities:
+		if r == rarity:
+			n += 1
+	return n
 
 
 func random_type(boss := false) -> int:
@@ -249,7 +268,12 @@ func _physics_process(delta: float) -> void:
 			var from_safe := new_pos - safe_center
 			if from_safe.length() < safe_radius + r:
 				new_pos = safe_center + from_safe.normalized() * (safe_radius + r)
-		positions[i] = new_pos
+		for o in obstacles:
+			var away := new_pos - Vector2(o.x, o.y)
+			var min_d := o.z + r
+			if away.length_squared() < min_d * min_d:
+				new_pos = Vector2(o.x, o.y) + away.normalized() * min_d
+		positions[i] = new_pos.clamp(bounds.position + Vector2(r, r), bounds.end - Vector2(r, r))
 
 		cooldowns[i] -= delta
 		flashes[i] = maxf(0.0, flashes[i] - delta)

@@ -39,6 +39,7 @@ func _initialize() -> void:
 	_test_tree_clusters()
 	_test_conditions()
 	_test_tree_version_refund()
+	_test_save_dir_migration()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
 	else:
@@ -493,10 +494,11 @@ func _test_enemy_hit_one() -> void:
 
 
 func _test_camp_and_tutorial_data() -> void:
-	var camp: Dictionary = DataLoader.load_json("res://data/camp.json")
-	var dialogues: Dictionary = camp["dialogues"]
-	for npc in camp["npcs"]:
-		_check(dialogues.has(npc["dialogue"]), "diálogo de %s" % npc["id"])
+	var npc_data: Dictionary = DataLoader.load_json("res://data/npcs.json")
+	var dialogues: Dictionary = npc_data["dialogues"]
+	for npc_id in npc_data["npcs"]:
+		_check(dialogues.has(npc_data["npcs"][npc_id]["dialogue"]), "diálogo de %s" % npc_id)
+	_test_act(npc_data)
 	for id in dialogues:
 		var d: Dictionary = dialogues[id]
 		_check(d["nodes"].has(d["start"]), "nodo inicial de %s" % id)
@@ -509,9 +511,75 @@ func _test_camp_and_tutorial_data() -> void:
 					var pool: Dictionary = _db.skills.skills if action["kind"] == "motherboard" else _db.skills.rams
 					_check(pool.has(action["id"]), "regalo desconocido '%s'" % action["id"])
 	var tutorial: Dictionary = DataLoader.load_json("res://data/tutorial.json")
-	var known := ["move", "talk_ada", "install_ram", "kevin", "leave_camp", "use_skill", "kill", "flask", "loot", "equip", "passives"]
+	var known := ["move", "talk_ada", "install_ram", "kevin", "reach_camp", "leave_camp", "use_skill", "kill", "flask", "loot", "equip", "passives"]
 	for step in tutorial["steps"]:
 		_check(known.has(step["id"]), "paso de tutorial sin condición: %s" % step["id"])
+
+
+func _test_act(npc_data: Dictionary) -> void:
+	var act: Dictionary = DataLoader.load_json("res://data/act1.json")
+	var zones := {}
+	for z in act["zones"]:
+		zones[z["id"]] = z
+	_check(zones.has(act["start_zone"]) and zones.has(act["town"]), "zona inicial y pueblo existen")
+	_check(zones[act["town"]].has("waypoint"), "el campamento tiene waypoint (reaparición)")
+	var type_ids := []
+	for t in EnemyManager.enemy_types():
+		type_ids.append(t["id"])
+	var bosses := 0
+	for z in act["zones"]:
+		for e in z.get("exits", []):
+			_check(zones.has(e["target"]), "%s: salida a zona inexistente %s" % [z["id"], e["target"]])
+			if zones.has(e["target"]):
+				_check(zones[e["target"]]["entries"].has(e["entry"]), "%s: la entrada %s no existe en %s" % [z["id"], e["entry"], e["target"]])
+		if z.has("waypoint"):
+			_check(z["entries"].has("waypoint"), "%s tiene waypoint pero no entrada 'waypoint'" % z["id"])
+		for n in z.get("npcs", []):
+			_check(npc_data["npcs"].has(n["id"]), "%s: NPC desconocido %s" % [z["id"], n["id"]])
+		var cfg = z.get("enemies")
+		if cfg is Dictionary:
+			for t in cfg.get("types", []):
+				_check(type_ids.has(t), "%s: tipo de enemigo desconocido %s" % [z["id"], t])
+		if z.has("boss"):
+			bosses += 1
+			_check(type_ids.has(z["boss"]["type"]), "tipo del jefe")
+
+		# Construye la zona y comprueba que el diseño es jugable.
+		var zone := Zone.new()
+		zone.setup(z, null, null)
+		for k in zone.key_points():
+			for o in zone.obstacles:
+				_check(k.distance_to(o["pos"]) > o["radius"] + 60.0, "%s: obstáculo encima de un punto de interés" % z["id"])
+			_check(zone.rect.grow(-10.0).has_point(k), "%s: punto de interés fuera del mapa" % z["id"])
+		if cfg is Dictionary:
+			var rng := RandomNumberGenerator.new()
+			rng.seed = 7
+			var packs := zone.pack_centers(int(cfg["packs"]), rng)
+			_check(packs.size() >= int(cfg["packs"]) * 0.8, "%s: solo caben %d de %d grupos" % [z["id"], packs.size(), cfg["packs"]])
+			for p in packs:
+				for k in zone.key_points():
+					_check(p.distance_to(k) >= 450.0, "%s: grupo demasiado cerca de una entrada/NPC" % z["id"])
+		zone.free()
+	_check(bosses == 1, "el acto tiene un jefe")
+	_check(act["zones"].size() >= 8, "tutorial + campamento + 5 zonas + jefe")
+
+
+func _test_save_dir_migration() -> void:
+	# Simula la carpeta del nombre antiguo junto a la actual y comprueba la copia.
+	var parent := OS.get_user_data_dir().get_base_dir()
+	var old_dir := parent.path_join("Exile Overflow").path_join("characters")
+	var existed := DirAccess.dir_exists_absolute(old_dir)
+	_check(not existed or CharacterSaves.list_all("user://__vacio__").is_empty(), "directorio vacío de prueba")
+	var dir := "user://test_migracion"
+	for f in DirAccess.get_files_at(dir) if DirAccess.dir_exists_absolute(dir) else PackedStringArray():
+		DirAccess.remove_absolute(dir + "/" + f)
+	if existed:
+		var copied := CharacterSaves.migrate_from_old_project_names(dir)
+		_check(copied > 0 and not CharacterSaves.list_all(dir).is_empty(), "copia los guardados del nombre antiguo")
+		_check(CharacterSaves.migrate_from_old_project_names(dir) == 0, "no vuelve a copiar si ya hay personajes")
+		for f in DirAccess.get_files_at(dir):
+			DirAccess.remove_absolute(dir + "/" + f)
+		DirAccess.remove_absolute(dir)
 
 func _test_item_transfer() -> void:
 	var c := _new_character()
