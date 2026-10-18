@@ -161,7 +161,7 @@
       "id": "mutex_lock",
       "name": "Candado Mutex",
       "sprite_row": 10,
-      "life_mult": 5.0,
+      "life_mult": 0.6,
       "speed_mult": 0.0,
       "damage_mult": 0.0,
       "xp_mult": 2.0,

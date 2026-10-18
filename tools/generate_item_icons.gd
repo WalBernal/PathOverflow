@@ -33,6 +33,7 @@ func _initialize() -> void:
 		["hacha_de_guerra", _axe.bind(true)],
 		["maza_de_depuracion", _mace],
 		["daga_de_root", _dagger.bind(STEEL)],
+		["navaja_multiherramienta", _dagger.bind(Color("c84b4b"))],
 		["punal_de_dia_cero", _dagger.bind(Color("b04ad9"))],
 		["teclado_mecanico", _keyboard.bind(Color("2a2a30"))],
 		["teclado_rgb", _keyboard.bind(Color("3a2a50"))],

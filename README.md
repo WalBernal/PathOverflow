@@ -23,7 +23,7 @@ Por ahora es solo para un jugador en local, pero la lógica está escrita para p
 | P | Árbol pasivo (pausa el juego) |
 | Esc | Cierra lo abierto; si no hay nada, menú de pausa |
 | F1 / F2 / F3 / F4 | Depuración: +30 enemigos / limpiar / jefe único / botín de prueba |
-| R | Reaparecer en el waypoint del campamento tras morir |
+| R | Reaparecer en el pueblo del acto tras morir |
 | Click en un waypoint | Viajar a otro waypoint descubierto |
 
 Todas las teclas están en *Proyecto → Configuración del proyecto → Mapa de entrada*. Pasa el ratón por cualquier elemento del HUD para ver una ayuda.
@@ -35,6 +35,14 @@ Todas las teclas están en *Proyecto → Configuración del proyecto → Mapa de
 **Animación al caminar**: piernas alternas que se levantan, brazos en oposición y el cuerpo sube y baja con cada paso. El ciclo avanza con la distancia recorrida de verdad, así que los pies no "patinan" y, si choca contra algo, deja de andar en el sitio. De perfil, las piernas avanzan y retroceden y el cuerpo se inclina.
 
 `scenes/ui/passive_tree_screen.tscn` funciona sola (F6) para probar builds, y `scenes/game/world.tscn` (F6) arranca con un personaje temporal que no se guarda.
+
+## Progresión
+
+- **Puntos de pasiva**: se empieza con 0; cada nivel da 1 y las misiones de la historia dan puntos extra (2 por cada misión principal de acto y 1 por algunas secundarias).
+- **Las placas base suben de nivel** con la experiencia mientras están instaladas (como las gemas de PoE), y con el nivel sube su daño: los hechizos un 15 % lineal ×1,03 por nivel y los ataques un 12 % por nivel sobre el arma. Así una habilidad inicial no se queda atrás.
+- **Atributos con daño**: la Fuerza da daño físico cuerpo a cuerpo (1 % por cada 4), la Destreza daño de proyectiles (1 % por cada 4) y velocidad de ataque, y la Inteligencia daño de hechizos (1 % por cada 4). Los caminos de atributos del árbol dan +12.
+- **Ascendencias** con mucho impacto: bonificaciones grandes (+25-60 % más) y efectos que cambian las habilidades: proyectiles adicionales, cadenas adicionales, esbirros adicionales o más trampas, minas y torretas a la vez.
+- Estos cambios **devuelven los puntos de pasiva** a los personajes guardados (árbol versión 4).
 
 ## Habilidades: placas base y RAM
 
@@ -100,7 +108,7 @@ El acto está definido en `data/act1.json` y lo construye `Zone` (`scripts/game/
 |---|---|---|---|
 | El Sandbox | 1 | | Tutorial: pocos bugs, más botín y B.O.B., el bot de onboarding |
 | Campamento | 1 | ✔ | Zona segura, punto de reaparición; Aida, Mario y Rafa |
-| El Bosque de Cables | 2 | | Iris, la becaria perdida |
+| El Bosque de Cables | 2 | | Iris, la practicante perdida |
 | Las Ruinas del Monolito | 4 | ✔ | |
 | El Pantano de Memory Leaks | 6 | | Tomás, el último QA |
 | Las Catacumbas del Legacy | 8 | ✔ | |
@@ -120,7 +128,7 @@ El acto está definido en `data/act1.json` y lo construye `Zone` (`scripts/game/
 
 ## Acto II: Kernel Panic
 
-`data/act2.json`. El pueblo es **El Socket Seguro** (waypoint y reaparición): Rafa por datos móviles, Clara y El Recolector.
+`data/act2.json`. El pueblo es **El Socket Seguro** (waypoint y reaparición): Rafa por datos del celular, Clara y El Recolector.
 
 | Zona | Nivel | Waypoint | Lo que hay |
 |---|---|---|---|
@@ -175,6 +183,8 @@ El **registro de misiones** está debajo del minimapa (L para plegarlo): la prin
 
 ## Interfaz
 
+- **Recuadros de lo activo** (sobre la barra de habilidades): esbirros, torretas, trampas, minas, giros y pociones de utilidad, con cuántos hay y el tiempo que les queda.
+- **Inventario y Habilidades** con marco de ventana (esquinas doradas, cabecera, botón de cerrar), siluetas en las ranuras vacías, zócalos DIMM y tarjetas de habilidad con nivel, experiencia y etiquetas.
 - **HUD**: orbes de vida/ES y maná, café y bebida energética con cargas (vapor y burbujas cuando están listas), barra de 6 habilidades con enfriamiento y coste, experiencia y botones de menú (C, I, K, P).
 - **Minimapa** (arriba a la derecha): el suelo de la zona, obstáculos, salidas, waypoint, NPCs, enemigos por rareza y botín valioso, con flechas hacia las salidas que quedan fuera de vista. Debajo, el nombre y nivel de la zona. Se oculta mientras el inventario está abierto.
 - **Hoja de personaje** (C): retrato animado de pecho hacia arriba que respira, parpadea, te sigue con la mirada, toma café, piensa (con spinner de carga), bosteza, se pone gafas de sol si su DPS es alto y suda con poca vida. Incluye atributos, defensas con su efecto real (reducción de la armadura, probabilidad de esquivar), resistencias con comentarios, ofensiva de la habilidad principal, muertes, enemigos eliminados y un estado de ánimo calculado.
@@ -234,6 +244,10 @@ Nueve tipos con sprites animados (`data/enemies.json`, `assets/sprites/enemies/e
 - **Seguro ante cortes**: se escribe en un `.tmp` y luego se sustituye el archivo; la versión anterior queda como `.bak` y se usa si el principal está dañado.
 - **Tolerante a cambios de datos**: lo que deja de existir (nodos, objetos, habilidades) se descarta al cargar en vez de romper la partida.
 - **Versiones**: `save_version` 2 añadió las placas base; los guardados v1 reciben las placas iniciales de su clase al cargarse.
+
+## Idioma
+
+Todos los textos están en **español latinoamericano neutro** (ustedes, laptop, celular, mouse, practicante...). Las reglas están en [`docs/estilo.md`](docs/estilo.md) y una prueba falla si aparece una forma de España.
 
 ## Estructura
 

@@ -27,13 +27,8 @@
                 {
                   "stat": "physical_damage",
                   "type": "more",
-                  "value": 15
-                }
-              ]
-            },
-            {
-              "name": "¿Quién necesita QA?",
-              "mods": [
+                  "value": 35
+                },
                 {
                   "stat": "attack_speed",
                   "type": "increased",
@@ -45,9 +40,43 @@
               "name": "Logs en rojo",
               "mods": [
                 {
+                  "stat": "damage",
+                  "type": "more",
+                  "value": 40,
+                  "tags": [
+                    "low_life"
+                  ]
+                },
+                {
+                  "stat": "life_leech",
+                  "type": "flat",
+                  "value": 2
+                }
+              ]
+            },
+            {
+              "name": "Sin fin de semana",
+              "mods": [
+                {
+                  "stat": "attack_speed",
+                  "type": "more",
+                  "value": 15,
+                  "tags": [
+                    "recent_kill"
+                  ]
+                },
+                {
+                  "stat": "movement_speed",
+                  "type": "increased",
+                  "value": 15,
+                  "tags": [
+                    "recent_kill"
+                  ]
+                },
+                {
                   "stat": "life_regen",
                   "type": "flat",
-                  "value": 25
+                  "value": 30
                 }
               ]
             }
@@ -64,17 +93,12 @@
                 {
                   "stat": "armour",
                   "type": "more",
-                  "value": 25
-                }
-              ]
-            },
-            {
-              "name": "Puerto 22 cerrado",
-              "mods": [
+                  "value": 60
+                },
                 {
                   "stat": "block_chance",
                   "type": "flat",
-                  "value": 15
+                  "value": 20
                 }
               ]
             },
@@ -84,17 +108,37 @@
                 {
                   "stat": "fire_res",
                   "type": "flat",
-                  "value": 10
+                  "value": 25
                 },
                 {
                   "stat": "cold_res",
                   "type": "flat",
-                  "value": 10
+                  "value": 25
                 },
                 {
                   "stat": "lightning_res",
                   "type": "flat",
-                  "value": 10
+                  "value": 25
+                },
+                {
+                  "stat": "chaos_res",
+                  "type": "flat",
+                  "value": 15
+                }
+              ]
+            },
+            {
+              "name": "Lista blanca",
+              "mods": [
+                {
+                  "stat": "life",
+                  "type": "more",
+                  "value": 20
+                },
+                {
+                  "stat": "life_regen",
+                  "type": "flat",
+                  "value": 25
                 }
               ]
             }
@@ -111,7 +155,12 @@
                 {
                   "stat": "life",
                   "type": "increased",
-                  "value": 25
+                  "value": 40
+                },
+                {
+                  "stat": "strength",
+                  "type": "flat",
+                  "value": 40
                 }
               ]
             },
@@ -121,7 +170,15 @@
                 {
                   "stat": "area_of_effect",
                   "type": "increased",
-                  "value": 25
+                  "value": 50
+                },
+                {
+                  "stat": "damage",
+                  "type": "more",
+                  "value": 20,
+                  "tags": [
+                    "area"
+                  ]
                 }
               ]
             },
@@ -129,14 +186,14 @@
               "name": "Tiempo de arranque",
               "mods": [
                 {
-                  "stat": "strength",
-                  "type": "flat",
+                  "stat": "damage",
+                  "type": "more",
                   "value": 30
                 },
                 {
                   "stat": "movement_speed",
                   "type": "increased",
-                  "value": -5
+                  "value": -10
                 }
               ]
             }
@@ -173,7 +230,7 @@
                 {
                   "stat": "crit_chance",
                   "type": "increased",
-                  "value": 40
+                  "value": 100
                 }
               ]
             },
@@ -183,7 +240,12 @@
                 {
                   "stat": "crit_multiplier",
                   "type": "flat",
-                  "value": 30
+                  "value": 60
+                },
+                {
+                  "stat": "damage",
+                  "type": "more",
+                  "value": 15
                 }
               ]
             },
@@ -192,8 +254,13 @@
               "mods": [
                 {
                   "stat": "life",
+                  "type": "more",
+                  "value": 15
+                },
+                {
+                  "stat": "block_chance",
                   "type": "flat",
-                  "value": 40
+                  "value": 12
                 }
               ]
             }
@@ -210,7 +277,12 @@
                 {
                   "stat": "movement_speed",
                   "type": "increased",
-                  "value": 15
+                  "value": 25
+                },
+                {
+                  "stat": "attack_speed",
+                  "type": "increased",
+                  "value": 20
                 }
               ]
             },
@@ -218,9 +290,12 @@
               "name": "Daily de 45 minutos",
               "mods": [
                 {
-                  "stat": "attack_speed",
-                  "type": "increased",
-                  "value": 10
+                  "stat": "damage",
+                  "type": "more",
+                  "value": 30,
+                  "tags": [
+                    "recent_kill"
+                  ]
                 }
               ]
             },
@@ -230,7 +305,12 @@
                 {
                   "stat": "damage",
                   "type": "increased",
-                  "value": 20
+                  "value": 60
+                },
+                {
+                  "stat": "life_leech",
+                  "type": "flat",
+                  "value": 1.5
                 }
               ]
             }
@@ -247,7 +327,7 @@
                 {
                   "stat": "damage",
                   "type": "more",
-                  "value": 12
+                  "value": 30
                 }
               ]
             },
@@ -257,7 +337,12 @@
                 {
                   "stat": "area_of_effect",
                   "type": "increased",
-                  "value": 20
+                  "value": 40
+                },
+                {
+                  "stat": "extra_projectiles",
+                  "type": "flat",
+                  "value": 1
                 }
               ]
             },
@@ -267,7 +352,12 @@
                 {
                   "stat": "life_leech",
                   "type": "flat",
-                  "value": 1
+                  "value": 3
+                },
+                {
+                  "stat": "attack_speed",
+                  "type": "increased",
+                  "value": 10
                 }
               ]
             }
@@ -304,10 +394,12 @@
                 {
                   "stat": "crit_chance",
                   "type": "increased",
-                  "value": 50,
-                  "tags": [
-                    "projectile"
-                  ]
+                  "value": 100
+                },
+                {
+                  "stat": "crit_multiplier",
+                  "type": "flat",
+                  "value": 40
                 }
               ]
             },
@@ -315,9 +407,14 @@
               "name": "Stack trace",
               "mods": [
                 {
+                  "stat": "extra_projectiles",
+                  "type": "flat",
+                  "value": 2
+                },
+                {
                   "stat": "projectile_speed",
                   "type": "increased",
-                  "value": 30
+                  "value": 40
                 }
               ]
             },
@@ -325,9 +422,9 @@
               "name": "Reproducible",
               "mods": [
                 {
-                  "stat": "physical_damage",
+                  "stat": "damage",
                   "type": "more",
-                  "value": 10,
+                  "value": 25,
                   "tags": [
                     "projectile"
                   ]
@@ -347,7 +444,7 @@
                 {
                   "stat": "evasion",
                   "type": "more",
-                  "value": 20
+                  "value": 40
                 }
               ]
             },
@@ -356,8 +453,13 @@
               "mods": [
                 {
                   "stat": "chaos_damage",
-                  "type": "increased",
+                  "type": "more",
                   "value": 40
+                },
+                {
+                  "stat": "extra_devices",
+                  "type": "flat",
+                  "value": 2
                 }
               ]
             },
@@ -367,7 +469,15 @@
                 {
                   "stat": "dexterity",
                   "type": "flat",
-                  "value": 30
+                  "value": 40
+                },
+                {
+                  "stat": "damage",
+                  "type": "more",
+                  "value": 30,
+                  "tags": [
+                    "trap"
+                  ]
                 }
               ]
             }
@@ -384,7 +494,7 @@
                 {
                   "stat": "attack_speed",
                   "type": "more",
-                  "value": 10
+                  "value": 20
                 }
               ]
             },
@@ -394,7 +504,12 @@
                 {
                   "stat": "movement_speed",
                   "type": "increased",
-                  "value": 12
+                  "value": 25
+                },
+                {
+                  "stat": "evasion",
+                  "type": "increased",
+                  "value": 60
                 }
               ]
             },
@@ -402,9 +517,14 @@
               "name": "Deadlock evitado",
               "mods": [
                 {
-                  "stat": "evasion",
+                  "stat": "skill_duration",
                   "type": "increased",
                   "value": 40
+                },
+                {
+                  "stat": "cooldown_recovery",
+                  "type": "increased",
+                  "value": 30
                 }
               ]
             }
@@ -441,7 +561,12 @@
                 {
                   "stat": "crit_chance",
                   "type": "increased",
-                  "value": 40
+                  "value": 80
+                },
+                {
+                  "stat": "crit_multiplier",
+                  "type": "flat",
+                  "value": 50
                 }
               ]
             },
@@ -449,9 +574,17 @@
               "name": "Sesión persistente",
               "mods": [
                 {
-                  "stat": "crit_multiplier",
+                  "stat": "extra_chains",
                   "type": "flat",
-                  "value": 25
+                  "value": 2
+                },
+                {
+                  "stat": "damage",
+                  "type": "more",
+                  "value": 15,
+                  "tags": [
+                    "chain"
+                  ]
                 }
               ]
             },
@@ -460,8 +593,13 @@
               "mods": [
                 {
                   "stat": "evasion",
-                  "type": "increased",
+                  "type": "more",
                   "value": 30
+                },
+                {
+                  "stat": "movement_speed",
+                  "type": "increased",
+                  "value": 15
                 }
               ]
             }
@@ -478,7 +616,7 @@
                 {
                   "stat": "elemental_damage",
                   "type": "more",
-                  "value": 15
+                  "value": 35
                 }
               ]
             },
@@ -488,7 +626,12 @@
                 {
                   "stat": "cast_speed",
                   "type": "increased",
-                  "value": 15
+                  "value": 25
+                },
+                {
+                  "stat": "extra_chains",
+                  "type": "flat",
+                  "value": 1
                 }
               ]
             },
@@ -497,8 +640,8 @@
               "mods": [
                 {
                   "stat": "energy_shield",
-                  "type": "increased",
-                  "value": 25
+                  "type": "more",
+                  "value": 30
                 }
               ]
             }
@@ -515,7 +658,7 @@
                 {
                   "stat": "chaos_damage",
                   "type": "more",
-                  "value": 25
+                  "value": 40
                 }
               ]
             },
@@ -523,9 +666,17 @@
               "name": "Dependencia transitiva",
               "mods": [
                 {
-                  "stat": "area_of_effect",
-                  "type": "increased",
-                  "value": 20
+                  "stat": "extra_devices",
+                  "type": "flat",
+                  "value": 3
+                },
+                {
+                  "stat": "damage",
+                  "type": "more",
+                  "value": 25,
+                  "tags": [
+                    "trap"
+                  ]
                 }
               ]
             },
@@ -535,7 +686,15 @@
                 {
                   "stat": "skill_duration",
                   "type": "increased",
-                  "value": 30
+                  "value": 50
+                },
+                {
+                  "stat": "damage",
+                  "type": "more",
+                  "value": 30,
+                  "tags": [
+                    "mine"
+                  ]
                 }
               ]
             }
@@ -571,8 +730,13 @@
               "mods": [
                 {
                   "stat": "cast_speed",
-                  "type": "increased",
+                  "type": "more",
                   "value": 15
+                },
+                {
+                  "stat": "mana",
+                  "type": "more",
+                  "value": 30
                 }
               ]
             },
@@ -580,9 +744,14 @@
               "name": "Pila profunda",
               "mods": [
                 {
-                  "stat": "mana",
+                  "stat": "extra_projectiles",
+                  "type": "flat",
+                  "value": 1
+                },
+                {
+                  "stat": "elemental_damage",
                   "type": "more",
-                  "value": 20
+                  "value": 15
                 }
               ]
             },
@@ -590,9 +759,14 @@
               "name": "Memoización",
               "mods": [
                 {
-                  "stat": "elemental_damage",
+                  "stat": "cooldown_recovery",
+                  "type": "increased",
+                  "value": 40
+                },
+                {
+                  "stat": "damage",
                   "type": "more",
-                  "value": 12,
+                  "value": 15,
                   "tags": [
                     "spell"
                   ]
@@ -612,17 +786,17 @@
                 {
                   "stat": "fire_damage",
                   "type": "increased",
-                  "value": 30
+                  "value": 80
                 },
                 {
                   "stat": "cold_damage",
                   "type": "increased",
-                  "value": 30
+                  "value": 80
                 },
                 {
                   "stat": "lightning_damage",
                   "type": "increased",
-                  "value": 30
+                  "value": 80
                 }
               ]
             },
@@ -632,7 +806,15 @@
                 {
                   "stat": "area_of_effect",
                   "type": "increased",
-                  "value": 20
+                  "value": 40
+                },
+                {
+                  "stat": "damage",
+                  "type": "more",
+                  "value": 15,
+                  "tags": [
+                    "area"
+                  ]
                 }
               ]
             },
@@ -642,17 +824,17 @@
                 {
                   "stat": "fire_res",
                   "type": "flat",
-                  "value": 10
+                  "value": 25
                 },
                 {
                   "stat": "cold_res",
                   "type": "flat",
-                  "value": 10
+                  "value": 25
                 },
                 {
                   "stat": "lightning_res",
                   "type": "flat",
-                  "value": 10
+                  "value": 25
                 }
               ]
             }
@@ -669,7 +851,7 @@
                 {
                   "stat": "minion_damage",
                   "type": "more",
-                  "value": 20
+                  "value": 60
                 }
               ]
             },
@@ -677,9 +859,14 @@
               "name": "Proceso huérfano",
               "mods": [
                 {
-                  "stat": "minion_life",
+                  "stat": "extra_minions",
+                  "type": "flat",
+                  "value": 2
+                },
+                {
+                  "stat": "skill_duration",
                   "type": "increased",
-                  "value": 40
+                  "value": 30
                 }
               ]
             },
@@ -687,9 +874,14 @@
               "name": "PID 1",
               "mods": [
                 {
+                  "stat": "minion_life",
+                  "type": "increased",
+                  "value": 80
+                },
+                {
                   "stat": "energy_shield",
                   "type": "increased",
-                  "value": 25
+                  "value": 40
                 }
               ]
             }
@@ -725,8 +917,13 @@
               "mods": [
                 {
                   "stat": "fire_damage",
-                  "type": "increased",
-                  "value": 40
+                  "type": "more",
+                  "value": 30
+                },
+                {
+                  "stat": "lightning_damage",
+                  "type": "more",
+                  "value": 30
                 }
               ]
             },
@@ -734,7 +931,15 @@
               "name": "Warnings como errores",
               "mods": [
                 {
-                  "stat": "lightning_damage",
+                  "stat": "damage",
+                  "type": "more",
+                  "value": 25,
+                  "tags": [
+                    "spell"
+                  ]
+                },
+                {
+                  "stat": "crit_chance",
                   "type": "increased",
                   "value": 40
                 }
@@ -745,8 +950,8 @@
               "mods": [
                 {
                   "stat": "armour",
-                  "type": "increased",
-                  "value": 30
+                  "type": "more",
+                  "value": 40
                 }
               ]
             }
@@ -761,9 +966,17 @@
               "name": "README sagrado",
               "mods": [
                 {
-                  "stat": "mana",
-                  "type": "increased",
-                  "value": 25
+                  "stat": "extra_devices",
+                  "type": "flat",
+                  "value": 2
+                },
+                {
+                  "stat": "damage",
+                  "type": "more",
+                  "value": 25,
+                  "tags": [
+                    "totem"
+                  ]
                 }
               ]
             },
@@ -771,14 +984,14 @@
               "name": "Comentarios en el código",
               "mods": [
                 {
-                  "stat": "energy_shield",
-                  "type": "increased",
-                  "value": 20
+                  "stat": "mana",
+                  "type": "more",
+                  "value": 30
                 },
                 {
-                  "stat": "life",
+                  "stat": "energy_shield",
                   "type": "increased",
-                  "value": 10
+                  "value": 40
                 }
               ]
             },
@@ -788,7 +1001,12 @@
                 {
                   "stat": "area_of_effect",
                   "type": "increased",
-                  "value": 15
+                  "value": 30
+                },
+                {
+                  "stat": "skill_duration",
+                  "type": "increased",
+                  "value": 30
                 }
               ]
             }
@@ -805,7 +1023,12 @@
                 {
                   "stat": "life_regen",
                   "type": "flat",
-                  "value": 30
+                  "value": 60
+                },
+                {
+                  "stat": "life",
+                  "type": "more",
+                  "value": 25
                 }
               ]
             },
@@ -815,7 +1038,7 @@
                 {
                   "stat": "block_chance",
                   "type": "flat",
-                  "value": 10
+                  "value": 20
                 }
               ]
             },
@@ -823,9 +1046,12 @@
               "name": "Punto de restauración",
               "mods": [
                 {
-                  "stat": "life",
+                  "stat": "damage",
                   "type": "more",
-                  "value": 10
+                  "value": 35,
+                  "tags": [
+                    "low_life"
+                  ]
                 }
               ]
             }
@@ -862,17 +1088,17 @@
                 {
                   "stat": "strength",
                   "type": "flat",
-                  "value": 15
+                  "value": 30
                 },
                 {
                   "stat": "dexterity",
                   "type": "flat",
-                  "value": 15
+                  "value": 30
                 },
                 {
                   "stat": "intelligence",
                   "type": "flat",
-                  "value": 15
+                  "value": 30
                 }
               ]
             },
@@ -881,8 +1107,8 @@
               "mods": [
                 {
                   "stat": "damage",
-                  "type": "increased",
-                  "value": 20
+                  "type": "more",
+                  "value": 25
                 }
               ]
             },
@@ -891,13 +1117,13 @@
               "mods": [
                 {
                   "stat": "life",
-                  "type": "increased",
-                  "value": 12
+                  "type": "more",
+                  "value": 15
                 },
                 {
                   "stat": "energy_shield",
                   "type": "increased",
-                  "value": 12
+                  "value": 40
                 }
               ]
             }
@@ -914,7 +1140,27 @@
                 {
                   "stat": "cooldown_recovery",
                   "type": "increased",
-                  "value": 25
+                  "value": 50
+                }
+              ]
+            },
+            {
+              "name": "Infraestructura como código",
+              "mods": [
+                {
+                  "stat": "extra_devices",
+                  "type": "flat",
+                  "value": 1
+                },
+                {
+                  "stat": "extra_minions",
+                  "type": "flat",
+                  "value": 1
+                },
+                {
+                  "stat": "damage",
+                  "type": "more",
+                  "value": 15
                 }
               ]
             },
@@ -924,26 +1170,16 @@
                 {
                   "stat": "attack_speed",
                   "type": "increased",
-                  "value": 10
+                  "value": 20
                 },
                 {
                   "stat": "cast_speed",
                   "type": "increased",
-                  "value": 10
-                }
-              ]
-            },
-            {
-              "name": "Monitorización 24/7",
-              "mods": [
+                  "value": 20
+                },
                 {
                   "stat": "life_regen",
                   "type": "flat",
-                  "value": 15
-                },
-                {
-                  "stat": "mana_regen",
-                  "type": "increased",
                   "value": 30
                 }
               ]
@@ -961,7 +1197,7 @@
                 {
                   "stat": "damage",
                   "type": "more",
-                  "value": 15
+                  "value": 35
                 }
               ]
             },
@@ -971,12 +1207,12 @@
                 {
                   "stat": "skill_duration",
                   "type": "increased",
-                  "value": 25
+                  "value": 40
                 },
                 {
                   "stat": "area_of_effect",
                   "type": "increased",
-                  "value": 15
+                  "value": 30
                 }
               ]
             },
@@ -986,7 +1222,12 @@
                 {
                   "stat": "movement_speed",
                   "type": "increased",
-                  "value": 10
+                  "value": 20
+                },
+                {
+                  "stat": "extra_projectiles",
+                  "type": "flat",
+                  "value": 1
                 }
               ]
             }

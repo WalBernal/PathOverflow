@@ -17,8 +17,8 @@ Documento vivo con la historia del juego, acto a acto. Lo que está marcado como
 | Zona | Lore |
 |---|---|
 | El Sandbox | Entorno de pruebas intacto desde 2014. **B.O.B.**, el Bot de Onboarding. |
-| Campamento del Último Commit | Refugio con "firewall". **Aida** (la Senior, desde los tiempos del COBOL), **Mario** (el Becario, tres meses sin accesos, gran café) y **Rafa** (el SysAdmin, reiniciando el servidor desde 2019; escribe con muchos puntos suspensivos...). |
-| El Bosque de Cables | **Iris**, la Becaria Perdida: revela el mensaje del commit y la existencia del Arquitecto. |
+| Campamento del Último Commit | Refugio con "firewall". **Aida** (la Senior, desde los tiempos del COBOL), **Mario** (el Practicante, tres meses sin accesos, gran café) y **Rafa** (el SysAdmin, reiniciando el servidor desde 2019; escribe con muchos puntos suspensivos...). |
+| El Bosque de Cables | **Iris**, la Practicante Perdida: revela el mensaje del commit y la existencia del Arquitecto. |
 | Las Ruinas del Monolito | Restos del sistema antiguo. |
 | El Pantano de Memory Leaks | **Tomás**, el Último QA (tests desactivados «temporalmente» en 2017). «Todo proceso se puede matar. Hasta el PID 1». |
 | Las Catacumbas del Legacy | Lápidas «RIP v1.0». La cinta de backup del DBA. |
@@ -29,7 +29,7 @@ Documento vivo con la historia del juego, acto a acto. Lo que está marcado como
 
 1. **Muerte del Arquitecto** (escena `arquitecto_muere`): el sistema hace glitch y tiembla. El Arquitecto, moribundo: *«kill -9... ¿sin un SIGTERM de cortesía?»*, *«El Monolito no era el problema. Era la **tapa**»*, *«el Servidor no arrancará. Se congelará. Y el **Padre** despertará. Él no deja que nada muera»*. Después, en la consola (`dmesg`): el servidor intenta arrancar, se **congela** e `init[1]` empieza a *adoptar 8192 procesos huérfanos*. Se abre un portal al campamento.
 2. **Reunión en el campamento** (escena `reunion_campamento`): Aida confirma que el Servidor está congelado. Rafa se defiende: él **heredó** el servidor de **El Pepe, prestador de servicios retirado**, su antecesor en el cargo, que se jubiló dejando una nota («todo documentado») y un pósit con la contraseña de root (*«el pósit era la documentación»*). Aida sospecha que El Pepe dejó «algún cron programado y se fue a pescar». Rafa abre el **puerto 2222**: un túnel al Espacio de Kernel. *«Adelántate tú; nosotros te seguimos»*.
-3. **Cae La Red Lince** (escena `red_lince`): al cruzar el portal se cae **La Red Lince**, el proveedor de internet del Acto I. Aparece la pantalla de "sin conexión" con el dinosaurio. Rafa, por **datos móviles** («me quedan 200 megas, no hagas streaming»), mantiene el túnel a medias. El túnel se rompe y el jugador **cae a través de la tabla de procesos** hasta la Brecha del 503.
+3. **Cae La Red Lince** (escena `red_lince`): al cruzar el portal se cae **La Red Lince**, el proveedor de internet del Acto I. Aparece la pantalla de "sin conexión" con el dinosaurio. Rafa, por los **datos de su celular** («me quedan 200 megas, no hagas streaming»), mantiene el túnel a medias. El túnel se rompe y el jugador **cae a través de la tabla de procesos** hasta la Brecha del 503.
 
 ### Misiones secundarias del Acto I (implementado)
 Bichos en el cableado (Iris), Reporte de incidencias (Tomás), La cinta de backup (DBA), Granos de café (Mario).
@@ -46,7 +46,7 @@ Al caer el Arquitecto, el servidor no arrancó: **se congeló**. Al forzar la en
 
 ### Hub: El Socket Seguro (túnel SSH) (implementado)
 Enclave blindado en una terminal remota que aún mantiene una sesión activa con permisos temporales de lectura (*«NO ESCRIBIR exit»*).
-- **Rafa, el Cronista**: conectado por **datos móviles** en un monitor de fósforo verde. Aterrado: sus comandos devuelven `Permission denied` y, con La Red Lince caída, en el campamento solo ven al dinosaurio del Chrome. Ha encontrado en el crontab una tarea de El Pepe: `limpieza_final.sh`, sin comentarios, con un emoji de pez.
+- **Rafa, el Cronista**: conectado por los **datos de su celular** en un monitor de fósforo verde. Aterrado: sus comandos devuelven `Permission denied` y, con La Red Lince caída, en el campamento solo ven al dinosaurio del Chrome. Ha encontrado en el crontab una tarea de El Pepe: `limpieza_final.sh`, sin comentarios, con un emoji de pez.
 - **Clara, Líder de Infraestructura (DevOps)**: veterana cínica que sobrevivió viviendo en la terminal. Trata los contenedores caídos como trincheras de guerra.
 - **El Recolector**: un Garbage Collector defectuoso que busca punteros nulos y memoria sin referenciar. Habla entrecortado, **tachando partes de sus propias frases**. Por ahora recicla equipo normal (3 piezas blancas = 1 objeto mejor).
 

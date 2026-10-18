@@ -48,6 +48,112 @@ static func panel_style() -> StyleBoxFlat:
 	return s
 
 
+# --- Ventanas de juego (inventario, habilidades...) ---
+
+const GOLD := Color("b08a4a")
+const GOLD_DARK := Color("5a4426")
+const WINDOW_BG := Color("120f17")
+
+
+## Fondo de las ventanas: oscuro, con borde dorado doble y sombra.
+static func window_style() -> StyleBoxFlat:
+	var s := StyleBoxFlat.new()
+	s.bg_color = Color(WINDOW_BG, 0.97)
+	s.border_color = GOLD_DARK
+	s.set_border_width_all(2)
+	s.set_corner_radius_all(6)
+	s.shadow_color = Color(0, 0, 0, 0.6)
+	s.shadow_size = 14
+	s.content_margin_left = 20
+	s.content_margin_right = 20
+	s.content_margin_top = 16
+	s.content_margin_bottom = 16
+	return s
+
+
+## Viste una ventana: estilo, degradado en la cabecera, filete interior y
+## esquinas doradas. Se dibuja detrás del contenido.
+static func decorate_window(panel: PanelContainer) -> void:
+	panel.add_theme_stylebox_override("panel", window_style())
+	panel.draw.connect(func() -> void:
+		var r := Rect2(Vector2.ZERO, panel.size)
+		# Degradado cálido en la cabecera.
+		for k in 12:
+			panel.draw_rect(Rect2(4, 4 + k * 5, r.size.x - 8, 5), Color(0.55, 0.38, 0.15, 0.10 * (1.0 - k / 12.0)))
+		panel.draw_rect(r.grow(-6.0), Color(GOLD, 0.25), false, 1.0)
+		var c := 22.0
+		for corner: Vector2 in [Vector2(0, 0), Vector2(r.size.x, 0), Vector2(0, r.size.y), Vector2(r.size.x, r.size.y)]:
+			var sx := 1.0 if corner.x == 0.0 else -1.0
+			var sy := 1.0 if corner.y == 0.0 else -1.0
+			var o := corner + Vector2(sx * 3.0, sy * 3.0)
+			panel.draw_line(o, o + Vector2(sx * c, 0), GOLD, 3.0)
+			panel.draw_line(o, o + Vector2(0, sy * c), GOLD, 3.0)
+			panel.draw_colored_polygon(PackedVector2Array([o + Vector2(sx * 7, sy * 2), o + Vector2(sx * 11, sy * 7),
+				o + Vector2(sx * 7, sy * 12), o + Vector2(sx * 3, sy * 7)]), GOLD.lightened(0.2)))
+
+
+## Cabecera de ventana: título dorado, subtítulo y un botón de cerrar.
+static func window_header(title: String, subtitle: String, on_close: Callable) -> Control:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 2)
+	var row := HBoxContainer.new()
+	box.add_child(row)
+	var t := label(title, 24, ACCENT.lightened(0.1))
+	t.add_theme_constant_override("outline_size", 4)
+	t.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(t)
+	if on_close.is_valid():
+		var close := Button.new()
+		close.text = "✕"
+		close.tooltip_text = "Cerrar"
+		close.focus_mode = Control.FOCUS_NONE
+		close.custom_minimum_size = Vector2(32, 32)
+		close.pressed.connect(on_close)
+		row.add_child(close)
+	if subtitle != "":
+		box.add_child(label(subtitle, 12, MUTED))
+	box.add_child(ornament())
+	return box
+
+
+## Separador ornamental: línea dorada con un rombo en el centro.
+static func ornament() -> Control:
+	var c := Control.new()
+	c.custom_minimum_size = Vector2(0, 14)
+	c.draw.connect(func() -> void:
+		var y := c.size.y / 2.0
+		var mid := c.size.x / 2.0
+		c.draw_line(Vector2(0, y), Vector2(mid - 12, y), Color(GOLD, 0.6), 1.0)
+		c.draw_line(Vector2(mid + 12, y), Vector2(c.size.x, y), Color(GOLD, 0.6), 1.0)
+		c.draw_colored_polygon(PackedVector2Array([Vector2(mid, y - 5), Vector2(mid + 7, y), Vector2(mid, y + 5), Vector2(mid - 7, y)]), GOLD))
+	return c
+
+
+## Título de sección con un rombo pequeño delante.
+static func section_header(text: String) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var gem := Control.new()
+	gem.custom_minimum_size = Vector2(10, 18)
+	gem.draw.connect(func() -> void:
+		gem.draw_colored_polygon(PackedVector2Array([Vector2(5, 4), Vector2(10, 9), Vector2(5, 14), Vector2(0, 9)]), GOLD))
+	row.add_child(gem)
+	row.add_child(label(text, 15, ACCENT))
+	return row
+
+
+## Caja interior (para resúmenes, filas...): más clara que la ventana.
+static func inset_style(border := Color("2e2836")) -> StyleBoxFlat:
+	var s := _box(Color("1a1620"), border)
+	s.set_corner_radius_all(4)
+	s.content_margin_left = 10
+	s.content_margin_right = 10
+	s.content_margin_top = 8
+	s.content_margin_bottom = 8
+	return s
+
+
 static func _box(bg: Color, border: Color, border_width := 1) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
 	s.bg_color = bg

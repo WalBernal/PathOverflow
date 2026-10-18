@@ -50,6 +50,8 @@ func _initialize() -> void:
 	_test_flasks()
 	_test_act2_layout()
 	_test_act2_mechanics()
+	_test_progression_rules()
+	_test_latam_spanish()
 	_test_walk_animation()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
@@ -412,7 +414,7 @@ func _test_motherboards_and_ram() -> void:
 	for n in 300:
 		var board := gen.generate_motherboard(30)
 		_check(board.slots.size() >= Motherboard.MIN_SLOTS and board.slots.size() <= Motherboard.MAX_SLOTS, "3 a 7 ranuras")
-		_check(board.level == 11, "nivel de la placa según el nivel de objeto (%d)" % board.level)
+		_check(board.level == 27, "nivel de la placa según el nivel de objeto (%d)" % board.level)
 	var proj := gen.generate_motherboard(1, "ping_letal")
 	proj.slots.assign(["DDR4", "DDR5", "DDR3"])
 	proj.rams.resize(3)
@@ -1070,6 +1072,97 @@ func _test_act2_mechanics() -> void:
 	_check(log.npc_has_turn_in("clara"), "los tres bloques recogidos")
 
 
+func _test_progression_rules() -> void:
+	# Puntos de pasiva: ninguno al empezar, 1 por nivel y extra por misiones.
+	var c := _new_character()
+	_check(c.passive_points_total() == 0 and c.passive_points_available() == 0, "sin puntos al crear el personaje")
+	c.set_level(5)
+	_check(c.passive_points_total() == 4, "1 punto por cada nivel subido")
+	c.flags["quest_passive_points"] = 2
+	_check(c.passive_points_total() == 6, "puntos extra por misiones")
+	var main_rewards: Array = QuestLog.database()["main_act1"]["rewards"]
+	_check(main_rewards.any(func(r: Dictionary) -> bool: return r["type"] == "passive_point"), "la misión principal da puntos de pasiva")
+	# Guardados con más puntos gastados de los que ahora tocan: se devuelven.
+	var old := _new_character()
+	old.set_level(3)
+	var start := old.passives.start_node_id
+	var data = JSON.parse_string(JSON.stringify(old.to_dict()))
+	var far: Array = []
+	var alloc := PassiveAllocation.new(_tree, start)
+	for id in _tree.nodes:
+		if alloc.find_path(id).size() == 6:
+			alloc.allocate_path(id, 999)
+			break
+	for id in alloc.get_allocated_ids():
+		if id != start:
+			far.append(id)
+	data["passives"] = far
+	data["passive_tree_version"] = _tree.version
+	var loaded := CharacterData.from_dict(data, _classes[0], _tree, _db)
+	_check(loaded.passives.spent_points() == 0 and loaded.flags.has("passives_refunded"), "se devuelven los puntos sobrantes")
+	# Las placas suben de nivel con la experiencia (como las gemas de PoE).
+	var c2 := _new_character()
+	var board: Motherboard = c2.inventory.boards[0] if c2.inventory.boards[0] else Motherboard.new(_db.skills.skills["barrido"], 1, ["DDR3"])
+	c2.inventory.set_board(0, board)
+	var before: float = SkillCalc.compute(board, c2)["max_damage"]
+	c2.add_experience(board.experience_to_next() * 3)
+	_check(board.level >= 2, "la placa instalada sube de nivel")
+	_check(SkillCalc.compute(board, c2)["max_damage"] > before, "y pega más fuerte")
+	var saved = JSON.parse_string(JSON.stringify(c2.to_dict()))
+	_check(int(saved["inventory"]["boards"][0]["level"]) == board.level, "el nivel de la placa se guarda")
+	# Ascendencias: fuertes y con efectos especiales.
+	var specials := 0
+	for cdef in _classes:
+		for a in cdef["ascendancies"]:
+			var big := false
+			for p in a["passives"]:
+				for md in p["mods"]:
+					if md["type"] == "more" and float(md["value"]) >= 25.0:
+						big = true
+					if String(md["stat"]).begins_with("extra_"):
+						specials += 1
+			_check(big or a["passives"].any(func(p: Dictionary) -> bool: return p["mods"].any(func(md: Dictionary) -> bool: return String(md["stat"]).begins_with("extra_") or float(md["value"]) >= 60.0)), "%s debe tener un efecto fuerte" % a["id"])
+	_check(specials >= 8, "varias ascendencias cambian cómo funcionan las habilidades (%d)" % specials)
+	var hacker: Dictionary = _classes.filter(func(x: Dictionary) -> bool: return x["id"] == "hacker")[0]
+	var ch := CharacterData.new(hacker, _tree)
+	var chain_board := Motherboard.new(_db.skills.skills["excepcion_en_cadena"], 1, ["DDR5"])
+	var chains_before: int = SkillCalc.compute(chain_board, ch)["chains"]
+	ch.set_ascendancy(&"asesina_sesiones")
+	_check(SkillCalc.compute(chain_board, ch)["chains"] == chains_before + 2, "la Asesina de Sesiones encadena 2 veces más")
+	# Los atributos dan daño a su estilo.
+	var warrior := CharacterData.new(_classes.filter(func(x: Dictionary) -> bool: return x["id"] == "guerrero")[0], _tree)
+	var wizard := CharacterData.new(_classes.filter(func(x: Dictionary) -> bool: return x["id"] == "hechicero")[0], _tree)
+	_check(wizard.stats.total_multiplier(Stat.DAMAGE, [Stat.TAG_SPELL]) > warrior.stats.total_multiplier(Stat.DAMAGE, [Stat.TAG_SPELL]), "la inteligencia da daño de hechizos")
+	_check(warrior.stats.total_multiplier(Stat.PHYSICAL_DAMAGE, [Stat.TAG_MELEE]) > wizard.stats.total_multiplier(Stat.PHYSICAL_DAMAGE, [Stat.TAG_MELEE]), "la fuerza da daño cuerpo a cuerpo")
+
+
+## Los textos del juego, en español latinoamericano (ver docs/estilo.md).
+func _test_latam_spanish() -> void:
+	var banned := RegEx.create_from_string("(*UCP)(?i)\\b(vosotr\\w*|vuestr\\w*|os|\\w+áis|\\w+éis|portátil\\w*|ordenador\\w*|móvil\\w*|vale|coger|ratón|gafas|zumo|guay|becari\\w*|marchando|cuidaos|proteged)\\b")
+	var files := ["res://data/npcs.json", "res://data/cutscenes.json", "res://data/quests.json", "res://data/tutorial.json",
+		"res://data/act1.json", "res://data/act2.json", "res://data/classes.json", "res://data/passive_themes.json",
+		"res://data/items/flasks.json", "res://data/items/uniques.json", "res://data/items/bases.json",
+		"res://data/skills/skills.json", "res://data/skills/ram_modules.json", "res://data/enemies.json"]
+	var found := PackedStringArray()
+	for path in files:
+		_collect_banned(DataLoader.load_json(path), banned, path, found)
+	_check(found.is_empty(), "formas de España en los textos: %s" % ", ".join(found.slice(0, 8)))
+
+
+func _collect_banned(value: Variant, banned: RegEx, path: String, found: PackedStringArray) -> void:
+	if value is Dictionary:
+		for k in value:
+			if k != "id" and not String(k).ends_with("_id"):
+				_collect_banned(value[k], banned, path, found)
+	elif value is Array:
+		for v in value:
+			_collect_banned(v, banned, path, found)
+	elif value is String:
+		var m := banned.search(value)
+		if m:
+			found.append("%s: «%s»" % [path.get_file(), m.get_string()])
+
+
 func _test_walk_animation() -> void:
 	_check(RetroSfx.blip().data.size() > 0, "pitido generado")
 
@@ -1193,6 +1286,7 @@ func _test_conditions() -> void:
 
 func _test_tree_version_refund() -> void:
 	var c := _new_character()
+	c.set_level(3)
 	var start := c.passives.start_node_id
 	c.passives.allocate_path(_tree.neighbors(start)[0], 5)
 	var data = JSON.parse_string(JSON.stringify(c.to_dict()))

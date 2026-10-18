@@ -47,6 +47,8 @@ func _ready() -> void:
 		character = GameData.create_character("Desarrollador", DEV_CLASS, CharacterAppearance.default(), false)
 	item_generator = ItemGenerator.new(GameData.items)
 	character.leveled_up.connect(_on_leveled_up)
+	character.board_leveled.connect(func(b: Motherboard) -> void:
+		ui.hud.flash("%s sube a nivel %d." % [b.skill_def.get("name", "La placa"), b.level], Color("1ba29b")))
 	character.inventory.changed.connect(_mark_dirty)
 	character.passives.changed.connect(_mark_dirty)
 	character.stats_changed.connect(_mark_dirty)  # incluye cambio de ascendencia
@@ -608,6 +610,11 @@ func _on_dialogue_action(action: Dictionary) -> void:
 			pass
 		"recycle_normals":
 			_recycle_normals()
+		"passive_point":
+			var amount := int(action.get("amount", 1))
+			character.flags["quest_passive_points"] = int(character.flags.get("quest_passive_points", 0)) + amount
+			character.recalculate()
+			ui.hud.flash("+%d punto%s de pasiva por la misión (P)." % [amount, "" if amount == 1 else "s"], UiStyle.ACCENT)
 	if flag != "":
 		character.flags[flag] = true
 	quests.refresh()

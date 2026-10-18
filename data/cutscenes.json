@@ -27,7 +27,7 @@
         {
           "name": "El Arquitecto del Monolito",
           "style": "boss",
-          "text": "No lo entendéis... El Monolito no era el problema. Era la [i]tapa[/i]."
+          "text": "No lo entienden... El Monolito no era el problema. Era la [i]tapa[/i]."
         },
         {
           "name": "El Arquitecto del Monolito",
@@ -74,15 +74,15 @@
       "steps": [
         {
           "speaker": "ada",
-          "text": "¡Has vuelto! Lo hemos visto en los logs: el Arquitecto, fuera. Y el Servidor... congelado. Ni arranca ni se apaga. Como el portátil de Mario."
+          "text": "¡Has vuelto! Lo hemos visto en los logs: el Arquitecto, fuera. Y el Servidor... congelado. Ni arranca ni se apaga. Como la laptop de Mario."
         },
         {
           "speaker": "kevin",
-          "text": "¡Oye! Mi portátil arranca. A veces. Si no lo miras directamente."
+          "text": "¡Oye! Mi laptop arranca. A veces. Si no la miras directamente."
         },
         {
           "speaker": "root",
-          "text": "Aaah... a ver..... esto no es culpa mía.... ¿vale?..... Yo heredé el servidor así......"
+          "text": "Aaah... a ver..... esto no es culpa mía.... ¿está bien?..... Yo heredé el servidor así......"
         },
         {
           "speaker": "ada",
@@ -152,16 +152,16 @@
           "text": "La Red Lince no responde"
         },
         {
-          "name": "Rafa (datos móviles)",
+          "name": "Rafa (datos del celular)",
           "style": "phone",
           "speaker": "root",
           "text": "¿Me..... oyes....? La Red Lince se ha caído..... otra vez..... Aquí solo vemos al dinosaurio del Chrome......"
         },
         {
-          "name": "Rafa (datos móviles)",
+          "name": "Rafa (datos del celular)",
           "style": "phone",
           "speaker": "root",
-          "text": "Te paso por mis datos móviles...... me quedan 200 megas..... no hagas streaming..... El túnel aguanta..... a medias......"
+          "text": "Te paso por los datos de mi celular...... me quedan 200 megas..... no hagas streaming..... El túnel aguanta..... a medias......"
         },
         {
           "effect": "shake",
@@ -202,7 +202,7 @@
           "text": "[ 0.000000 ] Bienvenido al Espacio de Kernel.\n[ 0.000001 ] Privilegios del usuario: [color=#e06c6c]ninguno[/color].\n[ 0.000002 ] Procesos zombi detectados: demasiados."
         },
         {
-          "name": "Rafa (datos móviles)",
+          "name": "Rafa (datos del celular)",
           "style": "phone",
           "speaker": "root",
           "text": "Sigues vivo..... bien..... Hay un enclave seguro más adelante..... un túnel SSH que aún aguanta..... Te espero allí..... con lo que me quede de batería......"

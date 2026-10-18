@@ -18,7 +18,7 @@
       }
     },
     "kevin": {
-      "name": "Mario, el Becario",
+      "name": "Mario, el Practicante",
       "dialogue": "kevin",
       "appearance": {
         "body": 0,
@@ -63,7 +63,7 @@
       }
     },
     "iris": {
-      "name": "Iris, la Becaria Perdida",
+      "name": "Iris, la Practicante Perdida",
       "dialogue": "iris",
       "appearance": {
         "body": 0,
@@ -108,7 +108,7 @@
       }
     },
     "rafa_terminal": {
-      "name": "Rafa (vía datos móviles)",
+      "name": "Rafa (vía datos del celular)",
       "dialogue": "rafa_terminal",
       "terminal": true,
       "appearance": {
@@ -230,7 +230,7 @@
           "text": "Cae de los enemigos, igual que las placas. A veces con 6 o 7 ranuras, si los dioses del RNG te quieren. Spoiler: no te quieren.",
           "options": [
             {
-              "text": "Vale.",
+              "text": "Está bien.",
               "next": "hola"
             }
           ]
@@ -263,7 +263,7 @@
       "start": "hola",
       "nodes": {
         "hola": {
-          "text": "¡Hola! Soy Mario, el becario. Llevo tres meses aquí y todavía no tengo acceso a nada. Pero preparo un café increíble.",
+          "text": "¡Hola! Soy Mario, el practicante. Llevo tres meses aquí y todavía no tengo acceso a nada. Pero preparo un café increíble.",
           "options": [
             {
               "text": "Traigo granos de café. De bicho.",
@@ -293,7 +293,7 @@
           ]
         },
         "cafe": {
-          "text": "¡Marchando! Te he rellenado todas las pociones del cinturón (teclas 1 a 5): cafés para la vida, refrescos para el maná y alguna rareza de utilidad. Se recargan matando cosas. Como mi autoestima. Y si encuentras un Cold Brew por ahí... es mío.",
+          "text": "¡En camino! Te rellené todas las pociones del cinturón (teclas 1 a 5): cafés para la vida, refrescos para el maná y alguna rareza de utilidad. Se recargan matando cosas. Como mi autoestima. Y si encuentras un Cold Brew por ahí... es mío.",
           "options": [
             {
               "text": "Gracias, Mario.",
@@ -314,7 +314,7 @@
           "text": "Se ha acabado el café. Del todo. Dicen que los bichos sueltan granos al morir... no me preguntes cómo lo sé. ¿Me traes los de unos 40?",
           "options": [
             {
-              "text": "Marchando 40 bichos.",
+              "text": "Van 40 bichos en camino.",
               "next": "",
               "action": {
                 "type": "start_quest",
@@ -409,7 +409,7 @@
           "text": "El Portal al Kernel..... puerto 2222..... Adelántate..... yo te sigo en cuanto baje la VPN..... Si La Red Lince aguanta..... que no aguantará......",
           "options": [
             {
-              "text": "Vale.",
+              "text": "Está bien.",
               "next": "hola"
             }
           ]
@@ -757,7 +757,7 @@
       "start": "hola",
       "nodes": {
         "hola": {
-          "text": "Te veo..... a 2 FPS..... pero te veo...... Estoy en una terminal de fósforo verde..... con datos móviles..... Mis comandos devuelven «Permission denied»..... hasta los míos...... Con La Red Lince solo vemos al dinosaurio......",
+          "text": "Te veo..... a 2 FPS..... pero te veo...... Estoy en una terminal de fósforo verde..... con los datos del celular..... Mis comandos devuelven «Permission denied»..... hasta los míos...... Con La Red Lince solo vemos al dinosaurio......",
           "options": [
             {
               "text": "He eliminado al Puntero Salvaje.",
@@ -892,7 +892,7 @@
               "next": "init"
             },
             {
-              "text": "Vale.",
+              "text": "Está bien.",
               "next": "hola"
             }
           ]
@@ -1068,16 +1068,16 @@
               "requires_flag": "quest_sindicato_descriptor_ready"
             },
             {
-              "text": "¿Puedo ayudar a alguno de vosotros?",
+              "text": "¿Puedo ayudar a alguno de ustedes?",
               "next": "mision_sindicato_descriptor_oferta",
               "hides_if_flag": "quest_sindicato_descriptor_started"
             },
             {
-              "text": "¿Qué queréis?",
+              "text": "¿Qué quieren?",
               "next": "piden"
             },
             {
-              "text": "¿init os protege?",
+              "text": "¿init los protege?",
               "next": "init"
             },
             {
@@ -1125,7 +1125,7 @@
           "text": "¡Un descriptor! Con esto, «huerfano_7731» pasa a llamarse «servicio-impresora.service». Nadie toca nunca el servicio de la impresora. Nunca. Toma, por la solidaridad de clase.",
           "options": [
             {
-              "text": "Cuidaos.",
+              "text": "Cuídense.",
               "next": "",
               "action": {
                 "type": "quest_advance",

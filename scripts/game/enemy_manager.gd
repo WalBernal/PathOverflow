@@ -447,6 +447,12 @@ func _physics_process(delta: float) -> void:
 					if d2 < min_dist * min_dist and d2 > 0.0001:
 						var d := sqrt(d2)
 						push += diff / d * (min_dist - d)
+		# Estáticos (candados...): no se mueven ni se dejan empujar; es el jugador quien choca con ellos.
+		if speeds[i] <= 0.0:
+			if dist < reach and dist > 0.001:
+				player.global_position = pos + to_player / dist * reach
+			i += 1
+			continue
 		# No se meten dentro del jugador.
 		if dist < reach and dist > 0.001:
 			push -= to_player / dist * (reach - dist)

@@ -128,6 +128,37 @@ func try_use(index: int) -> bool:
 	return true
 
 
+## Lo que hay activo ahora mismo (para los recuadros del HUD): esbirros, torretas,
+## trampas, minas y giros, agrupados. Cada entrada: {name, skill, count, remaining, total, kind}.
+func active_summaries() -> Array[Dictionary]:
+	var groups := {}
+	var add := func(key: String, name: String, skill: Dictionary, remaining: float, total: float, kind: String) -> void:
+		if not groups.has(key):
+			groups[key] = {"name": name, "skill": skill, "count": 0, "remaining": 0.0, "total": total, "kind": kind}
+		var g: Dictionary = groups[key]
+		g["count"] += 1
+		g["remaining"] = maxf(g["remaining"], remaining)
+		g["total"] = maxf(g["total"], total)
+	var skills_db: Dictionary = GameData.items.skills.skills if GameData.items else {}
+	for m in _minions:
+		var id: String = m["profile"]["id"]
+		add.call("minion:" + id, "Esbirros", skills_db.get(id, {}), m["life"], m["total"], "minion")
+	var device_names := {"trap": "Trampas", "mine": "Minas", "totem": "Torreta"}
+	for d in _devices:
+		var id: String = d["profile"]["id"]
+		add.call(d["kind"] + ":" + id, device_names[d["kind"]], skills_db.get(id, {}), d["life"], d["total"], d["kind"])
+	for trap in _traps:
+		var id: String = trap["profile"]["id"]
+		add.call("bomb:" + id, "Bombas", skills_db.get(id, {}), trap["life"], trap["profile"]["duration"], "trap")
+	for spin in _spins:
+		var id: String = spin["profile"]["id"]
+		add.call("spin:" + id, "Giro", skills_db.get(id, {}), spin["time_left"], spin["profile"]["duration"], "spin")
+	var result: Array[Dictionary] = []
+	for g in groups.values():
+		result.append(g)
+	return result
+
+
 ## `from`: si se indica, la usa un dispositivo (trampa, mina, torreta) desde ahí.
 func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 	var device := from != Vector2.INF
@@ -180,7 +211,7 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 			for k in maxi(1, p["count"]):
 				_minions.append({"pos": origin + Vector2.from_angle(TAU * k / maxf(1.0, p["count"])) * 30.0,
 					"life": p["duration"], "total": p["duration"], "cd": 0.3, "profile": p, "color": color, "phase": randf() * TAU})
-			while _minions.size() > maxi(1, p["max_active"]):
+			while _minions.size() > maxi(1, p["max_active"]) + int(p.get("count", 0)):
 				_minions.pop_front()
 			_effects.append({"type": "ring", "pos": origin, "radius": 50.0, "time": 0.0, "duration": 0.3, "color": color})
 		"degen_area":
@@ -189,7 +220,7 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 		"trap":
 			var offset := (target - origin).limit_length(p["range"])
 			_traps.append({"pos": origin + offset, "armed_in": 0.5, "life": p["duration"], "profile": p, "color": color})
-			while _traps.size() > maxi(1, p["max_active"]):
+			while _traps.size() > maxi(1, p["max_active"]) + int(p.get("extra_devices", 0)):
 				_traps.pop_front()
 		"chain":
 			_chain(p, origin, target, color)
@@ -274,7 +305,7 @@ func _deploy(p: Dictionary, target: Vector2) -> void:
 		"interval": maxf(0.35, float(p["use_time"]) * 1.25), "color": DAMAGE_COLORS.get(p["damage_type"], Color.WHITE)})
 	# Límite por tipo: se retira el más antiguo.
 	var same: Array = _devices.filter(func(d: Dictionary) -> bool: return d["kind"] == kind)
-	if same.size() > int(rules["max"]):
+	if same.size() > int(rules["max"]) + int(p.get("extra_devices", 0)):
 		_devices.erase(same[0])
 
 

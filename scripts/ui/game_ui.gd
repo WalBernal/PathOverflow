@@ -73,6 +73,7 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	inventory_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	inventory_panel.setup(character, item_tooltip)
 	inventory_panel.message.connect(hud.flash)
+	inventory_panel.close_requested.connect(func() -> void: _on_menu_requested("inventory"))
 	inventory_panel.item_equipped.connect(func() -> void: tutorial.notify("equipped"))
 
 	skills_panel = SkillsPanel.new()
@@ -81,6 +82,7 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	skills_panel.position = Vector2(10, 170)
 	skills_panel.setup(character, item_tooltip)
 	skills_panel.message.connect(hud.flash)
+	skills_panel.close_requested.connect(func() -> void: _on_menu_requested("skills"))
 	skills_panel.drop_to_ground.connect(_on_drop_to_ground)
 	inventory_panel.drop_to_ground.connect(_on_drop_to_ground)
 

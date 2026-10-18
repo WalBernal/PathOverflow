@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_doc": "Misiones. main: misión principal (se muestra primero). auto_start: empieza sola al crear/cargar el personaje. starts_after: empieza al completar esa otra misión. giver: NPC que la ofrece (marca '!' amarilla). Pasos: talk {npc} (hablar con él), reach_zone {zone}, flag {flag} (bandera del personaje), kill {count, zone?, min_rarity?: normal|special|elite|unique}, collect {item} (objeto de misión de act1.json → quest_items), turn_in {npc} (se entrega con la acción de diálogo quest_advance; marca '?' verde). Banderas que pone el sistema: quest_<id>_started, quest_<id>_ready (esperando entrega) y quest_<id>_done. rewards: acciones como las de los diálogos (give_item, give_matching_ram, give_random {rarity}, refill) más experience. kill.enemy_type: solo cuenta ese tipo. collect.items: varios objetos (cuenta n/total).",
+  "_doc": "Misiones. main: misión principal (se muestra primero). auto_start: empieza sola al crear/cargar el personaje. starts_after: empieza al completar esa otra misión. giver: NPC que la ofrece (marca '!' amarilla). Pasos: talk {npc} (hablar con él), reach_zone {zone}, flag {flag} (bandera del personaje), kill {count, zone?, min_rarity?: normal|special|elite|unique}, collect {item} (objeto de misión de act1.json → quest_items), turn_in {npc} (se entrega con la acción de diálogo quest_advance; marca '?' verde). Banderas que pone el sistema: quest_<id>_started, quest_<id>_ready (esperando entrega) y quest_<id>_done. rewards: acciones como las de los diálogos (give_item, give_matching_ram, give_random {rarity}, refill) más experience. kill.enemy_type: solo cuenta ese tipo. collect.items: varios objetos (cuenta n/total). passive_point {amount}: puntos de pasiva extra (además de 1 por nivel).",
   "quests": {
     "main_act1": {
       "name": "El Último Commit",
@@ -71,6 +71,10 @@
       ],
       "experience": 2500,
       "rewards": [
+        {
+          "type": "passive_point",
+          "amount": 2
+        },
         {
           "type": "give_random",
           "rarity": "unique"
@@ -157,6 +161,10 @@
       "experience": 6000,
       "rewards": [
         {
+          "type": "passive_point",
+          "amount": 2
+        },
+        {
           "type": "give_random",
           "rarity": "unique"
         },
@@ -185,6 +193,10 @@
       ],
       "experience": 300,
       "rewards": [
+        {
+          "type": "passive_point",
+          "amount": 1
+        },
         {
           "type": "give_random",
           "rarity": "rare"
@@ -238,6 +250,10 @@
       ],
       "experience": 900,
       "rewards": [
+        {
+          "type": "passive_point",
+          "amount": 1
+        },
         {
           "type": "give_random",
           "rarity": "unique"
@@ -316,6 +332,10 @@
       "experience": 1200,
       "rewards": [
         {
+          "type": "passive_point",
+          "amount": 1
+        },
+        {
           "type": "give_matching_ram"
         },
         {
@@ -346,6 +366,10 @@
       ],
       "experience": 2000,
       "rewards": [
+        {
+          "type": "passive_point",
+          "amount": 1
+        },
         {
           "type": "give_random",
           "rarity": "unique"

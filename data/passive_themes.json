@@ -752,7 +752,7 @@
     ],
     [
      "Spam de Clicks",
-     "Tu ratón no sobrevivirá a esto.",
+     "Tu mouse no sobrevivirá a esto.",
      [
       {
        "stat": "attack_speed",
@@ -1247,7 +1247,7 @@
     "Refrigeración Líquida",
     "Cámara Frigorífica",
     "Cold Storage",
-    "Ventilador a Tope"
+    "Ventilador al Máximo"
    ],
    "minors": [
     [

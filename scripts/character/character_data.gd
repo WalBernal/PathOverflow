@@ -8,10 +8,13 @@ signal leveled_up(new_level: int)
 ## Cambió alguna condición (vida baja, muerte reciente...): las cifras de las
 ## habilidades pueden cambiar aunque las stats base no.
 signal conditions_changed
+## Una placa base instalada ha subido de nivel.
+signal board_leveled(board: Motherboard)
 
 const MAX_LEVEL := 100
 ## Puntos extra que dan las misiones (en PoE son 24).
-const QUEST_PASSIVE_POINTS := 22
+## Puntos de pasiva: 1 por nivel (desde el 2) más los que dan las misiones de la
+## historia (flags["quest_passive_points"]).
 const ATTACK_TAGS := [Stat.TAG_ATTACK, Stat.TAG_MELEE]
 const BASE_ATTACK_RADIUS := 95.0
 ## Sin arma: puños.
@@ -81,6 +84,14 @@ func experience_to_next() -> int:
 
 
 func add_experience(amount: int) -> void:
+	# Las placas instaladas aprenden a la vez que el personaje.
+	var boards_up := false
+	for board in inventory.boards:
+		if board and (board as Motherboard).add_experience(amount):
+			boards_up = true
+			board_leveled.emit(board)
+	if boards_up:
+		inventory.changed.emit()   # recalcula los perfiles de las habilidades
 	if level >= MAX_LEVEL:
 		return
 	experience += amount
@@ -103,7 +114,7 @@ func set_ascendancy(asc_id: StringName) -> void:
 
 
 func passive_points_total() -> int:
-	return level - 1 + QUEST_PASSIVE_POINTS
+	return level - 1 + int(flags.get("quest_passive_points", 0))
 
 
 func passive_points_available() -> int:
@@ -198,11 +209,16 @@ func _apply_attribute_bonuses() -> void:
 	var int_value := stats.get_value(Stat.INTELLIGENCE)
 	var src := "attributes"
 	stats.add_modifier(Modifier.new(Stat.LIFE, Modifier.Type.FLAT, floorf(str_value / 10.0) * 5.0, [], src))
-	stats.add_modifier(Modifier.new(Stat.PHYSICAL_DAMAGE, Modifier.Type.INCREASED, floorf(str_value / 5.0), [Stat.TAG_MELEE], src))
+	# Cada atributo también da daño a su estilo, para que los caminos de atributos
+	# del árbol valgan para todas las clases.
+	stats.add_modifier(Modifier.new(Stat.PHYSICAL_DAMAGE, Modifier.Type.INCREASED, floorf(str_value / 4.0), [Stat.TAG_MELEE], src))
 	stats.add_modifier(Modifier.new(Stat.ACCURACY, Modifier.Type.FLAT, dex_value * 2.0, [], src))
 	stats.add_modifier(Modifier.new(Stat.EVASION, Modifier.Type.INCREASED, floorf(dex_value / 5.0), [], src))
+	stats.add_modifier(Modifier.new(Stat.DAMAGE, Modifier.Type.INCREASED, floorf(dex_value / 4.0), [Stat.TAG_PROJECTILE], src))
+	stats.add_modifier(Modifier.new(Stat.ATTACK_SPEED, Modifier.Type.INCREASED, floorf(dex_value / 10.0), [], src))
 	stats.add_modifier(Modifier.new(Stat.MANA, Modifier.Type.FLAT, floorf(int_value / 10.0) * 5.0, [], src))
 	stats.add_modifier(Modifier.new(Stat.ENERGY_SHIELD, Modifier.Type.INCREASED, floorf(int_value / 5.0), [], src))
+	stats.add_modifier(Modifier.new(Stat.DAMAGE, Modifier.Type.INCREASED, floorf(int_value / 4.0), [Stat.TAG_SPELL], src))
 
 
 ## Valores base del arma equipada (o de los puños), para las habilidades de ataque.
@@ -318,6 +334,10 @@ static func from_dict(d: Dictionary, p_class_def: Dictionary, tree: PassiveTree,
 	c.inventory.load_dict(d.get("inventory", {}), db)
 	if int(d.get("passive_tree_version", 1)) == tree.version:
 		c.passives.load_ids(d.get("passives", []))  # también recalcula las stats
+		if c.passives.spent_points() > c.passive_points_total():
+			# Cambió el reparto de puntos (antes había 22 de regalo): se devuelven todos.
+			c.passives.load_ids([])
+			c.flags["passives_refunded"] = true
 	elif not d.get("passives", []).is_empty():
 		# El árbol cambió: los ids antiguos apuntarían a otros nodos. Se devuelven los puntos.
 		c.flags["passives_refunded"] = true

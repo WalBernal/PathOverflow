@@ -62,7 +62,7 @@ func generate_motherboard(item_level: int, skill_id := "", slot_count := 0) -> M
 	var slots: Array = []
 	for i in slot_count:
 		slots.append(main_gen if rng.randf() < MAIN_GENERATION_CHANCE else _pick(RamModule.GENERATIONS))
-	var board := Motherboard.new(def, clampi(item_level / 3 + 1, 1, Motherboard.MAX_LEVEL), slots)
+	var board := Motherboard.new(def, clampi(item_level - 3, 1, Motherboard.MAX_LEVEL), slots)
 	board.item_level = item_level
 	return board
 

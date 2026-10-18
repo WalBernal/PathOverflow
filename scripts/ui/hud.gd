@@ -240,6 +240,49 @@ func _draw() -> void:
 	for i in SkillController.ACTIONS.size():
 		_draw_skill_slot(i, font)
 
+	_draw_status_boxes(font)
+
+
+## Recuadros de lo que está activo: esbirros, torretas, trampas, minas, giros y
+## efectos de pociones de utilidad, con el tiempo que les queda.
+func _draw_status_boxes(font: Font) -> void:
+	var entries: Array[Dictionary] = skills.active_summaries() if skills else []
+	for effect in character.timed_effects:
+		var flask_id: String = String(effect["id"]).trim_prefix("flask:")
+		entries.append({"name": GameData.items.flasks.get(flask_id, {}).get("name", flask_id), "flask": flask_id,
+			"count": 1, "remaining": effect["time_left"], "total": effect.get("total", effect["time_left"]), "kind": "flask"})
+	if entries.is_empty():
+		return
+	var box := 44.0
+	var gap := 30.0
+	var first := _slot_rect(0)
+	var x := first.position.x
+	var y := first.position.y - box - 34.0
+	var kind_colors := {"minion": Color("7fd07f"), "totem": Color("d9a441"), "trap": Color("b07a3a"), "mine": Color("a0a040"),
+		"spin": Color("b8b8c8"), "flask": Color("6fd36b")}
+	for e in entries:
+		var r := Rect2(x, y, box, box)
+		var color: Color = kind_colors.get(e["kind"], TRIM)
+		draw_rect(r.grow(2.0), Color(0, 0, 0, 0.7))
+		if e.has("flask"):
+			ItemIcons.draw(self, r.grow(-4.0), GameData.items.flasks.get(e["flask"], {}).get("icon", e["flask"]), Color.WHITE, false)
+		elif not e["skill"].is_empty():
+			SkillIcon.draw(self, r.grow(-3.0), e["skill"])
+		var frac: float = clampf(e["remaining"] / maxf(0.1, e["total"]), 0.0, 1.0)
+		# Barra de tiempo restante y borde del color del tipo.
+		draw_rect(Rect2(r.position.x, r.end.y + 2.0, r.size.x, 4.0), Color(0, 0, 0, 0.8))
+		draw_rect(Rect2(r.position.x, r.end.y + 2.0, r.size.x * frac, 4.0), color)
+		var blink := frac < 0.2 and fmod(Time.get_ticks_msec() / 1000.0, 0.5) < 0.25
+		draw_rect(r, color if not blink else Color.WHITE, false, 2.0)
+		if int(e["count"]) > 1:
+			draw_string_outline(font, r.position + Vector2(r.size.x - 18.0, 14.0), "x%d" % e["count"], HORIZONTAL_ALIGNMENT_LEFT, -1, 12, 4, Color.BLACK)
+			draw_string(font, r.position + Vector2(r.size.x - 18.0, 14.0), "x%d" % e["count"], HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
+		draw_string_outline(font, r.position + Vector2(0, r.size.y - 4.0), "%ds" % ceili(e["remaining"]), HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 11, 4, Color.BLACK)
+		draw_string(font, r.position + Vector2(0, r.size.y - 4.0), "%ds" % ceili(e["remaining"]), HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 11, TEXT_COLOR)
+		draw_string_outline(font, r.position + Vector2(-10, -4.0), e["name"], HORIZONTAL_ALIGNMENT_CENTER, r.size.x + 20.0, 10, 4, Color.BLACK)
+		draw_string(font, r.position + Vector2(-10, -4.0), e["name"], HORIZONTAL_ALIGNMENT_CENTER, r.size.x + 20.0, 10, color)
+		x += box + gap
+
 
 func _draw_plate() -> void:
 	var plate := _plate_rect()

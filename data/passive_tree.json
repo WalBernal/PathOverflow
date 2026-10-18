@@ -1,5 +1,5 @@
 {
- "version": 3,
+ "version": 4,
  "themes": {
   "vida": {
    "name": "Vida",
@@ -670,7 +670,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "life",
@@ -776,7 +776,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "life",
@@ -877,7 +877,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "life",
@@ -952,7 +952,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -967,7 +967,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -982,7 +982,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -1603,7 +1603,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -1618,7 +1618,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -1633,7 +1633,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -1648,7 +1648,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -1663,7 +1663,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -1678,7 +1678,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -1719,7 +1719,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -1743,7 +1743,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -1758,7 +1758,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -1923,7 +1923,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -1938,7 +1938,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -1974,7 +1974,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 4,
+     "value": 6,
      "tags": [
       "attack"
      ]
@@ -2035,7 +2035,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 4,
+     "value": 6,
      "tags": [
       "attack"
      ]
@@ -2096,7 +2096,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 4,
+     "value": 6,
      "tags": [
       "attack"
      ]
@@ -2133,7 +2133,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -2148,7 +2148,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -2308,7 +2308,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -2323,7 +2323,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -2512,7 +2512,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -2527,7 +2527,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -2542,7 +2542,7 @@
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "melee"
      ]
@@ -2561,7 +2561,7 @@
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     }
    ],
    "cluster": "c5",
@@ -2593,7 +2593,7 @@
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "accuracy",
@@ -2640,7 +2640,7 @@
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     }
    ],
    "cluster": "c5",
@@ -2672,7 +2672,7 @@
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "accuracy",
@@ -2693,7 +2693,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -2708,7 +2708,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -2889,7 +2889,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -2904,7 +2904,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -2940,7 +2940,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -2955,7 +2955,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -2970,7 +2970,7 @@
     {
      "stat": "area_of_effect",
      "type": "increased",
-     "value": 6
+     "value": 9
     }
    ],
    "cluster": "c7",
@@ -2986,7 +2986,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "area"
      ]
@@ -3005,12 +3005,12 @@
     {
      "stat": "area_of_effect",
      "type": "increased",
-     "value": 3
+     "value": 4
     },
     {
      "stat": "damage",
      "type": "increased",
-     "value": 5,
+     "value": 8,
      "tags": [
       "area"
      ]
@@ -3029,7 +3029,7 @@
     {
      "stat": "area_of_effect",
      "type": "increased",
-     "value": 6
+     "value": 9
     }
    ],
    "cluster": "c7",
@@ -3045,7 +3045,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "area"
      ]
@@ -3064,12 +3064,12 @@
     {
      "stat": "area_of_effect",
      "type": "increased",
-     "value": 3
+     "value": 4
     },
     {
      "stat": "damage",
      "type": "increased",
-     "value": 5,
+     "value": 8,
      "tags": [
       "area"
      ]
@@ -3088,7 +3088,7 @@
     {
      "stat": "area_of_effect",
      "type": "increased",
-     "value": 6
+     "value": 9
     }
    ],
    "cluster": "c7",
@@ -3122,7 +3122,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -3137,7 +3137,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -3152,7 +3152,7 @@
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "melee"
      ]
@@ -3171,7 +3171,7 @@
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     }
    ],
    "cluster": "c8",
@@ -3203,7 +3203,7 @@
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "accuracy",
@@ -3250,7 +3250,7 @@
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     }
    ],
    "cluster": "c8",
@@ -3282,7 +3282,7 @@
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "accuracy",
@@ -3303,7 +3303,7 @@
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "melee"
      ]
@@ -3446,7 +3446,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -3461,7 +3461,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -3485,7 +3485,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -3500,7 +3500,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -3515,7 +3515,7 @@
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "melee"
      ]
@@ -3534,7 +3534,7 @@
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     }
    ],
    "cluster": "c10",
@@ -3566,7 +3566,7 @@
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "accuracy",
@@ -3610,7 +3610,7 @@
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     }
    ],
    "cluster": "c10",
@@ -3642,7 +3642,7 @@
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "accuracy",
@@ -3663,7 +3663,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -3678,7 +3678,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -3693,7 +3693,7 @@
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c11",
@@ -3725,7 +3725,7 @@
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "crit_multiplier",
@@ -3746,7 +3746,7 @@
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c11",
@@ -3778,7 +3778,7 @@
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "crit_multiplier",
@@ -3799,7 +3799,7 @@
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c11",
@@ -3854,7 +3854,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -3869,7 +3869,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -3884,7 +3884,7 @@
     {
      "stat": "attack_speed",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c12",
@@ -3900,7 +3900,7 @@
     {
      "stat": "attack_speed",
      "type": "increased",
-     "value": 3
+     "value": 4
     },
     {
      "stat": "accuracy",
@@ -3921,12 +3921,12 @@
     {
      "stat": "attack_speed",
      "type": "increased",
-     "value": 2
+     "value": 3
     },
     {
      "stat": "damage",
      "type": "increased",
-     "value": 4,
+     "value": 6,
      "tags": [
       "attack"
      ]
@@ -3945,7 +3945,7 @@
     {
      "stat": "attack_speed",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c12",
@@ -3961,7 +3961,7 @@
     {
      "stat": "attack_speed",
      "type": "increased",
-     "value": 3
+     "value": 4
     },
     {
      "stat": "accuracy",
@@ -3982,12 +3982,12 @@
     {
      "stat": "attack_speed",
      "type": "increased",
-     "value": 2
+     "value": 3
     },
     {
      "stat": "damage",
      "type": "increased",
-     "value": 4,
+     "value": 6,
      "tags": [
       "attack"
      ]
@@ -4006,7 +4006,7 @@
     {
      "stat": "attack_speed",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c12",
@@ -4040,7 +4040,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -4055,7 +4055,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -4231,7 +4231,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -4246,7 +4246,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -4406,7 +4406,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -4421,7 +4421,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -4436,7 +4436,7 @@
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "melee"
      ]
@@ -4455,7 +4455,7 @@
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     }
    ],
    "cluster": "c15",
@@ -4487,7 +4487,7 @@
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "accuracy",
@@ -4508,7 +4508,7 @@
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "melee"
      ]
@@ -4527,7 +4527,7 @@
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     }
    ],
    "cluster": "c15",
@@ -4559,7 +4559,7 @@
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "accuracy",
@@ -4606,7 +4606,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -4621,7 +4621,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -4662,7 +4662,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -4677,7 +4677,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -4713,7 +4713,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 4,
+     "value": 6,
      "tags": [
       "attack"
      ]
@@ -4774,7 +4774,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 4,
+     "value": 6,
      "tags": [
       "attack"
      ]
@@ -4853,7 +4853,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -4868,7 +4868,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -4883,7 +4883,7 @@
     {
      "stat": "attack_speed",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c17",
@@ -4899,7 +4899,7 @@
     {
      "stat": "attack_speed",
      "type": "increased",
-     "value": 3
+     "value": 4
     },
     {
      "stat": "accuracy",
@@ -4920,12 +4920,12 @@
     {
      "stat": "attack_speed",
      "type": "increased",
-     "value": 2
+     "value": 3
     },
     {
      "stat": "damage",
      "type": "increased",
-     "value": 4,
+     "value": 6,
      "tags": [
       "attack"
      ]
@@ -4944,7 +4944,7 @@
     {
      "stat": "attack_speed",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c17",
@@ -4986,12 +4986,12 @@
     {
      "stat": "attack_speed",
      "type": "increased",
-     "value": 2
+     "value": 3
     },
     {
      "stat": "damage",
      "type": "increased",
-     "value": 4,
+     "value": 6,
      "tags": [
       "attack"
      ]
@@ -5010,7 +5010,7 @@
     {
      "stat": "attack_speed",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c17",
@@ -5026,7 +5026,7 @@
     {
      "stat": "attack_speed",
      "type": "increased",
-     "value": 3
+     "value": 4
     },
     {
      "stat": "accuracy",
@@ -5047,12 +5047,12 @@
     {
      "stat": "attack_speed",
      "type": "increased",
-     "value": 2
+     "value": 3
     },
     {
      "stat": "damage",
      "type": "increased",
-     "value": 4,
+     "value": 6,
      "tags": [
       "attack"
      ]
@@ -5205,7 +5205,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -5220,7 +5220,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -5244,7 +5244,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -5259,7 +5259,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -5274,7 +5274,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "projectile"
      ]
@@ -5309,7 +5309,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 6,
+     "value": 9,
      "tags": [
       "projectile"
      ]
@@ -5333,7 +5333,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "projectile"
      ]
@@ -5378,7 +5378,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 6,
+     "value": 9,
      "tags": [
       "projectile"
      ]
@@ -5402,7 +5402,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "projectile"
      ]
@@ -5437,7 +5437,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -5452,7 +5452,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -5467,7 +5467,7 @@
     {
      "stat": "cold_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c20",
@@ -5483,7 +5483,7 @@
     {
      "stat": "cold_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "cold_res",
@@ -5504,12 +5504,12 @@
     {
      "stat": "cold_damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "cast_speed",
      "type": "increased",
-     "value": 2
+     "value": 3
     }
    ],
    "cluster": "c20",
@@ -5525,7 +5525,7 @@
     {
      "stat": "cold_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c20",
@@ -5541,7 +5541,7 @@
     {
      "stat": "cold_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "cold_res",
@@ -5562,12 +5562,12 @@
     {
      "stat": "cold_damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "cast_speed",
      "type": "increased",
-     "value": 2
+     "value": 3
     }
    ],
    "cluster": "c20",
@@ -5583,7 +5583,7 @@
     {
      "stat": "cold_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c20",
@@ -5599,7 +5599,7 @@
     {
      "stat": "cold_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "cold_res",
@@ -5643,7 +5643,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -5658,7 +5658,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -5821,7 +5821,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -5836,7 +5836,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -5851,7 +5851,7 @@
     {
      "stat": "chaos_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c22",
@@ -5883,12 +5883,12 @@
     {
      "stat": "chaos_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "damage",
      "type": "increased",
-     "value": 3
+     "value": 4
     }
    ],
    "cluster": "c22",
@@ -5904,7 +5904,7 @@
     {
      "stat": "chaos_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c22",
@@ -5938,12 +5938,12 @@
     {
      "stat": "chaos_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "damage",
      "type": "increased",
-     "value": 3
+     "value": 4
     }
    ],
    "cluster": "c22",
@@ -5959,7 +5959,7 @@
     {
      "stat": "chaos_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c22",
@@ -5991,12 +5991,12 @@
     {
      "stat": "chaos_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "damage",
      "type": "increased",
-     "value": 3
+     "value": 4
     }
    ],
    "cluster": "c22",
@@ -6012,7 +6012,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -6027,7 +6027,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -6042,7 +6042,7 @@
     {
      "stat": "attack_speed",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c23",
@@ -6058,7 +6058,7 @@
     {
      "stat": "attack_speed",
      "type": "increased",
-     "value": 3
+     "value": 4
     },
     {
      "stat": "accuracy",
@@ -6079,12 +6079,12 @@
     {
      "stat": "attack_speed",
      "type": "increased",
-     "value": 2
+     "value": 3
     },
     {
      "stat": "damage",
      "type": "increased",
-     "value": 4,
+     "value": 6,
      "tags": [
       "attack"
      ]
@@ -6103,7 +6103,7 @@
     {
      "stat": "attack_speed",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c23",
@@ -6127,7 +6127,7 @@
      "value": 60
     }
    ],
-   "flavor": "Tu ratón no sobrevivirá a esto.",
+   "flavor": "Tu mouse no sobrevivirá a esto.",
    "cluster": "c23",
    "theme": "velocidad_ataque",
    "icon": "velocidad_ataque"
@@ -6142,12 +6142,12 @@
     {
      "stat": "attack_speed",
      "type": "increased",
-     "value": 2
+     "value": 3
     },
     {
      "stat": "damage",
      "type": "increased",
-     "value": 4,
+     "value": 6,
      "tags": [
       "attack"
      ]
@@ -6166,7 +6166,7 @@
     {
      "stat": "attack_speed",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c23",
@@ -6182,7 +6182,7 @@
     {
      "stat": "attack_speed",
      "type": "increased",
-     "value": 3
+     "value": 4
     },
     {
      "stat": "accuracy",
@@ -6203,7 +6203,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -6218,7 +6218,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -6233,7 +6233,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "projectile"
      ]
@@ -6268,7 +6268,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 6,
+     "value": 9,
      "tags": [
       "projectile"
      ]
@@ -6292,7 +6292,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "projectile"
      ]
@@ -6327,7 +6327,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 6,
+     "value": 9,
      "tags": [
       "projectile"
      ]
@@ -6351,7 +6351,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "projectile"
      ]
@@ -6407,7 +6407,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -6422,7 +6422,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -6458,7 +6458,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -6473,7 +6473,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -6488,7 +6488,7 @@
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c25",
@@ -6520,7 +6520,7 @@
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "crit_multiplier",
@@ -6541,7 +6541,7 @@
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c25",
@@ -6573,7 +6573,7 @@
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "crit_multiplier",
@@ -6594,7 +6594,7 @@
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c25",
@@ -6628,7 +6628,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -6643,7 +6643,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -6958,7 +6958,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -6973,7 +6973,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -6997,7 +6997,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -7012,7 +7012,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -7027,7 +7027,7 @@
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c28",
@@ -7059,7 +7059,7 @@
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "crit_multiplier",
@@ -7080,7 +7080,7 @@
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c28",
@@ -7114,7 +7114,7 @@
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "crit_multiplier",
@@ -7135,7 +7135,7 @@
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c28",
@@ -7167,7 +7167,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -7182,7 +7182,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -7197,7 +7197,7 @@
     {
      "stat": "cast_speed",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c29",
@@ -7213,7 +7213,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "spell"
      ]
@@ -7232,7 +7232,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 6,
+     "value": 9,
      "tags": [
       "spell"
      ]
@@ -7240,7 +7240,7 @@
     {
      "stat": "cast_speed",
      "type": "increased",
-     "value": 2
+     "value": 3
     }
    ],
    "cluster": "c29",
@@ -7256,7 +7256,7 @@
     {
      "stat": "cast_speed",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c29",
@@ -7272,7 +7272,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "spell"
      ]
@@ -7291,7 +7291,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 6,
+     "value": 9,
      "tags": [
       "spell"
      ]
@@ -7299,7 +7299,7 @@
     {
      "stat": "cast_speed",
      "type": "increased",
-     "value": 2
+     "value": 3
     }
    ],
    "cluster": "c29",
@@ -7315,7 +7315,7 @@
     {
      "stat": "cast_speed",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c29",
@@ -7331,7 +7331,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "spell"
      ]
@@ -7368,7 +7368,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -7383,7 +7383,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -7398,7 +7398,7 @@
     {
      "stat": "chaos_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c30",
@@ -7430,12 +7430,12 @@
     {
      "stat": "chaos_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "damage",
      "type": "increased",
-     "value": 3
+     "value": 4
     }
    ],
    "cluster": "c30",
@@ -7451,7 +7451,7 @@
     {
      "stat": "chaos_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c30",
@@ -7483,12 +7483,12 @@
     {
      "stat": "chaos_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "damage",
      "type": "increased",
-     "value": 3
+     "value": 4
     }
    ],
    "cluster": "c30",
@@ -7504,7 +7504,7 @@
     {
      "stat": "chaos_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c30",
@@ -7543,7 +7543,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -7558,7 +7558,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -7573,7 +7573,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "projectile"
      ]
@@ -7608,7 +7608,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 6,
+     "value": 9,
      "tags": [
       "projectile"
      ]
@@ -7632,7 +7632,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "projectile"
      ]
@@ -7674,7 +7674,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 6,
+     "value": 9,
      "tags": [
       "projectile"
      ]
@@ -7698,7 +7698,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "projectile"
      ]
@@ -7733,7 +7733,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 6,
+     "value": 9,
      "tags": [
       "projectile"
      ]
@@ -7757,7 +7757,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -7772,7 +7772,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -7932,7 +7932,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -7947,7 +7947,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -8123,7 +8123,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -8138,7 +8138,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -8179,7 +8179,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -8194,7 +8194,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -8209,7 +8209,7 @@
     {
      "stat": "lightning_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c34",
@@ -8225,7 +8225,7 @@
     {
      "stat": "lightning_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "lightning_res",
@@ -8246,12 +8246,12 @@
     {
      "stat": "lightning_damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 5
+     "value": 8
     }
    ],
    "cluster": "c34",
@@ -8267,7 +8267,7 @@
     {
      "stat": "lightning_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c34",
@@ -8283,7 +8283,7 @@
     {
      "stat": "lightning_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "lightning_res",
@@ -8304,12 +8304,12 @@
     {
      "stat": "lightning_damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 5
+     "value": 8
     }
    ],
    "cluster": "c34",
@@ -8325,7 +8325,7 @@
     {
      "stat": "lightning_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c34",
@@ -8364,7 +8364,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -8379,7 +8379,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -8431,7 +8431,7 @@
     {
      "stat": "area_of_effect",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c35",
@@ -8486,7 +8486,7 @@
     {
      "stat": "area_of_effect",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c35",
@@ -8539,7 +8539,7 @@
     {
      "stat": "area_of_effect",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c35",
@@ -8592,7 +8592,7 @@
     {
      "stat": "area_of_effect",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c36",
@@ -8652,7 +8652,7 @@
     {
      "stat": "area_of_effect",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c36",
@@ -8684,7 +8684,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -8699,7 +8699,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -8723,7 +8723,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -8738,7 +8738,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -8753,7 +8753,7 @@
     {
      "stat": "lightning_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c37",
@@ -8769,7 +8769,7 @@
     {
      "stat": "lightning_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "lightning_res",
@@ -8790,12 +8790,12 @@
     {
      "stat": "lightning_damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 5
+     "value": 8
     }
    ],
    "cluster": "c37",
@@ -8811,7 +8811,7 @@
     {
      "stat": "lightning_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c37",
@@ -8850,12 +8850,12 @@
     {
      "stat": "lightning_damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 5
+     "value": 8
     }
    ],
    "cluster": "c37",
@@ -8871,7 +8871,7 @@
     {
      "stat": "lightning_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c37",
@@ -8887,7 +8887,7 @@
     {
      "stat": "lightning_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "lightning_res",
@@ -8908,7 +8908,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -8923,7 +8923,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -9099,7 +9099,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -9114,7 +9114,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -9129,7 +9129,7 @@
     {
      "stat": "fire_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c39",
@@ -9145,7 +9145,7 @@
     {
      "stat": "fire_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "fire_res",
@@ -9166,12 +9166,12 @@
     {
      "stat": "fire_damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "area_of_effect",
      "type": "increased",
-     "value": 3
+     "value": 4
     }
    ],
    "cluster": "c39",
@@ -9187,7 +9187,7 @@
     {
      "stat": "fire_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c39",
@@ -9203,7 +9203,7 @@
     {
      "stat": "fire_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "fire_res",
@@ -9224,12 +9224,12 @@
     {
      "stat": "fire_damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "area_of_effect",
      "type": "increased",
-     "value": 3
+     "value": 4
     }
    ],
    "cluster": "c39",
@@ -9245,7 +9245,7 @@
     {
      "stat": "fire_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c39",
@@ -9287,7 +9287,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -9302,7 +9302,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -9473,7 +9473,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -9488,7 +9488,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -9503,7 +9503,7 @@
     {
      "stat": "cold_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c41",
@@ -9519,7 +9519,7 @@
     {
      "stat": "cold_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "cold_res",
@@ -9540,12 +9540,12 @@
     {
      "stat": "cold_damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "cast_speed",
      "type": "increased",
-     "value": 2
+     "value": 3
     }
    ],
    "cluster": "c41",
@@ -9561,7 +9561,7 @@
     {
      "stat": "cold_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c41",
@@ -9600,12 +9600,12 @@
     {
      "stat": "cold_damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "cast_speed",
      "type": "increased",
-     "value": 2
+     "value": 3
     }
    ],
    "cluster": "c41",
@@ -9621,7 +9621,7 @@
     {
      "stat": "cold_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c41",
@@ -9637,7 +9637,7 @@
     {
      "stat": "cold_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "cold_res",
@@ -9658,7 +9658,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -9673,7 +9673,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -9688,7 +9688,7 @@
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c42",
@@ -9720,7 +9720,7 @@
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "crit_multiplier",
@@ -9741,7 +9741,7 @@
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c42",
@@ -9773,7 +9773,7 @@
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "crit_multiplier",
@@ -9794,7 +9794,7 @@
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c42",
@@ -9849,7 +9849,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -9864,7 +9864,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -9900,7 +9900,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -9915,7 +9915,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -9930,7 +9930,7 @@
     {
      "stat": "cast_speed",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c43",
@@ -9946,7 +9946,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "spell"
      ]
@@ -9965,7 +9965,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 6,
+     "value": 9,
      "tags": [
       "spell"
      ]
@@ -9973,7 +9973,7 @@
     {
      "stat": "cast_speed",
      "type": "increased",
-     "value": 2
+     "value": 3
     }
    ],
    "cluster": "c43",
@@ -9989,7 +9989,7 @@
     {
      "stat": "cast_speed",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c43",
@@ -10005,7 +10005,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "spell"
      ]
@@ -10024,7 +10024,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 6,
+     "value": 9,
      "tags": [
       "spell"
      ]
@@ -10032,7 +10032,7 @@
     {
      "stat": "cast_speed",
      "type": "increased",
-     "value": 2
+     "value": 3
     }
    ],
    "cluster": "c43",
@@ -10048,7 +10048,7 @@
     {
      "stat": "cast_speed",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c43",
@@ -10085,7 +10085,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -10100,7 +10100,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -10115,7 +10115,7 @@
     {
      "stat": "chaos_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c44",
@@ -10147,12 +10147,12 @@
     {
      "stat": "chaos_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "damage",
      "type": "increased",
-     "value": 3
+     "value": 4
     }
    ],
    "cluster": "c44",
@@ -10168,7 +10168,7 @@
     {
      "stat": "chaos_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c44",
@@ -10210,12 +10210,12 @@
     {
      "stat": "chaos_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "damage",
      "type": "increased",
-     "value": 3
+     "value": 4
     }
    ],
    "cluster": "c44",
@@ -10231,7 +10231,7 @@
     {
      "stat": "chaos_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c44",
@@ -10263,12 +10263,12 @@
     {
      "stat": "chaos_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "damage",
      "type": "increased",
-     "value": 3
+     "value": 4
     }
    ],
    "cluster": "c44",
@@ -10403,7 +10403,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -10418,7 +10418,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -10442,7 +10442,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -10457,7 +10457,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -10472,7 +10472,7 @@
     {
      "stat": "fire_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c46",
@@ -10488,7 +10488,7 @@
     {
      "stat": "fire_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "fire_res",
@@ -10509,12 +10509,12 @@
     {
      "stat": "fire_damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "area_of_effect",
      "type": "increased",
-     "value": 3
+     "value": 4
     }
    ],
    "cluster": "c46",
@@ -10530,7 +10530,7 @@
     {
      "stat": "fire_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c46",
@@ -10569,12 +10569,12 @@
     {
      "stat": "fire_damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "area_of_effect",
      "type": "increased",
-     "value": 3
+     "value": 4
     }
    ],
    "cluster": "c46",
@@ -10590,7 +10590,7 @@
     {
      "stat": "fire_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c46",
@@ -10606,7 +10606,7 @@
     {
      "stat": "fire_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "fire_res",
@@ -10627,7 +10627,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -10642,7 +10642,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -10657,7 +10657,7 @@
     {
      "stat": "lightning_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c47",
@@ -10673,7 +10673,7 @@
     {
      "stat": "lightning_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "lightning_res",
@@ -10694,12 +10694,12 @@
     {
      "stat": "lightning_damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 5
+     "value": 8
     }
    ],
    "cluster": "c47",
@@ -10715,7 +10715,7 @@
     {
      "stat": "lightning_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c47",
@@ -10731,7 +10731,7 @@
     {
      "stat": "lightning_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "lightning_res",
@@ -10752,12 +10752,12 @@
     {
      "stat": "lightning_damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     },
     {
      "stat": "crit_chance",
      "type": "increased",
-     "value": 5
+     "value": 8
     }
    ],
    "cluster": "c47",
@@ -10773,7 +10773,7 @@
     {
      "stat": "lightning_damage",
      "type": "increased",
-     "value": 12
+     "value": 18
     }
    ],
    "cluster": "c47",
@@ -10789,7 +10789,7 @@
     {
      "stat": "lightning_damage",
      "type": "increased",
-     "value": 8
+     "value": 12
     },
     {
      "stat": "lightning_res",
@@ -10833,7 +10833,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -10848,7 +10848,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -10863,7 +10863,7 @@
     {
      "stat": "area_of_effect",
      "type": "increased",
-     "value": 6
+     "value": 9
     }
    ],
    "cluster": "c48",
@@ -10879,7 +10879,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "area"
      ]
@@ -10898,12 +10898,12 @@
     {
      "stat": "area_of_effect",
      "type": "increased",
-     "value": 3
+     "value": 4
     },
     {
      "stat": "damage",
      "type": "increased",
-     "value": 5,
+     "value": 8,
      "tags": [
       "area"
      ]
@@ -10922,7 +10922,7 @@
     {
      "stat": "area_of_effect",
      "type": "increased",
-     "value": 6
+     "value": 9
     }
    ],
    "cluster": "c48",
@@ -10938,7 +10938,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "area"
      ]
@@ -10957,12 +10957,12 @@
     {
      "stat": "area_of_effect",
      "type": "increased",
-     "value": 3
+     "value": 4
     },
     {
      "stat": "damage",
      "type": "increased",
-     "value": 5,
+     "value": 8,
      "tags": [
       "area"
      ]
@@ -10981,7 +10981,7 @@
     {
      "stat": "area_of_effect",
      "type": "increased",
-     "value": 6
+     "value": 9
     }
    ],
    "cluster": "c48",
@@ -11023,7 +11023,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -11038,7 +11038,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -11214,7 +11214,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -11229,7 +11229,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -11389,7 +11389,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -11404,7 +11404,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -11585,7 +11585,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -11600,7 +11600,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -11636,7 +11636,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -11651,7 +11651,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -11811,7 +11811,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -11826,7 +11826,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -11841,7 +11841,7 @@
     {
      "stat": "cast_speed",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c53",
@@ -11857,7 +11857,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "spell"
      ]
@@ -11876,7 +11876,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 6,
+     "value": 9,
      "tags": [
       "spell"
      ]
@@ -11884,7 +11884,7 @@
     {
      "stat": "cast_speed",
      "type": "increased",
-     "value": 2
+     "value": 3
     }
    ],
    "cluster": "c53",
@@ -11900,7 +11900,7 @@
     {
      "stat": "cast_speed",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c53",
@@ -11942,7 +11942,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 6,
+     "value": 9,
      "tags": [
       "spell"
      ]
@@ -11950,7 +11950,7 @@
     {
      "stat": "cast_speed",
      "type": "increased",
-     "value": 2
+     "value": 3
     }
    ],
    "cluster": "c53",
@@ -11966,7 +11966,7 @@
     {
      "stat": "cast_speed",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c53",
@@ -11982,7 +11982,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 10,
+     "value": 15,
      "tags": [
       "spell"
      ]
@@ -12001,7 +12001,7 @@
     {
      "stat": "damage",
      "type": "increased",
-     "value": 6,
+     "value": 9,
      "tags": [
       "spell"
      ]
@@ -12009,7 +12009,7 @@
     {
      "stat": "cast_speed",
      "type": "increased",
-     "value": 2
+     "value": 3
     }
    ],
    "cluster": "c53",
@@ -12062,7 +12062,7 @@
     {
      "stat": "area_of_effect",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c54",
@@ -12122,7 +12122,7 @@
     {
      "stat": "area_of_effect",
      "type": "increased",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c54",
@@ -12154,7 +12154,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -12169,7 +12169,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -12297,7 +12297,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -12312,7 +12312,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -12327,7 +12327,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -12342,7 +12342,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -12357,7 +12357,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -12372,7 +12372,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -12387,7 +12387,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -12402,7 +12402,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -12417,7 +12417,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -12432,7 +12432,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -12560,7 +12560,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -12575,7 +12575,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -12723,7 +12723,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -12738,7 +12738,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -12753,7 +12753,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -12768,7 +12768,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -12783,7 +12783,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -12798,7 +12798,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -12813,7 +12813,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -12828,7 +12828,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -12843,7 +12843,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -12858,7 +12858,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13001,7 +13001,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13016,7 +13016,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13139,7 +13139,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13154,7 +13154,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13169,7 +13169,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13184,7 +13184,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13199,7 +13199,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13214,7 +13214,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13229,7 +13229,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13244,7 +13244,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13259,7 +13259,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13274,7 +13274,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13402,7 +13402,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13417,7 +13417,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13560,7 +13560,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13575,7 +13575,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13590,7 +13590,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13605,7 +13605,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13620,7 +13620,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13635,7 +13635,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13650,7 +13650,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13665,7 +13665,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13680,7 +13680,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13695,7 +13695,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13838,7 +13838,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13853,7 +13853,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13981,7 +13981,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -13996,7 +13996,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -14011,7 +14011,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -14026,7 +14026,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -14041,7 +14041,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -14056,7 +14056,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -14071,7 +14071,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -14086,7 +14086,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -14101,7 +14101,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -14116,7 +14116,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -14239,7 +14239,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -14254,7 +14254,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -14402,7 +14402,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -14417,7 +14417,7 @@
     {
      "stat": "dexterity",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -14432,7 +14432,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -14447,7 +14447,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -14462,7 +14462,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -14477,7 +14477,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -14492,7 +14492,7 @@
     {
      "stat": "strength",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -14507,7 +14507,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -14522,7 +14522,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -14537,7 +14537,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -14680,7 +14680,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"
@@ -14695,7 +14695,7 @@
     {
      "stat": "intelligence",
      "type": "flat",
-     "value": 10
+     "value": 12
     }
    ],
    "theme": "atributos"

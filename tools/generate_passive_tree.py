@@ -30,7 +30,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "data" / "passive_tree.json"
 THEMES = json.loads((ROOT / "data" / "passive_themes.json").read_text(encoding="utf-8"))["themes"]
-TREE_VERSION = 3
+TREE_VERSION = 4
+# Multiplicador de los aumentos de daño de las pasivas menores (que no se queden
+# en un +4 % que no se nota).
+DAMAGE_MINOR_SCALE = 1.5
+ATTRIBUTE_TRAVEL = 12
+DAMAGE_STATS = {"damage", "physical_damage", "elemental_damage", "fire_damage", "cold_damage", "lightning_damage",
+                "chaos_damage", "minion_damage", "attack_speed", "cast_speed", "crit_chance", "area_of_effect"}
 
 # id, nombre, atributos, temáticas de los 4 clusters cercanos, de los 4 lejanos y del cluster interior.
 CLASSES = [
@@ -129,7 +135,13 @@ def new_cluster(theme, cx, cy, radius):
 
 def minor(theme, k, x, y, cluster):
     name, mods = THEMES[theme]["minors"][k % len(THEMES[theme]["minors"])]
-    return add("minor", name, x, y, mods, cluster=cluster, theme=theme)
+    scaled = []
+    for md in mods:
+        md = dict(md)
+        if md["stat"] in DAMAGE_STATS and md["type"] == "increased":
+            md["value"] = round(md["value"] * DAMAGE_MINOR_SCALE)
+        scaled.append(md)
+    return add("minor", name, x, y, scaled, cluster=cluster, theme=theme)
 
 
 def notable(theme, x, y, cluster):
@@ -142,7 +154,7 @@ def notable(theme, x, y, cluster):
 
 def travel(attr, x, y):
     stat, label = ATTR_STAT[attr]
-    return add("minor", label, x, y, [{"stat": stat, "type": "flat", "value": 10}], theme="atributos")
+    return add("minor", label, x, y, [{"stat": stat, "type": "flat", "value": ATTRIBUTE_TRAVEL}], theme="atributos")
 
 
 def ring_cluster(theme, cx, cy, radius, count, entry_deg):
