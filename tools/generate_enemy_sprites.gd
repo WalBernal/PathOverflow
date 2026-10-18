@@ -20,7 +20,7 @@ var oy := 0
 
 
 func _initialize() -> void:
-	var rows: Array[Callable] = [_bug, _zombie_process, _memory_leak, _worm, _daemon, _spam_bot, _thread, _node_modules, _troll]
+	var rows: Array[Callable] = [_bug, _zombie_process, _memory_leak, _worm, _daemon, _spam_bot, _thread, _node_modules, _troll, _irq, _mutex, _wild_pointer, _twin_thread, _init_fork, _init_core]
 	img = Image.create_empty(S * FRAMES, S * rows.size(), false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
 	for row in rows.size():
@@ -247,3 +247,86 @@ func _troll(f: int) -> void:
 	for k in 3:
 		_px(23 + k * 2, 15 - (f + k) % 3, flame[(f + k) % 3])
 		_px(23 + k * 2, 14 - (f + k) % 2, flame[k])
+
+
+## Interrupción (IRQ): chispa eléctrica flotante con un "!" dentro.
+func _irq(f: int) -> void:
+	var bob: int = [0, -1, -2, -1][f]
+	var core := Color("e8e040")
+	for k in 6:
+		var a := TAU * k / 6.0 + f * 0.4
+		_line(16, 16 + bob, 16 + int(cos(a) * 12.0), 16 + bob + int(sin(a) * 12.0), Color("f0a020"))
+	_ellipse(16, 16 + bob, 7, 7, core)
+	_rect(15, 11 + bob, 17, 17 + bob, Color("2a2a30"))
+	_rect(15, 19 + bob, 17, 20 + bob, Color("2a2a30"))
+
+
+## Candado Mutex: candado de hierro gordo con un "1" (bloqueado).
+func _mutex(f: int) -> void:
+	var iron := Color("7a7e88")
+	for x in range(9, 24):
+		for y in range(5, 15):
+			var d := Vector2(x + 0.5 - 16, y + 0.5 - 14).length()
+			if d <= 7.5 and d >= 4.5 and y < 14:
+				_px(x, y, iron.lightened(0.15))
+	_rect(6, 13, 26, 28, iron)
+	_rect(6, 13, 26, 14, iron.lightened(0.25))
+	_ellipse(16, 20, 2.5, 2.5, Color("1a1a1e"))
+	_rect(15, 21, 17, 25, Color("1a1a1e"))
+	_px(9 + f, 16, Color("e06c6c"))   # luz de "ocupado"
+
+
+## Puntero Salvaje: flecha glitcheada que deja copias desplazadas.
+func _wild_pointer(f: int) -> void:
+	var c := Color("c08aff")
+	var shift: int = [0, 2, -2, 1][f]
+	for k in 3:
+		var col: Color = [Color(1, 0.2, 0.4, 0.5), Color(0.2, 1, 0.9, 0.5), c][k]
+		var o: int = (k - 1) * shift
+		_line(6 + o, 24, 22 + o, 8, col)
+		_line(7 + o, 24, 23 + o, 8, col)
+		_line(22 + o, 8, 14 + o, 9, col)
+		_line(22 + o, 8, 21 + o, 16, col)
+	_ellipse(9, 22, 2.5, 2.5, Color("1a1a1e"))   # el "*" del puntero
+	_px(9, 22, c)
+
+
+## Hilo gemelo: autómata de hierro con un número de turno en el pecho.
+func _twin_thread(f: int) -> void:
+	var stride: int = [-2, 0, 2, 0][f]
+	var metal := Color("5a6a7a")
+	_rect(11 + stride, 22, 13 + stride, 28, metal.darkened(0.4))
+	_rect(18 - stride, 22, 20 - stride, 28, metal.darkened(0.4))
+	_rect(9, 11, 22, 23, metal)
+	_rect(12, 14, 19, 20, Color("1a2030"))
+	_line(14, 15, 16, 15, Color("6fd3c8"))   # "="
+	_line(14, 18, 17, 18, Color("6fd3c8"))
+	_rect(12, 4, 19, 10, metal.lightened(0.15))
+	_px(14, 7, Color("6fd3c8"))
+	_px(17, 7, Color("6fd3c8"))
+	_line(22, 13, 27, 17 + (f % 2), metal)       # brazo-pistón
+	_rect(4, 15, 8, 18, Color("8a5a2a"))          # engranaje
+
+
+## Copia de init: versión pequeña y translúcida del núcleo.
+func _init_fork(f: int) -> void:
+	var bob: int = [0, -1, 0, 1][f]
+	_ellipse(16, 18 + bob, 7, 7, Color(0.9, 0.35, 0.2, 0.75))
+	_ellipse(16, 18 + bob, 3, 3, Color("ffd870"))
+	for k in 4:
+		var a := TAU * k / 4.0 + f * 0.5
+		_px(16 + int(cos(a) * 10.0), 18 + bob + int(sin(a) * 10.0), Color("ffd870"))
+
+
+## init (PID 1): núcleo-procesador con patas de pines y un ojo incandescente.
+func _init_core(f: int) -> void:
+	var glow: Color = [Color("ff8a3a"), Color("ffb050"), Color("ffd870"), Color("ffb050")][f]
+	for k in 5:
+		_line(6 + k * 5, 26, 5 + k * 5, 30, Color("c0a060"))   # pines
+		_line(6 + k * 5, 6, 5 + k * 5, 2, Color("c0a060"))
+	_rect(4, 6, 27, 26, Color("2a2a30"))
+	_rect(6, 8, 25, 24, Color("3a3a44"))
+	_ellipse(16, 16, 6, 6, glow)
+	_ellipse(16, 16, 2.5, 2.5, Color("1a0a08"))
+	_line(8, 10, 12, 10, Color("8a8a96"))
+	_px(23, 22, glow)

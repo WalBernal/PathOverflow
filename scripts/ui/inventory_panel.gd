@@ -158,6 +158,9 @@ func _on_cell_clicked(cell: ItemCell, button: MouseButton) -> void:
 			message.emit("El cinturón está lleno: arrastra la poción encima de otra para cambiarlas.")
 		_on_cell_hovered(cell, true)
 		return
+	if cell.location["kind"] == "bag" and cell.item is KeyItem:
+		message.emit("Objeto clave: se usa solo al llegar a lo que abre.")
+		return
 	if cell.location["kind"] == "bag":
 		if not cell.item.is_equipment():
 			message.emit("Las placas base y la RAM se instalan en el menú de habilidades (K).")

@@ -118,9 +118,29 @@ El acto está definido en `data/act1.json` y lo construye `Zone` (`scripts/game/
 - **NPCs y lore** en `data/npcs.json` (en el campamento: Aida la Senior, Mario el Becario y Rafa el SysAdmin, que escribe con muchos puntos suspensivos...; sus ids internos siguen siendo `ada`, `kevin` y `root` para no romper los guardados): diálogos con opciones, condiciones (`requires_flag`) y acciones (regalos que se dan una sola vez). Cuentan la historia del administrador que hizo `push --force` "por el Monolito".
 - **Tutorial** (`data/tutorial.json`, versión 2): 12 pasos. Empieza en el Sandbox (moverse, atacar, matar, recoger, equipar, pociones, pasivas) y sigue en el campamento (Aida, RAM, Mario, salir al Bosque). Los personajes con el tutorial antiguo continúan donde corresponde.
 
-## Acto II: Kernel Panic (en desarrollo)
+## Acto II: Kernel Panic
 
-`data/act2.json`. Por ahora: **La Brecha del 503** (nivel 13, procesos zombi, el suelo parpadea entre binario y vacío) y **El Socket Seguro**, el pueblo del acto: una sesión SSH con Rafa conectado por datos móviles en un monitor de fósforo verde, Clara (Líder de Infraestructura) y El Recolector (un Garbage Collector que tacha sus frases y recicla 3 piezas de equipo normal por un objeto mejor). El resto del acto está diseñado en [`docs/lore.md`](docs/lore.md). Los waypoints se agrupan por acto y se reaparece en el pueblo del acto en el que estés.
+`data/act2.json`. El pueblo es **El Socket Seguro** (waypoint y reaparición): Rafa por datos móviles, Clara y El Recolector.
+
+| Zona | Nivel | Waypoint | Lo que hay |
+|---|---|---|---|
+| La Brecha del 503 | 13 | | Entrada al Kernel, procesos zombi |
+| El Socket Seguro | 14 | ✔ | Pueblo del acto |
+| La Fábrica de Hilos | 15 | | Pistones; subjefe **Carrera Crítica** (dos gemelos que se turnan la inmunidad: ataca al que le toca); prueba de estrés |
+| Las Alcantarillas del Buffer Overflow | 17 | | Registro de auditoría de Clara (revelación); escotilla **cerrada** al Módulo de Refrigeración |
+| El Módulo de Refrigeración (opcional) | 18 | | Solo con la **Tarjeta de Acceso al Rack** en la bolsa; Caché en Frío; prueba de estrés de 5 oleadas |
+| La Fosa de los Procesos Huérfanos | 19 | ✔ | Sindicato de Huérfanos (PID 404); el Puntero Salvaje (se teletransporta); prueba de estrés |
+| La Grieta del Deadlock | 21 | | Dos gigantes de hierro trabados: rompe los 4 **Candados Mutex** para abrir la compuerta; aquí está la Tarjeta de Acceso al Rack |
+| El Bus del Sistema | 23 | ✔ | Camino al núcleo |
+| El Anillo 0 | 25 | | Jefe: **init (PID 1)** |
+
+- **Camino bloqueado**: la escotilla del Módulo de Refrigeración (Alcantarillas) necesita la Tarjeta de Acceso al Rack, que está más adelante, en la Grieta del Deadlock: hay que volver con ella en la bolsa. Los objetos clave (`KeyItem`) no se pueden tirar.
+- **Pruebas de estrés (oleadas)**: al tocar un Banco de Pruebas de Estrés se ve la recompensa concreta (con tooltip) y se puede aceptar. Empiezan las oleadas alrededor del banco (cada una más dura; la última con élites) y, si sobrevives, cae la recompensa mostrada más botín adicional. Si mueres o sales de la zona, se reinicia. Se definen en `challenges` de cada zona.
+- **init** tiene tres fases según su vida: *Fork Bomb* (copias frágiles; usa daño de área), *nice -20* (ráfagas de interrupciones: cúbrete tras los disipadores, que bloquean proyectiles) y *OOM Killer* (rayos desde los núcleos a través de ti: si también atraviesan a init, le quitan un 7 % de vida). Al morir, la escena final revela el giro hacia el Acto III.
+- **Enemigos nuevos**: Interrupción (IRQ, tres proyectiles), Candado Mutex (inmóvil), Puntero Salvaje (se teletransporta con aviso), Hilo gemelo, Copia de init e init.
+- **Misiones secundarias**: El Puntero Salvaje (Rafa), La Petición del Sindicato, Caché en Frío (Clara) y Prueba de Carga (El Recolector).
+
+El lore completo está en [`docs/lore.md`](docs/lore.md).
 
 ## Misiones
 

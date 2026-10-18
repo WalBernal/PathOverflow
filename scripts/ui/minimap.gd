@@ -90,7 +90,7 @@ func _draw() -> void:
 
 	# Salidas: dentro, un rombo; fuera, una flecha en el borde hacia ellas.
 	for e in zone.exits:
-		if not zone.exit_open(e):
+		if not zone.exit_visible(e):
 			continue
 		var p := _to_map(e["pos"])
 		if _inside(p):

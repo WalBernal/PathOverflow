@@ -89,6 +89,7 @@ func _initialize() -> void:
 		["isotonica", _sports_bottle],
 		["chocolate_caliente", _mug.bind(Color("8a5a3a"), Color("4a2410"), false, true)],
 		["kombucha", _jar.bind(Color("c89a40"), false)],
+		["key_card", _key_card],
 		["unknown", _unknown],
 	]
 	var rows := ceili(float(icons.size()) / COLUMNS)
@@ -613,3 +614,14 @@ func _sports_bottle() -> void:
 	_poly([Vector2(10, 8), Vector2(21, 8), Vector2(19, 17), Vector2(21, 28), Vector2(10, 28), Vector2(12, 17)], Color("40c0e0"))
 	_rect(11, 20, 20, 23, Color("f0f020"))
 	_line(11, 9, 12, 26, Color("80e0f0"))
+
+
+## Tarjeta de acceso (objeto clave).
+func _key_card() -> void:
+	_rect(5, 9, 26, 24, Color("e8e4d8"))
+	_rect(5, 9, 26, 12, Color("d9a441"))
+	_rect(8, 15, 13, 21, Color("8a8a8a"))      # foto
+	_line(15, 16, 23, 16, Color("4a4a52"))
+	_line(15, 19, 21, 19, Color("4a4a52"))
+	_rect(21, 21, 24, 23, Color("c8a040"))     # chip
+	_rect(14, 6, 17, 9, Color("2a2a30"))       # pinza

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_doc": "Misiones. main: misión principal (se muestra primero). auto_start: empieza sola al crear/cargar el personaje. starts_after: empieza al completar esa otra misión. giver: NPC que la ofrece (marca '!' amarilla). Pasos: talk {npc} (hablar con él), reach_zone {zone}, flag {flag} (bandera del personaje), kill {count, zone?, min_rarity?: normal|special|elite|unique}, collect {item} (objeto de misión de act1.json → quest_items), turn_in {npc} (se entrega con la acción de diálogo quest_advance; marca '?' verde). Banderas que pone el sistema: quest_<id>_started, quest_<id>_ready (esperando entrega) y quest_<id>_done. rewards: acciones como las de los diálogos (give_item, give_matching_ram, give_random {rarity}, refill) más experience.",
+  "_doc": "Misiones. main: misión principal (se muestra primero). auto_start: empieza sola al crear/cargar el personaje. starts_after: empieza al completar esa otra misión. giver: NPC que la ofrece (marca '!' amarilla). Pasos: talk {npc} (hablar con él), reach_zone {zone}, flag {flag} (bandera del personaje), kill {count, zone?, min_rarity?: normal|special|elite|unique}, collect {item} (objeto de misión de act1.json → quest_items), turn_in {npc} (se entrega con la acción de diálogo quest_advance; marca '?' verde). Banderas que pone el sistema: quest_<id>_started, quest_<id>_ready (esperando entrega) y quest_<id>_done. rewards: acciones como las de los diálogos (give_item, give_matching_ram, give_random {rarity}, refill) más experience. kill.enemy_type: solo cuenta ese tipo. collect.items: varios objetos (cuenta n/total).",
   "quests": {
     "main_act1": {
       "name": "El Último Commit",
@@ -99,9 +99,70 @@
           "text": "Comprueba la conexión de Rafa"
         },
         {
+          "type": "reach_zone",
+          "zone": "fabrica",
+          "text": "Entra en la Fábrica de Hilos"
+        },
+        {
           "type": "flag",
-          "flag": "act2_fabrica",
-          "text": "Entra en la Fábrica de Hilos (próximamente)"
+          "flag": "race_condition_down",
+          "text": "Detén la Carrera Crítica (los Hilos gemelos)"
+        },
+        {
+          "type": "reach_zone",
+          "zone": "alcantarillas",
+          "text": "Baja a las Alcantarillas del Buffer Overflow"
+        },
+        {
+          "type": "collect",
+          "item": "registro_auditoria",
+          "text": "Rescata el registro de auditoría de Clara"
+        },
+        {
+          "type": "reach_zone",
+          "zone": "fosa",
+          "text": "Llega a la Fosa de los Procesos Huérfanos"
+        },
+        {
+          "type": "talk",
+          "npc": "sindicato",
+          "text": "Habla con el Sindicato de Huérfanos (PID 404)"
+        },
+        {
+          "type": "reach_zone",
+          "zone": "grieta",
+          "text": "Cruza a la Grieta del Deadlock"
+        },
+        {
+          "type": "flag",
+          "flag": "deadlock_open",
+          "text": "Rompe los Candados Mutex para abrir la compuerta"
+        },
+        {
+          "type": "reach_zone",
+          "zone": "bus",
+          "text": "Recorre el Bus del Sistema"
+        },
+        {
+          "type": "reach_zone",
+          "zone": "anillo0",
+          "text": "Entra en el Anillo 0"
+        },
+        {
+          "type": "flag",
+          "flag": "act2_complete",
+          "text": "Derrota a init (PID 1)"
+        }
+      ],
+      "experience": 6000,
+      "rewards": [
+        {
+          "type": "give_random",
+          "rarity": "unique"
+        },
+        {
+          "type": "give_random",
+          "rarity": "ultra_rare"
         }
       ]
     },
@@ -207,6 +268,115 @@
         {
           "type": "give_random",
           "rarity": "magic"
+        }
+      ]
+    },
+    "puntero_salvaje": {
+      "name": "El Puntero Salvaje",
+      "giver": "rafa_terminal",
+      "description": "Una aberración que se teletransporta por la Fosa de los Huérfanos y corrompe las tablas de botín. Acorrálala con trampas o aturdimientos.",
+      "steps": [
+        {
+          "type": "kill",
+          "count": 1,
+          "zone": "fosa",
+          "enemy_type": "puntero_salvaje",
+          "text": "Elimina al Puntero Salvaje en la Fosa"
+        },
+        {
+          "type": "turn_in",
+          "npc": "rafa_terminal",
+          "text": "Avisa a Rafa"
+        }
+      ],
+      "experience": 1500,
+      "rewards": [
+        {
+          "type": "give_random",
+          "rarity": "unique"
+        }
+      ]
+    },
+    "sindicato_descriptor": {
+      "name": "La Petición del Sindicato",
+      "giver": "sindicato",
+      "description": "Un descriptor de archivo en blanco permitiría a algunos huérfanos camuflarse como servicios legítimos y sobrevivir a la purga.",
+      "steps": [
+        {
+          "type": "collect",
+          "item": "descriptor_falso",
+          "text": "Encuentra un descriptor de archivo en las Alcantarillas"
+        },
+        {
+          "type": "turn_in",
+          "npc": "sindicato",
+          "text": "Lleva el descriptor al Sindicato"
+        }
+      ],
+      "experience": 1200,
+      "rewards": [
+        {
+          "type": "give_matching_ram"
+        },
+        {
+          "type": "give_random",
+          "rarity": "rare"
+        }
+      ]
+    },
+    "cache_en_frio": {
+      "name": "Caché en Frío",
+      "giver": "clara",
+      "description": "Tres bloques de caché congelados en el Módulo de Refrigeración, bajo las Alcantarillas. La escotilla necesita una Tarjeta de Acceso al Rack.",
+      "steps": [
+        {
+          "type": "collect",
+          "items": [
+            "cache_1",
+            "cache_2",
+            "cache_3"
+          ],
+          "text": "Recupera los bloques de caché congelados"
+        },
+        {
+          "type": "turn_in",
+          "npc": "clara",
+          "text": "Lleva los bloques a Clara"
+        }
+      ],
+      "experience": 2000,
+      "rewards": [
+        {
+          "type": "give_random",
+          "rarity": "unique"
+        },
+        {
+          "type": "give_random",
+          "rarity": "flask"
+        }
+      ]
+    },
+    "prueba_estres": {
+      "name": "Prueba de Carga",
+      "giver": "recolector",
+      "description": "El Recolector quiere los registros de un Banco de Pruebas de Estrés superado (resiste todas sus oleadas).",
+      "steps": [
+        {
+          "type": "flag",
+          "flag": "challenge_any_done",
+          "text": "Supera un Banco de Pruebas de Estrés"
+        },
+        {
+          "type": "turn_in",
+          "npc": "recolector",
+          "text": "Lleva los registros al Recolector"
+        }
+      ],
+      "experience": 1000,
+      "rewards": [
+        {
+          "type": "give_random",
+          "rarity": "ultra_rare"
         }
       ]
     }

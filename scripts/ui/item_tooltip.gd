@@ -61,6 +61,10 @@ static func build_text(item: Item, character: CharacterData, compare: bool) -> S
 		return _ram_text(item as RamModule)
 	if item is Flask:
 		return _flask_text(item as Flask, character)
+	if item is KeyItem:
+		return "[center][color=#%s][b]%s[/b][/color]\n[color=#%s]Objeto clave[/color][/center]\n%s" % [
+			KeyItem.COLOR.to_html(false), item.display_name(), GREY,
+			_section("[i][color=#a08f6a]%s[/color][/i]" % (item as KeyItem).description())]
 	var color := Rarity.item_color(item.rarity).to_html(false)
 	var t := "[center][color=#%s][b]%s[/b][/color]\n" % [color, item.display_name()]
 	if item.rarity != Rarity.Item.NORMAL and item.rarity != Rarity.Item.MAGIC:

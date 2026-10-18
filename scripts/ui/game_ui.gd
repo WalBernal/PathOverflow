@@ -22,6 +22,8 @@ var item_tooltip: ItemTooltip
 var minimap: Minimap
 var quest_tracker: QuestTracker
 var cutscene: CutscenePlayer
+var challenge_panel: ChallengePanel
+var _wave_label: Label
 var character_sheet: CharacterSheet
 var _character: CharacterData
 var _player: Player
@@ -157,6 +159,20 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	_act_banner = _build_act_banner()
 	add_child(_act_banner)
 
+	challenge_panel = ChallengePanel.new()
+	add_child(challenge_panel)
+	challenge_panel.setup(item_tooltip, character)
+
+	_wave_label = UiStyle.label("", 20, Color("ff9a4a"))
+	_wave_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_wave_label.add_theme_constant_override("outline_size", 6)
+	_wave_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	_wave_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_wave_label.visible = false
+	add_child(_wave_label)
+	_wave_label.anchor_right = 1.0
+	_wave_label.offset_top = 60.0
+
 	cutscene = CutscenePlayer.new()
 	cutscene.player = player
 	add_child(cutscene)
@@ -198,6 +214,12 @@ func play_cutscene(data: Dictionary, on_done: Callable) -> void:
 	item_tooltip.hide()
 	_update_minimap()
 	cutscene.play(data, on_done)
+
+
+## Texto de la prueba de estrés en curso ("" lo oculta).
+func set_wave_text(text: String) -> void:
+	_wave_label.text = text
+	_wave_label.visible = text != ""
 
 
 func open_waypoints(current_zone: String) -> void:
@@ -311,7 +333,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed(&"ui_cancel"):
 		# Esc cierra lo que esté abierto; si no hay nada, pausa.
-		if _waypoint_panel.visible:
+		if challenge_panel.visible:
+			challenge_panel._close()
+		elif _waypoint_panel.visible:
 			_waypoint_panel.visible = false
 		elif dialogue_box.visible:
 			dialogue_box.close()
@@ -383,6 +407,9 @@ func _on_drop_to_ground(location: Dictionary) -> void:
 		if panel != hud and panel.visible and panel.get_global_rect().has_point(mouse):
 			return  # soltado sobre un panel, en un sitio que no admite objetos
 	if hud.is_over_hud(mouse):
+		return
+	if ItemTransfer.get_at(_character.inventory, location) is KeyItem:
+		hud.flash("Es un objeto clave. Mejor no tirarlo: abre caminos que necesitarás.", UiStyle.ACCENT)
 		return
 	var item := ItemTransfer.take(_character, location)
 	if item:

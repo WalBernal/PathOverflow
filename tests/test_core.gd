@@ -48,6 +48,8 @@ func _initialize() -> void:
 	_test_skill_tags()
 	_test_new_supports()
 	_test_flasks()
+	_test_act2_layout()
+	_test_act2_mechanics()
 	_test_walk_animation()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
@@ -137,7 +139,7 @@ func _test_experience() -> void:
 func _test_enemies() -> void:
 	var em := EnemyManager.new()
 	var kills := [0]
-	em.enemy_killed.connect(func(_r: int, _xp: int, _pos: Vector2) -> void: kills[0] += 1)
+	em.enemy_killed.connect(func(_r: int, _xp: int, _pos: Vector2, _type: String) -> void: kills[0] += 1)
 	# Tipo fijo: con tipos aleatorios, un node_modules (mucha vida) podría sobrevivir.
 	var bug := em.type_index_of("bug")
 	em.spawn(Vector2(0, 0), Rarity.Enemy.NORMAL, bug)
@@ -581,7 +583,7 @@ func _test_act(npc_data: Dictionary) -> void:
 				for k in zone.key_points():
 					_check(p.distance_to(k) >= 450.0, "%s: grupo demasiado cerca de una entrada/NPC" % z["id"])
 		zone.free()
-	_check(bosses == 1, "el acto tiene un jefe")
+	_check(bosses == 2, "un jefe por acto (el Arquitecto e init)")
 	_test_quest_data(zones, npc_data)
 	_test_cutscenes(zones, npc_data)
 	_check(act["zones"].size() >= 10, "acto I completo + inicio del acto II")
@@ -657,7 +659,8 @@ func _test_quest_data(zones: Dictionary, npc_data: Dictionary) -> void:
 					_check(step.get("zone", "") == "" or zones.has(step["zone"]), "%s: zona desconocida" % id)
 					_check(QuestLog.RARITY_BY_NAME.has(step.get("min_rarity", "normal")), "%s: rareza desconocida" % id)
 				"collect":
-					_check(quest_items.has(step["item"]), "%s: objeto %s no está en ninguna zona" % [id, step["item"]])
+					for item_id in step.get("items", [step.get("item", "")]):
+						_check(quest_items.has(item_id), "%s: objeto %s no está en ninguna zona" % [id, item_id])
 				"flag":
 					pass
 				_:
@@ -809,7 +812,7 @@ func _test_new_skills() -> void:
 
 func _test_enemy_attacks() -> void:
 	var em := EnemyManager.new()
-	var kinds := ["melee", "ranged", "charge", "slam", "cone"]
+	var kinds := ["melee", "ranged", "charge", "slam", "cone", "blink", "none"]
 	var rows := {}
 	for t in EnemyManager.enemy_types():
 		_check(kinds.has(t.get("attack", {}).get("kind", "melee")), "ataque desconocido en %s" % t["id"])
@@ -844,7 +847,7 @@ func _test_enemy_attacks() -> void:
 			_check(float(z["boss"]["life_mult"]) < 4.0, "el jefe tiene menos vida")
 			_check(z["boss"].get("abilities", []).size() >= 2, "el jefe tiene habilidades especiales")
 			for a in z["boss"]["abilities"]:
-				_check(a["kind"] in ["projectile_nova", "ground_marks", "summon"], "habilidad de jefe desconocida")
+				_check(a["kind"] in ["projectile_nova", "ground_marks", "summon", "oom_beam"], "habilidad de jefe desconocida")
 
 
 func _test_skill_tags() -> void:
@@ -958,6 +961,113 @@ func _test_flasks() -> void:
 	for k in 30:
 		var drop := gen.generate_flask(5)
 		_check(drop != null and drop.required_level() <= 5, "pociones de botín de nivel <= zona")
+
+
+func _test_act2_layout() -> void:
+	var act: Dictionary = DataLoader.load_json("res://data/act2.json")
+	var zones := {}
+	for z in act["zones"]:
+		zones[z["id"]] = z
+	_check(zones.size() >= 8, "Acto II con al menos 6-7 escenarios además de la Brecha y el pueblo (%d)" % zones.size())
+	# Camino principal desde el pueblo hasta el jefe (sin pasar por salidas con objeto clave).
+	var seen := {"socket_seguro": true}
+	var todo := ["socket_seguro"]
+	while not todo.is_empty():
+		var z: Dictionary = zones[todo.pop_back()]
+		for e in z.get("exits", []):
+			if e.get("requires_item", "") != "" or not zones.has(e["target"]):
+				continue
+			if not seen.has(e["target"]):
+				seen[e["target"]] = true
+				todo.append(e["target"])
+	_check(seen.has("anillo0"), "se llega del Socket Seguro al Anillo 0")
+	_check(not seen.has("modulo_frio"), "el Módulo de Refrigeración solo se abre con la tarjeta")
+	_check(zones["socket_seguro"].get("safe", false) and zones["socket_seguro"].has("waypoint"), "el Socket Seguro es el pueblo (reaparición)")
+	# El camino bloqueado: la llave está en una zona más adelante que la puerta.
+	var lock_zone := ""
+	var key_zone := ""
+	for z in act["zones"]:
+		for e in z.get("exits", []):
+			if e.get("requires_item", "") == "tarjeta_rack":
+				lock_zone = z["id"]
+		for k in z.get("key_items", []):
+			if k["id"] == "tarjeta_rack":
+				key_zone = z["id"]
+	var order := ["socket_seguro", "fabrica", "alcantarillas", "fosa", "grieta", "bus", "anillo0"]
+	_check(lock_zone != "" and key_zone != "" and order.find(key_zone) > order.find(lock_zone), "la tarjeta está más adelante que la escotilla (hay que volver)")
+	_check(KeyItem.DEFS.has("tarjeta_rack") and ItemIcons.has_icon("key_card"), "objeto clave definido con icono")
+	# Pruebas de estrés y misiones secundarias.
+	var challenges := 0
+	for z in act["zones"]:
+		challenges += z.get("challenges", []).size()
+		for c in z.get("challenges", []):
+			_check(int(c.get("waves", 0)) >= 3 and not c.get("rewards", []).is_empty(), "%s: oleadas y recompensa" % c["id"])
+			for ty in c.get("types", []):
+				_check(EnemyManager.enemy_types().any(func(e: Dictionary) -> bool: return e["id"] == ty), "%s: tipo desconocido %s" % [c["id"], ty])
+	_check(challenges >= 3, "varias pruebas de estrés en el acto")
+	var quests := QuestLog.database()
+	for id in ["puntero_salvaje", "sindicato_descriptor", "cache_en_frio", "prueba_estres"]:
+		_check(quests.has(id), "misión secundaria %s" % id)
+	_check(zones["anillo0"]["boss"]["type"] == "init" and zones["anillo0"]["boss"]["abilities"].size() >= 4, "init con habilidades por fases")
+
+
+func _test_act2_mechanics() -> void:
+	# Objeto clave: se guarda, se detecta y no se puede tirar.
+	var c := _new_character()
+	_check(not KeyItem.has_key(c.inventory, "tarjeta_rack"), "sin tarjeta al principio")
+	c.inventory.add_item(KeyItem.new("tarjeta_rack"))
+	_check(KeyItem.has_key(c.inventory, "tarjeta_rack"), "tarjeta en la bolsa")
+	var idx := c.inventory.bag.find(c.inventory.bag.filter(func(i) -> bool: return i is KeyItem)[0])
+	_check(ItemTransfer.take(c, {"kind": "bag", "index": idx}) == null and KeyItem.has_key(c.inventory, "tarjeta_rack"), "no se puede tirar")
+	var data = JSON.parse_string(JSON.stringify(c.to_dict()))
+	var loaded := CharacterData.from_dict(data, _classes[0], _tree, _db)
+	_check(KeyItem.has_key(loaded.inventory, "tarjeta_rack"), "la tarjeta se guarda")
+	# Inmunidad por turnos (Carrera Crítica).
+	var em := EnemyManager.new()
+	var a := em.spawn(Vector2.ZERO, Rarity.Enemy.UNIQUE, em.type_index_of("hilo_gemelo"))
+	em.set_immune(a, true)
+	var before := em.lives[0]
+	em.hit_in_radius(Vector2.ZERO, 50.0, 100.0, 100.0, 0.0, 150.0)
+	_check(em.lives[0] == before, "el gemelo inmune no recibe daño")
+	em.set_immune(a, false)
+	em.hit_in_radius(Vector2.ZERO, 50.0, 10.0, 10.0, 0.0, 150.0)
+	_check(em.lives[0] < before, "el gemelo de turno sí")
+	_check(em.count_type("hilo_gemelo") == 1 and em.is_alive_id(a), "conteo por tipo")
+	em.clear_all()
+	# Fases del jefe: cada habilidad solo en su tramo de vida.
+	var boss_id := em.spawn(Vector2(500, 0), Rarity.Enemy.UNIQUE, em.type_index_of("init"), "init", 1.0, [
+		{"kind": "summon", "type": "init_fork", "count": 2, "cooldown": 1.0, "first": 0.0, "min_life": 0.66},
+		{"kind": "oom_beam", "count": 1, "cooldown": 1.0, "first": 0.0, "max_life": 0.33, "cores": [[0, 0]], "self_damage": 0.1}])
+	var bi := em.index_of(boss_id)
+	_check(em._try_ability(bi, 0.1, 100.0, Vector2.ZERO) and em.casting[boss_id]["def"]["kind"] == "summon", "fase 1: Fork Bomb")
+	em.casting.clear()
+	em.lives[bi] = em.max_lives[bi] * 0.2
+	for a2 in em.abilities[boss_id]:
+		a2["timer"] = 0.0
+	_check(em._try_ability(bi, 0.1, 100.0, Vector2.ZERO) and em.casting[boss_id]["def"]["kind"] == "oom_beam", "fase 3: OOM Killer")
+	# El rayo del OOM Killer daña al propio jefe si lo atraviesa.
+	var life_before := em.lives[bi]
+	em._resolve_ability(bi, em.casting[boss_id]["def"], em.positions[bi])   # rayo del núcleo (0,0) hacia el jefe
+	em.hazards[0]["time"] = 99.0
+	em._update_hazards(0.0)
+	_check(em.lives[bi] < life_before, "el OOM Killer se come a init si le apuntas bien")
+	em.free()
+	# Misiones: eliminar un tipo concreto y recoger varios objetos.
+	var c2 := _new_character()
+	var log := QuestLog.new(c2)
+	log.start("puntero_salvaje")
+	log.notify_kill("fosa", Rarity.Enemy.UNIQUE, "proceso_zombi")
+	_check(log.current_step("puntero_salvaje")["type"] == "kill", "otro tipo no cuenta")
+	log.notify_kill("fosa", Rarity.Enemy.UNIQUE, "puntero_salvaje")
+	_check(log.npc_has_turn_in("rafa_terminal"), "el Puntero cuenta")
+	log.start("cache_en_frio")
+	c2.flags["item_cache_1"] = true
+	c2.flags["item_cache_2"] = true
+	log.refresh()
+	_check(log.step_text("cache_en_frio").ends_with("(2/3)"), "progreso de varios objetos")
+	c2.flags["item_cache_3"] = true
+	log.refresh()
+	_check(log.npc_has_turn_in("clara"), "los tres bloques recogidos")
 
 
 func _test_walk_animation() -> void:
