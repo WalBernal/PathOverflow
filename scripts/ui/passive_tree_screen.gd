@@ -24,6 +24,10 @@ var _stats_label: RichTextLabel
 var _tooltip: PanelContainer
 var _tooltip_label: RichTextLabel
 var _hovered_id := -1
+var _search_edit: LineEdit
+var _search_label: Label
+var _search_matches: Array = []
+var _search_index := -1
 
 
 func _ready() -> void:
@@ -95,11 +99,22 @@ func _build_ui() -> void:
 	reset.pressed.connect(func() -> void: _character.passives.reset())
 	bar.add_child(reset)
 
+	_search_edit = LineEdit.new()
+	_search_edit.placeholder_text = "Buscar: vida, fuego, crítico..."
+	_search_edit.custom_minimum_size.x = 240
+	_search_edit.clear_button_enabled = true
+	_search_edit.text_changed.connect(_on_search_changed)
+	_search_edit.text_submitted.connect(func(_t: String) -> void: _focus_next_match())
+	bar.add_child(_search_edit)
+	_search_label = _make_label("")
+	_search_label.add_theme_color_override("font_color", Color("e8d070"))
+	bar.add_child(_search_label)
+
 	_status_label = _make_label("")
 	_status_label.add_theme_color_override("font_color", Color("e06c6c"))
 	bar.add_child(_status_label)
 
-	var hint := _make_label("Click izq.: asignar  ·  Click der.: quitar  ·  Arrastrar: mover  ·  Rueda: zoom")
+	var hint := _make_label("Click izq.: asignar  ·  Click der.: quitar  ·  Arrastrar: mover  ·  Rueda: zoom  ·  Enter en la búsqueda: ir al siguiente resultado")
 	add_child(hint)
 	hint.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
 	hint.position += Vector2(12, -12)
@@ -232,8 +247,17 @@ func _refresh() -> void:
 
 func _build_tooltip(node: PassiveNode) -> String:
 	var alloc := _character.passives
+	var tree := alloc.tree
+	var title_color := PassiveTreeView.border_color(node)
+	if node.theme != "" and node.kind != PassiveNode.Kind.CLASS_START:
+		title_color = tree.theme_color(node.theme).lightened(0.2)
+	var subtitle := PassiveNode.kind_label(node.kind)
+	if node.cluster != "":
+		subtitle += " · " + tree.cluster_name(node.cluster)
+	elif node.kind == PassiveNode.Kind.MINOR:
+		subtitle += " · camino"
 	var t := "[b][color=#%s]%s[/color][/b]\n[color=#8a8293]%s[/color]\n" % [
-		PassiveTreeView.border_color(node).to_html(false), node.title, PassiveNode.kind_label(node.kind)]
+		title_color.to_html(false), node.title, subtitle]
 	for m in node.mods:
 		t += "• %s\n" % m.describe()
 	if node.flavor != "":
@@ -269,6 +293,7 @@ func _build_stats_text() -> String:
 			for md in p.get("mods", []):
 				t += "   • %s\n" % Modifier.from_dict(md).describe()
 
+	t += _tree_summary()
 	t += "\n[b]Atributos[/b]\n"
 	t += _line("Fuerza", "%d" % s.get_value(Stat.STRENGTH))
 	t += _line("Destreza", "%d" % s.get_value(Stat.DEXTERITY))
@@ -304,6 +329,65 @@ func _build_stats_text() -> String:
 	t += _line("Área de efecto", _total_pct(Stat.AREA_OF_EFFECT))
 	t += _line("Velocidad de movimiento", "%d%%" % s.get_value(Stat.MOVEMENT_SPEED))
 	t += _line("Robo de vida", "%.1f%%" % s.get_value(Stat.LIFE_LEECH))
+	return t
+
+
+## Suma de todo lo asignado en el árbol, agrupado por efecto (como el resumen de PoE).
+func _tree_summary() -> String:
+	var totals := {}   # "stat|tipo|tags" -> [Modifier de ejemplo, suma]
+	for m in _character.passives.collect_modifiers():
+		var tag_names := PackedStringArray()
+		for tag in m.tags:
+			tag_names.append(String(tag))
+		tag_names.sort()
+		var key := "%s|%d|%s" % [m.stat, m.type, ",".join(tag_names)]
+		if totals.has(key):
+			totals[key][1] += m.value
+		else:
+			totals[key] = [m, m.value]
+	if totals.is_empty():
+		return "\n[b]Bonificaciones del árbol[/b]\n[color=#8a8293]Nada asignado todavía. Tu potencial, intacto.[/color]\n"
+	var lines: Array = []
+	for key in totals:
+		var sample: Modifier = totals[key][0]
+		var total := Modifier.new(sample.stat, sample.type, totals[key][1], sample.tags)
+		lines.append(total.describe())
+	lines.sort()
+	return "\n[b]Bonificaciones del árbol[/b]  [color=#8a8293](%d pasivas)[/color]\n[color=#8888ff]%s[/color]\n" % [
+		_character.passives.spent_points(), "\n".join(PackedStringArray(lines))]
+
+
+# --- Búsqueda ---
+
+func _on_search_changed(text: String) -> void:
+	_search_matches.clear()
+	_search_index = -1
+	var query := _normalize(text.strip_edges())
+	if query.length() >= 2:
+		var tree := _character.passives.tree
+		for id in tree.nodes:
+			var n: PassiveNode = tree.nodes[id]
+			var haystack := "%s %s %s" % [n.title, tree.theme_name(n.theme), tree.cluster_name(n.cluster)]
+			for m in n.mods:
+				haystack += " " + m.describe()
+			if _normalize(haystack).contains(query):
+				_search_matches.append(id)
+	_view.set_search(_search_matches)
+	_search_label.text = "" if query.length() < 2 else "%d coincidencias" % _search_matches.size()
+
+
+func _focus_next_match() -> void:
+	if _search_matches.is_empty():
+		return
+	_search_index = (_search_index + 1) % _search_matches.size()
+	_view.center_on(_character.passives.tree.get_node_data(_search_matches[_search_index]).position)
+
+
+## Minúsculas y sin tildes, para que "critico" encuentre "Crítico".
+static func _normalize(text: String) -> String:
+	var t := text.to_lower()
+	for pair in [["á", "a"], ["é", "e"], ["í", "i"], ["ó", "o"], ["ú", "u"], ["ü", "u"], ["ñ", "n"]]:
+		t = t.replace(pair[0], pair[1])
 	return t
 
 

@@ -9,6 +9,9 @@ var edges: Array[Vector2i] = []
 var bounds := Rect2()
 ## Versión del árbol: si cambia, los ids de los nodos ya no significan lo mismo.
 var version := 1
+## Temáticas: id -> {name, color}. Clusters: id -> {id, theme, name, x, y, radius}.
+var themes: Dictionary = {}
+var clusters: Dictionary = {}
 
 
 static func load_from_json(path: String) -> PassiveTree:
@@ -17,6 +20,9 @@ static func load_from_json(path: String) -> PassiveTree:
 		return null
 	var tree := PassiveTree.new()
 	tree.version = int(data.get("version", 1))
+	tree.themes = data.get("themes", {})
+	for c in data.get("clusters", []):
+		tree.clusters[c["id"]] = c
 	var first := true
 	for nd in data.get("nodes", []):
 		var n := PassiveNode.from_dict(nd)
@@ -41,6 +47,18 @@ static func load_from_json(path: String) -> PassiveTree:
 
 func get_node_data(id: int) -> PassiveNode:
 	return nodes.get(id)
+
+
+func theme_color(theme: String) -> Color:
+	return Color(themes[theme]["color"]) if themes.has(theme) else Color("8a8293")
+
+
+func theme_name(theme: String) -> String:
+	return themes[theme]["name"] if themes.has(theme) else ""
+
+
+func cluster_name(cluster_id: String) -> String:
+	return clusters[cluster_id]["name"] if clusters.has(cluster_id) else ""
 
 
 func neighbors(id: int) -> Array:

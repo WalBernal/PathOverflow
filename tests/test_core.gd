@@ -36,6 +36,9 @@ func _initialize() -> void:
 	_test_camp_and_tutorial_data()
 	_test_item_transfer()
 	_test_item_icons()
+	_test_tree_clusters()
+	_test_conditions()
+	_test_tree_version_refund()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
 	else:
@@ -560,3 +563,63 @@ func _test_item_icons() -> void:
 	var gen := ItemGenerator.new(_db, 2)
 	_check(ItemIcons.icon_id(gen.generate_ram(1, "ecc")) == "ram_DDR5", "icono de RAM según su generación")
 	_check(ItemIcons.texture() != null, "atlas de iconos cargado")
+
+func _test_tree_clusters() -> void:
+	_check(_tree.nodes.size() >= 450 and _tree.clusters.size() >= 40, "árbol grande con clusters (%d nodos, %d clusters)" % [_tree.nodes.size(), _tree.clusters.size()])
+	var themes_in_cluster := {}
+	for id in _tree.nodes:
+		var n: PassiveNode = _tree.nodes[id]
+		if n.kind == PassiveNode.Kind.NOTABLE or n.kind == PassiveNode.Kind.KEYSTONE:
+			_check(PassiveIcons.has_icon(n.icon), "sin icono para %s (%s)" % [n.title, n.icon])
+		if n.cluster != "":
+			_check(_tree.clusters.has(n.cluster), "cluster inexistente %s" % n.cluster)
+			if not themes_in_cluster.has(n.cluster):
+				themes_in_cluster[n.cluster] = {}
+			themes_in_cluster[n.cluster][n.theme] = true
+		if n.theme != "":
+			_check(_tree.themes.has(n.theme), "temática desconocida '%s'" % n.theme)
+	for cid in themes_in_cluster:
+		_check(themes_in_cluster[cid].size() == 1, "el cluster %s mezcla temáticas" % cid)
+		var has_notable := false
+		for id in _tree.nodes:
+			if _tree.nodes[id].cluster == cid and _tree.nodes[id].kind == PassiveNode.Kind.NOTABLE:
+				has_notable = true
+		_check(has_notable, "el cluster %s no tiene notable" % cid)
+
+
+func _test_conditions() -> void:
+	var c := _new_character()
+	var gen := ItemGenerator.new(_db, 30)
+	var board := gen.generate_motherboard(1, "barrido")
+	var low_life_node := -1
+	for id in _tree.nodes:
+		if _tree.nodes[id].title == "Hasta el Último Byte":
+			low_life_node = id
+	_check(low_life_node != -1, "existe el notable de vida baja")
+	var before := SkillCalc.compute(board, c)
+	c.passives.allocate_path(low_life_node, 999)
+	var full := SkillCalc.compute(board, c)
+	c.set_condition(Stat.COND_LOW_LIFE, true)
+	var low := SkillCalc.compute(board, c)
+	c.set_condition(Stat.COND_LOW_LIFE, false)
+	_check(is_equal_approx(SkillCalc.compute(board, c)["max_damage"], full["max_damage"]), "sin vida baja, el notable no da daño")
+	_check(full["max_damage"] >= before["max_damage"], "el camino no resta daño")
+	c.set_condition(Stat.COND_LOW_LIFE, true)
+	_check(low["max_damage"] > full["max_damage"] * 1.3, "con vida baja, +40%% de daño (%.1f → %.1f)" % [full["max_damage"], low["max_damage"]])
+	var signals := [0]
+	c.conditions_changed.connect(func() -> void: signals[0] += 1)
+	c.set_condition(Stat.COND_LOW_LIFE, true)
+	c.set_condition(Stat.COND_LOW_LIFE, false)
+	_check(signals[0] == 1, "conditions_changed solo cuando cambia algo")
+
+
+func _test_tree_version_refund() -> void:
+	var c := _new_character()
+	var start := c.passives.start_node_id
+	c.passives.allocate_path(_tree.neighbors(start)[0], 5)
+	var data = JSON.parse_string(JSON.stringify(c.to_dict()))
+	var same := CharacterData.from_dict(data, _classes[0], _tree, _db)
+	_check(same.passives.spent_points() == 1 and not same.flags.has("passives_refunded"), "misma versión del árbol: se conservan")
+	data["passive_tree_version"] = _tree.version - 1
+	var old := CharacterData.from_dict(data, _classes[0], _tree, _db)
+	_check(old.passives.spent_points() == 0 and old.flags.has("passives_refunded"), "versión antigua: puntos devueltos y aviso")

@@ -19,6 +19,11 @@ var mods: Array[Modifier] = []
 var flavor := ""
 ## Solo en nodos de inicio: la clase que empieza aquí.
 var class_id := &""
+## Temática (vida, fuego...), cluster al que pertenece ("" = nodo de viaje) e
+## icono de notables y piedras angulares (data/passive_icons.json).
+var theme := ""
+var cluster := ""
+var icon := ""
 
 
 static func from_dict(d: Dictionary) -> PassiveNode:
@@ -29,6 +34,9 @@ static func from_dict(d: Dictionary) -> PassiveNode:
 	n.position = Vector2(float(d["x"]), float(d["y"]))
 	n.flavor = d.get("flavor", "")
 	n.class_id = StringName(d.get("class_id", ""))
+	n.theme = d.get("theme", "")
+	n.cluster = d.get("cluster", "")
+	n.icon = d.get("icon", "")
 	for md in d.get("mods", []):
 		n.mods.append(Modifier.from_dict(md, "tree"))
 	return n
