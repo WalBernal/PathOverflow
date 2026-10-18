@@ -4,7 +4,8 @@ extends Node
 
 const CLASSES_PATH := "res://data/classes.json"
 const PASSIVE_TREE_PATH := "res://data/passive_tree.json"
-const ACT_PATH := "res://data/act1.json"
+const ACT_PATHS := ["res://data/act1.json", "res://data/act2.json"]
+const CUTSCENES_PATH := "res://data/cutscenes.json"
 const TITLE_SCENE := "res://scenes/menu/title_screen.tscn"
 const MAIN_MENU_SCENE := "res://scenes/menu/main_menu.tscn"
 const CREATION_SCENE := "res://scenes/menu/character_creation.tscn"
@@ -13,9 +14,13 @@ const WORLD_SCENE := "res://scenes/game/world.tscn"
 var classes: Array = []
 var passive_tree: PassiveTree
 var items: ItemDatabase
-## Acto actual (data/act1.json) y sus zonas por id.
+## Actos en orden (data/actN.json). `act` es el primero (donde empieza todo).
+var acts: Array = []
 var act: Dictionary = {}
+## Zonas de todos los actos por id; cada una sabe su acto en "act".
 var zones: Dictionary = {}
+## Escenas (data/cutscenes.json) por id.
+var cutscenes: Dictionary = {}
 ## Personaje elegido en la pantalla de inicio (null = ninguno todavía).
 var current_character: CharacterData
 
@@ -29,11 +34,32 @@ func _ready() -> void:
 	var migrated := CharacterSaves.migrate_from_old_project_names()
 	if migrated > 0:
 		print("Guardados copiados desde el nombre antiguo del proyecto: %d archivos" % migrated)
-	var act_data = DataLoader.load_json(ACT_PATH)
-	if act_data is Dictionary:
-		act = act_data
-		for z in act.get("zones", []):
+	for path in ACT_PATHS:
+		var act_data = DataLoader.load_json(path)
+		if not act_data is Dictionary:
+			continue
+		acts.append(act_data)
+		for z in act_data.get("zones", []):
+			z["act"] = act_data["id"]
 			zones[z["id"]] = z
+	act = acts[0] if not acts.is_empty() else {}
+	var cutscene_data = DataLoader.load_json(CUTSCENES_PATH)
+	if cutscene_data is Dictionary:
+		cutscenes = cutscene_data.get("cutscenes", {})
+
+
+## Acto al que pertenece una zona ({} si no existe).
+func act_of_zone(zone_id: String) -> Dictionary:
+	var act_id: String = zones.get(zone_id, {}).get("act", "")
+	for a in acts:
+		if a["id"] == act_id:
+			return a
+	return {}
+
+
+## Pueblo (punto de reaparición) del acto de esa zona.
+func town_for_zone(zone_id: String) -> String:
+	return act_of_zone(zone_id).get("town", act.get("town", "campamento"))
 
 
 func get_class_def(class_id: StringName) -> Dictionary:

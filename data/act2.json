@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "_doc": "Acto II: Kernel Panic. Mismo formato que act1.json. Por ahora: la Brecha del 503 (entrada al Kernel) y el Socket Seguro (pueblo del acto). El resto de zonas está diseñado en docs/lore.md.",
+  "id": "act2",
+  "name": "Acto II: Kernel Panic",
+  "start_zone": "brecha_503",
+  "town": "socket_seguro",
+  "zones": [
+    {
+      "id": "brecha_503", "name": "La Brecha del 503", "level": 13, "style": "kernel", "size": [3600, 2000],
+      "entries": { "start": [260, 1000], "from_socket": [3350, 1000] },
+      "cutscene_on_enter": { "id": "llegada_brecha", "unless_flag": "act2_llegada" , "set_flag": "act2_llegada" },
+      "exits": [ { "pos": [3480, 1000], "target": "socket_seguro", "entry": "from_brecha", "label": "Socket Seguro" } ],
+      "enemies": { "packs": 12, "pack_size": [5, 9], "types": ["proceso_zombi", "proceso_zombi", "memory_leak", "hilo_desbocado"], "special_chance": 0.2, "elite_chance": 0.12 },
+      "features": { "count": 4, "kinds": ["void", "chasm"] },
+      "obstacles": { "count": 30, "kinds": ["rack", "pillar", "cable_coil"] }
+    },
+    {
+      "id": "socket_seguro", "name": "El Socket Seguro", "level": 14, "style": "terminal", "size": [1900, 1400], "safe": true,
+      "entries": { "from_brecha": [190, 700], "waypoint": [950, 900] },
+      "exits": [
+        { "pos": [80, 700], "target": "brecha_503", "entry": "from_socket", "label": "La Brecha del 503" },
+        { "pos": [1820, 700], "target": "", "entry": "", "label": "La Fábrica de Hilos",
+          "message": "La Fábrica de Hilos sigue compilando... (el resto del Acto II está en desarrollo)." },
+        { "pos": [1500, 1180], "target": "campamento", "entry": "waypoint", "label": "Túnel al Campamento", "portal": true }
+      ],
+      "waypoint": [950, 1000],
+      "npcs": [ { "id": "rafa_terminal", "pos": [700, 520] }, { "id": "clara", "pos": [1200, 540] }, { "id": "recolector", "pos": [560, 1060] } ],
+      "obstacles": { "count": 0, "kinds": [] }
+    }
+  ]
+}

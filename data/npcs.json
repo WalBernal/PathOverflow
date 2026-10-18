@@ -106,6 +106,52 @@
         "pitch": 0.55,
         "rate": 0.85
       }
+    },
+    "rafa_terminal": {
+      "name": "Rafa (vía datos móviles)",
+      "dialogue": "rafa_terminal",
+      "terminal": true,
+      "appearance": {
+        "body": 2,
+        "hair": 0,
+        "skin_tone": "7c4a2d",
+        "hair_color": "0f0d0c",
+        "outfit_color": "1f1f2e"
+      },
+      "voice": {
+        "pitch": 0.65,
+        "rate": 0.9
+      }
+    },
+    "clara": {
+      "name": "Clara, Líder de Infraestructura",
+      "dialogue": "clara",
+      "appearance": {
+        "body": 1,
+        "hair": 2,
+        "skin_tone": "a8714f",
+        "hair_color": "2b2118",
+        "outfit_color": "2b6b45"
+      },
+      "voice": {
+        "pitch": 0.85,
+        "rate": 1.05
+      }
+    },
+    "recolector": {
+      "name": "El Recolector",
+      "dialogue": "recolector",
+      "appearance": {
+        "body": 2,
+        "hair": 0,
+        "skin_tone": "c8c8c8",
+        "hair_color": "8a8a8a",
+        "outfit_color": "5a4a3a"
+      },
+      "voice": {
+        "pitch": 0.5,
+        "rate": 0.8
+      }
     }
   },
   "dialogues": {
@@ -116,15 +162,9 @@
           "text": "Vaya, otro exiliado. Te tiraron a producción sin pasar por staging, ¿eh? Soy Aida. Llevo aquí desde que esto era un monolito en COBOL.",
           "options": [
             {
-              "text": "He derrotado al Arquitecto del Monolito.",
-              "next": "victoria",
-              "requires_flag": "act1_complete",
-              "hides_if_flag": "ada_victoria"
-            },
-            {
-              "text": "¿Qué hay después del Servidor?",
-              "next": "acto2",
-              "requires_flag": "root_reinicio"
+              "text": "¿Quién era El Pepe?",
+              "next": "pepe",
+              "requires_flag": "act1_reunion"
             },
             {
               "text": "¿Dónde estoy?",
@@ -193,24 +233,11 @@
             }
           ]
         },
-        "victoria": {
-          "text": "¿En serio? Entonces el Servidor debería poder reiniciarse... ¿Lo ves? Sigue caído. Claro. Habla con Rafa: él lleva reiniciándolo desde 2019, sabrá qué ha pasado esta vez.",
+        "pepe": {
+          "text": "El Pepe. Prestador de servicios. Se jubiló el año del Último Commit, qué casualidad. Dejó un pósit, un cron sin comentarios y una caña de pescar en el armario de los servidores. Si Rafa lo encuentra en el crontab, que no lo toque sin mí.",
           "options": [
             {
-              "text": "Iré a ver a Rafa.",
-              "next": "",
-              "action": {
-                "type": "set_flag",
-                "flag": "ada_victoria"
-              }
-            }
-          ]
-        },
-        "acto2": {
-          "text": "El Kernel. Nadie baja ahí desde la última actualización de seguridad. Dicen que los procesos huérfanos forman sindicatos. Prepárate bien: sube de nivel, reparte pasivas y consigue resistencias.",
-          "options": [
-            {
-              "text": "Entendido.",
+              "text": "Lo tendré en cuenta.",
               "next": "hola"
             }
           ]
@@ -307,15 +334,9 @@
           "text": "Aaah... ya voy en un momento.... si puedo..... Estoy reiniciando el servidor..... desde 2019... ¿Qué. Quieres....?",
           "options": [
             {
-              "text": "Aida dice que el Servidor sigue caído.",
-              "next": "reinicio",
-              "requires_flag": "ada_victoria",
-              "hides_if_flag": "root_reinicio"
-            },
-            {
               "text": "¿Qué es ese portal?",
               "next": "portal",
-              "requires_flag": "root_reinicio"
+              "requires_flag": "act1_reunion"
             },
             {
               "text": "¿Qué pasó aquí?",
@@ -369,30 +390,8 @@
             }
           ]
         },
-        "reinicio": {
-          "text": "Lo intenté..... «sudo reboot»... Kernel panic...... El Arquitecto no era el problema.... era un síntoma..... Algo vive más abajo... en el Kernel.... y no quiere que el Servidor vuelva..... Los logs están llenos de un nombre... «init»..... El PID 1......",
-          "options": [
-            {
-              "text": "¿Y ahora qué?",
-              "next": "reinicio2"
-            }
-          ]
-        },
-        "reinicio2": {
-          "text": "He abierto un portal... junto a la empalizada.... al sureste..... Lleva directo al Kernel... Bueno..... lo llevará cuando alguien lo programe.... Todo está «en desarrollo»..... como siempre......",
-          "options": [
-            {
-              "text": "Prepararé el viaje.",
-              "next": "",
-              "action": {
-                "type": "set_flag",
-                "flag": "root_reinicio"
-              }
-            }
-          ]
-        },
         "portal": {
-          "text": "El Portal al Kernel..... Ahora mismo da un 503... Cuando el Acto II esté listo.... será lo primero que cruces..... Hasta entonces... farmea..... Es lo que hacemos todos.......",
+          "text": "El Portal al Kernel..... puerto 2222..... Adelántate..... yo te sigo en cuanto baje la VPN..... Si La Red Lince aguanta..... que no aguantará......",
           "options": [
             {
               "text": "Vale.",
@@ -734,6 +733,189 @@
                 "type": "quest_advance",
                 "quest": "dba_backup"
               }
+            }
+          ]
+        }
+      }
+    },
+    "rafa_terminal": {
+      "start": "hola",
+      "nodes": {
+        "hola": {
+          "text": "Te veo..... a 2 FPS..... pero te veo...... Estoy en una terminal de fósforo verde..... con datos móviles..... Mis comandos devuelven «Permission denied»..... hasta los míos...... Con La Red Lince solo vemos al dinosaurio......",
+          "options": [
+            {
+              "text": "¿Qué ha pasado al otro lado?",
+              "next": "pasado"
+            },
+            {
+              "text": "¿Qué es este sitio?",
+              "next": "sitio"
+            },
+            {
+              "text": "¿Y El Pepe?",
+              "next": "pepe"
+            },
+            {
+              "text": "Aguanta, Rafa.",
+              "next": ""
+            }
+          ]
+        },
+        "pasado": {
+          "text": "Aida y Mario están bien..... creo..... Aida intenta reiniciar el router..... Mario dice que lo ha «apagado y encendido»..... tres veces..... El dinosaurio sigue saltando cactus......",
+          "options": [
+            {
+              "text": "Ánimo.",
+              "next": "hola"
+            }
+          ]
+        },
+        "sitio": {
+          "text": "El Socket Seguro..... una sesión SSH que alguien dejó abierta hace años..... con permisos temporales de lectura..... Si se cierra la sesión..... nos quedamos fuera..... así que nadie escribe «exit»..... nunca......",
+          "options": [
+            {
+              "text": "Anotado: no escribir «exit».",
+              "next": "hola"
+            }
+          ]
+        },
+        "pepe": {
+          "text": "He mirado el crontab..... hay una tarea de El Pepe..... programada hace años..... se llama «limpieza_final.sh»..... No tiene comentarios..... Solo un emoji de pez......",
+          "options": [
+            {
+              "text": "Eso no suena bien.",
+              "next": "hola"
+            }
+          ]
+        }
+      }
+    },
+    "clara": {
+      "start": "hola",
+      "nodes": {
+        "hola": {
+          "text": "Otro superviviente. Bienvenido a la trinchera. Soy Clara, infraestructura. Llevo tanto tiempo aquí abajo que ya no recuerdo cómo era una interfaz gráfica. Ni la luz del sol. Ni el sol.",
+          "options": [
+            {
+              "text": "¿Qué está pasando en el Kernel?",
+              "next": "kernel"
+            },
+            {
+              "text": "¿Quién es init?",
+              "next": "init"
+            },
+            {
+              "text": "¿Cómo sobrevives aquí?",
+              "next": "trinchera"
+            },
+            {
+              "text": "¿Qué hay más adelante?",
+              "next": "adelante"
+            },
+            {
+              "text": "Nos vemos.",
+              "next": ""
+            }
+          ]
+        },
+        "kernel": {
+          "text": "Kernel Panic. Cuando cayó el Arquitecto, el servidor no arrancó: se congeló. Miles de subprocesos se quedaron sin padre. Huérfanos. Y alguien decidió adoptarlos a todos a la vez. Mala idea. Siempre es mala idea.",
+          "options": [
+            {
+              "text": "¿Alguien?",
+              "next": "init"
+            },
+            {
+              "text": "Vale.",
+              "next": "hola"
+            }
+          ]
+        },
+        "init": {
+          "text": "init. PID 1. El padre de todo lo que corre en esta máquina. No es malvado: es un algoritmo con un solo mandamiento. Nada entra, nada sale, nada muere. Ha bloqueado el hardware para que el recolector de basura no toque a sus hijos.",
+          "options": [
+            {
+              "text": "¿Y cómo se le para?",
+              "next": "parar"
+            },
+            {
+              "text": "Entiendo.",
+              "next": "hola"
+            }
+          ]
+        },
+        "parar": {
+          "text": "Bajando hasta el Anillo 0, donde gira el procesador. Pero no corras. Entre aquí y allí hay una fábrica de hilos que no para de pelearse, alcantarillas que se desbordan y un cruce donde dos gigantes llevan años esperándose el uno al otro.",
+          "options": [
+            {
+              "text": "Suena encantador.",
+              "next": "hola"
+            }
+          ]
+        },
+        "trinchera": {
+          "text": "Trato cada contenedor caído como una trinchera: se cava, se protege y se documenta. Bueno, lo de documentar es teórico. Si algo funciona, no lo toques. Si no funciona, tampoco: igual empeora.",
+          "options": [
+            {
+              "text": "Filosofía DevOps.",
+              "next": "hola"
+            }
+          ]
+        },
+        "adelante": {
+          "text": "La Fábrica de Hilos. El Thread Pool. Pistones que ejecutan tareas sin parar y vapor que quema como un procesador sin pasta térmica. Todavía no hay forma segura de entrar. Dame tiempo. Y café. Sobre todo café.",
+          "options": [
+            {
+              "text": "Esperaré.",
+              "next": "hola"
+            }
+          ]
+        }
+      }
+    },
+    "recolector": {
+      "start": "hola",
+      "nodes": {
+        "hola": {
+          "text": "Busco... punteros [s]que nadie[/s]... nulos. Fragmentos de memoria sin refe[s]rencia, sin dueño, sin[/s]... ¿Tienes basura? Yo la... [s]libero[/s]... cambio.",
+          "options": [
+            {
+              "text": "¿Quién eres?",
+              "next": "quien"
+            },
+            {
+              "text": "Recicla mi equipo normal (blanco)",
+              "next": "reciclar"
+            },
+            {
+              "text": "Adiós.",
+              "next": ""
+            }
+          ]
+        },
+        "quien": {
+          "text": "Garbage Collector. Defectuo[s]so, no, solo[/s]... diferente. init me prohibió recolectar a sus hijos. Así que recolecto lo de[s]más. Tu basura. Tu pasado[/s]... tus objetos.",
+          "options": [
+            {
+              "text": "Qué inquietante.",
+              "next": "hola"
+            }
+          ]
+        },
+        "reciclar": {
+          "text": "Dame tu equipo [s]normal[/s]... blanco. Cada tres piezas te devuelvo algo... me[s]jor[/s]... útil. No pre[s]guntes de dónde[/s]... sale.",
+          "options": [
+            {
+              "text": "Trato hecho.",
+              "next": "",
+              "action": {
+                "type": "recycle_normals"
+              }
+            },
+            {
+              "text": "Mejor no.",
+              "next": "hola"
             }
           ]
         }

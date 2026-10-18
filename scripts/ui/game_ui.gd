@@ -21,6 +21,7 @@ var tutorial: TutorialPanel
 var item_tooltip: ItemTooltip
 var minimap: Minimap
 var quest_tracker: QuestTracker
+var cutscene: CutscenePlayer
 var character_sheet: CharacterSheet
 var _character: CharacterData
 var _player: Player
@@ -156,6 +157,10 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	_act_banner = _build_act_banner()
 	add_child(_act_banner)
 
+	cutscene = CutscenePlayer.new()
+	cutscene.player = player
+	add_child(cutscene)
+
 	_pause_panel = _build_pause_menu()
 	add_child(_pause_panel)
 	_pause_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -181,6 +186,18 @@ func on_zone_changed(zone: Zone) -> void:
 	tween.tween_property(_zone_banner, "modulate:a", 1.0, 0.4)
 	tween.tween_interval(2.0)
 	tween.tween_property(_zone_banner, "modulate:a", 0.0, 0.8)
+
+
+## Reproduce una escena; on_done se llama al terminar (o al saltarla).
+func play_cutscene(data: Dictionary, on_done: Callable) -> void:
+	dialogue_box.close()
+	_waypoint_panel.visible = false
+	inventory_panel.visible = false
+	skills_panel.visible = false
+	character_sheet.visible = false
+	item_tooltip.hide()
+	_update_minimap()
+	cutscene.play(data, on_done)
 
 
 func open_waypoints(current_zone: String) -> void:
@@ -285,6 +302,8 @@ func toggle_pause_menu() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if cutscene.is_playing():
+		return
 	if _pause_panel.visible:
 		if event.is_action_pressed(&"ui_cancel"):
 			toggle_pause_menu()

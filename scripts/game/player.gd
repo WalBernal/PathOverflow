@@ -33,6 +33,8 @@ var energy_shield := 0.0
 var invulnerable := false
 ## Mientras sea > 0, el personaje está lanzando una habilidad y no se mueve.
 var action_lock := 0.0
+## Durante las escenas: ni se mueve, ni lanza, ni bebe.
+var controls_locked := false
 
 var _move_held := false
 var _since_kill := 99.0
@@ -181,6 +183,8 @@ func _update_conditions(delta: float) -> void:
 # --- Bucle ---
 
 func _unhandled_input(event: InputEvent) -> void:
+	if controls_locked:
+		return
 	var mb := event as InputEventMouseButton
 	if mb and mb.button_index == MOUSE_BUTTON_LEFT:
 		_move_held = mb.pressed
@@ -215,8 +219,8 @@ func _physics_process(delta: float) -> void:
 			dir = to_target.normalized()
 		else:
 			_has_auto_target = false
-	if action_lock > 0.0:
-		dir = Vector2.ZERO  # como en PoE: quieto mientras lanza
+	if action_lock > 0.0 or controls_locked:
+		dir = Vector2.ZERO  # como en PoE: quieto mientras lanza (o en una escena)
 	if dir != Vector2.ZERO:
 		_facing = dir
 	velocity = dir * BASE_MOVE_SPEED * _stat(Stat.MOVEMENT_SPEED) / 100.0

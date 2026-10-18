@@ -168,9 +168,50 @@ func travel_to(zone_id: String, entry := "") -> void:
 	ui.on_zone_changed(zone)
 	quests.notify_zone(zone.id)
 	_mark_dirty()
+	_check_zone_cutscene.call_deferred()
+
+
+## Escena al entrar en la zona (una sola vez, según sus banderas).
+func _check_zone_cutscene() -> void:
+	var c: Dictionary = zone.def.get("cutscene_on_enter", {}) if zone.def.get("cutscene_on_enter") is Dictionary else {}
+	if c.is_empty():
+		return
+	if c.has("requires_flag") and not character.flags.has(c["requires_flag"]):
+		return
+	if c.has("unless_flag") and character.flags.has(c["unless_flag"]):
+		return
+	if c.has("set_flag"):
+		character.flags[c["set_flag"]] = true
+	play_cutscene(c["id"])
+
+
+# --- Escenas ---
+
+func play_cutscene(id: String) -> void:
+	var data: Dictionary = GameData.cutscenes.get(id, {})
+	if data.is_empty():
+		push_warning("Escena desconocida: %s" % id)
+		return
+	player.stop_auto_move()
+	enemies.frozen = true
+	ui.play_cutscene(data, func() -> void: _on_cutscene_finished(data.get("on_finish", {})))
+
+
+func _on_cutscene_finished(on_finish: Dictionary) -> void:
+	enemies.frozen = false
+	if on_finish.has("set_flag"):
+		character.flags[on_finish["set_flag"]] = true
+		quests.refresh()
+		_mark_dirty()
+	if on_finish.has("travel"):
+		var t: Dictionary = on_finish["travel"]
+		travel_to(t.get("zone", ""), t.get("entry", ""))
 
 
 func _on_exit_reached(e: Dictionary) -> void:
+	if e.has("cutscene"):
+		play_cutscene(e["cutscene"])   # la escena decide a dónde se viaja
+		return
 	if e["target"] == "" or not GameData.zones.has(e["target"]):
 		ui.hud.flash(e.get("message", "Esta salida todavía no lleva a ningún sitio."), Color("c08aff"))
 		return
@@ -204,7 +245,7 @@ func _spawn_zone_enemies() -> void:
 				enemies.spawn(p, rarity, type)
 	_boss_alive = false
 	var boss: Dictionary = zone.def.get("boss", {}) if zone.def.get("boss") is Dictionary else {}
-	if not boss.is_empty() and not character.flags.has("act1_complete"):
+	if not boss.is_empty() and not character.flags.has(boss.get("complete_flag", "act1_complete")):
 		enemies.spawn(Zone._v(boss["pos"]), Rarity.Enemy.UNIQUE, enemies.type_index_of(boss.get("type", "daemon")),
 			boss.get("name", ""), float(boss.get("life_mult", 1.0)), boss.get("abilities", []))
 		_boss_alive = true
@@ -229,7 +270,7 @@ func _on_player_died() -> void:
 func respawn() -> void:
 	player.refill()
 	ui.hide_death()
-	travel_to(GameData.act.get("town", "campamento"), "waypoint")
+	travel_to(GameData.town_for_zone(zone.id if zone else ""), "waypoint")
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -282,14 +323,18 @@ func _on_enemy_killed(rarity: int, experience: int, pos: Vector2) -> void:
 
 func _on_boss_defeated(pos: Vector2) -> void:
 	_boss_alive = false
-	character.flags["act1_complete"] = true
+	var boss: Dictionary = zone.def.get("boss", {})
+	character.flags[boss.get("complete_flag", "act1_complete")] = true
+	# El servidor se congela: lo que quedaba vivo se detiene y desaparece.
+	enemies.clear_all()
 	# Botín de jefe: algo bueno seguro.
 	for r in [Rarity.Item.UNIQUE, Rarity.Item.RARE, Rarity.Item.RARE, Rarity.Item.ULTRA_RARE]:
 		loot.drop_item(item_generator.generate(enemies.area_level, r), zone.free_spot_near(pos + Vector2(randf_range(-80, 80), randf_range(-60, 60))))
 	loot.drop_item(item_generator.generate_motherboard(enemies.area_level, "", 6), zone.free_spot_near(pos + Vector2(0, 70)))
-	ui.show_act_complete(GameData.act.get("name", "Acto I"))
 	quests.refresh()
 	save_now()
+	if boss.has("death_cutscene"):
+		play_cutscene(boss["death_cutscene"])
 
 
 ## Los monstruos tienen el nivel de su zona; subir de nivel solo avisa.
@@ -339,6 +384,8 @@ func _on_dialogue_action(action: Dictionary) -> void:
 			quests.advance(action.get("quest", ""))
 		"set_flag":
 			pass
+		"recycle_normals":
+			_recycle_normals()
 	if flag != "":
 		character.flags[flag] = true
 	quests.refresh()
@@ -377,6 +424,35 @@ func _matching_ram() -> RamModule:
 		if board.slots.has(ram.generation()) and ram.supports(board.skill_def):
 			options.append(ram)
 	return options.pick_random() if not options.is_empty() else item_generator.generate_ram(character.level)
+
+
+## El Recolector: cada 3 piezas de equipo normal (blancas) de la bolsa, un objeto mejor.
+func _recycle_normals() -> void:
+	var inv := character.inventory
+	var indices: Array[int] = []
+	for i in inv.bag.size():
+		var item: Item = inv.bag[i]
+		if item and item.is_equipment() and item.rarity == Rarity.Item.NORMAL:
+			indices.append(i)
+	var batches := indices.size() / 3
+	if batches == 0:
+		ui.hud.flash("El Recolector necesita al menos 3 piezas normales (blancas) en tu bolsa.", UiStyle.MUTED)
+		return
+	for k in batches * 3:
+		inv.bag[indices[k]] = null
+	inv.changed.emit()
+	for k in batches:
+		var roll := randf()
+		var reward: Item
+		if roll < 0.35:
+			reward = item_generator.generate_ram(enemies.area_level)
+		elif roll < 0.55:
+			reward = item_generator.generate_flask(enemies.area_level)
+		else:
+			reward = item_generator.generate(enemies.area_level, Rarity.Item.MAGIC if randf() < 0.6 else Rarity.Item.RARE)
+		if reward:
+			_give(reward)
+	ui.hud.flash("El Recolector se lleva %d piezas y te da %d objetos a cambio." % [batches * 3, batches], UiStyle.ACCENT)
 
 
 func _give(item: Item) -> void:

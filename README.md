@@ -113,9 +113,14 @@ El acto está definido en `data/act1.json` y lo construye `Zone` (`scripts/game/
 - **Salidas** en los bordes ("← Campamento", "Las Ruinas →"): basta con caminar hasta ellas.
 - **Waypoints**: se descubren al tocarlos y se guardan por personaje (`flags.waypoints`). Al hacer click se abre la lista del acto.
 - **Jefe**: al derrotarlo se completa el acto (bandera `act1_complete`), cae botín especial (siempre en suelo alcanzable) y se abre un portal al campamento.
-- **Después del jefe**: Aida te manda a hablar con Rafa, que cuenta que el reinicio falló con un *kernel panic* (algo llamado «init», el PID 1, vive en el Kernel) y abre el **Portal al Kernel** en el campamento. Al terminar la misión principal empieza la del Acto II (*Kernel Panic*); el portal responde con un 503 hasta que exista el Acto II.
+- **Después del jefe**: el Arquitecto muere en una **escena** (glitch, temblor, sus últimas palabras y la consola del sistema congelándose) y se abre un portal al campamento. Al volver, el campamento culpa a **El Pepe, prestador de servicios retirado** (el antecesor de Rafa), y Rafa abre el **puerto 2222** hacia el Kernel. Al cruzarlo se cae **La Red Lince** (pantalla del dinosaurio) y el jugador cae al **Acto II**.
+- **Escenas**: `data/cutscenes.json` (líneas con retrato, consola, efectos de glitch, temblor, fundidos y la página sin conexión). Click o Espacio avanzan; Esc salta. Los enemigos se congelan mientras duran.
 - **NPCs y lore** en `data/npcs.json` (en el campamento: Aida la Senior, Mario el Becario y Rafa el SysAdmin, que escribe con muchos puntos suspensivos...; sus ids internos siguen siendo `ada`, `kevin` y `root` para no romper los guardados): diálogos con opciones, condiciones (`requires_flag`) y acciones (regalos que se dan una sola vez). Cuentan la historia del administrador que hizo `push --force` "por el Monolito".
 - **Tutorial** (`data/tutorial.json`, versión 2): 12 pasos. Empieza en el Sandbox (moverse, atacar, matar, recoger, equipar, pociones, pasivas) y sigue en el campamento (Aida, RAM, Mario, salir al Bosque). Los personajes con el tutorial antiguo continúan donde corresponde.
+
+## Acto II: Kernel Panic (en desarrollo)
+
+`data/act2.json`. Por ahora: **La Brecha del 503** (nivel 13, procesos zombi, el suelo parpadea entre binario y vacío) y **El Socket Seguro**, el pueblo del acto: una sesión SSH con Rafa conectado por datos móviles en un monitor de fósforo verde, Clara (Líder de Infraestructura) y El Recolector (un Garbage Collector que tacha sus frases y recicla 3 piezas de equipo normal por un objeto mejor). El resto del acto está diseñado en [`docs/lore.md`](docs/lore.md). Los waypoints se agrupan por acto y se reaparece en el pueblo del acto en el que estés.
 
 ## Misiones
 
