@@ -12,7 +12,7 @@ extends Control
 ## Se mueve con A/D, flechas o manteniendo el click; E, Espacio o click para interactuar.
 
 const STAGE_SIZE := Vector2i(400, 225)
-const WALK_SPEED := 70.0
+const WALK_SPEED := 56.0
 const INTERACT_RANGE := 26.0
 const INTRO_LINES := [
 	"Licenciatura concluida. Promedio: 9.2. Vacantes aplicadas: 147.",
@@ -35,7 +35,7 @@ const CONSOLE_LINES := [
 ]
 ## Puntos de interés por sitio: x en el mundo, texto del aviso y acción.
 const HOTSPOTS := {
-	"calle": [{"x": 642.0, "text": "E · Entrar a la UAdeO", "action": "to_hallway"}],
+	"calle": [{"x": 300.0, "text": "E · Cruzar la avenida y entrar a la UAdeO", "action": "to_hallway"}],
 	"pasillo": [{"x": 635.0, "text": "E · Ventanilla de cobro", "action": "window"},
 		{"x": 752.0, "text": "E · Departamento de Informática", "action": "to_office"}],
 	"oficina": [{"x": 170.0, "text": "E · Hablar con el encargado", "action": "talk_rafa"}],
@@ -170,7 +170,7 @@ func _process(delta: float) -> void:
 func _update_screen() -> void:
 	var digital := 0.0
 	var pixel := 1.0
-	var desat := 0.5 if _stage.room != "oficina" else 0.42
+	var desat: float = {"calle": 0.22, "pasillo": 0.4}.get(_stage.room, 0.42)
 	if _phase == "fall":
 		var t := clampf(_fall_time / 5.0, 0.0, 1.0)
 		digital = t
@@ -202,7 +202,9 @@ func _update_walk(delta: float) -> void:
 		_stage.walk_phase = fmod(maxf(_stage.walk_phase, 0.0) + WALK_SPEED * delta / 14.0 * PI, TAU)
 	else:
 		_stage.walk_phase = -1.0
-	_stage.cam_x = clampf(_stage.player_x - STAGE_SIZE.x / 2.0, 0.0, _stage.width() - STAGE_SIZE.x)
+	# Cámara que sigue con suavidad (sin tirones al caminar).
+	var cam_target := clampf(_stage.player_x - STAGE_SIZE.x / 2.0, 0.0, _stage.width() - STAGE_SIZE.x)
+	_stage.cam_x = lerpf(_stage.cam_x, cam_target, 1.0 - exp(-5.0 * delta))
 	var spot := _nearest_hotspot()
 	_stage.prompt = {} if spot.is_empty() else {"pos": Vector2(spot["x"], PrologueStage.FLOOR_Y - 46.0), "text": spot["text"]}
 
@@ -438,7 +440,7 @@ func _draw_overlay() -> void:
 	if _phase == "walk" and not _cutscene.is_playing():
 		var hint := "A / D o mantén el click: caminar   ·   E / click: interactuar   ·   Esc: saltar prólogo"
 		_overlay.draw_string(font, Vector2(0, view.y - 14), hint, HORIZONTAL_ALIGNMENT_CENTER, view.x, 13, Color(1, 1, 1, 0.45))
-		var place: String = String({"calle": "Malecón de Mazatlán · 13:47 · 38 °C", "pasillo": "UAdeO · Pasillo del Departamento de Informática",
+		var place: String = String({"calle": "Av. del Mar, frente al malecón · Mazatlán · 13:47 · 38 °C", "pasillo": "UAdeO · Pasillo del Departamento de Informática",
 			"oficina": "Departamento de Informática"}.get(_stage.room, ""))
 		_overlay.draw_string(font, Vector2(24, 34), place, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(1, 1, 1, 0.6))
 	if _skip_hint > 0.0:

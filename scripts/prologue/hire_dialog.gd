@@ -3,10 +3,11 @@ extends Control
 ## "Confirmar Contratación de Emergencia": ventana modal gris al estilo
 ## Windows 98 donde se elige el primer puesto (la clase) en un desplegable.
 ## El botón [ No ] no quiere que lo pulsen:
-##   - al acercarse el ratón, salta 150 px a la derecha;
-##   - si ya no cabe (acorralado contra el borde), encoge hasta 1×1 px;
-##   - si aun así se le hace click, sale el error 0x80004005 y queda deshabilitado.
-## Solo se puede aceptar con [ Sí ].
+##   - al acercarse el ratón, salta (la primera vez 150 px a la derecha; luego a
+##     cualquier hueco de la ventana lejos del ratón), y encoge un poco cada vez;
+##   - cuando ya es diminuto deja de esquivar;
+##   - si se le atina, sale el error 0x80004005 y se convierte en «Pues ya que...»,
+##     que acepta igual que [ Sí ].
 
 signal hired(class_id: StringName)
 
@@ -18,6 +19,9 @@ const BLUE_B := Color("1084d0")
 const NO_JUMP := 150.0
 const NO_SIZE := Vector2(96, 30)
 const APPROACH := 26.0
+## Cuánto encoge en cada esquive y su tamaño mínimo (unos 8×2 px).
+const SHRINK := 0.8
+const MIN_SCALE := 0.085
 
 var _window: Control
 var _dropdown: OptionButton
@@ -30,6 +34,7 @@ var _error_box: PanelContainer
 var _no_scale := 1.0
 var _no_armed := true      # vuelve a esquivar cuando el ratón se aleja
 var _no_dead := false
+var _dodges := 0
 var _font: Font
 
 
@@ -105,9 +110,7 @@ func _ready() -> void:
 	_yes.size = NO_SIZE
 	_yes.position = Vector2(WIN_SIZE.x / 2.0 - 150, WIN_SIZE.y - 48)
 	_yes.focus_mode = Control.FOCUS_NONE
-	_yes.pressed.connect(func() -> void:
-		Sfx.play("buff")
-		hired.emit(StringName(GameData.classes[_dropdown.selected]["id"])))
+	_yes.pressed.connect(_accept)
 	_window.add_child(_yes)
 	_no = Button.new()
 	_no.text = "No"
@@ -190,44 +193,66 @@ func _refresh_info() -> void:
 
 
 func _process(_delta: float) -> void:
-	if _no_dead:
-		return
+	if _no_dead or _no_scale <= MIN_SCALE:
+		return   # ya es diminuto: se queda quieto (y se le puede atinar)
 	var mouse := _window.get_local_mouse_position()
 	var area := Rect2(_no.position, NO_SIZE * _no_scale).grow(APPROACH)
 	if area.has_point(mouse):
 		if _no_armed:
 			_no_armed = false
-			_dodge()
+			_dodge(mouse)
 	else:
 		_no_armed = true
 
 
-## Esquiva: salta a la derecha; si no cabe, encoge.
-func _dodge() -> void:
-	var target := _no.position.x + NO_JUMP
-	if target + NO_SIZE.x * _no_scale <= WIN_SIZE.x - 8.0:
-		_no.position.x = target
-		Sfx.play("blink", -6.0)
-		return
-	# Acorralado contra el borde: encoge hasta ser un punto de 1×1 px.
-	_no_scale = maxf(1.0 / NO_SIZE.x, _no_scale * 0.4)
-	var tiny := _no_scale <= 1.0 / NO_SIZE.x
-	_no.scale = Vector2(1.0 / NO_SIZE.x, 1.0 / NO_SIZE.y) if tiny else Vector2(_no_scale, _no_scale)
-	_no.position.x = WIN_SIZE.x - 8.0 - NO_SIZE.x * _no_scale
-	if tiny:
+## Esquiva sin salir de la ventana: el primer salto, 150 px a la derecha; luego,
+## a cualquier hueco lejos del ratón. Cada vez encoge un poco.
+func _dodge(mouse: Vector2) -> void:
+	_dodges += 1
+	_no_scale = maxf(MIN_SCALE, _no_scale * SHRINK)
+	var tiny := _no_scale <= MIN_SCALE
+	var w := NO_SIZE * _no_scale
+	var area := Rect2(Vector2(12, 40), WIN_SIZE - Vector2(24, 52) - w)
+	var target := Vector2(_no.position.x + NO_JUMP, _no.position.y)
+	if _dodges > 1 or not area.has_point(target):
+		target = _no.position
+		var yes_zone := Rect2(_yes.position, _yes.size).grow(14)
+		for k in 30:
+			var c := area.position + Vector2(randf() * area.size.x, randf() * area.size.y)
+			if c.distance_to(mouse) > 140.0 and not yes_zone.intersects(Rect2(c, w)):
+				target = c
+				break
+	_no.position = target.clamp(area.position, area.end)
+	_no.scale = Vector2(_no_scale, _no_scale)
+	if _no_scale < 0.45:
 		_no.text = ""
-	Sfx.play("blink", -8.0, 1.6)
+	Sfx.play("blink", -8.0, 1.0 + _dodges * 0.06)
+	if tiny:
+		_no.tooltip_text = "¿Seguro?"
 
 
+## Si se le atina: error del sistema y el botón se rinde: «Pues ya que...».
 func _on_no_pressed() -> void:
+	if _no_dead:
+		return
 	_no_dead = true
-	_no.disabled = true
 	_error.text = "Error 0x80004005: Acción denegada por el mercado laboral. Requiere 3 años de experiencia previa para rechazar esta oferta."
 	_error_box.visible = true
 	_error_box.reset_size()
-	_error_box.position = Vector2(clampf(_no.position.x - 220.0, 10.0, WIN_SIZE.x - 370.0), WIN_SIZE.y - 130)
+	_error_box.position = Vector2(WIN_SIZE.x - _error_box.size.x - 16.0, WIN_SIZE.y - 60.0 - _error_box.size.y)
 	Sfx.play("player_hurt")
+	_no.pressed.disconnect(_on_no_pressed)
+	_no.scale = Vector2.ONE
+	_no.text = "Pues ya que..."
+	_no.tooltip_text = ""
+	_no.size = Vector2(150, NO_SIZE.y)
+	_no.position = Vector2(WIN_SIZE.x / 2.0 + 30, WIN_SIZE.y - 48)
+	_no.pressed.connect(_accept)
 
+
+func _accept() -> void:
+	Sfx.play("buff")
+	hired.emit(StringName(GameData.classes[_dropdown.selected]["id"]))
 
 ## Tema gris de los 90: botones con bisel y texto negro.
 func _win98_theme() -> Theme:

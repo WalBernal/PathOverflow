@@ -10,7 +10,7 @@ extends Node2D
 
 const VIEW := Vector2(400, 225)
 const FLOOR_Y := 198.0
-const ROOM_WIDTH := {"calle": 760.0, "pasillo": 820.0, "oficina": 400.0}
+const ROOM_WIDTH := {"calle": 700.0, "pasillo": 820.0, "oficina": 400.0}
 const SHIRT := "e9e5d8"
 const PORTFOLIO := Color("3d6fb0")
 
@@ -67,6 +67,8 @@ func _draw() -> void:
 	_draw_player()
 	if room == "oficina":
 		_draw_office_front()
+	elif room == "calle":
+		_draw_street_front()
 	if not prompt.is_empty():
 		var p: Vector2 = prompt["pos"]
 		var bob := sin(time * 4.0) * 1.5
@@ -107,57 +109,95 @@ func _draw_player() -> void:
 				Color(0.3, 1.0, 0.5, 0.8 * (1.0 - absf(outfit_shift - 0.5) * 2.0)))
 
 
-# --- Calle: malecón de Mazatlán al mediodía ---
+# --- Calle: la UAdeO, frente al malecón de Mazatlán ---
 
 func _draw_street() -> void:
 	var w := width()
-	# Cielo blanco de calor y sol.
-	for k in 8:
-		draw_rect(Rect2(0, k * 14.0, w, 14.0), Color("bcd8e4").lerp(Color("f4ead2"), k / 7.0))
-	var sun := Vector2(cam_x + 330.0, 30.0)
-	draw_circle(sun, 22.0, Color(1.0, 0.95, 0.75, 0.25))
-	draw_circle(sun, 14.0, Color("fff3c4"))
+	# Cielo despejado de Mazatlán al mediodía.
+	for k in 10:
+		draw_rect(Rect2(0, k * 13.0, w, 13.0), Color("8cc4e8").lerp(Color("d8ecf4"), k / 9.0))
+	var sun := Vector2(cam_x + 60.0, 26.0)
+	draw_circle(sun, 20.0, Color(1.0, 0.97, 0.8, 0.3))
+	draw_circle(sun, 12.0, Color("fff6d0"))
 	for k in 12:
 		var a := TAU * k / 12.0 + time * 0.2
-		draw_line(sun + Vector2.from_angle(a) * 18.0, sun + Vector2.from_angle(a) * (24.0 + 3.0 * sin(time * 3.0 + k)), Color("fff3c4"), 1.0)
-	# Mar y olas.
-	draw_rect(Rect2(0, 112, w, 40), Color("4f8fa8"))
+		draw_line(sun + Vector2.from_angle(a) * 16.0, sun + Vector2.from_angle(a) * (21.0 + 3.0 * sin(time * 3.0 + k)), Color("fff6d0"), 1.0)
+	# Torre de departamentos color salmón detrás de la escuela.
+	var tower := Rect2(470, 22, 150, 120)
+	draw_rect(tower, Color("d99a7c"))
+	draw_rect(Rect2(tower.position, Vector2(tower.size.x, 5)), Color("e8b49a"))
+	for row in 7:
+		var y := tower.position.y + 10 + row * 16
+		draw_rect(Rect2(tower.position.x + 4, y + 9, tower.size.x - 8, 2), Color("c08066"))   # balcones
+		for col in 6:
+			draw_rect(Rect2(tower.position.x + 8 + col * 24, y, 12, 8), Color("f0e6d8") if (row + col) % 3 else Color("7aa0b8"))
+	# Palmeras detrás.
+	for px in [200.0, 452.0, 660.0]:
+		_draw_palm(Vector2(px, 150))
+	# Reja beige a la izquierda de la escuela, con su pilar de piedra.
+	draw_rect(Rect2(0, 122, 262, 4), Color("d8c8a0"))
+	draw_rect(Rect2(0, 164, 262, 4), Color("d8c8a0"))
+	for k in 27:
+		draw_rect(Rect2(k * 10.0, 122, 3, 46), Color("e2d4b0"))
+	draw_rect(Rect2(250, 104, 16, 64), Color("8e8a82"))
+	for k in 6:
+		draw_line(Vector2(250, 108 + k * 10), Vector2(266, 108 + k * 10), Color("7a766e"), 1.0)
+	# La UAdeO: fachada guinda con franja crema, letras, ventanas de marco blanco y escudo.
+	var b := Rect2(266, 66, 380, 102)
+	var maroon := Color("8e2c34")
+	draw_rect(b, maroon)
+	draw_rect(Rect2(b.position, Vector2(b.size.x, 4)), Color("e8dcc4"))
+	draw_rect(Rect2(b.position.x, b.position.y + 32, b.size.x, 4), Color("e8dcc4"))
+	draw_string(_font, Vector2(b.position.x + 30, b.position.y + 17), "UNIVERSIDAD AUTÓNOMA DE OCCIDENTE", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("f0e4cc"))
+	draw_string(_font, Vector2(b.position.x + 70, b.position.y + 29), "UNIDAD REGIONAL MAZATLÁN", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("f0e4cc"))
+	for k in 6:
+		var win := Rect2(b.position.x + 22 + k * 52, b.position.y + 44, 34, 22)
+		draw_rect(win, Color("f4f0e8"))
+		draw_rect(win.grow(-2), Color("2a3442"))
+		draw_line(win.position + Vector2(win.size.x / 2.0, 2), win.position + Vector2(win.size.x / 2.0, win.size.y - 2), Color("f4f0e8"), 1.0)
+	# Escudo y letras «UAdeO».
+	var logo := Vector2(b.end.x - 34, b.position.y + 54)
+	draw_circle(logo, 12, Color("f0e4cc"))
+	draw_circle(logo, 10, maroon)
+	draw_arc(logo, 6, PI, TAU, 10, Color("f0e4cc"), 1.0)
+	for k in 3:
+		draw_line(logo + Vector2(-5, 1 + k * 2.5), logo + Vector2(5, 1 + k * 2.5), Color("f0e4cc"), 1.0)
+	draw_string(_font, Vector2(logo.x - 18, b.position.y + 82), "UAdeO", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("f0e4cc"))
+	# Escaleras rojas (entrada peatonal) y el acceso al estacionamiento.
+	for k in 5:
+		draw_rect(Rect2(b.position.x + 8 + k * 4, b.position.y + 82 + k * 4, 40 - k * 4, 4), maroon.darkened(0.15 + k * 0.03))
+	draw_rect(Rect2(b.position.x + 4, b.position.y + 78, 46, 24), Color(0, 0, 0, 0.0))
+	var garage := Rect2(b.position.x + 120, b.position.y + 72, 110, 30)
+	draw_rect(garage, Color("e8e2d8"))
+	draw_rect(garage.grow(-3), Color("1e1e22"))
+	for k in 3:
+		draw_line(garage.position + Vector2(20 + k * 30, 22), garage.position + Vector2(36 + k * 30, 14), Color("e8c040"), 1.0)
+	# Poste de luz blanco.
+	draw_rect(Rect2(244, 30, 3, 140), Color("f0f0ec"))
+	draw_rect(Rect2(236, 28, 12, 3), Color("f0f0ec"))
+	# Banqueta de la escuela, la avenida y el camellón.
+	draw_rect(Rect2(0, 168, w, 8), Color("cfcac0"))
+	draw_rect(Rect2(0, 176, w, 16), Color("6c6c6e"))
+	for k in int(w / 30.0) + 1:
+		draw_rect(Rect2(k * 30.0 + 6, 183, 14, 2), Color("e8e4d8"))
+	draw_rect(Rect2(0, 191, w, 3), Color("e8c040"))   # guarnición amarilla
+	# Malecón (donde camina el jugador), barandal y el mar en primer plano.
+	draw_rect(Rect2(0, 194, w, 18), Color("d6cdb8"))
 	for k in int(w / 24.0) + 1:
-		var x := k * 24.0 + fmod(time * 6.0, 24.0)
-		draw_line(Vector2(x, 120 + (k % 3) * 9), Vector2(x + 10, 120 + (k % 3) * 9), Color("8cc1d2"), 1.0)
-	# Isla del Crestón al fondo (y su faro).
-	draw_colored_polygon(PackedVector2Array([Vector2(40, 112), Vector2(80, 88), Vector2(110, 96), Vector2(150, 112)]), Color("6f8a76"))
-	draw_rect(Rect2(84, 80, 3, 9), Color("e8e4d8"))
-	# Muro del malecón y barandal.
-	draw_rect(Rect2(0, 150, w, 16), Color("c9b89a"))
-	for k in int(w / 16.0) + 1:
-		draw_rect(Rect2(k * 16.0, 142, 2, 8), Color("d8cbb0"))
-	draw_line(Vector2(0, 142), Vector2(w, 142), Color("d8cbb0"), 1.0)
-	# Palmeras.
-	for px in [120.0, 300.0, 470.0]:
-		_draw_palm(Vector2(px, 166))
-	# Banqueta y calle.
-	draw_rect(Rect2(0, 166, w, 60), Color("a8a296"))
-	for k in int(w / 32.0) + 1:
-		draw_line(Vector2(k * 32.0, 166), Vector2(k * 32.0, 225), Color("98928a"), 1.0)
-	draw_line(Vector2(0, 205), Vector2(w, 205), Color("8e887e"), 1.0)
-	# La universidad, a la derecha.
-	var b := Rect2(560, 40, 200, 126)
-	draw_rect(b, Color("e6dcc8"))
-	draw_rect(Rect2(b.position, Vector2(b.size.x, 10)), Color("8a2d3a"))
-	for row in 3:
-		for col in 5:
-			draw_rect(Rect2(b.position + Vector2(14 + col * 36, 22 + row * 28), Vector2(20, 16)), Color("7f9eb0"))
-	draw_rect(Rect2(620, 118, 44, 48), Color("5a4a3a"))   # puerta
-	draw_rect(Rect2(624, 122, 17, 44), Color("7f9eb0"))
-	draw_rect(Rect2(643, 122, 17, 44), Color("7f9eb0"))
-	draw_rect(Rect2(586, 100, 152, 14), Color("8a2d3a"))
-	draw_string(_font, Vector2(590, 110), "UNIVERSIDAD AUTÓNOMA DE OCCIDENTE", HORIZONTAL_ALIGNMENT_LEFT, 148, 7, Color("f4ead2"))
-	draw_string(_font, Vector2(574, 36), "UAdeO · Unidad Mazatlán", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("5a4a3a"))
-	# Puesto de raspados abandonado (el calor ganó).
-	draw_rect(Rect2(200, 150, 26, 16), Color("d86a4a"))
-	draw_rect(Rect2(196, 140, 34, 4), Color("f0d060"))
-	draw_string(_font, Vector2(198, 162), "RASPADOS", HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color("fff3c4"))
+		draw_line(Vector2(k * 24.0, 194), Vector2(k * 24.0, 212), Color("c6bca6"), 1.0)
+	draw_rect(Rect2(0, 212, w, 13), Color("3f8db0"))
+	for k in int(w / 20.0) + 1:
+		var x := k * 20.0 + fmod(time * 5.0, 20.0)
+		draw_line(Vector2(x, 216 + (k % 2) * 4), Vector2(x + 8, 216 + (k % 2) * 4), Color("9fd0e4"), 1.0)
+	draw_line(Vector2(0, 211), Vector2(w, 211), Color("f0ece0"), 1.0)
+
+
+## El barandal del malecón va delante del jugador.
+func _draw_street_front() -> void:
+	var w := width()
+	for k in int(w / 12.0) + 1:
+		draw_rect(Rect2(k * 12.0, 204, 2, 8), Color("f0ece0"))
+	draw_line(Vector2(0, 204), Vector2(w, 204), Color("f0ece0"), 1.0)
 
 
 func _draw_palm(base: Vector2) -> void:
