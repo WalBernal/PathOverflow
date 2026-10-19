@@ -24,6 +24,8 @@ const INFO := {
 	"chaos": ["caos", "b04ad9"],
 	"elemental": ["elemental", "e0a060"],
 	"degen": ["degenerativo", "9a5ad0"],
+	"defense": ["defensa", "8ab0e0"],
+	"buff": ["potenciador", "e8d070"],
 }
 ## Tipo de daño → etiquetas que implica (se comprueban en las pruebas).
 const DAMAGE_TYPE_TAGS := {

@@ -3,13 +3,20 @@ extends Control
 ## Escenas cortas (data/cutscenes.json): líneas de diálogo con retrato y
 ## efectos de pantalla (glitch, temblor, fundido a negro y la pantalla de "sin
 ## conexión" del dinosaurio). Mientras dura, el jugador no se mueve.
-## Click, Espacio o Enter: completar el texto o pasar a la siguiente línea.
+## Las líneas avanzan solas: al terminar de escribirse, esperan un tiempo de
+## lectura (según su longitud) o, con el narrador activado, a que la voz acabe.
+## Click, Espacio o Enter: completar el texto o pasar ya a la siguiente.
 ## Esc: saltar la escena entera.
 
 signal finished
 
 const BOX_WIDTH := 760.0
 const CHARS_PER_SECOND := 55.0
+const NARRATED_CPS := 15.0
+## Tiempo de lectura tras escribirse la línea: base + por carácter.
+const READ_BASE := 1.4
+const READ_PER_CHAR := 0.035
+const DINO_TIME := 4.5
 const STYLE_COLORS := {
 	"npc": Color("d9a441"), "boss": Color("e0503a"), "console": Color("3cff6a"),
 	"system": Color("8ab0e0"), "phone": Color("6fd36b"),
@@ -38,6 +45,11 @@ var _shown := 0.0
 var _total := 0
 var _blip: AudioStreamPlayer
 var _pitch := 1.0
+var _rate := 1.0
+var _read_left := 0.0       # cuenta atrás para pasar sola a la siguiente
+var _read_total := 1.0
+var _narrating := false
+var _cps := CHARS_PER_SECOND
 var _rng := RandomNumberGenerator.new()
 
 
@@ -69,7 +81,7 @@ func _ready() -> void:
 	_text.add_theme_font_size_override("normal_font_size", 16)
 	_text.add_theme_font_size_override("mono_font_size", 15)
 	col.add_child(_text)
-	_hint = UiStyle.label("Click / Espacio: continuar  ·  Esc: saltar", 11, UiStyle.MUTED)
+	_hint = UiStyle.label("Avanza sola  ·  Click / Espacio: siguiente  ·  Esc: saltar", 11, UiStyle.MUTED)
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	col.add_child(_hint)
 	_blip = AudioStreamPlayer.new()
@@ -121,6 +133,8 @@ func _next() -> void:
 				_dino = true
 				_dino_text = step.get("text", "")
 				_waiting_input = true
+				_read_left = DINO_TIME
+				_read_total = DINO_TIME
 				return
 		_wait = float(step.get("time", 0.5))
 		return
@@ -137,6 +151,7 @@ func _show_line(step: Dictionary) -> void:
 	if _portrait.visible:
 		_portrait.appearance = CharacterAppearance.sanitize(npc.get("appearance", {}))
 	_pitch = float(npc.get("voice", {}).get("pitch", 0.7 if style == "boss" else 1.0))
+	_rate = float(npc.get("voice", {}).get("rate", 0.9 if style == "boss" else 1.0))
 	var text: String = step.get("text", "")
 	if style == "console":
 		text = "[code][color=#3cff6a]%s[/color][/code]" % text
@@ -150,6 +165,29 @@ func _show_line(step: Dictionary) -> void:
 	_text.visible_characters = 0
 	_box.visible = true
 	_waiting_input = true
+	_read_total = READ_BASE + READ_PER_CHAR * _total
+	_read_left = _read_total
+	_speak(style)
+
+
+## El narrador lee la línea (las de consola no: se leen solas en pantalla).
+func _speak(style: String) -> void:
+	_stop_voice()
+	_cps = CHARS_PER_SECOND
+	if style == "console" or not DialogueBox.narrator_enabled():
+		return
+	var voices := DisplayServer.tts_get_voices_for_language("es")
+	if voices.is_empty():
+		return
+	DisplayServer.tts_speak(_text.get_parsed_text(), voices[0], 80, clampf(_pitch, 0.0, 2.0), clampf(_rate * 1.1, 0.5, 2.0))
+	_narrating = true
+	_cps = NARRATED_CPS * _rate
+
+
+func _stop_voice() -> void:
+	if _narrating:
+		DisplayServer.tts_stop()
+		_narrating = false
 	_reposition.call_deferred()
 
 
@@ -159,6 +197,7 @@ func _reposition() -> void:
 
 
 func _finish() -> void:
+	_stop_voice()
 	visible = false
 	_box.visible = false
 	if player:
@@ -179,7 +218,7 @@ func _process(delta: float) -> void:
 	_set_camera_offset(Vector2(_rng.randf_range(-1, 1), _rng.randf_range(-1, 1)) * _shake * 14.0)
 	if _box.visible and _shown < _total:
 		var before := int(_shown)
-		_shown = minf(_total, _shown + CHARS_PER_SECOND * delta)
+		_shown = minf(_total, _shown + _cps * delta)
 		_text.visible_characters = int(_shown) if _shown < _total else -1
 		if int(_shown) / 3 != before / 3 and DialogueBox.blips_enabled():
 			_blip.pitch_scale = _pitch * randf_range(0.92, 1.08)
@@ -188,6 +227,15 @@ func _process(delta: float) -> void:
 		_wait -= delta
 		if _wait <= 0.0:
 			_next()
+	elif _dino or (_box.visible and _shown >= _total):
+		# Lectura automática: espera a la voz (si habla) y luego el tiempo de lectura.
+		if _narrating and DisplayServer.tts_is_speaking():
+			_read_left = maxf(_read_left, 0.6)
+		else:
+			_narrating = false
+			_read_left -= delta
+			if _read_left <= 0.0:
+				_next()
 	queue_redraw()
 
 
@@ -224,6 +272,7 @@ func _advance() -> void:
 		_shown = _total
 		_text.visible_characters = -1
 		return
+	_stop_voice()
 	_next()
 
 
@@ -233,6 +282,12 @@ func _draw() -> void:
 	var view := size
 	if _dino:
 		_draw_offline_page(view)
+	# Barra de lectura automática bajo el cuadro de texto.
+	if _box.visible and _shown >= _total and _read_total > 0.0:
+		var frac := clampf(1.0 - _read_left / _read_total, 0.0, 1.0)
+		var bar := Rect2(_box.position + Vector2(0, _box.size.y + 4), Vector2(_box.size.x, 3))
+		draw_rect(bar, Color(0, 0, 0, 0.6))
+		draw_rect(Rect2(bar.position, Vector2(bar.size.x * frac, bar.size.y)), Color(UiStyle.ACCENT, 0.8))
 	if _glitch > 0.0:
 		_draw_glitch(view)
 	if _black > 0.0:

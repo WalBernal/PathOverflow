@@ -210,6 +210,11 @@ func _draw() -> void:
 	if max_es > 0.0 and player.energy_shield > 0.0:
 		draw_arc(life_center, ORB_RADIUS + 7.0, -PI / 2.0, -PI / 2.0 + TAU * player.energy_shield / max_es,
 			64, ES_COLOR, 5.0, true)
+	if player.barrier > 0.0:
+		# Barrera: aro blanco-azulado por fuera del orbe de vida.
+		var frac := player.barrier / maxf(1.0, player.barrier_max)
+		draw_arc(life_center, ORB_RADIUS + 13.0, -PI / 2.0, -PI / 2.0 + TAU * frac, 64, Color("cfe8ff"), 4.0, true)
+		draw_string(font, life_center + Vector2(-80.0, -ORB_RADIUS - 20.0), "Barrera %d" % player.barrier, HORIZONTAL_ALIGNMENT_CENTER, 160.0, 12, Color("cfe8ff"))
 	_draw_orb(mana_center, player.mana / maxf(1.0, player.max_mana()), MANA_COLOR)
 	var life_text := "%d / %d" % [player.life, player.max_life()]
 	if max_es > 0.0:
@@ -248,9 +253,19 @@ func _draw() -> void:
 func _draw_status_boxes(font: Font) -> void:
 	var entries: Array[Dictionary] = skills.active_summaries() if skills else []
 	for effect in character.timed_effects:
-		var flask_id: String = String(effect["id"]).trim_prefix("flask:")
+		var eid: String = effect["id"]
+		if eid.begins_with("skill:"):
+			# Potenciadores de habilidades (Modo Seguro, Hiperthreading...).
+			var skill: Dictionary = GameData.items.skills.skills.get(eid.trim_prefix("skill:"), {})
+			entries.append({"name": skill.get("name", "Efecto"), "skill": skill, "count": 1, "remaining": effect["time_left"],
+				"total": effect.get("total", effect["time_left"]), "kind": "buff"})
+			continue
+		var flask_id: String = eid.trim_prefix("flask:")
 		entries.append({"name": GameData.items.flasks.get(flask_id, {}).get("name", flask_id), "flask": flask_id,
 			"count": 1, "remaining": effect["time_left"], "total": effect.get("total", effect["time_left"]), "kind": "flask"})
+	if player.barrier > 0.0:
+		entries.append({"name": "Barrera", "skill": GameData.items.skills.skills.get("firewall_personal", {}), "count": 1,
+			"remaining": player.barrier_time, "total": maxf(player.barrier_time, 6.0), "kind": "buff"})
 	if entries.is_empty():
 		return
 	var box := 44.0
@@ -259,7 +274,7 @@ func _draw_status_boxes(font: Font) -> void:
 	var x := first.position.x
 	var y := first.position.y - box - 34.0
 	var kind_colors := {"minion": Color("7fd07f"), "totem": Color("d9a441"), "trap": Color("b07a3a"), "mine": Color("a0a040"),
-		"spin": Color("b8b8c8"), "flask": Color("6fd36b")}
+		"spin": Color("b8b8c8"), "flask": Color("6fd36b"), "buff": Color("8ab0e0"), "drones": Color("e8d070")}
 	for e in entries:
 		var r := Rect2(x, y, box, box)
 		var color: Color = kind_colors.get(e["kind"], TRIM)

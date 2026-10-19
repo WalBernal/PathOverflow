@@ -174,6 +174,14 @@ El **registro de misiones** está debajo del minimapa (L para plegarlo): la prin
 - **Narrador**: si el sistema tiene una voz en español (en Windows: *Configuración → Hora e idioma → Voz*), los NPCs leen su texto en voz alta, cada uno con su tono y velocidad (`voice` en `npcs.json`), y el texto avanza al ritmo de la voz.
 - **Pitidos retro**: sin voz (o con el narrador desactivado), sale un pitido de 8 bits cada pocas letras, con el tono de cada NPC. El sonido se genera en código (`RetroSfx`), sin archivos.
 - Ambos se activan o desactivan en el menú de pausa (Esc) y se recuerdan en `user://settings.cfg`.
+- **Escenas** (muerte de jefes, transiciones): el texto avanza solo, con una barrita que marca el tiempo de lectura; si hay narrador, lo lee en voz alta y espera a que termine. Click o Espacio adelanta y Esc salta.
+
+## Efectos y ambiente
+
+- `tools/generate_sfx.gd` sintetiza todos los sonidos (sin archivos externos): efectos en `assets/audio/sfx/` y un ambiente en bucle por estilo de zona en `assets/audio/ambient/` (fogata en el campamento, ventiladores en los servidores, goteo en las alcantarillas, pistones en la fábrica, latido en las salas de jefe...).
+- El autoload `AudioManager` reproduce los efectos (limitados para no saturar cuando mueren muchos enemigos a la vez) y cambia el ambiente con un fundido al viajar. El juego lo usa a través de `Sfx` (`scripts/core/sfx.gd`), que no hace nada si el autoload no está (pruebas).
+- Cada habilidad suena según su tipo y su daño (`Sfx.skill_sound`): golpe, proyectil, fuego, frío, rayo, caos, explosión, teletransporte, buff, barrera, invocación o trampa. También suenan las muertes de enemigos, el daño recibido, el botín, las pociones, subir de nivel, los portales y las oleadas.
+- "Efectos de sonido" y "Sonido ambiente" se activan o desactivan en el menú de pausa. Para usar sonidos propios basta con sustituir el WAV del mismo nombre.
 
 ## Pantalla de título, menú y creador
 
@@ -270,7 +278,7 @@ scripts/ui/           Título, logo, menús, HUD, inventario, habilidades, waypo
 scripts/autoload/     GameData (datos estáticos y personaje actual), MusicPlayer
 scenes/               Escenas (.tscn)
 assets/               Sprites, shaders, UI, audio, fuentes
-tools/                Generadores (árbol, sprites, iconos, música) y comprobador de scripts
+tools/                Generadores (árbol, sprites, iconos, música, efectos y ambientes) y comprobador de scripts
 tests/                Pruebas de la lógica pura
 ```
 

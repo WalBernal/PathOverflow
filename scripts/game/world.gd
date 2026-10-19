@@ -130,6 +130,7 @@ func _mark_dirty() -> void:
 
 func _return_to_menu() -> void:
 	save_now()
+	Sfx.ambient("")
 	get_tree().paused = false
 	GameData.current_character = null
 	get_tree().change_scene_to_file(GameData.MAIN_MENU_SCENE)
@@ -190,6 +191,8 @@ func travel_to(zone_id: String, entry := "") -> void:
 	ui.on_zone_changed(zone)
 	quests.notify_zone(zone.id)
 	_mark_dirty()
+	Sfx.ambient(String(zone.def.get("style", "ruins")))
+	Sfx.play("portal", -8.0)
 	_check_zone_cutscene.call_deferred()
 
 
@@ -421,6 +424,7 @@ func _spawn_wave(c: Dictionary, wave: int, total: int) -> void:
 		var p := zone.free_spot_near(center + Vector2.from_angle(TAU * k / count + randf() * 0.3) * randf_range(280.0, 460.0))
 		_challenge["ids"].append(enemies.spawn(p, rarity, enemies.type_index_of(types[randi() % types.size()])))
 	ui.hud.flash("Oleada %d de %d" % [wave, total], Color("ff9a4a"))
+	Sfx.play("wave")
 
 
 func _complete_challenge() -> void:
@@ -504,6 +508,7 @@ func drop_test_loot() -> void:
 
 
 func _on_enemy_killed(rarity: int, experience: int, pos: Vector2, type_id: String = "") -> void:
+	Sfx.play("enemy_death", -6.0 + 2.0 * rarity, 1.0 - 0.08 * rarity)
 	character.add_experience(experience)
 	character.flags["stat_kills"] = int(character.flags.get("stat_kills", 0)) + 1
 	player.add_flask_charges(rarity)
@@ -557,6 +562,7 @@ func _on_mutex_broken() -> void:
 
 ## Los monstruos tienen el nivel de su zona; subir de nivel solo avisa.
 func _on_leveled_up(new_level: int) -> void:
+	Sfx.play("level_up")
 	if new_level == CharacterData.ASCENDANCY_LEVEL:
 		ui.hud.flash("¡Nivel %d! Ya puedes elegir tu ascendencia: abre el árbol (P) y pulsa el medallón junto a tu clase." % new_level, Color("ffd84a"))
 	elif new_level > CharacterData.ASCENDANCY_LEVEL and (new_level - CharacterData.ASCENDANCY_LEVEL) % 5 == 0 and new_level <= 30:
@@ -567,6 +573,7 @@ func _on_leveled_up(new_level: int) -> void:
 
 ## Pistas la primera vez que se recoge una placa base o un módulo RAM.
 func _on_item_picked_up(item: Item) -> void:
+	Sfx.play("pickup", -4.0)
 	if item is Motherboard and not character.flags.has("hint_board"):
 		character.flags["hint_board"] = true
 		ui.hud.flash("¡Una placa base! Es una habilidad: instálala en la barra con K.", UiStyle.ACCENT)

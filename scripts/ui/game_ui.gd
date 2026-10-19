@@ -314,6 +314,20 @@ func _build_pause_menu() -> Control:
 		GameSettings.set_value("dialogue", "blips", not DialogueBox.blips_enabled())
 		blips.text = "Pitidos del texto: " + ("sí" if DialogueBox.blips_enabled() else "no"))
 	box.add_child(blips)
+	# Efectos de habilidades y ambiente de las zonas.
+	var sfx := UiStyle.button("", func() -> void: pass, 320)
+	sfx.text = "Efectos de sonido: " + ("sí" if Sfx.sfx_enabled() else "no")
+	sfx.pressed.connect(func() -> void:
+		GameSettings.set_value("audio", "sfx", not Sfx.sfx_enabled())
+		sfx.text = "Efectos de sonido: " + ("sí" if Sfx.sfx_enabled() else "no"))
+	box.add_child(sfx)
+	var ambient := UiStyle.button("", func() -> void: pass, 320)
+	ambient.text = "Sonido ambiente: " + ("sí" if Sfx.ambient_enabled() else "no")
+	ambient.pressed.connect(func() -> void:
+		GameSettings.set_value("audio", "ambient", not Sfx.ambient_enabled())
+		Sfx.refresh_settings()
+		ambient.text = "Sonido ambiente: " + ("sí" if Sfx.ambient_enabled() else "no"))
+	box.add_child(ambient)
 	box.add_child(UiStyle.button("Guardar y volver al menú", func() -> void: return_to_menu_requested.emit(), 320))
 	box.add_child(UiStyle.button("Guardar y salir del juego", func() -> void: quit_requested.emit(), 320))
 	return overlay

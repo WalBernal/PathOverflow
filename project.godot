@@ -24,6 +24,7 @@ general/text_to_speech=true
 
 GameData="*res://scripts/autoload/game_data.gd"
 MusicPlayer="*res://scripts/autoload/music_player.gd"
+AudioManager="*res://scripts/autoload/audio_manager.gd"
 
 [display]
 

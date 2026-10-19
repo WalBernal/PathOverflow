@@ -55,7 +55,9 @@ func _initialize() -> void:
 	_test_ascendancy_rules()
 	_test_board_milestones()
 	_test_shaped_clusters()
+	_test_defense_and_dot_skills()
 	_test_walk_animation()
+	_test_audio_assets()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
 	else:
@@ -398,7 +400,7 @@ func _test_appearance() -> void:
 func _test_skill_data() -> void:
 	var skills := _db.skills
 	_check(skills.skills.size() >= 6 and skills.rams.size() >= 8, "carga de habilidades y RAM")
-	var kinds := ["melee_area", "nova", "projectile", "ground_aoe", "blink", "dash", "cone", "beam", "boomerang", "spin", "trap", "chain", "minion", "degen_area"]
+	var kinds := ["melee_area", "nova", "projectile", "ground_aoe", "blink", "dash", "cone", "beam", "boomerang", "spin", "trap", "chain", "minion", "degen_area", "barrier", "buff", "curse_area", "dot_projectile", "homing", "drones"]
 	for def in skills.skills.values():
 		_check(kinds.has(def["kind"]), "tipo de habilidad desconocido en %s" % def["id"])
 		_check(def.has("attack") or def.has("spell"), "%s necesita 'attack' o 'spell'" % def["id"])
@@ -1230,6 +1232,38 @@ func _test_shaped_clusters() -> void:
 		_check(themes.has(t), "cluster con forma de %s" % t)
 
 
+func _test_defense_and_dot_skills() -> void:
+	var c := _new_character()
+	var gen := ItemGenerator.new(_db, 21)
+	var barrier := SkillCalc.compute(gen.generate_motherboard(1, "firewall_personal"), c)
+	_check(barrier["barrier"] > 0.0 and barrier["duration"] > 0.0, "Firewall Personal da barrera")
+	var buff := SkillCalc.compute(gen.generate_motherboard(1, "hiperthreading"), c)
+	_check(not buff["buff_mods"].is_empty(), "Hiperthreading tiene mods")
+	# El potenciador se aplica como efecto temporal.
+	var mods: Array[Modifier] = []
+	for md in buff["buff_mods"]:
+		mods.append(Modifier.from_dict(md))
+	var speed_before := c.stats.total_multiplier(Stat.ATTACK_SPEED)
+	c.add_timed_effect("skill:hiperthreading", mods, buff["duration"])
+	_check(c.stats.total_multiplier(Stat.ATTACK_SPEED) > speed_before, "más velocidad de ataque durante el efecto")
+	# Degenerativo: mata con el tiempo.
+	var em := EnemyManager.new()
+	em.spawn(Vector2.ZERO, Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+	var kills := [0]
+	em.enemy_killed.connect(func(_r: int, _xp: int, _p: Vector2, _t: String) -> void: kills[0] += 1)
+	_check(em.dot_in_radius(Vector2.ZERO, 50.0, 1000.0, 3.0) == 1, "Ransomware afecta a los de la zona")
+	em._update_dots(0.5)
+	_check(kills[0] == 1, "el daño degenerativo mata")
+	em.free()
+	var dot := SkillCalc.compute(gen.generate_motherboard(1, "corrupcion_datos"), c)
+	_check(dot["dps"] > dot["max_damage"], "el DPS del degenerativo cuenta toda la duración")
+	var homing := SkillCalc.compute(gen.generate_motherboard(1, "paquete_rastreador"), c)
+	_check(homing["seek_range"] > 0.0 and homing["projectiles"] >= 3, "Paquete Rastreador busca enemigos")
+	var drones := SkillCalc.compute(gen.generate_motherboard(1, "drones_vigilancia"), c)
+	_check(drones["drone_count"] == 3 and drones["dps"] > 0.0, "tres drones")
+	_check(not gen.generate_ram(1, "servidor_torreta").supports(_db.skills.skills["modo_seguro"]), "los potenciadores no van en torreta")
+
+
 func _test_walk_animation() -> void:
 	_check(RetroSfx.blip().data.size() > 0, "pitido generado")
 
@@ -1362,3 +1396,17 @@ func _test_tree_version_refund() -> void:
 	data["passive_tree_version"] = _tree.version - 1
 	var old := CharacterData.from_dict(data, _classes[0], _tree, _db)
 	_check(old.passives.spent_points() == 0 and old.flags.has("passives_refunded"), "versión antigua: puntos devueltos y aviso")
+
+## Cada estilo de zona tiene su ambiente y cada habilidad su efecto.
+func _test_audio_assets() -> void:
+	for act_path in ["res://data/act1.json", "res://data/act2.json"]:
+		var act: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(act_path))
+		for z in act.get("zones", []):
+			var style := String(z.get("style", ""))
+			_check(Sfx.ambient_for(style) == style, "falta el ambiente del estilo %s" % style)
+	for id in _db.skills.skills:
+		var s: Dictionary = _db.skills.skills[id]
+		var sound := Sfx.skill_sound(String(s.get("kind", "")), String(s.get("damage_type", "")))
+		_check(ResourceLoader.exists(Sfx.SFX_DIR + sound + ".wav"), "falta el efecto %s (%s)" % [sound, id])
+	for extra in ["enemy_death", "player_hurt", "pickup", "level_up", "flask", "portal", "wave"]:
+		_check(ResourceLoader.exists(Sfx.SFX_DIR + extra + ".wav"), "falta el efecto " + extra)

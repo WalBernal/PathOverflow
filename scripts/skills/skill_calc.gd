@@ -36,6 +36,12 @@ static func milestone_text(skill: Dictionary) -> String:
 			return "+1 esbirro"
 		"trap":
 			return "+1 bomba a la vez"
+		"drones":
+			return "+1 dron"
+		"barrier":
+			return "+20 % de barrera"
+		"buff":
+			return "+1 s de duración"
 	if skill.has("projectiles"):
 		return "+1 proyectil"
 	if float(skill.get("radius", 0.0)) > 0.0:
@@ -136,6 +142,8 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 	var cooldown := float(skill.get("cooldown", 0.0)) / maxf(0.1, stats.total_multiplier(Stat.COOLDOWN_RECOVERY, tags) * lvl_mult)
 	var duration_mult := stats.total_multiplier(Stat.SKILL_DURATION, tags) * lvl_mult
 	var duration := float(skill.get("duration", 0.0)) * duration_mult
+	if bonus_text == "+1 s de duración":
+		duration += milestones
 	var tick := float(skill.get("tick", 0.0))
 	var hits_per_use := float(repeats + 1)
 	match String(skill["kind"]):
@@ -146,8 +154,10 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 		"minion":
 			# Cada esbirro golpea ~1 vez por segundo mientras dura.
 			hits_per_use *= float(int(skill.get("count", 1)) + int(stats.get_value(Stat.EXTRA_MINIONS, tags)) + milestones) * maxf(1.0, duration / MINION_ATTACK_INTERVAL)
-		"degen_area":
+		"degen_area", "curse_area", "dot_projectile":
 			hits_per_use *= maxf(1.0, duration)   # base_damage es por segundo
+		"drones":
+			hits_per_use *= float(int(skill.get("count", 1)) + milestones) * maxf(1.0, duration / maxf(0.1, tick))
 	var dps := average * minf(uses_per_second, 1.0 / maxf(cooldown, 0.0001)) * hits_per_use
 
 	return {
@@ -185,6 +195,12 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 		"totem_duration": totem_duration * duration_mult,
 		"count": int(skill.get("count", 0)) + (int(stats.get_value(Stat.EXTRA_MINIONS, tags)) + milestones if skill.get("kind", "") == "minion" else 0),
 		"extra_devices": int(stats.get_value(Stat.EXTRA_DEVICES, tags)),
+		"drone_count": int(skill.get("count", 0)) + milestones if skill.get("kind", "") == "drones" else 0,
+		"seek_range": float(skill.get("seek_range", 0.0)),
+		"turn_rate": float(skill.get("turn_rate", 6.0)),
+		"buff_mods": skill.get("buff_mods", []),
+		"barrier": (float(skill.get("barrier", 0.0)) * (1.0 + 0.1 * (board.level - 1)) + float(skill.get("barrier_life", 0.0)) * stats.get_value(Stat.LIFE)) \
+			* (1.0 + 0.2 * milestones if bonus_text == "+20 % de barrera" else 1.0),
 		"chain_range": float(skill.get("chain_range", 0.0)),
 		"life_leech": stats.get_value(Stat.LIFE_LEECH, tags),
 		"dps": dps,

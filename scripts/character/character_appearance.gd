@@ -12,7 +12,11 @@ const HAIR_COLORS := ["0f0d0c", "2b2118", "6b4423", "b5651d", "d9b26a", "c8c8c8"
 const OUTFIT_COLORS := ["6b2b2b", "2b4a6b", "2b6b45", "5a3b6b", "6b5a2b", "3a3a3a", "8a6d3b", "1f1f2e"]
 const BODY_NAMES := ["Delgada", "Media", "Robusta"]
 const BODY_WIDTH := [0.82, 1.0, 1.22]
-const HAIR_NAMES := ["Rapado", "Corto", "Largo", "Cresta", "Moño"]
+const HAIR_NAMES := ["Rapado", "Corto", "Largo", "Cresta", "Moño", "Hacia atrás"]
+## Opcionales (sobre todo para NPCs): "height" (0,8-1,15, estatura) y
+## "hair_streaks" (color de las canas o mechas).
+const MIN_HEIGHT := 0.8
+const MAX_HEIGHT := 1.15
 
 
 static func default() -> Dictionary:
@@ -45,6 +49,10 @@ static func sanitize(d: Dictionary) -> Dictionary:
 		var value := String(d.get(key, ""))
 		if Color.html_is_valid(value):
 			result[key] = value
+	if d.has("height"):
+		result["height"] = clampf(float(d["height"]), MIN_HEIGHT, MAX_HEIGHT)
+	if Color.html_is_valid(String(d.get("hair_streaks", ""))):
+		result["hair_streaks"] = String(d["hair_streaks"])
 	return result
 
 
@@ -67,9 +75,11 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 	var walking := walk_phase >= 0.0
 	var swing := sin(walk_phase) if walking else 0.0          # -1..1, pierna izquierda delante
 	var bob := absf(cos(walk_phase)) * 1.3 if walking else 0.0  # el cuerpo sube entre pisadas
-	var p := func(x: float, y: float) -> Vector2: return feet + Vector2(x, y) * scale
+	# Estatura: escala las alturas (la cabeza mantiene su tamaño).
+	var hs := float(a.get("height", 1.0))
+	var p := func(x: float, y: float) -> Vector2: return feet + Vector2(x, y * hs) * scale
 	# Parte superior del cuerpo, desplazada por el balanceo.
-	var u := func(x: float, y: float) -> Vector2: return feet + Vector2(x, y - bob) * scale
+	var u := func(x: float, y: float) -> Vector2: return feet + Vector2(x, (y - bob) * hs) * scale
 
 	# Sombra (se encoge un poco cuando el cuerpo sube).
 	ci.draw_set_transform(feet, 0.0, Vector2(1.0, 0.4))
@@ -87,7 +97,7 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 		if profile:
 			x = -2.0 * width + phase * 3.2 * signf(look)
 		var length := 9.0 + bob - lift
-		ci.draw_rect(Rect2(p.call(x, y_top), Vector2(4.0 * width, length) * scale), legs)
+		ci.draw_rect(Rect2(p.call(x, y_top), Vector2(4.0 * width, length * hs) * scale), legs)
 		ci.draw_rect(Rect2(p.call(x - 0.3, y_top + length - 1.6), Vector2(4.6 * width, 1.8) * scale), shoes)
 
 	# Brazos (detrás del torso), en oposición a las piernas.
@@ -99,7 +109,7 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 		if profile:
 			ax = -1.75 * width + swing * arm * 3.0 * signf(look)
 			hand_x = ax + 1.75 * width
-		ci.draw_rect(Rect2(u.call(ax, -23.0 + arm_swing * 0.4), Vector2(3.5 * width, 12.0) * scale), arm_color)
+		ci.draw_rect(Rect2(u.call(ax, -23.0 + arm_swing * 0.4), Vector2(3.5 * width, 12.0 * hs) * scale), arm_color)
 		ci.draw_circle(u.call(hand_x, -10.5 + arm_swing), 1.9 * scale * width, skin)
 
 	# Torso: trapecio de hombros a cintura (más estrecho de perfil).
@@ -108,20 +118,38 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 	ci.draw_colored_polygon(PackedVector2Array([
 		u.call(-8.0 * tw + lean, -24.0), u.call(8.0 * tw + lean, -24.0),
 		u.call(6.0 * tw, -8.0), u.call(-6.0 * tw, -8.0)]), outfit)
-	ci.draw_rect(Rect2(u.call(-6.0 * tw, -11.0), Vector2(12.0 * tw, 2.0) * scale), outfit.darkened(0.5))
+	ci.draw_rect(Rect2(u.call(-6.0 * tw, -11.0), Vector2(12.0 * tw, 2.0 * hs) * scale), outfit.darkened(0.5))
 
 	# Cabeza.
 	var head: Vector2 = u.call(lean, -31.0)
 	var r := 7.0 * scale
 	var style := int(a["hair"])
+	var streaks := _tinted(Color(a["hair_streaks"]), tint) if a.has("hair_streaks") else Color(0, 0, 0, 0)
 	if style == 2:  # pelo largo: por detrás de la cabeza
 		ci.draw_rect(Rect2(u.call(lean - 8.0, -33.0), Vector2(16.0, 15.0) * scale), hair)
+	elif style == 5:  # hacia atrás, semilargo: cae hasta la nuca
+		ci.draw_rect(Rect2(head + Vector2(-8.4, -2.0) * scale, Vector2(16.8, 8.5) * scale), hair)
 	ci.draw_circle(head, r, skin)
 	if back:
 		if style != 0:
 			ci.draw_circle(head, r + 0.6 * scale, hair)
+		if style == 5:
+			ci.draw_circle(head + Vector2(0.0, -1.5) * scale, r + 1.6 * scale, hair)
+			if streaks.a > 0.0:
+				for k in 2:
+					var x := -4.5 + k * 9.0
+					ci.draw_line(head + Vector2(x, -6.0) * scale, head + Vector2(x * 0.9, 4.0) * scale, Color(streaks, 0.7), 0.6 * scale)
 	else:
 		_draw_hair(ci, head, r, scale, style, hair)
+		if style == 5:
+			# Peinado hacia atrás: líneas del peine y canas en las sienes.
+			for k in 4:
+				var x0 := -4.2 + k * 2.8
+				ci.draw_line(head + Vector2(x0, -4.6) * scale, head + Vector2(x0 * 0.7, -9.0) * scale, hair.lightened(0.12), 0.5 * scale)
+			if streaks.a > 0.0:   # canas en las sienes y algún mechón arriba
+				for side in [-1.0, 1.0]:
+					ci.draw_line(head + Vector2(side * 6.9, -1.0) * scale, head + Vector2(side * 6.2, -5.0) * scale, streaks, 0.9 * scale)
+				ci.draw_line(head + Vector2(2.0, -4.8) * scale, head + Vector2(1.6, -8.6) * scale, Color(streaks, 0.8), 0.6 * scale)
 		for side in [-1.0, 1.0]:
 			ci.draw_circle(head + Vector2(side * 2.6 + look * 1.6, 0.5) * scale, 1.1 * scale, Color(0.08, 0.06, 0.06))
 	if style == 3:  # la cresta se ve desde todos los ángulos
@@ -136,6 +164,19 @@ static func _draw_hair(ci: CanvasItem, head: Vector2, r: float, scale: float, st
 	match style:
 		0:  # rapado: una sombra fina
 			ci.draw_arc(head, r - 0.5 * scale, PI * 1.05, PI * 1.95, 16, hair, 1.6 * scale, true)
+		5:  # hacia atrás: frente despejada, pelo por arriba y hasta las sienes
+			# Volumen arriba, peinado hacia atrás, con la línea del pelo un poco alta.
+			var points := PackedVector2Array()
+			for k in 17:
+				var t := PI + PI * k / 16.0
+				points.append(head + Vector2(cos(t) * (r + 1.0 * scale), sin(t) * (r + 2.4 * scale) - 0.6 * scale))
+			points.append(head + Vector2(6.9, -0.5) * scale)
+			points.append(head + Vector2(5.6, -3.4) * scale)
+			points.append(head + Vector2(2.5, -4.6) * scale)
+			points.append(head + Vector2(-2.5, -4.6) * scale)
+			points.append(head + Vector2(-5.6, -3.4) * scale)
+			points.append(head + Vector2(-6.9, -0.5) * scale)
+			ci.draw_colored_polygon(points, hair)
 		1, 2, 4:  # gorro de pelo sobre la mitad superior
 			var points := PackedVector2Array()
 			for k in 17:

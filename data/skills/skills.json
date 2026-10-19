@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_doc": "Habilidades activas (lo que hace cada placa base). kind: melee_area, nova (stun opcional), projectile, ground_aoe, blink, dash (embestida que golpea en línea), cone (cono delante), beam (rayo en línea tras un retardo), boomerang (va y vuelve golpeando en los dos sentidos), spin (gira golpeando durante duration cada tick), trap (trampa que explota al acercarse un enemigo; max_active), chain (salta entre enemigos chains veces), minion (invoca count esbirros durante duration; max_active a la vez), degen_area (charco que hace base_damage por segundo durante duration). tags: varias por habilidad (ver SkillTags): ataque/hechizo, forma (melee, projectile, area, chain), mecánica (duration, trap, mine, totem, minion, movement, degen) y tipo de daño (physical, fire, cold, lightning, chaos, elemental). duration y stun escalan con skill_duration; cooldown con cooldown_recovery. lol: en qué habilidad de League of Legends se inspira. attack: usa el arma (damage_effectiveness). spell: daño propio (base_damage) que crece un damage_growth por nivel de la placa. attribute: generación de RAM más probable en sus ranuras (str=DDR3, dex=DDR4, int=DDR5).",
+  "_doc": "Habilidades activas (lo que hace cada placa base). kind: melee_area, nova (stun opcional), projectile, ground_aoe, blink, dash (embestida que golpea en línea), cone (cono delante), beam (rayo en línea tras un retardo), boomerang (va y vuelve golpeando en los dos sentidos), spin (gira golpeando durante duration cada tick), trap (trampa que explota al acercarse un enemigo; max_active), chain (salta entre enemigos chains veces), minion (invoca count esbirros durante duration; max_active a la vez), degen_area (charco que hace base_damage por segundo durante duration), barrier (barrera que absorbe daño: barrier + barrier_life × vida máxima), buff (buff_mods sobre el personaje durante duration), curse_area (aplica daño degenerativo por segundo a todos los de una zona), dot_projectile (proyectil que deja daño degenerativo), homing (proyectiles teledirigidos al enemigo más cercano: seek_range, turn_rate), drones (count drones que orbitan y disparan proyectiles teledirigidos cada tick). tags: varias por habilidad (ver SkillTags): ataque/hechizo, forma (melee, projectile, area, chain), mecánica (duration, trap, mine, totem, minion, movement, degen) y tipo de daño (physical, fire, cold, lightning, chaos, elemental). duration y stun escalan con skill_duration; cooldown con cooldown_recovery. lol: en qué habilidad de League of Legends se inspira. attack: usa el arma (damage_effectiveness). spell: daño propio (base_damage) que crece un damage_growth por nivel de la placa. attribute: generación de RAM más probable en sus ranuras (str=DDR3, dex=DDR4, int=DDR5).",
   "skills": [
     {
       "id": "barrido",
@@ -504,6 +504,286 @@
       "icon": {
         "shape": "puddle",
         "color": "9a5ad0"
+      }
+    },
+    {
+      "id": "firewall_personal",
+      "name": "Firewall Personal",
+      "kind": "barrier",
+      "damage_type": "none",
+      "attribute": "str",
+      "tags": [
+        "spell",
+        "defense",
+        "buff",
+        "duration"
+      ],
+      "lol": "Shen W / Sett W",
+      "description": "Levantas un firewall a tu alrededor: una barrera que absorbe daño antes que tu vida. Crece con tu vida máxima.",
+      "spell": {
+        "base_damage": [
+          0,
+          0
+        ],
+        "damage_growth": 0.0,
+        "cast_time": 0.4,
+        "crit": 0.0
+      },
+      "barrier": 45,
+      "barrier_life": 0.2,
+      "duration": 6.0,
+      "mana_cost": 12,
+      "mana_per_level": 0.5,
+      "cooldown": 10.0,
+      "icon": {
+        "shape": "barrier",
+        "color": "7fb8e0"
+      }
+    },
+    {
+      "id": "modo_seguro",
+      "name": "Modo Seguro",
+      "kind": "buff",
+      "damage_type": "none",
+      "attribute": "str",
+      "tags": [
+        "spell",
+        "defense",
+        "buff",
+        "duration"
+      ],
+      "lol": "Braum E / Galio W",
+      "description": "Reinicias en modo seguro: mucha más armadura y resistencias durante unos segundos, a cambio de moverte más lento.",
+      "spell": {
+        "base_damage": [
+          0,
+          0
+        ],
+        "damage_growth": 0.0,
+        "cast_time": 0.4,
+        "crit": 0.0
+      },
+      "buff_mods": [
+        {
+          "stat": "armour",
+          "type": "more",
+          "value": 60
+        },
+        {
+          "stat": "fire_res",
+          "type": "flat",
+          "value": 20
+        },
+        {
+          "stat": "cold_res",
+          "type": "flat",
+          "value": 20
+        },
+        {
+          "stat": "lightning_res",
+          "type": "flat",
+          "value": 20
+        },
+        {
+          "stat": "movement_speed",
+          "type": "increased",
+          "value": -15
+        }
+      ],
+      "duration": 6.0,
+      "mana_cost": 10,
+      "mana_per_level": 0.4,
+      "cooldown": 12.0,
+      "icon": {
+        "shape": "safe_mode",
+        "color": "8ab0e0"
+      }
+    },
+    {
+      "id": "hiperthreading",
+      "name": "Hiperthreading",
+      "kind": "buff",
+      "damage_type": "none",
+      "attribute": "dex",
+      "tags": [
+        "spell",
+        "buff",
+        "duration"
+      ],
+      "lol": "Master Yi R / Jinx Q",
+      "description": "Dos hilos por núcleo: atacas y lanzas mucho más rápido durante unos segundos.",
+      "spell": {
+        "base_damage": [
+          0,
+          0
+        ],
+        "damage_growth": 0.0,
+        "cast_time": 0.3,
+        "crit": 0.0
+      },
+      "buff_mods": [
+        {
+          "stat": "attack_speed",
+          "type": "more",
+          "value": 25
+        },
+        {
+          "stat": "cast_speed",
+          "type": "more",
+          "value": 25
+        },
+        {
+          "stat": "movement_speed",
+          "type": "increased",
+          "value": 10
+        }
+      ],
+      "duration": 8.0,
+      "mana_cost": 10,
+      "mana_per_level": 0.4,
+      "cooldown": 14.0,
+      "icon": {
+        "shape": "threads",
+        "color": "e8d070"
+      }
+    },
+    {
+      "id": "ransomware",
+      "name": "Ransomware",
+      "kind": "curse_area",
+      "damage_type": "chaos",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "area",
+        "chaos",
+        "degen",
+        "duration"
+      ],
+      "lol": "Brand W / Malzahar E",
+      "description": "Cifras a todos los enemigos de una zona: sufren daño de caos por segundo hasta que paguen. No pagarán.",
+      "spell": {
+        "base_damage": [
+          14,
+          20
+        ],
+        "damage_growth": 0.16,
+        "cast_time": 0.65,
+        "crit": 0.0
+      },
+      "radius": 130,
+      "range": 450,
+      "duration": 5.0,
+      "mana_cost": 11,
+      "mana_per_level": 0.5,
+      "cooldown": 0,
+      "icon": {
+        "shape": "ransom",
+        "color": "b04ad9"
+      }
+    },
+    {
+      "id": "corrupcion_datos",
+      "name": "Corrupción de Datos",
+      "kind": "dot_projectile",
+      "damage_type": "chaos",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "projectile",
+        "chaos",
+        "degen",
+        "duration"
+      ],
+      "lol": "Twitch E / Teemo Q",
+      "description": "Un paquete corrupto que atraviesa enemigos y los deja pudriéndose: daño de caos por segundo.",
+      "spell": {
+        "base_damage": [
+          11,
+          17
+        ],
+        "damage_growth": 0.16,
+        "cast_time": 0.6,
+        "crit": 0.0
+      },
+      "projectiles": 1,
+      "projectile_speed": 720,
+      "range": 680,
+      "pierce": 3,
+      "duration": 4.0,
+      "mana_cost": 8,
+      "mana_per_level": 0.4,
+      "cooldown": 0,
+      "icon": {
+        "shape": "corrupt",
+        "color": "9a5ad0"
+      }
+    },
+    {
+      "id": "paquete_rastreador",
+      "name": "Paquete Rastreador",
+      "kind": "homing",
+      "damage_type": "physical",
+      "attribute": "dex",
+      "tags": [
+        "attack",
+        "projectile",
+        "physical"
+      ],
+      "lol": "Ezreal Q / Ashe W (teledirigido)",
+      "description": "Disparas paquetes con seguimiento que buscan al enemigo más cercano. Nadie escapa del tracking.",
+      "attack": {
+        "damage_effectiveness": 0.7
+      },
+      "projectiles": 3,
+      "spread_degrees": 40,
+      "projectile_speed": 560,
+      "range": 950,
+      "seek_range": 520,
+      "turn_rate": 7.0,
+      "mana_cost": 7,
+      "mana_per_level": 0.35,
+      "cooldown": 0,
+      "icon": {
+        "shape": "homing",
+        "color": "c8c8c8"
+      }
+    },
+    {
+      "id": "drones_vigilancia",
+      "name": "Drones de Vigilancia",
+      "kind": "drones",
+      "damage_type": "lightning",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "projectile",
+        "lightning",
+        "elemental",
+        "duration"
+      ],
+      "lol": "Heimerdinger Q / Zyra",
+      "description": "Tres drones orbitan a tu alrededor y disparan rayos teledirigidos al enemigo más cercano.",
+      "spell": {
+        "base_damage": [
+          6,
+          12
+        ],
+        "damage_growth": 0.16,
+        "cast_time": 0.7,
+        "crit": 5.0
+      },
+      "count": 3,
+      "duration": 10.0,
+      "tick": 1.0,
+      "seek_range": 480,
+      "projectile_speed": 620,
+      "mana_cost": 16,
+      "mana_per_level": 0.6,
+      "cooldown": 6.0,
+      "icon": {
+        "shape": "drones",
+        "color": "e8d070"
       }
     }
   ]

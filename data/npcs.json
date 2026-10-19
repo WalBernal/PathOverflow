@@ -36,11 +36,13 @@
       "name": "Rafa, el SysAdmin",
       "dialogue": "root",
       "appearance": {
-        "body": 2,
-        "hair": 0,
-        "skin_tone": "7c4a2d",
-        "hair_color": "0f0d0c",
-        "outfit_color": "1f1f2e"
+        "body": 1,
+        "hair": 5,
+        "skin_tone": "f1d2b6",
+        "hair_color": "17130f",
+        "hair_streaks": "b9b9b9",
+        "outfit_color": "1f1f2e",
+        "height": 0.86
       },
       "voice": {
         "pitch": 0.65,
@@ -112,11 +114,13 @@
       "dialogue": "rafa_terminal",
       "terminal": true,
       "appearance": {
-        "body": 2,
-        "hair": 0,
-        "skin_tone": "7c4a2d",
-        "hair_color": "0f0d0c",
-        "outfit_color": "1f1f2e"
+        "body": 1,
+        "hair": 5,
+        "skin_tone": "f1d2b6",
+        "hair_color": "17130f",
+        "hair_streaks": "b9b9b9",
+        "outfit_color": "1f1f2e",
+        "height": 0.86
       },
       "voice": {
         "pitch": 0.65,

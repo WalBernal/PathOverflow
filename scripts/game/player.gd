@@ -35,6 +35,16 @@ var invulnerable := false
 var action_lock := 0.0
 ## Durante las escenas: ni se mueve, ni lanza, ni bebe.
 var controls_locked := false
+## Barrera temporal (Firewall Personal): absorbe daño antes que el escudo y la vida.
+var barrier := 0.0
+var barrier_max := 0.0
+var barrier_time := 0.0
+
+
+func add_barrier(amount: float, seconds: float) -> void:
+	barrier = maxf(barrier, amount)
+	barrier_max = maxf(barrier, 1.0)
+	barrier_time = seconds
 
 var _move_held := false
 var _since_kill := 99.0
@@ -138,6 +148,7 @@ func use_flask(index: int) -> bool:
 				"flask": f.def["id"]})
 		_:
 			character.add_timed_effect("flask:" + String(f.def["id"]), f.timed_modifiers(), f.duration())
+	Sfx.play("flask")
 	flask_used.emit(index)
 	return true
 
@@ -202,6 +213,10 @@ func _physics_process(delta: float) -> void:
 	_update_conditions(delta)
 	_regenerate(delta)
 	character.tick_timed_effects(delta)
+	if barrier_time > 0.0:
+		barrier_time -= delta
+		if barrier_time <= 0.0:
+			barrier = 0.0
 	action_lock = maxf(0.0, action_lock - delta)
 
 	var dir := Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down")
@@ -271,6 +286,11 @@ func take_damage(amount: float) -> void:
 	amount *= 1.0 - minf(0.9, armour / (armour + 5.0 * amount))
 	_since_damage = 0.0
 	_hurt_time = 0.12
+	Sfx.play("player_hurt", -4.0)
+	if barrier > 0.0:
+		var blocked := minf(barrier, amount)
+		barrier -= blocked
+		amount -= blocked
 	var absorbed := minf(energy_shield, amount)
 	energy_shield -= absorbed
 	life -= amount - absorbed

@@ -40,6 +40,7 @@ var _traps: Array[Dictionary] = []        # trampas en el suelo (Bomba Lógica)
 var _devices: Array[Dictionary] = []
 var _minions: Array[Dictionary] = []      # esbirros (Proceso Hijo)
 var _clouds: Array[Dictionary] = []       # charcos de daño degenerativo (Fuga de Memoria)
+var _drones: Array[Dictionary] = []       # drones que orbitan y disparan (Drones de Vigilancia)
 
 const DEVICE_RULES := {
 	"trap": {"range": 450.0, "armed": 0.4, "life": 16.0, "trigger": 50.0, "max": 3},
@@ -98,6 +99,7 @@ func _physics_process(delta: float) -> void:
 	_update_devices(delta)
 	_update_minions(delta)
 	_update_clouds(delta)
+	_update_drones(delta)
 	_update_effects(delta)
 	queue_redraw()
 
@@ -117,6 +119,7 @@ func try_use(index: int) -> bool:
 	player.action_lock = minf(MAX_MOVE_LOCK, p["use_time"] * MOVE_LOCK_FRACTION)
 	var target := get_global_mouse_position()
 	player.face(target - player.global_position)
+	Sfx.play(Sfx.skill_sound("trap" if p["deploy"] != "" else String(p["kind"]), String(p["damage_type"])))
 	if p["deploy"] != "":
 		_deploy(p, target)
 		skill_used.emit(index)
@@ -143,6 +146,9 @@ func active_summaries() -> Array[Dictionary]:
 	for m in _minions:
 		var id: String = m["profile"]["id"]
 		add.call("minion:" + id, "Esbirros", skills_db.get(id, {}), m["life"], m["total"], "minion")
+	for d in _drones:
+		var id: String = d["profile"]["id"]
+		add.call("drones:" + id, "Drones", skills_db.get(id, {}), d["life"], d["total"], "drones")
 	var device_names := {"trap": "Trampas", "mine": "Minas", "totem": "Torreta"}
 	for d in _devices:
 		var id: String = d["profile"]["id"]
@@ -214,6 +220,41 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 			while _minions.size() > maxi(1, p["max_active"]) + int(p.get("count", 0)):
 				_minions.pop_front()
 			_effects.append({"type": "ring", "pos": origin, "radius": 50.0, "time": 0.0, "duration": 0.3, "color": color})
+		"barrier":
+			if not device:
+				player.add_barrier(p["barrier"], p["duration"])
+			_effects.append({"type": "ring", "pos": origin, "radius": 60.0, "time": 0.0, "duration": 0.5, "color": Color("cfe8ff")})
+		"buff":
+			if not device:
+				var mods: Array[Modifier] = []
+				for md in p["buff_mods"]:
+					mods.append(Modifier.from_dict(md, "skill:" + String(p["id"])))
+				character.add_timed_effect("skill:" + String(p["id"]), mods, p["duration"])
+			_effects.append({"type": "ring", "pos": origin, "radius": 45.0, "time": 0.0, "duration": 0.6, "color": Color("e8d070")})
+		"curse_area":
+			var offset := (target - origin).limit_length(p["range"])
+			var center := origin + offset
+			var dps: float = (p["min_damage"] + p["max_damage"]) / 2.0
+			enemies.dot_in_radius(center, p["radius"], dps, p["duration"])
+			_effects.append({"type": "curse", "pos": center, "radius": p["radius"], "time": 0.0, "duration": 0.8, "color": color})
+		"dot_projectile", "homing":
+			var count: int = maxi(1, p["projectiles"])
+			var spread := deg_to_rad(p["spread_degrees"])
+			for k in count:
+				var angle := 0.0 if count == 1 else lerpf(-spread / 2.0, spread / 2.0, float(k) / (count - 1))
+				_projectiles.append({
+					"pos": origin, "vel": dir.rotated(angle) * float(p["projectile_speed"]),
+					"distance_left": float(p["range"]), "pierce_left": int(p["pierce"]),
+					"hit_ids": {}, "profile": p, "color": color, "chains_left": int(p["projectile_chains"]),
+					"dot": p["kind"] == "dot_projectile", "homing": p["kind"] == "homing",
+				})
+		"drones":
+			var n: int = maxi(1, p["drone_count"])
+			for k in n:
+				_drones.append({"angle": TAU * k / n, "life": p["duration"], "total": p["duration"],
+					"next": 0.3 + 0.25 * k, "profile": p, "color": color})
+			while _drones.size() > n * 2:
+				_drones.pop_front()
 		"degen_area":
 			var offset := (target - origin).limit_length(p["range"])
 			_clouds.append({"pos": origin + offset, "life": p["duration"], "next": 0.0, "profile": p, "color": color, "seed": randi()})
@@ -367,6 +408,35 @@ func _update_minions(delta: float) -> void:
 	_minions = still
 
 
+# --- Drones ---
+
+func _update_drones(delta: float) -> void:
+	var still: Array[Dictionary] = []
+	for d in _drones:
+		d["life"] -= delta
+		d["next"] -= delta
+		d["angle"] += delta * 1.6
+		if d["life"] <= 0.0 or not player.is_alive():
+			continue
+		var p: Dictionary = d["profile"]
+		var pos := _drone_pos(d)
+		if d["next"] <= 0.0:
+			var t := enemies.nearest_index(pos, p["seek_range"])
+			if t != -1:
+				d["next"] = p["tick"]
+				var dir: Vector2 = (enemies.positions[t] - pos).normalized()
+				_projectiles.append({"pos": pos, "vel": dir * float(p["projectile_speed"]), "distance_left": p["seek_range"] * 1.5,
+					"pierce_left": 0, "hit_ids": {}, "profile": p, "color": d["color"], "chains_left": 0, "homing": true})
+			else:
+				d["next"] = 0.2
+		still.append(d)
+	_drones = still
+
+
+func _drone_pos(d: Dictionary) -> Vector2:
+	return player.global_position + Vector2.from_angle(d["angle"]) * Vector2(55, 34) + Vector2(0, -28)
+
+
 # --- Charcos degenerativos ---
 
 func _update_clouds(delta: float) -> void:
@@ -447,11 +517,23 @@ func _update_projectiles(delta: float) -> void:
 					continue   # de vuelta en la mano
 				pr["vel"] = back.normalized() * float(p["projectile_speed"]) * 1.15
 				pr["distance_left"] = 1.0
+		if pr.get("homing", false):
+			# Teledirigido: gira hacia el enemigo más cercano que no haya tocado.
+			var t := enemies.nearest_index(pr["pos"], p["seek_range"], pr["hit_ids"])
+			if t != -1:
+				var want: Vector2 = (enemies.positions[t] - pr["pos"]).normalized()
+				var cur: Vector2 = pr["vel"].normalized()
+				var turned := cur.slerp(want, clampf(p["turn_rate"] * delta, 0.0, 1.0))
+				pr["vel"] = turned * pr["vel"].length()
 		var step: Vector2 = pr["vel"] * delta
 		pr["pos"] += step
 		if not pr.get("returning", false):
 			pr["distance_left"] -= step.length()
-		var hit := enemies.hit_one(pr["pos"], PROJECTILE_RADIUS, pr["hit_ids"], p["min_damage"], p["max_damage"], p["crit_chance"], p["crit_multiplier"])
+		var hit := -1
+		if pr.get("dot", false):
+			hit = enemies.dot_one(pr["pos"], PROJECTILE_RADIUS, pr["hit_ids"], (p["min_damage"] + p["max_damage"]) / 2.0, p["duration"])
+		else:
+			hit = enemies.hit_one(pr["pos"], PROJECTILE_RADIUS, pr["hit_ids"], p["min_damage"], p["max_damage"], p["crit_chance"], p["crit_multiplier"])
 		if hit != -1:
 			_leech(p)
 			pr["hit_ids"][hit] = true
@@ -488,6 +570,14 @@ func _draw() -> void:
 	_draw_clouds()
 	_draw_devices()
 	_draw_minions()
+	for d in _drones:
+		var dp := _drone_pos(d)
+		draw_circle(dp + Vector2(0, 30), 5.0, Color(0, 0, 0, 0.25))
+		draw_rect(Rect2(dp - Vector2(7, 3), Vector2(14, 6)), Color("3a3f4a"))
+		for s in [-1.0, 1.0]:
+			draw_line(dp + Vector2(s * 7, -1), dp + Vector2(s * 13, -4), Color("8a8a96"), 1.5)
+			draw_circle(dp + Vector2(s * 13, -4), 3.5 + sin(Time.get_ticks_msec() / 30.0) * 0.5, Color(0.8, 0.8, 0.9, 0.35))
+		draw_circle(dp, 2.0, d["color"])
 	for spin in _spins:
 		var p: Dictionary = spin["profile"]
 		var c: Color = spin["color"]
@@ -532,6 +622,14 @@ func _draw() -> void:
 				pts.append(b)
 				draw_polyline(pts, Color(c, 1.0 - t), 3.0, true)
 				draw_circle(b, 8.0 * (1.0 - t), Color(c, 0.6 * (1.0 - t)))
+			"curse":
+				# Ransomware: candado violeta que se cierra sobre la zona.
+				var r: float = e["radius"]
+				draw_circle(e["pos"], r, Color(c, 0.15 * (1.0 - t)))
+				draw_arc(e["pos"], r * (1.2 - 0.2 * t), 0.0, TAU, 48, Color(c, 0.8 * (1.0 - t)), 3.0, true)
+				draw_rect(Rect2(e["pos"] + Vector2(-14, -6), Vector2(28, 22)), Color(c, 0.8 * (1.0 - t)))
+				draw_arc(e["pos"] + Vector2(0, -6), 10.0, PI, TAU, 12, Color(c, 0.8 * (1.0 - t)), 4.0)
+				draw_string(ThemeDB.fallback_font, e["pos"] + Vector2(-40, 34), "PAGA 0.5 BTC", HORIZONTAL_ALIGNMENT_CENTER, 80, 11, Color(c.lightened(0.4), 1.0 - t))
 			"lock":
 				var r: float = e["radius"]
 				for k in 6:
@@ -556,7 +654,12 @@ func _draw() -> void:
 				draw_line(pr["pos"] - d * 12.0, pr["pos"] + d * 12.0, pr["color"], 4.0, true)
 			continue
 		var dir: Vector2 = pr["vel"].normalized()
-		draw_line(pr["pos"] - dir * 18.0, pr["pos"], Color(pr["color"], 0.5), 4.0, true)
+		if pr.get("dot", false):
+			# Paquete corrupto: borroso y con glitch.
+			draw_circle(pr["pos"], 7.0, Color(pr["color"], 0.6))
+			draw_rect(Rect2(pr["pos"] - Vector2(5, 2) + dir.orthogonal() * randf_range(-3, 3), Vector2(10, 4)), Color(0.3, 1.0, 0.6, 0.7))
+			continue
+		draw_line(pr["pos"] - dir * (26.0 if pr.get("homing", false) else 18.0), pr["pos"], Color(pr["color"], 0.5), 4.0, true)
 		draw_circle(pr["pos"], 5.0, pr["color"])
 
 

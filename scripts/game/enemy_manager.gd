@@ -88,6 +88,8 @@ var attack_dirs := PackedVector2Array()
 var dashes := PackedFloat32Array()    # > 0: embistiendo
 var dash_hit := PackedByteArray()     # 1 si la embestida ya golpeó al jugador
 var immune := PackedByteArray()       # 1 = no recibe daño (gemelos de la Carrera Crítica)
+var dot_dps := PackedFloat32Array()   # daño degenerativo por segundo
+var dot_time := PackedFloat32Array()  # segundos que le quedan
 
 ## Proyectiles enemigos: {pos, vel, damage, radius, life, color}
 var projectiles: Array[Dictionary] = []
@@ -170,6 +172,8 @@ func spawn(pos: Vector2, rarity: Rarity.Enemy, type_index := -1, custom_name := 
 	dashes.append(0.0)
 	dash_hit.append(0)
 	immune.append(0)
+	dot_dps.append(0.0)
+	dot_time.append(0.0)
 	if not special_abilities.is_empty():
 		var list: Array = []
 		for a in special_abilities:
@@ -312,6 +316,46 @@ func hit_in_segment(a: Vector2, b: Vector2, half_width: float, min_damage: float
 		min_damage, max_damage, crit_chance, crit_multiplier, ignore_ids)
 
 
+## Daño degenerativo: el más fuerte manda y renueva la duración (no se apilan).
+func apply_dot(i: int, dps: float, duration: float) -> void:
+	if immune[i] == 1:
+		immune_hit.emit(positions[i])
+		return
+	if dps >= dot_dps[i] or dot_time[i] <= 0.0:
+		dot_dps[i] = dps
+	dot_time[i] = maxf(dot_time[i], duration)
+
+
+func dot_in_radius(center: Vector2, radius: float, dps: float, duration: float) -> int:
+	var n := 0
+	for i in positions.size():
+		if positions[i].distance_to(center) <= radius + radii[i]:
+			apply_dot(i, dps, duration)
+			n += 1
+	return n
+
+
+## Aplica el degenerativo al primer enemigo tocado (proyectiles). Devuelve su id o -1.
+func dot_one(center: Vector2, radius: float, ignore_ids: Dictionary, dps: float, duration: float) -> int:
+	for i in positions.size():
+		if not ignore_ids.has(ids[i]) and positions[i].distance_to(center) <= radius + radii[i]:
+			apply_dot(i, dps, duration)
+			return ids[i]
+	return -1
+
+
+func _update_dots(delta: float) -> void:
+	for i in range(positions.size() - 1, -1, -1):
+		if dot_time[i] <= 0.0:
+			continue
+		dot_time[i] -= delta
+		var dmg := dot_dps[i] * delta
+		last_damage_dealt += minf(dmg, lives[i])
+		lives[i] -= dmg
+		if lives[i] <= 0.0:
+			_kill(i)
+
+
 func stun_in_radius(center: Vector2, radius: float, time: float) -> void:
 	for i in positions.size():
 		if positions[i].distance_to(center) <= radius + radii[i]:
@@ -381,6 +425,8 @@ func _physics_process(delta: float) -> void:
 	var n := positions.size()
 	_update_projectiles(delta)
 	_update_hazards(delta)
+	_update_dots(delta)
+	n = positions.size()
 	if n == 0 or player == null:
 		last_simulation_ms = 0.0
 		return
@@ -718,6 +764,12 @@ func _draw() -> void:
 	for i in positions.size():
 		if stuns[i] > 0.0:
 			_draw_stun(positions[i] + Vector2(0, -radii[i] * SPRITE_SCALE * 1.1 - 18.0))
+		if dot_time[i] > 0.0:
+			# Burbujas de corrupción sobre el enemigo.
+			var tt := Time.get_ticks_msec() / 1000.0
+			for k in 3:
+				var ph := fmod(tt * 1.2 + k / 3.0 + ids[i] * 0.13, 1.0)
+				draw_circle(positions[i] + Vector2((k - 1) * radii[i] * 0.5, -radii[i] - ph * 16.0), 2.5, Color(0.7, 0.3, 0.9, 0.8 * (1.0 - ph)))
 		if immune[i] == 1:
 			var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 120.0)
 			draw_arc(positions[i], radii[i] * 1.7, 0.0, TAU, 32, Color(0.6, 0.8, 1.0, 0.4 + 0.4 * pulse), 3.0, true)
@@ -867,6 +919,8 @@ func _remove(i: int) -> void:
 		dashes[i] = dashes[last]
 		dash_hit[i] = dash_hit[last]
 		immune[i] = immune[last]
+		dot_dps[i] = dot_dps[last]
+		dot_time[i] = dot_time[last]
 	_resize_all(last)
 
 
@@ -891,6 +945,8 @@ func _resize_all(n: int) -> void:
 	dashes.resize(n)
 	dash_hit.resize(n)
 	immune.resize(n)
+	dot_dps.resize(n)
+	dot_time.resize(n)
 
 
 func _rebuild_grid() -> void:
