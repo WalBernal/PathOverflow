@@ -9,7 +9,8 @@ extends Control
 ##   Clímax: la carpeta lila, la descarga, la consola roja y la caída a producción.
 ## Al terminar se crea el personaje (nombre y apariencia del creador + la clase
 ## elegida) y se entra al Sandbox. Esc: saltar a la elección de puesto.
-## Se mueve con A/D, flechas o manteniendo el click; E, Espacio o click para interactuar.
+## Se mueve con A/D o flechas (en el pasillo, también W/S) o con click (destino
+## fijo en el mundo); E, Espacio o click para interactuar.
 
 const STAGE_SIZE := Vector2i(400, 225)
 const WALK_SPEED := 56.0
@@ -36,8 +37,9 @@ const CONSOLE_LINES := [
 ## Puntos de interés por sitio: x en el mundo, texto del aviso y acción.
 const HOTSPOTS := {
 	"calle": [{"x": 300.0, "text": "E · Cruzar la avenida y entrar a la UAdeO", "action": "to_hallway"}],
-	"pasillo": [{"x": 635.0, "text": "E · Ventanilla de cobro", "action": "window"},
-		{"x": 752.0, "text": "E · Departamento de Informática", "action": "to_office"}],
+	"pasillo": [{"lat": -0.72, "depth": 0.86, "text": "E · Departamento de Informática", "action": "to_office"},
+		{"lat": -0.12, "depth": 0.96, "text": "E · Caja de trámites", "action": "window"},
+		{"lat": 0.5, "depth": 0.96, "text": "E · Ver la TV", "action": "tv"}],
 	"oficina": [{"x": 170.0, "text": "E · Hablar con el encargado", "action": "talk_rafa"}],
 }
 
@@ -69,6 +71,8 @@ var _title_time := 0.0
 var _skip_hint := 0.0
 var _glitch := 0.0
 var _flash := 0.0
+## Destino del click en coordenadas del escenario (INF = ninguno).
+var _target := Vector2.INF
 
 
 func _ready() -> void:
@@ -191,29 +195,81 @@ func _update_walk(delta: float) -> void:
 		_stage.prompt = {}
 		_stage.walk_phase = -1.0
 		return
+	if _stage.room == "pasillo":
+		_walk_hallway(delta)
+	else:
+		_walk_side(delta)
+	var spot := _nearest_hotspot()
+	if spot.is_empty():
+		_stage.prompt = {}
+	else:
+		var lift := 46.0 if _stage.room != "pasillo" else 44.0 * PrologueStage.hall_scale(float(spot["depth"]))
+		_stage.prompt = {"pos": _hotspot_pos(spot) - Vector2(0, lift), "text": spot["text"]}
+
+
+## Vista lateral: A/D o flechas; el click fija un destino en el mundo (no en la
+## pantalla), así la cámara no lo arrastra y el personaje no se pasa de largo.
+func _walk_side(delta: float) -> void:
 	var dir := Input.get_axis(&"move_left", &"move_right")
-	if dir == 0.0 and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and not _cutscene.is_playing():
-		var target := _mouse_world_x()
-		if absf(target - _stage.player_x) > 4.0:
-			dir = signf(target - _stage.player_x)
+	if dir != 0.0:
+		_target = Vector2.INF
+	elif _target != Vector2.INF:
+		if absf(_target.x - _stage.player_x) > 2.0:
+			dir = signf(_target.x - _stage.player_x)
+		else:
+			_target = Vector2.INF
 	if dir != 0.0:
 		_stage.player_x = clampf(_stage.player_x + dir * WALK_SPEED * delta, 12.0, _stage.width() - 12.0)
+		if _target != Vector2.INF and signf(_target.x - _stage.player_x) != dir:
+			_stage.player_x = _target.x   # llegó: no se pasa del punto
+			_target = Vector2.INF
 		_stage.player_facing = Vector2(dir, 0.0)
 		_stage.walk_phase = fmod(maxf(_stage.walk_phase, 0.0) + WALK_SPEED * delta / 14.0 * PI, TAU)
 	else:
 		_stage.walk_phase = -1.0
-	# Cámara que sigue con suavidad (sin tirones al caminar).
+	# Cámara que sigue con suavidad.
 	var cam_target := clampf(_stage.player_x - STAGE_SIZE.x / 2.0, 0.0, _stage.width() - STAGE_SIZE.x)
 	_stage.cam_x = lerpf(_stage.cam_x, cam_target, 1.0 - exp(-5.0 * delta))
-	var spot := _nearest_hotspot()
-	_stage.prompt = {} if spot.is_empty() else {"pos": Vector2(spot["x"], PrologueStage.FLOOR_Y - 46.0), "text": spot["text"]}
+
+
+## Pasillo de frente: W/S (o arriba/abajo) avanzan y retroceden; A/D, de lado.
+func _walk_hallway(delta: float) -> void:
+	var move := Vector2(Input.get_axis(&"move_left", &"move_right"), Input.get_axis(&"move_down", &"move_up"))
+	if move != Vector2.ZERO:
+		_target = Vector2.INF
+	elif _target != Vector2.INF:
+		var goal := PrologueStage.hall_from_screen(_target)
+		var diff := Vector2(goal.x - _stage.player_lat, goal.y - _stage.player_depth)
+		if diff.length() > 0.015:
+			move = diff.normalized()
+		else:
+			_target = Vector2.INF
+	if move != Vector2.ZERO:
+		var step := move.normalized() * delta
+		_stage.player_lat = clampf(_stage.player_lat + step.x * 0.9, -0.85, 0.85)
+		_stage.player_depth = clampf(_stage.player_depth + step.y * 0.34, 0.0, 1.0)
+		_stage.player_facing = Vector2(move.x, -move.y).normalized()
+		_stage.walk_phase = fmod(maxf(_stage.walk_phase, 0.0) + delta * 2.6 * PI, TAU)
+	else:
+		_stage.walk_phase = -1.0
+	_stage.cam_x = 0.0
 
 
 func _nearest_hotspot() -> Dictionary:
 	for h in _hotspots():
-		if absf(float(h["x"]) - _stage.player_x) <= INTERACT_RANGE:
+		if _stage.room == "pasillo":
+			if absf(float(h["depth"]) - _stage.player_depth) <= 0.09 and absf(float(h["lat"]) - _stage.player_lat) <= 0.28:
+				return h
+		elif absf(float(h["x"]) - _stage.player_x) <= INTERACT_RANGE:
 			return h
 	return {}
+
+
+## Dónde está un punto de interés en el escenario.
+func _hotspot_pos(h: Dictionary) -> Vector2:
+	if _stage.room == "pasillo":
+		return PrologueStage.hall_to_screen(float(h["lat"]), float(h["depth"]))
+	return Vector2(float(h["x"]), PrologueStage.FLOOR_Y)
 
 
 func _hotspots() -> Array:
@@ -225,9 +281,11 @@ func _hotspots() -> Array:
 	return list
 
 
-func _mouse_world_x() -> float:
+## El ratón en coordenadas del escenario (con la cámara).
+func _mouse_stage() -> Vector2:
 	var rect := _screen_rect()
-	return (get_local_mouse_position().x - rect.position.x) / rect.size.x * STAGE_SIZE.x + _stage.cam_x
+	var local := (get_local_mouse_position() - rect.position) / rect.size * Vector2(STAGE_SIZE)
+	return local + Vector2(_stage.cam_x, 0.0)
 
 
 ## Dónde queda el escenario en la pantalla (escalado con su proporción).
@@ -250,6 +308,10 @@ func _input(event: InputEvent) -> void:
 				_skip_hint = 2.5
 		get_viewport().set_input_as_handled()
 		return
+	# Arrastrar con el botón pulsado mueve el destino (sigue al ratón).
+	if event is InputEventMouseMotion and _phase == "walk" and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		_target = _mouse_stage()
+		return
 	var pressed := (key and key.pressed and not key.echo and key.keycode in [KEY_E, KEY_SPACE, KEY_ENTER, KEY_KP_ENTER]) \
 		or (mb and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT)
 	if not pressed:
@@ -262,9 +324,12 @@ func _input(event: InputEvent) -> void:
 				_phase = "walk"
 		"walk":
 			var spot := _nearest_hotspot()
-			if not spot.is_empty() and (key != null or absf(_mouse_world_x() - float(spot["x"])) < 30.0):
+			if not spot.is_empty() and (key != null or _mouse_stage().distance_to(_hotspot_pos(spot)) < 40.0):
+				_target = Vector2.INF
 				_interact(String(spot["action"]))
 				get_viewport().set_input_as_handled()
+			elif mb != null:
+				_target = _mouse_stage()
 
 
 # --- Acciones ---
@@ -277,6 +342,8 @@ func _interact(action: String) -> void:
 				Sfx.ambient("pasillo"))
 		"window":
 			_play("prologo_ventanilla", Callable())
+		"tv":
+			_play("prologo_tv", Callable())
 		"to_office":
 			_transition(func() -> void:
 				_go_room("oficina", 26.0)
@@ -297,7 +364,10 @@ func _interact(action: String) -> void:
 func _go_room(room: String, x: float) -> void:
 	_stage.room = room
 	_stage.player_x = x
-	_stage.player_facing = Vector2.RIGHT
+	_stage.player_depth = 0.0
+	_stage.player_lat = 0.0
+	_stage.player_facing = Vector2.UP if room == "pasillo" else Vector2.RIGHT
+	_target = Vector2.INF
 	_stage.cam_x = clampf(x - STAGE_SIZE.x / 2.0, 0.0, _stage.width() - STAGE_SIZE.x)
 	if _phase != "intro":
 		_phase = "walk"
@@ -438,7 +508,7 @@ func _draw_overlay() -> void:
 		"title":
 			_draw_title(view)
 	if _phase == "walk" and not _cutscene.is_playing():
-		var hint := "A / D o mantén el click: caminar   ·   E / click: interactuar   ·   Esc: saltar prólogo"
+		var hint := ("WASD o click: caminar" if _stage.room == "pasillo" else "A / D o click: caminar") + "   ·   E / click: interactuar   ·   Esc: saltar prólogo"
 		_overlay.draw_string(font, Vector2(0, view.y - 14), hint, HORIZONTAL_ALIGNMENT_CENTER, view.x, 13, Color(1, 1, 1, 0.45))
 		var place: String = String({"calle": "Av. del Mar, frente al malecón · Mazatlán · 13:47 · 38 °C", "pasillo": "UAdeO · Pasillo del Departamento de Informática",
 			"oficina": "Departamento de Informática"}.get(_stage.room, ""))

@@ -505,6 +505,19 @@
         }
       ]
     },
+    "prologo_tv": {
+      "steps": [
+        {
+          "name": "",
+          "style": "system",
+          "text": "La TV del pasillo repite en bucle: «Ingeniería de Software: ¡inscríbete!» y «Hackatón LinceCode 2026». En letras chiquitas: «Premio: experiencia comprobable»."
+        },
+        {
+          "speaker": "player",
+          "text": "Experiencia comprobable... Si la hubiera tenido, no estaría aquí."
+        }
+      ]
+    },
     "prologo_ventanilla": {
       "steps": [
         {

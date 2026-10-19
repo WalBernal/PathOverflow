@@ -3,20 +3,48 @@ extends Node2D
 ## Escenario del prólogo, dibujado en pequeño (400×225) y escalado sin
 ## suavizado: pixel art de verdad. Tres sitios en vista lateral:
 ##   calle    — el malecón de Mazatlán al mediodía, camino a la UAdeO.
-##   pasillo  — el pasillo largo hasta el Departamento de Informática.
+##   pasillo  — vista de sur a norte (en perspectiva): se camina de frente hacia la
+##              caja de trámites; la puerta de Informática, a la izquierda.
 ##   oficina  — el departamento destrozado, con Rafa atrincherado.
 ## `dissolve` (0..1) convierte la oficina en el mundo digital (papeles en logs,
 ## cables en enredaderas de cobre).
 
 const VIEW := Vector2(400, 225)
 const FLOOR_Y := 198.0
-const ROOM_WIDTH := {"calle": 700.0, "pasillo": 820.0, "oficina": 400.0}
+const ROOM_WIDTH := {"calle": 700.0, "pasillo": 400.0, "oficina": 400.0}
+## Pasillo en perspectiva: profundidad 0 (cerca) .. 1 (al fondo) y lateral -1..1.
+const HALL_NEAR_Y := 214.0
+const HALL_FAR_Y := 150.0
+const HALL_BACK_LEFT := 110.0
+const HALL_BACK_RIGHT := 290.0
+## Logo del Hackatón LinceCode en pixel art (M = guinda, G = dorado).
+const LYNX := [
+	"......M...........",
+	".....MM...M.......",
+	"....MGM..MM.......",
+	"....MGMMMMM.......",
+	"...MMGMMMMMM......",
+	"...MMMMMMGGMM.....",
+	"..MMMMMMMMMMMM....",
+	"..MMGGGGMMMMMMMMM.",
+	".MMGMMMMGMMMMMMMMM",
+	".MMGMMMMMGMMMMM...",
+	"MMMGMMGMMMGMMMM...",
+	"MMGMMGMMMMMGMM....",
+	"MGMMGMMMMMMMGM....",
+	"GMMGMMMMMMMMMG....",
+	"MMGMMMMMMMMMMMG...",
+	"MGMMMMMMMMMMMMMG..",
+]
 const SHIRT := "e9e5d8"
 const PORTFOLIO := Color("3d6fb0")
 
 var room := "calle"
 var cam_x := 0.0
 var player_x := 40.0
+## Solo en el pasillo: profundidad (0..1) y desplazamiento lateral (-1..1).
+var player_depth := 0.0
+var player_lat := 0.0
 var player_facing := Vector2.RIGHT
 var walk_phase := -1.0
 var player_look: Dictionary = CharacterAppearance.default()
@@ -42,6 +70,20 @@ func _ready() -> void:
 	for k in 12:
 		_papers.append({"x": rng.randf_range(20, 380), "y": rng.randf_range(150, 205), "r": rng.randf_range(-0.6, 0.6),
 			"speed": rng.randf_range(0.5, 1.5), "phase": rng.randf() * TAU})
+
+
+## Pasillo: de (lateral, profundidad) a un punto del escenario, y al revés.
+static func hall_to_screen(lat: float, depth: float) -> Vector2:
+	return Vector2(200.0 + lat * lerpf(185.0, 88.0, depth), lerpf(HALL_NEAR_Y, HALL_FAR_Y, depth))
+
+
+static func hall_from_screen(p: Vector2) -> Vector2:
+	var depth := clampf((HALL_NEAR_Y - p.y) / (HALL_NEAR_Y - HALL_FAR_Y), 0.0, 1.0)
+	return Vector2(clampf((p.x - 200.0) / lerpf(185.0, 88.0, depth), -0.85, 0.85), depth)
+
+
+static func hall_scale(depth: float) -> float:
+	return lerpf(1.3, 0.62, depth)
 
 
 func width() -> float:
@@ -90,17 +132,23 @@ func _draw_player() -> void:
 	look["outfit_color"] = Color(SHIRT).lerp(digital, outfit_shift).to_html(false)
 	look["accessory"] = look.get("accessory", 0) if look.get("accessory", 0) in [1, 2] else 0   # sin gorra en la entrevista
 	var feet := Vector2(player_x, FLOOR_Y + (6.0 if kneeling else 0.0))
+	var sc := 1.0
+	if room == "pasillo":
+		feet = hall_to_screen(player_lat, player_depth)
+		sc = hall_scale(player_depth)
 	if kneeling:
 		look["height"] = 0.72
-	CharacterAppearance.draw(self, feet, 1.0, look, player_facing, Color(0, 0, 0, 0), walk_phase)
+	CharacterAppearance.draw(self, feet, sc, look, player_facing, Color(0, 0, 0, 0), walk_phase)
 	if outfit_shift < 0.5:
-		# Marcas de sudor y el portafolio de plástico bajo el brazo.
+		# Marcas de sudor y el portafolio de plástico bajo el brazo (de espaldas no se ven).
 		var hs := float(look.get("height", 1.0))
 		var side := 1.0 if player_facing.x >= 0.0 else -1.0
-		for s in [-1.0, 1.0]:
-			draw_circle(feet + Vector2(s * 5.5, -20.5 * hs), 1.6, Color(0.55, 0.52, 0.42, 0.55))
-		draw_rect(Rect2(feet + Vector2(side * 6.0 - 3.0, -21.0 * hs), Vector2(6, 9)), PORTFOLIO)
-		draw_rect(Rect2(feet + Vector2(side * 6.0 - 3.0, -21.0 * hs), Vector2(6, 9)), PORTFOLIO.darkened(0.4), false, 1.0)
+		if player_facing.y > -0.5:
+			for s in [-1.0, 1.0]:
+				draw_circle(feet + Vector2(s * 5.5, -20.5 * hs) * sc, 1.6 * sc, Color(0.55, 0.52, 0.42, 0.55))
+		var folder := Rect2(feet + Vector2(side * 6.0 - 3.0, -21.0 * hs) * sc, Vector2(6, 9) * sc)
+		draw_rect(folder, PORTFOLIO)
+		draw_rect(folder, PORTFOLIO.darkened(0.4), false, 1.0)
 	if outfit_shift > 0.0 and outfit_shift < 1.0:
 		# La ropa se descompone en binario.
 		for k in 6:
@@ -214,51 +262,112 @@ func _draw_palm(base: Vector2) -> void:
 # --- Pasillo ---
 
 func _draw_hallway() -> void:
-	var w := width()
-	draw_rect(Rect2(0, 0, w, FLOOR_Y), Color("d8cfb8"))
-	draw_rect(Rect2(0, 0, w, 18), Color("bfb59c"))
-	draw_rect(Rect2(0, FLOOR_Y - 34, w, 34), Color("9a8e74"))   # zócalo
-	for k in int(w / 20.0) + 1:
-		draw_rect(Rect2(k * 20.0, FLOOR_Y, 20, 30), Color("b8b0a0") if k % 2 == 0 else Color("a8a090"))
-	# Lámparas.
-	for k in int(w / 90.0) + 1:
-		var x := 40.0 + k * 90.0
-		draw_rect(Rect2(x, 18, 36, 4), Color("f4f0dc") if flicker <= 0.0 or k % 2 == 0 else Color("807a6a"))
-	# Puertas de salones.
-	for x in [90.0, 250.0, 410.0]:
-		draw_rect(Rect2(x, 108, 36, 90), Color("7a6a54"))
-		draw_rect(Rect2(x + 6, 116, 24, 22), Color("aac0c8"))
-		draw_circle(Vector2(x + 30, 156), 1.5, Color("d9c070"))
-	# Tablero de avisos.
-	draw_rect(Rect2(140, 70, 80, 50), Color("8a6a4a"))
-	draw_rect(Rect2(144, 74, 72, 42), Color("c8a878"))
-	var flyers := ["SE BUSCA PRACTICANTE", "Req: 5 años exp.", "Titulación: trámite", "TORNEO DE FUT 7"]
-	for k in flyers.size():
-		draw_rect(Rect2(147 + (k % 2) * 36, 77 + (k / 2) * 20, 32, 17), Color("f4f0e0"))
-		draw_string(_font, Vector2(148 + (k % 2) * 36, 86 + (k / 2) * 20), flyers[k], HORIZONTAL_ALIGNMENT_LEFT, 30, 4, Color("3a3a3a"))
-	# Ventiladores industriales forzados al límite.
-	for x in [320.0, 560.0]:
-		var c := Vector2(x, 60)
-		draw_circle(c, 14, Color("8a8a8a"))
-		for k in 3:
-			var a := time * 30.0 + TAU * k / 3.0
-			draw_line(c, c + Vector2.from_angle(a) * 12.0, Color("5a5a5a"), 3.0)
-		draw_circle(c, 3, Color("3a3a3a"))
-	# Ventanilla de cobro.
-	draw_rect(Rect2(600, 92, 70, 70), Color("8a7a5a"))
-	draw_rect(Rect2(608, 104, 54, 34), Color("5a5a5a"))
+	# Vista de sur a norte: se camina de frente hacia el fondo del pasillo.
+	var back := Rect2(HALL_BACK_LEFT, 40, HALL_BACK_RIGHT - HALL_BACK_LEFT, HALL_FAR_Y - 40)
+	# Techo, paredes y suelo.
+	draw_colored_polygon(PackedVector2Array([Vector2(0, 0), Vector2(400, 0), Vector2(back.end.x, 40), Vector2(back.position.x, 40)]), Color("bdb39a"))
+	draw_colored_polygon(PackedVector2Array([Vector2(0, 0), Vector2(back.position.x, 40), Vector2(back.position.x, HALL_FAR_Y), Vector2(-10, 225), Vector2(-10, 0)]), Color("cfc6ae"))
+	draw_colored_polygon(PackedVector2Array([Vector2(400, 0), Vector2(back.end.x, 40), Vector2(back.end.x, HALL_FAR_Y), Vector2(410, 225), Vector2(410, 0)]), Color("c3baa1"))
+	draw_rect(back, Color("dad2bb"))
+	draw_colored_polygon(PackedVector2Array([Vector2(back.position.x, HALL_FAR_Y), Vector2(back.end.x, HALL_FAR_Y), Vector2(410, 225), Vector2(-10, 225)]), Color("b4ac9c"))
+	# Baldosas en perspectiva: líneas hacia el punto de fuga y filas cada vez más juntas.
+	var vp := Vector2(200, 93.75)
+	for k in range(-6, 7):
+		var bottom := Vector2(200 + k * 34.0, 225)
+		var t := (HALL_FAR_Y - vp.y) / (bottom.y - vp.y)
+		draw_line(vp.lerp(bottom, t), bottom, Color("a39b8a"), 1.0)
+	for i in range(1, 9):
+		var y := HALL_FAR_Y + 75.0 * pow(i / 8.0, 1.6)
+		var edge := 120.0 * (y - HALL_FAR_Y) / 75.0   # el suelo se ensancha hacia abajo
+		draw_line(Vector2(HALL_BACK_LEFT - edge, y), Vector2(HALL_BACK_RIGHT + edge, y), Color("a39b8a"), 1.0)
+	# Zócalo oscuro a lo largo de las paredes.
+	draw_colored_polygon(PackedVector2Array([Vector2(back.position.x, HALL_FAR_Y - 7), Vector2(back.position.x, HALL_FAR_Y), Vector2(-10, 225), Vector2(-10, 212)]), Color("968b70"))
+	draw_colored_polygon(PackedVector2Array([Vector2(back.end.x, HALL_FAR_Y - 7), Vector2(back.end.x, HALL_FAR_Y), Vector2(410, 225), Vector2(410, 212)]), Color("8e8368"))
+	draw_rect(Rect2(back.position.x, HALL_FAR_Y - 7, back.size.x, 7), Color("9e9378"))
+	# Lámparas del techo, más pequeñas cuanto más lejos.
+	for k in 4:
+		var d := k / 4.0
+		var y := lerpf(6.0, 36.0, d)
+		var half := lerpf(30.0, 14.0, d)
+		var on := flicker <= 0.0 or k % 2 == 0
+		draw_rect(Rect2(200 - half, y, half * 2.0, lerpf(4.0, 2.0, d)), Color("f4f0dc") if on else Color("807a6a"))
+	# Pared derecha: un ventilador industrial al límite y carteles.
+	var fan := Vector2(352, 70)
+	draw_set_transform(fan, 0.0, Vector2(0.55, 1.0))
+	draw_circle(Vector2.ZERO, 16, Color("8a8a8a"))
+	for k in 3:
+		draw_line(Vector2.ZERO, Vector2.from_angle(time * 30.0 + TAU * k / 3.0) * 14.0, Color("5a5a5a"), 4.0)
+	draw_circle(Vector2.ZERO, 3, Color("3a3a3a"))
+	draw_set_transform(Vector2.ZERO)
+	draw_colored_polygon(PackedVector2Array([Vector2(322, 110), Vector2(372, 104), Vector2(372, 150), Vector2(322, 148)]), Color("8a6a4a"))
+	draw_colored_polygon(PackedVector2Array([Vector2(326, 113), Vector2(368, 108), Vector2(368, 146), Vector2(326, 144)]), Color("c8a878"))
+	draw_string(_font, Vector2(330, 124), "SE BUSCA", HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color("3a3a3a"))
+	draw_string(_font, Vector2(330, 132), "PRACTICANTE", HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color("3a3a3a"))
+	draw_string(_font, Vector2(330, 140), "5 años exp.", HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color("a03030"))
+	# Pared izquierda, al fondo: la puerta gris lisa de Informática, entreabierta.
+	var door := PackedVector2Array([Vector2(70, 85), Vector2(100, 84), Vector2(100, 156), Vector2(70, 175)])
+	draw_colored_polygon(door, Color("141414"))
+	draw_colored_polygon(PackedVector2Array([Vector2(70, 85), Vector2(84, 80), Vector2(84, 166), Vector2(70, 175)]), Color("8e9196"))
+	draw_circle(Vector2(81, 128), 1.2, Color("d9c070"))
+	draw_colored_polygon(PackedVector2Array([Vector2(84, 84.5), Vector2(100, 84), Vector2(112, 172), Vector2(90, 190)]), Color(0.4, 1.0, 0.6, 0.07 + 0.03 * sin(time * 7.0)))
+	draw_colored_polygon(PackedVector2Array([Vector2(64, 70), Vector2(106, 67), Vector2(106, 78), Vector2(64, 80)]), Color("3a3a3a"))
+	draw_string(_font, Vector2(66, 77), "INFORMÁTICA", HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color("e0e0e0"))
+	# Al fondo: la caja de trámites (cerrada, como siempre).
+	var caja := Rect2(back.position.x + 10, 72, 64, 70)
+	draw_rect(caja, Color("8a7a5a"))
+	draw_rect(Rect2(caja.position + Vector2(6, 16), Vector2(52, 32)), Color("5a5a5a"))
 	for k in 6:
-		draw_line(Vector2(608, 106 + k * 5), Vector2(662, 106 + k * 5), Color("7a7a7a"), 1.0)   # cortina cerrada
-	draw_rect(Rect2(600, 80, 70, 12), Color("2d5a8a"))
-	draw_string(_font, Vector2(604, 89), "CAJA · TRÁMITES", HORIZONTAL_ALIGNMENT_LEFT, 64, 7, Color.WHITE)
-	draw_string(_font, Vector2(610, 150), "Regreso en 15 min", HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color("f4f0e0"))
-	# La puerta gris lisa, entreabierta, al fondo.
-	draw_rect(Rect2(730, 100, 44, 98), Color("1a1a1a"))
-	draw_colored_polygon(PackedVector2Array([Vector2(730, 100), Vector2(758, 104), Vector2(758, 194), Vector2(730, 198)]), Color("8e9196"))
-	draw_rect(Rect2(722, 84, 60, 12), Color("3a3a3a"))
-	draw_string(_font, Vector2(725, 93), "Depto. Informática", HORIZONTAL_ALIGNMENT_LEFT, 56, 6, Color("e0e0e0"))
-	# Luz verdosa de monitores que sale por la rendija.
-	draw_colored_polygon(PackedVector2Array([Vector2(758, 104), Vector2(774, 100), Vector2(800, 198), Vector2(758, 194)]), Color(0.4, 1.0, 0.6, 0.06 + 0.03 * sin(time * 7.0)))
+		draw_line(caja.position + Vector2(6, 18 + k * 5), caja.position + Vector2(58, 18 + k * 5), Color("7a7a7a"), 1.0)
+	draw_rect(Rect2(caja.position + Vector2(0, -10), Vector2(64, 10)), Color("2d5a8a"))
+	draw_string(_font, caja.position + Vector2(3, -2), "CAJA · TRÁMITES", HORIZONTAL_ALIGNMENT_LEFT, 60, 7, Color.WHITE)
+	draw_rect(Rect2(caja.position + Vector2(10, 52), Vector2(44, 10)), Color("f4f0e0"))
+	draw_string(_font, caja.position + Vector2(11, 59), "Regreso en 15 min", HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color("3a3a3a"))
+	# A la derecha de la caja: la TV plana con la promoción.
+	_draw_tv(Rect2(back.position.x + 84, 64, 92, 56))
+
+
+## TV plana: alterna «Ingeniería de Software» y el Hackatón LinceCode 2026.
+func _draw_tv(tv: Rect2) -> void:
+	draw_rect(Rect2(tv.position + Vector2(tv.size.x / 2.0 - 6, tv.size.y), Vector2(12, 4)), Color("2a2a2a"))   # soporte
+	draw_rect(tv, Color("0c0c0e"))
+	var screen := tv.grow(-3)
+	var slide := int(time / 4.5) % 2
+	var t := fmod(time, 4.5)
+	if slide == 0:
+		for k in 8:
+			draw_rect(Rect2(screen.position.x, screen.position.y + k * screen.size.y / 8.0, screen.size.x, screen.size.y / 8.0 + 1),
+				Color("12305a").lerp(Color("1d5aa0"), k / 7.0))
+		# Laptop en pixel art.
+		var lp := screen.position + Vector2(6, 12)
+		draw_rect(Rect2(lp, Vector2(22, 14)), Color("d8d8d8"))
+		draw_rect(Rect2(lp + Vector2(2, 2), Vector2(18, 10)), Color("0c1a2a"))
+		for j in 3:
+			draw_rect(Rect2(lp + Vector2(4, 4 + j * 3), Vector2(6 + (j * 5) % 10, 1)), Color("3cff6a"))
+		draw_rect(Rect2(lp + Vector2(-3, 14), Vector2(28, 3)), Color("b8b8b8"))
+		draw_string(_font, screen.position + Vector2(33, 14), "INGENIERÍA", HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color.WHITE)
+		draw_string(_font, screen.position + Vector2(33, 23), "DE SOFTWARE", HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("ffd84a"))
+		draw_string(_font, screen.position + Vector2(34, 33), "¡Inscríbete!", HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color("cfe4ff"))
+		draw_string(_font, screen.position + Vector2(4, 46), "UAdeO · Unidad Mazatlán", HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color("cfe4ff"))
+	else:
+		draw_rect(screen, Color("f4f0e8"))
+		var px := 2.0
+		var origin := screen.position + Vector2(3, 6)
+		for y in LYNX.size():
+			var row: String = LYNX[y]
+			for x in row.length():
+				if row[x] == "M":
+					draw_rect(Rect2(origin + Vector2(x, y) * px, Vector2(px, px)), Color("7a1420"))
+				elif row[x] == "G":
+					draw_rect(Rect2(origin + Vector2(x, y) * px, Vector2(px, px)), Color("e0a820"))
+		draw_string(_font, screen.position + Vector2(42, 12), "HACKATÓN", HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("7a1420"))
+		draw_string(_font, screen.position + Vector2(41, 23), "LINCE", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("7a1420"))
+		draw_string(_font, screen.position + Vector2(41, 32), "CODE", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("d09018"))
+		draw_line(screen.position + Vector2(41, 36), screen.position + Vector2(84, 36), Color("d09018"), 1.0)
+		draw_string(_font, screen.position + Vector2(52, 45), "2026", HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("d09018"))
+	# Barrido de cambio de diapositiva y reflejo de la pantalla.
+	if t < 0.25:
+		draw_rect(Rect2(screen.position, Vector2(screen.size.x, screen.size.y * (1.0 - t / 0.25))), Color(0, 0, 0, 0.85))
+	draw_line(screen.position + Vector2(screen.size.x - 18, 2), screen.position + Vector2(screen.size.x - 6, 2), Color(1, 1, 1, 0.15), 1.0)
 
 
 # --- Oficina destrozada ---
