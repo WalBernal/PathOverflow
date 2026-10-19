@@ -56,7 +56,7 @@ func display_color() -> Color:
 
 ## Equipo normal (casco, arma...) frente a placas base, módulos RAM y pociones.
 func is_equipment() -> bool:
-	return not (slot() == "motherboard" or slot() == "ram" or slot() == "flask")
+	return not (slot() == "motherboard" or slot() == "ram" or slot() == "flask" or slot() == "key")
 
 
 func is_weapon() -> bool:
@@ -186,6 +186,8 @@ static func from_dict(d: Dictionary, db: ItemDatabase) -> Item:
 			return RamModule.from_save(d, db)
 		"flask":
 			return Flask.from_save(d, db)
+		"key":
+			return KeyItem.from_save(d)
 	if not db.bases.has(d.get("base", "")):
 		push_warning("Objeto guardado con base desconocida '%s': se descarta" % d.get("base", ""))
 		return null

@@ -301,7 +301,7 @@ func _draw_offline_page(view: Vector2) -> void:
 	draw_string(font, Vector2(origin.x, y0), "No hay conexión a Internet", HORIZONTAL_ALIGNMENT_LEFT, -1, 28, Color("e8eaed"))
 	draw_string(font, Vector2(origin.x, y0 + 40), _dino_text + ". Prueba a:", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, grey)
 	var tips := ["Comprobar los cables de red, el módem y el router", "Reiniciar el router de La Red Lince (otra vez)",
-		"Llamar al servicio técnico de La Red Lince (tiempo de espera: 3 actos)", "Usar los datos móviles de Rafa"]
+		"Llamar al servicio técnico de La Red Lince (tiempo de espera: 3 actos)", "Usar los datos del celular de Rafa"]
 	for k in tips.size():
 		draw_string(font, Vector2(origin.x + 16, y0 + 72 + k * 26), "•  " + tips[k], HORIZONTAL_ALIGNMENT_LEFT, -1, 16, grey)
 	draw_string(font, Vector2(origin.x, y0 + 196), "ERR_LINCE_DISCONNECTED", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("6a6f75"))

@@ -7,7 +7,7 @@
       "mods": [ { "stat": "local_physical_increased", "type": "increased", "min": 80, "max": 120 },
                 { "stat": "local_attack_speed", "type": "increased", "min": 10, "max": 15 },
                 { "stat": "life", "type": "flat", "min": 20, "max": 30 } ] },
-    { "id": "capucha_del_becario", "name": "Capucha del Becario", "base": "capucha_de_cuero",
+    { "id": "capucha_del_becario", "name": "Capucha del Practicante", "base": "capucha_de_cuero",
       "flavor": "Hace de todo. No cobra. No sabe nada.",
       "mods": [ { "stat": "life", "type": "flat", "min": 30, "max": 45 },
                 { "stat": "movement_speed", "type": "increased", "min": 8, "max": 12 },

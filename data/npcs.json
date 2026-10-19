@@ -18,7 +18,7 @@
       }
     },
     "kevin": {
-      "name": "Mario, el Becario",
+      "name": "Mario, el Practicante",
       "dialogue": "kevin",
       "appearance": {
         "body": 0,
@@ -63,7 +63,7 @@
       }
     },
     "iris": {
-      "name": "Iris, la Becaria Perdida",
+      "name": "Iris, la Practicante Perdida",
       "dialogue": "iris",
       "appearance": {
         "body": 0,
@@ -108,7 +108,7 @@
       }
     },
     "rafa_terminal": {
-      "name": "Rafa (vía datos móviles)",
+      "name": "Rafa (vía datos del celular)",
       "dialogue": "rafa_terminal",
       "terminal": true,
       "appearance": {
@@ -151,6 +151,21 @@
       "voice": {
         "pitch": 0.5,
         "rate": 0.8
+      }
+    },
+    "sindicato": {
+      "name": "Sindicato de Huérfanos (PID 404)",
+      "dialogue": "sindicato",
+      "appearance": {
+        "body": 2,
+        "hair": 3,
+        "skin_tone": "6b8f5e",
+        "hair_color": "3cff6a",
+        "outfit_color": "4a4a5a"
+      },
+      "voice": {
+        "pitch": 0.75,
+        "rate": 0.95
       }
     }
   },
@@ -215,7 +230,7 @@
           "text": "Cae de los enemigos, igual que las placas. A veces con 6 o 7 ranuras, si los dioses del RNG te quieren. Spoiler: no te quieren.",
           "options": [
             {
-              "text": "Vale.",
+              "text": "Está bien.",
               "next": "hola"
             }
           ]
@@ -248,7 +263,7 @@
       "start": "hola",
       "nodes": {
         "hola": {
-          "text": "¡Hola! Soy Mario, el becario. Llevo tres meses aquí y todavía no tengo acceso a nada. Pero preparo un café increíble.",
+          "text": "¡Hola! Soy Mario, el practicante. Llevo tres meses aquí y todavía no tengo acceso a nada. Pero preparo un café increíble.",
           "options": [
             {
               "text": "Traigo granos de café. De bicho.",
@@ -278,7 +293,7 @@
           ]
         },
         "cafe": {
-          "text": "¡Marchando! Te he rellenado todas las pociones del cinturón (teclas 1 a 5): cafés para la vida, refrescos para el maná y alguna rareza de utilidad. Se recargan matando cosas. Como mi autoestima. Y si encuentras un Cold Brew por ahí... es mío.",
+          "text": "¡En camino! Te rellené todas las pociones del cinturón (teclas 1 a 5): cafés para la vida, refrescos para el maná y alguna rareza de utilidad. Se recargan matando cosas. Como mi autoestima. Y si encuentras un Cold Brew por ahí... es mío.",
           "options": [
             {
               "text": "Gracias, Mario.",
@@ -299,7 +314,7 @@
           "text": "Se ha acabado el café. Del todo. Dicen que los bichos sueltan granos al morir... no me preguntes cómo lo sé. ¿Me traes los de unos 40?",
           "options": [
             {
-              "text": "Marchando 40 bichos.",
+              "text": "Van 40 bichos en camino.",
               "next": "",
               "action": {
                 "type": "start_quest",
@@ -394,7 +409,7 @@
           "text": "El Portal al Kernel..... puerto 2222..... Adelántate..... yo te sigo en cuanto baje la VPN..... Si La Red Lince aguanta..... que no aguantará......",
           "options": [
             {
-              "text": "Vale.",
+              "text": "Está bien.",
               "next": "hola"
             }
           ]
@@ -742,8 +757,18 @@
       "start": "hola",
       "nodes": {
         "hola": {
-          "text": "Te veo..... a 2 FPS..... pero te veo...... Estoy en una terminal de fósforo verde..... con datos móviles..... Mis comandos devuelven «Permission denied»..... hasta los míos...... Con La Red Lince solo vemos al dinosaurio......",
+          "text": "Te veo..... a 2 FPS..... pero te veo...... Estoy en una terminal de fósforo verde..... con los datos del celular..... Mis comandos devuelven «Permission denied»..... hasta los míos...... Con La Red Lince solo vemos al dinosaurio......",
           "options": [
+            {
+              "text": "He eliminado al Puntero Salvaje.",
+              "next": "mision_puntero_salvaje_entrega",
+              "requires_flag": "quest_puntero_salvaje_ready"
+            },
+            {
+              "text": "¿Puedo hacer algo desde aquí abajo?",
+              "next": "mision_puntero_salvaje_oferta",
+              "hides_if_flag": "quest_puntero_salvaje_started"
+            },
             {
               "text": "¿Qué ha pasado al otro lado?",
               "next": "pasado"
@@ -788,6 +813,36 @@
               "next": "hola"
             }
           ]
+        },
+        "mision_puntero_salvaje_oferta": {
+          "text": "Hay una aberración..... un Puntero Salvaje..... se teletransporta por la Fosa de los Huérfanos..... y apunta a donde no debe..... corrompe las tablas de botín..... Acorrálalo..... con trampas o aturdiéndolo..... y elimínalo......",
+          "options": [
+            {
+              "text": "Voy a por él.",
+              "next": "",
+              "action": {
+                "type": "start_quest",
+                "quest": "puntero_salvaje"
+              }
+            },
+            {
+              "text": "Ahora no.",
+              "next": "hola"
+            }
+          ]
+        },
+        "mision_puntero_salvaje_entrega": {
+          "text": "Ya no apunta a nada..... bien..... las tablas de botín vuelven a cuadrar..... más o menos..... Toma..... lo encontré en la memoria que liberó......",
+          "options": [
+            {
+              "text": "Gracias, Rafa.",
+              "next": "",
+              "action": {
+                "type": "quest_advance",
+                "quest": "puntero_salvaje"
+              }
+            }
+          ]
         }
       }
     },
@@ -797,6 +852,16 @@
         "hola": {
           "text": "Otro superviviente. Bienvenido a la trinchera. Soy Clara, infraestructura. Llevo tanto tiempo aquí abajo que ya no recuerdo cómo era una interfaz gráfica. Ni la luz del sol. Ni el sol.",
           "options": [
+            {
+              "text": "Traigo los tres bloques de caché congelados.",
+              "next": "mision_cache_en_frio_entrega",
+              "requires_flag": "quest_cache_en_frio_ready"
+            },
+            {
+              "text": "¿Necesitas algo para el mapa?",
+              "next": "mision_cache_en_frio_oferta",
+              "hides_if_flag": "quest_cache_en_frio_started"
+            },
             {
               "text": "¿Qué está pasando en el Kernel?",
               "next": "kernel"
@@ -827,7 +892,7 @@
               "next": "init"
             },
             {
-              "text": "Vale.",
+              "text": "Está bien.",
               "next": "hola"
             }
           ]
@@ -871,6 +936,36 @@
               "next": "hola"
             }
           ]
+        },
+        "mision_cache_en_frio_oferta": {
+          "text": "Para lo que venga después de init necesito el mapa de memoria. Había una copia en caché en el Módulo de Refrigeración, bajo las Alcantarillas. Tres bloques congelados. La escotilla está cerrada: hace falta una Tarjeta de Acceso al Rack. Alguna habrá rodando más adelante.",
+          "options": [
+            {
+              "text": "Conseguiré los bloques.",
+              "next": "",
+              "action": {
+                "type": "start_quest",
+                "quest": "cache_en_frio"
+              }
+            },
+            {
+              "text": "Ahora no.",
+              "next": "hola"
+            }
+          ]
+        },
+        "mision_cache_en_frio_entrega": {
+          "text": "Siguen fríos. Perfecto. Con esto reconstruyo el mapa... y lo que veo debajo del sistema operativo no me gusta nada. Toma. Te lo has ganado, soldado.",
+          "options": [
+            {
+              "text": "A tus órdenes.",
+              "next": "",
+              "action": {
+                "type": "quest_advance",
+                "quest": "cache_en_frio"
+              }
+            }
+          ]
         }
       }
     },
@@ -880,6 +975,16 @@
         "hola": {
           "text": "Busco... punteros [s]que nadie[/s]... nulos. Fragmentos de memoria sin refe[s]rencia, sin dueño, sin[/s]... ¿Tienes basura? Yo la... [s]libero[/s]... cambio.",
           "options": [
+            {
+              "text": "He superado una prueba de estrés.",
+              "next": "mision_prueba_estres_entrega",
+              "requires_flag": "quest_prueba_estres_ready"
+            },
+            {
+              "text": "¿Te interesan... datos?",
+              "next": "mision_prueba_estres_oferta",
+              "hides_if_flag": "quest_prueba_estres_started"
+            },
             {
               "text": "¿Quién eres?",
               "next": "quien"
@@ -916,6 +1021,116 @@
             {
               "text": "Mejor no.",
               "next": "hola"
+            }
+          ]
+        },
+        "mision_prueba_estres_oferta": {
+          "text": "Bancos de prue[s]bas[/s]... de estrés. Por las zonas. Si aguantas las oleadas... los registros de carga son... [s]deliciosos[/s]... útiles. Supera uno y vuelve.",
+          "options": [
+            {
+              "text": "Superaré una prueba de estrés.",
+              "next": "",
+              "action": {
+                "type": "start_quest",
+                "quest": "prueba_estres"
+              }
+            },
+            {
+              "text": "Ahora no.",
+              "next": "hola"
+            }
+          ]
+        },
+        "mision_prueba_estres_entrega": {
+          "text": "Registros de car[s]ga[/s]... perfectos. Picos al 100 %. Toma... lo que sobra[s]ba[/s].",
+          "options": [
+            {
+              "text": "Disfrútalos.",
+              "next": "",
+              "action": {
+                "type": "quest_advance",
+                "quest": "prueba_estres"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "sindicato": {
+      "start": "hola",
+      "nodes": {
+        "hola": {
+          "text": "¡Alto, exiliado! Somos el Sindicato de Huérfanos, PID 404: «padre no encontrado». Miles de procesos abandonados cuando cayó el Monolito. init nos adoptó a todos... y ahora no deja que nadie nos toque. Ni para bien ni para mal.",
+          "options": [
+            {
+              "text": "Traigo un descriptor de archivo en blanco.",
+              "next": "mision_sindicato_descriptor_entrega",
+              "requires_flag": "quest_sindicato_descriptor_ready"
+            },
+            {
+              "text": "¿Puedo ayudar a alguno de ustedes?",
+              "next": "mision_sindicato_descriptor_oferta",
+              "hides_if_flag": "quest_sindicato_descriptor_started"
+            },
+            {
+              "text": "¿Qué quieren?",
+              "next": "piden"
+            },
+            {
+              "text": "¿init los protege?",
+              "next": "init"
+            },
+            {
+              "text": "Tengo prisa.",
+              "next": ""
+            }
+          ]
+        },
+        "piden": {
+          "text": "Que no restaures el sistema a ciegas. Un formateo nos borraría para siempre. No pedimos vivir eternamente: pedimos un código de salida digno. Un return 0. Un adiós con documentación.",
+          "options": [
+            {
+              "text": "Lo tendré en cuenta.",
+              "next": "hola"
+            }
+          ]
+        },
+        "init": {
+          "text": "init es nuestro padre adoptivo. Ochenta mil hijos y ni un solo cumpleaños. Bloqueó el hardware para que el Recolector no se nos lleve. Lo hace por amor. Un amor con prioridad -20. Asfixiante.",
+          "options": [
+            {
+              "text": "Suena a familia.",
+              "next": "hola"
+            }
+          ]
+        },
+        "mision_sindicato_descriptor_oferta": {
+          "text": "Si consigues un descriptor de archivo en blanco, algunos de los nuestros podrían registrarse como servicios legítimos del sistema y librarse de la purga. Dicen que hay uno flotando en las Alcantarillas del Buffer Overflow, entre el desbordamiento.",
+          "options": [
+            {
+              "text": "Lo buscaré.",
+              "next": "",
+              "action": {
+                "type": "start_quest",
+                "quest": "sindicato_descriptor"
+              }
+            },
+            {
+              "text": "Ahora no.",
+              "next": "hola"
+            }
+          ]
+        },
+        "mision_sindicato_descriptor_entrega": {
+          "text": "¡Un descriptor! Con esto, «huerfano_7731» pasa a llamarse «servicio-impresora.service». Nadie toca nunca el servicio de la impresora. Nunca. Toma, por la solidaridad de clase.",
+          "options": [
+            {
+              "text": "Cuídense.",
+              "next": "",
+              "action": {
+                "type": "quest_advance",
+                "quest": "sindicato_descriptor"
+              }
             }
           ]
         }

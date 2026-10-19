@@ -30,24 +30,30 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "data" / "passive_tree.json"
 THEMES = json.loads((ROOT / "data" / "passive_themes.json").read_text(encoding="utf-8"))["themes"]
-TREE_VERSION = 3
+TREE_VERSION = 5
+# Multiplicador de los aumentos de daño de las pasivas menores (que no se queden
+# en un +4 % que no se nota).
+DAMAGE_MINOR_SCALE = 1.5
+ATTRIBUTE_TRAVEL = 12
+DAMAGE_STATS = {"damage", "physical_damage", "elemental_damage", "fire_damage", "cold_damage", "lightning_damage",
+                "chaos_damage", "minion_damage", "attack_speed", "cast_speed", "crit_chance", "area_of_effect"}
 
 # id, nombre, atributos, temáticas de los 4 clusters cercanos, de los 4 lejanos y del cluster interior.
 CLASSES = [
-    ("guerrero", "Guerrero", ["str"],
+    ("guerrero", "Técnico de Soporte", ["str"],
      ["vida", "armadura", "fisico", "area"], ["robo_vida", "vida", "armadura", "fisico"], "resistencias"),
-    ("duelista", "Duelista", ["str", "dex"],
+    ("duelista", "Tester QA", ["str", "dex"],
      ["fisico", "velocidad_ataque", "evasion", "robo_vida"], ["critico", "armadura", "fisico", "velocidad_ataque"], "movilidad"),
-    ("exploradora", "Exploradora", ["dex"],
+    ("exploradora", "Desarrolladora Frontend", ["dex"],
      ["proyectiles", "evasion", "velocidad_ataque", "critico"], ["frio", "caos", "proyectiles", "evasion"], "movilidad"),
-    ("hacker", "Hacker", ["dex", "int"],
+    ("hacker", "Ingeniera de Prompts", ["dex", "int"],
      ["critico", "caos", "evasion", "rayo"], ["lanzamiento", "proyectiles", "escudo", "tiempos"], "tiempos"),
-    ("hechicero", "Hechicero", ["int"],
+    ("hechicero", "Científico de Datos", ["int"],
      ["rayo", "fuego", "frio", "lanzamiento"], ["escudo", "mana", "critico", "caos"], "mana"),
-    ("templario", "Templario", ["int", "str"],
+    ("templario", "Ingeniero DevOps", ["int", "str"],
      ["fuego", "area", "escudo", "vida"], ["rayo", "mana", "armadura", "lanzamiento"], "tiempos"),
 ]
-CENTER_CLASS = ("full_stack", "Full Stack")
+CENTER_CLASS = ("full_stack", "Desarrollador Full Stack")
 GATE_THEMES = ["resistencias", "atributos", "resistencias", "atributos", "resistencias", "atributos"]
 BRIDGE_THEMES = ["resistencias", "atributos", "resistencias", "atributos", "resistencias", "atributos"]
 
@@ -129,7 +135,13 @@ def new_cluster(theme, cx, cy, radius):
 
 def minor(theme, k, x, y, cluster):
     name, mods = THEMES[theme]["minors"][k % len(THEMES[theme]["minors"])]
-    return add("minor", name, x, y, mods, cluster=cluster, theme=theme)
+    scaled = []
+    for md in mods:
+        md = dict(md)
+        if md["stat"] in DAMAGE_STATS and md["type"] == "increased":
+            md["value"] = round(md["value"] * DAMAGE_MINOR_SCALE)
+        scaled.append(md)
+    return add("minor", name, x, y, scaled, cluster=cluster, theme=theme)
 
 
 def notable(theme, x, y, cluster):
@@ -142,7 +154,7 @@ def notable(theme, x, y, cluster):
 
 def travel(attr, x, y):
     stat, label = ATTR_STAT[attr]
-    return add("minor", label, x, y, [{"stat": stat, "type": "flat", "value": 10}], theme="atributos")
+    return add("minor", label, x, y, [{"stat": stat, "type": "flat", "value": ATTRIBUTE_TRAVEL}], theme="atributos")
 
 
 def ring_cluster(theme, cx, cy, radius, count, entry_deg):
@@ -173,6 +185,145 @@ def wheel_cluster(theme, cx, cy, radius, count, entry_deg):
     link(ids[0], center)
     link(center, ids[count // 2])
     return ids[0], ids[count // 2], ids + [center]
+
+
+# --- Clusters con forma (estilo PoE 2): cada temática dibuja su símbolo ---
+# Coordenadas normalizadas (-1..1, y hacia abajo). Cada plantilla da puntos,
+# aristas y qué nodo es el notable. Las de contorno se remuestrean a `count`.
+
+def _resample(pts, n, closed):
+    """n puntos repartidos a distancia igual a lo largo de una polilínea."""
+    seq = pts + ([pts[0]] if closed else [])
+    seg = [math.dist(seq[i], seq[i + 1]) for i in range(len(seq) - 1)]
+    total = sum(seg)
+    out = []
+    steps = n if closed else n - 1
+    for k in range(n):
+        d = total * k / steps
+        i = 0
+        while i < len(seg) - 1 and d > seg[i]:
+            d -= seg[i]
+            i += 1
+        t = d / seg[i] if seg[i] else 0.0
+        a, b = seq[i], seq[i + 1]
+        out.append((a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t))
+    return out
+
+
+def _outline(pts, n, closed=True, notable_at=(0.0, 0.0)):
+    """Contorno remuestreado + notable en `notable_at`, unido arriba y abajo."""
+    ring = _resample(pts, n - 1, closed)
+    m = len(ring)
+    edges = [(i, i + 1) for i in range(m - 1)] + ([(m - 1, 0)] if closed else [])
+    top = min(range(m), key=lambda i: ring[i][1])
+    bottom = max(range(m), key=lambda i: ring[i][1])
+    nodes = ring + [notable_at]
+    edges += [(m, top), (m, bottom)]
+    return nodes, edges, m, (ring if closed else None)
+
+
+def _curve(fn, steps=40):
+    return [fn(2 * math.pi * k / steps) for k in range(steps)]
+
+
+def shape_template(theme, count):
+    if theme == "vida":            # corazón
+        pts = _curve(lambda t: (math.sin(t) ** 3, -(13 * math.cos(t) - 5 * math.cos(2 * t) - 2 * math.cos(3 * t) - math.cos(4 * t)) / 16.0))
+        return _outline(pts, count, True, (0.0, 0.05))
+    if theme == "fuego":           # llama
+        pts = _curve(lambda t: (math.sin(t) * math.sin(t / 2) * 0.85 + 0.12 * math.sin(3 * t) * math.sin(t / 2), -math.cos(t)))
+        return _outline(pts, count, True, (0.0, 0.35))
+    if theme == "mana":            # gota
+        pts = _curve(lambda t: (math.sin(t) * math.sin(t / 2) * 0.9, -math.cos(t)))
+        return _outline(pts, count, True, (0.0, 0.4))
+    if theme == "armadura":        # escudo
+        return _outline([(-0.85, -0.85), (0.0, -1.0), (0.85, -0.85), (0.8, 0.15), (0.0, 1.0), (-0.8, 0.15)], count, True, (0.0, -0.1))
+    if theme == "escudo":          # hexágono (burbuja de energía)
+        return _outline([(math.cos(math.radians(30 + 60 * k)), math.sin(math.radians(30 + 60 * k))) for k in range(6)], count, True)
+    if theme == "area":            # estrella de cinco puntas
+        pts = [(math.cos(math.radians(-90 + 36 * k)) * (1.0 if k % 2 == 0 else 0.45),
+                math.sin(math.radians(-90 + 36 * k)) * (1.0 if k % 2 == 0 else 0.45)) for k in range(10)]
+        return _outline(pts, max(count, 9), True, (0.0, 0.05))
+    if theme == "resistencias":    # prisma
+        return _outline([(0.0, -1.0), (0.95, 0.75), (-0.95, 0.75)], count, True, (0.0, 0.2))
+    if theme == "rayo":            # rayo en zigzag (abierto, el notable en la punta)
+        pts = _resample([(-0.15, -1.0), (0.45, -0.3), (-0.1, -0.15), (0.5, 0.55), (0.05, 0.4), (0.3, 1.0)], count, False)
+        return pts, [(i, i + 1) for i in range(len(pts) - 1)], len(pts) - 1, None
+    if theme == "caos":            # espiral
+        pts = [(math.cos(a) * r, math.sin(a) * r) for a, r in ((k * 1.25, 1.0 - k * 0.12) for k in range(count))]
+        return pts, [(i, i + 1) for i in range(len(pts) - 1)], len(pts) - 1, None
+    if theme == "evasion":         # pluma / media luna
+        pts = [(math.cos(a) * 0.95, math.sin(a) * 0.95 * 0.75 + 0.1) for a in (math.radians(200 + 140 * k / (count - 1)) for k in range(count))]
+        return pts, [(i, i + 1) for i in range(len(pts) - 1)], len(pts) - 1, None
+    if theme == "frio":            # copo de nieve: centro + 6 brazos
+        nodes = [(math.cos(math.radians(-90 + 60 * k)), math.sin(math.radians(-90 + 60 * k))) for k in range(6)] + [(0.0, 0.0)]
+        return nodes, [(6, k) for k in range(6)], 6, None
+    if theme == "critico":         # mira: aro de 4, cruz interior y centro
+        outer = [(0.0, -1.0), (1.0, 0.0), (0.0, 1.0), (-1.0, 0.0)]
+        inner = [(x * 0.48, y * 0.48) for x, y in outer]
+        nodes = outer + inner + [(0.0, 0.0)]
+        edges = [(i, (i + 1) % 4) for i in range(4)] + [(i, i + 4) for i in range(4)] + [(i + 4, 8) for i in range(4)]
+        return nodes, edges, 8, None
+    if theme == "proyectiles":     # flecha: astil, punta y aletas
+        shaft = [(-0.9 + 1.6 * k / 4, 0.75 - 1.5 * k / 4) for k in range(5)]
+        tip = shaft[-1]
+        nodes = shaft + [(tip[0] - 0.55, tip[1] - 0.05), (tip[0] + 0.05, tip[1] + 0.55)]
+        edges = [(i, i + 1) for i in range(4)] + [(4, 5), (4, 6)]
+        return nodes, edges, 4, None
+    if theme == "fisico":          # martillo: cabeza y mango
+        nodes = [(-0.9, -0.7), (-0.3, -0.7), (0.3, -0.7), (0.9, -0.7), (0.0, -0.05), (0.0, 0.5), (0.0, 1.0)]
+        edges = [(0, 1), (1, 2), (2, 3), (1, 4), (2, 4), (4, 5), (5, 6)]
+        return nodes, edges, 4, None
+    if theme in ("velocidad_ataque", "movilidad"):   # doble chevron ">>"
+        nodes = [(-0.9, -0.8), (-0.3, 0.0), (-0.9, 0.8), (0.1, -0.8), (0.7, 0.0), (0.1, 0.8)]
+        edges = [(0, 1), (1, 2), (3, 4), (4, 5), (1, 4)]
+        return nodes, edges, 4, None
+    if theme == "tiempos":         # reloj de arena
+        nodes = [(-0.7, -0.9), (0.0, -0.9), (0.7, -0.9), (0.0, 0.0), (0.7, 0.9), (0.0, 0.9), (-0.7, 0.9)]
+        edges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 3), (3, 0)]
+        return nodes, edges, 3, None
+    if theme == "lanzamiento":     # libro abierto
+        nodes = [(0.0, -0.55), (-0.95, -0.8), (-0.95, 0.55), (0.0, 0.8), (0.95, 0.55), (0.95, -0.8), (0.0, 0.1)]
+        edges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 0), (0, 6), (6, 3)]
+        return nodes, edges, 6, None
+    if theme == "robo_vida":       # colmillos
+        nodes = [(-1.0, -0.7), (-0.6, 0.85), (-0.2, -0.45), (0.2, -0.45), (0.6, 0.85), (1.0, -0.7), (0.0, -0.95)]
+        edges = [(0, 1), (1, 2), (2, 6), (6, 3), (3, 4), (4, 5)]
+        return nodes, edges, 6, None
+    return None
+
+
+def shape_cluster(theme, cx, cy, radius, count, entry_deg):
+    """Cluster con la forma de su temática. Devuelve (entrada, salida, ids)."""
+    nodes, edges, notable_i, fill = shape_template(theme, count)
+    cid = new_cluster(theme, cx, cy, radius)
+    ids = []
+    for j, (x, y) in enumerate(nodes):
+        px, py = cx + x * radius, cy + y * radius
+        if j == notable_i:
+            ids.append(notable(theme, px, py, cid))
+        else:
+            ids.append(minor(theme, j, px, py, cid))
+    for a, b in edges:
+        link(ids[a], ids[b])
+    # Para dibujar la silueta: aristas del símbolo y, si es cerrado, su relleno.
+    clusters[-1]["segments"] = [[round(cx + nodes[a][0] * radius, 1), round(cy + nodes[a][1] * radius, 1),
+                                 round(cx + nodes[b][0] * radius, 1), round(cy + nodes[b][1] * radius, 1)] for a, b in edges]
+    if fill:
+        clusters[-1]["fill"] = [[round(cx + x * radius, 1), round(cy + y * radius, 1)] for x, y in fill]
+    # Entrada: el nodo (no notable) más orientado hacia de donde se llega; salida: el opuesto.
+    back = (math.cos(math.radians(entry_deg)), math.sin(math.radians(entry_deg)))
+    others = [j for j in range(len(ids)) if j != notable_i]
+    entry_j = max(others, key=lambda j: nodes[j][0] * back[0] + nodes[j][1] * back[1])
+    far_j = min(others, key=lambda j: nodes[j][0] * back[0] + nodes[j][1] * back[1])
+    return ids[entry_j], ids[far_j], ids
+
+
+def cluster(theme, cx, cy, radius, count, entry_deg, fallback):
+    """Con forma si la temática tiene plantilla; si no, anillo o rueda."""
+    if shape_template(theme, count) is not None:
+        return shape_cluster(theme, cx, cy, radius, count, entry_deg)
+    return fallback(theme, cx, cy, radius, count, entry_deg)
 
 
 def walk(prev, x0, y0, dx, dy, distances, attrs):
@@ -266,7 +417,7 @@ for ci, (cid, cname, attrs, tier1, tier2, inner_theme) in enumerate(CLASSES):
         cx, cy = sx + dx * T1_DIST, sy + dy * T1_DIST
         shape = ring_cluster if bi % 2 == 0 else wheel_cluster
         count = 8 if shape is ring_cluster else 7
-        entry, far, ring = shape(tier1[bi], cx, cy, T1_R, count, back_deg)
+        entry, far, ring = cluster(tier1[bi], cx, cy, T1_R, count, back_deg, shape)
         link(prev, entry)
         near_rings.append(ring)
         if bi in (0, 3):
@@ -278,7 +429,7 @@ for ci, (cid, cname, attrs, tier1, tier2, inner_theme) in enumerate(CLASSES):
         cx2, cy2 = sx + dx * T2_DIST, sy + dy * T2_DIST
         shape2 = wheel_cluster if bi % 2 == 0 else ring_cluster
         count2 = 8 if shape2 is wheel_cluster else 9
-        entry2, far2, ring2 = shape2(tier2[bi], cx2, cy2, T2_R, count2, back_deg)
+        entry2, far2, ring2 = cluster(tier2[bi], cx2, cy2, T2_R, count2, back_deg, shape2)
         link(prev, entry2)
         if bi in (0, 3):
             far_sides[bi] = ring2
@@ -304,7 +455,7 @@ for ci, (cid, cname, attrs, tier1, tier2, inner_theme) in enumerate(CLASSES):
     # Cluster interior: entre el anillo central y la clase (NO se une al inicio).
     ix, iy = polar(INNER_R, ang)
     entry_deg = ang + 180
-    i_entry, i_far, i_ring = ring_cluster(inner_theme, ix, iy, 70, 7, entry_deg)
+    i_entry, i_far, i_ring = cluster(inner_theme, ix, iy, 70, 7, entry_deg, ring_cluster)
     walk_between(hub_node(ang), i_entry, 2, attrs)
 
 # --- Puertas entre clases vecinas y puentes exteriores ---
@@ -312,7 +463,7 @@ for i in range(N_OUTER):
     j = (i + 1) % N_OUTER
     gate_ang = -90 + SECTOR * i + SECTOR / 2.0
     gx, gy = polar(GATE_R, gate_ang)
-    g_entry, g_far, g_ring = ring_cluster(GATE_THEMES[i], gx, gy, 62, 6, gate_ang + 180)
+    g_entry, g_far, g_ring = cluster(GATE_THEMES[i], gx, gy, 62, 6, gate_ang + 180, ring_cluster)
     # Hacia el centro.
     walk_between(hub_node(gate_ang), g_entry, 2, ["str", "dex", "int"])
     # Hacia los clusters laterales de las dos clases.
@@ -337,7 +488,7 @@ for i in range(N_OUTER):
     (ax, ay), (bx, by) = pos(a), pos(b)
     mx, my = (ax + bx) / 2.0, (ay + by) / 2.0
     entry_deg = math.degrees(math.atan2(ay - my, ax - mx))
-    e1, e2, ring = ring_cluster(BRIDGE_THEMES[i], mx, my, 55, 6, entry_deg)
+    e1, e2, ring = cluster(BRIDGE_THEMES[i], mx, my, 55, 6, entry_deg, ring_cluster)
     for side in (a, b):
         target = min(ring, key=lambda n: dist(side, n))
         walk_between(side, target, 1, shared)

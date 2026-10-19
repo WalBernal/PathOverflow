@@ -113,7 +113,7 @@
       "id": "pipeline",
       "name": "Ejecución en Pipeline",
       "generation": "DDR3",
-      "description": "Lanza la habilidad dos veces seguidas. La segunda la ejecuta el becario.",
+      "description": "Lanza la habilidad dos veces seguidas. La segunda la ejecuta el practicante.",
       "requires_tags": [],
       "excludes_tags": [
         "movement"

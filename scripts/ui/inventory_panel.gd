@@ -9,6 +9,7 @@ extends PanelContainer
 signal message(text: String)
 signal item_equipped
 signal drop_to_ground(location: Dictionary)
+signal close_requested
 
 const CELL := 46.0
 const BAG_COLUMNS := 10
@@ -30,6 +31,14 @@ var _equip_cells: Dictionary = {}   # ranura -> ItemCell
 var _bag_cells: Array[ItemCell] = []
 var _flask_cells: Array[ItemCell] = []
 var _summary: RichTextLabel
+var _silhouette: AppearancePreview
+var _bag_header: Control
+## Silueta de lo que va en cada ranura vacía.
+const SLOT_ICONS := {
+	"weapon": "espada_oxidada", "helmet": "casco_de_hierro", "body": "cota_de_placas", "gloves": "guantes_de_cuero",
+	"boots": "botas_de_cuero", "amulet": "amuleto_de_ambar", "ring_left": "anillo_de_hierro", "ring_right": "anillo_de_hierro",
+	"belt": "cinturon_de_cuero",
+}
 var _tooltip: ItemTooltip
 
 
@@ -42,48 +51,65 @@ func setup(p_character: CharacterData, tooltip: ItemTooltip) -> void:
 
 
 func _ready() -> void:
-	add_theme_stylebox_override("panel", UiStyle.panel_style())
 	theme = UiStyle.make_theme()
+	UiStyle.decorate_window(self)
 
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 10)
+	box.add_theme_constant_override("separation", 8)
 	add_child(box)
-	box.add_child(UiStyle.label("Inventario", 20))
+	box.add_child(UiStyle.window_header("Inventario", "Equipo, pociones y bolsa  ·  I para cerrar",
+		func() -> void: close_requested.emit()))
 
+	# Muñeco: silueta del personaje detrás de las ranuras de equipo.
 	var doll := Control.new()
 	doll.custom_minimum_size = Vector2(CELL * BAG_COLUMNS, CELL * 5.3)
 	box.add_child(doll)
-	# Centra el muñeco (8.2 celdas de ancho) dentro del ancho de la bolsa.
 	var doll_offset := Vector2((BAG_COLUMNS - 8.2) * CELL / 2.0, 0.0)
+	_silhouette = AppearancePreview.new()
+	_silhouette.modulate = Color(1, 1, 1, 0.13)
+	_silhouette.position = doll_offset + Vector2(2.2 * CELL, -0.2 * CELL)
+	_silhouette.size = Vector2(3.6 * CELL, 5.6 * CELL)
+	doll.add_child(_silhouette)
+	doll.draw.connect(func() -> void:
+		var center := doll_offset + Vector2(4.1 * CELL, 2.6 * CELL)
+		doll.draw_circle(center, 2.4 * CELL, Color(0.6, 0.45, 0.2, 0.05))
+		doll.draw_arc(center, 2.4 * CELL, 0.0, TAU, 64, Color(UiStyle.GOLD, 0.15), 1.0, true))
 	for slot in EQUIP_LAYOUT:
 		var r: Rect2 = EQUIP_LAYOUT[slot]
 		var cell := _make_cell({"kind": "equip", "slot": slot})
 		cell.placeholder = Inventory.SLOT_NAMES[slot]
+		cell.placeholder_icon = SLOT_ICONS.get(slot, "")
 		cell.position = doll_offset + r.position * CELL
 		cell.size = r.size * CELL - Vector2(4, 4)
 		doll.add_child(cell)
 		_equip_cells[slot] = cell
 
 	# Cinturón de pociones.
+	box.add_child(UiStyle.section_header("Pociones  (teclas 1-5)"))
 	var belt := HBoxContainer.new()
-	belt.add_theme_constant_override("separation", 4)
+	belt.add_theme_constant_override("separation", 6)
+	belt.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.add_child(belt)
-	var belt_label := UiStyle.label("Pociones\n(1-5)", 12, UiStyle.MUTED)
-	belt_label.custom_minimum_size.x = CELL * 1.6
-	belt.add_child(belt_label)
 	for i in Inventory.FLASK_SLOTS:
 		var cell := _make_cell({"kind": "flask", "index": i})
 		cell.placeholder = str(i + 1)
+		cell.placeholder_icon = "flask_coffee" if i == 0 else ("flask_energy" if i == 1 else "")
 		cell.custom_minimum_size = Vector2(CELL * 1.1, CELL * 1.3)
 		belt.add_child(cell)
 		_flask_cells.append(cell)
 
+	# Resumen de cifras en una caja.
+	var summary_box := PanelContainer.new()
+	summary_box.add_theme_stylebox_override("panel", UiStyle.inset_style())
+	box.add_child(summary_box)
 	_summary = RichTextLabel.new()
 	_summary.bbcode_enabled = true
 	_summary.fit_content = true
 	_summary.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(_summary)
+	summary_box.add_child(_summary)
 
+	_bag_header = UiStyle.section_header("Bolsa")
+	box.add_child(_bag_header)
 	var grid := GridContainer.new()
 	grid.columns = BAG_COLUMNS
 	grid.add_theme_constant_override("h_separation", 2)
@@ -95,8 +121,7 @@ func _ready() -> void:
 		grid.add_child(cell)
 		_bag_cells.append(cell)
 
-	box.add_child(UiStyle.label("Arrastra para mover o equipar  ·  Click: equipar / quitar (también pociones)\nArrastra fuera del panel para tirarlo al suelo", 12, UiStyle.MUTED))
-
+	box.add_child(UiStyle.label("Arrastra para mover o equipar  ·  Click: equipar / quitar (también pociones)  ·  Arrastra fuera para tirar", 11, UiStyle.MUTED))
 
 func _make_cell(location: Dictionary) -> ItemCell:
 	var cell := ItemCell.new()
@@ -117,6 +142,11 @@ func _refresh() -> void:
 		_bag_cells[i].set_item(character.inventory.bag[i])
 	for i in _flask_cells.size():
 		_flask_cells[i].set_item(character.inventory.flasks[i])
+	if _silhouette:
+		_silhouette.appearance = character.appearance
+	if _bag_header:
+		var used := character.inventory.bag.filter(func(it) -> bool: return it != null).size()
+		(_bag_header.get_child(1) as Label).text = "Bolsa  (%d / %d)" % [used, Inventory.BAG_SIZE]
 	_refresh_summary()
 
 
@@ -157,6 +187,9 @@ func _on_cell_clicked(cell: ItemCell, button: MouseButton) -> void:
 		elif not inv.equip_flask(cell.location["index"]):
 			message.emit("El cinturón está lleno: arrastra la poción encima de otra para cambiarlas.")
 		_on_cell_hovered(cell, true)
+		return
+	if cell.location["kind"] == "bag" and cell.item is KeyItem:
+		message.emit("Objeto clave: se usa solo al llegar a lo que abre.")
 		return
 	if cell.location["kind"] == "bag":
 		if not cell.item.is_equipment():

@@ -40,7 +40,7 @@
       ],
       "description": "Lanza varios paquetes afilados en abanico. Algunos llegan. Es UDP.",
       "attack": {
-        "damage_effectiveness": 0.75
+        "damage_effectiveness": 0.9
       },
       "projectiles": 3,
       "spread_degrees": 24,

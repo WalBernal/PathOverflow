@@ -1,32 +1,1023 @@
 {
   "version": 1,
-  "_doc": "Acto II: Kernel Panic. Mismo formato que act1.json. Por ahora: la Brecha del 503 (entrada al Kernel) y el Socket Seguro (pueblo del acto). El resto de zonas está diseñado en docs/lore.md.",
+  "_doc": "Acto II: Kernel Panic. Mismo formato que act1.json, más: race_condition (subjefe de dos gemelos que se turnan la vulnerabilidad), mutex (candados que hay que romper para abrir una salida), rare_spawns (enemigos únicos que aparecen según banderas), challenges (pruebas de estrés: oleadas con recompensa), key_items (objetos clave que van a la bolsa), props (decorado: gigantes de hierro, núcleos de CPU) y salidas con requires_item (necesitan un objeto clave) o show_locked (se ven con candado). extra_points: puntos que deben quedar libres de obstáculos.",
   "id": "act2",
   "name": "Acto II: Kernel Panic",
   "start_zone": "brecha_503",
   "town": "socket_seguro",
   "zones": [
     {
-      "id": "brecha_503", "name": "La Brecha del 503", "level": 13, "style": "kernel", "size": [3600, 2000],
-      "entries": { "start": [260, 1000], "from_socket": [3350, 1000] },
-      "cutscene_on_enter": { "id": "llegada_brecha", "unless_flag": "act2_llegada" , "set_flag": "act2_llegada" },
-      "exits": [ { "pos": [3480, 1000], "target": "socket_seguro", "entry": "from_brecha", "label": "Socket Seguro" } ],
-      "enemies": { "packs": 12, "pack_size": [5, 9], "types": ["proceso_zombi", "proceso_zombi", "memory_leak", "hilo_desbocado"], "special_chance": 0.2, "elite_chance": 0.12 },
-      "features": { "count": 4, "kinds": ["void", "chasm"] },
-      "obstacles": { "count": 30, "kinds": ["rack", "pillar", "cable_coil"] }
+      "id": "brecha_503",
+      "name": "La Brecha del 503",
+      "level": 13,
+      "style": "kernel",
+      "size": [
+        3600,
+        2000
+      ],
+      "entries": {
+        "start": [
+          260,
+          1000
+        ],
+        "from_socket": [
+          3350,
+          1000
+        ]
+      },
+      "cutscene_on_enter": {
+        "id": "llegada_brecha",
+        "unless_flag": "act2_llegada",
+        "set_flag": "act2_llegada"
+      },
+      "exits": [
+        {
+          "pos": [
+            3480,
+            1000
+          ],
+          "target": "socket_seguro",
+          "entry": "from_brecha",
+          "label": "Socket Seguro"
+        }
+      ],
+      "enemies": {
+        "packs": 12,
+        "pack_size": [
+          5,
+          9
+        ],
+        "types": [
+          "proceso_zombi",
+          "proceso_zombi",
+          "memory_leak",
+          "hilo_desbocado"
+        ],
+        "special_chance": 0.2,
+        "elite_chance": 0.12
+      },
+      "features": {
+        "count": 4,
+        "kinds": [
+          "void",
+          "chasm"
+        ]
+      },
+      "obstacles": {
+        "count": 30,
+        "kinds": [
+          "rack",
+          "pillar",
+          "cable_coil"
+        ]
+      }
     },
     {
-      "id": "socket_seguro", "name": "El Socket Seguro", "level": 14, "style": "terminal", "size": [1900, 1400], "safe": true,
-      "entries": { "from_brecha": [190, 700], "waypoint": [950, 900] },
-      "exits": [
-        { "pos": [80, 700], "target": "brecha_503", "entry": "from_socket", "label": "La Brecha del 503" },
-        { "pos": [1820, 700], "target": "", "entry": "", "label": "La Fábrica de Hilos",
-          "message": "La Fábrica de Hilos sigue compilando... (el resto del Acto II está en desarrollo)." },
-        { "pos": [1500, 1180], "target": "campamento", "entry": "waypoint", "label": "Túnel al Campamento", "portal": true }
+      "id": "socket_seguro",
+      "name": "El Socket Seguro",
+      "level": 14,
+      "style": "terminal",
+      "size": [
+        1900,
+        1400
       ],
-      "waypoint": [950, 1000],
-      "npcs": [ { "id": "rafa_terminal", "pos": [700, 520] }, { "id": "clara", "pos": [1200, 540] }, { "id": "recolector", "pos": [560, 1060] } ],
-      "obstacles": { "count": 0, "kinds": [] }
+      "safe": true,
+      "entries": {
+        "from_brecha": [
+          190,
+          700
+        ],
+        "waypoint": [
+          950,
+          900
+        ],
+        "from_fabrica": [
+          1710,
+          700
+        ]
+      },
+      "exits": [
+        {
+          "pos": [
+            80,
+            700
+          ],
+          "target": "brecha_503",
+          "entry": "from_socket",
+          "label": "La Brecha del 503"
+        },
+        {
+          "pos": [
+            1820,
+            700
+          ],
+          "target": "fabrica",
+          "entry": "from_socket",
+          "label": "La Fábrica de Hilos"
+        },
+        {
+          "pos": [
+            1500,
+            1180
+          ],
+          "target": "campamento",
+          "entry": "waypoint",
+          "label": "Túnel al Campamento",
+          "portal": true
+        }
+      ],
+      "waypoint": [
+        950,
+        1000
+      ],
+      "npcs": [
+        {
+          "id": "rafa_terminal",
+          "pos": [
+            700,
+            520
+          ]
+        },
+        {
+          "id": "clara",
+          "pos": [
+            1200,
+            540
+          ]
+        },
+        {
+          "id": "recolector",
+          "pos": [
+            560,
+            1060
+          ]
+        }
+      ],
+      "obstacles": {
+        "count": 0,
+        "kinds": []
+      }
+    },
+    {
+      "id": "fabrica",
+      "name": "La Fábrica de Hilos",
+      "level": 15,
+      "style": "fabrica",
+      "size": [
+        3800,
+        2400
+      ],
+      "entries": {
+        "from_socket": [
+          190,
+          1200
+        ],
+        "from_alcantarillas": [
+          3610,
+          600
+        ]
+      },
+      "cutscene_on_enter": {
+        "id": "fabrica_llegada",
+        "unless_flag": "vio_fabrica",
+        "set_flag": "vio_fabrica"
+      },
+      "exits": [
+        {
+          "pos": [
+            80,
+            1200
+          ],
+          "target": "socket_seguro",
+          "entry": "from_fabrica",
+          "label": "Socket Seguro"
+        },
+        {
+          "pos": [
+            3720,
+            600
+          ],
+          "target": "alcantarillas",
+          "entry": "from_fabrica",
+          "label": "Alcantarillas del Buffer Overflow",
+          "requires_flag": "race_condition_down",
+          "show_locked": true,
+          "locked_message": "La compuerta no se abre mientras los Hilos gemelos sigan en carrera."
+        }
+      ],
+      "race_condition": {
+        "pos": [
+          3100,
+          1000
+        ],
+        "flag": "race_condition_down",
+        "names": [
+          "Hilo Alfa",
+          "Hilo Beta"
+        ],
+        "life_mult": 5.0,
+        "swap": 4.0
+      },
+      "challenges": [
+        {
+          "id": "estres_fabrica",
+          "name": "Banco de Pruebas de Estrés",
+          "pos": [
+            1800,
+            1950
+          ],
+          "waves": 4,
+          "types": [
+            "interrupcion",
+            "hilo_desbocado",
+            "proceso_zombi"
+          ],
+          "rewards": [
+            "rare",
+            "rare",
+            "flask"
+          ]
+        }
+      ],
+      "enemies": {
+        "packs": 13,
+        "pack_size": [
+          5,
+          8
+        ],
+        "types": [
+          "interrupcion",
+          "hilo_desbocado",
+          "proceso_zombi"
+        ],
+        "special_chance": 0.2,
+        "elite_chance": 0.12
+      },
+      "features": {
+        "count": 2,
+        "kinds": [
+          "chasm"
+        ]
+      },
+      "obstacles": {
+        "count": 36,
+        "kinds": [
+          "piston",
+          "piston",
+          "heat_sink",
+          "barrel"
+        ]
+      }
+    },
+    {
+      "id": "alcantarillas",
+      "name": "Las Alcantarillas del Buffer Overflow",
+      "level": 17,
+      "style": "alcantarillas",
+      "size": [
+        3800,
+        2400
+      ],
+      "entries": {
+        "from_fabrica": [
+          190,
+          600
+        ],
+        "from_fosa": [
+          3610,
+          1800
+        ],
+        "from_frio": [
+          1900,
+          2120
+        ]
+      },
+      "exits": [
+        {
+          "pos": [
+            80,
+            600
+          ],
+          "target": "fabrica",
+          "entry": "from_alcantarillas",
+          "label": "Fábrica de Hilos"
+        },
+        {
+          "pos": [
+            3720,
+            1800
+          ],
+          "target": "fosa",
+          "entry": "from_alcantarillas",
+          "label": "Fosa de los Procesos Huérfanos"
+        },
+        {
+          "pos": [
+            1900,
+            2240
+          ],
+          "target": "modulo_frio",
+          "entry": "from_alcantarillas",
+          "label": "Módulo de Refrigeración",
+          "requires_item": "tarjeta_rack",
+          "locked_message": "Escotilla de mantenimiento: necesita una Tarjeta de Acceso al Rack en la bolsa."
+        }
+      ],
+      "quest_items": [
+        {
+          "id": "registro_auditoria",
+          "name": "Registro de auditoría de Clara",
+          "pos": [
+            2300,
+            700
+          ],
+          "quest": "main_act2",
+          "cutscene": "registro_clara"
+        },
+        {
+          "id": "descriptor_falso",
+          "name": "Descriptor de archivo (en blanco)",
+          "pos": [
+            900,
+            1750
+          ],
+          "quest": "sindicato_descriptor"
+        }
+      ],
+      "enemies": {
+        "packs": 14,
+        "pack_size": [
+          5,
+          9
+        ],
+        "types": [
+          "memory_leak",
+          "gusano",
+          "interrupcion",
+          "bot_spam"
+        ],
+        "special_chance": 0.2,
+        "elite_chance": 0.12
+      },
+      "features": {
+        "count": 4,
+        "kinds": [
+          "bog",
+          "lake"
+        ]
+      },
+      "obstacles": {
+        "count": 30,
+        "kinds": [
+          "barrel",
+          "cable_coil",
+          "rubble"
+        ]
+      }
+    },
+    {
+      "id": "modulo_frio",
+      "name": "El Módulo de Refrigeración",
+      "level": 18,
+      "style": "frio",
+      "size": [
+        2400,
+        1700
+      ],
+      "entries": {
+        "from_alcantarillas": [
+          1200,
+          200
+        ]
+      },
+      "exits": [
+        {
+          "pos": [
+            1200,
+            80
+          ],
+          "target": "alcantarillas",
+          "entry": "from_frio",
+          "label": "Alcantarillas"
+        }
+      ],
+      "quest_items": [
+        {
+          "id": "cache_1",
+          "name": "Bloque de caché congelado",
+          "pos": [
+            500,
+            1300
+          ],
+          "quest": "cache_en_frio"
+        },
+        {
+          "id": "cache_2",
+          "name": "Bloque de caché congelado",
+          "pos": [
+            1900,
+            1350
+          ],
+          "quest": "cache_en_frio"
+        },
+        {
+          "id": "cache_3",
+          "name": "Bloque de caché congelado",
+          "pos": [
+            1200,
+            1000
+          ],
+          "quest": "cache_en_frio"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "estres_frio",
+          "name": "Prueba de Estrés Térmico",
+          "pos": [
+            1200,
+            650
+          ],
+          "waves": 5,
+          "types": [
+            "node_modules",
+            "memory_leak",
+            "interrupcion"
+          ],
+          "rewards": [
+            "unique",
+            "rare",
+            "ram"
+          ]
+        }
+      ],
+      "enemies": {
+        "packs": 6,
+        "pack_size": [
+          4,
+          7
+        ],
+        "types": [
+          "node_modules",
+          "memory_leak"
+        ],
+        "special_chance": 0.25,
+        "elite_chance": 0.15
+      },
+      "features": {
+        "count": 2,
+        "kinds": [
+          "lake"
+        ]
+      },
+      "obstacles": {
+        "count": 18,
+        "kinds": [
+          "ice_block",
+          "ice_block",
+          "heat_sink"
+        ]
+      }
+    },
+    {
+      "id": "fosa",
+      "name": "La Fosa de los Procesos Huérfanos",
+      "level": 19,
+      "style": "fosa",
+      "size": [
+        3600,
+        2600
+      ],
+      "entries": {
+        "from_alcantarillas": [
+          190,
+          1800
+        ],
+        "from_grieta": [
+          3410,
+          700
+        ],
+        "waypoint": [
+          1800,
+          1200
+        ]
+      },
+      "waypoint": [
+        1800,
+        1300
+      ],
+      "exits": [
+        {
+          "pos": [
+            80,
+            1800
+          ],
+          "target": "alcantarillas",
+          "entry": "from_fosa",
+          "label": "Alcantarillas"
+        },
+        {
+          "pos": [
+            3520,
+            700
+          ],
+          "target": "grieta",
+          "entry": "from_fosa",
+          "label": "Grieta del Deadlock"
+        }
+      ],
+      "npcs": [
+        {
+          "id": "sindicato",
+          "pos": [
+            1450,
+            950
+          ]
+        }
+      ],
+      "rare_spawns": [
+        {
+          "type": "puntero_salvaje",
+          "pos": [
+            2700,
+            1950
+          ],
+          "name": "El Puntero Salvaje",
+          "life_mult": 3.0,
+          "requires_flag": "quest_puntero_salvaje_started",
+          "unless_flag": "puntero_cazado"
+        }
+      ],
+      "challenges": [
+        {
+          "id": "estres_fosa",
+          "name": "Banco de Pruebas de Estrés",
+          "pos": [
+            800,
+            650
+          ],
+          "waves": 4,
+          "types": [
+            "proceso_zombi",
+            "troll_foro",
+            "memory_leak"
+          ],
+          "rewards": [
+            "rare",
+            "ram",
+            "flask"
+          ]
+        }
+      ],
+      "enemies": {
+        "packs": 14,
+        "pack_size": [
+          6,
+          10
+        ],
+        "types": [
+          "proceso_zombi",
+          "proceso_zombi",
+          "memory_leak",
+          "troll_foro"
+        ],
+        "special_chance": 0.2,
+        "elite_chance": 0.14
+      },
+      "features": {
+        "count": 3,
+        "kinds": [
+          "chasm",
+          "bog"
+        ]
+      },
+      "obstacles": {
+        "count": 34,
+        "kinds": [
+          "tomb",
+          "rubble",
+          "barrel"
+        ]
+      }
+    },
+    {
+      "id": "grieta",
+      "name": "La Grieta del Deadlock",
+      "level": 21,
+      "style": "grieta",
+      "size": [
+        3400,
+        2400
+      ],
+      "entries": {
+        "from_fosa": [
+          190,
+          700
+        ],
+        "from_bus": [
+          3000,
+          1200
+        ]
+      },
+      "exits": [
+        {
+          "pos": [
+            80,
+            700
+          ],
+          "target": "fosa",
+          "entry": "from_grieta",
+          "label": "Fosa de los Huérfanos"
+        },
+        {
+          "pos": [
+            3300,
+            1200
+          ],
+          "target": "bus",
+          "entry": "from_grieta",
+          "label": "Bus del Sistema",
+          "requires_flag": "deadlock_open",
+          "show_locked": true,
+          "locked_message": "La compuerta central está trabada: rompe los Candados Mutex que retienen a los gigantes."
+        }
+      ],
+      "props": [
+        {
+          "kind": "iron_giant",
+          "pos": [
+            2850,
+            850
+          ],
+          "free_flag": "deadlock_open"
+        },
+        {
+          "kind": "iron_giant",
+          "pos": [
+            2850,
+            1550
+          ],
+          "flip": true,
+          "free_flag": "deadlock_open"
+        }
+      ],
+      "mutex": {
+        "positions": [
+          [
+            2550,
+            1000
+          ],
+          [
+            2550,
+            1400
+          ],
+          [
+            3050,
+            750
+          ],
+          [
+            3050,
+            1650
+          ]
+        ],
+        "flag": "deadlock_open",
+        "cutscene": "deadlock_resuelto"
+      },
+      "extra_points": [
+        [
+          2550,
+          1000
+        ],
+        [
+          2550,
+          1400
+        ],
+        [
+          3050,
+          750
+        ],
+        [
+          3050,
+          1650
+        ]
+      ],
+      "key_items": [
+        {
+          "id": "tarjeta_rack",
+          "pos": [
+            1400,
+            2000
+          ]
+        }
+      ],
+      "enemies": {
+        "packs": 13,
+        "pack_size": [
+          5,
+          9
+        ],
+        "types": [
+          "hilo_desbocado",
+          "node_modules",
+          "interrupcion"
+        ],
+        "special_chance": 0.22,
+        "elite_chance": 0.15
+      },
+      "features": {
+        "count": 3,
+        "kinds": [
+          "chasm",
+          "cliff"
+        ]
+      },
+      "obstacles": {
+        "count": 30,
+        "kinds": [
+          "pillar",
+          "heat_sink",
+          "piston"
+        ]
+      }
+    },
+    {
+      "id": "bus",
+      "name": "El Bus del Sistema",
+      "level": 23,
+      "style": "bus",
+      "size": [
+        4200,
+        1800
+      ],
+      "entries": {
+        "from_grieta": [
+          190,
+          900
+        ],
+        "from_anillo": [
+          4010,
+          900
+        ],
+        "waypoint": [
+          1000,
+          1000
+        ]
+      },
+      "waypoint": [
+        1000,
+        1100
+      ],
+      "exits": [
+        {
+          "pos": [
+            80,
+            900
+          ],
+          "target": "grieta",
+          "entry": "from_bus",
+          "label": "Grieta del Deadlock"
+        },
+        {
+          "pos": [
+            4120,
+            900
+          ],
+          "target": "anillo0",
+          "entry": "from_bus",
+          "label": "Anillo 0"
+        }
+      ],
+      "enemies": {
+        "packs": 15,
+        "pack_size": [
+          6,
+          10
+        ],
+        "types": [
+          "interrupcion",
+          "hilo_desbocado",
+          "troll_foro",
+          "bot_spam"
+        ],
+        "special_chance": 0.25,
+        "elite_chance": 0.16
+      },
+      "features": {
+        "count": 3,
+        "kinds": [
+          "void"
+        ]
+      },
+      "obstacles": {
+        "count": 34,
+        "kinds": [
+          "rack",
+          "cable_coil",
+          "heat_sink"
+        ]
+      }
+    },
+    {
+      "id": "anillo0",
+      "name": "El Anillo 0 (Ring 0)",
+      "level": 25,
+      "style": "anillo",
+      "size": [
+        2400,
+        2400
+      ],
+      "entries": {
+        "from_bus": [
+          200,
+          1200
+        ]
+      },
+      "cutscene_on_enter": {
+        "id": "anillo_entrada",
+        "unless_flag": "act2_complete"
+      },
+      "exits": [
+        {
+          "pos": [
+            80,
+            1200
+          ],
+          "target": "bus",
+          "entry": "from_anillo",
+          "label": "Bus del Sistema"
+        },
+        {
+          "pos": [
+            1200,
+            2150
+          ],
+          "target": "socket_seguro",
+          "entry": "waypoint",
+          "label": "Túnel al Socket Seguro",
+          "portal": true,
+          "requires_flag": "act2_complete"
+        },
+        {
+          "pos": [
+            2300,
+            1200
+          ],
+          "target": "",
+          "entry": "",
+          "label": "Controladora de bus",
+          "requires_flag": "act2_complete",
+          "message": "La controladora de bus lleva al Silicio Profundo... (el Acto III está en desarrollo)."
+        }
+      ],
+      "props": [
+        {
+          "kind": "cpu_core",
+          "pos": [
+            550,
+            550
+          ]
+        },
+        {
+          "kind": "cpu_core",
+          "pos": [
+            1850,
+            550
+          ]
+        },
+        {
+          "kind": "cpu_core",
+          "pos": [
+            550,
+            1850
+          ]
+        },
+        {
+          "kind": "cpu_core",
+          "pos": [
+            1850,
+            1850
+          ]
+        }
+      ],
+      "boss": {
+        "type": "init",
+        "name": "init (PID 1)",
+        "pos": [
+          1400,
+          1200
+        ],
+        "life_mult": 5.0,
+        "complete_flag": "act2_complete",
+        "death_cutscene": "init_muere",
+        "abilities": [
+          {
+            "id": "fork_bomb",
+            "name": "Fork Bomb",
+            "kind": "summon",
+            "type": "init_fork",
+            "count": 6,
+            "cooldown": 7.0,
+            "first": 2.0,
+            "windup": 0.9,
+            "min_life": 0.66,
+            "color": "ff8a3a"
+          },
+          {
+            "id": "sigchld",
+            "name": "SIGCHLD",
+            "kind": "projectile_nova",
+            "count": 10,
+            "speed": 280,
+            "cooldown": 5.0,
+            "first": 4.0,
+            "windup": 0.7,
+            "damage_mult": 0.6,
+            "min_life": 0.66,
+            "color": "ffb050"
+          },
+          {
+            "id": "nice",
+            "name": "nice -20: NMI Trap",
+            "kind": "projectile_nova",
+            "count": 22,
+            "speed": 360,
+            "cooldown": 3.0,
+            "first": 0.5,
+            "windup": 0.6,
+            "damage_mult": 0.7,
+            "min_life": 0.33,
+            "max_life": 0.66,
+            "color": "ff5050",
+            "description": "Ráfagas de interrupciones: cúbrete tras los disipadores."
+          },
+          {
+            "id": "fork_bomb_2",
+            "name": "Fork Bomb",
+            "kind": "summon",
+            "type": "init_fork",
+            "count": 4,
+            "cooldown": 9.0,
+            "first": 5.0,
+            "windup": 0.8,
+            "min_life": 0.33,
+            "max_life": 0.66,
+            "color": "ff8a3a"
+          },
+          {
+            "id": "oom",
+            "name": "OOM Killer",
+            "kind": "oom_beam",
+            "count": 2,
+            "cooldown": 6.0,
+            "first": 0.5,
+            "windup": 0.8,
+            "delay": 1.6,
+            "width": 70,
+            "damage_mult": 1.8,
+            "self_damage": 0.07,
+            "max_life": 0.33,
+            "cores": [
+              [
+                550,
+                550
+              ],
+              [
+                1850,
+                550
+              ],
+              [
+                550,
+                1850
+              ],
+              [
+                1850,
+                1850
+              ]
+            ],
+            "color": "e0e040",
+            "description": "Rayos desde los núcleos a través de ti: alinéate para que también atraviesen a init."
+          },
+          {
+            "id": "sigchld_3",
+            "name": "SIGCHLD",
+            "kind": "projectile_nova",
+            "count": 12,
+            "speed": 300,
+            "cooldown": 5.5,
+            "first": 3.0,
+            "windup": 0.7,
+            "damage_mult": 0.6,
+            "max_life": 0.33,
+            "color": "ffb050"
+          }
+        ]
+      },
+      "obstacles": {
+        "count": 6,
+        "kinds": [
+          "heat_sink"
+        ]
+      }
     }
   ]
 }

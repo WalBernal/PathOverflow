@@ -54,6 +54,8 @@ static func fits(character: CharacterData, loc: Dictionary, item: Item) -> Strin
 			var slot: String = loc["slot"]
 			if item is Flask:
 				return "Las pociones van en el cinturón de pociones (abajo del inventario)."
+			if item is KeyItem:
+				return "Es un objeto clave: se queda en la bolsa y abre caminos bloqueados."
 			if not item.is_equipment():
 				return "Eso no se lleva puesto. Las placas y la RAM van en el menú de habilidades (K)."
 			var ok := item.slot() == slot or (item.slot() == "ring" and slot.begins_with("ring"))
@@ -105,8 +107,11 @@ static func move(character: CharacterData, from: Dictionary, to: Dictionary) -> 
 
 
 ## Saca el objeto de `from` (para tirarlo al suelo). Devuelve el objeto.
+## Los objetos clave no se pueden tirar (devuelve null).
 static func take(character: CharacterData, from: Dictionary) -> Item:
 	var item := get_at(character.inventory, from)
+	if item is KeyItem:
+		return null
 	if item:
 		_set_at(character.inventory, from, null)
 		character.inventory.changed.emit()

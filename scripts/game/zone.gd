@@ -15,6 +15,9 @@ signal exit_reached(exit: Dictionary)
 signal waypoint_clicked
 signal waypoint_touched
 signal quest_item_picked(item: Dictionary)
+signal key_item_picked(item: Dictionary)
+signal challenge_touched(challenge: Dictionary)
+signal exit_blocked(exit: Dictionary)
 
 const NPC_DATA_PATH := "res://data/npcs.json"
 const TALK_RANGE := 70.0
@@ -33,7 +36,11 @@ const EDGE_MAX := 230.0
 const OBSTACLE_RADIUS := {
 	"rock": 34.0, "crate": 26.0, "monitor": 24.0, "cable_tree": 32.0, "pillar": 34.0, "rubble": 30.0,
 	"puddle": 46.0, "dead_tree": 28.0, "tomb": 24.0, "rack": 32.0, "cable_coil": 26.0,
+	"piston": 30.0, "heat_sink": 40.0, "barrel": 22.0, "ice_block": 30.0,
 }
+const CHALLENGE_RADIUS := 60.0
+## Radio de la "arena" de una prueba de estrés activa.
+const CHALLENGE_ARENA := 520.0
 ## Accidentes del terreno: radio mínimo y máximo.
 const FEATURE_RADIUS := {
 	"lake": [110.0, 160.0], "hill": [100.0, 150.0], "cliff": [100.0, 160.0], "chasm": [90.0, 140.0],
@@ -50,6 +57,13 @@ const STYLES := {
 	"boss": {"ground": "1a0f12", "decal": "2a1418", "edge": "lava", "outside": "2a0808"},
 	"kernel": {"ground": "11161a", "decal": "1c262c", "edge": "void", "outside": "030405"},
 	"terminal": {"ground": "0c1810", "decal": "15301f", "edge": "racks", "outside": "040906"},
+	"fabrica": {"ground": "1e1a16", "decal": "2a241c", "edge": "wall", "outside": "0c0a08"},
+	"alcantarillas": {"ground": "141c1c", "decal": "1c2a2a", "edge": "water", "outside": "081014"},
+	"fosa": {"ground": "1c1814", "decal": "28221a", "edge": "cliff", "outside": "0e0c0a"},
+	"grieta": {"ground": "16161a", "decal": "222228", "edge": "cliff", "outside": "060608"},
+	"bus": {"ground": "10141c", "decal": "1a2230", "edge": "void", "outside": "04060a"},
+	"anillo": {"ground": "1e1210", "decal": "2e1a14", "edge": "lava", "outside": "200806"},
+	"frio": {"ground": "141c24", "decal": "1e2c38", "edge": "water", "outside": "08101a"},
 }
 const PHOSPHOR := Color("3cff6a")
 const TERMINAL_LINES := [
@@ -74,6 +88,11 @@ var has_waypoint := false
 var waypoint := Vector2.ZERO
 var npcs: Array = []                    # como en npcs.json + "position"
 var quest_items: Array = []             # {id, name, pos, quest}
+var key_items: Array = []               # {id, pos} (objetos clave que van a la bolsa)
+var challenges: Array = []              # pruebas de estrés: {id, pos, name, waves, ...}
+var props: Array = []                   # decorado especial (gigantes de hierro...)
+## Prueba de estrés en curso (World la pone): se dibuja la arena.
+var active_challenge: Dictionary = {}
 var dialogues: Dictionary = {}
 var player: Player
 var character: CharacterData
@@ -89,6 +108,7 @@ var _pending: Dictionary = {}           # {"kind": "npc"|"waypoint", "npc": {...
 var _hovered_npc := -1
 var _time := 0.0
 var _exits_armed := false
+var _challenge_armed := true
 
 
 static func npc_database() -> Dictionary:
@@ -112,7 +132,7 @@ func setup(p_def: Dictionary, p_player: Player, p_character: CharacterData, p_qu
 	rect = Rect2(Vector2.ZERO, Vector2(def["size"][0], def["size"][1]))
 	for e in def.get("exits", []):
 		var exit := {"pos": _v(e["pos"]), "target": e["target"], "entry": e.get("entry", ""), "label": e.get("label", "")}
-		for key in ["requires_flag", "portal", "message"]:
+		for key in ["requires_flag", "requires_item", "show_locked", "locked_message", "portal", "message", "cutscene"]:
 			if e.has(key):
 				exit[key] = e[key]
 		exits.append(exit)
@@ -120,7 +140,21 @@ func setup(p_def: Dictionary, p_player: Player, p_character: CharacterData, p_qu
 		has_waypoint = true
 		waypoint = _v(def["waypoint"])
 	for q in def.get("quest_items", []):
-		quest_items.append({"id": q["id"], "name": q.get("name", q["id"]), "pos": _v(q["pos"]), "quest": q.get("quest", "")})
+		var entry: Dictionary = q.duplicate()
+		entry["pos"] = _v(q["pos"])
+		entry["name"] = q.get("name", q["id"])
+		entry["quest"] = q.get("quest", "")
+		quest_items.append(entry)
+	for k in def.get("key_items", []):
+		key_items.append({"id": k["id"], "pos": _v(k["pos"])})
+	for c in def.get("challenges", []):
+		var entry: Dictionary = c.duplicate()
+		entry["pos"] = _v(c["pos"])
+		challenges.append(entry)
+	for p in def.get("props", []):
+		var entry: Dictionary = p.duplicate()
+		entry["pos"] = _v(p["pos"])
+		props.append(entry)
 	var db := npc_database()
 	dialogues = db.get("dialogues", {})
 	for placement in def.get("npcs", []):
@@ -169,6 +203,14 @@ func key_points() -> Array[Vector2]:
 		points.append(_v(placement["pos"]))
 	for q in def.get("quest_items", []):
 		points.append(_v(q["pos"]))
+	for k in def.get("key_items", []):
+		points.append(_v(k["pos"]))
+	for c in def.get("challenges", []):
+		points.append(_v(c["pos"]))
+	for p in def.get("props", []):
+		points.append(_v(p["pos"]))
+	for p in def.get("extra_points", []):
+		points.append(_v(p))
 	if def.has("boss"):
 		points.append(_v(def["boss"]["pos"]))
 	return points
@@ -460,7 +502,24 @@ static func _v(a: Array) -> Vector2:
 # --- Interacción ---
 
 func exit_open(e: Dictionary) -> bool:
-	return not e.has("requires_flag") or (character != null and character.flags.has(e["requires_flag"]))
+	return exit_visible(e) and not exit_blocked_reason(e) != ""
+
+
+## Las salidas con requires_flag no se ven hasta tener la bandera, salvo las
+## marcadas show_locked (se ven con candado). Las de requires_item, siempre.
+func exit_visible(e: Dictionary) -> bool:
+	if e.has("requires_flag") and not (character != null and character.flags.has(e["requires_flag"])):
+		return e.get("show_locked", false)
+	return true
+
+
+## "" si se puede pasar; si no, el motivo (para el aviso).
+func exit_blocked_reason(e: Dictionary) -> String:
+	if e.has("requires_flag") and not (character != null and character.flags.has(e["requires_flag"])):
+		return e.get("locked_message", "Bloqueado.")
+	if e.has("requires_item") and not (character != null and KeyItem.has_key(character.inventory, e["requires_item"])):
+		return e.get("locked_message", "Necesitas %s en la bolsa." % KeyItem.DEFS.get(e["requires_item"], {}).get("name", e["requires_item"]))
+	return ""
 
 
 func _process(delta: float) -> void:
@@ -470,11 +529,14 @@ func _process(delta: float) -> void:
 		return
 	var near_exit := false
 	for e in exits:
-		if exit_open(e) and player.global_position.distance_to(e["pos"]) < EXIT_RADIUS:
+		if exit_visible(e) and player.global_position.distance_to(e["pos"]) < EXIT_RADIUS:
 			near_exit = true
 			if _exits_armed:
 				_exits_armed = false
-				exit_reached.emit(e)
+				if exit_blocked_reason(e) != "":
+					exit_blocked.emit(e)
+				else:
+					exit_reached.emit(e)
 				return
 	if not near_exit:
 		_exits_armed = true
@@ -483,6 +545,27 @@ func _process(delta: float) -> void:
 	for q in quest_items:
 		if quest_item_visible(q) and player.global_position.distance_to(q["pos"]) < QUEST_ITEM_RADIUS:
 			quest_item_picked.emit(q)
+	for k in key_items:
+		if key_item_visible(k) and player.global_position.distance_to(k["pos"]) < QUEST_ITEM_RADIUS:
+			key_item_picked.emit(k)
+	var near_challenge := false
+	for c in challenges:
+		if challenge_available(c) and player.global_position.distance_to(c["pos"]) < CHALLENGE_RADIUS:
+			near_challenge = true
+			if _challenge_armed:
+				_challenge_armed = false
+				challenge_touched.emit(c)
+	if not near_challenge:
+		_challenge_armed = true
+
+
+func key_item_visible(k: Dictionary) -> bool:
+	return character != null and not character.flags.has("got_key_" + String(k["id"]))
+
+
+## Disponible si no se ha superado ya y no hay otra en marcha.
+func challenge_available(c: Dictionary) -> bool:
+	return character != null and not character.flags.has("challenge_done_" + String(c["id"])) and active_challenge.is_empty()
 
 
 func quest_item_visible(q: Dictionary) -> bool:
@@ -744,9 +827,17 @@ func _draw() -> void:
 		_draw_hub_terminal()
 	elif style == "kernel":
 		_draw_kernel_flicker()
+	for p in props:
+		_draw_prop(p)
 	for e in exits:
-		if exit_open(e):
+		if exit_visible(e):
 			_draw_exit(e)
+	for k in key_items:
+		if key_item_visible(k):
+			_draw_key_item(k)
+	for c in challenges:
+		if character and not character.flags.has("challenge_done_" + String(c["id"])):
+			_draw_challenge(c)
 	if has_waypoint:
 		_draw_waypoint()
 	for q in quest_items:
@@ -858,6 +949,32 @@ func _draw_obstacle(o: Dictionary) -> void:
 		"cable_coil":
 			for k in 3:
 				draw_arc(p, r * (1.0 - k * 0.25), 0.0, TAU, 20, Color("2a2a30").lightened(k * 0.1), 4.0, true)
+		"piston":
+			# Pistón rítmico con vapor.
+			var stroke := (0.5 + 0.5 * sin(_time * 3.0 + seed_value)) * r * 0.9
+			draw_rect(Rect2(p + Vector2(-r * 0.7, -r * 0.2), Vector2(r * 1.4, r * 0.9)), Color("5a4a3a"))
+			draw_rect(Rect2(p + Vector2(-r * 0.25, -r * 1.2 - stroke), Vector2(r * 0.5, r + stroke)), Color("9a9ea8"))
+			draw_rect(Rect2(p + Vector2(-r * 0.55, -r * 1.35 - stroke), Vector2(r * 1.1, r * 0.3)), Color("6a6e78"))
+			var steam := fmod(_time * 0.8 + seed_value % 5 * 0.2, 1.0)
+			draw_circle(p + Vector2(r * 0.6, -r * 0.4 - steam * 40.0), 6.0 + steam * 10.0, Color(0.9, 0.9, 0.95, 0.25 * (1.0 - steam)))
+		"heat_sink":
+			# Disipador: bloque de aletas (sirve de cobertura).
+			draw_rect(Rect2(p - Vector2(r, r * 0.7), Vector2(r * 2.0, r * 1.4)), Color("8a9098"))
+			for k in 7:
+				var x := p.x - r + 4.0 + k * (r * 2.0 - 8.0) / 6.0
+				draw_line(Vector2(x, p.y - r * 0.7), Vector2(x, p.y + r * 0.7), Color("5a6068"), 3.0)
+			draw_rect(Rect2(p - Vector2(r, r * 0.7), Vector2(r * 2.0, r * 1.4)), Color("3a4048"), false, 2.0)
+		"barrel":
+			draw_rect(Rect2(p - Vector2(r * 0.8, r), Vector2(r * 1.6, r * 1.8)), Color("3a5a3a"))
+			draw_line(p + Vector2(-r * 0.8, -r * 0.4), p + Vector2(r * 0.8, -r * 0.4), Color("2a3a2a"), 2.0)
+			draw_line(p + Vector2(-r * 0.8, r * 0.3), p + Vector2(r * 0.8, r * 0.3), Color("2a3a2a"), 2.0)
+			draw_string(ThemeDB.fallback_font, p + Vector2(-r * 0.7, 4), "0xFF", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("9ad06a"))
+		"ice_block":
+			var pts := PackedVector2Array()
+			for k in 6:
+				pts.append(p + Vector2.from_angle(TAU * k / 6.0 + seed_value) * r * (0.85 + 0.15 * sin(k + seed_value)))
+			draw_colored_polygon(pts, Color(0.7, 0.85, 1.0, 0.85))
+			draw_line(p + Vector2(-r * 0.4, -r * 0.3), p + Vector2(r * 0.2, r * 0.2), Color(1, 1, 1, 0.8), 2.0)
 		_:
 			draw_circle(p, r, Color("4a4352"))
 
@@ -982,7 +1099,14 @@ func _draw_exit(e: Dictionary) -> void:
 	var p: Vector2 = e["pos"]
 	var glow := 0.5 + 0.5 * sin(_time * 3.0)
 	var portal: bool = e.get("portal", false)
+	var locked := exit_blocked_reason(e) != ""
 	var color := Color(0.75, 0.45, 1.0) if portal else Color(0.5, 0.8, 1.0)
+	if locked:
+		color = Color(0.85, 0.3, 0.3)
+		# Candado delante de la salida.
+		draw_rect(Rect2(p + Vector2(-12, -8), Vector2(24, 20)), Color("8a8e98"))
+		draw_arc(p + Vector2(0, -8), 8.0, PI, TAU, 12, Color("8a8e98"), 4.0)
+		draw_circle(p + Vector2(0, 1), 3.0, Color("1a1a1e"))
 	draw_set_transform(p, 0.0, Vector2(0.55, 1.0))
 	draw_circle(Vector2.ZERO, EXIT_RADIUS + 10.0, Color(color, 0.08 + 0.06 * glow))
 	draw_circle(Vector2.ZERO, EXIT_RADIUS, Color(color.darkened(0.6), 0.45))
@@ -997,6 +1121,8 @@ func _draw_exit(e: Dictionary) -> void:
 	var label: String = e["label"]
 	if not portal:
 		label = ("← %s" if p.x < rect.get_center().x else "%s →") % label
+	if locked:
+		label = "[bloqueado] " + label
 	draw_string_outline(font, p + Vector2(-130, -EXIT_RADIUS - 18), label, HORIZONTAL_ALIGNMENT_CENTER, 260, 15, 5, Color.BLACK)
 	draw_string(font, p + Vector2(-130, -EXIT_RADIUS - 18), label, HORIZONTAL_ALIGNMENT_CENTER, 260, 15, color.lightened(0.3))
 
@@ -1019,6 +1145,84 @@ func _draw_waypoint() -> void:
 	var font := ThemeDB.fallback_font
 	draw_string_outline(font, p + Vector2(-80, -80), "Waypoint", HORIZONTAL_ALIGNMENT_CENTER, 160, 14, 5, Color.BLACK)
 	draw_string(font, p + Vector2(-80, -80), "Waypoint", HORIZONTAL_ALIGNMENT_CENTER, 160, 14, color)
+
+
+func _draw_key_item(k: Dictionary) -> void:
+	var p: Vector2 = k["pos"]
+	var bob := sin(_time * 3.0) * 4.0
+	draw_circle(p, 30.0, Color(1.0, 0.85, 0.3, 0.10 + 0.08 * sin(_time * 4.0)))
+	ItemIcons.draw(self, Rect2(p + Vector2(-18, -22 + bob), Vector2(36, 36)), KeyItem.DEFS.get(k["id"], {}).get("icon", "key_card"))
+	var name: String = KeyItem.DEFS.get(k["id"], {}).get("name", k["id"])
+	var font := ThemeDB.fallback_font
+	draw_string_outline(font, p + Vector2(-120, -30 + bob), name, HORIZONTAL_ALIGNMENT_CENTER, 240, 13, 5, Color.BLACK)
+	draw_string(font, p + Vector2(-120, -30 + bob), name, HORIZONTAL_ALIGNMENT_CENTER, 240, 13, KeyItem.COLOR)
+
+
+## Banco de Pruebas de Estrés: tócalo para ver la recompensa y aceptar las oleadas.
+func _draw_challenge(c: Dictionary) -> void:
+	var p: Vector2 = c["pos"]
+	var active: bool = active_challenge.get("id", "") == c["id"]
+	if active:
+		var pulse := 0.5 + 0.5 * sin(_time * 5.0)
+		draw_arc(p, CHALLENGE_ARENA, 0.0, TAU, 96, Color(1.0, 0.3, 0.2, 0.35 + 0.3 * pulse), 4.0, true)
+		draw_circle(p, CHALLENGE_ARENA, Color(1.0, 0.2, 0.1, 0.04))
+	draw_set_transform(p + Vector2(0, 14), 0.0, Vector2(1.0, 0.35))
+	draw_circle(Vector2.ZERO, 36.0, Color(0, 0, 0, 0.4))
+	draw_set_transform(Vector2.ZERO)
+	var box := Rect2(p - Vector2(22, 50), Vector2(44, 64))
+	draw_rect(box, Color("2a1e1e"))
+	draw_rect(box, Color("e06c3a") if active else Color("d9a441"), false, 2.0)
+	# Medidor de carga.
+	var load := 0.5 + 0.5 * sin(_time * (6.0 if active else 1.5))
+	draw_rect(Rect2(box.position + Vector2(8, 10), Vector2(28, 8)), Color("101010"))
+	draw_rect(Rect2(box.position + Vector2(8, 10), Vector2(28 * load, 8)), Color("e0503a") if load > 0.7 else Color("6fd36b"))
+	for k in 4:
+		draw_circle(box.position + Vector2(12 + k * 7, 34), 2.0, Color("e0503a") if fmod(_time * 3.0 + k, 2.0) < 1.0 else Color("401010"))
+	var font := ThemeDB.fallback_font
+	var label: String = c.get("name", "Banco de Pruebas de Estrés")
+	var bob := sin(_time * 3.0) * 3.0
+	draw_string_outline(font, p + Vector2(-140, -62 + bob), label, HORIZONTAL_ALIGNMENT_CENTER, 280, 14, 5, Color.BLACK)
+	draw_string(font, p + Vector2(-140, -62 + bob), label, HORIZONTAL_ALIGNMENT_CENTER, 280, 14, Color("ff9a4a"))
+	if not active:
+		draw_string_outline(font, p + Vector2(-10, -80 + bob), "!", HORIZONTAL_ALIGNMENT_CENTER, 20, 24, 5, Color.BLACK)
+		draw_string(font, p + Vector2(-10, -80 + bob), "!", HORIZONTAL_ALIGNMENT_CENTER, 20, 24, Color("ff9a4a"))
+
+
+## Gigantes de hierro de la Grieta del Deadlock: encadenados mientras no se abra.
+func _draw_prop(p: Dictionary) -> void:
+	match String(p.get("kind", "")):
+		"iron_giant":
+			var pos: Vector2 = p["pos"]
+			var s := -1.0 if p.get("flip", false) else 1.0
+			var free: bool = character != null and character.flags.has(p.get("free_flag", ""))
+			var lean := 0.0 if free else sin(_time * 1.5) * 2.0
+			var metal := Color("4a4e58")
+			draw_set_transform(pos + Vector2(0, 40), 0.0, Vector2(1.0, 0.3))
+			draw_circle(Vector2.ZERO, 80.0, Color(0, 0, 0, 0.4))
+			draw_set_transform(Vector2.ZERO)
+			draw_rect(Rect2(pos + Vector2(-50, -120 + lean), Vector2(100, 130)), metal)
+			draw_rect(Rect2(pos + Vector2(-34, -170 + lean), Vector2(68, 50)), metal.lightened(0.1))
+			draw_circle(pos + Vector2(-12, -148 + lean), 6.0, Color("e0503a") if not free else Color("6fd36b"))
+			draw_circle(pos + Vector2(12, -148 + lean), 6.0, Color("e0503a") if not free else Color("6fd36b"))
+			# Brazo extendido hacia el otro gigante, agarrando su recurso.
+			draw_line(pos + Vector2(s * 50, -90 + lean), pos + Vector2(s * (70.0 if free else 150.0), -80), metal.darkened(0.2), 18.0)
+			if not free:
+				for k in 5:
+					var q := pos + Vector2(s * (60 + k * 18), -60 + k * 4)
+					draw_arc(q, 7.0, 0.0, TAU, 10, Color("8a8e98"), 3.0)
+				draw_string(ThemeDB.fallback_font, pos + Vector2(-60, -190), "esperando recurso...", HORIZONTAL_ALIGNMENT_CENTER, 120, 12, Color("e06c6c"))
+		"cpu_core":
+			# Núcleo de la CPU: se sobrecalienta por turnos (y de él salen los rayos del OOM Killer).
+			var pos: Vector2 = p["pos"]
+			var heat := 0.5 + 0.5 * sin(_time * 1.3 + pos.x * 0.01 + pos.y * 0.02)
+			draw_circle(pos, 90.0, Color(1.0, 0.4, 0.1, 0.05 + 0.10 * heat))
+			draw_rect(Rect2(pos - Vector2(46, 46), Vector2(92, 92)), Color("2a2a30"))
+			draw_rect(Rect2(pos - Vector2(36, 36), Vector2(72, 72)), Color(0.35 + 0.5 * heat, 0.18, 0.1))
+			for k in 6:
+				var o := -40.0 + k * 16.0
+				for side in [Vector2(o, -52), Vector2(o, 52), Vector2(-52, o), Vector2(52, o)]:
+					draw_rect(Rect2(pos + side - Vector2(3, 3), Vector2(6, 6)), Color("c0a060"))
+			draw_string(ThemeDB.fallback_font, pos + Vector2(-40, 6), "CORE", HORIZONTAL_ALIGNMENT_CENTER, 80, 14, Color(1, 0.9, 0.7, 0.6 + 0.4 * heat))
 
 
 func _draw_quest_item(q: Dictionary) -> void:

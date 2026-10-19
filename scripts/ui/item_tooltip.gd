@@ -61,6 +61,10 @@ static func build_text(item: Item, character: CharacterData, compare: bool) -> S
 		return _ram_text(item as RamModule)
 	if item is Flask:
 		return _flask_text(item as Flask, character)
+	if item is KeyItem:
+		return "[center][color=#%s][b]%s[/b][/color]\n[color=#%s]Objeto clave[/color][/center]\n%s" % [
+			KeyItem.COLOR.to_html(false), item.display_name(), GREY,
+			_section("[i][color=#a08f6a]%s[/color][/i]" % (item as KeyItem).description())]
 	var color := Rarity.item_color(item.rarity).to_html(false)
 	var t := "[center][color=#%s][b]%s[/b][/color]\n" % [color, item.display_name()]
 	if item.rarity != Rarity.Item.NORMAL and item.rarity != Rarity.Item.MAGIC:
@@ -103,6 +107,15 @@ static func _motherboard_text(board: Motherboard, character: CharacterData) -> S
 	var t := "[center][color=#%s][b]%s[/b][/color]\n[color=#%s]Placa base · Nivel %d[/color]\n%s[/center]\n" % [
 		Motherboard.COLOR.to_html(false), board.display_name(), GREY, board.level, _tag_list(skill.get("tags", []))]
 	t += _section("[i][color=#a08f6a]%s[/color][/i]" % skill.get("description", ""))
+	# Progreso de la placa: experiencia, mejoras por nivel y hitos.
+	var xp_line := "Nivel [color=#e8d9b0]%d[/color] / %d" % [board.level, Motherboard.MAX_LEVEL]
+	if board.level < Motherboard.MAX_LEVEL:
+		xp_line += "  ·  Experiencia [color=#e8d9b0]%d / %d[/color]" % [board.experience, board.experience_to_next()]
+	var hits := PackedStringArray()
+	for m in SkillCalc.MILESTONES:
+		hits.append(("[color=#6fd36b]✔ nv. %d[/color]" if board.level >= m else "[color=#8a8293]nv. %d[/color]") % m)
+	t += _section("%s\n[color=#8a8293]Cada nivel: más daño, +1 %% de área y duración, -1 %% de enfriamiento.[/color]\nHitos (%s): %s" % [
+		xp_line, SkillCalc.milestone_text(skill), "  ".join(hits)])
 	if character:
 		var p := SkillCalc.compute(board, character)
 		var lines := PackedStringArray()

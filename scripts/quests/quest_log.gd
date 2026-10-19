@@ -85,7 +85,17 @@ func step_text(id: String) -> String:
 	var text: String = step.get("text", "")
 	if step.get("type", "") == "kill":
 		text += " (%d/%d)" % [mini(int(state(id).get("count", 0)), int(step.get("count", 1))), int(step.get("count", 1))]
+	elif step.get("type", "") == "collect" and step.has("items"):
+		text += " (%d/%d)" % [_collected(step), step["items"].size()]
 	return text
+
+
+func _collected(step: Dictionary) -> int:
+	var n := 0
+	for item_id in step.get("items", []):
+		if character.flags.has("item_" + String(item_id)):
+			n += 1
+	return n
 
 
 ## Activas, la principal primero.
@@ -107,7 +117,7 @@ func notify_zone(zone_id: String) -> void:
 	refresh()
 
 
-func notify_kill(zone_id: String, rarity: int) -> void:
+func notify_kill(zone_id: String, rarity: int, type_id := "") -> void:
 	for id in active_ids():
 		var step := current_step(id)
 		if step.get("type", "") != "kill":
@@ -115,6 +125,8 @@ func notify_kill(zone_id: String, rarity: int) -> void:
 		if step.get("zone", "") != "" and step["zone"] != zone_id:
 			continue
 		if rarity < int(RARITY_BY_NAME.get(step.get("min_rarity", "normal"), 0)):
+			continue
+		if step.get("enemy_type", "") != "" and step["enemy_type"] != type_id:
 			continue
 		_states()[id]["count"] = int(_states()[id].get("count", 0)) + 1
 		quest_progressed.emit(id)
@@ -185,6 +197,8 @@ func _satisfied(id: String, step: Dictionary) -> bool:
 		"kill":
 			return int(state(id).get("count", 0)) >= int(step.get("count", 1))
 		"collect":
+			if step.has("items"):
+				return _collected(step) >= step["items"].size()
 			return character.flags.has("item_" + String(step.get("item", "")))
 	return false   # turn_in y desconocidos: no se cumplen solos
 

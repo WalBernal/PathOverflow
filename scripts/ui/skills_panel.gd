@@ -11,9 +11,11 @@ extends PanelContainer
 
 signal message(text: String)
 signal drop_to_ground(location: Dictionary)
+signal close_requested
 
-const DIMM_SIZE := Vector2(40, 40)
-const ROW_HEIGHT := 50.0
+const DIMM_SIZE := Vector2(34, 50)
+const ROW_HEIGHT := 58.0
+const ATTRIBUTE_COLORS := {"str": Color("c84b4b"), "dex": Color("5cb85c"), "int": Color("4b8bd6")}
 
 var character: CharacterData
 var _tooltip: ItemTooltip
@@ -30,17 +32,18 @@ func setup(p_character: CharacterData, tooltip: ItemTooltip) -> void:
 
 
 func _ready() -> void:
-	add_theme_stylebox_override("panel", UiStyle.panel_style())
 	theme = UiStyle.make_theme()
+	UiStyle.decorate_window(self)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 10)
+	box.add_theme_constant_override("separation", 8)
 	add_child(box)
-	box.add_child(UiStyle.label("Habilidades: placas base y RAM", 20, UiStyle.ACCENT))
-	box.add_child(UiStyle.label("Arrastra placas a la barra y RAM a una ranura de su color. Arrastra a la bolsa para quitar.\nTambién con clicks: click en la RAM y luego en la ranura; doble click la coloca sola.", 12, UiStyle.MUTED))
+	box.add_child(UiStyle.window_header("Habilidades", "Placas base (habilidades) y módulos RAM (soportes)  ·  K para cerrar",
+		func() -> void: close_requested.emit()))
+	box.add_child(UiStyle.label("Arrastra placas a la barra y RAM a una ranura de su color; a la bolsa para quitar. Click en la RAM y luego en la ranura, o doble click.", 11, UiStyle.MUTED))
 	_rows = VBoxContainer.new()
 	_rows.add_theme_constant_override("separation", 6)
 	box.add_child(_rows)
-	box.add_child(UiStyle.label("En la bolsa (suelta aquí para desinstalar)", 16, UiStyle.ACCENT))
+	box.add_child(UiStyle.section_header("En la bolsa  (suelta aquí para desinstalar)"))
 	var bag_drop := _BagDropZone.new()
 	bag_drop.panel = self
 	bag_drop.custom_minimum_size = Vector2(640, 52)
@@ -79,11 +82,19 @@ func _rebuild() -> void:
 
 func _make_row(index: int) -> Control:
 	var board: Motherboard = character.inventory.boards[index]
+	var card := PanelContainer.new()
+	var accent: Color = ATTRIBUTE_COLORS.get(board.skill_def.get("attribute", ""), UiStyle.BORDER) if board else Color("2e2836")
+	var style := UiStyle.inset_style(accent.darkened(0.35) if board else Color("2a2530"))
+	style.border_width_left = 4 if board else 1
+	style.content_margin_top = 4
+	style.content_margin_bottom = 4
+	card.add_theme_stylebox_override("panel", style)
 	var row := HBoxContainer.new()
 	row.custom_minimum_size.y = ROW_HEIGHT
-	row.add_theme_constant_override("separation", 6)
+	row.add_theme_constant_override("separation", 8)
+	card.add_child(row)
 
-	var key := UiStyle.label(SkillController.KEY_LABELS[index], 14, UiStyle.ACCENT)
+	var key := UiStyle.label(SkillController.KEY_LABELS[index], 15, UiStyle.ACCENT)
 	key.custom_minimum_size.x = 34
 	key.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	row.add_child(key)
@@ -91,28 +102,55 @@ func _make_row(index: int) -> Control:
 	var icon := _make_cell({"kind": "board", "index": index})
 	icon.show_skill_icon = true
 	icon.placeholder = "Vacía"
+	icon.placeholder_icon = "motherboard"
 	icon.custom_minimum_size = Vector2(ROW_HEIGHT, ROW_HEIGHT)
 	row.add_child(icon)
 
-	var name_label := UiStyle.label("%s  (nv. %d)" % [board.skill_def["name"], board.level] if board else "Arrastra aquí una placa", 14,
-		Motherboard.COLOR if board else UiStyle.MUTED)
-	name_label.custom_minimum_size.x = 200
-	name_label.clip_text = true
-	row.add_child(name_label)
+	# Nombre, nivel, experiencia y etiquetas.
+	var info := VBoxContainer.new()
+	info.custom_minimum_size.x = 230
+	info.add_theme_constant_override("separation", 1)
+	row.add_child(info)
+	if board:
+		var title := UiStyle.label("%s  ·  nv. %d" % [board.skill_def["name"], board.level], 15, Motherboard.COLOR.lightened(0.2))
+		title.clip_text = true
+		info.add_child(title)
+		var xp := Control.new()
+		xp.custom_minimum_size = Vector2(220, 6)
+		xp.tooltip_text = "Experiencia de la placa: %d / %d (sube matando con ella instalada)" % [board.experience, board.experience_to_next()]
+		xp.mouse_filter = Control.MOUSE_FILTER_PASS
+		xp.draw.connect(func() -> void:
+			var frac: float = float(board.experience) / maxf(1.0, board.experience_to_next())
+			xp.draw_rect(Rect2(Vector2.ZERO, xp.size), Color(0, 0, 0, 0.7))
+			xp.draw_rect(Rect2(Vector2.ZERO, Vector2(xp.size.x * frac, xp.size.y)), Motherboard.COLOR)
+			xp.draw_rect(Rect2(Vector2.ZERO, xp.size), Color(UiStyle.GOLD, 0.4), false, 1.0))
+		info.add_child(xp)
+		var tags := RichTextLabel.new()
+		tags.bbcode_enabled = true
+		tags.fit_content = true
+		tags.scroll_active = false
+		tags.custom_minimum_size.x = 230
+		tags.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		tags.add_theme_font_size_override("normal_font_size", 11)
+		tags.text = SkillTags.bbcode(board.skill_def.get("tags", []))
+		info.add_child(tags)
+	else:
+		info.alignment = BoxContainer.ALIGNMENT_CENTER
+		info.add_child(UiStyle.label("Arrastra aquí una placa base", 13, UiStyle.MUTED))
 
 	if board:
 		for d in board.slots.size():
 			var dimm := _make_cell({"kind": "dimm", "board": index, "dimm": d})
 			dimm.slot_color = RamModule.GENERATION_COLORS[board.slots[d]]
 			dimm.placeholder = board.slots[d]
+			dimm.dimm_socket = true
 			dimm.custom_minimum_size = DIMM_SIZE
 			var ram: RamModule = board.rams[d]
 			dimm.warning = ram != null and not ram.supports(board.skill_def)
 			var selected: RamModule = character.inventory.bag[_selected_ram] if _selected_ram != -1 else null
 			dimm.selected = selected != null and ram == null and selected.generation() == board.slots[d]
 			row.add_child(dimm)
-	return row
-
+	return card
 
 func _make_bag_cell(bag_index: int) -> ItemCell:
 	var cell := _make_cell({"kind": "bag", "index": bag_index})

@@ -5,12 +5,14 @@ extends Item
 ## que modifica la habilidad (como las gemas de soporte de PoE).
 
 const COLOR := Color("1ba29b")
-const MAX_LEVEL := 20
+const MAX_LEVEL := 40
 const MIN_SLOTS := 3
 const MAX_SLOTS := 7
 
 var skill_def: Dictionary
 var level := 1
+## Experiencia hacia el siguiente nivel (las placas instaladas la ganan al matar).
+var experience := 0
 ## Generación de cada ranura ("DDR3", "DDR4" o "DDR5").
 var slots: Array[String] = []
 ## RamModule instalado en cada ranura, o null.
@@ -24,6 +26,24 @@ func _init(p_skill_def: Dictionary = {}, p_level := 1, p_slots: Array = []) -> v
 	level = clampi(p_level, 1, MAX_LEVEL)
 	slots.assign(p_slots)
 	rams.resize(slots.size())
+
+
+## Un poco más rápida que la del personaje, para que la placa no se quede atrás.
+func experience_to_next() -> int:
+	return int(60.0 * pow(level, 1.55))
+
+
+## Devuelve true si ha subido de nivel.
+func add_experience(amount: int) -> bool:
+	if level >= MAX_LEVEL:
+		return false
+	experience += amount
+	var leveled := false
+	while level < MAX_LEVEL and experience >= experience_to_next():
+		experience -= experience_to_next()
+		level += 1
+		leveled = true
+	return leveled
 
 
 func display_name() -> String:
@@ -90,6 +110,7 @@ func to_dict() -> Dictionary:
 		"kind": "motherboard",
 		"skill_id": skill_def.get("id", ""),
 		"level": level,
+		"experience": experience,
 		"item_level": item_level,
 		"slots": slots,
 		"rams": ram_data,
@@ -103,6 +124,7 @@ static func from_save(d: Dictionary, db: ItemDatabase) -> Motherboard:
 		return null
 	var board := Motherboard.new(def, int(d.get("level", 1)), d.get("slots", []))
 	board.item_level = int(d.get("item_level", 1))
+	board.experience = int(d.get("experience", 0))
 	var ram_data: Array = d.get("rams", [])
 	for i in mini(ram_data.size(), board.slots.size()):
 		if ram_data[i] is Dictionary:

@@ -26,6 +26,10 @@ var selected := false
 var show_skill_icon := false
 ## Marca en rojo (p. ej. una RAM instalada que no afecta a su habilidad).
 var warning := false
+## Silueta tenue de lo que va en la ranura vacía (id de icono de ItemIcons).
+var placeholder_icon := ""
+## Ranura DIMM: se dibuja como un zócalo de memoria.
+var dimm_socket := false
 
 var _dragging := false
 
@@ -86,33 +90,59 @@ func _notification(what: int) -> void:
 
 func _draw() -> void:
 	var rect := Rect2(Vector2.ZERO, size)
-	draw_rect(rect, BG)
-	if slot_color.a > 0.0:
-		draw_rect(rect, Color(slot_color, 0.15 if item == null else 0.3))
 	var font := get_theme_default_font()
+	# Fondo con relieve: más oscuro abajo a la derecha, filo claro arriba a la izquierda.
+	draw_rect(rect, BG)
+	draw_rect(Rect2(rect.position, Vector2(rect.size.x, rect.size.y * 0.5)), Color(1, 1, 1, 0.025))
+	if slot_color.a > 0.0:
+		draw_rect(rect, Color(slot_color, 0.12 if item == null else 0.25))
+	draw_line(Vector2(1, 1), Vector2(size.x - 1, 1), Color(1, 1, 1, 0.06), 1.0)
+	draw_line(Vector2(1, 1), Vector2(1, size.y - 1), Color(1, 1, 1, 0.06), 1.0)
+	draw_line(Vector2(1, size.y - 1), Vector2(size.x - 1, size.y - 1), Color(0, 0, 0, 0.5), 1.0)
 	if item == null:
+		if dimm_socket:
+			_draw_dimm_socket(rect)
+		elif placeholder_icon != "":
+			ItemIcons.draw(self, rect.grow(-maxf(6.0, minf(size.x, size.y) * 0.18)), placeholder_icon, Color(1, 1, 1, 0.10), false)
 		draw_rect(rect, slot_color.darkened(0.2) if slot_color.a > 0.0 else BORDER, false, 1.0)
-		if placeholder != "":
-			var y := size.y / 2.0 + font.get_ascent(11) / 2.0 - 1.0
-			draw_string(font, Vector2(0, y), placeholder, HORIZONTAL_ALIGNMENT_CENTER, size.x, 11,
-				slot_color.lightened(0.2) if slot_color.a > 0.0 else Color("4a4352"))
+		if placeholder != "" and not dimm_socket:
+			var y := size.y - 5.0 if placeholder_icon != "" else size.y / 2.0 + font.get_ascent(11) / 2.0 - 1.0
+			draw_string(font, Vector2(0, y), placeholder, HORIZONTAL_ALIGNMENT_CENTER, size.x, 10 if placeholder_icon != "" else 11,
+				slot_color.lightened(0.2) if slot_color.a > 0.0 else Color("5a5363"))
 		if selected:
 			draw_rect(rect, UiStyle.ACCENT, false, 3.0)
 		return
 	var color := item.display_color()
-	draw_rect(rect.grow(-1.0), Color(color, 0.12))
+	# Brillo de rareza: más intenso cuanto más raro.
+	var glow := 0.10 + 0.05 * clampi(item.rarity, 0, 4)
+	draw_rect(rect.grow(-1.0), Color(color, glow))
 	var board := item as Motherboard
 	if board and show_skill_icon:
 		SkillIcon.draw(self, rect.grow(-3.0), board.skill_def)
 	else:
 		ItemIcons.draw_item(self, rect.grow(-3.0), item)
-	draw_rect(rect, color.darkened(0.2), false, 2.0 if item.rarity >= Rarity.Item.RARE else 1.0)
+	draw_rect(rect, color.darkened(0.15), false, 2.0 if item.rarity >= Rarity.Item.RARE else 1.0)
+	if item.rarity >= Rarity.Item.UNIQUE and not item is Flask and not item is KeyItem:
+		draw_rect(rect.grow(-3.0), Color(color, 0.35), false, 1.0)
 	if warning:
 		draw_line(Vector2(3, 3), size - Vector2(3, 3), Color("e06c6c"), 2.0)
 		draw_rect(rect, Color("e06c6c"), false, 2.0)
 	if selected:
 		draw_rect(rect, UiStyle.ACCENT, false, 3.0)
 
+
+## Zócalo DIMM vacío: ranura con contactos dorados y una muesca, del color de su generación.
+func _draw_dimm_socket(rect: Rect2) -> void:
+	var c := slot_color if slot_color.a > 0.0 else Color("5a5363")
+	var slot := Rect2(rect.position + Vector2(size.x * 0.3, 4), Vector2(size.x * 0.4, size.y - 8))
+	draw_rect(slot, Color(0, 0, 0, 0.6))
+	draw_rect(slot, Color(c, 0.8), false, 1.0)
+	for k in 5:
+		var y := slot.position.y + 4 + k * (slot.size.y - 8) / 5.0
+		draw_line(Vector2(slot.position.x + 2, y), Vector2(slot.end.x - 2, y), Color("8a6d3b"), 1.0)
+	draw_rect(Rect2(slot.position.x - 2, slot.get_center().y - 2, slot.size.x + 4, 4), BG)   # muesca
+	var font := get_theme_default_font()
+	draw_string(font, Vector2(0, size.y - 1), placeholder, HORIZONTAL_ALIGNMENT_CENTER, size.x, 9, c.lightened(0.2))
 
 ## Lo que se ve bajo el cursor al arrastrar.
 class _DragPreview extends Control:

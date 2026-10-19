@@ -11,7 +11,9 @@ extends Node2D
 ## Si el benchmark se queda corto, este es el archivo a portar a C# o a
 ## GDExtension (C++): la interfaz pública no tendría que cambiar.
 
-signal enemy_killed(rarity: Rarity.Enemy, experience: int, position: Vector2)
+signal enemy_killed(rarity: Rarity.Enemy, experience: int, position: Vector2, type_id: String)
+## Un golpe a un enemigo inmune (para el aviso "INMUNE").
+signal immune_hit(position: Vector2)
 
 const TYPES_PATH := "res://data/enemies.json"
 const ATLAS := preload("res://assets/sprites/enemies/enemies.png")
@@ -85,6 +87,7 @@ var windups := PackedFloat32Array()   # > 0: preparando su ataque (telegrafiado)
 var attack_dirs := PackedVector2Array()
 var dashes := PackedFloat32Array()    # > 0: embistiendo
 var dash_hit := PackedByteArray()     # 1 si la embestida ya golpeó al jugador
+var immune := PackedByteArray()       # 1 = no recibe daño (gemelos de la Carrera Crítica)
 
 ## Proyectiles enemigos: {pos, vel, damage, radius, life, color}
 var projectiles: Array[Dictionary] = []
@@ -139,7 +142,7 @@ func count() -> int:
 ## custom_name y life_mult: para jefes con nombre propio.
 ## abilities: habilidades especiales (jefes), ver act1.json → boss.abilities.
 func spawn(pos: Vector2, rarity: Rarity.Enemy, type_index := -1, custom_name := "", life_mult := 1.0,
-		special_abilities: Array = []) -> void:
+		special_abilities: Array = []) -> int:
 	if type_index < 0:
 		type_index = random_type(rarity == Rarity.Enemy.UNIQUE)
 	var t: Dictionary = enemy_types()[type_index] if not enemy_types().is_empty() else {}
@@ -166,11 +169,33 @@ func spawn(pos: Vector2, rarity: Rarity.Enemy, type_index := -1, custom_name := 
 	attack_dirs.append(Vector2.RIGHT)
 	dashes.append(0.0)
 	dash_hit.append(0)
+	immune.append(0)
 	if not special_abilities.is_empty():
 		var list: Array = []
 		for a in special_abilities:
 			list.append({"def": a, "timer": float(a.get("first", a.get("cooldown", 6.0) * 0.5))})
 		abilities[ids[ids.size() - 1]] = list
+	return ids[ids.size() - 1]
+
+
+func set_immune(id: int, value: bool) -> void:
+	var i := index_of(id)
+	if i != -1:
+		immune[i] = 1 if value else 0
+
+
+## ¿Sigue vivo el enemigo con ese id?
+func is_alive_id(id: int) -> bool:
+	return index_of(id) != -1
+
+
+func count_type(type_id: String) -> int:
+	var t := type_index_of(type_id)
+	var n := 0
+	for k in types:
+		if k == t:
+			n += 1
+	return n
 
 
 func type_index_of(type_id: String) -> int:
@@ -332,6 +357,10 @@ func hit_index(i: int, min_damage: float, max_damage: float, crit_chance: float,
 
 
 func _damage(i: int, min_damage: float, max_damage: float, crit_chance: float, crit_multiplier: float) -> void:
+	if immune[i] == 1:
+		flashes[i] = FLASH_TIME * 0.5
+		immune_hit.emit(positions[i])
+		return
 	var damage := randf_range(min_damage, max_damage)
 	if randf() * 100.0 < crit_chance:
 		damage *= crit_multiplier / 100.0
@@ -387,6 +416,7 @@ func _physics_process(delta: float) -> void:
 			windups[i] -= delta
 			if windups[i] <= 0.0 and hunting:
 				_resolve_attack(i, atk, player_pos)
+				pos = positions[i]   # el teletransporte mueve al enemigo
 		elif casting.has(ids[i]):
 			var cast: Dictionary = casting[ids[i]]
 			cast["time"] -= delta
@@ -417,6 +447,12 @@ func _physics_process(delta: float) -> void:
 					if d2 < min_dist * min_dist and d2 > 0.0001:
 						var d := sqrt(d2)
 						push += diff / d * (min_dist - d)
+		# Estáticos (candados...): no se mueven ni se dejan empujar; es el jugador quien choca con ellos.
+		if speeds[i] <= 0.0:
+			if dist < reach and dist > 0.001:
+				player.global_position = pos + to_player / dist * reach
+			i += 1
+			continue
 		# No se meten dentro del jugador.
 		if dist < reach and dist > 0.001:
 			push -= to_player / dist * (reach - dist)
@@ -458,6 +494,19 @@ func _decide(i: int, atk: Dictionary, kind: String, to_player: Vector2, dist: fl
 			if dist < keep - 70.0:
 				return -dir * speed * 0.8   # se aleja (kiting)
 			return dir.orthogonal() * speed * 0.4 * (1.0 if ids[i] % 2 == 0 else -1.0)  # se mueve de lado
+		"none":
+			return Vector2.ZERO   # candados, torres... no se mueven ni atacan
+		"blink":
+			# Se teletransporta cerca del jugador cada poco (telegrafiado en el destino).
+			if cooldowns[i] <= 0.0 and dist < float(atk.get("range", 600.0)):
+				var dest := positions[i] + Vector2.from_angle(randf() * TAU) * randf_range(150.0, float(atk.get("jump", 380.0)))
+				if walk_clamp.is_valid():
+					dest = walk_clamp.call(dest, radii[i])
+				attack_dirs[i] = dest
+				windups[i] = float(atk.get("windup", 0.5))
+				cooldowns[i] = float(atk.get("cooldown", 2.5)) + windups[i]
+				return Vector2.ZERO
+			return dir * speed if dist > reach else Vector2.ZERO
 		"charge", "slam", "cone":
 			var trigger := float(atk.get("range", 120.0))
 			if dist <= trigger and cooldowns[i] <= 0.0:
@@ -482,6 +531,10 @@ func _resolve_attack(i: int, atk: Dictionary, player_pos: Vector2) -> void:
 	var damage := damages[i] * float(atk.get("damage_mult", 1.0))
 	var dir := attack_dirs[i]
 	match String(atk.get("kind", "melee")):
+		"blink":
+			_flashes_fx.append({"type": "circle", "pos": pos, "radius": radii[i] + 10.0, "time": 0.0, "color": Color(atk.get("color", "c08aff"))})
+			positions[i] = attack_dirs[i]
+			_flashes_fx.append({"type": "circle", "pos": positions[i], "radius": radii[i] + 14.0, "time": 0.0, "color": Color(atk.get("color", "c08aff"))})
 		"ranged":
 			var count := int(atk.get("projectiles", 1))
 			var spread := deg_to_rad(float(atk.get("spread", 0.0)))
@@ -520,8 +573,12 @@ func _try_ability(i: int, delta: float, dist: float, player_pos: Vector2) -> boo
 	var rate := 1.4 if lives[i] < max_lives[i] * 0.5 else 1.0
 	for a in list:
 		a["timer"] -= delta * rate
+	var life_fraction := lives[i] / max_lives[i]
 	for a in list:
-		if a["timer"] <= 0.0 and dist < float(a["def"].get("range", 700.0)):
+		var d: Dictionary = a["def"]
+		if life_fraction > float(d.get("max_life", 1.01)) or life_fraction <= float(d.get("min_life", -1.0)):
+			continue   # habilidad de otra fase
+		if a["timer"] <= 0.0 and dist < float(d.get("range", 700.0)):
 			a["timer"] = float(a["def"].get("cooldown", 6.0))
 			var windup := float(a["def"].get("windup", 0.8))
 			casting[ids[i]] = {"def": a["def"], "time": windup, "total": windup, "target": player_pos}
@@ -550,8 +607,25 @@ func _resolve_ability(i: int, def: Dictionary, target: Vector2) -> void:
 					"delay": float(def.get("delay", 1.0)) + k * 0.12, "damage": damage, "color": Color(def.get("color", "ff8c2a"))})
 		"summon":
 			var type_index := type_index_of(def.get("type", "bug"))
-			for k in int(def.get("count", 3)):
-				spawn(pos + Vector2.from_angle(TAU * k / maxf(1.0, def.get("count", 3))) * (radii[i] + 50.0), Rarity.Enemy.NORMAL, type_index)
+			var count := int(def.get("count", 3))
+			for k in count:
+				var p := pos + Vector2.from_angle(TAU * k / maxf(1.0, count) + randf()) * (radii[i] + 60.0)
+				if walk_clamp.is_valid():
+					p = walk_clamp.call(p, 12.0)
+				spawn(p, Rarity.Enemy.NORMAL, type_index, def.get("summon_name", ""), float(def.get("summon_life", 1.0)))
+		"oom_beam":
+			# OOM Killer: un rayo desde un núcleo de la CPU a través del jugador.
+			# Si al disparar atraviesa al propio jefe, se lo come él.
+			var cores: Array = def.get("cores", [])
+			for k in int(def.get("count", 1)):
+				var core: Vector2 = Vector2(cores[k % cores.size()][0], cores[k % cores.size()][1]) if not cores.is_empty() else pos
+				var dir := (target - core).normalized()
+				if dir == Vector2.ZERO:
+					dir = Vector2.RIGHT
+				hazards.append({"kind": "beam", "pos": core, "dir": dir, "length": float(def.get("length", 2600.0)),
+					"radius": float(def.get("width", 60.0)) * 0.5, "time": 0.0, "delay": float(def.get("delay", 1.4)) + k * 0.35,
+					"damage": damage, "color": Color(def.get("color", "e0e040")), "boss_id": ids[i],
+					"self_damage": float(def.get("self_damage", 0.08))})
 
 
 func _update_projectiles(delta: float) -> void:
@@ -591,10 +665,32 @@ func _update_hazards(delta: float) -> void:
 		if h["time"] < h["delay"]:
 			still.append(h)
 			continue
+		if h.get("kind", "") == "beam":
+			_resolve_beam(h)
+			continue
 		_flashes_fx.append({"type": "circle", "pos": h["pos"], "radius": h["radius"], "time": 0.0, "color": h["color"]})
 		if player and player.is_alive() and h["pos"].distance_to(player.global_position) <= h["radius"] + Player.RADIUS:
 			player.take_damage(h["damage"])
 	hazards = still
+
+
+func _resolve_beam(h: Dictionary) -> void:
+	var a: Vector2 = h["pos"]
+	var b: Vector2 = a + h["dir"] * h["length"]
+	_flashes_fx.append({"type": "beam", "pos": a, "end": b, "radius": h["radius"], "time": 0.0, "color": h["color"]})
+	if player and player.is_alive():
+		var p := Geometry2D.get_closest_point_to_segment(player.global_position, a, b)
+		if p.distance_to(player.global_position) <= h["radius"] + Player.RADIUS:
+			player.take_damage(h["damage"])
+	var bi := index_of(h["boss_id"])
+	if bi != -1:
+		var q := Geometry2D.get_closest_point_to_segment(positions[bi], a, b)
+		if q.distance_to(positions[bi]) <= h["radius"] + radii[bi]:
+			# El OOM Killer elige al proceso que más pesa... el propio jefe.
+			lives[bi] -= max_lives[bi] * float(h["self_damage"])
+			flashes[bi] = FLASH_TIME * 3.0
+			if lives[bi] <= 0.0:
+				_kill(bi)
 
 func _process(_delta: float) -> void:
 	var n := positions.size()
@@ -622,6 +718,9 @@ func _draw() -> void:
 	for i in positions.size():
 		if stuns[i] > 0.0:
 			_draw_stun(positions[i] + Vector2(0, -radii[i] * SPRITE_SCALE * 1.1 - 18.0))
+		if immune[i] == 1:
+			var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 120.0)
+			draw_arc(positions[i], radii[i] * 1.7, 0.0, TAU, 32, Color(0.6, 0.8, 1.0, 0.4 + 0.4 * pulse), 3.0, true)
 		var rarity := rarities[i]
 		if rarity == Rarity.Enemy.NORMAL and lives[i] >= max_lives[i]:
 			continue
@@ -667,6 +766,10 @@ func _draw_attacks(font: Font) -> void:
 					var side := dir.orthogonal() * w * 0.5
 					draw_colored_polygon(PackedVector2Array([pos + side, pos + side + dir * length, pos - side + dir * length, pos - side]), Color(TELEGRAPH, 0.10))
 					draw_colored_polygon(PackedVector2Array([pos + side, pos + side + dir * length * t, pos - side + dir * length * t, pos - side]), Color(TELEGRAPH, 0.22))
+				"blink":
+					var dest := attack_dirs[i]
+					draw_arc(dest, radii[i] + 6.0, 0.0, TAU, 24, Color(Color(atk.get("color", "c08aff")), 0.4 + 0.5 * t), 2.0, true)
+					draw_circle(dest, (radii[i] + 6.0) * t, Color(Color(atk.get("color", "c08aff")), 0.2))
 				"ranged":
 					draw_line(pos, pos + dir * 60.0, Color(Color(atk.get("color", "e0c040")), 0.6 * t), 2.0, true)
 					draw_circle(pos + dir * (radii[i] + 4.0), 3.0 + 4.0 * t, Color(atk.get("color", "e0c040")))
@@ -682,12 +785,21 @@ func _draw_attacks(font: Font) -> void:
 	for h in hazards:
 		var t: float = clampf(h["time"] / h["delay"], 0.0, 1.0)
 		var c: Color = h["color"]
+		if h.get("kind", "") == "beam":
+			var b: Vector2 = h["pos"] + h["dir"] * h["length"]
+			draw_line(h["pos"], b, Color(c, 0.10), h["radius"] * 2.0)
+			draw_line(h["pos"], b, Color(c, 0.25 + 0.5 * t), 2.0 + 4.0 * t, true)
+			continue
 		draw_circle(h["pos"], h["radius"], Color(c, 0.10))
 		draw_circle(h["pos"], h["radius"] * t, Color(c, 0.25))
 		draw_arc(h["pos"], h["radius"], 0.0, TAU, 40, Color(c, 0.8), 2.0, true)
 	for fx in _flashes_fx:
 		var a: float = 1.0 - fx["time"] / 0.25
 		var c: Color = fx["color"]
+		if fx["type"] == "beam":
+			draw_line(fx["pos"], fx["end"], Color(c, 0.7 * a), fx["radius"] * 2.0)
+			draw_line(fx["pos"], fx["end"], Color(1, 1, 1, 0.8 * a), fx["radius"] * 0.5)
+			continue
 		if fx["type"] == "cone":
 			draw_colored_polygon(_cone_points(fx["pos"], fx["dir"], fx["radius"], fx["half"]), Color(c, 0.45 * a))
 		else:
@@ -724,8 +836,9 @@ func _kill(i: int) -> void:
 	var type_mult: float = types_list[types[i]].get("xp_mult", 1.0) if types[i] < types_list.size() else 1.0
 	var xp := int(BASE_EXPERIENCE * info.xp_mult * type_mult * (1.0 + 0.15 * (area_level - 1)))
 	var pos := positions[i]
+	var type_id: String = types_list[types[i]]["id"] if types[i] < types_list.size() else ""
 	_remove(i)
-	enemy_killed.emit(rarity, xp, pos)
+	enemy_killed.emit(rarity, xp, pos, type_id)
 
 
 ## Borrado O(1): el último enemigo ocupa el hueco.
@@ -753,6 +866,7 @@ func _remove(i: int) -> void:
 		attack_dirs[i] = attack_dirs[last]
 		dashes[i] = dashes[last]
 		dash_hit[i] = dash_hit[last]
+		immune[i] = immune[last]
 	_resize_all(last)
 
 
@@ -776,6 +890,7 @@ func _resize_all(n: int) -> void:
 	attack_dirs.resize(n)
 	dashes.resize(n)
 	dash_hit.resize(n)
+	immune.resize(n)
 
 
 func _rebuild_grid() -> void:

@@ -23,7 +23,7 @@ Por ahora es solo para un jugador en local, pero la lógica está escrita para p
 | P | Árbol pasivo (pausa el juego) |
 | Esc | Cierra lo abierto; si no hay nada, menú de pausa |
 | F1 / F2 / F3 / F4 | Depuración: +30 enemigos / limpiar / jefe único / botín de prueba |
-| R | Reaparecer en el waypoint del campamento tras morir |
+| R | Reaparecer en el pueblo del acto tras morir |
 | Click en un waypoint | Viajar a otro waypoint descubierto |
 
 Todas las teclas están en *Proyecto → Configuración del proyecto → Mapa de entrada*. Pasa el ratón por cualquier elemento del HUD para ver una ayuda.
@@ -35,6 +35,14 @@ Todas las teclas están en *Proyecto → Configuración del proyecto → Mapa de
 **Animación al caminar**: piernas alternas que se levantan, brazos en oposición y el cuerpo sube y baja con cada paso. El ciclo avanza con la distancia recorrida de verdad, así que los pies no "patinan" y, si choca contra algo, deja de andar en el sitio. De perfil, las piernas avanzan y retroceden y el cuerpo se inclina.
 
 `scenes/ui/passive_tree_screen.tscn` funciona sola (F6) para probar builds, y `scenes/game/world.tscn` (F6) arranca con un personaje temporal que no se guarda.
+
+## Progresión
+
+- **Puntos de pasiva**: se empieza con 0; cada nivel da 1 y las misiones de la historia dan puntos extra (2 por cada misión principal de acto y 1 por algunas secundarias).
+- **Las placas base suben de nivel** (hasta el 40) con la experiencia mientras están instaladas, como las gemas de PoE. Cada nivel da más daño (hechizos: +15 % lineal ×1,03; ataques: +12 % sobre el arma), +1 % de área, ancho y duración y -1 % de enfriamiento. En los **niveles 10, 20 y 30** ganan un hito según la habilidad: +1 proyectil, +1 salto de cadena, +1 esbirro, +1 bomba a la vez, +10 % de área o +10 % de daño. El tooltip muestra el nivel, la experiencia y los hitos.
+- **Atributos con daño**: la Fuerza da daño físico cuerpo a cuerpo (1 % por cada 4), la Destreza daño de proyectiles (1 % por cada 4) y velocidad de ataque, y la Inteligencia daño de hechizos (1 % por cada 4). Los caminos de atributos del árbol dan +12.
+- **Ascendencias** con mucho impacto: bonificaciones grandes (+25-60 % más) y efectos que cambian las habilidades: proyectiles adicionales, cadenas adicionales, esbirros adicionales o más trampas, minas y torretas a la vez.
+- Estos cambios **devuelven los puntos de pasiva** a los personajes guardados (árbol versión 4).
 
 ## Habilidades: placas base y RAM
 
@@ -100,7 +108,7 @@ El acto está definido en `data/act1.json` y lo construye `Zone` (`scripts/game/
 |---|---|---|---|
 | El Sandbox | 1 | | Tutorial: pocos bugs, más botín y B.O.B., el bot de onboarding |
 | Campamento | 1 | ✔ | Zona segura, punto de reaparición; Aida, Mario y Rafa |
-| El Bosque de Cables | 2 | | Iris, la becaria perdida |
+| El Bosque de Cables | 2 | | Iris, la practicante perdida |
 | Las Ruinas del Monolito | 4 | ✔ | |
 | El Pantano de Memory Leaks | 6 | | Tomás, el último QA |
 | Las Catacumbas del Legacy | 8 | ✔ | |
@@ -118,9 +126,29 @@ El acto está definido en `data/act1.json` y lo construye `Zone` (`scripts/game/
 - **NPCs y lore** en `data/npcs.json` (en el campamento: Aida la Senior, Mario el Becario y Rafa el SysAdmin, que escribe con muchos puntos suspensivos...; sus ids internos siguen siendo `ada`, `kevin` y `root` para no romper los guardados): diálogos con opciones, condiciones (`requires_flag`) y acciones (regalos que se dan una sola vez). Cuentan la historia del administrador que hizo `push --force` "por el Monolito".
 - **Tutorial** (`data/tutorial.json`, versión 2): 12 pasos. Empieza en el Sandbox (moverse, atacar, matar, recoger, equipar, pociones, pasivas) y sigue en el campamento (Aida, RAM, Mario, salir al Bosque). Los personajes con el tutorial antiguo continúan donde corresponde.
 
-## Acto II: Kernel Panic (en desarrollo)
+## Acto II: Kernel Panic
 
-`data/act2.json`. Por ahora: **La Brecha del 503** (nivel 13, procesos zombi, el suelo parpadea entre binario y vacío) y **El Socket Seguro**, el pueblo del acto: una sesión SSH con Rafa conectado por datos móviles en un monitor de fósforo verde, Clara (Líder de Infraestructura) y El Recolector (un Garbage Collector que tacha sus frases y recicla 3 piezas de equipo normal por un objeto mejor). El resto del acto está diseñado en [`docs/lore.md`](docs/lore.md). Los waypoints se agrupan por acto y se reaparece en el pueblo del acto en el que estés.
+`data/act2.json`. El pueblo es **El Socket Seguro** (waypoint y reaparición): Rafa por datos del celular, Clara y El Recolector.
+
+| Zona | Nivel | Waypoint | Lo que hay |
+|---|---|---|---|
+| La Brecha del 503 | 13 | | Entrada al Kernel, procesos zombi |
+| El Socket Seguro | 14 | ✔ | Pueblo del acto |
+| La Fábrica de Hilos | 15 | | Pistones; subjefe **Carrera Crítica** (dos gemelos que se turnan la inmunidad: ataca al que le toca); prueba de estrés |
+| Las Alcantarillas del Buffer Overflow | 17 | | Registro de auditoría de Clara (revelación); escotilla **cerrada** al Módulo de Refrigeración |
+| El Módulo de Refrigeración (opcional) | 18 | | Solo con la **Tarjeta de Acceso al Rack** en la bolsa; Caché en Frío; prueba de estrés de 5 oleadas |
+| La Fosa de los Procesos Huérfanos | 19 | ✔ | Sindicato de Huérfanos (PID 404); el Puntero Salvaje (se teletransporta); prueba de estrés |
+| La Grieta del Deadlock | 21 | | Dos gigantes de hierro trabados: rompe los 4 **Candados Mutex** para abrir la compuerta; aquí está la Tarjeta de Acceso al Rack |
+| El Bus del Sistema | 23 | ✔ | Camino al núcleo |
+| El Anillo 0 | 25 | | Jefe: **init (PID 1)** |
+
+- **Camino bloqueado**: la escotilla del Módulo de Refrigeración (Alcantarillas) necesita la Tarjeta de Acceso al Rack, que está más adelante, en la Grieta del Deadlock: hay que volver con ella en la bolsa. Los objetos clave (`KeyItem`) no se pueden tirar.
+- **Pruebas de estrés (oleadas)**: al tocar un Banco de Pruebas de Estrés se ve la recompensa concreta (con tooltip) y se puede aceptar. Empiezan las oleadas alrededor del banco (cada una más dura; la última con élites) y, si sobrevives, cae la recompensa mostrada más botín adicional. Si mueres o sales de la zona, se reinicia. Se definen en `challenges` de cada zona.
+- **init** tiene tres fases según su vida: *Fork Bomb* (copias frágiles; usa daño de área), *nice -20* (ráfagas de interrupciones: cúbrete tras los disipadores, que bloquean proyectiles) y *OOM Killer* (rayos desde los núcleos a través de ti: si también atraviesan a init, le quitan un 7 % de vida). Al morir, la escena final revela el giro hacia el Acto III.
+- **Enemigos nuevos**: Interrupción (IRQ, tres proyectiles), Candado Mutex (inmóvil), Puntero Salvaje (se teletransporta con aviso), Hilo gemelo, Copia de init e init.
+- **Misiones secundarias**: El Puntero Salvaje (Rafa), La Petición del Sindicato, Caché en Frío (Clara) y Prueba de Carga (El Recolector).
+
+El lore completo está en [`docs/lore.md`](docs/lore.md).
 
 ## Misiones
 
@@ -155,6 +183,8 @@ El **registro de misiones** está debajo del minimapa (L para plegarlo): la prin
 
 ## Interfaz
 
+- **Recuadros de lo activo** (sobre la barra de habilidades): esbirros, torretas, trampas, minas, giros y pociones de utilidad, con cuántos hay y el tiempo que les queda.
+- **Inventario y Habilidades** con marco de ventana (esquinas doradas, cabecera, botón de cerrar), siluetas en las ranuras vacías, zócalos DIMM y tarjetas de habilidad con nivel, experiencia y etiquetas.
 - **HUD**: orbes de vida/ES y maná, café y bebida energética con cargas (vapor y burbujas cuando están listas), barra de 6 habilidades con enfriamiento y coste, experiencia y botones de menú (C, I, K, P).
 - **Minimapa** (arriba a la derecha): el suelo de la zona, obstáculos, salidas, waypoint, NPCs, enemigos por rareza y botín valioso, con flechas hacia las salidas que quedan fuera de vista. Debajo, el nombre y nivel de la zona. Se oculta mientras el inventario está abierto.
 - **Hoja de personaje** (C): retrato animado de pecho hacia arriba que respira, parpadea, te sigue con la mirada, toma café, piensa (con spinner de carga), bosteza, se pone gafas de sol si su DPS es alto y suda con poca vida. Incluye atributos, defensas con su efecto real (reducción de la armadura, probabilidad de esquivar), resistencias con comentarios, ofensiva de la habilidad principal, muertes, enemigos eliminados y un estado de ánimo calculado.
@@ -172,19 +202,23 @@ Las pociones son **objetos**: caen como botín (las de nivel cercano al de la zo
 
 Las bebidas son parodias de marcas reales (nombres y latas inventados). Cada poción tiene su sprite. Se definen en `data/items/flasks.json`; los personajes antiguos reciben el Café de máquina y la Pepsy al cargar.
 
-## Clases
+## Clases: tu primer trabajo
 
-| Clase | Atributos | Arma | Habilidades iniciales |
-|---|---|---|---|
-| Guerrero | FUE | Hacha de leñador | Barrido, Teletransporte TCP |
-| Duelista | FUE/DES | Espada oxidada | Barrido, Ráfaga de Paquetes |
-| Exploradora | DES | Espada oxidada | Ráfaga de Paquetes, Teletransporte TCP |
-| **Hacker** | DES/INT | Daga de root | Rollback, Excepción en Cadena |
-| Hechicero | INT | Maza de depuración | Ping Letal, Stack Overflow |
-| Templario | INT/FUE | Maza de depuración | Fork Bomb, Barrido |
-| **Full Stack** | las tres | Teclado mecánico | Bucle Infinito, Flamewar |
+El personaje es un recién egresado que se enfrenta al mundo laboral: cada clase es un puesto de entrada y sus ascendencias, los caminos de carrera que salen de él.
 
-Cada una con 3 ascendencias. El Full Stack empieza en el **centro** del árbol.
+| Clase | Atributos | Ascendencias (carreras) |
+|---|---|---|
+| Técnico de Soporte | FUE | Ingeniero de Guardia, Especialista en Ciberseguridad, Administrador de Sistemas |
+| Tester QA | FUE/DES | Revisor de Código, Scrum Master, Project Manager |
+| Desarrolladora Frontend | DES | Ingeniera de Rendimiento, Ingeniera de Depuración, Diseñadora UX/UI |
+| Ingeniera de Prompts | DES/INT | Especialista Red Team, Ingeniera de IA, Analista de Malware |
+| Científico de Datos | INT | Ingeniero de Machine Learning, Analista de Big Data, Orquestador de Agentes IA |
+| Ingeniero DevOps | INT/FUE | Ingeniero de Confiabilidad (SRE), Arquitecto Cloud, Release Manager |
+| Desarrollador Full Stack | las tres | Arquitecto de Soluciones, Líder Técnico (Tech Lead), CTO de Startup |
+
+(Los ids internos siguen siendo los de antes —`guerrero`, `duelista`...— para no romper los guardados.)
+
+**Ascendencia al nivel 20**: junto al inicio de tu clase en el árbol hay un **medallón**. Al pulsarlo se abre un panel circular: hasta el nivel 20 solo se pueden ver las tres opciones; a partir de ahí se elige una (permanente). Después, el panel muestra el inicio de la ascendencia y sus pasivas alrededor: cada una cuesta un **punto de ascendencia** (1 al nivel 20, +1 a los 25 y 30). En la pantalla de pruebas del árbol se puede cambiar libremente.
 
 ## Enemigos
 
@@ -214,6 +248,10 @@ Nueve tipos con sprites animados (`data/enemies.json`, `assets/sprites/enemies/e
 - **Seguro ante cortes**: se escribe en un `.tmp` y luego se sustituye el archivo; la versión anterior queda como `.bak` y se usa si el principal está dañado.
 - **Tolerante a cambios de datos**: lo que deja de existir (nodos, objetos, habilidades) se descarta al cargar en vez de romper la partida.
 - **Versiones**: `save_version` 2 añadió las placas base; los guardados v1 reciben las placas iniciales de su clase al cargarse.
+
+## Idioma
+
+Todos los textos están en **español latinoamericano neutro** (ustedes, laptop, celular, mouse, practicante...). Las reglas están en [`docs/estilo.md`](docs/estilo.md) y una prueba falla si aparece una forma de España.
 
 ## Estructura
 
@@ -284,7 +322,7 @@ GDScript va sobrado para densidades tipo PoE (300-600). Por encima de unos 800, 
 
 ## Árbol pasivo
 
-- **774 pasivas en 67 clusters temáticos** (7 clases: 6 alrededor y el Full Stack en el centro): cada anillo o rueda es de un solo tipo (vida, armadura, fuego, crítico, maná, robo de vida…). Sus pasivas menores son variaciones de ese tema (p. ej. vida plana, vida + regeneración, vida + armadura, % de vida) y su notable tiene nombre, texto sarcástico e icono propio. Entre clusters hay caminos de atributos, puentes temáticos entre clases vecinas y un anillo central de atributos.
+- **734 pasivas en 67 clusters con forma** (como en PoE 2: cada temática dibuja su símbolo: corazón para vida, llama para fuego, rayo en zigzag, copo de nieve para frío, escudo para armadura, gota para maná, mira para crítico, flecha para proyectiles, estrella para área, hexágono para escudo de energía, espiral para caos, colmillos para robo de vida, pluma para evasión, chevrons para velocidad y movilidad, reloj de arena para enfriamientos, libro para hechizos, prisma para resistencias y martillo para daño físico; los de atributos siguen siendo anillos) (7 clases: 6 alrededor y el Full Stack en el centro): cada anillo o rueda es de un solo tipo (vida, armadura, fuego, crítico, maná, robo de vida…). Sus pasivas menores son variaciones de ese tema (p. ej. vida plana, vida + regeneración, vida + armadura, % de vida) y su notable tiene nombre, texto sarcástico e icono propio. Entre clusters hay caminos de atributos, puentes temáticos entre clases vecinas y un anillo central de atributos.
 - **Inicios limpios**: el inicio de cada clase solo se conecta hacia delante, a sus 4 ramas; nada llega a él por detrás ni pasa junto a él. Cada región se une al centro por sus lados, a través de los clusters *puerta* entre clases vecinas, y hay un cluster interior por clase entre el anillo central y la clase.
 - **Centro**: el inicio del Full Stack, el anillo de *Versatilidad* (3 notables y su piedra angular) y el anillo central de atributos.
 - **Temáticas** en `data/passive_themes.json` (21, nuevas: Versatilidad, Enfriamientos y duración, Movilidad). Para añadir pasivas o cambiar valores, edita ese archivo y regenera el árbol con `python tools/generate_passive_tree.py`.

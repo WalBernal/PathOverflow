@@ -48,6 +48,13 @@ func _initialize() -> void:
 	_test_skill_tags()
 	_test_new_supports()
 	_test_flasks()
+	_test_act2_layout()
+	_test_act2_mechanics()
+	_test_progression_rules()
+	_test_latam_spanish()
+	_test_ascendancy_rules()
+	_test_board_milestones()
+	_test_shaped_clusters()
 	_test_walk_animation()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
@@ -137,7 +144,7 @@ func _test_experience() -> void:
 func _test_enemies() -> void:
 	var em := EnemyManager.new()
 	var kills := [0]
-	em.enemy_killed.connect(func(_r: int, _xp: int, _pos: Vector2) -> void: kills[0] += 1)
+	em.enemy_killed.connect(func(_r: int, _xp: int, _pos: Vector2, _type: String) -> void: kills[0] += 1)
 	# Tipo fijo: con tipos aleatorios, un node_modules (mucha vida) podría sobrevivir.
 	var bug := em.type_index_of("bug")
 	em.spawn(Vector2(0, 0), Rarity.Enemy.NORMAL, bug)
@@ -289,7 +296,7 @@ func _test_character_round_trip() -> void:
 	var gen := ItemGenerator.new(_db, 21)
 	c.id = "test_1"
 	c.character_name = "Bobby Tables"
-	c.set_level(12)
+	c.set_level(22)
 	c.add_experience(37)
 	c.appearance = CharacterAppearance.random(gen.rng)
 	c.set_ascendancy(StringName(_classes[0]["ascendancies"][1]["id"]))
@@ -304,7 +311,7 @@ func _test_character_round_trip() -> void:
 	var data = JSON.parse_string(JSON.stringify(c.to_dict()))
 	var loaded := CharacterData.from_dict(data, _classes[0], _tree, _db)
 	_check(loaded.id == "test_1" and loaded.character_name == "Bobby Tables", "id y nombre")
-	_check(loaded.level == 12 and loaded.experience == c.experience, "nivel y experiencia")
+	_check(loaded.level == 22 and loaded.experience == c.experience, "nivel y experiencia")
 	_check(loaded.ascendancy_def.get("id") == c.ascendancy_def.get("id"), "ascendencia")
 	_check(loaded.appearance == c.appearance, "apariencia")
 	_check(loaded.passives.get_allocated_ids().size() == c.passives.get_allocated_ids().size() and loaded.passives.spent_points() > 0, "pasivas")
@@ -410,7 +417,7 @@ func _test_motherboards_and_ram() -> void:
 	for n in 300:
 		var board := gen.generate_motherboard(30)
 		_check(board.slots.size() >= Motherboard.MIN_SLOTS and board.slots.size() <= Motherboard.MAX_SLOTS, "3 a 7 ranuras")
-		_check(board.level == 11, "nivel de la placa según el nivel de objeto (%d)" % board.level)
+		_check(board.level == 27, "nivel de la placa según el nivel de objeto (%d)" % board.level)
 	var proj := gen.generate_motherboard(1, "ping_letal")
 	proj.slots.assign(["DDR4", "DDR5", "DDR3"])
 	proj.rams.resize(3)
@@ -581,7 +588,7 @@ func _test_act(npc_data: Dictionary) -> void:
 				for k in zone.key_points():
 					_check(p.distance_to(k) >= 450.0, "%s: grupo demasiado cerca de una entrada/NPC" % z["id"])
 		zone.free()
-	_check(bosses == 1, "el acto tiene un jefe")
+	_check(bosses == 2, "un jefe por acto (el Arquitecto e init)")
 	_test_quest_data(zones, npc_data)
 	_test_cutscenes(zones, npc_data)
 	_check(act["zones"].size() >= 10, "acto I completo + inicio del acto II")
@@ -657,7 +664,8 @@ func _test_quest_data(zones: Dictionary, npc_data: Dictionary) -> void:
 					_check(step.get("zone", "") == "" or zones.has(step["zone"]), "%s: zona desconocida" % id)
 					_check(QuestLog.RARITY_BY_NAME.has(step.get("min_rarity", "normal")), "%s: rareza desconocida" % id)
 				"collect":
-					_check(quest_items.has(step["item"]), "%s: objeto %s no está en ninguna zona" % [id, step["item"]])
+					for item_id in step.get("items", [step.get("item", "")]):
+						_check(quest_items.has(item_id), "%s: objeto %s no está en ninguna zona" % [id, item_id])
 				"flag":
 					pass
 				_:
@@ -809,7 +817,7 @@ func _test_new_skills() -> void:
 
 func _test_enemy_attacks() -> void:
 	var em := EnemyManager.new()
-	var kinds := ["melee", "ranged", "charge", "slam", "cone"]
+	var kinds := ["melee", "ranged", "charge", "slam", "cone", "blink", "none"]
 	var rows := {}
 	for t in EnemyManager.enemy_types():
 		_check(kinds.has(t.get("attack", {}).get("kind", "melee")), "ataque desconocido en %s" % t["id"])
@@ -844,7 +852,7 @@ func _test_enemy_attacks() -> void:
 			_check(float(z["boss"]["life_mult"]) < 4.0, "el jefe tiene menos vida")
 			_check(z["boss"].get("abilities", []).size() >= 2, "el jefe tiene habilidades especiales")
 			for a in z["boss"]["abilities"]:
-				_check(a["kind"] in ["projectile_nova", "ground_marks", "summon"], "habilidad de jefe desconocida")
+				_check(a["kind"] in ["projectile_nova", "ground_marks", "summon", "oom_beam"], "habilidad de jefe desconocida")
 
 
 func _test_skill_tags() -> void:
@@ -958,6 +966,268 @@ func _test_flasks() -> void:
 	for k in 30:
 		var drop := gen.generate_flask(5)
 		_check(drop != null and drop.required_level() <= 5, "pociones de botín de nivel <= zona")
+
+
+func _test_act2_layout() -> void:
+	var act: Dictionary = DataLoader.load_json("res://data/act2.json")
+	var zones := {}
+	for z in act["zones"]:
+		zones[z["id"]] = z
+	_check(zones.size() >= 8, "Acto II con al menos 6-7 escenarios además de la Brecha y el pueblo (%d)" % zones.size())
+	# Camino principal desde el pueblo hasta el jefe (sin pasar por salidas con objeto clave).
+	var seen := {"socket_seguro": true}
+	var todo := ["socket_seguro"]
+	while not todo.is_empty():
+		var z: Dictionary = zones[todo.pop_back()]
+		for e in z.get("exits", []):
+			if e.get("requires_item", "") != "" or not zones.has(e["target"]):
+				continue
+			if not seen.has(e["target"]):
+				seen[e["target"]] = true
+				todo.append(e["target"])
+	_check(seen.has("anillo0"), "se llega del Socket Seguro al Anillo 0")
+	_check(not seen.has("modulo_frio"), "el Módulo de Refrigeración solo se abre con la tarjeta")
+	_check(zones["socket_seguro"].get("safe", false) and zones["socket_seguro"].has("waypoint"), "el Socket Seguro es el pueblo (reaparición)")
+	# El camino bloqueado: la llave está en una zona más adelante que la puerta.
+	var lock_zone := ""
+	var key_zone := ""
+	for z in act["zones"]:
+		for e in z.get("exits", []):
+			if e.get("requires_item", "") == "tarjeta_rack":
+				lock_zone = z["id"]
+		for k in z.get("key_items", []):
+			if k["id"] == "tarjeta_rack":
+				key_zone = z["id"]
+	var order := ["socket_seguro", "fabrica", "alcantarillas", "fosa", "grieta", "bus", "anillo0"]
+	_check(lock_zone != "" and key_zone != "" and order.find(key_zone) > order.find(lock_zone), "la tarjeta está más adelante que la escotilla (hay que volver)")
+	_check(KeyItem.DEFS.has("tarjeta_rack") and ItemIcons.has_icon("key_card"), "objeto clave definido con icono")
+	# Pruebas de estrés y misiones secundarias.
+	var challenges := 0
+	for z in act["zones"]:
+		challenges += z.get("challenges", []).size()
+		for c in z.get("challenges", []):
+			_check(int(c.get("waves", 0)) >= 3 and not c.get("rewards", []).is_empty(), "%s: oleadas y recompensa" % c["id"])
+			for ty in c.get("types", []):
+				_check(EnemyManager.enemy_types().any(func(e: Dictionary) -> bool: return e["id"] == ty), "%s: tipo desconocido %s" % [c["id"], ty])
+	_check(challenges >= 3, "varias pruebas de estrés en el acto")
+	var quests := QuestLog.database()
+	for id in ["puntero_salvaje", "sindicato_descriptor", "cache_en_frio", "prueba_estres"]:
+		_check(quests.has(id), "misión secundaria %s" % id)
+	_check(zones["anillo0"]["boss"]["type"] == "init" and zones["anillo0"]["boss"]["abilities"].size() >= 4, "init con habilidades por fases")
+
+
+func _test_act2_mechanics() -> void:
+	# Objeto clave: se guarda, se detecta y no se puede tirar.
+	var c := _new_character()
+	_check(not KeyItem.has_key(c.inventory, "tarjeta_rack"), "sin tarjeta al principio")
+	c.inventory.add_item(KeyItem.new("tarjeta_rack"))
+	_check(KeyItem.has_key(c.inventory, "tarjeta_rack"), "tarjeta en la bolsa")
+	var idx := c.inventory.bag.find(c.inventory.bag.filter(func(i) -> bool: return i is KeyItem)[0])
+	_check(ItemTransfer.take(c, {"kind": "bag", "index": idx}) == null and KeyItem.has_key(c.inventory, "tarjeta_rack"), "no se puede tirar")
+	var data = JSON.parse_string(JSON.stringify(c.to_dict()))
+	var loaded := CharacterData.from_dict(data, _classes[0], _tree, _db)
+	_check(KeyItem.has_key(loaded.inventory, "tarjeta_rack"), "la tarjeta se guarda")
+	# Inmunidad por turnos (Carrera Crítica).
+	var em := EnemyManager.new()
+	var a := em.spawn(Vector2.ZERO, Rarity.Enemy.UNIQUE, em.type_index_of("hilo_gemelo"))
+	em.set_immune(a, true)
+	var before := em.lives[0]
+	em.hit_in_radius(Vector2.ZERO, 50.0, 100.0, 100.0, 0.0, 150.0)
+	_check(em.lives[0] == before, "el gemelo inmune no recibe daño")
+	em.set_immune(a, false)
+	em.hit_in_radius(Vector2.ZERO, 50.0, 10.0, 10.0, 0.0, 150.0)
+	_check(em.lives[0] < before, "el gemelo de turno sí")
+	_check(em.count_type("hilo_gemelo") == 1 and em.is_alive_id(a), "conteo por tipo")
+	em.clear_all()
+	# Fases del jefe: cada habilidad solo en su tramo de vida.
+	var boss_id := em.spawn(Vector2(500, 0), Rarity.Enemy.UNIQUE, em.type_index_of("init"), "init", 1.0, [
+		{"kind": "summon", "type": "init_fork", "count": 2, "cooldown": 1.0, "first": 0.0, "min_life": 0.66},
+		{"kind": "oom_beam", "count": 1, "cooldown": 1.0, "first": 0.0, "max_life": 0.33, "cores": [[0, 0]], "self_damage": 0.1}])
+	var bi := em.index_of(boss_id)
+	_check(em._try_ability(bi, 0.1, 100.0, Vector2.ZERO) and em.casting[boss_id]["def"]["kind"] == "summon", "fase 1: Fork Bomb")
+	em.casting.clear()
+	em.lives[bi] = em.max_lives[bi] * 0.2
+	for a2 in em.abilities[boss_id]:
+		a2["timer"] = 0.0
+	_check(em._try_ability(bi, 0.1, 100.0, Vector2.ZERO) and em.casting[boss_id]["def"]["kind"] == "oom_beam", "fase 3: OOM Killer")
+	# El rayo del OOM Killer daña al propio jefe si lo atraviesa.
+	var life_before := em.lives[bi]
+	em._resolve_ability(bi, em.casting[boss_id]["def"], em.positions[bi])   # rayo del núcleo (0,0) hacia el jefe
+	em.hazards[0]["time"] = 99.0
+	em._update_hazards(0.0)
+	_check(em.lives[bi] < life_before, "el OOM Killer se come a init si le apuntas bien")
+	em.free()
+	# Misiones: eliminar un tipo concreto y recoger varios objetos.
+	var c2 := _new_character()
+	var log := QuestLog.new(c2)
+	log.start("puntero_salvaje")
+	log.notify_kill("fosa", Rarity.Enemy.UNIQUE, "proceso_zombi")
+	_check(log.current_step("puntero_salvaje")["type"] == "kill", "otro tipo no cuenta")
+	log.notify_kill("fosa", Rarity.Enemy.UNIQUE, "puntero_salvaje")
+	_check(log.npc_has_turn_in("rafa_terminal"), "el Puntero cuenta")
+	log.start("cache_en_frio")
+	c2.flags["item_cache_1"] = true
+	c2.flags["item_cache_2"] = true
+	log.refresh()
+	_check(log.step_text("cache_en_frio").ends_with("(2/3)"), "progreso de varios objetos")
+	c2.flags["item_cache_3"] = true
+	log.refresh()
+	_check(log.npc_has_turn_in("clara"), "los tres bloques recogidos")
+
+
+func _test_progression_rules() -> void:
+	# Puntos de pasiva: ninguno al empezar, 1 por nivel y extra por misiones.
+	var c := _new_character()
+	_check(c.passive_points_total() == 0 and c.passive_points_available() == 0, "sin puntos al crear el personaje")
+	c.set_level(5)
+	_check(c.passive_points_total() == 4, "1 punto por cada nivel subido")
+	c.flags["quest_passive_points"] = 2
+	_check(c.passive_points_total() == 6, "puntos extra por misiones")
+	var main_rewards: Array = QuestLog.database()["main_act1"]["rewards"]
+	_check(main_rewards.any(func(r: Dictionary) -> bool: return r["type"] == "passive_point"), "la misión principal da puntos de pasiva")
+	# Guardados con más puntos gastados de los que ahora tocan: se devuelven.
+	var old := _new_character()
+	old.set_level(3)
+	var start := old.passives.start_node_id
+	var data = JSON.parse_string(JSON.stringify(old.to_dict()))
+	var far: Array = []
+	var alloc := PassiveAllocation.new(_tree, start)
+	for id in _tree.nodes:
+		if alloc.find_path(id).size() == 6:
+			alloc.allocate_path(id, 999)
+			break
+	for id in alloc.get_allocated_ids():
+		if id != start:
+			far.append(id)
+	data["passives"] = far
+	data["passive_tree_version"] = _tree.version
+	var loaded := CharacterData.from_dict(data, _classes[0], _tree, _db)
+	_check(loaded.passives.spent_points() == 0 and loaded.flags.has("passives_refunded"), "se devuelven los puntos sobrantes")
+	# Las placas suben de nivel con la experiencia (como las gemas de PoE).
+	var c2 := _new_character()
+	var board: Motherboard = c2.inventory.boards[0] if c2.inventory.boards[0] else Motherboard.new(_db.skills.skills["barrido"], 1, ["DDR3"])
+	c2.inventory.set_board(0, board)
+	var before: float = SkillCalc.compute(board, c2)["max_damage"]
+	c2.add_experience(board.experience_to_next() * 3)
+	_check(board.level >= 2, "la placa instalada sube de nivel")
+	_check(SkillCalc.compute(board, c2)["max_damage"] > before, "y pega más fuerte")
+	var saved = JSON.parse_string(JSON.stringify(c2.to_dict()))
+	_check(int(saved["inventory"]["boards"][0]["level"]) == board.level, "el nivel de la placa se guarda")
+	# Ascendencias: fuertes y con efectos especiales.
+	var specials := 0
+	for cdef in _classes:
+		for a in cdef["ascendancies"]:
+			var big := false
+			for p in a["passives"]:
+				for md in p["mods"]:
+					if md["type"] == "more" and float(md["value"]) >= 25.0:
+						big = true
+					if String(md["stat"]).begins_with("extra_"):
+						specials += 1
+			_check(big or a["passives"].any(func(p: Dictionary) -> bool: return p["mods"].any(func(md: Dictionary) -> bool: return String(md["stat"]).begins_with("extra_") or float(md["value"]) >= 60.0)), "%s debe tener un efecto fuerte" % a["id"])
+	_check(specials >= 8, "varias ascendencias cambian cómo funcionan las habilidades (%d)" % specials)
+	var hacker: Dictionary = _classes.filter(func(x: Dictionary) -> bool: return x["id"] == "hacker")[0]
+	var ch := CharacterData.new(hacker, _tree)
+	var chain_board := Motherboard.new(_db.skills.skills["excepcion_en_cadena"], 1, ["DDR5"])
+	var chains_before: int = SkillCalc.compute(chain_board, ch)["chains"]
+	ch.set_level(20)
+	ch.set_ascendancy(&"asesina_sesiones")
+	ch.allocate_ascendancy_node(1)
+	_check(SkillCalc.compute(chain_board, ch)["chains"] == chains_before + 2, "la Asesina de Sesiones encadena 2 veces más")
+	# Los atributos dan daño a su estilo.
+	var warrior := CharacterData.new(_classes.filter(func(x: Dictionary) -> bool: return x["id"] == "guerrero")[0], _tree)
+	var wizard := CharacterData.new(_classes.filter(func(x: Dictionary) -> bool: return x["id"] == "hechicero")[0], _tree)
+	_check(wizard.stats.total_multiplier(Stat.DAMAGE, [Stat.TAG_SPELL]) > warrior.stats.total_multiplier(Stat.DAMAGE, [Stat.TAG_SPELL]), "la inteligencia da daño de hechizos")
+	_check(warrior.stats.total_multiplier(Stat.PHYSICAL_DAMAGE, [Stat.TAG_MELEE]) > wizard.stats.total_multiplier(Stat.PHYSICAL_DAMAGE, [Stat.TAG_MELEE]), "la fuerza da daño cuerpo a cuerpo")
+
+
+## Los textos del juego, en español latinoamericano (ver docs/estilo.md).
+func _test_latam_spanish() -> void:
+	var banned := RegEx.create_from_string("(*UCP)(?i)\\b(vosotr\\w*|vuestr\\w*|os|\\w+áis|\\w+éis|portátil\\w*|ordenador\\w*|móvil\\w*|vale|coger|ratón|gafas|zumo|guay|becari\\w*|marchando|cuidaos|proteged)\\b")
+	var files := ["res://data/npcs.json", "res://data/cutscenes.json", "res://data/quests.json", "res://data/tutorial.json",
+		"res://data/act1.json", "res://data/act2.json", "res://data/classes.json", "res://data/passive_themes.json",
+		"res://data/items/flasks.json", "res://data/items/uniques.json", "res://data/items/bases.json",
+		"res://data/skills/skills.json", "res://data/skills/ram_modules.json", "res://data/enemies.json"]
+	var found := PackedStringArray()
+	for path in files:
+		_collect_banned(DataLoader.load_json(path), banned, path, found)
+	_check(found.is_empty(), "formas de España en los textos: %s" % ", ".join(found.slice(0, 8)))
+
+
+func _collect_banned(value: Variant, banned: RegEx, path: String, found: PackedStringArray) -> void:
+	if value is Dictionary:
+		for k in value:
+			if k != "id" and not String(k).ends_with("_id"):
+				_collect_banned(value[k], banned, path, found)
+	elif value is Array:
+		for v in value:
+			_collect_banned(v, banned, path, found)
+	elif value is String:
+		var m := banned.search(value)
+		if m:
+			found.append("%s: «%s»" % [path.get_file(), m.get_string()])
+
+
+func _test_ascendancy_rules() -> void:
+	var c := _new_character()
+	c.set_level(19)
+	_check(not c.can_choose_ascendancy() and c.ascendancy_points_total() == 0, "sin ascendencia antes del nivel 20")
+	c.set_level(20)
+	_check(c.can_choose_ascendancy() and c.ascendancy_points_total() == 1, "al nivel 20 se elige y hay 1 punto")
+	var asc_id := StringName(c.class_def["ascendancies"][0]["id"])
+	c.set_ascendancy(asc_id)
+	var life_before := c.stats.get_value(Stat.LIFE)
+	_check(c.ascendancy_nodes.is_empty(), "al elegirla no hay pasivas asignadas")
+	_check(c.allocate_ascendancy_node(0) and not c.allocate_ascendancy_node(1), "un punto, una pasiva")
+	_check(not c.can_choose_ascendancy(), "la elección queda hecha")
+	c.set_level(30)
+	_check(c.ascendancy_points_total() == 3 and c.allocate_ascendancy_node(1) and c.allocate_ascendancy_node(2), "3 puntos al nivel 30")
+	_check(c.refund_ascendancy_node(2) and c.ascendancy_points_available() == 1, "se pueden quitar")
+	# Solo cuentan las pasivas asignadas.
+	var data = JSON.parse_string(JSON.stringify(c.to_dict()))
+	var loaded := CharacterData.from_dict(data, _classes[0], _tree, _db)
+	_check(loaded.ascendancy_nodes.size() == 2 and loaded.ascendancy_def.get("id", "") == String(asc_id), "ascendancia y pasivas guardadas")
+	# Guardado antiguo con ascendencia por debajo del nivel 20: se reinicia.
+	data["level"] = 12
+	var young := CharacterData.from_dict(data, _classes[0], _tree, _db)
+	_check(young.ascendancy_def.is_empty() and young.flags.has("ascendancy_reset"), "ascendencia anterior al nivel 20 reiniciada")
+	# Nombres de puestos de trabajo coherentes (sin los descartados).
+	var names := PackedStringArray()
+	for cdef in _classes:
+		names.append(cdef["name"])
+		for a in cdef["ascendancies"]:
+			names.append(a["name"])
+	for banned in ["Hacker", "Desarrollador 10x", "Danzarina de Hilos", "Señor del Monolito"]:
+		_check(not names.has(banned), "nombre descartado: %s" % banned)
+	for wanted in ["Scrum Master", "Project Manager", "Tester QA", "Ingeniera de Prompts"]:
+		_check(names.has(wanted), "falta el rol %s" % wanted)
+
+
+func _test_board_milestones() -> void:
+	var c := _new_character()
+	var rafaga: Dictionary = _db.skills.skills["rafaga_de_paquetes"]
+	var low := SkillCalc.compute(Motherboard.new(rafaga, 1, ["DDR4"]), c)
+	var mid := SkillCalc.compute(Motherboard.new(rafaga, 10, ["DDR4"]), c)
+	var high := SkillCalc.compute(Motherboard.new(rafaga, 30, ["DDR4"]), c)
+	_check(mid["projectiles"] == low["projectiles"] + 1 and high["projectiles"] == low["projectiles"] + 3, "hitos: +1 proyectil a los niveles 10, 20 y 30")
+	var deadlock: Dictionary = _db.skills.skills["deadlock"]
+	var d1 := SkillCalc.compute(Motherboard.new(deadlock, 1, ["DDR3"]), c)
+	var d20 := SkillCalc.compute(Motherboard.new(deadlock, 20, ["DDR3"]), c)
+	_check(d20["radius"] > d1["radius"] and d20["cooldown"] < d1["cooldown"] and d20["stun"] > d1["stun"], "cada nivel mejora área, enfriamiento y duración")
+	_check(SkillCalc.milestone_text(_db.skills.skills["proceso_hijo"]) == "+1 esbirro", "hito de esbirros")
+	_check(SkillCalc.compute(Motherboard.new(_db.skills.skills["proceso_hijo"], 20, ["DDR5"]), c)["count"] == 4, "esbirros extra por nivel")
+
+
+func _test_shaped_clusters() -> void:
+	var shaped := 0
+	var themes := {}
+	for c in _tree.clusters.values():
+		if c.has("segments"):
+			shaped += 1
+			themes[c["theme"]] = true
+	_check(shaped >= 50, "la mayoría de los clusters tienen forma (%d)" % shaped)
+	for t in ["vida", "fuego", "rayo", "frio"]:
+		_check(themes.has(t), "cluster con forma de %s" % t)
 
 
 func _test_walk_animation() -> void:
@@ -1083,6 +1353,7 @@ func _test_conditions() -> void:
 
 func _test_tree_version_refund() -> void:
 	var c := _new_character()
+	c.set_level(3)
 	var start := c.passives.start_node_id
 	c.passives.allocate_path(_tree.neighbors(start)[0], 5)
 	var data = JSON.parse_string(JSON.stringify(c.to_dict()))

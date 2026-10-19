@@ -1,21 +1,234 @@
 {
   "version": 1,
-  "_doc": "Tipos de enemigo. sprite_row: fila en assets/sprites/enemies/enemies.png. Los multiplicadores se aplican sobre los de su rareza; radius_mult cambia el tamaño del cuerpo (hitbox). boss_only: solo aparece como único. attack (opcional; sin él, cuerpo a cuerpo por contacto): kind ranged (dispara proyectiles y mantiene la distancia: range, keep_distance, projectiles, spread, projectile_speed), charge (embestida en línea: range, dash_speed, dash_time, width), slam (golpe en círculo alrededor: range, radius), cone (cono delante: range, angle). Todos con windup (tiempo telegrafiado en rojo), cooldown y damage_mult.",
+  "_doc": "Tipos de enemigo. sprite_row: fila en assets/sprites/enemies/enemies.png. Los multiplicadores se aplican sobre los de su rareza; radius_mult cambia el tamaño del cuerpo (hitbox). boss_only: solo aparece como único. attack (opcional; sin él, cuerpo a cuerpo por contacto): kind ranged (dispara proyectiles y mantiene la distancia: range, keep_distance, projectiles, spread, projectile_speed), charge (embestida en línea: range, dash_speed, dash_time, width), slam (golpe en círculo alrededor: range, radius), cone (cono delante: range, angle), blink (se teletransporta cerca: range, jump), none (no se mueve ni ataca: candados). Todos con windup (tiempo telegrafiado en rojo), cooldown y damage_mult.",
   "types": [
-    { "id": "bug", "name": "Bug", "sprite_row": 0, "life_mult": 0.8, "speed_mult": 1.15, "damage_mult": 0.9, "xp_mult": 1.0, "scale": 1.0 },
-    { "id": "proceso_zombi", "name": "Proceso zombi", "sprite_row": 1, "life_mult": 1.3, "speed_mult": 0.75, "damage_mult": 1.2, "xp_mult": 1.2, "scale": 1.15 },
-    { "id": "memory_leak", "name": "Memory leak", "sprite_row": 2, "life_mult": 1.6, "speed_mult": 0.6, "damage_mult": 0.8, "xp_mult": 1.2, "scale": 1.1 },
-    { "id": "gusano", "name": "Gusano de red", "sprite_row": 3, "life_mult": 0.9, "speed_mult": 1.0, "damage_mult": 1.1, "xp_mult": 1.0, "scale": 1.05 },
-    { "id": "daemon", "name": "Daemon", "sprite_row": 4, "life_mult": 1.2, "speed_mult": 0.9, "damage_mult": 1.3, "xp_mult": 1.5, "scale": 1.2, "boss_only": true },
-    { "id": "bot_spam", "name": "Bot de spam", "sprite_row": 5, "life_mult": 0.7, "speed_mult": 0.9, "damage_mult": 0.9, "xp_mult": 1.1, "scale": 1.0,
-      "attack": { "kind": "ranged", "range": 430, "keep_distance": 300, "windup": 0.45, "cooldown": 2.2,
-                  "projectiles": 1, "projectile_speed": 340, "damage_mult": 1.1, "color": "e0c040" } },
-    { "id": "hilo_desbocado", "name": "Hilo desbocado", "sprite_row": 6, "life_mult": 0.8, "speed_mult": 1.1, "damage_mult": 1.0, "xp_mult": 1.1, "scale": 1.0, "radius_mult": 0.85,
-      "attack": { "kind": "charge", "range": 360, "windup": 0.65, "cooldown": 3.2, "dash_speed": 640, "dash_time": 0.5,
-                  "width": 30, "damage_mult": 1.7 } },
-    { "id": "node_modules", "name": "node_modules", "sprite_row": 7, "life_mult": 2.6, "speed_mult": 0.55, "damage_mult": 1.0, "xp_mult": 1.8, "scale": 1.15, "radius_mult": 1.6,
-      "attack": { "kind": "slam", "range": 90, "radius": 120, "windup": 0.95, "cooldown": 2.8, "damage_mult": 2.4, "color": "c86030" } },
-    { "id": "troll_foro", "name": "Troll de foro", "sprite_row": 8, "life_mult": 1.2, "speed_mult": 0.85, "damage_mult": 1.0, "xp_mult": 1.3, "scale": 1.1, "radius_mult": 1.1,
-      "attack": { "kind": "cone", "range": 160, "angle": 75, "windup": 0.7, "cooldown": 2.6, "damage_mult": 1.6, "color": "e0652f" } }
+    {
+      "id": "bug",
+      "name": "Bug",
+      "sprite_row": 0,
+      "life_mult": 0.8,
+      "speed_mult": 1.15,
+      "damage_mult": 0.9,
+      "xp_mult": 1.0,
+      "scale": 1.0
+    },
+    {
+      "id": "proceso_zombi",
+      "name": "Proceso zombi",
+      "sprite_row": 1,
+      "life_mult": 1.3,
+      "speed_mult": 0.75,
+      "damage_mult": 1.2,
+      "xp_mult": 1.2,
+      "scale": 1.15
+    },
+    {
+      "id": "memory_leak",
+      "name": "Memory leak",
+      "sprite_row": 2,
+      "life_mult": 1.6,
+      "speed_mult": 0.6,
+      "damage_mult": 0.8,
+      "xp_mult": 1.2,
+      "scale": 1.1
+    },
+    {
+      "id": "gusano",
+      "name": "Gusano de red",
+      "sprite_row": 3,
+      "life_mult": 0.9,
+      "speed_mult": 1.0,
+      "damage_mult": 1.1,
+      "xp_mult": 1.0,
+      "scale": 1.05
+    },
+    {
+      "id": "daemon",
+      "name": "Daemon",
+      "sprite_row": 4,
+      "life_mult": 1.2,
+      "speed_mult": 0.9,
+      "damage_mult": 1.3,
+      "xp_mult": 1.5,
+      "scale": 1.2,
+      "boss_only": true
+    },
+    {
+      "id": "bot_spam",
+      "name": "Bot de spam",
+      "sprite_row": 5,
+      "life_mult": 0.7,
+      "speed_mult": 0.9,
+      "damage_mult": 0.9,
+      "xp_mult": 1.1,
+      "scale": 1.0,
+      "attack": {
+        "kind": "ranged",
+        "range": 430,
+        "keep_distance": 300,
+        "windup": 0.45,
+        "cooldown": 2.2,
+        "projectiles": 1,
+        "projectile_speed": 340,
+        "damage_mult": 1.1,
+        "color": "e0c040"
+      }
+    },
+    {
+      "id": "hilo_desbocado",
+      "name": "Hilo desbocado",
+      "sprite_row": 6,
+      "life_mult": 0.8,
+      "speed_mult": 1.1,
+      "damage_mult": 1.0,
+      "xp_mult": 1.1,
+      "scale": 1.0,
+      "radius_mult": 0.85,
+      "attack": {
+        "kind": "charge",
+        "range": 360,
+        "windup": 0.65,
+        "cooldown": 3.2,
+        "dash_speed": 640,
+        "dash_time": 0.5,
+        "width": 30,
+        "damage_mult": 1.7
+      }
+    },
+    {
+      "id": "node_modules",
+      "name": "node_modules",
+      "sprite_row": 7,
+      "life_mult": 2.6,
+      "speed_mult": 0.55,
+      "damage_mult": 1.0,
+      "xp_mult": 1.8,
+      "scale": 1.15,
+      "radius_mult": 1.6,
+      "attack": {
+        "kind": "slam",
+        "range": 90,
+        "radius": 120,
+        "windup": 0.95,
+        "cooldown": 2.8,
+        "damage_mult": 2.4,
+        "color": "c86030"
+      }
+    },
+    {
+      "id": "troll_foro",
+      "name": "Troll de foro",
+      "sprite_row": 8,
+      "life_mult": 1.2,
+      "speed_mult": 0.85,
+      "damage_mult": 1.0,
+      "xp_mult": 1.3,
+      "scale": 1.1,
+      "radius_mult": 1.1,
+      "attack": {
+        "kind": "cone",
+        "range": 160,
+        "angle": 75,
+        "windup": 0.7,
+        "cooldown": 2.6,
+        "damage_mult": 1.6,
+        "color": "e0652f"
+      }
+    },
+    {
+      "id": "interrupcion",
+      "name": "Interrupción (IRQ)",
+      "sprite_row": 9,
+      "life_mult": 0.7,
+      "speed_mult": 1.2,
+      "damage_mult": 0.8,
+      "xp_mult": 1.2,
+      "scale": 0.95,
+      "attack": {
+        "kind": "ranged",
+        "range": 460,
+        "keep_distance": 320,
+        "windup": 0.35,
+        "cooldown": 2.0,
+        "projectiles": 3,
+        "spread": 30,
+        "projectile_speed": 420,
+        "damage_mult": 0.8,
+        "color": "e8e040"
+      }
+    },
+    {
+      "id": "mutex_lock",
+      "name": "Candado Mutex",
+      "sprite_row": 10,
+      "life_mult": 0.6,
+      "speed_mult": 0.0,
+      "damage_mult": 0.0,
+      "xp_mult": 2.0,
+      "scale": 1.0,
+      "radius_mult": 1.4,
+      "attack": {
+        "kind": "none"
+      }
+    },
+    {
+      "id": "puntero_salvaje",
+      "name": "Puntero Salvaje",
+      "sprite_row": 11,
+      "life_mult": 1.0,
+      "speed_mult": 1.1,
+      "damage_mult": 1.2,
+      "xp_mult": 2.0,
+      "scale": 1.1,
+      "attack": {
+        "kind": "blink",
+        "range": 700,
+        "jump": 420,
+        "windup": 0.5,
+        "cooldown": 2.2,
+        "color": "c08aff"
+      }
+    },
+    {
+      "id": "hilo_gemelo",
+      "name": "Hilo gemelo",
+      "sprite_row": 12,
+      "life_mult": 1.6,
+      "speed_mult": 0.9,
+      "damage_mult": 1.2,
+      "xp_mult": 1.5,
+      "scale": 1.15,
+      "attack": {
+        "kind": "charge",
+        "range": 380,
+        "windup": 0.7,
+        "cooldown": 3.0,
+        "dash_speed": 680,
+        "dash_time": 0.45,
+        "width": 34,
+        "damage_mult": 1.5
+      }
+    },
+    {
+      "id": "init_fork",
+      "name": "Copia de init",
+      "sprite_row": 13,
+      "life_mult": 0.25,
+      "speed_mult": 1.35,
+      "damage_mult": 0.6,
+      "xp_mult": 0.2,
+      "scale": 0.8
+    },
+    {
+      "id": "init",
+      "name": "init",
+      "sprite_row": 14,
+      "life_mult": 1.3,
+      "speed_mult": 0.7,
+      "damage_mult": 1.4,
+      "xp_mult": 2.0,
+      "scale": 1.35,
+      "boss_only": true
+    }
   ]
 }

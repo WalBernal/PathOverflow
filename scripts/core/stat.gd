@@ -43,6 +43,11 @@ const MOVEMENT_SPEED := &"movement_speed"
 const LIFE_LEECH := &"life_leech"
 const COOLDOWN_RECOVERY := &"cooldown_recovery"
 const SKILL_DURATION := &"skill_duration"
+## Stats especiales (ascendencias): cambian cómo funcionan las habilidades.
+const EXTRA_PROJECTILES := &"extra_projectiles"
+const EXTRA_CHAINS := &"extra_chains"
+const EXTRA_MINIONS := &"extra_minions"
+const EXTRA_DEVICES := &"extra_devices"
 
 # --- Tags (condiciones de los modificadores) ---
 const TAG_ATTACK := &"attack"
@@ -94,6 +99,10 @@ const NAMES := {
 	LIFE_LEECH: "Robo de vida",
 	COOLDOWN_RECOVERY: "Recuperación de enfriamientos",
 	SKILL_DURATION: "Duración de habilidades",
+	EXTRA_PROJECTILES: "Proyectiles adicionales",
+	EXTRA_CHAINS: "Encadenamientos adicionales",
+	EXTRA_MINIONS: "Esbirros adicionales",
+	EXTRA_DEVICES: "Trampas, minas y torretas adicionales a la vez",
 }
 
 ## Los aumentos/más de los padres también aplican al hijo:
@@ -118,6 +127,12 @@ const TAG_NAMES := {
 	TAG_PROJECTILE: "de proyectiles",
 	TAG_AREA: "de área",
 	TAG_MOVEMENT: "de movimiento",
+	&"trap": "de trampas",
+	&"mine": "de minas",
+	&"totem": "de torretas",
+	&"minion": "de esbirros",
+	&"chain": "de cadenas",
+	&"duration": "de duración",
 	COND_LOW_LIFE: "con la vida baja",
 	COND_FULL_LIFE: "con la vida al máximo",
 	COND_RECENT_KILL: "si has matado recientemente",
