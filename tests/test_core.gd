@@ -52,6 +52,9 @@ func _initialize() -> void:
 	_test_act2_mechanics()
 	_test_progression_rules()
 	_test_latam_spanish()
+	_test_ascendancy_rules()
+	_test_board_milestones()
+	_test_shaped_clusters()
 	_test_walk_animation()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
@@ -293,7 +296,7 @@ func _test_character_round_trip() -> void:
 	var gen := ItemGenerator.new(_db, 21)
 	c.id = "test_1"
 	c.character_name = "Bobby Tables"
-	c.set_level(12)
+	c.set_level(22)
 	c.add_experience(37)
 	c.appearance = CharacterAppearance.random(gen.rng)
 	c.set_ascendancy(StringName(_classes[0]["ascendancies"][1]["id"]))
@@ -308,7 +311,7 @@ func _test_character_round_trip() -> void:
 	var data = JSON.parse_string(JSON.stringify(c.to_dict()))
 	var loaded := CharacterData.from_dict(data, _classes[0], _tree, _db)
 	_check(loaded.id == "test_1" and loaded.character_name == "Bobby Tables", "id y nombre")
-	_check(loaded.level == 12 and loaded.experience == c.experience, "nivel y experiencia")
+	_check(loaded.level == 22 and loaded.experience == c.experience, "nivel y experiencia")
 	_check(loaded.ascendancy_def.get("id") == c.ascendancy_def.get("id"), "ascendencia")
 	_check(loaded.appearance == c.appearance, "apariencia")
 	_check(loaded.passives.get_allocated_ids().size() == c.passives.get_allocated_ids().size() and loaded.passives.spent_points() > 0, "pasivas")
@@ -1127,7 +1130,9 @@ func _test_progression_rules() -> void:
 	var ch := CharacterData.new(hacker, _tree)
 	var chain_board := Motherboard.new(_db.skills.skills["excepcion_en_cadena"], 1, ["DDR5"])
 	var chains_before: int = SkillCalc.compute(chain_board, ch)["chains"]
+	ch.set_level(20)
 	ch.set_ascendancy(&"asesina_sesiones")
+	ch.allocate_ascendancy_node(1)
 	_check(SkillCalc.compute(chain_board, ch)["chains"] == chains_before + 2, "la Asesina de Sesiones encadena 2 veces más")
 	# Los atributos dan daño a su estilo.
 	var warrior := CharacterData.new(_classes.filter(func(x: Dictionary) -> bool: return x["id"] == "guerrero")[0], _tree)
@@ -1161,6 +1166,68 @@ func _collect_banned(value: Variant, banned: RegEx, path: String, found: PackedS
 		var m := banned.search(value)
 		if m:
 			found.append("%s: «%s»" % [path.get_file(), m.get_string()])
+
+
+func _test_ascendancy_rules() -> void:
+	var c := _new_character()
+	c.set_level(19)
+	_check(not c.can_choose_ascendancy() and c.ascendancy_points_total() == 0, "sin ascendencia antes del nivel 20")
+	c.set_level(20)
+	_check(c.can_choose_ascendancy() and c.ascendancy_points_total() == 1, "al nivel 20 se elige y hay 1 punto")
+	var asc_id := StringName(c.class_def["ascendancies"][0]["id"])
+	c.set_ascendancy(asc_id)
+	var life_before := c.stats.get_value(Stat.LIFE)
+	_check(c.ascendancy_nodes.is_empty(), "al elegirla no hay pasivas asignadas")
+	_check(c.allocate_ascendancy_node(0) and not c.allocate_ascendancy_node(1), "un punto, una pasiva")
+	_check(not c.can_choose_ascendancy(), "la elección queda hecha")
+	c.set_level(30)
+	_check(c.ascendancy_points_total() == 3 and c.allocate_ascendancy_node(1) and c.allocate_ascendancy_node(2), "3 puntos al nivel 30")
+	_check(c.refund_ascendancy_node(2) and c.ascendancy_points_available() == 1, "se pueden quitar")
+	# Solo cuentan las pasivas asignadas.
+	var data = JSON.parse_string(JSON.stringify(c.to_dict()))
+	var loaded := CharacterData.from_dict(data, _classes[0], _tree, _db)
+	_check(loaded.ascendancy_nodes.size() == 2 and loaded.ascendancy_def.get("id", "") == String(asc_id), "ascendancia y pasivas guardadas")
+	# Guardado antiguo con ascendencia por debajo del nivel 20: se reinicia.
+	data["level"] = 12
+	var young := CharacterData.from_dict(data, _classes[0], _tree, _db)
+	_check(young.ascendancy_def.is_empty() and young.flags.has("ascendancy_reset"), "ascendencia anterior al nivel 20 reiniciada")
+	# Nombres de puestos de trabajo coherentes (sin los descartados).
+	var names := PackedStringArray()
+	for cdef in _classes:
+		names.append(cdef["name"])
+		for a in cdef["ascendancies"]:
+			names.append(a["name"])
+	for banned in ["Hacker", "Desarrollador 10x", "Danzarina de Hilos", "Señor del Monolito"]:
+		_check(not names.has(banned), "nombre descartado: %s" % banned)
+	for wanted in ["Scrum Master", "Project Manager", "Tester QA", "Ingeniera de Prompts"]:
+		_check(names.has(wanted), "falta el rol %s" % wanted)
+
+
+func _test_board_milestones() -> void:
+	var c := _new_character()
+	var rafaga: Dictionary = _db.skills.skills["rafaga_de_paquetes"]
+	var low := SkillCalc.compute(Motherboard.new(rafaga, 1, ["DDR4"]), c)
+	var mid := SkillCalc.compute(Motherboard.new(rafaga, 10, ["DDR4"]), c)
+	var high := SkillCalc.compute(Motherboard.new(rafaga, 30, ["DDR4"]), c)
+	_check(mid["projectiles"] == low["projectiles"] + 1 and high["projectiles"] == low["projectiles"] + 3, "hitos: +1 proyectil a los niveles 10, 20 y 30")
+	var deadlock: Dictionary = _db.skills.skills["deadlock"]
+	var d1 := SkillCalc.compute(Motherboard.new(deadlock, 1, ["DDR3"]), c)
+	var d20 := SkillCalc.compute(Motherboard.new(deadlock, 20, ["DDR3"]), c)
+	_check(d20["radius"] > d1["radius"] and d20["cooldown"] < d1["cooldown"] and d20["stun"] > d1["stun"], "cada nivel mejora área, enfriamiento y duración")
+	_check(SkillCalc.milestone_text(_db.skills.skills["proceso_hijo"]) == "+1 esbirro", "hito de esbirros")
+	_check(SkillCalc.compute(Motherboard.new(_db.skills.skills["proceso_hijo"], 20, ["DDR5"]), c)["count"] == 4, "esbirros extra por nivel")
+
+
+func _test_shaped_clusters() -> void:
+	var shaped := 0
+	var themes := {}
+	for c in _tree.clusters.values():
+		if c.has("segments"):
+			shaped += 1
+			themes[c["theme"]] = true
+	_check(shaped >= 50, "la mayoría de los clusters tienen forma (%d)" % shaped)
+	for t in ["vida", "fuego", "rayo", "frio"]:
+		_check(themes.has(t), "cluster con forma de %s" % t)
 
 
 func _test_walk_animation() -> void:

@@ -12,6 +12,8 @@ extends Control
 
 signal node_hovered(node_id: int)  # -1 = ninguno
 signal node_clicked(node_id: int, button: MouseButton)
+## Click en el medallón de la ascendencia (junto al inicio de la clase).
+signal ascendancy_clicked
 
 const GRID_CELL := 128.0
 const MIN_ZOOM := 0.15
@@ -40,6 +42,10 @@ var _grid_tree: PassiveTree
 var _pressed := false
 var _drag_distance := 0.0
 var _search: Dictionary = {}   # ids que coinciden con la búsqueda -> true
+## Estado del medallón de ascendencia: {unlocked, pending, name}.
+var ascendancy_info: Dictionary = {}
+var _medallion_hover := false
+const MEDALLION_RADIUS := 30.0
 
 
 func _ready() -> void:
@@ -85,8 +91,16 @@ func set_search(ids: Array) -> void:
 
 
 func _process(_delta: float) -> void:
-	if not _search.is_empty():
-		queue_redraw()  # el anillo de búsqueda está animado
+	if not _search.is_empty() or ascendancy_info.get("pending", false):
+		queue_redraw()  # el anillo de búsqueda y el medallón están animados
+
+
+## Detrás del inicio de la clase (hacia el centro, donde no hay pasivas); para
+## la clase central, debajo de su inicio.
+func medallion_position() -> Vector2:
+	var start := allocation.tree.get_node_data(allocation.start_node_id).position
+	var dir := -start.normalized() if start.length() > 1.0 else Vector2(0, 1)
+	return start + dir * 95.0
 
 
 static func border_color(n: PassiveNode) -> Color:
@@ -173,11 +187,38 @@ func _draw() -> void:
 		if n.id == _hovered_id:
 			draw_arc(n.position, r + 5.0, 0.0, TAU, 32, Color.WHITE, 2.0, true)
 
+	if not ascendancy_info.is_empty():
+		_draw_medallion(font, pulse)
 	draw_set_transform(Vector2.ZERO)
 	_draw_labels(tree, visible_rect, font)
 
 
-## Fondos de los clusters: un halo del color de su temática.
+func _draw_medallion(font: Font, pulse: float) -> void:
+	var p := medallion_position()
+	var start := allocation.tree.get_node_data(allocation.start_node_id).position
+	var unlocked: bool = ascendancy_info.get("unlocked", false)
+	var pending: bool = ascendancy_info.get("pending", false)
+	draw_line(start, p, Color(COLOR_ALLOCATED, 0.5) if unlocked else COLOR_EDGE, 3.0, true)
+	if pending:
+		draw_circle(p, MEDALLION_RADIUS + 10.0 + pulse * 6.0, Color(1.0, 0.85, 0.3, 0.12 + 0.12 * pulse))
+	draw_circle(p, MEDALLION_RADIUS, Color("1a1410") if unlocked else COLOR_NODE)
+	var gold := Color("d9a441") if unlocked else Color("5a5363")
+	draw_arc(p, MEDALLION_RADIUS, 0.0, TAU, 40, gold if not _medallion_hover else Color.WHITE, 4.0, true)
+	draw_arc(p, MEDALLION_RADIUS - 7.0, 0.0, TAU, 40, Color(gold, 0.5), 1.5, true)
+	# Estrella de la ascendencia.
+	var pts := PackedVector2Array()
+	for k in 10:
+		pts.append(p + Vector2.from_angle(-PI / 2.0 + TAU * k / 10.0) * (16.0 if k % 2 == 0 else 7.0))
+	draw_colored_polygon(pts, gold)
+	var label: String = ascendancy_info.get("name", "Ascendencia")
+	if not unlocked:
+		label = "Ascendencia · nv. %d" % CharacterData.ASCENDANCY_LEVEL
+	draw_string_outline(font, p + Vector2(-160, MEDALLION_RADIUS + 26), label, HORIZONTAL_ALIGNMENT_CENTER, 320, 18, 6, COLOR_BG)
+	draw_string(font, p + Vector2(-160, MEDALLION_RADIUS + 26), label, HORIZONTAL_ALIGNMENT_CENTER, 320, 18, gold.lightened(0.2))
+
+
+## Fondos de los clusters: la silueta de su símbolo (corazón, llama, rayo...)
+## brillando con el color de su temática; los que no tienen forma, un halo.
 func _draw_clusters(tree: PassiveTree, visible_rect: Rect2) -> void:
 	for c in tree.clusters.values():
 		var center := Vector2(c["x"], c["y"])
@@ -185,6 +226,20 @@ func _draw_clusters(tree: PassiveTree, visible_rect: Rect2) -> void:
 		if not visible_rect.grow(radius).has_point(center):
 			continue
 		var color := tree.theme_color(c["theme"])
+		if c.has("segments"):
+			if c.has("fill"):
+				var poly := PackedVector2Array()
+				for p in c["fill"]:
+					poly.append(Vector2(p[0], p[1]))
+				draw_colored_polygon(poly, Color(color, 0.08))
+				poly.append(poly[0])
+				draw_polyline(poly, Color(color, 0.30), 3.0, true)
+			for s in c["segments"]:
+				var a := Vector2(s[0], s[1])
+				var b := Vector2(s[2], s[3])
+				draw_line(a, b, Color(color, 0.07), 38.0, true)   # resplandor ancho
+				draw_line(a, b, Color(color, 0.10), 20.0, true)
+			continue
 		draw_circle(center, radius, Color(color, 0.07))
 		draw_arc(center, radius, 0.0, TAU, 48, Color(color, 0.22), 2.0, true)
 
@@ -233,7 +288,9 @@ func _gui_input(event: InputEvent) -> void:
 				_pressed = true
 				_drag_distance = 0.0
 			else:
-				if _pressed and _drag_distance < DRAG_THRESHOLD and _hovered_id != -1:
+				if _pressed and _drag_distance < DRAG_THRESHOLD and _medallion_hover:
+					ascendancy_clicked.emit()
+				elif _pressed and _drag_distance < DRAG_THRESHOLD and _hovered_id != -1:
 					node_clicked.emit(_hovered_id, MOUSE_BUTTON_LEFT)
 				_pressed = false
 		elif mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed and _hovered_id != -1:
@@ -268,6 +325,11 @@ func _zoom_at(screen_pos: Vector2, factor: float) -> void:
 
 func _update_hover(screen_pos: Vector2) -> void:
 	var p := _to_tree(screen_pos)
+	var on_medallion := not ascendancy_info.is_empty() and p.distance_to(medallion_position()) <= MEDALLION_RADIUS + 4.0
+	if on_medallion != _medallion_hover:
+		_medallion_hover = on_medallion
+		mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if on_medallion else Control.CURSOR_ARROW
+		queue_redraw()
 	var cell := _cell_of(p)
 	var best := -1
 	var best_dist := INF

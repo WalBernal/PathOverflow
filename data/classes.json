@@ -3,13 +3,13 @@
   "classes": [
     {
       "id": "guerrero",
-      "name": "Guerrero",
+      "name": "Técnico de Soporte",
       "starter_weapon": "hacha_de_lenador",
       "starter_skills": [
         "barrido",
         "teleport_tcp"
       ],
-      "description": "Resuelve los problemas a golpes. Los bugs también. Sobre todo los bugs.",
+      "description": "Recién egresado y ya es quien arregla todo a golpes: reinicia, desconecta, vuelve a conectar. Y si no, golpe seco.",
       "base_attributes": {
         "strength": 32,
         "dexterity": 14,
@@ -18,8 +18,8 @@
       "ascendancies": [
         {
           "id": "berserker_hotfix",
-          "name": "Berserker del Hotfix",
-          "description": "Despliega los viernes a las 18:00. Sin tests. Sin miedo. Sin fin de semana.",
+          "name": "Ingeniero de Guardia",
+          "description": "Atiende incidentes a las 3 AM. Cuanto peor va todo, mejor rinde.",
           "passives": [
             {
               "name": "Directo a producción",
@@ -84,7 +84,7 @@
         },
         {
           "id": "guardian_firewall",
-          "name": "Guardián del Firewall",
+          "name": "Especialista en Ciberseguridad",
           "description": "Bloquea todo el tráfico entrante. Incluido el que necesitabas.",
           "passives": [
             {
@@ -146,8 +146,8 @@
         },
         {
           "id": "senor_monolito",
-          "name": "Señor del Monolito",
-          "description": "Un único proceso de 4 GB que nadie se atreve a reiniciar.",
+          "name": "Administrador de Sistemas",
+          "description": "Mantiene servidores enormes que nadie se atreve a reiniciar. Lento, pesado e imparable.",
           "passives": [
             {
               "name": "Acoplamiento total",
@@ -206,13 +206,13 @@
     },
     {
       "id": "duelista",
-      "name": "Duelista",
+      "name": "Tester QA",
       "starter_weapon": "espada_oxidada",
       "starter_skills": [
         "barrido",
         "rafaga_de_paquetes"
       ],
-      "description": "Lucha por la gloria, el público y las estrellas en GitHub.",
+      "description": "Su trabajo es romper las cosas antes que los usuarios. Lo hace de cerca, con precisión y con un reporte de 40 páginas.",
       "base_attributes": {
         "strength": 23,
         "dexterity": 23,
@@ -221,8 +221,8 @@
       "ascendancies": [
         {
           "id": "gladiador_review",
-          "name": "Gladiador del Code Review",
-          "description": "Deja 87 comentarios por pull request. Todos sobre nombres de variables.",
+          "name": "Revisor de Código",
+          "description": "Encuentra el error en la línea 3482. Cada comentario suyo es un golpe crítico.",
           "passives": [
             {
               "name": "Nit:",
@@ -268,8 +268,8 @@
         },
         {
           "id": "campeon_sprint",
-          "name": "Campeón del Sprint",
-          "description": "Completa 40 puntos de historia en dos semanas. Los otros 39 son deuda.",
+          "name": "Scrum Master",
+          "description": "Velocidad del equipo, dailies y sprints. Si el equipo acaba rápido, rinde todavía más.",
           "passives": [
             {
               "name": "Velocidad del equipo",
@@ -318,8 +318,8 @@
         },
         {
           "id": "asesino_deadlines",
-          "name": "Asesino de Deadlines",
-          "description": "Las fechas límite le temen. Hacen bien.",
+          "name": "Project Manager",
+          "description": "Todo es para ayer. Reparte el trabajo (y el daño) en todas direcciones.",
           "passives": [
             {
               "name": "Entrega a las 23:59",
@@ -364,19 +364,19 @@
           ]
         }
       ],
-      "playstyle": "Ataques rápidos, críticos y robo de vida. Elegante, arrogante y casi siempre a dos píxeles de morir.",
+      "playstyle": "Ataques rápidos y críticos. Elegante, minucioso y casi siempre a dos píxeles de morir.",
       "difficulty": 2,
       "color": "d9a441"
     },
     {
       "id": "exploradora",
-      "name": "Exploradora",
+      "name": "Desarrolladora Frontend",
       "starter_weapon": "espada_oxidada",
       "starter_skills": [
         "rafaga_de_paquetes",
         "teleport_tcp"
       ],
-      "description": "Recorre los rincones del mapa que el diseñador de niveles juró que nadie visitaría.",
+      "description": "Píxel perfecto y a distancia. Dispara antes de que el backend termine de responder.",
       "base_attributes": {
         "strength": 14,
         "dexterity": 32,
@@ -385,8 +385,8 @@
       "ascendancies": [
         {
           "id": "francotiradora_bugs",
-          "name": "Francotiradora de Bugs",
-          "description": "Encuentra el bug en una línea entre un millón. Luego descubre que lo escribió ella.",
+          "name": "Ingeniera de Rendimiento",
+          "description": "Mide, optimiza y dispara. Cada milisegundo cuenta; cada proyectil, también.",
           "passives": [
             {
               "name": "Breakpoint certero",
@@ -435,8 +435,8 @@
         },
         {
           "id": "rastreadora_leaks",
-          "name": "Rastreadora de Memory Leaks",
-          "description": "Sigue el rastro de la memoria perdida hasta su origen. Siempre es el navegador.",
+          "name": "Ingeniera de Depuración",
+          "description": "Pone breakpoints como quien pone trampas. Y los bugs caen en ellos.",
           "passives": [
             {
               "name": "Heap dump",
@@ -485,8 +485,8 @@
         },
         {
           "id": "danzarina_hilos",
-          "name": "Danzarina de Hilos",
-          "description": "Ejecuta veinte tareas en paralelo. Ninguna termina, pero todas empiezan muy rápido.",
+          "name": "Diseñadora UX/UI",
+          "description": "Fluida, responsiva y difícil de atrapar. Nunca está donde la esperas.",
           "passives": [
             {
               "name": "Race condition",
@@ -537,13 +537,13 @@
     },
     {
       "id": "hacker",
-      "name": "Hacker",
+      "name": "Ingeniera de Prompts",
       "starter_weapon": "daga_de_root",
       "starter_skills": [
         "rollback",
         "excepcion_en_cadena"
       ],
-      "description": "Entra donde no debe y sale antes de que salten las alertas. Su contraseña es «contraseña».",
+      "description": "Habla con las máquinas mejor que con las personas. Encadena instrucciones hasta que el sistema hace exactamente lo que ella quiere.",
       "base_attributes": {
         "strength": 14,
         "dexterity": 23,
@@ -552,8 +552,8 @@
       "ascendancies": [
         {
           "id": "asesina_sesiones",
-          "name": "Asesina de Sesiones",
-          "description": "Roba cookies. No de las de chocolate.",
+          "name": "Especialista Red Team",
+          "description": "Ataca el sistema para encontrar sus fallos: críticos y saltos de un objetivo a otro.",
           "passives": [
             {
               "name": "Token robado",
@@ -607,8 +607,8 @@
         },
         {
           "id": "ingeniera_social",
-          "name": "Ingeniera Social",
-          "description": "No hackea sistemas: hackea personas. Son más fáciles.",
+          "name": "Ingeniera de IA",
+          "description": "Entrena modelos elementales. Sus instrucciones saltan de enemigo en enemigo.",
           "passives": [
             {
               "name": "Phishing elemental",
@@ -649,8 +649,8 @@
         },
         {
           "id": "saboteadora",
-          "name": "Saboteadora de Dependencias",
-          "description": "Publica un paquete con un typo en el nombre y espera.",
+          "name": "Analista de Malware",
+          "description": "Estudió tanto código malicioso que ya lo usa a su favor: caos, trampas y minas.",
           "passives": [
             {
               "name": "Supply chain",
@@ -701,19 +701,19 @@
           ]
         }
       ],
-      "playstyle": "Cadenas, trampas y armas que vuelven. Golpes críticos con daga y hechizos que saltan de enemigo en enemigo.",
+      "playstyle": "Cadenas, trampas y armas que vuelven. Críticos con daga y hechizos que saltan de enemigo en enemigo.",
       "difficulty": 2,
       "color": "2fd0a0"
     },
     {
       "id": "hechicero",
-      "name": "Hechicero",
+      "name": "Científico de Datos",
       "starter_weapon": "maza_de_depuracion",
       "starter_skills": [
         "ping_letal",
         "stack_overflow"
       ],
-      "description": "Estudió magia arcana durante años. Ahora la copia de foros sin leer la pregunta.",
+      "description": "Convierte números en hechizos. Si el modelo falla, fue culpa de los datos.",
       "base_attributes": {
         "strength": 14,
         "dexterity": 14,
@@ -722,8 +722,8 @@
       "ascendancies": [
         {
           "id": "archimago_recursivo",
-          "name": "Archimago Recursivo",
-          "description": "Sus hechizos se lanzan a sí mismos. Hasta que dejan de hacerlo.",
+          "name": "Ingeniero de Machine Learning",
+          "description": "Recursivo y eficiente: lanza más rápido y multiplica sus proyectiles.",
           "passives": [
             {
               "name": "Caso base",
@@ -777,8 +777,8 @@
         },
         {
           "id": "elementalista_so",
-          "name": "Elementalista de Stack Overflow",
-          "description": "Domina los elementos copiando la respuesta aceptada. Marcado como duplicado.",
+          "name": "Analista de Big Data",
+          "description": "Procesa volúmenes enormes: área, daño elemental y resistencia a todo.",
           "passives": [
             {
               "name": "Respuesta aceptada",
@@ -842,8 +842,8 @@
         },
         {
           "id": "nigromante_zombis",
-          "name": "Nigromante de Procesos Zombi",
-          "description": "kill -9 no funciona con sus siervos. Lo intentaron.",
+          "name": "Orquestador de Agentes IA",
+          "description": "No pelea: delega. Sus agentes (esbirros) hacen el trabajo sucio.",
           "passives": [
             {
               "name": "fork()",
@@ -888,19 +888,19 @@
           ]
         }
       ],
-      "playstyle": "Hechizos elementales y escudo de energía. Mucho daño, poca vida y una fe ciega en el maná.",
+      "playstyle": "Hechizos elementales y escudo de energía. Mucho daño, poca vida y una fe ciega en las estadísticas.",
       "difficulty": 3,
       "color": "4b8bd6"
     },
     {
       "id": "templario",
-      "name": "Templario",
+      "name": "Ingeniero DevOps",
       "starter_weapon": "maza_de_depuracion",
       "starter_skills": [
         "fork_bomb",
         "barrido"
       ],
-      "description": "Fanático de las buenas prácticas. Las impone con fuego sagrado y pull requests bloqueados.",
+      "description": "Despliega fuego y servidores por igual. Su lema: si pasa el pipeline, pasa en el mundo.",
       "base_attributes": {
         "strength": 23,
         "dexterity": 14,
@@ -909,8 +909,8 @@
       "ascendancies": [
         {
           "id": "inquisidor_linter",
-          "name": "Inquisidor del Linter",
-          "description": "Toda línea de más de 80 caracteres será purgada por el fuego.",
+          "name": "Ingeniero de Confiabilidad (SRE)",
+          "description": "Ningún warning sobrevive. Fuego y rayo para todo lo que no cumple el SLA.",
           "passives": [
             {
               "name": "Falta un punto y coma",
@@ -959,8 +959,8 @@
         },
         {
           "id": "hierofante_docs",
-          "name": "Hierofante de la Documentación",
-          "description": "El único que escribe documentación. Nadie la lee, pero existe.",
+          "name": "Arquitecto Cloud",
+          "description": "Levanta servidores en cualquier parte: sus torretas trabajan por él.",
           "passives": [
             {
               "name": "README sagrado",
@@ -1014,8 +1014,8 @@
         },
         {
           "id": "profeta_rollback",
-          "name": "Profeta del Rollback",
-          "description": "Ha visto el futuro. En el futuro, todo vuelve a la versión anterior.",
+          "name": "Release Manager",
+          "description": "Si algo sale mal, hace rollback. Aguanta lo que sea y pega más fuerte al borde del desastre.",
           "passives": [
             {
               "name": "git revert",
@@ -1058,13 +1058,13 @@
           ]
         }
       ],
-      "playstyle": "Hechizos de área con armadura. Quema todo lo que no cumple el linter. Que es todo.",
+      "playstyle": "Hechizos de área con armadura y torretas. Quema todo lo que no pasa las pruebas. Que es todo.",
       "difficulty": 2,
       "color": "b04ad9"
     },
     {
       "id": "full_stack",
-      "name": "Full Stack",
+      "name": "Desarrollador Full Stack",
       "starter_weapon": "teclado_mecanico",
       "starter_skills": [
         "bucle_infinito",
@@ -1080,7 +1080,7 @@
         {
           "id": "arquitecto_soluciones",
           "name": "Arquitecto de Soluciones",
-          "description": "Dibuja cajas y flechas. Otros escriben el código.",
+          "description": "Dibuja cajas y flechas. Los demás escriben el código.",
           "passives": [
             {
               "name": "Diagrama de todo",
@@ -1131,8 +1131,8 @@
         },
         {
           "id": "devops_integral",
-          "name": "DevOps Integral",
-          "description": "Si se cae, lo levanta. Si no se cae, lo tira para probar.",
+          "name": "Líder Técnico (Tech Lead)",
+          "description": "Coordina, automatiza y delega: más torretas, más esbirros, menos enfriamiento.",
           "passives": [
             {
               "name": "Integración continua",
@@ -1188,8 +1188,8 @@
         },
         {
           "id": "desarrollador_10x",
-          "name": "Desarrollador 10x",
-          "description": "Diez veces más código. Diez veces más bugs.",
+          "name": "CTO de Startup",
+          "description": "Hace de todo, rápido y sin documentación. Mucho daño, mucha área y cero procesos.",
           "passives": [
             {
               "name": "Commits a las 4 AM",

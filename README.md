@@ -39,7 +39,7 @@ Todas las teclas están en *Proyecto → Configuración del proyecto → Mapa de
 ## Progresión
 
 - **Puntos de pasiva**: se empieza con 0; cada nivel da 1 y las misiones de la historia dan puntos extra (2 por cada misión principal de acto y 1 por algunas secundarias).
-- **Las placas base suben de nivel** con la experiencia mientras están instaladas (como las gemas de PoE), y con el nivel sube su daño: los hechizos un 15 % lineal ×1,03 por nivel y los ataques un 12 % por nivel sobre el arma. Así una habilidad inicial no se queda atrás.
+- **Las placas base suben de nivel** (hasta el 40) con la experiencia mientras están instaladas, como las gemas de PoE. Cada nivel da más daño (hechizos: +15 % lineal ×1,03; ataques: +12 % sobre el arma), +1 % de área, ancho y duración y -1 % de enfriamiento. En los **niveles 10, 20 y 30** ganan un hito según la habilidad: +1 proyectil, +1 salto de cadena, +1 esbirro, +1 bomba a la vez, +10 % de área o +10 % de daño. El tooltip muestra el nivel, la experiencia y los hitos.
 - **Atributos con daño**: la Fuerza da daño físico cuerpo a cuerpo (1 % por cada 4), la Destreza daño de proyectiles (1 % por cada 4) y velocidad de ataque, y la Inteligencia daño de hechizos (1 % por cada 4). Los caminos de atributos del árbol dan +12.
 - **Ascendencias** con mucho impacto: bonificaciones grandes (+25-60 % más) y efectos que cambian las habilidades: proyectiles adicionales, cadenas adicionales, esbirros adicionales o más trampas, minas y torretas a la vez.
 - Estos cambios **devuelven los puntos de pasiva** a los personajes guardados (árbol versión 4).
@@ -202,19 +202,23 @@ Las pociones son **objetos**: caen como botín (las de nivel cercano al de la zo
 
 Las bebidas son parodias de marcas reales (nombres y latas inventados). Cada poción tiene su sprite. Se definen en `data/items/flasks.json`; los personajes antiguos reciben el Café de máquina y la Pepsy al cargar.
 
-## Clases
+## Clases: tu primer trabajo
 
-| Clase | Atributos | Arma | Habilidades iniciales |
-|---|---|---|---|
-| Guerrero | FUE | Hacha de leñador | Barrido, Teletransporte TCP |
-| Duelista | FUE/DES | Espada oxidada | Barrido, Ráfaga de Paquetes |
-| Exploradora | DES | Espada oxidada | Ráfaga de Paquetes, Teletransporte TCP |
-| **Hacker** | DES/INT | Daga de root | Rollback, Excepción en Cadena |
-| Hechicero | INT | Maza de depuración | Ping Letal, Stack Overflow |
-| Templario | INT/FUE | Maza de depuración | Fork Bomb, Barrido |
-| **Full Stack** | las tres | Teclado mecánico | Bucle Infinito, Flamewar |
+El personaje es un recién egresado que se enfrenta al mundo laboral: cada clase es un puesto de entrada y sus ascendencias, los caminos de carrera que salen de él.
 
-Cada una con 3 ascendencias. El Full Stack empieza en el **centro** del árbol.
+| Clase | Atributos | Ascendencias (carreras) |
+|---|---|---|
+| Técnico de Soporte | FUE | Ingeniero de Guardia, Especialista en Ciberseguridad, Administrador de Sistemas |
+| Tester QA | FUE/DES | Revisor de Código, Scrum Master, Project Manager |
+| Desarrolladora Frontend | DES | Ingeniera de Rendimiento, Ingeniera de Depuración, Diseñadora UX/UI |
+| Ingeniera de Prompts | DES/INT | Especialista Red Team, Ingeniera de IA, Analista de Malware |
+| Científico de Datos | INT | Ingeniero de Machine Learning, Analista de Big Data, Orquestador de Agentes IA |
+| Ingeniero DevOps | INT/FUE | Ingeniero de Confiabilidad (SRE), Arquitecto Cloud, Release Manager |
+| Desarrollador Full Stack | las tres | Arquitecto de Soluciones, Líder Técnico (Tech Lead), CTO de Startup |
+
+(Los ids internos siguen siendo los de antes —`guerrero`, `duelista`...— para no romper los guardados.)
+
+**Ascendencia al nivel 20**: junto al inicio de tu clase en el árbol hay un **medallón**. Al pulsarlo se abre un panel circular: hasta el nivel 20 solo se pueden ver las tres opciones; a partir de ahí se elige una (permanente). Después, el panel muestra el inicio de la ascendencia y sus pasivas alrededor: cada una cuesta un **punto de ascendencia** (1 al nivel 20, +1 a los 25 y 30). En la pantalla de pruebas del árbol se puede cambiar libremente.
 
 ## Enemigos
 
@@ -318,7 +322,7 @@ GDScript va sobrado para densidades tipo PoE (300-600). Por encima de unos 800, 
 
 ## Árbol pasivo
 
-- **774 pasivas en 67 clusters temáticos** (7 clases: 6 alrededor y el Full Stack en el centro): cada anillo o rueda es de un solo tipo (vida, armadura, fuego, crítico, maná, robo de vida…). Sus pasivas menores son variaciones de ese tema (p. ej. vida plana, vida + regeneración, vida + armadura, % de vida) y su notable tiene nombre, texto sarcástico e icono propio. Entre clusters hay caminos de atributos, puentes temáticos entre clases vecinas y un anillo central de atributos.
+- **734 pasivas en 67 clusters con forma** (como en PoE 2: cada temática dibuja su símbolo: corazón para vida, llama para fuego, rayo en zigzag, copo de nieve para frío, escudo para armadura, gota para maná, mira para crítico, flecha para proyectiles, estrella para área, hexágono para escudo de energía, espiral para caos, colmillos para robo de vida, pluma para evasión, chevrons para velocidad y movilidad, reloj de arena para enfriamientos, libro para hechizos, prisma para resistencias y martillo para daño físico; los de atributos siguen siendo anillos) (7 clases: 6 alrededor y el Full Stack en el centro): cada anillo o rueda es de un solo tipo (vida, armadura, fuego, crítico, maná, robo de vida…). Sus pasivas menores son variaciones de ese tema (p. ej. vida plana, vida + regeneración, vida + armadura, % de vida) y su notable tiene nombre, texto sarcástico e icono propio. Entre clusters hay caminos de atributos, puentes temáticos entre clases vecinas y un anillo central de atributos.
 - **Inicios limpios**: el inicio de cada clase solo se conecta hacia delante, a sus 4 ramas; nada llega a él por detrás ni pasa junto a él. Cada región se une al centro por sus lados, a través de los clusters *puerta* entre clases vecinas, y hay un cluster interior por clase entre el anillo central y la clase.
 - **Centro**: el inicio del Full Stack, el anillo de *Versatilidad* (3 notables y su piedra angular) y el anillo central de atributos.
 - **Temáticas** en `data/passive_themes.json` (21, nuevas: Versatilidad, Enfriamientos y duración, Movilidad). Para añadir pasivas o cambiar valores, edita ese archivo y regenera el árbol con `python tools/generate_passive_tree.py`.

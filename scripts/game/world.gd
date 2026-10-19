@@ -94,6 +94,9 @@ func _ready() -> void:
 	travel_to(start_zone, "waypoint" if GameData.zones[start_zone].get("waypoint") != null else "")
 	quests.start_auto()
 
+	if character.flags.has("ascendancy_reset"):
+		character.flags.erase("ascendancy_reset")
+		ui.hud.flash.call_deferred("Las ascendencias ahora se eligen al nivel 20: tu elección se ha reiniciado.", UiStyle.ACCENT)
 	if character.flags.has("passives_refunded"):
 		character.flags.erase("passives_refunded")
 		ui.hud.flash.call_deferred("El árbol pasivo ha cambiado: te hemos devuelto todos los puntos (P).", UiStyle.ACCENT)
@@ -554,7 +557,12 @@ func _on_mutex_broken() -> void:
 
 ## Los monstruos tienen el nivel de su zona; subir de nivel solo avisa.
 func _on_leveled_up(new_level: int) -> void:
-	ui.hud.flash("¡Nivel %d! Tienes un punto de pasiva nuevo (P)." % new_level, UiStyle.ACCENT)
+	if new_level == CharacterData.ASCENDANCY_LEVEL:
+		ui.hud.flash("¡Nivel %d! Ya puedes elegir tu ascendencia: abre el árbol (P) y pulsa el medallón junto a tu clase." % new_level, Color("ffd84a"))
+	elif new_level > CharacterData.ASCENDANCY_LEVEL and (new_level - CharacterData.ASCENDANCY_LEVEL) % 5 == 0 and new_level <= 30:
+		ui.hud.flash("¡Nivel %d! Nuevo punto de pasiva y de ascendencia (P)." % new_level, Color("ffd84a"))
+	else:
+		ui.hud.flash("¡Nivel %d! Tienes un punto de pasiva nuevo (P)." % new_level, UiStyle.ACCENT)
 
 
 ## Pistas la primera vez que se recoge una placa base o un módulo RAM.

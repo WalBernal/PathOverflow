@@ -29,6 +29,8 @@ var id := ""
 var character_name := "Exiliado sin nombre"
 var class_def: Dictionary
 var ascendancy_def: Dictionary = {}
+## Pasivas de la ascendencia asignadas (índices en ascendancy_def.passives).
+var ascendancy_nodes: Array[int] = []
 var level := 1
 var experience := 0
 ## Apariencia elegida en el creador (ver CharacterAppearance).
@@ -107,10 +109,48 @@ func add_experience(amount: int) -> void:
 
 func set_ascendancy(asc_id: StringName) -> void:
 	ascendancy_def = {}
+	ascendancy_nodes.clear()
 	for a in class_def.get("ascendancies", []):
 		if StringName(a["id"]) == asc_id:
 			ascendancy_def = a
 	recalculate()
+
+
+## La ascendencia se elige al llegar al nivel ASCENDANCY_LEVEL.
+const ASCENDANCY_LEVEL := 20
+
+
+## Puntos de ascendencia: 1 al nivel 20, 2 al 25 y 3 al 30.
+func ascendancy_points_total() -> int:
+	if level < ASCENDANCY_LEVEL:
+		return 0
+	return clampi(1 + (level - ASCENDANCY_LEVEL) / 5, 1, 3)
+
+
+func ascendancy_points_available() -> int:
+	return ascendancy_points_total() - ascendancy_nodes.size()
+
+
+func can_choose_ascendancy() -> bool:
+	return level >= ASCENDANCY_LEVEL and ascendancy_def.is_empty()
+
+
+func allocate_ascendancy_node(index: int) -> bool:
+	if ascendancy_def.is_empty() or ascendancy_nodes.has(index) or ascendancy_points_available() <= 0:
+		return false
+	if index < 0 or index >= ascendancy_def.get("passives", []).size():
+		return false
+	ascendancy_nodes.append(index)
+	recalculate()
+	return true
+
+
+func refund_ascendancy_node(index: int) -> bool:
+	if not ascendancy_nodes.has(index):
+		return false
+	ascendancy_nodes.erase(index)
+	recalculate()
+	return true
 
 
 func passive_points_total() -> int:
@@ -148,9 +188,11 @@ func recalculate(emit := true) -> void:
 	stats.set_base(Stat.CRIT_MULTIPLIER, 150.0)
 	stats.set_base(Stat.MOVEMENT_SPEED, 100.0)
 	stats.add_modifiers(passives.collect_modifiers())
-	for p in ascendancy_def.get("passives", []):
-		for md in p.get("mods", []):
-			stats.add_modifier(Modifier.from_dict(md, "ascendancy"))
+	var asc_passives: Array = ascendancy_def.get("passives", [])
+	for i in ascendancy_nodes:
+		if i < asc_passives.size():
+			for md in asc_passives[i].get("mods", []):
+				stats.add_modifier(Modifier.from_dict(md, "ascendancy"))
 	_apply_equipment()
 	for effect in timed_effects:
 		stats.add_modifiers(effect["mods"])
@@ -301,6 +343,7 @@ func to_dict() -> Dictionary:
 		"name": character_name,
 		"class_id": class_def["id"],
 		"ascendancy_id": ascendancy_def.get("id", ""),
+		"ascendancy_nodes": ascendancy_nodes,
 		"level": level,
 		"experience": experience,
 		"appearance": appearance,
@@ -331,6 +374,21 @@ static func from_dict(d: Dictionary, p_class_def: Dictionary, tree: PassiveTree,
 	for a in p_class_def.get("ascendancies", []):
 		if a["id"] == d.get("ascendancy_id", ""):
 			c.ascendancy_def = a
+	if not c.ascendancy_def.is_empty():
+		if c.level < ASCENDANCY_LEVEL:
+			# Antes se elegía en cualquier momento; ahora hace falta el nivel 20.
+			c.ascendancy_def = {}
+			c.flags["ascendancy_reset"] = true
+		elif d.has("ascendancy_nodes"):
+			for i in d["ascendancy_nodes"]:
+				if int(i) < c.ascendancy_def.get("passives", []).size() and not c.ascendancy_nodes.has(int(i)):
+					c.ascendancy_nodes.append(int(i))
+		else:
+			# Guardados de antes: se asignan las que permitan sus puntos.
+			for i in mini(c.ascendancy_points_total(), c.ascendancy_def.get("passives", []).size()):
+				c.ascendancy_nodes.append(i)
+		while c.ascendancy_nodes.size() > c.ascendancy_points_total():
+			c.ascendancy_nodes.pop_back()
 	c.inventory.load_dict(d.get("inventory", {}), db)
 	if int(d.get("passive_tree_version", 1)) == tree.version:
 		c.passives.load_ids(d.get("passives", []))  # también recalcula las stats

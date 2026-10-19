@@ -16,7 +16,7 @@ var _standalone_controls: Array[Control] = []
 var _close_button: Button
 var _view: PassiveTreeView
 var _class_option: OptionButton
-var _asc_option: OptionButton
+var _ascendancy_panel: AscendancyPanel
 var _level_spin: SpinBox
 var _points_label: Label
 var _status_label: Label
@@ -57,6 +57,9 @@ func _build_ui() -> void:
 	_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_view.node_hovered.connect(_on_node_hovered)
 	_view.node_clicked.connect(_on_node_clicked)
+	_view.ascendancy_clicked.connect(func() -> void:
+		_ascendancy_panel.allow_change = standalone
+		_ascendancy_panel.open(_character))
 
 	var top := PanelContainer.new()
 	add_child(top)
@@ -76,10 +79,6 @@ func _build_ui() -> void:
 	_class_option.item_selected.connect(_select_class)
 	bar.add_child(_class_option)
 
-	bar.add_child(_make_label("Ascendencia:"))
-	_asc_option = OptionButton.new()
-	_asc_option.item_selected.connect(_on_ascendancy_selected)
-	bar.add_child(_asc_option)
 
 	var level_label := _make_label("Nivel:")
 	bar.add_child(level_label)
@@ -151,6 +150,11 @@ func _build_ui() -> void:
 	_tooltip_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_tooltip.add_child(_tooltip_label)
 
+	_ascendancy_panel = AscendancyPanel.new()
+	_ascendancy_panel.theme = UiStyle.make_theme()
+	add_child(_ascendancy_panel)
+	_ascendancy_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_ascendancy_panel.changed.connect(_refresh)
 
 func _make_panel_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -182,25 +186,12 @@ func show_character(character: CharacterData) -> void:
 	_character = character
 	_character.stats_changed.connect(_refresh)
 
-	_asc_option.clear()
-	_asc_option.add_item("(ninguna)")
-	var ascendancies: Array = _character.class_def.get("ascendancies", [])
-	for i in ascendancies.size():
-		_asc_option.add_item(ascendancies[i]["name"])
-		if ascendancies[i] == _character.ascendancy_def:
-			_asc_option.select(i + 1)
-
+	_ascendancy_panel.visible = false
 	_view.setup(_character.passives)
 	var start := GameData.passive_tree.get_node_data(_character.passives.start_node_id)
 	_view.center_on.call_deferred(start.position)
 	_refresh()
 
-
-func _on_ascendancy_selected(index: int) -> void:
-	if index == 0:
-		_character.set_ascendancy(&"")
-	else:
-		_character.set_ascendancy(StringName(_character.class_def["ascendancies"][index - 1]["id"]))
 
 
 func _on_node_clicked(id: int, button: MouseButton) -> void:
@@ -237,6 +228,11 @@ func _refresh() -> void:
 	_view.available_points = available
 	_view.queue_redraw()
 	_points_label.text = "Puntos: %d / %d" % [available, _character.passive_points_total()]
+	if _character.ascendancy_points_total() > 0:
+		_points_label.text += "   ·   Ascendencia: %d / %d" % [_character.ascendancy_points_available(), _character.ascendancy_points_total()]
+	var asc_pending := _character.can_choose_ascendancy() or (not _character.ascendancy_def.is_empty() and _character.ascendancy_points_available() > 0)
+	_view.ascendancy_info = {"unlocked": _character.level >= CharacterData.ASCENDANCY_LEVEL, "pending": asc_pending,
+		"name": _character.ascendancy_def.get("name", "Elegir ascendencia")}
 	_points_label.add_theme_color_override("font_color", Color("e06c6c") if available < 0 else Color("e8d9b0"))
 	_stats_label.text = _build_stats_text()
 	if _hovered_id != -1:
@@ -288,10 +284,15 @@ func _build_stats_text() -> String:
 	if not _character.ascendancy_def.is_empty():
 		var a := _character.ascendancy_def
 		t += "\n[b][color=#d9a441]%s[/color][/b]\n[i][color=#a08f6a]%s[/color][/i]\n" % [a["name"], a["description"]]
-		for p in a.get("passives", []):
-			t += "[b]%s[/b]\n" % p["name"]
-			for md in p.get("mods", []):
+		var passives: Array = a.get("passives", [])
+		for i in _character.ascendancy_nodes:
+			t += "[b]%s[/b]\n" % passives[i]["name"]
+			for md in passives[i].get("mods", []):
 				t += "   • %s\n" % Modifier.from_dict(md).describe()
+		if _character.ascendancy_points_available() > 0:
+			t += "[color=#ffd84a]Tienes %d punto(s) de ascendencia: pulsa el medallón.[/color]\n" % _character.ascendancy_points_available()
+	elif _character.can_choose_ascendancy():
+		t += "\n[color=#ffd84a]Ya puedes elegir tu ascendencia: pulsa el medallón junto a tu clase.[/color]\n"
 
 	t += _tree_summary()
 	t += "\n[b]Atributos[/b]\n"

@@ -91,3 +91,5 @@ No lucha por maldad, sino por un imperativo algorítmico: **nada entra, nada sal
 - **La Red Lince**: el proveedor de internet que siempre cae en el peor momento; buen chiste recurrente para los siguientes actos.
 - **Aida y Mario** siguen en el campamento, sin conexión. Rafa prometió alcanzar al jugador «en cuanto baje la VPN».
 - **Acto III: El Silicio Profundo** (firmware, ROM, BIOS/UEFI, reflashing).
+
+- **Las clases como primer trabajo**: el exiliado es un recién egresado; cada clase es un puesto de entrada y cada ascendencia (nivel 20), un camino de carrera.
