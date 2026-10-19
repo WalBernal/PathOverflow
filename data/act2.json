@@ -126,6 +126,7 @@
           "portal": true
         }
       ],
+      "stash": [790, 960],
       "waypoint": [
         950,
         1000
@@ -145,6 +146,7 @@
             540
           ]
         },
+        {"id": "nacho", "pos": [1380, 980]},
         {
           "id": "recolector",
           "pos": [

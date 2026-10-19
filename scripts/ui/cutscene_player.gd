@@ -44,6 +44,7 @@ var _hint: Label
 var _shown := 0.0
 var _total := 0
 var _blip: AudioStreamPlayer
+var _voice_age := 0.0
 var _pitch := 1.0
 var _rate := 1.0
 var _read_left := 0.0       # cuenta atrás para pasar sola a la siguiente
@@ -111,6 +112,7 @@ func is_playing() -> bool:
 
 func _next() -> void:
 	_index += 1
+	FreezeWatch.mark("escena: paso %d" % _index)
 	_waiting_input = false
 	_dino = false
 	if _index >= _steps.size():
@@ -176,17 +178,16 @@ func _speak(style: String) -> void:
 	_cps = CHARS_PER_SECOND
 	if style == "console" or not DialogueBox.narrator_enabled():
 		return
-	var voices := DisplayServer.tts_get_voices_for_language("es")
-	if voices.is_empty():
-		return
-	DisplayServer.tts_speak(_text.get_parsed_text(), voices[0], 80, clampf(_pitch, 0.0, 2.0), clampf(_rate * 1.1, 0.5, 2.0))
+	DialogueBox.speak(_text.get_parsed_text(), _pitch, _rate)
+	_voice_age = 0.0
+
 	_narrating = true
 	_cps = NARRATED_CPS * _rate
 
 
 func _stop_voice() -> void:
 	if _narrating:
-		DisplayServer.tts_stop()
+		DialogueBox.stop_speaking()
 		_narrating = false
 	_reposition.call_deferred()
 
@@ -229,7 +230,8 @@ func _process(delta: float) -> void:
 			_next()
 	elif _dino or (_box.visible and _shown >= _total):
 		# Lectura automática: espera a la voz (si habla) y luego el tiempo de lectura.
-		if _narrating and DisplayServer.tts_is_speaking():
+		_voice_age += delta
+		if _narrating and (_voice_age < DialogueBox.VOICE_GRACE or DisplayServer.tts_is_speaking()):
 			_read_left = maxf(_read_left, 0.6)
 		else:
 			_narrating = false

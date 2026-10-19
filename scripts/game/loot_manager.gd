@@ -2,15 +2,19 @@ class_name LootManager
 extends Node2D
 ## Objetos en el suelo, dibujados como etiquetas de texto al estilo del filtro
 ## de botín de PoE. Click en una etiqueta: el jugador camina hasta ella y la recoge.
+## Los tokens (moneda) se recogen solos al pasar cerca: se acercan al jugador.
 
 signal hovered_item_changed(item: Item)  # null = ninguno
 signal picked_up(item: Item)
 signal pickup_failed(reason: String)
+signal tokens_picked(amount: int)
 
 const PICKUP_RANGE := 50.0
 const FONT_SIZE := 14
 const PADDING := Vector2(6.0, 3.0)
 const MAX_LABEL_SHIFTS := 12
+const TOKEN_PICKUP_RANGE := 34.0
+const TOKEN_MAGNET_RANGE := 150.0
 
 var player: Player
 var inventory: Inventory
@@ -20,6 +24,8 @@ var placement_check: Callable
 var spot_fixer: Callable
 ## {item: Item, rect: Rect2, text: String}
 var drops: Array[Dictionary] = []
+## Montoncitos de tokens: {pos: Vector2, amount: int, age: float}
+var coins: Array[Dictionary] = []
 
 var _pending: Dictionary = {}
 var _hovered := -1
@@ -58,8 +64,19 @@ func find_spot(pos: Vector2, label_size: Vector2) -> Rect2:
 	return fallback
 
 
+## Deja tokens en el suelo (en un punto alcanzable).
+func drop_tokens(amount: int, pos: Vector2) -> void:
+	if amount <= 0:
+		return
+	if placement_check.is_valid() and not placement_check.call(pos) and spot_fixer.is_valid():
+		pos = spot_fixer.call(pos)
+	coins.append({"pos": pos, "amount": amount, "age": 0.0})
+	queue_redraw()
+
+
 func clear_all() -> void:
 	drops.clear()
+	coins.clear()
 	_pending = {}
 	_set_hovered(-1)
 	queue_redraw()
@@ -68,6 +85,8 @@ func clear_all() -> void:
 func _draw() -> void:
 	var font := ThemeDB.fallback_font
 	var ascent := font.get_ascent(FONT_SIZE)
+	for c in coins:
+		_draw_coin(c, font)
 	for i in drops.size():
 		var d := drops[i]
 		var item: Item = d["item"]
@@ -93,7 +112,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
+	_update_coins(delta)
 	if _pending.is_empty() or player == null:
 		return
 	if not drops.has(_pending):
@@ -136,3 +156,34 @@ func _set_hovered(i: int) -> void:
 	_hovered = i
 	hovered_item_changed.emit(drops[i]["item"] if i != -1 else null)
 	queue_redraw()
+
+func _update_coins(delta: float) -> void:
+	if coins.is_empty() or player == null or not player.is_alive():
+		return
+	var picked := 0
+	for i in range(coins.size() - 1, -1, -1):
+		var c := coins[i]
+		c["age"] += delta
+		var to_player := player.global_position - (c["pos"] as Vector2)
+		var dist := to_player.length()
+		if dist <= TOKEN_PICKUP_RANGE:
+			picked += int(c["amount"])
+			coins.remove_at(i)
+		elif dist <= TOKEN_MAGNET_RANGE and c["age"] > 0.35:
+			c["pos"] += to_player / dist * minf(dist, (260.0 + (TOKEN_MAGNET_RANGE - dist) * 4.0) * delta)
+	if picked > 0:
+		tokens_picked.emit(picked)
+	queue_redraw()
+
+
+func _draw_coin(c: Dictionary, font: Font) -> void:
+	var p: Vector2 = c["pos"]
+	var bob := sin(c["age"] * 5.0 + p.x) * 1.5
+	var n := clampi(int(c["amount"]) / 8 + 1, 1, 4)
+	for k in n:
+		var q := p + Vector2((k - (n - 1) / 2.0) * 7.0, -bob - k % 2 * 3.0)
+		draw_circle(q + Vector2(0, 2), 6.0, Color(0, 0, 0, 0.35))
+		draw_circle(q, 6.0, Economy.COLOR.darkened(0.25))
+		draw_circle(q, 4.5, Economy.COLOR)
+		draw_line(q + Vector2(-1.5, -2.5), q + Vector2(-1.5, 2.5), Economy.COLOR.darkened(0.45), 1.2)
+	draw_string(font, p + Vector2(-20, -14 - bob), "+%d" % c["amount"], HORIZONTAL_ALIGNMENT_CENTER, 40, 11, Economy.COLOR)

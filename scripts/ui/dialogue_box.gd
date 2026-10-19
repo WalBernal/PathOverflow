@@ -34,17 +34,43 @@ var _total := 0
 var _cps := CHARS_PER_SECOND
 var _pitch := 1.0
 var _rate := 1.0
-var _utterance := 0
 var _narrating := false
 
-static var _utterance_counter := 0
+static var _voice_cache: Variant = null
+## Cuánto tarda la voz en empezar (antes de eso tts_is_speaking puede dar false).
+const VOICE_GRACE := 0.6
+var _voice_age := 0.0
 
 
 ## ¿Hay voz en español para el narrador? (Sin pantalla, como en las pruebas, no.)
 static func narrator_available() -> bool:
-	if DisplayServer.get_name() == "headless":
-		return false
-	return not DisplayServer.tts_get_voices_for_language("es").is_empty()
+	return voice_id() != ""
+
+
+## Voz en español del sistema (se busca una sola vez: enumerarlas es lento).
+static func voice_id() -> String:
+	if _voice_cache == null:
+		_voice_cache = ""
+		if DisplayServer.get_name() != "headless":
+			var voices := DisplayServer.tts_get_voices_for_language("es")
+			if not voices.is_empty():
+				_voice_cache = voices[0]
+	return _voice_cache
+
+
+## Habla. Sin callbacks de la voz: el texto avanza a su ritmo y se consulta
+## tts_is_speaking (los avisos por palabra de SAPI en Windows son delicados).
+static func speak(text: String, pitch: float, rate: float) -> void:
+	stop_speaking()
+	FreezeWatch.mark("voz: hablar (%d letras)" % text.length())
+	DisplayServer.tts_speak(text, voice_id(), 80, clampf(pitch, 0.0, 2.0), clampf(rate * 1.1, 0.5, 2.0))
+
+
+## Calla la voz, solo si de verdad está hablando.
+static func stop_speaking() -> void:
+	if voice_id() != "" and DisplayServer.tts_is_speaking():
+		FreezeWatch.mark("voz: callar")
+		DisplayServer.tts_stop()
 
 
 static func narrator_enabled() -> bool:
@@ -88,11 +114,7 @@ func _ready() -> void:
 	_blip_player.volume_db = -12.0
 	_blip_player.max_polyphony = 2
 	add_child(_blip_player)
-	if narrator_available():
-		DisplayServer.tts_set_utterance_callback(DisplayServer.TTS_UTTERANCE_BOUNDARY,
-			func(pos: int, id: int) -> void: _on_voice_boundary.call_deferred(pos, id))
-		DisplayServer.tts_set_utterance_callback(DisplayServer.TTS_UTTERANCE_ENDED,
-			func(id: int) -> void: _on_voice_ended.call_deferred(id))
+
 
 
 func open(p_npc: Dictionary, dialogue: Dictionary) -> void:
@@ -106,12 +128,14 @@ func open(p_npc: Dictionary, dialogue: Dictionary) -> void:
 	_rate = float(voice.get("rate", 1.0))
 	visible = true
 	_portrait.queue_redraw.call_deferred()  # estaba oculto: forzar el dibujo
+	FreezeWatch.mark("diálogo: abrir " + String(npc.get("id", "")))
 	_show_node(dialogue.get("start", ""))
 
 
 func close() -> void:
 	if not visible:
 		return
+	FreezeWatch.mark("diálogo: cerrar")
 	_stop_voice()
 	visible = false
 	closed.emit(npc.get("id", ""))
@@ -135,12 +159,8 @@ func _show_node(node_id: String) -> void:
 	_stop_voice()
 	_narrating = narrator_enabled()
 	if _narrating:
-		_utterance_counter += 1
-		_utterance = _utterance_counter
-		var voices := DisplayServer.tts_get_voices_for_language("es")
-		# Tono de Godot: 0..2 (1 = normal); velocidad: 0.1..10.
-		DisplayServer.tts_speak(_text.get_parsed_text(), voices[0], 80, clampf(_pitch, 0.0, 2.0),
-			clampf(_rate * 1.1, 0.5, 2.0), _utterance, true)
+		speak(_text.get_parsed_text(), _pitch, _rate)
+		_voice_age = 0.0
 		_cps = NARRATED_CPS * _rate
 	else:
 		_cps = CHARS_PER_SECOND
@@ -167,6 +187,12 @@ func _show_node(node_id: String) -> void:
 func _process(delta: float) -> void:
 	if not visible or _shown >= _total:
 		return
+	if _narrating:
+		_voice_age += delta
+		if _voice_age > VOICE_GRACE and not DisplayServer.tts_is_speaking():
+			_narrating = false   # la voz terminó: el texto la alcanza de golpe
+			_finish_text()
+			return
 	var before := int(_shown)
 	_shown = minf(_total, _shown + _cps * delta)
 	_reveal(before)
@@ -186,25 +212,6 @@ func _reveal(before: int) -> void:
 			break
 
 
-func _on_voice_boundary(pos: int, id: int) -> void:
-	if id != _utterance or not visible:
-		return
-	# La voz va por delante: el texto la alcanza (mostrando la palabra entera).
-	var parsed := _text.get_parsed_text()
-	var word_end := pos
-	while word_end < parsed.length() and parsed[word_end] != " ":
-		word_end += 1
-	if word_end > _shown:
-		var before := int(_shown)
-		_shown = float(word_end)
-		_reveal(before)
-
-
-func _on_voice_ended(id: int) -> void:
-	if id == _utterance and visible:
-		_finish_text()
-
-
 func _finish_text() -> void:
 	_shown = _total
 	_text.visible_characters = -1
@@ -212,7 +219,7 @@ func _finish_text() -> void:
 
 func _stop_voice() -> void:
 	if _narrating:
-		DisplayServer.tts_stop()
+		stop_speaking()
 		_narrating = false
 
 

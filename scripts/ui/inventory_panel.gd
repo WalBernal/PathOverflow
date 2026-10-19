@@ -1,7 +1,7 @@
 class_name InventoryPanel
 extends PanelContainer
 ## Panel de inventario (tecla I): equipo en forma de "muñeco", cinturón de
-## pociones (teclas 1-5) y bolsa.
+## pociones (teclas 1-5), tokens y bolsa. Las cifras del personaje están en la hoja (C).
 ## Arrastrar y soltar: mover entre la bolsa y el equipo (intercambia si hace
 ## falta). Soltar fuera de los paneles: tirarlo al suelo.
 ## Click: equipar (desde la bolsa) o quitar (desde el equipo).
@@ -10,6 +10,8 @@ signal message(text: String)
 signal item_equipped
 signal drop_to_ground(location: Dictionary)
 signal close_requested
+## Click en la bolsa con el alijo abierto: guardar ahí (lo conecta GameUI).
+var bag_click_override: Callable
 
 const CELL := 46.0
 const BAG_COLUMNS := 10
@@ -46,7 +48,7 @@ func setup(p_character: CharacterData, tooltip: ItemTooltip) -> void:
 	character = p_character
 	_tooltip = tooltip
 	character.inventory.changed.connect(_refresh)
-	character.stats_changed.connect(_refresh_summary)
+	character.tokens_changed.connect(func(_t: int) -> void: _refresh_summary())
 	_refresh()
 
 
@@ -153,14 +155,9 @@ func _refresh() -> void:
 func _refresh_summary() -> void:
 	if _summary == null or character == null:
 		return
-	var p := character.attack_profile()
-	var s := character.stats
-	_summary.text = "[color=#8a8293]DPS arma[/color] [color=#e8d9b0]%.1f[/color]   [color=#8a8293]Daño[/color] [color=#e8d9b0]%d-%d[/color]   [color=#8a8293]APS[/color] [color=#e8d9b0]%.2f[/color]   [color=#8a8293]Crít.[/color] [color=#e8d9b0]%.1f%%[/color]\n[color=#8a8293]Vida[/color] [color=#e8d9b0]%d[/color]   [color=#8a8293]ES[/color] [color=#e8d9b0]%d[/color]   [color=#8a8293]Armadura[/color] [color=#e8d9b0]%d[/color]   [color=#8a8293]Evasión[/color] [color=#e8d9b0]%d[/color]\n[color=#8a8293]Res.[/color] [color=#e06c6c]%d%%[/color] / [color=#7fb8e0]%d%%[/color] / [color=#e8d070]%d%%[/color] / [color=#b04ad9]%d%%[/color]" % [
-		p.dps, p.min_damage, p.max_damage, p.attacks_per_second, p.crit_chance,
-		s.get_value(Stat.LIFE), s.get_value(Stat.ENERGY_SHIELD), s.get_value(Stat.ARMOUR), s.get_value(Stat.EVASION),
-		minf(Stat.RESISTANCE_CAP, s.get_value(Stat.FIRE_RES)), minf(Stat.RESISTANCE_CAP, s.get_value(Stat.COLD_RES)),
-		minf(Stat.RESISTANCE_CAP, s.get_value(Stat.LIGHTNING_RES)), minf(Stat.RESISTANCE_CAP, s.get_value(Stat.CHAOS_RES)),
-	]
+	# Solo la moneda: vida, daño y resistencias están en la hoja de personaje (C).
+	_summary.text = "[color=#f2c14e]●[/color] [color=#8a8293]%s[/color] [color=#f2c14e][b]%d[/b][/color]     [color=#5a5363]Las cifras del personaje: tecla C[/color]" % [
+		Economy.CURRENCY, character.tokens]
 
 
 func _on_cell_dropped(target: ItemCell, payload: Dictionary) -> void:
@@ -180,6 +177,10 @@ func _on_cell_clicked(cell: ItemCell, button: MouseButton) -> void:
 		if not inv.unequip_flask(cell.location["index"]):
 			message.emit("Inventario lleno. Como tu backlog.")
 		_on_cell_hovered(cell, true)
+		return
+	if cell.location["kind"] == "bag" and bag_click_override.is_valid():
+		bag_click_override.call(int(cell.location["index"]))
+		_tooltip.hide()
 		return
 	if cell.location["kind"] == "bag" and cell.item is Flask:
 		if character.level < cell.item.required_level():

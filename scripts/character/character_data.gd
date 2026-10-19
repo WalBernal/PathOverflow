@@ -5,6 +5,7 @@ extends RefCounted
 
 signal stats_changed
 signal leveled_up(new_level: int)
+signal tokens_changed(total: int)
 ## Cambió alguna condición (vida baja, muerte reciente...): las cifras de las
 ## habilidades pueden cambiar aunque las stats base no.
 signal conditions_changed
@@ -41,6 +42,8 @@ var last_played := 0
 var play_time := 0.0
 ## Banderas de progreso: diálogos vistos, regalos recibidos, paso del tutorial...
 var flags: Dictionary = {}
+## Moneda (Economy): la sueltan los enemigos y se gasta con el comerciante.
+var tokens := 0
 var passives: PassiveAllocation
 var inventory := Inventory.new()
 var stats := StatBlock.new()
@@ -331,6 +334,20 @@ func summary() -> Dictionary:
 	}
 
 
+func add_tokens(amount: int) -> void:
+	tokens = maxi(0, tokens + amount)
+	tokens_changed.emit(tokens)
+
+
+## Paga si le alcanza. false (y no gasta nada) si no.
+func spend_tokens(amount: int) -> bool:
+	if amount > tokens:
+		return false
+	tokens -= amount
+	tokens_changed.emit(tokens)
+	return true
+
+
 func to_dict() -> Dictionary:
 	var passive_ids: Array = []
 	for pid in passives.get_allocated_ids():
@@ -354,6 +371,7 @@ func to_dict() -> Dictionary:
 		"last_played": last_played,
 		"play_time": play_time,
 		"flags": flags,
+		"tokens": tokens,
 	}
 
 
@@ -369,6 +387,7 @@ static func from_dict(d: Dictionary, p_class_def: Dictionary, tree: PassiveTree,
 	c.created_at = int(d.get("created_at", 0))
 	c.last_played = int(d.get("last_played", 0))
 	c.play_time = float(d.get("play_time", 0.0))
+	c.tokens = maxi(0, int(d.get("tokens", 0)))
 	var saved_flags = d.get("flags", {})
 	c.flags = saved_flags if saved_flags is Dictionary else {}
 	for a in p_class_def.get("ascendancies", []):

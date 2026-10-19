@@ -175,6 +175,8 @@ El **registro de misiones** está debajo del minimapa (L para plegarlo): la prin
 - **Pitidos retro**: sin voz (o con el narrador desactivado), sale un pitido de 8 bits cada pocas letras, con el tono de cada NPC. El sonido se genera en código (`RetroSfx`), sin archivos.
 - Ambos se activan o desactivan en el menú de pausa (Esc) y se recuerdan en `user://settings.cfg`.
 - **Escenas** (muerte de jefes, transiciones): el texto avanza solo, con una barrita que marca el tiempo de lectura; si hay narrador, lo lee en voz alta y espera a que termine. Click o Espacio adelanta y Esc salta.
+- El narrador no usa los avisos por palabra de la voz (en Windows pueden trabar el juego): el texto avanza a su ritmo y se consulta si la voz sigue hablando. Solo se corta la voz si de verdad está hablando.
+- **Detector de cuelgues** (FreezeWatch): un hilo aparte vigila que el juego avance. Si se para más de 4 s, escribe en user://logs/congelado.log las últimas acciones (diálogos, voz, escenas, viajes). Si el juego se congela, ese archivo dice dónde.
 
 ## Efectos y ambiente
 
@@ -247,6 +249,13 @@ Nueve tipos con sprites animados (`data/enemies.json`, `assets/sprites/enemies/e
 - Por debajo de la mitad de vida se recargan un 40 % más rápido.
 - El atlas se genera con `tools/generate_enemy_sprites.gd` (pixel art procedural, "arte de programador"). Para usar sprites dibujados a mano, sustituye el PNG respetando la cuadrícula: columnas = 4 fotogramas, filas = tipos.
 - Un shader (`assets/shaders/enemy_sprite.gdshader`) se encarga de la animación, el volteo, el contorno del color de rareza y el destello al recibir daño, todo por instancia del `MultiMesh`.
+
+## Tokens, comerciante y alijo
+
+- **Tokens** (Economy): la moneda. Los enemigos normales los sueltan 2 de cada 5 veces (los especiales, élites y únicos más y en más cantidad, según el nivel de la zona). Se recogen solos al pasar cerca. Se ven en el inventario (I).
+- **Nacho, revendedor de hardware**, en el Campamento del Último Commit y en el Socket Seguro: vende 4 placas base y 6 módulos RAM del nivel del personaje. La mercancía cambia al subir de nivel o pagando "Renovar mercancía". También compra lo que le arrastres desde la bolsa (paga el 20 % de su precio).
+- **Alijo (NAS compartido)**, junto al waypoint de los campamentos: 4 pestañas de 60 casillas, **compartido entre todos los personajes** de la cuenta (user://stash.json, se guarda en cada cambio). Arrastra entre el alijo y la bolsa, o haz click: en el alijo lo pasa a la bolsa y en la bolsa lo guarda. Los objetos clave no entran.
+- El inventario ya no muestra vida, daño ni resistencias: están en la hoja de personaje (C).
 
 ## Guardado de personajes
 

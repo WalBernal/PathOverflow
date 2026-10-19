@@ -58,6 +58,7 @@ func _initialize() -> void:
 	_test_defense_and_dot_skills()
 	_test_walk_animation()
 	_test_audio_assets()
+	_test_economy_and_stash()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
 	else:
@@ -1410,3 +1411,47 @@ func _test_audio_assets() -> void:
 		_check(ResourceLoader.exists(Sfx.SFX_DIR + sound + ".wav"), "falta el efecto %s (%s)" % [sound, id])
 	for extra in ["enemy_death", "player_hurt", "pickup", "level_up", "flask", "portal", "wave"]:
 		_check(ResourceLoader.exists(Sfx.SFX_DIR + extra + ".wav"), "falta el efecto " + extra)
+
+## Tokens (2 de cada 5 normales en promedio), tienda del nivel del jugador y alijo compartido.
+func _test_economy_and_stash() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var drops := 0
+	for k in 5000:
+		if Economy.drop_amount(5, Rarity.Enemy.NORMAL, rng) > 0:
+			drops += 1
+	_check(absf(drops / 5000.0 - 0.4) < 0.03, "los normales sueltan tokens ~2 de cada 5 (%.2f)" % (drops / 5000.0))
+	_check(Economy.drop_amount(5, Rarity.Enemy.UNIQUE, rng) > Economy.drop_amount(5, Rarity.Enemy.NORMAL, rng), "un único suelta más que un normal")
+	var gen := ItemGenerator.new(_db, 3)
+	var stock := Economy.generate_stock(gen, 12)
+	_check(stock.size() == Economy.STOCK_BOARDS + Economy.STOCK_RAMS, "la tienda tiene placas y RAM")
+	for item in stock:
+		_check(item.item_level == 12, "mercancía del nivel del jugador")
+		_check(Economy.price(item) > Economy.sell_price(item), "se vende más barato de lo que se compra")
+	var c := _new_character()
+	c.add_tokens(50)
+	_check(not c.spend_tokens(80) and c.tokens == 50, "no se gasta lo que no hay")
+	_check(c.spend_tokens(20) and c.tokens == 30, "gastar tokens")
+	var saved := CharacterData.from_dict(c.to_dict(), c.class_def, _tree, _db)
+	_check(saved.tokens == 30, "los tokens se guardan")
+	# Alijo: mover desde la bolsa, guardar en disco y cargarlo en otro personaje.
+	var path := "user://test_saves/stash.json"
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("user://test_saves"))
+	var stash := Stash.new(path)
+	ItemTransfer.stash = stash
+	var board := gen.generate_motherboard(5, "", 2)
+	c.inventory.add_item(board)
+	var bag_i := c.inventory.bag.find(board)
+	_check(ItemTransfer.move(c, {"kind": "bag", "index": bag_i}, {"kind": "stash", "tab": 1, "index": 3}) == "", "guardar en el alijo")
+	_check(stash.get_item(1, 3) == board and c.inventory.bag[bag_i] == null, "el objeto pasó al alijo")
+	var key := KeyItem.new("tarjeta_rack")
+	c.inventory.add_item(key)
+	_check(ItemTransfer.move(c, {"kind": "bag", "index": c.inventory.bag.find(key)}, {"kind": "stash", "tab": 0, "index": 0}) != "", "los objetos clave no van al alijo")
+	var other := _new_character()
+	var loaded := Stash.load_from(path, _db)
+	ItemTransfer.stash = loaded
+	_check(loaded.get_item(1, 3) is Motherboard and loaded.count() == 1, "el alijo se comparte entre personajes (archivo)")
+	var free := other.inventory.free_bag_index()
+	_check(ItemTransfer.move(other, {"kind": "stash", "tab": 1, "index": 3}, {"kind": "bag", "index": free}) == "" and other.inventory.bag[free] is Motherboard, "otro personaje lo saca")
+	ItemTransfer.stash = null
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))

@@ -23,7 +23,7 @@ func _initialize() -> void:
 		"swing": _swing, "projectile": _projectile, "fire": _fire, "cold": _cold, "lightning": _lightning,
 		"chaos": _chaos, "explosion": _explosion, "blink": _blink, "buff": _buff, "barrier": _barrier,
 		"summon": _summon, "trap": _trap, "enemy_death": _enemy_death, "player_hurt": _player_hurt,
-		"pickup": _pickup, "level_up": _level_up, "flask": _flask, "portal": _portal, "wave": _wave_horn,
+		"pickup": _pickup, "level_up": _level_up, "flask": _flask, "portal": _portal, "wave": _wave_horn, "coin": _coin,
 	}
 	for name in sfx:
 		_save(SFX_DIR + name + ".wav", sfx[name].call())
@@ -256,6 +256,10 @@ func _player_hurt() -> PackedFloat32Array:
 
 func _pickup() -> PackedFloat32Array:
 	return _arpeggio([987.77, 1318.5], 0.05, 0.05, 1)
+
+
+func _coin() -> PackedFloat32Array:
+	return _arpeggio([1975.5, 2637.0], 0.045, 0.06)
 
 
 func _level_up() -> PackedFloat32Array:

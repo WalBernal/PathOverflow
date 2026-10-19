@@ -77,7 +77,9 @@ func _draw() -> void:
 			for q in Zone._blob_points(o, 1.0, Vector2.ZERO):
 				blob.append(_to_map(q))
 			for poly in Geometry2D.intersect_polygons(blob, circle):
-				draw_colored_polygon(poly, FEATURE_COLORS.get(o["kind"], Color("4a4352")))
+				# El recorte con el borde puede dejar astillas sin área: no se pueden triangular.
+				if poly.size() >= 3 and not Geometry2D.triangulate_polygon(poly).is_empty():
+					draw_colored_polygon(poly, FEATURE_COLORS.get(o["kind"], Color("4a4352")))
 		elif _inside(p):
 			draw_circle(p, maxf(1.5, o["radius"] * SCALE), Color("4a4352"))
 	for q in zone.quest_items:

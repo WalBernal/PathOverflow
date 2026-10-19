@@ -37,19 +37,35 @@ var _challenge_previews: Dictionary = {}
 ## Subjefe de los gemelos: {ids, turn, timer, swap, flag}.
 var _twins: Dictionary = {}
 var _immune_warning := 0.0
+## Alijo de la cuenta (compartido por todos los personajes).
+var stash: Stash
+## Mercancía de Nacho y el nivel para el que se generó.
+var _shop_stock: Array[Item] = []
+var _shop_level := 0
+var _rng := RandomNumberGenerator.new()
 
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color("0b0a0e"))
 	MusicPlayer.stop_music()
+	# Detector de cuelgues (escribe en user://logs/congelado.log si el juego se para).
+	if not get_tree().process_frame.is_connected(FreezeWatch.beat):
+		get_tree().process_frame.connect(FreezeWatch.beat)
+	FreezeWatch.start()
+	tree_exiting.connect(FreezeWatch.stop)
 	character = GameData.current_character
 	if character == null:
 		character = GameData.create_character("Desarrollador", DEV_CLASS, CharacterAppearance.default(), false)
 	item_generator = ItemGenerator.new(GameData.items)
+	_rng.randomize()
+	stash = Stash.load_from(Stash.DEFAULT_PATH, GameData.items)
+	ItemTransfer.stash = stash
+	tree_exiting.connect(func() -> void: ItemTransfer.stash = null)
 	character.leveled_up.connect(_on_leveled_up)
 	character.board_leveled.connect(func(b: Motherboard) -> void:
 		ui.hud.flash("%s sube a nivel %d." % [b.skill_def.get("name", "La placa"), b.level], Color("1ba29b")))
 	character.inventory.changed.connect(_mark_dirty)
+	character.tokens_changed.connect(func(_t: int) -> void: _mark_dirty())
 	character.passives.changed.connect(_mark_dirty)
 	character.stats_changed.connect(_mark_dirty)  # incluye cambio de ascendencia
 
@@ -70,6 +86,10 @@ func _ready() -> void:
 	loot.inventory = character.inventory
 	add_child(loot)
 	loot.picked_up.connect(_on_item_picked_up)
+	loot.tokens_picked.connect(func(amount: int) -> void:
+		character.add_tokens(amount)
+		Sfx.play("coin", -8.0)
+		_mark_dirty())
 	# El botín solo cae donde se puede llegar a recogerlo.
 	loot.placement_check = func(p: Vector2) -> bool: return zone == null or zone.is_walkable(p, 18.0)
 	loot.spot_fixer = func(p: Vector2) -> Vector2: return p if zone == null else zone.free_spot_near(p, 24.0)
@@ -85,6 +105,7 @@ func _ready() -> void:
 	ui.return_to_menu_requested.connect(_return_to_menu)
 	ui.quit_requested.connect(_quit_game)
 	ui.dialogue_action.connect(_on_dialogue_action)
+	ui.shop_refresh_requested.connect(_refresh_shop)
 	ui.waypoint_selected.connect(func(zone_id: String) -> void: travel_to(zone_id, "waypoint"))
 
 	# Se vuelve a la última zona; los personajes de antes del acto, al campamento.
@@ -120,6 +141,8 @@ func _notification(what: int) -> void:
 
 func save_now() -> void:
 	GameData.save_character(character)
+	if stash:
+		stash.save()
 	_dirty = false
 	_since_save = 0.0
 
@@ -145,6 +168,7 @@ func _quit_game() -> void:
 
 ## Carga una zona y coloca al jugador en la entrada indicada ("" = la primera).
 func travel_to(zone_id: String, entry := "") -> void:
+	FreezeWatch.mark("viaje: " + zone_id)
 	var def: Dictionary = GameData.zones.get(zone_id, {})
 	if def.is_empty():
 		push_error("Zona desconocida: %s" % zone_id)
@@ -168,6 +192,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 	zone.challenge_touched.connect(_on_challenge_touched)
 	zone.exit_blocked.connect(func(e: Dictionary) -> void: ui.hud.flash(zone.exit_blocked_reason(e), Color("e06c6c")))
 	zone.waypoint_clicked.connect(func() -> void: ui.open_waypoints(zone.id))
+	zone.stash_clicked.connect(func() -> void: ui.open_stash(stash))
 	zone.waypoint_touched.connect(_discover_waypoint)
 
 	player.global_position = zone.entry_point(entry)
@@ -515,6 +540,9 @@ func _on_enemy_killed(rarity: int, experience: int, pos: Vector2, type_id: Strin
 	player.notify_kill()
 	ui.tutorial.notify("kill")
 	quests.notify_kill(zone.id, rarity, type_id)
+	var coins := Economy.drop_amount(enemies.area_level, rarity, _rng)
+	if coins > 0:
+		loot.drop_tokens(coins, zone.free_spot_near(pos + Vector2(randf_range(-24.0, 24.0), randf_range(-16.0, 16.0))))
 	var info: Dictionary = Rarity.ENEMY_INFO[rarity]
 	var drop_mult := float(zone.def.get("drop_multiplier", 1.0))
 	for k in int(info["drop_count"]):
@@ -585,9 +613,22 @@ func _on_item_picked_up(item: Item) -> void:
 # --- NPCs ---
 
 func _on_npc_interacted(npc: Dictionary) -> void:
+	FreezeWatch.mark("npc: " + String(npc["id"]))
 	character.flags["talked_" + String(npc["id"])] = true
 	quests.refresh()
 	ui.open_dialogue(npc, zone.dialogues.get(npc.get("dialogue", ""), {}))
+
+
+## Nacho saca otra caja: mercancía nueva, pagando.
+func _refresh_shop() -> void:
+	var cost := ShopPanel.refresh_cost(character.level)
+	if not character.spend_tokens(cost):
+		ui.hud.flash("Renovar cuesta %d tokens. Nacho tampoco trabaja gratis." % cost, UiStyle.DANGER)
+		return
+	_shop_stock = Economy.generate_stock(item_generator, character.level)
+	_shop_level = character.level
+	ui.open_shop(_shop_stock)
+	_mark_dirty()
 
 
 func _on_dialogue_action(action: Dictionary) -> void:
@@ -625,6 +666,11 @@ func _on_dialogue_action(action: Dictionary) -> void:
 			pass
 		"recycle_normals":
 			_recycle_normals()
+		"open_shop":
+			if _shop_stock.is_empty() or _shop_level != character.level:
+				_shop_stock = Economy.generate_stock(item_generator, character.level)
+				_shop_level = character.level
+			ui.open_shop(_shop_stock)
 		"passive_point":
 			var amount := int(action.get("amount", 1))
 			character.flags["quest_passive_points"] = int(character.flags.get("quest_passive_points", 0)) + amount

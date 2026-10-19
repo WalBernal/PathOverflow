@@ -49,6 +49,21 @@
         "rate": 0.9
       }
     },
+    "nacho": {
+      "name": "Nacho, revendedor de hardware",
+      "dialogue": "nacho",
+      "appearance": {
+        "body": 0,
+        "hair": 1,
+        "skin_tone": "c68642",
+        "hair_color": "2a1d14",
+        "outfit_color": "6b4a1f"
+      },
+      "voice": {
+        "pitch": 0.95,
+        "rate": 1.2
+      }
+    },
     "bot_onboarding": {
       "name": "B.O.B., Bot de Onboarding",
       "dialogue": "bot_onboarding",
@@ -174,6 +189,34 @@
     }
   },
   "dialogues": {
+    "nacho": {
+      "start": "hola",
+      "nodes": {
+        "hola": {
+          "text": "¡Pásale, pásale! Nacho, revendedor de hardware de segunda mano. Placas base, RAM, todo probado... bueno, todo encendió una vez. Se paga en tokens, nada de exposición ni de \"te lo pago con visibilidad\".",
+          "options": [
+            {"text": "Muéstrame lo que tienes.", "action": {"type": "open_shop"}},
+            {"text": "¿Tokens? ¿De dónde salen?", "next": "tokens"},
+            {"text": "¿Y de dónde sacas todo esto?", "next": "origen"},
+            {"text": "Solo estaba mirando.", "next": ""}
+          ]
+        },
+        "tokens": {
+          "text": "Los bugs los sueltan al morir, como dos de cada cinco. Nadie sabe por qué. Unos dicen que son restos de una API de pago que nadie dio de baja. Yo digo que no hagas preguntas y los recojas: se te pegan solos si pasas cerca.",
+          "options": [
+            {"text": "Muéstrame lo que tienes.", "action": {"type": "open_shop"}},
+            {"text": "Entendido.", "next": ""}
+          ]
+        },
+        "origen": {
+          "text": "De servidores dados de baja, de mudanzas de oficina, de la bodega de El Pepe cuando no mira... Lo que no se vende lo compro barato: si me traes algo que no uses, te lo pago. Poco, pero te lo pago.",
+          "options": [
+            {"text": "Muéstrame lo que tienes.", "action": {"type": "open_shop"}},
+            {"text": "Mejor no pregunto más.", "next": ""}
+          ]
+        }
+      }
+    },
     "ada": {
       "start": "hola",
       "nodes": {

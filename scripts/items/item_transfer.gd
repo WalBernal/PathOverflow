@@ -6,8 +6,12 @@ class_name ItemTransfer
 ##   {"kind": "board", "index": h}              (ranura de la barra de habilidades)
 ##   {"kind": "dimm", "board": h, "dimm": d}    (ranura DIMM de una placa instalada)
 ##   {"kind": "flask", "index": f}              (ranura del cinturón de pociones)
+##   {"kind": "stash", "tab": t, "index": i}    (alijo compartido, ver ItemTransfer.stash)
 ## Siempre es un intercambio: lo que hay en el destino vuelve al origen, así que
 ## ambos objetos tienen que encajar donde acaban.
+
+## El alijo de la cuenta (lo pone World). Sin él, las ubicaciones "stash" no existen.
+static var stash: Stash
 
 
 static func get_at(inv: Inventory, loc: Dictionary) -> Item:
@@ -23,6 +27,8 @@ static func get_at(inv: Inventory, loc: Dictionary) -> Item:
 			return board.rams[loc["dimm"]] if board else null
 		"flask":
 			return inv.flasks[loc["index"]]
+		"stash":
+			return stash.get_item(loc["tab"], loc["index"]) if stash else null
 	return null
 
 
@@ -41,6 +47,8 @@ static func _set_at(inv: Inventory, loc: Dictionary, item: Item) -> void:
 			inv.boards[loc["board"]].rams[loc["dimm"]] = item
 		"flask":
 			inv.flasks[loc["index"]] = item
+		"stash":
+			stash.set_item(loc["tab"], loc["index"], item)
 
 
 ## "" si `item` puede quedarse en `loc`; si no, el motivo.
@@ -49,6 +57,12 @@ static func fits(character: CharacterData, loc: Dictionary, item: Item) -> Strin
 		return ""
 	match loc.get("kind", ""):
 		"bag":
+			return ""
+		"stash":
+			if stash == null:
+				return "El alijo no está disponible aquí."
+			if item is KeyItem:
+				return "Los objetos clave se quedan contigo: son de tu historia, no de la cuenta."
 			return ""
 		"equip":
 			var slot: String = loc["slot"]
@@ -103,6 +117,7 @@ static func move(character: CharacterData, from: Dictionary, to: Dictionary) -> 
 	_set_at(inv, to, a)
 	_set_at(inv, from, b)
 	inv.changed.emit()
+	_stash_touched(from, to)
 	return ""
 
 
@@ -115,4 +130,12 @@ static func take(character: CharacterData, from: Dictionary) -> Item:
 	if item:
 		_set_at(character.inventory, from, null)
 		character.inventory.changed.emit()
+		_stash_touched(from, {})
 	return item
+
+
+## Si se tocó el alijo: avisa a su panel y lo guarda (es de toda la cuenta).
+static func _stash_touched(a: Dictionary, b: Dictionary) -> void:
+	if stash and (a.get("kind", "") == "stash" or b.get("kind", "") == "stash"):
+		stash.changed.emit()
+		stash.save()

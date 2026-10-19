@@ -13,6 +13,7 @@ extends Node2D
 signal npc_interacted(npc: Dictionary)
 signal exit_reached(exit: Dictionary)
 signal waypoint_clicked
+signal stash_clicked
 signal waypoint_touched
 signal quest_item_picked(item: Dictionary)
 signal key_item_picked(item: Dictionary)
@@ -24,6 +25,7 @@ const TALK_RANGE := 70.0
 const CLICK_RADIUS := 28.0
 const EXIT_RADIUS := 55.0
 const WAYPOINT_RADIUS := 46.0
+const STASH_RADIUS := 40.0
 const QUEST_ITEM_RADIUS := 40.0
 const BORDER := 260.0
 ## Distancia mínima de un obstáculo a entradas, salidas, NPCs y waypoint.
@@ -86,6 +88,9 @@ var obstacles: Array[Dictionary] = []   # {pos, radius, kind, seed, feature?, bl
 var exits: Array[Dictionary] = []       # {pos, target, entry, label, requires_flag?, portal?}
 var has_waypoint := false
 var waypoint := Vector2.ZERO
+## Alijo de la cuenta (cofre en los campamentos).
+var has_stash := false
+var stash_pos := Vector2.ZERO
 var npcs: Array = []                    # como en npcs.json + "position"
 var quest_items: Array = []             # {id, name, pos, quest}
 var key_items: Array = []               # {id, pos} (objetos clave que van a la bolsa)
@@ -139,6 +144,9 @@ func setup(p_def: Dictionary, p_player: Player, p_character: CharacterData, p_qu
 	if def.has("waypoint"):
 		has_waypoint = true
 		waypoint = _v(def["waypoint"])
+	if def.has("stash"):
+		has_stash = true
+		stash_pos = _v(def["stash"])
 	for q in def.get("quest_items", []):
 		var entry: Dictionary = q.duplicate()
 		entry["pos"] = _v(q["pos"])
@@ -590,17 +598,30 @@ func _unhandled_input(event: InputEvent) -> void:
 			_pending = {"kind": "waypoint"}
 			player.move_to(waypoint + Vector2(0, 30))
 			get_viewport().set_input_as_handled()
+		elif has_stash and mouse.distance_to(stash_pos) < STASH_RADIUS:
+			_pending = {"kind": "stash"}
+			player.move_to(stash_pos + Vector2(0, 34))
+			get_viewport().set_input_as_handled()
 
 
 func _physics_process(_delta: float) -> void:
 	if _pending.is_empty():
 		return
-	var target: Vector2 = waypoint if _pending["kind"] == "waypoint" else npc_position(_pending["npc"])
+	var target: Vector2
+	match String(_pending["kind"]):
+		"waypoint":
+			target = waypoint
+		"stash":
+			target = stash_pos
+		_:
+			target = npc_position(_pending["npc"])
 	if player.global_position.distance_to(target) <= TALK_RANGE:
 		player.stop_auto_move()
 		player.face(target - player.global_position)
 		if _pending["kind"] == "waypoint":
 			waypoint_clicked.emit()
+		elif _pending["kind"] == "stash":
+			stash_clicked.emit()
 		else:
 			npc_interacted.emit(_pending["npc"])
 		_pending = {}
@@ -840,6 +861,8 @@ func _draw() -> void:
 			_draw_challenge(c)
 	if has_waypoint:
 		_draw_waypoint()
+	if has_stash:
+		_draw_stash()
 	for q in quest_items:
 		if quest_item_visible(q):
 			_draw_quest_item(q)
@@ -881,7 +904,9 @@ func _draw_feature_anim(o: Dictionary) -> void:
 func _draw_obstacle(o: Dictionary) -> void:
 	var p: Vector2 = o["pos"]
 	var r: float = o["radius"]
-	var seed_value: int = o["seed"]
+	# Semilla pequeña: sumada a ángulos en float32, una de ~4e9 los colapsa a
+	# todos en el mismo valor (polígono degenerado, error en cada frame).
+	var seed_value: int = int(o["seed"]) % 10007
 	# Sombra común.
 	draw_set_transform(p + Vector2(0, r * 0.55), 0.0, Vector2(1.0, 0.35))
 	draw_circle(Vector2.ZERO, r * 1.05, Color(0, 0, 0, 0.35))
@@ -1145,6 +1170,28 @@ func _draw_waypoint() -> void:
 	var font := ThemeDB.fallback_font
 	draw_string_outline(font, p + Vector2(-80, -80), "Waypoint", HORIZONTAL_ALIGNMENT_CENTER, 160, 14, 5, Color.BLACK)
 	draw_string(font, p + Vector2(-80, -80), "Waypoint", HORIZONTAL_ALIGNMENT_CENTER, 160, 14, color)
+
+
+## Alijo: un NAS (servidor de archivos) con lucecitas, compartido por la cuenta.
+func _draw_stash() -> void:
+	var p := stash_pos
+	draw_set_transform(p + Vector2(0, 22), 0.0, Vector2(1.0, 0.35))
+	draw_circle(Vector2.ZERO, 36.0, Color(0, 0, 0, 0.35))
+	draw_set_transform(Vector2.ZERO)
+	var box := Rect2(p + Vector2(-30, -40), Vector2(60, 62))
+	draw_rect(box, Color("2b2733"))
+	draw_rect(Rect2(box.position, Vector2(box.size.x, 8)), Color("3d3747"))
+	for k in 4:
+		var bay := Rect2(box.position + Vector2(6, 13 + k * 12), Vector2(48, 9))
+		draw_rect(bay, Color("1a1720"))
+		var on := sin(_time * (3.0 + k * 1.3) + k) > -0.2
+		draw_circle(bay.position + Vector2(42, 4.5), 2.0, Color("3cff6a") if on else Color("1a4a2a"))
+		draw_line(bay.position + Vector2(4, 4.5), bay.position + Vector2(28, 4.5), Color("4a4352"), 2.0)
+	draw_rect(box, Color("f2c14e").darkened(0.35), false, 2.0)
+	var font := ThemeDB.fallback_font
+	var label := "Alijo (NAS compartido)"
+	draw_string_outline(font, p + Vector2(-100, -50), label, HORIZONTAL_ALIGNMENT_CENTER, 200, 14, 5, Color.BLACK)
+	draw_string(font, p + Vector2(-100, -50), label, HORIZONTAL_ALIGNMENT_CENTER, 200, 14, Color("f2c14e"))
 
 
 func _draw_key_item(k: Dictionary) -> void:

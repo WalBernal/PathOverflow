@@ -9,6 +9,7 @@ signal return_to_menu_requested
 signal quit_requested
 signal dialogue_action(action: Dictionary)
 signal waypoint_selected(zone_id: String)
+signal shop_refresh_requested
 
 const TREE_SCREEN := preload("res://scenes/ui/passive_tree_screen.tscn")
 
@@ -23,6 +24,8 @@ var minimap: Minimap
 var quest_tracker: QuestTracker
 var cutscene: CutscenePlayer
 var challenge_panel: ChallengePanel
+var shop_panel: ShopPanel
+var stash_panel: StashPanel
 var _wave_label: Label
 var character_sheet: CharacterSheet
 var _character: CharacterData
@@ -91,6 +94,21 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	add_child(character_sheet)
 	character_sheet.position = Vector2(10, 34)
 	character_sheet.setup(character, player, skills)
+
+	# Comerciante y alijo: a la izquierda, con el inventario abierto a la derecha.
+	shop_panel = ShopPanel.new()
+	add_child(shop_panel)
+	shop_panel.position = Vector2(10, 34)
+	shop_panel.setup(character, item_tooltip)
+	shop_panel.message.connect(hud.flash)
+	shop_panel.close_requested.connect(close_trade_panels)
+	shop_panel.refresh_requested.connect(func() -> void: shop_refresh_requested.emit())
+	stash_panel = StashPanel.new()
+	add_child(stash_panel)
+	stash_panel.position = Vector2(10, 34)
+	stash_panel.message.connect(hud.flash)
+	stash_panel.close_requested.connect(close_trade_panels)
+	stash_panel.drop_to_ground.connect(_on_drop_to_ground)
 
 	minimap = Minimap.new()
 	minimap.player = player
@@ -197,6 +215,7 @@ func on_zone_changed(zone: Zone) -> void:
 	minimap.zone = zone
 	tutorial.zone = zone
 	dialogue_box.close()
+	close_trade_panels()
 	_waypoint_panel.visible = false
 	_zone_banner.text = zone.zone_name if zone.safe else "%s\nNivel de zona %d" % [zone.zone_name, zone.level]
 	var tween := create_tween()
@@ -209,6 +228,7 @@ func on_zone_changed(zone: Zone) -> void:
 ## Reproduce una escena; on_done se llama al terminar (o al saltarla).
 func play_cutscene(data: Dictionary, on_done: Callable) -> void:
 	dialogue_box.close()
+	close_trade_panels()
 	_waypoint_panel.visible = false
 	inventory_panel.visible = false
 	skills_panel.visible = false
@@ -252,6 +272,40 @@ func _build_act_banner() -> PanelContainer:
 	text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(text)
 	return panel
+
+
+## Tienda de Nacho (con el inventario al lado para vender).
+func open_shop(stock: Array[Item]) -> void:
+	dialogue_box.close()
+	_open_trade_panel(shop_panel)
+	shop_panel.open(stock)
+
+
+## Alijo de la cuenta: click en la bolsa guarda, click en el alijo saca.
+func open_stash(stash: Stash) -> void:
+	if stash_panel.stash == null:
+		stash_panel.setup(_character, stash, item_tooltip)
+	_open_trade_panel(stash_panel)
+	inventory_panel.bag_click_override = stash_panel.store_from_bag
+
+
+func _open_trade_panel(panel: Control) -> void:
+	skills_panel.visible = false
+	character_sheet.visible = false
+	shop_panel.visible = false
+	stash_panel.visible = false
+	inventory_panel.bag_click_override = Callable()
+	panel.visible = true
+	inventory_panel.visible = true
+	item_tooltip.hide()
+	_update_minimap()
+
+
+func close_trade_panels() -> void:
+	shop_panel.visible = false
+	stash_panel.visible = false
+	inventory_panel.bag_click_override = Callable()
+	item_tooltip.hide()
 
 
 func open_dialogue(npc: Dictionary, dialogue: Dictionary) -> void:
@@ -351,6 +405,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		# Esc cierra lo que esté abierto; si no hay nada, pausa.
 		if challenge_panel.visible:
 			challenge_panel._close()
+		elif shop_panel.visible or stash_panel.visible:
+			close_trade_panels()
+			inventory_panel.visible = false
+			_update_minimap()
 		elif _waypoint_panel.visible:
 			_waypoint_panel.visible = false
 		elif dialogue_box.visible:
@@ -391,6 +449,8 @@ func _on_menu_requested(menu: String) -> void:
 	if tree_screen.visible and menu != "passives":
 		return
 	item_tooltip.hide()
+	if menu != "inventory" or inventory_panel.visible:
+		close_trade_panels()   # cerrar el inventario (u abrir otra ventana) cierra la tienda
 	match menu:
 		"passives":
 			toggle_passive_tree()
@@ -419,7 +479,7 @@ func _update_minimap() -> void:
 ## Soltar un objeto fuera de los paneles: al suelo, junto al jugador.
 func _on_drop_to_ground(location: Dictionary) -> void:
 	var mouse := get_viewport().get_mouse_position()
-	for panel: Control in [inventory_panel, skills_panel, character_sheet, hud]:
+	for panel: Control in [inventory_panel, skills_panel, character_sheet, shop_panel, stash_panel, hud]:
 		if panel != hud and panel.visible and panel.get_global_rect().has_point(mouse):
 			return  # soltado sobre un panel, en un sitio que no admite objetos
 	if hud.is_over_hud(mouse):
@@ -437,6 +497,7 @@ func toggle_passive_tree() -> void:
 	tree_screen.visible = not tree_screen.visible
 	hud.visible = not tree_screen.visible
 	if tree_screen.visible:
+		close_trade_panels()
 		inventory_panel.visible = false
 		skills_panel.visible = false
 		character_sheet.visible = false
