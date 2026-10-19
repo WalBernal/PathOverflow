@@ -9,6 +9,8 @@ extends Control
 ## Esc: saltar la escena entera.
 
 signal finished
+## Cada paso de efecto (también los que no conoce, para quien escuche: el prólogo).
+signal effect(effect_name: String, strength: float)
 
 const BOX_WIDTH := 760.0
 const CHARS_PER_SECOND := 55.0
@@ -23,6 +25,9 @@ const STYLE_COLORS := {
 }
 
 var player: Player
+## Hablantes que no están en npcs.json (p. ej. el jugador en el prólogo):
+## id -> {name, appearance, voice, color}.
+var speakers: Dictionary = {}
 var _steps: Array = []
 var _index := -1
 var _on_done: Callable
@@ -122,6 +127,7 @@ func _next() -> void:
 	if step.has("effect"):
 		_box.visible = false
 		var strength := float(step.get("strength", 1.0))
+		effect.emit(String(step["effect"]), strength)
 		match String(step["effect"]):
 			"glitch":
 				_glitch = maxf(_glitch, strength)
@@ -146,7 +152,7 @@ func _next() -> void:
 func _show_line(step: Dictionary) -> void:
 	var style: String = step.get("style", "npc")
 	var color: Color = STYLE_COLORS.get(style, UiStyle.ACCENT)
-	var npc: Dictionary = Zone.npc_database().get("npcs", {}).get(step.get("speaker", ""), {})
+	var npc: Dictionary = speakers.get(step.get("speaker", ""), Zone.npc_database().get("npcs", {}).get(step.get("speaker", ""), {}))
 	_name.text = step.get("name", npc.get("name", ""))
 	_name.add_theme_color_override("font_color", color)
 	_portrait.visible = not npc.is_empty() and style != "console"
@@ -156,7 +162,7 @@ func _show_line(step: Dictionary) -> void:
 		_portrait.glitch = 0.6 if style == "phone" or npc.get("terminal", false) else 0.0
 	_pitch = float(npc.get("voice", {}).get("pitch", 0.7 if style == "boss" else 1.0))
 	_rate = float(npc.get("voice", {}).get("rate", 0.9 if style == "boss" else 1.0))
-	var text: String = step.get("text", "")
+	var text: String = String(step.get("text", "")).replace("{jugador}", String(speakers.get("player", {}).get("name", "tú")))
 	if style == "console":
 		text = "[code][color=#3cff6a]%s[/color][/code]" % text
 	elif style == "boss":

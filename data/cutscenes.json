@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_doc": "Escenas cortas (el jugador no se mueve; click, Espacio o Enter avanzan; Esc las salta). Pasos: {speaker: id de NPC de npcs.json} o {name, style: boss | console | system} con text = una línea de diálogo (espera al jugador). {effect: glitch | shake | blackout | fade_in | dino, strength, time}: efecto; time = segundos de espera antes del siguiente paso (dino espera al jugador y muestra text). on_finish: {set_flag, travel: {zone, entry}}.",
+  "_doc": "Escenas cortas (el jugador no se mueve; click, Espacio o Enter avanzan; Esc las salta). Pasos: {speaker: id de NPC de npcs.json} o {name, style: boss | console | system} con text = una línea de diálogo (espera al jugador). {effect: glitch | shake | blackout | fade_in | dino, strength, time}: efecto; time = segundos de espera antes del siguiente paso (dino espera al jugador y muestra text). on_finish: {set_flag, travel: {zone, entry}}. Hablantes extra (CutscenePlayer.speakers): 'player' = el personaje del jugador; {jugador} en el texto se cambia por su nombre. Efectos desconocidos (lights_flicker, fans, rafa_stands, shock) los recibe quien escucha la señal effect (el prólogo).",
   "cutscenes": {
     "arquitecto_muere": {
       "steps": [
@@ -74,7 +74,7 @@
       "steps": [
         {
           "speaker": "ada",
-          "text": "¡Has vuelto! Lo hemos visto en los logs: el Arquitecto, fuera. Y el Servidor... congelado. Ni arranca ni se apaga. Como la laptop de Mario."
+          "text": "¡Volviste! Lo vimos en los logs: el Arquitecto, fuera. Y el Servidor... congelado. Ni arranca ni se apaga. Como la laptop de Mario."
         },
         {
           "speaker": "kevin",
@@ -90,7 +90,7 @@
         },
         {
           "speaker": "root",
-          "text": "De El Pepe..... prestador de servicios retirado..... mi antecesor en el cargo.... Se jubiló... dejó una nota que decía «todo documentado»..... y un pósit con la contraseña de root......"
+          "text": "Del Inge Pepe..... el jefe de informática de toda la vida..... desde antes de que existiera el wifi..... Se jubiló en julio..... dejó una nota que decía «todo documentado»..... y un pósit con la contraseña de root......"
         },
         {
           "speaker": "kevin",
@@ -102,11 +102,11 @@
         },
         {
           "speaker": "ada",
-          "text": "Clásico Pepe. Seguro que también dejó algún cron programado y se fue a pescar. Nadie se jubila sin dejar una bomba de relojería."
+          "text": "Clásico Pepe. Treinta años a cargo de todo, así que todo es culpa suya. Seguro que dejó algún cron programado y se fue a pescar."
         },
         {
           "speaker": "root",
-          "text": "No digas eso..... que luego pasa.... Bueno..... el kernel está en pánico... pero he encontrado un puerto abierto..... el 2222.... Si lo fuerzo..... hay un túnel hasta el Espacio de Kernel......"
+          "text": "No digas eso..... que luego pasa.... Bueno..... el kernel está en pánico... pero encontré un puerto abierto..... el 2222.... Si lo fuerzo..... hay un túnel hasta el Espacio de Kernel......"
         },
         {
           "effect": "glitch",
@@ -253,13 +253,13 @@
         {
           "speaker": "rafa_terminal",
           "style": "phone",
-          "text": "Hace siete años..... Eso es..... cuando se jubiló El Pepe..... No..... no puede ser..... ¿o sí.....?"
+          "text": "Hace siete años..... la misma semana en que el Inge Pepe instaló su «limpieza_final»..... con el mismo usuario admin..... No..... no puede ser él..... ¿o sí.....?"
         },
         {
           "speaker": "clara",
           "name": "Clara (por radio)",
           "style": "phone",
-          "text": "Sigue bajando. Lo que haya hecho El Pepe, init lo está protegiendo. Y el Anillo 0 tiene las respuestas."
+          "text": "Sigue bajando. Sea quien sea el que dejó esto preparado, init lo está protegiendo. Y el Anillo 0 tiene las respuestas."
         }
       ],
       "on_finish": {}
@@ -390,6 +390,179 @@
         }
       ],
       "on_finish": {}
+    },
+    "prologo_rafa": {
+      "steps": [
+        {
+          "speaker": "root",
+          "text": "¿Quién eres tú.....??? ..... Ah, vienes a ayudarnos....."
+        },
+        {
+          "speaker": "player",
+          "text": "Eh, no, yo vengo por..."
+        },
+        {
+          "speaker": "root",
+          "text": "Ah..... eres alumno.... Si buscas al Inge Pepe, llegaste un semestre tarde.... Se jubiló en julio. Bueno..... «jubiló»..... entre comillas.... todavía viene los jueves a dar clases.... porque dice que si se queda en su casa su esposa lo pone a limpiar....."
+        },
+        {
+          "speaker": "player",
+          "text": "Vengo por mi constancia de servicio social. Hice mis 480 horas: seis meses pelando cables UTP, cambiando HDMI y limpiando las computadoras de la sala de cómputo B, bajo las órdenes del Inge Pepe. Si no tengo el sello, Servicios Escolares me anula la titulación."
+        },
+        {
+          "name": "",
+          "style": "system",
+          "text": "Rafa suelta un suspiro cansado y teclea con desgana, sin quitar los ojos de la pantalla."
+        },
+        {
+          "name": "Terminal de Rafa",
+          "style": "console",
+          "text": "$ grep -ri \"{jugador}\" /var/log/servicio_social/"
+        },
+        {
+          "name": "Terminal de Rafa",
+          "style": "console",
+          "text": "$ _"
+        },
+        {
+          "speaker": "root",
+          "text": "Tengo malas noticias, «genio»..... Pepe no usaba base de datos..... Anotaba a los prestadores en una libreta Scribe con pasta de gatitos..... Cuando recogió sus cosas, se llevó la libreta creyendo que era su recetario de cocina....."
+        },
+        {
+          "speaker": "root",
+          "text": "Para el sistema escolar de la UAdeO..... tú nunca exististe..... Eres un puntero nulo....."
+        }
+      ]
+    },
+    "prologo_incidente": {
+      "steps": [
+        {
+          "effect": "lights_flicker",
+          "time": 1.0,
+          "strength": 1.0
+        },
+        {
+          "effect": "fans",
+          "time": 0.8,
+          "strength": 1.0
+        },
+        {
+          "effect": "shake",
+          "time": 0.4,
+          "strength": 0.5
+        },
+        {
+          "effect": "rafa_stands",
+          "time": 0.4,
+          "strength": 1.0
+        },
+        {
+          "speaker": "root",
+          "text": "Y para colmo..... se cayó el Sistema Integral de Control Escolar..... el SICE..... Hoy vencían las actas de calificaciones de todo el estado....."
+        },
+        {
+          "speaker": "root",
+          "text": "Si la plataforma no sube en media hora..... el Rector va a bajar personalmente a ver qué pasa..... Y no tengo ni el diagrama de red....."
+        },
+        {
+          "speaker": "root",
+          "text": "Todo el backend de la universidad corre sobre un servidor ensamblado en 2004..... que Pepe bautizó como «El Monolito»..... La única copia de la documentación física..... está perdida en este basurero....."
+        },
+        {
+          "name": "",
+          "style": "system",
+          "text": "Rafa te mide con la mirada: la camisa planchada, el portafolio y la desesperación de alguien que necesita con urgencia un renglón en su currículum."
+        },
+        {
+          "speaker": "root",
+          "text": "Hagamos un trato..... El sistema no me deja emitirte la constancia..... la tabla está bloqueada por transacciones huérfanas....."
+        },
+        {
+          "speaker": "root",
+          "text": "Si me ayudas a..... desenterrar la documentación..... y a levantar el servidor antes de que colapse la máquina virtual..... te libero el servicio."
+        },
+        {
+          "speaker": "root",
+          "text": "Es más..... te doy experiencia comprobable..... y una carta de recomendación firmada por mí..... para que el mercado laboral te tome en serio..... espero....."
+        },
+        {
+          "effect": "glitch",
+          "time": 0.5,
+          "strength": 0.6
+        }
+      ]
+    },
+    "prologo_trato": {
+      "steps": [
+        {
+          "name": "",
+          "style": "system",
+          "text": "Rafa asiente con una media sonrisa amarga."
+        },
+        {
+          "speaker": "root",
+          "text": "Bienvenido a bordo..... Ahora ponte a buscar detrás del rack negro..... Hay una carpeta lila que dice «NO TOCAR - CONFIG_PROD»....."
+        }
+      ]
+    },
+    "prologo_ventanilla": {
+      "steps": [
+        {
+          "name": "",
+          "style": "system",
+          "text": "La ventanilla de cobro dice «Regreso en 15 minutos». El polvo del letrero dice «desde 2019»."
+        }
+      ]
+    },
+    "prologo_descarga": {
+      "steps": [
+        {
+          "name": "",
+          "style": "system",
+          "text": "Te arrodillas entre el polvo y los cables calientes, detrás del viejo servidor, que tiembla con violencia."
+        },
+        {
+          "name": "",
+          "style": "system",
+          "text": "Apartas una maraña de cables de corriente puenteados... y ahí está: una carpeta lila."
+        },
+        {
+          "effect": "shock",
+          "time": 0.7,
+          "strength": 1.0
+        },
+        {
+          "speaker": "root",
+          "text": "¡NO JALES ESO.....!"
+        }
+      ]
+    },
+    "llegada_sandbox": {
+      "steps": [
+        {
+          "effect": "glitch",
+          "time": 0.6,
+          "strength": 0.8
+        },
+        {
+          "name": "Sistema",
+          "style": "console",
+          "text": "Dropping user session into Ring 3 sandbox... OK"
+        },
+        {
+          "name": "",
+          "style": "system",
+          "text": "Apareces tirado boca abajo sobre una superficie fría de metal cuadriculado, rodeado de cajas de texto flotantes con mensajes de error amarillos que nadie lee."
+        },
+        {
+          "speaker": "player",
+          "text": "...¿Rafa? ¿Y mi camisa? ¿Y mi constancia?"
+        },
+        {
+          "speaker": "bot_onboarding",
+          "text": "¡Bienvenido al Sandbox! Detecté un usuario nuevo: sin credenciales, sin experiencia y sin camisa formal. Perfil típico de practicante. Ven, háblame y te explico lo básico."
+        }
+      ]
     }
   }
 }

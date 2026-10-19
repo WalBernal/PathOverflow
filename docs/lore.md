@@ -10,6 +10,20 @@ Documento vivo con la historia del juego, acto a acto. Lo que está marcado como
 
 ---
 
+## Prólogo / Acto 0: La Beca de Schrödinger (implementado)
+
+El juego arranca en el mundo real, en pixel art limpio pero descolorido. El protagonista es un **recién egresado** de Ingeniería en Sistemas (promedio 9.2, 147 vacantes aplicadas, rechazado por falta de experiencia) que necesita su **constancia de liberación de Servicio Social** para titularse y concursar por una plaza de practicante.
+
+1. **El Desembarco de la Realidad**: el malecón de Mazatlán, sol abrasador, camisa formal sudada y portafolio de plástico.
+2. **Retorno a la UAdeO** (Universidad Autónoma de Occidente, frente al malecón): pasillo silencioso salvo por los ventiladores industriales; el Departamento de Informática está al fondo, junto a la ventanilla de cobro.
+3. **El Error 404 del Archivo Muerto**: oficina destrozada. **Rafa** (bajito, ojeras, pelo hacia atrás con canas, taza «Don't talk to me before git pull»). El **Inge Pepe** se jubiló en julio, aunque sigue dando clases los jueves; anotaba a los prestadores en una libreta Scribe con pasta de gatitos y se la llevó creyendo que era su recetario. Para el sistema, el jugador nunca existió: es un puntero nulo.
+4. **El Incidente del Viernes a las 6:00 PM**: se cae el **SICE** (Sistema Integral de Control Escolar) el día que vencían las actas de todo el estado. El backend corre en un servidor de 2004 que Pepe bautizó **«El Monolito»**. Trato: si ayudas a levantar el servidor, Rafa libera tu servicio y te da experiencia comprobable y una carta de recomendación.
+5. **La Elección Forzada**: la ventana de «Contratación de Emergencia» (aquí se elige la clase); el botón No es imposible de pulsar.
+6. **La Caída a Producción**: la carpeta lila «NO TOCAR - CONFIG_PROD», una descarga electrostática y el monitor vomitando `POST /api/v1/deploy/force --user admin` con el mensaje *«Por el Monolito. Que nunca se reinicie»*. La realidad se pixela y el jugador despierta en **El Sandbox**.
+
+### El Inge Pepe (cambio de historia)
+Pepe **no** programó el Monolito ni hizo el commit. Estuvo a cargo de informática desde tiempos que casi nadie recuerda, así que todos lo culpan de todo. El commit lo hizo alguien con permisos de «admin», sin descripción (y en informática todos son admin). **Giro**: él no fue. Pepe ponía descripción hasta en los commits de una línea; su tarea `limpieza_final.sh` (firmada con un pez) no escribió nada: **selló** lo que el push dejó abierto. Quién hizo el push sigue siendo un misterio.
+
 ## Acto I: El Último Commit (implementado)
 
 **Premisa.** El Servidor Principal sostenía el mundo sobre un sistema antiguo, el **Monolito**, diseñado hace veinte años por **el Arquitecto**. Un viernes a las seis de la tarde, alguien hizo un `git push --force` sin tests, firmado por «admin», con el mensaje *«Por el Monolito. Que nunca se reinicie»*: **la Gran Migración**. El Servidor se corrompió y todo lo que corría dentro cobró vida (bugs con patas, procesos zombi, fugas de memoria). El jugador es un **exiliado** desplegado en producción sin pasar por staging.
@@ -28,7 +42,7 @@ Documento vivo con la historia del juego, acto a acto. Lo que está marcado como
 ### Final del Acto I y transición (implementado)
 
 1. **Muerte del Arquitecto** (escena `arquitecto_muere`): el sistema hace glitch y tiembla. El Arquitecto, moribundo: *«kill -9... ¿sin un SIGTERM de cortesía?»*, *«El Monolito no era el problema. Era la **tapa**»*, *«el Servidor no arrancará. Se congelará. Y el **Padre** despertará. Él no deja que nada muera»*. Después, en la consola (`dmesg`): el servidor intenta arrancar, se **congela** e `init[1]` empieza a *adoptar 8192 procesos huérfanos*. Se abre un portal al campamento.
-2. **Reunión en el campamento** (escena `reunion_campamento`): Aida confirma que el Servidor está congelado. Rafa se defiende: él **heredó** el servidor de **El Pepe, prestador de servicios retirado**, su antecesor en el cargo, que se jubiló dejando una nota («todo documentado») y un pósit con la contraseña de root (*«el pósit era la documentación»*). Aida sospecha que El Pepe dejó «algún cron programado y se fue a pescar». Rafa abre el **puerto 2222**: un túnel al Espacio de Kernel. *«Adelántate tú; nosotros te seguimos»*.
+2. **Reunión en el campamento** (escena `reunion_campamento`): Aida confirma que el Servidor está congelado. Rafa se defiende: él **heredó** el servidor de el **Inge Pepe**, jefe de informática de toda la vida y su antecesor en el cargo, que se jubiló dejando una nota («todo documentado») y un pósit con la contraseña de root (*«el pósit era la documentación»*). Aida sospecha que El Pepe dejó «algún cron programado y se fue a pescar». Rafa abre el **puerto 2222**: un túnel al Espacio de Kernel. *«Adelántate tú; nosotros te seguimos»*.
 3. **Cae La Red Lince** (escena `red_lince`): al cruzar el portal se cae **La Red Lince**, el proveedor de internet del Acto I. Aparece la pantalla de "sin conexión" con el dinosaurio. Rafa, por los **datos de su celular** («me quedan 200 megas, no hagas streaming»), mantiene el túnel a medias. El túnel se rompe y el jugador **cae a través de la tabla de procesos** hasta la Brecha del 503.
 
 ### Misiones secundarias del Acto I (implementado)
@@ -107,7 +121,8 @@ Otras historias de los diálogos: Aida escribió la mitad de las nóminas en COB
 
 ## Hilos abiertos
 
-- **El Pepe, prestador de servicios retirado**: antecesor de Rafa. ¿Era «admin»? ¿Qué pasará cuando `limpieza_final.sh` se ejecute por segunda vez?
+- **¿Quién hizo el push?** No fue el Inge Pepe. ¿Qué pasará cuando `limpieza_final.sh` se ejecute por segunda vez («cuando init termine»)?
+- **La constancia del jugador**: Rafa prometió firmarla (y la carta de recomendación) cuando levanten el servidor.
 - **Los huérfanos**: ¿salvarlos o purgarlos? El Sindicato (PID 404) podría dar elecciones al jugador.
 - **La Red Lince**: el proveedor de internet que siempre cae en el peor momento; buen chiste recurrente para los siguientes actos.
 - **Aida y Mario** siguen en el campamento, sin conexión. Rafa prometió alcanzar al jugador «en cuanto baje la VPN».

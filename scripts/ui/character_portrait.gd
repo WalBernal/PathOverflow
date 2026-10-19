@@ -110,10 +110,11 @@ func _draw() -> void:
 	var skin := Color(a["skin_tone"])
 	var body_w: float = CharacterAppearance.BODY_WIDTH[int(a["body"])]
 	var breath := sin(_time * 2.0) * radius * 0.012
-	var r := radius * 0.36
+	# Cabeza grande y hombros altos: un busto, sin cuello de jirafa.
+	var r := radius * 0.4
 	var jitter := Vector2(_rng.randf_range(-1, 1) * glitch * 4.0, 0)
-	var head := c + Vector2(0, -radius * 0.08 + breath * 0.5) + jitter
-	var shoulders_y := c.y + radius * 0.5 + breath
+	var head := c + Vector2(0, -radius * 0.04 + breath * 0.5) + jitter
+	var shoulders_y := head.y + r * 1.02 + breath * 0.5
 	var torso := PackedVector2Array([
 		Vector2(c.x - radius * 0.95 * body_w, c.y + radius * 1.3), Vector2(c.x - radius * 0.62 * body_w, shoulders_y),
 		Vector2(c.x + radius * 0.62 * body_w, shoulders_y), Vector2(c.x + radius * 0.95 * body_w, c.y + radius * 1.3)])

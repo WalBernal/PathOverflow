@@ -26,6 +26,7 @@ func _run() -> void:
 		await _wait(1.2)
 		_save(shot)
 	await _capture_appearances()
+	await _capture_prologue()
 	await _capture_game()
 	get_tree().quit()
 
@@ -66,6 +67,58 @@ func _capture_appearances() -> void:
 	_swap(sheet)
 	await _wait(0.6)
 	_save("00_apariencias")
+
+
+## El prólogo, paso a paso (sin crear el personaje al final).
+func _capture_prologue() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var look := CharacterAppearance.default()
+	look["hair"] = 7
+	look["accessory"] = 1
+	gd.pending_creation = {"name": "Capturas", "appearance": look}
+	var p: Node = load("res://scenes/prologue/prologue.tscn").instantiate()
+	_swap(p)
+	await _wait(2.0)
+	_save("p1_intro")
+	p.set("_intro_chars", 9999.0)
+	p.set("_phase", "walk")
+	p.get("_stage").set("player_x", 560.0)
+	await _wait(1.0)
+	_save("p2_calle")
+	p.call("_go_room", "pasillo", 650.0)
+	await _wait(0.8)
+	_save("p3_pasillo")
+	p.call("_go_room", "oficina", 170.0)
+	await _wait(0.6)
+	_save("p4_oficina")
+	p.call("_play", "prologo_rafa", Callable())
+	await _wait(3.0)
+	_save("p5_rafa")
+	p.get("_cutscene").call("_finish")
+	p.call("_open_hire")
+	await _wait(0.6)
+	_save("p6_contratacion")
+	var hire: Node = p.get("_hire")
+	hire.call("_dodge")
+	hire.call("_dodge")
+	hire.call("_dodge")
+	hire.call("_on_no_pressed")
+	await _wait(0.3)
+	_save("p7_boton_no")
+	hire.queue_free()
+	p.set("_hire", null)
+	p.call("_start_console")
+	await _wait(1.6)
+	_save("p8_consola")
+	p.set("_flags", {"console_done": true})
+	p.call("_start_fall")
+	await _wait(2.4)
+	_save("p9_caida")
+	p.call("_start_title")
+	await _wait(2.0)
+	_save("p10_titulo")
+	p.set("_title_time", -999.0)
+	gd.pending_creation = {}
 
 
 func _capture_game() -> void:

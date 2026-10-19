@@ -60,6 +60,7 @@ func _initialize() -> void:
 	_test_audio_assets()
 	_test_economy_and_stash()
 	_test_appearance_and_dialogue_flow()
+	_test_prologue_data()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
 	else:
@@ -618,9 +619,10 @@ func _test_cutscenes(zones: Dictionary, npc_data: Dictionary) -> void:
 	for id in cutscenes:
 		for step in cutscenes[id]["steps"]:
 			if step.has("speaker"):
-				_check(npc_data["npcs"].has(step["speaker"]), "%s: hablante desconocido %s" % [id, step["speaker"]])
+				_check(step["speaker"] == "player" or npc_data["npcs"].has(step["speaker"]), "%s: hablante desconocido %s" % [id, step["speaker"]])
 			if step.has("effect"):
-				_check(step["effect"] in ["glitch", "shake", "blackout", "fade_in", "dino"], "%s: efecto desconocido" % id)
+				var prologue_fx: bool = id.begins_with("prologo_") and step["effect"] in ["lights_flicker", "fans", "rafa_stands", "shock"]
+				_check(prologue_fx or step["effect"] in ["glitch", "shake", "blackout", "fade_in", "dino"], "%s: efecto desconocido" % id)
 			else:
 				_check(step.has("text") and (step.has("speaker") or step.has("name")), "%s: línea sin texto o sin hablante" % id)
 		var travel: Dictionary = cutscenes[id].get("on_finish", {}).get("travel", {})
@@ -633,7 +635,7 @@ func _test_cutscenes(zones: Dictionary, npc_data: Dictionary) -> void:
 	var reunion_text := ""
 	for s in cutscenes["reunion_campamento"]["steps"]:
 		reunion_text += s.get("text", "")
-	_check(reunion_text.contains("El Pepe") and reunion_text.contains("prestador de servicios retirado"), "culpan a El Pepe")
+	_check(reunion_text.contains("Inge Pepe") and reunion_text.contains("culpa suya"), "culpan al Inge Pepe")
 
 
 func _test_quest_data(zones: Dictionary, npc_data: Dictionary) -> void:
@@ -1492,3 +1494,30 @@ func _test_appearance_and_dialogue_flow() -> void:
 	_check(box._text_for("a", box._dialogue["nodes"]["a"]) == "Ya te lo conté.", "tema ya leído: texto 'again'")
 	_check(c.flags["dialogue_seen"]["prueba"].has("a"), "lo leído se guarda en el personaje")
 	box.free()
+
+## Prólogo: las escenas que usa existen y la llegada al Sandbox solo sale tras él.
+func _test_prologue_data() -> void:
+	var cut: Dictionary = DataLoader.load_json("res://data/cutscenes.json")["cutscenes"]
+	var source := FileAccess.get_file_as_string("res://scripts/prologue/prologue.gd")
+	var regex := RegEx.new()
+	regex.compile("_play\\(\"([a-z_]+)\"")
+	var used := 0
+	for m in regex.search_all(source):
+		used += 1
+		_check(cut.has(m.get_string(1)), "el prólogo usa la escena '%s', que no existe" % m.get_string(1))
+	_check(used >= 5, "el prólogo usa sus escenas (%d)" % used)
+	_check(cut.has("prologo_descarga") and cut.has("llegada_sandbox"), "escenas del clímax y de la llegada")
+	var player_lines := 0
+	for id in ["prologo_rafa", "llegada_sandbox"]:
+		for step in cut[id]["steps"]:
+			if step.get("speaker", "") == "player":
+				player_lines += 1
+	_check(player_lines >= 2, "el jugador habla en el prólogo")
+	var act1: Dictionary = DataLoader.load_json("res://data/act1.json")
+	for z in act1["zones"]:
+		if z["id"] == act1["start_zone"]:
+			var enter: Dictionary = z.get("cutscene_on_enter", {})
+			_check(enter.get("id", "") == "llegada_sandbox" and enter.get("requires_flag", "") == "prologue_done", "llegada al Sandbox tras el prólogo")
+	# El Inge Pepe ya no es «prestador de servicios».
+	for path in ["res://data/npcs.json", "res://data/cutscenes.json"]:
+		_check(not FileAccess.get_file_as_string(path).contains("restador de servicios retirado"), "%s: Pepe ya no es prestador de servicios" % path)

@@ -70,6 +70,12 @@
         "kinds": [
           "void"
         ]
+      },
+      "cutscene_on_enter": {
+        "id": "llegada_sandbox",
+        "requires_flag": "prologue_done",
+        "unless_flag": "llegada_sandbox_vista",
+        "set_flag": "llegada_sandbox_vista"
       }
     },
     {
@@ -128,7 +134,10 @@
           "cutscene": "red_lince"
         }
       ],
-      "stash": [720, 900],
+      "stash": [
+        720,
+        900
+      ],
       "waypoint": [
         900,
         900
@@ -148,7 +157,13 @@
             540
           ]
         },
-        {"id": "nacho", "pos": [1240, 820]},
+        {
+          "id": "nacho",
+          "pos": [
+            1240,
+            820
+          ]
+        },
         {
           "id": "root",
           "pos": [

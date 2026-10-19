@@ -411,11 +411,11 @@
           ]
         },
         "pepe": {
-          "text": "El Pepe. Prestador de servicios. Se jubiló el año del Último Commit, qué casualidad. Dejó un pósit, un cron sin comentarios y una caña de pescar en el armario de los servidores.",
+          "text": "El Inge Pepe. Jefe de informática desde que nadie se acuerda: instaló la primera red, bautizó al Monolito y firmó cada parche durante treinta años. Se jubiló en julio. Así que ahora todo es culpa suya.",
           "next": "pepe2"
         },
         "pepe2": {
-          "text": "Era buena gente, ojo. Te arreglaba la impresora con un clip y te contaba de pesca mientras compilaba. Pero tenía una regla: «Lo que funciona, no se documenta: se protege». Nunca supe qué protegía.",
+          "text": "Era buena gente, ojo. Te arreglaba la impresora con un clip y te contaba de pesca mientras compilaba. Tenía una regla: «Lo que funciona, no se documenta: se protege». Y no, él no hizo ese commit. Pepe jamás subió nada sin descripción. Era insoportable con eso.",
           "options": [
             {
               "text": "Lo tendré en cuenta.",
@@ -568,8 +568,12 @@
       ],
       "nodes": {
         "hola": {
-          "text": "Aaah... ya voy en un momento.... si puedo..... Estoy reiniciando el servidor..... desde 2019... ¿Qué. Quieres....?",
+          "text": "Aaah..... ¿«genio»?..... ¿Tú también caíste.....? Bienvenido a producción..... Aquí el tiempo corre raro..... llevo reiniciando el servidor..... desde 2019..... o desde el martes..... ¿Qué. Quieres....?",
           "options": [
+            {
+              "text": "¿Y mi constancia de servicio social?",
+              "next": "constancia"
+            },
             {
               "text": "¿Qué es ese portal?",
               "next": "portal",
@@ -669,6 +673,32 @@
               "next": "hola"
             }
           ]
+        },
+        "constancia": {
+          "text": "Tu constancia..... sigue en pie el trato..... En cuanto levantemos el servidor..... te la firmo..... y la carta de recomendación..... si queda papel..... y universidad......",
+          "next": "constancia2"
+        },
+        "constancia2": {
+          "text": "Y no culpes a Pepe de esto..... todos lo hacen..... pero yo vi el commit..... «admin»..... sin descripción..... Pepe ponía descripción hasta en los commits de una línea..... con faltas de ortografía..... pero la ponía......",
+          "options": [
+            {
+              "text": "Entonces, ¿quién fue?",
+              "next": "constancia3"
+            },
+            {
+              "text": "Ya veremos.",
+              "next": "hola"
+            }
+          ]
+        },
+        "constancia3": {
+          "text": "No sé..... Alguien con permisos de admin..... o sea..... cualquiera de este departamento..... incluyéndome..... ¿Por qué me miras así.....?",
+          "options": [
+            {
+              "text": "Por nada.",
+              "next": "hola"
+            }
+          ]
         }
       }
     },
@@ -752,7 +782,7 @@
           ]
         },
         "origen": {
-          "text": "Un tal Pepe. Prestador de servicios. Me escribió en una tarde, entre un ticket y una caña de pescar. Mis comentarios de código dicen: «bot temporal, borrar en dos semanas». Eso fue hace once años.",
+          "text": "El Inge Pepe. Jefe de informática. Me escribió en una tarde, entre una clase y una caña de pescar. Mis comentarios de código dicen: «bot temporal, borrar en dos semanas». Eso fue hace once años.",
           "next": "origen2"
         },
         "origen2": {
@@ -1096,7 +1126,7 @@
           ]
         },
         "vio": {
-          "text": "Lo vi. Yo estaba haciendo el backup de las seis. El push llegó desde adentro: una tarea programada, firmada como «admin», que llevaba años dormida. Se despertó, escribió sobre todo y se volvió a dormir.",
+          "text": "Lo vi. Yo estaba haciendo el backup de las seis. Llegó un push firmado como «admin», sin descripción. Escribió sobre todo. Y un segundo después se despertó otra tarea, una que llevaba años dormida, y empezó a cerrar puertas.",
           "next": "vio2"
         },
         "vio2": {
@@ -1113,10 +1143,10 @@
           ]
         },
         "vio3": {
-          "text": "El usuario estaba borrado. Solo quedaba el nombre del script en la tabla de procesos: «limpieza_final». Y una firma en los comentarios. Un pez. ><(((º>",
+          "text": "La que cerró puertas se llamaba «limpieza_final» y estaba firmada con un pez: ><(((º>  La de Pepe. Todos lo culpan por eso. Pero esa tarea no escribió nada... solo selló lo que el push dejó abierto. El push vino de otra parte.",
           "options": [
             {
-              "text": "Otra vez el pez.",
+              "text": "Entonces Pepe no fue.",
               "next": "hola"
             }
           ]
@@ -1232,7 +1262,7 @@
           ]
         },
         "pepe": {
-          "text": "Miré el crontab..... hay una tarea de El Pepe..... programada hace años..... se llama «limpieza_final.sh»..... No tiene comentarios..... Solo un emoji de pez......",
+          "text": "Miré el crontab..... hay una tarea del Inge Pepe..... programada hace años..... se llama «limpieza_final.sh»..... No tiene comentarios..... Solo un emoji de pez..... Todos dicen que es la prueba de que fue él..... yo ya no sé......",
           "next": "pepe2"
         },
         "pepe2": {
@@ -1407,11 +1437,11 @@
           ]
         },
         "auditoria": {
-          "text": "Lo leí tres veces. El Último Commit no vino de afuera. Fue una llamada interna, programada hace siete años. El mismo mes en que se jubiló El Pepe. El mismo usuario que borró su cuenta al salir.",
+          "text": "Lo leí tres veces. El Último Commit no vino de afuera. Fue una llamada interna, programada hace siete años con el usuario admin. La misma semana en que el Inge Pepe instaló su «limpieza_final». Por eso todos lo culpan.",
           "next": "auditoria2"
         },
         "auditoria2": {
-          "text": "Y hay algo más: la llamada no intentaba romper el sistema. Intentaba sellarlo. Como cuando cierras una escotilla con alguien adentro... o con algo adentro. No sé de qué lado estaba El Pepe. Todavía.",
+          "text": "Y hay algo más: la llamada no intentaba romper el sistema. Intentaba sellarlo. Como cuando cierras una escotilla con alguien adentro... o con algo adentro. Y eso no cuadra con alguien que quisiera romper todo. Si Pepe hizo algo, fue cerrar la escotilla. Lo que no sé es quién la abrió.",
           "options": [
             {
               "text": "Lo averiguaremos juntos.",

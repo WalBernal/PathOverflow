@@ -10,6 +10,7 @@ const TITLE_SCENE := "res://scenes/menu/title_screen.tscn"
 const MAIN_MENU_SCENE := "res://scenes/menu/main_menu.tscn"
 const CREATION_SCENE := "res://scenes/menu/character_creation.tscn"
 const WORLD_SCENE := "res://scenes/game/world.tscn"
+const PROLOGUE_SCENE := "res://scenes/prologue/prologue.tscn"
 
 var classes: Array = []
 var passive_tree: PassiveTree
@@ -23,6 +24,9 @@ var zones: Dictionary = {}
 var cutscenes: Dictionary = {}
 ## Personaje elegido en la pantalla de inicio (null = ninguno todavía).
 var current_character: CharacterData
+## Personaje a medio crear (nombre y apariencia del creador) mientras dura el
+## prólogo: la clase se elige allí. {name, appearance, skip_prologue}
+var pending_creation: Dictionary = {}
 
 
 func _ready() -> void:

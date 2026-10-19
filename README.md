@@ -100,6 +100,19 @@ Trampa, mina y torreta añaden su etiqueta a la habilidad y no funcionan con mov
 
 Stats nuevas para ellas: **Recuperación de enfriamientos** (acorta los enfriamientos) y **Duración de habilidades** (giros, trampas y aturdimientos).
 
+## Prólogo / Acto 0: La Beca de Schrödinger
+
+Al crear un personaje (apariencia y nombre; ya no se elige clase en el creador, que muestra el **expediente** del recién egresado) empieza el prólogo (`scenes/prologue/prologue.tscn`), en pixel art de verdad: un escenario de 400×225 escalado sin suavizado, con un shader que lo pinta descolorido por el calor (`prologue_screen.gdshader`).
+
+1. **El Desembarco de la Realidad**: texto mecanografiado (147 vacantes, 5 años de experiencia requerida, café soluble y agua de garrafón) y el malecón de Mazatlán al mediodía, con camisa formal, marcas de sudor y un portafolio de plástico.
+2. **Retorno a la UAdeO**: el pasillo largo hasta el Departamento de Informática, junto a la ventanilla de cobro («Regreso en 15 minutos»).
+3. **El Error 404 del Archivo Muerto**: el departamento destrozado (archivadores volcados, CRT beige, el minisplit goteando sobre una torre quemada) y Rafa, que busca tu servicio social con `grep`: el Inge Pepe anotaba a los prestadores en una libreta Scribe de gatitos y se la llevó.
+4. **El Incidente del Viernes a las 6:00 PM**: se cae el SICE; el backend corre en «El Monolito» (2004). Rafa propone un trato.
+5. **La Elección Forzada**: ventana al estilo Windows 98, «Confirmar Contratación de Emergencia», con un desplegable para el **primer puesto (la clase)**. El botón **No** esquiva el ratón (salta 150 px; acorralado, encoge hasta 1×1 px) y si se le atina sale `Error 0x80004005` y queda deshabilitado.
+6. **Clímax**: la carpeta lila «NO TOCAR - CONFIG_PROD» detrás del rack, la descarga, la consola roja (`POST /api/v1/deploy/force --user admin`), la oficina pixelándose (papeles en logs, cables en cobre, la ropa en binario) y el título **EL ÚLTIMO COMMIT**. Despiertas en el Sandbox (escena `llegada_sandbox`).
+
+Se camina con A/D, flechas o manteniendo el click; E, Espacio o click para interactuar. Esc (dos veces) salta a la elección de puesto; en el creador, «Saltar prólogo» va directo a ella.
+
 ## Acto I: El Último Commit
 
 El acto está definido en `data/act1.json` y lo construye `Zone` (`scripts/game/zone.gd`).
@@ -121,7 +134,7 @@ El acto está definido en `data/act1.json` y lo construye `Zone` (`scripts/game/
 - **Salidas** en los bordes ("← Campamento", "Las Ruinas →"): basta con caminar hasta ellas.
 - **Waypoints**: se descubren al tocarlos y se guardan por personaje (`flags.waypoints`). Al hacer click se abre la lista del acto.
 - **Jefe**: al derrotarlo se completa el acto (bandera `act1_complete`), cae botín especial (siempre en suelo alcanzable) y se abre un portal al campamento.
-- **Después del jefe**: el Arquitecto muere en una **escena** (glitch, temblor, sus últimas palabras y la consola del sistema congelándose) y se abre un portal al campamento. Al volver, el campamento culpa a **El Pepe, prestador de servicios retirado** (el antecesor de Rafa), y Rafa abre el **puerto 2222** hacia el Kernel. Al cruzarlo se cae **La Red Lince** (pantalla del dinosaurio) y el jugador cae al **Acto II**.
+- **Después del jefe**: el Arquitecto muere en una **escena** (glitch, temblor, sus últimas palabras y la consola del sistema congelándose) y se abre un portal al campamento. Al volver, el campamento culpa al **Inge Pepe**, jefe de informática de toda la vida, recién jubilado (el antecesor de Rafa), y Rafa abre el **puerto 2222** hacia el Kernel. Al cruzarlo se cae **La Red Lince** (pantalla del dinosaurio) y el jugador cae al **Acto II**.
 - **Escenas**: `data/cutscenes.json` (líneas con retrato, consola, efectos de glitch, temblor, fundidos y la página sin conexión). Click o Espacio avanzan; Esc salta. Los enemigos se congelan mientras duran.
 - **NPCs y lore** en `data/npcs.json` (en el campamento: Aida la Senior, Mario el Becario y Rafa el SysAdmin, que escribe con muchos puntos suspensivos...; sus ids internos siguen siendo `ada`, `kevin` y `root` para no romper los guardados): diálogos con opciones, condiciones (`requires_flag`) y acciones (regalos que se dan una sola vez). Cuentan la historia del administrador que hizo `push --force` "por el Monolito".
 - **Tutorial** (`data/tutorial.json`, versión 2): 12 pasos. Empieza en el Sandbox (moverse, atacar, matar, recoger, equipar, pociones, pasivas) y sigue en el campamento (Aida, RAM, Mario, salir al Bosque). Los personajes con el tutorial antiguo continúan donde corresponde.

@@ -32,6 +32,7 @@ func _initialize() -> void:
 		"swamp": _amb_swamp, "catacombs": _amb_catacombs, "servers": _amb_servers, "boss": _amb_boss,
 		"kernel": _amb_kernel, "terminal": _amb_terminal, "fabrica": _amb_factory, "alcantarillas": _amb_sewer,
 		"fosa": _amb_pit, "grieta": _amb_rift, "bus": _amb_bus, "anillo": _amb_ring, "frio": _amb_wind.bind(0.7, 1400.0),
+		"calle": _amb_street, "pasillo": _amb_hallway, "oficina": _amb_office,
 	}
 	for name in ambients:
 		_save(AMB_DIR + name + ".wav", _loopable(ambients[name].call()))
@@ -488,4 +489,34 @@ func _amb_ring() -> PackedFloat32Array:
 	_add_drone(b, 55.0, 0.25, 0.3)
 	_add_drone(b, 110.0, 0.1, 0.25)
 	_add_crackle(b, 0.0008, 0.35)   # calor
+	return b
+
+# --- Prólogo (mundo real) ---
+
+func _amb_street() -> PackedFloat32Array:
+	var b := _amb_base()
+	_add_wind(b, 0.3, 700.0, 0.12)        # brisa del malecón
+	_add_wind(b, 0.25, 220.0, 0.08)       # olas
+	_add_drone(b, 85.0, 0.05, 0.6)        # tráfico lejano
+	for k in 3:   # gaviotas
+		var start := rng.randi_range(0, b.size() - RATE)
+		for i in int(RATE * 0.35):
+			var t := float(i) / RATE
+			b[start + i] += sin(TAU * lerpf(1700.0, 1100.0, t / 0.35) * t) * sin(PI * t / 0.35) * 0.08
+	return b
+
+
+func _amb_hallway() -> PackedFloat32Array:
+	var b := _amb_base()
+	_add_wind(b, 0.4, 900.0, 0.4)         # ventiladores industriales al límite
+	_add_drone(b, 100.0, 0.1, 0.0)
+	_add_drone(b, 50.0, 0.08, 0.0)        # zumbido de las lámparas
+	return b
+
+
+func _amb_office() -> PackedFloat32Array:
+	var b := _amb_base()
+	_add_wind(b, 0.3, 1600.0, 0.05)       # ventiladores del rack
+	_add_drone(b, 120.0, 0.07, 0.0)
+	_add_pings(b, 6, 1800.0, 2000.0, 0.25, 0.04)   # el minisplit gotea
 	return b

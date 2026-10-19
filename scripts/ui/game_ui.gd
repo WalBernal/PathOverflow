@@ -197,6 +197,8 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 
 	cutscene = CutscenePlayer.new()
 	cutscene.player = player
+	cutscene.speakers = {"player": {"name": character.character_name, "appearance": character.appearance,
+		"color": character.class_def.get("color", "d9a441")}}
 	add_child(cutscene)
 
 	_pause_panel = _build_pause_menu()
