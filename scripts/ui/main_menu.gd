@@ -43,11 +43,16 @@ func _build() -> void:
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 18)
 	add_child(root)
-	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 40)
+	# Márgenes fijos: el contenido se adapta a la ventana (antes la lista se salía por abajo).
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.offset_left = 40.0
+	root.offset_right = -40.0
+	root.offset_top = 24.0
+	root.offset_bottom = -24.0
 
 	var logo := GameLogo.new()
-	logo.logo_scale = 0.55
-	logo.custom_minimum_size = Vector2(0, 150)
+	logo.logo_scale = 0.5
+	logo.custom_minimum_size = Vector2(0, 130)
 	root.add_child(logo)
 	var subtitle := UiStyle.label("Un ARPG oscuro. Como tu código en producción.", 18, UiStyle.MUTED)
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -95,7 +100,8 @@ func _build() -> void:
 	detail_box.add_theme_constant_override("separation", 12)
 	detail_panel.add_child(detail_box)
 	_preview = AppearancePreview.new()
-	_preview.custom_minimum_size = Vector2(0, 300)
+	_preview.animated = true
+	_preview.custom_minimum_size = Vector2(0, 240)
 	detail_box.add_child(_preview)
 	_detail = RichTextLabel.new()
 	_detail.bbcode_enabled = true
@@ -156,8 +162,16 @@ func _make_card(index: int) -> Button:
 	row.add_theme_constant_override("separation", 14)
 	card.add_child(row)
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 8)
-	var portrait := AppearancePreview.new()
-	portrait.custom_minimum_size = Vector2(48, 0)
+	var class_def := GameData.get_class_def(StringName(data.get("class_id", "")))
+	var stripe := ColorRect.new()
+	stripe.color = Color(class_def.get("color", "d9a441"))
+	stripe.custom_minimum_size = Vector2(5, 0)
+	stripe.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(stripe)
+	var portrait := CharacterPortrait.new()
+	portrait.custom_minimum_size = Vector2(66, 66)
+	portrait.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	portrait.ring_color = stripe.color
 	portrait.appearance = CharacterAppearance.sanitize(data.get("appearance", {}))
 	row.add_child(portrait)
 	var texts := VBoxContainer.new()
@@ -193,6 +207,7 @@ func _select(index: int) -> void:
 	var data := _saves[index]
 	_preview.appearance = CharacterAppearance.sanitize(data.get("appearance", {}))
 	var class_def := GameData.get_class_def(StringName(data.get("class_id", "")))
+	_preview.glow_color = Color(class_def.get("color", "d9a441"))
 	_detail.text = "[center][font_size=26][color=#d9a441]%s[/color][/font_size]\n%s\n\n[color=#8a8293]%s[/color]\n\n[color=#8a8293]Tiempo jugado:[/color] %s\n[color=#8a8293]Última partida:[/color] %s[/center]" % [
 		data.get("name", "?"), _class_line(data), class_def.get("description", ""),
 		UiStyle.play_time(float(data.get("play_time", 0.0))), UiStyle.relative_time(int(data.get("last_played", 0)))]

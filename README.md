@@ -175,6 +175,7 @@ El **registro de misiones** está debajo del minimapa (L para plegarlo): la prin
 - **Pitidos retro**: sin voz (o con el narrador desactivado), sale un pitido de 8 bits cada pocas letras, con el tono de cada NPC. El sonido se genera en código (`RetroSfx`), sin archivos.
 - Ambos se activan o desactivan en el menú de pausa (Esc) y se recuerdan en `user://settings.cfg`.
 - **Escenas** (muerte de jefes, transiciones): el texto avanza solo, con una barrita que marca el tiempo de lectura; si hay narrador, lo lee en voz alta y espera a que termine. Click o Espacio adelanta y Esc salta.
+- **Conversaciones que fluyen**: volver al inicio muestra una frase corta del NPC (`menu`) en vez de repetir el saludo; en visitas siguientes saluda distinto (`greeting_again`) y los temas ya leídos pueden resumirse (`again`). Las opciones ya leídas salen marcadas con ✓ y al final; las de misiones, con ★ y primero. Los temas largos se encadenan con *Continuar*. Las opciones aparecen cuando termina el texto (click lo completa); teclas 1-9 eligen y Espacio sigue. Lo leído se guarda en el personaje.
 - El narrador no usa los avisos por palabra de la voz (en Windows pueden trabar el juego): el texto avanza a su ritmo y se consulta si la voz sigue hablando. Solo se corta la voz si de verdad está hablando.
 - **Detector de cuelgues** (FreezeWatch): un hilo aparte vigila que el juego avance. Si se para más de 4 s, escribe en user://logs/congelado.log las últimas acciones (diálogos, voz, escenas, viajes). Si el juego se congela, ese archivo dice dónde.
 
@@ -189,7 +190,9 @@ El **registro de misiones** está debajo del minimapa (L para plegarlo): la prin
 
 - **Pantalla de título** (`scenes/menu/title_screen.tscn`, escena principal): logo animado de *Path Overflow* (`GameLogo`) con efecto glitch y una pila desbordándose, lluvia de binario, `console.log`s flotando, un grafo de git que termina en `push --force`, bugs cruzando, un rack de servidores echando vapor y un café.
 - **Música**: `assets/audio/title_theme.wav`, generada con `tools/generate_music.gd` (bucle de ~37 s). El autoload `MusicPlayer` la mantiene sonando entre título, menú y creador; el botón "Música" la silencia y se recuerda en `user://settings.cfg`. Para usar otra música basta con sustituir el WAV.
-- **Creador de personaje**: barras de atributos, estilo de juego, dificultad, arma, ascendencias y las placas base iniciales con su icono y descripción. Vista previa animada sobre un pedestal del color de la clase. Esos datos están en `classes.json` (`playstyle`, `difficulty`, `color`).
+- **Creador de personaje**: barras de atributos, estilo de juego, dificultad, arma, ascendencias y las placas base iniciales con su icono y descripción. Vista previa animada sobre un pedestal del color de la clase y un retrato de cerca. Esos datos están en `classes.json` (`playstyle`, `difficulty`, `color`).
+- **Apariencia**: complexión, estatura (baja, media, alta), 10 peinados (rapado, corto, largo, cresta, moño, hacia atrás, afro, coleta, rapado lateral, melena con flequillo), barba (tres días, completa, bigote, candado), accesorio (lentes, lentes de sol, audífonos, gorra, gorro de lana) y colores de piel, pelo, ojos, atuendo y detalles (cinturón, zapatos y accesorio). Todo sale de `CharacterAppearance`: la misma cabeza (`draw_head`) se usa en el mundo, en los retratos y en el creador, así que lo que eliges es lo que ves. Los personajes de antes reciben valores por defecto.
+- **Lista de personajes**: cada tarjeta con un medallón animado y la franja del color de su clase.
 
 ## Interfaz
 
@@ -197,7 +200,8 @@ El **registro de misiones** está debajo del minimapa (L para plegarlo): la prin
 - **Inventario y Habilidades** con marco de ventana (esquinas doradas, cabecera, botón de cerrar), siluetas en las ranuras vacías, zócalos DIMM y tarjetas de habilidad con nivel, experiencia y etiquetas.
 - **HUD**: orbes de vida/ES y maná, café y bebida energética con cargas (vapor y burbujas cuando están listas), barra de 6 habilidades con enfriamiento y coste, experiencia y botones de menú (C, I, K, P).
 - **Minimapa** (arriba a la derecha): el suelo de la zona, obstáculos, salidas, waypoint, NPCs, enemigos por rareza y botín valioso, con flechas hacia las salidas que quedan fuera de vista. Debajo, el nombre y nivel de la zona. Se oculta mientras el inventario está abierto.
-- **Hoja de personaje** (C): retrato animado de pecho hacia arriba que respira, parpadea, te sigue con la mirada, toma café, piensa (con spinner de carga), bosteza, se pone gafas de sol si su DPS es alto y suda con poca vida. Incluye atributos, defensas con su efecto real (reducción de la armadura, probabilidad de esquivar), resistencias con comentarios, ofensiva de la habilidad principal, muertes, enemigos eliminados y un estado de ánimo calculado.
+- **Hoja de personaje** (C): medallón redondo animado (`CharacterPortrait`) que respira, parpadea, te sigue con la mirada, toma café, piensa (con spinner de carga), bosteza, se pone lentes de sol si su DPS es alto y suda con poca vida; el aro es del color de la clase. Barra de experiencia y tarjetas con barras que se llenan: atributos, resistencias (con el tope de 75 %), defensa (vida, escudo, maná, armadura y evasión con su efecto real, bloqueo) y ofensiva (icono de la habilidad principal, DPS grande, daño, crítico, usos por segundo). Si hay pasivas sin gastar, un botón abre el árbol.
+- **Retratos**: los diálogos y las escenas usan el mismo medallón, con la boca moviéndose mientras el NPC habla; Rafa y Clara por radio salen con interferencia verde.
 - **Iconos de objetos**: atlas `assets/sprites/items/items.png` generado con `tools/generate_item_icons.gd` (un icono por base, placas base, RAM por generación y pociones). Para usar arte propio, sustituye el PNG respetando la cuadrícula (mapa en `data/item_icons.json`).
 
 ## Pociones
@@ -320,6 +324,9 @@ Godot_v4.7.2-stable_win64_console.exe --headless --path . -s res://tests/test_co
 
 ```bash
 Godot_v4.7.2-stable_win64_console.exe --headless --path . -s res://tools/check_scripts.gd
+# Capturas de todas las pantallas (título, personajes, creador, muestrario de apariencias,
+# campamento, hoja C, inventario, diálogo, árbol y una zona del acto II) en user://capturas/:
+Godot_v4.7.2-stable_win64_console.exe --path . res://tools/capture_screens.tscn
 ```
 
 La primera ejecuta las pruebas de lógica: stats, árbol, objetos, guardado, placas base y RAM (compatibilidad, generaciones, cálculo de daño, coste, proyectiles, área) y la integridad de los JSON (diálogos que apuntan a nodos que existen, pasos del tutorial, regalos válidos...).

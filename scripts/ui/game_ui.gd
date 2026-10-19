@@ -94,6 +94,8 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	add_child(character_sheet)
 	character_sheet.position = Vector2(10, 34)
 	character_sheet.setup(character, player, skills)
+	character_sheet.close_requested.connect(func() -> void: _on_menu_requested("character"))
+	character_sheet.passives_requested.connect(func() -> void: _on_menu_requested("passives"))
 
 	# Comerciante y alijo: a la izquierda, con el inventario abierto a la derecha.
 	shop_panel = ShopPanel.new()

@@ -30,6 +30,7 @@ var _class_info: RichTextLabel
 var _attribute_bars: Control
 var _skills_box: VBoxContainer
 var _preview: AppearancePreview
+var _face: CharacterPortrait
 var _option_labels := {}      # clave -> Label del valor (complexión, peinado)
 var _swatch_rows := {}        # clave -> Array[Button]
 var _name_edit: LineEdit
@@ -184,21 +185,42 @@ func _build() -> void:
 	var look_box := VBoxContainer.new()
 	look_box.add_theme_constant_override("separation", 10)
 	look_panel.add_child(look_box)
-	look_box.add_child(UiStyle.label("Apariencia", 22, UiStyle.ACCENT))
-	look_box.add_child(_option_row("Complexión", "body", CharacterAppearance.BODY_NAMES))
-	look_box.add_child(_option_row("Peinado", "hair", CharacterAppearance.HAIR_NAMES))
-	look_box.add_child(UiStyle.label("Tono de piel", 14, UiStyle.MUTED))
-	look_box.add_child(_swatch_row("skin_tone", CharacterAppearance.SKIN_TONES))
-	look_box.add_child(UiStyle.label("Color de pelo", 14, UiStyle.MUTED))
-	look_box.add_child(_swatch_row("hair_color", CharacterAppearance.HAIR_COLORS))
-	look_box.add_child(UiStyle.label("Color del atuendo", 14, UiStyle.MUTED))
-	look_box.add_child(_swatch_row("outfit_color", CharacterAppearance.OUTFIT_COLORS))
-	var spacer := Control.new()
-	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	look_box.add_child(spacer)
-	var hint := UiStyle.label("La apariencia no da stats. Es puramente cosmética,\ncomo los comentarios del código.", 13, UiStyle.MUTED)
-	look_box.add_child(hint)
-	look_box.add_child(UiStyle.button("Apariencia aleatoria", _randomize_appearance))
+	# Cabecera con un retrato de cerca (para ver ojos, barba y accesorios).
+	var look_top := HBoxContainer.new()
+	look_top.add_theme_constant_override("separation", 12)
+	look_box.add_child(look_top)
+	var look_titles := VBoxContainer.new()
+	look_titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	look_titles.alignment = BoxContainer.ALIGNMENT_CENTER
+	look_top.add_child(look_titles)
+	look_titles.add_child(UiStyle.label("Apariencia", 22, UiStyle.ACCENT))
+	var hint := UiStyle.label("No da stats. Es puramente cosmética,\ncomo los comentarios del código.", 12, UiStyle.MUTED)
+	look_titles.add_child(hint)
+	look_titles.add_child(UiStyle.button("Apariencia aleatoria", _randomize_appearance))
+	_face = CharacterPortrait.new()
+	_face.custom_minimum_size = Vector2(118, 118)
+	look_top.add_child(_face)
+
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	look_box.add_child(scroll)
+	var options := VBoxContainer.new()
+	options.add_theme_constant_override("separation", 6)
+	options.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(options)
+	options.add_child(_option_row("Complexión", "body", CharacterAppearance.BODY_NAMES))
+	options.add_child(_option_row("Estatura", "height", CharacterAppearance.HEIGHT_NAMES))
+	options.add_child(_option_row("Peinado", "hair", CharacterAppearance.HAIR_NAMES))
+	options.add_child(_option_row("Barba", "beard", CharacterAppearance.BEARD_NAMES))
+	options.add_child(_option_row("Accesorio", "accessory", CharacterAppearance.ACCESSORY_NAMES))
+	for entry in [["Tono de piel", "skin_tone", CharacterAppearance.SKIN_TONES],
+			["Color de pelo", "hair_color", CharacterAppearance.HAIR_COLORS],
+			["Color de ojos", "eye_color", CharacterAppearance.EYE_COLORS],
+			["Color del atuendo", "outfit_color", CharacterAppearance.OUTFIT_COLORS],
+			["Detalles (cinturón, zapatos, accesorio)", "accent_color", CharacterAppearance.ACCENT_COLORS]]:
+		options.add_child(UiStyle.label(entry[0], 13, UiStyle.MUTED))
+		options.add_child(_swatch_row(entry[1], entry[2]))
 
 	# --- Nombre y confirmación ---
 	var footer := HBoxContainer.new()
@@ -242,12 +264,14 @@ func _option_row(title: String, key: String, names: Array) -> Control:
 
 
 func _swatch_row(key: String, colors: Array) -> Control:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 6)
+	var row := HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 5)
+	row.add_theme_constant_override("v_separation", 5)
 	var buttons: Array[Button] = []
 	for hex in colors:
 		var b := Button.new()
-		b.custom_minimum_size = Vector2(40, 32)
+		b.custom_minimum_size = Vector2(30, 26)
+		b.focus_mode = Control.FOCUS_NONE
 		b.tooltip_text = "#" + hex
 		b.pressed.connect(func() -> void:
 			_appearance[key] = hex
@@ -336,7 +360,11 @@ func _draw_attribute_bars() -> void:
 
 
 func _cycle(key: String, count: int, step: int) -> void:
-	_appearance[key] = posmod(int(_appearance[key]) + step, count)
+	if key == "height":
+		var i := posmod(CharacterAppearance.height_index(_appearance) + step, count)
+		_appearance["height"] = CharacterAppearance.HEIGHT_VALUES[i]
+	else:
+		_appearance[key] = posmod(int(_appearance.get(key, 0)) + step, count)
 	_refresh_appearance()
 
 
@@ -351,13 +379,19 @@ func _randomize_appearance() -> void:
 
 
 func _refresh_appearance() -> void:
+	_appearance = CharacterAppearance.sanitize(_appearance)
 	_preview.appearance = _appearance.duplicate()
+	_face.appearance = _appearance.duplicate()
+	_face.ring_color = Color(GameData.classes[_class_index].get("color", "d9a441"))
 	_option_labels["body"].text = CharacterAppearance.BODY_NAMES[_appearance["body"]]
+	_option_labels["height"].text = CharacterAppearance.HEIGHT_NAMES[CharacterAppearance.height_index(_appearance)]
 	_option_labels["hair"].text = CharacterAppearance.HAIR_NAMES[_appearance["hair"]]
+	_option_labels["beard"].text = CharacterAppearance.BEARD_NAMES[_appearance["beard"]]
+	_option_labels["accessory"].text = CharacterAppearance.ACCESSORY_NAMES[_appearance["accessory"]]
 	for key in _swatch_rows:
 		for b: Button in _swatch_rows[key]:
 			var hex := b.tooltip_text.substr(1)
-			var selected: bool = hex == _appearance[key]
+			var selected: bool = hex == String(_appearance.get(key, ""))
 			var style := StyleBoxFlat.new()
 			style.bg_color = Color(hex)
 			style.border_color = UiStyle.ACCENT if selected else UiStyle.BORDER

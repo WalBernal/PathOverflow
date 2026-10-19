@@ -59,6 +59,7 @@ func _initialize() -> void:
 	_test_walk_animation()
 	_test_audio_assets()
 	_test_economy_and_stash()
+	_test_appearance_and_dialogue_flow()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
 	else:
@@ -523,7 +524,11 @@ func _test_camp_and_tutorial_data() -> void:
 	for id in dialogues:
 		var d: Dictionary = dialogues[id]
 		_check(d["nodes"].has(d["start"]), "nodo inicial de %s" % id)
+		_check(d.has("menu"), "%s: falta 'menu' (frase corta al volver al inicio, para no repetir el saludo)" % id)
 		for node_id in d["nodes"]:
+			var node_next: String = d["nodes"][node_id].get("next", "")
+			_check(node_next == "" or d["nodes"].has(node_next), "%s/%s encadena con '%s', que no existe" % [id, node_id, node_next])
+			_check(d["nodes"][node_id].has("options") or d["nodes"][node_id].has("next"), "%s/%s no tiene salida" % [id, node_id])
 			for option in d["nodes"][node_id].get("options", []):
 				var next: String = option.get("next", "")
 				_check(next == "" or d["nodes"].has(next), "%s/%s apunta a '%s', que no existe" % [id, node_id, next])
@@ -1455,3 +1460,35 @@ func _test_economy_and_stash() -> void:
 	_check(ItemTransfer.move(other, {"kind": "stash", "tab": 1, "index": 3}, {"kind": "bag", "index": free}) == "" and other.inventory.bag[free] is Motherboard, "otro personaje lo saca")
 	ItemTransfer.stash = null
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
+## Apariencia nueva (barba, accesorio, ojos, detalles, estatura) y diálogos que no se repiten.
+func _test_appearance_and_dialogue_flow() -> void:
+	var old := CharacterAppearance.sanitize({"body": 1, "hair": 2, "outfit_color": "2b4a6b"})
+	_check(old["beard"] == 0 and old["accessory"] == 0, "guardados viejos: sin barba ni accesorio")
+	_check(old["accent_color"] == Color("2b4a6b").darkened(0.55).to_html(false), "guardados viejos: detalles = atuendo oscurecido")
+	var bad := CharacterAppearance.sanitize({"beard": 99, "accessory": -4, "eye_color": "nope", "height": 9.0})
+	_check(bad["beard"] == CharacterAppearance.BEARD_NAMES.size() - 1 and bad["accessory"] == 0, "barba y accesorio dentro de rango")
+	_check(bad["height"] == CharacterAppearance.MAX_HEIGHT and Color.html_is_valid(bad["eye_color"]), "estatura y ojos corregidos")
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	for k in 20:
+		var a := CharacterAppearance.random(rng)
+		_check(CharacterAppearance.sanitize(a) == CharacterAppearance.sanitize(CharacterAppearance.sanitize(a)), "apariencia aleatoria estable")
+	# Diálogo: el saludo no se repite al volver al inicio; lo leído queda marcado.
+	var c := _new_character()
+	var box := DialogueBox.new()
+	box.character = c
+	box._dialogue = {"start": "hola", "menu": ["¿Algo más?"], "greeting_again": ["De nuevo tú."],
+		"nodes": {"hola": {"text": "Saludo largo.", "options": [{"text": "A", "next": "a"}]},
+			"a": {"text": "Tema A.", "again": "Ya te lo conté.", "next": "hola"}}}
+	box._dialogue_id = "prueba"
+	_check(box._text_for("hola", box._dialogue["nodes"]["hola"]) == "Saludo largo.", "primera vez: saludo completo")
+	box._visited_now["hola"] = true
+	box._seen_nodes()["hola"] = true
+	box._seen_nodes()["a"] = true
+	_check(box._text_for("hola", box._dialogue["nodes"]["hola"]) == "¿Algo más?", "volver al inicio en la misma charla: frase corta")
+	box._visited_now = {}
+	_check(box._text_for("hola", box._dialogue["nodes"]["hola"]) == "De nuevo tú.", "otra visita: saludo distinto")
+	_check(box._text_for("a", box._dialogue["nodes"]["a"]) == "Ya te lo conté.", "tema ya leído: texto 'again'")
+	_check(c.flags["dialogue_seen"]["prueba"].has("a"), "lo leído se guarda en el personaje")
+	box.free()

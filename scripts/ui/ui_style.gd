@@ -18,17 +18,20 @@ static func make_theme() -> Theme:
 	theme.set_color("font_color", "Label", TEXT)
 	theme.set_stylebox("panel", "PanelContainer", panel_style())
 
-	theme.set_stylebox("normal", "Button", _box(PANEL_LIGHT, BORDER))
-	theme.set_stylebox("hover", "Button", _box(Color("2c2735"), ACCENT.darkened(0.3)))
-	theme.set_stylebox("pressed", "Button", _box(Color("332b22"), ACCENT))
-	theme.set_stylebox("disabled", "Button", _box(PANEL, Color("2a2530")))
+	theme.set_stylebox("normal", "Button", _button_box(PANEL_LIGHT, BORDER, Color("100d14")))
+	theme.set_stylebox("hover", "Button", _button_box(Color("2e2836"), ACCENT.darkened(0.25), Color("100d14"), Color(ACCENT, 0.22)))
+	theme.set_stylebox("pressed", "Button", _button_box(Color("3a2f22"), ACCENT, Color("1a140c")))
+	theme.set_stylebox("disabled", "Button", _button_box(PANEL, Color("2a2530"), Color("100d14")))
 	theme.set_stylebox("focus", "Button", _box(Color(0, 0, 0, 0), ACCENT.darkened(0.2), 1))
+	theme.set_stylebox("hover_pressed", "Button", _button_box(Color("3a2f22"), ACCENT.lightened(0.1), Color("1a140c"), Color(ACCENT, 0.25)))
 	theme.set_color("font_color", "Button", TEXT)
 	theme.set_color("font_hover_color", "Button", Color.WHITE)
 	theme.set_color("font_pressed_color", "Button", ACCENT)
 	theme.set_color("font_disabled_color", "Button", Color("4a4352"))
 
-	theme.set_stylebox("normal", "LineEdit", _box(Color("0d0b10"), BORDER))
+	var edit := _box(Color("0d0b10"), BORDER)
+	edit.set_corner_radius_all(6)
+	theme.set_stylebox("normal", "LineEdit", edit)
 	theme.set_stylebox("focus", "LineEdit", _box(Color(0, 0, 0, 0), ACCENT, 1))
 	theme.set_color("font_color", "LineEdit", TEXT)
 	theme.set_color("font_placeholder_color", "LineEdit", Color("5a5363"))
@@ -43,8 +46,29 @@ static func make_theme() -> Theme:
 
 
 static func panel_style() -> StyleBoxFlat:
-	var s := _box(Color(PANEL, 0.94), BORDER)
+	var s := _box(Color(PANEL, 0.95), BORDER)
+	s.set_corner_radius_all(8)
+	s.border_color = Color("3d3547")
+	s.border_width_top = 2
+	s.shadow_color = Color(0, 0, 0, 0.45)
+	s.shadow_size = 10
+	s.shadow_offset = Vector2(0, 3)
 	s.set_content_margin_all(16)
+	return s
+
+
+## Botón con relieve: borde inferior más grueso y oscuro (como una tecla) y,
+## opcionalmente, un brillo alrededor (hover).
+static func _button_box(bg: Color, border: Color, bottom: Color, glow := Color(0, 0, 0, 0)) -> StyleBoxFlat:
+	var s := _box(bg, border)
+	s.set_corner_radius_all(6)
+	s.border_width_bottom = 3
+	s.border_color = border
+	s.content_margin_bottom = 5
+	if glow.a > 0.0:
+		s.shadow_color = glow
+		s.shadow_size = 6
+	s.anti_aliasing = true
 	return s
 
 
@@ -193,10 +217,16 @@ static func draw_background(ci: CanvasItem, size: Vector2) -> void:
 		ci.draw_line(Vector2(0, c), Vector2(size.x, c + size.x * 0.5), line, 1.0)
 		ci.draw_line(Vector2(0, c), Vector2(size.x, c - size.x * 0.5), line, 1.0)
 		c += step
+	# Resplandor cálido en el centro y viñeta en los bordes.
+	var center := size / 2.0
+	for k in 10:
+		var r := maxf(size.x, size.y) * (0.55 - k * 0.045)
+		ci.draw_circle(center + Vector2(0, size.y * 0.1), r, Color(0.55, 0.38, 0.15, 0.012))
 	var vignette := 220.0
 	for k in 6:
 		var a := 0.08 * (6 - k) / 6.0
 		ci.draw_rect(Rect2(Vector2.ZERO, Vector2(size.x, vignette * (1.0 - k / 6.0))), Color(0, 0, 0, a))
+		ci.draw_rect(Rect2(Vector2(0, size.y - vignette * (1.0 - k / 6.0)), Vector2(size.x, vignette * (1.0 - k / 6.0))), Color(0, 0, 0, a))
 
 
 ## "hace 5 min", "hace 3 h"... para la lista de personajes.

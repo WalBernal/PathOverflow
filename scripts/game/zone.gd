@@ -691,6 +691,70 @@ func _draw_decals(ci: CanvasItem, c: Color) -> void:
 				var q := p + Vector2(sz, 0).rotated(d["angle"])
 				ci.draw_line(p, q, Color(c, 0.9), 2.0)
 				ci.draw_circle(q, 3.0, Color(0.8, 0.2, 0.2, 0.35))
+			"fabrica":
+				# Planchas de metal remachadas y, a veces, franjas de peligro.
+				var tile := 96.0
+				var cell := (p / tile).floor() * tile
+				ci.draw_rect(Rect2(cell + Vector2(2, 2), Vector2(tile - 4, tile - 4)), Color(c, 0.55))
+				ci.draw_rect(Rect2(cell + Vector2(2, 2), Vector2(tile - 4, tile - 4)), Color(c.lightened(0.12), 0.6), false, 1.0)
+				for corner in [Vector2(8, 8), Vector2(tile - 8, 8), Vector2(8, tile - 8), Vector2(tile - 8, tile - 8)]:
+					ci.draw_circle(cell + corner, 2.0, Color(c.lightened(0.25), 0.7))
+				if int(d["seed"]) % 4 == 0:
+					for k in 5:
+						var a := cell + Vector2(10 + k * 16, tile - 18)
+						ci.draw_colored_polygon(PackedVector2Array([a, a + Vector2(8, 0), a + Vector2(16, 10), a + Vector2(8, 10)]), Color(0.85, 0.65, 0.1, 0.18))
+			"alcantarillas":
+				if int(d["seed"]) % 3 == 0:   # rejilla
+					var g := Rect2(p - Vector2(22, 14), Vector2(44, 28))
+					ci.draw_rect(g, Color(0, 0, 0, 0.35))
+					for k in 6:
+						ci.draw_line(g.position + Vector2(4 + k * 7, 2), g.position + Vector2(4 + k * 7, 26), Color(c.lightened(0.2), 0.8), 2.0)
+				else:   # charco de datos
+					ci.draw_set_transform(p, d["angle"], Vector2(1.0, 0.45))
+					ci.draw_circle(Vector2.ZERO, sz * 0.5, Color(0.2, 0.55, 0.6, 0.18))
+					ci.draw_arc(Vector2.ZERO, sz * 0.5, 0.0, TAU, 24, Color(0.4, 0.8, 0.85, 0.15), 2.0)
+					ci.draw_set_transform(Vector2.ZERO)
+			"fosa":
+				# Restos de procesos: etiquetas <defunct> tiradas por el suelo.
+				ci.draw_set_transform(p, d["angle"] * 0.3, Vector2.ONE)
+				ci.draw_rect(Rect2(-30, -9, 60, 16), Color(c, 0.9))
+				ci.draw_string(ThemeDB.fallback_font, Vector2(-27, 4), "<defunct>" if int(d["seed"]) % 2 == 0 else "PID %d" % (int(d["seed"]) % 9000 + 100),
+					HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.75, 0.65, 0.5, 0.35))
+				ci.draw_set_transform(Vector2.ZERO)
+			"grieta":
+				# Grietas en zigzag.
+				var pts := PackedVector2Array([p])
+				var dir := Vector2.from_angle(d["angle"])
+				for k in 5:
+					pts.append(pts[-1] + dir.rotated((0.6 if k % 2 == 0 else -0.6)) * sz * 0.25)
+				ci.draw_polyline(pts, Color(0, 0, 0, 0.55), 3.0, true)
+				ci.draw_polyline(pts, Color(0.55, 0.35, 0.9, 0.12), 1.0, true)
+			"bus":
+				# Carriles de datos con flechas.
+				var dir := Vector2.from_angle(snappedf(d["angle"], PI / 2.0))
+				ci.draw_line(p, p + dir * sz * 1.5, Color(0.3, 0.55, 1.0, 0.18), 3.0)
+				for k in 3:
+					var a := p + dir * (sz * 0.3 + k * sz * 0.4)
+					ci.draw_colored_polygon(PackedVector2Array([a + dir * 8.0, a + dir.orthogonal() * 5.0, a - dir.orthogonal() * 5.0]), Color(0.4, 0.7, 1.0, 0.22))
+			"anillo":
+				# Pistas de circuito con soldaduras doradas.
+				var a := p
+				var b := a + Vector2(sz, 0).rotated(snappedf(d["angle"], PI / 4.0))
+				var m := b + Vector2(sz * 0.5, 0).rotated(snappedf(d["angle"], PI / 2.0))
+				ci.draw_polyline(PackedVector2Array([a, b, m]), Color(0.85, 0.55, 0.2, 0.22), 3.0, true)
+				ci.draw_circle(a, 4.0, Color(0.95, 0.75, 0.3, 0.3))
+				ci.draw_circle(m, 4.0, Color(0.95, 0.75, 0.3, 0.3))
+			"frio":
+				# Escarcha: cristales de seis puntas.
+				for k in 3:
+					var dir := Vector2.from_angle(d["angle"] + k * PI / 3.0)
+					ci.draw_line(p - dir * sz * 0.35, p + dir * sz * 0.35, Color(0.75, 0.9, 1.0, 0.16), 2.0)
+			"ruins":
+				# Baldosas rotas.
+				ci.draw_set_transform(p, d["angle"] * 0.2, Vector2.ONE)
+				ci.draw_rect(Rect2(-sz * 0.4, -sz * 0.3, sz * 0.8, sz * 0.6), Color(c, 0.85))
+				ci.draw_line(Vector2(-sz * 0.3, -sz * 0.3), Vector2(sz * 0.1, sz * 0.3), Color(0, 0, 0, 0.35), 2.0)
+				ci.draw_set_transform(Vector2.ZERO)
 			_:
 				ci.draw_set_transform(p, d["angle"], Vector2(1.0, 0.6))
 				ci.draw_circle(Vector2.ZERO, sz * 0.4, Color(c, 0.7))

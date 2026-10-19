@@ -84,9 +84,30 @@ No lucha por maldad, sino por un imperativo algorítmico: **nada entra, nada sal
 
 ---
 
+## El misterio de El Pepe, contado por los NPCs (implementado en los diálogos)
+
+Cada NPC sabe una pieza; el jugador las junta hablando con todos:
+
+| Quién | Pista |
+|---|---|
+| **B.O.B.** (Sandbox) | El Pepe lo programó «temporalmente» hace once años. Le dejó un mensaje: «todo está documentado». No hay documentación: hay un **pez en ASCII** `><(((º>` en los logs viejos. |
+| **Aida** | El Pepe arreglaba impresoras con un clip y tenía una regla: «Lo que funciona, no se documenta: se protege». Aida conoció al Arquitecto: «hay cosas debajo del código que es mejor no despertar» y no entiende qué era «la tapa». |
+| **Mario** | Vio a Rafa hablándole al pósit de El Pepe: «¿por qué no me lo dijiste?». |
+| **Rafa** (campamento) | Heredó el servidor; el reinicio está atascado en el **99 %** desde 2019. El Pepe le dijo: «el último uno por ciento no es tuyo, es mío». El push salió de una tarea programada; el crontab estaba cifrado y la clave, en el pósit perdido en la mudanza. |
+| **Iris** | En su bienvenida, el Arquitecto dijo: «Hay cosas debajo del código que es mejor no despertar». |
+| **Tomás** | Su ticket más viejo (2016): «el sistema hace cosas a las 3:33 de la madrugada». Lo cerró El Pepe: «Es mantenimiento. No tocar». Desde el Último Commit, a las 3:33 el pantano burbujea más. |
+| **El Fantasma del DBA** | Vio el push: una tarea dormida, firmada «admin», que se despertó, escribió sobre todo y volvió a dormir. Se llamaba **«limpieza_final»** y estaba firmada con el pez. Le cortó la conexión a mitad de una transacción: por eso es un fantasma. |
+| **Nacho** | Le compró a El Pepe una caja de discos con la etiqueta «NO FORMATEAR. NUNCA». |
+| **Rafa** (Socket Seguro) | `limpieza_final.sh` ya se ejecutó una vez (el día del Último Commit) y tiene programada otra: **«cuando init termine»**. |
+| **Clara** (con el registro de auditoría) | La llamada interna se programó hace siete años, el mes en que se jubiló El Pepe, y **no intentaba romper el sistema, sino sellarlo**. |
+
+Esto encaja con el final del Acto II: el Último Commit selló el acceso al firmware y El Pepe dejó preparado el segundo paso para cuando cayera init.
+
+Otras historias de los diálogos: Aida escribió la mitad de las nóminas en COBOL y sobrevivió a cuatro migraciones; Mario entró por una convocatoria con «fruta los viernes»; Clara fue jefa de guardias (la única alerta del día del desastre decía «todo bien»); el Sindicato cuenta cómo sus procesos se quedaron sin `wait()` de sus padres; el Recolector duda si liberar memoria es matar.
+
 ## Hilos abiertos
 
-- **El Pepe, prestador de servicios retirado**: antecesor de Rafa. ¿Su cron `limpieza_final.sh` (con un pez) es la «llamada interna programada hace años» del registro de Clara? ¿Era «admin»?
+- **El Pepe, prestador de servicios retirado**: antecesor de Rafa. ¿Era «admin»? ¿Qué pasará cuando `limpieza_final.sh` se ejecute por segunda vez?
 - **Los huérfanos**: ¿salvarlos o purgarlos? El Sindicato (PID 404) podría dar elecciones al jugador.
 - **La Red Lince**: el proveedor de internet que siempre cae en el peor momento; buen chiste recurrente para los siguientes actos.
 - **Aida y Mario** siguen en el campamento, sin conexión. Rafa prometió alcanzar al jugador «en cuanto baje la VPN».

@@ -37,7 +37,7 @@ var _dino := false
 var _dino_text := ""
 
 var _box: PanelContainer
-var _portrait: AppearancePreview
+var _portrait: CharacterPortrait
 var _name: Label
 var _text: RichTextLabel
 var _hint: Label
@@ -60,13 +60,13 @@ func _ready() -> void:
 	visible = false
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_box = PanelContainer.new()
-	_box.add_theme_stylebox_override("panel", UiStyle.panel_style())
+	UiStyle.decorate_window(_box)
 	add_child(_box)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 14)
 	_box.add_child(row)
-	_portrait = AppearancePreview.new()
-	_portrait.custom_minimum_size = Vector2(90, 120)
+	_portrait = CharacterPortrait.new()
+	_portrait.custom_minimum_size = Vector2(110, 110)
 	_portrait.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	row.add_child(_portrait)
 	var col := VBoxContainer.new()
@@ -152,6 +152,8 @@ func _show_line(step: Dictionary) -> void:
 	_portrait.visible = not npc.is_empty() and style != "console"
 	if _portrait.visible:
 		_portrait.appearance = CharacterAppearance.sanitize(npc.get("appearance", {}))
+		_portrait.ring_color = color
+		_portrait.glitch = 0.6 if style == "phone" or npc.get("terminal", false) else 0.0
 	_pitch = float(npc.get("voice", {}).get("pitch", 0.7 if style == "boss" else 1.0))
 	_rate = float(npc.get("voice", {}).get("rate", 0.9 if style == "boss" else 1.0))
 	var text: String = step.get("text", "")
@@ -217,6 +219,7 @@ func _process(delta: float) -> void:
 	_shake = maxf(0.0, _shake - delta * 1.5)
 	_black = move_toward(_black, _black_target, delta * 1.6)
 	_set_camera_offset(Vector2(_rng.randf_range(-1, 1), _rng.randf_range(-1, 1)) * _shake * 14.0)
+	_portrait.talking = _box.visible and (_shown < _total or (_narrating and DisplayServer.tts_is_speaking()))
 	if _box.visible and _shown < _total:
 		var before := int(_shown)
 		_shown = minf(_total, _shown + _cps * delta)
