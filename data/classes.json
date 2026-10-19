@@ -7,7 +7,7 @@
       "starter_weapon": "hacha_de_lenador",
       "starter_skills": [
         "barrido",
-        "teleport_tcp"
+        "firewall_personal"
       ],
       "description": "Recién egresado y ya es quien arregla todo a golpes: reinicia, desconecta, vuelve a conectar. Y si no, golpe seco.",
       "base_attributes": {
@@ -209,8 +209,8 @@
       "name": "Tester QA",
       "starter_weapon": "espada_oxidada",
       "starter_skills": [
-        "barrido",
-        "rafaga_de_paquetes"
+        "deploy_continuo",
+        "hiperthreading"
       ],
       "description": "Su trabajo es romper las cosas antes que los usuarios. Lo hace de cerca, con precisión y con un reporte de 40 páginas.",
       "base_attributes": {
@@ -897,10 +897,10 @@
       "name": "Ingeniero DevOps",
       "starter_weapon": "maza_de_depuracion",
       "starter_skills": [
-        "fork_bomb",
-        "barrido"
+        "torreta_ci",
+        "drones_vigilancia"
       ],
-      "description": "Despliega fuego y servidores por igual. Su lema: si pasa el pipeline, pasa en el mundo.",
+      "description": "Automatiza todo, incluso el combate: arma torretas con piezas de servidores viejos, suelta drones y deja que los robots hagan el trabajo sucio. Su lema: si se puede automatizar, que pelee solo.",
       "base_attributes": {
         "strength": 23,
         "dexterity": 14,
@@ -959,16 +959,21 @@
         },
         {
           "id": "hierofante_docs",
-          "name": "Arquitecto Cloud",
-          "description": "Levanta servidores en cualquier parte: sus torretas trabajan por él.",
+          "name": "Ingeniero en Robótica",
+          "description": "Construye, programa y suelta robots: más torretas a la vez y un robot de compañía que nunca se va, con su propio láser de rastreo y un pulso EMP.",
           "passives": [
             {
-              "name": "README sagrado",
+              "name": "Ensamble en serie",
               "mods": [
                 {
                   "stat": "extra_devices",
                   "type": "flat",
                   "value": 2
+                },
+                {
+                  "stat": "extra_minions",
+                  "type": "flat",
+                  "value": 1
                 },
                 {
                   "stat": "damage",
@@ -981,25 +986,33 @@
               ]
             },
             {
-              "name": "Comentarios en el código",
+              "name": "Robot de compañía R-2PL",
               "mods": [
                 {
-                  "stat": "mana",
-                  "type": "more",
-                  "value": 30
+                  "stat": "companion_robot",
+                  "type": "flat",
+                  "value": 1
                 },
                 {
-                  "stat": "energy_shield",
+                  "stat": "minion_damage",
                   "type": "increased",
                   "value": 40
                 }
               ]
             },
             {
-              "name": "Wiki desactualizada",
+              "name": "Sensores de proximidad",
               "mods": [
                 {
-                  "stat": "area_of_effect",
+                  "stat": "damage",
+                  "type": "more",
+                  "value": 20,
+                  "tags": [
+                    "projectile"
+                  ]
+                },
+                {
+                  "stat": "crit_chance",
                   "type": "increased",
                   "value": 30
                 },
@@ -1058,7 +1071,7 @@
           ]
         }
       ],
-      "playstyle": "Hechizos de área con armadura y torretas. Quema todo lo que no pasa las pruebas. Que es todo.",
+      "playstyle": "Robótica: torretas que disparan solas, drones y proyectiles que rastrean al enemigo más cercano. Despliega, detecta y mantén la distancia mientras las máquinas trabajan.",
       "difficulty": 2,
       "color": "b04ad9"
     },

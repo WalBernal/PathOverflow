@@ -225,7 +225,7 @@ func _process(delta: float) -> void:
 	_shake = maxf(0.0, _shake - delta * 1.5)
 	_black = move_toward(_black, _black_target, delta * 1.6)
 	_set_camera_offset(Vector2(_rng.randf_range(-1, 1), _rng.randf_range(-1, 1)) * _shake * 14.0)
-	_portrait.talking = _box.visible and (_shown < _total or (_narrating and DisplayServer.tts_is_speaking()))
+	_portrait.talking = _box.visible and (_shown < _total or (_narrating and DialogueBox.voice_busy()))
 	if _box.visible and _shown < _total:
 		var before := int(_shown)
 		_shown = minf(_total, _shown + _cps * delta)
@@ -240,7 +240,7 @@ func _process(delta: float) -> void:
 	elif _dino or (_box.visible and _shown >= _total):
 		# Lectura automática: espera a la voz (si habla) y luego el tiempo de lectura.
 		_voice_age += delta
-		if _narrating and (_voice_age < DialogueBox.VOICE_GRACE or DisplayServer.tts_is_speaking()):
+		if _narrating and (_voice_age < DialogueBox.VOICE_GRACE or DialogueBox.voice_busy()):
 			_read_left = maxf(_read_left, 0.6)
 		else:
 			_narrating = false

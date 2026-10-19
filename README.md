@@ -69,7 +69,9 @@ La versión informática de las gemas de PoE:
 | | | | Alto Voltaje (DDR5) | más daño elemental de hechizos |
 | | | | Swap Vampírica (DDR3) | robo de vida |
 
-Se definen en `data/skills/skills.json` y `data/skills/ram_modules.json`. Cada clase empieza con dos placas (`starter_skills` en `classes.json`).
+Se definen en `data/skills/skills.json` y `data/skills/ram_modules.json`. Cada clase empieza con dos placas (`starter_skills` en `classes.json`); ninguna empieza con el mismo par que otra (lo comprueban las pruebas).
+
+- **Ingeniero DevOps (robótica)**: empieza con la **Torreta de Integración Continua** (se despliega sola, sin RAM: `deploy` en `skills.json`, y dispara proyectiles teledirigidos) y los **Drones de Vigilancia**. Su ascendencia **Ingeniero en Robótica** da +2 torretas/trampas a la vez, +1 esbirro y el **robot de compañía R-2PL** (`CompanionRobot`): te sigue siempre y tiene su propio kit, **Láser de rastreo** (al enemigo más cercano) y **Pulso EMP** (aturde a lo que se te acerque). Las mejoras de esbirros le afectan.
 
 **Habilidades inspiradas en League of Legends** (sencillas de leer y de esquivar):
 
@@ -244,7 +246,7 @@ El personaje es un recién egresado que se enfrenta al mundo laboral: cada clase
 | Desarrolladora Frontend | DES | Ingeniera de Rendimiento, Ingeniera de Depuración, Diseñadora UX/UI |
 | Ingeniera de Prompts | DES/INT | Especialista Red Team, Ingeniera de IA, Analista de Malware |
 | Científico de Datos | INT | Ingeniero de Machine Learning, Analista de Big Data, Orquestador de Agentes IA |
-| Ingeniero DevOps | INT/FUE | Ingeniero de Confiabilidad (SRE), Arquitecto Cloud, Release Manager |
+| Ingeniero DevOps | INT/FUE | Ingeniero de Confiabilidad (SRE), Ingeniero en Robótica, Release Manager |
 | Desarrollador Full Stack | las tres | Arquitecto de Soluciones, Líder Técnico (Tech Lead), CTO de Startup |
 
 (Los ids internos siguen siendo los de antes —`guerrero`, `duelista`...— para no romper los guardados.)

@@ -28,6 +28,7 @@ func _run() -> void:
 	await _capture_appearances()
 	await _capture_prologue()
 	await _capture_game()
+	await _capture_robotics()
 	get_tree().quit()
 
 
@@ -174,6 +175,30 @@ func _capture_game() -> void:
 	world.set("_since_save", -9999.0)
 	await _wait(3.5)
 	_save("09_acto2_zona")
+	world.set("_since_save", -9999.0)
+
+
+## Ingeniero DevOps con la ascendencia de robótica: torreta, drones y robot de compañía.
+func _capture_robotics() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Robótica", &"templario", CharacterAppearance.default(), false)
+	c.flags["zone"] = "zona1"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 25
+	c.set_ascendancy(&"hierofante_docs")
+	c.allocate_ascendancy_node(1)
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.5)
+	var skills: Node = world.get("skills")
+	var player: Node = world.get("player")
+	skills.call("_deploy", skills.call("profile", 0), player.global_position + Vector2(120, 0))
+	skills.call("_execute", skills.call("profile", 1), player.global_position)
+	await _wait(2.5)
+	_save("10_robotica")
 	world.set("_since_save", -9999.0)
 
 

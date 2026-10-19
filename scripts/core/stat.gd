@@ -48,6 +48,8 @@ const EXTRA_PROJECTILES := &"extra_projectiles"
 const EXTRA_CHAINS := &"extra_chains"
 const EXTRA_MINIONS := &"extra_minions"
 const EXTRA_DEVICES := &"extra_devices"
+## Robot de compañía (ascendencia Ingeniero en Robótica): 1 = lo tiene.
+const COMPANION_ROBOT := &"companion_robot"
 
 # --- Tags (condiciones de los modificadores) ---
 const TAG_ATTACK := &"attack"
@@ -103,6 +105,7 @@ const NAMES := {
 	EXTRA_CHAINS: "Encadenamientos adicionales",
 	EXTRA_MINIONS: "Esbirros adicionales",
 	EXTRA_DEVICES: "Trampas, minas y torretas adicionales a la vez",
+	COMPANION_ROBOT: "Robot de compañía (Láser de rastreo y Pulso EMP)",
 }
 
 ## Los aumentos/más de los padres también aplican al hijo:

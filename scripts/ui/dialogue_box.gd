@@ -77,11 +77,14 @@ static func voice_id() -> String:
 	return _voice_cache
 
 
-## Habla, si la voz está libre. Devuelve false si sigue hablando la línea anterior.
-## NUNCA se corta una voz a medias: en Windows, tts_stop() con SAPI hablando puede
-## bloquear el juego entero (lo registró FreezeWatch: se colgaba justo tras
-## «voz: callar»). Si el jugador adelanta, esa línea sale sin voz (con pitidos).
+## Habla. En Windows la voz va en un proceso aparte (NarratorVoice): corta la
+## frase anterior y se puede callar sin riesgo. En otros sistemas se usa la voz
+## de Godot, pero sin cortarla nunca (tts_stop() con SAPI colgaba el juego): si
+## sigue hablando, devuelve false y esa línea va sin voz.
 static func speak(text: String, pitch: float, rate: float) -> bool:
+	if NarratorVoice.supported():
+		FreezeWatch.mark("voz: hablar (%d letras)" % text.length())
+		return NarratorVoice.speak(text, pitch, rate)
 	if voice_id() == "" or DisplayServer.tts_is_speaking():
 		return false
 	FreezeWatch.mark("voz: hablar (%d letras)" % text.length())
@@ -89,10 +92,17 @@ static func speak(text: String, pitch: float, rate: float) -> bool:
 	return true
 
 
-## Ya no se corta la voz (ver speak): termina sola su frase.
+## Calla la voz (solo con el ayudante; la de Godot termina sola su frase).
 static func stop_speaking() -> void:
-	pass
+	if NarratorVoice.supported():
+		NarratorVoice.stop()
 
+
+## ¿Sigue hablando el narrador?
+static func voice_busy() -> bool:
+	if NarratorVoice.supported():
+		return NarratorVoice.is_speaking()
+	return voice_id() != "" and DisplayServer.tts_is_speaking()
 
 static func narrator_enabled() -> bool:
 	return narrator_available() and bool(GameSettings.get_value("dialogue", "narrator", true))
@@ -295,13 +305,13 @@ func _show_options() -> void:
 func _process(delta: float) -> void:
 	if not visible:
 		return
-	_portrait.talking = is_typing() or (_narrating and DisplayServer.tts_is_speaking())
+	_portrait.talking = is_typing() or (_narrating and voice_busy())
 	if _shown >= _total:
 		_show_options()
 		return
 	if _narrating:
 		_voice_age += delta
-		if _voice_age > VOICE_GRACE and not DisplayServer.tts_is_speaking():
+		if _voice_age > VOICE_GRACE and not voice_busy():
 			_narrating = false   # la voz terminó: el texto la alcanza de golpe
 			_finish_text()
 			return

@@ -785,6 +785,47 @@
         "shape": "drones",
         "color": "e8d070"
       }
+    },
+    {
+      "id": "torreta_ci",
+      "name": "Torreta de Integración Continua",
+      "kind": "homing",
+      "damage_type": "lightning",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "projectile",
+        "lightning",
+        "elemental",
+        "totem",
+        "duration"
+      ],
+      "lol": "Heimerdinger Q (torreta)",
+      "description": "Despliegas una torreta armada con piezas de servidor que dispara sola proyectiles teledirigidos al enemigo más cercano. Tú programas; ella pelea.",
+      "spell": {
+        "base_damage": [
+          7,
+          13
+        ],
+        "damage_growth": 0.16,
+        "cast_time": 0.7,
+        "crit": 5.0
+      },
+      "projectiles": 2,
+      "spread_degrees": 30,
+      "projectile_speed": 600,
+      "range": 900,
+      "seek_range": 560,
+      "turn_rate": 7.5,
+      "deploy": "totem",
+      "totem_duration": 10.0,
+      "mana_cost": 14,
+      "mana_per_level": 0.5,
+      "cooldown": 1.0,
+      "icon": {
+        "shape": "turret",
+        "color": "b04ad9"
+      }
     }
   ]
 }

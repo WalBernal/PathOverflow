@@ -61,6 +61,7 @@ func _initialize() -> void:
 	_test_economy_and_stash()
 	_test_appearance_and_dialogue_flow()
 	_test_prologue_data()
+	_test_class_kits_and_robotics()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
 	else:
@@ -1528,3 +1529,38 @@ func _test_prologue_data() -> void:
 	# El Inge Pepe ya no es «prestador de servicios».
 	for path in ["res://data/npcs.json", "res://data/cutscenes.json"]:
 		_check(not FileAccess.get_file_as_string(path).contains("restador de servicios retirado"), "%s: Pepe ya no es prestador de servicios" % path)
+
+## Cada clase empieza con su par de habilidades (pueden compartir una, no las dos)
+## y el Ingeniero DevOps es de robótica: torreta autónoma, drones y robot de compañía.
+func _test_class_kits_and_robotics() -> void:
+	var seen := {}
+	for c in _classes:
+		var pair: Array = c["starter_skills"].duplicate()
+		pair.sort()
+		var key := ",".join(pair)
+		_check(not seen.has(key), "%s empieza con las mismas habilidades que %s" % [c["id"], seen.get(key, "")])
+		seen[key] = c["id"]
+		for id in pair:
+			_check(_db.skills.skills.has(id), "%s: habilidad inicial desconocida %s" % [c["id"], id])
+	var devops: Dictionary = {}
+	for c in _classes:
+		if c["id"] == "templario":
+			devops = c
+	_check(devops["starter_skills"][0] == "torreta_ci", "el DevOps empieza con la torreta")
+	var c := CharacterData.new(devops, _tree)
+	var turret := SkillCalc.compute(Motherboard.new(_db.skills.skills["torreta_ci"], 1, []), c)
+	_check(turret["deploy"] == "totem" and turret["totem_duration"] > 0.0 and turret["kind"] == "homing", "la torreta se despliega sola y rastrea")
+	var robotics: Dictionary = {}
+	for a in devops["ascendancies"]:
+		if a["name"] == "Ingeniero en Robótica":
+			robotics = a
+	_check(not robotics.is_empty(), "ascendencia de robótica")
+	var grants := false
+	for passive in robotics.get("passives", []):
+		for m in passive["mods"]:
+			grants = grants or m["stat"] == "companion_robot"
+	_check(grants, "la robótica da un robot de compañía")
+	var laser := SkillCalc.compute(Motherboard.new(CompanionRobot.LASER, 5, []), c)
+	var emp := SkillCalc.compute(Motherboard.new(CompanionRobot.EMP, 5, []), c)
+	_check(laser["max_damage"] > 0.0 and laser["kind"] == "homing", "láser de rastreo del robot")
+	_check(emp["stun"] > 0.0 and emp["radius"] > 0.0, "pulso EMP del robot")

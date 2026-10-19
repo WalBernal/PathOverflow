@@ -117,5 +117,13 @@ static func draw(ci: CanvasItem, rect: Rect2, skill_def: Dictionary, dimmed := f
 				var p := c + Vector2.from_angle(-PI / 2.0 + TAU * k / 3.0) * r * 0.6
 				ci.draw_rect(Rect2(p - Vector2(r * 0.25, r * 0.1), Vector2(r * 0.5, r * 0.2)), Color("8a8a96"))
 				ci.draw_circle(p, r * 0.1, color)
+		"turret":
+			# Torreta: trípode, cuerpo y cañón con un sensor.
+			for s in [-1.0, 0.0, 1.0]:
+				ci.draw_line(c + Vector2(0, r * 0.2), c + Vector2(s * r * 0.8, r), Color("8a8a96"), 2.0, true)
+			ci.draw_rect(Rect2(c + Vector2(-r * 0.5, -r * 0.4), Vector2(r, r * 0.65)), color)
+			ci.draw_rect(Rect2(c + Vector2(r * 0.4, -r * 0.25), Vector2(r * 0.6, r * 0.2)), Color("3a3f4a"))
+			ci.draw_circle(c + Vector2(-r * 0.15, -r * 0.1), r * 0.14, Color("7fd0e8"))
+			ci.draw_arc(c + Vector2(-r * 0.15, -r * 0.1), r * 0.6, -0.6, 0.6, 8, Color("7fd0e8", 0.5), 1.5, true)
 		_:
 			ci.draw_circle(c, r * 0.5, color)

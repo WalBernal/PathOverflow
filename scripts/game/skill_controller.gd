@@ -41,6 +41,11 @@ var _devices: Array[Dictionary] = []
 var _minions: Array[Dictionary] = []      # esbirros (Proceso Hijo)
 var _clouds: Array[Dictionary] = []       # charcos de daño degenerativo (Fuga de Memoria)
 var _drones: Array[Dictionary] = []       # drones que orbitan y disparan (Drones de Vigilancia)
+## Robot de compañía (ascendencia Ingeniero en Robótica): {pos, laser, emp, bob}.
+var _companion: Dictionary = {}
+var _companion_laser: Dictionary = {}
+var _companion_emp: Dictionary = {}
+
 
 const DEVICE_RULES := {
 	"trap": {"range": 450.0, "armed": 0.4, "life": 16.0, "trigger": 50.0, "max": 3},
@@ -70,6 +75,12 @@ func refresh_profiles() -> void:
 	_profiles.clear()
 	for i in ACTIONS.size():
 		_profiles.append(character.skill_profile(i))
+	_companion_laser = {}
+	_companion_emp = {}
+	if character.stats.get_value(Stat.COMPANION_ROBOT) > 0.0:
+		var lvl := clampi(character.level - 2, 1, Motherboard.MAX_LEVEL)
+		_companion_laser = SkillCalc.compute(Motherboard.new(CompanionRobot.LASER, lvl, []), character)
+		_companion_emp = SkillCalc.compute(Motherboard.new(CompanionRobot.EMP, lvl, []), character)
 
 
 func profile(index: int) -> Dictionary:
@@ -100,6 +111,7 @@ func _physics_process(delta: float) -> void:
 	_update_minions(delta)
 	_update_clouds(delta)
 	_update_drones(delta)
+	_update_companion(delta)
 	_update_effects(delta)
 	queue_redraw()
 
@@ -437,6 +449,57 @@ func _drone_pos(d: Dictionary) -> Vector2:
 	return player.global_position + Vector2.from_angle(d["angle"]) * Vector2(55, 34) + Vector2(0, -28)
 
 
+# --- Robot de compañía ---
+
+## Sigue al jugador por encima del hombro; dispara su láser al enemigo más
+## cercano y, si alguno se acerca demasiado, suelta un pulso EMP que aturde.
+func _update_companion(delta: float) -> void:
+	if _companion_laser.is_empty() or not player.is_alive():
+		_companion = {}
+		return
+	if _companion.is_empty():
+		_companion = {"pos": player.global_position + Vector2(-40, -40), "laser": 0.6, "emp": 3.0, "bob": 0.0}
+		_effects.append({"type": "ring", "pos": _companion["pos"], "radius": 30.0, "time": 0.0, "duration": 0.4, "color": Color("7fd0e8")})
+	var goal := player.global_position + Vector2(-44, -46)
+	_companion["pos"] = (_companion["pos"] as Vector2).lerp(goal, 1.0 - exp(-4.0 * delta))
+	_companion["bob"] += delta
+	_companion["laser"] -= delta
+	_companion["emp"] -= delta
+	var pos: Vector2 = _companion["pos"]
+	if _companion["laser"] <= 0.0:
+		var t := enemies.nearest_index(pos, float(_companion_laser["seek_range"]))
+		if t != -1:
+			_execute(_companion_laser, enemies.positions[t], pos)
+			_companion["laser"] = CompanionRobot.LASER_INTERVAL
+		else:
+			_companion["laser"] = 0.2
+	if _companion["emp"] <= 0.0:
+		if enemies.nearest_index(player.global_position, float(_companion_emp["radius"])) != -1:
+			_execute(_companion_emp, player.global_position, player.global_position)
+			_companion["emp"] = CompanionRobot.EMP_INTERVAL
+			Sfx.play("lightning", -6.0, 0.8)
+		else:
+			_companion["emp"] = 0.4
+
+
+func _draw_companion() -> void:
+	if _companion.is_empty():
+		return
+	var p: Vector2 = _companion["pos"] + Vector2(0, sin(_companion["bob"] * 3.0) * 3.0)
+	draw_circle(p + Vector2(0, 40), 7.0, Color(0, 0, 0, 0.25))
+	for s in [-1.0, 1.0]:   # propulsores
+		draw_circle(p + Vector2(s * 7, 9), 3.0 + sin(_companion["bob"] * 20.0 + s) * 0.8, Color(0.5, 0.85, 1.0, 0.5))
+	draw_rect(Rect2(p - Vector2(11, 8), Vector2(22, 16)), Color("6e7480"))
+	draw_rect(Rect2(p - Vector2(11, 8), Vector2(22, 16)), Color("3a3f4a"), false, 1.5)
+	draw_rect(Rect2(p - Vector2(8, 5), Vector2(16, 7)), Color("15181e"))
+	var eye := 0.6 + 0.4 * sin(_companion["bob"] * 4.0)
+	draw_rect(Rect2(p - Vector2(5, 3), Vector2(10, 3)), Color(0.4, 0.95, 1.0, eye))
+	draw_line(p + Vector2(0, -8), p + Vector2(0, -14), Color("3a3f4a"), 1.5)
+	draw_circle(p + Vector2(0, -15), 2.0, Color("ff5a4a") if _companion["emp"] < 1.0 else Color("e8d070"))
+	var font := ThemeDB.fallback_font
+	draw_string(font, p + Vector2(-20, 22), "R-2PL", HORIZONTAL_ALIGNMENT_CENTER, 40, 9, Color(0.75, 0.9, 1.0, 0.7))
+
+
 # --- Charcos degenerativos ---
 
 func _update_clouds(delta: float) -> void:
@@ -570,6 +633,7 @@ func _draw() -> void:
 	_draw_clouds()
 	_draw_devices()
 	_draw_minions()
+	_draw_companion()
 	for d in _drones:
 		var dp := _drone_pos(d)
 		draw_circle(dp + Vector2(0, 30), 5.0, Color(0, 0, 0, 0.25))

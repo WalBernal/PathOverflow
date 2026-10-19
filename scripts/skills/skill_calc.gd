@@ -64,8 +64,9 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 	var repeats := 0
 	var area_mult := 1.0
 	var extra_chains := 0
-	var deploy := ""
-	var totem_duration := 0.0
+	# Algunas habilidades se despliegan solas (p. ej. la Torreta de Integración Continua).
+	var deploy: String = skill.get("deploy", "")
+	var totem_duration: float = float(skill.get("totem_duration", 8.0)) if deploy != "" else 0.0
 	for ram: RamModule in board.active_supports():
 		extra_chains += int(ram.special("extra_chains"))
 		# Solo cuenta el primer módulo de despliegue (una trampa no puede ser también una torreta).

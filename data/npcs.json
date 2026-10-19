@@ -419,7 +419,7 @@
           "next": "pepe2"
         },
         "pepe2": {
-          "text": "Era buena gente, ojo. Te arreglaba la impresora con un clip y te contaba de pesca mientras compilaba. Y no, él no hizo ese commit. Lo hizo alguien que nadie conoce, firmado como <admin>, sin descripción. Aquí todos somos admin, así que eso no dice nada. Pepe jamás subió nada sin descripción.",
+          "text": "Era buena gente, ojo. Te arreglaba la impresora con un clip y te contaba de pesca mientras compilaba. Tenía una regla: «Lo que funciona, no se documenta: se protege». El commit lo firmó <admin>, sin descripción... y como fue el jefe antes que Rafa y le entregó todo así, la culpa es suya. Así funciona esto.",
           "options": [
             {
               "text": "Lo tendré en cuenta.",
@@ -629,7 +629,7 @@
           ]
         },
         "lore3": {
-          "text": "Yo..... Tres noches..... Alguien de adentro..... con permisos de admin..... sin descripción..... Y nadie sabe quién..... Todos miran a Pepe..... porque me entregó todo así..... pero no fue él......",
+          "text": "Yo..... Tres noches..... Alguien de adentro..... con permisos de admin..... sin descripción..... Y todos miran a Pepe..... porque fue mi antecesor..... y me entregó todo así......",
           "options": [
             {
               "text": "Siempre la mudanza.",
@@ -692,7 +692,7 @@
           "next": "constancia2"
         },
         "constancia2": {
-          "text": "Y no culpes a Pepe de esto..... todos lo hacen..... porque me entregó todo así..... pero yo vi el commit..... <admin>..... sin descripción..... Pepe ponía descripción hasta en los commits de una línea..... con faltas de ortografía..... pero la ponía......",
+          "text": "Y todos culpan a Pepe..... porque fue mi antecesor..... y me entregó todo así..... El commit dice <admin>..... sin descripción..... y aquí todos somos admin......",
           "options": [
             {
               "text": "Entonces, ¿quién fue?",
@@ -1156,10 +1156,10 @@
           ]
         },
         "vio3": {
-          "text": "La que cerró puertas se llamaba «limpieza_final» y estaba firmada con un pez: ><(((º>  La de Pepe. Todos lo culpan por eso. Pero esa tarea no escribió nada... solo selló lo que el push dejó abierto. El push vino de otra parte.",
+          "text": "La que cerró puertas se llamaba «limpieza_final» y estaba firmada con un pez: ><(((º>  La de Pepe. Por eso todos lo culpan: fue el jefe antes que Rafa, y todo lo de este servidor lleva su firma.",
           "options": [
             {
-              "text": "Entonces Pepe no fue.",
+              "text": "Siempre es culpa del anterior.",
               "next": "hola"
             }
           ]
@@ -1275,7 +1275,7 @@
           ]
         },
         "pepe": {
-          "text": "Miré el crontab..... hay una tarea del Inge Pepe..... programada hace años..... se llama «limpieza_final.sh»..... No tiene comentarios..... Solo un emoji de pez..... Todos dicen que es la prueba de que fue él..... yo ya no sé......",
+          "text": "Miré el crontab..... hay una tarea del Inge Pepe..... programada hace años..... se llama «limpieza_final.sh»..... No tiene comentarios..... Solo un emoji de pez..... Todos dicen que es la prueba de que fue él..... Fue mi antecesor..... así que todo apunta a él......",
           "next": "pepe2"
         },
         "pepe2": {
@@ -1454,7 +1454,7 @@
           "next": "auditoria2"
         },
         "auditoria2": {
-          "text": "Y hay algo más: la llamada no intentaba romper el sistema. Intentaba sellarlo. Como cuando cierras una escotilla con alguien adentro... o con algo adentro. Y eso no cuadra con alguien que quisiera romper todo. Si Pepe hizo algo, fue cerrar la escotilla. Lo que no sé es quién la abrió.",
+          "text": "Y hay algo más: la llamada no intentaba romper el sistema. Intentaba sellarlo. Como cuando cierras una escotilla con alguien adentro... o con algo adentro. Si fue Pepe, sabía algo que nosotros no.",
           "options": [
             {
               "text": "Lo averiguaremos juntos.",
