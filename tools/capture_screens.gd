@@ -29,6 +29,7 @@ func _run() -> void:
 	await _capture_prologue()
 	await _capture_game()
 	await _capture_robotics()
+	await _capture_act3()
 	get_tree().quit()
 
 
@@ -199,6 +200,52 @@ func _capture_robotics() -> void:
 	skills.call("_execute", skills.call("profile", 1), player.global_position)
 	await _wait(2.5)
 	_save("10_robotica")
+	world.set("_since_save", -9999.0)
+
+
+## Acto III: el Puerto JTAG con M. Páez y Eugenio, combate en la Oblea y el jefe.
+func _capture_act3() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Silicio", &"hechicero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "puerto_jtag"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.flags["act2_complete"] = true
+	c.flags["llegada_silicio_vista"] = true
+	c.level = 30
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(2.5)
+	_save("11_puerto_jtag")
+	for npc in world.get("zone").get("npcs"):
+		if npc["id"] == "m_paez":
+			world.get("player").global_position = Vector2(npc["position"][0], npc["position"][1] + 60.0)
+			world.call("_on_npc_interacted", npc)
+	await _wait(2.2)
+	_save("12_dialogo_paez")
+	world.get("ui").get("dialogue_box").call("close")
+	world.call("travel_to", "oblea", "from_jtag")
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var em: Node = world.get("enemies")
+	em.call("clear_all")
+	var p: Vector2 = world.get("player").global_position
+	for t in [["rootkit", Vector2(420, -120)], ["centinela_bios", Vector2(520, 160)], ["gusano_firmware", Vector2(380, 40)],
+			["electromigracion", Vector2(330, -220)], ["condensador", Vector2(240, 120)]]:
+		em.call("spawn", p + t[1], Rarity.Enemy.NORMAL, em.call("type_index_of", t[0]))
+	world.get("player").set("invulnerable", true)
+	await _wait(4.0)
+	_save("13_combate_silicio")
+	world.call("travel_to", "camara_flash", "from_sector")
+	world.set("_since_save", -9999.0)
+	await _wait(2.0)
+	_save("14_camara_entrada")
+	world.get("ui").get("cutscene").call("_finish")
+	world.get("player").global_position += Vector2(700, 0)
+	await _wait(5.0)
+	_save("15_jefe_fw_update")
 	world.set("_since_save", -9999.0)
 
 

@@ -39,7 +39,7 @@ func _ready() -> void:
 
 ## Reproduce un efecto. `volume` en dB relativos; `pitch` con una pequeña variación.
 func play_sfx(sfx_name: String, volume := 0.0, pitch := 1.0) -> void:
-	if not Sfx.sfx_enabled():
+	if _voices.is_empty() or not Sfx.sfx_enabled():   # aún sin iniciar (pruebas)
 		return
 	var now := Time.get_ticks_msec() / 1000.0
 	if now - float(_last_played.get(sfx_name, -1.0)) < MIN_GAP:

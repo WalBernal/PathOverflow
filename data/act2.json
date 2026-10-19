@@ -126,7 +126,10 @@
           "portal": true
         }
       ],
-      "stash": [790, 960],
+      "stash": [
+        790,
+        960
+      ],
       "waypoint": [
         950,
         1000
@@ -146,7 +149,13 @@
             540
           ]
         },
-        {"id": "nacho", "pos": [1380, 980]},
+        {
+          "id": "nacho",
+          "pos": [
+            1380,
+            980
+          ]
+        },
         {
           "id": "recolector",
           "pos": [
@@ -832,6 +841,10 @@
         "from_bus": [
           200,
           1200
+        ],
+        "from_controladora": [
+          2150,
+          1200
         ]
       },
       "cutscene_on_enter": {
@@ -864,11 +877,10 @@
             2300,
             1200
           ],
-          "target": "",
-          "entry": "",
+          "target": "controladora_bus",
+          "entry": "from_anillo",
           "label": "Controladora de bus",
-          "requires_flag": "act2_complete",
-          "message": "La controladora de bus lleva al Silicio Profundo... (el Acto III está en desarrollo)."
+          "requires_flag": "act2_complete"
         }
       ],
       "props": [

@@ -38,7 +38,7 @@ const EDGE_MAX := 230.0
 const OBSTACLE_RADIUS := {
 	"rock": 34.0, "crate": 26.0, "monitor": 24.0, "cable_tree": 32.0, "pillar": 34.0, "rubble": 30.0,
 	"puddle": 46.0, "dead_tree": 28.0, "tomb": 24.0, "rack": 32.0, "cable_coil": 26.0,
-	"piston": 30.0, "heat_sink": 40.0, "barrel": 22.0, "ice_block": 30.0,
+	"piston": 30.0, "heat_sink": 40.0, "barrel": 22.0, "ice_block": 30.0, "capacitor": 24.0, "chip_die": 34.0,
 }
 const CHALLENGE_RADIUS := 60.0
 ## Radio de la "arena" de una prueba de estrés activa.
@@ -66,6 +66,11 @@ const STYLES := {
 	"bus": {"ground": "10141c", "decal": "1a2230", "edge": "void", "outside": "04060a"},
 	"anillo": {"ground": "1e1210", "decal": "2e1a14", "edge": "lava", "outside": "200806"},
 	"frio": {"ground": "141c24", "decal": "1e2c38", "edge": "water", "outside": "08101a"},
+	# Acto III: el Silicio Profundo.
+	"silicio": {"ground": "141a22", "decal": "203040", "edge": "void", "outside": "04060a"},
+	"bios": {"ground": "0e1a3c", "decal": "1a2c60", "edge": "racks", "outside": "040818"},
+	"rom": {"ground": "1a1428", "decal": "2c2244", "edge": "cliff", "outside": "0a0612"},
+	"flash": {"ground": "1e1418", "decal": "321c26", "edge": "lava", "outside": "1c0606"},
 }
 const PHOSPHOR := Color("3cff6a")
 const TERMINAL_LINES := [
@@ -749,6 +754,32 @@ func _draw_decals(ci: CanvasItem, c: Color) -> void:
 				for k in 3:
 					var dir := Vector2.from_angle(d["angle"] + k * PI / 3.0)
 					ci.draw_line(p - dir * sz * 0.35, p + dir * sz * 0.35, Color(0.75, 0.9, 1.0, 0.16), 2.0)
+			"silicio":
+				# Oblea: dados de silicio en cuadrícula con pistas doradas.
+				var tile := 72.0
+				var cell := (p / tile).floor() * tile
+				ci.draw_rect(Rect2(cell + Vector2(3, 3), Vector2(tile - 6, tile - 6)), Color(c, 0.6), false, 1.0)
+				if int(d["seed"]) % 3 == 0:
+					ci.draw_line(cell + Vector2(8, tile * 0.5), cell + Vector2(tile - 8, tile * 0.5), Color(0.85, 0.65, 0.25, 0.22), 2.0)
+					ci.draw_circle(cell + Vector2(tile - 8, tile * 0.5), 3.0, Color(0.95, 0.75, 0.3, 0.3))
+			"bios":
+				# Pantalla de configuración del BIOS: renglones de texto y cuadrícula.
+				var tile := 64.0
+				var cell := (p / tile).floor() * tile
+				ci.draw_rect(Rect2(cell, Vector2(tile, tile)), Color(c, 0.5), false, 1.0)
+				var words := ["Boot Order", "Secure Boot [ON]", "SATA Mode", "CPU Ratio", "F10: Save", "Fan: Auto"]
+				ci.draw_string(ThemeDB.fallback_font, cell + Vector2(6, 20), words[int(d["seed"]) % words.size()],
+					HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.85, 0.9, 1.0, 0.16))
+			"rom":
+				# Cristales de la ROM: rombos de solo lectura.
+				var s := sz * 0.35
+				ci.draw_colored_polygon(PackedVector2Array([p + Vector2(0, -s), p + Vector2(s * 0.6, 0), p + Vector2(0, s), p + Vector2(-s * 0.6, 0)]), Color(c, 0.75))
+				ci.draw_line(p + Vector2(0, -s), p + Vector2(0, s), Color(0.7, 0.55, 1.0, 0.18), 1.0)
+			"flash":
+				# Celdas de memoria flash: barras de progreso a medio escribir.
+				var w := sz * 0.9
+				ci.draw_rect(Rect2(p - Vector2(w / 2.0, 4), Vector2(w, 8)), Color(c, 0.9))
+				ci.draw_rect(Rect2(p - Vector2(w / 2.0, 4), Vector2(w * (0.3 + 0.69 * fmod(d["seed"] * 0.37, 1.0)), 8)), Color(0.9, 0.3, 0.25, 0.25))
 			"ruins":
 				# Baldosas rotas.
 				ci.draw_set_transform(p, d["angle"] * 0.2, Vector2.ONE)
@@ -1058,6 +1089,23 @@ func _draw_obstacle(o: Dictionary) -> void:
 			draw_line(p + Vector2(-r * 0.8, -r * 0.4), p + Vector2(r * 0.8, -r * 0.4), Color("2a3a2a"), 2.0)
 			draw_line(p + Vector2(-r * 0.8, r * 0.3), p + Vector2(r * 0.8, r * 0.3), Color("2a3a2a"), 2.0)
 			draw_string(ThemeDB.fallback_font, p + Vector2(-r * 0.7, 4), "0xFF", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("9ad06a"))
+		"capacitor":
+			# Condensador electrolítico (cobertura contra los orbes).
+			draw_rect(Rect2(p - Vector2(r * 0.7, r), Vector2(r * 1.4, r * 1.8)), Color("2a4a8a"))
+			draw_rect(Rect2(p - Vector2(r * 0.7, r), Vector2(r * 0.35, r * 1.8)), Color("c8c8d0"))
+			draw_set_transform(p + Vector2(0, -r), 0.0, Vector2(1.0, 0.35))
+			draw_circle(Vector2.ZERO, r * 0.7, Color("9a9aa4"))
+			draw_set_transform(Vector2.ZERO)
+			draw_line(p + Vector2(-r * 0.3, -r), p + Vector2(r * 0.3, -r), Color("5a5a62"), 2.0)
+		"chip_die":
+			# Encapsulado de un chip con sus patas.
+			var box := Rect2(p - Vector2(r, r * 0.8), Vector2(r * 2.0, r * 1.6))
+			for k in 6:
+				var x := box.position.x + 6.0 + k * (box.size.x - 12.0) / 5.0
+				draw_line(Vector2(x, box.position.y - 6), Vector2(x, box.end.y + 6), Color("c0a060"), 3.0)
+			draw_rect(box, Color("1c1c22"))
+			draw_rect(box.grow(-4), Color("26262e"))
+			draw_circle(box.position + Vector2(10, 10), 3.0, Color("3a3a44"))
 		"ice_block":
 			var pts := PackedVector2Array()
 			for k in 6:

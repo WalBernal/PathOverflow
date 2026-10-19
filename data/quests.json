@@ -403,6 +403,168 @@
           "rarity": "ultra_rare"
         }
       ]
+    },
+    "main_act3": {
+      "name": "El Silicio Profundo",
+      "main": true,
+      "starts_after": "main_act2",
+      "description": "Alguien está forzando un reflasheo total del firmware. Si llega al 100 %, el universo digital desaparece.",
+      "steps": [
+        {
+          "type": "reach_zone",
+          "zone": "controladora_bus",
+          "text": "Cruza la controladora de bus desde el Anillo 0"
+        },
+        {
+          "type": "reach_zone",
+          "zone": "puerto_jtag",
+          "text": "Llega al Puerto de Depuración JTAG"
+        },
+        {
+          "type": "talk",
+          "npc": "m_paez",
+          "text": "Habla con M. Páez, el Inge"
+        },
+        {
+          "type": "talk",
+          "npc": "eugenio",
+          "text": "Conoce a Eugenio"
+        },
+        {
+          "type": "reach_zone",
+          "zone": "memoria_rom",
+          "text": "Atraviesa la Oblea hasta los Cristales de la ROM"
+        },
+        {
+          "type": "reach_zone",
+          "zone": "sector_arranque",
+          "text": "Llega al Sector de Arranque"
+        },
+        {
+          "type": "reach_zone",
+          "zone": "camara_flash",
+          "text": "Entra en la Cámara de Reflasheo"
+        },
+        {
+          "type": "flag",
+          "flag": "act3_complete",
+          "text": "Detén a fw_update.exe"
+        }
+      ],
+      "experience": 9000,
+      "rewards": [
+        {
+          "type": "passive_point",
+          "amount": 2
+        },
+        {
+          "type": "give_random",
+          "rarity": "unique"
+        },
+        {
+          "type": "give_random",
+          "rarity": "ultra_rare"
+        }
+      ]
+    },
+    "paez_kindle": {
+      "name": "El Kindle Perdido",
+      "giver": "m_paez",
+      "description": "M. Páez perdió su Kindle al caer: 1.400 libros subrayados y su tesis sin respaldo.",
+      "steps": [
+        {
+          "type": "collect",
+          "item": "funda_kindle",
+          "text": "Busca la funda del Kindle en la Oblea de Silicio"
+        },
+        {
+          "type": "collect",
+          "item": "kindle_paez",
+          "text": "Encuentra el Kindle en los Cristales de la ROM"
+        },
+        {
+          "type": "turn_in",
+          "npc": "m_paez",
+          "text": "Devuélvele el Kindle a M. Páez"
+        }
+      ],
+      "experience": 3000,
+      "rewards": [
+        {
+          "type": "passive_point",
+          "amount": 1
+        },
+        {
+          "type": "give_random",
+          "rarity": "unique"
+        }
+      ]
+    },
+    "paez_cargador": {
+      "name": "1 % de Batería",
+      "giver": "m_paez",
+      "description": "El Kindle prende, pero le queda 1 %. Un Centinela del BIOS usa el cargador USB-C del Inge como antena.",
+      "steps": [
+        {
+          "type": "kill",
+          "count": 1,
+          "zone": "memoria_rom",
+          "min_rarity": "unique",
+          "enemy_type": "centinela_bios",
+          "text": "Recupera el cargador del Centinela del Cargador USB-C (Cristales de la ROM)"
+        },
+        {
+          "type": "turn_in",
+          "npc": "m_paez",
+          "text": "Lleva el cargador a M. Páez"
+        }
+      ],
+      "experience": 2500,
+      "rewards": [
+        {
+          "type": "give_random",
+          "rarity": "ultra_rare"
+        },
+        {
+          "type": "give_matching_ram"
+        }
+      ]
+    },
+    "eugenio_panes": {
+      "name": "Cata de Pan en el Silicio",
+      "giver": "eugenio",
+      "description": "Eugenio quiere hacer una cata con los panes que aparecen entre el silicio. Ninguno llegará al 10.",
+      "steps": [
+        {
+          "type": "collect",
+          "items": [
+            "pan_concha",
+            "pan_bolillo",
+            "pan_cuernito"
+          ],
+          "text": "Consigue una concha (Oblea), un bolillo (Caché L3) y un cuernito (Sector de Arranque)"
+        },
+        {
+          "type": "turn_in",
+          "npc": "eugenio",
+          "text": "Lleva los panes a Eugenio para la cata"
+        }
+      ],
+      "experience": 3000,
+      "rewards": [
+        {
+          "type": "passive_point",
+          "amount": 1
+        },
+        {
+          "type": "give_random",
+          "rarity": "flask"
+        },
+        {
+          "type": "give_random",
+          "rarity": "ultra_rare"
+        }
+      ]
     }
   }
 }

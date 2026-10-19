@@ -35,6 +35,7 @@ func _initialize() -> void:
 		"kernel": _amb_kernel, "terminal": _amb_terminal, "fabrica": _amb_factory, "alcantarillas": _amb_sewer,
 		"fosa": _amb_pit, "grieta": _amb_rift, "bus": _amb_bus, "anillo": _amb_ring, "frio": _amb_wind.bind(0.7, 1400.0),
 		"calle": _amb_street, "pasillo": _amb_hallway, "oficina": _amb_office,
+		"silicio": _amb_silicon, "bios": _amb_bios, "rom": _amb_rom, "flash": _amb_flash,
 	}
 	for name in ambients:
 		_save(AMB_DIR + name + ".wav", _loopable(ambients[name].call()), float(AMBIENT_PEAK.get(name, 0.9)))
@@ -529,4 +530,39 @@ func _amb_office() -> PackedFloat32Array:
 		var start := rng.randi_range(0, b.size() - 400)
 		for i in 300:
 			b[start + i] += _noise() * exp(-i / 25.0) * 0.12
+	return b
+
+# --- Acto III: el Silicio Profundo ---
+
+func _amb_silicon() -> PackedFloat32Array:
+	var b := _amb_base()
+	_add_drone(b, 50.0, 0.18, 0.05)           # zumbido del silicio
+	_add_drone(b, 1000.0, 0.012, 0.0)          # bobina que silba
+	_add_pings(b, 14, 3000.0, 4200.0, 0.05, 0.015)   # electrones saltando
+	return b
+
+
+func _amb_bios() -> PackedFloat32Array:
+	var b := _amb_base()
+	_add_drone(b, 60.0, 0.12, 0.0)
+	_add_wind(b, 0.12, 900.0, 0.05)
+	for k in 4:   # pitidos del POST
+		var start := rng.randi_range(0, b.size() - 3000)
+		for i in 2600:
+			b[start + i] += _sq(i * 1000.0 / RATE) * 0.06 * (1.0 if i < 2200 else 0.0)
+	return b
+
+
+func _amb_rom() -> PackedFloat32Array:
+	var b := _amb_base()
+	_add_drone(b, 70.0, 0.14, 0.08)
+	_add_pings(b, 10, 1800.0, 2900.0, 0.18, 0.22)   # cristales que resuenan
+	return b
+
+
+func _amb_flash() -> PackedFloat32Array:
+	var b := _amb_base()
+	_add_drone(b, 40.0, 0.3, 0.06)
+	_add_thumps(b, 0.75, 55.0, 0.5)                  # latido de la escritura
+	_add_wind(b, 0.15, 1400.0, 0.6)
 	return b

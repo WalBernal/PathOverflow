@@ -95,6 +95,8 @@ var dot_time := PackedFloat32Array()  # segundos que le quedan
 var projectiles: Array[Dictionary] = []
 ## Ataques en el suelo con retardo (jefe): {pos, radius, time, delay, damage}
 var hazards: Array[Dictionary] = []
+## Charcos que hacen daño degenerativo mientras se pisan: {pos, radius, life, dps, color, kind}.
+var pools: Array[Dictionary] = []
 ## Habilidades especiales por id de enemigo: [{def, timer}] y lanzamiento en curso.
 var abilities := {}
 var casting := {}                     # id -> {def, time, target, total}
@@ -220,6 +222,8 @@ func count_rarity(rarity: int) -> int:
 func random_type(boss := false) -> int:
 	var options: Array = []
 	for i in enemy_types().size():
+		if bool(enemy_types()[i].get("summon_only", false)):
+			continue   # solo aparecen invocados
 		if bool(enemy_types()[i].get("boss_only", false)) == boss:
 			options.append(i)
 	return options.pick_random() if not options.is_empty() else 0
@@ -229,6 +233,7 @@ func clear_all() -> void:
 	_resize_all(0)
 	projectiles.clear()
 	hazards.clear()
+	pools.clear()
 	abilities.clear()
 	casting.clear()
 	_flashes_fx.clear()
@@ -425,6 +430,7 @@ func _physics_process(delta: float) -> void:
 	var n := positions.size()
 	_update_projectiles(delta)
 	_update_hazards(delta)
+	_update_pools(delta)
 	_update_dots(delta)
 	n = positions.size()
 	if n == 0 or player == null:
@@ -540,6 +546,22 @@ func _decide(i: int, atk: Dictionary, kind: String, to_player: Vector2, dist: fl
 			if dist < keep - 70.0:
 				return -dir * speed * 0.8   # se aleja (kiting)
 			return dir.orthogonal() * speed * 0.4 * (1.0 if ids[i] % 2 == 0 else -1.0)  # se mueve de lado
+		"summon", "seeker", "lob_pool":
+			# A distancia, como los de "ranged"; el invocador no supera su tope de esbirros.
+			var keep_d := float(atk.get("keep_distance", 300.0))
+			var ready := cooldowns[i] <= 0.0 and dist <= float(atk.get("range", 450.0))
+			if ready and kind == "summon" and count_type(String(atk.get("type", "proceso_fantasma"))) >= int(atk.get("max_alive", 8)):
+				ready = false
+			if ready:
+				_start_windup(i, atk, dir)
+				if kind == "lob_pool":
+					attack_dirs[i] = player.global_position   # el charco cae donde estabas
+				return Vector2.ZERO
+			if dist > keep_d + 40.0:
+				return dir * speed
+			if dist < keep_d - 70.0:
+				return -dir * speed * 0.8
+			return dir.orthogonal() * speed * 0.4 * (1.0 if ids[i] % 2 == 0 else -1.0)
 		"none":
 			return Vector2.ZERO   # candados, torres... no se mueven ni atacan
 		"blink":
@@ -588,9 +610,34 @@ func _resolve_attack(i: int, atk: Dictionary, player_pos: Vector2) -> void:
 			var aim := (player_pos - pos).normalized()
 			for k in count:
 				var angle := 0.0 if count == 1 else lerpf(-spread / 2.0, spread / 2.0, float(k) / (count - 1))
-				projectiles.append({"pos": pos, "vel": aim.rotated(angle) * float(atk.get("projectile_speed", 360.0)),
+				var shot := {"pos": pos, "vel": aim.rotated(angle) * float(atk.get("projectile_speed", 360.0)),
 					"damage": damage, "radius": float(atk.get("projectile_radius", 7.0)), "life": 2.5,
-					"color": Color(atk.get("color", "e0c040"))})
+					"color": Color(atk.get("color", "e0c040"))}
+				if atk.has("dot"):   # proyectil que quema/corrompe: sigue haciendo daño después
+					var dot: Dictionary = atk["dot"]
+					shot["dot_dps"] = damages[i] * float(dot.get("dps_mult", 0.4))
+					shot["dot_time"] = float(dot.get("duration", 4.0))
+					shot["dot_kind"] = String(dot.get("kind", "fire"))
+				projectiles.append(shot)
+		"summon":
+			var t_index := type_index_of(String(atk.get("type", "proceso_fantasma")))
+			for k in int(atk.get("count", 2)):
+				var sp := pos + Vector2.from_angle(TAU * k / maxf(1.0, float(atk.get("count", 2))) + randf()) * (radii[i] + 40.0)
+				if walk_clamp.is_valid():
+					sp = walk_clamp.call(sp, 12.0)
+				spawn(sp, Rarity.Enemy.NORMAL, t_index)
+			_flashes_fx.append({"type": "circle", "pos": pos, "radius": radii[i] + 34.0, "time": 0.0, "color": Color(atk.get("color", "7a4ad9"))})
+		"seeker":
+			var aim_s := (player_pos - pos).normalized()
+			var n := int(atk.get("projectiles", 1))
+			for k in n:
+				var a := 0.0 if n == 1 else lerpf(-0.6, 0.6, float(k) / (n - 1))
+				projectiles.append(_seeker_orb(pos, aim_s.rotated(a), damage, atk))
+		"lob_pool":
+			pools.append({"pos": attack_dirs[i], "radius": float(atk.get("radius", 70.0)), "life": float(atk.get("pool_time", 5.0)),
+				"total": float(atk.get("pool_time", 5.0)), "dps": damages[i] * float(atk.get("dps_mult", 0.6)),
+				"kind": String(atk.get("dot_kind", "chaos")), "color": Color(atk.get("color", "6fd36b"))})
+			_flashes_fx.append({"type": "circle", "pos": attack_dirs[i], "radius": float(atk.get("radius", 70.0)), "time": 0.0, "color": Color(atk.get("color", "6fd36b"))})
 		"charge":
 			dashes[i] = float(atk.get("dash_time", 0.5))
 			dash_hit[i] = 0
@@ -599,6 +646,10 @@ func _resolve_attack(i: int, atk: Dictionary, player_pos: Vector2) -> void:
 			_flashes_fx.append({"type": "circle", "pos": pos, "radius": radius, "time": 0.0, "color": Color(atk.get("color", "c86030"))})
 			if pos.distance_to(player_pos) <= radius + Player.RADIUS:
 				player.take_damage(damage)
+			if atk.has("pool"):   # el golpe deja un charco (condensador que revienta)
+				var pd: Dictionary = atk["pool"]
+				pools.append({"pos": pos, "radius": radius * 0.8, "life": float(pd.get("time", 4.0)), "total": float(pd.get("time", 4.0)),
+					"dps": damages[i] * float(pd.get("dps_mult", 0.4)), "kind": String(pd.get("kind", "chaos")), "color": Color(atk.get("color", "d0b040"))})
 		"cone":
 			var radius := float(atk.get("range", 160.0)) + 20.0
 			var half := deg_to_rad(float(atk.get("angle", 60.0))) / 2.0
@@ -659,6 +710,22 @@ func _resolve_ability(i: int, def: Dictionary, target: Vector2) -> void:
 				if walk_clamp.is_valid():
 					p = walk_clamp.call(p, 12.0)
 				spawn(p, Rarity.Enemy.NORMAL, type_index, def.get("summon_name", ""), float(def.get("summon_life", 1.0)))
+		"seeker_nova":
+			# Orbes lentos en todas direcciones que luego persiguen al jugador.
+			var n := int(def.get("count", 6))
+			var off := randf() * TAU
+			for k in n:
+				projectiles.append(_seeker_orb(pos, Vector2.from_angle(off + TAU * k / n), damage, def))
+		"pool_marks":
+			# Marcas en el suelo que, al caer, dejan charcos de daño degenerativo.
+			var n := int(def.get("count", 4))
+			var spread := float(def.get("spread", 180.0))
+			for k in n:
+				var mp := target if k == 0 else target + Vector2.from_angle(randf() * TAU) * randf_range(spread * 0.3, spread)
+				hazards.append({"pos": mp, "radius": float(def.get("radius", 80.0)), "time": 0.0,
+					"delay": float(def.get("delay", 0.9)) + k * 0.15, "damage": damage, "color": Color(def.get("color", "6fd36b")),
+					"pool": {"dps": damages[i] * float(def.get("dps_mult", 0.5)), "time": float(def.get("pool_time", 5.0)),
+						"kind": String(def.get("dot_kind", "chaos"))}})
 		"oom_beam":
 			# OOM Killer: un rayo desde un núcleo de la CPU a través del jugador.
 			# Si al disparar atraviesa al propio jefe, se lo come él.
@@ -679,12 +746,20 @@ func _update_projectiles(delta: float) -> void:
 		return
 	var still: Array[Dictionary] = []
 	for pr in projectiles:
+		if pr.has("homing") and player:
+			# Orbe perseguidor: gira poco a poco hacia el jugador (se le puede esquivar tras una cobertura).
+			var want: Vector2 = (player.global_position - pr["pos"]).normalized()
+			var vel: Vector2 = pr["vel"]
+			var turn := clampf(vel.angle_to(want), -float(pr["homing"]) * delta, float(pr["homing"]) * delta)
+			pr["vel"] = vel.rotated(turn)
 		pr["pos"] += pr["vel"] * delta
 		pr["life"] -= delta
 		var p: Vector2 = pr["pos"]
 		var gone: bool = pr["life"] <= 0.0
 		if not gone and player and player.is_alive() and p.distance_to(player.global_position) <= pr["radius"] + Player.RADIUS:
 			player.take_damage(pr["damage"])
+			if pr.has("dot_dps"):
+				player.apply_dot("golpe_%d" % (randi() % 3), pr["dot_dps"], pr["dot_time"], pr.get("dot_kind", "fire"))
 			_flashes_fx.append({"type": "circle", "pos": p, "radius": 16.0, "time": 0.0, "color": pr["color"]})
 			gone = true
 		if not gone:
@@ -697,6 +772,28 @@ func _update_projectiles(delta: float) -> void:
 		if not gone:
 			still.append(pr)
 	projectiles = still
+
+
+## Charcos: mientras el jugador esté dentro, se renueva un daño degenerativo corto.
+func _update_pools(delta: float) -> void:
+	if pools.is_empty():
+		return
+	var still: Array[Dictionary] = []
+	for pool in pools:
+		pool["life"] -= delta
+		if pool["life"] <= 0.0:
+			continue
+		if player and player.is_alive() and (pool["pos"] as Vector2).distance_to(player.global_position) <= pool["radius"] + Player.RADIUS * 0.5:
+			player.apply_dot("charco", pool["dps"], 0.6, pool["kind"])
+		still.append(pool)
+	pools = still
+
+
+## Orbe lento y persistente que persigue al jugador (centinelas y jefe del acto III).
+func _seeker_orb(pos: Vector2, dir: Vector2, damage: float, def: Dictionary) -> Dictionary:
+	return {"pos": pos + dir * 20.0, "vel": dir * float(def.get("projectile_speed", def.get("speed", 130.0))),
+		"damage": damage, "radius": float(def.get("projectile_radius", 11.0)), "life": float(def.get("projectile_life", 7.0)),
+		"color": Color(def.get("color", "5cd0ff")), "homing": float(def.get("turn_rate", 2.0)), "orb": true}
 
 
 func _update_hazards(delta: float) -> void:
@@ -717,6 +814,10 @@ func _update_hazards(delta: float) -> void:
 		_flashes_fx.append({"type": "circle", "pos": h["pos"], "radius": h["radius"], "time": 0.0, "color": h["color"]})
 		if player and player.is_alive() and h["pos"].distance_to(player.global_position) <= h["radius"] + Player.RADIUS:
 			player.take_damage(h["damage"])
+		if h.has("pool"):
+			var pool: Dictionary = h["pool"]
+			pools.append({"pos": h["pos"], "radius": h["radius"], "life": pool["time"], "total": pool["time"], "dps": pool["dps"],
+				"kind": pool["kind"], "color": h["color"]})
 	hazards = still
 
 
@@ -822,6 +923,26 @@ func _draw_attacks(font: Font) -> void:
 					var dest := attack_dirs[i]
 					draw_arc(dest, radii[i] + 6.0, 0.0, TAU, 24, Color(Color(atk.get("color", "c08aff")), 0.4 + 0.5 * t), 2.0, true)
 					draw_circle(dest, (radii[i] + 6.0) * t, Color(Color(atk.get("color", "c08aff")), 0.2))
+				"summon":
+					# Círculo de invocación con runas de código girando.
+					var sc := Color(atk.get("color", "7a4ad9"))
+					draw_arc(pos, radii[i] + 30.0, 0.0, TAU, 32, Color(sc, 0.3 + 0.5 * t), 2.0, true)
+					for k in 6:
+						var ra := TAU * k / 6.0 + t * 3.0
+						draw_string(font, pos + Vector2.from_angle(ra) * (radii[i] + 30.0) + Vector2(-4, 4), "#$%&{}"[k], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(sc, 0.4 + 0.6 * t))
+				"seeker":
+					var oc := Color(atk.get("color", "5cd0ff"))
+					draw_circle(pos + dir * (radii[i] + 8.0), 4.0 + 8.0 * t, Color(oc, 0.35))
+					draw_circle(pos + dir * (radii[i] + 8.0), 2.0 + 4.0 * t, oc)
+				"lob_pool":
+					var target: Vector2 = attack_dirs[i]
+					var pr_radius := float(atk.get("radius", 70.0))
+					var lc := Color(atk.get("color", "6fd36b"))
+					draw_circle(target, pr_radius, Color(lc, 0.08))
+					draw_circle(target, pr_radius * t, Color(lc, 0.2))
+					draw_arc(target, pr_radius, 0.0, TAU, 32, Color(lc, 0.7), 2.0, true)
+					var arc_top := pos.lerp(target, t) + Vector2(0, -sin(t * PI) * 90.0)
+					draw_circle(arc_top, 6.0, lc)
 				"ranged":
 					draw_line(pos, pos + dir * 60.0, Color(Color(atk.get("color", "e0c040")), 0.6 * t), 2.0, true)
 					draw_circle(pos + dir * (radii[i] + 4.0), 3.0 + 4.0 * t, Color(atk.get("color", "e0c040")))
@@ -834,6 +955,21 @@ func _draw_attacks(font: Font) -> void:
 			draw_string_outline(font, top, label, HORIZONTAL_ALIGNMENT_CENTER, 300.0, 18, 5, Color.BLACK)
 			draw_string(font, top, label, HORIZONTAL_ALIGNMENT_CENTER, 300.0, 18, Color(def.get("color", "ff8c2a")))
 			draw_arc(pos, radii[i] + 10.0, -PI / 2.0, -PI / 2.0 + TAU * t, 40, Color(def.get("color", "ff8c2a")), 3.0, true)
+	# Charcos de daño degenerativo: burbujean y se desvanecen al final.
+	var now := Time.get_ticks_msec() / 1000.0
+	for pool in pools:
+		var fade: float = clampf(pool["life"] / 0.8, 0.0, 1.0)
+		var pc: Color = pool["color"]
+		var pp: Vector2 = pool["pos"]
+		draw_set_transform(pp, 0.0, Vector2(1.0, 0.6))
+		draw_circle(Vector2.ZERO, pool["radius"], Color(pc, 0.22 * fade))
+		draw_circle(Vector2.ZERO, pool["radius"] * 0.7, Color(pc, 0.18 * fade))
+		draw_arc(Vector2.ZERO, pool["radius"], 0.0, TAU, 32, Color(pc, 0.55 * fade), 2.0, true)
+		draw_set_transform(Vector2.ZERO)
+		for k in 4:
+			var ph := fmod(now * 0.9 + k * 0.25 + pp.x * 0.01, 1.0)
+			var bp := pp + Vector2(cos(k * 1.9) * pool["radius"] * 0.5, sin(k * 2.7) * pool["radius"] * 0.25)
+			draw_circle(bp + Vector2(0, -ph * 10.0), 2.0 + ph * 3.0, Color(pc.lightened(0.3), 0.6 * (1.0 - ph) * fade))
 	for h in hazards:
 		var t: float = clampf(h["time"] / h["delay"], 0.0, 1.0)
 		var c: Color = h["color"]
@@ -858,6 +994,14 @@ func _draw_attacks(font: Font) -> void:
 			draw_circle(fx["pos"], fx["radius"], Color(c, 0.45 * a))
 	for pr in projectiles:
 		var c: Color = pr["color"]
+		if pr.has("orb"):
+			# Orbe perseguidor: halo que pulsa y se apaga al final de su vida.
+			var life_fade: float = clampf(pr["life"] / 1.0, 0.25, 1.0)
+			var pulse := 0.5 + 0.5 * sin(now * 8.0 + pr["pos"].x * 0.05)
+			draw_circle(pr["pos"], pr["radius"] * (1.6 + 0.3 * pulse), Color(c, 0.18 * life_fade))
+			draw_circle(pr["pos"], pr["radius"], Color(c, 0.85 * life_fade))
+			draw_circle(pr["pos"], pr["radius"] * 0.4, Color(1, 1, 1, 0.9 * life_fade))
+			continue
 		var dir: Vector2 = pr["vel"].normalized()
 		draw_line(pr["pos"] - dir * 16.0, pr["pos"], Color(c, 0.45), pr["radius"], true)
 		draw_circle(pr["pos"], pr["radius"], c)

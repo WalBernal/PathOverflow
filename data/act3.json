@@ -1,0 +1,180 @@
+{
+  "version": 1,
+  "_doc": "Acto III: El Silicio Profundo. Mismo formato que act2.json. Enemigos nuevos con invocaciones (rootkit), orbes lentos y persistentes que persiguen (centinela_bios), charcos y proyectiles con daño degenerativo (gusano_firmware, electromigracion, condensador). rare_spawns.kill_flag: bandera que se pone al eliminarlo (para que no reaparezca).",
+  "id": "act3",
+  "name": "Acto III: El Silicio Profundo",
+  "start_zone": "controladora_bus",
+  "town": "puerto_jtag",
+  "zones": [
+    {
+      "id": "controladora_bus",
+      "name": "La Controladora de Bus",
+      "level": 26,
+      "style": "silicio",
+      "size": [3400, 1800],
+      "entries": {"from_anillo": [190, 900], "from_jtag": [3210, 900]},
+      "cutscene_on_enter": {"id": "llegada_silicio", "unless_flag": "llegada_silicio_vista", "set_flag": "llegada_silicio_vista"},
+      "exits": [
+        {"pos": [80, 900], "target": "anillo0", "entry": "from_controladora", "label": "Anillo 0"},
+        {"pos": [3320, 900], "target": "puerto_jtag", "entry": "from_controladora", "label": "Puerto de Depuración JTAG"}
+      ],
+      "enemies": {"packs": 12, "pack_size": [5, 8], "types": ["electromigracion", "centinela_bios", "condensador"], "special_chance": 0.22, "elite_chance": 0.12},
+      "features": {"count": 2, "kinds": ["void"]},
+      "obstacles": {"count": 26, "kinds": ["chip_die", "capacitor", "cable_coil"]}
+    },
+    {
+      "id": "puerto_jtag",
+      "name": "El Puerto de Depuración JTAG",
+      "level": 27,
+      "style": "bios",
+      "size": [1900, 1400],
+      "safe": true,
+      "entries": {"from_controladora": [190, 700], "waypoint": [950, 900], "from_oblea": [1710, 700]},
+      "exits": [
+        {"pos": [80, 700], "target": "controladora_bus", "entry": "from_jtag", "label": "La Controladora de Bus"},
+        {"pos": [1820, 700], "target": "oblea", "entry": "from_jtag", "label": "La Oblea de Silicio"},
+        {"pos": [1500, 1180], "target": "socket_seguro", "entry": "waypoint", "label": "Túnel al Socket Seguro", "portal": true}
+      ],
+      "stash": [790, 960],
+      "waypoint": [950, 1000],
+      "npcs": [
+        {"id": "m_paez", "pos": [680, 520]},
+        {"id": "eugenio", "pos": [1220, 540]},
+        {"id": "rafa_terminal", "pos": [520, 1060]},
+        {"id": "nacho", "pos": [1380, 980]}
+      ],
+      "obstacles": {"count": 0, "kinds": []}
+    },
+    {
+      "id": "oblea",
+      "name": "La Oblea de Silicio",
+      "level": 28,
+      "style": "silicio",
+      "size": [3800, 2000],
+      "entries": {"from_jtag": [190, 1000], "from_rom": [3610, 1000]},
+      "exits": [
+        {"pos": [80, 1000], "target": "puerto_jtag", "entry": "from_oblea", "label": "Puerto JTAG"},
+        {"pos": [3720, 1000], "target": "memoria_rom", "entry": "from_oblea", "label": "Los Cristales de la ROM"}
+      ],
+      "quest_items": [
+        {"id": "funda_kindle", "name": "Funda de Kindle (con una nota)", "pos": [2600, 560], "quest": "paez_kindle"},
+        {"id": "pan_concha", "name": "Concha de silicio", "pos": [1400, 1600], "quest": "eugenio_panes"}
+      ],
+      "challenges": [
+        {"id": "estres_oblea", "name": "Banco de Pruebas de Estrés", "pos": [2000, 1000], "waves": 4,
+         "types": ["gusano_firmware", "electromigracion", "rootkit"], "rewards": ["rare", "ram", "flask"]}
+      ],
+      "enemies": {"packs": 15, "pack_size": [5, 9], "types": ["rootkit", "gusano_firmware", "electromigracion"], "special_chance": 0.24, "elite_chance": 0.14},
+      "features": {"count": 3, "kinds": ["void"]},
+      "obstacles": {"count": 30, "kinds": ["chip_die", "capacitor", "rack"]}
+    },
+    {
+      "id": "memoria_rom",
+      "name": "Los Cristales de la ROM",
+      "level": 30,
+      "style": "rom",
+      "size": [3600, 2200],
+      "entries": {"from_oblea": [190, 1100], "waypoint": [800, 1100], "from_cache": [1800, 2010], "from_sector": [3410, 1100]},
+      "waypoint": [700, 1100],
+      "exits": [
+        {"pos": [80, 1100], "target": "oblea", "entry": "from_rom", "label": "La Oblea de Silicio"},
+        {"pos": [1800, 2120], "target": "cache_l3", "entry": "from_rom", "label": "La Caché L3 Abandonada"},
+        {"pos": [3520, 1100], "target": "sector_arranque", "entry": "from_rom", "label": "El Sector de Arranque"}
+      ],
+      "quest_items": [
+        {"id": "kindle_paez", "name": "El Kindle de M. Páez", "pos": [2700, 480], "quest": "paez_kindle"}
+      ],
+      "rare_spawns": [
+        {"type": "centinela_bios", "pos": [3000, 1750], "name": "Centinela del Cargador USB-C", "life_mult": 3.0,
+         "requires_flag": "quest_paez_cargador_started", "unless_flag": "cargador_recuperado", "kill_flag": "cargador_recuperado"}
+      ],
+      "enemies": {"packs": 15, "pack_size": [5, 9], "types": ["centinela_bios", "rootkit", "condensador"], "special_chance": 0.25, "elite_chance": 0.15},
+      "features": {"count": 3, "kinds": ["void"]},
+      "obstacles": {"count": 30, "kinds": ["chip_die", "capacitor", "ice_block"]}
+    },
+    {
+      "id": "cache_l3",
+      "name": "La Caché L3 Abandonada",
+      "level": 32,
+      "style": "rom",
+      "size": [3000, 2000],
+      "entries": {"from_rom": [1500, 190]},
+      "exits": [
+        {"pos": [1500, 80], "target": "memoria_rom", "entry": "from_cache", "label": "Los Cristales de la ROM"}
+      ],
+      "quest_items": [
+        {"id": "pan_bolillo", "name": "Bolillo de caché (todavía tibio)", "pos": [2400, 1500], "quest": "eugenio_panes"}
+      ],
+      "challenges": [
+        {"id": "estres_cache", "name": "Banco de Pruebas de Estrés Térmico", "pos": [1500, 1150], "waves": 5,
+         "types": ["rootkit", "centinela_bios", "gusano_firmware", "condensador"], "rewards": ["ultra_rare", "ram", "flask"]}
+      ],
+      "enemies": {"packs": 12, "pack_size": [6, 9], "types": ["electromigracion", "condensador", "gusano_firmware"], "special_chance": 0.3, "elite_chance": 0.2},
+      "features": {"count": 2, "kinds": ["void"]},
+      "obstacles": {"count": 24, "kinds": ["capacitor", "chip_die"]}
+    },
+    {
+      "id": "sector_arranque",
+      "name": "El Sector de Arranque",
+      "level": 34,
+      "style": "bios",
+      "size": [4000, 1800],
+      "entries": {"from_rom": [190, 900], "waypoint": [1000, 1000], "from_camara": [3810, 900]},
+      "waypoint": [1000, 1100],
+      "exits": [
+        {"pos": [80, 900], "target": "memoria_rom", "entry": "from_sector", "label": "Los Cristales de la ROM"},
+        {"pos": [3920, 900], "target": "camara_flash", "entry": "from_sector", "label": "La Cámara de Reflasheo"}
+      ],
+      "quest_items": [
+        {"id": "pan_cuernito", "name": "Cuernito de arranque en frío", "pos": [2800, 1500], "quest": "eugenio_panes"}
+      ],
+      "enemies": {"packs": 16, "pack_size": [6, 10], "types": ["rootkit", "centinela_bios", "gusano_firmware", "electromigracion", "condensador"], "special_chance": 0.26, "elite_chance": 0.17},
+      "features": {"count": 3, "kinds": ["void"]},
+      "obstacles": {"count": 32, "kinds": ["rack", "chip_die", "capacitor"]}
+    },
+    {
+      "id": "camara_flash",
+      "name": "La Cámara de Reflasheo",
+      "level": 36,
+      "style": "flash",
+      "size": [2400, 2400],
+      "entries": {"from_sector": [200, 1200]},
+      "cutscene_on_enter": {"id": "camara_entrada", "unless_flag": "act3_complete"},
+      "exits": [
+        {"pos": [80, 1200], "target": "sector_arranque", "entry": "from_camara", "label": "El Sector de Arranque"},
+        {"pos": [1200, 2150], "target": "puerto_jtag", "entry": "waypoint", "label": "Túnel al Puerto JTAG", "portal": true, "requires_flag": "act3_complete"},
+        {"pos": [2300, 1200], "target": "", "entry": "", "label": "Bus de la BIOS", "requires_flag": "act3_complete",
+         "message": "Más abajo solo queda la BIOS... (el Acto IV está en desarrollo)."}
+      ],
+      "boss": {
+        "type": "fw_update",
+        "name": "fw_update.exe (El Gran Reflasheo)",
+        "pos": [1400, 1200],
+        "life_mult": 6.0,
+        "complete_flag": "act3_complete",
+        "death_cutscene": "reflash_cancelado",
+        "abilities": [
+          {"id": "checksum", "name": "Verificación de checksum", "kind": "seeker_nova", "count": 6, "speed": 120, "turn_rate": 1.6,
+           "projectile_life": 8.0, "cooldown": 6.0, "first": 2.0, "windup": 0.9, "damage_mult": 0.9, "min_life": 0.66, "color": "5cd0ff",
+           "description": "Orbes lentos que te persiguen: escóndete tras los condensadores."},
+          {"id": "hilos_escritura", "name": "Hilos de escritura", "kind": "summon", "type": "proceso_fantasma", "count": 5,
+           "cooldown": 8.0, "first": 4.0, "windup": 0.8, "min_life": 0.66, "color": "7a4ad9"},
+          {"id": "borrado", "name": "Borrado de sectores", "kind": "pool_marks", "count": 5, "spread": 220, "radius": 85,
+           "pool_time": 6.0, "dps_mult": 0.5, "delay": 0.9, "cooldown": 5.0, "first": 1.0, "windup": 0.7, "damage_mult": 1.0,
+           "min_life": 0.33, "max_life": 0.66, "color": "6fd36b"},
+          {"id": "rafaga_bloques", "name": "Ráfaga de bloques", "kind": "projectile_nova", "count": 18, "speed": 320,
+           "cooldown": 4.0, "first": 3.0, "windup": 0.6, "damage_mult": 0.6, "min_life": 0.33, "max_life": 0.66, "color": "ff8a3a"},
+          {"id": "verificacion_final", "name": "99 %: Verificación final", "kind": "seeker_nova", "count": 10, "speed": 140,
+           "turn_rate": 2.2, "projectile_life": 8.0, "cooldown": 6.0, "first": 0.5, "windup": 0.8, "damage_mult": 0.8,
+           "max_life": 0.33, "color": "ff5050"},
+          {"id": "rootkits_respaldo", "name": "Rootkits de respaldo", "kind": "summon", "type": "rootkit", "count": 2,
+           "cooldown": 10.0, "first": 3.0, "windup": 0.9, "max_life": 0.33, "color": "7a4ad9"},
+          {"id": "borrado_final", "name": "Borrado de sectores", "kind": "pool_marks", "count": 3, "spread": 180, "radius": 80,
+           "pool_time": 5.0, "dps_mult": 0.55, "delay": 0.8, "cooldown": 5.0, "first": 2.0, "windup": 0.6, "damage_mult": 0.9,
+           "max_life": 0.33, "color": "6fd36b"}
+        ]
+      },
+      "obstacles": {"count": 10, "kinds": ["capacitor"]}
+    }
+  ]
+}

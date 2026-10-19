@@ -198,6 +198,48 @@
         "rate": 0.95
       },
       "color": "e06c6c"
+    },
+    "m_paez": {
+      "name": "M. Páez, el Inge",
+      "dialogue": "m_paez",
+      "color": "4b8bd6",
+      "appearance": {
+        "body": 2,
+        "hair": 1,
+        "beard": 2,
+        "accessory": 1,
+        "height": 1.08,
+        "skin_tone": "c99a7a",
+        "hair_color": "2b2118",
+        "eye_color": "3a2414",
+        "outfit_color": "2b4a6b",
+        "accent_color": "2a2a30"
+      },
+      "voice": {
+        "pitch": 0.8,
+        "rate": 0.95
+      }
+    },
+    "eugenio": {
+      "name": "Eugenio, catador oficial",
+      "dialogue": "eugenio",
+      "color": "d9a441",
+      "appearance": {
+        "body": 0,
+        "hair": 1,
+        "beard": 0,
+        "accessory": 1,
+        "height": 1.0,
+        "skin_tone": "e0ac8a",
+        "hair_color": "0f0d0c",
+        "eye_color": "6b4423",
+        "outfit_color": "8a6d3b",
+        "accent_color": "c8c8c8"
+      },
+      "voice": {
+        "pitch": 1.08,
+        "rate": 1.05
+      }
     }
   },
   "dialogues": {
@@ -1707,6 +1749,313 @@
               "action": {
                 "type": "quest_advance",
                 "quest": "sindicato_descriptor"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "m_paez": {
+      "start": "hola",
+      "greeting_again": [
+        "¡Volviste! Dime que traes mi Kindle. O al menos un buen dato.",
+        "Hola. Sigo aquí, calculando la probabilidad de salir. Es baja, pero no nula."
+      ],
+      "menu": [
+        "¿Algo más? Pregunta con datos, por favor.",
+        "Dime. Tengo tiempo: aquí no hay clases que dar.",
+        "¿Qué más necesitas?"
+      ],
+      "nodes": {
+        "hola": {
+          "text": "¡Ah, otro del departamento! Soy M. Páez, el Inge. Estaba calificando exámenes de álgebra lineal en el laboratorio cuando la pantalla empezó a parpadear... y aparecí aquí. Con mis lentes, mi taza y sin mi Kindle. Eso último es lo grave.",
+          "options": [
+            {
+              "text": "Encontré tu Kindle.",
+              "next": "mision_kindle_entrega",
+              "requires_flag": "quest_paez_kindle_ready"
+            },
+            {
+              "text": "¿Te ayudo con algo?",
+              "next": "mision_kindle_oferta",
+              "hides_if_flag": "quest_paez_kindle_started"
+            },
+            {
+              "text": "Traigo el cargador USB-C.",
+              "next": "mision_cargador_entrega",
+              "requires_flag": "quest_paez_cargador_ready"
+            },
+            {
+              "text": "¿Y el Kindle ya prende?",
+              "next": "mision_cargador_oferta",
+              "requires_flag": "quest_paez_kindle_done",
+              "hides_if_flag": "quest_paez_cargador_started"
+            },
+            {
+              "text": "¿Qué es este lugar?",
+              "next": "lugar"
+            },
+            {
+              "text": "¿Qué hace un inge como usted aquí abajo?",
+              "next": "datos"
+            },
+            {
+              "text": "¿Club de lectura?",
+              "next": "club"
+            },
+            {
+              "text": "¿Conoce al Inge Pepe?",
+              "next": "pepe"
+            },
+            {
+              "text": "Nos vemos, Inge.",
+              "next": ""
+            }
+          ]
+        },
+        "lugar": {
+          "text": "El Silicio Profundo. Debajo del sistema operativo, debajo de los drivers... el hardware puro. Y alguien está intentando reescribirlo todo: un reflasheo total del firmware.",
+          "next": "lugar2"
+        },
+        "lugar2": {
+          "text": "Hice un análisis rápido: la barra de progreso del reflasheo avanza un 3,7 % por hora. Con un intervalo de confianza del 95 %, tenemos unas 26 horas antes del 99 %. Lo que pase en el 100 %... no tengo datos. Y no me gusta no tener datos.",
+          "options": [
+            {
+              "text": "¿Y qué hacemos?",
+              "next": "lugar3"
+            },
+            {
+              "text": "Qué alentador.",
+              "next": "hola"
+            }
+          ]
+        },
+        "lugar3": {
+          "text": "Bajar a la Cámara de Reflasheo, al fondo del Sector de Arranque, y cancelar el proceso. Es como un sistema de ecuaciones: primero despejas lo que estorba. En este caso, rootkits.",
+          "options": [
+            {
+              "text": "Entendido.",
+              "next": "hola"
+            }
+          ]
+        },
+        "datos": {
+          "text": "Lo mío es el análisis de datos y el álgebra. «Su mero mole», como dicen mis alumnos. Una matriz bien diagonalizada me hace más feliz que un aumento de sueldo. Bueno, eso nunca lo he comprobado.",
+          "next": "datos2"
+        },
+        "datos2": {
+          "text": "Aquí abajo todo es álgebra: los Centinelas del BIOS disparan orbes que siguen una curva de persecución, ¿lo notaste? Si pones un obstáculo entre ellos y tú, la ecuación no tiene solución. Y si ves un charco verde, no te quedes: el daño se acumula por segundo.",
+          "options": [
+            {
+              "text": "Buen consejo.",
+              "next": "hola"
+            }
+          ]
+        },
+        "club": {
+          "text": "Llevo el club de lectura de los jueves... bueno, lo comparto con el Inge Pepe, que también da clases los jueves. Él siempre propone novelas de pesca. Yo propongo ensayos de estadística. Nadie vota por ninguno.",
+          "next": "club2"
+        },
+        "club2": {
+          "text": "Por eso me duele lo del Kindle: 1.400 libros, subrayados, con notas. Mi tesis de maestría estaba ahí, en PDF. Sin respaldo. Sí, ya sé. El de datos, sin respaldo. No me lo digas.",
+          "options": [
+            {
+              "text": "No dije nada.",
+              "next": "hola"
+            }
+          ]
+        },
+        "pepe": {
+          "text": "¿El Inge Pepe? Treinta años a cargo de informática. Todo lo de este servidor tiene su nombre, para bien y para mal. Según mis encuestas de pasillo, un 87 % de la gente lo culpa de todo. El 13 % restante no contestó.",
+          "options": [
+            {
+              "text": "Datos duros.",
+              "next": "hola"
+            }
+          ]
+        },
+        "mision_kindle_oferta": {
+          "text": "Cuando caí, lo traía en la mano. Vi cómo salía volando hacia la Oblea de Silicio. Si encuentras la funda, le puse una etiqueta con mi nombre... y una nota con dónde buscar si algún día lo perdía. Precavido para eso, sí.",
+          "options": [
+            {
+              "text": "Lo buscaré.",
+              "next": "",
+              "action": {
+                "type": "start_quest",
+                "quest": "paez_kindle"
+              }
+            },
+            {
+              "text": "Ahora no.",
+              "next": "hola"
+            }
+          ]
+        },
+        "mision_kindle_entrega": {
+          "text": "¡Mi Kindle! Tiene la pantalla rayada y... está casi sin batería. Bueno, la tinta electrónica aguanta. Gracias. En serio: te ganaste un agradecimiento en mi próximo artículo.",
+          "options": [
+            {
+              "text": "Disfrute la lectura.",
+              "next": "",
+              "action": {
+                "type": "quest_advance",
+                "quest": "paez_kindle"
+              }
+            }
+          ]
+        },
+        "mision_cargador_oferta": {
+          "text": "Prender, prende... con 1 % de batería. Y mi cargador USB-C lo traía en la mochila. Lo vi en el radar: un Centinela del BIOS en los Cristales de la ROM se lo tragó. Literal: lo usa de antena.",
+          "options": [
+            {
+              "text": "Voy por él.",
+              "next": "",
+              "action": {
+                "type": "start_quest",
+                "quest": "paez_cargador"
+              }
+            },
+            {
+              "text": "Ahora no.",
+              "next": "hola"
+            }
+          ]
+        },
+        "mision_cargador_entrega": {
+          "text": "¡El cargador! Con antena y todo. Ya carga: 2 %... 3 %... Esto es mejor que cualquier gráfica. Toma, lo encontré en un sector que nadie había leído.",
+          "options": [
+            {
+              "text": "Que lo disfrute, Inge.",
+              "next": "",
+              "action": {
+                "type": "quest_advance",
+                "quest": "paez_cargador"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "eugenio": {
+      "start": "hola",
+      "greeting_again": [
+        "¡Volviste! ¿Traes pan? Di que traes pan.",
+        "Hola. Hoy el café del puerto sabe a ozono. Le doy un 6/10."
+      ],
+      "menu": [
+        "¿Algo más? Mientras, me tomo otro café.",
+        "Dime. Estoy calificando el aroma de este capacitor.",
+        "¿Qué más?"
+      ],
+      "nodes": {
+        "hola": {
+          "text": "Buenas. Eugenio, para servirte. Soltero, codiciado, sin suerte. Me caí desde la fila de la cafetería de la universidad con una charola en la mano: café de grano y un pan de dulce. El pan no sobrevivió. Yo, apenas.",
+          "options": [
+            {
+              "text": "Traigo los tres panes para la cata.",
+              "next": "mision_entrega",
+              "requires_flag": "quest_eugenio_panes_ready"
+            },
+            {
+              "text": "¿Necesitas algo?",
+              "next": "mision_oferta",
+              "hides_if_flag": "quest_eugenio_panes_started"
+            },
+            {
+              "text": "¿Me invitas un café?",
+              "next": "cafe",
+              "action": {
+                "type": "refill"
+              }
+            },
+            {
+              "text": "¿Cómo va el amor?",
+              "next": "amor"
+            },
+            {
+              "text": "¿Qué calificación le das a este lugar?",
+              "next": "lugar"
+            },
+            {
+              "text": "¿Conoces a M. Páez?",
+              "next": "paez"
+            },
+            {
+              "text": "Hasta luego, Eugenio.",
+              "next": ""
+            }
+          ]
+        },
+        "cafe": {
+          "text": "Claro. Traigo un molino de mano y granos de Veracruz en la mochila. Te rellené las pociones. Este café... 8/10. Le falta acidez. Nada llega al 10.",
+          "again": [
+            "Rellenadas. Este lote, 7.5/10: molí con prisa.",
+            "Listo. 8/10. Mejor que ayer, peor que mañana."
+          ],
+          "options": [
+            {
+              "text": "Gracias, Eugenio.",
+              "next": "hola"
+            }
+          ]
+        },
+        "amor": {
+          "text": "Mal. Siempre mal. Mi última cita me dejó porque dije que su pastel de tres leches era un 8/10. ¡Era un 8/10! Tenía demasiada canela. Uno no puede mentir sobre el pan.",
+          "next": "amor2"
+        },
+        "amor2": {
+          "text": "Así que me enfoco en lo que nunca me falla: el café y el pan. El café nunca me deja en visto. El pan nunca me dice «no eres tú, soy yo». Bueno, a veces el bolillo está duro. Pero da la cara.",
+          "options": [
+            {
+              "text": "Muy sabio.",
+              "next": "hola"
+            }
+          ]
+        },
+        "lugar": {
+          "text": "¿El Silicio Profundo? Un 4/10. Buena iluminación, cero cafeterías. Los rootkits huelen a quemado y los condensadores revientan cuando te acercas. Como mis citas.",
+          "options": [
+            {
+              "text": "Duro.",
+              "next": "hola"
+            }
+          ]
+        },
+        "paez": {
+          "text": "El Inge Páez. Gran tipo. Me hizo una gráfica de mis citas: tendencia a la baja, con un pico en 2019 que, según él, fue un error de medición. Me dolió más que la gráfica.",
+          "options": [
+            {
+              "text": "Lo siento.",
+              "next": "hola"
+            }
+          ]
+        },
+        "mision_oferta": {
+          "text": "Te propongo algo: dicen que entre el silicio aparecen panes. De verdad, o algo que se les parece mucho. Una concha en la Oblea, un bolillo en la Caché L3 y un cuernito en el Sector de Arranque. Tráemelos y hago la cata. Con fichas técnicas.",
+          "options": [
+            {
+              "text": "Acepto la cata.",
+              "next": "",
+              "action": {
+                "type": "start_quest",
+                "quest": "eugenio_panes"
+              }
+            },
+            {
+              "text": "Ahora no.",
+              "next": "hola"
+            }
+          ]
+        },
+        "mision_entrega": {
+          "text": "A ver... La concha: costra crujiente, migajón aireado, un leve aroma a soldadura. 8.5/10. El bolillo: tibio, honesto, como debe ser. 9/10. El cuernito: mantequilla de arranque en frío... 9/10. Ninguno es 10. Ninguno lo será jamás. Gracias, de verdad. Toma, por tu servicio a la ciencia del pan.",
+          "options": [
+            {
+              "text": "Buen provecho.",
+              "next": "",
+              "action": {
+                "type": "quest_advance",
+                "quest": "eugenio_panes"
               }
             }
           ]

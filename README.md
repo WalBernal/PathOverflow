@@ -168,6 +168,32 @@ El acto está definido en `data/act1.json` y lo construye `Zone` (`scripts/game/
 
 El lore completo está en [`docs/lore.md`](docs/lore.md).
 
+## Acto III: El Silicio Profundo
+
+Se llega por la **controladora de bus** del Anillo 0 (tras derrotar a init). Datos en `data/act3.json`.
+
+| Zona | Nivel | Qué hay |
+|---|---|---|
+| La Controladora de Bus | 26 | Llegada (escena `llegada_silicio`): el reflasheo está jalando a más gente de la UAdeO. |
+| **El Puerto de Depuración JTAG** (campamento) | 27 | **M. Páez, el Inge** (análisis de datos, álgebra y club de lectura), **Eugenio** (catador de café y pan; nada llega al 10/10), Rafa por el celular, Nacho, alijo y waypoint. |
+| La Oblea de Silicio | 28 | Funda del Kindle, una concha, Banco de Pruebas de Estrés. |
+| Los Cristales de la ROM | 30 | El Kindle de M. Páez, waypoint y el Centinela del Cargador USB-C (aparece con la misión). |
+| La Caché L3 Abandonada | 32 | Un bolillo y una prueba de estrés térmico de 5 oleadas. |
+| El Sector de Arranque | 34 | Un cuernito y waypoint. |
+| La Cámara de Reflasheo | 36 | Jefe: **fw_update.exe (El Gran Reflasheo)**. |
+
+- **Misiones**: *El Silicio Profundo* (principal), *El Kindle Perdido* y *1 % de Batería* (M. Páez), *Cata de Pan en el Silicio* (Eugenio). Eugenio también rellena las pociones con su café (8/10).
+- **Enemigos nuevos** (`enemies.json`):
+  - **Rootkit** (`summon`): se queda a distancia e invoca **procesos fantasma** (con tope).
+  - **Centinela del BIOS** (`seeker`): orbes **lentos y persistentes** que giran hacia ti durante 7 s; los obstáculos los rompen (cúbrete tras los condensadores).
+  - **Gusano de firmware** (`lob_pool`): lanza ácido donde estabas (marcado en el suelo) y deja un **charco** de daño degenerativo de caos.
+  - **Arco de electromigración** (`ranged` con `dot`): sus chispas **queman** durante 4 s.
+  - **Condensador hinchado** (`slam` con `pool`): revienta y deja un charco eléctrico.
+- **Daño degenerativo en el jugador** (`Player.apply_dot`): no se esquiva ni lo reduce la armadura, pero sí la resistencia de su tipo; la misma fuente se renueva, no se acumula. Se ve como burbujas de color sobre la cabeza.
+- **Jefe fw_update.exe**: fase 1, orbes perseguidores y procesos fantasma; fase 2, *Borrado de sectores* (charcos) y ráfagas de bloques; fase 3 (99 %), más orbes, rootkits de respaldo y charcos. Al caer, el reflasheo se detiene en el 99 %.
+- Suelos propios (silicio, BIOS, ROM, flash), obstáculos nuevos (condensadores y chips) y ambientes.
+- `tests/test_core.gd` simula el combate contra cada enemigo nuevo y contra el jefe (`_test_act3_mechanics`).
+
 ## Misiones
 
 Definidas en `data/quests.json` y gestionadas por `QuestLog` (lógica pura, guardada en el personaje).

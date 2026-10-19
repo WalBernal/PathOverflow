@@ -119,6 +119,15 @@ Esto encaja con el final del Acto II: el Último Commit selló el acceso al firm
 
 Otras historias de los diálogos: Aida escribió la mitad de las nóminas en COBOL y sobrevivió a cuatro migraciones; Mario entró por una convocatoria con «fruta los viernes»; Clara fue jefa de guardias (la única alerta del día del desastre decía «todo bien»); el Sindicato cuenta cómo sus procesos se quedaron sin `wait()` de sus padres; el Recolector duda si liberar memoria es matar.
 
+## Acto III: El Silicio Profundo (implementado)
+
+Debajo del sistema operativo y de los drivers está el hardware puro. Alguien está forzando un **reflasheo total del firmware**: si la barra llega al 100 %, el universo digital desaparece. El reflasheo jala todo lo que estaba conectado a la red de la UAdeO, incluida la sala de maestros y la cafetería.
+
+- **M. Páez, el Inge**: alto, robusto, lentes, pelo corto y barba corta. Su «mero mole» es el análisis de datos, el álgebra y los clubs de lectura (el de los jueves lo comparte con el Inge Pepe: Pepe propone novelas de pesca; Páez, ensayos de estadística). Perdió su Kindle al caer (1.400 libros y su tesis sin respaldo) y luego el cargador USB-C, que un Centinela del BIOS usa de antena. Explica las mecánicas con álgebra: los orbes siguen una curva de persecución; un obstáculo deja la ecuación sin solución.
+- **Eugenio**: delgado, lentes, sin barba. Soltero codiciado sin suerte en el amor (a su última cita le calificó el pastel con un 8/10). Se consuela catando café y pan; nada llega al 10/10. Cayó desde la fila de la cafetería con una charola.
+- **fw_update.exe (El Gran Reflasheo)**: un chip de memoria flash con una barra de progreso por boca. Al morir, la actualización queda **detenida en el 99 %** y la consola muestra: `[cron] limpieza_final.sh: ejecución 2 de 2 completada`. Rafa recuerda la frase de El Pepe: «el último uno por ciento no es tuyo, es mío». Páez: «Los datos dicen que alguien lo dejó todo preparado. Los datos no dicen quién».
+- **Gancho del Acto IV**: más abajo, en la BIOS, algo acaba de despertar.
+
 ## Hilos abiertos
 
 - **¿Quién hizo el push?** No fue el Inge Pepe. ¿Qué pasará cuando `limpieza_final.sh` se ejecute por segunda vez («cuando init termine»)?

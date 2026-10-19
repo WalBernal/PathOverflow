@@ -35,6 +35,11 @@ var invulnerable := false
 var action_lock := 0.0
 ## Durante las escenas: ni se mueve, ni lanza, ni bebe.
 var controls_locked := false
+## Daños degenerativos activos (charcos, quemaduras): clave -> {dps, time, kind}.
+## Cada fuente tiene su clave; la misma fuente no se acumula, se renueva.
+var dots: Dictionary = {}
+const DOT_COLORS := {"chaos": Color("6fd36b"), "fire": Color("e0652f"), "cold": Color("7fb8e0"), "lightning": Color("e8d070")}
+const DOT_RES := {"chaos": &"chaos_res", "fire": &"fire_res", "cold": &"cold_res", "lightning": &"lightning_res"}
 ## Barrera temporal (Firewall Personal): absorbe daño antes que el escudo y la vida.
 var barrier := 0.0
 var barrier_max := 0.0
@@ -83,6 +88,7 @@ func is_alive() -> bool:
 
 
 func refill() -> void:
+	dots.clear()
 	life = max_life()
 	mana = max_mana()
 	energy_shield = max_energy_shield()
@@ -212,6 +218,7 @@ func _physics_process(delta: float) -> void:
 		return
 	_update_conditions(delta)
 	_regenerate(delta)
+	_tick_dots(delta)
 	character.tick_timed_effects(delta)
 	if barrier_time > 0.0:
 		barrier_time -= delta
@@ -273,6 +280,45 @@ func _regenerate(delta: float) -> void:
 			energy_shield + max_energy_shield() * ES_RECHARGE_PERCENT / 100.0 * delta)
 
 
+## Daño degenerativo: no se esquiva, no se bloquea y la armadura no lo reduce,
+## pero sí la resistencia de su tipo. La misma clave renueva (no acumula).
+func apply_dot(key: String, dps: float, duration: float, kind := "chaos") -> void:
+	if not is_alive() or invulnerable or dps <= 0.0:
+		return
+	var old: Dictionary = dots.get(key, {})
+	dots[key] = {"dps": maxf(dps, float(old.get("dps", 0.0))), "time": maxf(duration, float(old.get("time", 0.0))), "kind": kind}
+
+
+func _tick_dots(delta: float) -> void:
+	if dots.is_empty():
+		return
+	var total := 0.0
+	for key in dots.keys():
+		var d: Dictionary = dots[key]
+		d["time"] -= delta
+		if d["time"] <= 0.0:
+			dots.erase(key)
+			continue
+		var res := minf(Stat.RESISTANCE_CAP, _stat(DOT_RES.get(d["kind"], &"chaos_res")))
+		total += float(d["dps"]) * delta * (1.0 - res / 100.0)
+	if total <= 0.0 or not is_alive():
+		return
+	_since_damage = 0.0
+	var amount := total
+	if barrier > 0.0:
+		var blocked := minf(barrier, amount)
+		barrier -= blocked
+		amount -= blocked
+	var absorbed := minf(energy_shield, amount)
+	energy_shield -= absorbed
+	life -= amount - absorbed
+	if life <= 0.0:
+		life = 0.0
+		dots.clear()
+		_recoveries.clear()
+		died.emit()
+
+
 func take_damage(amount: float) -> void:
 	if not is_alive() or invulnerable:
 		return
@@ -309,3 +355,10 @@ func _draw() -> void:
 		tint = Color.RED
 	CharacterAppearance.draw(self, Vector2(0.0, RADIUS * 0.6), 0.9, character.appearance, _facing, tint,
 		_walk_phase if is_alive() else -1.0)
+	# Burbujas del daño degenerativo sobre la cabeza (del color de su tipo).
+	var k := 0
+	for d in dots.values():
+		var ph := fmod(Time.get_ticks_msec() / 700.0 + k * 0.33, 1.0)
+		var c: Color = DOT_COLORS.get(d["kind"], Color("6fd36b"))
+		draw_circle(Vector2(-8.0 + k * 8.0, -44.0 - ph * 14.0), 2.5 + ph * 1.5, Color(c, 0.85 * (1.0 - ph)))
+		k += 1

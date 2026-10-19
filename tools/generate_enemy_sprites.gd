@@ -20,7 +20,8 @@ var oy := 0
 
 
 func _initialize() -> void:
-	var rows: Array[Callable] = [_bug, _zombie_process, _memory_leak, _worm, _daemon, _spam_bot, _thread, _node_modules, _troll, _irq, _mutex, _wild_pointer, _twin_thread, _init_fork, _init_core]
+	var rows: Array[Callable] = [_bug, _zombie_process, _memory_leak, _worm, _daemon, _spam_bot, _thread, _node_modules, _troll, _irq, _mutex, _wild_pointer, _twin_thread, _init_fork, _init_core,
+		_rootkit, _ghost_process, _bios_sentinel, _firmware_worm, _electromigration, _capacitor, _fw_update]
 	img = Image.create_empty(S * FRAMES, S * rows.size(), false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
 	for row in rows.size():
@@ -330,3 +331,108 @@ func _init_core(f: int) -> void:
 	_ellipse(16, 16, 2.5, 2.5, Color("1a0a08"))
 	_line(8, 10, 12, 10, Color("8a8a96"))
 	_px(23, 22, glow)
+
+# --- Acto III: el Silicio Profundo ---
+
+## Rootkit: figura encapuchada que flota, con un bastón-prompt «$» que brilla.
+func _rootkit(f: int) -> void:
+	var hover: int = [0, -1, -2, -1][f]
+	var robe := Color("2a1f3a")
+	for y in range(10, 27):
+		var w := 4 + (y - 10) / 2
+		_rect(15 - w, y + hover, 15 + w, y + hover, robe)
+	_ellipse(15, 9 + hover, 5, 5, robe.lightened(0.1))
+	_ellipse(16, 10 + hover, 3, 3, Color("0a0810"))
+	_px(17, 10 + hover, Color("b07aff"))
+	_line(24, 6 + hover, 24, 26 + hover, Color("6a5a40"))
+	var glow: Color = [Color("7a4ad9"), Color("a06aff"), Color("c08aff"), Color("a06aff")][f]
+	_rect(22, 3 + hover, 26, 6 + hover, glow)
+	_px(24, 4 + hover, Color.WHITE)
+	_line(11, 18 + hover, 19, 18 + hover, Color("7a4ad9"))   # cinturón de código
+
+
+## Proceso fantasma: espectro pequeño y translúcido con ojos de «?».
+func _ghost_process(f: int) -> void:
+	var bob: int = [0, -1, 0, 1][f]
+	var c := Color(0.75, 0.7, 1.0, 0.75)
+	_ellipse(16, 15 + bob, 7, 7, c)
+	_rect(9, 15 + bob, 23, 22 + bob, c)
+	for k in 4:   # borde ondulado
+		var x := 10 + k * 4
+		_rect(x, 23 + bob + (k + f) % 2, x + 2, 24 + bob + (k + f) % 2, c)
+	_px(13, 14 + bob, Color("1a1430"))
+	_px(18, 14 + bob, Color("1a1430"))
+	_px(13, 13 + bob, Color("1a1430"))
+	_px(18, 13 + bob, Color("1a1430"))
+
+
+## Centinela del BIOS: pantalla azul flotante con un ojo y antenas.
+func _bios_sentinel(f: int) -> void:
+	var hover: int = [0, -1, -1, 0][f]
+	_rect(6, 7 + hover, 25, 21 + hover, Color("2a3a6a"))
+	_rect(8, 9 + hover, 23, 19 + hover, Color("1040b0"))
+	for k in 3:
+		_line(9, 11 + k * 3 + hover, 13 + k * 3, 11 + k * 3 + hover, Color("d0d8ff"))
+	var eye: Color = [Color("5cd0ff"), Color("9ae8ff"), Color("5cd0ff"), Color("2a8aaa")][f]
+	_ellipse(19, 14 + hover, 3, 3, eye)
+	_px(19, 14 + hover, Color.WHITE)
+	_line(9, 7 + hover, 7, 3 + hover, Color("8a8a96"))
+	_line(22, 7 + hover, 24, 3 + hover, Color("8a8a96"))
+	_rect(13, 22 + hover, 18, 24 + hover, Color("3a3f4a"))   # soporte
+
+
+## Gusano de firmware: babosa verde hecha de chips, que gotea.
+func _firmware_worm(f: int) -> void:
+	var wave: int = [0, 1, 0, -1][f]
+	var body := Color("3a7a3a")
+	for k in 5:
+		var x := 6 + k * 4
+		_ellipse(x, 21 + (wave if k % 2 == 0 else -wave), 4, 4, body.lightened(k * 0.04))
+		_px(x, 19 + (wave if k % 2 == 0 else -wave), Color("c0a060"))   # patita de chip
+	_ellipse(26, 19 + wave, 4.5, 4.5, body.lightened(0.2))
+	_px(27, 18 + wave, Color("e8ff6a"))
+	_px(25, 27, Color("6fd36b"))   # gota
+	_px(12, 27 - f % 2, Color("6fd36b"))
+
+
+## Arco de electromigración: cable de cobre retorcido con chispas.
+func _electromigration(f: int) -> void:
+	var copper := Color("c87a3a")
+	var pts := [[8, 26], [12, 18], [9, 12], [15, 7], [20, 12], [17, 19], [22, 26]]
+	for k in pts.size() - 1:
+		_line(pts[k][0], pts[k][1], pts[k + 1][0], pts[k + 1][1], copper)
+		_line(pts[k][0] + 1, pts[k][1], pts[k + 1][0] + 1, pts[k + 1][1], copper.darkened(0.3))
+	var spark: Color = [Color("ffd860"), Color("ff9a3a"), Color("ffffff"), Color("ff9a3a")][f]
+	var s: Array = pts[f + 2]
+	_px(s[0], s[1] - 2, spark)
+	_px(s[0] + 1, s[1] - 3, spark)
+	_px(s[0] - 1, s[1] - 1, spark)
+	_ellipse(15, 7, 2.5, 2.5, Color("ffd860"))
+
+
+## Condensador hinchado: cilindro con la tapa abombada a punto de reventar.
+func _capacitor(f: int) -> void:
+	var bulge: int = [0, 1, 2, 1][f]
+	_rect(9, 9, 22, 26, Color("2a4a8a"))
+	_rect(9, 9, 11, 26, Color("d0d0d8"))                # franja del polo negativo
+	_ellipse(15.5, 9 - bulge * 0.5, 7 + bulge * 0.5, 2 + bulge, Color("a0a0a8"))
+	_line(13, 8 - bulge, 18, 8 - bulge, Color("6a6a70"))   # la cruz de la tapa
+	_line(15, 6 - bulge, 15, 10, Color("6a6a70"))
+	_line(12, 27, 12, 30, Color("c0a060"))
+	_line(19, 27, 19, 30, Color("c0a060"))
+	_px(20, 15, Color("d0b040"))
+
+
+## fw_update.exe: chip de memoria flash gigante con una barra de progreso por boca.
+func _fw_update(f: int) -> void:
+	for k in 6:
+		_line(5 + k * 4, 4, 5 + k * 4, 1, Color("c0a060"))
+		_line(5 + k * 4, 26, 5 + k * 4, 30, Color("c0a060"))
+	_rect(3, 4, 28, 26, Color("1c1c22"))
+	_rect(5, 6, 26, 24, Color("2a2a34"))
+	var eye: Color = [Color("ff4a3a"), Color("ff8a3a"), Color("ffd060"), Color("ff8a3a")][f]
+	_ellipse(11, 11, 2.5, 2.5, eye)
+	_ellipse(20, 11, 2.5, 2.5, eye)
+	_rect(7, 17, 24, 21, Color("0a0a0e"))
+	_rect(8, 18, 8 + 3 + f * 4, 20, Color("3cff6a"))   # la barra de progreso avanza
+	_px(26, 6, Color("5cd0ff"))

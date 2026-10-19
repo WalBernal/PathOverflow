@@ -549,6 +549,11 @@ func _on_enemy_killed(rarity: int, experience: int, pos: Vector2, type_id: Strin
 		if randf() < float(info["drop_chance"]) * drop_mult:
 			var item := item_generator.roll_drop(enemies.area_level, info["item_rarity_bonus"])
 			loot.drop_item(item, zone.free_spot_near(pos + Vector2(randf_range(-30.0, 30.0), randf_range(-20.0, 20.0))))
+	# Enemigos raros con kill_flag (p. ej. el Centinela del Cargador): que no reaparezcan.
+	if rarity == Rarity.Enemy.UNIQUE:
+		for r in zone.def.get("rare_spawns", []):
+			if r.get("type", "") == type_id and r.has("kill_flag"):
+				character.flags[r["kill_flag"]] = true
 	if type_id == "mutex_lock":
 		_on_mutex_broken()
 	elif type_id == "puntero_salvaje":

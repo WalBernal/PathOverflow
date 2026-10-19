@@ -589,6 +589,107 @@
           "text": "¡Bienvenido al Sandbox! Detecté un usuario nuevo: sin credenciales, sin experiencia y sin camisa formal. Perfil típico de practicante. Ven, háblame y te explico lo básico."
         }
       ]
+    },
+    "llegada_silicio": {
+      "steps": [
+        {
+          "effect": "glitch",
+          "time": 0.6,
+          "strength": 1.0
+        },
+        {
+          "name": "",
+          "style": "system",
+          "text": "La controladora de bus te escupe sobre un suelo de silicio que vibra. Arriba, en lugar de cielo, hay un circuito infinito."
+        },
+        {
+          "speaker": "rafa_terminal",
+          "text": "Te veo..... apenas..... aquí abajo la señal llega por el bus de depuración..... Ve hacia el Puerto JTAG..... detecto a dos personas más..... de la universidad....."
+        },
+        {
+          "speaker": "player",
+          "text": "¿Más gente de la UAdeO cayó aquí?"
+        },
+        {
+          "speaker": "rafa_terminal",
+          "text": "El reflasheo..... está jalando todo lo que estaba conectado..... incluida la sala de maestros..... y la cafetería......"
+        }
+      ]
+    },
+    "camara_entrada": {
+      "steps": [
+        {
+          "name": "",
+          "style": "system",
+          "text": "En el techo avanza una barra de progreso del tamaño de un edificio: 97 %... 98 %..."
+        },
+        {
+          "name": "fw_update.exe",
+          "style": "boss",
+          "text": "ACTUALIZACIÓN DE FIRMWARE EN CURSO. NO APAGUE EL EQUIPO. NO DESCONECTE EL CABLE. NO SE MUEVA."
+        },
+        {
+          "speaker": "m_paez",
+          "name": "M. Páez (por radio)",
+          "style": "phone",
+          "text": "Sus orbes siguen una curva de persecución: rompe la línea de visión con los condensadores. Y no te quedes en los charcos."
+        },
+        {
+          "speaker": "player",
+          "text": "¿Algo más, Inge?"
+        },
+        {
+          "speaker": "m_paez",
+          "name": "M. Páez (por radio)",
+          "style": "phone",
+          "text": "Sí: cuando llegue al 99 %, se va a poner nervioso. Como yo en las juntas de academia."
+        }
+      ]
+    },
+    "reflash_cancelado": {
+      "steps": [
+        {
+          "effect": "shake",
+          "time": 0.3,
+          "strength": 1.0
+        },
+        {
+          "effect": "glitch",
+          "time": 0.8,
+          "strength": 1.3
+        },
+        {
+          "name": "fw_update.exe",
+          "style": "boss",
+          "text": "Actualización... cancelada... por el usuario... ¿Qué... usuario...?"
+        },
+        {
+          "name": "Consola",
+          "style": "console",
+          "text": "fw_update.exe: ERROR 0x99 - progreso detenido en 99 %\n[cron] limpieza_final.sh: ejecución 2 de 2 completada"
+        },
+        {
+          "speaker": "rafa_terminal",
+          "text": "99 %..... como mi reinicio..... «el último uno por ciento no es tuyo, es mío»..... esa frase..... me la dijo El Pepe......"
+        },
+        {
+          "speaker": "m_paez",
+          "name": "M. Páez (por radio)",
+          "style": "phone",
+          "text": "Los datos dicen que alguien lo dejó todo preparado. Los datos no dicen quién. Odio cuando los datos se callan."
+        },
+        {
+          "speaker": "eugenio",
+          "name": "Eugenio (por radio)",
+          "style": "phone",
+          "text": "Yo a este final le doy un 7/10. Le faltó pan."
+        },
+        {
+          "name": "",
+          "style": "system",
+          "text": "Acto III completado. Se abrió un túnel al Puerto JTAG. Más abajo, en la BIOS, algo acaba de despertar."
+        }
+      ]
     }
   }
 }

@@ -62,6 +62,7 @@ func _initialize() -> void:
 	_test_appearance_and_dialogue_flow()
 	_test_prologue_data()
 	_test_class_kits_and_robotics()
+	_test_act3_mechanics()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
 	else:
@@ -547,12 +548,12 @@ func _test_camp_and_tutorial_data() -> void:
 func _test_act(npc_data: Dictionary) -> void:
 	var all_zones: Array = []
 	var zones := {}
-	for path in ["res://data/act1.json", "res://data/act2.json"]:
+	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json"]:
 		var a: Dictionary = DataLoader.load_json(path)
 		for z in a["zones"]:
 			zones[z["id"]] = z
 			all_zones.append(z)
-	for path in ["res://data/act1.json", "res://data/act2.json"]:
+	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json"]:
 		var a: Dictionary = DataLoader.load_json(path)
 		_check(zones.has(a["start_zone"]) and zones.has(a["town"]), "%s: zona inicial y pueblo existen" % a["id"])
 		_check(zones[a["town"]].has("waypoint"), "%s: el pueblo tiene waypoint (reaparición)" % a["id"])
@@ -598,7 +599,7 @@ func _test_act(npc_data: Dictionary) -> void:
 				for k in zone.key_points():
 					_check(p.distance_to(k) >= 450.0, "%s: grupo demasiado cerca de una entrada/NPC" % z["id"])
 		zone.free()
-	_check(bosses == 2, "un jefe por acto (el Arquitecto e init)")
+	_check(bosses == 3, "un jefe por acto (el Arquitecto, init y fw_update.exe)")
 	_test_quest_data(zones, npc_data)
 	_test_cutscenes(zones, npc_data)
 	_check(act["zones"].size() >= 10, "acto I completo + inicio del acto II")
@@ -828,7 +829,7 @@ func _test_new_skills() -> void:
 
 func _test_enemy_attacks() -> void:
 	var em := EnemyManager.new()
-	var kinds := ["melee", "ranged", "charge", "slam", "cone", "blink", "none"]
+	var kinds := ["melee", "ranged", "charge", "slam", "cone", "blink", "none", "summon", "seeker", "lob_pool"]
 	var rows := {}
 	for t in EnemyManager.enemy_types():
 		_check(kinds.has(t.get("attack", {}).get("kind", "melee")), "ataque desconocido en %s" % t["id"])
@@ -1156,7 +1157,7 @@ func _test_progression_rules() -> void:
 func _test_latam_spanish() -> void:
 	var banned := RegEx.create_from_string("(*UCP)(?i)\\b(vosotr\\w*|vuestr\\w*|os|\\w+áis|\\w+éis|portátil\\w*|ordenador\\w*|móvil\\w*|vale|coger|ratón|gafas|zumo|guay|becari\\w*|marchando|cuidaos|proteged)\\b")
 	var files := ["res://data/npcs.json", "res://data/cutscenes.json", "res://data/quests.json", "res://data/tutorial.json",
-		"res://data/act1.json", "res://data/act2.json", "res://data/classes.json", "res://data/passive_themes.json",
+		"res://data/act1.json", "res://data/act2.json", "res://data/act3.json", "res://data/classes.json", "res://data/passive_themes.json",
 		"res://data/items/flasks.json", "res://data/items/uniques.json", "res://data/items/bases.json",
 		"res://data/skills/skills.json", "res://data/skills/ram_modules.json", "res://data/enemies.json"]
 	var found := PackedStringArray()
@@ -1408,7 +1409,7 @@ func _test_tree_version_refund() -> void:
 
 ## Cada estilo de zona tiene su ambiente y cada habilidad su efecto.
 func _test_audio_assets() -> void:
-	for act_path in ["res://data/act1.json", "res://data/act2.json"]:
+	for act_path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json"]:
 		var act: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(act_path))
 		for z in act.get("zones", []):
 			var style := String(z.get("style", ""))
@@ -1564,3 +1565,117 @@ func _test_class_kits_and_robotics() -> void:
 	var emp := SkillCalc.compute(Motherboard.new(CompanionRobot.EMP, 5, []), c)
 	_check(laser["max_damage"] > 0.0 and laser["kind"] == "homing", "láser de rastreo del robot")
 	_check(emp["stun"] > 0.0 and emp["radius"] > 0.0, "pulso EMP del robot")
+
+## Simulación de combate del acto III: un jugador quieto frente a cada enemigo
+## nuevo; se avanza el tiempo y se comprueba que la mecánica ocurre de verdad.
+func _test_act3_mechanics() -> void:
+	var em := EnemyManager.new()
+	root.add_child(em)
+	var player: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(player)
+	player.setup(_new_character(), em)
+	var home := Vector2(1000, 1000)
+	player.global_position = home
+	em.player = player
+	em.area_level = 30
+	var sim := func(seconds: float) -> void:
+		for k in int(seconds / 0.05):
+			em._physics_process(0.05)
+			player._tick_dots(0.05)
+			player.life = player.max_life()   # inmortal durante la prueba
+	var spawn := func(type_id: String, offset: Vector2, rarity := Rarity.Enemy.NORMAL) -> int:
+		return em.spawn(home + offset, rarity, em.type_index_of(type_id))
+
+	# Rootkit: invoca procesos fantasma, sin pasarse de su tope.
+	em.clear_all()
+	spawn.call("rootkit", Vector2(420, 0))
+	sim.call(9.0)
+	var ghosts := em.count_type("proceso_fantasma")
+	_check(ghosts >= 2 and ghosts <= 10, "el Rootkit invoca procesos fantasma (%d)" % ghosts)
+
+	# Centinela del BIOS: orbes lentos que giran hacia el jugador y se rompen contra obstáculos.
+	em.clear_all()
+	spawn.call("centinela_bios", Vector2(520, 0))
+	sim.call(2.5)
+	var orbs := em.projectiles.filter(func(pr: Dictionary) -> bool: return pr.has("homing"))
+	_check(not orbs.is_empty(), "el Centinela dispara orbes perseguidores")
+	if not orbs.is_empty():
+		var orb: Dictionary = orbs[0]
+		player.global_position = home + Vector2(0, 380)   # el jugador se aparta
+		sim.call(1.2)
+		var heading: float = (orb["vel"] as Vector2).normalized().dot((player.global_position - orb["pos"]).normalized())
+		_check(heading > 0.6, "el orbe gira para seguir al jugador (%.2f)" % heading)
+		_check(absf((orb["vel"] as Vector2).length() - 120.0) < 1.0, "el orbe es lento y mantiene su velocidad")
+	player.global_position = home
+	em.clear_all()
+	em.obstacles = [Vector3(home.x + 200, home.y, 40)]
+	em.projectiles.append(em._seeker_orb(home + Vector2(400, 0), Vector2.LEFT, 10.0, {"speed": 200.0}))
+	sim.call(1.5)
+	_check(em.projectiles.is_empty(), "un obstáculo detiene al orbe (cobertura)")
+	em.obstacles = []
+
+	# Gusano de firmware: lanza un charco donde estaba el jugador; pisarlo aplica daño degenerativo.
+	em.clear_all()
+	player.dots.clear()
+	spawn.call("gusano_firmware", Vector2(380, 0))
+	for k in 40:
+		sim.call(0.25)
+		if not em.pools.is_empty():
+			break
+	_check(not em.pools.is_empty(), "el Gusano deja un charco")
+	if not em.pools.is_empty():
+		_check((em.pools[0]["pos"] as Vector2).distance_to(home) < 40.0, "el charco cae donde estaba el jugador")
+		sim.call(0.2)
+		_check(player.dots.has("charco"), "pisar el charco aplica daño degenerativo")
+
+	# Arco de electromigración: sus proyectiles dejan una quemadura.
+	em.clear_all()
+	player.dots.clear()
+	spawn.call("electromigracion", Vector2(330, 0))
+	var burned := false
+	for k in 30:
+		sim.call(0.25)
+		for key in player.dots:
+			burned = burned or String(player.dots[key]["kind"]) == "fire"
+		if burned:
+			break
+	_check(burned, "la electromigración quema (daño degenerativo de fuego)")
+
+	# Condensador: su golpe en área deja un charco eléctrico.
+	em.clear_all()
+	spawn.call("condensador", Vector2(70, 0))
+	sim.call(3.0)
+	_check(em.pools.any(func(pl: Dictionary) -> bool: return pl["kind"] == "lightning"), "el Condensador revienta y deja un charco eléctrico")
+
+	# El daño degenerativo ignora la armadura pero respeta la resistencia.
+	player.dots.clear()
+	player.life = player.max_life()
+	var before := player.life
+	player.apply_dot("prueba", 40.0, 2.0, "chaos")
+	player._tick_dots(1.0)
+	var lost := before - player.life
+	_check(lost > 0.0 and lost <= 40.0 + 0.01, "el daño degenerativo resta vida por segundo (%.1f)" % lost)
+	player.apply_dot("prueba", 10.0, 0.5, "chaos")
+	_check(float(player.dots["prueba"]["dps"]) == 40.0, "la misma fuente no se acumula: se renueva con el mayor")
+
+	# Jefe fw_update.exe: orbes al principio; charcos a media vida; más orbes y rootkits al final.
+	em.clear_all()
+	var act3: Dictionary = DataLoader.load_json("res://data/act3.json")
+	var boss: Dictionary = {}
+	for z in act3["zones"]:
+		if z.has("boss"):
+			boss = z["boss"]
+	var bid: int = em.spawn(home + Vector2(300, 0), Rarity.Enemy.UNIQUE, em.type_index_of("fw_update"), boss["name"], 1.0, boss["abilities"])
+	sim.call(4.0)
+	_check(em.projectiles.any(func(pr: Dictionary) -> bool: return pr.has("homing")), "fase 1: el jefe lanza orbes perseguidores")
+	var bi := em.index_of(bid)
+	em.lives[bi] = em.max_lives[bi] * 0.5
+	em.projectiles.clear()
+	sim.call(4.0)
+	_check(not em.pools.is_empty(), "fase 2: el jefe deja charcos (Borrado de sectores)")
+	bi = em.index_of(bid)
+	em.lives[bi] = em.max_lives[bi] * 0.2
+	sim.call(5.0)
+	_check(em.count_type("rootkit") > 0, "fase 3: el jefe invoca rootkits de respaldo")
+	em.queue_free()
+	player.queue_free()
