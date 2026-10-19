@@ -6,7 +6,7 @@ Por ahora es solo para un jugador en local, pero la lógica está escrita para p
 ## Cómo abrirlo
 
 - **Jugar sin el editor**: doble click en `Jugar.bat` (pantalla completa, sin depurador). **F11** o **Alt+Enter** cambian entre pantalla completa y ventana en cualquier momento.
-- **Exportar** (`build/PathOverflow.exe`, pantalla completa por defecto): hace falta instalar una vez las plantillas de exportación de Godot 4.7.2 (Editor → Gestionar plantillas de exportación → Descargar e instalar). Luego: Proyecto → Exportar → Windows, o `Godot_v4.7.2-stable_win64.exe --headless --path . --export-release Windows build/PathOverflow.exe`.
+- **Exportar** (`build/PathOverflow.exe`, un solo archivo con el juego dentro, pantalla completa por defecto): las plantillas de exportación de Godot 4.7.2 están instaladas en `%APPDATA%\Godot\export_templates\4.7.2.stable`. Proyecto → Exportar → Windows, o `Godot_v4.7.2-stable_win64.exe --headless --path . --export-release Windows build/PathOverflow.exe`.
 
 1. Abre Godot 4.7.2 → **Importar** → selecciona `project.godot`.
 2. Pulsa **F5**. Aparece la pantalla de título (logo, música); cualquier tecla lleva a la lista de personajes.
