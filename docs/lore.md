@@ -26,7 +26,7 @@ Pepe **no** programó el Monolito ni hizo el commit. Estuvo a cargo de informát
 
 ## Acto I: El Último Commit (implementado)
 
-**Premisa.** El Servidor Principal sostenía el mundo sobre un sistema antiguo, el **Monolito**, diseñado hace veinte años por **el Arquitecto**. Un viernes a las seis de la tarde, alguien hizo un `git push --force` sin tests, firmado por «admin», con el mensaje *«Por el Monolito. Que nunca se reinicie»*: **la Gran Migración**. El Servidor se corrompió y todo lo que corría dentro cobró vida (bugs con patas, procesos zombi, fugas de memoria). El jugador es un **exiliado** desplegado en producción sin pasar por staging.
+**Premisa.** El Servidor Principal sostenía el mundo sobre un sistema antiguo, el **Monolito**, diseñado hace veinte años por **el Arquitecto**. Un viernes a las seis de la tarde, alguien hizo un `git push --force` sin tests, firmado por «admin», con el mensaje *«Por el Monolito. Que nunca se reinicie»*: **la Gran Migración**. El Servidor se corrompió y todo lo que corría dentro cobró vida (bugs con patas, procesos zombi, fugas de memoria). El jugador es un **recién egresado** arrastrado a producción desde el Departamento de Informática de la UAdeO (ver el Prólogo).
 
 | Zona | Lore |
 |---|---|
@@ -128,4 +128,4 @@ Otras historias de los diálogos: Aida escribió la mitad de las nóminas en COB
 - **Aida y Mario** siguen en el campamento, sin conexión. Rafa prometió alcanzar al jugador «en cuanto baje la VPN».
 - **Acto III: El Silicio Profundo** (firmware, ROM, BIOS/UEFI, reflashing).
 
-- **Las clases como primer trabajo**: el exiliado es un recién egresado; cada clase es un puesto de entrada y cada ascendencia (nivel 20), un camino de carrera.
+- **Las clases como primer trabajo**: el jugador es un recién egresado que busca su constancia de servicio social (que El Pepe nunca registró); cada clase es un puesto de entrada y cada ascendencia (nivel 20), un camino de carrera.

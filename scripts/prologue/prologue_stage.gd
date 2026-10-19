@@ -49,6 +49,11 @@ var player_facing := Vector2.RIGHT
 var walk_phase := -1.0
 var player_look: Dictionary = CharacterAppearance.default()
 var rafa_look: Dictionary = CharacterAppearance.default()
+var mario_look: Dictionary = CharacterAppearance.default()
+var aida_look: Dictionary = CharacterAppearance.default()
+## Mario (con el carrito de frituras) y Aida entrando a la oficina: x de Mario (< -100 = no están).
+var visitors_x := -999.0
+var visitors_walk := -1.0
 ## Ropa formal (0) → ropa del mundo digital (1).
 var outfit_shift := 0.0
 var kneeling := false
@@ -106,11 +111,15 @@ func _draw() -> void:
 			_draw_hallway()
 		"oficina":
 			_draw_office()
-	_draw_player()
 	if room == "oficina":
+		# El jugador, delante del escritorio (y de la barricada).
 		_draw_office_front()
-	elif room == "calle":
-		_draw_street_front()
+		_draw_visitors()
+		_draw_player()
+	else:
+		_draw_player()
+		if room == "calle":
+			_draw_street_front()
 	if not prompt.is_empty():
 		var p: Vector2 = prompt["pos"]
 		var bob := sin(time * 4.0) * 1.5
@@ -464,3 +473,37 @@ func _draw_office_front() -> void:
 			var lines := ["ERR", "WARN", "0x0F", "null", "500", "OOM"]
 			draw_string(_font, pos, lines[int(p["x"]) % lines.size()], HORIZONTAL_ALIGNMENT_LEFT, -1, 6,
 				Color(1.0, 0.85, 0.3, 0.9) if int(p["x"]) % 2 == 0 else Color(0.4, 1.0, 0.6, 0.9))
+
+# --- Mario y Aida llegan con el carrito ---
+
+## Mario jala un carrito plegable negro con una bolsa de basura llena de
+## frituras; Aida camina a su lado.
+func _draw_visitors() -> void:
+	if visitors_x < -100.0:
+		return
+	var mx := visitors_x
+	var feet_y := FLOOR_Y + 4.0
+	# Carrito: lona negra con el armazón en X, cuatro ruedas y el asa hacia Mario.
+	var cart := Rect2(mx - 46, feet_y - 19, 30, 13)
+	for wx in [cart.position.x + 3, cart.end.x - 3]:
+		draw_circle(Vector2(wx, feet_y - 3), 3.2, Color("101010"))
+		draw_circle(Vector2(wx, feet_y - 3), 1.2, Color("3a3a3a"))
+	draw_rect(cart, Color("1a1a1c"))
+	draw_line(cart.position, cart.end, Color("3a3a40"), 1.0)
+	draw_line(Vector2(cart.position.x, cart.end.y), Vector2(cart.end.x, cart.position.y), Color("3a3a40"), 1.0)
+	draw_rect(cart, Color("2c2c30"), false, 1.0)
+	draw_line(Vector2(cart.end.x, cart.position.y + 3), Vector2(mx - 6, feet_y - 13), Color("202024"), 1.5)   # asa
+	# Bolsa negra repleta de frituras (con bolsitas de colores asomando).
+	draw_circle(cart.get_center() + Vector2(0, -9), 9.0, Color("0c0c0e"))
+	draw_circle(cart.get_center() + Vector2(-6, -6), 6.0, Color("0c0c0e"))
+	draw_circle(cart.get_center() + Vector2(6, -6), 6.0, Color("121214"))
+	for chip in [[Vector2(-5, -17), Color("e8a020")], [Vector2(1, -19), Color("d83a2a")], [Vector2(6, -16), Color("f0d040")], [Vector2(-1, -14), Color("3a8ad0")]]:
+		draw_rect(Rect2(cart.get_center() + chip[0], Vector2(4, 5)), chip[1])
+	draw_line(cart.get_center() + Vector2(-2, -18), cart.get_center() + Vector2(2, -20), Color("0c0c0e"), 1.0)   # nudo
+	CharacterAppearance.draw(self, Vector2(mx, feet_y), 1.0, mario_look, Vector2.RIGHT, Color(0, 0, 0, 0), visitors_walk)
+	CharacterAppearance.draw(self, Vector2(mx + 20, feet_y + 2), 1.0, aida_look, Vector2.RIGHT, Color(0, 0, 0, 0),
+		visitors_walk + 1.4 if visitors_walk >= 0.0 else -1.0)
+	if dissolve > 0.0:
+		for k in 8:
+			var y := feet_y - 8.0 - fmod(time * 26.0 + k * 9.0, 34.0)
+			draw_string(_font, Vector2(mx - 40 + k * 9, y), "1" if k % 2 == 0 else "0", HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(0.3, 1.0, 0.5, 0.8 * dissolve))

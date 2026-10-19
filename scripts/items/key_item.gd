@@ -8,7 +8,7 @@ const COLOR := Color("ffd84a")
 ## Definiciones conocidas (id -> nombre, descripción, icono).
 const DEFS := {
 	"tarjeta_rack": {"name": "Tarjeta de Acceso al Rack", "icon": "key_card",
-		"description": "Tarjeta magnética de un técnico de El Pepe. Abre la escotilla del Módulo de Refrigeración, en las Alcantarillas del Buffer Overflow."},
+		"description": "Tarjeta magnética de un técnico del Inge Pepe. Abre la escotilla del Módulo de Refrigeración, en las Alcantarillas del Buffer Overflow."},
 }
 
 var key_id := ""

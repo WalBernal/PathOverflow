@@ -7,7 +7,7 @@ extends Control
 
 const RANDOM_NAMES := [
 	"Segfault", "NullPointer", "Bobby Tables", "Sudo", "Deadlock", "Hotfix", "Legacy",
-	"Pato de Goma", "Chmod 777", "Lorem Ipsum", "Tabulador", "Exiliado404", "Commitero",
+	"Pato de Goma", "Chmod 777", "Lorem Ipsum", "Tabulador", "Egresado404", "Commitero",
 	"Stack Smasher", "Regexorcista", "Async Await", "Kernel Sanders", "Monolito", "Cron Job",
 ]
 const FACINGS := [Vector2.DOWN, Vector2.LEFT, Vector2.UP, Vector2.RIGHT]

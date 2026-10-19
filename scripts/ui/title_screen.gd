@@ -6,11 +6,11 @@ extends Control
 ## click continúa a la lista de personajes.
 
 const SNIPPETS := [
-	"console.log('hola, exiliado');", "git push --force origin main", "sudo rm -rf /bugs",
+	"console.log('hola, egresado');", "git push --force origin main", "sudo rm -rf /bugs",
 	"while (true) { farmear(); }", "// TODO: sobrevivir", "Segmentation fault (core dumped)",
 	"npm install esperanza", "404: Héroe no encontrado", "System.out.println(\"ayuda\");",
 	"git blame --everyone", "SELECT * FROM esperanza; -- 0 rows", "throw new Error('motivación');",
-	"merge conflict in vida.gd", "docker run --rm exiliado", "if (lunes) { return; }",
+	"merge conflict in vida.gd", "docker run --rm egresado", "if (lunes) { return; }",
 ]
 const ENEMY_ATLAS := preload("res://assets/sprites/enemies/enemies.png")
 

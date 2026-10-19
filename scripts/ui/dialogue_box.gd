@@ -77,19 +77,21 @@ static func voice_id() -> String:
 	return _voice_cache
 
 
-## Habla. Sin callbacks de la voz: el texto avanza a su ritmo y se consulta
-## tts_is_speaking (los avisos por palabra de SAPI en Windows son delicados).
-static func speak(text: String, pitch: float, rate: float) -> void:
-	stop_speaking()
+## Habla, si la voz está libre. Devuelve false si sigue hablando la línea anterior.
+## NUNCA se corta una voz a medias: en Windows, tts_stop() con SAPI hablando puede
+## bloquear el juego entero (lo registró FreezeWatch: se colgaba justo tras
+## «voz: callar»). Si el jugador adelanta, esa línea sale sin voz (con pitidos).
+static func speak(text: String, pitch: float, rate: float) -> bool:
+	if voice_id() == "" or DisplayServer.tts_is_speaking():
+		return false
 	FreezeWatch.mark("voz: hablar (%d letras)" % text.length())
 	DisplayServer.tts_speak(text, voice_id(), 80, clampf(pitch, 0.0, 2.0), clampf(rate * 1.1, 0.5, 2.0))
+	return true
 
 
-## Calla la voz, solo si de verdad está hablando.
+## Ya no se corta la voz (ver speak): termina sola su frase.
 static func stop_speaking() -> void:
-	if voice_id() != "" and DisplayServer.tts_is_speaking():
-		FreezeWatch.mark("voz: callar")
-		DisplayServer.tts_stop()
+	pass
 
 
 static func narrator_enabled() -> bool:
@@ -224,9 +226,8 @@ func _show_node(node_id: String) -> void:
 	_shown = 0.0
 	_text.visible_characters = 0
 	_stop_voice()
-	_narrating = narrator_enabled()
+	_narrating = narrator_enabled() and speak(_text.get_parsed_text(), _pitch, _rate)
 	if _narrating:
-		speak(_text.get_parsed_text(), _pitch, _rate)
 		_voice_age = 0.0
 		_cps = NARRATED_CPS * _rate
 	else:

@@ -5,6 +5,9 @@ Por ahora es solo para un jugador en local, pero la lógica está escrita para p
 
 ## Cómo abrirlo
 
+- **Jugar sin el editor**: doble click en `Jugar.bat` (pantalla completa, sin depurador). **F11** o **Alt+Enter** cambian entre pantalla completa y ventana en cualquier momento.
+- **Exportar** (`build/PathOverflow.exe`, pantalla completa por defecto): hace falta instalar una vez las plantillas de exportación de Godot 4.7.2 (Editor → Gestionar plantillas de exportación → Descargar e instalar). Luego: Proyecto → Exportar → Windows, o `Godot_v4.7.2-stable_win64.exe --headless --path . --export-release Windows build/PathOverflow.exe`.
+
 1. Abre Godot 4.7.2 → **Importar** → selecciona `project.godot`.
 2. Pulsa **F5**. Aparece la pantalla de título (logo, música); cualquier tecla lleva a la lista de personajes.
 3. Un personaje nuevo empieza en **El Sandbox**, la zona tutorial. Desde ahí se llega al campamento y al resto del acto. El tutorial (arriba a la izquierda) te guía; se puede saltar.
@@ -109,7 +112,7 @@ Al crear un personaje (apariencia y nombre; ya no se elige clase en el creador, 
 3. **El Error 404 del Archivo Muerto**: el departamento destrozado (archivadores volcados, CRT beige, el minisplit goteando sobre una torre quemada) y Rafa, que busca tu servicio social con `grep`: el Inge Pepe anotaba a los prestadores en una libreta Scribe de gatitos y se la llevó.
 4. **El Incidente del Viernes a las 6:00 PM**: se cae el SICE; el backend corre en «El Monolito» (2004). Rafa propone un trato.
 5. **La Elección Forzada**: ventana al estilo Windows 98, «Confirmar Contratación de Emergencia», con un desplegable para el **primer puesto (la clase)**. El botón **No** esquiva el ratón sin salir de la ventana (el primer salto, 150 px a la derecha; luego a cualquier hueco) y encoge cada vez; ya diminuto deja de huir, y si se le atina sale `Error 0x80004005` y se convierte en «Pues ya que...», que acepta igual.
-6. **Clímax**: la carpeta lila «NO TOCAR - CONFIG_PROD» detrás del rack, la descarga, la consola roja (`POST /api/v1/deploy/force --user admin`), la oficina pixelándose (papeles en logs, cables en cobre, la ropa en binario) y el título **EL ÚLTIMO COMMIT**. Despiertas en el Sandbox (escena `llegada_sandbox`).
+6. **Clímax**: Mario llega jalando un carrito con una bolsa de frituras, Aida con él («Profe Rafa, ¿va a querer churr...?»), y la caída se los lleva a todos. Antes: la carpeta lila «NO TOCAR - CONFIG_PROD» detrás del rack, la descarga, la consola roja (`POST /api/v1/deploy/force --user admin`), la oficina pixelándose (papeles en logs, cables en cobre, la ropa en binario) y el título **EL ÚLTIMO COMMIT**. Despiertas en el Sandbox (escena `llegada_sandbox`).
 
 Se camina con A/D o flechas (en el pasillo, WASD) o con click, que fija un destino en el mundo; E, Espacio o click para interactuar. Esc (dos veces) salta a la elección de puesto; en el creador, «Saltar prólogo» va directo a ella.
 
@@ -189,6 +192,7 @@ El **registro de misiones** está debajo del minimapa (L para plegarlo): la prin
 - Ambos se activan o desactivan en el menú de pausa (Esc) y se recuerdan en `user://settings.cfg`.
 - **Escenas** (muerte de jefes, transiciones): el texto avanza solo, con una barrita que marca el tiempo de lectura; si hay narrador, lo lee en voz alta y espera a que termine. Click o Espacio adelanta y Esc salta.
 - **Conversaciones que fluyen**: volver al inicio muestra una frase corta del NPC (`menu`) en vez de repetir el saludo; en visitas siguientes saluda distinto (`greeting_again`) y los temas ya leídos pueden resumirse (`again`). Las opciones ya leídas salen marcadas con ✓ y al final; las de misiones, con ★ y primero. Los temas largos se encadenan con *Continuar*. Las opciones aparecen cuando termina el texto (click lo completa); teclas 1-9 eligen y Espacio sigue. Lo leído se guarda en el personaje.
+- **El narrador nunca corta la voz a media frase**: en Windows, `tts_stop()` con la voz hablando colgaba el juego entero (y el editor); lo detectó `FreezeWatch` (la última acción antes de cada cuelgue era «voz: callar»). Si se adelanta una línea mientras la voz habla, esa línea sale sin voz (con pitidos) y la voz termina su frase.
 - El narrador no usa los avisos por palabra de la voz (en Windows pueden trabar el juego): el texto avanza a su ritmo y se consulta si la voz sigue hablando. Solo se corta la voz si de verdad está hablando.
 - **Detector de cuelgues** (FreezeWatch): un hilo aparte vigila que el juego avance. Si se para más de 4 s, escribe en user://logs/congelado.log las últimas acciones (diálogos, voz, escenas, viajes). Si el juego se congela, ese archivo dice dónde.
 

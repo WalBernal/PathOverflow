@@ -1518,6 +1518,13 @@ func _test_prologue_data() -> void:
 		if z["id"] == act1["start_zone"]:
 			var enter: Dictionary = z.get("cutscene_on_enter", {})
 			_check(enter.get("id", "") == "llegada_sandbox" and enter.get("requires_flag", "") == "prologue_done", "llegada al Sandbox tras el prólogo")
+	# El narrador nunca corta la voz: tts_stop() con SAPI colgaba el juego entero.
+	for path in ["res://scripts/ui/dialogue_box.gd", "res://scripts/ui/cutscene_player.gd", "res://scripts/prologue/prologue.gd"]:
+		_check(not FileAccess.get_file_as_string(path).contains("tts_stop()" + "
+") and not FileAccess.get_file_as_string(path).contains("DisplayServer.tts_stop"), "%s no debe llamar a tts_stop" % path)
+	# El jugador es un recién egresado, no un exiliado.
+	for path in ["res://data/npcs.json", "res://data/cutscenes.json", "res://data/tutorial.json", "res://data/quests.json"]:
+		_check(not FileAccess.get_file_as_string(path).to_lower().contains("exiliad"), "%s: ya no hay exiliados" % path)
 	# El Inge Pepe ya no es «prestador de servicios».
 	for path in ["res://data/npcs.json", "res://data/cutscenes.json"]:
 		_check(not FileAccess.get_file_as_string(path).contains("restador de servicios retirado"), "%s: Pepe ya no es prestador de servicios" % path)

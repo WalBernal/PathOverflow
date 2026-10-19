@@ -186,9 +186,9 @@ func _speak(style: String) -> void:
 	_cps = CHARS_PER_SECOND
 	if style == "console" or not DialogueBox.narrator_enabled():
 		return
-	DialogueBox.speak(_text.get_parsed_text(), _pitch, _rate)
+	if not DialogueBox.speak(_text.get_parsed_text(), _pitch, _rate):
+		return   # la voz sigue con la línea anterior: esta va sin voz
 	_voice_age = 0.0
-
 	_narrating = true
 	_cps = NARRATED_CPS * _rate
 

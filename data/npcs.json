@@ -285,12 +285,16 @@
       ],
       "nodes": {
         "hola": {
-          "text": "Vaya, otro exiliado. Te tiraron a producción sin pasar por staging, ¿eh? Soy Aida. Llevo aquí desde que esto era un monolito en COBOL.",
+          "text": "Vaya, un recién egresado. Te tiraron a producción sin pasar por staging, ¿eh? Soy Aida. Llevo aquí desde que El Pepe programaba todo en COBOL.",
           "options": [
             {
               "text": "¿Quién era El Pepe?",
               "next": "pepe",
               "requires_flag": "act1_reunion"
+            },
+            {
+              "text": "¿Sabes algo de mi constancia de servicio social?",
+              "next": "constancia"
             },
             {
               "text": "¿Dónde estoy?",
@@ -359,7 +363,7 @@
           ]
         },
         "historia": {
-          "text": "Entré como practicante cuando las pantallas eran verdes y los discos pesaban como un refrigerador. Escribí la mitad del sistema de nóminas en COBOL. Todavía funciona. Nadie sabe cómo. Yo tampoco.",
+          "text": "Entré como practicante cuando las pantallas eran verdes y los discos pesaban como un refrigerador. El Pepe escribió medio sistema de nóminas en COBOL y yo le capturaba los datos. Todavía funciona. Nadie sabe cómo. Ni él.",
           "next": "historia2"
         },
         "historia2": {
@@ -411,14 +415,23 @@
           ]
         },
         "pepe": {
-          "text": "El Inge Pepe. Jefe de informática desde que nadie se acuerda: instaló la primera red, bautizó al Monolito y firmó cada parche durante treinta años. Se jubiló en julio. Así que ahora todo es culpa suya.",
+          "text": "El Inge Pepe. Jefe de informática desde que nadie se acuerda: programó medio sistema en COBOL, instaló la primera red y bautizó al Monolito. En julio dejó el puesto, pero sigue dando clases los jueves. Le entregó todo a Rafa así, tal cual, cuando a Rafa le dieron la jefatura. Por eso ahora todo es culpa suya.",
           "next": "pepe2"
         },
         "pepe2": {
-          "text": "Era buena gente, ojo. Te arreglaba la impresora con un clip y te contaba de pesca mientras compilaba. Tenía una regla: «Lo que funciona, no se documenta: se protege». Y no, él no hizo ese commit. Pepe jamás subió nada sin descripción. Era insoportable con eso.",
+          "text": "Era buena gente, ojo. Te arreglaba la impresora con un clip y te contaba de pesca mientras compilaba. Y no, él no hizo ese commit. Lo hizo alguien que nadie conoce, firmado como <admin>, sin descripción. Aquí todos somos admin, así que eso no dice nada. Pepe jamás subió nada sin descripción.",
           "options": [
             {
               "text": "Lo tendré en cuenta.",
+              "next": "hola"
+            }
+          ]
+        },
+        "constancia": {
+          "text": "¿Tu constancia de servicio social? Pepe nunca registró a nadie. Literal: anotaba a los prestadores en una libreta de gatitos. Cuando salgamos de esto, te la firmo yo misma... si Rafa no pierde el sello.",
+          "options": [
+            {
+              "text": "Gracias, Aida.",
               "next": "hola"
             }
           ]
@@ -603,7 +616,7 @@
           "next": "lore2"
         },
         "lore2": {
-          "text": "Ahora los bugs tienen patas..... Literalmente..... Los logs dicen que fue «admin»..... Todos somos «admin»..... Esa es la tragedia.......",
+          "text": "Ahora los bugs tienen patas..... Literalmente..... El commit está firmado como <admin>..... Todos somos admin..... Esa es la tragedia.......",
           "options": [
             {
               "text": "¿Nadie revisó los logs a fondo?",
@@ -616,7 +629,7 @@
           ]
         },
         "lore3": {
-          "text": "Yo..... Tres noches..... El push salió de dentro..... de una tarea programada..... no de una persona..... Pero el crontab estaba cifrado..... y la clave..... estaba en el pósit..... que se perdió..... en la mudanza......",
+          "text": "Yo..... Tres noches..... Alguien de adentro..... con permisos de admin..... sin descripción..... Y nadie sabe quién..... Todos miran a Pepe..... porque me entregó todo así..... pero no fue él......",
           "options": [
             {
               "text": "Siempre la mudanza.",
@@ -625,7 +638,7 @@
           ]
         },
         "reinicio": {
-          "text": "Heredé el servidor de El Pepe..... Me dijo: «si algo falla, reinicia»..... Falló..... Reinicié..... El reinicio se quedó en un 99 %..... desde entonces..... No lo puedo cancelar..... me da miedo......",
+          "text": "Me dieron el puesto de jefe de informática..... y El Pepe me entregó el servidor así..... Me dijo: «si algo falla, reinicia»..... Falló..... Reinicié..... El reinicio se quedó en un 99 %..... desde entonces..... No lo puedo cancelar..... me da miedo......",
           "next": "reinicio2"
         },
         "reinicio2": {
@@ -679,7 +692,7 @@
           "next": "constancia2"
         },
         "constancia2": {
-          "text": "Y no culpes a Pepe de esto..... todos lo hacen..... pero yo vi el commit..... «admin»..... sin descripción..... Pepe ponía descripción hasta en los commits de una línea..... con faltas de ortografía..... pero la ponía......",
+          "text": "Y no culpes a Pepe de esto..... todos lo hacen..... porque me entregó todo así..... pero yo vi el commit..... <admin>..... sin descripción..... Pepe ponía descripción hasta en los commits de una línea..... con faltas de ortografía..... pero la ponía......",
           "options": [
             {
               "text": "Entonces, ¿quién fue?",
@@ -773,7 +786,7 @@
           "next": "lucha3"
         },
         "lucha3": {
-          "text": "Y lo más importante: si mueres, reapareces en el campamento. Nadie te va a descontar nada del sueldo. Porque no hay sueldo. Pero eso no es lo importante.",
+          "text": "Y lo más importante: si mueres, reapareces en el campamento. Nadie te va a descontar nada del sueldo. Porque no hay sueldo. Eres practicante. Bueno, ni eso: tu servicio social no está registrado.",
           "options": [
             {
               "text": "Entendido.",
@@ -812,7 +825,7 @@
           "next": "despues2"
         },
         "despues2": {
-          "text": "Pregunta por Aida. Es la Senior: lleva aquí desde que esto era un monolito en COBOL y es la única que lee la documentación. Y no te asustes si Rafa habla.... así...... Es normal. Creo.",
+          "text": "Pregunta por Aida. Es la Senior: lleva aquí desde que El Pepe programaba todo en COBOL y es la única que lee la documentación. Y no te asustes si Rafa habla.... así...... Es normal. Creo.",
           "options": [
             {
               "text": "Allá voy.",
@@ -1126,7 +1139,7 @@
           ]
         },
         "vio": {
-          "text": "Lo vi. Yo estaba haciendo el backup de las seis. Llegó un push firmado como «admin», sin descripción. Escribió sobre todo. Y un segundo después se despertó otra tarea, una que llevaba años dormida, y empezó a cerrar puertas.",
+          "text": "Lo vi. Yo estaba haciendo el backup de las seis. Llegó un push firmado como <admin>, sin descripción. Nadie sabe de quién. Escribió sobre todo. Y un segundo después se despertó otra tarea, una que llevaba años dormida, y empezó a cerrar puertas.",
           "next": "vio2"
         },
         "vio2": {
@@ -1597,7 +1610,7 @@
     "sindicato": {
       "start": "hola",
       "greeting_again": [
-        "¡Compañero exiliado! El Sindicato te saluda. En asamblea. Somos muchos.",
+        "¡Compañero egresado! El Sindicato te saluda. En asamblea. Somos muchos.",
         "Volviste. Votamos 7.912 a 3 que eres de confianza. Los 3 eran procesos zombi."
       ],
       "menu": [
@@ -1607,7 +1620,7 @@
       ],
       "nodes": {
         "hola": {
-          "text": "¡Alto, exiliado! Somos el Sindicato de Huérfanos, PID 404: «padre no encontrado». Miles de procesos abandonados cuando cayó el Monolito. init nos adoptó a todos... y ahora no deja que nadie nos toque. Ni para bien ni para mal.",
+          "text": "¡Alto, recién egresado! Somos el Sindicato de Huérfanos, PID 404: «padre no encontrado». Miles de procesos abandonados cuando cayó el Monolito. init nos adoptó a todos... y ahora no deja que nadie nos toque. Ni para bien ni para mal.",
           "options": [
             {
               "text": "Traigo un descriptor de archivo en blanco.",

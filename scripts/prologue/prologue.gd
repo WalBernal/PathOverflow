@@ -6,7 +6,8 @@ extends Control
 ##   3. El Error 404 del Archivo Muerto: Rafa y la libreta de gatitos.
 ##   4. El Incidente del Viernes a las 6:00 PM: se cae el SICE.
 ##   5. La Elección Forzada: la ventana de contratación (aquí se elige la clase).
-##   Clímax: la carpeta lila, la descarga, la consola roja y la caída a producción.
+##   Clímax: la carpeta lila, la descarga, la consola roja, llegan Mario (con el
+##   carrito de frituras) y Aida, y la caída a producción se los lleva a todos.
 ## Al terminar se crea el personaje (nombre y apariencia del creador + la clase
 ## elegida) y se entra al Sandbox. Esc: saltar a la elección de puesto.
 ## Se mueve con A/D o flechas (en el pasillo, también W/S) o con click (destino
@@ -108,7 +109,10 @@ func _build() -> void:
 	add_child(_viewport)
 	_stage = PrologueStage.new()
 	_stage.player_look = _appearance
-	_stage.rafa_look = CharacterAppearance.sanitize(Zone.npc_database().get("npcs", {}).get("root", {}).get("appearance", {}))
+	var npc_looks: Dictionary = Zone.npc_database().get("npcs", {})
+	_stage.rafa_look = CharacterAppearance.sanitize(npc_looks.get("root", {}).get("appearance", {}))
+	_stage.mario_look = CharacterAppearance.sanitize(npc_looks.get("kevin", {}).get("appearance", {}))
+	_stage.aida_look = CharacterAppearance.sanitize(npc_looks.get("ada", {}).get("appearance", {}))
 	_viewport.add_child(_stage)
 	_screen = TextureRect.new()
 	_screen.texture = _viewport.get_texture()
@@ -159,7 +163,9 @@ func _process(delta: float) -> void:
 			_stage.rack_shake = 1.0
 			if _console_chars >= _console_text.length() and not _flags.has("console_done"):
 				_flags["console_done"] = true
-				get_tree().create_timer(1.4).timeout.connect(_start_fall)
+				get_tree().create_timer(1.4).timeout.connect(_start_arrival)
+		"arrival":
+			_update_arrival(delta)
 		"fall":
 			_update_fall(delta)
 		"title":
@@ -449,6 +455,25 @@ func _start_console() -> void:
 	_console_text = "\n".join(CONSOLE_LINES)
 	_console_chars = 0.0
 	Sfx.play("wave", -6.0, 0.7)
+
+
+## Antes de la caída llegan Mario (jalando el carrito de frituras) y Aida.
+func _start_arrival() -> void:
+	_phase = "arrival"
+	_stage.kneeling = false
+	_stage.player_facing = Vector2.LEFT
+	_stage.visitors_x = -50.0
+	Sfx.play("swing", -12.0, 0.6)
+
+
+func _update_arrival(delta: float) -> void:
+	_stage.rack_shake = 1.0
+	_stage.visitors_x = move_toward(_stage.visitors_x, 112.0, delta * 42.0)
+	_stage.visitors_walk = fmod(maxf(_stage.visitors_walk, 0.0) + delta * 2.6 * PI, TAU)
+	if _stage.visitors_x >= 112.0:
+		_stage.visitors_walk = -1.0
+		_phase = "busy"
+		_play("prologo_mario", _start_fall)
 
 
 ## La oficina se pixela: papeles en logs, cables en cobre y la ropa en binario.

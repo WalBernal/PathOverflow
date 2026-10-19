@@ -11,6 +11,8 @@ const RATE := 22050
 const SFX_DIR := "res://assets/audio/sfx/"
 const AMB_DIR := "res://assets/audio/ambient/"
 const AMBIENT_SECONDS := 6.0
+## Ambientes más bajos que el resto (los del prólogo no deben tapar los diálogos).
+const AMBIENT_PEAK := {"oficina": 0.28, "pasillo": 0.4, "calle": 0.5}
 
 var rng := RandomNumberGenerator.new()
 
@@ -35,7 +37,7 @@ func _initialize() -> void:
 		"calle": _amb_street, "pasillo": _amb_hallway, "oficina": _amb_office,
 	}
 	for name in ambients:
-		_save(AMB_DIR + name + ".wav", _loopable(ambients[name].call()))
+		_save(AMB_DIR + name + ".wav", _loopable(ambients[name].call()), float(AMBIENT_PEAK.get(name, 0.9)))
 	print("Sonidos generados: %d efectos y %d ambientes" % [sfx.size(), ambients.size()])
 	quit()
 
@@ -48,11 +50,11 @@ func _buf(seconds: float) -> PackedFloat32Array:
 	return b
 
 
-func _save(path: String, samples: PackedFloat32Array) -> void:
+func _save(path: String, samples: PackedFloat32Array, target_peak := 0.9) -> void:
 	var peak := 0.001
 	for s in samples:
 		peak = maxf(peak, absf(s))
-	var gain := 0.9 / peak
+	var gain := target_peak / peak
 	var data := PackedByteArray()
 	data.resize(samples.size() * 2)
 	for i in samples.size():
@@ -514,9 +516,17 @@ func _amb_hallway() -> PackedFloat32Array:
 	return b
 
 
+## Oficina: un servidor viejo encerrado en el cuarto. Zumbido grave de la fuente
+## (60 Hz y armónicos), ventiladores apagados tras la puerta del rack y algún
+## clic de disco duro. Bajo y constante: no debe tapar los diálogos.
 func _amb_office() -> PackedFloat32Array:
 	var b := _amb_base()
-	_add_wind(b, 0.3, 1600.0, 0.05)       # ventiladores del rack
-	_add_drone(b, 120.0, 0.07, 0.0)
-	_add_pings(b, 6, 1800.0, 2000.0, 0.25, 0.04)   # el minisplit gotea
+	_add_drone(b, 60.0, 0.22, 0.0)
+	_add_drone(b, 120.0, 0.1, 0.0)
+	_add_drone(b, 180.0, 0.04, 0.0)
+	_add_wind(b, 0.18, 380.0, 0.03)       # ventiladores amortiguados por la carcasa
+	for k in 9:   # el disco duro buscando sectores
+		var start := rng.randi_range(0, b.size() - 400)
+		for i in 300:
+			b[start + i] += _noise() * exp(-i / 25.0) * 0.12
 	return b

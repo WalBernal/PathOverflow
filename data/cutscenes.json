@@ -90,7 +90,7 @@
         },
         {
           "speaker": "root",
-          "text": "Del Inge Pepe..... el jefe de informática de toda la vida..... desde antes de que existiera el wifi..... Se jubiló en julio..... dejó una nota que decía «todo documentado»..... y un pósit con la contraseña de root......"
+          "text": "Del Inge Pepe..... el jefe de informática de toda la vida..... Dejó el puesto en julio..... sigue dando clases los jueves..... Cuando me dieron la jefatura me entregó todo así..... con una nota que decía «todo documentado»..... y un pósit con la contraseña de root......"
         },
         {
           "speaker": "kevin",
@@ -102,7 +102,7 @@
         },
         {
           "speaker": "ada",
-          "text": "Clásico Pepe. Treinta años a cargo de todo, así que todo es culpa suya. Seguro que dejó algún cron programado y se fue a pescar."
+          "text": "Clásico Pepe. Treinta años a cargo de todo y te lo entrega así, sin documentación. Ahora todo es culpa suya. Aunque el commit lo firmó <admin>... y aquí todos somos admin."
         },
         {
           "speaker": "root",
@@ -515,6 +515,19 @@
         {
           "speaker": "player",
           "text": "Experiencia comprobable... Si la hubiera tenido, no estaría aquí."
+        }
+      ]
+    },
+    "prologo_mario": {
+      "steps": [
+        {
+          "speaker": "kevin",
+          "text": "Profe Rafa, ¿va a querer churr...?"
+        },
+        {
+          "effect": "glitch",
+          "time": 0.4,
+          "strength": 1.5
         }
       ]
     },

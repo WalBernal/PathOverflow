@@ -130,3 +130,13 @@ func save_character(c: CharacterData) -> Error:
 	if err != OK:
 		push_error("No se pudo guardar a %s: %s" % [c.character_name, error_string(err)])
 	return err
+
+## F11 o Alt+Enter: pantalla completa / ventana (en cualquier pantalla).
+func _input(event: InputEvent) -> void:
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo:
+		return
+	if key.keycode == KEY_F11 or (key.keycode == KEY_ENTER and key.alt_pressed):
+		var full := DisplayServer.window_get_mode() in [DisplayServer.WINDOW_MODE_FULLSCREEN, DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN]
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if full else DisplayServer.WINDOW_MODE_FULLSCREEN)
+		get_viewport().set_input_as_handled()

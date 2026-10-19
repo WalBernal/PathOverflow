@@ -27,7 +27,7 @@ const SAVE_VERSION := 2
 
 ## Identificador del archivo de guardado ("" = personaje temporal, no se guarda).
 var id := ""
-var character_name := "Exiliado sin nombre"
+var character_name := "Egresado sin nombre"
 var class_def: Dictionary
 var ascendancy_def: Dictionary = {}
 ## Pasivas de la ascendencia asignadas (índices en ascendancy_def.passives).
