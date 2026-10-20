@@ -50,6 +50,20 @@ const EXTRA_MINIONS := &"extra_minions"
 const EXTRA_DEVICES := &"extra_devices"
 ## Robot de compañía (ascendencia Ingeniero en Robótica): 1 = lo tiene.
 const COMPANION_ROBOT := &"companion_robot"
+## Estados alterados (ver Ailments): probabilidad plana (%) de aplicarlos al golpear.
+const BURN_CHANCE := &"burn_chance"
+const SHOCK_CHANCE := &"shock_chance"
+const CHILL_CHANCE := &"chill_chance"
+const FREEZE_CHANCE := &"freeze_chance"
+const POISON_CHANCE := &"poison_chance"
+const BLEED_CHANCE := &"bleed_chance"
+## Daño, duración y efecto de los estados alterados que aplicas.
+const AILMENT_DAMAGE := &"ailment_damage"
+const AILMENT_DURATION := &"ailment_duration"
+## Velocidad de los autómatas (torretas, drones, esbirros, robots): más disparos y golpes.
+const AUTOMATON_SPEED := &"automaton_speed"
+## Maná reservado por las invocaciones persistentes (menos es mejor).
+const RESERVATION_EFFICIENCY := &"reservation_efficiency"
 
 # --- Tags (condiciones de los modificadores) ---
 const TAG_ATTACK := &"attack"
@@ -106,6 +120,16 @@ const NAMES := {
 	EXTRA_MINIONS: "Esbirros adicionales",
 	EXTRA_DEVICES: "Trampas, minas y torretas adicionales a la vez",
 	COMPANION_ROBOT: "Robot de compañía (Láser de rastreo y Pulso EMP)",
+	BURN_CHANCE: "Probabilidad de quemar",
+	SHOCK_CHANCE: "Probabilidad de electrocutar",
+	CHILL_CHANCE: "Probabilidad de helar",
+	FREEZE_CHANCE: "Probabilidad de congelar",
+	POISON_CHANCE: "Probabilidad de envenenar",
+	BLEED_CHANCE: "Probabilidad de hacer sangrar",
+	AILMENT_DAMAGE: "Daño y efecto de estados alterados",
+	AILMENT_DURATION: "Duración de estados alterados",
+	AUTOMATON_SPEED: "Velocidad de autómatas",
+	RESERVATION_EFFICIENCY: "Eficiencia de reserva de maná",
 }
 
 ## Los aumentos/más de los padres también aplican al hijo:
@@ -121,6 +145,7 @@ const PARENTS := {
 
 const PERCENT_STATS := [
 	BLOCK_CHANCE, FIRE_RES, COLD_RES, LIGHTNING_RES, CHAOS_RES, CRIT_MULTIPLIER, LIFE_LEECH,
+	BURN_CHANCE, SHOCK_CHANCE, CHILL_CHANCE, FREEZE_CHANCE, POISON_CHANCE, BLEED_CHANCE,
 ]
 
 const TAG_NAMES := {
@@ -136,6 +161,13 @@ const TAG_NAMES := {
 	&"minion": "de esbirros",
 	&"chain": "de cadenas",
 	&"duration": "de duración",
+	&"automaton": "de autómatas",
+	&"physical": "físicas",
+	&"fire": "de fuego",
+	&"cold": "de frío",
+	&"lightning": "de rayo",
+	&"chaos": "de caos",
+	&"elemental": "elementales",
 	COND_LOW_LIFE: "con la vida baja",
 	COND_FULL_LIFE: "con la vida al máximo",
 	COND_RECENT_KILL: "si has matado recientemente",

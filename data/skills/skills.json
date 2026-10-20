@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_doc": "Habilidades activas (lo que hace cada placa base). kind: melee_area, nova (stun opcional), projectile, ground_aoe, blink, dash (embestida que golpea en línea), cone (cono delante), beam (rayo en línea tras un retardo), boomerang (va y vuelve golpeando en los dos sentidos), spin (gira golpeando durante duration cada tick), trap (trampa que explota al acercarse un enemigo; max_active), chain (salta entre enemigos chains veces), minion (invoca count esbirros durante duration; max_active a la vez), degen_area (charco que hace base_damage por segundo durante duration), barrier (barrera que absorbe daño: barrier + barrier_life × vida máxima), buff (buff_mods sobre el personaje durante duration), curse_area (aplica daño degenerativo por segundo a todos los de una zona), dot_projectile (proyectil que deja daño degenerativo), homing (proyectiles teledirigidos al enemigo más cercano: seek_range, turn_rate), drones (count drones que orbitan y disparan proyectiles teledirigidos cada tick). tags: varias por habilidad (ver SkillTags): ataque/hechizo, forma (melee, projectile, area, chain), mecánica (duration, trap, mine, totem, minion, movement, degen) y tipo de daño (physical, fire, cold, lightning, chaos, elemental). duration y stun escalan con skill_duration; cooldown con cooldown_recovery. lol: en qué habilidad de League of Legends se inspira. attack: usa el arma (damage_effectiveness). spell: daño propio (base_damage) que crece un damage_growth por nivel de la placa. attribute: generación de RAM más probable en sus ranuras (str=DDR3, dex=DDR4, int=DDR5).",
+  "_doc": "Habilidades activas (lo que hace cada placa base). kind: melee_area, nova (stun opcional), projectile, ground_aoe, blink, dash (embestida que golpea en línea), cone (cono delante), beam (rayo en línea tras un retardo), boomerang (va y vuelve golpeando en los dos sentidos), spin (gira golpeando durante duration cada tick), trap (trampa que explota al acercarse un enemigo; max_active), chain (salta entre enemigos chains veces), minion (invoca count esbirros durante duration; max_active a la vez), degen_area (charco que hace base_damage por segundo durante duration), barrier (barrera que absorbe daño: barrier + barrier_life × vida máxima), buff (buff_mods sobre el personaje durante duration), curse_area (aplica daño degenerativo por segundo a todos los de una zona), dot_projectile (proyectil que deja daño degenerativo), homing (proyectiles teledirigidos al enemigo más cercano: seek_range, turn_rate), drones (count drones que orbitan y disparan proyectiles teledirigidos cada tick). tags: varias por habilidad (ver SkillTags): ataque/hechizo, forma (melee, projectile, area, chain), mecánica (duration, trap, mine, totem, minion, movement, degen) y tipo de daño (physical, fire, cold, lightning, chaos, elemental). duration y stun escalan con skill_duration; cooldown con cooldown_recovery. lol: en qué habilidad de League of Legends se inspira. attack: usa el arma (damage_effectiveness). spell: daño propio (base_damage) que crece un damage_growth por nivel de la placa. attribute: generación de RAM más probable en sus ranuras (str=DDR3, dex=DDR4, int=DDR5). leap_slam (salta hacia el cursor y golpea el suelo al caer: radius, range, stun), rain (count impactos de impact_radius repartidos en radius durante duration), unit (invocación PERSISTENTE: no caduca, reserva unit.reserve % del maná máximo mientras viva; unit.behavior: melee | ranged | orbit (dron invulnerable que orbita) | tank (provoca a los enemigos en unit.taunt); unit.life, unit.radius, unit.speed, unit.interval (s entre ataques), unit.range, unit.reduction (daño evitado); max_active a la vez). repeats: la habilidad se repite sola. ailments: probabilidad extra (%) de aplicar estados (burn, shock, chill, freeze, poison, bleed), además de la innata de su tipo de daño (ver Ailments). La etiqueta automaton (autómata) la llevan torretas, drones, esbirros y robots.",
   "skills": [
     {
       "id": "barrido",
@@ -25,6 +25,9 @@
       "icon": {
         "shape": "ring",
         "color": "d9a441"
+      },
+      "ailments": {
+        "bleed": 10
       }
     },
     {
@@ -52,6 +55,9 @@
       "icon": {
         "shape": "fan",
         "color": "c8c8c8"
+      },
+      "ailments": {
+        "bleed": 5
       }
     },
     {
@@ -86,6 +92,9 @@
       "icon": {
         "shape": "bolt",
         "color": "e8d070"
+      },
+      "ailments": {
+        "shock": 10
       }
     },
     {
@@ -119,6 +128,9 @@
       "icon": {
         "shape": "burst",
         "color": "e0652f"
+      },
+      "ailments": {
+        "burn": 15
       }
     },
     {
@@ -150,6 +162,9 @@
       "icon": {
         "shape": "nova",
         "color": "7fb8e0"
+      },
+      "ailments": {
+        "chill": 15
       }
     },
     {
@@ -205,6 +220,9 @@
       "icon": {
         "shape": "dash",
         "color": "d9a441"
+      },
+      "ailments": {
+        "bleed": 15
       }
     },
     {
@@ -238,6 +256,9 @@
       "icon": {
         "shape": "cone",
         "color": "e0652f"
+      },
+      "ailments": {
+        "burn": 20
       }
     },
     {
@@ -272,6 +293,9 @@
       "icon": {
         "shape": "beam",
         "color": "e8d070"
+      },
+      "ailments": {
+        "shock": 20
       }
     },
     {
@@ -300,6 +324,9 @@
       "icon": {
         "shape": "boomerang",
         "color": "c8c8c8"
+      },
+      "ailments": {
+        "bleed": 10
       }
     },
     {
@@ -329,6 +356,9 @@
       "icon": {
         "shape": "spin",
         "color": "b8b8c8"
+      },
+      "ailments": {
+        "bleed": 5
       }
     },
     {
@@ -363,6 +393,9 @@
       "icon": {
         "shape": "lock",
         "color": "7fb8e0"
+      },
+      "ailments": {
+        "freeze": 15
       }
     },
     {
@@ -400,6 +433,9 @@
       "icon": {
         "shape": "trap",
         "color": "b04ad9"
+      },
+      "ailments": {
+        "poison": 25
       }
     },
     {
@@ -434,6 +470,9 @@
       "icon": {
         "shape": "chain",
         "color": "8888ff"
+      },
+      "ailments": {
+        "shock": 15
       }
     },
     {
@@ -446,7 +485,8 @@
         "spell",
         "minion",
         "duration",
-        "physical"
+        "physical",
+        "automaton"
       ],
       "lol": "Yorick / Annie R (Tibbers)",
       "description": "fork() y dos procesos hijos salen a pelear por ti durante un rato. No los has documentado, pero obedecen.",
@@ -747,6 +787,9 @@
       "icon": {
         "shape": "homing",
         "color": "c8c8c8"
+      },
+      "ailments": {
+        "bleed": 5
       }
     },
     {
@@ -760,7 +803,8 @@
         "projectile",
         "lightning",
         "elemental",
-        "duration"
+        "duration",
+        "automaton"
       ],
       "lol": "Heimerdinger Q / Zyra",
       "description": "Tres drones orbitan a tu alrededor y disparan rayos teledirigidos al enemigo más cercano.",
@@ -784,6 +828,9 @@
       "icon": {
         "shape": "drones",
         "color": "e8d070"
+      },
+      "ailments": {
+        "shock": 5
       }
     },
     {
@@ -798,7 +845,8 @@
         "lightning",
         "elemental",
         "totem",
-        "duration"
+        "duration",
+        "automaton"
       ],
       "lol": "Heimerdinger Q (torreta)",
       "description": "Despliegas una torreta armada con piezas de servidor que dispara sola proyectiles teledirigidos al enemigo más cercano. Tú programas; ella pelea.",
@@ -825,6 +873,300 @@
       "icon": {
         "shape": "turret",
         "color": "b04ad9"
+      },
+      "ailments": {
+        "shock": 10
+      }
+    },
+    {
+      "id": "reinicio_forzado",
+      "name": "Reinicio Forzado",
+      "kind": "leap_slam",
+      "damage_type": "physical",
+      "attribute": "str",
+      "tags": [
+        "attack",
+        "melee",
+        "area",
+        "physical"
+      ],
+      "lol": "Malphite R / Sejuani Q",
+      "description": "Saltas hacia el cursor y caes sobre los enemigos como quien reinicia un servidor a patadas: daño en área, aturdimiento corto y alguna hemorragia.",
+      "attack": {
+        "damage_effectiveness": 1.35
+      },
+      "radius": 110,
+      "range": 340,
+      "stun": 0.7,
+      "ailments": {
+        "bleed": 15
+      },
+      "mana_cost": 9,
+      "mana_per_level": 0.4,
+      "cooldown": 4.0,
+      "icon": {
+        "shape": "leap",
+        "color": "d9a441"
+      }
+    },
+    {
+      "id": "fuzzing",
+      "name": "Fuzzing",
+      "kind": "cone",
+      "damage_type": "physical",
+      "attribute": "dex",
+      "tags": [
+        "attack",
+        "melee",
+        "area",
+        "physical"
+      ],
+      "lol": "Yasuo Q / Fiora Q",
+      "description": "Bombardeas al enemigo con entradas aleatorias: tres tajos rapidísimos en cono. Alguno encuentra el bug, y el bug sangra.",
+      "attack": {
+        "damage_effectiveness": 0.55
+      },
+      "radius": 135,
+      "angle": 80,
+      "repeats": 2,
+      "ailments": {
+        "bleed": 20
+      },
+      "mana_cost": 6,
+      "mana_per_level": 0.3,
+      "cooldown": 0,
+      "icon": {
+        "shape": "flurry",
+        "color": "e8d9b0"
+      }
+    },
+    {
+      "id": "cascada_css",
+      "name": "Cascada de Estilos",
+      "kind": "rain",
+      "damage_type": "cold",
+      "attribute": "dex",
+      "tags": [
+        "attack",
+        "projectile",
+        "area",
+        "cold",
+        "elemental"
+      ],
+      "lol": "Ashe W / Miss Fortune R",
+      "description": "Haces llover hojas de estilo heladas sobre una zona: !important tras !important, cada impacto congela un poco más el diseño (y a los enemigos).",
+      "attack": {
+        "damage_effectiveness": 0.6
+      },
+      "count": 8,
+      "radius": 150,
+      "impact_radius": 42,
+      "duration": 1.2,
+      "range": 560,
+      "ailments": {
+        "chill": 15
+      },
+      "mana_cost": 10,
+      "mana_per_level": 0.45,
+      "cooldown": 3.0,
+      "icon": {
+        "shape": "rain",
+        "color": "7fb8e0"
+      }
+    },
+    {
+      "id": "robot_centinela",
+      "name": "Robot Centinela",
+      "kind": "unit",
+      "damage_type": "lightning",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "minion",
+        "automaton",
+        "persistent",
+        "projectile",
+        "lightning",
+        "elemental"
+      ],
+      "lol": "Heimerdinger / Ivern (Daisy)",
+      "description": "Montas un robot centinela que te sigue y dispara láseres teledirigidos. No caduca: reserva maná mientras siga en pie. Si lo destruyen, vuelve a montarlo.",
+      "spell": {
+        "base_damage": [
+          8,
+          14
+        ],
+        "damage_growth": 0.16,
+        "cast_time": 0.9,
+        "crit": 5.0
+      },
+      "unit": {
+        "behavior": "ranged",
+        "life": 60,
+        "radius": 12,
+        "speed": 240,
+        "interval": 1.1,
+        "range": 520,
+        "reserve": 15
+      },
+      "max_active": 1,
+      "projectile_speed": 640,
+      "seek_range": 520,
+      "turn_rate": 8.0,
+      "ailments": {
+        "shock": 10
+      },
+      "mana_cost": 10,
+      "mana_per_level": 0.3,
+      "cooldown": 1.5,
+      "icon": {
+        "shape": "robot",
+        "color": "7fd0e8"
+      }
+    },
+    {
+      "id": "daemon_segundo_plano",
+      "name": "Daemon en Segundo Plano",
+      "kind": "unit",
+      "damage_type": "physical",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "minion",
+        "automaton",
+        "persistent",
+        "physical"
+      ],
+      "lol": "Yorick (Doncellas) / Annie (Tibbers)",
+      "description": "Lanzas dos procesos daemon que pelean cuerpo a cuerpo por ti. Corren en segundo plano para siempre (como todo lo que nadie documentó) y reservan maná.",
+      "spell": {
+        "base_damage": [
+          7,
+          12
+        ],
+        "damage_growth": 0.16,
+        "cast_time": 0.8,
+        "crit": 5.0
+      },
+      "unit": {
+        "behavior": "melee",
+        "life": 90,
+        "radius": 13,
+        "speed": 250,
+        "interval": 0.9,
+        "range": 450,
+        "reserve": 12
+      },
+      "max_active": 2,
+      "ailments": {
+        "bleed": 10
+      },
+      "mana_cost": 12,
+      "mana_per_level": 0.4,
+      "cooldown": 1.0,
+      "icon": {
+        "shape": "daemon",
+        "color": "7fd07f"
+      }
+    },
+    {
+      "id": "dron_escolta",
+      "name": "Dron Escolta",
+      "kind": "unit",
+      "damage_type": "fire",
+      "attribute": "dex",
+      "tags": [
+        "spell",
+        "minion",
+        "automaton",
+        "persistent",
+        "projectile",
+        "fire",
+        "elemental"
+      ],
+      "lol": "Zyra / Heimerdinger E",
+      "description": "Un dron armado que orbita a tu alrededor y dispara bengalas incendiarias. Vuela demasiado alto para que lo golpeen. Persistente: reserva maná.",
+      "spell": {
+        "base_damage": [
+          6,
+          11
+        ],
+        "damage_growth": 0.16,
+        "cast_time": 0.7,
+        "crit": 5.0
+      },
+      "unit": {
+        "behavior": "orbit",
+        "life": 1,
+        "radius": 8,
+        "speed": 0,
+        "interval": 1.3,
+        "range": 480,
+        "reserve": 10
+      },
+      "max_active": 2,
+      "projectile_speed": 600,
+      "seek_range": 480,
+      "turn_rate": 7.0,
+      "ailments": {
+        "burn": 20
+      },
+      "mana_cost": 8,
+      "mana_per_level": 0.3,
+      "cooldown": 1.0,
+      "icon": {
+        "shape": "escort",
+        "color": "e0652f"
+      }
+    },
+    {
+      "id": "golem_hardware",
+      "name": "Golem de Hardware Reciclado",
+      "kind": "unit",
+      "damage_type": "physical",
+      "attribute": "str",
+      "tags": [
+        "spell",
+        "minion",
+        "automaton",
+        "persistent",
+        "area",
+        "physical"
+      ],
+      "lol": "Annie R (Tibbers) / Malphite",
+      "description": "Ensamblas un golem con torres viejas y cables. Es lento y enorme: provoca a los enemigos cercanos para que le peguen a él y golpea el suelo. Persistente: reserva maná.",
+      "spell": {
+        "base_damage": [
+          12,
+          20
+        ],
+        "damage_growth": 0.16,
+        "cast_time": 1.0,
+        "crit": 5.0
+      },
+      "unit": {
+        "behavior": "tank",
+        "life": 220,
+        "radius": 20,
+        "speed": 170,
+        "interval": 1.6,
+        "range": 400,
+        "taunt": 230,
+        "reduction": 0.3,
+        "reserve": 25
+      },
+      "max_active": 1,
+      "radius": 90,
+      "stun": 0.4,
+      "ailments": {
+        "bleed": 10
+      },
+      "mana_cost": 14,
+      "mana_per_level": 0.5,
+      "cooldown": 2.0,
+      "icon": {
+        "shape": "golem",
+        "color": "b8a888"
       }
     }
   ]

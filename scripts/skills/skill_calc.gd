@@ -5,6 +5,7 @@ class_name SkillCalc
 
 ## Segundos entre golpes de cada esbirro.
 const MINION_ATTACK_INTERVAL := 0.9
+const TAG_AUTOMATON := &"automaton"
 
 ## Daño por nivel de la placa base (sube con la experiencia, como las gemas de PoE):
 ## - Hechizos: base × (1 + growth × (nivel - 1)) × SPELL_LEVEL_MULT^(nivel - 1).
@@ -38,6 +39,10 @@ static func milestone_text(skill: Dictionary) -> String:
 			return "+1 bomba a la vez"
 		"drones":
 			return "+1 dron"
+		"unit":
+			return "+1 invocación a la vez"
+		"rain":
+			return "+2 impactos"
 		"barrier":
 			return "+20 % de barrera"
 		"buff":
@@ -61,7 +66,8 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 	var cost_mult := 1.0
 	var extra_projectiles := 0
 	var pierce := int(skill.get("pierce", 0))
-	var repeats := 0
+	# Algunas habilidades se repiten solas (Fuzzing: varios tajos seguidos).
+	var repeats := int(skill.get("repeats", 0))
 	var area_mult := 1.0
 	var extra_chains := 0
 	# Algunas habilidades se despliegan solas (p. ej. la Torreta de Integración Continua).
@@ -83,6 +89,10 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 	# (los modificadores "de trampas" le afectan).
 	if deploy != "" and not tags.has(StringName(deploy)):
 		tags.append(StringName(deploy))
+	# Autómatas: todo lo que ataca solo (torretas, drones, esbirros, robots).
+	var kind := String(skill.get("kind", ""))
+	if not tags.has(TAG_AUTOMATON) and (tags.has(&"totem") or tags.has(&"minion") or kind in ["drones", "unit"]):
+		tags.append(TAG_AUTOMATON)
 	# Mejoras por nivel de la placa.
 	var lvl_mult := 1.0 + LEVEL_UTILITY * (board.level - 1)
 	var milestones := milestones_reached(board.level)
@@ -145,24 +155,48 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 	var duration := float(skill.get("duration", 0.0)) * duration_mult
 	if bonus_text == "+1 s de duración":
 		duration += milestones
+	# Autómatas: más velocidad = disparan y golpean más a menudo.
+	var automaton_speed := stats.total_multiplier(Stat.AUTOMATON_SPEED, tags) if tags.has(TAG_AUTOMATON) else 1.0
 	var tick := float(skill.get("tick", 0.0))
+	if kind == "drones":
+		tick /= maxf(0.1, automaton_speed)
+	var minion_interval := MINION_ATTACK_INTERVAL / maxf(0.1, automaton_speed)
+	# Invocaciones persistentes (kind "unit"): no caducan, reservan maná.
+	var unit: Dictionary = skill.get("unit", {})
+	var extra_minions := int(stats.get_value(Stat.EXTRA_MINIONS, tags))
+	var max_units := int(skill.get("max_active", 1)) + extra_minions + (milestones if kind == "unit" else 0)
+	var unit_interval := float(unit.get("interval", 1.0)) / maxf(0.1, automaton_speed)
+	var unit_life := float(unit.get("life", 0.0)) * (1.0 + 0.12 * (board.level - 1)) * stats.total_multiplier(Stat.MINION_LIFE, tags)
+	var reserve := float(unit.get("reserve", 0.0)) / maxf(0.1, stats.total_multiplier(Stat.RESERVATION_EFFICIENCY, tags))
+	var rain_hits := int(skill.get("count", 0)) + (2 * milestones if kind == "rain" else 0)
 	var hits_per_use := float(repeats + 1)
-	match String(skill["kind"]):
+	match kind:
 		"spin":
 			hits_per_use *= maxf(1.0, floorf(duration / maxf(0.05, tick)))
 		"boomerang":
 			hits_per_use *= 2.0   # ida y vuelta contra el mismo objetivo
 		"minion":
 			# Cada esbirro golpea ~1 vez por segundo mientras dura.
-			hits_per_use *= float(int(skill.get("count", 1)) + int(stats.get_value(Stat.EXTRA_MINIONS, tags)) + milestones) * maxf(1.0, duration / MINION_ATTACK_INTERVAL)
+			hits_per_use *= float(int(skill.get("count", 1)) + extra_minions + milestones) * maxf(1.0, duration / minion_interval)
 		"degen_area", "curse_area", "dot_projectile":
 			hits_per_use *= maxf(1.0, duration)   # base_damage es por segundo
 		"drones":
-			hits_per_use *= float(int(skill.get("count", 1)) + milestones) * maxf(1.0, duration / maxf(0.1, tick))
+			hits_per_use *= float(int(skill.get("count", 1)) + milestones + extra_minions) * maxf(1.0, duration / maxf(0.1, tick))
+		"rain":
+			hits_per_use *= maxf(1.0, rain_hits * 0.5)   # no todos los impactos caen sobre el mismo
 	var dps := average * minf(uses_per_second, 1.0 / maxf(cooldown, 0.0001)) * hits_per_use
+	if kind == "unit":
+		# Daño sostenido de todas las invocaciones a la vez.
+		dps = average * max_units / maxf(0.1, unit_interval)
+	# Estados alterados: probabilidad por tipo, potencia y duración.
+	var ailment_chances := Ailments.chances(stats, tags, skill)
+	var ailment_effect := stats.total_multiplier(Stat.AILMENT_DAMAGE, tags)
+	var ailment_duration := stats.total_multiplier(Stat.AILMENT_DURATION, tags)
+	var ailment_ctx := {} if ailment_chances.is_empty() else {"chances": ailment_chances, "effect": ailment_effect, "duration": ailment_duration}
 
 	return {
 		"id": skill["id"],
+		"def": skill,
 		"name": skill["name"],
 		"kind": skill["kind"],
 		"damage_type": damage_type,
@@ -196,7 +230,7 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 		"totem_duration": totem_duration * duration_mult,
 		"count": int(skill.get("count", 0)) + (int(stats.get_value(Stat.EXTRA_MINIONS, tags)) + milestones if skill.get("kind", "") == "minion" else 0),
 		"extra_devices": int(stats.get_value(Stat.EXTRA_DEVICES, tags)),
-		"drone_count": int(skill.get("count", 0)) + milestones if skill.get("kind", "") == "drones" else 0,
+		"drone_count": int(skill.get("count", 0)) + milestones + extra_minions if kind == "drones" else 0,
 		"seek_range": float(skill.get("seek_range", 0.0)),
 		"turn_rate": float(skill.get("turn_rate", 6.0)),
 		"buff_mods": skill.get("buff_mods", []),
@@ -205,4 +239,17 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 		"chain_range": float(skill.get("chain_range", 0.0)),
 		"life_leech": stats.get_value(Stat.LIFE_LEECH, tags),
 		"dps": dps,
+		"ailments": ailment_chances,
+		"ailment_effect": ailment_effect,
+		"ailment_duration": ailment_duration,
+		"ailment_ctx": ailment_ctx,
+		"automaton_speed": automaton_speed,
+		"minion_interval": minion_interval,
+		"rain_hits": rain_hits,
+		"impact_radius": float(skill.get("impact_radius", 0.0)) * sqrt(stats.total_multiplier(Stat.AREA_OF_EFFECT, tags)) * area_mult * lvl_mult,
+		"unit": unit,
+		"max_units": max_units,
+		"unit_life": unit_life,
+		"unit_interval": unit_interval,
+		"reserve": reserve,
 	}

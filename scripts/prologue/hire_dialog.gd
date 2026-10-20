@@ -175,6 +175,9 @@ func _refresh_info() -> void:
 	_info.text = "[b]%s[/b]   [color=#555555](FUE %d · DES %d · INT %d · dificultad %s)[/color]\n%s\n[color=#333333][i]%s[/i][/color]" % [
 		c["name"], int(attrs.get("strength", 0)), int(attrs.get("dexterity", 0)), int(attrs.get("intelligence", 0)),
 		"★".repeat(difficulty) + "☆".repeat(3 - difficulty), c.get("description", ""), c.get("playstyle", "")]
+	var trait_def: Dictionary = c.get("trait", {})
+	if not trait_def.is_empty():
+		_info.text += "\n[color=#0a3a7a][b]Rasgo: %s.[/b] %s[/color]" % [trait_def.get("name", ""), trait_def.get("description", "")]
 	for child in _skills.get_children():
 		child.queue_free()
 	for skill_id in c.get("starter_skills", []):
@@ -189,6 +192,9 @@ func _refresh_info() -> void:
 		var name := Label.new()
 		name.text = def.get("name", "")
 		name.add_theme_color_override("font_color", Color.BLACK)
+		name.add_theme_font_size_override("font_size", 12)
+		name.custom_minimum_size.x = 150
+		name.autowrap_mode = TextServer.AUTOWRAP_WORD
 		_skills.add_child(name)
 
 

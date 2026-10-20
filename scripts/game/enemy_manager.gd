@@ -67,6 +67,8 @@ var bounds := Rect2(-1e6, -1e6, 2e6, 2e6)
 var walk_clamp: Callable
 ## Durante las escenas todo se congela (ni se mueven, ni atacan, ni disparan).
 var frozen := false
+## Distancia a la que despiertan (cada zona puede cambiarla: el tutorial la acorta).
+var aggro_range := AGGRO_RANGE
 
 var ids := PackedInt32Array()
 var positions := PackedVector2Array()
@@ -90,6 +92,25 @@ var dash_hit := PackedByteArray()     # 1 si la embestida ya golpeó al jugador
 var immune := PackedByteArray()       # 1 = no recibe daño (gemelos de la Carrera Crítica)
 var dot_dps := PackedFloat32Array()   # daño degenerativo por segundo
 var dot_time := PackedFloat32Array()  # segundos que le quedan
+# Estados alterados (ver Ailments).
+var burn_dps := PackedFloat32Array()
+var burn_time := PackedFloat32Array()
+var shock_time := PackedFloat32Array()
+var shock_amp := PackedFloat32Array()   # daño extra recibido mientras dure (0.25 = +25 %)
+var chill_time := PackedFloat32Array()
+var freeze_time := PackedFloat32Array()
+var poison_dps := PackedFloat32Array()
+var poison_time := PackedFloat32Array()
+var poison_stacks := PackedInt32Array()
+var bleed_dps := PackedFloat32Array()
+var bleed_time := PackedFloat32Array()
+
+## Estados que puede aplicar el golpe en curso (lo prepara SkillController antes
+## de llamar a hit_*): {chances: {burn: %, ...}, effect: mult. de daño, duration: mult.}.
+var hit_ailments: Dictionary = {}
+## Aliados que los enemigos pueden atacar (invocaciones persistentes):
+## [{pos, life, max_life, radius, taunt}]. Los mantiene SkillController.
+var allies: Array = []
 
 ## Proyectiles enemigos: {pos, vel, damage, radius, life, color}
 var projectiles: Array[Dictionary] = []
@@ -176,6 +197,17 @@ func spawn(pos: Vector2, rarity: Rarity.Enemy, type_index := -1, custom_name := 
 	immune.append(0)
 	dot_dps.append(0.0)
 	dot_time.append(0.0)
+	burn_dps.append(0.0)
+	burn_time.append(0.0)
+	shock_time.append(0.0)
+	shock_amp.append(0.0)
+	chill_time.append(0.0)
+	freeze_time.append(0.0)
+	poison_dps.append(0.0)
+	poison_time.append(0.0)
+	poison_stacks.append(0)
+	bleed_dps.append(0.0)
+	bleed_time.append(0.0)
 	if not special_abilities.is_empty():
 		var list: Array = []
 		for a in special_abilities:
@@ -349,16 +381,41 @@ func dot_one(center: Vector2, radius: float, ignore_ids: Dictionary, dps: float,
 	return -1
 
 
+## Daños degenerativos (corrupción, quemadura, veneno, sangrado) y duración de
+## los demás estados. Electrocutado también amplifica estos daños.
 func _update_dots(delta: float) -> void:
 	for i in range(positions.size() - 1, -1, -1):
-		if dot_time[i] <= 0.0:
+		var dps := 0.0
+		if dot_time[i] > 0.0:
+			dot_time[i] -= delta
+			dps += dot_dps[i]
+		if burn_time[i] > 0.0:
+			burn_time[i] -= delta
+			dps += burn_dps[i]
+		if poison_time[i] > 0.0:
+			poison_time[i] -= delta
+			dps += poison_dps[i]
+		if bleed_time[i] > 0.0:
+			bleed_time[i] -= delta
+			dps += bleed_dps[i] * (Ailments.BLEED_MOVING_MULT if _is_moving(i) else 1.0)
+		if shock_time[i] > 0.0:
+			shock_time[i] -= delta
+			dps *= 1.0 + shock_amp[i]
+		chill_time[i] = maxf(0.0, chill_time[i] - delta)
+		freeze_time[i] = maxf(0.0, freeze_time[i] - delta)
+		if dps <= 0.0:
 			continue
-		dot_time[i] -= delta
-		var dmg := dot_dps[i] * delta
+		var dmg := dps * delta
 		last_damage_dealt += minf(dmg, lives[i])
 		lives[i] -= dmg
 		if lives[i] <= 0.0:
 			_kill(i)
+
+
+## Aproximado: no está bloqueado, puede moverse y aún no ha llegado al jugador.
+func _is_moving(i: int) -> bool:
+	return speeds[i] > 0.0 and stuns[i] <= 0.0 and windups[i] <= 0.0 and player != null \
+		and positions[i].distance_to(player.global_position) > radii[i] + Player.RADIUS + 8.0
 
 
 func stun_in_radius(center: Vector2, radius: float, time: float) -> void:
@@ -413,11 +470,96 @@ func _damage(i: int, min_damage: float, max_damage: float, crit_chance: float, c
 	var damage := randf_range(min_damage, max_damage)
 	if randf() * 100.0 < crit_chance:
 		damage *= crit_multiplier / 100.0
+	if shock_time[i] > 0.0:
+		damage *= 1.0 + shock_amp[i]
 	last_damage_dealt += minf(damage, lives[i])
 	lives[i] -= damage
 	flashes[i] = FLASH_TIME
 	if lives[i] <= 0.0:
 		_kill(i)
+	elif not hit_ailments.is_empty() and damage > 0.0:
+		_roll_ailments(i, damage)
+
+
+## Tira los dados de cada estado alterado del golpe en curso (hit_ailments).
+func _roll_ailments(i: int, damage: float) -> void:
+	var chances: Dictionary = hit_ailments.get("chances", {})
+	var effect := float(hit_ailments.get("effect", 1.0))
+	var dur := float(hit_ailments.get("duration", 1.0))
+	for id in chances:
+		if randf() * 100.0 >= float(chances[id]):
+			continue
+		apply_ailment(i, id, damage, effect, dur)
+
+
+## Aplica un estado a un enemigo. `damage`: golpe que lo causa (base de los
+## degenerativos). Los únicos lo sufren la mitad de tiempo.
+func apply_ailment(i: int, id: String, damage: float, effect := 1.0, duration_mult := 1.0) -> void:
+	if immune[i] == 1:
+		return
+	var t: float = Ailments.DURATION.get(id, 2.0) * duration_mult * (0.5 if rarities[i] == Rarity.Enemy.UNIQUE else 1.0)
+	var dps: float = damage * float(Ailments.DOT_FRACTION.get(id, 0.0)) * effect
+	match id:
+		Ailments.BURN:
+			# La quemadura más fuerte manda; renueva la duración.
+			burn_dps[i] = maxf(burn_dps[i] if burn_time[i] > 0.0 else 0.0, dps)
+			burn_time[i] = maxf(burn_time[i], t)
+		Ailments.SHOCK:
+			shock_amp[i] = maxf(shock_amp[i] if shock_time[i] > 0.0 else 0.0, Ailments.SHOCK_AMP * effect)
+			shock_time[i] = maxf(shock_time[i], t)
+		Ailments.CHILL:
+			chill_time[i] = maxf(chill_time[i], t)
+		Ailments.FREEZE:
+			freeze_time[i] = maxf(freeze_time[i], t)
+			stun_index(i, t * (2.0 if rarities[i] == Rarity.Enemy.UNIQUE else 1.0))   # stun_index ya lo reduce a la mitad
+		Ailments.POISON:
+			# El veneno se acumula: cada aplicación suma (hasta POISON_MAX_STACKS).
+			if poison_time[i] <= 0.0:
+				poison_dps[i] = 0.0
+				poison_stacks[i] = 0
+			if poison_stacks[i] < Ailments.POISON_MAX_STACKS:
+				poison_stacks[i] += 1
+				poison_dps[i] += dps
+			else:
+				poison_dps[i] = maxf(poison_dps[i], dps * Ailments.POISON_MAX_STACKS)
+			poison_time[i] = maxf(poison_time[i], t)
+		Ailments.BLEED:
+			bleed_dps[i] = maxf(bleed_dps[i] if bleed_time[i] > 0.0 else 0.0, dps)
+			bleed_time[i] = maxf(bleed_time[i], t)
+
+
+## Estados activos del enemigo i: [{id, time, stacks}] (para el HUD y su dibujo).
+func ailments_of(i: int) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if freeze_time[i] > 0.0:
+		out.append({"id": Ailments.FREEZE, "time": freeze_time[i]})
+	elif stuns[i] > 0.0:
+		out.append({"id": "stun", "time": stuns[i]})
+	if burn_time[i] > 0.0:
+		out.append({"id": Ailments.BURN, "time": burn_time[i]})
+	if shock_time[i] > 0.0:
+		out.append({"id": Ailments.SHOCK, "time": shock_time[i]})
+	if chill_time[i] > 0.0:
+		out.append({"id": Ailments.CHILL, "time": chill_time[i]})
+	if poison_time[i] > 0.0:
+		out.append({"id": Ailments.POISON, "time": poison_time[i], "stacks": poison_stacks[i]})
+	if bleed_time[i] > 0.0:
+		out.append({"id": Ailments.BLEED, "time": bleed_time[i]})
+	if dot_time[i] > 0.0:
+		out.append({"id": "corrupt", "time": dot_time[i]})
+	return out
+
+
+## Enemigo bajo el cursor (o el más cercano a `pos` a menos de `slack` de su borde); -1 si no hay.
+func hover_index(pos: Vector2, slack := 14.0) -> int:
+	var best := -1
+	var best_d := INF
+	for i in positions.size():
+		var d := positions[i].distance_to(pos) - radii[i] * SPRITE_SCALE
+		if d <= slack and d < best_d:
+			best_d = d
+			best = i
+	return best
 
 
 func is_in_safe_zone(pos: Vector2) -> bool:
@@ -449,38 +591,49 @@ func _physics_process(delta: float) -> void:
 		var to_player := player_pos - pos
 		var dist := to_player.length()
 		var reach := r + Player.RADIUS + 2.0
+		# Objetivo: el jugador, salvo que un aliado (invocación) esté más a mano o provoque.
+		var ally := _pick_ally(pos, dist) if hunting and not allies.is_empty() else -1
+		var target_pos := player_pos if ally == -1 else (allies[ally]["pos"] as Vector2)
+		var to_target := target_pos - pos
+		var tdist := to_target.length()
+		var treach := reach if ally == -1 else r + float(allies[ally].get("radius", 12.0)) + 2.0
 		var atk: Dictionary = all_types[types[i]].get("attack", {}) if types[i] < all_types.size() else {}
 		var kind: String = atk.get("kind", "melee")
 		var move := Vector2.ZERO
-		cooldowns[i] -= delta
+		# Helado: todo va más lento (movimiento, recarga y preparación de ataques).
+		var tempo := (1.0 - Ailments.CHILL_SLOW) if chill_time[i] > 0.0 else 1.0
+		cooldowns[i] -= delta * tempo
 		flashes[i] = maxf(0.0, flashes[i] - delta)
 
 		if stuns[i] > 0.0:
 			stuns[i] -= delta
 		elif dashes[i] > 0.0:
-			# Embestida: en línea recta, golpea una vez si toca al jugador.
+			# Embestida: en línea recta, golpea una vez a lo que toque.
 			dashes[i] -= delta
-			move = attack_dirs[i] * float(atk.get("dash_speed", 600.0))
-			if dash_hit[i] == 0 and hunting and dist <= reach + float(atk.get("width", 30.0)) * 0.5:
+			move = attack_dirs[i] * float(atk.get("dash_speed", 600.0)) * tempo
+			var half_w := float(atk.get("width", 30.0)) * 0.5
+			if dash_hit[i] == 0 and hunting and dist <= reach + half_w:
 				dash_hit[i] = 1
 				player.take_damage(damages[i] * float(atk.get("damage_mult", 1.0)))
+			elif dash_hit[i] == 0 and _damage_allies_near(pos, r + half_w, damages[i] * float(atk.get("damage_mult", 1.0)), true):
+				dash_hit[i] = 1
 		elif windups[i] > 0.0:
-			windups[i] -= delta
+			windups[i] -= delta * tempo
 			if windups[i] <= 0.0 and hunting:
-				_resolve_attack(i, atk, player_pos)
+				_resolve_attack(i, atk, target_pos)
 				pos = positions[i]   # el teletransporte mueve al enemigo
 		elif casting.has(ids[i]):
 			var cast: Dictionary = casting[ids[i]]
-			cast["time"] -= delta
+			cast["time"] -= delta * tempo
 			if cast["time"] <= 0.0:
 				casting.erase(ids[i])
 				if hunting:
 					_resolve_ability(i, cast["def"], cast["target"])
-		elif hunting and dist < AGGRO_RANGE:
-			facings[i] = 1.0 if to_player.x < 0.0 else 0.0
+		elif hunting and tdist < aggro_range:
+			facings[i] = 1.0 if to_target.x < 0.0 else 0.0
 			var started_ability := _try_ability(i, delta, dist, player_pos)
 			if not started_ability:
-				move = _decide(i, atk, kind, to_player, dist, reach)
+				move = _decide(i, atk, kind, to_target, tdist, treach, target_pos) * tempo
 
 		# Separación entre enemigos (rejilla espacial: solo celdas vecinas).
 		var push := Vector2.ZERO
@@ -524,15 +677,58 @@ func _physics_process(delta: float) -> void:
 		positions[i] = walk_clamp.call(new_pos, r) if walk_clamp.is_valid() else new_pos
 
 		# Cuerpo a cuerpo por contacto (los que no tienen ataque especial).
-		if kind == "melee" and stuns[i] <= 0.0 and hunting and dist <= reach + 6.0 and cooldowns[i] <= 0.0:
-			cooldowns[i] = ATTACK_INTERVAL
-			player.take_damage(damages[i])
+		if kind == "melee" and stuns[i] <= 0.0 and hunting and cooldowns[i] <= 0.0:
+			if ally != -1 and tdist <= treach + 6.0:
+				cooldowns[i] = ATTACK_INTERVAL
+				_damage_ally(ally, damages[i])
+			elif dist <= reach + 6.0:
+				cooldowns[i] = ATTACK_INTERVAL
+				player.take_damage(damages[i])
 		i += 1
 	last_simulation_ms = (Time.get_ticks_usec() - started) / 1000.0
 
 
+## Aliado al que irá el enemigo en `pos` (o -1 = el jugador): el que provoca
+## (golem) dentro de su radio, o uno claramente más cerca que el jugador.
+func _pick_ally(pos: Vector2, player_dist: float) -> int:
+	var best := -1
+	var best_d := INF
+	for k in allies.size():
+		var a: Dictionary = allies[k]
+		if float(a.get("life", 0.0)) <= 0.0:
+			continue
+		var d := pos.distance_to(a["pos"])
+		var taunting := d <= float(a.get("taunt", 0.0))
+		if (taunting or d < player_dist * 0.7) and d < best_d:
+			best_d = d
+			best = k
+			if taunting:
+				best_d = -1.0   # la provocación gana a cualquier otro
+	return best
+
+
+func _damage_ally(k: int, amount: float) -> void:
+	var a: Dictionary = allies[k]
+	a["life"] = float(a["life"]) - amount * (1.0 - float(a.get("reduction", 0.0)))
+	a["hurt"] = 0.15
+
+
+## Daña a los aliados a menos de `radius` de `center`. `only_one`: al primero.
+func _damage_allies_near(center: Vector2, radius: float, amount: float, only_one := false) -> bool:
+	var any := false
+	for k in allies.size():
+		var a: Dictionary = allies[k]
+		if float(a.get("life", 0.0)) > 0.0 and center.distance_to(a["pos"]) <= radius + float(a.get("radius", 12.0)):
+			_damage_ally(k, amount)
+			any = true
+			if only_one:
+				return true
+	return any
+
+
 ## Movimiento y, si toca, inicio del ataque telegrafiado según el tipo.
-func _decide(i: int, atk: Dictionary, kind: String, to_player: Vector2, dist: float, reach: float) -> Vector2:
+## `to_player`/`dist`/`reach`: respecto al objetivo actual (jugador o aliado en `target_pos`).
+func _decide(i: int, atk: Dictionary, kind: String, to_player: Vector2, dist: float, reach: float, target_pos: Vector2) -> Vector2:
 	var dir := to_player / maxf(dist, 0.001)
 	var speed := speeds[i]
 	match kind:
@@ -555,7 +751,7 @@ func _decide(i: int, atk: Dictionary, kind: String, to_player: Vector2, dist: fl
 			if ready:
 				_start_windup(i, atk, dir)
 				if kind == "lob_pool":
-					attack_dirs[i] = player.global_position   # el charco cae donde estabas
+					attack_dirs[i] = target_pos   # el charco cae donde estabas
 				return Vector2.ZERO
 			if dist > keep_d + 40.0:
 				return dir * speed
@@ -644,8 +840,9 @@ func _resolve_attack(i: int, atk: Dictionary, player_pos: Vector2) -> void:
 		"slam":
 			var radius := float(atk.get("radius", 100.0))
 			_flashes_fx.append({"type": "circle", "pos": pos, "radius": radius, "time": 0.0, "color": Color(atk.get("color", "c86030"))})
-			if pos.distance_to(player_pos) <= radius + Player.RADIUS:
+			if pos.distance_to(player.global_position) <= radius + Player.RADIUS:
 				player.take_damage(damage)
+			_damage_allies_near(pos, radius, damage)
 			if atk.has("pool"):   # el golpe deja un charco (condensador que revienta)
 				var pd: Dictionary = atk["pool"]
 				pools.append({"pos": pos, "radius": radius * 0.8, "life": float(pd.get("time", 4.0)), "total": float(pd.get("time", 4.0)),
@@ -655,9 +852,13 @@ func _resolve_attack(i: int, atk: Dictionary, player_pos: Vector2) -> void:
 			var half := deg_to_rad(float(atk.get("angle", 60.0))) / 2.0
 			_flashes_fx.append({"type": "cone", "pos": pos, "dir": dir, "radius": radius, "half": half, "time": 0.0,
 				"color": Color(atk.get("color", "e0652f"))})
-			var to := player_pos - pos
+			var to := player.global_position - pos
 			if to.length() <= radius + Player.RADIUS and absf(dir.angle_to(to)) <= half + 0.15:
 				player.take_damage(damage)
+			for k in allies.size():
+				var to_ally: Vector2 = allies[k]["pos"] - pos
+				if to_ally.length() <= radius + 12.0 and absf(dir.angle_to(to_ally)) <= half + 0.15:
+					_damage_ally(k, damage)
 
 
 # --- Habilidades especiales (jefes) ---
@@ -762,6 +963,9 @@ func _update_projectiles(delta: float) -> void:
 				player.apply_dot("golpe_%d" % (randi() % 3), pr["dot_dps"], pr["dot_time"], pr.get("dot_kind", "fire"))
 			_flashes_fx.append({"type": "circle", "pos": p, "radius": 16.0, "time": 0.0, "color": pr["color"]})
 			gone = true
+		if not gone and not allies.is_empty() and _damage_allies_near(p, pr["radius"], pr["damage"], true):
+			_flashes_fx.append({"type": "circle", "pos": p, "radius": 16.0, "time": 0.0, "color": pr["color"]})
+			gone = true
 		if not gone:
 			for o in obstacles:
 				if p.distance_squared_to(Vector2(o.x, o.y)) < o.z * o.z:
@@ -814,6 +1018,7 @@ func _update_hazards(delta: float) -> void:
 		_flashes_fx.append({"type": "circle", "pos": h["pos"], "radius": h["radius"], "time": 0.0, "color": h["color"]})
 		if player and player.is_alive() and h["pos"].distance_to(player.global_position) <= h["radius"] + Player.RADIUS:
 			player.take_damage(h["damage"])
+		_damage_allies_near(h["pos"], h["radius"], h["damage"])
 		if h.has("pool"):
 			var pool: Dictionary = h["pool"]
 			pools.append({"pos": h["pos"], "radius": h["radius"], "life": pool["time"], "total": pool["time"], "dps": pool["dps"],
@@ -862,28 +1067,41 @@ func _process(_delta: float) -> void:
 func _draw() -> void:
 	var font := ThemeDB.fallback_font
 	_draw_attacks(font)
+	var tt := Time.get_ticks_msec() / 1000.0
 	for i in positions.size():
-		if stuns[i] > 0.0:
+		if stuns[i] > 0.0 and freeze_time[i] <= 0.0:
 			_draw_stun(positions[i] + Vector2(0, -radii[i] * SPRITE_SCALE * 1.1 - 18.0))
-		if dot_time[i] > 0.0:
-			# Burbujas de corrupción sobre el enemigo.
-			var tt := Time.get_ticks_msec() / 1000.0
-			for k in 3:
-				var ph := fmod(tt * 1.2 + k / 3.0 + ids[i] * 0.13, 1.0)
-				draw_circle(positions[i] + Vector2((k - 1) * radii[i] * 0.5, -radii[i] - ph * 16.0), 2.5, Color(0.7, 0.3, 0.9, 0.8 * (1.0 - ph)))
+		_draw_ailment_fx(i, tt)
 		if immune[i] == 1:
 			var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 120.0)
 			draw_arc(positions[i], radii[i] * 1.7, 0.0, TAU, 32, Color(0.6, 0.8, 1.0, 0.4 + 0.4 * pulse), 3.0, true)
 		var rarity := rarities[i]
-		if rarity == Rarity.Enemy.NORMAL and lives[i] >= max_lives[i]:
-			continue
 		var r := radii[i]
 		var w := maxf(r * 2.0, 30.0)
 		var top := positions[i] + Vector2(-w / 2.0, -r * SPRITE_SCALE * 1.1 - 8.0)
-		draw_rect(Rect2(top, Vector2(w, 4.0)), Color(0, 0, 0, 0.7))
-		draw_rect(Rect2(top, Vector2(w * lives[i] / max_lives[i], 4.0)), Color("c83232"))
+		var has_bar := not (rarity == Rarity.Enemy.NORMAL and lives[i] >= max_lives[i])
+		# Iconos de estados encima de la barra (o donde iría).
+		var states := ailments_of(i)
+		if not states.is_empty():
+			var side := 11.0
+			var x0 := positions[i].x - (states.size() * (side + 2.0) - 2.0) / 2.0
+			for k in states.size():
+				StatusIcon.draw(self, Rect2(x0 + k * (side + 2.0), top.y - side - 3.0, side, side), states[k]["id"], true)
+		if not has_bar:
+			continue
+		draw_rect(Rect2(top - Vector2(1, 1), Vector2(w + 2.0, 6.0)), Color(0, 0, 0, 0.75))
+		var frac := lives[i] / max_lives[i]
+		var bar_color := Color("c83232")
+		if poison_time[i] > 0.0:
+			bar_color = Color("4fa04a")
+		elif freeze_time[i] > 0.0 or chill_time[i] > 0.0:
+			bar_color = Color("5a9ad0")
+		draw_rect(Rect2(top, Vector2(w * frac, 4.0)), bar_color)
+		draw_rect(Rect2(top, Vector2(w * frac, 1.0)), Color(1, 1, 1, 0.25))
 		if rarity >= Rarity.Enemy.ELITE:
-			draw_string(font, top + Vector2(-80.0, -6.0), names[i], HORIZONTAL_ALIGNMENT_CENTER,
+			var name_y := -6.0 - (14.0 if not states.is_empty() else 0.0)
+			draw_string_outline(font, top + Vector2(-80.0, name_y), names[i], HORIZONTAL_ALIGNMENT_CENTER, w + 160.0, 14, 4, Color(0, 0, 0, 0.8))
+			draw_string(font, top + Vector2(-80.0, name_y), names[i], HORIZONTAL_ALIGNMENT_CENTER,
 				w + 160.0, 14, Rarity.enemy_color(rarity))
 
 
@@ -1015,6 +1233,52 @@ static func _cone_points(origin: Vector2, dir: Vector2, radius: float, half: flo
 	return pts
 
 
+## Efectos visuales baratos de cada estado sobre el enemigo.
+func _draw_ailment_fx(i: int, tt: float) -> void:
+	var p := positions[i]
+	var r := radii[i]
+	var jitter := ids[i] * 0.37
+	if dot_time[i] > 0.0:
+		# Burbujas de corrupción.
+		for k in 3:
+			var ph := fmod(tt * 1.2 + k / 3.0 + jitter, 1.0)
+			draw_circle(p + Vector2((k - 1) * r * 0.5, -r - ph * 16.0), 2.5, Color(0.7, 0.3, 0.9, 0.8 * (1.0 - ph)))
+	if poison_time[i] > 0.0:
+		for k in 3:
+			var ph := fmod(tt * 1.0 + k / 3.0 + jitter + 0.5, 1.0)
+			draw_circle(p + Vector2((k - 1) * r * 0.6 + sin(tt * 3.0 + k) * 2.0, -r * 0.4 - ph * 18.0), 2.0 + ph * 1.5, Color(0.45, 0.9, 0.4, 0.75 * (1.0 - ph)))
+	if burn_time[i] > 0.0:
+		# Lenguas de fuego que suben.
+		for k in 4:
+			var ph := fmod(tt * 1.8 + k / 4.0 + jitter, 1.0)
+			var q := p + Vector2((k - 1.5) * r * 0.45, -r * 0.2 - ph * r * 1.6)
+			draw_circle(q, (1.0 - ph) * 4.5, Color(1.0, 0.45 + 0.4 * ph, 0.1, 0.8 * (1.0 - ph)))
+	if bleed_time[i] > 0.0:
+		for k in 2:
+			var ph := fmod(tt * 1.4 + k * 0.5 + jitter, 1.0)
+			var q := p + Vector2((k - 0.5) * r * 0.8, -r * 0.3 + ph * r * 1.1)
+			draw_circle(q, 2.2 * (1.0 - ph * 0.5), Color(0.8, 0.08, 0.1, 0.9 * (1.0 - ph)))
+	if shock_time[i] > 0.0 and fmod(tt * 7.0 + jitter, 1.0) < 0.45:
+		# Chispas en zigzag alrededor.
+		var a := fmod(tt * 5.0 + jitter, TAU)
+		var from := p + Vector2.from_angle(a) * r * 1.1
+		var to := p + Vector2.from_angle(a + 1.1) * r * 1.1
+		var mid := from.lerp(to, 0.5) + (to - from).orthogonal().normalized() * 6.0
+		draw_polyline(PackedVector2Array([from, mid, to]), Color(1.0, 0.92, 0.45, 0.95), 2.0, true)
+	if freeze_time[i] > 0.0:
+		# Bloque de hielo.
+		var ice := PackedVector2Array()
+		for k in 6:
+			ice.append(p + Vector2.from_angle(TAU * k / 6.0 + 0.3) * r * 1.35 + Vector2(0, -r * 0.4))
+		draw_colored_polygon(ice, Color(0.7, 0.9, 1.0, 0.35))
+		ice.append(ice[0])
+		draw_polyline(ice, Color(0.85, 0.97, 1.0, 0.85), 1.5, true)
+	elif chill_time[i] > 0.0:
+		draw_set_transform(p + Vector2(0, r * 0.5), 0.0, Vector2(1.0, 0.45))
+		draw_arc(Vector2.ZERO, r * 1.3, 0.0, TAU, 20, Color(0.55, 0.8, 1.0, 0.7), 2.0, true)
+		draw_set_transform(Vector2.ZERO)
+
+
 func _draw_stun(p: Vector2) -> void:
 	# Candado girando: proceso bloqueado.
 	var a := Time.get_ticks_msec() / 300.0
@@ -1065,6 +1329,17 @@ func _remove(i: int) -> void:
 		immune[i] = immune[last]
 		dot_dps[i] = dot_dps[last]
 		dot_time[i] = dot_time[last]
+		burn_dps[i] = burn_dps[last]
+		burn_time[i] = burn_time[last]
+		shock_time[i] = shock_time[last]
+		shock_amp[i] = shock_amp[last]
+		chill_time[i] = chill_time[last]
+		freeze_time[i] = freeze_time[last]
+		poison_dps[i] = poison_dps[last]
+		poison_time[i] = poison_time[last]
+		poison_stacks[i] = poison_stacks[last]
+		bleed_dps[i] = bleed_dps[last]
+		bleed_time[i] = bleed_time[last]
 	_resize_all(last)
 
 
@@ -1091,6 +1366,17 @@ func _resize_all(n: int) -> void:
 	immune.resize(n)
 	dot_dps.resize(n)
 	dot_time.resize(n)
+	burn_dps.resize(n)
+	burn_time.resize(n)
+	shock_time.resize(n)
+	shock_amp.resize(n)
+	chill_time.resize(n)
+	freeze_time.resize(n)
+	poison_dps.resize(n)
+	poison_time.resize(n)
+	poison_stacks.resize(n)
+	bleed_dps.resize(n)
+	bleed_time.resize(n)
 
 
 func _rebuild_grid() -> void:

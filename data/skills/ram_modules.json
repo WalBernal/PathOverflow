@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_doc": "Módulos RAM (soportes). generation: DDR3/DDR4/DDR5, solo encajan en ranuras de su generación. requires_tags: la habilidad debe tener alguno (vacío = cualquiera). excludes_tags: no funciona con habilidades que tengan alguno. cost_multiplier: multiplica el maná. mods: Modifiers que solo afectan a esa habilidad. special: extra_projectiles, pierce, repeats, area_multiplier, extra_chains (cadenas +N; en proyectiles, rebotes), deploy (trap | mine | totem: la habilidad se coloca en el suelo o en una torreta en vez de lanzarse), totem_duration.",
+  "_doc": "Módulos RAM (soportes). generation: DDR3/DDR4/DDR5, solo encajan en ranuras de su generación. requires_tags: la habilidad debe tener alguno (vacío = cualquiera). excludes_tags: no funciona con habilidades que tengan alguno. cost_multiplier: multiplica el maná. mods: Modifiers que solo afectan a esa habilidad. special: extra_projectiles, pierce, repeats, area_multiplier, extra_chains (cadenas +N; en proyectiles, rebotes), deploy (trap | mine | totem: la habilidad se coloca en el suelo o en una torreta en vez de lanzarse), totem_duration. RAM de asistencia: mods con burn_chance, shock_chance, chill_chance, freeze_chance, poison_chance, bleed_chance (probabilidad plana de aplicar el estado al golpear), ailment_damage / ailment_duration (potencia y duración de los estados), automaton_speed (autómatas) y extra_minions / extra_devices.",
   "modules": [
     {
       "id": "multicanal",
@@ -336,6 +336,232 @@
         "deploy": "totem",
         "totem_duration": 8.0
       }
+    },
+    {
+      "id": "pasta_termica",
+      "name": "Pasta Térmica Caducada",
+      "generation": "DDR3",
+      "description": "Ya no disipa nada: todo lo que tocas sale ardiendo. Probabilidad de quemar y algo más de daño de fuego.",
+      "requires_tags": [],
+      "excludes_tags": [
+        "movement",
+        "buff"
+      ],
+      "cost_multiplier": 1.25,
+      "mods": [
+        {
+          "stat": "burn_chance",
+          "type": "flat",
+          "value": 30
+        },
+        {
+          "stat": "fire_damage",
+          "type": "more",
+          "value": 10
+        }
+      ],
+      "special": {}
+    },
+    {
+      "id": "sobretension",
+      "name": "Módulo de Sobretensión",
+      "generation": "DDR5",
+      "description": "Picos de voltaje en cada golpe. Los enemigos electrocutados reciben más daño de todo.",
+      "requires_tags": [],
+      "excludes_tags": [
+        "movement",
+        "buff"
+      ],
+      "cost_multiplier": 1.25,
+      "mods": [
+        {
+          "stat": "shock_chance",
+          "type": "flat",
+          "value": 30
+        },
+        {
+          "stat": "lightning_damage",
+          "type": "increased",
+          "value": 15
+        }
+      ],
+      "special": {}
+    },
+    {
+      "id": "refrigeracion_liquida",
+      "name": "Refrigeración Líquida con Fugas",
+      "generation": "DDR4",
+      "description": "Gotea refrigerante sobre los enemigos: los hiela y, a veces, los congela del todo.",
+      "requires_tags": [],
+      "excludes_tags": [
+        "movement",
+        "buff"
+      ],
+      "cost_multiplier": 1.25,
+      "mods": [
+        {
+          "stat": "chill_chance",
+          "type": "flat",
+          "value": 35
+        },
+        {
+          "stat": "freeze_chance",
+          "type": "flat",
+          "value": 10
+        }
+      ],
+      "special": {}
+    },
+    {
+      "id": "inyeccion_malware",
+      "name": "Inyección de Malware",
+      "generation": "DDR4",
+      "description": "Cada golpe instala un pequeño regalo. El veneno se acumula hasta 10 veces.",
+      "requires_tags": [],
+      "excludes_tags": [
+        "movement",
+        "buff"
+      ],
+      "cost_multiplier": 1.3,
+      "mods": [
+        {
+          "stat": "poison_chance",
+          "type": "flat",
+          "value": 35
+        },
+        {
+          "stat": "ailment_damage",
+          "type": "increased",
+          "value": 15
+        }
+      ],
+      "special": {}
+    },
+    {
+      "id": "fragmentacion_disco",
+      "name": "Fragmentación de Disco",
+      "generation": "DDR3",
+      "description": "Rompes a los enemigos en sectores dispersos. Sangran, y el doble si intentan huir.",
+      "requires_tags": [],
+      "excludes_tags": [
+        "movement",
+        "buff"
+      ],
+      "cost_multiplier": 1.25,
+      "mods": [
+        {
+          "stat": "bleed_chance",
+          "type": "flat",
+          "value": 35
+        },
+        {
+          "stat": "physical_damage",
+          "type": "more",
+          "value": 5
+        }
+      ],
+      "special": {}
+    },
+    {
+      "id": "gestor_estados",
+      "name": "Gestor de Estados Global",
+      "generation": "DDR5",
+      "description": "Un store centralizado para tus estados alterados: duran más y hacen más daño. No los aplica: los mejora.",
+      "requires_tags": [],
+      "excludes_tags": [
+        "movement",
+        "buff"
+      ],
+      "cost_multiplier": 1.3,
+      "mods": [
+        {
+          "stat": "ailment_damage",
+          "type": "more",
+          "value": 30
+        },
+        {
+          "stat": "ailment_duration",
+          "type": "increased",
+          "value": 30
+        }
+      ],
+      "special": {}
+    },
+    {
+      "id": "firmware_autonomo",
+      "name": "Firmware Autónomo",
+      "generation": "DDR5",
+      "description": "Tus torretas, drones, esbirros y robots dejan de esperar órdenes: atacan mucho más a menudo.",
+      "requires_tags": [
+        "automaton",
+        "totem",
+        "minion"
+      ],
+      "excludes_tags": [],
+      "cost_multiplier": 1.3,
+      "mods": [
+        {
+          "stat": "automaton_speed",
+          "type": "more",
+          "value": 25
+        }
+      ],
+      "special": {}
+    },
+    {
+      "id": "protocolo_enjambre",
+      "name": "Protocolo Enjambre",
+      "generation": "DDR4",
+      "description": "Escalado horizontal: +1 esbirro, dron, torreta o invocación a la vez. Cada uno pega algo menos.",
+      "requires_tags": [
+        "automaton",
+        "totem",
+        "minion"
+      ],
+      "excludes_tags": [],
+      "cost_multiplier": 1.4,
+      "mods": [
+        {
+          "stat": "extra_minions",
+          "type": "flat",
+          "value": 1
+        },
+        {
+          "stat": "extra_devices",
+          "type": "flat",
+          "value": 1
+        },
+        {
+          "stat": "damage",
+          "type": "more",
+          "value": -15
+        }
+      ],
+      "special": {}
+    },
+    {
+      "id": "carcasa_reforzada",
+      "name": "Carcasa Reforzada",
+      "generation": "DDR3",
+      "description": "Chapa de servidor atornillada a tus esbirros: mucha más vida y algo más de daño.",
+      "requires_tags": [
+        "minion"
+      ],
+      "excludes_tags": [],
+      "cost_multiplier": 1.2,
+      "mods": [
+        {
+          "stat": "minion_life",
+          "type": "increased",
+          "value": 50
+        },
+        {
+          "stat": "minion_damage",
+          "type": "more",
+          "value": 10
+        }
+      ],
+      "special": {}
     }
   ]
 }

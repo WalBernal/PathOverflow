@@ -191,6 +191,9 @@ func recalculate(emit := true) -> void:
 	stats.set_base(Stat.CRIT_MULTIPLIER, 150.0)
 	stats.set_base(Stat.MOVEMENT_SPEED, 100.0)
 	stats.add_modifiers(passives.collect_modifiers())
+	# Rasgo de clase (classes.json → trait): siempre activo, lo que la hace única.
+	for md in class_def.get("trait", {}).get("mods", []):
+		stats.add_modifier(Modifier.from_dict(md, "class_trait"))
 	var asc_passives: Array = ascendancy_def.get("passives", [])
 	for i in ascendancy_nodes:
 		if i < asc_passives.size():
@@ -272,6 +275,35 @@ func weapon_values() -> Dictionary:
 	if weapon:
 		return {"min": weapon.physical_min, "max": weapon.physical_max, "aps": weapon.attacks_per_second, "crit": weapon.crit_chance}
 	return {"min": UNARMED["physical"][0], "max": UNARMED["physical"][1], "aps": UNARMED["aps"], "crit": UNARMED["crit"]}
+
+
+## Bandera de los kits de 3 habilidades por clase (ver give_missing_starter_skills).
+const STARTER_KIT_FLAG := "starter_kit_v2"
+
+
+## Placas del kit de la clase que el personaje no tenga (en la barra o en la
+## bolsa): a la primera ranura libre de la barra o, si no hay, a la bolsa.
+## Para los personajes creados antes de que los kits tuvieran 3 habilidades.
+func give_missing_starter_skills(db: ItemDatabase) -> void:
+	flags[STARTER_KIT_FLAG] = true
+	var owned := {}
+	for b in inventory.boards:
+		if b:
+			owned[(b as Motherboard).skill_def.get("id", "")] = true
+	for it in inventory.bag:
+		if it is Motherboard:
+			owned[(it as Motherboard).skill_def.get("id", "")] = true
+	for skill_id in class_def.get("starter_skills", []):
+		if owned.has(skill_id) or not db.skills.skills.has(skill_id):
+			continue
+		var def: Dictionary = db.skills.skills[skill_id]
+		var gen: String = RamModule.GENERATION_BY_ATTRIBUTE.get(def.get("attribute", "str"), "DDR3")
+		var board := Motherboard.new(def, 1, [gen, gen, gen])
+		var slot := inventory.boards.find(null)
+		if slot != -1:
+			inventory.set_board(slot, board)
+		else:
+			inventory.add_item(board)
 
 
 ## Cifras finales de la habilidad instalada en esa ranura de la barra (o {}).

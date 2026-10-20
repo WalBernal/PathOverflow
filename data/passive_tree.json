@@ -1,5 +1,5 @@
 {
- "version": 5,
+ "version": 6,
  "themes": {
   "vida": {
    "name": "Vida",
@@ -84,6 +84,30 @@
   "movilidad": {
    "name": "Movilidad",
    "color": "9ad06a"
+  },
+  "ignicion": {
+   "name": "Ignición",
+   "color": "ff7a2a"
+  },
+  "sobrecarga": {
+   "name": "Sobrecarga",
+   "color": "f0e060"
+  },
+  "criogenia": {
+   "name": "Criogenia",
+   "color": "a0e0ff"
+  },
+  "toxinas": {
+   "name": "Toxinas",
+   "color": "6fd36b"
+  },
+  "hemorragia": {
+   "name": "Hemorragia",
+   "color": "c02838"
+  },
+  "automatizacion": {
+   "name": "Automatización",
+   "color": "7fd0e8"
   }
  },
  "clusters": [
@@ -321,105 +345,105 @@
   },
   {
    "id": "c4",
-   "theme": "vida",
-   "name": "Vida: Bloque de Alimentación",
+   "theme": "hemorragia",
+   "name": "Hemorragia: Cortes de Red",
    "x": -178.6,
    "y": -1566.5,
    "radius": 88,
    "segments": [
     [
      -178.6,
-     -1594.0,
-     -128.0,
-     -1630.8
+     -1654.5,
+     -152.7,
+     -1608.5
     ],
     [
-     -128.0,
-     -1630.8,
-     -92.3,
-     -1579.9
+     -152.7,
+     -1608.5,
+     -132.5,
+     -1560.3
     ],
     [
-     -92.3,
-     -1579.9,
-     -133.8,
-     -1525.4
+     -132.5,
+     -1560.3,
+     -138.0,
+     -1511.3
     ],
     [
-     -133.8,
-     -1525.4,
+     -138.0,
+     -1511.3,
      -178.6,
-     -1473.0
-    ],
-    [
-     -178.6,
-     -1473.0,
-     -223.4,
-     -1525.4
-    ],
-    [
-     -223.4,
-     -1525.4,
-     -264.9,
-     -1579.9
-    ],
-    [
-     -264.9,
-     -1579.9,
-     -229.2,
-     -1630.8
-    ],
-    [
-     -229.2,
-     -1630.8,
-     -178.6,
-     -1594.0
+     -1491.7
     ],
     [
      -178.6,
-     -1562.1,
-     -229.2,
-     -1630.8
+     -1491.7,
+     -219.2,
+     -1511.3
+    ],
+    [
+     -219.2,
+     -1511.3,
+     -224.7,
+     -1560.3
+    ],
+    [
+     -224.7,
+     -1560.3,
+     -204.4,
+     -1608.5
+    ],
+    [
+     -204.4,
+     -1608.5,
+     -178.6,
+     -1654.5
     ],
     [
      -178.6,
-     -1562.1,
+     -1535.7,
      -178.6,
-     -1473.0
+     -1654.5
+    ],
+    [
+     -178.6,
+     -1535.7,
+     -178.6,
+     -1491.7
     ]
    ],
    "fill": [
     [
      -178.6,
-     -1594.0
+     -1654.5
     ],
     [
-     -128.0,
-     -1630.8
+     -152.7,
+     -1608.5
     ],
     [
-     -92.3,
-     -1579.9
+     -132.5,
+     -1560.3
     ],
     [
-     -133.8,
-     -1525.4
+     -138.0,
+     -1511.3
     ],
     [
      -178.6,
-     -1473.0
+     -1491.7
     ],
     [
-     -223.4,
-     -1525.4
+     -219.2,
+     -1511.3
     ],
     [
-     -264.9,
-     -1579.9
+     -224.7,
+     -1560.3
     ],
     [
-     -229.2,
-     -1630.8
+     -204.4,
+     -1608.5
     ]
    ]
   },
@@ -985,105 +1009,105 @@
   },
   {
    "id": "c13",
-   "theme": "armadura",
-   "name": "Armadura: Blindaje Legacy",
+   "theme": "hemorragia",
+   "name": "Hemorragia: Hemorragia de Datos",
    "x": 1267.3,
    "y": -937.9,
    "radius": 88,
    "segments": [
     [
-     1192.5,
-     -1012.7,
-     1258.2,
-     -1024.3
+     1267.3,
+     -1025.9,
+     1293.2,
+     -979.9
     ],
     [
-     1258.2,
-     -1024.3,
-     1323.9,
-     -1015.9
+     1293.2,
+     -979.9,
+     1313.4,
+     -931.7
     ],
     [
-     1323.9,
-     -1015.9,
-     1339.7,
-     -964.6
+     1313.4,
+     -931.7,
+     1307.9,
+     -882.7
     ],
     [
-     1339.7,
-     -964.6,
-     1319.4,
-     -905.2
-    ],
-    [
-     1319.4,
-     -905.2,
-     1273.7,
-     -856.6
-    ],
-    [
-     1273.7,
-     -856.6,
-     1228.0,
-     -891.7
-    ],
-    [
-     1228.0,
-     -891.7,
-     1195.9,
-     -946.1
-    ],
-    [
-     1195.9,
-     -946.1,
-     1192.5,
-     -1012.7
+     1307.9,
+     -882.7,
+     1267.3,
+     -863.1
     ],
     [
      1267.3,
-     -946.7,
-     1258.2,
-     -1024.3
+     -863.1,
+     1226.7,
+     -882.7
+    ],
+    [
+     1226.7,
+     -882.7,
+     1221.2,
+     -931.7
+    ],
+    [
+     1221.2,
+     -931.7,
+     1241.5,
+     -979.9
+    ],
+    [
+     1241.5,
+     -979.9,
+     1267.3,
+     -1025.9
     ],
     [
      1267.3,
-     -946.7,
-     1273.7,
-     -856.6
+     -907.1,
+     1267.3,
+     -1025.9
+    ],
+    [
+     1267.3,
+     -907.1,
+     1267.3,
+     -863.1
     ]
    ],
    "fill": [
     [
-     1192.5,
-     -1012.7
+     1267.3,
+     -1025.9
     ],
     [
-     1258.2,
-     -1024.3
+     1293.2,
+     -979.9
     ],
     [
-     1323.9,
-     -1015.9
+     1313.4,
+     -931.7
     ],
     [
-     1339.7,
-     -964.6
+     1307.9,
+     -882.7
     ],
     [
-     1319.4,
-     -905.2
+     1267.3,
+     -863.1
     ],
     [
-     1273.7,
-     -856.6
+     1226.7,
+     -882.7
     ],
     [
-     1228.0,
-     -891.7
+     1221.2,
+     -931.7
     ],
     [
-     1195.9,
-     -946.1
+     1241.5,
+     -979.9
     ]
    ]
   },
@@ -1365,12 +1389,54 @@
   },
   {
    "id": "c20",
-   "theme": "frio",
-   "name": "Frío: Refrigeración Líquida",
+   "theme": "criogenia",
+   "name": "Criogenia: Sala Fría",
    "x": 1445.9,
    "y": 271.4,
    "radius": 88,
    "segments": [
+    [
+     1445.9,
+     183.4,
+     1511.2,
+     221.1
+    ],
+    [
+     1511.2,
+     221.1,
+     1522.1,
+     290.3
+    ],
+    [
+     1522.1,
+     290.3,
+     1478.6,
+     340.6
+    ],
+    [
+     1478.6,
+     340.6,
+     1413.3,
+     340.6
+    ],
+    [
+     1413.3,
+     340.6,
+     1369.7,
+     290.3
+    ],
+    [
+     1369.7,
+     290.3,
+     1380.6,
+     221.1
+    ],
+    [
+     1380.6,
+     221.1,
+     1445.9,
+     183.4
+    ],
     [
      1445.9,
      271.4,
@@ -1380,32 +1446,38 @@
     [
      1445.9,
      271.4,
+     1478.6,
+     340.6
+    ]
+   ],
+   "fill": [
+    [
+     1445.9,
+     183.4
+    ],
+    [
+     1511.2,
+     221.1
+    ],
+    [
      1522.1,
-     227.4
+     290.3
     ],
     [
-     1445.9,
-     271.4,
-     1522.1,
-     315.4
+     1478.6,
+     340.6
     ],
     [
-     1445.9,
-     271.4,
-     1445.9,
-     359.4
+     1413.3,
+     340.6
     ],
     [
-     1445.9,
-     271.4,
      1369.7,
-     315.4
+     290.3
     ],
     [
-     1445.9,
-     271.4,
-     1369.7,
-     227.4
+     1380.6,
+     221.1
     ]
    ]
   },
@@ -1457,59 +1529,105 @@
   },
   {
    "id": "c22",
-   "theme": "caos",
-   "name": "Caos: Comportamiento Indefinido",
+   "theme": "toxinas",
+   "name": "Toxinas: Repositorio Infectado",
    "x": 1445.9,
    "y": 628.6,
    "radius": 88,
    "segments": [
     [
-     1533.9,
-     628.6,
-     1470.3,
-     702.1
+     1423.9,
+     540.6,
+     1467.9,
+     564.6
     ],
     [
-     1470.3,
-     702.1,
-     1392.3,
-     668.6
+     1467.9,
+     564.6,
+     1483.5,
+     628.9
     ],
     [
-     1392.3,
-     668.6,
-     1399.7,
-     596.4
+     1483.5,
+     628.9,
+     1513.9,
+     689.8
     ],
     [
-     1399.7,
-     596.4,
-     1458.9,
-     584.7
+     1513.9,
+     689.8,
+     1467.9,
+     703.4
     ],
     [
-     1458.9,
-     584.7,
-     1481.1,
-     627.4
+     1467.9,
+     703.4,
+     1399.9,
+     703.4
     ],
     [
-     1481.1,
-     627.4,
-     1454.5,
-     651.7
+     1399.9,
+     703.4,
+     1388.7,
+     668.3
     ],
     [
-     1454.5,
-     651.7,
-     1434.9,
-     637.4
+     1388.7,
+     668.3,
+     1419.1,
+     607.5
     ],
     [
-     1434.9,
-     637.4,
-     1443.0,
-     626.7
+     1419.1,
+     607.5,
+     1423.9,
+     540.6
+    ],
+    [
+     1445.9,
+     659.4,
+     1423.9,
+     540.6
+    ],
+    [
+     1445.9,
+     659.4,
+     1467.9,
+     703.4
+    ]
+   ],
+   "fill": [
+    [
+     1423.9,
+     540.6
+    ],
+    [
+     1467.9,
+     564.6
+    ],
+    [
+     1483.5,
+     628.9
+    ],
+    [
+     1513.9,
+     689.8
+    ],
+    [
+     1467.9,
+     703.4
+    ],
+    [
+     1399.9,
+     703.4
+    ],
+    [
+     1388.7,
+     668.3
+    ],
+    [
+     1419.1,
+     607.5
     ]
    ]
   },
@@ -1921,93 +2039,189 @@
   },
   {
    "id": "c30",
-   "theme": "caos",
-   "name": "Caos: Undefined",
+   "theme": "toxinas",
+   "name": "Toxinas: Paquete Malicioso",
    "x": 93.2,
    "y": 1247.7,
    "radius": 75,
    "segments": [
     [
-     168.2,
-     1247.7,
-     114.0,
-     1310.4
+     74.4,
+     1172.7,
+     111.9,
+     1212.5
     ],
     [
-     114.0,
-     1310.4,
-     47.5,
-     1281.8
+     111.9,
+     1212.5,
+     142.5,
+     1282.6
     ],
     [
-     47.5,
-     1281.8,
-     53.8,
-     1220.3
+     142.5,
+     1282.6,
+     111.9,
+     1311.5
     ],
     [
-     53.8,
-     1220.3,
-     104.2,
-     1210.3
+     111.9,
+     1311.5,
+     34.6,
+     1311.5
     ],
     [
-     104.2,
-     1210.3,
-     123.2,
-     1246.7
+     34.6,
+     1311.5,
+     61.7,
+     1247.0
     ],
     [
-     123.2,
-     1246.7,
-     100.5,
-     1267.4
+     61.7,
+     1247.0,
+     74.4,
+     1172.7
+    ],
+    [
+     93.2,
+     1274.0,
+     74.4,
+     1172.7
+    ],
+    [
+     93.2,
+     1274.0,
+     111.9,
+     1311.5
+    ]
+   ],
+   "fill": [
+    [
+     74.4,
+     1172.7
+    ],
+    [
+     111.9,
+     1212.5
+    ],
+    [
+     142.5,
+     1282.6
+    ],
+    [
+     111.9,
+     1311.5
+    ],
+    [
+     34.6,
+     1311.5
+    ],
+    [
+     61.7,
+     1247.0
     ]
    ]
   },
   {
    "id": "c31",
-   "theme": "proyectiles",
-   "name": "Proyectiles: Tubería de Datos",
+   "theme": "sobrecarga",
+   "name": "Sobrecarga: Subestación",
    "x": 178.6,
    "y": 1566.5,
    "radius": 88,
    "segments": [
     [
-     99.4,
-     1632.5,
-     134.6,
-     1599.5
+     196.2,
+     1478.5,
+     161.9,
+     1528.8
     ],
     [
-     134.6,
-     1599.5,
-     169.8,
-     1566.5
+     161.9,
+     1528.8,
+     134.9,
+     1575.3
     ],
     [
-     169.8,
+     134.9,
+     1575.3,
+     169.5,
+     1596.4
+    ],
+    [
+     169.5,
+     1596.4,
+     157.4,
+     1653.3
+    ],
+    [
+     157.4,
+     1653.3,
+     193.7,
+     1604.3
+    ],
+    [
+     193.7,
+     1604.3,
+     229.9,
+     1555.3
+    ],
+    [
+     229.9,
+     1555.3,
+     189.1,
+     1539.0
+    ],
+    [
+     189.1,
+     1539.0,
+     196.2,
+     1478.5
+    ],
+    [
+     180.3,
      1566.5,
-     205.0,
-     1533.5
+     196.2,
+     1478.5
     ],
     [
-     205.0,
-     1533.5,
-     240.2,
-     1500.5
+     180.3,
+     1566.5,
+     157.4,
+     1653.3
+    ]
+   ],
+   "fill": [
+    [
+     196.2,
+     1478.5
     ],
     [
-     240.2,
-     1500.5,
-     191.8,
-     1496.1
+     161.9,
+     1528.8
     ],
     [
-     240.2,
-     1500.5,
-     244.6,
-     1548.9
+     134.9,
+     1575.3
+    ],
+    [
+     169.5,
+     1596.4
+    ],
+    [
+     157.4,
+     1653.3
+    ],
+    [
+     193.7,
+     1604.3
+    ],
+    [
+     229.9,
+     1555.3
+    ],
+    [
+     189.1,
+     1539.0
     ]
    ]
   },
@@ -2551,8 +2765,8 @@
   },
   {
    "id": "c40",
-   "theme": "mana",
-   "name": "Maná: Pila de Memoria",
+   "theme": "ignicion",
+   "name": "Ignición: Hoguera de Logs",
    "x": -1267.3,
    "y": 937.9,
    "radius": 88,
@@ -2560,62 +2774,62 @@
     [
      -1267.3,
      849.9,
-     -1232.2,
-     895.2
+     -1236.5,
+     892.4
     ],
     [
-     -1232.2,
-     895.2,
-     -1208.9,
-     947.4
+     -1236.5,
+     892.4,
+     -1211.3,
+     914.9
     ],
     [
-     -1208.9,
-     947.4,
-     -1217.3,
-     1002.2
+     -1211.3,
+     914.9,
+     -1217.9,
+     983.2
     ],
     [
-     -1217.3,
-     1002.2,
+     -1217.9,
+     983.2,
      -1267.3,
-     1025.9
-    ],
-    [
-     -1267.3,
-     1025.9,
-     -1317.3,
-     1002.2
-    ],
-    [
-     -1317.3,
-     1002.2,
-     -1325.7,
-     947.4
-    ],
-    [
-     -1325.7,
-     947.4,
-     -1302.4,
-     895.2
-    ],
-    [
-     -1302.4,
-     895.2,
-     -1267.3,
-     849.9
+     1012.7
     ],
     [
      -1267.3,
-     973.1,
+     1012.7,
+     -1316.8,
+     983.2
+    ],
+    [
+     -1316.8,
+     983.2,
+     -1323.3,
+     914.9
+    ],
+    [
+     -1323.3,
+     914.9,
+     -1298.1,
+     892.4
+    ],
+    [
+     -1298.1,
+     892.4,
      -1267.3,
      849.9
     ],
     [
      -1267.3,
-     973.1,
+     964.3,
      -1267.3,
-     1025.9
+     849.9
+    ],
+    [
+     -1267.3,
+     964.3,
+     -1267.3,
+     1012.7
     ]
    ],
    "fill": [
@@ -2624,39 +2838,39 @@
      849.9
     ],
     [
-     -1232.2,
-     895.2
+     -1236.5,
+     892.4
     ],
     [
-     -1208.9,
-     947.4
+     -1211.3,
+     914.9
     ],
     [
-     -1217.3,
-     1002.2
+     -1217.9,
+     983.2
     ],
     [
      -1267.3,
-     1025.9
+     1012.7
     ],
     [
-     -1317.3,
-     1002.2
+     -1316.8,
+     983.2
     ],
     [
-     -1325.7,
-     947.4
+     -1323.3,
+     914.9
     ],
     [
-     -1302.4,
-     895.2
+     -1298.1,
+     892.4
     ]
    ]
   },
   {
    "id": "c41",
    "theme": "frio",
-   "name": "Frío: Cámara Frigorífica",
+   "name": "Frío: Refrigeración Líquida",
    "x": -1127.2,
    "y": 543.2,
    "radius": 75,
@@ -2841,66 +3055,112 @@
   },
   {
    "id": "c44",
-   "theme": "caos",
-   "name": "Caos: Puntero Colgante",
+   "theme": "sobrecarga",
+   "name": "Sobrecarga: Picos de Voltaje",
    "x": -1445.9,
    "y": 271.4,
    "radius": 88,
    "segments": [
     [
-     -1357.9,
-     271.4,
-     -1421.5,
-     344.9
+     -1428.3,
+     183.4,
+     -1462.6,
+     233.8
     ],
     [
-     -1421.5,
-     344.9,
-     -1499.5,
-     311.4
-    ],
-    [
-     -1499.5,
-     311.4,
-     -1492.1,
-     239.2
-    ],
-    [
-     -1492.1,
-     239.2,
-     -1432.9,
-     227.5
-    ],
-    [
-     -1432.9,
-     227.5,
-     -1410.7,
-     270.2
-    ],
-    [
-     -1410.7,
-     270.2,
-     -1437.4,
-     294.5
-    ],
-    [
-     -1437.4,
-     294.5,
-     -1456.9,
+     -1462.6,
+     233.8,
+     -1489.6,
      280.2
     ],
     [
-     -1456.9,
+     -1489.6,
      280.2,
-     -1448.9,
-     269.5
+     -1455.0,
+     301.3
+    ],
+    [
+     -1455.0,
+     301.3,
+     -1467.1,
+     358.3
+    ],
+    [
+     -1467.1,
+     358.3,
+     -1430.8,
+     309.3
+    ],
+    [
+     -1430.8,
+     309.3,
+     -1394.6,
+     260.3
+    ],
+    [
+     -1394.6,
+     260.3,
+     -1435.4,
+     243.9
+    ],
+    [
+     -1435.4,
+     243.9,
+     -1428.3,
+     183.4
+    ],
+    [
+     -1444.2,
+     271.4,
+     -1428.3,
+     183.4
+    ],
+    [
+     -1444.2,
+     271.4,
+     -1467.1,
+     358.3
+    ]
+   ],
+   "fill": [
+    [
+     -1428.3,
+     183.4
+    ],
+    [
+     -1462.6,
+     233.8
+    ],
+    [
+     -1489.6,
+     280.2
+    ],
+    [
+     -1455.0,
+     301.3
+    ],
+    [
+     -1467.1,
+     358.3
+    ],
+    [
+     -1430.8,
+     309.3
+    ],
+    [
+     -1394.6,
+     260.3
+    ],
+    [
+     -1435.4,
+     243.9
     ]
    ]
   },
   {
    "id": "c45",
    "theme": "mana",
-   "name": "Maná: Heap de Maná",
+   "name": "Maná: Pila de Memoria",
    "x": -519.6,
    "y": 300.0,
    "radius": 70,
@@ -2983,8 +3243,8 @@
   },
   {
    "id": "c46",
-   "theme": "fuego",
-   "name": "Fuego: Sala de Servidores",
+   "theme": "automatizacion",
+   "name": "Automatización: Sala de Máquinas",
    "x": -1127.2,
    "y": -356.8,
    "radius": 75,
@@ -2992,56 +3252,56 @@
     [
      -1127.2,
      -431.8,
-     -1096.5,
-     -385.8
+     -1075.0,
+     -400.6
     ],
     [
-     -1096.5,
-     -385.8,
-     -1081.9,
-     -331.7
+     -1075.0,
+     -400.6,
+     -1066.5,
+     -345.0
     ],
     [
-     -1081.9,
-     -331.7,
-     -1099.5,
-     -285.9
+     -1066.5,
+     -345.0,
+     -1101.9,
+     -306.5
     ],
     [
-     -1099.5,
-     -285.9,
-     -1154.8,
-     -285.9
+     -1101.9,
+     -306.5,
+     -1152.4,
+     -306.5
     ],
     [
-     -1154.8,
-     -285.9,
-     -1172.4,
-     -331.7
+     -1152.4,
+     -306.5,
+     -1187.8,
+     -345.0
     ],
     [
-     -1172.4,
-     -331.7,
-     -1157.8,
-     -385.8
+     -1187.8,
+     -345.0,
+     -1179.3,
+     -400.6
     ],
     [
-     -1157.8,
-     -385.8,
+     -1179.3,
+     -400.6,
      -1127.2,
      -431.8
     ],
     [
      -1127.2,
-     -330.6,
+     -356.8,
      -1127.2,
      -431.8
     ],
     [
      -1127.2,
-     -330.6,
-     -1099.5,
-     -285.9
+     -356.8,
+     -1101.9,
+     -306.5
     ]
    ],
    "fill": [
@@ -3050,80 +3310,122 @@
      -431.8
     ],
     [
-     -1096.5,
-     -385.8
+     -1075.0,
+     -400.6
     ],
     [
-     -1081.9,
-     -331.7
+     -1066.5,
+     -345.0
     ],
     [
-     -1099.5,
-     -285.9
+     -1101.9,
+     -306.5
     ],
     [
-     -1154.8,
-     -285.9
+     -1152.4,
+     -306.5
     ],
     [
-     -1172.4,
-     -331.7
+     -1187.8,
+     -345.0
     ],
     [
-     -1157.8,
-     -385.8
+     -1179.3,
+     -400.6
     ]
    ]
   },
   {
    "id": "c47",
-   "theme": "rayo",
-   "name": "Rayo: Bus de Datos",
+   "theme": "sobrecarga",
+   "name": "Sobrecarga: Cable Pelado",
    "x": -1445.9,
    "y": -271.4,
    "radius": 88,
    "segments": [
     [
-     -1459.1,
+     -1428.3,
      -359.4,
-     -1430.2,
-     -325.6
+     -1467.5,
+     -301.9
     ],
     [
-     -1430.2,
-     -325.6,
-     -1413.9,
-     -295.8
+     -1467.5,
+     -301.9,
+     -1472.2,
+     -262.6
     ],
     [
-     -1413.9,
-     -295.8,
-     -1453.3,
-     -283.0
+     -1472.2,
+     -262.6,
+     -1460.7,
+     -216.0
     ],
     [
-     -1453.3,
-     -283.0,
-     -1424.4,
-     -249.2
+     -1460.7,
+     -216.0,
+     -1446.4,
+     -212.6
     ],
     [
-     -1424.4,
-     -249.2,
-     -1411.4,
-     -226.2
+     -1446.4,
+     -212.6,
+     -1405.0,
+     -268.6
     ],
     [
-     -1411.4,
-     -226.2,
-     -1436.6,
-     -224.5
+     -1405.0,
+     -268.6,
+     -1436.4,
+     -290.3
     ],
     [
-     -1436.6,
-     -224.5,
-     -1419.5,
-     -183.4
+     -1436.4,
+     -290.3,
+     -1428.3,
+     -359.4
+    ],
+    [
+     -1444.2,
+     -271.4,
+     -1428.3,
+     -359.4
+    ],
+    [
+     -1444.2,
+     -271.4,
+     -1446.4,
+     -212.6
+    ]
+   ],
+   "fill": [
+    [
+     -1428.3,
+     -359.4
+    ],
+    [
+     -1467.5,
+     -301.9
+    ],
+    [
+     -1472.2,
+     -262.6
+    ],
+    [
+     -1460.7,
+     -216.0
+    ],
+    [
+     -1446.4,
+     -212.6
+    ],
+    [
+     -1405.0,
+     -268.6
+    ],
+    [
+     -1436.4,
+     -290.3
     ]
    ]
   },
@@ -3233,8 +3535,8 @@
   },
   {
    "id": "c49",
-   "theme": "mana",
-   "name": "Maná: Caché de Maná",
+   "theme": "automatizacion",
+   "name": "Automatización: Línea de Montaje",
    "x": -1445.9,
    "y": -628.6,
    "radius": 88,
@@ -3242,60 +3544,60 @@
     [
      -1445.9,
      -716.6,
-     -1410.8,
-     -671.2
+     -1383.7,
+     -690.8
     ],
     [
-     -1410.8,
-     -671.2,
-     -1387.5,
-     -619.1
+     -1383.7,
+     -690.8,
+     -1357.9,
+     -628.6
     ],
     [
-     -1387.5,
-     -619.1,
-     -1395.9,
-     -564.3
+     -1357.9,
+     -628.6,
+     -1383.7,
+     -566.4
     ],
     [
-     -1395.9,
-     -564.3,
+     -1383.7,
+     -566.4,
      -1445.9,
      -540.6
     ],
     [
      -1445.9,
      -540.6,
-     -1495.9,
-     -564.3
+     -1508.1,
+     -566.4
     ],
     [
-     -1495.9,
-     -564.3,
-     -1504.3,
-     -619.1
+     -1508.1,
+     -566.4,
+     -1533.9,
+     -628.6
     ],
     [
-     -1504.3,
-     -619.1,
-     -1481.0,
-     -671.2
+     -1533.9,
+     -628.6,
+     -1508.1,
+     -690.8
     ],
     [
-     -1481.0,
-     -671.2,
+     -1508.1,
+     -690.8,
      -1445.9,
      -716.6
     ],
     [
      -1445.9,
-     -593.4,
+     -628.6,
      -1445.9,
      -716.6
     ],
     [
      -1445.9,
-     -593.4,
+     -628.6,
      -1445.9,
      -540.6
     ]
@@ -3306,32 +3608,32 @@
      -716.6
     ],
     [
-     -1410.8,
-     -671.2
+     -1383.7,
+     -690.8
     ],
     [
-     -1387.5,
-     -619.1
+     -1357.9,
+     -628.6
     ],
     [
-     -1395.9,
-     -564.3
+     -1383.7,
+     -566.4
     ],
     [
      -1445.9,
      -540.6
     ],
     [
-     -1495.9,
-     -564.3
+     -1508.1,
+     -566.4
     ],
     [
-     -1504.3,
-     -619.1
+     -1533.9,
+     -628.6
     ],
     [
-     -1481.0,
-     -671.2
+     -1508.1,
+     -690.8
     ]
    ]
   },
@@ -3432,7 +3734,7 @@
   {
    "id": "c51",
    "theme": "armadura",
-   "name": "Armadura: Búnker",
+   "name": "Armadura: Blindaje Legacy",
    "x": -1267.3,
    "y": -937.9,
    "radius": 88,
@@ -3526,7 +3828,7 @@
   {
    "id": "c52",
    "theme": "vida",
-   "name": "Vida: Reserva de Energía",
+   "name": "Vida: Bloque de Alimentación",
    "x": -872.6,
    "y": -797.7,
    "radius": 75,
@@ -4129,73 +4431,73 @@
    "id": "c64",
    "theme": "resistencias",
    "name": "Resistencias: Antivirus",
-   "x": -1426.2,
-   "y": 22.0,
+   "x": -1437.3,
+   "y": -14.6,
    "radius": 55,
    "segments": [
     [
-     -1426.2,
-     -33.0,
-     -1395.3,
-     23.9
+     -1437.3,
+     -69.6,
+     -1406.5,
+     -12.7
     ],
     [
-     -1395.3,
-     23.9,
-     -1393.8,
-     63.3
+     -1406.5,
+     -12.7,
+     -1405.0,
+     26.7
     ],
     [
-     -1393.8,
-     63.3,
-     -1458.6,
-     63.3
+     -1405.0,
+     26.7,
+     -1469.7,
+     26.7
     ],
     [
-     -1458.6,
-     63.3,
-     -1457.1,
-     23.9
+     -1469.7,
+     26.7,
+     -1468.2,
+     -12.7
     ],
     [
-     -1457.1,
-     23.9,
-     -1426.2,
-     -33.0
+     -1468.2,
+     -12.7,
+     -1437.3,
+     -69.6
     ],
     [
-     -1426.2,
-     33.0,
-     -1426.2,
-     -33.0
+     -1437.3,
+     -3.6,
+     -1437.3,
+     -69.6
     ],
     [
-     -1426.2,
-     33.0,
-     -1393.8,
-     63.3
+     -1437.3,
+     -3.6,
+     -1405.0,
+     26.7
     ]
    ],
    "fill": [
     [
-     -1426.2,
-     -33.0
+     -1437.3,
+     -69.6
     ],
     [
-     -1395.3,
-     23.9
+     -1406.5,
+     -12.7
     ],
     [
-     -1393.8,
-     63.3
+     -1405.0,
+     26.7
     ],
     [
-     -1458.6,
-     63.3
+     -1469.7,
+     26.7
     ],
     [
-     -1457.1,
-     23.9
+     -1468.2,
+     -12.7
     ]
    ]
   },
@@ -5862,171 +6164,168 @@
   {
    "id": 79,
    "kind": "minor",
-   "name": "Vida",
+   "name": "Probabilidad de hacer sangrar",
    "x": -178.6,
-   "y": -1594.0,
+   "y": -1654.5,
    "mods": [
     {
-     "stat": "life",
+     "stat": "bleed_chance",
      "type": "flat",
-     "value": 12
+     "value": 6
     }
    ],
    "cluster": "c4",
-   "theme": "vida"
+   "theme": "hemorragia"
   },
   {
    "id": 80,
    "kind": "minor",
-   "name": "Vida",
-   "x": -128.0,
-   "y": -1630.8,
+   "name": "Sangrar y físico",
+   "x": -152.7,
+   "y": -1608.5,
    "mods": [
     {
-     "stat": "life",
+     "stat": "bleed_chance",
+     "type": "flat",
+     "value": 4
+    },
+    {
+     "stat": "physical_damage",
      "type": "increased",
-     "value": 6
+     "value": 9
     }
    ],
    "cluster": "c4",
-   "theme": "vida"
+   "theme": "hemorragia"
   },
   {
    "id": 81,
    "kind": "minor",
-   "name": "Vida y regeneración",
-   "x": -92.3,
-   "y": -1579.9,
+   "name": "Estados más dañinos",
+   "x": -132.5,
+   "y": -1560.3,
    "mods": [
     {
-     "stat": "life",
+     "stat": "ailment_damage",
      "type": "increased",
-     "value": 4
-    },
-    {
-     "stat": "life_regen",
-     "type": "flat",
-     "value": 2
+     "value": 8
     }
    ],
    "cluster": "c4",
-   "theme": "vida"
+   "theme": "hemorragia"
   },
   {
    "id": 82,
    "kind": "minor",
-   "name": "Vida y armadura",
-   "x": -133.8,
-   "y": -1525.4,
+   "name": "Probabilidad de hacer sangrar",
+   "x": -138.0,
+   "y": -1511.3,
    "mods": [
     {
-     "stat": "life",
-     "type": "increased",
-     "value": 4
-    },
-    {
-     "stat": "armour",
-     "type": "increased",
-     "value": 8
-    }
-   ],
-   "cluster": "c4",
-   "theme": "vida"
-  },
-  {
-   "id": 83,
-   "kind": "minor",
-   "name": "Vida máxima",
-   "x": -178.6,
-   "y": -1473.0,
-   "mods": [
-    {
-     "stat": "life",
-     "type": "increased",
-     "value": 8
-    }
-   ],
-   "cluster": "c4",
-   "theme": "vida"
-  },
-  {
-   "id": 84,
-   "kind": "minor",
-   "name": "Vida",
-   "x": -223.4,
-   "y": -1525.4,
-   "mods": [
-    {
-     "stat": "life",
+     "stat": "bleed_chance",
      "type": "flat",
-     "value": 12
-    }
-   ],
-   "cluster": "c4",
-   "theme": "vida"
-  },
-  {
-   "id": 85,
-   "kind": "minor",
-   "name": "Vida",
-   "x": -264.9,
-   "y": -1579.9,
-   "mods": [
-    {
-     "stat": "life",
-     "type": "increased",
      "value": 6
     }
    ],
    "cluster": "c4",
-   "theme": "vida"
+   "theme": "hemorragia"
   },
   {
-   "id": 86,
+   "id": 83,
    "kind": "minor",
-   "name": "Vida y regeneración",
-   "x": -229.2,
-   "y": -1630.8,
+   "name": "Sangrar y físico",
+   "x": -178.6,
+   "y": -1491.7,
    "mods": [
     {
-     "stat": "life",
-     "type": "increased",
+     "stat": "bleed_chance",
+     "type": "flat",
      "value": 4
     },
     {
-     "stat": "life_regen",
-     "type": "flat",
-     "value": 2
+     "stat": "physical_damage",
+     "type": "increased",
+     "value": 9
     }
    ],
    "cluster": "c4",
-   "theme": "vida"
+   "theme": "hemorragia"
   },
   {
-   "id": 87,
-   "kind": "notable",
-   "name": "Hasta el Último Byte",
-   "x": -178.6,
-   "y": -1562.1,
+   "id": 84,
+   "kind": "minor",
+   "name": "Estados más dañinos",
+   "x": -219.2,
+   "y": -1511.3,
    "mods": [
     {
-     "stat": "damage",
-     "type": "increased",
-     "value": 40,
-     "tags": [
-      "low_life"
-     ]
-    },
-    {
-     "stat": "life",
+     "stat": "ailment_damage",
      "type": "increased",
      "value": 8
     }
    ],
-   "flavor": "Cuanto peor va, mejor rindes. Como en cada entrega.",
    "cluster": "c4",
-   "theme": "vida",
-   "icon": "vida"
+   "theme": "hemorragia"
+  },
+  {
+   "id": 85,
+   "kind": "minor",
+   "name": "Probabilidad de hacer sangrar",
+   "x": -224.7,
+   "y": -1560.3,
+   "mods": [
+    {
+     "stat": "bleed_chance",
+     "type": "flat",
+     "value": 6
+    }
+   ],
+   "cluster": "c4",
+   "theme": "hemorragia"
+  },
+  {
+   "id": 86,
+   "kind": "minor",
+   "name": "Sangrar y físico",
+   "x": -204.4,
+   "y": -1608.5,
+   "mods": [
+    {
+     "stat": "bleed_chance",
+     "type": "flat",
+     "value": 4
+    },
+    {
+     "stat": "physical_damage",
+     "type": "increased",
+     "value": 9
+    }
+   ],
+   "cluster": "c4",
+   "theme": "hemorragia"
+  },
+  {
+   "id": 87,
+   "kind": "notable",
+   "name": "Corte de Fibra",
+   "x": -178.6,
+   "y": -1535.7,
+   "mods": [
+    {
+     "stat": "bleed_chance",
+     "type": "flat",
+     "value": 15
+    },
+    {
+     "stat": "ailment_damage",
+     "type": "increased",
+     "value": 20
+    }
+   ],
+   "flavor": "Alguien pasó una excavadora por el cable submarino.",
+   "cluster": "c4",
+   "theme": "hemorragia",
+   "icon": "hemorragia"
   },
   {
    "id": 88,
@@ -6159,14 +6458,17 @@
   {
    "id": 95,
    "kind": "minor",
-   "name": "Daño físico",
+   "name": "Daño físico cuerpo a cuerpo",
    "x": 93.2,
    "y": -1210.2,
    "mods": [
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 12
+     "value": 15,
+     "tags": [
+      "melee"
+     ]
     }
    ],
    "cluster": "c5",
@@ -6175,14 +6477,14 @@
   {
    "id": 96,
    "kind": "minor",
-   "name": "Fuerza",
+   "name": "Daño físico",
    "x": 93.2,
    "y": -1172.7,
    "mods": [
     {
-     "stat": "strength",
-     "type": "flat",
-     "value": 10
+     "stat": "physical_damage",
+     "type": "increased",
+     "value": 12
     }
    ],
    "cluster": "c5",
@@ -6746,14 +7048,17 @@
   {
    "id": 128,
    "kind": "minor",
-   "name": "Daño físico",
+   "name": "Daño físico cuerpo a cuerpo",
    "x": 487.9,
    "y": -1343.9,
    "mods": [
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 12
+     "value": 15,
+     "tags": [
+      "melee"
+     ]
     }
    ],
    "cluster": "c8",
@@ -6762,14 +7067,14 @@
   {
    "id": 129,
    "kind": "minor",
-   "name": "Fuerza",
+   "name": "Daño físico",
    "x": 487.9,
    "y": -1299.9,
    "mods": [
     {
-     "stat": "strength",
-     "type": "flat",
-     "value": 10
+     "stat": "physical_damage",
+     "type": "increased",
+     "value": 12
     }
    ],
    "cluster": "c8",
@@ -7066,6 +7371,11 @@
      "stat": "crit_multiplier",
      "type": "flat",
      "value": 15
+    },
+    {
+     "stat": "bleed_chance",
+     "type": "flat",
+     "value": 10
     }
    ],
    "flavor": "Rompe todo lo que toca. Por eso no le dejan tocar main.",
@@ -7076,14 +7386,17 @@
   {
    "id": 147,
    "kind": "minor",
-   "name": "Daño físico",
+   "name": "Daño físico cuerpo a cuerpo",
    "x": 872.6,
    "y": -760.2,
    "mods": [
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 12
+     "value": 15,
+     "tags": [
+      "melee"
+     ]
     }
    ],
    "cluster": "c10",
@@ -7092,14 +7405,14 @@
   {
    "id": 148,
    "kind": "minor",
-   "name": "Fuerza",
+   "name": "Daño físico",
    "x": 872.6,
    "y": -722.7,
    "mods": [
     {
-     "stat": "strength",
-     "type": "flat",
-     "value": 10
+     "stat": "physical_damage",
+     "type": "increased",
+     "value": 12
     }
    ],
    "cluster": "c10",
@@ -7478,168 +7791,173 @@
   {
    "id": 170,
    "kind": "minor",
-   "name": "Armadura",
-   "x": 1192.5,
-   "y": -1012.7,
+   "name": "Probabilidad de hacer sangrar",
+   "x": 1267.3,
+   "y": -1025.9,
    "mods": [
     {
-     "stat": "armour",
-     "type": "increased",
-     "value": 15
+     "stat": "bleed_chance",
+     "type": "flat",
+     "value": 6
     }
    ],
    "cluster": "c13",
-   "theme": "armadura"
+   "theme": "hemorragia"
   },
   {
    "id": 171,
    "kind": "minor",
-   "name": "Armadura",
-   "x": 1258.2,
-   "y": -1024.3,
+   "name": "Sangrar y físico",
+   "x": 1293.2,
+   "y": -979.9,
    "mods": [
     {
-     "stat": "armour",
+     "stat": "bleed_chance",
      "type": "flat",
-     "value": 30
+     "value": 4
+    },
+    {
+     "stat": "physical_damage",
+     "type": "increased",
+     "value": 9
     }
    ],
    "cluster": "c13",
-   "theme": "armadura"
+   "theme": "hemorragia"
   },
   {
    "id": 172,
    "kind": "minor",
-   "name": "Armadura y vida",
-   "x": 1323.9,
-   "y": -1015.9,
+   "name": "Estados más dañinos",
+   "x": 1313.4,
+   "y": -931.7,
    "mods": [
     {
-     "stat": "armour",
+     "stat": "ailment_damage",
      "type": "increased",
-     "value": 10
-    },
-    {
-     "stat": "life",
-     "type": "increased",
-     "value": 3
+     "value": 8
     }
    ],
    "cluster": "c13",
-   "theme": "armadura"
+   "theme": "hemorragia"
   },
   {
    "id": 173,
    "kind": "minor",
-   "name": "Bloqueo",
-   "x": 1339.7,
-   "y": -964.6,
+   "name": "Probabilidad de hacer sangrar",
+   "x": 1307.9,
+   "y": -882.7,
    "mods": [
     {
-     "stat": "block_chance",
+     "stat": "bleed_chance",
      "type": "flat",
-     "value": 2
+     "value": 6
     }
    ],
    "cluster": "c13",
-   "theme": "armadura"
+   "theme": "hemorragia"
   },
   {
    "id": 174,
    "kind": "minor",
-   "name": "Armadura y bloqueo",
-   "x": 1319.4,
-   "y": -905.2,
+   "name": "Sangrar y físico",
+   "x": 1267.3,
+   "y": -863.1,
    "mods": [
     {
-     "stat": "armour",
-     "type": "increased",
-     "value": 8
+     "stat": "bleed_chance",
+     "type": "flat",
+     "value": 4
     },
     {
-     "stat": "block_chance",
-     "type": "flat",
-     "value": 1
+     "stat": "physical_damage",
+     "type": "increased",
+     "value": 9
     }
    ],
    "cluster": "c13",
-   "theme": "armadura"
+   "theme": "hemorragia"
   },
   {
    "id": 175,
    "kind": "minor",
-   "name": "Armadura",
-   "x": 1273.7,
-   "y": -856.6,
+   "name": "Estados más dañinos",
+   "x": 1226.7,
+   "y": -882.7,
    "mods": [
     {
-     "stat": "armour",
+     "stat": "ailment_damage",
      "type": "increased",
-     "value": 15
+     "value": 8
     }
    ],
    "cluster": "c13",
-   "theme": "armadura"
+   "theme": "hemorragia"
   },
   {
    "id": 176,
    "kind": "minor",
-   "name": "Armadura",
-   "x": 1228.0,
-   "y": -891.7,
+   "name": "Probabilidad de hacer sangrar",
+   "x": 1221.2,
+   "y": -931.7,
    "mods": [
     {
-     "stat": "armour",
+     "stat": "bleed_chance",
      "type": "flat",
-     "value": 30
+     "value": 6
     }
    ],
    "cluster": "c13",
-   "theme": "armadura"
+   "theme": "hemorragia"
   },
   {
    "id": 177,
    "kind": "minor",
-   "name": "Armadura y vida",
-   "x": 1195.9,
-   "y": -946.1,
+   "name": "Sangrar y físico",
+   "x": 1241.5,
+   "y": -979.9,
    "mods": [
     {
-     "stat": "armour",
-     "type": "increased",
-     "value": 10
+     "stat": "bleed_chance",
+     "type": "flat",
+     "value": 4
     },
     {
-     "stat": "life",
+     "stat": "physical_damage",
      "type": "increased",
-     "value": 3
+     "value": 9
     }
    ],
    "cluster": "c13",
-   "theme": "armadura"
+   "theme": "hemorragia"
   },
   {
    "id": 178,
    "kind": "notable",
-   "name": "Defensa en Profundidad",
+   "name": "Sector Defectuoso",
    "x": 1267.3,
-   "y": -946.7,
+   "y": -907.1,
    "mods": [
     {
-     "stat": "armour",
+     "stat": "bleed_chance",
+     "type": "flat",
+     "value": 10
+    },
+    {
+     "stat": "ailment_duration",
      "type": "increased",
      "value": 25
     },
     {
-     "stat": "life",
+     "stat": "physical_damage",
      "type": "increased",
-     "value": 6
+     "value": 10
     }
    ],
-   "flavor": "Capas y capas de seguridad. Y de burocracia.",
+   "flavor": "Pierde datos a cada paso.",
    "cluster": "c13",
-   "theme": "armadura",
-   "icon": "armadura"
+   "theme": "hemorragia",
+   "icon": "hemorragia"
   },
   {
    "id": 179,
@@ -7947,14 +8265,17 @@
   {
    "id": 196,
    "kind": "minor",
-   "name": "Daño físico",
+   "name": "Daño físico cuerpo a cuerpo",
    "x": 1445.9,
    "y": -584.6,
    "mods": [
     {
      "stat": "physical_damage",
      "type": "increased",
-     "value": 12
+     "value": 15,
+     "tags": [
+      "melee"
+     ]
     }
    ],
    "cluster": "c15",
@@ -7963,14 +8284,14 @@
   {
    "id": 197,
    "kind": "minor",
-   "name": "Fuerza",
+   "name": "Daño físico",
    "x": 1445.9,
    "y": -540.6,
    "mods": [
     {
-     "stat": "strength",
-     "type": "flat",
-     "value": 10
+     "stat": "physical_damage",
+     "type": "increased",
+     "value": 12
     }
    ],
    "cluster": "c15",
@@ -8726,144 +9047,150 @@
   {
    "id": 238,
    "kind": "minor",
-   "name": "Daño de frío",
+   "name": "Probabilidad de helar",
    "x": 1445.9,
    "y": 183.4,
    "mods": [
     {
-     "stat": "cold_damage",
-     "type": "increased",
-     "value": 18
+     "stat": "chill_chance",
+     "type": "flat",
+     "value": 8
     }
    ],
    "cluster": "c20",
-   "theme": "frio"
+   "theme": "criogenia"
   },
   {
    "id": 239,
    "kind": "minor",
-   "name": "Frío y resistencia",
-   "x": 1522.1,
-   "y": 227.4,
+   "name": "Helar y frío",
+   "x": 1511.2,
+   "y": 221.1,
    "mods": [
+    {
+     "stat": "chill_chance",
+     "type": "flat",
+     "value": 5
+    },
     {
      "stat": "cold_damage",
      "type": "increased",
-     "value": 12
-    },
-    {
-     "stat": "cold_res",
-     "type": "flat",
-     "value": 4
+     "value": 9
     }
    ],
    "cluster": "c20",
-   "theme": "frio"
+   "theme": "criogenia"
   },
   {
    "id": 240,
    "kind": "minor",
-   "name": "Frío y lanzamiento",
+   "name": "Probabilidad de congelar",
    "x": 1522.1,
-   "y": 315.4,
+   "y": 290.3,
    "mods": [
     {
-     "stat": "cold_damage",
-     "type": "increased",
-     "value": 9
-    },
-    {
-     "stat": "cast_speed",
-     "type": "increased",
+     "stat": "freeze_chance",
+     "type": "flat",
      "value": 3
     }
    ],
    "cluster": "c20",
-   "theme": "frio"
+   "theme": "criogenia"
   },
   {
    "id": 241,
    "kind": "minor",
-   "name": "Daño de frío",
-   "x": 1445.9,
-   "y": 359.4,
+   "name": "Probabilidad de helar",
+   "x": 1478.6,
+   "y": 340.6,
    "mods": [
     {
-     "stat": "cold_damage",
-     "type": "increased",
-     "value": 18
+     "stat": "chill_chance",
+     "type": "flat",
+     "value": 8
     }
    ],
    "cluster": "c20",
-   "theme": "frio"
+   "theme": "criogenia"
   },
   {
    "id": 242,
    "kind": "minor",
-   "name": "Frío y resistencia",
-   "x": 1369.7,
-   "y": 315.4,
+   "name": "Helar y frío",
+   "x": 1413.3,
+   "y": 340.6,
    "mods": [
     {
-     "stat": "cold_damage",
-     "type": "increased",
-     "value": 12
-    },
-    {
-     "stat": "cold_res",
+     "stat": "chill_chance",
      "type": "flat",
-     "value": 4
-    }
-   ],
-   "cluster": "c20",
-   "theme": "frio"
-  },
-  {
-   "id": 243,
-   "kind": "minor",
-   "name": "Frío y lanzamiento",
-   "x": 1369.7,
-   "y": 227.4,
-   "mods": [
+     "value": 5
+    },
     {
      "stat": "cold_damage",
      "type": "increased",
      "value": 9
-    },
+    }
+   ],
+   "cluster": "c20",
+   "theme": "criogenia"
+  },
+  {
+   "id": 243,
+   "kind": "minor",
+   "name": "Probabilidad de congelar",
+   "x": 1369.7,
+   "y": 290.3,
+   "mods": [
     {
-     "stat": "cast_speed",
-     "type": "increased",
+     "stat": "freeze_chance",
+     "type": "flat",
      "value": 3
     }
    ],
    "cluster": "c20",
-   "theme": "frio"
+   "theme": "criogenia"
   },
   {
    "id": 244,
+   "kind": "minor",
+   "name": "Probabilidad de helar",
+   "x": 1380.6,
+   "y": 221.1,
+   "mods": [
+    {
+     "stat": "chill_chance",
+     "type": "flat",
+     "value": 8
+    }
+   ],
+   "cluster": "c20",
+   "theme": "criogenia"
+  },
+  {
+   "id": 245,
    "kind": "notable",
-   "name": "Cold Boot",
+   "name": "Cero Absoluto",
    "x": 1445.9,
    "y": 271.4,
    "mods": [
     {
-     "stat": "cold_damage",
-     "type": "increased",
-     "value": 30
+     "stat": "freeze_chance",
+     "type": "flat",
+     "value": 10
     },
     {
-     "stat": "cast_speed",
-     "type": "increased",
-     "value": 4
+     "stat": "chill_chance",
+     "type": "flat",
+     "value": 10
     }
    ],
-   "flavor": "Arranca en frío. Y deja todo helado.",
+   "flavor": "0 kelvin, 0 bugs, 0 movimiento.",
    "cluster": "c20",
-   "theme": "frio",
-   "icon": "frio"
+   "theme": "criogenia",
+   "icon": "criogenia"
   },
   {
-   "id": 245,
+   "id": 246,
    "kind": "minor",
    "name": "Destreza",
    "x": 871.2,
@@ -8878,7 +9205,7 @@
    "theme": "atributos"
   },
   {
-   "id": 246,
+   "id": 247,
    "kind": "minor",
    "name": "Destreza",
    "x": 962.9,
@@ -8893,7 +9220,7 @@
    "theme": "atributos"
   },
   {
-   "id": 247,
+   "id": 248,
    "kind": "minor",
    "name": "Evasión",
    "x": 1060.2,
@@ -8909,7 +9236,7 @@
    "theme": "evasion"
   },
   {
-   "id": 248,
+   "id": 249,
    "kind": "minor",
    "name": "Evasión",
    "x": 1075.3,
@@ -8925,7 +9252,7 @@
    "theme": "evasion"
   },
   {
-   "id": 249,
+   "id": 250,
    "kind": "minor",
    "name": "Evasión y movimiento",
    "x": 1098.9,
@@ -8946,7 +9273,7 @@
    "theme": "evasion"
   },
   {
-   "id": 250,
+   "id": 251,
    "kind": "minor",
    "name": "Destreza",
    "x": 1127.2,
@@ -8962,7 +9289,7 @@
    "theme": "evasion"
   },
   {
-   "id": 251,
+   "id": 252,
    "kind": "minor",
    "name": "Evasión",
    "x": 1155.4,
@@ -8978,7 +9305,7 @@
    "theme": "evasion"
   },
   {
-   "id": 252,
+   "id": 253,
    "kind": "minor",
    "name": "Evasión",
    "x": 1179.0,
@@ -8994,7 +9321,7 @@
    "theme": "evasion"
   },
   {
-   "id": 253,
+   "id": 254,
    "kind": "notable",
    "name": "Proceso en Segundo Plano",
    "x": 1194.1,
@@ -9020,7 +9347,7 @@
    "icon": "evasion"
   },
   {
-   "id": 254,
+   "id": 255,
    "kind": "minor",
    "name": "Destreza",
    "x": 1232.8,
@@ -9035,7 +9362,7 @@
    "theme": "atributos"
   },
   {
-   "id": 255,
+   "id": 256,
    "kind": "minor",
    "name": "Destreza",
    "x": 1286.5,
@@ -9050,163 +9377,173 @@
    "theme": "atributos"
   },
   {
-   "id": 256,
-   "kind": "minor",
-   "name": "Daño de caos",
-   "x": 1533.9,
-   "y": 628.6,
-   "mods": [
-    {
-     "stat": "chaos_damage",
-     "type": "increased",
-     "value": 18
-    }
-   ],
-   "cluster": "c22",
-   "theme": "caos"
-  },
-  {
    "id": 257,
    "kind": "minor",
-   "name": "Resistencia al caos",
-   "x": 1470.3,
-   "y": 702.1,
+   "name": "Probabilidad de envenenar",
+   "x": 1423.9,
+   "y": 540.6,
    "mods": [
     {
-     "stat": "chaos_res",
+     "stat": "poison_chance",
      "type": "flat",
-     "value": 7
+     "value": 6
     }
    ],
    "cluster": "c22",
-   "theme": "caos"
+   "theme": "toxinas"
   },
   {
    "id": 258,
    "kind": "minor",
-   "name": "Caos y daño",
-   "x": 1392.3,
-   "y": 668.6,
+   "name": "Veneno y caos",
+   "x": 1467.9,
+   "y": 564.6,
    "mods": [
+    {
+     "stat": "poison_chance",
+     "type": "flat",
+     "value": 4
+    },
     {
      "stat": "chaos_damage",
      "type": "increased",
-     "value": 12
-    },
-    {
-     "stat": "damage",
-     "type": "increased",
-     "value": 4
+     "value": 9
     }
    ],
    "cluster": "c22",
-   "theme": "caos"
+   "theme": "toxinas"
   },
   {
    "id": 259,
    "kind": "minor",
-   "name": "Daño de caos",
-   "x": 1399.7,
-   "y": 596.4,
+   "name": "Estados duraderos",
+   "x": 1483.5,
+   "y": 628.9,
    "mods": [
     {
-     "stat": "chaos_damage",
+     "stat": "ailment_duration",
      "type": "increased",
-     "value": 18
+     "value": 8
     }
    ],
    "cluster": "c22",
-   "theme": "caos"
+   "theme": "toxinas"
   },
   {
    "id": 260,
    "kind": "minor",
-   "name": "Resistencia al caos",
-   "x": 1458.9,
-   "y": 584.7,
+   "name": "Probabilidad de envenenar",
+   "x": 1513.9,
+   "y": 689.8,
    "mods": [
     {
-     "stat": "chaos_res",
+     "stat": "poison_chance",
      "type": "flat",
-     "value": 7
+     "value": 6
     }
    ],
    "cluster": "c22",
-   "theme": "caos"
+   "theme": "toxinas"
   },
   {
    "id": 261,
    "kind": "minor",
-   "name": "Caos y daño",
-   "x": 1481.1,
-   "y": 627.4,
+   "name": "Veneno y caos",
+   "x": 1467.9,
+   "y": 703.4,
    "mods": [
+    {
+     "stat": "poison_chance",
+     "type": "flat",
+     "value": 4
+    },
     {
      "stat": "chaos_damage",
      "type": "increased",
-     "value": 12
-    },
-    {
-     "stat": "damage",
-     "type": "increased",
-     "value": 4
+     "value": 9
     }
    ],
    "cluster": "c22",
-   "theme": "caos"
+   "theme": "toxinas"
   },
   {
    "id": 262,
    "kind": "minor",
-   "name": "Daño de caos",
-   "x": 1454.5,
-   "y": 651.7,
+   "name": "Estados duraderos",
+   "x": 1399.9,
+   "y": 703.4,
    "mods": [
     {
-     "stat": "chaos_damage",
+     "stat": "ailment_duration",
      "type": "increased",
-     "value": 18
+     "value": 8
     }
    ],
    "cluster": "c22",
-   "theme": "caos"
+   "theme": "toxinas"
   },
   {
    "id": 263,
    "kind": "minor",
-   "name": "Resistencia al caos",
-   "x": 1434.9,
-   "y": 637.4,
+   "name": "Probabilidad de envenenar",
+   "x": 1388.7,
+   "y": 668.3,
    "mods": [
     {
-     "stat": "chaos_res",
+     "stat": "poison_chance",
      "type": "flat",
-     "value": 7
+     "value": 6
     }
    ],
    "cluster": "c22",
-   "theme": "caos"
+   "theme": "toxinas"
   },
   {
    "id": 264,
-   "kind": "notable",
-   "name": "Comportamiento Indefinido",
-   "x": 1443.0,
-   "y": 626.7,
+   "kind": "minor",
+   "name": "Veneno y caos",
+   "x": 1419.1,
+   "y": 607.5,
    "mods": [
+    {
+     "stat": "poison_chance",
+     "type": "flat",
+     "value": 4
+    },
     {
      "stat": "chaos_damage",
      "type": "increased",
-     "value": 35
+     "value": 9
     }
    ],
-   "flavor": "A veces funciona. Nadie sabe por qué.",
    "cluster": "c22",
-   "theme": "caos",
-   "icon": "caos"
+   "theme": "toxinas"
   },
   {
    "id": 265,
+   "kind": "notable",
+   "name": "Dependencia Comprometida",
+   "x": 1445.9,
+   "y": 659.4,
+   "mods": [
+    {
+     "stat": "poison_chance",
+     "type": "flat",
+     "value": 15
+    },
+    {
+     "stat": "ailment_damage",
+     "type": "increased",
+     "value": 20
+    }
+   ],
+   "flavor": "npm install veneno@latest",
+   "cluster": "c22",
+   "theme": "toxinas",
+   "icon": "toxinas"
+  },
+  {
+   "id": 266,
    "kind": "minor",
    "name": "Destreza",
    "x": 846.6,
@@ -9221,7 +9558,7 @@
    "theme": "atributos"
   },
   {
-   "id": 266,
+   "id": 267,
    "kind": "minor",
    "name": "Destreza",
    "x": 913.8,
@@ -9236,7 +9573,7 @@
    "theme": "atributos"
   },
   {
-   "id": 267,
+   "id": 268,
    "kind": "minor",
    "name": "Velocidad de ataque",
    "x": 966.5,
@@ -9252,7 +9589,7 @@
    "theme": "velocidad_ataque"
   },
   {
-   "id": 268,
+   "id": 269,
    "kind": "minor",
    "name": "Velocidad de ataque y precisión",
    "x": 1011.5,
@@ -9273,7 +9610,7 @@
    "theme": "velocidad_ataque"
   },
   {
-   "id": 269,
+   "id": 270,
    "kind": "minor",
    "name": "Velocidad y daño de ataque",
    "x": 966.5,
@@ -9297,7 +9634,7 @@
    "theme": "velocidad_ataque"
   },
   {
-   "id": 270,
+   "id": 271,
    "kind": "minor",
    "name": "Velocidad de ataque",
    "x": 1041.5,
@@ -9313,7 +9650,7 @@
    "theme": "velocidad_ataque"
   },
   {
-   "id": 271,
+   "id": 272,
    "kind": "notable",
    "name": "Spam de Clicks",
    "x": 1086.5,
@@ -9336,7 +9673,7 @@
    "icon": "velocidad_ataque"
   },
   {
-   "id": 272,
+   "id": 273,
    "kind": "minor",
    "name": "Velocidad y daño de ataque",
    "x": 1041.5,
@@ -9360,7 +9697,7 @@
    "theme": "velocidad_ataque"
   },
   {
-   "id": 273,
+   "id": 274,
    "kind": "minor",
    "name": "Destreza",
    "x": 1080.9,
@@ -9375,7 +9712,7 @@
    "theme": "atributos"
   },
   {
-   "id": 274,
+   "id": 275,
    "kind": "minor",
    "name": "Destreza",
    "x": 1120.2,
@@ -9390,7 +9727,7 @@
    "theme": "atributos"
   },
   {
-   "id": 275,
+   "id": 276,
    "kind": "minor",
    "name": "Daño de proyectiles",
    "x": 1188.1,
@@ -9409,7 +9746,7 @@
    "theme": "proyectiles"
   },
   {
-   "id": 276,
+   "id": 277,
    "kind": "minor",
    "name": "Velocidad de proyectiles",
    "x": 1223.3,
@@ -9425,7 +9762,7 @@
    "theme": "proyectiles"
   },
   {
-   "id": 277,
+   "id": 278,
    "kind": "minor",
    "name": "Proyectiles",
    "x": 1258.5,
@@ -9449,7 +9786,7 @@
    "theme": "proyectiles"
   },
   {
-   "id": 278,
+   "id": 279,
    "kind": "minor",
    "name": "Daño de proyectiles",
    "x": 1293.7,
@@ -9468,7 +9805,7 @@
    "theme": "proyectiles"
   },
   {
-   "id": 279,
+   "id": 280,
    "kind": "notable",
    "name": "Paquetes Jumbo",
    "x": 1328.9,
@@ -9489,7 +9826,7 @@
    "icon": "proyectiles"
   },
   {
-   "id": 280,
+   "id": 281,
    "kind": "minor",
    "name": "Proyectiles",
    "x": 1280.5,
@@ -9513,7 +9850,7 @@
    "theme": "proyectiles"
   },
   {
-   "id": 281,
+   "id": 282,
    "kind": "minor",
    "name": "Daño de proyectiles",
    "x": 1333.3,
@@ -9532,7 +9869,7 @@
    "theme": "proyectiles"
   },
   {
-   "id": 282,
+   "id": 283,
    "kind": "minor",
    "name": "Destreza",
    "x": 1396.9,
@@ -9547,7 +9884,7 @@
    "theme": "atributos"
   },
   {
-   "id": 283,
+   "id": 284,
    "kind": "minor",
    "name": "Destreza",
    "x": 1460.6,
@@ -9562,7 +9899,7 @@
    "theme": "atributos"
   },
   {
-   "id": 284,
+   "id": 285,
    "kind": "keystone",
    "name": "Deuda Técnica",
    "x": 1538.4,
@@ -9583,7 +9920,7 @@
    "icon": "ks_exploradora"
   },
   {
-   "id": 285,
+   "id": 286,
    "kind": "minor",
    "name": "Destreza",
    "x": 804.0,
@@ -9598,7 +9935,7 @@
    "theme": "atributos"
   },
   {
-   "id": 286,
+   "id": 287,
    "kind": "minor",
    "name": "Destreza",
    "x": 828.6,
@@ -9613,7 +9950,7 @@
    "theme": "atributos"
   },
   {
-   "id": 287,
+   "id": 288,
    "kind": "minor",
    "name": "Probabilidad de crítico",
    "x": 872.6,
@@ -9629,7 +9966,7 @@
    "theme": "critico"
   },
   {
-   "id": 288,
+   "id": 289,
    "kind": "minor",
    "name": "Multiplicador de crítico",
    "x": 947.6,
@@ -9645,7 +9982,7 @@
    "theme": "critico"
   },
   {
-   "id": 289,
+   "id": 290,
    "kind": "minor",
    "name": "Crítico",
    "x": 872.6,
@@ -9666,7 +10003,7 @@
    "theme": "critico"
   },
   {
-   "id": 290,
+   "id": 291,
    "kind": "minor",
    "name": "Probabilidad de crítico",
    "x": 797.6,
@@ -9682,7 +10019,7 @@
    "theme": "critico"
   },
   {
-   "id": 291,
+   "id": 292,
    "kind": "minor",
    "name": "Multiplicador de crítico",
    "x": 872.6,
@@ -9698,7 +10035,7 @@
    "theme": "critico"
   },
   {
-   "id": 292,
+   "id": 293,
    "kind": "minor",
    "name": "Crítico",
    "x": 908.6,
@@ -9719,7 +10056,7 @@
    "theme": "critico"
   },
   {
-   "id": 293,
+   "id": 294,
    "kind": "minor",
    "name": "Probabilidad de crítico",
    "x": 872.6,
@@ -9735,7 +10072,7 @@
    "theme": "critico"
   },
   {
-   "id": 294,
+   "id": 295,
    "kind": "minor",
    "name": "Multiplicador de crítico",
    "x": 836.6,
@@ -9751,7 +10088,7 @@
    "theme": "critico"
   },
   {
-   "id": 295,
+   "id": 296,
    "kind": "notable",
    "name": "Kernel Panic",
    "x": 872.6,
@@ -9769,7 +10106,7 @@
    "icon": "critico"
   },
   {
-   "id": 296,
+   "id": 297,
    "kind": "minor",
    "name": "Destreza",
    "x": 887.0,
@@ -9784,7 +10121,7 @@
    "theme": "atributos"
   },
   {
-   "id": 297,
+   "id": 298,
    "kind": "minor",
    "name": "Destreza",
    "x": 901.4,
@@ -9799,7 +10136,7 @@
    "theme": "atributos"
   },
   {
-   "id": 298,
+   "id": 299,
    "kind": "minor",
    "name": "Evasión",
    "x": 879.4,
@@ -9815,7 +10152,7 @@
    "theme": "evasion"
   },
   {
-   "id": 299,
+   "id": 300,
    "kind": "minor",
    "name": "Evasión",
    "x": 891.7,
@@ -9831,7 +10168,7 @@
    "theme": "evasion"
   },
   {
-   "id": 300,
+   "id": 301,
    "kind": "minor",
    "name": "Evasión y movimiento",
    "x": 910.1,
@@ -9852,7 +10189,7 @@
    "theme": "evasion"
   },
   {
-   "id": 301,
+   "id": 302,
    "kind": "minor",
    "name": "Destreza",
    "x": 932.9,
@@ -9868,7 +10205,7 @@
    "theme": "evasion"
   },
   {
-   "id": 302,
+   "id": 303,
    "kind": "minor",
    "name": "Evasión",
    "x": 958.0,
@@ -9884,7 +10221,7 @@
    "theme": "evasion"
   },
   {
-   "id": 303,
+   "id": 304,
    "kind": "minor",
    "name": "Evasión",
    "x": 983.1,
@@ -9900,7 +10237,7 @@
    "theme": "evasion"
   },
   {
-   "id": 304,
+   "id": 305,
    "kind": "minor",
    "name": "Evasión y movimiento",
    "x": 1006.0,
@@ -9921,7 +10258,7 @@
    "theme": "evasion"
   },
   {
-   "id": 305,
+   "id": 306,
    "kind": "minor",
    "name": "Destreza",
    "x": 1024.3,
@@ -9937,7 +10274,7 @@
    "theme": "evasion"
   },
   {
-   "id": 306,
+   "id": 307,
    "kind": "notable",
    "name": "Deploy Silencioso",
    "x": 1036.6,
@@ -9960,7 +10297,7 @@
    "icon": "evasion"
   },
   {
-   "id": 307,
+   "id": 308,
    "kind": "minor",
    "name": "Velocidad de movimiento",
    "x": 456.6,
@@ -9976,7 +10313,7 @@
    "theme": "movilidad"
   },
   {
-   "id": 308,
+   "id": 309,
    "kind": "minor",
    "name": "Movimiento y evasión",
    "x": 498.6,
@@ -9997,7 +10334,7 @@
    "theme": "movilidad"
   },
   {
-   "id": 309,
+   "id": 310,
    "kind": "minor",
    "name": "Movimiento y enfriamientos",
    "x": 456.6,
@@ -10018,7 +10355,7 @@
    "theme": "movilidad"
   },
   {
-   "id": 310,
+   "id": 311,
    "kind": "minor",
    "name": "Velocidad de movimiento",
    "x": 526.6,
@@ -10034,7 +10371,7 @@
    "theme": "movilidad"
   },
   {
-   "id": 311,
+   "id": 312,
    "kind": "notable",
    "name": "Ctrl+Alt+Escapar",
    "x": 568.6,
@@ -10057,7 +10394,7 @@
    "icon": "movilidad"
   },
   {
-   "id": 312,
+   "id": 313,
    "kind": "minor",
    "name": "Movimiento y enfriamientos",
    "x": 526.6,
@@ -10078,7 +10415,7 @@
    "theme": "movilidad"
   },
   {
-   "id": 313,
+   "id": 314,
    "kind": "minor",
    "name": "Destreza",
    "x": 336.9,
@@ -10093,7 +10430,7 @@
    "theme": "atributos"
   },
   {
-   "id": 314,
+   "id": 315,
    "kind": "minor",
    "name": "Destreza",
    "x": 396.8,
@@ -10108,7 +10445,7 @@
    "theme": "atributos"
   },
   {
-   "id": 315,
+   "id": 316,
    "kind": "start",
    "name": "Ingeniera de Prompts",
    "x": 0.0,
@@ -10117,7 +10454,7 @@
    "class_id": "hacker"
   },
   {
-   "id": 316,
+   "id": 317,
    "kind": "minor",
    "name": "Destreza",
    "x": 67.2,
@@ -10132,7 +10469,7 @@
    "theme": "atributos"
   },
   {
-   "id": 317,
+   "id": 318,
    "kind": "minor",
    "name": "Inteligencia",
    "x": 134.4,
@@ -10147,7 +10484,7 @@
    "theme": "atributos"
   },
   {
-   "id": 318,
+   "id": 319,
    "kind": "minor",
    "name": "Probabilidad de crítico",
    "x": 254.6,
@@ -10163,7 +10500,7 @@
    "theme": "critico"
   },
   {
-   "id": 319,
+   "id": 320,
    "kind": "minor",
    "name": "Multiplicador de crítico",
    "x": 329.6,
@@ -10179,7 +10516,7 @@
    "theme": "critico"
   },
   {
-   "id": 320,
+   "id": 321,
    "kind": "minor",
    "name": "Crítico",
    "x": 254.6,
@@ -10200,7 +10537,7 @@
    "theme": "critico"
   },
   {
-   "id": 321,
+   "id": 322,
    "kind": "minor",
    "name": "Probabilidad de crítico",
    "x": 179.6,
@@ -10216,7 +10553,7 @@
    "theme": "critico"
   },
   {
-   "id": 322,
+   "id": 323,
    "kind": "minor",
    "name": "Multiplicador de crítico",
    "x": 254.6,
@@ -10232,7 +10569,7 @@
    "theme": "critico"
   },
   {
-   "id": 323,
+   "id": 324,
    "kind": "minor",
    "name": "Crítico",
    "x": 290.6,
@@ -10253,7 +10590,7 @@
    "theme": "critico"
   },
   {
-   "id": 324,
+   "id": 325,
    "kind": "minor",
    "name": "Probabilidad de crítico",
    "x": 254.6,
@@ -10269,7 +10606,7 @@
    "theme": "critico"
   },
   {
-   "id": 325,
+   "id": 326,
    "kind": "minor",
    "name": "Multiplicador de crítico",
    "x": 218.6,
@@ -10285,7 +10622,7 @@
    "theme": "critico"
   },
   {
-   "id": 326,
+   "id": 327,
    "kind": "notable",
    "name": "Off-by-one",
    "x": 254.6,
@@ -10303,7 +10640,7 @@
    "icon": "critico"
   },
   {
-   "id": 327,
+   "id": 328,
    "kind": "minor",
    "name": "Destreza",
    "x": 369.0,
@@ -10318,7 +10655,7 @@
    "theme": "atributos"
   },
   {
-   "id": 328,
+   "id": 329,
    "kind": "minor",
    "name": "Inteligencia",
    "x": 408.3,
@@ -10333,7 +10670,7 @@
    "theme": "atributos"
   },
   {
-   "id": 329,
+   "id": 330,
    "kind": "minor",
    "name": "Velocidad de lanzamiento",
    "x": 487.9,
@@ -10349,7 +10686,7 @@
    "theme": "lanzamiento"
   },
   {
-   "id": 330,
+   "id": 331,
    "kind": "minor",
    "name": "Daño de hechizos",
    "x": 404.3,
@@ -10368,7 +10705,7 @@
    "theme": "lanzamiento"
   },
   {
-   "id": 331,
+   "id": 332,
    "kind": "minor",
    "name": "Hechizos",
    "x": 404.3,
@@ -10392,7 +10729,7 @@
    "theme": "lanzamiento"
   },
   {
-   "id": 332,
+   "id": 333,
    "kind": "minor",
    "name": "Velocidad de lanzamiento",
    "x": 487.9,
@@ -10408,7 +10745,7 @@
    "theme": "lanzamiento"
   },
   {
-   "id": 333,
+   "id": 334,
    "kind": "minor",
    "name": "Daño de hechizos",
    "x": 571.5,
@@ -10427,7 +10764,7 @@
    "theme": "lanzamiento"
   },
   {
-   "id": 334,
+   "id": 335,
    "kind": "minor",
    "name": "Hechizos",
    "x": 571.5,
@@ -10451,7 +10788,7 @@
    "theme": "lanzamiento"
   },
   {
-   "id": 335,
+   "id": 336,
    "kind": "notable",
    "name": "Compilación JIT",
    "x": 487.9,
@@ -10469,7 +10806,7 @@
    "icon": "lanzamiento"
   },
   {
-   "id": 336,
+   "id": 337,
    "kind": "minor",
    "name": "Destreza",
    "x": 24.6,
@@ -10484,7 +10821,7 @@
    "theme": "atributos"
   },
   {
-   "id": 337,
+   "id": 338,
    "kind": "minor",
    "name": "Inteligencia",
    "x": 49.2,
@@ -10499,140 +10836,140 @@
    "theme": "atributos"
   },
   {
-   "id": 338,
-   "kind": "minor",
-   "name": "Daño de caos",
-   "x": 168.2,
-   "y": 1247.7,
-   "mods": [
-    {
-     "stat": "chaos_damage",
-     "type": "increased",
-     "value": 18
-    }
-   ],
-   "cluster": "c30",
-   "theme": "caos"
-  },
-  {
    "id": 339,
    "kind": "minor",
-   "name": "Resistencia al caos",
-   "x": 114.0,
-   "y": 1310.4,
+   "name": "Probabilidad de envenenar",
+   "x": 74.4,
+   "y": 1172.7,
    "mods": [
     {
-     "stat": "chaos_res",
+     "stat": "poison_chance",
      "type": "flat",
-     "value": 7
+     "value": 6
     }
    ],
    "cluster": "c30",
-   "theme": "caos"
+   "theme": "toxinas"
   },
   {
    "id": 340,
    "kind": "minor",
-   "name": "Caos y daño",
-   "x": 47.5,
-   "y": 1281.8,
+   "name": "Veneno y caos",
+   "x": 111.9,
+   "y": 1212.5,
    "mods": [
+    {
+     "stat": "poison_chance",
+     "type": "flat",
+     "value": 4
+    },
     {
      "stat": "chaos_damage",
      "type": "increased",
-     "value": 12
-    },
-    {
-     "stat": "damage",
-     "type": "increased",
-     "value": 4
+     "value": 9
     }
    ],
    "cluster": "c30",
-   "theme": "caos"
+   "theme": "toxinas"
   },
   {
    "id": 341,
    "kind": "minor",
-   "name": "Daño de caos",
-   "x": 53.8,
-   "y": 1220.3,
+   "name": "Estados duraderos",
+   "x": 142.5,
+   "y": 1282.6,
    "mods": [
     {
-     "stat": "chaos_damage",
+     "stat": "ailment_duration",
      "type": "increased",
-     "value": 18
+     "value": 8
     }
    ],
    "cluster": "c30",
-   "theme": "caos"
+   "theme": "toxinas"
   },
   {
    "id": 342,
    "kind": "minor",
-   "name": "Resistencia al caos",
-   "x": 104.2,
-   "y": 1210.3,
+   "name": "Probabilidad de envenenar",
+   "x": 111.9,
+   "y": 1311.5,
    "mods": [
     {
-     "stat": "chaos_res",
+     "stat": "poison_chance",
      "type": "flat",
-     "value": 7
+     "value": 6
     }
    ],
    "cluster": "c30",
-   "theme": "caos"
+   "theme": "toxinas"
   },
   {
    "id": 343,
    "kind": "minor",
-   "name": "Caos y daño",
-   "x": 123.2,
-   "y": 1246.7,
+   "name": "Veneno y caos",
+   "x": 34.6,
+   "y": 1311.5,
    "mods": [
+    {
+     "stat": "poison_chance",
+     "type": "flat",
+     "value": 4
+    },
     {
      "stat": "chaos_damage",
      "type": "increased",
-     "value": 12
-    },
-    {
-     "stat": "damage",
-     "type": "increased",
-     "value": 4
+     "value": 9
     }
    ],
    "cluster": "c30",
-   "theme": "caos"
+   "theme": "toxinas"
   },
   {
    "id": 344,
-   "kind": "notable",
-   "name": "Null Pointer",
-   "x": 100.5,
-   "y": 1267.4,
+   "kind": "minor",
+   "name": "Estados duraderos",
+   "x": 61.7,
+   "y": 1247.0,
    "mods": [
     {
-     "stat": "chaos_damage",
+     "stat": "ailment_duration",
      "type": "increased",
-     "value": 25
-    },
-    {
-     "stat": "chaos_res",
-     "type": "flat",
-     "value": 12
+     "value": 8
     }
    ],
-   "flavor": "Apunta al vacío. El vacío devuelve el golpe.",
    "cluster": "c30",
-   "theme": "caos",
-   "icon": "caos"
+   "theme": "toxinas"
   },
   {
    "id": 345,
+   "kind": "notable",
+   "name": "Ataque a la Cadena de Suministro",
+   "x": 93.2,
+   "y": 1274.0,
+   "mods": [
+    {
+     "stat": "poison_chance",
+     "type": "flat",
+     "value": 10
+    },
+    {
+     "stat": "ailment_duration",
+     "type": "increased",
+     "value": 30
+    }
+   ],
+   "flavor": "Infectas al proveedor y caen todos.",
+   "cluster": "c30",
+   "theme": "toxinas",
+   "icon": "toxinas"
+  },
+  {
+   "id": 346,
    "kind": "minor",
    "name": "Destreza",
-   "x": 128.4,
-   "y": 1364.2,
+   "x": 126.3,
+   "y": 1365.3,
    "mods": [
     {
      "stat": "dexterity",
@@ -10643,11 +10980,11 @@
    "theme": "atributos"
   },
   {
-   "id": 346,
+   "id": 347,
    "kind": "minor",
    "name": "Inteligencia",
-   "x": 142.8,
-   "y": 1417.9,
+   "x": 140.7,
+   "y": 1419.0,
    "mods": [
     {
      "stat": "intelligence",
@@ -10658,151 +10995,173 @@
    "theme": "atributos"
   },
   {
-   "id": 347,
-   "kind": "minor",
-   "name": "Daño de proyectiles",
-   "x": 99.4,
-   "y": 1632.5,
-   "mods": [
-    {
-     "stat": "damage",
-     "type": "increased",
-     "value": 15,
-     "tags": [
-      "projectile"
-     ]
-    }
-   ],
-   "cluster": "c31",
-   "theme": "proyectiles"
-  },
-  {
    "id": 348,
    "kind": "minor",
-   "name": "Velocidad de proyectiles",
-   "x": 134.6,
-   "y": 1599.5,
+   "name": "Probabilidad de electrocutar",
+   "x": 196.2,
+   "y": 1478.5,
    "mods": [
     {
-     "stat": "projectile_speed",
-     "type": "increased",
-     "value": 10
+     "stat": "shock_chance",
+     "type": "flat",
+     "value": 6
     }
    ],
    "cluster": "c31",
-   "theme": "proyectiles"
+   "theme": "sobrecarga"
   },
   {
    "id": 349,
    "kind": "minor",
-   "name": "Proyectiles",
-   "x": 169.8,
-   "y": 1566.5,
+   "name": "Electrocutar y rayo",
+   "x": 161.9,
+   "y": 1528.8,
    "mods": [
     {
-     "stat": "damage",
-     "type": "increased",
-     "value": 9,
-     "tags": [
-      "projectile"
-     ]
+     "stat": "shock_chance",
+     "type": "flat",
+     "value": 4
     },
     {
-     "stat": "projectile_speed",
+     "stat": "lightning_damage",
      "type": "increased",
-     "value": 5
+     "value": 9
     }
    ],
    "cluster": "c31",
-   "theme": "proyectiles"
+   "theme": "sobrecarga"
   },
   {
    "id": 350,
    "kind": "minor",
-   "name": "Daño de proyectiles",
-   "x": 205.0,
-   "y": 1533.5,
+   "name": "Estados más dañinos",
+   "x": 134.9,
+   "y": 1575.3,
    "mods": [
     {
-     "stat": "damage",
+     "stat": "ailment_damage",
      "type": "increased",
-     "value": 15,
-     "tags": [
-      "projectile"
-     ]
+     "value": 8
     }
    ],
    "cluster": "c31",
-   "theme": "proyectiles"
+   "theme": "sobrecarga"
   },
   {
    "id": 351,
-   "kind": "notable",
-   "name": "Latencia Cero",
-   "x": 240.2,
-   "y": 1500.5,
+   "kind": "minor",
+   "name": "Probabilidad de electrocutar",
+   "x": 169.5,
+   "y": 1596.4,
    "mods": [
     {
-     "stat": "projectile_speed",
-     "type": "increased",
-     "value": 30
-    },
-    {
-     "stat": "attack_speed",
-     "type": "increased",
-     "value": 5
+     "stat": "shock_chance",
+     "type": "flat",
+     "value": 6
     }
    ],
-   "flavor": "Llega antes de que lo dispares. Casi.",
    "cluster": "c31",
-   "theme": "proyectiles",
-   "icon": "proyectiles"
+   "theme": "sobrecarga"
   },
   {
    "id": 352,
    "kind": "minor",
-   "name": "Proyectiles",
-   "x": 191.8,
-   "y": 1496.1,
+   "name": "Electrocutar y rayo",
+   "x": 157.4,
+   "y": 1653.3,
    "mods": [
     {
-     "stat": "damage",
-     "type": "increased",
-     "value": 9,
-     "tags": [
-      "projectile"
-     ]
+     "stat": "shock_chance",
+     "type": "flat",
+     "value": 4
     },
     {
-     "stat": "projectile_speed",
+     "stat": "lightning_damage",
      "type": "increased",
-     "value": 5
+     "value": 9
     }
    ],
    "cluster": "c31",
-   "theme": "proyectiles"
+   "theme": "sobrecarga"
   },
   {
    "id": 353,
    "kind": "minor",
-   "name": "Daño de proyectiles",
-   "x": 244.6,
-   "y": 1548.9,
+   "name": "Estados más dañinos",
+   "x": 193.7,
+   "y": 1604.3,
    "mods": [
     {
-     "stat": "damage",
+     "stat": "ailment_damage",
      "type": "increased",
-     "value": 15,
-     "tags": [
-      "projectile"
-     ]
+     "value": 8
     }
    ],
    "cluster": "c31",
-   "theme": "proyectiles"
+   "theme": "sobrecarga"
   },
   {
    "id": 354,
+   "kind": "minor",
+   "name": "Probabilidad de electrocutar",
+   "x": 229.9,
+   "y": 1555.3,
+   "mods": [
+    {
+     "stat": "shock_chance",
+     "type": "flat",
+     "value": 6
+    }
+   ],
+   "cluster": "c31",
+   "theme": "sobrecarga"
+  },
+  {
+   "id": 355,
+   "kind": "minor",
+   "name": "Electrocutar y rayo",
+   "x": 189.1,
+   "y": 1539.0,
+   "mods": [
+    {
+     "stat": "shock_chance",
+     "type": "flat",
+     "value": 4
+    },
+    {
+     "stat": "lightning_damage",
+     "type": "increased",
+     "value": 9
+    }
+   ],
+   "cluster": "c31",
+   "theme": "sobrecarga"
+  },
+  {
+   "id": 356,
+   "kind": "notable",
+   "name": "Sobretensión de Red",
+   "x": 180.3,
+   "y": 1566.5,
+   "mods": [
+    {
+     "stat": "shock_chance",
+     "type": "flat",
+     "value": 15
+    },
+    {
+     "stat": "ailment_damage",
+     "type": "increased",
+     "value": 20
+    }
+   ],
+   "flavor": "El SAI no llegó a tiempo.",
+   "cluster": "c31",
+   "theme": "sobrecarga",
+   "icon": "sobrecarga"
+  },
+  {
+   "id": 357,
    "kind": "minor",
    "name": "Destreza",
    "x": -24.6,
@@ -10817,7 +11176,7 @@
    "theme": "atributos"
   },
   {
-   "id": 355,
+   "id": 358,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -49.2,
@@ -10832,7 +11191,7 @@
    "theme": "atributos"
   },
   {
-   "id": 356,
+   "id": 359,
    "kind": "minor",
    "name": "Evasión",
    "x": -160.1,
@@ -10848,7 +11207,7 @@
    "theme": "evasion"
   },
   {
-   "id": 357,
+   "id": 360,
    "kind": "minor",
    "name": "Evasión",
    "x": -147.8,
@@ -10864,7 +11223,7 @@
    "theme": "evasion"
   },
   {
-   "id": 358,
+   "id": 361,
    "kind": "minor",
    "name": "Evasión y movimiento",
    "x": -128.8,
@@ -10885,7 +11244,7 @@
    "theme": "evasion"
   },
   {
-   "id": 359,
+   "id": 362,
    "kind": "minor",
    "name": "Destreza",
    "x": -105.5,
@@ -10901,7 +11260,7 @@
    "theme": "evasion"
   },
   {
-   "id": 360,
+   "id": 363,
    "kind": "minor",
    "name": "Evasión",
    "x": -80.8,
@@ -10917,7 +11276,7 @@
    "theme": "evasion"
   },
   {
-   "id": 361,
+   "id": 364,
    "kind": "minor",
    "name": "Evasión",
    "x": -57.5,
@@ -10933,7 +11292,7 @@
    "theme": "evasion"
   },
   {
-   "id": 362,
+   "id": 365,
    "kind": "minor",
    "name": "Evasión y movimiento",
    "x": -38.6,
@@ -10954,7 +11313,7 @@
    "theme": "evasion"
   },
   {
-   "id": 363,
+   "id": 366,
    "kind": "notable",
    "name": "Race Condition",
    "x": -26.2,
@@ -10977,7 +11336,7 @@
    "icon": "evasion"
   },
   {
-   "id": 364,
+   "id": 367,
    "kind": "minor",
    "name": "Destreza",
    "x": -174.5,
@@ -10992,7 +11351,7 @@
    "theme": "atributos"
   },
   {
-   "id": 365,
+   "id": 368,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -188.9,
@@ -11007,7 +11366,7 @@
    "theme": "atributos"
   },
   {
-   "id": 366,
+   "id": 369,
    "kind": "minor",
    "name": "Escudo de energía",
    "x": -102.4,
@@ -11023,7 +11382,7 @@
    "theme": "escudo"
   },
   {
-   "id": 367,
+   "id": 370,
    "kind": "minor",
    "name": "Escudo de energía",
    "x": -167.7,
@@ -11039,7 +11398,7 @@
    "theme": "escudo"
   },
   {
-   "id": 368,
+   "id": 371,
    "kind": "minor",
    "name": "Escudo e inteligencia",
    "x": -233.0,
@@ -11060,7 +11419,7 @@
    "theme": "escudo"
   },
   {
-   "id": 369,
+   "id": 372,
    "kind": "minor",
    "name": "Escudo de energía",
    "x": -254.8,
@@ -11076,7 +11435,7 @@
    "theme": "escudo"
   },
   {
-   "id": 370,
+   "id": 373,
    "kind": "minor",
    "name": "Escudo de energía",
    "x": -222.1,
@@ -11092,7 +11451,7 @@
    "theme": "escudo"
   },
   {
-   "id": 371,
+   "id": 374,
    "kind": "minor",
    "name": "Escudo e inteligencia",
    "x": -156.8,
@@ -11113,7 +11472,7 @@
    "theme": "escudo"
   },
   {
-   "id": 372,
+   "id": 375,
    "kind": "minor",
    "name": "Escudo de energía",
    "x": -102.4,
@@ -11129,7 +11488,7 @@
    "theme": "escudo"
   },
   {
-   "id": 373,
+   "id": 376,
    "kind": "notable",
    "name": "Snapshot",
    "x": -178.6,
@@ -11152,7 +11511,7 @@
    "icon": "escudo"
   },
   {
-   "id": 374,
+   "id": 377,
    "kind": "minor",
    "name": "Destreza",
    "x": -191.0,
@@ -11167,7 +11526,7 @@
    "theme": "atributos"
   },
   {
-   "id": 375,
+   "id": 378,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -214.3,
@@ -11182,7 +11541,7 @@
    "theme": "atributos"
   },
   {
-   "id": 376,
+   "id": 379,
    "kind": "keystone",
    "name": "Root Sin Contraseña",
    "x": -242.8,
@@ -11208,7 +11567,7 @@
    "icon": "ks_hacker"
   },
   {
-   "id": 377,
+   "id": 380,
    "kind": "minor",
    "name": "Destreza",
    "x": -67.2,
@@ -11223,7 +11582,7 @@
    "theme": "atributos"
   },
   {
-   "id": 378,
+   "id": 381,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -134.4,
@@ -11238,7 +11597,7 @@
    "theme": "atributos"
   },
   {
-   "id": 379,
+   "id": 382,
    "kind": "minor",
    "name": "Daño de rayo",
    "x": -265.8,
@@ -11254,7 +11613,7 @@
    "theme": "rayo"
   },
   {
-   "id": 380,
+   "id": 383,
    "kind": "minor",
    "name": "Rayo y resistencia",
    "x": -237.0,
@@ -11275,7 +11634,7 @@
    "theme": "rayo"
   },
   {
-   "id": 381,
+   "id": 384,
    "kind": "minor",
    "name": "Rayo y crítico",
    "x": -239.4,
@@ -11296,11 +11655,32 @@
    "theme": "rayo"
   },
   {
-   "id": 382,
+   "id": 385,
    "kind": "minor",
-   "name": "Daño de rayo",
+   "name": "Rayo y sobrecarga",
    "x": -248.5,
    "y": 1159.1,
+   "mods": [
+    {
+     "stat": "lightning_damage",
+     "type": "increased",
+     "value": 9
+    },
+    {
+     "stat": "shock_chance",
+     "type": "flat",
+     "value": 4
+    }
+   ],
+   "cluster": "c34",
+   "theme": "rayo"
+  },
+  {
+   "id": 386,
+   "kind": "minor",
+   "name": "Daño de rayo",
+   "x": -219.7,
+   "y": 1192.7,
    "mods": [
     {
      "stat": "lightning_damage",
@@ -11312,11 +11692,11 @@
    "theme": "rayo"
   },
   {
-   "id": 383,
+   "id": 387,
    "kind": "minor",
    "name": "Rayo y resistencia",
-   "x": -219.7,
-   "y": 1192.7,
+   "x": -249.1,
+   "y": 1188.7,
    "mods": [
     {
      "stat": "lightning_damage",
@@ -11333,28 +11713,7 @@
    "theme": "rayo"
   },
   {
-   "id": 384,
-   "kind": "minor",
-   "name": "Rayo y crítico",
-   "x": -249.1,
-   "y": 1188.7,
-   "mods": [
-    {
-     "stat": "lightning_damage",
-     "type": "increased",
-     "value": 9
-    },
-    {
-     "stat": "crit_chance",
-     "type": "increased",
-     "value": 8
-    }
-   ],
-   "cluster": "c34",
-   "theme": "rayo"
-  },
-  {
-   "id": 385,
+   "id": 388,
    "kind": "notable",
    "name": "Descarga Electrostática",
    "x": -232.1,
@@ -11377,7 +11736,7 @@
    "icon": "rayo"
   },
   {
-   "id": 386,
+   "id": 389,
    "kind": "minor",
    "name": "Destreza",
    "x": -288.5,
@@ -11392,7 +11751,7 @@
    "theme": "atributos"
   },
   {
-   "id": 387,
+   "id": 390,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -327.8,
@@ -11407,7 +11766,7 @@
    "theme": "atributos"
   },
   {
-   "id": 388,
+   "id": 391,
    "kind": "minor",
    "name": "Recuperación de enfriamientos",
    "x": -549.5,
@@ -11423,66 +11782,11 @@
    "theme": "tiempos"
   },
   {
-   "id": 389,
-   "kind": "minor",
-   "name": "Duración de habilidades",
-   "x": -487.9,
-   "y": 1308.7,
-   "mods": [
-    {
-     "stat": "skill_duration",
-     "type": "increased",
-     "value": 8
-    }
-   ],
-   "cluster": "c35",
-   "theme": "tiempos"
-  },
-  {
-   "id": 390,
-   "kind": "minor",
-   "name": "Enfriamiento y área",
-   "x": -426.3,
-   "y": 1308.7,
-   "mods": [
-    {
-     "stat": "cooldown_recovery",
-     "type": "increased",
-     "value": 4
-    },
-    {
-     "stat": "area_of_effect",
-     "type": "increased",
-     "value": 6
-    }
-   ],
-   "cluster": "c35",
-   "theme": "tiempos"
-  },
-  {
-   "id": 391,
-   "kind": "notable",
-   "name": "Cron Cada Segundo",
-   "x": -487.9,
-   "y": 1387.9,
-   "mods": [
-    {
-     "stat": "cooldown_recovery",
-     "type": "increased",
-     "value": 20
-    }
-   ],
-   "flavor": "* * * * * habilidad.sh. El servidor lo agradece.",
-   "cluster": "c35",
-   "theme": "tiempos",
-   "icon": "tiempos"
-  },
-  {
    "id": 392,
    "kind": "minor",
    "name": "Duración de habilidades",
-   "x": -426.3,
-   "y": 1467.1,
+   "x": -487.9,
+   "y": 1308.7,
    "mods": [
     {
      "stat": "skill_duration",
@@ -11497,8 +11801,8 @@
    "id": 393,
    "kind": "minor",
    "name": "Enfriamiento y área",
-   "x": -487.9,
-   "y": 1467.1,
+   "x": -426.3,
+   "y": 1308.7,
    "mods": [
     {
      "stat": "cooldown_recovery",
@@ -11516,6 +11820,61 @@
   },
   {
    "id": 394,
+   "kind": "notable",
+   "name": "Cron Cada Segundo",
+   "x": -487.9,
+   "y": 1387.9,
+   "mods": [
+    {
+     "stat": "cooldown_recovery",
+     "type": "increased",
+     "value": 20
+    }
+   ],
+   "flavor": "* * * * * habilidad.sh. El servidor lo agradece.",
+   "cluster": "c35",
+   "theme": "tiempos",
+   "icon": "tiempos"
+  },
+  {
+   "id": 395,
+   "kind": "minor",
+   "name": "Duración de habilidades",
+   "x": -426.3,
+   "y": 1467.1,
+   "mods": [
+    {
+     "stat": "skill_duration",
+     "type": "increased",
+     "value": 8
+    }
+   ],
+   "cluster": "c35",
+   "theme": "tiempos"
+  },
+  {
+   "id": 396,
+   "kind": "minor",
+   "name": "Enfriamiento y área",
+   "x": -487.9,
+   "y": 1467.1,
+   "mods": [
+    {
+     "stat": "cooldown_recovery",
+     "type": "increased",
+     "value": 4
+    },
+    {
+     "stat": "area_of_effect",
+     "type": "increased",
+     "value": 6
+    }
+   ],
+   "cluster": "c35",
+   "theme": "tiempos"
+  },
+  {
+   "id": 397,
    "kind": "minor",
    "name": "Recuperación de enfriamientos",
    "x": -549.5,
@@ -11531,7 +11890,7 @@
    "theme": "tiempos"
   },
   {
-   "id": 395,
+   "id": 398,
    "kind": "minor",
    "name": "Recuperación de enfriamientos",
    "x": -49.0,
@@ -11547,7 +11906,7 @@
    "theme": "tiempos"
   },
   {
-   "id": 396,
+   "id": 399,
    "kind": "minor",
    "name": "Duración de habilidades",
    "x": 0.0,
@@ -11563,7 +11922,7 @@
    "theme": "tiempos"
   },
   {
-   "id": 397,
+   "id": 400,
    "kind": "minor",
    "name": "Enfriamiento y área",
    "x": 49.0,
@@ -11584,7 +11943,7 @@
    "theme": "tiempos"
   },
   {
-   "id": 398,
+   "id": 401,
    "kind": "notable",
    "name": "setTimeout(∞)",
    "x": 0.0,
@@ -11607,7 +11966,7 @@
    "icon": "tiempos"
   },
   {
-   "id": 399,
+   "id": 402,
    "kind": "minor",
    "name": "Duración de habilidades",
    "x": 49.0,
@@ -11623,7 +11982,7 @@
    "theme": "tiempos"
   },
   {
-   "id": 400,
+   "id": 403,
    "kind": "minor",
    "name": "Enfriamiento y área",
    "x": 0.0,
@@ -11644,7 +12003,7 @@
    "theme": "tiempos"
   },
   {
-   "id": 401,
+   "id": 404,
    "kind": "minor",
    "name": "Recuperación de enfriamientos",
    "x": -49.0,
@@ -11660,7 +12019,7 @@
    "theme": "tiempos"
   },
   {
-   "id": 402,
+   "id": 405,
    "kind": "minor",
    "name": "Destreza",
    "x": -16.3,
@@ -11675,7 +12034,7 @@
    "theme": "atributos"
   },
   {
-   "id": 403,
+   "id": 406,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -32.7,
@@ -11690,7 +12049,7 @@
    "theme": "atributos"
   },
   {
-   "id": 404,
+   "id": 407,
    "kind": "start",
    "name": "Científico de Datos",
    "x": -779.4,
@@ -11699,7 +12058,7 @@
    "class_id": "hechicero"
   },
   {
-   "id": 405,
+   "id": 408,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -804.0,
@@ -11714,7 +12073,7 @@
    "theme": "atributos"
   },
   {
-   "id": 406,
+   "id": 409,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -828.6,
@@ -11729,7 +12088,7 @@
    "theme": "atributos"
   },
   {
-   "id": 407,
+   "id": 410,
    "kind": "minor",
    "name": "Daño de rayo",
    "x": -883.8,
@@ -11745,7 +12104,7 @@
    "theme": "rayo"
   },
   {
-   "id": 408,
+   "id": 411,
    "kind": "minor",
    "name": "Rayo y resistencia",
    "x": -859.2,
@@ -11766,7 +12125,7 @@
    "theme": "rayo"
   },
   {
-   "id": 409,
+   "id": 412,
    "kind": "minor",
    "name": "Rayo y crítico",
    "x": -845.3,
@@ -11787,11 +12146,32 @@
    "theme": "rayo"
   },
   {
-   "id": 410,
+   "id": 413,
    "kind": "minor",
-   "name": "Daño de rayo",
+   "name": "Rayo y sobrecarga",
    "x": -878.9,
    "y": 787.9,
+   "mods": [
+    {
+     "stat": "lightning_damage",
+     "type": "increased",
+     "value": 9
+    },
+    {
+     "stat": "shock_chance",
+     "type": "flat",
+     "value": 4
+    }
+   ],
+   "cluster": "c37",
+   "theme": "rayo"
+  },
+  {
+   "id": 414,
+   "kind": "minor",
+   "name": "Daño de rayo",
+   "x": -854.2,
+   "y": 816.7,
    "mods": [
     {
      "stat": "lightning_damage",
@@ -11803,11 +12183,11 @@
    "theme": "rayo"
   },
   {
-   "id": 411,
+   "id": 415,
    "kind": "minor",
    "name": "Rayo y resistencia",
-   "x": -854.2,
-   "y": 816.7,
+   "x": -843.2,
+   "y": 836.3,
    "mods": [
     {
      "stat": "lightning_damage",
@@ -11824,11 +12204,11 @@
    "theme": "rayo"
   },
   {
-   "id": 412,
+   "id": 416,
    "kind": "minor",
    "name": "Rayo y crítico",
-   "x": -843.2,
-   "y": 836.3,
+   "x": -864.7,
+   "y": 837.7,
    "mods": [
     {
      "stat": "lightning_damage",
@@ -11845,23 +12225,7 @@
    "theme": "rayo"
   },
   {
-   "id": 413,
-   "kind": "minor",
-   "name": "Daño de rayo",
-   "x": -864.7,
-   "y": 837.7,
-   "mods": [
-    {
-     "stat": "lightning_damage",
-     "type": "increased",
-     "value": 18
-    }
-   ],
-   "cluster": "c37",
-   "theme": "rayo"
-  },
-  {
-   "id": 414,
+   "id": 417,
    "kind": "notable",
    "name": "Pico de Tensión",
    "x": -850.1,
@@ -11876,6 +12240,11 @@
      "stat": "life",
      "type": "increased",
      "value": -4
+    },
+    {
+     "stat": "shock_chance",
+     "type": "flat",
+     "value": 10
     }
    ],
    "flavor": "Fríe todo lo conectado. Incluido el router.",
@@ -11884,7 +12253,7 @@
    "icon": "rayo"
   },
   {
-   "id": 415,
+   "id": 418,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -879.1,
@@ -11899,7 +12268,7 @@
    "theme": "atributos"
   },
   {
-   "id": 416,
+   "id": 419,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -893.5,
@@ -11914,7 +12283,7 @@
    "theme": "atributos"
   },
   {
-   "id": 417,
+   "id": 420,
    "kind": "minor",
    "name": "Escudo de energía",
    "x": -881.8,
@@ -11930,7 +12299,7 @@
    "theme": "escudo"
   },
   {
-   "id": 418,
+   "id": 421,
    "kind": "minor",
    "name": "Escudo de energía",
    "x": -947.1,
@@ -11946,7 +12315,7 @@
    "theme": "escudo"
   },
   {
-   "id": 419,
+   "id": 422,
    "kind": "minor",
    "name": "Escudo e inteligencia",
    "x": -1012.4,
@@ -11967,7 +12336,7 @@
    "theme": "escudo"
   },
   {
-   "id": 420,
+   "id": 423,
    "kind": "minor",
    "name": "Escudo de energía",
    "x": -1034.2,
@@ -11983,7 +12352,7 @@
    "theme": "escudo"
   },
   {
-   "id": 421,
+   "id": 424,
    "kind": "minor",
    "name": "Escudo de energía",
    "x": -1001.6,
@@ -11999,7 +12368,7 @@
    "theme": "escudo"
   },
   {
-   "id": 422,
+   "id": 425,
    "kind": "minor",
    "name": "Escudo e inteligencia",
    "x": -936.2,
@@ -12020,7 +12389,7 @@
    "theme": "escudo"
   },
   {
-   "id": 423,
+   "id": 426,
    "kind": "minor",
    "name": "Escudo de energía",
    "x": -881.8,
@@ -12036,7 +12405,7 @@
    "theme": "escudo"
   },
   {
-   "id": 424,
+   "id": 427,
    "kind": "notable",
    "name": "Contenedor Aislado",
    "x": -958.0,
@@ -12059,7 +12428,7 @@
    "icon": "escudo"
   },
   {
-   "id": 425,
+   "id": 428,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -846.6,
@@ -12074,7 +12443,7 @@
    "theme": "atributos"
   },
   {
-   "id": 426,
+   "id": 429,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -913.8,
@@ -12089,7 +12458,7 @@
    "theme": "atributos"
   },
   {
-   "id": 427,
+   "id": 430,
    "kind": "minor",
    "name": "Daño de fuego",
    "x": -1034.0,
@@ -12105,7 +12474,7 @@
    "theme": "fuego"
   },
   {
-   "id": 428,
+   "id": 431,
    "kind": "minor",
    "name": "Fuego y resistencia",
    "x": -1000.6,
@@ -12126,7 +12495,7 @@
    "theme": "fuego"
   },
   {
-   "id": 429,
+   "id": 432,
    "kind": "minor",
    "name": "Fuego y área",
    "x": -985.6,
@@ -12147,11 +12516,32 @@
    "theme": "fuego"
   },
   {
-   "id": 430,
+   "id": 433,
    "kind": "minor",
-   "name": "Daño de fuego",
+   "name": "Fuego y quemadura",
    "x": -1034.0,
    "y": 779.6,
+   "mods": [
+    {
+     "stat": "fire_damage",
+     "type": "increased",
+     "value": 9
+    },
+    {
+     "stat": "burn_chance",
+     "type": "flat",
+     "value": 4
+    }
+   ],
+   "cluster": "c39",
+   "theme": "fuego"
+  },
+  {
+   "id": 434,
+   "kind": "minor",
+   "name": "Daño de fuego",
+   "x": -1082.3,
+   "y": 748.1,
    "mods": [
     {
      "stat": "fire_damage",
@@ -12163,11 +12553,11 @@
    "theme": "fuego"
   },
   {
-   "id": 431,
+   "id": 435,
    "kind": "minor",
    "name": "Fuego y resistencia",
-   "x": -1082.3,
-   "y": 748.1,
+   "x": -1067.4,
+   "y": 684.5,
    "mods": [
     {
      "stat": "fire_damage",
@@ -12184,28 +12574,7 @@
    "theme": "fuego"
   },
   {
-   "id": 432,
-   "kind": "minor",
-   "name": "Fuego y área",
-   "x": -1067.4,
-   "y": 684.5,
-   "mods": [
-    {
-     "stat": "fire_damage",
-     "type": "increased",
-     "value": 9
-    },
-    {
-     "stat": "area_of_effect",
-     "type": "increased",
-     "value": 4
-    }
-   ],
-   "cluster": "c39",
-   "theme": "fuego"
-  },
-  {
-   "id": 433,
+   "id": 436,
    "kind": "notable",
    "name": "Thermal Throttling",
    "x": -1034.0,
@@ -12231,7 +12600,7 @@
    "icon": "fuego"
   },
   {
-   "id": 434,
+   "id": 437,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -1121.7,
@@ -12246,7 +12615,7 @@
    "theme": "atributos"
   },
   {
-   "id": 435,
+   "id": 438,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -1161.0,
@@ -12261,163 +12630,173 @@
    "theme": "atributos"
   },
   {
-   "id": 436,
+   "id": 439,
    "kind": "minor",
-   "name": "Maná",
+   "name": "Probabilidad de quemar",
    "x": -1267.3,
    "y": 849.9,
    "mods": [
     {
-     "stat": "mana",
-     "type": "increased",
-     "value": 8
-    }
-   ],
-   "cluster": "c40",
-   "theme": "mana"
-  },
-  {
-   "id": 437,
-   "kind": "minor",
-   "name": "Maná",
-   "x": -1232.2,
-   "y": 895.2,
-   "mods": [
-    {
-     "stat": "mana",
+     "stat": "burn_chance",
      "type": "flat",
-     "value": 15
+     "value": 6
     }
    ],
    "cluster": "c40",
-   "theme": "mana"
-  },
-  {
-   "id": 438,
-   "kind": "minor",
-   "name": "Regeneración de maná",
-   "x": -1208.9,
-   "y": 947.4,
-   "mods": [
-    {
-     "stat": "mana_regen",
-     "type": "increased",
-     "value": 15
-    }
-   ],
-   "cluster": "c40",
-   "theme": "mana"
-  },
-  {
-   "id": 439,
-   "kind": "minor",
-   "name": "Maná y regeneración",
-   "x": -1217.3,
-   "y": 1002.2,
-   "mods": [
-    {
-     "stat": "mana",
-     "type": "increased",
-     "value": 4
-    },
-    {
-     "stat": "mana_regen",
-     "type": "increased",
-     "value": 8
-    }
-   ],
-   "cluster": "c40",
-   "theme": "mana"
+   "theme": "ignicion"
   },
   {
    "id": 440,
    "kind": "minor",
-   "name": "Maná",
-   "x": -1267.3,
-   "y": 1025.9,
+   "name": "Quemar y fuego",
+   "x": -1236.5,
+   "y": 892.4,
    "mods": [
     {
-     "stat": "mana",
+     "stat": "burn_chance",
+     "type": "flat",
+     "value": 4
+    },
+    {
+     "stat": "fire_damage",
      "type": "increased",
-     "value": 8
+     "value": 9
     }
    ],
    "cluster": "c40",
-   "theme": "mana"
+   "theme": "ignicion"
   },
   {
    "id": 441,
    "kind": "minor",
-   "name": "Maná",
-   "x": -1317.3,
-   "y": 1002.2,
+   "name": "Estados más dañinos",
+   "x": -1211.3,
+   "y": 914.9,
    "mods": [
     {
-     "stat": "mana",
-     "type": "flat",
-     "value": 15
-    }
-   ],
-   "cluster": "c40",
-   "theme": "mana"
-  },
-  {
-   "id": 442,
-   "kind": "minor",
-   "name": "Regeneración de maná",
-   "x": -1325.7,
-   "y": 947.4,
-   "mods": [
-    {
-     "stat": "mana_regen",
-     "type": "increased",
-     "value": 15
-    }
-   ],
-   "cluster": "c40",
-   "theme": "mana"
-  },
-  {
-   "id": 443,
-   "kind": "minor",
-   "name": "Maná y regeneración",
-   "x": -1302.4,
-   "y": 895.2,
-   "mods": [
-    {
-     "stat": "mana",
-     "type": "increased",
-     "value": 4
-    },
-    {
-     "stat": "mana_regen",
+     "stat": "ailment_damage",
      "type": "increased",
      "value": 8
     }
    ],
    "cluster": "c40",
-   "theme": "mana"
+   "theme": "ignicion"
+  },
+  {
+   "id": 442,
+   "kind": "minor",
+   "name": "Probabilidad de quemar",
+   "x": -1217.9,
+   "y": 983.2,
+   "mods": [
+    {
+     "stat": "burn_chance",
+     "type": "flat",
+     "value": 6
+    }
+   ],
+   "cluster": "c40",
+   "theme": "ignicion"
+  },
+  {
+   "id": 443,
+   "kind": "minor",
+   "name": "Quemar y fuego",
+   "x": -1267.3,
+   "y": 1012.7,
+   "mods": [
+    {
+     "stat": "burn_chance",
+     "type": "flat",
+     "value": 4
+    },
+    {
+     "stat": "fire_damage",
+     "type": "increased",
+     "value": 9
+    }
+   ],
+   "cluster": "c40",
+   "theme": "ignicion"
   },
   {
    "id": 444,
-   "kind": "notable",
-   "name": "Garbage Collector",
-   "x": -1267.3,
-   "y": 973.1,
+   "kind": "minor",
+   "name": "Estados más dañinos",
+   "x": -1316.8,
+   "y": 983.2,
    "mods": [
     {
-     "stat": "mana_regen",
+     "stat": "ailment_damage",
      "type": "increased",
-     "value": 40
+     "value": 8
     }
    ],
-   "flavor": "Recicla lo que tú olvidas liberar.",
    "cluster": "c40",
-   "theme": "mana",
-   "icon": "mana"
+   "theme": "ignicion"
   },
   {
    "id": 445,
+   "kind": "minor",
+   "name": "Probabilidad de quemar",
+   "x": -1323.3,
+   "y": 914.9,
+   "mods": [
+    {
+     "stat": "burn_chance",
+     "type": "flat",
+     "value": 6
+    }
+   ],
+   "cluster": "c40",
+   "theme": "ignicion"
+  },
+  {
+   "id": 446,
+   "kind": "minor",
+   "name": "Quemar y fuego",
+   "x": -1298.1,
+   "y": 892.4,
+   "mods": [
+    {
+     "stat": "burn_chance",
+     "type": "flat",
+     "value": 4
+    },
+    {
+     "stat": "fire_damage",
+     "type": "increased",
+     "value": 9
+    }
+   ],
+   "cluster": "c40",
+   "theme": "ignicion"
+  },
+  {
+   "id": 447,
+   "kind": "notable",
+   "name": "Incendio Forestal en Producción",
+   "x": -1267.3,
+   "y": 964.3,
+   "mods": [
+    {
+     "stat": "burn_chance",
+     "type": "flat",
+     "value": 15
+    },
+    {
+     "stat": "ailment_damage",
+     "type": "increased",
+     "value": 20
+    }
+   ],
+   "flavor": "Nadie apagó el servidor. Nadie apagó nada.",
+   "cluster": "c40",
+   "theme": "ignicion",
+   "icon": "ignicion"
+  },
+  {
+   "id": 448,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -871.2,
@@ -12432,7 +12811,7 @@
    "theme": "atributos"
   },
   {
-   "id": 446,
+   "id": 449,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -962.9,
@@ -12447,7 +12826,7 @@
    "theme": "atributos"
   },
   {
-   "id": 447,
+   "id": 450,
    "kind": "minor",
    "name": "Daño de frío",
    "x": -1127.2,
@@ -12463,69 +12842,11 @@
    "theme": "frio"
   },
   {
-   "id": 448,
+   "id": 451,
    "kind": "minor",
    "name": "Frío y resistencia",
    "x": -1062.2,
    "y": 505.7,
-   "mods": [
-    {
-     "stat": "cold_damage",
-     "type": "increased",
-     "value": 12
-    },
-    {
-     "stat": "cold_res",
-     "type": "flat",
-     "value": 4
-    }
-   ],
-   "cluster": "c41",
-   "theme": "frio"
-  },
-  {
-   "id": 449,
-   "kind": "minor",
-   "name": "Frío y lanzamiento",
-   "x": -1062.2,
-   "y": 580.7,
-   "mods": [
-    {
-     "stat": "cold_damage",
-     "type": "increased",
-     "value": 9
-    },
-    {
-     "stat": "cast_speed",
-     "type": "increased",
-     "value": 3
-    }
-   ],
-   "cluster": "c41",
-   "theme": "frio"
-  },
-  {
-   "id": 450,
-   "kind": "minor",
-   "name": "Daño de frío",
-   "x": -1127.2,
-   "y": 618.2,
-   "mods": [
-    {
-     "stat": "cold_damage",
-     "type": "increased",
-     "value": 18
-    }
-   ],
-   "cluster": "c41",
-   "theme": "frio"
-  },
-  {
-   "id": 451,
-   "kind": "minor",
-   "name": "Frío y resistencia",
-   "x": -1192.1,
-   "y": 580.7,
    "mods": [
     {
      "stat": "cold_damage",
@@ -12545,8 +12866,8 @@
    "id": 452,
    "kind": "minor",
    "name": "Frío y lanzamiento",
-   "x": -1192.1,
-   "y": 505.7,
+   "x": -1062.2,
+   "y": 580.7,
    "mods": [
     {
      "stat": "cold_damage",
@@ -12564,29 +12885,92 @@
   },
   {
    "id": 453,
+   "kind": "minor",
+   "name": "Frío y escarcha",
+   "x": -1127.2,
+   "y": 618.2,
+   "mods": [
+    {
+     "stat": "cold_damage",
+     "type": "increased",
+     "value": 9
+    },
+    {
+     "stat": "chill_chance",
+     "type": "flat",
+     "value": 5
+    }
+   ],
+   "cluster": "c41",
+   "theme": "frio"
+  },
+  {
+   "id": 454,
+   "kind": "minor",
+   "name": "Daño de frío",
+   "x": -1192.1,
+   "y": 580.7,
+   "mods": [
+    {
+     "stat": "cold_damage",
+     "type": "increased",
+     "value": 18
+    }
+   ],
+   "cluster": "c41",
+   "theme": "frio"
+  },
+  {
+   "id": 455,
+   "kind": "minor",
+   "name": "Frío y resistencia",
+   "x": -1192.1,
+   "y": 505.7,
+   "mods": [
+    {
+     "stat": "cold_damage",
+     "type": "increased",
+     "value": 12
+    },
+    {
+     "stat": "cold_res",
+     "type": "flat",
+     "value": 4
+    }
+   ],
+   "cluster": "c41",
+   "theme": "frio"
+  },
+  {
+   "id": 456,
    "kind": "notable",
-   "name": "Almacenamiento en Frío",
+   "name": "Cold Boot",
    "x": -1127.2,
    "y": 543.2,
    "mods": [
     {
      "stat": "cold_damage",
      "type": "increased",
-     "value": 25
+     "value": 30
     },
     {
-     "stat": "cold_res",
+     "stat": "cast_speed",
+     "type": "increased",
+     "value": 4
+    },
+    {
+     "stat": "freeze_chance",
      "type": "flat",
-     "value": 15
+     "value": 6
     }
    ],
-   "flavor": "Lo que entra ahí no vuelve a moverse.",
+   "flavor": "Arranca en frío. Y deja todo helado.",
    "cluster": "c41",
    "theme": "frio",
    "icon": "frio"
   },
   {
-   "id": 454,
+   "id": 457,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -1245.9,
@@ -12601,7 +12985,7 @@
    "theme": "atributos"
   },
   {
-   "id": 455,
+   "id": 458,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -1299.6,
@@ -12616,7 +13000,7 @@
    "theme": "atributos"
   },
   {
-   "id": 456,
+   "id": 459,
    "kind": "minor",
    "name": "Probabilidad de crítico",
    "x": -1445.9,
@@ -12632,7 +13016,7 @@
    "theme": "critico"
   },
   {
-   "id": 457,
+   "id": 460,
    "kind": "minor",
    "name": "Multiplicador de crítico",
    "x": -1357.9,
@@ -12648,7 +13032,7 @@
    "theme": "critico"
   },
   {
-   "id": 458,
+   "id": 461,
    "kind": "minor",
    "name": "Crítico",
    "x": -1445.9,
@@ -12669,7 +13053,7 @@
    "theme": "critico"
   },
   {
-   "id": 459,
+   "id": 462,
    "kind": "minor",
    "name": "Probabilidad de crítico",
    "x": -1533.9,
@@ -12685,7 +13069,7 @@
    "theme": "critico"
   },
   {
-   "id": 460,
+   "id": 463,
    "kind": "minor",
    "name": "Multiplicador de crítico",
    "x": -1445.9,
@@ -12701,7 +13085,7 @@
    "theme": "critico"
   },
   {
-   "id": 461,
+   "id": 464,
    "kind": "minor",
    "name": "Crítico",
    "x": -1403.7,
@@ -12722,7 +13106,7 @@
    "theme": "critico"
   },
   {
-   "id": 462,
+   "id": 465,
    "kind": "minor",
    "name": "Probabilidad de crítico",
    "x": -1445.9,
@@ -12738,7 +13122,7 @@
    "theme": "critico"
   },
   {
-   "id": 463,
+   "id": 466,
    "kind": "minor",
    "name": "Multiplicador de crítico",
    "x": -1488.2,
@@ -12754,7 +13138,7 @@
    "theme": "critico"
   },
   {
-   "id": 464,
+   "id": 467,
    "kind": "notable",
    "name": "Pantallazo Azul",
    "x": -1445.9,
@@ -12777,7 +13161,7 @@
    "icon": "critico"
   },
   {
-   "id": 465,
+   "id": 468,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -1620.8,
@@ -12792,7 +13176,7 @@
    "theme": "atributos"
   },
   {
-   "id": 466,
+   "id": 469,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -1707.8,
@@ -12807,7 +13191,7 @@
    "theme": "atributos"
   },
   {
-   "id": 467,
+   "id": 470,
    "kind": "keystone",
    "name": "Programación Orientada a Deadlines",
    "x": -1814.0,
@@ -12828,7 +13212,7 @@
    "icon": "ks_hechicero"
   },
   {
-   "id": 468,
+   "id": 471,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -871.2,
@@ -12843,7 +13227,7 @@
    "theme": "atributos"
   },
   {
-   "id": 469,
+   "id": 472,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -962.9,
@@ -12858,7 +13242,7 @@
    "theme": "atributos"
   },
   {
-   "id": 470,
+   "id": 473,
    "kind": "minor",
    "name": "Velocidad de lanzamiento",
    "x": -1127.2,
@@ -12874,70 +13258,11 @@
    "theme": "lanzamiento"
   },
   {
-   "id": 471,
+   "id": 474,
    "kind": "minor",
    "name": "Daño de hechizos",
    "x": -1198.4,
    "y": 296.8,
-   "mods": [
-    {
-     "stat": "damage",
-     "type": "increased",
-     "value": 15,
-     "tags": [
-      "spell"
-     ]
-    }
-   ],
-   "cluster": "c43",
-   "theme": "lanzamiento"
-  },
-  {
-   "id": 472,
-   "kind": "minor",
-   "name": "Hechizos",
-   "x": -1198.4,
-   "y": 398.1,
-   "mods": [
-    {
-     "stat": "damage",
-     "type": "increased",
-     "value": 9,
-     "tags": [
-      "spell"
-     ]
-    },
-    {
-     "stat": "cast_speed",
-     "type": "increased",
-     "value": 3
-    }
-   ],
-   "cluster": "c43",
-   "theme": "lanzamiento"
-  },
-  {
-   "id": 473,
-   "kind": "minor",
-   "name": "Velocidad de lanzamiento",
-   "x": -1127.2,
-   "y": 416.8,
-   "mods": [
-    {
-     "stat": "cast_speed",
-     "type": "increased",
-     "value": 6
-    }
-   ],
-   "cluster": "c43",
-   "theme": "lanzamiento"
-  },
-  {
-   "id": 474,
-   "kind": "minor",
-   "name": "Daño de hechizos",
-   "x": -1055.9,
-   "y": 398.1,
    "mods": [
     {
      "stat": "damage",
@@ -12955,8 +13280,8 @@
    "id": 475,
    "kind": "minor",
    "name": "Hechizos",
-   "x": -1055.9,
-   "y": 296.8,
+   "x": -1198.4,
+   "y": 398.1,
    "mods": [
     {
      "stat": "damage",
@@ -12977,6 +13302,65 @@
   },
   {
    "id": 476,
+   "kind": "minor",
+   "name": "Velocidad de lanzamiento",
+   "x": -1127.2,
+   "y": 416.8,
+   "mods": [
+    {
+     "stat": "cast_speed",
+     "type": "increased",
+     "value": 6
+    }
+   ],
+   "cluster": "c43",
+   "theme": "lanzamiento"
+  },
+  {
+   "id": 477,
+   "kind": "minor",
+   "name": "Daño de hechizos",
+   "x": -1055.9,
+   "y": 398.1,
+   "mods": [
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 15,
+     "tags": [
+      "spell"
+     ]
+    }
+   ],
+   "cluster": "c43",
+   "theme": "lanzamiento"
+  },
+  {
+   "id": 478,
+   "kind": "minor",
+   "name": "Hechizos",
+   "x": -1055.9,
+   "y": 296.8,
+   "mods": [
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 9,
+     "tags": [
+      "spell"
+     ]
+    },
+    {
+     "stat": "cast_speed",
+     "type": "increased",
+     "value": 3
+    }
+   ],
+   "cluster": "c43",
+   "theme": "lanzamiento"
+  },
+  {
+   "id": 479,
    "kind": "notable",
    "name": "Script Kiddie",
    "x": -1127.2,
@@ -12997,7 +13381,7 @@
    "icon": "lanzamiento"
   },
   {
-   "id": 477,
+   "id": 480,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -1252.2,
@@ -13012,7 +13396,7 @@
    "theme": "atributos"
   },
   {
-   "id": 478,
+   "id": 481,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -1305.9,
@@ -13027,171 +13411,173 @@
    "theme": "atributos"
   },
   {
-   "id": 479,
-   "kind": "minor",
-   "name": "Daño de caos",
-   "x": -1357.9,
-   "y": 271.4,
-   "mods": [
-    {
-     "stat": "chaos_damage",
-     "type": "increased",
-     "value": 18
-    }
-   ],
-   "cluster": "c44",
-   "theme": "caos"
-  },
-  {
-   "id": 480,
-   "kind": "minor",
-   "name": "Resistencia al caos",
-   "x": -1421.5,
-   "y": 344.9,
-   "mods": [
-    {
-     "stat": "chaos_res",
-     "type": "flat",
-     "value": 7
-    }
-   ],
-   "cluster": "c44",
-   "theme": "caos"
-  },
-  {
-   "id": 481,
-   "kind": "minor",
-   "name": "Caos y daño",
-   "x": -1499.5,
-   "y": 311.4,
-   "mods": [
-    {
-     "stat": "chaos_damage",
-     "type": "increased",
-     "value": 12
-    },
-    {
-     "stat": "damage",
-     "type": "increased",
-     "value": 4
-    }
-   ],
-   "cluster": "c44",
-   "theme": "caos"
-  },
-  {
    "id": 482,
    "kind": "minor",
-   "name": "Daño de caos",
-   "x": -1492.1,
-   "y": 239.2,
+   "name": "Probabilidad de electrocutar",
+   "x": -1428.3,
+   "y": 183.4,
    "mods": [
     {
-     "stat": "chaos_damage",
-     "type": "increased",
-     "value": 18
+     "stat": "shock_chance",
+     "type": "flat",
+     "value": 6
     }
    ],
    "cluster": "c44",
-   "theme": "caos"
+   "theme": "sobrecarga"
   },
   {
    "id": 483,
    "kind": "minor",
-   "name": "Resistencia al caos",
-   "x": -1432.9,
-   "y": 227.5,
+   "name": "Electrocutar y rayo",
+   "x": -1462.6,
+   "y": 233.8,
    "mods": [
     {
-     "stat": "chaos_res",
+     "stat": "shock_chance",
      "type": "flat",
-     "value": 7
+     "value": 4
+    },
+    {
+     "stat": "lightning_damage",
+     "type": "increased",
+     "value": 9
     }
    ],
    "cluster": "c44",
-   "theme": "caos"
+   "theme": "sobrecarga"
   },
   {
    "id": 484,
    "kind": "minor",
-   "name": "Caos y daño",
-   "x": -1410.7,
-   "y": 270.2,
+   "name": "Estados más dañinos",
+   "x": -1489.6,
+   "y": 280.2,
    "mods": [
     {
-     "stat": "chaos_damage",
+     "stat": "ailment_damage",
      "type": "increased",
-     "value": 12
-    },
-    {
-     "stat": "damage",
-     "type": "increased",
-     "value": 4
+     "value": 8
     }
    ],
    "cluster": "c44",
-   "theme": "caos"
+   "theme": "sobrecarga"
   },
   {
    "id": 485,
    "kind": "minor",
-   "name": "Daño de caos",
-   "x": -1437.4,
-   "y": 294.5,
+   "name": "Probabilidad de electrocutar",
+   "x": -1455.0,
+   "y": 301.3,
    "mods": [
     {
-     "stat": "chaos_damage",
-     "type": "increased",
-     "value": 18
+     "stat": "shock_chance",
+     "type": "flat",
+     "value": 6
     }
    ],
    "cluster": "c44",
-   "theme": "caos"
+   "theme": "sobrecarga"
   },
   {
    "id": 486,
    "kind": "minor",
-   "name": "Resistencia al caos",
-   "x": -1456.9,
-   "y": 280.2,
+   "name": "Electrocutar y rayo",
+   "x": -1467.1,
+   "y": 358.3,
    "mods": [
     {
-     "stat": "chaos_res",
+     "stat": "shock_chance",
      "type": "flat",
-     "value": 7
+     "value": 4
+    },
+    {
+     "stat": "lightning_damage",
+     "type": "increased",
+     "value": 9
     }
    ],
    "cluster": "c44",
-   "theme": "caos"
+   "theme": "sobrecarga"
   },
   {
    "id": 487,
-   "kind": "notable",
-   "name": "Dangling Pointer",
-   "x": -1448.9,
-   "y": 269.5,
+   "kind": "minor",
+   "name": "Estados más dañinos",
+   "x": -1430.8,
+   "y": 309.3,
    "mods": [
     {
-     "stat": "chaos_damage",
+     "stat": "ailment_damage",
      "type": "increased",
-     "value": 20
-    },
-    {
-     "stat": "damage",
-     "type": "increased",
-     "value": 20,
-     "tags": [
-      "recent_kill"
-     ]
+     "value": 8
     }
    ],
-   "flavor": "Señala algo que ya no existe. Duele igual.",
    "cluster": "c44",
-   "theme": "caos",
-   "icon": "caos"
+   "theme": "sobrecarga"
   },
   {
    "id": 488,
+   "kind": "minor",
+   "name": "Probabilidad de electrocutar",
+   "x": -1394.6,
+   "y": 260.3,
+   "mods": [
+    {
+     "stat": "shock_chance",
+     "type": "flat",
+     "value": 6
+    }
+   ],
+   "cluster": "c44",
+   "theme": "sobrecarga"
+  },
+  {
+   "id": 489,
+   "kind": "minor",
+   "name": "Electrocutar y rayo",
+   "x": -1435.4,
+   "y": 243.9,
+   "mods": [
+    {
+     "stat": "shock_chance",
+     "type": "flat",
+     "value": 4
+    },
+    {
+     "stat": "lightning_damage",
+     "type": "increased",
+     "value": 9
+    }
+   ],
+   "cluster": "c44",
+   "theme": "sobrecarga"
+  },
+  {
+   "id": 490,
+   "kind": "notable",
+   "name": "Sin Toma de Tierra",
+   "x": -1444.2,
+   "y": 271.4,
+   "mods": [
+    {
+     "stat": "shock_chance",
+     "type": "flat",
+     "value": 20
+    },
+    {
+     "stat": "lightning_res",
+     "type": "flat",
+     "value": 10
+    }
+   ],
+   "flavor": "Así se cablea en este edificio.",
+   "cluster": "c44",
+   "theme": "sobrecarga",
+   "icon": "sobrecarga"
+  },
+  {
+   "id": 491,
    "kind": "minor",
    "name": "Maná",
    "x": -519.6,
@@ -13207,7 +13593,7 @@
    "theme": "mana"
   },
   {
-   "id": 489,
+   "id": 492,
    "kind": "minor",
    "name": "Maná",
    "x": -484.0,
@@ -13223,7 +13609,7 @@
    "theme": "mana"
   },
   {
-   "id": 490,
+   "id": 493,
    "kind": "minor",
    "name": "Regeneración de maná",
    "x": -473.3,
@@ -13239,7 +13625,7 @@
    "theme": "mana"
   },
   {
-   "id": 491,
+   "id": 494,
    "kind": "minor",
    "name": "Maná y regeneración",
    "x": -519.6,
@@ -13260,7 +13646,7 @@
    "theme": "mana"
   },
   {
-   "id": 492,
+   "id": 495,
    "kind": "minor",
    "name": "Maná",
    "x": -566.0,
@@ -13276,7 +13662,7 @@
    "theme": "mana"
   },
   {
-   "id": 493,
+   "id": 496,
    "kind": "minor",
    "name": "Maná",
    "x": -555.2,
@@ -13292,30 +13678,25 @@
    "theme": "mana"
   },
   {
-   "id": 494,
+   "id": 497,
    "kind": "notable",
-   "name": "Memoria Dinámica",
+   "name": "Garbage Collector",
    "x": -519.6,
    "y": 328.0,
    "mods": [
     {
-     "stat": "mana",
-     "type": "increased",
-     "value": 20
-    },
-    {
      "stat": "mana_regen",
      "type": "increased",
-     "value": 15
+     "value": 40
     }
    ],
-   "flavor": "Crece cuando hace falta. Nunca se libera.",
+   "flavor": "Recicla lo que tú olvidas liberar.",
    "cluster": "c45",
    "theme": "mana",
    "icon": "mana"
   },
   {
-   "id": 495,
+   "id": 498,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -346.1,
@@ -13330,7 +13711,7 @@
    "theme": "atributos"
   },
   {
-   "id": 496,
+   "id": 499,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -415.0,
@@ -13345,7 +13726,7 @@
    "theme": "atributos"
   },
   {
-   "id": 497,
+   "id": 500,
    "kind": "start",
    "name": "Ingeniero DevOps",
    "x": -779.4,
@@ -13354,7 +13735,7 @@
    "class_id": "templario"
   },
   {
-   "id": 498,
+   "id": 501,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -871.2,
@@ -13369,7 +13750,7 @@
    "theme": "atributos"
   },
   {
-   "id": 499,
+   "id": 502,
    "kind": "minor",
    "name": "Fuerza",
    "x": -962.9,
@@ -13384,166 +13765,158 @@
    "theme": "atributos"
   },
   {
-   "id": 500,
+   "id": 503,
    "kind": "minor",
-   "name": "Daño de fuego",
+   "name": "Daño de autómatas",
    "x": -1127.2,
    "y": -431.8,
    "mods": [
     {
-     "stat": "fire_damage",
+     "stat": "damage",
      "type": "increased",
-     "value": 18
+     "value": 15,
+     "tags": [
+      "automaton"
+     ]
     }
    ],
    "cluster": "c46",
-   "theme": "fuego"
-  },
-  {
-   "id": 501,
-   "kind": "minor",
-   "name": "Fuego y resistencia",
-   "x": -1096.5,
-   "y": -385.8,
-   "mods": [
-    {
-     "stat": "fire_damage",
-     "type": "increased",
-     "value": 12
-    },
-    {
-     "stat": "fire_res",
-     "type": "flat",
-     "value": 4
-    }
-   ],
-   "cluster": "c46",
-   "theme": "fuego"
-  },
-  {
-   "id": 502,
-   "kind": "minor",
-   "name": "Fuego y área",
-   "x": -1081.9,
-   "y": -331.7,
-   "mods": [
-    {
-     "stat": "fire_damage",
-     "type": "increased",
-     "value": 9
-    },
-    {
-     "stat": "area_of_effect",
-     "type": "increased",
-     "value": 4
-    }
-   ],
-   "cluster": "c46",
-   "theme": "fuego"
-  },
-  {
-   "id": 503,
-   "kind": "minor",
-   "name": "Daño de fuego",
-   "x": -1099.5,
-   "y": -285.9,
-   "mods": [
-    {
-     "stat": "fire_damage",
-     "type": "increased",
-     "value": 18
-    }
-   ],
-   "cluster": "c46",
-   "theme": "fuego"
+   "theme": "automatizacion"
   },
   {
    "id": 504,
    "kind": "minor",
-   "name": "Fuego y resistencia",
-   "x": -1154.8,
-   "y": -285.9,
+   "name": "Velocidad de autómatas",
+   "x": -1075.0,
+   "y": -400.6,
    "mods": [
     {
-     "stat": "fire_damage",
+     "stat": "automaton_speed",
      "type": "increased",
-     "value": 12
-    },
-    {
-     "stat": "fire_res",
-     "type": "flat",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c46",
-   "theme": "fuego"
+   "theme": "automatizacion"
   },
   {
    "id": 505,
    "kind": "minor",
-   "name": "Fuego y área",
-   "x": -1172.4,
-   "y": -331.7,
+   "name": "Vida de esbirros",
+   "x": -1066.5,
+   "y": -345.0,
    "mods": [
     {
-     "stat": "fire_damage",
+     "stat": "minion_life",
      "type": "increased",
-     "value": 9
-    },
-    {
-     "stat": "area_of_effect",
-     "type": "increased",
-     "value": 4
+     "value": 10
     }
    ],
    "cluster": "c46",
-   "theme": "fuego"
+   "theme": "automatizacion"
   },
   {
    "id": 506,
    "kind": "minor",
-   "name": "Daño de fuego",
-   "x": -1157.8,
-   "y": -385.8,
+   "name": "Daño de autómatas",
+   "x": -1101.9,
+   "y": -306.5,
    "mods": [
     {
-     "stat": "fire_damage",
+     "stat": "damage",
      "type": "increased",
-     "value": 18
+     "value": 15,
+     "tags": [
+      "automaton"
+     ]
     }
    ],
    "cluster": "c46",
-   "theme": "fuego"
+   "theme": "automatizacion"
   },
   {
    "id": 507,
-   "kind": "notable",
-   "name": "Incendio en el CPD",
-   "x": -1127.2,
-   "y": -330.6,
+   "kind": "minor",
+   "name": "Velocidad de autómatas",
+   "x": -1152.4,
+   "y": -306.5,
    "mods": [
     {
-     "stat": "fire_damage",
+     "stat": "automaton_speed",
      "type": "increased",
-     "value": 25
-    },
-    {
-     "stat": "area_of_effect",
-     "type": "increased",
-     "value": 8
+     "value": 6
     }
    ],
-   "flavor": "Quemar el centro de datos también es una forma de borrar logs.",
    "cluster": "c46",
-   "theme": "fuego",
-   "icon": "fuego"
+   "theme": "automatizacion"
   },
   {
    "id": 508,
    "kind": "minor",
+   "name": "Vida de esbirros",
+   "x": -1187.8,
+   "y": -345.0,
+   "mods": [
+    {
+     "stat": "minion_life",
+     "type": "increased",
+     "value": 10
+    }
+   ],
+   "cluster": "c46",
+   "theme": "automatizacion"
+  },
+  {
+   "id": 509,
+   "kind": "minor",
+   "name": "Daño de autómatas",
+   "x": -1179.3,
+   "y": -400.6,
+   "mods": [
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 15,
+     "tags": [
+      "automaton"
+     ]
+    }
+   ],
+   "cluster": "c46",
+   "theme": "automatizacion"
+  },
+  {
+   "id": 510,
+   "kind": "notable",
+   "name": "Pipeline de CI/CD",
+   "x": -1127.2,
+   "y": -356.8,
+   "mods": [
+    {
+     "stat": "automaton_speed",
+     "type": "increased",
+     "value": 15
+    },
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 15,
+     "tags": [
+      "automaton"
+     ]
+    }
+   ],
+   "flavor": "Cada commit despliega otra torreta.",
+   "cluster": "c46",
+   "theme": "automatizacion",
+   "icon": "automatizacion"
+  },
+  {
+   "id": 511,
+   "kind": "minor",
    "name": "Inteligencia",
-   "x": -1226.2,
-   "y": -317.3,
+   "x": -1241.6,
+   "y": -330.6,
    "mods": [
     {
      "stat": "intelligence",
@@ -13554,11 +13927,11 @@
    "theme": "atributos"
   },
   {
-   "id": 509,
+   "id": 512,
    "kind": "minor",
    "name": "Fuerza",
-   "x": -1279.9,
-   "y": -302.9,
+   "x": -1295.3,
+   "y": -316.2,
    "mods": [
     {
      "stat": "strength",
@@ -13569,162 +13942,152 @@
    "theme": "atributos"
   },
   {
-   "id": 510,
+   "id": 513,
    "kind": "minor",
-   "name": "Daño de rayo",
-   "x": -1459.1,
+   "name": "Probabilidad de electrocutar",
+   "x": -1428.3,
    "y": -359.4,
    "mods": [
     {
-     "stat": "lightning_damage",
-     "type": "increased",
-     "value": 18
-    }
-   ],
-   "cluster": "c47",
-   "theme": "rayo"
-  },
-  {
-   "id": 511,
-   "kind": "minor",
-   "name": "Rayo y resistencia",
-   "x": -1430.2,
-   "y": -325.6,
-   "mods": [
-    {
-     "stat": "lightning_damage",
-     "type": "increased",
-     "value": 12
-    },
-    {
-     "stat": "lightning_res",
+     "stat": "shock_chance",
      "type": "flat",
-     "value": 4
+     "value": 6
     }
    ],
    "cluster": "c47",
-   "theme": "rayo"
-  },
-  {
-   "id": 512,
-   "kind": "minor",
-   "name": "Rayo y crítico",
-   "x": -1413.9,
-   "y": -295.8,
-   "mods": [
-    {
-     "stat": "lightning_damage",
-     "type": "increased",
-     "value": 9
-    },
-    {
-     "stat": "crit_chance",
-     "type": "increased",
-     "value": 8
-    }
-   ],
-   "cluster": "c47",
-   "theme": "rayo"
-  },
-  {
-   "id": 513,
-   "kind": "minor",
-   "name": "Daño de rayo",
-   "x": -1453.3,
-   "y": -283.0,
-   "mods": [
-    {
-     "stat": "lightning_damage",
-     "type": "increased",
-     "value": 18
-    }
-   ],
-   "cluster": "c47",
-   "theme": "rayo"
+   "theme": "sobrecarga"
   },
   {
    "id": 514,
    "kind": "minor",
-   "name": "Rayo y resistencia",
-   "x": -1424.4,
-   "y": -249.2,
+   "name": "Electrocutar y rayo",
+   "x": -1467.5,
+   "y": -301.9,
    "mods": [
     {
-     "stat": "lightning_damage",
-     "type": "increased",
-     "value": 12
-    },
-    {
-     "stat": "lightning_res",
+     "stat": "shock_chance",
      "type": "flat",
      "value": 4
-    }
-   ],
-   "cluster": "c47",
-   "theme": "rayo"
-  },
-  {
-   "id": 515,
-   "kind": "minor",
-   "name": "Rayo y crítico",
-   "x": -1411.4,
-   "y": -226.2,
-   "mods": [
+    },
     {
      "stat": "lightning_damage",
      "type": "increased",
      "value": 9
-    },
+    }
+   ],
+   "cluster": "c47",
+   "theme": "sobrecarga"
+  },
+  {
+   "id": 515,
+   "kind": "minor",
+   "name": "Estados más dañinos",
+   "x": -1472.2,
+   "y": -262.6,
+   "mods": [
     {
-     "stat": "crit_chance",
+     "stat": "ailment_damage",
      "type": "increased",
      "value": 8
     }
    ],
    "cluster": "c47",
-   "theme": "rayo"
+   "theme": "sobrecarga"
   },
   {
    "id": 516,
    "kind": "minor",
-   "name": "Daño de rayo",
-   "x": -1436.6,
-   "y": -224.5,
+   "name": "Probabilidad de electrocutar",
+   "x": -1460.7,
+   "y": -216.0,
    "mods": [
     {
-     "stat": "lightning_damage",
-     "type": "increased",
-     "value": 18
+     "stat": "shock_chance",
+     "type": "flat",
+     "value": 6
     }
    ],
    "cluster": "c47",
-   "theme": "rayo"
+   "theme": "sobrecarga"
   },
   {
    "id": 517,
-   "kind": "notable",
-   "name": "Toma de Tierra",
-   "x": -1419.5,
-   "y": -183.4,
+   "kind": "minor",
+   "name": "Electrocutar y rayo",
+   "x": -1446.4,
+   "y": -212.6,
    "mods": [
+    {
+     "stat": "shock_chance",
+     "type": "flat",
+     "value": 4
+    },
     {
      "stat": "lightning_damage",
      "type": "increased",
-     "value": 15
-    },
-    {
-     "stat": "lightning_res",
-     "type": "flat",
-     "value": 20
+     "value": 9
     }
    ],
-   "flavor": "Seguridad eléctrica. Por fin alguien la usa.",
    "cluster": "c47",
-   "theme": "rayo",
-   "icon": "rayo"
+   "theme": "sobrecarga"
   },
   {
    "id": 518,
+   "kind": "minor",
+   "name": "Estados más dañinos",
+   "x": -1405.0,
+   "y": -268.6,
+   "mods": [
+    {
+     "stat": "ailment_damage",
+     "type": "increased",
+     "value": 8
+    }
+   ],
+   "cluster": "c47",
+   "theme": "sobrecarga"
+  },
+  {
+   "id": 519,
+   "kind": "minor",
+   "name": "Probabilidad de electrocutar",
+   "x": -1436.4,
+   "y": -290.3,
+   "mods": [
+    {
+     "stat": "shock_chance",
+     "type": "flat",
+     "value": 6
+    }
+   ],
+   "cluster": "c47",
+   "theme": "sobrecarga"
+  },
+  {
+   "id": 520,
+   "kind": "notable",
+   "name": "Arco Eléctrico",
+   "x": -1444.2,
+   "y": -271.4,
+   "mods": [
+    {
+     "stat": "shock_chance",
+     "type": "flat",
+     "value": 10
+    },
+    {
+     "stat": "crit_chance",
+     "type": "increased",
+     "value": 15
+    }
+   ],
+   "flavor": "No toques la placa sin pulsera antiestática.",
+   "cluster": "c47",
+   "theme": "sobrecarga",
+   "icon": "sobrecarga"
+  },
+  {
+   "id": 521,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -871.2,
@@ -13739,7 +14102,7 @@
    "theme": "atributos"
   },
   {
-   "id": 519,
+   "id": 522,
    "kind": "minor",
    "name": "Fuerza",
    "x": -962.9,
@@ -13754,7 +14117,7 @@
    "theme": "atributos"
   },
   {
-   "id": 520,
+   "id": 523,
    "kind": "minor",
    "name": "Área de efecto",
    "x": -1127.2,
@@ -13770,7 +14133,7 @@
    "theme": "area"
   },
   {
-   "id": 521,
+   "id": 524,
    "kind": "minor",
    "name": "Daño de área",
    "x": -1094.4,
@@ -13789,7 +14152,7 @@
    "theme": "area"
   },
   {
-   "id": 522,
+   "id": 525,
    "kind": "minor",
    "name": "Área y daño",
    "x": -1075.4,
@@ -13813,7 +14176,7 @@
    "theme": "area"
   },
   {
-   "id": 523,
+   "id": 526,
    "kind": "minor",
    "name": "Área de efecto",
    "x": -1086.1,
@@ -13829,7 +14192,7 @@
    "theme": "area"
   },
   {
-   "id": 524,
+   "id": 527,
    "kind": "minor",
    "name": "Daño de área",
    "x": -1127.2,
@@ -13848,7 +14211,7 @@
    "theme": "area"
   },
   {
-   "id": 525,
+   "id": 528,
    "kind": "minor",
    "name": "Área y daño",
    "x": -1168.2,
@@ -13872,7 +14235,7 @@
    "theme": "area"
   },
   {
-   "id": 526,
+   "id": 529,
    "kind": "minor",
    "name": "Área de efecto",
    "x": -1178.9,
@@ -13888,7 +14251,7 @@
    "theme": "area"
   },
   {
-   "id": 527,
+   "id": 530,
    "kind": "minor",
    "name": "Daño de área",
    "x": -1159.9,
@@ -13907,7 +14270,7 @@
    "theme": "area"
   },
   {
-   "id": 528,
+   "id": 531,
    "kind": "notable",
    "name": "Efecto Mariposa",
    "x": -1127.2,
@@ -13933,7 +14296,7 @@
    "icon": "area"
   },
   {
-   "id": 529,
+   "id": 532,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -1232.7,
@@ -13948,7 +14311,7 @@
    "theme": "atributos"
   },
   {
-   "id": 530,
+   "id": 533,
    "kind": "minor",
    "name": "Fuerza",
    "x": -1286.4,
@@ -13963,168 +14326,170 @@
    "theme": "atributos"
   },
   {
-   "id": 531,
+   "id": 534,
    "kind": "minor",
-   "name": "Maná",
+   "name": "Daño de autómatas",
    "x": -1445.9,
    "y": -716.6,
    "mods": [
     {
-     "stat": "mana",
+     "stat": "damage",
      "type": "increased",
-     "value": 8
+     "value": 15,
+     "tags": [
+      "automaton"
+     ]
     }
    ],
    "cluster": "c49",
-   "theme": "mana"
-  },
-  {
-   "id": 532,
-   "kind": "minor",
-   "name": "Maná",
-   "x": -1410.8,
-   "y": -671.2,
-   "mods": [
-    {
-     "stat": "mana",
-     "type": "flat",
-     "value": 15
-    }
-   ],
-   "cluster": "c49",
-   "theme": "mana"
-  },
-  {
-   "id": 533,
-   "kind": "minor",
-   "name": "Regeneración de maná",
-   "x": -1387.5,
-   "y": -619.1,
-   "mods": [
-    {
-     "stat": "mana_regen",
-     "type": "increased",
-     "value": 15
-    }
-   ],
-   "cluster": "c49",
-   "theme": "mana"
-  },
-  {
-   "id": 534,
-   "kind": "minor",
-   "name": "Maná y regeneración",
-   "x": -1395.9,
-   "y": -564.3,
-   "mods": [
-    {
-     "stat": "mana",
-     "type": "increased",
-     "value": 4
-    },
-    {
-     "stat": "mana_regen",
-     "type": "increased",
-     "value": 8
-    }
-   ],
-   "cluster": "c49",
-   "theme": "mana"
+   "theme": "automatizacion"
   },
   {
    "id": 535,
    "kind": "minor",
-   "name": "Maná",
-   "x": -1445.9,
-   "y": -540.6,
+   "name": "Velocidad de autómatas",
+   "x": -1383.7,
+   "y": -690.8,
    "mods": [
     {
-     "stat": "mana",
+     "stat": "automaton_speed",
      "type": "increased",
-     "value": 8
+     "value": 6
     }
    ],
    "cluster": "c49",
-   "theme": "mana"
+   "theme": "automatizacion"
   },
   {
    "id": 536,
    "kind": "minor",
-   "name": "Maná",
-   "x": -1495.9,
-   "y": -564.3,
+   "name": "Vida de esbirros",
+   "x": -1357.9,
+   "y": -628.6,
    "mods": [
     {
-     "stat": "mana",
-     "type": "flat",
-     "value": 15
-    }
-   ],
-   "cluster": "c49",
-   "theme": "mana"
-  },
-  {
-   "id": 537,
-   "kind": "minor",
-   "name": "Regeneración de maná",
-   "x": -1504.3,
-   "y": -619.1,
-   "mods": [
-    {
-     "stat": "mana_regen",
-     "type": "increased",
-     "value": 15
-    }
-   ],
-   "cluster": "c49",
-   "theme": "mana"
-  },
-  {
-   "id": 538,
-   "kind": "minor",
-   "name": "Maná y regeneración",
-   "x": -1481.0,
-   "y": -671.2,
-   "mods": [
-    {
-     "stat": "mana",
-     "type": "increased",
-     "value": 4
-    },
-    {
-     "stat": "mana_regen",
-     "type": "increased",
-     "value": 8
-    }
-   ],
-   "cluster": "c49",
-   "theme": "mana"
-  },
-  {
-   "id": 539,
-   "kind": "notable",
-   "name": "Malloc Infinito",
-   "x": -1445.9,
-   "y": -593.4,
-   "mods": [
-    {
-     "stat": "mana",
-     "type": "flat",
-     "value": 50
-    },
-    {
-     "stat": "mana",
+     "stat": "minion_life",
      "type": "increased",
      "value": 10
     }
    ],
-   "flavor": "Pide memoria sin límite. ¿Qué podría salir mal?",
    "cluster": "c49",
-   "theme": "mana",
-   "icon": "mana"
+   "theme": "automatizacion"
+  },
+  {
+   "id": 537,
+   "kind": "minor",
+   "name": "Daño de autómatas",
+   "x": -1383.7,
+   "y": -566.4,
+   "mods": [
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 15,
+     "tags": [
+      "automaton"
+     ]
+    }
+   ],
+   "cluster": "c49",
+   "theme": "automatizacion"
+  },
+  {
+   "id": 538,
+   "kind": "minor",
+   "name": "Velocidad de autómatas",
+   "x": -1445.9,
+   "y": -540.6,
+   "mods": [
+    {
+     "stat": "automaton_speed",
+     "type": "increased",
+     "value": 6
+    }
+   ],
+   "cluster": "c49",
+   "theme": "automatizacion"
+  },
+  {
+   "id": 539,
+   "kind": "minor",
+   "name": "Vida de esbirros",
+   "x": -1508.1,
+   "y": -566.4,
+   "mods": [
+    {
+     "stat": "minion_life",
+     "type": "increased",
+     "value": 10
+    }
+   ],
+   "cluster": "c49",
+   "theme": "automatizacion"
   },
   {
    "id": 540,
+   "kind": "minor",
+   "name": "Daño de autómatas",
+   "x": -1533.9,
+   "y": -628.6,
+   "mods": [
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 15,
+     "tags": [
+      "automaton"
+     ]
+    }
+   ],
+   "cluster": "c49",
+   "theme": "automatizacion"
+  },
+  {
+   "id": 541,
+   "kind": "minor",
+   "name": "Velocidad de autómatas",
+   "x": -1508.1,
+   "y": -690.8,
+   "mods": [
+    {
+     "stat": "automaton_speed",
+     "type": "increased",
+     "value": 6
+    }
+   ],
+   "cluster": "c49",
+   "theme": "automatizacion"
+  },
+  {
+   "id": 542,
+   "kind": "notable",
+   "name": "Orquestador",
+   "x": -1445.9,
+   "y": -628.6,
+   "mods": [
+    {
+     "stat": "extra_devices",
+     "type": "flat",
+     "value": 1
+    },
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 10,
+     "tags": [
+      "automaton"
+     ]
+    }
+   ],
+   "flavor": "Tú das las órdenes; ellos hacen el trabajo.",
+   "cluster": "c49",
+   "theme": "automatizacion",
+   "icon": "automatizacion"
+  },
+  {
+   "id": 543,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -846.6,
@@ -14139,7 +14504,7 @@
    "theme": "atributos"
   },
   {
-   "id": 541,
+   "id": 544,
    "kind": "minor",
    "name": "Fuerza",
    "x": -913.8,
@@ -14154,7 +14519,7 @@
    "theme": "atributos"
   },
   {
-   "id": 542,
+   "id": 545,
    "kind": "minor",
    "name": "Escudo de energía",
    "x": -969.0,
@@ -14170,7 +14535,7 @@
    "theme": "escudo"
   },
   {
-   "id": 543,
+   "id": 546,
    "kind": "minor",
    "name": "Escudo de energía",
    "x": -1024.7,
@@ -14186,7 +14551,7 @@
    "theme": "escudo"
   },
   {
-   "id": 544,
+   "id": 547,
    "kind": "minor",
    "name": "Escudo e inteligencia",
    "x": -1080.4,
@@ -14207,7 +14572,7 @@
    "theme": "escudo"
   },
   {
-   "id": 545,
+   "id": 548,
    "kind": "minor",
    "name": "Escudo de energía",
    "x": -1098.9,
@@ -14223,7 +14588,7 @@
    "theme": "escudo"
   },
   {
-   "id": 546,
+   "id": 549,
    "kind": "minor",
    "name": "Escudo de energía",
    "x": -1071.1,
@@ -14239,7 +14604,7 @@
    "theme": "escudo"
   },
   {
-   "id": 547,
+   "id": 550,
    "kind": "minor",
    "name": "Escudo e inteligencia",
    "x": -1015.4,
@@ -14260,7 +14625,7 @@
    "theme": "escudo"
   },
   {
-   "id": 548,
+   "id": 551,
    "kind": "minor",
    "name": "Escudo de energía",
    "x": -969.0,
@@ -14276,7 +14641,7 @@
    "theme": "escudo"
   },
   {
-   "id": 549,
+   "id": 552,
    "kind": "notable",
    "name": "Hipervisor",
    "x": -1034.0,
@@ -14299,7 +14664,7 @@
    "icon": "escudo"
   },
   {
-   "id": 550,
+   "id": 553,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -1110.5,
@@ -14314,7 +14679,7 @@
    "theme": "atributos"
   },
   {
-   "id": 551,
+   "id": 554,
    "kind": "minor",
    "name": "Fuerza",
    "x": -1149.8,
@@ -14329,7 +14694,7 @@
    "theme": "atributos"
   },
   {
-   "id": 552,
+   "id": 555,
    "kind": "minor",
    "name": "Armadura",
    "x": -1342.1,
@@ -14345,7 +14710,7 @@
    "theme": "armadura"
   },
   {
-   "id": 553,
+   "id": 556,
    "kind": "minor",
    "name": "Armadura",
    "x": -1267.1,
@@ -14361,7 +14726,7 @@
    "theme": "armadura"
   },
   {
-   "id": 554,
+   "id": 557,
    "kind": "minor",
    "name": "Armadura y vida",
    "x": -1192.6,
@@ -14382,7 +14747,7 @@
    "theme": "armadura"
   },
   {
-   "id": 555,
+   "id": 558,
    "kind": "minor",
    "name": "Bloqueo",
    "x": -1196.4,
@@ -14398,7 +14763,7 @@
    "theme": "armadura"
   },
   {
-   "id": 556,
+   "id": 559,
    "kind": "minor",
    "name": "Armadura y bloqueo",
    "x": -1241.4,
@@ -14419,7 +14784,7 @@
    "theme": "armadura"
   },
   {
-   "id": 557,
+   "id": 560,
    "kind": "minor",
    "name": "Armadura",
    "x": -1293.6,
@@ -14435,7 +14800,7 @@
    "theme": "armadura"
   },
   {
-   "id": 558,
+   "id": 561,
    "kind": "minor",
    "name": "Armadura",
    "x": -1338.3,
@@ -14451,30 +14816,30 @@
    "theme": "armadura"
   },
   {
-   "id": 559,
+   "id": 562,
    "kind": "notable",
-   "name": "Escudo de Producción",
+   "name": "Defensa en Profundidad",
    "x": -1267.3,
    "y": -946.7,
    "mods": [
     {
-     "stat": "block_chance",
-     "type": "flat",
-     "value": 6
+     "stat": "armour",
+     "type": "increased",
+     "value": 25
     },
     {
-     "stat": "armour",
-     "type": "flat",
-     "value": 60
+     "stat": "life",
+     "type": "increased",
+     "value": 6
     }
    ],
-   "flavor": "Recibe los golpes para que el resto del equipo no.",
+   "flavor": "Capas y capas de seguridad. Y de burocracia.",
    "cluster": "c51",
    "theme": "armadura",
    "icon": "armadura"
   },
   {
-   "id": 560,
+   "id": 563,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -1405.7,
@@ -14489,7 +14854,7 @@
    "theme": "atributos"
   },
   {
-   "id": 561,
+   "id": 564,
    "kind": "minor",
    "name": "Fuerza",
    "x": -1469.4,
@@ -14504,28 +14869,41 @@
    "theme": "atributos"
   },
   {
-   "id": 562,
+   "id": 565,
    "kind": "keystone",
-   "name": "Funciona en mi Máquina",
+   "name": "Orquestación con Kubernetes",
    "x": -1547.2,
    "y": -1217.8,
    "mods": [
     {
-     "stat": "energy_shield",
+     "stat": "damage",
      "type": "more",
-     "value": 60
+     "value": 40,
+     "tags": [
+      "automaton"
+     ]
+    },
+    {
+     "stat": "extra_minions",
+     "type": "flat",
+     "value": 1
+    },
+    {
+     "stat": "extra_devices",
+     "type": "flat",
+     "value": 1
     },
     {
      "stat": "life",
      "type": "more",
-     "value": -40
+     "value": -20
     }
    ],
-   "flavor": "En producción es otra historia.",
+   "flavor": "Ya no programas: orquestas. Las máquinas hacen el resto.",
    "icon": "ks_templario"
   },
   {
-   "id": 563,
+   "id": 566,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -804.0,
@@ -14540,7 +14918,7 @@
    "theme": "atributos"
   },
   {
-   "id": 564,
+   "id": 567,
    "kind": "minor",
    "name": "Fuerza",
    "x": -828.6,
@@ -14555,7 +14933,7 @@
    "theme": "atributos"
   },
   {
-   "id": 565,
+   "id": 568,
    "kind": "minor",
    "name": "Vida",
    "x": -872.6,
@@ -14571,7 +14949,7 @@
    "theme": "vida"
   },
   {
-   "id": 566,
+   "id": 569,
    "kind": "minor",
    "name": "Vida",
    "x": -811.8,
@@ -14587,7 +14965,7 @@
    "theme": "vida"
   },
   {
-   "id": 567,
+   "id": 570,
    "kind": "minor",
    "name": "Vida y regeneración",
    "x": -819.6,
@@ -14608,7 +14986,7 @@
    "theme": "vida"
   },
   {
-   "id": 568,
+   "id": 571,
    "kind": "minor",
    "name": "Vida y armadura",
    "x": -872.6,
@@ -14629,7 +15007,7 @@
    "theme": "vida"
   },
   {
-   "id": 569,
+   "id": 572,
    "kind": "minor",
    "name": "Vida máxima",
    "x": -925.6,
@@ -14645,7 +15023,7 @@
    "theme": "vida"
   },
   {
-   "id": 570,
+   "id": 573,
    "kind": "minor",
    "name": "Vida",
    "x": -933.4,
@@ -14661,30 +15039,33 @@
    "theme": "vida"
   },
   {
-   "id": 571,
+   "id": 574,
    "kind": "notable",
-   "name": "SAI Personal",
+   "name": "Hasta el Último Byte",
    "x": -872.6,
    "y": -794.0,
    "mods": [
     {
-     "stat": "life",
+     "stat": "damage",
      "type": "increased",
-     "value": 10
+     "value": 40,
+     "tags": [
+      "low_life"
+     ]
     },
     {
-     "stat": "life_regen",
-     "type": "flat",
-     "value": 10
+     "stat": "life",
+     "type": "increased",
+     "value": 8
     }
    ],
-   "flavor": "Sistema de Alimentación Ininterrumpida. Para tu vida.",
+   "flavor": "Cuanto peor va, mejor rindes. Como en cada entrega.",
    "cluster": "c52",
    "theme": "vida",
    "icon": "vida"
   },
   {
-   "id": 572,
+   "id": 575,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -947.8,
@@ -14699,7 +15080,7 @@
    "theme": "atributos"
   },
   {
-   "id": 573,
+   "id": 576,
    "kind": "minor",
    "name": "Fuerza",
    "x": -962.2,
@@ -14714,7 +15095,7 @@
    "theme": "atributos"
   },
   {
-   "id": 574,
+   "id": 577,
    "kind": "minor",
    "name": "Velocidad de lanzamiento",
    "x": -958.0,
@@ -14730,70 +15111,11 @@
    "theme": "lanzamiento"
   },
   {
-   "id": 575,
+   "id": 578,
    "kind": "minor",
    "name": "Daño de hechizos",
    "x": -1041.6,
    "y": -1186.9,
-   "mods": [
-    {
-     "stat": "damage",
-     "type": "increased",
-     "value": 15,
-     "tags": [
-      "spell"
-     ]
-    }
-   ],
-   "cluster": "c53",
-   "theme": "lanzamiento"
-  },
-  {
-   "id": 576,
-   "kind": "minor",
-   "name": "Hechizos",
-   "x": -1041.6,
-   "y": -1068.1,
-   "mods": [
-    {
-     "stat": "damage",
-     "type": "increased",
-     "value": 9,
-     "tags": [
-      "spell"
-     ]
-    },
-    {
-     "stat": "cast_speed",
-     "type": "increased",
-     "value": 3
-    }
-   ],
-   "cluster": "c53",
-   "theme": "lanzamiento"
-  },
-  {
-   "id": 577,
-   "kind": "minor",
-   "name": "Velocidad de lanzamiento",
-   "x": -958.0,
-   "y": -1046.1,
-   "mods": [
-    {
-     "stat": "cast_speed",
-     "type": "increased",
-     "value": 6
-    }
-   ],
-   "cluster": "c53",
-   "theme": "lanzamiento"
-  },
-  {
-   "id": 578,
-   "kind": "minor",
-   "name": "Daño de hechizos",
-   "x": -874.4,
-   "y": -1068.1,
    "mods": [
     {
      "stat": "damage",
@@ -14811,8 +15133,8 @@
    "id": 579,
    "kind": "minor",
    "name": "Hechizos",
-   "x": -874.4,
-   "y": -1186.9,
+   "x": -1041.6,
+   "y": -1068.1,
    "mods": [
     {
      "stat": "damage",
@@ -14833,6 +15155,65 @@
   },
   {
    "id": 580,
+   "kind": "minor",
+   "name": "Velocidad de lanzamiento",
+   "x": -958.0,
+   "y": -1046.1,
+   "mods": [
+    {
+     "stat": "cast_speed",
+     "type": "increased",
+     "value": 6
+    }
+   ],
+   "cluster": "c53",
+   "theme": "lanzamiento"
+  },
+  {
+   "id": 581,
+   "kind": "minor",
+   "name": "Daño de hechizos",
+   "x": -874.4,
+   "y": -1068.1,
+   "mods": [
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 15,
+     "tags": [
+      "spell"
+     ]
+    }
+   ],
+   "cluster": "c53",
+   "theme": "lanzamiento"
+  },
+  {
+   "id": 582,
+   "kind": "minor",
+   "name": "Hechizos",
+   "x": -874.4,
+   "y": -1186.9,
+   "mods": [
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 9,
+     "tags": [
+      "spell"
+     ]
+    },
+    {
+     "stat": "cast_speed",
+     "type": "increased",
+     "value": 3
+    }
+   ],
+   "cluster": "c53",
+   "theme": "lanzamiento"
+  },
+  {
+   "id": 583,
    "kind": "notable",
    "name": "Sudo Hechizo",
    "x": -958.0,
@@ -14858,7 +15239,7 @@
    "icon": "lanzamiento"
   },
   {
-   "id": 581,
+   "id": 584,
    "kind": "minor",
    "name": "Recuperación de enfriamientos",
    "x": -568.6,
@@ -14874,7 +15255,7 @@
    "theme": "tiempos"
   },
   {
-   "id": 582,
+   "id": 585,
    "kind": "minor",
    "name": "Duración de habilidades",
    "x": -519.6,
@@ -14890,7 +15271,7 @@
    "theme": "tiempos"
   },
   {
-   "id": 583,
+   "id": 586,
    "kind": "minor",
    "name": "Enfriamiento y área",
    "x": -470.6,
@@ -14911,7 +15292,7 @@
    "theme": "tiempos"
   },
   {
-   "id": 584,
+   "id": 587,
    "kind": "notable",
    "name": "Tiempo Real",
    "x": -519.6,
@@ -14934,7 +15315,7 @@
    "icon": "tiempos"
   },
   {
-   "id": 585,
+   "id": 588,
    "kind": "minor",
    "name": "Duración de habilidades",
    "x": -470.6,
@@ -14950,7 +15331,7 @@
    "theme": "tiempos"
   },
   {
-   "id": 586,
+   "id": 589,
    "kind": "minor",
    "name": "Enfriamiento y área",
    "x": -519.6,
@@ -14971,7 +15352,7 @@
    "theme": "tiempos"
   },
   {
-   "id": 587,
+   "id": 590,
    "kind": "minor",
    "name": "Recuperación de enfriamientos",
    "x": -568.6,
@@ -14987,7 +15368,7 @@
    "theme": "tiempos"
   },
   {
-   "id": 588,
+   "id": 591,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -341.6,
@@ -15002,7 +15383,7 @@
    "theme": "atributos"
   },
   {
-   "id": 589,
+   "id": 592,
    "kind": "minor",
    "name": "Fuerza",
    "x": -406.1,
@@ -15017,7 +15398,7 @@
    "theme": "atributos"
   },
   {
-   "id": 590,
+   "id": 593,
    "kind": "minor",
    "name": "Resistencia al fuego",
    "x": 310.0,
@@ -15033,7 +15414,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 591,
+   "id": 594,
    "kind": "minor",
    "name": "Resistencia al frío",
    "x": 344.8,
@@ -15049,7 +15430,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 592,
+   "id": 595,
    "kind": "minor",
    "name": "Resistencia al rayo",
    "x": 346.5,
@@ -15065,7 +15446,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 593,
+   "id": 596,
    "kind": "minor",
    "name": "Resistencias elementales",
    "x": 273.5,
@@ -15091,7 +15472,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 594,
+   "id": 597,
    "kind": "minor",
    "name": "Resistencia al fuego",
    "x": 275.2,
@@ -15107,7 +15488,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 595,
+   "id": 598,
    "kind": "notable",
    "name": "Antivirus Premium",
    "x": 310.0,
@@ -15140,7 +15521,7 @@
    "icon": "resistencias"
   },
   {
-   "id": 596,
+   "id": 599,
    "kind": "minor",
    "name": "Fuerza",
    "x": 197.8,
@@ -15155,7 +15536,7 @@
    "theme": "atributos"
   },
   {
-   "id": 597,
+   "id": 600,
    "kind": "minor",
    "name": "Destreza",
    "x": 235.7,
@@ -15170,7 +15551,7 @@
    "theme": "atributos"
   },
   {
-   "id": 598,
+   "id": 601,
    "kind": "minor",
    "name": "Destreza",
    "x": 299.2,
@@ -15185,7 +15566,7 @@
    "theme": "atributos"
   },
   {
-   "id": 599,
+   "id": 602,
    "kind": "minor",
    "name": "Fuerza",
    "x": 302.8,
@@ -15200,7 +15581,7 @@
    "theme": "atributos"
   },
   {
-   "id": 600,
+   "id": 603,
    "kind": "minor",
    "name": "Destreza",
    "x": 306.4,
@@ -15215,7 +15596,7 @@
    "theme": "atributos"
   },
   {
-   "id": 601,
+   "id": 604,
    "kind": "minor",
    "name": "Destreza",
    "x": 681.3,
@@ -15230,7 +15611,7 @@
    "theme": "atributos"
   },
   {
-   "id": 602,
+   "id": 605,
    "kind": "minor",
    "name": "Fuerza",
    "x": 557.5,
@@ -15245,7 +15626,7 @@
    "theme": "atributos"
   },
   {
-   "id": 603,
+   "id": 606,
    "kind": "minor",
    "name": "Destreza",
    "x": 433.8,
@@ -15260,7 +15641,7 @@
    "theme": "atributos"
   },
   {
-   "id": 604,
+   "id": 607,
    "kind": "minor",
    "name": "Destreza",
    "x": 170.3,
@@ -15275,7 +15656,7 @@
    "theme": "atributos"
   },
   {
-   "id": 605,
+   "id": 608,
    "kind": "minor",
    "name": "Destreza",
    "x": 401.6,
@@ -15290,7 +15671,7 @@
    "theme": "atributos"
   },
   {
-   "id": 606,
+   "id": 609,
    "kind": "minor",
    "name": "Resistencia al fuego",
    "x": 679.0,
@@ -15306,7 +15687,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 607,
+   "id": 610,
    "kind": "minor",
    "name": "Resistencia al frío",
    "x": 709.8,
@@ -15322,7 +15703,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 608,
+   "id": 611,
    "kind": "minor",
    "name": "Resistencia al rayo",
    "x": 711.3,
@@ -15338,7 +15719,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 609,
+   "id": 612,
    "kind": "minor",
    "name": "Resistencias elementales",
    "x": 646.6,
@@ -15364,7 +15745,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 610,
+   "id": 613,
    "kind": "minor",
    "name": "Resistencia al fuego",
    "x": 648.1,
@@ -15380,7 +15761,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 611,
+   "id": 614,
    "kind": "notable",
    "name": "Actualización Obligatoria",
    "x": 679.0,
@@ -15413,7 +15794,7 @@
    "icon": "resistencias"
   },
   {
-   "id": 612,
+   "id": 615,
    "kind": "minor",
    "name": "Destreza",
    "x": 568.0,
@@ -15428,7 +15809,7 @@
    "theme": "atributos"
   },
   {
-   "id": 613,
+   "id": 616,
    "kind": "minor",
    "name": "Destreza",
    "x": 790.6,
@@ -15443,7 +15824,7 @@
    "theme": "atributos"
   },
   {
-   "id": 614,
+   "id": 617,
    "kind": "minor",
    "name": "Todos los atributos",
    "x": 558.0,
@@ -15469,7 +15850,7 @@
    "theme": "atributos"
   },
   {
-   "id": 615,
+   "id": 618,
    "kind": "minor",
    "name": "Fuerza",
    "x": 589.0,
@@ -15485,7 +15866,7 @@
    "theme": "atributos"
   },
   {
-   "id": 616,
+   "id": 619,
    "kind": "minor",
    "name": "Destreza",
    "x": 651.0,
@@ -15501,7 +15882,7 @@
    "theme": "atributos"
   },
   {
-   "id": 617,
+   "id": 620,
    "kind": "notable",
    "name": "Root Access",
    "x": 682.0,
@@ -15534,7 +15915,7 @@
    "icon": "atributos"
   },
   {
-   "id": 618,
+   "id": 621,
    "kind": "minor",
    "name": "Todos los atributos",
    "x": 651.0,
@@ -15560,7 +15941,7 @@
    "theme": "atributos"
   },
   {
-   "id": 619,
+   "id": 622,
    "kind": "minor",
    "name": "Fuerza",
    "x": 589.0,
@@ -15576,7 +15957,7 @@
    "theme": "atributos"
   },
   {
-   "id": 620,
+   "id": 623,
    "kind": "minor",
    "name": "Fuerza",
    "x": 399.3,
@@ -15591,7 +15972,7 @@
    "theme": "atributos"
   },
   {
-   "id": 621,
+   "id": 624,
    "kind": "minor",
    "name": "Destreza",
    "x": 478.7,
@@ -15606,7 +15987,7 @@
    "theme": "atributos"
   },
   {
-   "id": 622,
+   "id": 625,
    "kind": "minor",
    "name": "Destreza",
    "x": 974.4,
@@ -15621,7 +16002,7 @@
    "theme": "atributos"
   },
   {
-   "id": 623,
+   "id": 626,
    "kind": "minor",
    "name": "Fuerza",
    "x": 866.6,
@@ -15636,7 +16017,7 @@
    "theme": "atributos"
   },
   {
-   "id": 624,
+   "id": 627,
    "kind": "minor",
    "name": "Destreza",
    "x": 758.8,
@@ -15651,7 +16032,7 @@
    "theme": "atributos"
   },
   {
-   "id": 625,
+   "id": 628,
    "kind": "minor",
    "name": "Destreza",
    "x": 1024.3,
@@ -15666,7 +16047,7 @@
    "theme": "atributos"
   },
   {
-   "id": 626,
+   "id": 629,
    "kind": "minor",
    "name": "Fuerza",
    "x": 910.2,
@@ -15681,7 +16062,7 @@
    "theme": "atributos"
   },
   {
-   "id": 627,
+   "id": 630,
    "kind": "minor",
    "name": "Destreza",
    "x": 796.1,
@@ -15696,7 +16077,7 @@
    "theme": "atributos"
   },
   {
-   "id": 628,
+   "id": 631,
    "kind": "minor",
    "name": "Destreza",
    "x": 557.8,
@@ -15711,7 +16092,7 @@
    "theme": "atributos"
   },
   {
-   "id": 629,
+   "id": 632,
    "kind": "minor",
    "name": "Destreza",
    "x": 557.8,
@@ -15726,7 +16107,7 @@
    "theme": "atributos"
   },
   {
-   "id": 630,
+   "id": 633,
    "kind": "minor",
    "name": "Todos los atributos",
    "x": 1451.6,
@@ -15752,7 +16133,7 @@
    "theme": "atributos"
   },
   {
-   "id": 631,
+   "id": 634,
    "kind": "minor",
    "name": "Fuerza",
    "x": 1498.5,
@@ -15768,7 +16149,7 @@
    "theme": "atributos"
   },
   {
-   "id": 632,
+   "id": 635,
    "kind": "minor",
    "name": "Destreza",
    "x": 1497.3,
@@ -15784,7 +16165,7 @@
    "theme": "atributos"
   },
   {
-   "id": 633,
+   "id": 636,
    "kind": "notable",
    "name": "Full Stack",
    "x": 1449.0,
@@ -15812,7 +16193,7 @@
    "icon": "atributos"
   },
   {
-   "id": 634,
+   "id": 637,
    "kind": "minor",
    "name": "Todos los atributos",
    "x": 1402.1,
@@ -15838,7 +16219,7 @@
    "theme": "atributos"
   },
   {
-   "id": 635,
+   "id": 638,
    "kind": "minor",
    "name": "Fuerza",
    "x": 1403.3,
@@ -15854,7 +16235,7 @@
    "theme": "atributos"
   },
   {
-   "id": 636,
+   "id": 639,
    "kind": "minor",
    "name": "Destreza",
    "x": 1453.2,
@@ -15869,7 +16250,7 @@
    "theme": "atributos"
   },
   {
-   "id": 637,
+   "id": 640,
    "kind": "minor",
    "name": "Destreza",
    "x": 1447.5,
@@ -15884,7 +16265,7 @@
    "theme": "atributos"
   },
   {
-   "id": 638,
+   "id": 641,
    "kind": "minor",
    "name": "Resistencia al fuego",
    "x": 310.0,
@@ -15900,7 +16281,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 639,
+   "id": 642,
    "kind": "minor",
    "name": "Resistencia al frío",
    "x": 344.8,
@@ -15916,7 +16297,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 640,
+   "id": 643,
    "kind": "minor",
    "name": "Resistencia al rayo",
    "x": 346.5,
@@ -15932,7 +16313,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 641,
+   "id": 644,
    "kind": "minor",
    "name": "Resistencias elementales",
    "x": 273.5,
@@ -15958,7 +16339,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 642,
+   "id": 645,
    "kind": "minor",
    "name": "Resistencia al fuego",
    "x": 275.2,
@@ -15974,7 +16355,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 643,
+   "id": 646,
    "kind": "notable",
    "name": "Parche del Martes",
    "x": 310.0,
@@ -16002,7 +16383,7 @@
    "icon": "resistencias"
   },
   {
-   "id": 644,
+   "id": 647,
    "kind": "minor",
    "name": "Fuerza",
    "x": 210.0,
@@ -16017,7 +16398,7 @@
    "theme": "atributos"
   },
   {
-   "id": 645,
+   "id": 648,
    "kind": "minor",
    "name": "Destreza",
    "x": 260.0,
@@ -16032,7 +16413,7 @@
    "theme": "atributos"
   },
   {
-   "id": 646,
+   "id": 649,
    "kind": "minor",
    "name": "Destreza",
    "x": 684.8,
@@ -16047,7 +16428,7 @@
    "theme": "atributos"
   },
   {
-   "id": 647,
+   "id": 650,
    "kind": "minor",
    "name": "Inteligencia",
    "x": 572.0,
@@ -16062,7 +16443,7 @@
    "theme": "atributos"
   },
   {
-   "id": 648,
+   "id": 651,
    "kind": "minor",
    "name": "Destreza",
    "x": 459.3,
@@ -16077,7 +16458,7 @@
    "theme": "atributos"
   },
   {
-   "id": 649,
+   "id": 652,
    "kind": "minor",
    "name": "Destreza",
    "x": 259.3,
@@ -16092,7 +16473,7 @@
    "theme": "atributos"
   },
   {
-   "id": 650,
+   "id": 653,
    "kind": "minor",
    "name": "Inteligencia",
    "x": 264.1,
@@ -16107,7 +16488,7 @@
    "theme": "atributos"
   },
   {
-   "id": 651,
+   "id": 654,
    "kind": "minor",
    "name": "Destreza",
    "x": 268.8,
@@ -16122,7 +16503,7 @@
    "theme": "atributos"
   },
   {
-   "id": 652,
+   "id": 655,
    "kind": "minor",
    "name": "Destreza",
    "x": 383.3,
@@ -16137,7 +16518,7 @@
    "theme": "atributos"
   },
   {
-   "id": 653,
+   "id": 656,
    "kind": "minor",
    "name": "Destreza",
    "x": 162.1,
@@ -16152,7 +16533,7 @@
    "theme": "atributos"
   },
   {
-   "id": 654,
+   "id": 657,
    "kind": "minor",
    "name": "Resistencia al fuego",
    "x": 725.5,
@@ -16168,7 +16549,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 655,
+   "id": 658,
    "kind": "minor",
    "name": "Resistencia al frío",
    "x": 756.3,
@@ -16184,7 +16565,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 656,
+   "id": 659,
    "kind": "minor",
    "name": "Resistencia al rayo",
    "x": 757.8,
@@ -16200,7 +16581,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 657,
+   "id": 660,
    "kind": "minor",
    "name": "Resistencias elementales",
    "x": 693.1,
@@ -16226,7 +16607,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 658,
+   "id": 661,
    "kind": "minor",
    "name": "Resistencia al fuego",
    "x": 694.6,
@@ -16242,7 +16623,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 659,
+   "id": 662,
    "kind": "notable",
    "name": "Antivirus Premium",
    "x": 725.5,
@@ -16275,7 +16656,7 @@
    "icon": "resistencias"
   },
   {
-   "id": 660,
+   "id": 663,
    "kind": "minor",
    "name": "Destreza",
    "x": 802.5,
@@ -16290,7 +16671,7 @@
    "theme": "atributos"
   },
   {
-   "id": 661,
+   "id": 664,
    "kind": "minor",
    "name": "Destreza",
    "x": 632.3,
@@ -16305,7 +16686,7 @@
    "theme": "atributos"
   },
   {
-   "id": 662,
+   "id": 665,
    "kind": "minor",
    "name": "Todos los atributos",
    "x": -279.0,
@@ -16331,7 +16712,7 @@
    "theme": "atributos"
   },
   {
-   "id": 663,
+   "id": 666,
    "kind": "minor",
    "name": "Fuerza",
    "x": -248.0,
@@ -16347,7 +16728,7 @@
    "theme": "atributos"
   },
   {
-   "id": 664,
+   "id": 667,
    "kind": "minor",
    "name": "Destreza",
    "x": -279.0,
@@ -16363,7 +16744,7 @@
    "theme": "atributos"
   },
   {
-   "id": 665,
+   "id": 668,
    "kind": "notable",
    "name": "Ingeniero 10x",
    "x": -341.0,
@@ -16391,7 +16772,7 @@
    "icon": "atributos"
   },
   {
-   "id": 666,
+   "id": 669,
    "kind": "minor",
    "name": "Todos los atributos",
    "x": -372.0,
@@ -16417,7 +16798,7 @@
    "theme": "atributos"
   },
   {
-   "id": 667,
+   "id": 670,
    "kind": "minor",
    "name": "Fuerza",
    "x": -341.0,
@@ -16433,7 +16814,7 @@
    "theme": "atributos"
   },
   {
-   "id": 668,
+   "id": 671,
    "kind": "minor",
    "name": "Fuerza",
    "x": -199.7,
@@ -16448,7 +16829,7 @@
    "theme": "atributos"
   },
   {
-   "id": 669,
+   "id": 672,
    "kind": "minor",
    "name": "Destreza",
    "x": -239.3,
@@ -16463,7 +16844,7 @@
    "theme": "atributos"
   },
   {
-   "id": 670,
+   "id": 673,
    "kind": "minor",
    "name": "Destreza",
    "x": -269.1,
@@ -16478,7 +16859,7 @@
    "theme": "atributos"
   },
   {
-   "id": 671,
+   "id": 674,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -272.4,
@@ -16493,7 +16874,7 @@
    "theme": "atributos"
   },
   {
-   "id": 672,
+   "id": 675,
    "kind": "minor",
    "name": "Destreza",
    "x": -275.7,
@@ -16508,7 +16889,7 @@
    "theme": "atributos"
   },
   {
-   "id": 673,
+   "id": 676,
    "kind": "minor",
    "name": "Destreza",
    "x": -727.0,
@@ -16523,7 +16904,7 @@
    "theme": "atributos"
   },
   {
-   "id": 674,
+   "id": 677,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -608.6,
@@ -16538,7 +16919,7 @@
    "theme": "atributos"
   },
   {
-   "id": 675,
+   "id": 678,
    "kind": "minor",
    "name": "Destreza",
    "x": -490.3,
@@ -16553,7 +16934,7 @@
    "theme": "atributos"
   },
   {
-   "id": 676,
+   "id": 679,
    "kind": "minor",
    "name": "Destreza",
    "x": -148.5,
@@ -16568,7 +16949,7 @@
    "theme": "atributos"
   },
   {
-   "id": 677,
+   "id": 680,
    "kind": "minor",
    "name": "Destreza",
    "x": -407.1,
@@ -16583,7 +16964,7 @@
    "theme": "atributos"
   },
   {
-   "id": 678,
+   "id": 681,
    "kind": "minor",
    "name": "Todos los atributos",
    "x": -665.4,
@@ -16609,7 +16990,7 @@
    "theme": "atributos"
   },
   {
-   "id": 679,
+   "id": 682,
    "kind": "minor",
    "name": "Fuerza",
    "x": -709.9,
@@ -16625,7 +17006,7 @@
    "theme": "atributos"
   },
   {
-   "id": 680,
+   "id": 683,
    "kind": "minor",
    "name": "Destreza",
    "x": -760.2,
@@ -16641,7 +17022,7 @@
    "theme": "atributos"
   },
   {
-   "id": 681,
+   "id": 684,
    "kind": "notable",
    "name": "Café Doble",
    "x": -765.9,
@@ -16669,7 +17050,7 @@
    "icon": "atributos"
   },
   {
-   "id": 682,
+   "id": 685,
    "kind": "minor",
    "name": "Todos los atributos",
    "x": -721.4,
@@ -16695,7 +17076,7 @@
    "theme": "atributos"
   },
   {
-   "id": 683,
+   "id": 686,
    "kind": "minor",
    "name": "Fuerza",
    "x": -671.1,
@@ -16711,7 +17092,7 @@
    "theme": "atributos"
   },
   {
-   "id": 684,
+   "id": 687,
    "kind": "minor",
    "name": "Destreza",
    "x": -607.5,
@@ -16726,7 +17107,7 @@
    "theme": "atributos"
   },
   {
-   "id": 685,
+   "id": 688,
    "kind": "minor",
    "name": "Destreza",
    "x": -823.8,
@@ -16741,7 +17122,7 @@
    "theme": "atributos"
   },
   {
-   "id": 686,
+   "id": 689,
    "kind": "minor",
    "name": "Resistencia al fuego",
    "x": -620.0,
@@ -16757,7 +17138,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 687,
+   "id": 690,
    "kind": "minor",
    "name": "Resistencia al frío",
    "x": -585.2,
@@ -16773,7 +17154,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 688,
+   "id": 691,
    "kind": "minor",
    "name": "Resistencia al rayo",
    "x": -583.5,
@@ -16789,7 +17170,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 689,
+   "id": 692,
    "kind": "minor",
    "name": "Resistencias elementales",
    "x": -656.5,
@@ -16815,7 +17196,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 690,
+   "id": 693,
    "kind": "minor",
    "name": "Resistencia al fuego",
    "x": -654.8,
@@ -16831,7 +17212,7 @@
    "theme": "resistencias"
   },
   {
-   "id": 691,
+   "id": 694,
    "kind": "notable",
    "name": "Actualización Obligatoria",
    "x": -620.0,
@@ -16864,7 +17245,7 @@
    "icon": "resistencias"
   },
   {
-   "id": 692,
+   "id": 695,
    "kind": "minor",
    "name": "Fuerza",
    "x": -407.8,
@@ -16879,7 +17260,7 @@
    "theme": "atributos"
   },
   {
-   "id": 693,
+   "id": 696,
    "kind": "minor",
    "name": "Destreza",
    "x": -495.7,
@@ -16894,7 +17275,7 @@
    "theme": "atributos"
   },
   {
-   "id": 694,
+   "id": 697,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -956.1,
@@ -16909,7 +17290,7 @@
    "theme": "atributos"
   },
   {
-   "id": 695,
+   "id": 698,
    "kind": "minor",
    "name": "Fuerza",
    "x": -856.2,
@@ -16924,7 +17305,7 @@
    "theme": "atributos"
   },
   {
-   "id": 696,
+   "id": 699,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -756.4,
@@ -16939,11 +17320,11 @@
    "theme": "atributos"
   },
   {
-   "id": 697,
+   "id": 700,
    "kind": "minor",
    "name": "Inteligencia",
-   "x": -979.6,
-   "y": -229.9,
+   "x": -954.9,
+   "y": -274.2,
    "mods": [
     {
      "stat": "intelligence",
@@ -16954,11 +17335,11 @@
    "theme": "atributos"
   },
   {
-   "id": 698,
+   "id": 701,
    "kind": "minor",
    "name": "Fuerza",
-   "x": -859.8,
-   "y": -173.9,
+   "x": -843.2,
+   "y": -203.5,
    "mods": [
     {
      "stat": "strength",
@@ -16969,11 +17350,11 @@
    "theme": "atributos"
   },
   {
-   "id": 699,
+   "id": 702,
    "kind": "minor",
    "name": "Inteligencia",
-   "x": -739.9,
-   "y": -118.0,
+   "x": -731.6,
+   "y": -132.8,
    "mods": [
     {
      "stat": "intelligence",
@@ -16984,7 +17365,7 @@
    "theme": "atributos"
   },
   {
-   "id": 700,
+   "id": 703,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -551.5,
@@ -16999,7 +17380,7 @@
    "theme": "atributos"
   },
   {
-   "id": 701,
+   "id": 704,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -594.3,
@@ -17014,74 +17395,16 @@
    "theme": "atributos"
   },
   {
-   "id": 702,
-   "kind": "minor",
-   "name": "Resistencia al fuego",
-   "x": -1426.2,
-   "y": -33.0,
-   "mods": [
-    {
-     "stat": "fire_res",
-     "type": "flat",
-     "value": 12
-    }
-   ],
-   "cluster": "c64",
-   "theme": "resistencias"
-  },
-  {
-   "id": 703,
-   "kind": "minor",
-   "name": "Resistencia al frío",
-   "x": -1395.3,
-   "y": 23.9,
-   "mods": [
-    {
-     "stat": "cold_res",
-     "type": "flat",
-     "value": 12
-    }
-   ],
-   "cluster": "c64",
-   "theme": "resistencias"
-  },
-  {
-   "id": 704,
-   "kind": "minor",
-   "name": "Resistencia al rayo",
-   "x": -1393.8,
-   "y": 63.3,
-   "mods": [
-    {
-     "stat": "lightning_res",
-     "type": "flat",
-     "value": 12
-    }
-   ],
-   "cluster": "c64",
-   "theme": "resistencias"
-  },
-  {
    "id": 705,
    "kind": "minor",
-   "name": "Resistencias elementales",
-   "x": -1458.6,
-   "y": 63.3,
+   "name": "Resistencia al fuego",
+   "x": -1437.3,
+   "y": -69.6,
    "mods": [
     {
      "stat": "fire_res",
      "type": "flat",
-     "value": 5
-    },
-    {
-     "stat": "cold_res",
-     "type": "flat",
-     "value": 5
-    },
-    {
-     "stat": "lightning_res",
-     "type": "flat",
-     "value": 5
+     "value": 12
     }
    ],
    "cluster": "c64",
@@ -17090,12 +17413,12 @@
   {
    "id": 706,
    "kind": "minor",
-   "name": "Resistencia al fuego",
-   "x": -1457.1,
-   "y": 23.9,
+   "name": "Resistencia al frío",
+   "x": -1406.5,
+   "y": -12.7,
    "mods": [
     {
-     "stat": "fire_res",
+     "stat": "cold_res",
      "type": "flat",
      "value": 12
     }
@@ -17105,10 +17428,68 @@
   },
   {
    "id": 707,
+   "kind": "minor",
+   "name": "Resistencia al rayo",
+   "x": -1405.0,
+   "y": 26.7,
+   "mods": [
+    {
+     "stat": "lightning_res",
+     "type": "flat",
+     "value": 12
+    }
+   ],
+   "cluster": "c64",
+   "theme": "resistencias"
+  },
+  {
+   "id": 708,
+   "kind": "minor",
+   "name": "Resistencias elementales",
+   "x": -1469.7,
+   "y": 26.7,
+   "mods": [
+    {
+     "stat": "fire_res",
+     "type": "flat",
+     "value": 5
+    },
+    {
+     "stat": "cold_res",
+     "type": "flat",
+     "value": 5
+    },
+    {
+     "stat": "lightning_res",
+     "type": "flat",
+     "value": 5
+    }
+   ],
+   "cluster": "c64",
+   "theme": "resistencias"
+  },
+  {
+   "id": 709,
+   "kind": "minor",
+   "name": "Resistencia al fuego",
+   "x": -1468.2,
+   "y": -12.7,
+   "mods": [
+    {
+     "stat": "fire_res",
+     "type": "flat",
+     "value": 12
+    }
+   ],
+   "cluster": "c64",
+   "theme": "resistencias"
+  },
+  {
+   "id": 710,
    "kind": "notable",
    "name": "Parche del Martes",
-   "x": -1426.2,
-   "y": 33.0,
+   "x": -1437.3,
+   "y": -3.6,
    "mods": [
     {
      "stat": "fire_res",
@@ -17132,11 +17513,11 @@
    "icon": "resistencias"
   },
   {
-   "id": 708,
+   "id": 711,
    "kind": "minor",
    "name": "Inteligencia",
-   "x": -1445.8,
-   "y": 145.4,
+   "x": -1416.7,
+   "y": 105.0,
    "mods": [
     {
      "stat": "intelligence",
@@ -17147,11 +17528,11 @@
    "theme": "atributos"
   },
   {
-   "id": 709,
+   "id": 712,
    "kind": "minor",
    "name": "Inteligencia",
-   "x": -1422.8,
-   "y": -108.2,
+   "x": -1441.8,
+   "y": -141.1,
    "mods": [
     {
      "stat": "intelligence",
@@ -17162,7 +17543,7 @@
    "theme": "atributos"
   },
   {
-   "id": 710,
+   "id": 713,
    "kind": "minor",
    "name": "Todos los atributos",
    "x": -279.0,
@@ -17188,7 +17569,7 @@
    "theme": "atributos"
   },
   {
-   "id": 711,
+   "id": 714,
    "kind": "minor",
    "name": "Fuerza",
    "x": -341.0,
@@ -17204,7 +17585,7 @@
    "theme": "atributos"
   },
   {
-   "id": 712,
+   "id": 715,
    "kind": "minor",
    "name": "Destreza",
    "x": -372.0,
@@ -17220,7 +17601,7 @@
    "theme": "atributos"
   },
   {
-   "id": 713,
+   "id": 716,
    "kind": "notable",
    "name": "Root Access",
    "x": -341.0,
@@ -17253,7 +17634,7 @@
    "icon": "atributos"
   },
   {
-   "id": 714,
+   "id": 717,
    "kind": "minor",
    "name": "Todos los atributos",
    "x": -279.0,
@@ -17279,7 +17660,7 @@
    "theme": "atributos"
   },
   {
-   "id": 715,
+   "id": 718,
    "kind": "minor",
    "name": "Fuerza",
    "x": -248.0,
@@ -17295,7 +17676,7 @@
    "theme": "atributos"
   },
   {
-   "id": 716,
+   "id": 719,
    "kind": "minor",
    "name": "Fuerza",
    "x": -199.7,
@@ -17310,7 +17691,7 @@
    "theme": "atributos"
   },
   {
-   "id": 717,
+   "id": 720,
    "kind": "minor",
    "name": "Destreza",
    "x": -239.3,
@@ -17325,7 +17706,7 @@
    "theme": "atributos"
   },
   {
-   "id": 718,
+   "id": 721,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -707.7,
@@ -17340,7 +17721,7 @@
    "theme": "atributos"
   },
   {
-   "id": 719,
+   "id": 722,
    "kind": "minor",
    "name": "Fuerza",
    "x": -595.8,
@@ -17355,7 +17736,7 @@
    "theme": "atributos"
   },
   {
-   "id": 720,
+   "id": 723,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -483.9,
@@ -17370,7 +17751,7 @@
    "theme": "atributos"
   },
   {
-   "id": 721,
+   "id": 724,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -275.0,
@@ -17385,7 +17766,7 @@
    "theme": "atributos"
   },
   {
-   "id": 722,
+   "id": 725,
    "kind": "minor",
    "name": "Fuerza",
    "x": -276.3,
@@ -17400,7 +17781,7 @@
    "theme": "atributos"
   },
   {
-   "id": 723,
+   "id": 726,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -277.6,
@@ -17415,7 +17796,7 @@
    "theme": "atributos"
   },
   {
-   "id": 724,
+   "id": 727,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -405.8,
@@ -17430,7 +17811,7 @@
    "theme": "atributos"
   },
   {
-   "id": 725,
+   "id": 728,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -156.8,
@@ -17445,7 +17826,7 @@
    "theme": "atributos"
   },
   {
-   "id": 726,
+   "id": 729,
    "kind": "minor",
    "name": "Todos los atributos",
    "x": -759.0,
@@ -17471,7 +17852,7 @@
    "theme": "atributos"
   },
   {
-   "id": 727,
+   "id": 730,
    "kind": "minor",
    "name": "Fuerza",
    "x": -750.1,
@@ -17487,7 +17868,7 @@
    "theme": "atributos"
   },
   {
-   "id": 728,
+   "id": 731,
    "kind": "minor",
    "name": "Destreza",
    "x": -698.7,
@@ -17503,7 +17884,7 @@
    "theme": "atributos"
   },
   {
-   "id": 729,
+   "id": 732,
    "kind": "notable",
    "name": "Full Stack",
    "x": -656.1,
@@ -17531,7 +17912,7 @@
    "icon": "atributos"
   },
   {
-   "id": 730,
+   "id": 733,
    "kind": "minor",
    "name": "Todos los atributos",
    "x": -665.0,
@@ -17557,7 +17938,7 @@
    "theme": "atributos"
   },
   {
-   "id": 731,
+   "id": 734,
    "kind": "minor",
    "name": "Fuerza",
    "x": -716.4,
@@ -17573,7 +17954,7 @@
    "theme": "atributos"
   },
   {
-   "id": 732,
+   "id": 735,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -816.7,
@@ -17588,7 +17969,7 @@
    "theme": "atributos"
   },
   {
-   "id": 733,
+   "id": 736,
    "kind": "minor",
    "name": "Inteligencia",
    "x": -598.4,
@@ -17998,7 +18379,7 @@
   ],
   [
    87,
-   86
+   79
   ],
   [
    87,
@@ -18430,15 +18811,15 @@
   ],
   [
    178,
-   171
+   170
   ],
   [
    178,
-   175
+   174
   ],
   [
    169,
-   176
+   175
   ],
   [
    139,
@@ -18689,44 +19070,52 @@
    237
   ],
   [
+   238,
+   239
+  ],
+  [
+   239,
+   240
+  ],
+  [
+   240,
+   241
+  ],
+  [
+   241,
+   242
+  ],
+  [
+   242,
+   243
+  ],
+  [
+   243,
+   244
+  ],
+  [
    244,
    238
   ],
   [
-   244,
-   239
-  ],
-  [
-   244,
-   240
-  ],
-  [
-   244,
-   241
-  ],
-  [
-   244,
-   242
-  ],
-  [
-   244,
-   243
-  ],
-  [
-   237,
-   242
-  ],
-  [
-   226,
-   245
+   245,
+   238
   ],
   [
    245,
+   241
+  ],
+  [
+   237,
+   243
+  ],
+  [
+   226,
    246
   ],
   [
-   247,
-   248
+   246,
+   247
   ],
   [
    248,
@@ -18749,20 +19138,20 @@
    253
   ],
   [
-   246,
-   247
-  ],
-  [
-   252,
+   253,
    254
   ],
   [
-   254,
+   247,
+   248
+  ],
+  [
+   253,
    255
   ],
   [
-   256,
-   257
+   255,
+   256
   ],
   [
    257,
@@ -18793,52 +19182,60 @@
    264
   ],
   [
-   255,
-   259
-  ],
-  [
-   226,
-   265
+   264,
+   257
   ],
   [
    265,
+   257
+  ],
+  [
+   265,
+   261
+  ],
+  [
+   256,
+   263
+  ],
+  [
+   226,
    266
-  ],
-  [
-   267,
-   268
-  ],
-  [
-   268,
-   269
-  ],
-  [
-   270,
-   271
-  ],
-  [
-   271,
-   272
-  ],
-  [
-   268,
-   271
   ],
   [
    266,
    267
   ],
   [
+   268,
+   269
+  ],
+  [
+   269,
+   270
+  ],
+  [
+   271,
+   272
+  ],
+  [
    272,
    273
+  ],
+  [
+   269,
+   272
+  ],
+  [
+   267,
+   268
   ],
   [
    273,
    274
   ],
   [
-   275,
-   276
+   274,
+   275
   ],
   [
    276,
@@ -18857,16 +19254,16 @@
    280
   ],
   [
-   279,
+   280,
    281
   ],
   [
-   274,
-   280
+   280,
+   282
   ],
   [
-   281,
-   282
+   275,
+   281
   ],
   [
    282,
@@ -18877,16 +19274,16 @@
    284
   ],
   [
-   226,
+   284,
    285
   ],
   [
-   285,
+   226,
    286
   ],
   [
-   287,
-   288
+   286,
+   287
   ],
   [
    288,
@@ -18898,11 +19295,11 @@
   ],
   [
    290,
-   287
+   291
   ],
   [
-   287,
-   291
+   291,
+   288
   ],
   [
    288,
@@ -18922,31 +19319,31 @@
   ],
   [
    292,
-   295
-  ],
-  [
-   293,
-   295
-  ],
-  [
-   294,
-   295
-  ],
-  [
-   286,
-   287
-  ],
-  [
-   289,
    296
   ],
   [
-   296,
+   293,
+   296
+  ],
+  [
+   294,
+   296
+  ],
+  [
+   295,
+   296
+  ],
+  [
+   287,
+   288
+  ],
+  [
+   290,
    297
   ],
   [
-   298,
-   299
+   297,
+   298
   ],
   [
    299,
@@ -18977,64 +19374,64 @@
    306
   ],
   [
-   297,
-   301
+   306,
+   307
+  ],
+  [
+   298,
+   302
   ],
   [
    229,
-   249
+   250
   ],
   [
-   247,
-   270
+   248,
+   271
   ],
   [
-   269,
-   288
-  ],
-  [
-   307,
-   308
+   270,
+   289
   ],
   [
    308,
    309
   ],
   [
-   310,
-   311
+   309,
+   310
   ],
   [
    311,
    312
   ],
   [
-   308,
-   311
-  ],
-  [
-   24,
+   312,
    313
   ],
   [
-   313,
+   309,
+   312
+  ],
+  [
+   24,
    314
   ],
   [
    314,
-   307
+   315
   ],
   [
    315,
-   316
+   308
   ],
   [
    316,
    317
   ],
   [
-   318,
-   319
+   317,
+   318
   ],
   [
    319,
@@ -19046,11 +19443,11 @@
   ],
   [
    321,
-   318
+   322
   ],
   [
-   318,
-   322
+   322,
+   319
   ],
   [
    319,
@@ -19070,31 +19467,31 @@
   ],
   [
    323,
-   326
-  ],
-  [
-   324,
-   326
-  ],
-  [
-   325,
-   326
-  ],
-  [
-   317,
-   321
-  ],
-  [
-   319,
    327
   ],
   [
-   327,
+   324,
+   327
+  ],
+  [
+   325,
+   327
+  ],
+  [
+   326,
+   327
+  ],
+  [
+   318,
+   322
+  ],
+  [
+   320,
    328
   ],
   [
-   329,
-   330
+   328,
+   329
   ],
   [
    330,
@@ -19114,31 +19511,31 @@
   ],
   [
    334,
-   329
-  ],
-  [
-   329,
    335
   ],
   [
    335,
-   332
-  ],
-  [
-   328,
    330
   ],
   [
-   315,
+   330,
    336
   ],
   [
    336,
+   333
+  ],
+  [
+   329,
+   331
+  ],
+  [
+   316,
    337
   ],
   [
-   338,
-   339
+   337,
+   338
   ],
   [
    339,
@@ -19161,20 +19558,28 @@
    344
   ],
   [
-   337,
-   341
-  ],
-  [
-   339,
-   345
+   344,
+   339
   ],
   [
    345,
+   339
+  ],
+  [
+   345,
+   342
+  ],
+  [
+   338,
+   339
+  ],
+  [
+   342,
    346
   ],
   [
-   347,
-   348
+   346,
+   347
   ],
   [
    348,
@@ -19193,15 +19598,11 @@
    352
   ],
   [
-   351,
+   352,
    353
   ],
   [
-   346,
-   352
-  ],
-  [
-   315,
+   353,
    354
   ],
   [
@@ -19209,16 +19610,28 @@
    355
   ],
   [
+   355,
+   348
+  ],
+  [
    356,
+   348
+  ],
+  [
+   356,
+   352
+  ],
+  [
+   347,
+   348
+  ],
+  [
+   316,
    357
   ],
   [
    357,
    358
-  ],
-  [
-   358,
-   359
   ],
   [
    359,
@@ -19237,11 +19650,7 @@
    363
   ],
   [
-   355,
-   360
-  ],
-  [
-   356,
+   363,
    364
   ],
   [
@@ -19249,16 +19658,20 @@
    365
   ],
   [
-   366,
+   365,
+   366
+  ],
+  [
+   358,
+   363
+  ],
+  [
+   359,
    367
   ],
   [
    367,
    368
-  ],
-  [
-   368,
-   369
   ],
   [
    369,
@@ -19274,22 +19687,10 @@
   ],
   [
    372,
-   366
+   373
   ],
   [
    373,
-   371
-  ],
-  [
-   373,
-   367
-  ],
-  [
-   365,
-   371
-  ],
-  [
-   367,
    374
   ],
   [
@@ -19298,10 +19699,22 @@
   ],
   [
    375,
-   376
+   369
   ],
   [
-   315,
+   376,
+   374
+  ],
+  [
+   376,
+   370
+  ],
+  [
+   368,
+   374
+  ],
+  [
+   370,
    377
   ],
   [
@@ -19309,16 +19722,16 @@
    378
   ],
   [
-   379,
+   378,
+   379
+  ],
+  [
+   316,
    380
   ],
   [
    380,
    381
-  ],
-  [
-   381,
-   382
   ],
   [
    382,
@@ -19333,11 +19746,7 @@
    385
   ],
   [
-   378,
-   379
-  ],
-  [
-   384,
+   385,
    386
   ],
   [
@@ -19345,16 +19754,20 @@
    387
   ],
   [
-   388,
+   387,
+   388
+  ],
+  [
+   381,
+   382
+  ],
+  [
+   387,
    389
   ],
   [
    389,
    390
-  ],
-  [
-   390,
-   391
   ],
   [
    391,
@@ -19370,27 +19783,7 @@
   ],
   [
    394,
-   391
-  ],
-  [
-   391,
-   388
-  ],
-  [
-   387,
-   390
-  ],
-  [
-   320,
-   338
-  ],
-  [
-   340,
-   363
-  ],
-  [
-   356,
-   385
+   395
   ],
   [
    395,
@@ -19402,7 +19795,27 @@
   ],
   [
    397,
-   398
+   394
+  ],
+  [
+   394,
+   391
+  ],
+  [
+   390,
+   393
+  ],
+  [
+   321,
+   341
+  ],
+  [
+   343,
+   366
+  ],
+  [
+   359,
+   388
   ],
   [
    398,
@@ -19418,14 +19831,6 @@
   ],
   [
    401,
-   398
-  ],
-  [
-   398,
-   395
-  ],
-  [
-   28,
    402
   ],
   [
@@ -19434,15 +19839,27 @@
   ],
   [
    403,
-   395
+   404
   ],
   [
    404,
+   401
+  ],
+  [
+   401,
+   398
+  ],
+  [
+   28,
    405
   ],
   [
    405,
    406
+  ],
+  [
+   406,
+   398
   ],
   [
    407,
@@ -19451,10 +19868,6 @@
   [
    408,
    409
-  ],
-  [
-   409,
-   410
   ],
   [
    410,
@@ -19473,11 +19886,7 @@
    414
   ],
   [
-   406,
-   407
-  ],
-  [
-   413,
+   414,
    415
   ],
   [
@@ -19485,16 +19894,20 @@
    416
   ],
   [
-   417,
+   416,
+   417
+  ],
+  [
+   409,
+   410
+  ],
+  [
+   416,
    418
   ],
   [
    418,
    419
-  ],
-  [
-   419,
-   420
   ],
   [
    420,
@@ -19510,22 +19923,10 @@
   ],
   [
    423,
-   417
+   424
   ],
   [
    424,
-   422
-  ],
-  [
-   424,
-   418
-  ],
-  [
-   416,
-   422
-  ],
-  [
-   404,
    425
   ],
   [
@@ -19533,16 +19934,28 @@
    426
   ],
   [
+   426,
+   420
+  ],
+  [
    427,
+   425
+  ],
+  [
+   427,
+   421
+  ],
+  [
+   419,
+   425
+  ],
+  [
+   407,
    428
   ],
   [
    428,
    429
-  ],
-  [
-   429,
-   430
   ],
   [
    430,
@@ -19554,22 +19967,10 @@
   ],
   [
    432,
-   427
+   433
   ],
   [
    433,
-   427
-  ],
-  [
-   433,
-   430
-  ],
-  [
-   426,
-   427
-  ],
-  [
-   431,
    434
   ],
   [
@@ -19577,16 +19978,28 @@
    435
   ],
   [
+   435,
+   430
+  ],
+  [
    436,
+   430
+  ],
+  [
+   436,
+   433
+  ],
+  [
+   429,
+   430
+  ],
+  [
+   434,
    437
   ],
   [
    437,
    438
-  ],
-  [
-   438,
-   439
   ],
   [
    439,
@@ -19606,22 +20019,10 @@
   ],
   [
    443,
-   436
+   444
   ],
   [
    444,
-   436
-  ],
-  [
-   444,
-   440
-  ],
-  [
-   435,
-   436
-  ],
-  [
-   404,
    445
   ],
   [
@@ -19629,43 +20030,59 @@
    446
   ],
   [
-   453,
-   447
+   446,
+   439
   ],
   [
-   453,
+   447,
+   439
+  ],
+  [
+   447,
+   443
+  ],
+  [
+   438,
+   439
+  ],
+  [
+   407,
    448
   ],
   [
-   453,
+   448,
    449
   ],
   [
-   453,
+   456,
    450
   ],
   [
-   453,
+   456,
    451
   ],
   [
-   453,
+   456,
    452
   ],
   [
-   446,
-   448
-  ],
-  [
-   451,
-   454
-  ],
-  [
-   454,
-   455
+   456,
+   453
   ],
   [
    456,
+   454
+  ],
+  [
+   456,
+   455
+  ],
+  [
+   449,
+   451
+  ],
+  [
+   454,
    457
   ],
   [
@@ -19673,24 +20090,20 @@
    458
   ],
   [
-   458,
-   459
-  ],
-  [
    459,
-   456
-  ],
-  [
-   456,
    460
   ],
   [
-   457,
+   460,
    461
   ],
   [
-   458,
+   461,
    462
+  ],
+  [
+   462,
+   459
   ],
   [
    459,
@@ -19702,34 +20115,34 @@
   ],
   [
    461,
-   464
-  ],
-  [
-   462,
-   464
-  ],
-  [
-   463,
-   464
-  ],
-  [
-   455,
-   457
-  ],
-  [
-   459,
    465
   ],
   [
-   465,
+   462,
    466
+  ],
+  [
+   463,
+   467
+  ],
+  [
+   464,
+   467
+  ],
+  [
+   465,
+   467
   ],
   [
    466,
    467
   ],
   [
-   404,
+   458,
+   460
+  ],
+  [
+   462,
    468
   ],
   [
@@ -19737,16 +20150,16 @@
    469
   ],
   [
-   470,
+   469,
+   470
+  ],
+  [
+   407,
    471
   ],
   [
    471,
    472
-  ],
-  [
-   472,
-   473
   ],
   [
    473,
@@ -19758,22 +20171,10 @@
   ],
   [
    475,
-   470
-  ],
-  [
-   470,
    476
   ],
   [
    476,
-   473
-  ],
-  [
-   469,
-   474
-  ],
-  [
-   471,
    477
   ],
   [
@@ -19781,16 +20182,28 @@
    478
   ],
   [
+   478,
+   473
+  ],
+  [
+   473,
+   479
+  ],
+  [
    479,
+   476
+  ],
+  [
+   472,
+   477
+  ],
+  [
+   474,
    480
   ],
   [
    480,
    481
-  ],
-  [
-   481,
-   482
   ],
   [
    482,
@@ -19813,20 +20226,8 @@
    487
   ],
   [
-   478,
-   479
-  ],
-  [
-   410,
-   429
-  ],
-  [
-   432,
-   450
-  ],
-  [
-   447,
-   473
+   487,
+   488
   ],
   [
    488,
@@ -19834,11 +20235,31 @@
   ],
   [
    489,
-   490
+   482
   ],
   [
    490,
-   491
+   482
+  ],
+  [
+   490,
+   486
+  ],
+  [
+   481,
+   488
+  ],
+  [
+   413,
+   432
+  ],
+  [
+   435,
+   453
+  ],
+  [
+   450,
+   476
   ],
   [
    491,
@@ -19850,18 +20271,10 @@
   ],
   [
    493,
-   488
+   494
   ],
   [
    494,
-   488
-  ],
-  [
-   494,
-   491
-  ],
-  [
-   32,
    495
   ],
   [
@@ -19870,15 +20283,27 @@
   ],
   [
    496,
-   489
+   491
   ],
   [
    497,
+   491
+  ],
+  [
+   497,
+   494
+  ],
+  [
+   32,
    498
   ],
   [
    498,
    499
+  ],
+  [
+   499,
+   492
   ],
   [
    500,
@@ -19887,10 +20312,6 @@
   [
    501,
    502
-  ],
-  [
-   502,
-   503
   ],
   [
    503,
@@ -19906,22 +20327,10 @@
   ],
   [
    506,
-   500
+   507
   ],
   [
    507,
-   500
-  ],
-  [
-   507,
-   503
-  ],
-  [
-   499,
-   502
-  ],
-  [
-   505,
    508
   ],
   [
@@ -19929,16 +20338,28 @@
    509
   ],
   [
+   509,
+   503
+  ],
+  [
    510,
+   503
+  ],
+  [
+   510,
+   506
+  ],
+  [
+   502,
+   504
+  ],
+  [
+   508,
    511
   ],
   [
    511,
    512
-  ],
-  [
-   512,
-   513
   ],
   [
    513,
@@ -19957,11 +20378,7 @@
    517
   ],
   [
-   509,
-   512
-  ],
-  [
-   497,
+   517,
    518
   ],
   [
@@ -19969,16 +20386,28 @@
    519
   ],
   [
+   519,
+   513
+  ],
+  [
    520,
+   513
+  ],
+  [
+   520,
+   517
+  ],
+  [
+   512,
+   513
+  ],
+  [
+   500,
    521
   ],
   [
    521,
    522
-  ],
-  [
-   522,
-   523
   ],
   [
    523,
@@ -19998,22 +20427,10 @@
   ],
   [
    527,
-   520
+   528
   ],
   [
    528,
-   520
-  ],
-  [
-   528,
-   525
-  ],
-  [
-   519,
-   523
-  ],
-  [
-   526,
    529
   ],
   [
@@ -20021,16 +20438,28 @@
    530
   ],
   [
+   530,
+   523
+  ],
+  [
    531,
+   523
+  ],
+  [
+   531,
+   528
+  ],
+  [
+   522,
+   526
+  ],
+  [
+   529,
    532
   ],
   [
    532,
    533
-  ],
-  [
-   533,
-   534
   ],
   [
    534,
@@ -20050,22 +20479,10 @@
   ],
   [
    538,
-   531
+   539
   ],
   [
    539,
-   531
-  ],
-  [
-   539,
-   535
-  ],
-  [
-   530,
-   534
-  ],
-  [
-   497,
    540
   ],
   [
@@ -20073,16 +20490,28 @@
    541
   ],
   [
+   541,
+   534
+  ],
+  [
    542,
+   534
+  ],
+  [
+   542,
+   538
+  ],
+  [
+   533,
+   536
+  ],
+  [
+   500,
    543
   ],
   [
    543,
    544
-  ],
-  [
-   544,
-   545
   ],
   [
    545,
@@ -20098,22 +20527,10 @@
   ],
   [
    548,
-   542
+   549
   ],
   [
    549,
-   547
-  ],
-  [
-   549,
-   543
-  ],
-  [
-   541,
-   542
-  ],
-  [
-   546,
    550
   ],
   [
@@ -20121,16 +20538,28 @@
    551
   ],
   [
+   551,
+   545
+  ],
+  [
    552,
+   550
+  ],
+  [
+   552,
+   546
+  ],
+  [
+   544,
+   545
+  ],
+  [
+   549,
    553
   ],
   [
    553,
    554
-  ],
-  [
-   554,
-   555
   ],
   [
    555,
@@ -20146,22 +20575,10 @@
   ],
   [
    558,
-   552
+   559
   ],
   [
    559,
-   553
-  ],
-  [
-   559,
-   556
-  ],
-  [
-   551,
-   556
-  ],
-  [
-   552,
    560
   ],
   [
@@ -20170,10 +20587,22 @@
   ],
   [
    561,
-   562
+   555
   ],
   [
-   497,
+   562,
+   556
+  ],
+  [
+   562,
+   559
+  ],
+  [
+   554,
+   559
+  ],
+  [
+   555,
    563
   ],
   [
@@ -20181,16 +20610,16 @@
    564
   ],
   [
-   565,
+   564,
+   565
+  ],
+  [
+   500,
    566
   ],
   [
    566,
    567
-  ],
-  [
-   567,
-   568
   ],
   [
    568,
@@ -20202,22 +20631,10 @@
   ],
   [
    570,
-   565
+   571
   ],
   [
    571,
-   570
-  ],
-  [
-   571,
-   568
-  ],
-  [
-   564,
-   568
-  ],
-  [
-   570,
    572
   ],
   [
@@ -20225,16 +20642,28 @@
    573
   ],
   [
+   573,
+   568
+  ],
+  [
    574,
+   573
+  ],
+  [
+   574,
+   571
+  ],
+  [
+   567,
+   571
+  ],
+  [
+   573,
    575
   ],
   [
    575,
    576
-  ],
-  [
-   576,
-   577
   ],
   [
    577,
@@ -20246,31 +20675,11 @@
   ],
   [
    579,
-   574
-  ],
-  [
-   574,
    580
   ],
   [
    580,
-   577
-  ],
-  [
-   573,
-   578
-  ],
-  [
-   500,
-   525
-  ],
-  [
-   520,
-   544
-  ],
-  [
-   548,
-   569
+   581
   ],
   [
    581,
@@ -20278,11 +20687,31 @@
   ],
   [
    582,
+   577
+  ],
+  [
+   577,
    583
   ],
   [
    583,
-   584
+   580
+  ],
+  [
+   576,
+   581
+  ],
+  [
+   503,
+   528
+  ],
+  [
+   523,
+   547
+  ],
+  [
+   551,
+   572
   ],
   [
    584,
@@ -20298,14 +20727,6 @@
   ],
   [
    587,
-   584
-  ],
-  [
-   584,
-   581
-  ],
-  [
-   36,
    588
   ],
   [
@@ -20314,10 +20735,18 @@
   ],
   [
    589,
-   585
+   590
   ],
   [
    590,
+   587
+  ],
+  [
+   587,
+   584
+  ],
+  [
+   36,
    591
   ],
   [
@@ -20326,7 +20755,7 @@
   ],
   [
    592,
-   593
+   588
   ],
   [
    593,
@@ -20334,18 +20763,10 @@
   ],
   [
    594,
-   590
+   595
   ],
   [
    595,
-   590
-  ],
-  [
-   595,
-   592
-  ],
-  [
-   18,
    596
   ],
   [
@@ -20357,11 +20778,15 @@
    593
   ],
   [
-   115,
-   598
+   598,
+   593
   ],
   [
    598,
+   595
+  ],
+  [
+   18,
    599
   ],
   [
@@ -20370,10 +20795,10 @@
   ],
   [
    600,
-   590
+   596
   ],
   [
-   142,
+   115,
    601
   ],
   [
@@ -20386,35 +20811,39 @@
   ],
   [
    603,
-   590
+   593
   ],
   [
-   132,
+   142,
    604
   ],
   [
    604,
-   594
-  ],
-  [
-   218,
    605
   ],
   [
    605,
-   592
+   606
   ],
   [
    606,
+   593
+  ],
+  [
+   132,
    607
   ],
   [
    607,
+   597
+  ],
+  [
+   218,
    608
   ],
   [
    608,
-   609
+   595
   ],
   [
    609,
@@ -20422,43 +20851,43 @@
   ],
   [
    610,
-   606
+   611
   ],
   [
    611,
-   606
-  ],
-  [
-   611,
-   608
-  ],
-  [
-   129,
    612
   ],
   [
    612,
-   610
-  ],
-  [
-   154,
    613
   ],
   [
    613,
-   608
+   609
   ],
   [
    614,
+   609
+  ],
+  [
+   614,
+   611
+  ],
+  [
+   129,
    615
   ],
   [
    615,
+   613
+  ],
+  [
+   154,
    616
   ],
   [
    616,
-   617
+   611
   ],
   [
    617,
@@ -20470,10 +20899,6 @@
   ],
   [
    619,
-   614
-  ],
-  [
-   22,
    620
   ],
   [
@@ -20482,14 +20907,14 @@
   ],
   [
    621,
-   614
-  ],
-  [
-   204,
    622
   ],
   [
    622,
+   617
+  ],
+  [
+   22,
    623
   ],
   [
@@ -20498,10 +20923,10 @@
   ],
   [
    624,
-   616
+   617
   ],
   [
-   234,
+   204,
    625
   ],
   [
@@ -20514,35 +20939,39 @@
   ],
   [
    627,
-   617
+   619
   ],
   [
-   223,
+   234,
    628
   ],
   [
    628,
-   615
-  ],
-  [
-   310,
    629
   ],
   [
    629,
-   619
+   630
   ],
   [
    630,
+   620
+  ],
+  [
+   223,
    631
   ],
   [
    631,
+   618
+  ],
+  [
+   311,
    632
   ],
   [
    632,
-   633
+   622
   ],
   [
    633,
@@ -20554,35 +20983,35 @@
   ],
   [
    635,
-   630
-  ],
-  [
-   217,
    636
   ],
   [
    636,
-   630
-  ],
-  [
-   238,
    637
   ],
   [
    637,
-   633
+   638
   ],
   [
    638,
+   633
+  ],
+  [
+   217,
    639
   ],
   [
    639,
+   633
+  ],
+  [
+   238,
    640
   ],
   [
    640,
-   641
+   636
   ],
   [
    641,
@@ -20590,18 +21019,10 @@
   ],
   [
    642,
-   638
+   643
   ],
   [
    643,
-   638
-  ],
-  [
-   643,
-   640
-  ],
-  [
-   26,
    644
   ],
   [
@@ -20610,14 +21031,18 @@
   ],
   [
    645,
-   638
-  ],
-  [
-   290,
-   646
+   641
   ],
   [
    646,
+   641
+  ],
+  [
+   646,
+   643
+  ],
+  [
+   26,
    647
   ],
   [
@@ -20626,10 +21051,10 @@
   ],
   [
    648,
-   640
+   641
   ],
   [
-   318,
+   291,
    649
   ],
   [
@@ -20642,35 +21067,39 @@
   ],
   [
    651,
-   641
+   643
   ],
   [
-   309,
+   319,
    652
   ],
   [
    652,
-   638
-  ],
-  [
-   397,
    653
   ],
   [
    653,
-   642
+   654
   ],
   [
    654,
+   644
+  ],
+  [
+   310,
    655
   ],
   [
    655,
+   641
+  ],
+  [
+   400,
    656
   ],
   [
    656,
-   657
+   645
   ],
   [
    657,
@@ -20678,26 +21107,14 @@
   ],
   [
    658,
-   654
+   659
   ],
   [
    659,
-   654
-  ],
-  [
-   659,
-   656
-  ],
-  [
-   298,
    660
   ],
   [
    660,
-   654
-  ],
-  [
-   334,
    661
   ],
   [
@@ -20706,15 +21123,27 @@
   ],
   [
    662,
+   657
+  ],
+  [
+   662,
+   659
+  ],
+  [
+   299,
    663
   ],
   [
    663,
+   657
+  ],
+  [
+   335,
    664
   ],
   [
    664,
-   665
+   660
   ],
   [
    665,
@@ -20726,10 +21155,6 @@
   ],
   [
    667,
-   662
-  ],
-  [
-   30,
    668
   ],
   [
@@ -20738,14 +21163,14 @@
   ],
   [
    669,
-   662
-  ],
-  [
-   379,
    670
   ],
   [
    670,
+   665
+  ],
+  [
+   30,
    671
   ],
   [
@@ -20754,10 +21179,10 @@
   ],
   [
    672,
-   664
+   665
   ],
   [
-   409,
+   382,
    673
   ],
   [
@@ -20770,35 +21195,39 @@
   ],
   [
    675,
-   666
+   667
   ],
   [
-   395,
+   412,
    676
   ],
   [
    676,
-   663
-  ],
-  [
-   490,
    677
   ],
   [
    677,
-   667
+   678
   ],
   [
    678,
+   669
+  ],
+  [
+   398,
    679
   ],
   [
    679,
+   666
+  ],
+  [
+   493,
    680
   ],
   [
    680,
-   681
+   670
   ],
   [
    681,
@@ -20810,35 +21239,35 @@
   ],
   [
    683,
-   678
-  ],
-  [
-   388,
    684
   ],
   [
    684,
-   678
-  ],
-  [
-   417,
    685
   ],
   [
    685,
-   681
+   686
   ],
   [
    686,
+   681
+  ],
+  [
+   391,
    687
   ],
   [
    687,
+   681
+  ],
+  [
+   420,
    688
   ],
   [
    688,
-   689
+   684
   ],
   [
    689,
@@ -20846,18 +21275,10 @@
   ],
   [
    690,
-   686
+   691
   ],
   [
    691,
-   686
-  ],
-  [
-   691,
-   688
-  ],
-  [
-   34,
    692
   ],
   [
@@ -20866,14 +21287,18 @@
   ],
   [
    693,
-   688
-  ],
-  [
-   475,
-   694
+   689
   ],
   [
    694,
+   689
+  ],
+  [
+   694,
+   691
+  ],
+  [
+   34,
    695
   ],
   [
@@ -20882,10 +21307,10 @@
   ],
   [
    696,
-   689
+   691
   ],
   [
-   503,
+   478,
    697
   ],
   [
@@ -20898,35 +21323,39 @@
   ],
   [
    699,
-   686
+   692
   ],
   [
-   488,
+   505,
    700
   ],
   [
    700,
-   688
-  ],
-  [
-   587,
    701
   ],
   [
    701,
-   686
+   702
   ],
   [
    702,
+   689
+  ],
+  [
+   491,
    703
   ],
   [
    703,
+   691
+  ],
+  [
+   590,
    704
   ],
   [
    704,
-   705
+   689
   ],
   [
    705,
@@ -20934,43 +21363,43 @@
   ],
   [
    706,
-   702
+   707
   ],
   [
    707,
-   702
-  ],
-  [
-   707,
-   704
-  ],
-  [
-   483,
    708
   ],
   [
    708,
-   705
-  ],
-  [
-   517,
    709
   ],
   [
    709,
-   702
+   705
   ],
   [
    710,
+   705
+  ],
+  [
+   710,
+   707
+  ],
+  [
+   482,
    711
   ],
   [
    711,
+   707
+  ],
+  [
+   517,
    712
   ],
   [
    712,
-   713
+   705
   ],
   [
    713,
@@ -20982,10 +21411,6 @@
   ],
   [
    715,
-   710
-  ],
-  [
-   38,
    716
   ],
   [
@@ -20994,14 +21419,14 @@
   ],
   [
    717,
-   710
-  ],
-  [
-   567,
    718
   ],
   [
    718,
+   713
+  ],
+  [
+   38,
    719
   ],
   [
@@ -21010,10 +21435,10 @@
   ],
   [
    720,
-   712
+   713
   ],
   [
-   55,
+   570,
    721
   ],
   [
@@ -21026,35 +21451,39 @@
   ],
   [
    723,
-   714
+   715
   ],
   [
-   583,
+   55,
    724
   ],
   [
    724,
-   711
-  ],
-  [
-   134,
    725
   ],
   [
    725,
-   715
+   726
   ],
   [
    726,
+   717
+  ],
+  [
+   586,
    727
   ],
   [
    727,
+   714
+  ],
+  [
+   134,
    728
   ],
   [
    728,
-   729
+   718
   ],
   [
    729,
@@ -21066,23 +21495,35 @@
   ],
   [
    731,
-   726
-  ],
-  [
-   579,
    732
   ],
   [
    732,
-   726
-  ],
-  [
-   62,
    733
   ],
   [
    733,
+   734
+  ],
+  [
+   734,
    729
+  ],
+  [
+   582,
+   735
+  ],
+  [
+   735,
+   729
+  ],
+  [
+   62,
+   736
+  ],
+  [
+   736,
+   732
   ]
  ]
 }

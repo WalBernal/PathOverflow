@@ -69,9 +69,25 @@ La versión informática de las gemas de PoE:
 | | | | Alto Voltaje (DDR5) | más daño elemental de hechizos |
 | | | | Swap Vampírica (DDR3) | robo de vida |
 
-Se definen en `data/skills/skills.json` y `data/skills/ram_modules.json`. Cada clase empieza con dos placas (`starter_skills` en `classes.json`); ninguna empieza con el mismo par que otra (lo comprueban las pruebas).
+Se definen en `data/skills/skills.json` y `data/skills/ram_modules.json`. Cada clase empieza con **tres placas exclusivas** (`starter_skills` en `classes.json`) y un **rasgo de clase** siempre activo (`trait`); ninguna comparte habilidad inicial con otra ni juega con la misma combinación de mecánicas (lo comprueban las pruebas). Los personajes de antes reciben la placa que les falte al cargar (bandera `starter_kit_v2`).
 
-- **Ingeniero DevOps (robótica)**: empieza con la **Torreta de Integración Continua** (se despliega sola, sin RAM: `deploy` en `skills.json`, y dispara proyectiles teledirigidos) y los **Drones de Vigilancia**. Su ascendencia **Ingeniero en Robótica** da +2 torretas/trampas a la vez, +1 esbirro y el **robot de compañía R-2PL** (`CompanionRobot`): te sigue siempre y tiene su propio kit, **Láser de rastreo** (al enemigo más cercano) y **Pulso EMP** (aturde a lo que se te acerque). Las mejoras de esbirros le afectan.
+| Clase | Kit inicial | Rasgo |
+|---|---|---|
+| Técnico de Soporte | Barrido · **Reinicio Forzado** (salto con aturdimiento) · Firewall Personal | Mantenimiento Preventivo: sangrado cuerpo a cuerpo, estados más largos, armadura |
+| Tester QA | **Fuzzing** (3 tajos en cono) · Despliegue Continuo · Hiperthreading | Pruebas de Regresión: crítico y sangrado con ataques |
+| Desarrolladora Frontend | Ráfaga de Paquetes · **Cascada de Estilos** (lluvia helada) · Teletransporte TCP | Diseño Responsive: los proyectiles hielan, más velocidad |
+| Ingeniera de Prompts | Rollback · Excepción en Cadena · Bomba Lógica | Inyección de Prompts: veneno y daño de estados |
+| Científico de Datos | Ping Letal · Stack Overflow · Fork Bomb (los tres elementos) | Sobreajuste: los hechizos queman, hielan y electrocutan |
+| Ingeniero DevOps | Torreta CI · **Robot Centinela** (persistente) · Drones de Vigilancia | Infraestructura como Código: autómatas más rápidos y fuertes |
+| Full Stack | Bucle Infinito · Flamewar · **Daemon en Segundo Plano** (persistentes) | Hilo Principal y Secundario: daño, esbirros y menos reserva |
+
+**Estados alterados** (`Ailments`, iconos en `StatusIcon`): cada golpe tira los dados de **quemar** (daño de fuego por segundo), **electrocutar** (+25 % de daño recibido), **helar** (35 % más lento), **congelar** (no actúa), **envenenar** (se acumula hasta 10) y **hacer sangrar** (el doble si se mueve). Cada tipo de daño tiene una probabilidad innata hacia su estado, que suben la propia habilidad (`ailments` en `skills.json`), los rasgos, las pasivas (temáticas Ignición, Sobrecarga, Criogenia, Toxinas y Hemorragia) y las **RAM de asistencia**: Pasta Térmica Caducada, Módulo de Sobretensión, Refrigeración Líquida con Fugas, Inyección de Malware, Fragmentación de Disco y Gestor de Estados Global. Los iconos salen sobre la barra de vida de los enemigos y en el **marco del objetivo** (arriba, al pasar el mouse por un enemigo); los del jugador, sobre el orbe de vida.
+
+**Autómatas** (etiqueta `automaton`): torretas, drones, esbirros y robots. Les afectan la *velocidad de autómatas*, la temática de pasivas Automatización, la piedra angular **Orquestación con Kubernetes** y las RAM Firmware Autónomo, Protocolo Enjambre y Carcasa Reforzada.
+
+**Invocaciones persistentes** (`kind: unit`): Robot Centinela, Daemon en Segundo Plano, Dron Escolta y Golem de Hardware Reciclado. No caducan: **reservan un % del maná máximo** mientras sigan en pie (la parte rayada del orbe), te siguen entre zonas y los enemigos pueden atacarlas (el golem además los provoca). Si caen, se vuelve a lanzar la habilidad; si ya están todas, relanzarla las repara. Quitar la placa de la barra las retira.
+
+- **Ingeniero DevOps (robótica)**: empieza con la **Torreta de Integración Continua** (se despliega sola, sin RAM: `deploy` en `skills.json`, y dispara proyectiles teledirigidos), el **Robot Centinela** y los **Drones de Vigilancia**. Su ascendencia **Ingeniero en Robótica** da +2 torretas/trampas a la vez, +1 esbirro y el **robot de compañía R-2PL** (`CompanionRobot`): te sigue siempre y tiene su propio kit, **Láser de rastreo** (al enemigo más cercano) y **Pulso EMP** (aturde a lo que se te acerque). Las mejoras de esbirros le afectan.
 
 **Habilidades inspiradas en League of Legends** (sencillas de leer y de esquivar):
 
@@ -124,7 +140,7 @@ El acto está definido en `data/act1.json` y lo construye `Zone` (`scripts/game/
 
 | Zona | Nivel | Waypoint | Notas |
 |---|---|---|---|
-| El Sandbox | 1 | | Tutorial: pocos bugs, más botín y B.O.B., el bot de onboarding |
+| El Sandbox | 1 | | Tutorial: pocos bugs, más botín y B.O.B., el bot de onboarding. Los bugs empiezan al este, lejos de la entrada y de B.O.B. (`keep_away`), y despiertan más cerca (`aggro_range`): primero se habla, luego se pelea |
 | Campamento | 1 | ✔ | Zona segura, punto de reaparición; Aida, Mario y Rafa |
 | El Bosque de Cables | 2 | | Iris, la practicante perdida |
 | Las Ruinas del Monolito | 4 | ✔ | |

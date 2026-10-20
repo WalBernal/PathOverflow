@@ -794,7 +794,7 @@
           ]
         },
         "lugar": {
-          "text": "Un entorno de pruebas que sobrevivió a la Gran Migración. Lo único que funciona es porque nadie lo tocó desde 2014. Los bugs de aquí son pequeños y casi no muerden. Casi.",
+          "text": "Un entorno de pruebas que sobrevivió a la Gran Migración. Lo único que funciona es porque nadie lo tocó desde 2014. Los bugs están al este, pasadas las cajas: son pequeños y casi no muerden. Casi. Aquí, a mi lado, no se acercan: les doy miedo. O pena.",
           "next": "lugar2"
         },
         "lugar2": {
@@ -820,7 +820,7 @@
           ]
         },
         "lucha": {
-          "text": "Click derecho o Espacio usan tu primera habilidad; Q, E, R y F, las demás. Mantén el click izquierdo para caminar. Si te quedas sin vida, café (tecla 1). Sin maná, un refresco (tecla 2).",
+          "text": "Primero lo primero: aquí estás a salvo, los bugs están al este y no vienen hasta que te acercas. Click derecho o Espacio usan tu primera habilidad; Q, E, R y F, las demás. Mantén el click izquierdo para caminar. Si te quedas sin vida, café (tecla 1). Sin maná, un refresco (tecla 2).",
           "next": "lucha2"
         },
         "lucha2": {
@@ -830,6 +830,14 @@
         "lucha3": {
           "text": "Y lo más importante: si mueres, reapareces en el campamento. Nadie te va a descontar nada del sueldo. Porque no hay sueldo. Eres practicante. Bueno, ni eso: tu servicio social no está registrado.",
           "options": [
+            {
+              "text": "¿Qué son esos iconos sobre los enemigos?",
+              "next": "estados"
+            },
+            {
+              "text": "¿Y las invocaciones que no se van?",
+              "next": "persistentes"
+            },
             {
               "text": "Entendido.",
               "next": "hola"
@@ -875,6 +883,36 @@
             },
             {
               "text": "Una pregunta más.",
+              "next": "hola"
+            }
+          ]
+        },
+        "estados": {
+          "text": "Estados alterados. Cada tipo de daño tiende a uno: el fuego QUEMA (daño por segundo), el rayo ELECTROCUTA (reciben más daño), el frío HIELA (van más lentos) y a veces CONGELA (no se mueven), el caos ENVENENA (se acumula) y el daño físico hace SANGRAR (el doble si corren).",
+          "next": "estados2"
+        },
+        "estados2": {
+          "text": "Los iconos encima de la barra de vida te dicen qué tienen. Pasa el mouse por encima de un enemigo y arriba verás su ficha completa. Hay módulos RAM y pasivas que suben esas probabilidades. Y sí: tú también puedes acabar quemado. Ya lo estás, de hecho. Es el onboarding.",
+          "options": [
+            {
+              "text": "¿Y las invocaciones que no se van?",
+              "next": "persistentes"
+            },
+            {
+              "text": "Entendido.",
+              "next": "hola"
+            }
+          ]
+        },
+        "persistentes": {
+          "text": "Torretas y drones duran un rato. Pero algunas placas montan aliados PERSISTENTES: robots, daemons, golems... No caducan, te siguen entre zonas y reservan parte de tu maná mientras sigan en pie. Si se los cargan, vuelve a lanzar la habilidad y los montas otra vez.",
+          "options": [
+            {
+              "text": "¿Qué son esos iconos sobre los enemigos?",
+              "next": "estados"
+            },
+            {
+              "text": "Entendido.",
               "next": "hola"
             }
           ]

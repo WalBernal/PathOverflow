@@ -63,6 +63,11 @@ func _initialize() -> void:
 	_test_prologue_data()
 	_test_class_kits_and_robotics()
 	_test_act3_mechanics()
+	_test_ailments()
+	_test_ailment_supports_and_tree()
+	_test_persistent_units()
+	_test_unique_class_kits()
+	_test_tutorial_safe_start()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
 	else:
@@ -405,7 +410,7 @@ func _test_appearance() -> void:
 func _test_skill_data() -> void:
 	var skills := _db.skills
 	_check(skills.skills.size() >= 6 and skills.rams.size() >= 8, "carga de habilidades y RAM")
-	var kinds := ["melee_area", "nova", "projectile", "ground_aoe", "blink", "dash", "cone", "beam", "boomerang", "spin", "trap", "chain", "minion", "degen_area", "barrier", "buff", "curse_area", "dot_projectile", "homing", "drones"]
+	var kinds := ["melee_area", "nova", "projectile", "ground_aoe", "blink", "dash", "cone", "beam", "boomerang", "spin", "trap", "chain", "minion", "degen_area", "barrier", "buff", "curse_area", "dot_projectile", "homing", "drones", "leap_slam", "rain", "unit"]
 	for def in skills.skills.values():
 		_check(kinds.has(def["kind"]), "tipo de habilidad desconocido en %s" % def["id"])
 		_check(def.has("attack") or def.has("spell"), "%s necesita 'attack' o 'spell'" % def["id"])
@@ -593,7 +598,7 @@ func _test_act(npc_data: Dictionary) -> void:
 		if cfg is Dictionary:
 			var rng := RandomNumberGenerator.new()
 			rng.seed = 7
-			var packs := zone.pack_centers(int(cfg["packs"]), rng)
+			var packs := zone.pack_centers(int(cfg["packs"]), rng, float(cfg.get("keep_away", 0.0)))
 			_check(packs.size() >= int(cfg["packs"]) * 0.8, "%s: solo caben %d de %d grupos" % [z["id"], packs.size(), cfg["packs"]])
 			for p in packs:
 				for k in zone.key_points():
@@ -1531,7 +1536,7 @@ func _test_prologue_data() -> void:
 	for path in ["res://data/npcs.json", "res://data/cutscenes.json"]:
 		_check(not FileAccess.get_file_as_string(path).contains("restador de servicios retirado"), "%s: Pepe ya no es prestador de servicios" % path)
 
-## Cada clase empieza con su par de habilidades (pueden compartir una, no las dos)
+## Cada clase empieza con su kit de habilidades (no puede repetir el de otra)
 ## y el Ingeniero DevOps es de robótica: torreta autónoma, drones y robot de compañía.
 func _test_class_kits_and_robotics() -> void:
 	var seen := {}
@@ -1679,3 +1684,222 @@ func _test_act3_mechanics() -> void:
 	_check(em.count_type("rootkit") > 0, "fase 3: el jefe invoca rootkits de respaldo")
 	em.queue_free()
 	player.queue_free()
+
+
+func _class_def(id: String) -> Dictionary:
+	return _classes.filter(func(x: Dictionary) -> bool: return x["id"] == id)[0]
+
+
+## Estados alterados: se aplican con la probabilidad del golpe, hacen su efecto
+## (degenerativos, +daño, lentitud, congelación) y caducan.
+func _test_ailments() -> void:
+	var em := EnemyManager.new()
+	em.spawn(Vector2.ZERO, Rarity.Enemy.NORMAL)
+	em.lives[0] = 1.0e6
+	em.max_lives[0] = 1.0e6
+	var all := {}
+	for id in Ailments.ALL:
+		if id != Ailments.FREEZE:
+			all[id] = 100.0
+	em.hit_ailments = {"chances": all, "effect": 1.0, "duration": 1.0}
+	em.hit_index(0, 100.0, 100.0, 0.0, 150.0)
+	_check(em.burn_time[0] > 0.0 and em.shock_time[0] > 0.0 and em.chill_time[0] > 0.0 and em.poison_time[0] > 0.0 and em.bleed_time[0] > 0.0,
+		"un golpe con 100 % aplica todos los estados")
+	_check(em.ailments_of(0).size() == 5, "ailments_of lista los estados activos (%d)" % em.ailments_of(0).size())
+	_check(is_equal_approx(em.burn_dps[0], 100.0 * Ailments.DOT_FRACTION[Ailments.BURN]), "la quemadura es una fracción del golpe")
+	em.hit_ailments = {}
+	var before := em.lives[0]
+	em.hit_index(0, 100.0, 100.0, 0.0, 150.0)
+	_check(is_equal_approx(before - em.lives[0], 100.0 * (1.0 + Ailments.SHOCK_AMP)), "electrocutado recibe más daño (%.1f)" % (before - em.lives[0]))
+	before = em.lives[0]
+	em._update_dots(0.5)
+	_check(em.lives[0] < before, "los degenerativos restan vida")
+	em.hit_ailments = {"chances": {Ailments.POISON: 100.0}, "effect": 1.0, "duration": 1.0}
+	for k in 20:
+		em.hit_index(0, 10.0, 10.0, 0.0, 150.0)
+	_check(em.poison_stacks[0] == Ailments.POISON_MAX_STACKS, "el veneno se acumula hasta el tope (%d)" % em.poison_stacks[0])
+	em.hit_ailments = {"chances": {Ailments.FREEZE: 100.0}, "effect": 1.0, "duration": 1.0}
+	em.hit_index(0, 10.0, 10.0, 0.0, 150.0)
+	_check(em.freeze_time[0] > 0.0 and em.stuns[0] > 0.0, "congelado: no puede actuar")
+	_check(em.ailments_of(0)[0]["id"] == Ailments.FREEZE, "congelado se muestra en vez de aturdido")
+	em._update_dots(10.0)
+	_check(em.ailments_of(0).size() == 1 and em.ailments_of(0)[0]["id"] == "stun" or em.ailments_of(0).is_empty(), "los estados caducan")
+	# Inmunes: nada. Y al quitar un enemigo, los arrays siguen alineados.
+	var b := em.spawn(Vector2(50, 0), Rarity.Enemy.NORMAL)
+	em.set_immune(b, true)
+	em.hit_ailments = {"chances": {Ailments.BURN: 100.0}, "effect": 1.0, "duration": 1.0}
+	em.hit_index(em.index_of(b), 1.0, 1.0, 0.0, 150.0)
+	_check(em.burn_time[em.index_of(b)] == 0.0, "un inmune no se quema")
+	em.lives[0] = 0.5
+	em.hit_ailments = {}
+	em.hit_index(0, 10.0, 10.0, 0.0, 150.0)
+	_check(em.count() == 1 and em.burn_time.size() == 1 and em.poison_stacks.size() == 1 and em.ids[0] == b, "los arrays de estados se compactan al morir")
+	# Helado: más lento.
+	_check(Ailments.CHILL_SLOW > 0.0 and Ailments.chances(StatBlock.new(), [], {"damage_type": "cold"}).has(Ailments.CHILL), "el frío hiela de forma innata")
+	em.free()
+	# Las habilidades llevan sus probabilidades en el perfil (innata + propia + rasgo).
+	var wizard := CharacterData.new(_class_def("hechicero"), _tree)
+	var flame := SkillCalc.compute(Motherboard.new(_db.skills.skills["flamewar"], 1, []), wizard)
+	_check(is_equal_approx(flame["ailments"][Ailments.BURN], 10.0 + 20.0 + 10.0), "Flamewar quema: innata + propia + rasgo (%.0f)" % flame["ailments"][Ailments.BURN])
+	_check(not flame["ailment_ctx"].is_empty(), "el contexto de estados va en el perfil")
+	var buff := SkillCalc.compute(Motherboard.new(_db.skills.skills["hiperthreading"], 1, []), wizard)
+	_check(buff["ailments"].is_empty(), "un potenciador no aplica estados")
+
+
+## RAM de asistencia y pasivas que dan probabilidad de estados o mejoran autómatas.
+func _test_ailment_supports_and_tree() -> void:
+	var gen := ItemGenerator.new(_db, 31)
+	var c := _new_character()
+	for entry in [["pasta_termica", Ailments.BURN], ["sobretension", Ailments.SHOCK], ["refrigeracion_liquida", Ailments.CHILL],
+			["inyeccion_malware", Ailments.POISON], ["fragmentacion_disco", Ailments.BLEED]]:
+		var ram := gen.generate_ram(1, entry[0])
+		var board := Motherboard.new(_db.skills.skills["barrido"], 1, [ram.generation()])
+		var base := SkillCalc.compute(board, c)
+		_check(board.install(ram, 0) == "" and ram.supports(board.skill_def), "%s encaja y funciona con Barrido" % entry[0])
+		var with := SkillCalc.compute(board, c)
+		_check(float(with["ailments"].get(entry[1], 0.0)) >= float(base["ailments"].get(entry[1], 0.0)) + 25.0, "%s sube la probabilidad de %s" % [entry[0], entry[1]])
+	var turret: Dictionary = _db.skills.skills["torreta_ci"]
+	var firmware := gen.generate_ram(1, "firmware_autonomo")
+	_check(firmware.supports(turret) and firmware.supports(_db.skills.skills["drones_vigilancia"]), "el firmware funciona con torretas y drones")
+	_check(not firmware.supports(_db.skills.skills["barrido"]), "el firmware no hace nada en un ataque normal")
+	var drones := Motherboard.new(_db.skills.skills["drones_vigilancia"], 1, ["DDR4", "DDR5"])
+	var before := SkillCalc.compute(drones, c)
+	drones.install(gen.generate_ram(1, "protocolo_enjambre"), 0)
+	drones.install(firmware, 1)
+	var after := SkillCalc.compute(drones, c)
+	_check(after["drone_count"] == before["drone_count"] + 1, "el enjambre añade un dron")
+	_check(after["tick"] < before["tick"] and after["automaton_speed"] > 1.0, "el firmware hace disparar más rápido a los drones")
+	# Árbol: temáticas nuevas, pasivas con estados y piedra angular de autómatas.
+	var themes := {}
+	var ailment_nodes := 0
+	for n in _tree.nodes.values():
+		themes[n.theme] = true
+		for m in n.mods:
+			if String(m.stat).ends_with("_chance") and String(m.stat) != "crit_chance" and String(m.stat) != "block_chance":
+				ailment_nodes += 1
+	for t in ["ignicion", "sobrecarga", "criogenia", "toxinas", "hemorragia", "automatizacion"]:
+		_check(themes.has(t), "el árbol tiene la temática %s" % t)
+		_check(PassiveIcons.has_icon(t), "icono de la temática %s" % t)
+	_check(ailment_nodes >= 60, "muchas pasivas dan probabilidad de estados (%d)" % ailment_nodes)
+	var devops := CharacterData.new(_class_def("templario"), _tree)
+	var ks_found := false
+	for n in _tree.nodes.values():
+		if n.kind == PassiveNode.Kind.KEYSTONE and n.icon == "ks_templario":
+			for m in n.mods:
+				ks_found = ks_found or m.tags.has(&"automaton")
+	_check(ks_found, "la piedra angular del DevOps potencia a los autómatas")
+	_check(devops.stats.total_multiplier(Stat.AUTOMATON_SPEED) > 1.0, "rasgo del DevOps: autómatas más rápidos")
+
+
+## Invocaciones persistentes: no caducan, reservan maná, los enemigos pueden
+## atacarlas, se re-montan al relanzar y desaparecen al quitar la placa.
+func _test_persistent_units() -> void:
+	var c := CharacterData.new(_class_def("templario"), _tree)
+	c.inventory.boards.fill(null)
+	c.inventory.set_board(0, Motherboard.new(_db.skills.skills["robot_centinela"], 1, []))
+	c.inventory.set_board(1, Motherboard.new(_db.skills.skills["dron_escolta"], 1, []))
+	var em := EnemyManager.new()
+	root.add_child(em)
+	var player: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(player)
+	player.setup(c, em)
+	em.player = player
+	var sk := SkillController.new()
+	root.add_child(sk)
+	sk.setup(player, em, c)
+	var p := sk.profile(0)
+	_check(p["kind"] == "unit" and p["max_units"] >= 1 and p["unit_life"] > 0.0 and p["reserve"] > 0.0, "perfil de invocación persistente")
+	_check(p["tags"].has(&"automaton"), "las invocaciones son autómatas")
+	var full := player.max_mana()
+	sk._execute(p, Vector2(100, 0))
+	_check(sk._units.size() == 1 and em.allies.size() == 1, "invoca el robot y los enemigos pueden atacarlo")
+	_check(is_equal_approx(player.mana_reserved, p["reserve"] / 100.0) and player.max_mana() < full, "reserva maná mientras viva")
+	sk._update_units(30.0)
+	_check(sk._units.size() == 1, "no caduca con el tiempo")
+	sk._execute(p, Vector2(100, 0))
+	_check(sk._units.size() == p["max_units"], "al máximo, relanzar lo repara en vez de añadir otro")
+	var drone := sk.profile(1)
+	sk._execute(drone, Vector2.ZERO)
+	_check(sk._units.size() == 2 and em.allies.size() == 1, "el dron escolta orbita y no se le puede atacar")
+	# Un enemigo cerca del robot va a por él (está más cerca que el jugador) y lo destruye.
+	player.global_position = Vector2(-600, 0)
+	sk._units[0]["pos"] = Vector2(0, 0)
+	em.spawn(Vector2(30, 0), Rarity.Enemy.NORMAL)
+	em._physics_process(0.05)
+	_check(em._pick_ally(Vector2(30, 0), 630.0) == 0, "el enemigo prefiere al aliado que tiene al lado")
+	em._damage_ally(0, 1.0e6)
+	sk._update_units(0.05)
+	_check(sk._units.size() == 1 and is_equal_approx(player.mana_reserved, drone["reserve"] / 100.0), "al caer libera su reserva")
+	# Sin placa en la barra, la invocación desaparece.
+	c.inventory.set_board(1, null)
+	_check(sk._units.is_empty() and player.mana_reserved == 0.0, "quitar la placa retira la invocación")
+	# El golem provoca: los enemigos en su radio van a por él aunque el jugador esté cerca.
+	c.inventory.set_board(2, Motherboard.new(_db.skills.skills["golem_hardware"], 1, []))
+	var golem := sk.profile(2)
+	player.global_position = Vector2(0, 0)
+	sk._execute(golem, Vector2.ZERO)
+	sk._units[0]["pos"] = Vector2(150, 0)
+	_check(em._pick_ally(Vector2(40, 0), 40.0) == 0, "el golem provoca a los enemigos de su radio")
+	# Reserva llena: no deja invocar más.
+	player.set_mana_reserved(0.9)
+	_check(not sk._can_summon(p), "sin maná sin reservar no se puede invocar otra")
+	sk.queue_free()
+	em.queue_free()
+	player.queue_free()
+
+
+## Cada clase tiene un kit de 3 habilidades exclusivas y un rasgo propio.
+func _test_unique_class_kits() -> void:
+	var owner := {}
+	for cdef in _classes:
+		var kit: Array = cdef["starter_skills"]
+		_check(kit.size() >= 3, "%s empieza con 3 habilidades" % cdef["id"])
+		for s in kit:
+			_check(not owner.has(s), "%s y %s empiezan con %s: los kits deben ser únicos" % [cdef["id"], owner.get(s, ""), s])
+			owner[s] = cdef["id"]
+		var trait_def: Dictionary = cdef.get("trait", {})
+		_check(trait_def.has("name") and not trait_def.get("mods", []).is_empty(), "%s tiene rasgo de clase" % cdef["id"])
+		for md in trait_def.get("mods", []):
+			_check(Stat.exists(StringName(md["stat"])), "%s: stat del rasgo %s" % [cdef["id"], md["stat"]])
+	# El kit de cada clase cubre mecánicas distintas (no todo es "proyectil").
+	var kinds := {}
+	for cdef in _classes:
+		var key := PackedStringArray()
+		for s in cdef["starter_skills"]:
+			key.append(_db.skills.skills[s]["kind"])
+		key.sort()
+		_check(not kinds.has(",".join(key)), "%s juega igual que %s" % [cdef["id"], kinds.get(",".join(key), "")])
+		kinds[",".join(key)] = cdef["id"]
+	# Los personajes de antes reciben la habilidad que les falte del kit nuevo.
+	var old := CharacterData.new(_class_def("guerrero"), _tree)
+	old.inventory.set_board(0, Motherboard.new(_db.skills.skills["barrido"], 1, []))
+	old.give_missing_starter_skills(_db)
+	var ids := []
+	for b in old.inventory.boards:
+		if b:
+			ids.append(b.skill_def["id"])
+	_check(ids.has("reinicio_forzado") and ids.has("firewall_personal") and ids.count("barrido") == 1, "migración del kit: %s" % str(ids))
+	_check(old.flags.has(CharacterData.STARTER_KIT_FLAG), "la migración se hace una vez")
+
+
+## En el tutorial los enemigos empiezan lejos del jugador y de B.O.B. y no se
+## despiertan hasta que el jugador se acerca: primero se habla, luego se pelea.
+func _test_tutorial_safe_start() -> void:
+	var act: Dictionary = DataLoader.load_json("res://data/act1.json")
+	var z: Dictionary = act["zones"].filter(func(x: Dictionary) -> bool: return x["id"] == "tutorial")[0]
+	var aggro := float(z.get("aggro_range", EnemyManager.AGGRO_RANGE))
+	var keep := float(z["enemies"].get("keep_away", 0.0))
+	_check(keep - aggro >= 300.0, "los bugs no oyen al jugador desde el inicio (%.0f / %.0f)" % [keep, aggro])
+	var zone := Zone.new()
+	zone.setup(z, null, null)
+	var rng := RandomNumberGenerator.new()
+	for seed_value in [1, 2, 3, 4, 5]:
+		rng.seed = seed_value
+		var packs := zone.pack_centers(int(z["enemies"]["packs"]), rng, keep)
+		_check(packs.size() == int(z["enemies"]["packs"]), "caben todos los grupos lejos del inicio (%d)" % packs.size())
+		for p in packs:
+			_check(p.distance_to(zone.entry_point("start")) >= keep, "grupo lejos de la entrada")
+			for npc in z["npcs"]:
+				# Los bugs de un grupo se reparten hasta ±70 px: aun así, fuera del alcance desde B.O.B.
+				_check(p.distance_to(Zone._v(npc["pos"])) - 100.0 > aggro, "grupo fuera del alcance de B.O.B.")
+	zone.free()

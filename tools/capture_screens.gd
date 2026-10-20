@@ -3,6 +3,7 @@ extends Node
 ## interfaz sin jugar). No guarda personajes ni toca el alijo.
 ##
 ## Uso:  Godot_v4.7.2-stable_win64_console.exe --path . res://tools/capture_screens.tscn
+## Solo las de combate (estados, HUD, iconos, tutorial): añade  -- combate
 
 const OUT := "user://capturas/"
 const MENU_SCENES := {
@@ -21,6 +22,12 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("combate"):
+		await _capture_icons()
+		await _capture_combat_hud()
+		await _capture_tutorial_start()
+		get_tree().quit()
+		return
 	for shot in MENU_SCENES:
 		_swap(load(MENU_SCENES[shot]).instantiate())
 		await _wait(1.2)
@@ -246,6 +253,110 @@ func _capture_act3() -> void:
 	world.get("player").global_position += Vector2(700, 0)
 	await _wait(5.0)
 	_save("15_jefe_fw_update")
+	world.set("_since_save", -9999.0)
+
+
+## Muestrario de iconos: todas las habilidades y todos los estados.
+func _capture_icons() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var defs: Array = gd.get("items").skills.skills.values()
+	var sheet := Control.new()
+	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sheet.draw.connect(func() -> void:
+		UiStyle.draw_background(sheet, sheet.size)
+		var font := sheet.get_theme_default_font()
+		for i in defs.size():
+			var r := Rect2(60.0 + (i % 8) * 180.0, 50.0 + (i / 8) * 120.0, 64, 64)
+			SkillIcon.draw(sheet, r, defs[i])
+			SkillIcon.draw_ailment_pips(sheet, r, defs[i].get("ailments", {}))
+			sheet.draw_string(font, r.position + Vector2(-50, 82), defs[i]["name"], HORIZONTAL_ALIGNMENT_CENTER, 164, 12)
+		var ids: Array = Ailments.ALL + ["stun", "corrupt", "taunt", "reserve"]
+		for k in ids.size():
+			var r := Rect2(60.0 + k * 140.0, 560.0, 40, 40)
+			StatusIcon.draw(sheet, r, ids[k])
+			StatusIcon.draw(sheet, Rect2(r.position + Vector2(48, 14), Vector2(12, 12)), ids[k], true)
+			sheet.draw_string(font, r.position + Vector2(-40, 58), Ailments.display_name(ids[k]), HORIZONTAL_ALIGNMENT_CENTER, 120, 12, Ailments.color(ids[k])))
+	_swap(sheet)
+	await _wait(0.5)
+	_save("16_iconos")
+
+
+## Combate con estados alterados, invocaciones persistentes y el HUD nuevo.
+func _capture_combat_hud() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Estados", &"templario", CharacterAppearance.default(), false)
+	c.flags["zone"] = "zona1"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 14
+	var items: ItemDatabase = gd.get("items")
+	c.inventory.set_board(3, Motherboard.new(items.skills.skills["golem_hardware"], 5, ["DDR3", "DDR3"]))
+	c.inventory.set_board(4, Motherboard.new(items.skills.skills["dron_escolta"], 5, ["DDR4"]))
+	c.inventory.set_board(5, Motherboard.new(items.skills.skills["cascada_css"], 5, ["DDR4"]))
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var skills: SkillController = world.get("skills")
+	var player: Player = world.get("player")
+	var em: EnemyManager = world.get("enemies")
+	player.invulnerable = true
+	em.clear_all()
+	var p := player.global_position
+	for slot in [1, 3, 4]:
+		skills.call("_execute", skills.profile(slot), p)
+	skills.call("_deploy", skills.profile(0), p + Vector2(140, 60))
+	var states := [Ailments.BURN, Ailments.SHOCK, Ailments.CHILL, Ailments.POISON, Ailments.BLEED, Ailments.FREEZE]
+	for k in 12:
+		var id := em.spawn(p + Vector2.from_angle(TAU * k / 12.0) * randf_range(260, 380), Rarity.Enemy.ELITE if k == 0 else Rarity.Enemy.NORMAL)
+		var i := em.index_of(id)
+		em.lives[i] *= 0.7
+		em.apply_ailment(i, states[k % states.size()], 30.0)
+		if k % 3 == 0:
+			em.apply_ailment(i, states[(k + 2) % states.size()], 30.0)
+	var target := em.index_of(em.ids[0])
+	for id in [Ailments.BURN, Ailments.SHOCK, Ailments.POISON, Ailments.POISON, Ailments.POISON]:
+		em.apply_ailment(target, id, 40.0)
+	var hud: Node = world.get("ui").get("hud")
+	hud.set("_target_id", em.ids[target])
+	hud.set("_target_linger", 999.0)
+	player.invulnerable = false
+	player.apply_dot("prueba_fuego", 0.1, 30.0, "fire")
+	player.apply_dot("prueba_veneno", 0.1, 30.0, "chaos")
+	player.invulnerable = true
+	await _wait(1.2)
+	_save("17_estados_y_persistentes")
+	# Unos segundos de combate de verdad: las invocaciones pelean y aplican estados.
+	hud.set("_target_linger", 0.0)
+	for k in 4:
+		skills.call("_execute", skills.profile(5), p + Vector2(300, 0).rotated(k * 1.5))
+		await _wait(1.0)
+	_save("17b_combate")
+	var applied := 0
+	for i in em.count():
+		applied += em.ailments_of(i).size()
+	print("combate: %d enemigos vivos, %d estados activos, %d invocaciones, reserva %.0f %%" % [
+		em.count(), applied, skills.get("_units").size(), player.mana_reserved * 100.0])
+	world.set("_since_save", -9999.0)
+
+
+## Tutorial recién llegado: los bugs están lejos, B.O.B. al lado.
+func _capture_tutorial_start() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Tutorial", &"guerrero", CharacterAppearance.default(), false)
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(3.0)
+	_save("18_tutorial_inicio")
+	var em: EnemyManager = world.get("enemies")
+	var player: Player = world.get("player")
+	var nearest := INF
+	for k in em.count():
+		nearest = minf(nearest, em.positions[k].distance_to(player.global_position))
+	print("tutorial: %d enemigos, el más cercano a %.0f px; vida %d/%d" % [em.count(), nearest, player.life, player.max_life()])
 	world.set("_since_save", -9999.0)
 
 

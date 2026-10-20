@@ -83,6 +83,7 @@ func create_character(char_name: String, class_id: StringName, appearance: Dicti
 	if items.bases.has(weapon_id):
 		c.inventory.set_equipped("weapon", ItemGenerator.new(items).generate(1, Rarity.Item.NORMAL, weapon_id))
 	give_starter_skills(c)
+	c.flags[CharacterData.STARTER_KIT_FLAG] = true
 	var starters := Flask.starter_set(items)
 	for i in mini(starters.size(), Inventory.FLASK_SLOTS):
 		c.inventory.flasks[i] = starters[i]
@@ -107,6 +108,9 @@ func load_character(id: String) -> CharacterData:
 	# Migración v1 -> v2: los guardados de antes de las habilidades no tienen placas.
 	if int(data.get("save_version", 1)) < 2:
 		give_starter_skills(c)
+	# Kits de 3 habilidades: a los personajes de antes se les regala la que les falte.
+	if not c.flags.has(CharacterData.STARTER_KIT_FLAG):
+		c.give_missing_starter_skills(items)
 	return c
 
 

@@ -35,6 +35,8 @@ var invulnerable := false
 var action_lock := 0.0
 ## Durante las escenas: ni se mueve, ni lanza, ni bebe.
 var controls_locked := false
+## Fracción del maná máximo reservada por invocaciones persistentes (0..0.95).
+var mana_reserved := 0.0
 ## Daños degenerativos activos (charcos, quemaduras): clave -> {dps, time, kind}.
 ## Cada fuente tiene su clave; la misma fuente no se acumula, se renueva.
 var dots: Dictionary = {}
@@ -75,8 +77,20 @@ func max_life() -> float:
 	return maxf(1.0, character.stats.get_value(Stat.LIFE))
 
 
+## Maná utilizable: el máximo menos lo que reservan las invocaciones persistentes.
 func max_mana() -> float:
+	return unreserved_mana_max() * (1.0 - mana_reserved)
+
+
+## Maná máximo sin contar la reserva (el tamaño del orbe).
+func unreserved_mana_max() -> float:
 	return maxf(0.0, character.stats.get_value(Stat.MANA))
+
+
+## Fracción (0..1) del maná máximo reservada (la pone SkillController).
+func set_mana_reserved(fraction: float) -> void:
+	mana_reserved = clampf(fraction, 0.0, 0.95)
+	mana = minf(mana, max_mana())
 
 
 func max_energy_shield() -> float:
@@ -263,7 +277,7 @@ func _process(delta: float) -> void:
 
 func _regenerate(delta: float) -> void:
 	var life_gain := _stat(Stat.LIFE_REGEN)
-	var mana_gain := max_mana() * MANA_REGEN_PERCENT / 100.0 * character.stats.total_multiplier(Stat.MANA_REGEN, character.condition_tags())
+	var mana_gain := unreserved_mana_max() * MANA_REGEN_PERCENT / 100.0 * character.stats.total_multiplier(Stat.MANA_REGEN, character.condition_tags())
 	for r in _recoveries:
 		var dt := minf(delta, r["remaining"])
 		if r["resource"] == "life":

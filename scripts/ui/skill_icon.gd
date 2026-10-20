@@ -10,8 +10,68 @@ static func draw(ci: CanvasItem, rect: Rect2, skill_def: Dictionary, dimmed := f
 		color = color.darkened(0.55)
 	var c := rect.get_center()
 	var r := minf(rect.size.x, rect.size.y) * 0.34
-	ci.draw_rect(rect, Color(color, 0.12))
+	_draw_backdrop(ci, rect, color, dimmed)
 	match icon.get("shape", ""):
+		"leap":
+			# Arco de salto que termina en un impacto.
+			ci.draw_arc(c + Vector2(-r * 0.1, r * 0.35), r * 0.85, PI * 1.05, PI * 1.85, 14, Color(color, 0.7), 3.0, true)
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(r * 0.55, -r * 0.2), c + Vector2(r * 0.95, -r * 0.05), c + Vector2(r * 0.6, r * 0.25)]), color)
+			ci.draw_line(c + Vector2(-r, r * 0.85), c + Vector2(r, r * 0.85), color, 3.0, true)
+			for k in 3:
+				ci.draw_line(c + Vector2(r * (0.15 + 0.3 * k), r * 0.85), c + Vector2(r * (0.05 + 0.35 * k), r * 0.45), color.lightened(0.3), 2.0, true)
+		"flurry":
+			# Tres tajos paralelos.
+			for k in 3:
+				var o := Vector2((k - 1) * r * 0.45, (k - 1) * r * 0.15)
+				ci.draw_line(c + o + Vector2(-r * 0.6, r * 0.85), c + o + Vector2(r * 0.5, -r * 0.85), Color(color, 0.55 + 0.2 * k), 3.0, true)
+			ci.draw_circle(c + Vector2(r * 0.85, -r * 0.7), r * 0.12, Color.WHITE)
+		"rain":
+			# Proyectiles cayendo sobre una zona.
+			ci.draw_set_transform(c + Vector2(0, r * 0.7), 0.0, Vector2(1.0, 0.35))
+			ci.draw_arc(Vector2.ZERO, r * 0.95, 0.0, TAU, 20, Color(color, 0.7), 2.0, true)
+			ci.draw_set_transform(Vector2.ZERO)
+			for k in 4:
+				var x := (k - 1.5) * r * 0.5
+				var y := -r * 0.9 + (k % 2) * r * 0.35
+				ci.draw_line(c + Vector2(x - r * 0.15, y), c + Vector2(x + r * 0.05, y + r * 0.8), Color(color, 0.5), 2.0, true)
+				ci.draw_circle(c + Vector2(x + r * 0.05, y + r * 0.8), r * 0.1, color.lightened(0.4))
+		"robot":
+			ci.draw_rect(Rect2(c + Vector2(-r * 0.6, -r * 0.55), Vector2(r * 1.2, r * 1.0)), Color("6e7480"))
+			ci.draw_rect(Rect2(c + Vector2(-r * 0.45, -r * 0.4), Vector2(r * 0.9, r * 0.35)), Color("10161c"))
+			ci.draw_rect(Rect2(c + Vector2(-r * 0.35, -r * 0.32), Vector2(r * 0.7, r * 0.18)), color)
+			ci.draw_line(c + Vector2(-r * 0.3, r * 0.45), c + Vector2(-r * 0.45, r), Color("4a4f5c"), 3.0, true)
+			ci.draw_line(c + Vector2(r * 0.3, r * 0.45), c + Vector2(r * 0.45, r), Color("4a4f5c"), 3.0, true)
+			ci.draw_rect(Rect2(c + Vector2(r * 0.6, -r * 0.1), Vector2(r * 0.45, r * 0.2)), Color("3a3f4a"))
+			ci.draw_line(c + Vector2(0, -r * 0.55), c + Vector2(0, -r * 0.9), Color("8a8a96"), 2.0)
+			ci.draw_circle(c + Vector2(0, -r * 0.95), r * 0.12, color)
+		"daemon":
+			ci.draw_circle(c + Vector2(0, r * 0.35), r * 0.55, Color("b8322a"))
+			ci.draw_circle(c + Vector2(0, -r * 0.3), r * 0.42, Color("c83a30"))
+			for s in [-1.0, 1.0]:
+				ci.draw_colored_polygon(PackedVector2Array([c + Vector2(s * r * 0.2, -r * 0.62), c + Vector2(s * r * 0.55, -r * 1.05), c + Vector2(s * r * 0.42, -r * 0.48)]), Color("f0e0c0"))
+			ci.draw_circle(c + Vector2(-r * 0.15, -r * 0.3), r * 0.08, Color("ffe070"))
+			ci.draw_circle(c + Vector2(r * 0.15, -r * 0.3), r * 0.08, Color("ffe070"))
+			ci.draw_line(c + Vector2(r * 0.8, r), c + Vector2(r * 0.8, -r * 0.7), Color("c8c8c8"), 2.0, true)
+			for k in 3:
+				ci.draw_line(c + Vector2(r * (0.62 + 0.18 * k), -r * 0.7), c + Vector2(r * (0.62 + 0.18 * k), -r * 1.0), Color("c8c8c8"), 1.5, true)
+		"escort":
+			for k in 4:
+				var arm := Vector2.from_angle(PI / 4.0 + PI / 2.0 * k) * r * 0.75
+				ci.draw_line(c, c + arm, Color("8a8a96"), 2.0, true)
+				ci.draw_circle(c + arm, r * 0.28, Color(0.85, 0.85, 0.9, 0.35))
+			ci.draw_circle(c, r * 0.35, Color("3a3f4a"))
+			ci.draw_circle(c, r * 0.2, color)
+			ci.draw_line(c + Vector2(r * 0.2, r * 0.3), c + Vector2(r * 0.6, r * 0.95), Color(color, 0.8), 2.0, true)
+		"golem":
+			ci.draw_rect(Rect2(c + Vector2(-r * 0.7, -r * 0.2), Vector2(r * 1.4, r * 1.15)), Color("5a5650"))
+			ci.draw_rect(Rect2(c + Vector2(-r * 0.5, -r * 0.95), Vector2(r * 1.0, r * 0.7)), Color("b8b8b0"))
+			ci.draw_rect(Rect2(c + Vector2(-r * 0.4, -r * 0.85), Vector2(r * 0.8, r * 0.5)), Color("10200f"))
+			ci.draw_line(c + Vector2(-r * 0.25, -r * 0.6), c + Vector2(-r * 0.05, -r * 0.55), Color("3cff6a"), 2.0)
+			ci.draw_line(c + Vector2(r * 0.25, -r * 0.6), c + Vector2(r * 0.05, -r * 0.55), Color("3cff6a"), 2.0)
+			for k in 3:
+				ci.draw_circle(c + Vector2(-r * 0.4 + k * r * 0.4, r * 0.4), r * 0.09, color if k != 1 else Color("e06c6c"))
+			ci.draw_rect(Rect2(c + Vector2(-r * 1.05, -r * 0.1), Vector2(r * 0.3, r * 0.8)), Color("47443f"))
+			ci.draw_rect(Rect2(c + Vector2(r * 0.75, -r * 0.1), Vector2(r * 0.3, r * 0.8)), Color("47443f"))
 		"ring":
 			ci.draw_arc(c, r, 0.0, TAU, 32, color, r * 0.28, true)
 			ci.draw_line(c + Vector2(-r * 0.2, r * 0.2), c + Vector2(r * 0.9, -r * 0.9), color, 3.0, true)
@@ -127,3 +187,35 @@ static func draw(ci: CanvasItem, rect: Rect2, skill_def: Dictionary, dimmed := f
 			ci.draw_arc(c + Vector2(-r * 0.15, -r * 0.1), r * 0.6, -0.6, 0.6, 8, Color("7fd0e8", 0.5), 1.5, true)
 		_:
 			ci.draw_circle(c, r * 0.5, color)
+	# Brillo diagonal de cristal por encima del glifo.
+	ci.draw_colored_polygon(PackedVector2Array([rect.position, rect.position + Vector2(rect.size.x * 0.55, 0),
+		rect.position + Vector2(0, rect.size.y * 0.55)]), Color(1, 1, 1, 0.05))
+
+
+## Fondo del icono: degradado vertical del color de la habilidad a casi negro,
+## un halo detrás del glifo y un bisel (luz arriba-izquierda, sombra abajo-derecha).
+static func _draw_backdrop(ci: CanvasItem, rect: Rect2, color: Color, dimmed: bool) -> void:
+	var top := Color(color.darkened(0.35), 0.55 if not dimmed else 0.3)
+	var bottom := Color(0.04, 0.03, 0.06, 0.95)
+	ci.draw_polygon(PackedVector2Array([rect.position, Vector2(rect.end.x, rect.position.y), rect.end, Vector2(rect.position.x, rect.end.y)]),
+		PackedColorArray([top, top, bottom, bottom]))
+	var c := rect.get_center()
+	var r := minf(rect.size.x, rect.size.y) * 0.5
+	for k in 3:
+		ci.draw_circle(c, r * (0.9 - 0.25 * k), Color(color, 0.05 + 0.03 * k))
+	ci.draw_line(rect.position, Vector2(rect.end.x, rect.position.y), Color(1, 1, 1, 0.18), 1.0)
+	ci.draw_line(rect.position, Vector2(rect.position.x, rect.end.y), Color(1, 1, 1, 0.12), 1.0)
+	ci.draw_line(Vector2(rect.position.x, rect.end.y), rect.end, Color(0, 0, 0, 0.6), 1.0)
+	ci.draw_line(Vector2(rect.end.x, rect.position.y), rect.end, Color(0, 0, 0, 0.6), 1.0)
+
+
+## Puntitos de colores con los estados que puede aplicar (esquina inferior derecha).
+static func draw_ailment_pips(ci: CanvasItem, rect: Rect2, chances: Dictionary) -> void:
+	var k := 0
+	for id in Ailments.ALL:
+		if not chances.has(id):
+			continue
+		var p := Vector2(rect.end.x - 5.0 - k * 7.0, rect.end.y - 5.0)
+		ci.draw_circle(p, 3.2, Color(0, 0, 0, 0.8))
+		ci.draw_circle(p, 2.3, Ailments.color(id))
+		k += 1

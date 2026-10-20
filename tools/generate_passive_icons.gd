@@ -27,6 +27,8 @@ func _initialize() -> void:
 		["ks_hechicero", _alarm_clock], ["ks_templario", _monitor],
 		["versatil", _layers], ["tiempos", _hourglass], ["movilidad", _boot],
 		["ks_hacker", _key], ["ks_full_stack", _tower_of_stacks],
+		["ignicion", _campfire], ["sobrecarga", _tesla_coil], ["criogenia", _ice_crystal],
+		["toxinas", _poison_flask], ["hemorragia", _blood_drop], ["automatizacion", _robot_arm],
 	]
 	var rows := ceili(float(icons.size()) / COLUMNS)
 	img = Image.create_empty(S * COLUMNS, S * rows, false, Image.FORMAT_RGBA8)
@@ -308,13 +310,81 @@ func _alarm_clock() -> void:
 	_line(23, 28, 25, 30, Color("2a2a30"), 2)
 
 
+## Orquestación con Kubernetes: timón de barco.
 func _monitor() -> void:
-	_rect(4, 5, 28, 22, Color("b8b8b0"))
-	_rect(6, 7, 26, 20, Color("10200f"))
-	_line(9, 13, 12, 16, Color("3cff6a"), 1)   # check ✓
-	_line(12, 16, 18, 10, Color("3cff6a"), 1)
-	_rect(14, 22, 18, 25, Color("8a8a80"))
-	_rect(10, 26, 22, 27, Color("8a8a80"))
+	var blue := Color("4b7bd6")
+	_ring(16, 16, 10, 2.5, blue)
+	for k in 7:
+		var d := Vector2.from_angle(TAU * k / 7.0 - PI / 2.0)
+		_line(roundi(16 + d.x * 3), roundi(16 + d.y * 3), roundi(16 + d.x * 14), roundi(16 + d.y * 14), Color("e8e8f0"), 2)
+	_ellipse(16, 16, 3.5, 3.5, Color("e8e8f0"))
+
+
+# --- Estados alterados y autómatas ---
+
+## Ignición: hoguera con troncos.
+func _campfire() -> void:
+	_line(6, 27, 26, 22, Color("7a5230"), 2)
+	_line(6, 22, 26, 27, Color("6a4628"), 2)
+	_poly([Vector2(16, 3), Vector2(24, 15), Vector2(22, 23), Vector2(10, 23), Vector2(8, 15), Vector2(12, 9)], Color("ff7a2a"))
+	_poly([Vector2(16, 10), Vector2(20, 18), Vector2(19, 23), Vector2(13, 23), Vector2(12, 18)], Color("ffc040"))
+	_ellipse(16, 20, 2, 3, Color("fff0a0"))
+
+
+## Sobrecarga: bobina de Tesla con chispa.
+func _tesla_coil() -> void:
+	_rect(13, 12, 19, 27, Color("8a6d3b"))
+	for y in [14, 18, 22]:
+		_rect(12, y, 20, y + 1, Color("d9a441"))
+	_rect(9, 27, 23, 29, Color("4a4a52"))
+	_ellipse(16, 8, 5, 4, Color("c8ccd4"))
+	_line(20, 6, 25, 3, Color("f0e060"))
+	_line(25, 3, 23, 9, Color("f0e060"))
+	_line(23, 9, 29, 7, Color("fff4b0"))
+	_line(12, 6, 6, 4, Color("f0e060"))
+
+
+## Criogenia: cristal de hielo.
+func _ice_crystal() -> void:
+	_poly([Vector2(16, 2), Vector2(24, 11), Vector2(20, 29), Vector2(12, 29), Vector2(8, 11)], Color("a0e0ff"))
+	_poly([Vector2(16, 2), Vector2(24, 11), Vector2(16, 14)], Color("e0f8ff"))
+	_line(16, 14, 16, 28, Color("6ab0e0"))
+	_line(8, 11, 16, 14, Color("6ab0e0"))
+	_px(12, 8, Color.WHITE)
+	_px(13, 7, Color.WHITE)
+
+
+## Toxinas: matraz con veneno burbujeante.
+func _poison_flask() -> void:
+	var glass := Color("c8e0d0")
+	_rect(13, 3, 19, 11, glass)
+	_poly([Vector2(13, 11), Vector2(19, 11), Vector2(28, 28), Vector2(4, 28)], glass)
+	_poly([Vector2(9, 19), Vector2(23, 19), Vector2(27, 27), Vector2(5, 27)], Color("4fc04a"))
+	_ellipse(12, 23, 1.5, 1.5, Color("b0ffa0"))
+	_ellipse(19, 21, 1.2, 1.2, Color("b0ffa0"))
+	_ellipse(16, 7, 1.5, 1.5, Color("6fd36b"))
+
+
+## Hemorragia: gota de sangre con salpicadura.
+func _blood_drop() -> void:
+	var c := Color("c02838")
+	_poly([Vector2(15, 3), Vector2(22, 16), Vector2(8, 16)], c)
+	_ellipse(15, 19, 7.5, 8, c)
+	_ellipse(12, 17, 2, 3, Color("ff7080"))
+	_ellipse(25, 25, 2.5, 2, c.darkened(0.15))
+	_ellipse(6, 27, 1.5, 1.2, c.darkened(0.15))
+
+
+## Automatización: brazo robótico con pinza.
+func _robot_arm() -> void:
+	var metal := Color("8a96a8")
+	_rect(6, 26, 18, 29, Color("4a4f5c"))
+	_line(11, 26, 11, 16, metal, 3)
+	_ellipse(12, 16, 3, 3, Color("7fd0e8"))
+	_line(12, 15, 22, 8, metal, 3)
+	_ellipse(22, 8, 2.5, 2.5, Color("7fd0e8"))
+	_line(23, 7, 28, 4, metal, 2)
+	_line(23, 9, 28, 12, metal, 2)
 
 
 ## Versatilidad: capas de una pila (front, back, base de datos).

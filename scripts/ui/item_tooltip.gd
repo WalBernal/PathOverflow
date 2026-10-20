@@ -130,6 +130,17 @@ static func _motherboard_text(board: Motherboard, character: CharacterData) -> S
 			lines.append("Enfriamiento: [color=#e8d9b0]%.1f s[/color]" % p["cooldown"])
 		if p["repeats"] > 0:
 			lines.append("Se repite [color=#e8d9b0]%d[/color] vez más" % p["repeats"])
+		if p["kind"] == "unit":
+			lines.append("[color=#9ad0ff]Persistente[/color]: hasta [color=#e8d9b0]%d[/color] a la vez · vida [color=#e8d9b0]%d[/color] · reserva [color=#7fa8e0]%d %%[/color] del maná cada una" % [
+				p["max_units"], p["unit_life"], roundi(p["reserve"])])
+		if p["automaton_speed"] != 1.0:
+			lines.append("Velocidad de autómata: [color=#e8d9b0]×%.2f[/color]" % p["automaton_speed"])
+		if not p["ailments"].is_empty():
+			var parts := PackedStringArray()
+			for id in Ailments.ALL:
+				if p["ailments"].has(id):
+					parts.append("[color=#%s]%d %% %s[/color]" % [Ailments.color(id).to_html(false), roundi(p["ailments"][id]), Ailments.display_name(id).to_lower()])
+			lines.append("Estados: " + " · ".join(parts))
 		t += _section("\n".join(lines))
 	var slots := PackedStringArray()
 	for i in board.slots.size():
@@ -153,6 +164,14 @@ static func _ram_text(ram: RamModule) -> String:
 		color, ram.def["name"], GREY, ram.generation()]
 	t += _section("[i][color=#a08f6a]%s[/color][/i]" % ram.def.get("description", ""))
 	t += _section("[color=#%s]%s[/color]" % [MOD_COLOR, "\n".join(ram.effect_lines())])
+	# RAM de asistencia: explica qué hace cada estado que puede aplicar.
+	var helps := PackedStringArray()
+	for md in ram.def.get("mods", []):
+		for id in Ailments.ALL:
+			if String(md.get("stat", "")) == String(Ailments.CHANCE_STAT[id]):
+				helps.append("[color=#%s]%s[/color]: %s" % [Ailments.color(id).to_html(false), Ailments.display_name(id), Ailments.description(id)])
+	if not helps.is_empty():
+		t += _section("\n".join(helps))
 	var compat := PackedStringArray()
 	var required: Array = ram.def.get("requires_tags", [])
 	compat.append("Funciona con: %s" % ("cualquier habilidad" if required.is_empty() else "habilidades con " + _tag_list(required)))

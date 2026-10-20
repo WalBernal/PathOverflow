@@ -7,6 +7,7 @@
       "starter_weapon": "hacha_de_lenador",
       "starter_skills": [
         "barrido",
+        "reinicio_forzado",
         "firewall_personal"
       ],
       "description": "Recién egresado y ya es quien arregla todo a golpes: reinicia, desconecta, vuelve a conectar. Y si no, golpe seco.",
@@ -200,15 +201,40 @@
           ]
         }
       ],
-      "playstyle": "Cuerpo a cuerpo y aguante. Recibe golpes, los devuelve más fuertes y no pregunta por qué.",
+      "playstyle": "Cuerpo a cuerpo y aguante: barre, salta sobre los grupos y los deja sangrando mientras su firewall aguanta lo que venga.",
       "difficulty": 1,
-      "color": "c84b4b"
+      "color": "c84b4b",
+      "trait": {
+        "name": "Mantenimiento Preventivo",
+        "description": "Tus golpes cuerpo a cuerpo tienen un 10 % de probabilidad de hacer sangrar y los estados que aplicas duran un 25 % más. +10 % de armadura.",
+        "mods": [
+          {
+            "stat": "bleed_chance",
+            "type": "flat",
+            "value": 10,
+            "tags": [
+              "melee"
+            ]
+          },
+          {
+            "stat": "ailment_duration",
+            "type": "increased",
+            "value": 25
+          },
+          {
+            "stat": "armour",
+            "type": "increased",
+            "value": 10
+          }
+        ]
+      }
     },
     {
       "id": "duelista",
       "name": "Tester QA",
       "starter_weapon": "espada_oxidada",
       "starter_skills": [
+        "fuzzing",
         "deploy_continuo",
         "hiperthreading"
       ],
@@ -364,9 +390,31 @@
           ]
         }
       ],
-      "playstyle": "Ataques rápidos y críticos. Elegante, minucioso y casi siempre a dos píxeles de morir.",
+      "playstyle": "Ataques rápidos y críticos: ráfagas de tajos, embestidas y un buff de velocidad. Elegante, minucioso y casi siempre a dos píxeles de morir.",
       "difficulty": 2,
-      "color": "d9a441"
+      "color": "d9a441",
+      "trait": {
+        "name": "Pruebas de Regresión",
+        "description": "+25 % de probabilidad de crítico con ataques y +10 % de probabilidad de hacer sangrar con ataques.",
+        "mods": [
+          {
+            "stat": "crit_chance",
+            "type": "increased",
+            "value": 25,
+            "tags": [
+              "attack"
+            ]
+          },
+          {
+            "stat": "bleed_chance",
+            "type": "flat",
+            "value": 10,
+            "tags": [
+              "attack"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "exploradora",
@@ -374,6 +422,7 @@
       "starter_weapon": "espada_oxidada",
       "starter_skills": [
         "rafaga_de_paquetes",
+        "cascada_css",
         "teleport_tcp"
       ],
       "description": "Píxel perfecto y a distancia. Dispara antes de que el backend termine de responder.",
@@ -531,9 +580,28 @@
           ]
         }
       ],
-      "playstyle": "Proyectiles y evasión. Dispara desde lejos y no deja que nadie se acerque. Como a su código.",
+      "playstyle": "Proyectiles y control: dispara desde lejos, hiela a lo que se acerca y se teletransporta si no basta. Como con su código: nadie la toca.",
       "difficulty": 2,
-      "color": "5cb85c"
+      "color": "5cb85c",
+      "trait": {
+        "name": "Diseño Responsive",
+        "description": "Tus proyectiles tienen un 15 % de probabilidad de helar. +5 % de velocidad de movimiento.",
+        "mods": [
+          {
+            "stat": "chill_chance",
+            "type": "flat",
+            "value": 15,
+            "tags": [
+              "projectile"
+            ]
+          },
+          {
+            "stat": "movement_speed",
+            "type": "increased",
+            "value": 5
+          }
+        ]
+      }
     },
     {
       "id": "hacker",
@@ -541,7 +609,8 @@
       "starter_weapon": "daga_de_root",
       "starter_skills": [
         "rollback",
-        "excepcion_en_cadena"
+        "excepcion_en_cadena",
+        "bomba_logica"
       ],
       "description": "Habla con las máquinas mejor que con las personas. Encadena instrucciones hasta que el sistema hace exactamente lo que ella quiere.",
       "base_attributes": {
@@ -701,9 +770,25 @@
           ]
         }
       ],
-      "playstyle": "Cadenas, trampas y armas que vuelven. Críticos con daga y hechizos que saltan de enemigo en enemigo.",
+      "playstyle": "Cadenas, trampas y veneno: armas que vuelven, excepciones que saltan de enemigo en enemigo y bombas lógicas que los dejan pudriéndose.",
       "difficulty": 2,
-      "color": "2fd0a0"
+      "color": "2fd0a0",
+      "trait": {
+        "name": "Inyección de Prompts",
+        "description": "+15 % de probabilidad de envenenar con todo y +20 % de daño de estados alterados.",
+        "mods": [
+          {
+            "stat": "poison_chance",
+            "type": "flat",
+            "value": 15
+          },
+          {
+            "stat": "ailment_damage",
+            "type": "increased",
+            "value": 20
+          }
+        ]
+      }
     },
     {
       "id": "hechicero",
@@ -711,7 +796,8 @@
       "starter_weapon": "maza_de_depuracion",
       "starter_skills": [
         "ping_letal",
-        "stack_overflow"
+        "stack_overflow",
+        "fork_bomb"
       ],
       "description": "Convierte números en hechizos. Si el modelo falla, fue culpa de los datos.",
       "base_attributes": {
@@ -888,9 +974,39 @@
           ]
         }
       ],
-      "playstyle": "Hechizos elementales y escudo de energía. Mucho daño, poca vida y una fe ciega en las estadísticas.",
+      "playstyle": "Los tres elementos: rayo que atraviesa, frío que congela y fuego que se replica. Mucho daño, poca vida y una fe ciega en las estadísticas.",
       "difficulty": 3,
-      "color": "4b8bd6"
+      "color": "4b8bd6",
+      "trait": {
+        "name": "Sobreajuste",
+        "description": "Tus hechizos tienen +10 % de probabilidad de quemar, helar y electrocutar.",
+        "mods": [
+          {
+            "stat": "burn_chance",
+            "type": "flat",
+            "value": 10,
+            "tags": [
+              "spell"
+            ]
+          },
+          {
+            "stat": "chill_chance",
+            "type": "flat",
+            "value": 10,
+            "tags": [
+              "spell"
+            ]
+          },
+          {
+            "stat": "shock_chance",
+            "type": "flat",
+            "value": 10,
+            "tags": [
+              "spell"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "templario",
@@ -898,6 +1014,7 @@
       "starter_weapon": "maza_de_depuracion",
       "starter_skills": [
         "torreta_ci",
+        "robot_centinela",
         "drones_vigilancia"
       ],
       "description": "Automatiza todo, incluso el combate: arma torretas con piezas de servidores viejos, suelta drones y deja que los robots hagan el trabajo sucio. Su lema: si se puede automatizar, que pelee solo.",
@@ -1071,9 +1188,28 @@
           ]
         }
       ],
-      "playstyle": "Robótica: torretas que disparan solas, drones y proyectiles que rastrean al enemigo más cercano. Despliega, detecta y mantén la distancia mientras las máquinas trabajan.",
+      "playstyle": "Robótica: torretas que disparan solas, un robot centinela persistente que le sigue a todas partes y drones de vigilancia. Despliega y deja que las máquinas trabajen.",
       "difficulty": 2,
-      "color": "b04ad9"
+      "color": "b04ad9",
+      "trait": {
+        "name": "Infraestructura como Código",
+        "description": "+20 % de velocidad de autómatas y +15 % de daño de autómatas (torretas, drones, esbirros y robots).",
+        "mods": [
+          {
+            "stat": "automaton_speed",
+            "type": "increased",
+            "value": 20
+          },
+          {
+            "stat": "damage",
+            "type": "increased",
+            "value": 15,
+            "tags": [
+              "automaton"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "full_stack",
@@ -1081,7 +1217,8 @@
       "starter_weapon": "teclado_mecanico",
       "starter_skills": [
         "bucle_infinito",
-        "flamewar"
+        "flamewar",
+        "daemon_segundo_plano"
       ],
       "description": "Sabe un poco de todo y nada del todo. Empieza en el centro del árbol, como su ego.",
       "base_attributes": {
@@ -1247,9 +1384,30 @@
           ]
         }
       ],
-      "playstyle": "Híbrido de verdad: mezcla ataques y hechizos, empieza en el centro y puede ir hacia cualquier rama del árbol.",
+      "playstyle": "Híbrido de verdad: gira en cuerpo a cuerpo, quema con hechizos y deja daemons peleando en segundo plano. Empieza en el centro del árbol y puede ir a cualquier rama.",
       "difficulty": 3,
-      "color": "e8e8e8"
+      "color": "e8e8e8",
+      "trait": {
+        "name": "Hilo Principal y Secundario",
+        "description": "+10 % de daño y de daño de esbirros. Tus invocaciones persistentes reservan un 15 % menos de maná.",
+        "mods": [
+          {
+            "stat": "damage",
+            "type": "increased",
+            "value": 10
+          },
+          {
+            "stat": "minion_damage",
+            "type": "increased",
+            "value": 10
+          },
+          {
+            "stat": "reservation_efficiency",
+            "type": "increased",
+            "value": 15
+          }
+        ]
+      }
     }
   ]
 }

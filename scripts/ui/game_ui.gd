@@ -175,7 +175,7 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	_zone_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_zone_banner)
 	_zone_banner.anchor_right = 1.0
-	_zone_banner.offset_top = 150.0
+	_zone_banner.offset_top = 165.0
 	_zone_banner.modulate.a = 0.0
 
 	_act_banner = _build_act_banner()
@@ -210,7 +210,12 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	loot.pickup_failed.connect(hud.flash)
 	loot.picked_up.connect(func(_item: Item) -> void: tutorial.notify("picked_up"))
 	skills.skill_used.connect(func(_i: int) -> void: tutorial.notify("skill_used"))
+	skills.skill_used.connect(hud.notify_skill_used)
 	skills.not_enough_mana.connect(func() -> void: hud.flash("Sin maná. Bebe un refresco (teclas 1-5) o espera, como con el compilador."))
+	skills.reservation_full.connect(func(skill_name: String) -> void:
+		hud.flash("No queda maná sin reservar para otra invocación de %s. Tus procesos en segundo plano ya se lo comen todo." % skill_name))
+	skills.unit_lost.connect(func(skill_name: String) -> void:
+		hud.flash("Ha caído tu %s. Vuelve a lanzar la habilidad para montarlo otra vez." % skill_name, Color("ff9a4a")))
 	player.flask_used.connect(func(_i: int) -> void: tutorial.notify("flask_used"))
 
 

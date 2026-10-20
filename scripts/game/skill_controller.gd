@@ -7,6 +7,10 @@ extends Node2D
 
 signal skill_used(hotbar_index: int)
 signal not_enough_mana
+## No queda maná sin reservar para otra invocación persistente.
+signal reservation_full(skill_name: String)
+## Una invocación persistente ha caído.
+signal unit_lost(skill_name: String)
 
 const ACTIONS := [&"skill_1", &"skill_2", &"skill_3", &"skill_4", &"skill_5", &"skill_6"]
 const KEY_LABELS := ["Der.", "Esp.", "Q", "E", "R", "F"]
@@ -41,6 +45,12 @@ var _devices: Array[Dictionary] = []
 var _minions: Array[Dictionary] = []      # esbirros (Proceso Hijo)
 var _clouds: Array[Dictionary] = []       # charcos de daño degenerativo (Fuga de Memoria)
 var _drones: Array[Dictionary] = []       # drones que orbitan y disparan (Drones de Vigilancia)
+## Invocaciones persistentes (kind "unit"): no caducan, reservan maná y los
+## enemigos pueden atacarlas (EnemyManager.allies). Ver _update_units.
+var _units: Array[Dictionary] = []
+const UNIT_LEASH := 900.0
+## Lluvias en curso (Cascada de Estilos): impactos pendientes repartidos en el tiempo.
+var _rains: Array[Dictionary] = []
 ## Robot de compañía (ascendencia Ingeniero en Robótica): {pos, laser, emp, bob}.
 var _companion: Dictionary = {}
 var _companion_laser: Dictionary = {}
@@ -81,6 +91,69 @@ func refresh_profiles() -> void:
 		var lvl := clampi(character.level - 2, 1, Motherboard.MAX_LEVEL)
 		_companion_laser = SkillCalc.compute(Motherboard.new(CompanionRobot.LASER, lvl, []), character)
 		_companion_emp = SkillCalc.compute(Motherboard.new(CompanionRobot.EMP, lvl, []), character)
+	_refresh_units()
+
+
+## Las invocaciones siguen a su placa: si se quita de la barra, desaparecen; si
+## cambian sus cifras (nivel, RAM, pasivas), se actualizan conservando su % de vida.
+func _refresh_units() -> void:
+	var by_id := {}
+	for p in _profiles:
+		if not p.is_empty() and p["kind"] == "unit":
+			by_id[p["id"]] = p
+	var kept: Array[Dictionary] = []
+	var per_skill := {}
+	for u in _units:
+		var p: Dictionary = by_id.get(u["skill_id"], {})
+		if p.is_empty():
+			continue
+		per_skill[u["skill_id"]] = int(per_skill.get(u["skill_id"], 0)) + 1
+		if per_skill[u["skill_id"]] > int(p["max_units"]):
+			continue
+		var frac: float = clampf(u["life"] / maxf(1.0, u["max_life"]), 0.0, 1.0)
+		u["profile"] = p
+		u["max_life"] = maxf(1.0, p["unit_life"])
+		u["life"] = u["max_life"] * frac
+		kept.append(u)
+	_units = kept
+	_update_reservation()
+
+
+func _update_reservation() -> void:
+	var total := 0.0
+	for u in _units:
+		total += float(u["profile"]["reserve"]) / 100.0
+	if player:
+		player.set_mana_reserved(total)
+	if enemies:
+		enemies.allies = _units.filter(func(u: Dictionary) -> bool: return u["behavior"] != "orbit")
+
+
+## Al cambiar de zona: lo que estaba en el suelo desaparece y las invocaciones
+## y esbirros llegan con el jugador.
+func on_zone_changed() -> void:
+	_projectiles.clear()
+	_effects.clear()
+	_pending.clear()
+	_traps.clear()
+	_devices.clear()
+	_clouds.clear()
+	_rains.clear()
+	_spins.assign(_spins.filter(func(s: Dictionary) -> bool: return s["center"] == Vector2.INF))
+	var k := 0
+	for m in _minions:
+		m["pos"] = player.global_position + Vector2.from_angle(TAU * k / maxf(1.0, _minions.size())) * 40.0
+		k += 1
+	for u in _units:
+		u["pos"] = player.global_position + Vector2.from_angle(TAU * k / maxf(1.0, _units.size() + _minions.size())) * 55.0
+		k += 1
+	_companion = {}
+
+
+## Quita todas las invocaciones persistentes (al morir).
+func clear_units() -> void:
+	_units.clear()
+	_update_reservation()
 
 
 func profile(index: int) -> Dictionary:
@@ -109,11 +182,27 @@ func _physics_process(delta: float) -> void:
 	_update_traps(delta)
 	_update_devices(delta)
 	_update_minions(delta)
+	_update_units(delta)
+	_update_rains(delta)
 	_update_clouds(delta)
 	_update_drones(delta)
 	_update_companion(delta)
 	_update_effects(delta)
+	enemies.hit_ailments = {}
 	queue_redraw()
+
+
+## Prepara los estados alterados que puede aplicar el próximo golpe de `p`.
+## `scale`: para daños por tick (charcos), que tiran los dados muchas veces.
+func _ctx(p: Dictionary, scale := 1.0) -> void:
+	var ctx: Dictionary = p.get("ailment_ctx", {})
+	if scale == 1.0 or ctx.is_empty():
+		enemies.hit_ailments = ctx
+		return
+	var scaled := {}
+	for id in ctx["chances"]:
+		scaled[id] = float(ctx["chances"][id]) * scale
+	enemies.hit_ailments = {"chances": scaled, "effect": ctx["effect"], "duration": ctx["duration"]}
 
 
 func try_use(index: int) -> bool:
@@ -124,6 +213,11 @@ func try_use(index: int) -> bool:
 		if _mana_warning_cooldown <= 0.0:
 			_mana_warning_cooldown = 1.5
 			not_enough_mana.emit()
+		return false
+	if p["kind"] == "unit" and not _can_summon(p):
+		if _mana_warning_cooldown <= 0.0:
+			_mana_warning_cooldown = 1.5
+			reservation_full.emit(String(p["name"]))
 		return false
 	player.mana -= p["mana_cost"]
 	cooldowns[index] = p["cooldown"]
@@ -143,8 +237,24 @@ func try_use(index: int) -> bool:
 	return true
 
 
+## ¿Cabe otra invocación? Si ya están todas, volver a lanzarla las repara.
+func _can_summon(p: Dictionary) -> bool:
+	if _units_of(p["id"]).size() >= int(p["max_units"]):
+		return true
+	return player.mana_reserved + float(p["reserve"]) / 100.0 <= 0.95 + 0.0001
+
+
+func _units_of(skill_id: String) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for u in _units:
+		if u["skill_id"] == skill_id:
+			out.append(u)
+	return out
+
+
 ## Lo que hay activo ahora mismo (para los recuadros del HUD): esbirros, torretas,
-## trampas, minas y giros, agrupados. Cada entrada: {name, skill, count, remaining, total, kind}.
+## trampas, minas, giros e invocaciones persistentes, agrupados.
+## Cada entrada: {name, skill, count, remaining, total, kind, persistent?}.
 func active_summaries() -> Array[Dictionary]:
 	var groups := {}
 	var add := func(key: String, name: String, skill: Dictionary, remaining: float, total: float, kind: String) -> void:
@@ -154,7 +264,23 @@ func active_summaries() -> Array[Dictionary]:
 		g["count"] += 1
 		g["remaining"] = maxf(g["remaining"], remaining)
 		g["total"] = maxf(g["total"], total)
-	var skills_db: Dictionary = GameData.items.skills.skills if GameData.items else {}
+	# Definición de cada habilidad (para su icono), sacada de los perfiles.
+	var skills_db := {}
+	for group in [_units, _minions, _drones, _devices, _traps, _spins]:
+		for o in group:
+			skills_db[o["profile"]["id"]] = o["profile"].get("def", {})
+	for u in _units:
+		var uid: String = u["skill_id"]
+		var key := "unit:" + uid
+		if not groups.has(key):
+			groups[key] = {"name": u["profile"]["name"], "skill": skills_db.get(uid, {}), "count": 0, "remaining": 0.0,
+				"total": 0.0, "kind": "unit", "persistent": true}
+		var g: Dictionary = groups[key]
+		g["count"] += 1
+		# Para las persistentes, "remaining/total" es la vida de todas juntas.
+		g["remaining"] += maxf(0.0, u["life"])
+		g["total"] += u["max_life"]
+		g["invulnerable"] = u["behavior"] == "orbit"
 	for m in _minions:
 		var id: String = m["profile"]["id"]
 		add.call("minion:" + id, "Esbirros", skills_db.get(id, {}), m["life"], m["total"], "minion")
@@ -185,7 +311,28 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 	var dir := (target - origin).normalized()
 	if dir == Vector2.ZERO:
 		dir = Vector2.RIGHT
+	_ctx(p)
 	match p["kind"]:
+		"leap_slam":
+			# Salto: se mueve con colisión (no atraviesa paredes) y golpea al caer.
+			var land := origin + (target - origin).limit_length(p["range"])
+			if not device:
+				player.move_and_collide(land - origin)
+				player.stop_auto_move()
+				land = player.global_position
+			_effects.append({"type": "leap", "pos": origin, "end": land, "time": 0.0, "duration": 0.3, "color": color})
+			if p["stun"] > 0.0:
+				enemies.stun_in_radius(land, p["radius"], p["stun"])
+			_damage_area(land, p["radius"], p)
+			_effects.append({"type": "quake", "pos": land, "radius": p["radius"], "time": 0.0, "duration": 0.45, "color": color})
+		"rain":
+			var center := origin + (target - origin).limit_length(p["range"])
+			var hits: int = maxi(1, p["rain_hits"])
+			_rains.append({"pos": center, "left": hits, "next": 0.0, "interval": p["duration"] / hits, "profile": p, "color": color})
+			_effects.append({"type": "marker", "pos": center, "radius": p["radius"], "time": 0.0, "duration": p["duration"] + 0.2, "color": color})
+		"unit":
+			if not device:
+				_summon_unit(p, origin, color)
 		"melee_area", "nova":
 			if p["stun"] > 0.0:
 				enemies.stun_in_radius(origin, p["radius"], p["stun"])
@@ -335,6 +482,7 @@ func _update_spin(delta: float) -> void:
 			continue
 		if spin["next_tick"] <= 0.0:
 			spin["next_tick"] = p["tick"]
+			_ctx(p)
 			_damage_area(_spin_center(spin), p["radius"], p)
 		still.append(spin)
 	_spins = still
@@ -355,7 +503,8 @@ func _deploy(p: Dictionary, target: Vector2) -> void:
 	var life: float = p["totem_duration"] if kind == "totem" else rules["life"]
 	_devices.append({"kind": kind, "pos": origin + (target - origin).limit_length(rules["range"]), "armed_in": rules["armed"],
 		"life": life, "total": life, "profile": inner, "next_use": 0.0,
-		"interval": maxf(0.35, float(p["use_time"]) * 1.25), "color": DAMAGE_COLORS.get(p["damage_type"], Color.WHITE)})
+		"interval": maxf(0.35, float(p["use_time"]) * 1.25) / maxf(0.1, float(p["automaton_speed"])),
+		"color": DAMAGE_COLORS.get(p["damage_type"], Color.WHITE)})
 	# Límite por tipo: se retira el más antiguo.
 	var same: Array = _devices.filter(func(d: Dictionary) -> bool: return d["kind"] == kind)
 	if same.size() > int(rules["max"]) + int(p.get("extra_devices", 0)):
@@ -408,7 +557,8 @@ func _update_minions(delta: float) -> void:
 			if to.length() > reach:
 				m["pos"] = pos + to.normalized() * minf(MINION_SPEED * delta, to.length() - reach)
 			elif m["cd"] <= 0.0:
-				m["cd"] = SkillCalc.MINION_ATTACK_INTERVAL
+				m["cd"] = p["minion_interval"]
+				_ctx(p)
 				enemies.hit_index(i, p["min_damage"], p["max_damage"], p["crit_chance"], p["crit_multiplier"])
 				_effects.append({"type": "burst", "pos": pos + to.normalized() * 14.0, "radius": 12.0, "time": 0.0, "duration": 0.15, "color": m["color"]})
 		else:
@@ -418,6 +568,139 @@ func _update_minions(delta: float) -> void:
 				m["pos"] = pos + to_player.normalized() * MINION_SPEED * delta
 		still.append(m)
 	_minions = still
+
+
+# --- Invocaciones persistentes ---
+
+func _summon_unit(p: Dictionary, origin: Vector2, color: Color) -> void:
+	var mine := _units_of(p["id"])
+	var unit: Dictionary = p["unit"]
+	if mine.size() >= int(p["max_units"]):
+		# Ya están todas: se re-monta la más dañada (vida al máximo, junto al jugador).
+		var worst: Dictionary = mine[0]
+		for u in mine:
+			if u["life"] / u["max_life"] < worst["life"] / worst["max_life"]:
+				worst = u
+		worst["life"] = worst["max_life"]
+		if worst["behavior"] != "orbit":
+			worst["pos"] = origin + Vector2.from_angle(randf() * TAU) * 40.0
+		_effects.append({"type": "ring", "pos": worst["pos"], "radius": 34.0, "time": 0.0, "duration": 0.4, "color": color})
+		return
+	var life: float = maxf(1.0, p["unit_life"])
+	var u := {"skill_id": p["id"], "profile": p, "behavior": String(unit.get("behavior", "melee")),
+		"pos": origin + Vector2.from_angle(randf() * TAU) * 45.0, "life": life, "max_life": life,
+		"radius": float(unit.get("radius", 12.0)), "taunt": float(unit.get("taunt", 0.0)), "reduction": float(unit.get("reduction", 0.0)),
+		"cd": 0.5, "phase": randf() * TAU, "hurt": 0.0, "angle": TAU * mine.size() / maxf(1.0, p["max_units"]),
+		"slot": mine.size(), "color": color}
+	_units.append(u)
+	_effects.append({"type": "ring", "pos": u["pos"], "radius": 40.0 + u["radius"], "time": 0.0, "duration": 0.5, "color": color})
+	_update_reservation()
+
+
+func _update_units(delta: float) -> void:
+	if _units.is_empty():
+		return
+	if not player.is_alive():
+		clear_units()
+		return
+	var lost := false
+	var still: Array[Dictionary] = []
+	for u in _units:
+		u["hurt"] = maxf(0.0, float(u.get("hurt", 0.0)) - delta)
+		u["phase"] += delta * 6.0
+		u["cd"] -= delta
+		var p: Dictionary = u["profile"]
+		if u["life"] <= 0.0:
+			_effects.append({"type": "burst", "pos": u["pos"], "radius": 36.0 + u["radius"], "time": 0.0, "duration": 0.4, "color": Color("ff7a4a")})
+			unit_lost.emit(String(p["name"]))
+			lost = true
+			continue
+		if (u["pos"] as Vector2).distance_to(player.global_position) > UNIT_LEASH:
+			u["pos"] = player.global_position + Vector2.from_angle(randf() * TAU) * 60.0   # se ha quedado atrás
+		var unit: Dictionary = p["unit"]
+		var speed := float(unit.get("speed", 220.0))
+		var reach_range := float(unit.get("range", 450.0))
+		match String(u["behavior"]):
+			"orbit":
+				u["angle"] += delta * 1.3
+				u["pos"] = player.global_position + Vector2.from_angle(u["angle"]) * Vector2(72, 46) + Vector2(0, -34)
+				_unit_shoot(u, p, reach_range)
+			"ranged":
+				# Se queda a un lado del jugador y dispara a distancia.
+				var goal := player.global_position + Vector2.from_angle(PI * 0.8 + u["slot"] * 1.1) * Vector2(74, 52)
+				_unit_step(u, goal, speed, delta, 10.0)
+				_unit_shoot(u, p, reach_range)
+			_:
+				# Cuerpo a cuerpo (daemon) o tanque (golem): van a por el enemigo más cercano.
+				var pos: Vector2 = u["pos"]
+				var i := enemies.nearest_index(pos, reach_range)
+				if i != -1 and enemies.positions[i].distance_to(player.global_position) < reach_range * 1.8:
+					var to := enemies.positions[i] - pos
+					var reach: float = enemies.radii[i] + u["radius"] + 4.0
+					if to.length() > reach:
+						_unit_step(u, enemies.positions[i], speed, delta, reach)
+					elif u["cd"] <= 0.0:
+						u["cd"] = p["unit_interval"]
+						_ctx(p)
+						if u["behavior"] == "tank":
+							if p["stun"] > 0.0:
+								enemies.stun_in_radius(pos, p["radius"], p["stun"])
+							_damage_area(pos, p["radius"], p)
+							_effects.append({"type": "quake", "pos": pos, "radius": p["radius"], "time": 0.0, "duration": 0.35, "color": u["color"]})
+						else:
+							enemies.hit_index(i, p["min_damage"], p["max_damage"], p["crit_chance"], p["crit_multiplier"])
+							_leech(p)
+							_effects.append({"type": "burst", "pos": pos + to.normalized() * u["radius"], "radius": 14.0, "time": 0.0, "duration": 0.15, "color": u["color"]})
+				else:
+					_unit_step(u, player.global_position + Vector2.from_angle(PI * 0.5 + u["slot"] * 1.4) * 70.0, speed, delta, 12.0)
+		still.append(u)
+	_units = still
+	if lost:
+		_update_reservation()
+
+
+## Avanza hacia `goal` hasta quedarse a `stop` de él, sin salirse del terreno.
+func _unit_step(u: Dictionary, goal: Vector2, speed: float, delta: float, stop: float) -> void:
+	var to: Vector2 = goal - u["pos"]
+	if to.length() <= stop:
+		return
+	var new_pos: Vector2 = u["pos"] + to.normalized() * minf(speed * delta, to.length() - stop)
+	if enemies.walk_clamp.is_valid():
+		new_pos = enemies.walk_clamp.call(new_pos, u["radius"])
+	u["pos"] = new_pos
+
+
+func _unit_shoot(u: Dictionary, p: Dictionary, reach_range: float) -> void:
+	if u["cd"] > 0.0:
+		return
+	var pos: Vector2 = u["pos"]
+	var t := enemies.nearest_index(pos, reach_range)
+	if t == -1:
+		u["cd"] = 0.2
+		return
+	u["cd"] = p["unit_interval"]
+	var dir: Vector2 = (enemies.positions[t] - pos).normalized()
+	_projectiles.append({"pos": pos, "vel": dir * float(p["projectile_speed"]), "distance_left": reach_range * 1.5,
+		"pierce_left": 0, "hit_ids": {}, "profile": p, "color": u["color"], "chains_left": 0, "homing": true})
+	_effects.append({"type": "burst", "pos": pos + dir * 10.0, "radius": 8.0, "time": 0.0, "duration": 0.12, "color": u["color"]})
+
+
+# --- Lluvia de impactos (Cascada de Estilos) ---
+
+func _update_rains(delta: float) -> void:
+	var still: Array[Dictionary] = []
+	for rain in _rains:
+		rain["next"] -= delta
+		while rain["next"] <= 0.0 and rain["left"] > 0:
+			rain["next"] += rain["interval"]
+			rain["left"] -= 1
+			var p: Dictionary = rain["profile"]
+			var spot: Vector2 = rain["pos"] + Vector2.from_angle(randf() * TAU) * sqrt(randf()) * p["radius"]
+			_pending.append({"type": "blast", "time": 0.16, "pos": spot, "profile": p, "color": rain["color"], "radius": p["impact_radius"]})
+			_effects.append({"type": "streak", "pos": spot, "radius": p["impact_radius"], "time": 0.0, "duration": 0.16, "color": rain["color"]})
+		if rain["left"] > 0:
+			still.append(rain)
+	_rains = still
 
 
 # --- Drones ---
@@ -470,7 +753,7 @@ func _update_companion(delta: float) -> void:
 		var t := enemies.nearest_index(pos, float(_companion_laser["seek_range"]))
 		if t != -1:
 			_execute(_companion_laser, enemies.positions[t], pos)
-			_companion["laser"] = CompanionRobot.LASER_INTERVAL
+			_companion["laser"] = CompanionRobot.LASER_INTERVAL / maxf(0.1, float(_companion_laser["automaton_speed"]))
 		else:
 			_companion["laser"] = 0.2
 	if _companion["emp"] <= 0.0:
@@ -512,6 +795,7 @@ func _update_clouds(delta: float) -> void:
 			c["next"] = p["tick"]
 			# base_damage es por segundo: cada tick hace la parte proporcional.
 			var k: float = p["tick"]
+			_ctx(p, k)
 			enemies.hit_in_radius(c["pos"], p["radius"], p["min_damage"] * k, p["max_damage"] * k, 0.0, 100.0)
 			_leech(p)
 		if c["life"] > 0.0:
@@ -525,6 +809,7 @@ func _update_traps(delta: float) -> void:
 		trap["life"] -= delta
 		var p: Dictionary = trap["profile"]
 		if trap["armed_in"] <= 0.0 and enemies.nearest_index(trap["pos"], p["trigger_radius"]) != -1:
+			_ctx(p)
 			_damage_area(trap["pos"], p["radius"], p)
 			_effects.append({"type": "burst", "pos": trap["pos"], "radius": p["radius"], "time": 0.0, "duration": 0.35, "color": trap["color"]})
 			continue
@@ -551,9 +836,11 @@ func _update_pending(delta: float) -> void:
 			still.append(e)
 			continue
 		var p: Dictionary = e["profile"]
+		_ctx(p)
 		if e["type"] == "blast":
-			_damage_area(e["pos"], p["radius"], p)
-			_effects.append({"type": "burst", "pos": e["pos"], "radius": p["radius"], "time": 0.0, "duration": 0.3, "color": e["color"]})
+			var radius: float = e.get("radius", p["radius"])
+			_damage_area(e["pos"], radius, p)
+			_effects.append({"type": "burst", "pos": e["pos"], "radius": radius, "time": 0.0, "duration": 0.3, "color": e["color"]})
 		elif e["type"] == "beam":
 			var end: Vector2 = e["pos"] + e["dir"] * p["range"]
 			enemies.hit_in_segment(e["pos"], end, p["width"] * 0.5, p["min_damage"], p["max_damage"], p["crit_chance"], p["crit_multiplier"])
@@ -593,6 +880,7 @@ func _update_projectiles(delta: float) -> void:
 		if not pr.get("returning", false):
 			pr["distance_left"] -= step.length()
 		var hit := -1
+		_ctx(p)
 		if pr.get("dot", false):
 			hit = enemies.dot_one(pr["pos"], PROJECTILE_RADIUS, pr["hit_ids"], (p["min_damage"] + p["max_damage"]) / 2.0, p["duration"])
 		else:
@@ -633,6 +921,7 @@ func _draw() -> void:
 	_draw_clouds()
 	_draw_devices()
 	_draw_minions()
+	_draw_units()
 	_draw_companion()
 	for d in _drones:
 		var dp := _drone_pos(d)
@@ -657,6 +946,33 @@ func _draw() -> void:
 		var t: float = e["time"] / e["duration"]
 		var c: Color = e["color"]
 		match e["type"]:
+			"leap":
+				# Arco del salto: una sombra que recorre el camino y una estela.
+				var a: Vector2 = e["pos"]
+				var b: Vector2 = e["end"]
+				var pts := PackedVector2Array()
+				for k in 9:
+					var s := k / 8.0
+					pts.append(a.lerp(b, s) + Vector2(0, -sin(s * PI) * 60.0))
+				draw_polyline(pts, Color(c, 0.6 * (1.0 - t)), 4.0 * (1.0 - t) + 1.0, true)
+			"quake":
+				# Golpe al suelo: anillo que se expande y grietas.
+				var r: float = e["radius"]
+				draw_set_transform(e["pos"], 0.0, Vector2(1.0, 0.6))
+				draw_circle(Vector2.ZERO, r * (0.4 + 0.6 * t), Color(c, 0.22 * (1.0 - t)))
+				draw_arc(Vector2.ZERO, r * (0.4 + 0.6 * t), 0.0, TAU, 40, Color(c.lightened(0.3), 0.9 * (1.0 - t)), 4.0, true)
+				draw_set_transform(Vector2.ZERO)
+				for k in 6:
+					var ang := TAU * k / 6.0 + 0.4
+					var p0: Vector2 = e["pos"] + Vector2.from_angle(ang) * Vector2(1.0, 0.6) * r * 0.25
+					var p1: Vector2 = e["pos"] + Vector2.from_angle(ang + 0.15) * Vector2(1.0, 0.6) * r * 0.8
+					draw_line(p0, p1, Color(0.1, 0.08, 0.06, 0.8 * (1.0 - t)), 2.0, true)
+			"streak":
+				# Proyectil que cae del cielo hasta el punto de impacto.
+				var top: Vector2 = e["pos"] + Vector2(-60.0, -260.0) * (1.0 - t)
+				draw_line(top + Vector2(-12.0, -46.0), top, Color(c, 0.4), 3.0, true)
+				draw_circle(top, 5.0, c.lightened(0.4))
+				draw_arc(e["pos"], e["radius"] * 0.7, 0.0, TAU, 20, Color(c, 0.5 * t), 1.5, true)
 			"trail":
 				var a: Vector2 = e["pos"]
 				var b: Vector2 = e["end"]
@@ -777,6 +1093,77 @@ func _draw_minions() -> void:
 		draw_string(ThemeDB.fallback_font, p + Vector2(-5, -11 + bob), ">_", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("3cff6a"))
 		var life: float = m["life"] / maxf(0.1, m["total"])
 		draw_rect(Rect2(p + Vector2(-10, -26), Vector2(20 * life, 2)), Color("7fd07f"))
+
+
+## Invocaciones persistentes: cada comportamiento tiene su figura.
+func _draw_units() -> void:
+	var font := ThemeDB.fallback_font
+	for u in _units:
+		var p: Vector2 = u["pos"]
+		var ph: float = u["phase"]
+		var c: Color = u["color"]
+		var hurt: bool = u.get("hurt", 0.0) > 0.0
+		var r: float = u["radius"]
+		if u["behavior"] != "orbit":
+			draw_set_transform(p + Vector2(0, r * 0.7), 0.0, Vector2(1.0, 0.4))
+			draw_circle(Vector2.ZERO, r * 1.1, Color(0, 0, 0, 0.35))
+			draw_set_transform(Vector2.ZERO)
+		match String(u["behavior"]):
+			"ranged":
+				# Robot centinela: patas, torso con visor y un cañón.
+				var bob := sin(ph) * 1.5
+				for s in [-1.0, 1.0]:
+					draw_line(p + Vector2(s * 4, 2), p + Vector2(s * 6 + sin(ph + s) * 2.0, 10), Color("4a4f5c"), 3.0, true)
+				draw_rect(Rect2(p + Vector2(-9, -16 + bob), Vector2(18, 16)), Color("6e7480"))
+				draw_rect(Rect2(p + Vector2(-9, -16 + bob), Vector2(18, 16)), Color("2f333c"), false, 1.5)
+				draw_rect(Rect2(p + Vector2(-6, -13 + bob), Vector2(12, 5)), Color("10161c"))
+				draw_rect(Rect2(p + Vector2(-5, -12 + bob), Vector2(10 * (0.5 + 0.5 * sin(ph * 0.7)), 3)), c)
+				draw_rect(Rect2(p + Vector2(8, -8 + bob), Vector2(9, 4)), Color("3a3f4a"))
+				draw_line(p + Vector2(0, -16 + bob), p + Vector2(0, -22 + bob), Color("8a8a96"), 1.5)
+				draw_circle(p + Vector2(0, -23 + bob), 2.0, c)
+			"orbit":
+				# Dron escolta: cuatro rotores y un núcleo incandescente.
+				draw_circle(p + Vector2(0, 30), 5.0, Color(0, 0, 0, 0.22))
+				for k in 4:
+					var arm := Vector2.from_angle(PI / 4.0 + PI / 2.0 * k) * 10.0
+					draw_line(p, p + arm, Color("5a5f6c"), 2.0, true)
+					draw_circle(p + arm, 4.0 + sin(ph * 6.0 + k) * 0.6, Color(0.85, 0.85, 0.9, 0.3))
+				draw_circle(p, 5.0, Color("3a3f4a"))
+				draw_circle(p, 2.6 + 0.6 * sin(ph * 2.0), c)
+			"tank":
+				# Golem de hardware: torres de PC apiladas con LEDs y un monitor por cabeza.
+				var sway := sin(ph * 0.5) * 1.5
+				draw_rect(Rect2(p + Vector2(-16, -28 + sway), Vector2(32, 30)), Color("5a5650"))
+				draw_rect(Rect2(p + Vector2(-16, -28 + sway), Vector2(32, 30)), Color("2a2724"), false, 2.0)
+				for k in 4:
+					draw_circle(p + Vector2(-10 + k * 6, -6 + sway), 1.6, c if fmod(ph + k, 3.0) < 1.5 else Color("2a2a20"))
+				for s in [-1.0, 1.0]:
+					draw_rect(Rect2(p + Vector2(s * 16 - (8 if s < 0 else 0), -24 + sway + sin(ph + s) * 2.0), Vector2(8, 22)), Color("47443f"))
+				draw_rect(Rect2(p + Vector2(-11, -44 + sway), Vector2(22, 16)), Color("b8b8b0"))
+				draw_rect(Rect2(p + Vector2(-9, -42 + sway), Vector2(18, 11)), Color("10200f"))
+				draw_string(font, p + Vector2(-8, -33 + sway), "ò_ó", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("3cff6a"))
+			_:
+				# Daemon (el de BSD): cuerpecillo rojo con cuernos y un tridente.
+				var hop := absf(sin(ph)) * 3.0
+				draw_circle(p + Vector2(0, -8 - hop), 9.0, Color("b8322a"))
+				draw_circle(p + Vector2(0, -19 - hop), 6.5, Color("c83a30"))
+				for s in [-1.0, 1.0]:
+					draw_colored_polygon(PackedVector2Array([p + Vector2(s * 3, -24 - hop), p + Vector2(s * 8, -31 - hop), p + Vector2(s * 6, -22 - hop)]), Color("f0e0c0"))
+				draw_circle(p + Vector2(-2.5, -19 - hop), 1.3, Color("ffe070"))
+				draw_circle(p + Vector2(2.5, -19 - hop), 1.3, Color("ffe070"))
+				draw_line(p + Vector2(11, -2 - hop), p + Vector2(11, -26 - hop), Color("c8c8c8"), 1.5, true)
+				for k in 3:
+					draw_line(p + Vector2(8 + k * 3, -26 - hop), p + Vector2(8 + k * 3, -31 - hop), Color("c8c8c8"), 1.5, true)
+		if hurt:
+			draw_circle(p + Vector2(0, -r), r * 1.1, Color(1, 1, 1, 0.35))
+		if u["behavior"] != "orbit":
+			# Barra de vida con el símbolo de persistente.
+			var w := maxf(24.0, r * 2.2)
+			var top := p + Vector2(-w / 2.0, -r * 2.6 - 14.0)
+			draw_rect(Rect2(top - Vector2(1, 1), Vector2(w + 2.0, 5.0)), Color(0, 0, 0, 0.75))
+			draw_rect(Rect2(top, Vector2(w * clampf(u["life"] / u["max_life"], 0.0, 1.0), 3.0)), Color("6fd36b"))
+			if u["taunt"] > 0.0:
+				draw_arc(p, u["taunt"], 0.0, TAU, 48, Color(Ailments.color("taunt"), 0.12), 1.5, true)
 
 
 func _draw_clouds() -> void:

@@ -231,15 +231,25 @@ func key_points() -> Array[Vector2]:
 
 ## Centros de los grupos de enemigos: repartidos por la zona, lejos de los
 ## puntos de interés, de los obstáculos y entre sí.
-func pack_centers(count: int, rng: RandomNumberGenerator) -> Array[Vector2]:
+## `keep_away`: distancia mínima a la entrada inicial ("start") y a los NPCs de
+## la zona (el tutorial la usa para que B.O.B. pueda explicar antes de pelear).
+func pack_centers(count: int, rng: RandomNumberGenerator, keep_away := 0.0) -> Array[Vector2]:
 	var result: Array[Vector2] = []
 	var keys := key_points()
+	var safe_points: Array[Vector2] = []
+	if keep_away > 0.0:
+		safe_points.append(entry_point("start"))
+		for npc in def.get("npcs", []):
+			safe_points.append(_v(npc["pos"]))
 	var inner := rect.grow(-220.0)
-	for attempt in 800:
+	for attempt in 1500:
 		if result.size() >= count:
 			break
 		var p := Vector2(rng.randf_range(inner.position.x, inner.end.x), rng.randf_range(inner.position.y, inner.end.y))
 		var ok := is_walkable(p, 90.0)
+		for s in safe_points:
+			if ok and p.distance_to(s) < keep_away:
+				ok = false
 		for k in keys:
 			if ok and p.distance_to(k) < 450.0:
 				ok = false

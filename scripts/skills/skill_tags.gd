@@ -17,6 +17,8 @@ const INFO := {
 	"mine": ["mina", "a0a040"],
 	"totem": ["tótem", "a07850"],
 	"minion": ["esbirro", "7fd07f"],
+	"automaton": ["autómata", "7fd0e8"],
+	"persistent": ["persistente", "9ad0ff"],
 	"physical": ["físico", "c8b8a0"],
 	"fire": ["fuego", "e0652f"],
 	"cold": ["frío", "7fb8e0"],

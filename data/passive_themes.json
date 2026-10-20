@@ -338,6 +338,21 @@
        "value": 30
       }
      ]
+    ],
+    [
+     "Físico y hemorragia",
+     [
+      {
+       "stat": "physical_damage",
+       "type": "increased",
+       "value": 6
+      },
+      {
+       "stat": "bleed_chance",
+       "type": "flat",
+       "value": 4
+      }
+     ]
     ]
    ],
    "notables": [
@@ -392,6 +407,11 @@
        "stat": "crit_multiplier",
        "type": "flat",
        "value": 15
+      },
+      {
+       "stat": "bleed_chance",
+       "type": "flat",
+       "value": 10
       }
      ]
     ],
@@ -1168,6 +1188,21 @@
        "value": 3
       }
      ]
+    ],
+    [
+     "Fuego y quemadura",
+     [
+      {
+       "stat": "fire_damage",
+       "type": "increased",
+       "value": 6
+      },
+      {
+       "stat": "burn_chance",
+       "type": "flat",
+       "value": 4
+      }
+     ]
     ]
    ],
    "notables": [
@@ -1203,6 +1238,11 @@
        "stat": "area_of_effect",
        "type": "increased",
        "value": 8
+      },
+      {
+       "stat": "burn_chance",
+       "type": "flat",
+       "value": 10
       }
      ]
     ],
@@ -1289,6 +1329,21 @@
        "value": 2
       }
      ]
+    ],
+    [
+     "Frío y escarcha",
+     [
+      {
+       "stat": "cold_damage",
+       "type": "increased",
+       "value": 6
+      },
+      {
+       "stat": "chill_chance",
+       "type": "flat",
+       "value": 5
+      }
+     ]
     ]
    ],
    "notables": [
@@ -1305,6 +1360,11 @@
        "stat": "cast_speed",
        "type": "increased",
        "value": 4
+      },
+      {
+       "stat": "freeze_chance",
+       "type": "flat",
+       "value": 6
       }
      ]
     ],
@@ -1410,6 +1470,21 @@
        "value": 5
       }
      ]
+    ],
+    [
+     "Rayo y sobrecarga",
+     [
+      {
+       "stat": "lightning_damage",
+       "type": "increased",
+       "value": 6
+      },
+      {
+       "stat": "shock_chance",
+       "type": "flat",
+       "value": 4
+      }
+     ]
     ]
    ],
    "notables": [
@@ -1442,6 +1517,11 @@
        "stat": "life",
        "type": "increased",
        "value": -4
+      },
+      {
+       "stat": "shock_chance",
+       "type": "flat",
+       "value": 10
       }
      ]
     ],
@@ -1641,6 +1721,21 @@
        "value": 3
       }
      ]
+    ],
+    [
+     "Caos y toxinas",
+     [
+      {
+       "stat": "chaos_damage",
+       "type": "increased",
+       "value": 6
+      },
+      {
+       "stat": "poison_chance",
+       "type": "flat",
+       "value": 5
+      }
+     ]
     ]
    ],
    "notables": [
@@ -1668,6 +1763,11 @@
        "stat": "chaos_res",
        "type": "flat",
        "value": 12
+      },
+      {
+       "stat": "poison_chance",
+       "type": "flat",
+       "value": 10
       }
      ]
     ],
@@ -2569,6 +2669,714 @@
        "stat": "attack_speed",
        "type": "increased",
        "value": 8
+      }
+     ]
+    ]
+   ]
+  },
+  "ignicion": {
+   "name": "Ignición",
+   "color": "ff7a2a",
+   "cluster_names": [
+    "Hoguera de Logs",
+    "Cortocircuito",
+    "Ventilador Muerto",
+    "Punto de Ignición"
+   ],
+   "minors": [
+    [
+     "Probabilidad de quemar",
+     [
+      {
+       "stat": "burn_chance",
+       "type": "flat",
+       "value": 6
+      }
+     ]
+    ],
+    [
+     "Quemar y fuego",
+     [
+      {
+       "stat": "burn_chance",
+       "type": "flat",
+       "value": 4
+      },
+      {
+       "stat": "fire_damage",
+       "type": "increased",
+       "value": 6
+      }
+     ]
+    ],
+    [
+     "Estados más dañinos",
+     [
+      {
+       "stat": "ailment_damage",
+       "type": "increased",
+       "value": 8
+      }
+     ]
+    ]
+   ],
+   "notables": [
+    [
+     "Incendio Forestal en Producción",
+     "Nadie apagó el servidor. Nadie apagó nada.",
+     [
+      {
+       "stat": "burn_chance",
+       "type": "flat",
+       "value": 15
+      },
+      {
+       "stat": "ailment_damage",
+       "type": "increased",
+       "value": 20
+      }
+     ]
+    ],
+    [
+     "Thermal Runaway",
+     "Cuanto más arde, más arde.",
+     [
+      {
+       "stat": "burn_chance",
+       "type": "flat",
+       "value": 10
+      },
+      {
+       "stat": "ailment_duration",
+       "type": "increased",
+       "value": 25
+      },
+      {
+       "stat": "fire_damage",
+       "type": "increased",
+       "value": 10
+      }
+     ]
+    ],
+    [
+     "Rack en Llamas",
+     "Al menos ya no hace frío en el CPD.",
+     [
+      {
+       "stat": "burn_chance",
+       "type": "flat",
+       "value": 20
+      },
+      {
+       "stat": "fire_res",
+       "type": "flat",
+       "value": 10
+      }
+     ]
+    ],
+    [
+     "Chispa de Arranque",
+     "Todo empieza con un pequeño cortocircuito.",
+     [
+      {
+       "stat": "burn_chance",
+       "type": "flat",
+       "value": 12
+      },
+      {
+       "stat": "cast_speed",
+       "type": "increased",
+       "value": 6
+      }
+     ]
+    ]
+   ]
+  },
+  "sobrecarga": {
+   "name": "Sobrecarga",
+   "color": "f0e060",
+   "cluster_names": [
+    "Subestación",
+    "Picos de Voltaje",
+    "Cable Pelado",
+    "Fuente Quemada"
+   ],
+   "minors": [
+    [
+     "Probabilidad de electrocutar",
+     [
+      {
+       "stat": "shock_chance",
+       "type": "flat",
+       "value": 6
+      }
+     ]
+    ],
+    [
+     "Electrocutar y rayo",
+     [
+      {
+       "stat": "shock_chance",
+       "type": "flat",
+       "value": 4
+      },
+      {
+       "stat": "lightning_damage",
+       "type": "increased",
+       "value": 6
+      }
+     ]
+    ],
+    [
+     "Estados más dañinos",
+     [
+      {
+       "stat": "ailment_damage",
+       "type": "increased",
+       "value": 8
+      }
+     ]
+    ]
+   ],
+   "notables": [
+    [
+     "Sobretensión de Red",
+     "El SAI no llegó a tiempo.",
+     [
+      {
+       "stat": "shock_chance",
+       "type": "flat",
+       "value": 15
+      },
+      {
+       "stat": "ailment_damage",
+       "type": "increased",
+       "value": 20
+      }
+     ]
+    ],
+    [
+     "Sin Toma de Tierra",
+     "Así se cablea en este edificio.",
+     [
+      {
+       "stat": "shock_chance",
+       "type": "flat",
+       "value": 20
+      },
+      {
+       "stat": "lightning_res",
+       "type": "flat",
+       "value": 10
+      }
+     ]
+    ],
+    [
+     "Arco Eléctrico",
+     "No toques la placa sin pulsera antiestática.",
+     [
+      {
+       "stat": "shock_chance",
+       "type": "flat",
+       "value": 10
+      },
+      {
+       "stat": "crit_chance",
+       "type": "increased",
+       "value": 15
+      }
+     ]
+    ],
+    [
+     "Bobina de Tesla",
+     "Ilumina el CPD entero. Y a los que hay dentro.",
+     [
+      {
+       "stat": "shock_chance",
+       "type": "flat",
+       "value": 12
+      },
+      {
+       "stat": "area_of_effect",
+       "type": "increased",
+       "value": 8
+      }
+     ]
+    ]
+   ]
+  },
+  "criogenia": {
+   "name": "Criogenia",
+   "color": "a0e0ff",
+   "cluster_names": [
+    "Sala Fría",
+    "Criostato",
+    "Escarcha",
+    "Refrigeración Industrial"
+   ],
+   "minors": [
+    [
+     "Probabilidad de helar",
+     [
+      {
+       "stat": "chill_chance",
+       "type": "flat",
+       "value": 8
+      }
+     ]
+    ],
+    [
+     "Helar y frío",
+     [
+      {
+       "stat": "chill_chance",
+       "type": "flat",
+       "value": 5
+      },
+      {
+       "stat": "cold_damage",
+       "type": "increased",
+       "value": 6
+      }
+     ]
+    ],
+    [
+     "Probabilidad de congelar",
+     [
+      {
+       "stat": "freeze_chance",
+       "type": "flat",
+       "value": 3
+      }
+     ]
+    ]
+   ],
+   "notables": [
+    [
+     "Cero Absoluto",
+     "0 kelvin, 0 bugs, 0 movimiento.",
+     [
+      {
+       "stat": "freeze_chance",
+       "type": "flat",
+       "value": 10
+      },
+      {
+       "stat": "chill_chance",
+       "type": "flat",
+       "value": 10
+      }
+     ]
+    ],
+    [
+     "Criostasis",
+     "Overclock extremo, enemigos extremadamente quietos.",
+     [
+      {
+       "stat": "chill_chance",
+       "type": "flat",
+       "value": 15
+      },
+      {
+       "stat": "ailment_duration",
+       "type": "increased",
+       "value": 25
+      }
+     ]
+    ],
+    [
+     "Cámara Frigorífica",
+     "Aquí se conservan los servidores. Y los enemigos.",
+     [
+      {
+       "stat": "freeze_chance",
+       "type": "flat",
+       "value": 8
+      },
+      {
+       "stat": "cold_res",
+       "type": "flat",
+       "value": 10
+      }
+     ]
+    ],
+    [
+     "Escarcha en el Disipador",
+     "Algo va muy bien o muy mal.",
+     [
+      {
+       "stat": "chill_chance",
+       "type": "flat",
+       "value": 12
+      },
+      {
+       "stat": "cold_damage",
+       "type": "increased",
+       "value": 15
+      }
+     ]
+    ]
+   ]
+  },
+  "toxinas": {
+   "name": "Toxinas",
+   "color": "6fd36b",
+   "cluster_names": [
+    "Repositorio Infectado",
+    "Paquete Malicioso",
+    "Laboratorio de Malware",
+    "Backdoor"
+   ],
+   "minors": [
+    [
+     "Probabilidad de envenenar",
+     [
+      {
+       "stat": "poison_chance",
+       "type": "flat",
+       "value": 6
+      }
+     ]
+    ],
+    [
+     "Veneno y caos",
+     [
+      {
+       "stat": "poison_chance",
+       "type": "flat",
+       "value": 4
+      },
+      {
+       "stat": "chaos_damage",
+       "type": "increased",
+       "value": 6
+      }
+     ]
+    ],
+    [
+     "Estados duraderos",
+     [
+      {
+       "stat": "ailment_duration",
+       "type": "increased",
+       "value": 8
+      }
+     ]
+    ]
+   ],
+   "notables": [
+    [
+     "Dependencia Comprometida",
+     "npm install veneno@latest",
+     [
+      {
+       "stat": "poison_chance",
+       "type": "flat",
+       "value": 15
+      },
+      {
+       "stat": "ailment_damage",
+       "type": "increased",
+       "value": 20
+      }
+     ]
+    ],
+    [
+     "Ataque a la Cadena de Suministro",
+     "Infectas al proveedor y caen todos.",
+     [
+      {
+       "stat": "poison_chance",
+       "type": "flat",
+       "value": 10
+      },
+      {
+       "stat": "ailment_duration",
+       "type": "increased",
+       "value": 30
+      }
+     ]
+    ],
+    [
+     "Gusano Autorreplicante",
+     "Se copia solo. Como la deuda técnica.",
+     [
+      {
+       "stat": "poison_chance",
+       "type": "flat",
+       "value": 20
+      },
+      {
+       "stat": "chaos_res",
+       "type": "flat",
+       "value": 10
+      }
+     ]
+    ],
+    [
+     "Rootkit Residente",
+     "No se va ni formateando.",
+     [
+      {
+       "stat": "poison_chance",
+       "type": "flat",
+       "value": 12
+      },
+      {
+       "stat": "ailment_damage",
+       "type": "increased",
+       "value": 15
+      },
+      {
+       "stat": "chaos_damage",
+       "type": "increased",
+       "value": 10
+      }
+     ]
+    ]
+   ]
+  },
+  "hemorragia": {
+   "name": "Hemorragia",
+   "color": "c02838",
+   "cluster_names": [
+    "Cortes de Red",
+    "Hemorragia de Datos",
+    "Cable Cortado",
+    "Sectores Dañados"
+   ],
+   "minors": [
+    [
+     "Probabilidad de hacer sangrar",
+     [
+      {
+       "stat": "bleed_chance",
+       "type": "flat",
+       "value": 6
+      }
+     ]
+    ],
+    [
+     "Sangrar y físico",
+     [
+      {
+       "stat": "bleed_chance",
+       "type": "flat",
+       "value": 4
+      },
+      {
+       "stat": "physical_damage",
+       "type": "increased",
+       "value": 6
+      }
+     ]
+    ],
+    [
+     "Estados más dañinos",
+     [
+      {
+       "stat": "ailment_damage",
+       "type": "increased",
+       "value": 8
+      }
+     ]
+    ]
+   ],
+   "notables": [
+    [
+     "Corte de Fibra",
+     "Alguien pasó una excavadora por el cable submarino.",
+     [
+      {
+       "stat": "bleed_chance",
+       "type": "flat",
+       "value": 15
+      },
+      {
+       "stat": "ailment_damage",
+       "type": "increased",
+       "value": 20
+      }
+     ]
+    ],
+    [
+     "Sector Defectuoso",
+     "Pierde datos a cada paso.",
+     [
+      {
+       "stat": "bleed_chance",
+       "type": "flat",
+       "value": 10
+      },
+      {
+       "stat": "ailment_duration",
+       "type": "increased",
+       "value": 25
+      },
+      {
+       "stat": "physical_damage",
+       "type": "increased",
+       "value": 10
+      }
+     ]
+    ],
+    [
+     "Fuga de Paquetes",
+     "Drip, drip, drip.",
+     [
+      {
+       "stat": "bleed_chance",
+       "type": "flat",
+       "value": 20
+      },
+      {
+       "stat": "life_leech",
+       "type": "flat",
+       "value": 0.5
+      }
+     ]
+    ],
+    [
+     "Navaja de Ockham",
+     "La explicación más simple: le has cortado.",
+     [
+      {
+       "stat": "bleed_chance",
+       "type": "flat",
+       "value": 12
+      },
+      {
+       "stat": "attack_speed",
+       "type": "increased",
+       "value": 6
+      }
+     ]
+    ]
+   ]
+  },
+  "automatizacion": {
+   "name": "Automatización",
+   "color": "7fd0e8",
+   "cluster_names": [
+    "Sala de Máquinas",
+    "Línea de Montaje",
+    "Granja de Bots",
+    "Taller de Robótica"
+   ],
+   "minors": [
+    [
+     "Daño de autómatas",
+     [
+      {
+       "stat": "damage",
+       "type": "increased",
+       "value": 10,
+       "tags": [
+        "automaton"
+       ]
+      }
+     ]
+    ],
+    [
+     "Velocidad de autómatas",
+     [
+      {
+       "stat": "automaton_speed",
+       "type": "increased",
+       "value": 6
+      }
+     ]
+    ],
+    [
+     "Vida de esbirros",
+     [
+      {
+       "stat": "minion_life",
+       "type": "increased",
+       "value": 10
+      }
+     ]
+    ]
+   ],
+   "notables": [
+    [
+     "Pipeline de CI/CD",
+     "Cada commit despliega otra torreta.",
+     [
+      {
+       "stat": "automaton_speed",
+       "type": "increased",
+       "value": 15
+      },
+      {
+       "stat": "damage",
+       "type": "increased",
+       "value": 15,
+       "tags": [
+        "automaton"
+       ]
+      }
+     ]
+    ],
+    [
+     "Orquestador",
+     "Tú das las órdenes; ellos hacen el trabajo.",
+     [
+      {
+       "stat": "extra_devices",
+       "type": "flat",
+       "value": 1
+      },
+      {
+       "stat": "damage",
+       "type": "increased",
+       "value": 10,
+       "tags": [
+        "automaton"
+       ]
+      }
+     ]
+    ],
+    [
+     "Redundancia N+1",
+     "Si cae uno, sigue el otro.",
+     [
+      {
+       "stat": "minion_life",
+       "type": "increased",
+       "value": 30
+      },
+      {
+       "stat": "reservation_efficiency",
+       "type": "increased",
+       "value": 12
+      }
+     ]
+    ],
+    [
+     "Sensores Calibrados",
+     "Ahora apuntan a lo que se mueve y no a las palomas.",
+     [
+      {
+       "stat": "automaton_speed",
+       "type": "increased",
+       "value": 10
+      },
+      {
+       "stat": "shock_chance",
+       "type": "flat",
+       "value": 8,
+       "tags": [
+        "automaton"
+       ]
+      },
+      {
+       "stat": "burn_chance",
+       "type": "flat",
+       "value": 8,
+       "tags": [
+        "automaton"
+       ]
       }
      ]
     ]

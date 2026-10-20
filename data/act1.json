@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_doc": "Acto I. Coordenadas en píxeles dentro de cada zona (0,0 = esquina superior izquierda). entries: puntos de llegada (los usan las salidas de otras zonas y el waypoint). exits: al pisarlas se viaja a target/entry. enemies.packs: grupos repartidos por la zona (lejos de entradas, salidas, NPCs y waypoint); se regeneran al volver a entrar. obstacles: cantidad y tipos (se colocan con una semilla fija por zona, sin tapar el camino entre entradas y salidas). style: aspecto del suelo y de los obstáculos. features: accidentes del terreno grandes (lagos, colinas, simas...). quest_items: objetos de misión (aparecen al aceptar su misión). Salidas con requires_flag: solo aparecen con esa bandera; portal: se dibuja como portal; target vacío + message: aún no lleva a ningún sitio. boss.abilities: habilidades especiales del jefe (projectile_nova: proyectiles en todas direcciones; ground_marks: círculos en el suelo que explotan tras delay; summon: invoca enemigos). first: segundos hasta el primer uso. Con menos de la mitad de vida se recargan más rápido. boss.death_cutscene / complete_flag: escena al morir el jefe y bandera que marca el acto como completado. cutscene_on_enter: escena al entrar en la zona (requires_flag / unless_flag / set_flag). Una salida con cutscene reproduce la escena antes de viajar (la escena decide a dónde).",
+  "_doc": "Acto I. Coordenadas en píxeles dentro de cada zona (0,0 = esquina superior izquierda). entries: puntos de llegada (los usan las salidas de otras zonas y el waypoint). exits: al pisarlas se viaja a target/entry. enemies.packs: grupos repartidos por la zona (lejos de entradas, salidas, NPCs y waypoint); se regeneran al volver a entrar. obstacles: cantidad y tipos (se colocan con una semilla fija por zona, sin tapar el camino entre entradas y salidas). style: aspecto del suelo y de los obstáculos. features: accidentes del terreno grandes (lagos, colinas, simas...). quest_items: objetos de misión (aparecen al aceptar su misión). Salidas con requires_flag: solo aparecen con esa bandera; portal: se dibuja como portal; target vacío + message: aún no lleva a ningún sitio. boss.abilities: habilidades especiales del jefe (projectile_nova: proyectiles en todas direcciones; ground_marks: círculos en el suelo que explotan tras delay; summon: invoca enemigos). first: segundos hasta el primer uso. Con menos de la mitad de vida se recargan más rápido. boss.death_cutscene / complete_flag: escena al morir el jefe y bandera que marca el acto como completado. cutscene_on_enter: escena al entrar en la zona (requires_flag / unless_flag / set_flag). Una salida con cutscene reproduce la escena antes de viajar (la escena decide a dónde). enemies.keep_away: distancia mínima de los grupos a la entrada inicial y a los NPCs (tutorial). aggro_range: distancia a la que despiertan los enemigos en esa zona (por defecto 850).",
   "id": "act1",
   "name": "Acto I: El Último Commit",
   "start_zone": "tutorial",
@@ -12,7 +12,7 @@
       "level": 1,
       "style": "sandbox",
       "size": [
-        2200,
+        2800,
         1400
       ],
       "entries": {
@@ -21,14 +21,14 @@
           700
         ],
         "from_camp": [
-          1950,
+          2550,
           700
         ]
       },
       "exits": [
         {
           "pos": [
-            2110,
+            2710,
             700
           ],
           "target": "campamento",
@@ -55,7 +55,8 @@
           "bug"
         ],
         "special_chance": 0.0,
-        "elite_chance": 0.0
+        "elite_chance": 0.0,
+        "keep_away": 1050
       },
       "drop_multiplier": 3.0,
       "obstacles": {
@@ -76,7 +77,8 @@
         "requires_flag": "prologue_done",
         "unless_flag": "llegada_sandbox_vista",
         "set_flag": "llegada_sandbox_vista"
-      }
+      },
+      "aggro_range": 600
     },
     {
       "id": "campamento",

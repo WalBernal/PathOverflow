@@ -205,12 +205,14 @@ func travel_to(zone_id: String, entry := "") -> void:
 	cam.reset_smoothing()
 
 	enemies.area_level = zone.level
+	enemies.aggro_range = float(zone.def.get("aggro_range", EnemyManager.AGGRO_RANGE))
 	enemies.bounds = zone.rect
 	enemies.walk_clamp = zone.clamp_to_walkable
 	enemies.obstacles.clear()
 	for o in zone.obstacles:
 		enemies.obstacles.append(Vector3(o["pos"].x, o["pos"].y, o["radius"]))
 	_spawn_zone_enemies()
+	skills.on_zone_changed()
 
 	character.flags["zone"] = zone.id
 	ui.on_zone_changed(zone)
@@ -294,7 +296,7 @@ func _spawn_zone_enemies() -> void:
 	if not cfg.is_empty():
 		var type_ids: Array = cfg.get("types", [])
 		var size_range: Array = cfg.get("pack_size", [3, 6])
-		for center in zone.pack_centers(int(cfg.get("packs", 0)), rng):
+		for center in zone.pack_centers(int(cfg.get("packs", 0)), rng, float(cfg.get("keep_away", 0.0))):
 			var type := enemies.type_index_of(type_ids[rng.randi_range(0, type_ids.size() - 1)]) if not type_ids.is_empty() else -1
 			var pack := rng.randi_range(int(size_range[0]), int(size_range[1]))
 			for k in pack:

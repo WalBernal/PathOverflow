@@ -30,7 +30,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "data" / "passive_tree.json"
 THEMES = json.loads((ROOT / "data" / "passive_themes.json").read_text(encoding="utf-8"))["themes"]
-TREE_VERSION = 5
+TREE_VERSION = 6
 # Multiplicador de los aumentos de daño de las pasivas menores (que no se queden
 # en un +4 % que no se nota).
 DAMAGE_MINOR_SCALE = 1.5
@@ -39,19 +39,21 @@ DAMAGE_STATS = {"damage", "physical_damage", "elemental_damage", "fire_damage", 
                 "chaos_damage", "minion_damage", "attack_speed", "cast_speed", "crit_chance", "area_of_effect"}
 
 # id, nombre, atributos, temáticas de los 4 clusters cercanos, de los 4 lejanos y del cluster interior.
+# Las temáticas de estados alterados (ignicion, sobrecarga, criogenia, toxinas,
+# hemorragia) y la de automatizacion van cerca de las clases que más las usan.
 CLASSES = [
     ("guerrero", "Técnico de Soporte", ["str"],
-     ["vida", "armadura", "fisico", "area"], ["robo_vida", "vida", "armadura", "fisico"], "resistencias"),
+     ["vida", "armadura", "fisico", "area"], ["robo_vida", "hemorragia", "armadura", "fisico"], "resistencias"),
     ("duelista", "Tester QA", ["str", "dex"],
-     ["fisico", "velocidad_ataque", "evasion", "robo_vida"], ["critico", "armadura", "fisico", "velocidad_ataque"], "movilidad"),
+     ["fisico", "velocidad_ataque", "evasion", "robo_vida"], ["critico", "hemorragia", "fisico", "velocidad_ataque"], "movilidad"),
     ("exploradora", "Desarrolladora Frontend", ["dex"],
-     ["proyectiles", "evasion", "velocidad_ataque", "critico"], ["frio", "caos", "proyectiles", "evasion"], "movilidad"),
+     ["proyectiles", "evasion", "velocidad_ataque", "critico"], ["criogenia", "toxinas", "proyectiles", "evasion"], "movilidad"),
     ("hacker", "Ingeniera de Prompts", ["dex", "int"],
-     ["critico", "caos", "evasion", "rayo"], ["lanzamiento", "proyectiles", "escudo", "tiempos"], "tiempos"),
+     ["critico", "toxinas", "evasion", "rayo"], ["lanzamiento", "sobrecarga", "escudo", "tiempos"], "tiempos"),
     ("hechicero", "Científico de Datos", ["int"],
-     ["rayo", "fuego", "frio", "lanzamiento"], ["escudo", "mana", "critico", "caos"], "mana"),
+     ["rayo", "fuego", "frio", "lanzamiento"], ["escudo", "ignicion", "critico", "sobrecarga"], "mana"),
     ("templario", "Ingeniero DevOps", ["int", "str"],
-     ["fuego", "area", "escudo", "vida"], ["rayo", "mana", "armadura", "lanzamiento"], "tiempos"),
+     ["automatizacion", "area", "escudo", "vida"], ["sobrecarga", "automatizacion", "armadura", "lanzamiento"], "tiempos"),
 ]
 CENTER_CLASS = ("full_stack", "Desarrollador Full Stack")
 GATE_THEMES = ["resistencias", "atributos", "resistencias", "atributos", "resistencias", "atributos"]
@@ -68,8 +70,9 @@ KEYSTONES = {
                [("crit_chance", "more", 50), ("energy_shield", "more", -50), ("life", "more", -10)]),
     "hechicero": ("Programación Orientada a Deadlines", "El código más rápido es el que nadie revisa.",
                   [("cast_speed", "more", 25), ("mana", "more", -30)]),
-    "templario": ("Funciona en mi Máquina", "En producción es otra historia.",
-                  [("energy_shield", "more", 60), ("life", "more", -40)]),
+    "templario": ("Orquestación con Kubernetes", "Ya no programas: orquestas. Las máquinas hacen el resto.",
+                  [("damage", "more", 40, ["automaton"]), ("extra_minions", "flat", 1), ("extra_devices", "flat", 1),
+                   ("life", "more", -20)]),
     "full_stack": ("Hola Mundo en 40 Lenguajes", "Sabes decir hola en todos. Y nada más.",
                    [("damage", "more", 12), ("life", "more", 8), ("crit_multiplier", "flat", -30)]),
 }
@@ -103,6 +106,17 @@ def add(kind, name, x, y, mods=None, flavor="", class_id=None, cluster="", theme
             n[key] = value
     nodes.append(n)
     return n["id"]
+
+
+def keystone_mods(raw):
+    """(stat, tipo, valor[, tags]) -> mods del JSON."""
+    out = []
+    for entry in raw:
+        md = {"stat": entry[0], "type": entry[1], "value": entry[2]}
+        if len(entry) > 3:
+            md["tags"] = entry[3]
+        out.append(md)
+    return out
 
 
 def link(a, b):
@@ -286,6 +300,21 @@ def shape_template(theme, count):
         nodes = [(0.0, -0.55), (-0.95, -0.8), (-0.95, 0.55), (0.0, 0.8), (0.95, 0.55), (0.95, -0.8), (0.0, 0.1)]
         edges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 0), (0, 6), (6, 3)]
         return nodes, edges, 6, None
+    if theme == "ignicion":        # hoguera: llama de tres lenguas
+        return _outline([(0.0, -1.0), (0.25, -0.4), (0.55, -0.75), (0.7, 0.1), (0.45, 0.85), (-0.45, 0.85),
+                         (-0.7, 0.1), (-0.55, -0.75), (-0.25, -0.4)], count, True, (0.0, 0.3))
+    if theme == "sobrecarga":      # rayo cerrado (el contorno del relámpago)
+        return _outline([(0.2, -1.0), (-0.55, 0.1), (-0.05, 0.1), (-0.25, 1.0), (0.6, -0.15), (0.1, -0.15)], count, True, (0.02, 0.0))
+    if theme == "criogenia":       # cristal de hielo hexagonal con núcleo
+        return _outline([(math.cos(math.radians(-90 + 60 * k)), math.sin(math.radians(-90 + 60 * k))) for k in range(6)], count, True)
+    if theme == "toxinas":         # matraz de laboratorio
+        return _outline([(-0.25, -1.0), (0.25, -1.0), (0.25, -0.35), (0.85, 0.85), (-0.85, 0.85), (-0.25, -0.35)], count, True, (0.0, 0.35))
+    if theme == "hemorragia":      # gota de sangre
+        return _outline([(0.0, -1.0), (0.45, -0.2), (0.6, 0.35), (0.35, 0.85), (-0.35, 0.85), (-0.6, 0.35), (-0.45, -0.2)], count, True, (0.0, 0.35))
+    if theme == "automatizacion":  # engranaje
+        pts = [(math.cos(math.radians(-90 + 22.5 * k)) * (1.0 if k % 2 == 0 else 0.72),
+                math.sin(math.radians(-90 + 22.5 * k)) * (1.0 if k % 2 == 0 else 0.72)) for k in range(16)]
+        return _outline(pts, max(count, 8), True, (0.0, 0.0))
     if theme == "robo_vida":       # colmillos
         nodes = [(-1.0, -0.7), (-0.6, 0.85), (-0.2, -0.45), (0.2, -0.45), (0.6, 0.85), (1.0, -0.7), (0.0, -0.95)]
         edges = [(0, 1), (1, 2), (2, 6), (6, 3), (3, 4), (4, 5)]
@@ -393,7 +422,7 @@ for i in (1, 3, 5, 7, 9, 11):
 # Piedra angular del Full Stack: hacia fuera desde un notable del núcleo, entre dos radios.
 ks_name, ks_flavor, ks_mods = KEYSTONES[CENTER_CLASS[0]]
 kx, ky = polar(HUB_R - 70, -90 + 360.0 * 10 / CORE_N)
-ks_center = add("keystone", ks_name, kx, ky, [{"stat": s, "type": t, "value": v} for s, t, v in ks_mods], ks_flavor,
+ks_center = add("keystone", ks_name, kx, ky, keystone_mods(ks_mods), ks_flavor,
                 icon="ks_" + CENTER_CLASS[0])
 walk_between(core[10], ks_center, 1, ["int"])
 
@@ -439,7 +468,7 @@ for ci, (cid, cname, attrs, tier1, tier2, inner_theme) in enumerate(CLASSES):
             prev = walk(far2, fx, fy, dx, dy, [90, 180], attrs)
             ks_name, ks_flavor, ks_mods = KEYSTONES[cid]
             ks = add("keystone", ks_name, fx + dx * 290, fy + dy * 290,
-                     [{"stat": s, "type": t, "value": v} for s, t, v in ks_mods], ks_flavor, icon="ks_" + cid)
+                     keystone_mods(ks_mods), ks_flavor, icon="ks_" + cid)
             link(prev, ks)
     # Une los clusters cercanos vecinos por sus nodos más alejados del inicio,
     # para que ninguna conexión pase por detrás del inicio.
