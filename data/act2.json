@@ -1024,6 +1024,34 @@
             "max_life": 0.33,
             "color": "ffb050"
           }
+        ],
+        "phases": [
+          {
+            "at": 0.66,
+            "name": "Fase 2: Fork Bomb",
+            "text": "init (PID 1) se bifurca sin parar: los procesos hijo inundan el anillo.",
+            "speed_mult": 1.1,
+            "damage_mult": 1.1,
+            "invulnerable": 1.2,
+            "nova": {
+              "radius": 240,
+              "stun": 0.7,
+              "color": "ff8a3a"
+            }
+          },
+          {
+            "at": 0.33,
+            "name": "Fase 3: OOM Killer",
+            "text": "Memoria agotada. El OOM Killer elige a su próxima víctima... y puede ser él mismo.",
+            "speed_mult": 1.15,
+            "damage_mult": 1.2,
+            "invulnerable": 1.2,
+            "nova": {
+              "radius": 280,
+              "stun": 0.8,
+              "color": "e0e040"
+            }
+          }
         ]
       },
       "obstacles": {

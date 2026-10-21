@@ -225,7 +225,7 @@ func _refresh() -> void:
 	_bars["life"].setup("Vida", "%d / %d" % [player.life, player.max_life()], player.life / player.max_life(), Color("c23b3b"))
 	var es := player.max_energy_shield()
 	_bars["es"].setup("Escudo de energía", "%d" % es, (player.energy_shield / es) if es > 0.0 else 0.0, Color("7fd0e8"))
-	_bars["mana"].setup("Maná", "%d / %d" % [player.mana, player.max_mana()], player.mana / player.max_mana(), Color("3b6bc2"))
+	_bars["mana"].setup("Maná", ("%d / %d" % [player.mana, player.max_mana()]) + ("" if player.mana_reserved <= 0.0 else "  (reservado %d)" % (player.unreserved_mana_max() * player.mana_reserved)), player.mana / maxf(1.0, player.max_mana()), Color("3b6bc2"))
 	var armour := s.get_value(Stat.ARMOUR)
 	var armour_cut := minf(0.9, armour / (armour + 250.0))
 	_bars["armour"].setup("Armadura", "%d  (-%d%% a golpes de 50)" % [armour, roundi(100.0 * armour_cut)], armour_cut / 0.9, Color("b8a07a"))

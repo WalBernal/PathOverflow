@@ -15,7 +15,7 @@ const ACCENT_COLORS := ["2a2a30", "d9a441", "c8c8c8", "8a2b2b", "2b5a8a", "2b8a5
 const EYE_COLORS := ["3a2414", "6b4423", "2e6b8a", "3d7a3d", "5a5a6a", "8a6d3b", "1a1414", "9a3a6a"]
 const BODY_NAMES := ["Delgada", "Media", "Robusta"]
 const BODY_WIDTH := [0.82, 1.0, 1.22]
-const HAIR_NAMES := ["Rapado", "Corto", "Largo", "Cresta", "Moño", "Hacia atrás", "Afro", "Coleta", "Rapado lateral", "Melena con flequillo"]
+const HAIR_NAMES := ["Rapado", "Corto", "Largo", "Cresta", "Moño", "Hacia atrás", "Afro", "Coleta", "Rapado lateral", "Melena con flequillo", "Entradas"]
 const BEARD_NAMES := ["Sin barba", "Barba de tres días", "Barba completa", "Bigote", "Candado"]
 const ACCESSORY_NAMES := ["Nada", "Lentes", "Lentes de sol", "Audífonos", "Gorra", "Gorro de lana"]
 const HEIGHT_NAMES := ["Baja", "Media", "Alta"]
@@ -77,6 +77,14 @@ static func sanitize(d: Dictionary) -> Dictionary:
 		result["height"] = clampf(float(d["height"]), MIN_HEIGHT, MAX_HEIGHT)
 	if Color.html_is_valid(String(d.get("hair_streaks", ""))):
 		result["hair_streaks"] = String(d["hair_streaks"])
+	# Opcionales (NPC): color propio de la barba y de la camisa, canas en la barba y sonrisa fija.
+	for key in ["beard_color", "shirt_color"]:
+		if Color.html_is_valid(String(d.get(key, ""))):
+			result[key] = String(d[key])
+	if d.get("beard_streaks", false):
+		result["beard_streaks"] = true
+	if d.has("smile"):
+		result["smile"] = clampf(float(d["smile"]), -1.0, 1.0)
 	return result
 
 
@@ -152,7 +160,8 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 		u.call(-8.0 * tw + lean, -24.0), u.call(8.0 * tw + lean, -24.0),
 		u.call(6.0 * tw, -8.0), u.call(-6.0 * tw, -8.0)]), outfit)
 	if not back and not profile:
-		ci.draw_colored_polygon(PackedVector2Array([u.call(-2.4 + lean, -24.0), u.call(2.4 + lean, -24.0), u.call(lean, -21.4)]), accent)
+		var shirt := _tinted(Color(a["shirt_color"]), tint) if a.has("shirt_color") else accent
+		ci.draw_colored_polygon(PackedVector2Array([u.call(-3.0 + lean, -24.0), u.call(3.0 + lean, -24.0), u.call(lean, -19.0)]), shirt)
 	ci.draw_rect(Rect2(u.call(-6.0 * tw, -11.0), Vector2(12.0 * tw, 2.0 * hs) * scale), accent)
 
 	# Cabeza.
@@ -166,6 +175,10 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 ##   tint (Color), time (para pequeñas animaciones), profile.
 ## Con r grande (retratos) añade detalles: blanco de los ojos, iris, cejas y boca.
 static func draw_head(ci: CanvasItem, head: Vector2, r: float, a: Dictionary, opts := {}) -> void:
+	if a.has("smile"):
+		# Sonrisa fija del personaje: gana a la expresión del retrato si ésta es menor.
+		opts = opts.duplicate()
+		opts["smile"] = maxf(float(opts.get("smile", 0.0)), float(a["smile"]))
 	var tint: Color = opts.get("tint", Color(0, 0, 0, 0))
 	var skin := _tinted(Color(a["skin_tone"]), tint)
 	var hair := _tinted(Color(a["hair_color"]), tint)
@@ -219,7 +232,14 @@ static func draw_head(ci: CanvasItem, head: Vector2, r: float, a: Dictionary, op
 	else:
 		_draw_hair_front(ci, head, r, style, hair, streaks, lw)
 		_draw_face(ci, head, r, a, opts, look, detail, lw, hair)
-		_draw_beard(ci, head, r, beard, hair, opts, detail, lw)
+		var beard_hair := _tinted(Color(a["beard_color"]), tint) if a.has("beard_color") else hair
+		_draw_beard(ci, head, r, beard, beard_hair, opts, detail, lw)
+		if a.has("beard_streaks") and beard in [1, 2]:
+			for k in 5:
+				var x := -0.55 + k * 0.275
+				ci.draw_line(head + Vector2(x, 0.62 + 0.18 * absf(x)) * r, head + Vector2(x * 1.05, 0.95 + 0.1 * absf(x)) * r, Color("c8c4bc", 0.55), maxf(1.0, lw * 0.8))
+		if float(opts.get("smile", 0.0)) >= 0.5:
+			_draw_big_smile(ci, head, r, float(opts.get("mouth", 0.0)), detail, lw)
 
 	# Lo que se ve desde cualquier ángulo.
 	if style == 3:   # cresta
@@ -253,6 +273,15 @@ static func _draw_hair_front(ci: CanvasItem, head: Vector2, r: float, style: int
 				for side in [-1.0, 1.0]:
 					ci.draw_line(head + Vector2(side * 0.99, -0.14) * r, head + Vector2(side * 0.89, -0.71) * r, streaks, lw * 1.2)
 				ci.draw_line(head + Vector2(0.29, -0.69) * r, head + Vector2(0.23, -1.23) * r, Color(streaks, 0.8), lw * 0.8)
+		10:  # entradas: pelo corto con la frente despejada y un pico al centro
+			var pts := PackedVector2Array()
+			for k in 17:
+				var t := PI + PI * k / 16.0
+				pts.append(head + Vector2(cos(t), sin(t)) * r * 1.11)
+			for q in [Vector2(1.0, -0.05), Vector2(0.86, -0.3), Vector2(0.6, -0.5), Vector2(0.28, -0.74), Vector2(0.0, -0.66),
+					Vector2(-0.28, -0.74), Vector2(-0.6, -0.5), Vector2(-0.86, -0.3), Vector2(-1.0, -0.05)]:
+				pts.append(head + q * r)
+			ci.draw_colored_polygon(pts, hair)
 		6:  # afro: el frente con forma redondeada
 			_cap(ci, head, r, 1.15, hair)
 			ci.draw_circle(head + Vector2(-0.95, -0.15) * r, 0.32 * r, hair)
@@ -321,7 +350,7 @@ static func _draw_face(ci: CanvasItem, head: Vector2, r: float, a: Dictionary, o
 	for side in [-1.0, 1.0]:
 		ci.draw_circle(head + Vector2(side * 0.55, 0.32) * r, 0.11 * r, Color(1.0, 0.45, 0.45, 0.12))
 	var mouth: float = opts.get("mouth", 0.0)
-	if mouth < 0.0:
+	if mouth < 0.0 or float(opts.get("smile", 0.0)) >= 0.5:
 		return
 	var m := head + Vector2(0.0, 0.52) * r + Vector2(shift.x * 0.4, 0)
 	var smile: float = opts.get("smile", 0.0)
@@ -334,6 +363,25 @@ static func _draw_face(ci: CanvasItem, head: Vector2, r: float, a: Dictionary, o
 		ci.draw_arc(m - Vector2(0, 0.1 * r * signf(smile)), 0.2 * r, from, from + PI * 0.7, 12, MOUTH, lw)
 	else:
 		ci.draw_line(m - Vector2(0.14 * r, 0), m + Vector2(0.14 * r, 0), MOUTH, lw)
+
+
+## Sonrisa ancha con dientes. En sprites pequeños (sin detalle) es una cuña clara
+## bajo la nariz; en retratos, media luna con dientes y contorno.
+static func _draw_big_smile(ci: CanvasItem, head: Vector2, r: float, mouth: float, detail: bool, lw: float) -> void:
+	var m := head + Vector2(0.0, 0.5) * r
+	var half := 0.36 * r
+	var depth := (0.2 + 0.25 * clampf(mouth, 0.0, 1.0)) * r
+	var pts := PackedVector2Array()
+	for k in 11:
+		var t := PI * k / 10.0
+		pts.append(m + Vector2(cos(t) * half, sin(t) * depth))
+	ci.draw_colored_polygon(pts, Color("f4efe6") if detail or r > 5.0 else Color("f4efe6"))
+	if detail:
+		ci.draw_line(m + Vector2(-half * 0.92, depth * 0.35), m + Vector2(half * 0.92, depth * 0.35), Color(0, 0, 0, 0.18), maxf(1.0, lw * 0.6))
+		ci.draw_polyline(pts, MOUTH, lw, true)
+		ci.draw_line(m + Vector2(-half, 0), m + Vector2(half, 0), MOUTH, lw)
+	else:
+		ci.draw_line(m + Vector2(-half, 0), m + Vector2(half, 0), MOUTH, maxf(1.0, lw))
 
 
 static func _draw_beard(ci: CanvasItem, head: Vector2, r: float, beard: int, hair: Color, opts: Dictionary, detail: bool, lw: float) -> void:
@@ -352,7 +400,7 @@ static func _draw_beard(ci: CanvasItem, head: Vector2, r: float, beard: int, hai
 			ci.draw_colored_polygon(jaw, Color(hair, 0.3))
 		2:  # completa (deja ver la boca)
 			ci.draw_colored_polygon(jaw, hair)
-			if detail:
+			if detail and float(opts.get("smile", 0.0)) < 0.5:
 				var mouth: float = opts.get("mouth", 0.0)
 				var m := head + Vector2(0.0, 0.52) * r
 				ci.draw_set_transform(m, 0.0, Vector2(1.0, 0.35 + maxf(0.0, mouth) * 0.65))

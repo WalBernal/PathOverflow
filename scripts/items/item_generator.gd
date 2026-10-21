@@ -69,7 +69,16 @@ func generate_motherboard(item_level: int, skill_id := "", slot_count := 0) -> M
 
 func generate_ram(item_level: int, ram_id := "") -> RamModule:
 	var defs: Dictionary = db.skills.rams
-	var def: Dictionary = defs[ram_id] if ram_id != "" else defs[_pick(defs.keys())]
+	var def: Dictionary
+	if ram_id != "":
+		def = defs[ram_id]
+	else:
+		# Solo caen los módulos cuyo nivel mínimo se alcanza (menor → normal → mayor según el acto).
+		var options: Array = []
+		for id in defs:
+			if int(defs[id].get("min_level", 1)) <= item_level:
+				options.append(id)
+		def = defs[_pick(options if not options.is_empty() else defs.keys())]
 	return RamModule.new(def, item_level)
 
 

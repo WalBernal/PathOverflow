@@ -205,15 +205,19 @@
       "color": "4b8bd6",
       "appearance": {
         "body": 2,
-        "hair": 1,
+        "hair": 10,
         "beard": 2,
         "accessory": 1,
-        "height": 1.08,
-        "skin_tone": "c99a7a",
-        "hair_color": "2b2118",
+        "height": 1.0,
+        "smile": 1.0,
+        "skin_tone": "c8967a",
+        "hair_color": "241c16",
+        "beard_color": "4e4842",
+        "beard_streaks": true,
         "eye_color": "3a2414",
-        "outfit_color": "2b4a6b",
-        "accent_color": "2a2a30"
+        "outfit_color": "233a5c",
+        "accent_color": "1a2a44",
+        "shirt_color": "f2f2f0"
       },
       "voice": {
         "pitch": 0.8,

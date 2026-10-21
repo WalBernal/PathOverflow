@@ -68,6 +68,10 @@ func _initialize() -> void:
 	_test_persistent_units()
 	_test_unique_class_kits()
 	_test_tutorial_safe_start()
+	_test_chain_tiers()
+	_test_auras_and_unit_abilities()
+	_test_resists_and_affixes()
+	_test_boss_phases()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
 	else:
@@ -410,7 +414,7 @@ func _test_appearance() -> void:
 func _test_skill_data() -> void:
 	var skills := _db.skills
 	_check(skills.skills.size() >= 6 and skills.rams.size() >= 8, "carga de habilidades y RAM")
-	var kinds := ["melee_area", "nova", "projectile", "ground_aoe", "blink", "dash", "cone", "beam", "boomerang", "spin", "trap", "chain", "minion", "degen_area", "barrier", "buff", "curse_area", "dot_projectile", "homing", "drones", "leap_slam", "rain", "unit"]
+	var kinds := ["melee_area", "nova", "projectile", "ground_aoe", "blink", "dash", "cone", "beam", "boomerang", "spin", "trap", "chain", "minion", "degen_area", "barrier", "buff", "curse_area", "dot_projectile", "homing", "drones", "leap_slam", "rain", "unit", "aura"]
 	for def in skills.skills.values():
 		_check(kinds.has(def["kind"]), "tipo de habilidad desconocido en %s" % def["id"])
 		_check(def.has("attack") or def.has("spell"), "%s necesita 'attack' o 'spell'" % def["id"])
@@ -1694,7 +1698,7 @@ func _class_def(id: String) -> Dictionary:
 ## (degenerativos, +daño, lentitud, congelación) y caducan.
 func _test_ailments() -> void:
 	var em := EnemyManager.new()
-	em.spawn(Vector2.ZERO, Rarity.Enemy.NORMAL)
+	em.spawn(Vector2.ZERO, Rarity.Enemy.NORMAL, em.type_index_of("bug"))
 	em.lives[0] = 1.0e6
 	em.max_lives[0] = 1.0e6
 	var all := {}
@@ -1922,3 +1926,251 @@ func _test_tutorial_safe_start() -> void:
 				# Los bugs de un grupo se reparten hasta ±70 px: aun así, fuera del alcance desde B.O.B.
 				_check(p.distance_to(Zone._v(npc["pos"])) - 100.0 > aggro, "grupo fuera del alcance de B.O.B.")
 	zone.free()
+
+
+## RAM de encadenamiento por grados: menor (1 salto), normal (2) y mayor (3); cada salto pega
+## menos y la penalización mejora 1 punto por nivel de la placa.
+func _test_chain_tiers() -> void:
+	var gen := ItemGenerator.new(_db, 41)
+	var c := _new_character()
+	var tiers := {}
+	for id in ["propagacion_excepciones_menor", "propagacion_excepciones", "propagacion_excepciones_mayor"]:
+		var ram := gen.generate_ram(1, id)
+		tiers[ram.tier()] = ram
+	_check(tiers.size() == 3 and tiers[1].special("extra_chains") == 1 and tiers[2].special("extra_chains") == 2 and tiers[3].special("extra_chains") == 3, "tres grados de encadenamiento: 1, 2 y 3 saltos")
+	_check(tiers[1].special("chain_penalty") > tiers[2].special("chain_penalty") and tiers[2].special("chain_penalty") > tiers[3].special("chain_penalty"), "los grados altos pierden menos daño")
+	var board := Motherboard.new(_db.skills.skills["robot_centinela"], 1, ["DDR5"])
+	board.install(tiers[1], 0)
+	var lvl1 := SkillCalc.compute(board, c)
+	_check(lvl1["projectile_chains"] == 1 and is_equal_approx(lvl1["chain_damage"], 0.70), "nivel 1 con la menor: 1 salto al -30 %% (%.2f)" % lvl1["chain_damage"])
+	board.level = 2
+	_check(is_equal_approx(SkillCalc.compute(board, c)["chain_damage"], 0.71), "al subir de nivel la penalización mejora un punto (-29 %)")
+	board.level = 40
+	_check(SkillCalc.compute(board, c)["chain_damage"] <= 1.0, "nunca supera el 100 %")
+	_check(SkillCalc.compute(board, c)["projectile_chains"] == 1, "subir de nivel no añade saltos")
+	# Solo caen los grados que corresponden al nivel de la zona.
+	var seen_act1 := {}
+	var seen_act3 := {}
+	for k in 600:
+		seen_act1[gen.generate_ram(8).def["id"]] = true
+		seen_act3[gen.generate_ram(30).def["id"]] = true
+	_check(seen_act1.has("propagacion_excepciones_menor") and not seen_act1.has("propagacion_excepciones") and not seen_act1.has("propagacion_excepciones_mayor"), "en el acto I solo cae la menor")
+	_check(seen_act3.has("propagacion_excepciones_mayor") and seen_act3.has("pasta_termica_mayor"), "en el acto III caen los grados mayores")
+	# El daño baja en cada rebote de un proyectil.
+	var em := EnemyManager.new()
+	root.add_child(em)
+	var player: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(player)
+	var chara := CharacterData.new(_class_def("templario"), _tree)
+	chara.inventory.boards.fill(null)
+	chara.inventory.set_board(0, board)
+	board.level = 1
+	player.setup(chara, em)
+	em.player = player
+	var sk := SkillController.new()
+	root.add_child(sk)
+	sk.setup(player, em, chara)
+	var p := sk.profile(0)
+	var pr := {"pos": Vector2.ZERO, "vel": Vector2.RIGHT * 100.0, "distance_left": 500.0, "pierce_left": 0, "hit_ids": {}, "profile": p,
+		"color": Color.WHITE, "chains_left": 1, "homing": false}
+	em.roll_affixes = false
+	var bug := em.type_index_of("bug")
+	em.spawn(Vector2(3, 0), Rarity.Enemy.NORMAL, bug)
+	em.spawn(Vector2(120, 0), Rarity.Enemy.NORMAL, bug)
+	em.lives[0] = 1.0e6
+	em.max_lives[0] = 1.0e6
+	em.lives[1] = 1.0e6
+	em.max_lives[1] = 1.0e6
+	sk._projectiles.append(pr)
+	sk._update_projectiles(0.01)
+	_check(sk._projectiles.size() == 1 and is_equal_approx(float(sk._projectiles[0].get("dmg_mult", 1.0)), p["chain_damage"]), "tras rebotar, el proyectil lleva la penalización")
+	sk.queue_free()
+	em.queue_free()
+	player.queue_free()
+
+
+## Auras (se activan y apagan, reservan maná, mejoran a los autómatas) y habilidades de invocaciones.
+func _test_auras_and_unit_abilities() -> void:
+	var c := CharacterData.new(_class_def("templario"), _tree)
+	c.level = 20
+	c.inventory.boards.fill(null)
+	c.inventory.set_board(0, Motherboard.new(_db.skills.skills["robot_centinela"], 1, []))
+	c.inventory.set_board(1, Motherboard.new(_db.skills.skills["aura_overclock"], 1, []))
+	c.inventory.set_board(2, Motherboard.new(_db.skills.skills["dron_medico"], 1, []))
+	c.inventory.set_board(3, Motherboard.new(_db.skills.skills["dron_escudo"], 1, []))
+	c.inventory.set_board(4, Motherboard.new(_db.skills.skills["mina_rodante"], 1, []))
+	c.inventory.set_board(5, Motherboard.new(_db.skills.skills["aura_blindaje"], 1, []))
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	root.add_child(em)
+	var player: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(player)
+	player.setup(c, em)
+	em.player = player
+	var sk := SkillController.new()
+	root.add_child(sk)
+	sk.setup(player, em, c)
+	var before := sk.profile(0)
+	sk._execute(sk.profile(1), Vector2.ZERO)
+	_check(sk.is_aura_active("aura_overclock") and sk._auras.size() == 1, "la aura se activa")
+	var after := sk.profile(0)
+	_check(after["automaton_speed"] > before["automaton_speed"] and after["unit_interval"] < before["unit_interval"], "la aura acelera a los autómatas (%.2f → %.2f)" % [before["automaton_speed"], after["automaton_speed"]])
+	_check(after["ailments"].get(Ailments.SHOCK, 0.0) > before["ailments"].get(Ailments.SHOCK, 0.0), "y les da probabilidad de electrocutar")
+	_check(player.mana_reserved > 0.0, "la aura reserva maná")
+	sk._execute(sk.profile(1), Vector2.ZERO)
+	_check(not sk.is_aura_active("aura_overclock") and is_equal_approx(sk.profile(0)["automaton_speed"], before["automaton_speed"]) and player.mana_reserved == 0.0, "relanzarla la apaga y libera la reserva")
+	sk._execute(sk.profile(5), Vector2.ZERO)
+	sk._execute(sk.profile(0), Vector2.ZERO)
+	sk._update_units(0.05)
+	_check(sk._units[0]["reduction"] >= sk.profile(5)["aura_reduction"] - 0.001 and sk.profile(5)["aura_reduction"] > 0.0, "el blindaje reduce el daño de las invocaciones")
+	sk.clear_auras()
+	_check(sk._auras.is_empty() and c.timed_effects.is_empty(), "clear_auras quita los efectos")
+	# Dron médico: cura al jugador cuando está herido.
+	sk.clear_units()
+	sk._execute(sk.profile(2), Vector2.ZERO)
+	player.life = player.max_life() * 0.5
+	sk._units[0]["ab_cd"] = 0.0
+	var hp := player.life
+	sk._update_units(0.05)
+	_check(player.life > hp, "el dron de mantenimiento cura al jugador")
+	# Cortafuegos: da barrera.
+	sk.clear_units()
+	sk._execute(sk.profile(3), Vector2.ZERO)
+	sk._units[0]["ab_cd"] = 0.0
+	sk._update_units(0.05)
+	_check(player.barrier > 0.0, "el dron cortafuegos levanta una barrera")
+	# Mina rodante: explota al caer y daña a los cercanos.
+	sk.clear_units()
+	sk._execute(sk.profile(4), Vector2.ZERO)
+	var bug_i := em.spawn(sk._units[0]["pos"] + Vector2(20, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+	em.lives[em.index_of(bug_i)] = 1.0e6
+	em.max_lives[em.index_of(bug_i)] = 1.0e6
+	var life_before := em.lives[em.index_of(bug_i)]
+	sk._units[0]["life"] = 0.0
+	sk._update_units(0.05)
+	_check(sk._units.is_empty() and em.lives[em.index_of(bug_i)] < life_before, "la mina rodante explota al caer")
+	sk.queue_free()
+	em.queue_free()
+	player.queue_free()
+	# Cada habilidad de invocación tiene una habilidad propia distinta.
+	var kinds := {}
+	for id in ["robot_centinela", "daemon_segundo_plano", "dron_escolta", "golem_hardware", "dron_medico", "dron_escudo", "bot_pruebas", "mina_rodante", "agente_ia"]:
+		var d: Dictionary = _db.skills.skills[id]
+		_check(d["kind"] == "unit" and d["tags"].has("persistent"), "%s es una invocación persistente" % id)
+		kinds[str(d["unit"].get("ability", {}).get("kind", "")) + "/" + str(d["unit"]["behavior"]) + "/" + str(d["damage_type"])] = true
+	_check(kinds.size() >= 8, "las invocaciones juegan distinto (%d combinaciones)" % kinds.size())
+
+
+## Resistencias, inmunidades y afijos de los enemigos.
+func _test_resists_and_affixes() -> void:
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	var zombi := em.type_index_of("proceso_zombi")
+	var id := em.spawn(Vector2.ZERO, Rarity.Enemy.NORMAL, zombi)
+	var i := em.index_of(id)
+	em.lives[i] = 1.0e6
+	em.max_lives[i] = 1.0e6
+	_check(em.is_immune_to(i, "poison") and em.resist_of(i, "chaos") == 50.0 and em.resist_of(i, "fire") == -25.0, "el proceso zombi es inmune al veneno y resiste caos")
+	em.hit_ailments = {"type": "chaos", "chances": {"poison": 100.0}, "effect": 1.0, "duration": 1.0}
+	var before := em.lives[i]
+	em.hit_index(i, 100.0, 100.0, 0.0, 150.0)
+	_check(is_equal_approx(before - em.lives[i], 50.0) and em.poison_time[i] == 0.0, "50 % de resistencia: la mitad del daño y sin veneno")
+	em.hit_ailments = {"type": "fire", "chances": {}, "effect": 1.0, "duration": 1.0}
+	before = em.lives[i]
+	em.hit_index(i, 100.0, 100.0, 0.0, 150.0)
+	_check(is_equal_approx(before - em.lives[i], 125.0), "resistencia negativa: más daño (%.0f)" % (before - em.lives[i]))
+	# Daño extra contra enemigos con estados.
+	em.apply_ailment(i, Ailments.BLEED, 10.0)
+	em.hit_ailments = {"type": "", "chances": {}, "effect": 1.0, "duration": 1.0, "ailing": 1.5}
+	before = em.lives[i]
+	em.hit_index(i, 100.0, 100.0, 0.0, 150.0)
+	_check(is_equal_approx(before - em.lives[i], 150.0), "daño contra enemigos con estados")
+	# Afijos explícitos: resistencias, inmunidades y velocidad.
+	em.clear_all()
+	var bug := em.type_index_of("bug")
+	var base_speed_id := em.spawn(Vector2(500, 0), Rarity.Enemy.ELITE, bug, "", 1.0, [], [])
+	var aff_id := em.spawn(Vector2(0, 0), Rarity.Enemy.ELITE, bug, "", 1.0, [], ["ignifugo", "veloz"])
+	var ai := em.index_of(aff_id)
+	_check(em.resist_of(ai, "fire") == 75.0 and em.is_immune_to(ai, "burn") and em.affixes_of(ai).size() == 2, "afijos Ignífugo y Veloz")
+	_check(em.names[ai].begins_with("Ignífugo"), "el afijo da nombre al élite (%s)" % em.names[ai])
+	_check(em.speeds[ai] > em.speeds[em.index_of(base_speed_id)] * 1.1, "Veloz corre más")
+	# Los élite tiran afijos según el nivel de la zona.
+	var em2 := EnemyManager.new()
+	em2.area_level = 10
+	var with := 0
+	for k in 30:
+		var e := em2.spawn(Vector2.ZERO, Rarity.Enemy.ELITE, bug)
+		with += 1 if em2.affixes_of(em2.index_of(e)).size() == 2 else 0
+	_check(with == 30, "los élite del nivel 10 llevan dos afijos")
+	em2.area_level = 1
+	var e1 := em2.spawn(Vector2.ZERO, Rarity.Enemy.ELITE, bug)
+	_check(em2.affixes_of(em2.index_of(e1)).is_empty(), "sin afijos en el nivel 1")
+	# Explosivo: al morir deja una carga; regenerador: recupera vida.
+	var boom_id := em.spawn(Vector2(0, 300), Rarity.Enemy.ELITE, bug, "", 1.0, [], ["explosivo"])
+	em.hit_index(em.index_of(boom_id), 1.0e9, 1.0e9, 0.0, 150.0)
+	_check(em.hazards.size() == 1, "el explosivo deja una carga al morir")
+	var regen_id := em.spawn(Vector2(0, 600), Rarity.Enemy.ELITE, bug, "", 1.0, [], ["regenerador"])
+	var ri := em.index_of(regen_id)
+	em.lives[ri] = em.max_lives[ri] * 0.5
+	em._update_affixes(1.0)
+	_check(em.lives[ri] > em.max_lives[ri] * 0.5, "el regenerador recupera vida")
+	for aid in EnemyManager.affix_defs():
+		var d: Dictionary = EnemyManager.affix_defs()[aid]
+		_check(d.has("name") and d.has("description") and d.has("color"), "afijo %s completo" % aid)
+	for t in EnemyManager.enemy_types():
+		for k in t.get("resist", {}):
+			_check(EnemyManager.RESIST_TYPES.has(k), "%s: tipo de resistencia %s" % [t["id"], k])
+		for k in t.get("immune", []):
+			_check(Ailments.ALL.has(k), "%s: estado inmune %s" % [t["id"], k])
+	em.free()
+	em2.free()
+
+
+## Fases de jefe: aviso, más velocidad, invulnerabilidad breve y barra de jefe con umbrales.
+func _test_boss_phases() -> void:
+	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json"]:
+		var act: Dictionary = DataLoader.load_json(path)
+		for z in act["zones"]:
+			if z.has("boss"):
+				var phases: Array = z["boss"].get("phases", [])
+				_check(phases.size() >= 2, "%s: el jefe tiene fases" % z["id"])
+				var last := 1.0
+				for ph in phases:
+					_check(float(ph["at"]) < last and ph.has("name") and ph.has("text"), "%s: fases ordenadas y con texto" % z["id"])
+					last = float(ph["at"])
+	var act1: Dictionary = DataLoader.load_json("res://data/act1.json")
+	var boss: Dictionary = act1["zones"].filter(func(z: Dictionary) -> bool: return z.has("boss"))[0]["boss"]
+	var em := EnemyManager.new()
+	root.add_child(em)
+	var player: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(player)
+	player.setup(_new_character(), em)
+	player.global_position = Vector2(3000, 3000)
+	em.player = player
+	var id := em.spawn(Vector2(0, 0), Rarity.Enemy.UNIQUE, em.type_index_of(boss["type"]), boss["name"], float(boss["life_mult"]), boss["abilities"])
+	em.set_phases(id, boss["phases"])
+	var announced := []
+	em.phase_started.connect(func(_i: int, n: String, _t: String, _c: Color) -> void: announced.append(n))
+	var info := em.boss_info()
+	_check(info["thresholds"].size() == 2 and info["index"] == 0 and info["frac"] > 0.99, "barra de jefe: dos umbrales y fase 1")
+	var i := em.index_of(id)
+	var speed := em.speeds[i]
+	em.lives[i] = em.max_lives[i] * 0.6
+	em._update_phases(0.1)
+	_check(announced.size() == 1 and em.boss_info()["index"] == 1, "al bajar del 66 % empieza la fase 2")
+	_check(em.speeds[i] > speed and em.boss_info()["shield"] > 0.0, "la fase sube la velocidad y da invulnerabilidad breve")
+	var life := em.lives[i]
+	em.hit_index(i, 1000.0, 1000.0, 0.0, 150.0)
+	_check(em.lives[i] == life, "el jefe es invulnerable entre fases")
+	em._update_phases(2.0)
+	em.hit_index(i, 10.0, 10.0, 0.0, 150.0)
+	_check(em.lives[i] < life, "y vuelve a recibir daño después")
+	em.lives[i] = em.max_lives[i] * 0.2
+	em._update_phases(0.1)
+	_check(announced.size() == 2 and em.boss_info()["index"] == 2, "fase 3 al bajar del 33 %")
+	em.lives[i] = 1.0
+	em._update_phases(5.0)
+	em.hit_index(i, 100.0, 100.0, 0.0, 150.0)
+	_check(em.boss_info().is_empty() and em.boss_phases.is_empty(), "al morir el jefe desaparece la barra")
+	em.queue_free()
+	player.queue_free()

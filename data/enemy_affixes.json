@@ -1,0 +1,136 @@
+{
+  "_doc": "Afijos de enemigos élite y únicos raros. name: prefijo del nombre. resist/immune: como en enemies.json (se suman). speed_mult: velocidad. regen: % de vida por segundo. on_hit: estado que aplican al jugador (dot: kind fire/chaos/cold/lightning, dps_mult del daño del enemigo, duration). death_explosion: explota al morir (radius, damage_mult, delay). summoner: invoca type cada cooldown s. min_level: nivel de zona mínimo. color: aura visual.",
+  "affixes": [
+    {
+      "id": "ignifugo",
+      "name": "Ignífugo",
+      "color": "ff7a2a",
+      "resist": {
+        "fire": 75
+      },
+      "immune": [
+        "burn"
+      ],
+      "min_level": 2,
+      "description": "Resiste el fuego (75 %) y no se quema."
+    },
+    {
+      "id": "aislado",
+      "name": "Aislado",
+      "color": "f0e060",
+      "resist": {
+        "lightning": 75
+      },
+      "immune": [
+        "shock"
+      ],
+      "min_level": 2,
+      "description": "Resiste el rayo (75 %) y no se electrocuta."
+    },
+    {
+      "id": "criogenizado",
+      "name": "Criogenizado",
+      "color": "a0e0ff",
+      "resist": {
+        "cold": 75
+      },
+      "immune": [
+        "chill",
+        "freeze"
+      ],
+      "min_level": 2,
+      "description": "Resiste el frío (75 %); no se hiela ni se congela."
+    },
+    {
+      "id": "toxico",
+      "name": "Tóxico",
+      "color": "6fd36b",
+      "resist": {
+        "chaos": 60
+      },
+      "immune": [
+        "poison"
+      ],
+      "min_level": 4,
+      "on_hit": {
+        "dot": {
+          "kind": "chaos",
+          "dps_mult": 0.35,
+          "duration": 4.0
+        }
+      },
+      "description": "Envenena con sus golpes; inmune al veneno."
+    },
+    {
+      "id": "ardiente",
+      "name": "Ardiente",
+      "color": "ff5a2a",
+      "immune": [
+        "burn"
+      ],
+      "min_level": 4,
+      "on_hit": {
+        "dot": {
+          "kind": "fire",
+          "dps_mult": 0.4,
+          "duration": 3.0
+        }
+      },
+      "description": "Quema con sus golpes."
+    },
+    {
+      "id": "blindado",
+      "name": "Blindado",
+      "color": "b8b8c0",
+      "resist": {
+        "physical": 50
+      },
+      "immune": [
+        "bleed"
+      ],
+      "min_level": 3,
+      "description": "Mucha armadura: resiste el daño físico (50 %) y no sangra."
+    },
+    {
+      "id": "veloz",
+      "name": "Veloz",
+      "color": "7fffd4",
+      "speed_mult": 1.35,
+      "min_level": 2,
+      "description": "Se mueve mucho más rápido."
+    },
+    {
+      "id": "regenerador",
+      "name": "Regenerador",
+      "color": "ff9ac0",
+      "regen": 2.0,
+      "min_level": 3,
+      "description": "Recupera un 2 % de su vida por segundo."
+    },
+    {
+      "id": "explosivo",
+      "name": "Explosivo",
+      "color": "ffb030",
+      "death_explosion": {
+        "radius": 110,
+        "damage_mult": 2.2,
+        "delay": 0.9
+      },
+      "min_level": 4,
+      "description": "Al morir, deja una carga que explota al poco: apártate."
+    },
+    {
+      "id": "invocador",
+      "name": "Invocador",
+      "color": "c08aff",
+      "summoner": {
+        "type": "bug",
+        "count": 2,
+        "cooldown": 9.0,
+        "max_alive": 6
+      },
+      "min_level": 5,
+      "description": "Invoca bugs cada pocos segundos."
+    }
+  ]
+}

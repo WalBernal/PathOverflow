@@ -12,6 +12,64 @@ static func draw(ci: CanvasItem, rect: Rect2, skill_def: Dictionary, dimmed := f
 	var r := minf(rect.size.x, rect.size.y) * 0.34
 	_draw_backdrop(ci, rect, color, dimmed)
 	match icon.get("shape", ""):
+		"medic":
+			# Dron con cruz de reparación.
+			for k in 4:
+				var arm := Vector2.from_angle(PI / 4.0 + PI / 2.0 * k) * r * 0.85
+				ci.draw_line(c, c + arm, Color("8a8a96"), 2.0, true)
+				ci.draw_circle(c + arm, r * 0.22, Color(0.85, 0.9, 0.85, 0.35))
+			ci.draw_circle(c, r * 0.5, Color("e8f0e8"))
+			ci.draw_rect(Rect2(c + Vector2(-r * 0.12, -r * 0.34), Vector2(r * 0.24, r * 0.68)), color)
+			ci.draw_rect(Rect2(c + Vector2(-r * 0.34, -r * 0.12), Vector2(r * 0.68, r * 0.24)), color)
+		"shielddrone":
+			ci.draw_arc(c + Vector2(0, -r * 0.05), r * 0.95, PI * 1.05, PI * 1.95, 14, color, 3.0, true)
+			ci.draw_arc(c + Vector2(0, -r * 0.05), r * 0.65, PI * 1.1, PI * 1.9, 12, Color(color, 0.6), 2.0, true)
+			ci.draw_rect(Rect2(c + Vector2(-r * 0.4, r * 0.1), Vector2(r * 0.8, r * 0.4)), Color("3a3f4a"))
+			ci.draw_circle(c + Vector2(0, r * 0.3), r * 0.12, color)
+			for s in [-1.0, 1.0]:
+				ci.draw_line(c + Vector2(s * r * 0.4, r * 0.2), c + Vector2(s * r * 0.8, r * 0.05), Color("8a8a96"), 2.0)
+		"testbot":
+			# Muñeco de pruebas con una flecha de salto.
+			ci.draw_circle(c + Vector2(0, -r * 0.45), r * 0.32, Color("e8d9b0"))
+			ci.draw_rect(Rect2(c + Vector2(-r * 0.3, -r * 0.1), Vector2(r * 0.6, r * 0.7)), color.darkened(0.2))
+			ci.draw_line(c + Vector2(-r * 0.2, r * 0.6), c + Vector2(-r * 0.35, r), Color("8a8a96"), 2.5)
+			ci.draw_line(c + Vector2(r * 0.2, r * 0.6), c + Vector2(r * 0.35, r), Color("8a8a96"), 2.5)
+			ci.draw_arc(c + Vector2(r * 0.3, 0), r * 0.7, PI * 1.2, PI * 1.9, 10, Color(color, 0.8), 2.0, true)
+			ci.draw_rect(Rect2(c + Vector2(-r * 0.15, -r * 0.5), Vector2(r * 0.1, r * 0.08)), Color("1a1620"))
+			ci.draw_rect(Rect2(c + Vector2(r * 0.05, -r * 0.5), Vector2(r * 0.1, r * 0.08)), Color("1a1620"))
+		"wheelbomb":
+			ci.draw_circle(c + Vector2(0, -r * 0.05), r * 0.62, Color("2a2a30"))
+			ci.draw_circle(c + Vector2(-r * 0.2, -r * 0.25), r * 0.14, Color("5a5a66"))
+			ci.draw_line(c + Vector2(r * 0.25, -r * 0.55), c + Vector2(r * 0.6, -r * 0.95), Color("8a6d3b"), 2.0, true)
+			ci.draw_circle(c + Vector2(r * 0.65, -r * 1.0), r * 0.16, Color("ffd84a"))
+			for s in [-1.0, 1.0]:
+				ci.draw_circle(c + Vector2(s * r * 0.4, r * 0.75), r * 0.22, Color("5a5a66"))
+				ci.draw_circle(c + Vector2(s * r * 0.4, r * 0.75), r * 0.08, color)
+		"agent":
+			ci.draw_circle(c, r * 0.65, Color("2a1f3a"))
+			ci.draw_arc(c, r * 0.65, 0.0, TAU, 20, color, 2.5, true)
+			ci.draw_circle(c + Vector2(-r * 0.22, -r * 0.1), r * 0.12, Color("3cff9a"))
+			ci.draw_circle(c + Vector2(r * 0.22, -r * 0.1), r * 0.12, Color("3cff9a"))
+			ci.draw_arc(c + Vector2(0, r * 0.15), r * 0.28, 0.2, PI - 0.2, 8, Color("3cff9a"), 2.0, true)
+			for k in 3:
+				ci.draw_circle(c + Vector2(r * (0.5 + 0.18 * k), -r * (0.75 + 0.1 * k)), r * (0.08 + 0.03 * k), Color(color, 0.8))
+		"aura_clock", "aura_shield", "aura_cross", "aura_flag":
+			# Aros de aura con un símbolo en el centro.
+			ci.draw_arc(c, r * 1.0, 0.0, TAU, 28, Color(color, 0.5), 2.0, true)
+			ci.draw_arc(c, r * 0.78, 0.4, TAU - 0.4, 24, Color(color, 0.8), 2.0, true)
+			match icon.get("shape", ""):
+				"aura_clock":
+					ci.draw_line(c, c + Vector2(0, -r * 0.5), color, 2.5, true)
+					ci.draw_line(c, c + Vector2(r * 0.35, r * 0.15), color, 2.5, true)
+					ci.draw_circle(c, r * 0.1, Color.WHITE)
+				"aura_shield":
+					ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-r * 0.4, -r * 0.4), c + Vector2(r * 0.4, -r * 0.4), c + Vector2(r * 0.35, r * 0.1), c + Vector2(0, r * 0.55), c + Vector2(-r * 0.35, r * 0.1)]), color)
+				"aura_cross":
+					ci.draw_rect(Rect2(c + Vector2(-r * 0.12, -r * 0.45), Vector2(r * 0.24, r * 0.9)), color)
+					ci.draw_rect(Rect2(c + Vector2(-r * 0.45, -r * 0.12), Vector2(r * 0.9, r * 0.24)), color)
+				"aura_flag":
+					ci.draw_line(c + Vector2(-r * 0.3, r * 0.55), c + Vector2(-r * 0.3, -r * 0.5), Color("c8c8c8"), 2.0, true)
+					ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-r * 0.3, -r * 0.5), c + Vector2(r * 0.5, -r * 0.3), c + Vector2(-r * 0.3, -r * 0.05)]), color)
 		"leap":
 			# Arco de salto que termina en un impacto.
 			ci.draw_arc(c + Vector2(-r * 0.1, r * 0.35), r * 0.85, PI * 1.05, PI * 1.85, 14, Color(color, 0.7), 3.0, true)

@@ -29,6 +29,11 @@ func display_name() -> String:
 	return "%s (%s)" % [def.get("name", "?"), generation()]
 
 
+## 1 menor, 2 normal, 3 mayor.
+func tier() -> int:
+	return int(def.get("tier", 2))
+
+
 func display_color() -> Color:
 	return GENERATION_COLORS.get(generation(), Color.WHITE)
 
@@ -86,6 +91,10 @@ func effect_lines() -> PackedStringArray:
 		lines.append("La habilidad se repite %d vez más" % sp["repeats"])
 	if sp.has("extra_chains"):
 		lines.append("+%d encadenamientos (los proyectiles rebotan a otro enemigo)" % sp["extra_chains"])
+	if sp.has("chain_penalty"):
+		lines.append("Cada encadenamiento pega un %d %% menos (mejora 1 %% por nivel de la placa)" % int(sp["chain_penalty"]))
+	if sp.has("unit_reduction"):
+		lines.append("Tus invocaciones reciben un %d %% menos de daño" % roundi(float(sp["unit_reduction"]) * 100.0))
 	match String(sp.get("deploy", "")):
 		"trap":
 			lines.append("Se lanza como trampa: se activa al acercarse un enemigo (máx. 3)")

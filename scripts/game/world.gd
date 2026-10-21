@@ -77,6 +77,9 @@ func _ready() -> void:
 	enemies.player = player
 	enemies.enemy_killed.connect(_on_enemy_killed)
 	enemies.immune_hit.connect(_on_immune_hit)
+	enemies.phase_started.connect(func(_id: int, phase_name: String, text: String, color: Color) -> void:
+		ui.hud.flash("%s\n%s" % [phase_name, text], color)
+		Sfx.play("wave"))
 	skills = SkillController.new()
 	add_child(skills)
 	skills.setup(player, enemies, character)
@@ -313,6 +316,7 @@ func _spawn_zone_enemies() -> void:
 	if not boss.is_empty() and not character.flags.has(boss.get("complete_flag", "act1_complete")):
 		enemies.spawn(Zone._v(boss["pos"]), Rarity.Enemy.UNIQUE, enemies.type_index_of(boss.get("type", "daemon")),
 			boss.get("name", ""), float(boss.get("life_mult", 1.0)), boss.get("abilities", []))
+		enemies.set_phases(enemies.ids[enemies.ids.size() - 1], boss.get("phases", []))
 		_boss_alive = true
 
 
@@ -491,6 +495,7 @@ func _discover_waypoint() -> void:
 
 
 func _on_player_died() -> void:
+	skills.clear_auras()
 	character.flags["stat_deaths"] = int(character.flags.get("stat_deaths", 0)) + 1
 	ui.show_death()
 	_mark_dirty()

@@ -39,6 +39,8 @@ static func milestone_text(skill: Dictionary) -> String:
 			return "+1 bomba a la vez"
 		"drones":
 			return "+1 dron"
+		"aura":
+			return "+15 % de efecto"
 		"unit":
 			return "+1 invocación a la vez"
 		"rain":
@@ -70,11 +72,17 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 	var repeats := int(skill.get("repeats", 0))
 	var area_mult := 1.0
 	var extra_chains := 0
+	# Encadenamiento: % de daño que se pierde en cada salto (-1 = sin penalización).
+	var chain_penalty := -1.0
+	var unit_reduction := 0.0
 	# Algunas habilidades se despliegan solas (p. ej. la Torreta de Integración Continua).
 	var deploy: String = skill.get("deploy", "")
 	var totem_duration: float = float(skill.get("totem_duration", 8.0)) if deploy != "" else 0.0
 	for ram: RamModule in board.active_supports():
 		extra_chains += int(ram.special("extra_chains"))
+		if ram.special("chain_penalty") > 0.0:
+			chain_penalty = ram.special("chain_penalty") if chain_penalty < 0.0 else minf(chain_penalty, ram.special("chain_penalty"))
+		unit_reduction += ram.special("unit_reduction")
 		# Solo cuenta el primer módulo de despliegue (una trampa no puede ser también una torreta).
 		if deploy == "" and ram.special_string("deploy") != "":
 			deploy = ram.special_string("deploy")
@@ -163,11 +171,22 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 	var minion_interval := MINION_ATTACK_INTERVAL / maxf(0.1, automaton_speed)
 	# Invocaciones persistentes (kind "unit"): no caducan, reservan maná.
 	var unit: Dictionary = skill.get("unit", {})
+	var aura: Dictionary = skill.get("aura", {})
 	var extra_minions := int(stats.get_value(Stat.EXTRA_MINIONS, tags))
 	var max_units := int(skill.get("max_active", 1)) + extra_minions + (milestones if kind == "unit" else 0)
 	var unit_interval := float(unit.get("interval", 1.0)) / maxf(0.1, automaton_speed)
 	var unit_life := float(unit.get("life", 0.0)) * (1.0 + 0.12 * (board.level - 1)) * stats.total_multiplier(Stat.MINION_LIFE, tags)
-	var reserve := float(unit.get("reserve", 0.0)) / maxf(0.1, stats.total_multiplier(Stat.RESERVATION_EFFICIENCY, tags))
+	var reserve := float(unit.get("reserve", aura.get("reserve", 0.0))) / maxf(0.1, stats.total_multiplier(Stat.RESERVATION_EFFICIENCY, tags))
+	# Auras: bonificaciones para tus aliados, escaladas por el nivel, los hitos y "efecto de aura".
+	var aura_scale := stats.total_multiplier(Stat.AURA_EFFECT, tags) * (1.0 + 0.02 * (board.level - 1)) \
+		* (1.0 + 0.15 * milestones if kind == "aura" else 1.0)
+	var aura_mods: Array = []
+	for md in aura.get("mods", []):
+		var scaled: Dictionary = md.duplicate()
+		scaled["value"] = float(md["value"]) * aura_scale
+		aura_mods.append(scaled)
+	# Encadenamiento: la penalización mejora 1 punto por nivel de la placa (−30 % → −29 % → ...).
+	var chain_damage := 1.0 if chain_penalty < 0.0 else clampf(1.0 - chain_penalty / 100.0 + 0.01 * (board.level - 1), 0.0, 1.0)
 	var rain_hits := int(skill.get("count", 0)) + (2 * milestones if kind == "rain" else 0)
 	var hits_per_use := float(repeats + 1)
 	match kind:
@@ -192,7 +211,9 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 	var ailment_chances := Ailments.chances(stats, tags, skill)
 	var ailment_effect := stats.total_multiplier(Stat.AILMENT_DAMAGE, tags)
 	var ailment_duration := stats.total_multiplier(Stat.AILMENT_DURATION, tags)
-	var ailment_ctx := {} if ailment_chances.is_empty() else {"chances": ailment_chances, "effect": ailment_effect, "duration": ailment_duration}
+	var ailing_bonus := stats.total_multiplier(Stat.AILING_DAMAGE, tags)
+	# Contexto de cada golpe: tipo de daño (resistencias del enemigo), estados y bonus contra enemigos con estados.
+	var ailment_ctx := {"type": damage_type, "chances": ailment_chances, "effect": ailment_effect, "duration": ailment_duration, "ailing": ailing_bonus}
 
 	return {
 		"id": skill["id"],
@@ -252,4 +273,12 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 		"unit_life": unit_life,
 		"unit_interval": unit_interval,
 		"reserve": reserve,
+		"chain_damage": chain_damage,
+		"ailing_bonus": ailing_bonus,
+		"aura_mods": aura_mods,
+		"aura_regen": float(aura.get("regen", 0.0)) * aura_scale,
+		"aura_reduction": minf(0.6, float(aura.get("reduction", 0.0)) * aura_scale),
+		"unit_reduction": minf(0.7, float(unit.get("reduction", 0.0)) + unit_reduction),
+		"unit_shoots": bool(unit.get("shoots", true)),
+		"unit_ability": unit.get("ability", {}),
 	}

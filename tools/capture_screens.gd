@@ -23,6 +23,8 @@ func _ready() -> void:
 
 func _run() -> void:
 	if OS.get_cmdline_user_args().has("combate"):
+		await _capture_paez()
+		await _capture_boss_and_affixes()
 		await _capture_icons()
 		await _capture_combat_hud()
 		await _capture_tutorial_start()
@@ -253,6 +255,72 @@ func _capture_act3() -> void:
 	world.get("player").global_position += Vector2(700, 0)
 	await _wait(5.0)
 	_save("15_jefe_fw_update")
+	world.set("_since_save", -9999.0)
+
+
+## M. Páez: retrato grande, sprite del juego y su aspecto lado a lado con otros NPC.
+func _capture_paez() -> void:
+	var look: Dictionary = CharacterAppearance.sanitize(Zone.npc_database()["npcs"]["m_paez"]["appearance"])
+	var sheet := Control.new()
+	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sheet.draw.connect(func() -> void:
+		UiStyle.draw_background(sheet, sheet.size)
+		CharacterAppearance.draw_head(sheet, Vector2(300, 330), 150.0, look, {"mouth": 0.0})
+		CharacterAppearance.draw(sheet, Vector2(700, 520), 6.0, look)
+		for k in 4:
+			CharacterAppearance.draw(sheet, Vector2(900 + k * 120, 300), 1.06 + k * 1.0, look)
+		CharacterAppearance.draw(sheet, Vector2(1000, 520), 1.06, look, Vector2.RIGHT)
+		CharacterAppearance.draw(sheet, Vector2(1100, 520), 1.06, look, Vector2.UP))
+	_swap(sheet)
+	await _wait(0.5)
+	_save("19_paez")
+
+
+## Jefe del acto I con fases, afijos en un élite con resistencias, y auras activas.
+func _capture_boss_and_affixes() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Jefe", &"templario", CharacterAppearance.default(), false)
+	c.flags["zone"] = "jefe"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 14
+	var items: ItemDatabase = gd.get("items")
+	c.inventory.set_board(3, Motherboard.new(items.skills.skills["aura_overclock"], 3, ["DDR5"]))
+	c.inventory.set_board(4, Motherboard.new(items.skills.skills["dron_medico"], 3, ["DDR5"]))
+	c.inventory.set_board(5, Motherboard.new(items.skills.skills["mina_rodante"], 3, ["DDR4"]))
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.2)
+	var skills: SkillController = world.get("skills")
+	var player: Player = world.get("player")
+	var em: EnemyManager = world.get("enemies")
+	player.invulnerable = true
+	skills.call("_execute", skills.profile(3), player.global_position)
+	skills.call("_execute", skills.profile(4), player.global_position)
+	skills.call("_execute", skills.profile(5), player.global_position)
+	var boss_pos := Vector2.ZERO
+	for k in em.count():
+		if em.rarities[k] == Rarity.Enemy.UNIQUE:
+			boss_pos = em.positions[k]
+			player.global_position = boss_pos + Vector2(-380, 0)
+			em.lives[k] = em.max_lives[k] * 0.5
+			em._update_phases(0.1)
+	var elite := em.spawn(player.global_position + Vector2(220, -60), Rarity.Enemy.ELITE, em.type_index_of("daemon"), "", 1.0, [], ["ignifugo", "blindado"])
+	em.spawn(player.global_position + Vector2(180, 90), Rarity.Enemy.SPECIAL, em.type_index_of("proceso_zombi"), "", 1.0, [], ["toxico"])
+	var hud: Node = world.get("ui").get("hud")
+	hud.set("_target_id", elite)
+	hud.set("_target_linger", 999.0)
+	em.apply_ailment(em.index_of(elite), Ailments.BLEED, 10.0)
+	await _wait(1.0)
+	_save("20_jefe_fases")
+	# Con el escudo de fase: invulnerable.
+	for k in em.count():
+		if em.rarities[k] == Rarity.Enemy.UNIQUE:
+			em.lives[k] = em.max_lives[k] * 0.3
+	await _wait(0.3)
+	_save("21_jefe_fase3")
 	world.set("_since_save", -9999.0)
 
 

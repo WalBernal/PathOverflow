@@ -233,6 +233,25 @@ func add_timed_effect(id: String, mods: Array[Modifier], seconds: float) -> void
 	recalculate()
 
 
+## Crea o sustituye un efecto sin caducidad práctica (auras: se quitan a mano).
+func set_timed_effect(id: String, mods: Array[Modifier], seconds := 1.0e9) -> void:
+	for effect in timed_effects:
+		if effect["id"] == id:
+			effect["mods"] = mods
+			effect["time_left"] = seconds
+			recalculate()
+			return
+	timed_effects.append({"id": id, "mods": mods, "time_left": seconds, "total": seconds})
+	recalculate()
+
+
+func remove_timed_effect(id: String) -> void:
+	var before := timed_effects.size()
+	timed_effects.assign(timed_effects.filter(func(e: Dictionary) -> bool: return e["id"] != id))
+	if timed_effects.size() != before:
+		recalculate()
+
+
 ## Lo llama Player cada frame: quita los efectos caducados.
 func tick_timed_effects(delta: float) -> void:
 	if timed_effects.is_empty():

@@ -661,10 +661,67 @@
             "damage_mult": 1.5,
             "color": "ff8c2a",
             "description": "Marca el suelo donde estás y alrededor; explota al segundo. Sal de los círculos."
+          },
+          {
+            "id": "rebase",
+            "name": "Rebase interactivo",
+            "kind": "summon",
+            "type": "bug",
+            "count": 4,
+            "cooldown": 9.0,
+            "first": 1.5,
+            "windup": 0.9,
+            "max_life": 0.66,
+            "color": "ff8a3a",
+            "description": "Reescribe la historia e invoca bugs que nadie pidió."
+          },
+          {
+            "id": "deuda_tecnica",
+            "name": "Deuda Técnica",
+            "kind": "ground_marks",
+            "cooldown": 6.0,
+            "first": 1.0,
+            "windup": 0.5,
+            "max_life": 0.33,
+            "count": 8,
+            "radius": 85,
+            "delay": 0.95,
+            "spread": 240,
+            "damage_mult": 1.7,
+            "color": "ff4a4a",
+            "description": "Los intereses se acumulan: círculos por todos lados."
           }
         ],
         "death_cutscene": "arquitecto_muere",
-        "complete_flag": "act1_complete"
+        "complete_flag": "act1_complete",
+        "phases": [
+          {
+            "at": 0.66,
+            "name": "Fase 2: Refactorización",
+            "text": "«Esto hay que refactorizarlo.» El Arquitecto invoca bugs y se vuelve más rápido.",
+            "speed_mult": 1.15,
+            "damage_mult": 1.1,
+            "invulnerable": 1.2,
+            "nova": {
+              "radius": 220,
+              "stun": 0.7,
+              "color": "ff8c2a"
+            }
+          },
+          {
+            "at": 0.33,
+            "name": "Fase 3: Deuda Técnica",
+            "text": "«Ya la pagarás.» El suelo se llena de deuda técnica y todo va más rápido.",
+            "speed_mult": 1.2,
+            "damage_mult": 1.2,
+            "invulnerable": 1.2,
+            "nova": {
+              "radius": 260,
+              "stun": 0.8,
+              "color": "ff4a4a"
+            }
+          }
+        ]
       },
       "enemies": {
         "packs": 2,

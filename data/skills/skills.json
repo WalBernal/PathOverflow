@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_doc": "Habilidades activas (lo que hace cada placa base). kind: melee_area, nova (stun opcional), projectile, ground_aoe, blink, dash (embestida que golpea en línea), cone (cono delante), beam (rayo en línea tras un retardo), boomerang (va y vuelve golpeando en los dos sentidos), spin (gira golpeando durante duration cada tick), trap (trampa que explota al acercarse un enemigo; max_active), chain (salta entre enemigos chains veces), minion (invoca count esbirros durante duration; max_active a la vez), degen_area (charco que hace base_damage por segundo durante duration), barrier (barrera que absorbe daño: barrier + barrier_life × vida máxima), buff (buff_mods sobre el personaje durante duration), curse_area (aplica daño degenerativo por segundo a todos los de una zona), dot_projectile (proyectil que deja daño degenerativo), homing (proyectiles teledirigidos al enemigo más cercano: seek_range, turn_rate), drones (count drones que orbitan y disparan proyectiles teledirigidos cada tick). tags: varias por habilidad (ver SkillTags): ataque/hechizo, forma (melee, projectile, area, chain), mecánica (duration, trap, mine, totem, minion, movement, degen) y tipo de daño (physical, fire, cold, lightning, chaos, elemental). duration y stun escalan con skill_duration; cooldown con cooldown_recovery. lol: en qué habilidad de League of Legends se inspira. attack: usa el arma (damage_effectiveness). spell: daño propio (base_damage) que crece un damage_growth por nivel de la placa. attribute: generación de RAM más probable en sus ranuras (str=DDR3, dex=DDR4, int=DDR5). leap_slam (salta hacia el cursor y golpea el suelo al caer: radius, range, stun), rain (count impactos de impact_radius repartidos en radius durante duration), unit (invocación PERSISTENTE: no caduca, reserva unit.reserve % del maná máximo mientras viva; unit.behavior: melee | ranged | orbit (dron invulnerable que orbita) | tank (provoca a los enemigos en unit.taunt); unit.life, unit.radius, unit.speed, unit.interval (s entre ataques), unit.range, unit.reduction (daño evitado); max_active a la vez). repeats: la habilidad se repite sola. ailments: probabilidad extra (%) de aplicar estados (burn, shock, chill, freeze, poison, bleed), además de la innata de su tipo de daño (ver Ailments). La etiqueta automaton (autómata) la llevan torretas, drones, esbirros y robots.",
+  "_doc": "Habilidades activas (lo que hace cada placa base). kind: melee_area, nova (stun opcional), projectile, ground_aoe, blink, dash (embestida que golpea en línea), cone (cono delante), beam (rayo en línea tras un retardo), boomerang (va y vuelve golpeando en los dos sentidos), spin (gira golpeando durante duration cada tick), trap (trampa que explota al acercarse un enemigo; max_active), chain (salta entre enemigos chains veces), minion (invoca count esbirros durante duration; max_active a la vez), degen_area (charco que hace base_damage por segundo durante duration), barrier (barrera que absorbe daño: barrier + barrier_life × vida máxima), buff (buff_mods sobre el personaje durante duration), curse_area (aplica daño degenerativo por segundo a todos los de una zona), dot_projectile (proyectil que deja daño degenerativo), homing (proyectiles teledirigidos al enemigo más cercano: seek_range, turn_rate), drones (count drones que orbitan y disparan proyectiles teledirigidos cada tick). tags: varias por habilidad (ver SkillTags): ataque/hechizo, forma (melee, projectile, area, chain), mecánica (duration, trap, mine, totem, minion, movement, degen) y tipo de daño (physical, fire, cold, lightning, chaos, elemental). duration y stun escalan con skill_duration; cooldown con cooldown_recovery. lol: en qué habilidad de League of Legends se inspira. attack: usa el arma (damage_effectiveness). spell: daño propio (base_damage) que crece un damage_growth por nivel de la placa. attribute: generación de RAM más probable en sus ranuras (str=DDR3, dex=DDR4, int=DDR5). leap_slam (salta hacia el cursor y golpea el suelo al caer: radius, range, stun), rain (count impactos de impact_radius repartidos en radius durante duration), unit (invocación PERSISTENTE: no caduca, reserva unit.reserve % del maná máximo mientras viva; unit.behavior: melee | ranged | orbit (dron invulnerable que orbita) | tank (provoca a los enemigos en unit.taunt); unit.life, unit.radius, unit.speed, unit.interval (s entre ataques), unit.range, unit.reduction (daño evitado); max_active a la vez). repeats: la habilidad se repite sola. ailments: probabilidad extra (%) de aplicar estados (burn, shock, chill, freeze, poison, bleed), además de la innata de su tipo de daño (ver Ailments). La etiqueta automaton (autómata) la llevan torretas, drones, esbirros y robots. aura: kind 'aura' (persistente, se activa y desactiva al relanzar; reserva aura.reserve % del maná): aura.mods son modificadores para tus aliados (se escalan con el nivel de la placa y con aura_effect), aura.regen: % de vida por segundo que recuperan tus invocaciones, aura.reduction: daño evitado por las invocaciones. unit.ability (invocaciones): heal (cura al jugador y a las invocaciones), barrier (barrera al jugador), leap (salta a un grupo y golpea el suelo), venom (escupe un charco venenoso), explode (explota al morir); unit.shoots=false: no dispara. unit.reduction ya existe.",
   "skills": [
     {
       "id": "barrido",
@@ -1167,6 +1167,441 @@
       "icon": {
         "shape": "golem",
         "color": "b8a888"
+      }
+    },
+    {
+      "id": "dron_medico",
+      "name": "Dron de Mantenimiento",
+      "kind": "unit",
+      "damage_type": "none",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "minion",
+        "automaton",
+        "persistent"
+      ],
+      "lol": "Soraka / Lulu",
+      "description": "Un dron con el botiquín de IT: orbita a tu alrededor y repara cada pocos segundos a ti y a tus invocaciones. No ataca. Persistente.",
+      "spell": {
+        "base_damage": [
+          0,
+          0
+        ],
+        "damage_growth": 0.0,
+        "cast_time": 0.8,
+        "crit": 0.0
+      },
+      "unit": {
+        "behavior": "orbit",
+        "shoots": false,
+        "life": 1,
+        "radius": 8,
+        "speed": 0,
+        "interval": 3.5,
+        "range": 600,
+        "reserve": 12,
+        "ability": {
+          "kind": "heal",
+          "player_pct": 6,
+          "unit_pct": 12
+        }
+      },
+      "max_active": 1,
+      "mana_cost": 9,
+      "mana_per_level": 0.3,
+      "cooldown": 1.0,
+      "icon": {
+        "shape": "medic",
+        "color": "6fd36b"
+      }
+    },
+    {
+      "id": "dron_escudo",
+      "name": "Dron Cortafuegos",
+      "kind": "unit",
+      "damage_type": "none",
+      "attribute": "str",
+      "tags": [
+        "spell",
+        "minion",
+        "automaton",
+        "persistent",
+        "defense"
+      ],
+      "lol": "Janna / Orianna",
+      "description": "Un dron que levanta un cortafuegos sobre ti cada pocos segundos: una barrera que crece con tu vida máxima. Orbita, no ataca. Persistente.",
+      "spell": {
+        "base_damage": [
+          0,
+          0
+        ],
+        "damage_growth": 0.0,
+        "cast_time": 0.8,
+        "crit": 0.0
+      },
+      "unit": {
+        "behavior": "orbit",
+        "shoots": false,
+        "life": 1,
+        "radius": 8,
+        "speed": 0,
+        "interval": 7.0,
+        "range": 600,
+        "reserve": 14,
+        "ability": {
+          "kind": "barrier",
+          "barrier": 20,
+          "barrier_life": 0.12
+        }
+      },
+      "max_active": 1,
+      "mana_cost": 10,
+      "mana_per_level": 0.3,
+      "cooldown": 1.0,
+      "icon": {
+        "shape": "shielddrone",
+        "color": "7fb8e0"
+      }
+    },
+    {
+      "id": "bot_pruebas",
+      "name": "Bot de Pruebas",
+      "kind": "unit",
+      "damage_type": "physical",
+      "attribute": "dex",
+      "tags": [
+        "attack",
+        "minion",
+        "automaton",
+        "persistent",
+        "melee",
+        "physical"
+      ],
+      "lol": "Zed (sombra) / Kha'Zix",
+      "description": "Un script de QA que salta sobre el grupo enemigo más lejano y lo golpea en área; luego sigue a golpes. Rápido y frágil. Persistente.",
+      "attack": {
+        "damage_effectiveness": 0.5
+      },
+      "unit": {
+        "behavior": "melee",
+        "life": 70,
+        "radius": 11,
+        "speed": 300,
+        "interval": 0.6,
+        "range": 520,
+        "reserve": 12,
+        "ability": {
+          "kind": "leap",
+          "cooldown": 5.0,
+          "radius": 75,
+          "damage_mult": 1.6
+        }
+      },
+      "max_active": 2,
+      "ailments": {
+        "bleed": 20
+      },
+      "mana_cost": 10,
+      "mana_per_level": 0.35,
+      "cooldown": 1.0,
+      "icon": {
+        "shape": "testbot",
+        "color": "e8d9b0"
+      }
+    },
+    {
+      "id": "mina_rodante",
+      "name": "Mina Rodante",
+      "kind": "unit",
+      "damage_type": "fire",
+      "attribute": "dex",
+      "tags": [
+        "spell",
+        "minion",
+        "automaton",
+        "persistent",
+        "area",
+        "fire",
+        "elemental"
+      ],
+      "lol": "Zac / Ziggs",
+      "description": "Una bomba con ruedas que persigue al enemigo más cercano y explota al morir (y a veces antes). Cuando estalla, la vuelves a lanzar. Persistente.",
+      "spell": {
+        "base_damage": [
+          18,
+          30
+        ],
+        "damage_growth": 0.16,
+        "cast_time": 0.7,
+        "crit": 5.0
+      },
+      "unit": {
+        "behavior": "melee",
+        "life": 55,
+        "radius": 11,
+        "speed": 260,
+        "interval": 1.4,
+        "range": 480,
+        "reserve": 10,
+        "ability": {
+          "kind": "explode",
+          "radius": 95
+        }
+      },
+      "radius": 95,
+      "max_active": 2,
+      "ailments": {
+        "burn": 30
+      },
+      "mana_cost": 9,
+      "mana_per_level": 0.3,
+      "cooldown": 1.0,
+      "icon": {
+        "shape": "wheelbomb",
+        "color": "e0652f"
+      }
+    },
+    {
+      "id": "agente_ia",
+      "name": "Agente IA",
+      "kind": "unit",
+      "damage_type": "chaos",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "minion",
+        "automaton",
+        "persistent",
+        "area",
+        "chaos",
+        "projectile"
+      ],
+      "lol": "Cassiopeia / Zyra",
+      "description": "Un agente autónomo que alucina con confianza: dispara a distancia y, cada pocos segundos, escupe un charco tóxico sobre el grupo enemigo. Persistente.",
+      "spell": {
+        "base_damage": [
+          7,
+          13
+        ],
+        "damage_growth": 0.16,
+        "cast_time": 0.9,
+        "crit": 0.0
+      },
+      "unit": {
+        "behavior": "ranged",
+        "life": 65,
+        "radius": 12,
+        "speed": 230,
+        "interval": 1.4,
+        "range": 540,
+        "reserve": 15,
+        "ability": {
+          "kind": "venom",
+          "cooldown": 7.0,
+          "radius": 95,
+          "duration": 4.0
+        }
+      },
+      "max_active": 1,
+      "projectile_speed": 560,
+      "seek_range": 540,
+      "turn_rate": 7.0,
+      "ailments": {
+        "poison": 30
+      },
+      "mana_cost": 11,
+      "mana_per_level": 0.35,
+      "cooldown": 1.0,
+      "icon": {
+        "shape": "agent",
+        "color": "9a5ad0"
+      }
+    },
+    {
+      "id": "aura_overclock",
+      "name": "Aura de Overclock",
+      "kind": "aura",
+      "damage_type": "none",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "aura",
+        "persistent",
+        "duration"
+      ],
+      "lol": "Nami / Bard",
+      "description": "Un campo de reloj acelerado: tus torretas, drones, esbirros y robots atacan más rápido y con más probabilidad de electrocutar. Se activa y se apaga al relanzarla; reserva maná.",
+      "spell": {
+        "base_damage": [
+          0,
+          0
+        ],
+        "damage_growth": 0.0,
+        "cast_time": 0.5,
+        "crit": 0.0
+      },
+      "aura": {
+        "reserve": 20,
+        "mods": [
+          {
+            "stat": "automaton_speed",
+            "type": "increased",
+            "value": 20
+          },
+          {
+            "stat": "shock_chance",
+            "type": "flat",
+            "value": 8,
+            "tags": [
+              "automaton"
+            ]
+          }
+        ]
+      },
+      "mana_cost": 0,
+      "mana_per_level": 0,
+      "cooldown": 0.6,
+      "icon": {
+        "shape": "aura_clock",
+        "color": "e8d070"
+      }
+    },
+    {
+      "id": "aura_blindaje",
+      "name": "Aura de Blindaje Redundante",
+      "kind": "aura",
+      "damage_type": "none",
+      "attribute": "str",
+      "tags": [
+        "spell",
+        "aura",
+        "persistent",
+        "duration",
+        "defense"
+      ],
+      "lol": "Taric / Braum",
+      "description": "Redundancia N+2: tus invocaciones tienen mucha más vida y reciben menos daño. Se activa y se apaga al relanzarla; reserva maná.",
+      "spell": {
+        "base_damage": [
+          0,
+          0
+        ],
+        "damage_growth": 0.0,
+        "cast_time": 0.5,
+        "crit": 0.0
+      },
+      "aura": {
+        "reserve": 20,
+        "reduction": 0.2,
+        "mods": [
+          {
+            "stat": "minion_life",
+            "type": "increased",
+            "value": 40
+          }
+        ]
+      },
+      "mana_cost": 0,
+      "mana_per_level": 0,
+      "cooldown": 0.6,
+      "icon": {
+        "shape": "aura_shield",
+        "color": "7fb8e0"
+      }
+    },
+    {
+      "id": "aura_mantenimiento",
+      "name": "Aura de Mantenimiento Continuo",
+      "kind": "aura",
+      "damage_type": "none",
+      "attribute": "dex",
+      "tags": [
+        "spell",
+        "aura",
+        "persistent",
+        "duration"
+      ],
+      "lol": "Soraka / Sona",
+      "description": "Un cron que repara todo lo que está cerca: tus invocaciones recuperan vida sin parar y tú también. Se activa y se apaga al relanzarla; reserva maná.",
+      "spell": {
+        "base_damage": [
+          0,
+          0
+        ],
+        "damage_growth": 0.0,
+        "cast_time": 0.5,
+        "crit": 0.0
+      },
+      "aura": {
+        "reserve": 16,
+        "regen": 3.0,
+        "mods": [
+          {
+            "stat": "life_regen",
+            "type": "flat",
+            "value": 4
+          }
+        ]
+      },
+      "mana_cost": 0,
+      "mana_per_level": 0,
+      "cooldown": 0.6,
+      "icon": {
+        "shape": "aura_cross",
+        "color": "6fd36b"
+      }
+    },
+    {
+      "id": "aura_mando",
+      "name": "Aura de Mando",
+      "kind": "aura",
+      "damage_type": "none",
+      "attribute": "str",
+      "tags": [
+        "spell",
+        "aura",
+        "persistent",
+        "duration"
+      ],
+      "lol": "Sona / Seraphine",
+      "description": "El jefe de equipo da órdenes claras: tus aliados hacen más daño y crítico. Se activa y se apaga al relanzarla; reserva maná.",
+      "spell": {
+        "base_damage": [
+          0,
+          0
+        ],
+        "damage_growth": 0.0,
+        "cast_time": 0.5,
+        "crit": 0.0
+      },
+      "aura": {
+        "reserve": 22,
+        "mods": [
+          {
+            "stat": "damage",
+            "type": "increased",
+            "value": 25,
+            "tags": [
+              "automaton"
+            ]
+          },
+          {
+            "stat": "crit_chance",
+            "type": "increased",
+            "value": 30,
+            "tags": [
+              "automaton"
+            ]
+          }
+        ]
+      },
+      "mana_cost": 0,
+      "mana_per_level": 0,
+      "cooldown": 0.6,
+      "icon": {
+        "shape": "aura_flag",
+        "color": "d9a441"
       }
     }
   ]

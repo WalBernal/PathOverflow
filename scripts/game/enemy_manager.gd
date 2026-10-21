@@ -14,6 +14,8 @@ extends Node2D
 signal enemy_killed(rarity: Rarity.Enemy, experience: int, position: Vector2, type_id: String)
 ## Un golpe a un enemigo inmune (para el aviso "INMUNE").
 signal immune_hit(position: Vector2)
+## Un jefe cruza el umbral de una fase: (id, nombre de la fase, texto, color).
+signal phase_started(id: int, phase_name: String, text: String, color: Color)
 
 const TYPES_PATH := "res://data/enemies.json"
 const ATLAS := preload("res://assets/sprites/enemies/enemies.png")
@@ -51,6 +53,11 @@ const UNIQUE_NAMES := [
 ]
 
 static var _types: Array = []
+static var _affixes: Dictionary = {}
+## Tipos de daño con resistencia, y el tipo de daño de cada estado (para su daño por segundo).
+const RESIST_TYPES := ["physical", "fire", "cold", "lightning", "chaos"]
+const AILMENT_ELEMENT := {"burn": "fire", "poison": "chaos", "bleed": "physical"}
+const RESIST_CAP := 90.0
 
 var player: Player
 ## Nivel de zona: escala vida, daño y experiencia.
@@ -108,6 +115,15 @@ var bleed_time := PackedFloat32Array()
 ## Estados que puede aplicar el golpe en curso (lo prepara SkillController antes
 ## de llamar a hit_*): {chances: {burn: %, ...}, effect: mult. de daño, duration: mult.}.
 var hit_ailments: Dictionary = {}
+## Rasgos de cada enemigo: {res: {tipo: %}, immune: {estado: true}, affixes: [ids]} (o {} si no tiene).
+var traits: Array = []
+## Jefes con fases: id -> {list: [...], next: índice de la próxima fase}.
+var boss_phases := {}
+## Segundos de invulnerabilidad restantes tras cambiar de fase: id -> tiempo.
+var phase_shield := {}
+## ¿Tiran afijos los élite y especiales nuevos? (las pruebas lo apagan para ser deterministas)
+var roll_affixes := true
+var _affix_timers := {}
 ## Aliados que los enemigos pueden atacar (invocaciones persistentes):
 ## [{pos, life, max_life, radius, taunt}]. Los mantiene SkillController.
 var allies: Array = []
@@ -130,6 +146,14 @@ var last_simulation_ms := 0.0
 var _next_id := 1
 var _multimesh: MultiMesh
 var _grid: Dictionary = {}  # Vector2i -> Array de índices
+
+
+static func affix_defs() -> Dictionary:
+	if _affixes.is_empty():
+		var data = DataLoader.load_json("res://data/enemy_affixes.json")
+		for a in (data.get("affixes", []) if data is Dictionary else []):
+			_affixes[a["id"]] = a
+	return _affixes
 
 
 static func enemy_types() -> Array:
@@ -167,7 +191,7 @@ func count() -> int:
 ## custom_name y life_mult: para jefes con nombre propio.
 ## abilities: habilidades especiales (jefes), ver act1.json → boss.abilities.
 func spawn(pos: Vector2, rarity: Rarity.Enemy, type_index := -1, custom_name := "", life_mult := 1.0,
-		special_abilities: Array = []) -> int:
+		special_abilities: Array = [], affix_ids: Array = []) -> int:
 	if type_index < 0:
 		type_index = random_type(rarity == Rarity.Enemy.UNIQUE)
 	var t: Dictionary = enemy_types()[type_index] if not enemy_types().is_empty() else {}
@@ -208,12 +232,192 @@ func spawn(pos: Vector2, rarity: Rarity.Enemy, type_index := -1, custom_name := 
 	poison_stacks.append(0)
 	bleed_dps.append(0.0)
 	bleed_time.append(0.0)
+	traits.append(_make_traits(t, rarity, affix_ids if not affix_ids.is_empty() or not roll_affixes else _roll_affixes(rarity), special_abilities.is_empty()))
+	var tr: Dictionary = traits[traits.size() - 1]
+	if tr.has("affixes"):
+		var i_new := traits.size() - 1
+		var affix_speed := 1.0
+		var prefix := ""
+		for aid in tr["affixes"]:
+			var def: Dictionary = affix_defs().get(aid, {})
+			affix_speed *= float(def.get("speed_mult", 1.0))
+			if prefix == "":
+				prefix = String(def.get("name", ""))
+		speeds[i_new] *= affix_speed
+		if rarity >= Rarity.Enemy.ELITE and prefix != "":
+			names[i_new] = "%s %s" % [prefix, names[i_new]]
 	if not special_abilities.is_empty():
 		var list: Array = []
 		for a in special_abilities:
 			list.append({"def": a, "timer": float(a.get("first", a.get("cooldown", 6.0) * 0.5))})
 		abilities[ids[ids.size() - 1]] = list
 	return ids[ids.size() - 1]
+
+
+## Afijos al azar según la rareza y el nivel de la zona: élite 1 (2 desde el nivel 8),
+## especiales 1 de cada 4 desde el nivel 3. Los únicos no tiran (los jefes tienen fases).
+func _roll_affixes(rarity: int) -> Array:
+	var count := 0
+	if rarity == Rarity.Enemy.ELITE:
+		count = 2 if area_level >= 8 else 1
+	elif rarity == Rarity.Enemy.SPECIAL and area_level >= 3 and randf() < 0.25:
+		count = 1
+	if count == 0:
+		return []
+	var pool: Array = []
+	for aid in affix_defs():
+		if int(affix_defs()[aid].get("min_level", 1)) <= area_level:
+			pool.append(aid)
+	pool.shuffle()
+	return pool.slice(0, mini(count, pool.size()))
+
+
+## Resistencias, inmunidades y afijos de un enemigo (tipo + afijos).
+func _make_traits(t: Dictionary, _rarity: int, affix_ids: Array, _normal_spawn: bool) -> Dictionary:
+	var res: Dictionary = {}
+	var immune_set: Dictionary = {}
+	for k in t.get("resist", {}):
+		res[k] = float(t["resist"][k])
+	for k in t.get("immune", []):
+		immune_set[k] = true
+	var applied: Array = []
+	for aid in affix_ids:
+		var def: Dictionary = affix_defs().get(aid, {})
+		if def.is_empty():
+			continue
+		applied.append(aid)
+		for k in def.get("resist", {}):
+			res[k] = maxf(float(res.get(k, 0.0)), float(def["resist"][k]))
+		for k in def.get("immune", []):
+			immune_set[k] = true
+	if res.is_empty() and immune_set.is_empty() and applied.is_empty():
+		return {}
+	var out := {}
+	if not res.is_empty():
+		out["res"] = res
+	if not immune_set.is_empty():
+		out["immune"] = immune_set
+	if not applied.is_empty():
+		out["affixes"] = applied
+	return out
+
+
+## Resistencia (%) del enemigo i a un tipo de daño.
+func resist_of(i: int, damage_type: String) -> float:
+	return minf(RESIST_CAP, float(traits[i].get("res", {}).get(damage_type, 0.0)))
+
+
+func is_immune_to(i: int, ailment: String) -> bool:
+	return traits[i].get("immune", {}).has(ailment)
+
+
+func affixes_of(i: int) -> Array:
+	return traits[i].get("affixes", [])
+
+
+## Fases de un jefe (act*.json → boss.phases). Al cruzar cada umbral de vida:
+## aviso, más velocidad y daño, un instante de invulnerabilidad y una onda.
+func set_phases(id: int, list: Array) -> void:
+	if not list.is_empty():
+		boss_phases[id] = {"list": list, "next": 0}
+
+
+## Info para la barra de jefe: {id, index (fase actual 0..n), thresholds, frac, shield}.
+func boss_info() -> Dictionary:
+	for id in boss_phases:
+		var i := index_of(id)
+		if i == -1:
+			continue
+		var bp: Dictionary = boss_phases[id]
+		var thresholds: Array = []
+		var names_list: Array = []
+		for ph in bp["list"]:
+			thresholds.append(float(ph["at"]))
+			names_list.append(String(ph.get("name", "")))
+		return {"id": id, "index": int(bp["next"]), "thresholds": thresholds, "phase_names": names_list,
+			"frac": lives[i] / max_lives[i], "shield": float(phase_shield.get(id, 0.0)), "name": names[i], "pos": positions[i], "rarity": rarities[i]}
+	return {}
+
+
+func _update_phases(delta: float) -> void:
+	for id in phase_shield.keys():
+		phase_shield[id] -= delta
+		if phase_shield[id] <= 0.0:
+			phase_shield.erase(id)
+	for id in boss_phases.keys():
+		var i := index_of(id)
+		if i == -1:
+			boss_phases.erase(id)
+			continue
+		var bp: Dictionary = boss_phases[id]
+		var list: Array = bp["list"]
+		var frac := lives[i] / max_lives[i]
+		while bp["next"] < list.size() and frac <= float(list[bp["next"]]["at"]):
+			_start_phase(i, list[bp["next"]])
+			bp["next"] += 1
+
+
+func _start_phase(i: int, ph: Dictionary) -> void:
+	var color := Color(ph.get("nova", {}).get("color", "ff8c2a"))
+	speeds[i] *= float(ph.get("speed_mult", 1.0))
+	damages[i] *= float(ph.get("damage_mult", 1.0))
+	phase_shield[ids[i]] = float(ph.get("invulnerable", 1.0))
+	stuns[i] = 0.0
+	windups[i] = 0.0
+	dashes[i] = 0.0
+	casting.erase(ids[i])
+	flashes[i] = FLASH_TIME * 4.0
+	# Las habilidades de la fase nueva llegan pronto.
+	var list: Array = abilities.get(ids[i], [])
+	for k in list.size():
+		list[k]["timer"] = minf(float(list[k]["timer"]), 2.5 + 1.0 * k)
+	var nova: Dictionary = ph.get("nova", {})
+	if not nova.is_empty():
+		var radius := float(nova.get("radius", 220.0))
+		_flashes_fx.append({"type": "circle", "pos": positions[i], "radius": radius, "time": 0.0, "color": color})
+		if player and player.is_alive() and positions[i].distance_to(player.global_position) <= radius + Player.RADIUS:
+			player.take_damage(damages[i] * 0.6)
+		_damage_allies_near(positions[i], radius, damages[i] * 0.6)
+	projectiles.clear()
+	phase_started.emit(ids[i], String(ph.get("name", "")), String(ph.get("text", "")), color)
+
+
+## Afijos con efecto por tick: regeneración e invocación.
+func _update_affixes(delta: float) -> void:
+	for i in range(positions.size() - 1, -1, -1):
+		var aff: Array = traits[i].get("affixes", [])
+		if aff.is_empty():
+			continue
+		for aid in aff:
+			var def: Dictionary = affix_defs().get(aid, {})
+			if def.has("regen") and lives[i] < max_lives[i]:
+				lives[i] = minf(max_lives[i], lives[i] + max_lives[i] * float(def["regen"]) / 100.0 * delta)
+			if def.has("summoner") and stuns[i] <= 0.0 and player != null and positions[i].distance_to(player.global_position) < aggro_range:
+				var sm: Dictionary = def["summoner"]
+				var key := "%d:%s" % [ids[i], aid]
+				_affix_timers[key] = float(_affix_timers.get(key, float(sm.get("cooldown", 9.0)) * 0.5)) - delta
+				if _affix_timers[key] <= 0.0:
+					_affix_timers[key] = float(sm.get("cooldown", 9.0))
+					if count_type(String(sm.get("type", "bug"))) < int(sm.get("max_alive", 6)):
+						var type_i := type_index_of(String(sm.get("type", "bug")))
+						for k in int(sm.get("count", 2)):
+							var sp := positions[i] + Vector2.from_angle(TAU * k / maxf(1.0, float(sm.get("count", 2))) + randf()) * (radii[i] + 30.0)
+							if walk_clamp.is_valid():
+								sp = walk_clamp.call(sp, 12.0)
+							var saved := roll_affixes
+							roll_affixes = false
+							spawn(sp, Rarity.Enemy.NORMAL, type_i)
+							roll_affixes = saved
+						_flashes_fx.append({"type": "circle", "pos": positions[i], "radius": radii[i] + 28.0, "time": 0.0, "color": Color(def.get("color", "c08aff"))})
+
+
+## Golpe al jugador con los efectos de los afijos (veneno, quemadura).
+func _hit_player(i: int, amount: float) -> void:
+	player.take_damage(amount)
+	for aid in traits[i].get("affixes", []):
+		var dot: Dictionary = affix_defs().get(aid, {}).get("on_hit", {}).get("dot", {})
+		if not dot.is_empty():
+			player.apply_dot("afijo_" + String(aid), damages[i] * float(dot.get("dps_mult", 0.3)), float(dot.get("duration", 3.0)), String(dot.get("kind", "chaos")))
 
 
 func set_immune(id: int, value: bool) -> void:
@@ -269,6 +473,9 @@ func clear_all() -> void:
 	abilities.clear()
 	casting.clear()
 	_flashes_fx.clear()
+	boss_phases.clear()
+	phase_shield.clear()
+	_affix_timers.clear()
 
 
 ## Ataque del tipo (enemies.json → attack); {} = cuerpo a cuerpo por contacto.
@@ -467,9 +674,19 @@ func _damage(i: int, min_damage: float, max_damage: float, crit_chance: float, c
 		flashes[i] = FLASH_TIME * 0.5
 		immune_hit.emit(positions[i])
 		return
+	if not phase_shield.is_empty() and phase_shield.has(ids[i]):
+		flashes[i] = FLASH_TIME * 0.5   # entre fases, el jefe es invulnerable
+		return
 	var damage := randf_range(min_damage, max_damage)
 	if randf() * 100.0 < crit_chance:
 		damage *= crit_multiplier / 100.0
+	if not hit_ailments.is_empty():
+		var dtype := String(hit_ailments.get("type", ""))
+		if dtype != "" and dtype != "none":
+			damage *= 1.0 - resist_of(i, dtype) / 100.0
+		var ailing := float(hit_ailments.get("ailing", 1.0))
+		if ailing != 1.0 and not ailments_of(i).is_empty():
+			damage *= ailing
 	if shock_time[i] > 0.0:
 		damage *= 1.0 + shock_amp[i]
 	last_damage_dealt += minf(damage, lives[i])
@@ -495,10 +712,12 @@ func _roll_ailments(i: int, damage: float) -> void:
 ## Aplica un estado a un enemigo. `damage`: golpe que lo causa (base de los
 ## degenerativos). Los únicos lo sufren la mitad de tiempo.
 func apply_ailment(i: int, id: String, damage: float, effect := 1.0, duration_mult := 1.0) -> void:
-	if immune[i] == 1:
+	if immune[i] == 1 or is_immune_to(i, id):
 		return
 	var t: float = Ailments.DURATION.get(id, 2.0) * duration_mult * (0.5 if rarities[i] == Rarity.Enemy.UNIQUE else 1.0)
 	var dps: float = damage * float(Ailments.DOT_FRACTION.get(id, 0.0)) * effect
+	if AILMENT_ELEMENT.has(id):
+		dps *= 1.0 - resist_of(i, AILMENT_ELEMENT[id]) / 100.0
 	match id:
 		Ailments.BURN:
 			# La quemadura más fuerte manda; renueva la duración.
@@ -574,6 +793,8 @@ func _physics_process(delta: float) -> void:
 	_update_hazards(delta)
 	_update_pools(delta)
 	_update_dots(delta)
+	_update_phases(delta)
+	_update_affixes(delta)
 	n = positions.size()
 	if n == 0 or player == null:
 		last_simulation_ms = 0.0
@@ -614,7 +835,7 @@ func _physics_process(delta: float) -> void:
 			var half_w := float(atk.get("width", 30.0)) * 0.5
 			if dash_hit[i] == 0 and hunting and dist <= reach + half_w:
 				dash_hit[i] = 1
-				player.take_damage(damages[i] * float(atk.get("damage_mult", 1.0)))
+				_hit_player(i, damages[i] * float(atk.get("damage_mult", 1.0)))
 			elif dash_hit[i] == 0 and _damage_allies_near(pos, r + half_w, damages[i] * float(atk.get("damage_mult", 1.0)), true):
 				dash_hit[i] = 1
 		elif windups[i] > 0.0:
@@ -683,7 +904,7 @@ func _physics_process(delta: float) -> void:
 				_damage_ally(ally, damages[i])
 			elif dist <= reach + 6.0:
 				cooldowns[i] = ATTACK_INTERVAL
-				player.take_damage(damages[i])
+				_hit_player(i, damages[i])
 		i += 1
 	last_simulation_ms = (Time.get_ticks_usec() - started) / 1000.0
 
@@ -809,6 +1030,12 @@ func _resolve_attack(i: int, atk: Dictionary, player_pos: Vector2) -> void:
 				var shot := {"pos": pos, "vel": aim.rotated(angle) * float(atk.get("projectile_speed", 360.0)),
 					"damage": damage, "radius": float(atk.get("projectile_radius", 7.0)), "life": 2.5,
 					"color": Color(atk.get("color", "e0c040"))}
+				for aid in traits[i].get("affixes", []):
+					var adot: Dictionary = affix_defs().get(aid, {}).get("on_hit", {}).get("dot", {})
+					if not adot.is_empty() and not atk.has("dot"):
+						shot["dot_dps"] = damages[i] * float(adot.get("dps_mult", 0.3))
+						shot["dot_time"] = float(adot.get("duration", 3.0))
+						shot["dot_kind"] = String(adot.get("kind", "chaos"))
 				if atk.has("dot"):   # proyectil que quema/corrompe: sigue haciendo daño después
 					var dot: Dictionary = atk["dot"]
 					shot["dot_dps"] = damages[i] * float(dot.get("dps_mult", 0.4))
@@ -841,7 +1068,7 @@ func _resolve_attack(i: int, atk: Dictionary, player_pos: Vector2) -> void:
 			var radius := float(atk.get("radius", 100.0))
 			_flashes_fx.append({"type": "circle", "pos": pos, "radius": radius, "time": 0.0, "color": Color(atk.get("color", "c86030"))})
 			if pos.distance_to(player.global_position) <= radius + Player.RADIUS:
-				player.take_damage(damage)
+				_hit_player(i, damage)
 			_damage_allies_near(pos, radius, damage)
 			if atk.has("pool"):   # el golpe deja un charco (condensador que revienta)
 				var pd: Dictionary = atk["pool"]
@@ -854,7 +1081,7 @@ func _resolve_attack(i: int, atk: Dictionary, player_pos: Vector2) -> void:
 				"color": Color(atk.get("color", "e0652f"))})
 			var to := player.global_position - pos
 			if to.length() <= radius + Player.RADIUS and absf(dir.angle_to(to)) <= half + 0.15:
-				player.take_damage(damage)
+				_hit_player(i, damage)
 			for k in allies.size():
 				var to_ally: Vector2 = allies[k]["pos"] - pos
 				if to_ally.length() <= radius + 12.0 and absf(dir.angle_to(to_ally)) <= half + 0.15:
@@ -1072,6 +1299,10 @@ func _draw() -> void:
 		if stuns[i] > 0.0 and freeze_time[i] <= 0.0:
 			_draw_stun(positions[i] + Vector2(0, -radii[i] * SPRITE_SCALE * 1.1 - 18.0))
 		_draw_ailment_fx(i, tt)
+		_draw_affix_fx(i, tt)
+		if phase_shield.has(ids[i]):
+			var shield_pulse := 0.5 + 0.5 * sin(tt * 14.0)
+			draw_arc(positions[i], radii[i] * 2.0, 0.0, TAU, 32, Color(0.6, 0.85, 1.0, 0.5 + 0.4 * shield_pulse), 4.0, true)
 		if immune[i] == 1:
 			var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 120.0)
 			draw_arc(positions[i], radii[i] * 1.7, 0.0, TAU, 32, Color(0.6, 0.8, 1.0, 0.4 + 0.4 * pulse), 3.0, true)
@@ -1279,6 +1510,23 @@ func _draw_ailment_fx(i: int, tt: float) -> void:
 		draw_set_transform(Vector2.ZERO)
 
 
+## Aro de color por afijo, girando alrededor del enemigo.
+func _draw_affix_fx(i: int, tt: float) -> void:
+	var aff: Array = traits[i].get("affixes", [])
+	if aff.is_empty():
+		return
+	var k := 0
+	for aid in aff:
+		var c := Color(affix_defs().get(aid, {}).get("color", "ffffff"))
+		var radius := radii[i] * 1.55 + k * 4.0
+		var a0 := tt * (1.6 + k * 0.5) + ids[i]
+		draw_set_transform(positions[i] + Vector2(0, radii[i] * 0.5), 0.0, Vector2(1.0, 0.5))
+		for q in 3:
+			draw_arc(Vector2.ZERO, radius, a0 + TAU * q / 3.0, a0 + TAU * q / 3.0 + 1.3, 10, Color(c, 0.85), 2.5, true)
+		draw_set_transform(Vector2.ZERO)
+		k += 1
+
+
 func _draw_stun(p: Vector2) -> void:
 	# Candado girando: proceso bloqueado.
 	var a := Time.get_ticks_msec() / 300.0
@@ -1297,6 +1545,13 @@ func _kill(i: int) -> void:
 	var xp := int(BASE_EXPERIENCE * info.xp_mult * type_mult * (1.0 + 0.15 * (area_level - 1)))
 	var pos := positions[i]
 	var type_id: String = types_list[types[i]]["id"] if types[i] < types_list.size() else ""
+	for aid in traits[i].get("affixes", []):
+		var boom: Dictionary = affix_defs().get(aid, {}).get("death_explosion", {})
+		if not boom.is_empty():
+			hazards.append({"pos": pos, "radius": float(boom.get("radius", 100.0)), "time": 0.0, "delay": float(boom.get("delay", 0.9)),
+				"damage": damages[i] * float(boom.get("damage_mult", 2.0)), "color": Color(affix_defs()[aid].get("color", "ffb030"))})
+	boss_phases.erase(ids[i])
+	phase_shield.erase(ids[i])
 	_remove(i)
 	enemy_killed.emit(rarity, xp, pos, type_id)
 
@@ -1340,6 +1595,7 @@ func _remove(i: int) -> void:
 		poison_stacks[i] = poison_stacks[last]
 		bleed_dps[i] = bleed_dps[last]
 		bleed_time[i] = bleed_time[last]
+		traits[i] = traits[last]
 	_resize_all(last)
 
 
@@ -1377,6 +1633,7 @@ func _resize_all(n: int) -> void:
 	poison_stacks.resize(n)
 	bleed_dps.resize(n)
 	bleed_time.resize(n)
+	traits.resize(n)
 
 
 func _rebuild_grid() -> void:

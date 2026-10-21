@@ -55,7 +55,10 @@ func _ready() -> void:
 	_message.add_theme_font_size_override("font_size", 18)
 	add_child(_message)
 	_message.anchor_right = 1.0
-	_message.offset_top = 124.0   # debajo del marco del objetivo
+	_message.anchor_top = 1.0   # avisos sobre las cajas de estado, lejos de los marcos de arriba
+	_message.anchor_bottom = 1.0
+	_message.offset_top = -245.0
+	_message.offset_bottom = -215.0
 
 	for key in ["life", "mana", "xp", "flask_0", "flask_1", "flask_2", "flask_3", "flask_4", "skill_0", "skill_1", "skill_2", "skill_3", "skill_4", "skill_5"]:
 		var spot := Control.new()
@@ -211,6 +214,15 @@ func _skill_tooltip(i: int) -> String:
 	if p["kind"] == "unit":
 		text += "\nPersistente: hasta %d a la vez  ·  Vida %d  ·  Reserva %d %% de maná cada una" % [
 			p["max_units"], p["unit_life"], roundi(p["reserve"])]
+	elif p["kind"] == "aura":
+		var lines := PackedStringArray()
+		for md in p["aura_mods"]:
+			lines.append(Modifier.from_dict(md).describe())
+		if p["aura_regen"] > 0.0:
+			lines.append("Las invocaciones recuperan un %.1f %% de su vida por segundo" % p["aura_regen"])
+		if p["aura_reduction"] > 0.0:
+			lines.append("Las invocaciones reciben un %d %% menos de daño" % roundi(p["aura_reduction"] * 100.0))
+		text += "\nAura (relánzala para apagarla) · Reserva %d %% del maná\n%s" % [roundi(p["reserve"]), "\n".join(lines)]
 	if not p["ailments"].is_empty():
 		text += "\nEstados: " + Ailments.describe_chances(p["ailments"])
 	if p["automaton_speed"] != 1.0:
@@ -278,8 +290,13 @@ func _draw() -> void:
 	if max_es > 0.0:
 		life_text += "\n+%d ES" % player.energy_shield
 	draw_multiline_string(font, life_center + Vector2(-80.0, 4.0), life_text, HORIZONTAL_ALIGNMENT_CENTER, 160.0, 16, -1, TEXT_COLOR)
-	draw_string(font, mana_center + Vector2(-80.0, 6.0), "%d / %d" % [player.mana, player.max_mana()],
+	# Maná disponible / utilizable. Con invocaciones persistentes, debajo: reservado y total.
+	var reserved_amount := player.unreserved_mana_max() * player.mana_reserved
+	draw_string(font, mana_center + Vector2(-80.0, 6.0 if reserved_amount <= 0.0 else -2.0), "%d / %d" % [player.mana, player.max_mana()],
 		HORIZONTAL_ALIGNMENT_CENTER, 160.0, 16, TEXT_COLOR)
+	if reserved_amount > 0.0:
+		draw_string(font, mana_center + Vector2(-80.0, 16.0), "reservado %d de %d" % [reserved_amount, player.unreserved_mana_max()],
+			HORIZONTAL_ALIGNMENT_CENTER, 160.0, 11, Color("9ad0ff"))
 
 	# Experiencia.
 	var xp := _xp_rect()
@@ -304,7 +321,71 @@ func _draw() -> void:
 		_draw_skill_slot(i, font)
 
 	_draw_status_boxes(font)
-	_draw_target_frame(font)
+	var boss_bar := _draw_boss_bar(font)
+	_draw_target_frame(font, 78.0 if boss_bar else 0.0)
+
+
+## Barra de jefe (arriba, centrada) con marco, porcentaje de vida y las fases separadas por marcas.
+## Devuelve true si se ha dibujado.
+func _draw_boss_bar(font: Font) -> bool:
+	var info := enemies.boss_info()
+	if info.is_empty() or player == null:
+		return false
+	var dist: float = (info["pos"] as Vector2).distance_to(player.global_position)
+	if dist > 1300.0 and info["frac"] >= 0.999:
+		return false   # aún no ha despertado
+	var thresholds: Array = info["thresholds"]
+	var frac: float = clampf(info["frac"], 0.0, 1.0)
+	var width := minf(760.0, size.x - 560.0)
+	var box := Rect2(Vector2((size.x - width) / 2.0, 8.0), Vector2(width, 66.0))
+	var shield: bool = info["shield"] > 0.0
+	draw_rect(box, Color(PLATE, 0.95))
+	draw_rect(box, TRIM, false, 2.0)
+	draw_rect(box.grow(-3.0), TRIM.darkened(0.5), false, 1.0)
+	# Remates en las esquinas.
+	for corner in [box.position, Vector2(box.end.x, box.position.y), Vector2(box.position.x, box.end.y), box.end]:
+		draw_circle(corner, 4.0, TRIM)
+	var boss_color := Rarity.enemy_color(info["rarity"])
+	draw_string_outline(font, box.position + Vector2(0, 21), String(info["name"]), HORIZONTAL_ALIGNMENT_CENTER, box.size.x, 17, 5, Color.BLACK)
+	draw_string(font, box.position + Vector2(0, 21), String(info["name"]), HORIZONTAL_ALIGNMENT_CENTER, box.size.x, 17, boss_color)
+	var bar := Rect2(box.position + Vector2(14, 29), Vector2(box.size.x - 28.0, 16))
+	draw_rect(bar, Color(0, 0, 0, 0.85))
+	# Cada fase, de un tono (más oscura la que ya pasó): segmentos entre umbrales.
+	var edges: Array = [1.0] + thresholds + [0.0]
+	var phase_colors := [Color("b02a2a"), Color("c8682a"), Color("c8a82a"), Color("a02ac8")]
+	for k in edges.size() - 1:
+		var hi: float = edges[k]
+		var lo: float = edges[k + 1]
+		var seg_frac := clampf((minf(frac, hi) - lo) / maxf(0.001, hi - lo), 0.0, 1.0)
+		var seg := Rect2(bar.position.x + bar.size.x * lo, bar.position.y, bar.size.x * (hi - lo), bar.size.y)
+		var col: Color = phase_colors[k % phase_colors.size()]
+		if shield:
+			col = col.lerp(Color("9fd0ff"), 0.5)
+		draw_rect(Rect2(seg.position, Vector2(seg.size.x * seg_frac, seg.size.y)), col)
+		draw_rect(Rect2(seg.position, Vector2(seg.size.x * seg_frac, 4.0)), Color(1, 1, 1, 0.2))
+		if k > 0:
+			# Separador de fase (umbral de vida) con un rombo.
+			var x := seg.end.x
+			draw_line(Vector2(x, bar.position.y - 3.0), Vector2(x, bar.end.y + 3.0), TRIM.lightened(0.2), 2.0)
+			draw_colored_polygon(PackedVector2Array([Vector2(x, bar.end.y + 3.0), Vector2(x + 4.0, bar.end.y + 7.0), Vector2(x, bar.end.y + 11.0), Vector2(x - 4.0, bar.end.y + 7.0)]), TRIM.lightened(0.2))
+	draw_rect(bar, Color(0, 0, 0, 0.9), false, 1.5)
+	var pct := "%d %%" % ceili(frac * 100.0)
+	draw_string_outline(font, bar.position + Vector2(0, 13), pct, HORIZONTAL_ALIGNMENT_CENTER, bar.size.x, 13, 4, Color.BLACK)
+	draw_string(font, bar.position + Vector2(0, 13), pct, HORIZONTAL_ALIGNMENT_CENTER, bar.size.x, 13, TEXT_COLOR)
+	# Nombre de la fase actual y marcas "I II III".
+	var phase_names: Array = info["phase_names"]
+	var idx: int = clampi(info["index"], 0, phase_names.size())
+	var phase_label := "Fase %d" % (idx + 1) if idx == 0 else String(phase_names[idx - 1])
+	if shield:
+		phase_label += "  ·  ¡invulnerable!"
+	draw_string(font, box.position + Vector2(14, 60), phase_label, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, ES_COLOR if shield else MUTED)
+	var roman := ["I", "II", "III", "IV"]
+	for k in edges.size() - 1:
+		var mid: float = (float(edges[k]) + float(edges[k + 1])) / 2.0
+		var cx := bar.position.x + bar.size.x * mid
+		draw_string(font, Vector2(cx - 12.0, box.end.y - 6.0), roman[k % roman.size()], HORIZONTAL_ALIGNMENT_CENTER, 24.0, 11,
+			TEXT_COLOR if k == idx else MUTED.darkened(0.2))
+	return true
 
 
 ## Estados del jugador (quemado, envenenado...) en fila sobre el orbe de vida.
@@ -325,7 +406,7 @@ func _draw_player_states(life_center: Vector2, font: Font) -> void:
 
 ## Marco del objetivo (arriba, centrado): nombre, vida y estados del enemigo
 ## bajo el cursor, como en PoE.
-func _draw_target_frame(font: Font) -> void:
+func _draw_target_frame(font: Font, top_offset := 0.0) -> void:
 	if _target_id == -1:
 		return
 	var i := enemies.index_of(_target_id)
@@ -353,7 +434,14 @@ func _draw_target_frame(font: Font) -> void:
 			rows += 1
 			row_x = 10.0
 		row_x += w
-	var box := Rect2(Vector2((size.x - TARGET_SIZE.x) / 2.0, 10.0), TARGET_SIZE + Vector2(0, 22.0 * rows + (8.0 if rows > 0 else 0.0)))
+	# Afijos, resistencias e inmunidades: una fila más debajo de la vida.
+	var tr: Dictionary = enemies.traits[i]
+	var resists: Dictionary = tr.get("res", {})
+	var immunes: Dictionary = tr.get("immune", {})
+	var affixes: Array = tr.get("affixes", [])
+	var extra_row := not resists.is_empty() or not immunes.is_empty() or not affixes.is_empty()
+	var box := Rect2(Vector2((size.x - TARGET_SIZE.x) / 2.0, 10.0 + top_offset),
+		TARGET_SIZE + Vector2(0, 22.0 * rows + (8.0 if rows > 0 else 0.0) + (24.0 if extra_row else 0.0)))
 	draw_rect(box, Color(PLATE, 0.92))
 	draw_rect(box, TRIM if rarity >= Rarity.Enemy.ELITE else TRIM.darkened(0.4), false, 1.5)
 	draw_string_outline(font, box.position + Vector2(0, 17), title, HORIZONTAL_ALIGNMENT_CENTER, box.size.x, 15, 4, Color.BLACK)
@@ -371,9 +459,36 @@ func _draw_target_frame(font: Font) -> void:
 	draw_string(font, bar.position + Vector2(0, 10), "%d %%" % ceili(frac * 100.0), HORIZONTAL_ALIGNMENT_CENTER, bar.size.x, 10, TEXT_COLOR)
 	if enemies.immune[i] == 1:
 		draw_string(font, bar.position + Vector2(0, 10), "INMUNE", HORIZONTAL_ALIGNMENT_RIGHT, bar.size.x - 4.0, 10, ES_COLOR)
+	# Afijos (nombre coloreado), resistencias por elemento e inmunidades (icono tachado).
+	var y := bar.end.y + 6.0
+	if extra_row:
+		var fx := box.position.x + 10.0
+		for aid in affixes:
+			var def: Dictionary = EnemyManager.affix_defs().get(aid, {})
+			var aname := String(def.get("name", aid))
+			var aw := font.get_string_size(aname, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x + 10.0
+			draw_rect(Rect2(fx, y, aw, 16), Color(Color(def.get("color", "ffffff")), 0.25))
+			draw_rect(Rect2(fx, y, aw, 16), Color(def.get("color", "ffffff")), false, 1.0)
+			draw_string(font, Vector2(fx + 5.0, y + 12.0), aname, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(def.get("color", "ffffff")).lightened(0.3))
+			fx += aw + 6.0
+		var res_colors := {"physical": Color("c8b8a0"), "fire": Color("e0652f"), "cold": Color("7fb8e0"), "lightning": Color("e8d070"), "chaos": Color("b04ad9")}
+		var res_short := {"physical": "Fís", "fire": "Fue", "cold": "Frío", "lightning": "Rayo", "chaos": "Caos"}
+		for t in EnemyManager.RESIST_TYPES:
+			if not resists.has(t) or absf(resists[t]) < 1.0:
+				continue
+			var label := "%s %+d %%" % [res_short[t], roundi(minf(EnemyManager.RESIST_CAP, resists[t]))]
+			var lw := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
+			draw_string(font, Vector2(fx, y + 12.0), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, res_colors[t] if resists[t] > 0.0 else Color("6fd36b"))
+			fx += lw + 10.0
+		for id in Ailments.ALL:
+			if immunes.has(id):
+				var ir := Rect2(fx, y, 16, 16)
+				StatusIcon.draw(self, ir, id, true, 0.7)
+				draw_line(ir.position + Vector2(1, 15), ir.position + Vector2(15, 1), Color("ff4040"), 2.0)
+				fx += 20.0
+		y += 24.0
 	# Estados con su icono, nombre y tiempo.
 	var x := box.position.x + 10.0
-	var y := bar.end.y + 6.0
 	for k in states.size():
 		var w := font.get_string_size(labels[k], HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
 		if x - box.position.x + 30.0 + w > box.size.x - 10.0 and x > box.position.x + 10.0:
@@ -390,6 +505,8 @@ func _draw_status_boxes(font: Font) -> void:
 	var entries: Array[Dictionary] = skills.active_summaries() if skills else []
 	for effect in character.timed_effects:
 		var eid: String = effect["id"]
+		if eid.begins_with("aura:"):
+			continue   # las auras salen en active_summaries()
 		if eid.begins_with("skill:"):
 			# Potenciadores de habilidades (Modo Seguro, Hiperthreading...).
 			var skill: Dictionary = GameData.items.skills.skills.get(eid.trim_prefix("skill:"), {})
@@ -410,7 +527,7 @@ func _draw_status_boxes(font: Font) -> void:
 	var x := first.position.x
 	var y := first.position.y - box - 34.0
 	var kind_colors := {"minion": Color("7fd07f"), "totem": Color("d9a441"), "trap": Color("b07a3a"), "mine": Color("a0a040"),
-		"spin": Color("b8b8c8"), "flask": Color("6fd36b"), "buff": Color("8ab0e0"), "drones": Color("e8d070"), "unit": Color("9ad0ff")}
+		"spin": Color("b8b8c8"), "flask": Color("6fd36b"), "buff": Color("8ab0e0"), "drones": Color("e8d070"), "unit": Color("9ad0ff"), "aura": Color("d9b0ff")}
 	for e in entries:
 		var r := Rect2(x, y, box, box)
 		var color: Color = kind_colors.get(e["kind"], TRIM)
@@ -538,6 +655,11 @@ func _draw_skill_slot(i: int, font: Font) -> void:
 			Color("e06c6c") if no_mana else Color("8ab8ff"))
 		var flash := _slot_flash[i] / 0.25
 		draw_rect(r, Motherboard.COLOR.darkened(0.2).lerp(Color("ffe8a0"), flash), false, 1.5 + 1.5 * flash)
+		if not p.is_empty() and p["kind"] == "aura" and skills.is_aura_active(p["id"]):
+			var glow := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 220.0)
+			draw_rect(r.grow(1.0), Color("e0c0ff", 0.55 + 0.45 * glow), false, 2.5)
+			draw_string_outline(font, r.position + Vector2(0, 12), "ON", HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 10, 3, Color.BLACK)
+			draw_string(font, r.position + Vector2(0, 12), "ON", HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 10, Color("e0c0ff"))
 		if no_mana:
 			key_color = Color("e06c6c")
 	else:

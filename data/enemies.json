@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_doc": "Tipos de enemigo. sprite_row: fila en assets/sprites/enemies/enemies.png. Los multiplicadores se aplican sobre los de su rareza; radius_mult cambia el tamaño del cuerpo (hitbox). boss_only: solo aparece como único. attack (opcional; sin él, cuerpo a cuerpo por contacto): kind ranged (dispara proyectiles y mantiene la distancia: range, keep_distance, projectiles, spread, projectile_speed), charge (embestida en línea: range, dash_speed, dash_time, width), slam (golpe en círculo alrededor: range, radius), cone (cono delante: range, angle), blink (se teletransporta cerca: range, jump), none (no se mueve ni ataca: candados). Todos con windup (tiempo telegrafiado en rojo), cooldown y damage_mult. Acto III: summon (invoca type, count, con tope max_alive; se queda a distancia), seeker (orbes lentos y persistentes que persiguen: projectile_speed, turn_rate, projectile_life; los bloquean los obstáculos), lob_pool (lanza un charco al sitio del jugador: radius, pool_time, dps_mult, dot_kind), ranged.dot y slam.pool (daño degenerativo). summon_only: solo aparece invocado.",
+  "_doc": "Tipos de enemigo. sprite_row: fila en assets/sprites/enemies/enemies.png. Los multiplicadores se aplican sobre los de su rareza; radius_mult cambia el tamaño del cuerpo (hitbox). boss_only: solo aparece como único. attack (opcional; sin él, cuerpo a cuerpo por contacto): kind ranged (dispara proyectiles y mantiene la distancia: range, keep_distance, projectiles, spread, projectile_speed), charge (embestida en línea: range, dash_speed, dash_time, width), slam (golpe en círculo alrededor: range, radius), cone (cono delante: range, angle), blink (se teletransporta cerca: range, jump), none (no se mueve ni ataca: candados). Todos con windup (tiempo telegrafiado en rojo), cooldown y damage_mult. Acto III: summon (invoca type, count, con tope max_alive; se queda a distancia), seeker (orbes lentos y persistentes que persiguen: projectile_speed, turn_rate, projectile_life; los bloquean los obstáculos), lob_pool (lanza un charco al sitio del jugador: radius, pool_time, dps_mult, dot_kind), ranged.dot y slam.pool (daño degenerativo). summon_only: solo aparece invocado. resist: % de daño que reducen por tipo (physical, fire, cold, lightning, chaos; negativo = más daño). immune: estados a los que son inmunes (burn, shock, chill, freeze, poison, bleed). Los afijos de élite están en data/enemy_affixes.json.",
   "types": [
     {
       "id": "bug",
@@ -20,7 +20,14 @@
       "speed_mult": 0.75,
       "damage_mult": 1.2,
       "xp_mult": 1.2,
-      "scale": 1.15
+      "scale": 1.15,
+      "resist": {
+        "chaos": 50,
+        "fire": -25
+      },
+      "immune": [
+        "poison"
+      ]
     },
     {
       "id": "memory_leak",
@@ -30,7 +37,14 @@
       "speed_mult": 0.6,
       "damage_mult": 0.8,
       "xp_mult": 1.2,
-      "scale": 1.1
+      "scale": 1.1,
+      "resist": {
+        "chaos": 60,
+        "physical": -10
+      },
+      "immune": [
+        "poison"
+      ]
     },
     {
       "id": "gusano",
@@ -40,7 +54,10 @@
       "speed_mult": 1.0,
       "damage_mult": 1.1,
       "xp_mult": 1.0,
-      "scale": 1.05
+      "scale": 1.05,
+      "resist": {
+        "lightning": -25
+      }
     },
     {
       "id": "daemon",
@@ -51,7 +68,14 @@
       "damage_mult": 1.3,
       "xp_mult": 1.5,
       "scale": 1.2,
-      "boss_only": true
+      "boss_only": true,
+      "resist": {
+        "fire": 50,
+        "cold": -25
+      },
+      "immune": [
+        "burn"
+      ]
     },
     {
       "id": "bot_spam",
@@ -72,7 +96,13 @@
         "projectile_speed": 340,
         "damage_mult": 1.1,
         "color": "e0c040"
-      }
+      },
+      "resist": {
+        "lightning": 40
+      },
+      "immune": [
+        "shock"
+      ]
     },
     {
       "id": "hilo_desbocado",
@@ -93,6 +123,9 @@
         "dash_time": 0.5,
         "width": 30,
         "damage_mult": 1.7
+      },
+      "resist": {
+        "cold": -20
       }
     },
     {
@@ -113,7 +146,14 @@
         "cooldown": 2.8,
         "damage_mult": 2.4,
         "color": "c86030"
-      }
+      },
+      "resist": {
+        "physical": 25,
+        "lightning": -20
+      },
+      "immune": [
+        "bleed"
+      ]
     },
     {
       "id": "troll_foro",
@@ -133,6 +173,10 @@
         "cooldown": 2.6,
         "damage_mult": 1.6,
         "color": "e0652f"
+      },
+      "resist": {
+        "chaos": -20,
+        "fire": 20
       }
     },
     {
@@ -155,7 +199,13 @@
         "projectile_speed": 420,
         "damage_mult": 0.8,
         "color": "e8e040"
-      }
+      },
+      "resist": {
+        "lightning": 50
+      },
+      "immune": [
+        "shock"
+      ]
     },
     {
       "id": "mutex_lock",
@@ -169,7 +219,22 @@
       "radius_mult": 1.4,
       "attack": {
         "kind": "none"
-      }
+      },
+      "resist": {
+        "physical": 25,
+        "fire": 25,
+        "cold": 25,
+        "lightning": 25,
+        "chaos": 25
+      },
+      "immune": [
+        "burn",
+        "shock",
+        "chill",
+        "freeze",
+        "poison",
+        "bleed"
+      ]
     },
     {
       "id": "puntero_salvaje",
@@ -187,7 +252,13 @@
         "windup": 0.5,
         "cooldown": 2.2,
         "color": "c08aff"
-      }
+      },
+      "resist": {
+        "chaos": 25
+      },
+      "immune": [
+        "freeze"
+      ]
     },
     {
       "id": "hilo_gemelo",
@@ -207,7 +278,13 @@
         "dash_time": 0.45,
         "width": 34,
         "damage_mult": 1.5
-      }
+      },
+      "resist": {
+        "chaos": 25
+      },
+      "immune": [
+        "freeze"
+      ]
     },
     {
       "id": "init_fork",
@@ -217,7 +294,13 @@
       "speed_mult": 1.35,
       "damage_mult": 0.6,
       "xp_mult": 0.2,
-      "scale": 0.8
+      "scale": 0.8,
+      "resist": {
+        "fire": 25
+      },
+      "immune": [
+        "burn"
+      ]
     },
     {
       "id": "init",
@@ -228,7 +311,15 @@
       "damage_mult": 1.4,
       "xp_mult": 2.0,
       "scale": 1.35,
-      "boss_only": true
+      "boss_only": true,
+      "resist": {
+        "fire": 50,
+        "physical": 20
+      },
+      "immune": [
+        "freeze",
+        "burn"
+      ]
     },
     {
       "id": "rootkit",
@@ -249,7 +340,14 @@
         "windup": 1.0,
         "cooldown": 5.0,
         "color": "7a4ad9"
-      }
+      },
+      "resist": {
+        "chaos": 50,
+        "physical": 15
+      },
+      "immune": [
+        "poison"
+      ]
     },
     {
       "id": "proceso_fantasma",
@@ -260,7 +358,16 @@
       "damage_mult": 0.7,
       "xp_mult": 0.3,
       "scale": 0.8,
-      "summon_only": true
+      "summon_only": true,
+      "resist": {
+        "physical": 60,
+        "chaos": 30,
+        "cold": -25
+      },
+      "immune": [
+        "bleed",
+        "poison"
+      ]
     },
     {
       "id": "centinela_bios",
@@ -283,7 +390,15 @@
         "projectile_life": 7.0,
         "damage_mult": 1.3,
         "color": "5cd0ff"
-      }
+      },
+      "resist": {
+        "lightning": 50,
+        "physical": 20
+      },
+      "immune": [
+        "shock",
+        "freeze"
+      ]
     },
     {
       "id": "gusano_firmware",
@@ -305,7 +420,14 @@
         "dps_mult": 0.55,
         "dot_kind": "chaos",
         "color": "6fd36b"
-      }
+      },
+      "resist": {
+        "chaos": 50,
+        "lightning": 20
+      },
+      "immune": [
+        "poison"
+      ]
     },
     {
       "id": "electromigracion",
@@ -332,7 +454,16 @@
           "duration": 4.0,
           "kind": "fire"
         }
-      }
+      },
+      "resist": {
+        "fire": 50,
+        "lightning": 50,
+        "cold": -30
+      },
+      "immune": [
+        "burn",
+        "shock"
+      ]
     },
     {
       "id": "condensador",
@@ -356,7 +487,14 @@
           "time": 4.0,
           "kind": "lightning"
         }
-      }
+      },
+      "resist": {
+        "lightning": 75,
+        "fire": -20
+      },
+      "immune": [
+        "shock"
+      ]
     },
     {
       "id": "fw_update",
@@ -367,7 +505,16 @@
       "damage_mult": 1.5,
       "xp_mult": 2.2,
       "scale": 1.4,
-      "boss_only": true
+      "boss_only": true,
+      "resist": {
+        "lightning": 40,
+        "chaos": 30,
+        "physical": 15
+      },
+      "immune": [
+        "freeze",
+        "shock"
+      ]
     }
   ]
 }

@@ -64,6 +64,10 @@ const AILMENT_DURATION := &"ailment_duration"
 const AUTOMATON_SPEED := &"automaton_speed"
 ## Maná reservado por las invocaciones persistentes (menos es mejor).
 const RESERVATION_EFFICIENCY := &"reservation_efficiency"
+## Daño contra enemigos que ya sufren algún estado alterado.
+const AILING_DAMAGE := &"ailing_damage"
+## Potencia de las auras.
+const AURA_EFFECT := &"aura_effect"
 
 # --- Tags (condiciones de los modificadores) ---
 const TAG_ATTACK := &"attack"
@@ -130,6 +134,8 @@ const NAMES := {
 	AILMENT_DURATION: "Duración de estados alterados",
 	AUTOMATON_SPEED: "Velocidad de autómatas",
 	RESERVATION_EFFICIENCY: "Eficiencia de reserva de maná",
+	AILING_DAMAGE: "Daño contra enemigos con estados alterados",
+	AURA_EFFECT: "Efecto de auras",
 }
 
 ## Los aumentos/más de los padres también aplican al hijo:
@@ -162,6 +168,8 @@ const TAG_NAMES := {
 	&"chain": "de cadenas",
 	&"duration": "de duración",
 	&"automaton": "de autómatas",
+	&"aura": "de auras",
+	&"persistent": "persistentes",
 	&"physical": "físicas",
 	&"fire": "de fuego",
 	&"cold": "de frío",
