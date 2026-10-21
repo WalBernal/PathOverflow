@@ -225,7 +225,7 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 		"trigger_radius": float(skill.get("trigger_radius", 0.0)),
 		"max_active": int(skill.get("max_active", 0)) + (milestones if bonus_text == "+1 bomba a la vez" else 0),
 		"chains": int(skill.get("chains", 0)) + (extra_chains if skill.get("kind", "") == "chain" else 0),
-		"projectile_chains": extra_chains if skill.has("projectiles") else 0,
+		"projectile_chains": extra_chains if (skill.has("projectiles") or kind in ["unit", "drones"]) else 0,
 		"deploy": deploy,
 		"totem_duration": totem_duration * duration_mult,
 		"count": int(skill.get("count", 0)) + (int(stats.get_value(Stat.EXTRA_MINIONS, tags)) + milestones if skill.get("kind", "") == "minion" else 0),

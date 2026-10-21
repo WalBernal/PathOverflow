@@ -1433,7 +1433,7 @@ func _draw_npcs() -> void:
 		if npc.get("terminal", false):
 			_draw_terminal_npc(pos, appearance)
 		else:
-			CharacterAppearance.draw(self, pos, 0.95, appearance, Vector2(signf(to_player.x) * 0.5, 1.0))
+			CharacterAppearance.draw(self, pos, 1.12, appearance, Vector2(signf(to_player.x) * 0.5, 1.0))
 		var label_color := UiStyle.ACCENT if i == _hovered_npc else UiStyle.TEXT
 		var label_pos := pos + Vector2(-110.0, -52.0)
 		draw_string_outline(font, label_pos, npc["name"], HORIZONTAL_ALIGNMENT_CENTER, 220.0, 14, 5, Color(0, 0, 0, 0.8))

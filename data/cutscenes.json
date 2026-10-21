@@ -145,6 +145,15 @@
         {
           "name": "Sistema",
           "style": "system",
+          "text": "Atraviesas el portal. El campamento se deshace en una lluvia de ceros y unos..."
+        },
+        {
+          "effect": "blackout",
+          "time": 0.9
+        },
+        {
+          "name": "Sistema",
+          "style": "system",
           "text": "Conectando con el Espacio de Kernel por el puerto 2222..."
         },
         {
@@ -161,7 +170,19 @@
           "name": "Rafa (datos del celular)",
           "style": "phone",
           "speaker": "root",
-          "text": "Te paso por los datos de mi celular...... me quedan 200 megas..... no hagas streaming..... El túnel aguanta..... a medias......"
+          "text": "Intento pasarte por los datos de mi celular...... a ver..... «Plan de datos agotado»...... Me quedan 100 megas..... y el túnel pide más......"
+        },
+        {
+          "name": "Mario",
+          "style": "phone",
+          "speaker": "kevin",
+          "text": "¡Yo también quiero pasar! ...Ay. Me dice que no cabe. El portal. O mi mochila. No sé."
+        },
+        {
+          "name": "Rafa (datos del celular)",
+          "style": "phone",
+          "speaker": "root",
+          "text": "Ni siquiera Mario cabe con lo que queda de datos...... Pasa tú sola..... solo tú...... Te sigo en cuanto recargue saldo......"
         },
         {
           "effect": "shake",
@@ -177,10 +198,6 @@
           "name": "Sistema",
           "style": "system",
           "text": "El túnel se rompe. Caes a través de la tabla de procesos..."
-        },
-        {
-          "effect": "blackout",
-          "time": 0.9
         }
       ],
       "on_finish": {

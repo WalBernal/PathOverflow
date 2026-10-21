@@ -20,7 +20,7 @@ const ATLAS := preload("res://assets/sprites/enemies/enemies.png")
 const SPRITE_SHADER := preload("res://assets/shaders/enemy_sprite.gdshader")
 const ATLAS_FRAMES := 4
 ## Tamaño del sprite respecto al diámetro de colisión.
-const SPRITE_SCALE := 1.9
+const SPRITE_SCALE := 2.24
 const BASE_LIFE := 40.0
 const BASE_DAMAGE := 7.0
 const BASE_EXPERIENCE := 6.0

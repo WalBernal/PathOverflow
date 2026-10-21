@@ -172,6 +172,12 @@ func _physics_process(delta: float) -> void:
 		cooldowns[i] = maxf(0.0, cooldowns[i] - delta)
 	_mana_warning_cooldown = maxf(0.0, _mana_warning_cooldown - delta)
 	_busy = maxf(0.0, _busy - delta)
+	# En escenas (enemigos congelados, jugador bloqueado) nada ataca: ni aliados,
+	# ni torretas, ni proyectiles en vuelo. Solo se apagan los efectos visuales.
+	if enemies.frozen or player.controls_locked:
+		_update_effects(delta)
+		queue_redraw()
+		return
 	if player.is_alive() and _busy <= 0.0 and not player.controls_locked:
 		for i in ACTIONS.size():
 			if Input.is_action_pressed(ACTIONS[i]) and try_use(i):
@@ -681,7 +687,7 @@ func _unit_shoot(u: Dictionary, p: Dictionary, reach_range: float) -> void:
 	u["cd"] = p["unit_interval"]
 	var dir: Vector2 = (enemies.positions[t] - pos).normalized()
 	_projectiles.append({"pos": pos, "vel": dir * float(p["projectile_speed"]), "distance_left": reach_range * 1.5,
-		"pierce_left": 0, "hit_ids": {}, "profile": p, "color": u["color"], "chains_left": 0, "homing": true})
+		"pierce_left": int(p["pierce"]), "hit_ids": {}, "profile": p, "color": u["color"], "chains_left": int(p["projectile_chains"]), "homing": true})
 	_effects.append({"type": "burst", "pos": pos + dir * 10.0, "radius": 8.0, "time": 0.0, "duration": 0.12, "color": u["color"]})
 
 
@@ -721,7 +727,7 @@ func _update_drones(delta: float) -> void:
 				d["next"] = p["tick"]
 				var dir: Vector2 = (enemies.positions[t] - pos).normalized()
 				_projectiles.append({"pos": pos, "vel": dir * float(p["projectile_speed"]), "distance_left": p["seek_range"] * 1.5,
-					"pierce_left": 0, "hit_ids": {}, "profile": p, "color": d["color"], "chains_left": 0, "homing": true})
+					"pierce_left": int(p["pierce"]), "hit_ids": {}, "profile": p, "color": d["color"], "chains_left": int(p["projectile_chains"]), "homing": true})
 			else:
 				d["next"] = 0.2
 		still.append(d)

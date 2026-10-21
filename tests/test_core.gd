@@ -1840,6 +1840,25 @@ func _test_persistent_units() -> void:
 	sk._execute(golem, Vector2.ZERO)
 	sk._units[0]["pos"] = Vector2(150, 0)
 	_check(em._pick_ally(Vector2(40, 0), 40.0) == 0, "el golem provoca a los enemigos de su radio")
+	# RAM de proyectiles (rebote/perforación) afecta a los disparos de autómatas.
+	var chain_board := Motherboard.new(_db.skills.skills["robot_centinela"], 1, ["DDR5", "DDR4"])
+	chain_board.install(ItemGenerator.new(_db, 3).generate_ram(1, "propagacion_excepciones"), 0)
+	chain_board.install(ItemGenerator.new(_db, 3).generate_ram(1, "bypass_firewall"), 1)
+	var chain_p := SkillCalc.compute(chain_board, c)
+	_check(chain_p["projectile_chains"] == 2 and chain_p["pierce"] == 3, "la RAM de rebote y perforación llega al robot (%d/%d)" % [chain_p["projectile_chains"], chain_p["pierce"]])
+	var shots_before := sk._projectiles.size()
+	sk._units[0]["cd"] = 0.0
+	sk._units[0]["profile"] = chain_p
+	em.spawn(sk._units[0]["pos"] + Vector2(200, 0), Rarity.Enemy.NORMAL)
+	sk._unit_shoot(sk._units[0], chain_p, 520.0)
+	_check(sk._projectiles.size() == shots_before + 1 and sk._projectiles[-1]["chains_left"] == 2, "el disparo del robot sale con rebotes")
+	# En escenas (jugador bloqueado) los aliados no atacan.
+	sk._units[0]["cd"] = 0.0
+	var count_before := sk._projectiles.size()
+	player.controls_locked = true
+	sk._physics_process(0.1)
+	player.controls_locked = false
+	_check(sk._projectiles.size() == count_before, "con el jugador bloqueado nadie dispara")
 	# Reserva llena: no deja invocar más.
 	player.set_mana_reserved(0.9)
 	_check(not sk._can_summon(p), "sin maná sin reservar no se puede invocar otra")

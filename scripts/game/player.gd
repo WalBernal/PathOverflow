@@ -10,6 +10,8 @@ signal died
 signal flask_used(index: int)
 
 const RADIUS := 14.0
+## Tamaño del dibujo del personaje (0.9 antes; +18 % para que no quede más pequeño que las cajas).
+const PLAYER_SPRITE_SCALE := 1.06
 ## Píxeles que avanza el personaje en cada paso (medio ciclo de la animación).
 const STRIDE := 30.0
 const BASE_MOVE_SPEED := 260.0
@@ -367,12 +369,12 @@ func _draw() -> void:
 		tint = Color("444444")
 	elif _hurt_time > 0.0:
 		tint = Color.RED
-	CharacterAppearance.draw(self, Vector2(0.0, RADIUS * 0.6), 0.9, character.appearance, _facing, tint,
+	CharacterAppearance.draw(self, Vector2(0.0, RADIUS * 0.6), PLAYER_SPRITE_SCALE, character.appearance, _facing, tint,
 		_walk_phase if is_alive() else -1.0)
 	# Burbujas del daño degenerativo sobre la cabeza (del color de su tipo).
 	var k := 0
 	for d in dots.values():
 		var ph := fmod(Time.get_ticks_msec() / 700.0 + k * 0.33, 1.0)
 		var c: Color = DOT_COLORS.get(d["kind"], Color("6fd36b"))
-		draw_circle(Vector2(-8.0 + k * 8.0, -44.0 - ph * 14.0), 2.5 + ph * 1.5, Color(c, 0.85 * (1.0 - ph)))
+		draw_circle(Vector2(-8.0 + k * 8.0, -52.0 - ph * 14.0), 2.5 + ph * 1.5, Color(c, 0.85 * (1.0 - ph)))
 		k += 1
