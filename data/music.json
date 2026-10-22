@@ -1,0 +1,85 @@
+{
+  "_doc": "Música del juego. 'tracks' describe cada pista (la compone tools/generate_zone_music.gd en assets/audio/music/<id>.wav); 'zones' dice qué pista suena en cada zona. root = nota MIDI de la tónica; prog = [semitonos sobre la tónica, calidad]; bass: root|walk|eighth|pulse; arp: broken|up|ballad|none; lead: instrumento de la melodía; drums: none|soft|ballad|drive|boss. 'from' = compás en el que entra cada capa.",
+  "tracks": {
+    "camp1": {
+      "name": "Fogata de fósforo", "bpm": 84, "bars": 16, "chord_bars": 2, "seed": 11, "root": 48, "scale": "major",
+      "prog": [[0, "M"], [9, "m"], [5, "M"], [7, "M"]],
+      "pad": 0.05, "bass": "root", "arp": "broken", "arp_wave": "bell", "lead": "bell", "drums": "soft",
+      "from": {"arp": 0, "lead": 4, "drums": 6}
+    },
+    "field1": {
+      "name": "Bosque de cables", "bpm": 112, "bars": 16, "chord_bars": 1, "seed": 21, "root": 45, "scale": "minor",
+      "prog": [[0, "m"], [8, "M"], [3, "M"], [10, "M"]],
+      "pad": 0.04, "bass": "eighth", "arp": "up", "arp_wave": "square", "lead": "square", "drums": "drive",
+      "from": {"arp": 2, "lead": 8, "drums": 4}
+    },
+    "dark1": {
+      "name": "Fuga de memoria", "bpm": 88, "bars": 16, "chord_bars": 2, "seed": 31, "root": 38, "scale": "phrygian",
+      "prog": [[0, "m"], [1, "M"], [0, "m"], [10, "M"]],
+      "pad": 0.06, "bass": "root", "arp": "broken", "arp_wave": "pluck", "lead": "bell", "drums": "soft",
+      "from": {"arp": 4, "lead": 8, "drums": 8}
+    },
+    "boss1": {
+      "name": "Servidor principal", "bpm": 142, "bars": 16, "chord_bars": 1, "seed": 41, "root": 40, "scale": "minor",
+      "prog": [[0, "m"], [0, "m"], [8, "M"], [7, "M"]],
+      "pad": 0.04, "bass": "pulse", "arp": "up", "arp_wave": "saw", "lead": "square", "drums": "boss",
+      "from": {"arp": 0, "lead": 4, "drums": 0}
+    },
+    "camp2": {
+      "name": "Socket seguro", "bpm": 92, "bars": 16, "chord_bars": 2, "seed": 12, "root": 53, "scale": "major",
+      "prog": [[0, "M7"], [2, "m"], [7, "M"], [5, "M7"]],
+      "pad": 0.05, "bass": "root", "arp": "ballad", "arp_wave": "piano", "lead": "bell", "drums": "soft",
+      "from": {"arp": 0, "lead": 4, "drums": 8}
+    },
+    "field2": {
+      "name": "Fábrica de hilos", "bpm": 118, "bars": 16, "chord_bars": 1, "seed": 22, "root": 50, "scale": "dorian",
+      "prog": [[0, "m"], [5, "M"], [0, "m"], [10, "M"]],
+      "pad": 0.04, "bass": "walk", "arp": "up", "arp_wave": "pluck", "lead": "square", "drums": "drive",
+      "from": {"arp": 0, "lead": 8, "drums": 2}
+    },
+    "cold2": {
+      "name": "Módulo frío", "bpm": 90, "bars": 16, "chord_bars": 2, "seed": 32, "root": 42, "scale": "minor",
+      "prog": [[0, "m7"], [8, "M7"], [3, "M"], [10, "sus"]],
+      "pad": 0.06, "bass": "root", "arp": "broken", "arp_wave": "bell", "lead": "bell", "drums": "none",
+      "from": {"arp": 2, "lead": 6, "drums": 0}
+    },
+    "boss2": {
+      "name": "Anillo 0", "bpm": 146, "bars": 16, "chord_bars": 1, "seed": 42, "root": 36, "scale": "minor",
+      "prog": [[0, "m"], [8, "M"], [5, "m"], [7, "M"]],
+      "pad": 0.04, "bass": "pulse", "arp": "up", "arp_wave": "saw", "lead": "square", "drums": "boss",
+      "from": {"arp": 0, "lead": 4, "drums": 0}
+    },
+    "camp3": {
+      "name": "Expectativas (instrumental)", "bpm": 72, "bars": 16, "chord_bars": 2, "seed": 13, "root": 50, "scale": "minor",
+      "prog": [[0, "m"], [8, "M"], [3, "M"], [10, "M"]],
+      "pad": 0.05, "bass": "root", "arp": "ballad", "arp_wave": "piano", "lead": "piano", "drums": "ballad",
+      "from": {"arp": 0, "lead": 4, "drums": 6}
+    },
+    "field3": {
+      "name": "Silicio en marcha", "bpm": 112, "bars": 16, "chord_bars": 1, "seed": 23, "root": 43, "scale": "minor",
+      "prog": [[0, "m"], [3, "M"], [8, "M"], [10, "M"]],
+      "pad": 0.04, "bass": "eighth", "arp": "up", "arp_wave": "square", "lead": "pluck", "drums": "drive",
+      "from": {"arp": 0, "lead": 6, "drums": 2}
+    },
+    "deep3": {
+      "name": "Cristales de la ROM", "bpm": 84, "bars": 16, "chord_bars": 2, "seed": 33, "root": 51, "scale": "lydian",
+      "prog": [[0, "M7"], [2, "M"], [9, "m"], [7, "M"]],
+      "pad": 0.06, "bass": "root", "arp": "ballad", "arp_wave": "bell", "lead": "bell", "drums": "none",
+      "from": {"arp": 0, "lead": 4, "drums": 0}
+    },
+    "boss3": {
+      "name": "Cámara de reflasheo", "bpm": 150, "bars": 16, "chord_bars": 1, "seed": 43, "root": 45, "scale": "phrygian",
+      "prog": [[0, "m"], [1, "M"], [0, "m"], [10, "M"]],
+      "pad": 0.04, "bass": "pulse", "arp": "up", "arp_wave": "saw", "lead": "square", "drums": "boss",
+      "from": {"arp": 0, "lead": 2, "drums": 0}
+    }
+  },
+  "zones": {
+    "tutorial": "field1", "campamento": "camp1", "zona1": "field1", "zona2": "field1", "zona3": "dark1",
+    "zona4": "dark1", "zona5": "field1", "jefe": "boss1",
+    "brecha_503": "field2", "socket_seguro": "camp2", "fabrica": "field2", "alcantarillas": "dark1",
+    "modulo_frio": "cold2", "fosa": "cold2", "grieta": "cold2", "bus": "field2", "anillo0": "boss2",
+    "controladora_bus": "field3", "puerto_jtag": "camp3", "oblea": "field3", "memoria_rom": "deep3",
+    "cache_l3": "deep3", "sector_arranque": "field3", "camara_flash": "boss3"
+  }
+}

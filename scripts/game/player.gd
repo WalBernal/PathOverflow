@@ -434,22 +434,45 @@ func _draw() -> void:
 		tint = Color.RED
 	CharacterAppearance.draw(self, Vector2(0.0, RADIUS * 0.6), PLAYER_SPRITE_SCALE, character.appearance, _facing, tint,
 		_walk_phase if is_alive() else -1.0)
-	if statuses.has("freeze"):
-		var ice := PackedVector2Array()
-		for q in 6:
-			ice.append(Vector2.from_angle(TAU * q / 6.0 + 0.3) * 24.0 + Vector2(0, -14))
-		draw_colored_polygon(ice, Color(0.7, 0.9, 1.0, 0.38))
-		ice.append(ice[0])
-		draw_polyline(ice, Color(0.85, 0.97, 1.0, 0.9), 2.0, true)
-	elif statuses.has("chill"):
-		draw_set_transform(Vector2(0, 8), 0.0, Vector2(1.0, 0.45))
-		draw_arc(Vector2.ZERO, 20.0, 0.0, TAU, 20, Color(0.55, 0.8, 1.0, 0.8), 2.5, true)
-		draw_set_transform(Vector2.ZERO)
-	if statuses.has("shock") and fmod(Time.get_ticks_msec() / 150.0, 1.0) < 0.5:
-		var sa := Time.get_ticks_msec() / 90.0
-		var from := Vector2.from_angle(sa) * 20.0 + Vector2(0, -14)
-		var to := Vector2.from_angle(sa + 1.2) * 20.0 + Vector2(0, -14)
-		draw_polyline(PackedVector2Array([from, from.lerp(to, 0.5) + Vector2(4, -3), to]), Color(1.0, 0.92, 0.45), 2.0, true)
+	var tt := Time.get_ticks_msec() / 1000.0
+	if statuses.has("freeze") or statuses.has("chill"):
+		var frozen := statuses.has("freeze")
+		# Escarcha sobre el cuerpo, cristales en los pies y copos que caen.
+		var cover := PackedVector2Array()
+		for q in 18:
+			var a := TAU * q / 18.0
+			cover.append(Vector2(cos(a) * 20.0, sin(a) * 30.0 + (-22.0)) * (1.0 + 0.07 * sin(a * 5.0)))
+		draw_colored_polygon(cover, Color(0.72, 0.92, 1.0, 0.42 if frozen else 0.18))
+		for q in (7 if frozen else 4):
+			var bx := (float(q) / (7 if frozen else 4) - 0.5) * 40.0
+			var h := (14.0 + 12.0 * fposmod(sin(q * 12.9898) * 43758.5, 1.0)) * (1.4 if frozen else 0.7)
+			draw_colored_polygon(PackedVector2Array([Vector2(bx - 3, 14), Vector2(bx, 14 - h), Vector2(bx + 3, 14)]),
+				Color(0.82, 0.96, 1.0, 0.85 if frozen else 0.55))
+		if frozen:
+			draw_polyline(cover + PackedVector2Array([cover[0]]), Color(0.88, 0.98, 1.0, 0.9), 2.0, true)
+		else:
+			draw_set_transform(Vector2(0, 8), 0.0, Vector2(1.0, 0.45))
+			draw_arc(Vector2.ZERO, 20.0, 0.0, TAU, 20, Color(0.55, 0.8, 1.0, 0.8), 2.5, true)
+			draw_set_transform(Vector2.ZERO)
+		for q in 4:
+			var ph := fposmod(tt * 0.8 + q * 0.25, 1.0)
+			draw_circle(Vector2((q - 1.5) * 12.0 + sin(tt * 2.0 + q) * 3.0, -56.0 + ph * 60.0), 1.8, Color(0.9, 0.98, 1.0, 0.9 * (1.0 - ph * 0.6)))
+	if statuses.has("shock"):
+		# Arcos persistentes, resplandor y chispas que saltan.
+		var c0 := Vector2(0, -20)
+		draw_circle(c0, 28.0, Color(1.0, 0.95, 0.4, 0.10 + 0.06 * sin(tt * 18.0)))
+		for q in 3:
+			var st := floorf(tt * 10.0 + q * 3.0)
+			var a := fposmod(st * 2.399 + q * 2.1, TAU)
+			var from := c0 + Vector2.from_angle(a) * 10.0
+			var to := c0 + Vector2.from_angle(a + 0.9 + fposmod(st * 1.7, 1.2)) * 30.0
+			var mid := from.lerp(to, 0.5) + (to - from).orthogonal().normalized() * (fposmod(st * 3.1, 1.0) - 0.5) * 22.0
+			draw_polyline(PackedVector2Array([from, mid, to]), Color(1.0, 0.95, 0.5, 0.9), 2.0, true)
+			draw_circle(to, 2.0, Color(1.0, 1.0, 0.8, 0.9))
+		for q in 5:
+			var ph := fposmod(tt * 2.3 + q * 0.2, 1.0)
+			var dir := Vector2.from_angle(q * 1.7 + floorf(tt * 2.3 + q * 0.2) * 0.9)
+			draw_circle(c0 + dir * (22.0 + ph * 22.0), 1.8 * (1.0 - ph), Color(1.0, 0.95, 0.4, 1.0 - ph))
 	# Burbujas del daño degenerativo sobre la cabeza (del color de su tipo).
 	var k := 0
 	for d in dots.values():

@@ -14,7 +14,8 @@
       },
       "voice": {
         "pitch": 0.9,
-        "rate": 1.0
+        "rate": 1.0,
+        "gender": "female"
       },
       "color": "b08ad9"
     },
@@ -30,7 +31,8 @@
       },
       "voice": {
         "pitch": 1.25,
-        "rate": 1.15
+        "rate": 1.15,
+        "gender": "male"
       },
       "color": "6fb36b"
     },
@@ -48,7 +50,8 @@
       },
       "voice": {
         "pitch": 0.65,
-        "rate": 0.9
+        "rate": 0.9,
+        "gender": "male"
       },
       "color": "7fb8e0"
     },
@@ -64,7 +67,8 @@
       },
       "voice": {
         "pitch": 0.95,
-        "rate": 1.2
+        "rate": 1.2,
+        "gender": "male"
       },
       "color": "f2c14e"
     },
@@ -80,7 +84,8 @@
       },
       "voice": {
         "pitch": 1.6,
-        "rate": 1.2
+        "rate": 1.2,
+        "gender": "neutral"
       },
       "color": "5cd0ff"
     },
@@ -96,7 +101,8 @@
       },
       "voice": {
         "pitch": 1.3,
-        "rate": 1.1
+        "rate": 1.1,
+        "gender": "female"
       },
       "color": "e8a0c8"
     },
@@ -112,7 +118,8 @@
       },
       "voice": {
         "pitch": 0.8,
-        "rate": 0.95
+        "rate": 0.95,
+        "gender": "male"
       },
       "color": "d9a441"
     },
@@ -128,7 +135,8 @@
       },
       "voice": {
         "pitch": 0.55,
-        "rate": 0.85
+        "rate": 0.85,
+        "gender": "male"
       },
       "color": "9ab0c8"
     },
@@ -147,7 +155,8 @@
       },
       "voice": {
         "pitch": 0.65,
-        "rate": 0.9
+        "rate": 0.9,
+        "gender": "male"
       },
       "color": "3cff6a"
     },
@@ -163,7 +172,8 @@
       },
       "voice": {
         "pitch": 0.85,
-        "rate": 1.05
+        "rate": 1.05,
+        "gender": "female"
       },
       "color": "e07a4a"
     },
@@ -179,7 +189,8 @@
       },
       "voice": {
         "pitch": 0.5,
-        "rate": 0.8
+        "rate": 0.8,
+        "gender": "male"
       },
       "color": "8a8293"
     },
@@ -195,7 +206,8 @@
       },
       "voice": {
         "pitch": 0.75,
-        "rate": 0.95
+        "rate": 0.95,
+        "gender": "male"
       },
       "color": "e06c6c"
     },
@@ -221,7 +233,8 @@
       },
       "voice": {
         "pitch": 0.8,
-        "rate": 0.95
+        "rate": 0.95,
+        "gender": "male"
       }
     },
     "eugenio": {
@@ -242,7 +255,8 @@
       },
       "voice": {
         "pitch": 1.08,
-        "rate": 1.05
+        "rate": 1.05,
+        "gender": "male"
       }
     }
   },
@@ -2011,18 +2025,23 @@
     "eugenio": {
       "start": "hola",
       "greeting_again": [
-        "¡Volviste! ¿Traes pan? Di que traes pan.",
-        "Hola. Hoy el café del puerto sabe a ozono. Le doy un 6/10."
+        "¡Volviste! ¿Traes pan? Di que traes pan. Oye, ¿sabías que Chappell Roan sacó su nombre artístico de su abuelo? O sea... ¿qué te decía? Perdón, mi neurodivergencia.",
+        "Hola. Hoy el café del puerto sabe a ozono. Le doy un 6/10. Aunque el ozono me recuerda a... ¿has visto a NewJeans bailar «Hype Boy»? Mira nada más, me fui. Neurodivergencia, ya sabes.",
+        "¡Ahí estás! Te iba a decir algo importante. Ya se me olvidó. Seguro era del pan. O de Chappell Roan. Culpo a mi neurodivergencia."
       ],
       "menu": [
-        "¿Algo más? Mientras, me tomo otro café.",
-        "Dime. Estoy calificando el aroma de este capacitor.",
-        "¿Qué más?"
+        "¿Algo más? Mientras, me tomo otro café. Oye, NewJeans son cinco, ¿lo sabías? Bueno, ¿qué ibas a decir?",
+        "Dime. Estoy calificando el aroma de este capacitor. Espera, ¿oyes cómo cambia el bajo de la canción? Perdón, me distraje. Neurodivergencia.",
+        "¿Qué más? Ah, y Chappell Roan hizo su primer sencillo siendo adolescente, un dato que no te pedí pero ahí está."
       ],
       "nodes": {
         "hola": {
-          "text": "Buenas. Eugenio, para servirte. Soltero, codiciado, sin suerte. Me caí desde la fila de la cafetería de la universidad con una charola en la mano: café de grano y un pan de dulce. El pan no sobrevivió. Yo, apenas.",
+          "text": "¿Oyes eso del fondo? ¡Que rolón! Alguien dejó una canción en el puerto y yo ya me enamoré del piano. Ah, perdón, buenas: Eugenio, para servirte. Soltero, codiciado, sin suerte. Me caí desde la fila de la cafetería de la universidad con una charola en la mano: café de grano y un pan de dulce. El pan no sobrevivió. Yo, apenas.",
           "options": [
+            {
+              "text": "¿Qué es esa música?",
+              "next": "musica"
+            },
             {
               "text": "Traigo los tres panes para la cata.",
               "next": "mision_entrega",
@@ -2058,11 +2077,20 @@
             }
           ]
         },
+        "musica": {
+          "text": "No sé ni de quién es, pero tiene ese piano melancólico, como de quien espera que todo salga bien y ya sabe que no. ¡Un 9/10! Y mira que yo no regalo nueves. Me recuerda a Chappell Roan, que dicen que sacó el «Chappell» del nombre de su abuelo y el «Roan» de su canción favorita. ¿O era al revés? Da igual. Hablando de música, ¿viste que NewJeans debutó en 2022 con «Attention»? Cinco integrantes, todas con coreografías que me quitan el sueño. ¿De qué hablábamos? Perdón, es mi neurodivergencia: mi cerebro abre doce pestañas y cierra la que importa.",
+          "options": [
+            {
+              "text": "Está bien, se entiende.",
+              "next": "hola"
+            }
+          ]
+        },
         "cafe": {
-          "text": "Claro. Traigo un molino de mano y granos de Veracruz en la mochila. Te rellené las pociones. Este café... 8/10. Le falta acidez. Nada llega al 10.",
+          "text": "Claro. Traigo un molino de mano y granos de Veracruz en la mochila. Te rellené las pociones. Este café... 8/10. Le falta acidez. Nada llega al 10. Aunque el aroma me recuerda a un videoclip de Chappell Roan, ese del caballo rosa... ¿qué decía? Ah, sí. El café.",
           "again": [
-            "Rellenadas. Este lote, 7.5/10: molí con prisa.",
-            "Listo. 8/10. Mejor que ayer, peor que mañana."
+            "Rellenadas. Este lote, 7.5/10: molí con prisa. Por cierto, ¿Hanni de NewJeans nació en Australia? Bueno, ya te rellené.",
+            "Listo. 8/10. Mejor que ayer, peor que mañana. Perdón, mi neurodivergencia me susurró otra canción."
           ],
           "options": [
             {
@@ -2072,7 +2100,7 @@
           ]
         },
         "amor": {
-          "text": "Mal. Siempre mal. Mi última cita me dejó porque dije que su pastel de tres leches era un 8/10. ¡Era un 8/10! Tenía demasiada canela. Uno no puede mentir sobre el pan.",
+          "text": "Mal. Siempre mal. Mi última cita me dejó porque dije que su pastel de tres leches era un 8/10. ¡Era un 8/10! Tenía demasiada canela. Uno no puede mentir sobre el pan. Es como cuando Chappell Roan dijo que quería... espera, ¿qué decía? Ya me fui por la tangente. Mi neurodivergencia y yo te pedimos disculpas.",
           "next": "amor2"
         },
         "amor2": {

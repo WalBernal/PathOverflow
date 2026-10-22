@@ -1627,25 +1627,61 @@ func _draw_ailment_fx(i: int, tt: float) -> void:
 			var ph := fmod(tt * 1.4 + k * 0.5 + jitter, 1.0)
 			var q := p + Vector2((k - 0.5) * r * 0.8, -r * 0.3 + ph * r * 1.1)
 			draw_circle(q, 2.2 * (1.0 - ph * 0.5), Color(0.8, 0.08, 0.1, 0.9 * (1.0 - ph)))
-	if shock_time[i] > 0.0 and fmod(tt * 7.0 + jitter, 1.0) < 0.45:
-		# Chispas en zigzag alrededor.
-		var a := fmod(tt * 5.0 + jitter, TAU)
-		var from := p + Vector2.from_angle(a) * r * 1.1
-		var to := p + Vector2.from_angle(a + 1.1) * r * 1.1
-		var mid := from.lerp(to, 0.5) + (to - from).orthogonal().normalized() * 6.0
-		draw_polyline(PackedVector2Array([from, mid, to]), Color(1.0, 0.92, 0.45, 0.95), 2.0, true)
-	if freeze_time[i] > 0.0:
-		# Bloque de hielo.
-		var ice := PackedVector2Array()
-		for k in 6:
-			ice.append(p + Vector2.from_angle(TAU * k / 6.0 + 0.3) * r * 1.35 + Vector2(0, -r * 0.4))
-		draw_colored_polygon(ice, Color(0.7, 0.9, 1.0, 0.35))
-		ice.append(ice[0])
-		draw_polyline(ice, Color(0.85, 0.97, 1.0, 0.85), 1.5, true)
-	elif chill_time[i] > 0.0:
+	if shock_time[i] > 0.0:
+		_draw_shock_fx(p, r, tt, jitter)
+	if freeze_time[i] > 0.0 or chill_time[i] > 0.0:
+		_draw_frost_fx(p, r, tt, jitter, freeze_time[i] > 0.0)
+
+
+## Electrocutado: arcos que no paran, un resplandor amarillo y chispas que saltan.
+func _draw_shock_fx(p: Vector2, r: float, tt: float, jitter: float) -> void:
+	var c := p + Vector2(0, -r * 0.4)
+	draw_circle(c, r * 1.25, Color(1.0, 0.95, 0.4, 0.10 + 0.06 * sin(tt * 18.0 + jitter)))
+	for k in 3:  # tres arcos persistentes, cada uno cambia de forma ~10 veces por segundo
+		var seed_t := floorf(tt * 10.0 + k * 3.0 + jitter)
+		var a := fposmod(seed_t * 2.399 + k * 2.1, TAU)
+		var from := c + Vector2.from_angle(a) * r * 0.5
+		var to := c + Vector2.from_angle(a + 0.9 + fposmod(seed_t * 1.7, 1.2)) * r * 1.3
+		var pts := PackedVector2Array([from])
+		for s in 1:
+			var mid := from.lerp(to, 0.5) + (to - from).orthogonal().normalized() * (fposmod(seed_t * 3.1, 1.0) - 0.5) * r
+			pts.append(mid)
+		pts.append(to)
+		draw_polyline(pts, Color(1.0, 0.95, 0.5, 0.9), 1.8, true)
+		draw_circle(to, 1.8, Color(1.0, 1.0, 0.8, 0.9))
+	for k in 4:  # chispas sueltas que se apagan
+		var ph := fposmod(tt * 2.3 + k * 0.25 + jitter, 1.0)
+		var dir := Vector2.from_angle(k * 1.7 + floorf(tt * 2.3 + k * 0.25 + jitter) * 0.9)
+		draw_circle(c + dir * r * (0.8 + ph * 0.9), 1.5 * (1.0 - ph), Color(1.0, 0.95, 0.4, 1.0 - ph))
+
+
+## Helado/congelado: escarcha que cubre el sprite, copos que caen y cristales en la base.
+func _draw_frost_fx(p: Vector2, r: float, tt: float, jitter: float, frozen: bool) -> void:
+	var c := p + Vector2(0, -r * 0.45)
+	var cover := PackedVector2Array()
+	for k in 18:  # silueta irregular de escarcha sobre el cuerpo
+		var a := TAU * k / 18.0
+		var wob := 1.0 + 0.08 * sin(a * 5.0 + jitter)
+		cover.append(c + Vector2(cos(a) * r * 1.05 * wob, sin(a) * r * 1.5 * wob))
+	draw_colored_polygon(cover, Color(0.72, 0.92, 1.0, 0.42 if frozen else 0.2))
+	# Cristales de la base (más altos y claros si está congelado).
+	var n := 7 if frozen else 4
+	for k in n:
+		var bx := (float(k) / (n - 1) - 0.5) * r * 2.2
+		var h := r * (0.5 + 0.5 * fposmod(sin(k * 12.9898 + jitter) * 43758.5, 1.0)) * (1.5 if frozen else 0.8)
+		var base := p + Vector2(bx, r * 0.5)
+		draw_colored_polygon(PackedVector2Array([base + Vector2(-3, 0), base + Vector2(0, -h), base + Vector2(3, 0)]),
+			Color(0.82, 0.96, 1.0, 0.85 if frozen else 0.6))
+	if frozen:
+		draw_polyline(cover + PackedVector2Array([cover[0]]), Color(0.88, 0.98, 1.0, 0.9), 1.5, true)
+	else:
 		draw_set_transform(p + Vector2(0, r * 0.5), 0.0, Vector2(1.0, 0.45))
 		draw_arc(Vector2.ZERO, r * 1.3, 0.0, TAU, 20, Color(0.55, 0.8, 1.0, 0.7), 2.0, true)
 		draw_set_transform(Vector2.ZERO)
+	for k in 3:  # copos que caen
+		var ph := fposmod(tt * 0.8 + k / 3.0 + jitter, 1.0)
+		var q := c + Vector2((k - 1) * r * 0.7 + sin(tt * 2.0 + k) * 3.0, -r * 1.5 + ph * r * 2.4)
+		draw_circle(q, 1.6, Color(0.9, 0.98, 1.0, 0.9 * (1.0 - ph * 0.6)))
 
 
 ## Aro de color por afijo, girando alrededor del enemigo.

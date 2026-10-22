@@ -22,6 +22,8 @@ var act: Dictionary = {}
 var zones: Dictionary = {}
 ## Escenas (data/cutscenes.json) por id.
 var cutscenes: Dictionary = {}
+## Música (data/music.json): pistas y pista de cada zona.
+var music: Dictionary = {}
 ## Personaje elegido en la pantalla de inicio (null = ninguno todavía).
 var current_character: CharacterData
 ## Personaje a medio crear (nombre y apariencia del creador) mientras dura el
@@ -50,6 +52,9 @@ func _ready() -> void:
 	var cutscene_data = DataLoader.load_json(CUTSCENES_PATH)
 	if cutscene_data is Dictionary:
 		cutscenes = cutscene_data.get("cutscenes", {})
+	var music_data = DataLoader.load_json("res://data/music.json")
+	if music_data is Dictionary:
+		music = music_data
 
 
 ## Acto al que pertenece una zona ({} si no existe).

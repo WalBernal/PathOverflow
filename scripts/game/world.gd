@@ -30,6 +30,8 @@ var quests: QuestLog
 var _dirty := false
 var _since_save := 0.0
 var _boss_alive := false
+## Fases de jefe ya iniciadas en esta zona (la música acelera con cada una).
+var _boss_phase := 0
 ## Prueba de estrés en curso: {def, wave, total, ids, next_in, rewards}.
 var _challenge: Dictionary = {}
 ## Recompensas ya enseñadas por prueba (para no cambiarlas al volver a mirar).
@@ -47,7 +49,7 @@ var _rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color("0b0a0e"))
-	MusicPlayer.stop_music()
+	tree_exiting.connect(func() -> void: MusicPlayer.set_intensity(0))
 	# Detector de cuelgues (escribe en user://logs/congelado.log si el juego se para).
 	if not get_tree().process_frame.is_connected(FreezeWatch.beat):
 		get_tree().process_frame.connect(FreezeWatch.beat)
@@ -79,7 +81,9 @@ func _ready() -> void:
 	enemies.immune_hit.connect(_on_immune_hit)
 	enemies.phase_started.connect(func(_id: int, phase_name: String, text: String, color: Color) -> void:
 		ui.hud.flash("%s\n%s" % [phase_name, text], color)
-		Sfx.play("wave"))
+		Sfx.play("wave")
+		_boss_phase += 1
+		MusicPlayer.set_intensity(_boss_phase))
 	skills = SkillController.new()
 	add_child(skills)
 	skills.setup(player, enemies, character)
@@ -226,6 +230,9 @@ func travel_to(zone_id: String, entry := "") -> void:
 	_mark_dirty()
 	Sfx.ambient(String(zone.def.get("style", "ruins")))
 	Sfx.play("portal", -8.0)
+	_boss_phase = 0
+	MusicPlayer.set_intensity(0)
+	MusicPlayer.play_zone(zone.id)
 	_check_zone_cutscene.call_deferred()
 
 
@@ -574,6 +581,8 @@ func _on_enemy_killed(rarity: int, experience: int, pos: Vector2, type_id: Strin
 
 func _on_boss_defeated(pos: Vector2) -> void:
 	_boss_alive = false
+	MusicPlayer.set_intensity(0)
+	MusicPlayer.play_track(String(GameData.music.get("zones", {}).get(GameData.town_for_zone(zone.id), "camp1")), 3.0)
 	var boss: Dictionary = zone.def.get("boss", {})
 	character.flags[boss.get("complete_flag", "act1_complete")] = true
 	# El servidor se congela: lo que quedaba vivo se detiene y desaparece.

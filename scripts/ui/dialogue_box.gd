@@ -81,15 +81,28 @@ static func voice_id() -> String:
 ## frase anterior y se puede callar sin riesgo. En otros sistemas se usa la voz
 ## de Godot, pero sin cortarla nunca (tts_stop() con SAPI colgaba el juego): si
 ## sigue hablando, devuelve false y esa línea va sin voz.
-static func speak(text: String, pitch: float, rate: float) -> bool:
+## `voice` es el bloque "voice" del NPC: pitch, rate, gender (male|female|neutral)
+## y volume (0-1) propios; encima van los ajustes del jugador (velocidad y volumen).
+static func speak(text: String, pitch: float, rate: float, voice: Dictionary = {}) -> bool:
+	rate *= voice_speed()
+	var volume := clampf(float(voice.get("volume", 1.0)) * voice_volume(), 0.0, 1.0)
 	if NarratorVoice.supported():
 		FreezeWatch.mark("voz: hablar (%d letras)" % text.length())
-		return NarratorVoice.speak(text, pitch, rate)
+		return NarratorVoice.speak(text, pitch, rate, String(voice.get("gender", "neutral")), volume)
 	if voice_id() == "" or DisplayServer.tts_is_speaking():
 		return false
 	FreezeWatch.mark("voz: hablar (%d letras)" % text.length())
-	DisplayServer.tts_speak(text, voice_id(), 80, clampf(pitch, 0.0, 2.0), clampf(rate * 1.1, 0.5, 2.0))
+	DisplayServer.tts_speak(text, voice_id(), int(80.0 * volume), clampf(pitch, 0.0, 2.0), clampf(rate * 1.1, 0.5, 2.0))
 	return true
+
+
+## Ajustes del jugador: velocidad (0.8 / 1 / 1.25) y volumen (0.4 / 0.7 / 1) de todas las voces.
+static func voice_speed() -> float:
+	return clampf(float(GameSettings.get_value("dialogue", "voice_speed", 1.0)), 0.6, 1.6)
+
+
+static func voice_volume() -> float:
+	return clampf(float(GameSettings.get_value("dialogue", "voice_volume", 1.0)), 0.0, 1.0)
 
 
 ## Calla la voz (solo con el ayudante; la de Godot termina sola su frase).
@@ -236,7 +249,7 @@ func _show_node(node_id: String) -> void:
 	_shown = 0.0
 	_text.visible_characters = 0
 	_stop_voice()
-	_narrating = narrator_enabled() and speak(_text.get_parsed_text(), _pitch, _rate)
+	_narrating = narrator_enabled() and speak(_text.get_parsed_text(), _pitch, _rate, npc.get("voice", {}))
 	if _narrating:
 		_voice_age = 0.0
 		_cps = NARRATED_CPS * _rate

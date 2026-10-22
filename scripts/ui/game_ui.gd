@@ -377,8 +377,51 @@ func _build_pause_menu() -> Control:
 		GameSettings.set_value("dialogue", "blips", not DialogueBox.blips_enabled())
 		blips.text = "Pitidos del texto: " + ("sí" if DialogueBox.blips_enabled() else "no"))
 	box.add_child(blips)
+	# Voz: velocidad y volumen (cada NPC además tiene su tono, velocidad, género y volumen en npcs.json).
+	var speed_steps := [0.8, 1.0, 1.25]
+	var speed_names := ["lenta", "normal", "rápida"]
+	var speed := UiStyle.button("", func() -> void: pass, 320)
+	var speed_index := func() -> int:
+		var cur := 1
+		for k in speed_steps.size():
+			if absf(speed_steps[k] - DialogueBox.voice_speed()) < 0.05:
+				cur = k
+		return cur
+	var refresh_speed := func() -> void:
+		speed.text = "Velocidad de la voz: " + speed_names[speed_index.call()]
+	speed.pressed.connect(func() -> void:
+		GameSettings.set_value("dialogue", "voice_speed", speed_steps[(speed_index.call() + 1) % speed_steps.size()])
+		refresh_speed.call())
+	refresh_speed.call()
+	box.add_child(speed)
+	var vol_steps := [0.4, 0.7, 1.0]
+	var vol := UiStyle.button("", func() -> void: pass, 320)
+	var refresh_vol := func() -> void:
+		vol.text = "Volumen de la voz: %d %%" % int(round(DialogueBox.voice_volume() * 100.0))
+	vol.pressed.connect(func() -> void:
+		var cur := 0
+		for k in vol_steps.size():
+			if absf(vol_steps[k] - DialogueBox.voice_volume()) < 0.05:
+				cur = k
+		GameSettings.set_value("dialogue", "voice_volume", vol_steps[(cur + 1) % vol_steps.size()])
+		refresh_vol.call())
+	refresh_vol.call()
+	box.add_child(vol)
+	var music_steps := [0.0, 0.4, 0.7, 1.0]
+	var music := UiStyle.button("", func() -> void: pass, 320)
+	var refresh_music := func() -> void:
+		music.text = "Volumen de la música: %d %%" % int(round(MusicPlayer.music_volume * 100.0))
+	music.pressed.connect(func() -> void:
+		var cur := 0
+		for k in music_steps.size():
+			if absf(music_steps[k] - MusicPlayer.music_volume) < 0.05:
+				cur = k
+		MusicPlayer.set_volume(music_steps[(cur + 1) % music_steps.size()])
+		refresh_music.call())
+	refresh_music.call()
+	box.add_child(music)
 	# Efectos de habilidades y ambiente de las zonas.
-	var sfx := UiStyle.button("", func() -> void: pass, 320)
+	var sfx :=UiStyle.button("", func() -> void: pass, 320)
 	sfx.text = "Efectos de sonido: " + ("sí" if Sfx.sfx_enabled() else "no")
 	sfx.pressed.connect(func() -> void:
 		GameSettings.set_value("audio", "sfx", not Sfx.sfx_enabled())

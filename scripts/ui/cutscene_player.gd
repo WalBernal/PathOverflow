@@ -50,6 +50,7 @@ var _shown := 0.0
 var _total := 0
 var _blip: AudioStreamPlayer
 var _voice_age := 0.0
+var _voice: Dictionary = {}
 var _pitch := 1.0
 var _rate := 1.0
 var _read_left := 0.0       # cuenta atrás para pasar sola a la siguiente
@@ -160,6 +161,7 @@ func _show_line(step: Dictionary) -> void:
 		_portrait.appearance = CharacterAppearance.sanitize(npc.get("appearance", {}))
 		_portrait.ring_color = color
 		_portrait.glitch = 0.6 if style == "phone" or npc.get("terminal", false) else 0.0
+	_voice = npc.get("voice", {})
 	_pitch = float(npc.get("voice", {}).get("pitch", 0.7 if style == "boss" else 1.0))
 	_rate = float(npc.get("voice", {}).get("rate", 0.9 if style == "boss" else 1.0))
 	var text: String = String(step.get("text", "")).replace("{jugador}", String(speakers.get("player", {}).get("name", "tú")))
@@ -186,7 +188,7 @@ func _speak(style: String) -> void:
 	_cps = CHARS_PER_SECOND
 	if style == "console" or not DialogueBox.narrator_enabled():
 		return
-	if not DialogueBox.speak(_text.get_parsed_text(), _pitch, _rate):
+	if not DialogueBox.speak(_text.get_parsed_text(), _pitch, _rate, _voice):
 		return   # la voz sigue con la línea anterior: esta va sin voz
 	_voice_age = 0.0
 	_narrating = true

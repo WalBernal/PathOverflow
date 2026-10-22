@@ -6,7 +6,8 @@ class_name NarratorVoice
 ## vez el que se cuelga es el ayudante, se mata y se vuelve a lanzar.
 ##
 ## Protocolo (una línea por orden):
-##   juego → ayudante:  S <id> <velocidad%> <tono%> <texto en base64>   hablar (corta lo anterior)
+##   juego → ayudante:  S <id> <velocidad%> <tono%> <género> <volumen 0-100> <texto en base64>   hablar (corta lo anterior)
+##                      (género: male | female | neutral; si no hay una voz así, se usa la que haya)
 ##                      X                                                callar
 ##                      Q                                                salir
 ##   ayudante → juego:  D <id>   terminó (o se cortó) la frase <id>
@@ -43,9 +44,10 @@ while ($true) {
       $p = $line.Split(' ')
       $s.SpeakAsyncCancelAll()
       if ($cur -gt 0) { $out.WriteLine("D $cur") }
-      $text = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($p[4]))
+      $text = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($p[6]))
       $esc = [Security.SecurityElement]::Escape($text)
-      $ssml = "<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='$lang'><prosody rate='$($p[2])%' pitch='$($p[3])%'>$esc</prosody></speak>"
+      $s.Volume = [Math]::Max(0, [Math]::Min(100, [int]$p[5]))
+      $ssml = "<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='$lang'><voice gender='$($p[4])'><prosody rate='$($p[2])%' pitch='$($p[3])%'>$esc</prosody></voice></speak>"
       $cur = [int]$p[1]
       $since = [DateTime]::Now
       $ready = 0
@@ -78,17 +80,19 @@ static func supported() -> bool:
 
 
 ## Habla (cortando lo que estuviera diciendo). `pitch` y `rate`: 1 = normal.
-static func speak(text: String, pitch: float, rate: float) -> bool:
+static func speak(text: String, pitch: float, rate: float, gender := "neutral", volume := 1.0) -> bool:
 	if not _ensure():
 		return false
+	if not gender in ["male", "female", "neutral"]:
+		gender = "neutral"
 	_mutex.lock()
 	_sent_id += 1
 	var id := _sent_id
 	_mutex.unlock()
 	var rate_pct := int(round((clampf(rate * 1.1, 0.5, 2.0) - 1.0) * 100.0))
 	var pitch_pct := int(round((clampf(pitch, 0.5, 1.6) - 1.0) * 60.0))
-	var line := "S %d %s%d %s%d %s" % [id, "+" if rate_pct >= 0 else "", rate_pct, "+" if pitch_pct >= 0 else "", pitch_pct,
-		Marshalls.utf8_to_base64(text)]
+	var line := "S %d %s%d %s%d %s %d %s" % [id, "+" if rate_pct >= 0 else "", rate_pct, "+" if pitch_pct >= 0 else "", pitch_pct,
+		gender, int(round(clampf(volume, 0.0, 1.0) * 100.0)), Marshalls.utf8_to_base64(text)]
 	return _send(line)
 
 

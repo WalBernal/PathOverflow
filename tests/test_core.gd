@@ -79,6 +79,7 @@ func _initialize() -> void:
 	_test_ram_grades()
 	_test_tree_themes_and_spacing()
 	_test_thermal_shock_and_status_resist()
+	_test_music_and_voices()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
 	else:
@@ -2456,6 +2457,39 @@ func _test_ram_grades() -> void:
 	var board := Motherboard.new(_db.skills.skills["rafaga_de_paquetes"], 1, ["DDR4"])
 	board.install(gen.generate_ram(1, "multicanal_mayor"), 0)
 	_check(SkillCalc.compute(board, c)["projectiles"] == 6, "multicanal mayor: +3 proyectiles")
+
+
+## Música: cada zona de los tres actos tiene una pista que existe; Eugenio y las voces de los NPC.
+func _test_music_and_voices() -> void:
+	var music: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/music.json"))
+	var zones: Dictionary = music["zones"]
+	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json"]:
+		var act: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+		for z in act["zones"]:
+			_check(zones.has(z["id"]), "música: la zona %s tiene pista" % z["id"])
+			if z.has("boss"):
+				_check(String(zones.get(z["id"], "")).begins_with("boss"), "música: la zona del jefe %s suena a jefe" % z["id"])
+	for id in music["tracks"]:
+		_check(FileAccess.file_exists("res://assets/audio/music/%s.wav" % id), "música: existe %s.wav (tools/generate_zone_music.gd)" % id)
+	for z in zones:
+		_check(music["tracks"].has(zones[z]), "música: la pista %s de %s está definida" % [zones[z], z])
+	_check(String(music["tracks"]["camp3"]["name"]).begins_with("Expectativas"), "música: el campamento del acto III tiene su pista propia")
+	var npcs: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/npcs.json"))
+	for id in npcs["npcs"]:
+		var voice: Dictionary = npcs["npcs"][id].get("voice", {})
+		_check(voice.get("gender", "") in ["male", "female", "neutral"], "voz: %s tiene género" % id)
+	var eugenio: Dictionary = npcs["dialogues"]["eugenio"]
+	_check(String(eugenio["nodes"]["hola"]["text"]).begins_with("¿Oyes eso del fondo? ¡Que rolón!"), "Eugenio: abre con la música del fondo")
+	var tangents := 0
+	for k in eugenio["nodes"]:
+		var n: Dictionary = eugenio["nodes"][k]
+		for t in [n.get("text", "")] + n.get("again", []):
+			if "neurodivergencia" in String(t):
+				tangents += 1
+	for t in eugenio["greeting_again"] + eugenio["menu"]:
+		if "neurodivergencia" in String(t) or "Chappell" in String(t) or "NewJeans" in String(t):
+			tangents += 1
+	_check(tangents >= 6, "Eugenio: se distrae y culpa a su neurodivergencia (%d)" % tangents)
 
 
 ## Árbol: las temáticas de estados y aliados tienen 3-5 clusters, del lado de las clases que las usan,
