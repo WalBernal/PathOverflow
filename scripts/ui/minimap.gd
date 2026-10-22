@@ -128,6 +128,25 @@ func _draw() -> void:
 		var rarity := enemies.rarities[i]
 		draw_circle(p, 1.6 + rarity * 0.7, ENEMY_COLORS[rarity])
 
+	# Aliados (invocaciones persistentes): puntos azules.
+	for a in enemies.allies:
+		var ap := _to_map(a["pos"])
+		if _inside(ap):
+			draw_circle(ap, 3.0, Color("9ad0ff"))
+			draw_arc(ap, 4.5, 0.0, TAU, 12, Color("1a2a40"), 1.0, true)
+	# Jefe con fases: marca roja que pulsa; si queda fuera del mapa, una flecha en el borde.
+	var boss := enemies.boss_info()
+	if not boss.is_empty():
+		var bp := _to_map(boss["pos"])
+		var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 250.0)
+		if _inside(bp):
+			draw_circle(bp, 5.0 + pulse * 2.0, Color(1.0, 0.25, 0.2, 0.9))
+			draw_arc(bp, 8.0 + pulse * 3.0, 0.0, TAU, 16, Color(1.0, 0.8, 0.3, 0.8), 1.5, true)
+		else:
+			var dir := (bp - center).normalized()
+			var edge := center + dir * (RADIUS - 8.0)
+			draw_colored_polygon(PackedVector2Array([edge + dir * 6.0, edge - dir * 4.0 + dir.orthogonal() * 5.0, edge - dir * 4.0 - dir.orthogonal() * 5.0]), Color(1.0, 0.3, 0.2))
+
 	# Jugador: flecha hacia donde mira.
 	var f := player.facing_direction()
 	draw_colored_polygon(PackedVector2Array([center + f * 7.0, center - f * 4.0 + f.orthogonal() * 4.5,

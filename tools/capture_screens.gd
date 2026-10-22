@@ -23,6 +23,7 @@ func _ready() -> void:
 
 func _run() -> void:
 	if OS.get_cmdline_user_args().has("combate"):
+		await _capture_tree_sectors()
 		await _capture_tunnel_dino()
 		await _capture_player_states()
 		await _capture_paez()
@@ -257,6 +258,39 @@ func _capture_act3() -> void:
 	world.get("player").global_position += Vector2(700, 0)
 	await _wait(5.0)
 	_save("15_jefe_fw_update")
+	world.set("_since_save", -9999.0)
+
+
+## Árbol pasivo: el sector del templario (automatización y legión), el del hechicero (rayo) y el conjunto.
+func _capture_tree_sectors() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Arbol", &"templario", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 30
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var ui: Node = world.get("ui")
+	ui.call("_on_menu_requested", "passives")
+	await _wait(0.6)
+	var view: Node = ui.get("tree_screen").get("_view")
+	var shots := {"25_arbol_templario": [210.0, 1150.0, 0.62], "26_arbol_hechicero": [150.0, 1150.0, 0.62],
+		"27_arbol_exploradora": [30.0, 1150.0, 0.62], "28_arbol_guerrero": [-90.0, 1150.0, 0.62]}
+	for name in shots:
+		var cfg: Array = shots[name]
+		view.set("zoom", cfg[2])
+		view.call("center_on", Vector2.from_angle(deg_to_rad(cfg[0])) * cfg[1])
+		await _wait(0.4)
+		_save(name)
+	view.set("zoom", 0.2)
+	view.call("center_on", Vector2.ZERO)
+	await _wait(0.4)
+	_save("29_arbol_completo")
+	ui.call("_on_menu_requested", "passives")
 	world.set("_since_save", -9999.0)
 
 

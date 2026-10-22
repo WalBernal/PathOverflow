@@ -28,7 +28,7 @@ func _initialize() -> void:
 		["versatil", _layers], ["tiempos", _hourglass], ["movilidad", _boot],
 		["ks_hacker", _key], ["ks_full_stack", _tower_of_stacks],
 		["ignicion", _campfire], ["sobrecarga", _tesla_coil], ["criogenia", _ice_crystal],
-		["toxinas", _poison_flask], ["hemorragia", _blood_drop], ["automatizacion", _robot_arm],
+		["toxinas", _poison_flask], ["hemorragia", _blood_drop], ["automatizacion", _robot_arm], ["legion", _banner],
 	]
 	var rows := ceili(float(icons.size()) / COLUMNS)
 	img = Image.create_empty(S * COLUMNS, S * rows, false, Image.FORMAT_RGBA8)
@@ -373,6 +373,18 @@ func _blood_drop() -> void:
 	_ellipse(12, 17, 2, 3, Color("ff7080"))
 	_ellipse(25, 25, 2.5, 2, c.darkened(0.15))
 	_ellipse(6, 27, 1.5, 1.2, c.darkened(0.15))
+
+
+## Legión: estandarte con un circuito en la bandera.
+func _banner() -> void:
+	_line(8, 29, 8, 3, Color("a0a8b8"), 2)
+	_ellipse(8, 3, 2, 2, Color("e0b040"))
+	_poly([Vector2(10, 5), Vector2(28, 8), Vector2(24, 14), Vector2(28, 20), Vector2(10, 18)], Color("5a8ad0"))
+	_poly([Vector2(10, 5), Vector2(28, 8), Vector2(10, 9)], Color("8ab8f0"))
+	_line(13, 12, 20, 12, Color("e8f0ff"))
+	_line(20, 12, 20, 15, Color("e8f0ff"))
+	_px(13, 15, Color("e8f0ff"))
+	_px(22, 10, Color("e8f0ff"))
 
 
 ## Automatización: brazo robótico con pinza.

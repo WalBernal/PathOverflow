@@ -143,7 +143,7 @@ func apply_status(id: String, duration: float) -> bool:
 	if id == "freeze" and (_freeze_grace > 0.0 or statuses.has("freeze")):
 		return false
 	var res := minf(Stat.RESISTANCE_CAP, _stat(STATUS_RES[id]))
-	var t := duration * (1.0 - res / 100.0)
+	var t := duration * (1.0 - res / 100.0) * (1.0 - minf(80.0, _stat(Stat.STATUS_RESIST)) / 100.0)
 	if t < 0.15:
 		return false
 	statuses[id] = maxf(float(statuses.get(id, 0.0)), t)

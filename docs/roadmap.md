@@ -1,6 +1,6 @@
 # Roadmap — Path Overflow: El Último Commit
 
-Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propios, 14 ascendencias (2 por clase, cada una con juego distinto), estados alterados sobre enemigos **y sobre el jugador**, interacciones entre estados, 9 invocaciones persistentes y 4 auras, RAM por grados (menor / normal / mayor), enemigos con resistencias, inmunidades y 16 afijos, jefes con fases (que además cambian de resistencias) y barra de jefe. Lo que **falta**, por prioridad. **S** = pequeño (≈ 1 sesión), **M** = mediano, **L** = grande.
+Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propios, 14 ascendencias (2 por clase, cada una con juego distinto), un árbol con las temáticas de estados y aliados repartidas por sectores (3-5 clusters cada una, sin nodos encimados), estados alterados sobre enemigos **y sobre el jugador**, interacciones entre estados, 9 invocaciones persistentes y 4 auras, RAM por grados (menor / normal / mayor), enemigos con resistencias, inmunidades y 16 afijos, jefes con fases (que además cambian de resistencias) y barra de jefe. Lo que **falta**, por prioridad. **S** = pequeño (≈ 1 sesión), **M** = mediano, **L** = grande.
 
 > Descartado por ahora: escala de las invocaciones y escala de los obstáculos.
 
@@ -17,11 +17,10 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 
 - **Auras con alcance** (S): hoy afectan a todos tus aliados; que dependan de la distancia al jugador y que haya auras que debiliten a los enemigos.
 - **Más invocaciones y auras** (M): una de cada por clase que aún no la tiene, mejoras por hito y modo «reservar más maná = más potencia».
-- **Pasivas de aliados en el árbol** (M): temática nueva para vida y reserva de invocaciones y notables de auras (exige subir la versión del árbol y devolver los puntos otra vez).
-- **RAM de grados para más familias** (S): área, velocidad y encadenamiento de cadenas ya tienen grados; faltan daño elemental, crítico y robo de vida. Módulos de efecto sobre aliados (rebotes en torretas, estados en drones).
+- **RAM de grados para más familias** (S): ya tienen grados el encadenamiento, la perforación, el multicanal, los estados, el crítico, el daño elemental y el robo de vida; faltan área, velocidad y pipeline. Módulos de efecto sobre aliados (estados en drones).
 - **Desbloqueo de habilidades por nivel** (M): que cada clase tenga progresión de kit propia, no solo botín.
-- **Más interacciones entre estados** (S): hoy hay rotura (congelado + físico), sobrecarga (electrocutado + fuego) e infección (veneno + sangrado); faltan para helado y quemado, y que las ascendencias las potencien.
-- **Resistencia propia a estados en el árbol** (S): nodos y objetos que reduzcan la duración de electrocutado, helado y congelado.
+- **Más interacciones entre estados** (S): hoy hay rotura, sobrecarga, infección y choque térmico; falta una para helado + rayo y que las ascendencias las potencien.
+- **Resistencia a estados en objetos** (S): el árbol ya tiene nodos de «resistencia a estados»; faltan afijos en el equipo.
 
 ## 3. Enemigos y jefes
 
@@ -45,8 +44,7 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 ## 5. Interfaz
 
 - Pantalla K con filtros por tipo de habilidad, y vista previa de DPS con y sin RAM (M).
-- Árbol pasivo: buscador por estado (escribir «quemar» resalta los nodos) (M).
-- Minimapa con aliados e iconos de jefes (S).
+- Árbol pasivo: que el buscador reconozca también las temáticas nuevas por su nombre de estado (S).
 - Configuración: tamaño de interfaz, modo daltónico (los estados se distinguen en parte por color), volumen por canal (M).
 - Mando / gamepad (L).
 
@@ -76,4 +74,5 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 
 ## Hecho (no repetir)
 
+**Árbol reorganizado (versión 7)**: 7 temáticas nuevas con 3-5 clusters cada una y colocadas del lado de las clases que las usan (automatización y Legión de aliados/auras junto al DevOps y la puerta hacia el centro del Full Stack; hemorragia con guerrero y duelista; criogenia y toxinas con exploradora y hacker; ignición y sobrecarga con hechicero y DevOps), nodos de resistencia a estados, sin nodos encimados ni aristas sobre nodos (lo comprueban el generador y las pruebas) · choque térmico · RAM de grados de crítico, elemental y robo de vida · minimapa con aliados y marca del jefe · 
 Kits de 3 habilidades y rasgo por clase · estados alterados con iconos · RAM de asistencia y por grados (encadenamiento, perforación, multicanal, estados) con escala por nivel · invocaciones persistentes (9) y auras (4) con reserva de maná visible · resistencias, inmunidades y 16 afijos de enemigos · fases en los tres jefes con resistencias que cambian, barra de jefe segmentada y sacudida de cámara · marco del objetivo con resistencias, afijos, estados y ayuda al pasar el mouse · tutorial con enemigos lejos · escena final del acto I con el dinosaurio visible en el túnel · sprites +18 % · M. Páez con sonrisa fija · **estados sobre el jugador** (electrocutado, helado, congelado) y barra de buffs y debuffs con ayuda · **interacciones entre estados** (rotura, sobrecarga, infección) · sonidos de estados · hoja de personaje con estados, auras y aliados · **14 ascendencias** (2 por clase) con efectos nuevos (espinas, vida al matar, perforación, estados, auras) y aviso a los personajes que tenían una eliminada.

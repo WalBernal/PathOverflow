@@ -73,6 +73,8 @@ const LIFE_ON_KILL := &"life_on_kill"
 const THORNS := &"thorns"
 ## Enemigos extra que atraviesan los proyectiles (suma a la RAM de perforación).
 const EXTRA_PIERCE := &"extra_pierce"
+## % menos de duración de electrocutado, helado y congelado sobre ti.
+const STATUS_RESIST := &"status_resist"
 
 # --- Tags (condiciones de los modificadores) ---
 const TAG_ATTACK := &"attack"
@@ -144,6 +146,7 @@ const NAMES := {
 	LIFE_ON_KILL: "Vida al matar",
 	THORNS: "Daño de espinas al recibir un golpe",
 	EXTRA_PIERCE: "Enemigos extra que atraviesan los proyectiles",
+	STATUS_RESIST: "Resistencia a estados (electrocutado, helado, congelado)",
 }
 
 ## Los aumentos/más de los padres también aplican al hijo:
@@ -159,7 +162,7 @@ const PARENTS := {
 
 const PERCENT_STATS := [
 	BLOCK_CHANCE, FIRE_RES, COLD_RES, LIGHTNING_RES, CHAOS_RES, CRIT_MULTIPLIER, LIFE_LEECH,
-	BURN_CHANCE, SHOCK_CHANCE, CHILL_CHANCE, FREEZE_CHANCE, POISON_CHANCE, BLEED_CHANCE,
+	BURN_CHANCE, SHOCK_CHANCE, CHILL_CHANCE, FREEZE_CHANCE, POISON_CHANCE, BLEED_CHANCE, STATUS_RESIST,
 ]
 
 const TAG_NAMES := {

@@ -77,6 +77,8 @@ func _initialize() -> void:
 	_test_state_interactions()
 	_test_new_affixes_and_phase_resists()
 	_test_ram_grades()
+	_test_tree_themes_and_spacing()
+	_test_thermal_shock_and_status_resist()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
 	else:
@@ -2454,3 +2456,97 @@ func _test_ram_grades() -> void:
 	var board := Motherboard.new(_db.skills.skills["rafaga_de_paquetes"], 1, ["DDR4"])
 	board.install(gen.generate_ram(1, "multicanal_mayor"), 0)
 	_check(SkillCalc.compute(board, c)["projectiles"] == 6, "multicanal mayor: +3 proyectiles")
+
+
+## Árbol: las temáticas de estados y aliados tienen 3-5 clusters, del lado de las clases que las usan,
+## y no hay nodos encimados (ni aristas sobre nodos ajenos).
+func _test_tree_themes_and_spacing() -> void:
+	var radius_by_kind := {PassiveNode.Kind.MINOR: 10.0, PassiveNode.Kind.NOTABLE: 22.0, PassiveNode.Kind.KEYSTONE: 30.0, PassiveNode.Kind.CLASS_START: 30.0}
+	var all_nodes: Array = _tree.nodes.values()
+	var overlaps := 0
+	for i in all_nodes.size():
+		var a: PassiveNode = all_nodes[i]
+		for j in range(i + 1, all_nodes.size()):
+			var b: PassiveNode = all_nodes[j]
+			if a.position.distance_to(b.position) < radius_by_kind[a.kind] + radius_by_kind[b.kind] + 4.0:
+				overlaps += 1
+	_check(overlaps == 0, "no hay nodos encimados en el árbol (%d pares)" % overlaps)
+	var through := 0
+	for e in _tree.edges:
+		var pa: Vector2 = _tree.get_node_data(e.x).position
+		var pb: Vector2 = _tree.get_node_data(e.y).position
+		for n: PassiveNode in all_nodes:
+			if n.id == e.x or n.id == e.y:
+				continue
+			if Geometry2D.get_closest_point_to_segment(n.position, pa, pb).distance_to(n.position) < radius_by_kind[n.kind] + 1.0:
+				through += 1
+	_check(through == 0, "ninguna arista pasa por encima de un nodo (%d)" % through)
+	# Clusters por temática y su sector (ángulo alrededor del centro, 0 = derecha, sentido horario).
+	var sectors := {"hemorragia": 300.0, "criogenia": 90.0, "toxinas": 60.0, "sobrecarga": 150.0, "ignicion": 180.0, "automatizacion": 210.0, "legion": 200.0}
+	var tolerance := {"hemorragia": 80.0, "criogenia": 140.0, "toxinas": 80.0, "sobrecarga": 90.0, "ignicion": 70.0, "automatizacion": 55.0, "legion": 65.0}
+	var counts := {}
+	var near := {}
+	for cl in _tree.clusters.values():
+		var t: String = cl["theme"]
+		counts[t] = int(counts.get(t, 0)) + 1
+		if sectors.has(t):
+			var ang := fposmod(rad_to_deg(atan2(cl["y"], cl["x"])), 360.0)
+			var diff := absf(wrapf(ang - sectors[t], -180.0, 180.0))
+			if diff <= tolerance[t]:
+				near[t] = int(near.get(t, 0)) + 1
+	for t in sectors:
+		_check(int(counts.get(t, 0)) >= 3 and int(counts.get(t, 0)) <= 5, "%s: entre 3 y 5 clusters (%d)" % [t, counts.get(t, 0)])
+		_check(int(near.get(t, 0)) >= int(counts.get(t, 0)) - 1, "%s: sus clusters están del lado de sus clases (%d de %d)" % [t, near.get(t, 0), counts.get(t, 0)])
+	_check(_tree.themes.has("legion") and PassiveIcons.has_icon("legion"), "temática y icono de Legión")
+	# Los nodos de aliados dan stats de aliados; hay notables distintos para variar entre clusters.
+	var allied_stats := {}
+	var legion_notables := {}
+	for n: PassiveNode in all_nodes:
+		if n.theme == "legion":
+			for m in n.mods:
+				allied_stats[m.stat] = true
+			if n.kind == PassiveNode.Kind.NOTABLE:
+				legion_notables[n.title] = true
+	for k in [Stat.MINION_LIFE, Stat.MINION_DAMAGE, Stat.RESERVATION_EFFICIENCY, Stat.AURA_EFFECT]:
+		_check(allied_stats.has(k), "Legión da %s" % k)
+	_check(legion_notables.size() >= 4, "Legión tiene notables distintos (%d)" % legion_notables.size())
+	var status_nodes := 0
+	for n: PassiveNode in all_nodes:
+		for m in n.mods:
+			if m.stat == Stat.STATUS_RESIST:
+				status_nodes += 1
+	_check(status_nodes >= 5, "hay nodos de resistencia a estados (%d)" % status_nodes)
+
+
+## Choque térmico (frío sobre un enemigo en llamas) y resistencia a estados sobre el jugador.
+func _test_thermal_shock_and_status_resist() -> void:
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	var id := em.spawn(Vector2.ZERO, Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+	var i := em.index_of(id)
+	em.lives[i] = 1.0e6
+	em.max_lives[i] = 1.0e6
+	em.burn_time[i] = 3.0
+	em.burn_dps[i] = 10.0
+	em.hit_ailments = {"type": "cold", "chances": {}, "effect": 1.0, "duration": 1.0}
+	var before := em.lives[i]
+	em.hit_index(i, 100.0, 100.0, 0.0, 150.0)
+	_check(is_equal_approx(before - em.lives[i], 140.0) and em.burn_time[i] == 0.0, "choque térmico: +40 % y se apaga la quemadura")
+	em.free()
+	var base := _new_character()
+	var tough := _new_character()
+	tough.stats.add_modifier(Modifier.new(Stat.STATUS_RESIST, Modifier.Type.FLAT, 50.0, [], "prueba"))
+	var e2 := EnemyManager.new()
+	root.add_child(e2)
+	var pa: Player = load("res://scenes/game/player.tscn").instantiate()
+	var pb: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(pa)
+	root.add_child(pb)
+	pa.setup(base, e2)
+	pb.setup(tough, e2)
+	pa.apply_status("shock", 4.0)
+	pb.apply_status("shock", 4.0)
+	_check(is_equal_approx(pb.statuses["shock"], pa.statuses["shock"] * 0.5), "50 %% de resistencia a estados: la mitad de duración (%.1f vs %.1f)" % [pb.statuses["shock"], pa.statuses["shock"]])
+	pa.queue_free()
+	pb.queue_free()
+	e2.queue_free()

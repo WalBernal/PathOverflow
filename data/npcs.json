@@ -899,6 +899,14 @@
           "text": "Los iconos encima de la barra de vida te dicen qué tienen. Pasa el mouse por encima de un enemigo y arriba verás su ficha completa. Hay módulos RAM y pasivas que suben esas probabilidades. Y sí: tú también puedes acabar quemado. Ya lo estás, de hecho. Es el onboarding.",
           "options": [
             {
+              "text": "¿Y si me los hacen a mí?",
+              "next": "estados_jugador"
+            },
+            {
+              "text": "¿Hay combinaciones?",
+              "next": "interacciones"
+            },
+            {
               "text": "¿Y las invocaciones que no se van?",
               "next": "persistentes"
             },
@@ -915,6 +923,28 @@
               "text": "¿Qué son esos iconos sobre los enemigos?",
               "next": "estados"
             },
+            {
+              "text": "Entendido.",
+              "next": "hola"
+            }
+          ]
+        },
+        "estados_jugador": {
+          "text": "Los enemigos también te hacen cosas. Electrocutado: recibes más daño. Helado: caminas más lento. Congelado: no haces nada un rato, y luego unos segundos de gracia. La resistencia al rayo y al frío acorta esos estados, y hay pasivas de «resistencia a estados». Los verás sobre tu orbe de vida con su tiempo.",
+          "options": [
+            {
+              "text": "¿Hay combinaciones?",
+              "next": "interacciones"
+            },
+            {
+              "text": "Entendido.",
+              "next": "hola"
+            }
+          ]
+        },
+        "interacciones": {
+          "text": "Tres combos que importan: ROTURA (golpe físico a un congelado: +50 % y se acaba el hielo), SOBRECARGA (fuego a un electrocutado: explosión en área) y CHOQUE TÉRMICO (frío a un enemigo en llamas: +40 %). Y ojo: envenenado y sangrando a la vez es INFECCIÓN: el veneno pega la mitad más.",
+          "options": [
             {
               "text": "Entendido.",
               "next": "hola"

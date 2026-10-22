@@ -1937,6 +1937,41 @@
    ],
    "minors": [
     [
+     "Resistencia a estados",
+     [
+      {
+       "stat": "status_resist",
+       "type": "flat",
+       "value": 8
+      }
+     ]
+    ],
+    [
+     "Estados y resistencia",
+     [
+      {
+       "stat": "status_resist",
+       "type": "flat",
+       "value": 5
+      },
+      {
+       "stat": "fire_res",
+       "type": "flat",
+       "value": 3
+      },
+      {
+       "stat": "cold_res",
+       "type": "flat",
+       "value": 3
+      },
+      {
+       "stat": "lightning_res",
+       "type": "flat",
+       "value": 3
+      }
+     ]
+    ],
+    [
      "Resistencia al fuego",
      [
       {
@@ -1988,6 +2023,48 @@
     ]
    ],
    "notables": [
+    [
+     "Cortafuegos de Estados",
+     "Nada se te pega: ni el frío, ni la descarga.",
+     [
+      {
+       "stat": "status_resist",
+       "type": "flat",
+       "value": 30
+      },
+      {
+       "stat": "fire_res",
+       "type": "flat",
+       "value": 8
+      },
+      {
+       "stat": "cold_res",
+       "type": "flat",
+       "value": 8
+      },
+      {
+       "stat": "lightning_res",
+       "type": "flat",
+       "value": 8
+      }
+     ]
+    ],
+    [
+     "Toma de Tierra Certificada",
+     "Por fin alguien cableó esto bien.",
+     [
+      {
+       "stat": "status_resist",
+       "type": "flat",
+       "value": 20
+      },
+      {
+       "stat": "lightning_res",
+       "type": "flat",
+       "value": 20
+      }
+     ]
+    ],
     [
      "Parche del Martes",
      "Llega puntual. Arregla lo justo.",
@@ -2718,6 +2795,31 @@
        "value": 8
       }
      ]
+    ],
+    [
+     "Duración de estados",
+     [
+      {
+       "stat": "ailment_duration",
+       "type": "increased",
+       "value": 8
+      }
+     ]
+    ],
+    [
+     "Quemar y área",
+     [
+      {
+       "stat": "burn_chance",
+       "type": "flat",
+       "value": 4
+      },
+      {
+       "stat": "area_of_effect",
+       "type": "increased",
+       "value": 3
+      }
+     ]
     ]
    ],
    "notables": [
@@ -2789,6 +2891,38 @@
        "value": 6
       }
      ]
+    ],
+    [
+     "Combustión Espontánea",
+     "Nadie encendió nada. Ardió igual.",
+     [
+      {
+       "stat": "burn_chance",
+       "type": "flat",
+       "value": 14
+      },
+      {
+       "stat": "fire_damage",
+       "type": "increased",
+       "value": 20
+      }
+     ]
+    ],
+    [
+     "Brasas Persistentes",
+     "Los logs se apagan; las brasas, no.",
+     [
+      {
+       "stat": "ailment_duration",
+       "type": "increased",
+       "value": 35
+      },
+      {
+       "stat": "burn_chance",
+       "type": "flat",
+       "value": 8
+      }
+     ]
     ]
    ]
   },
@@ -2834,6 +2968,31 @@
        "stat": "ailment_damage",
        "type": "increased",
        "value": 8
+      }
+     ]
+    ],
+    [
+     "Duración de estados",
+     [
+      {
+       "stat": "ailment_duration",
+       "type": "increased",
+       "value": 8
+      }
+     ]
+    ],
+    [
+     "Electrocutar y velocidad",
+     [
+      {
+       "stat": "shock_chance",
+       "type": "flat",
+       "value": 4
+      },
+      {
+       "stat": "cast_speed",
+       "type": "increased",
+       "value": 2
       }
      ]
     ]
@@ -2902,6 +3061,38 @@
        "value": 8
       }
      ]
+    ],
+    [
+     "Cortocircuito en Cadena",
+     "Un cable suelto. Cuarenta servidores menos.",
+     [
+      {
+       "stat": "shock_chance",
+       "type": "flat",
+       "value": 14
+      },
+      {
+       "stat": "extra_chains",
+       "type": "flat",
+       "value": 1
+      }
+     ]
+    ],
+    [
+     "Pararrayos",
+     "Atrae todo el daño. Y lo devuelve.",
+     [
+      {
+       "stat": "shock_chance",
+       "type": "flat",
+       "value": 10
+      },
+      {
+       "stat": "lightning_damage",
+       "type": "increased",
+       "value": 25
+      }
+     ]
     ]
    ]
   },
@@ -2947,6 +3138,31 @@
        "stat": "freeze_chance",
        "type": "flat",
        "value": 3
+      }
+     ]
+    ],
+    [
+     "Duración de estados",
+     [
+      {
+       "stat": "ailment_duration",
+       "type": "increased",
+       "value": 8
+      }
+     ]
+    ],
+    [
+     "Helar y resistencia",
+     [
+      {
+       "stat": "chill_chance",
+       "type": "flat",
+       "value": 5
+      },
+      {
+       "stat": "cold_res",
+       "type": "flat",
+       "value": 4
       }
      ]
     ]
@@ -3015,6 +3231,38 @@
        "value": 15
       }
      ]
+    ],
+    [
+     "Condensación Fatal",
+     "El rocío se queda helado sobre el procesador.",
+     [
+      {
+       "stat": "chill_chance",
+       "type": "flat",
+       "value": 14
+      },
+      {
+       "stat": "freeze_chance",
+       "type": "flat",
+       "value": 5
+      }
+     ]
+    ],
+    [
+     "Invierno de la IA",
+     "Se enfría la inversión. Y todo lo demás.",
+     [
+      {
+       "stat": "freeze_chance",
+       "type": "flat",
+       "value": 10
+      },
+      {
+       "stat": "cold_damage",
+       "type": "increased",
+       "value": 20
+      }
+     ]
     ]
    ]
   },
@@ -3060,6 +3308,31 @@
        "stat": "ailment_duration",
        "type": "increased",
        "value": 8
+      }
+     ]
+    ],
+    [
+     "Estados más dañinos",
+     [
+      {
+       "stat": "ailment_damage",
+       "type": "increased",
+       "value": 8
+      }
+     ]
+    ],
+    [
+     "Envenenar y velocidad",
+     [
+      {
+       "stat": "poison_chance",
+       "type": "flat",
+       "value": 4
+      },
+      {
+       "stat": "attack_speed",
+       "type": "increased",
+       "value": 2
       }
      ]
     ]
@@ -3133,6 +3406,43 @@
        "value": 10
       }
      ]
+    ],
+    [
+     "Inyección SQL",
+     "'; DROP TABLE enemigos; --",
+     [
+      {
+       "stat": "poison_chance",
+       "type": "flat",
+       "value": 15
+      },
+      {
+       "stat": "chaos_damage",
+       "type": "increased",
+       "value": 20
+      }
+     ]
+    ],
+    [
+     "Fuga de Memoria Tóxica",
+     "malloc(): sin free() a la vista.",
+     [
+      {
+       "stat": "poison_chance",
+       "type": "flat",
+       "value": 10
+      },
+      {
+       "stat": "ailment_duration",
+       "type": "increased",
+       "value": 30
+      },
+      {
+       "stat": "ailment_damage",
+       "type": "more",
+       "value": 15
+      }
+     ]
     ]
    ]
   },
@@ -3177,6 +3487,31 @@
       {
        "stat": "ailment_damage",
        "type": "increased",
+       "value": 8
+      }
+     ]
+    ],
+    [
+     "Duración de estados",
+     [
+      {
+       "stat": "ailment_duration",
+       "type": "increased",
+       "value": 8
+      }
+     ]
+    ],
+    [
+     "Sangrar y vida",
+     [
+      {
+       "stat": "bleed_chance",
+       "type": "flat",
+       "value": 4
+      },
+      {
+       "stat": "life",
+       "type": "flat",
        "value": 8
       }
      ]
@@ -3251,6 +3586,38 @@
        "value": 6
       }
      ]
+    ],
+    [
+     "Corte de Suministro",
+     "Se cae el proveedor. Se cae todo lo demás.",
+     [
+      {
+       "stat": "bleed_chance",
+       "type": "flat",
+       "value": 14
+      },
+      {
+       "stat": "physical_damage",
+       "type": "increased",
+       "value": 20
+      }
+     ]
+    ],
+    [
+     "Pérdida de Paquetes",
+     "El 30 % ya no vuelve. El resto, tampoco.",
+     [
+      {
+       "stat": "bleed_chance",
+       "type": "flat",
+       "value": 10
+      },
+      {
+       "stat": "ailment_damage",
+       "type": "increased",
+       "value": 25
+      }
+     ]
     ]
    ]
   },
@@ -3292,6 +3659,29 @@
      [
       {
        "stat": "minion_life",
+       "type": "increased",
+       "value": 10
+      }
+     ]
+    ],
+    [
+     "Daño de torretas",
+     [
+      {
+       "stat": "damage",
+       "type": "increased",
+       "value": 10,
+       "tags": [
+        "totem"
+       ]
+      }
+     ]
+    ],
+    [
+     "Daño de esbirros",
+     [
+      {
+       "stat": "minion_damage",
        "type": "increased",
        "value": 10
       }
@@ -3377,6 +3767,221 @@
        "tags": [
         "automaton"
        ]
+      }
+     ]
+    ],
+    [
+     "Infraestructura Inmutable",
+     "Si algo falla, no se arregla: se destruye y se vuelve a desplegar.",
+     [
+      {
+       "stat": "extra_devices",
+       "type": "flat",
+       "value": 1
+      },
+      {
+       "stat": "damage",
+       "type": "increased",
+       "value": 15,
+       "tags": [
+        "totem"
+       ]
+      }
+     ]
+    ],
+    [
+     "Escalado Horizontal",
+     "¿Más carga? Más robots. ¿Más robots? Más carga.",
+     [
+      {
+       "stat": "extra_minions",
+       "type": "flat",
+       "value": 1
+      },
+      {
+       "stat": "automaton_speed",
+       "type": "increased",
+       "value": 10
+      }
+     ]
+    ],
+    [
+     "Cron de la Madrugada",
+     "Corre solo. Rompe solo.",
+     [
+      {
+       "stat": "automaton_speed",
+       "type": "increased",
+       "value": 20
+      },
+      {
+       "stat": "damage",
+       "type": "increased",
+       "value": 10,
+       "tags": [
+        "automaton"
+       ]
+      }
+     ]
+    ]
+   ]
+  },
+  "legion": {
+   "name": "Legión",
+   "color": "9ad0ff",
+   "cluster_names": [
+    "Granja de Procesos",
+    "Flota de Drones",
+    "Escuadrón de Daemons",
+    "Sala de Control",
+    "Batallón Redundante"
+   ],
+   "minors": [
+    [
+     "Vida de esbirros",
+     [
+      {
+       "stat": "minion_life",
+       "type": "increased",
+       "value": 12
+      }
+     ]
+    ],
+    [
+     "Daño de esbirros",
+     [
+      {
+       "stat": "minion_damage",
+       "type": "increased",
+       "value": 12
+      }
+     ]
+    ],
+    [
+     "Eficiencia de reserva",
+     [
+      {
+       "stat": "reservation_efficiency",
+       "type": "increased",
+       "value": 6
+      }
+     ]
+    ],
+    [
+     "Efecto de auras",
+     [
+      {
+       "stat": "aura_effect",
+       "type": "increased",
+       "value": 6
+      }
+     ]
+    ],
+    [
+     "Esbirros y vida",
+     [
+      {
+       "stat": "minion_life",
+       "type": "increased",
+       "value": 6
+      },
+      {
+       "stat": "minion_damage",
+       "type": "increased",
+       "value": 6
+      }
+     ]
+    ]
+   ],
+   "notables": [
+    [
+     "Redundancia Activa-Activa",
+     "Si cae uno, ya hay otro corriendo.",
+     [
+      {
+       "stat": "minion_life",
+       "type": "increased",
+       "value": 35
+      },
+      {
+       "stat": "reservation_efficiency",
+       "type": "increased",
+       "value": 10
+      }
+     ]
+    ],
+    [
+     "Orquestador de Contenedores",
+     "Cada contenedor, un daemon. Cada daemon, un problema.",
+     [
+      {
+       "stat": "extra_minions",
+       "type": "flat",
+       "value": 1
+      },
+      {
+       "stat": "minion_damage",
+       "type": "increased",
+       "value": 15
+      }
+     ]
+    ],
+    [
+     "Estado Compartido",
+     "Todas las auras leen la misma variable global.",
+     [
+      {
+       "stat": "aura_effect",
+       "type": "increased",
+       "value": 30
+      },
+      {
+       "stat": "reservation_efficiency",
+       "type": "increased",
+       "value": 8
+      }
+     ]
+    ],
+    [
+     "Servicio sin Estado",
+     "Lo matas y vuelve igual. Reservando lo mismo.",
+     [
+      {
+       "stat": "reservation_efficiency",
+       "type": "increased",
+       "value": 20
+      }
+     ]
+    ],
+    [
+     "Cadena de Mando",
+     "El jefe habla, los demás ejecutan sin preguntar.",
+     [
+      {
+       "stat": "minion_damage",
+       "type": "increased",
+       "value": 30
+      },
+      {
+       "stat": "aura_effect",
+       "type": "increased",
+       "value": 15
+      }
+     ]
+    ],
+    [
+     "Autoescalado Reactivo",
+     "Más enemigos, más daemons. Hasta que la factura llega.",
+     [
+      {
+       "stat": "minion_life",
+       "type": "increased",
+       "value": 25
+      },
+      {
+       "stat": "automaton_speed",
+       "type": "increased",
+       "value": 12
       }
      ]
     ]

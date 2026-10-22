@@ -30,7 +30,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "data" / "passive_tree.json"
 THEMES = json.loads((ROOT / "data" / "passive_themes.json").read_text(encoding="utf-8"))["themes"]
-TREE_VERSION = 6
+TREE_VERSION = 7
 # Multiplicador de los aumentos de daño de las pasivas menores (que no se queden
 # en un +4 % que no se nota).
 DAMAGE_MINOR_SCALE = 1.5
@@ -39,25 +39,34 @@ DAMAGE_STATS = {"damage", "physical_damage", "elemental_damage", "fire_damage", 
                 "chaos_damage", "minion_damage", "attack_speed", "cast_speed", "crit_chance", "area_of_effect"}
 
 # id, nombre, atributos, temáticas de los 4 clusters cercanos, de los 4 lejanos y del cluster interior.
-# Las temáticas de estados alterados (ignicion, sobrecarga, criogenia, toxinas,
-# hemorragia) y la de automatizacion van cerca de las clases que más las usan.
+# Reparto de temáticas por vecindad. Orden alrededor del anillo: guerrero, duelista,
+# exploradora, hacker, hechicero, templario (y el Full Stack en el centro, pegado a
+# las puertas del templario). Cada temática de estados / aliados tiene 3-5 clusters
+# y están del lado de las clases con ascendencias de ese tipo:
+#   hemorragia      guerrero, duelista (puerta 0)
+#   criogenia       exploradora, hechicero (puerta 1)
+#   toxinas         exploradora, hacker (puerta 2)
+#   sobrecarga      hacker, hechicero, templario (puente 3)
+#   ignicion        hechicero, templario SRE (puente 4)
+#   automatizacion  templario (robótica) y la puerta 5 hacia el centro (Full Stack, Tech Lead)
+#   legion          templario (auras y SRE), puerta 4 y puente 5: aliados, reserva y auras
 CLASSES = [
     ("guerrero", "Técnico de Soporte", ["str"],
-     ["vida", "armadura", "fisico", "area"], ["robo_vida", "hemorragia", "armadura", "fisico"], "resistencias"),
+     ["vida", "armadura", "hemorragia", "area"], ["robo_vida", "hemorragia", "armadura", "fisico"], "resistencias"),
     ("duelista", "Tester QA", ["str", "dex"],
      ["fisico", "velocidad_ataque", "evasion", "robo_vida"], ["critico", "hemorragia", "fisico", "velocidad_ataque"], "movilidad"),
     ("exploradora", "Desarrolladora Frontend", ["dex"],
-     ["proyectiles", "evasion", "velocidad_ataque", "critico"], ["criogenia", "toxinas", "proyectiles", "evasion"], "movilidad"),
+     ["proyectiles", "criogenia", "evasion", "critico"], ["criogenia", "toxinas", "proyectiles", "toxinas"], "movilidad"),
     ("hacker", "Ingeniera de Prompts", ["dex", "int"],
      ["critico", "toxinas", "evasion", "rayo"], ["lanzamiento", "sobrecarga", "escudo", "tiempos"], "tiempos"),
     ("hechicero", "Científico de Datos", ["int"],
-     ["rayo", "fuego", "frio", "lanzamiento"], ["escudo", "ignicion", "critico", "sobrecarga"], "mana"),
+     ["rayo", "ignicion", "criogenia", "lanzamiento"], ["escudo", "fuego", "frio", "sobrecarga"], "mana"),
     ("templario", "Ingeniero DevOps", ["int", "str"],
-     ["automatizacion", "area", "escudo", "vida"], ["sobrecarga", "automatizacion", "armadura", "lanzamiento"], "tiempos"),
+     ["automatizacion", "legion", "vida", "automatizacion"], ["sobrecarga", "armadura", "legion", "ignicion"], "automatizacion"),
 ]
 CENTER_CLASS = ("full_stack", "Desarrollador Full Stack")
-GATE_THEMES = ["resistencias", "atributos", "resistencias", "atributos", "resistencias", "atributos"]
-BRIDGE_THEMES = ["resistencias", "atributos", "resistencias", "atributos", "resistencias", "atributos"]
+GATE_THEMES = ["hemorragia", "criogenia", "toxinas", "resistencias", "legion", "automatizacion"]
+BRIDGE_THEMES = ["resistencias", "atributos", "atributos", "sobrecarga", "ignicion", "legion"]
 
 KEYSTONES = {
     "guerrero": ("Monolito Legacy", "Nadie sabe cómo funciona. Nadie se atreve a tocarlo.",
@@ -89,8 +98,8 @@ CORE_N = 12
 INNER_R = 600          # clusters interiores (entre el anillo central y cada clase)
 GATE_R = 620           # clusters puerta (entre clases vecinas)
 PATH_STEP = 95
-T1_DIST, T1_R = 360, 75
-T2_DIST, T2_R = 690, 88
+T1_DIST, T1_R = 390, 75
+T2_DIST, T2_R = 725, 88
 OFFSETS = [-45, -15, 15, 45]
 nodes = []
 edges = []
@@ -260,8 +269,17 @@ def shape_template(theme, count):
         return _outline(pts, max(count, 9), True, (0.0, 0.05))
     if theme == "resistencias":    # prisma
         return _outline([(0.0, -1.0), (0.95, 0.75), (-0.95, 0.75)], count, True, (0.0, 0.2))
-    if theme == "rayo":            # rayo en zigzag (abierto, el notable en la punta)
-        pts = _resample([(-0.15, -1.0), (0.45, -0.3), (-0.1, -0.15), (0.5, 0.55), (0.05, 0.4), (0.3, 1.0)], count, False)
+    if theme == "rayo":            # rayo en zigzag (abierto, el notable en la punta): sus vértices + puntos intermedios
+        pts = [(-0.15, -1.0), (0.45, -0.3), (-0.1, -0.15), (0.5, 0.55), (0.05, 0.4), (0.3, 1.0)]
+        while len(pts) < count:
+            k = max(range(len(pts) - 1), key=lambda q: math.dist(pts[q], pts[q + 1]))
+            pts.insert(k + 1, ((pts[k][0] + pts[k + 1][0]) / 2.0, (pts[k][1] + pts[k + 1][1]) / 2.0))
+        return pts, [(i, i + 1) for i in range(len(pts) - 1)], len(pts) - 1, None
+    if theme == "sobrecarga":      # rayo clásico de cuatro vértices, con puntos intermedios en los tramos largos
+        pts = [(0.3, -1.0), (-0.45, 0.05), (0.15, 0.05), (-0.3, 1.0)]
+        while len(pts) < count:
+            k = max(range(len(pts) - 1), key=lambda q: math.dist(pts[q], pts[q + 1]))
+            pts.insert(k + 1, ((pts[k][0] + pts[k + 1][0]) / 2.0, (pts[k][1] + pts[k + 1][1]) / 2.0))
         return pts, [(i, i + 1) for i in range(len(pts) - 1)], len(pts) - 1, None
     if theme == "caos":            # espiral
         pts = [(math.cos(a) * r, math.sin(a) * r) for a, r in ((k * 1.25, 1.0 - k * 0.12) for k in range(count))]
@@ -301,10 +319,8 @@ def shape_template(theme, count):
         edges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 0), (0, 6), (6, 3)]
         return nodes, edges, 6, None
     if theme == "ignicion":        # hoguera: llama de tres lenguas
-        return _outline([(0.0, -1.0), (0.25, -0.4), (0.55, -0.75), (0.7, 0.1), (0.45, 0.85), (-0.45, 0.85),
-                         (-0.7, 0.1), (-0.55, -0.75), (-0.25, -0.4)], count, True, (0.0, 0.3))
-    if theme == "sobrecarga":      # rayo cerrado (el contorno del relámpago)
-        return _outline([(0.2, -1.0), (-0.55, 0.1), (-0.05, 0.1), (-0.25, 1.0), (0.6, -0.15), (0.1, -0.15)], count, True, (0.02, 0.0))
+        return _outline([(0.0, -1.0), (0.42, -0.4), (0.62, -0.75), (0.74, 0.1), (0.45, 0.85), (-0.45, 0.85),
+                         (-0.74, 0.1), (-0.62, -0.75), (-0.42, -0.4)], count, True, (0.0, 0.05))
     if theme == "criogenia":       # cristal de hielo hexagonal con núcleo
         return _outline([(math.cos(math.radians(-90 + 60 * k)), math.sin(math.radians(-90 + 60 * k))) for k in range(6)], count, True)
     if theme == "toxinas":         # matraz de laboratorio
@@ -315,6 +331,10 @@ def shape_template(theme, count):
         pts = [(math.cos(math.radians(-90 + 22.5 * k)) * (1.0 if k % 2 == 0 else 0.72),
                 math.sin(math.radians(-90 + 22.5 * k)) * (1.0 if k % 2 == 0 else 0.72)) for k in range(16)]
         return _outline(pts, max(count, 8), True, (0.0, 0.0))
+    if theme == "legion":          # estandarte: asta y bandera triangular
+        nodes = [(-0.55, 1.0), (-0.55, 0.35), (-0.55, -0.3), (-0.55, -1.0), (0.1, -0.85), (0.75, -0.55), (0.1, -0.2)]
+        edges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 2)]
+        return nodes, edges, 5, None
     if theme == "robo_vida":       # colmillos
         nodes = [(-1.0, -0.7), (-0.6, 0.85), (-0.2, -0.45), (0.2, -0.45), (0.6, 0.85), (1.0, -0.7), (0.0, -0.95)]
         edges = [(0, 1), (1, 2), (2, 6), (6, 3), (3, 4), (4, 5)]
@@ -322,9 +342,36 @@ def shape_template(theme, count):
     return None
 
 
+MIN_GAP = 42.0   # separación mínima entre dos nodos de un mismo cluster (menores miden 10 px de radio, notables 22)
+
+
+def _min_dist(pts):
+    return min(math.dist(a, b) for i, a in enumerate(pts) for b in pts[i + 1:])
+
+
+def fitted_template(theme, count, radius):
+    """Plantilla sin nodos encimados: primero agranda el cluster hasta un 25 %, y si no basta,
+    usa menos nodos (solo las siluetas de contorno lo admiten). Devuelve (plantilla, radio)."""
+    c = count
+    last_len = -1
+    while c >= 5:
+        tpl = shape_template(theme, c)
+        pts = tpl[0]
+        scale = max(1.0, MIN_GAP / (_min_dist(pts) * radius))
+        if scale <= 1.25:
+            return tpl, radius * scale
+        if len(pts) == last_len:
+            break   # plantilla de nodos fijos: no mejora con menos nodos
+        last_len = len(pts)
+        c -= 1
+    # Sin solución cómoda: la variante con menos nodos, lo más grande que haga falta.
+    tpl = shape_template(theme, 5)
+    return tpl, radius * min(1.9, max(1.0, MIN_GAP / (_min_dist(tpl[0]) * radius)))
+
+
 def shape_cluster(theme, cx, cy, radius, count, entry_deg):
     """Cluster con la forma de su temática. Devuelve (entrada, salida, ids)."""
-    nodes, edges, notable_i, fill = shape_template(theme, count)
+    (nodes, edges, notable_i, fill), radius = fitted_template(theme, count, radius)
     cid = new_cluster(theme, cx, cy, radius)
     ids = []
     for j, (x, y) in enumerate(nodes):
@@ -521,6 +568,88 @@ for i in range(N_OUTER):
     for side in (a, b):
         target = min(ring, key=lambda n: dist(side, n))
         walk_between(side, target, 1, shared)
+
+# --- Sin nodos encimados ---
+NODE_R = {"minor": 10.0, "notable": 22.0, "keystone": 30.0, "start": 30.0}
+CLEARANCE = 8.0
+
+
+def overlaps():
+    """Pares de nodos más juntos de lo que permiten sus radios (más un margen)."""
+    out = []
+    for i in range(len(nodes)):
+        for j in range(i + 1, len(nodes)):
+            need = NODE_R[nodes[i]["kind"]] + NODE_R[nodes[j]["kind"]] + CLEARANCE
+            if dist(i, j) < need:
+                out.append((i, j, need))
+    return out
+
+
+# Los nodos de viaje (sin cluster) se apartan de lo que tengan encima; los de un cluster ya
+# salen separados por fitted_template.
+for _ in range(300):
+    moved = False
+    for i, j, need in overlaps():
+        free = [k for k in (i, j) if not nodes[k].get("cluster") and nodes[k]["kind"] == "minor"]
+        if not free:
+            continue
+        k = free[0]
+        o = j if k == i else i
+        (kx, ky), (ox, oy) = pos(k), pos(o)
+        d = math.hypot(kx - ox, ky - oy) or 1.0
+        push = (need - d) * 0.6 + 1.0
+        nodes[k]["x"] = round(kx + (kx - ox) / d * push, 1)
+        nodes[k]["y"] = round(ky + (ky - oy) / d * push, 1)
+        moved = True
+    if not moved:
+        break
+def seg_clearance(n, a, b):
+    """Distancia del nodo n al segmento a-b."""
+    (ax, ay), (bx, by), (px, py) = pos(a), pos(b), pos(n)
+    dx, dy = bx - ax, by - ay
+    t = max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / ((dx * dx + dy * dy) or 1.0)))
+    return math.hypot(ax + t * dx - px, ay + t * dy - py)
+
+
+def crossings():
+    """Aristas que pasan por encima de un nodo que no es de ninguno de sus extremos."""
+    out = []
+    for a, b in edges:
+        for n in range(len(nodes)):
+            if n in (a, b):
+                continue
+            if seg_clearance(n, a, b) < NODE_R[nodes[n]["kind"]] + 3.0:
+                out.append((a, b, n))
+    return out
+
+
+# Una arista que atraviesa un nodo: se desplaza el nodo de viaje de la arista hacia un lado.
+for _ in range(60):
+    moved = False
+    for a, b, n in crossings():
+        free = [k for k in (a, b) if not nodes[k].get("cluster") and nodes[k]["kind"] == "minor"]
+        if not free:
+            continue
+        k = free[0]
+        other = b if k == a else a
+        (kx, ky), (ox, oy), (nx, ny) = pos(k), pos(other), pos(n)
+        ex, ey = kx - ox, ky - oy
+        el = math.hypot(ex, ey) or 1.0
+        px, py = -ey / el, ex / el   # perpendicular a la arista
+        side = 1.0 if (nx - ox) * px + (ny - oy) * py < 0 else -1.0   # hacia el lado contrario al nodo
+        nodes[k]["x"] = round(kx + px * side * 12.0, 1)
+        nodes[k]["y"] = round(ky + py * side * 12.0, 1)
+        moved = True
+    if not moved:
+        break
+for a, b, n in crossings():
+    print("ARISTA SOBRE NODO", nodes[a].get("theme"), nodes[b].get("theme"), "->", nodes[n].get("theme"), nodes[n].get("cluster"))
+
+leftover = overlaps()
+if leftover:
+    for i, j, need in leftover:
+        print("ENCIMADOS", nodes[i].get("theme"), nodes[i].get("cluster"), nodes[i]["kind"], nodes[j].get("theme"), nodes[j].get("cluster"), nodes[j]["kind"], round(dist(i, j), 1), "necesita", need)
+assert not leftover, "nodos encimados"
 
 # --- Comprobaciones de diseño ---
 starts = [n for n in nodes if n["kind"] == "start"]

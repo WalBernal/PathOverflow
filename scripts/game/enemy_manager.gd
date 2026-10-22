@@ -793,6 +793,12 @@ func _damage(i: int, min_damage: float, max_damage: float, crit_chance: float, c
 		freeze_time[i] = 0.0
 		_flashes_fx.append({"type": "circle", "pos": positions[i], "radius": radii[i] * 2.0, "time": 0.0, "color": Color("bfe8ff")})
 		_state_sfx("freeze")
+	elif burn_time[i] > 0.0 and dmg_type == "cold":
+		# Choque térmico: el frío sobre un enemigo en llamas hace un 40 % más y apaga la quemadura.
+		damage *= 1.4
+		burn_time[i] = 0.0
+		_flashes_fx.append({"type": "circle", "pos": positions[i], "radius": radii[i] * 1.8, "time": 0.0, "color": Color("c8e8ff")})
+		_state_sfx("chill")
 	elif shock_time[i] > 0.0 and dmg_type == "fire":
 		# Sobrecarga: el fuego sobre un enemigo electrocutado hace saltar una explosión y gasta la descarga.
 		_booms.append({"pos": positions[i], "damage": damage * 0.5, "radius": 85.0})
@@ -1489,7 +1495,8 @@ func _draw_attacks(font: Font) -> void:
 					var radius := float(atk.get("range", 160.0)) + 20.0
 					var half := deg_to_rad(float(atk.get("angle", 60.0))) / 2.0
 					draw_colored_polygon(_cone_points(pos, dir, radius, half), Color(TELEGRAPH, 0.10))
-					draw_colored_polygon(_cone_points(pos, dir, radius * t, half), Color(TELEGRAPH, 0.22))
+					if t > 0.03:
+						draw_colored_polygon(_cone_points(pos, dir, radius * t, half), Color(TELEGRAPH, 0.22))
 					var outline := _cone_points(pos, dir, radius, half)
 					outline.append(outline[0])
 					draw_polyline(outline, Color(TELEGRAPH, 0.7), 2.0, true)
