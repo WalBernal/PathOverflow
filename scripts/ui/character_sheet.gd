@@ -251,6 +251,27 @@ func _refresh() -> void:
 		lines.append("Usos por segundo:  %.2f" % main["uses_per_second"])
 		lines.append("Velocidad de movimiento:  %d%%" % s.get_value(Stat.MOVEMENT_SPEED))
 		lines.append("Regeneración de vida:  %.1f /s     Robo de vida:  %.1f%%" % [s.get_value(Stat.LIFE_REGEN), s.get_value(Stat.LIFE_LEECH)])
+		# Estados que aplica la habilidad principal, con potencia y duración.
+		if not main["ailments"].is_empty():
+			lines.append("Estados:  " + Ailments.describe_chances(main["ailments"]))
+			lines.append("Potencia de estados:  ×%.2f     Duración:  ×%.2f" % [main["ailment_effect"], main["ailment_duration"]])
+		if main["ailing_bonus"] != 1.0:
+			lines.append("Daño contra enemigos con estados:  ×%.2f" % main["ailing_bonus"])
+		var aliados := PackedStringArray()
+		var speed := s.total_multiplier(Stat.AUTOMATON_SPEED, [&"automaton"])
+		if speed != 1.0:
+			aliados.append("velocidad ×%.2f" % speed)
+		var thorns := s.get_value(Stat.THORNS)
+		if thorns > 0.0:
+			lines.append("Espinas:  %d de daño al recibir un golpe" % thorns)
+		if s.get_value(Stat.LIFE_ON_KILL) > 0.0:
+			lines.append("Vida al matar:  %d" % s.get_value(Stat.LIFE_ON_KILL))
+		if skills != null and not skills.active_auras().is_empty():
+			aliados.append("auras: " + ", ".join(skills.active_auras()))
+		if player.mana_reserved > 0.0:
+			aliados.append("maná reservado %d %%" % roundi(player.mana_reserved * 100.0))
+		if not aliados.is_empty():
+			lines.append("Aliados:  " + "  ·  ".join(aliados))
 		_offense_rows.text = "\n".join(lines)
 	_skill_icon.queue_redraw()
 

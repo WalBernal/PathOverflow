@@ -60,7 +60,7 @@ func _ready() -> void:
 	_message.offset_top = -245.0
 	_message.offset_bottom = -215.0
 
-	for key in ["life", "mana", "xp", "flask_0", "flask_1", "flask_2", "flask_3", "flask_4", "skill_0", "skill_1", "skill_2", "skill_3", "skill_4", "skill_5"]:
+	for key in ["life", "mana", "xp", "states", "target", "flask_0", "flask_1", "flask_2", "flask_3", "flask_4", "skill_0", "skill_1", "skill_2", "skill_3", "skill_4", "skill_5"]:
 		var spot := Control.new()
 		spot.mouse_filter = Control.MOUSE_FILTER_STOP
 		add_child(spot)
@@ -180,11 +180,19 @@ func _update_tooltips() -> void:
 		_hotspots["mana"].tooltip_text += "\nReservado: %d %% (%d) por tus invocaciones persistentes." % [
 			roundi(player.mana_reserved * 100.0), player.unreserved_mana_max() * player.mana_reserved]
 	var states := _player_states()
-	if not states.is_empty():
+	var buffs := _player_buffs()
+	_place("states", _states_rect)
+	if not states.is_empty() or not buffs.is_empty():
 		var lines := PackedStringArray()
 		for s in states:
 			lines.append(StatusIcon.tooltip(s["id"], s["time"]))
+		for b in buffs:
+			lines.append("%s (%.0f s): %s" % [b["name"], b["time"], b["desc"]])
+		_hotspots["states"].tooltip_text = "\n".join(lines)
 		_hotspots["life"].tooltip_text += "\n\nEstados:\n" + "\n".join(lines)
+	else:
+		_hotspots["states"].tooltip_text = ""
+		_hotspots["states"].size = Vector2.ZERO
 	_hotspots["xp"].tooltip_text = "Nivel %d · Experiencia %d / %d\nCada nivel da un punto de pasiva (P)." % [
 		character.level, character.experience, character.experience_to_next()]
 	for i in Inventory.FLASK_SLOTS:
@@ -243,6 +251,8 @@ func _player_states() -> Array[Dictionary]:
 	for d in player.dots.values():
 		var id: String = Ailments.PLAYER_DOT_STATUS.get(d["kind"], "corrupt")
 		best[id] = maxf(float(best.get(id, 0.0)), float(d["time"]))
+	for id in player.statuses:
+		best[id] = maxf(float(best.get(id, 0.0)), float(player.statuses[id]))
 	var out: Array[Dictionary] = []
 	for id in best:
 		out.append({"id": id, "time": best[id]})
@@ -388,25 +398,65 @@ func _draw_boss_bar(font: Font) -> bool:
 	return true
 
 
-## Estados del jugador (quemado, envenenado...) en fila sobre el orbe de vida.
+## Barra de estados del jugador sobre el orbe de vida: debuffs (borde rojo: quemado, helado,
+## electrocutado, congelado, envenenado...) y buffs (borde verde: pociones y potenciadores)
+## con su tiempo restante. Deja el rectángulo en _states_rect para el tooltip.
+var _states_rect := Rect2()
+
+
+func _player_buffs() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for effect in character.timed_effects:
+		var eid: String = effect["id"]
+		if eid.begins_with("aura:"):
+			continue   # las auras salen en los recuadros de activos
+		if eid.begins_with("skill:"):
+			var skill: Dictionary = GameData.items.skills.skills.get(eid.trim_prefix("skill:"), {})
+			out.append({"name": skill.get("name", "Efecto"), "skill": skill, "time": effect["time_left"], "desc": skill.get("description", "")})
+		else:
+			var flask_id: String = eid.trim_prefix("flask:")
+			var fdef: Dictionary = GameData.items.flasks.get(flask_id, {})
+			out.append({"name": fdef.get("name", flask_id), "flask": fdef.get("icon", flask_id), "time": effect["time_left"], "desc": fdef.get("description", "")})
+	return out
+
+
 func _draw_player_states(life_center: Vector2, font: Font) -> void:
-	var states := _player_states()
-	if states.is_empty():
+	var debuffs := _player_states()
+	var buffs := _player_buffs()
+	_states_rect = Rect2()
+	if debuffs.is_empty() and buffs.is_empty():
 		return
 	var side := 26.0
-	var y := life_center.y - ORB_RADIUS - 52.0 - (16.0 if player.barrier > 0.0 else 0.0)
-	var x := life_center.x - (states.size() * (side + 4.0) - 4.0) / 2.0
-	for s in states:
+	var x0 := 24.0
+	var y := life_center.y - ORB_RADIUS - 56.0 - (16.0 if player.barrier > 0.0 else 0.0)
+	var x := x0
+	for s in debuffs:
 		var r := Rect2(x, y, side, side)
 		StatusIcon.draw(self, r, s["id"])
-		draw_string_outline(font, r.position + Vector2(0, side + 11.0), "%.0fs" % ceilf(s["time"]), HORIZONTAL_ALIGNMENT_CENTER, side, 10, 3, Color.BLACK)
-		draw_string(font, r.position + Vector2(0, side + 11.0), "%.0fs" % ceilf(s["time"]), HORIZONTAL_ALIGNMENT_CENTER, side, 10, Ailments.color(s["id"]))
+		draw_rect(r.grow(1.0), Color("e06c6c", 0.9), false, 1.5)
+		var label := "%.0fs" % ceilf(s["time"])
+		draw_string_outline(font, r.position + Vector2(0, side + 11.0), label, HORIZONTAL_ALIGNMENT_CENTER, side, 10, 3, Color.BLACK)
+		draw_string(font, r.position + Vector2(0, side + 11.0), label, HORIZONTAL_ALIGNMENT_CENTER, side, 10, Ailments.color(s["id"]))
 		x += side + 4.0
+	for b in buffs:
+		var r := Rect2(x, y, side, side)
+		draw_rect(r, Color(0, 0, 0, 0.7))
+		if b.has("flask"):
+			ItemIcons.draw(self, r.grow(-2.0), b["flask"], Color.WHITE, false)
+		elif not b["skill"].is_empty():
+			SkillIcon.draw(self, r, b["skill"])
+		draw_rect(r.grow(1.0), Color("6fd36b", 0.9), false, 1.5)
+		var blabel := "%.0fs" % ceilf(b["time"])
+		draw_string_outline(font, r.position + Vector2(0, side + 11.0), blabel, HORIZONTAL_ALIGNMENT_CENTER, side, 10, 3, Color.BLACK)
+		draw_string(font, r.position + Vector2(0, side + 11.0), blabel, HORIZONTAL_ALIGNMENT_CENTER, side, 10, Color("9ae09a"))
+		x += side + 4.0
+	_states_rect = Rect2(x0, y, x - x0 - 4.0, side + 14.0)
 
 
 ## Marco del objetivo (arriba, centrado): nombre, vida y estados del enemigo
 ## bajo el cursor, como en PoE.
 func _draw_target_frame(font: Font, top_offset := 0.0) -> void:
+	_hotspots["target"].size = Vector2.ZERO
 	if _target_id == -1:
 		return
 	var i := enemies.index_of(_target_id)
@@ -442,6 +492,24 @@ func _draw_target_frame(font: Font, top_offset := 0.0) -> void:
 	var extra_row := not resists.is_empty() or not immunes.is_empty() or not affixes.is_empty()
 	var box := Rect2(Vector2((size.x - TARGET_SIZE.x) / 2.0, 10.0 + top_offset),
 		TARGET_SIZE + Vector2(0, 22.0 * rows + (8.0 if rows > 0 else 0.0) + (24.0 if extra_row else 0.0)))
+	# Ayuda al pasar el mouse por el marco: qué hace cada estado, afijo, resistencia e inmunidad.
+	var tip := PackedStringArray()
+	for s in states:
+		tip.append(StatusIcon.tooltip(s["id"], s["time"], int(s.get("stacks", 0))))
+	for aid in affixes:
+		var adef: Dictionary = EnemyManager.affix_defs().get(aid, {})
+		tip.append("%s: %s" % [adef.get("name", aid), adef.get("description", "")])
+	if not immunes.is_empty():
+		var names_list := PackedStringArray()
+		for id in Ailments.ALL:
+			if immunes.has(id):
+				names_list.append(Ailments.display_name(id))
+		tip.append("Inmune a: " + ", ".join(names_list))
+	if not resists.is_empty():
+		tip.append("Resistencias: valores positivos reducen el daño de ese tipo; negativos lo aumentan.")
+	_hotspots["target"].position = box.position
+	_hotspots["target"].size = box.size
+	_hotspots["target"].tooltip_text = "\n".join(tip)
 	draw_rect(box, Color(PLATE, 0.92))
 	draw_rect(box, TRIM if rarity >= Rarity.Enemy.ELITE else TRIM.darkened(0.4), false, 1.5)
 	draw_string_outline(font, box.position + Vector2(0, 17), title, HORIZONTAL_ALIGNMENT_CENTER, box.size.x, 15, 4, Color.BLACK)

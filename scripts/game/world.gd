@@ -121,6 +121,9 @@ func _ready() -> void:
 	if character.flags.has("ascendancy_reset"):
 		character.flags.erase("ascendancy_reset")
 		ui.hud.flash.call_deferred("Las ascendencias ahora se eligen al nivel 20: tu elección se ha reiniciado.", UiStyle.ACCENT)
+	if character.flags.has("ascendancy_removed"):
+		character.flags.erase("ascendancy_removed")
+		ui.hud.flash.call_deferred("Las ascendencias ahora son dos por clase: tu elección ya no existe, elige otra en el árbol (P).", UiStyle.ACCENT)
 	if character.flags.has("passives_refunded"):
 		character.flags.erase("passives_refunded")
 		ui.hud.flash.call_deferred("El árbol pasivo ha cambiado: te hemos devuelto todos los puntos (P).", UiStyle.ACCENT)

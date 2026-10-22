@@ -68,6 +68,11 @@ const RESERVATION_EFFICIENCY := &"reservation_efficiency"
 const AILING_DAMAGE := &"ailing_damage"
 ## Potencia de las auras.
 const AURA_EFFECT := &"aura_effect"
+## Vida que se recupera al matar (plano) y daño de espinas a los enemigos cercanos al recibir un golpe.
+const LIFE_ON_KILL := &"life_on_kill"
+const THORNS := &"thorns"
+## Enemigos extra que atraviesan los proyectiles (suma a la RAM de perforación).
+const EXTRA_PIERCE := &"extra_pierce"
 
 # --- Tags (condiciones de los modificadores) ---
 const TAG_ATTACK := &"attack"
@@ -136,6 +141,9 @@ const NAMES := {
 	RESERVATION_EFFICIENCY: "Eficiencia de reserva de maná",
 	AILING_DAMAGE: "Daño contra enemigos con estados alterados",
 	AURA_EFFECT: "Efecto de auras",
+	LIFE_ON_KILL: "Vida al matar",
+	THORNS: "Daño de espinas al recibir un golpe",
+	EXTRA_PIERCE: "Enemigos extra que atraviesan los proyectiles",
 }
 
 ## Los aumentos/más de los padres también aplican al hijo:

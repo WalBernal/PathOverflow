@@ -44,6 +44,18 @@ var mana_reserved := 0.0
 var dots: Dictionary = {}
 const DOT_COLORS := {"chaos": Color("6fd36b"), "fire": Color("e0652f"), "cold": Color("7fb8e0"), "lightning": Color("e8d070")}
 const DOT_RES := {"chaos": &"chaos_res", "fire": &"fire_res", "cold": &"cold_res", "lightning": &"lightning_res"}
+## Estados sobre el jugador (los aplican enemigos y afijos): id -> segundos que quedan.
+## shock: recibes un 25 % más de daño · chill: te mueves un 30 % más lento · freeze: no puedes actuar.
+## Su duración baja con la resistencia al rayo (shock) o al frío (chill y freeze).
+var statuses: Dictionary = {}
+const STATUS_RES := {"shock": &"lightning_res", "chill": &"cold_res", "freeze": &"cold_res"}
+const SHOCK_TAKEN := 0.25
+const CHILL_SLOW := 0.30
+## Tras descongelarte, unos segundos sin poder volver a congelarte.
+const FREEZE_GRACE := 3.0
+var _freeze_grace := 0.0
+var _shake_time := 0.0
+var _shake_amount := 0.0
 ## Barrera temporal (Firewall Personal): absorbe daño antes que el escudo y la vida.
 var barrier := 0.0
 var barrier_max := 0.0
@@ -105,6 +117,7 @@ func is_alive() -> bool:
 
 func refill() -> void:
 	dots.clear()
+	statuses.clear()
 	life = max_life()
 	mana = max_mana()
 	energy_shield = max_energy_shield()
@@ -121,6 +134,30 @@ func heal(amount: float) -> void:
 
 func facing_direction() -> Vector2:
 	return _facing
+
+
+## Aplica un estado al jugador (shock, chill, freeze). Devuelve true si entró.
+func apply_status(id: String, duration: float) -> bool:
+	if not is_alive() or invulnerable or not STATUS_RES.has(id):
+		return false
+	if id == "freeze" and (_freeze_grace > 0.0 or statuses.has("freeze")):
+		return false
+	var res := minf(Stat.RESISTANCE_CAP, _stat(STATUS_RES[id]))
+	var t := duration * (1.0 - res / 100.0)
+	if t < 0.15:
+		return false
+	statuses[id] = maxf(float(statuses.get(id, 0.0)), t)
+	return true
+
+
+func is_frozen() -> bool:
+	return statuses.has("freeze")
+
+
+## Sacude la cámara un instante (cambios de fase de los jefes, explosiones grandes).
+func camera_shake(amount: float, seconds: float) -> void:
+	_shake_amount = maxf(_shake_amount, amount)
+	_shake_time = maxf(_shake_time, seconds)
 
 
 func face(direction: Vector2) -> void:
@@ -199,6 +236,9 @@ func add_flask_charges(enemy_rarity: int) -> void:
 ## Lo llama World al matar un enemigo (condición «has matado recientemente»).
 func notify_kill() -> void:
 	_since_kill = 0.0
+	var on_kill := _stat(Stat.LIFE_ON_KILL)
+	if on_kill > 0.0:
+		heal(on_kill)
 
 
 ## Stat con las condiciones activas aplicadas (vida baja, etc.).
@@ -235,6 +275,13 @@ func _physics_process(delta: float) -> void:
 	_update_conditions(delta)
 	_regenerate(delta)
 	_tick_dots(delta)
+	_freeze_grace = maxf(0.0, _freeze_grace - delta)
+	for id in statuses.keys():
+		statuses[id] -= delta
+		if statuses[id] <= 0.0:
+			statuses.erase(id)
+			if id == "freeze":
+				_freeze_grace = FREEZE_GRACE
 	character.tick_timed_effects(delta)
 	if barrier_time > 0.0:
 		barrier_time -= delta
@@ -257,11 +304,11 @@ func _physics_process(delta: float) -> void:
 			dir = to_target.normalized()
 		else:
 			_has_auto_target = false
-	if action_lock > 0.0 or controls_locked:
+	if action_lock > 0.0 or controls_locked or is_frozen():
 		dir = Vector2.ZERO  # como en PoE: quieto mientras lanza (o en una escena)
 	if dir != Vector2.ZERO:
 		_facing = dir
-	velocity = dir * BASE_MOVE_SPEED * _stat(Stat.MOVEMENT_SPEED) / 100.0
+	velocity = dir * BASE_MOVE_SPEED * _stat(Stat.MOVEMENT_SPEED) / 100.0 * (1.0 - CHILL_SLOW if statuses.has("chill") else 1.0)
 	move_and_slide()
 	# Ciclo de paso: avanza con la distancia recorrida de verdad (si choca con
 	# algo, deja de "caminar en el sitio").
@@ -274,6 +321,16 @@ func _physics_process(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	_hurt_time = maxf(0.0, _hurt_time - delta)
+	var cam := get_node_or_null("Camera2D") as Camera2D
+	if cam:
+		if _shake_time > 0.0:
+			_shake_time -= delta
+			cam.offset = Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * _shake_amount * clampf(_shake_time * 4.0, 0.0, 1.0)
+			if _shake_time <= 0.0:
+				_shake_amount = 0.0
+				cam.offset = Vector2.ZERO
+		elif cam.offset != Vector2.ZERO:
+			cam.offset = Vector2.ZERO
 	queue_redraw()
 
 
@@ -343,12 +400,18 @@ func take_damage(amount: float) -> void:
 		return
 	if randf() * 100.0 < minf(MAX_BLOCK_CHANCE, _stat(Stat.BLOCK_CHANCE)):
 		return
+	if statuses.has("shock"):
+		amount *= 1.0 + SHOCK_TAKEN
 	# Fórmula de armadura de PoE: protege mucho contra golpes pequeños, poco contra grandes.
 	var armour := _stat(Stat.ARMOUR)
 	amount *= 1.0 - minf(0.9, armour / (armour + 5.0 * amount))
 	_since_damage = 0.0
 	_hurt_time = 0.12
 	Sfx.play("player_hurt", -4.0)
+	var thorns := _stat(Stat.THORNS)
+	if thorns > 0.0 and enemies != null:
+		# Espinas: el golpe recibido se devuelve a quien esté cerca.
+		enemies.hit_in_radius(global_position, 110.0, thorns, thorns * 1.3, 0.0, 100.0)
 	if barrier > 0.0:
 		var blocked := minf(barrier, amount)
 		barrier -= blocked
@@ -371,6 +434,22 @@ func _draw() -> void:
 		tint = Color.RED
 	CharacterAppearance.draw(self, Vector2(0.0, RADIUS * 0.6), PLAYER_SPRITE_SCALE, character.appearance, _facing, tint,
 		_walk_phase if is_alive() else -1.0)
+	if statuses.has("freeze"):
+		var ice := PackedVector2Array()
+		for q in 6:
+			ice.append(Vector2.from_angle(TAU * q / 6.0 + 0.3) * 24.0 + Vector2(0, -14))
+		draw_colored_polygon(ice, Color(0.7, 0.9, 1.0, 0.38))
+		ice.append(ice[0])
+		draw_polyline(ice, Color(0.85, 0.97, 1.0, 0.9), 2.0, true)
+	elif statuses.has("chill"):
+		draw_set_transform(Vector2(0, 8), 0.0, Vector2(1.0, 0.45))
+		draw_arc(Vector2.ZERO, 20.0, 0.0, TAU, 20, Color(0.55, 0.8, 1.0, 0.8), 2.5, true)
+		draw_set_transform(Vector2.ZERO)
+	if statuses.has("shock") and fmod(Time.get_ticks_msec() / 150.0, 1.0) < 0.5:
+		var sa := Time.get_ticks_msec() / 90.0
+		var from := Vector2.from_angle(sa) * 20.0 + Vector2(0, -14)
+		var to := Vector2.from_angle(sa + 1.2) * 20.0 + Vector2(0, -14)
+		draw_polyline(PackedVector2Array([from, from.lerp(to, 0.5) + Vector2(4, -3), to]), Color(1.0, 0.92, 0.45), 2.0, true)
 	# Burbujas del daño degenerativo sobre la cabeza (del color de su tipo).
 	var k := 0
 	for d in dots.values():

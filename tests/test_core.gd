@@ -72,6 +72,11 @@ func _initialize() -> void:
 	_test_auras_and_unit_abilities()
 	_test_resists_and_affixes()
 	_test_boss_phases()
+	_test_ascendancy_identity()
+	_test_player_statuses()
+	_test_state_interactions()
+	_test_new_affixes_and_phase_resists()
+	_test_ram_grades()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
 	else:
@@ -142,7 +147,7 @@ func _test_data_integrity() -> void:
 	_check(_classes.size() == 7, "deben existir 7 clases")
 	for c in _classes:
 		_check(_tree.get_start_node_for_class(StringName(c["id"])) != -1, "inicio de %s" % c["id"])
-		_check(c["ascendancies"].size() == 3, "%s debe tener 3 ascendencias" % c["id"])
+		_check(c["ascendancies"].size() == 2, "%s debe tener 2 ascendencias" % c["id"])
 		for a in c["ascendancies"]:
 			for p in a["passives"]:
 				for md in p["mods"]:
@@ -1218,9 +1223,9 @@ func _test_ascendancy_rules() -> void:
 		names.append(cdef["name"])
 		for a in cdef["ascendancies"]:
 			names.append(a["name"])
-	for banned in ["Hacker", "Desarrollador 10x", "Danzarina de Hilos", "Señor del Monolito"]:
+	for banned in ["Hacker", "Desarrollador 10x", "Danzarina de Hilos", "Señor del Monolito", "Project Manager", "Administrador de Sistemas", "Release Manager"]:
 		_check(not names.has(banned), "nombre descartado: %s" % banned)
-	for wanted in ["Scrum Master", "Project Manager", "Tester QA", "Ingeniera de Prompts"]:
+	for wanted in ["Scrum Master", "Revisor de Código", "Tester QA", "Ingeniera de Prompts"]:
 		_check(names.has(wanted), "falta el rol %s" % wanted)
 
 
@@ -2174,3 +2179,278 @@ func _test_boss_phases() -> void:
 	_check(em.boss_info().is_empty() and em.boss_phases.is_empty(), "al morir el jefe desaparece la barra")
 	em.queue_free()
 	player.queue_free()
+
+
+## Dos ascendencias por clase, y cada una con efectos o juego distintos a los de su pareja.
+func _test_ascendancy_identity() -> void:
+	for cdef in _classes:
+		var pair: Array = cdef["ascendancies"]
+		_check(pair.size() == 2, "%s tiene 2 ascendencias" % cdef["id"])
+		var stat_sets: Array = []
+		for a in pair:
+			var set := {}
+			for p in a["passives"]:
+				for md in p["mods"]:
+					set[md["stat"]] = true
+			stat_sets.append(set)
+			_check(a["passives"].size() == 3 and not str(a["description"]).is_empty(), "%s: 3 pasivas y descripción" % a["id"])
+		var shared := 0
+		for k in stat_sets[0]:
+			if stat_sets[1].has(k):
+				shared += 1
+		var union: int = stat_sets[0].size() + stat_sets[1].size() - shared
+		_check(float(shared) / float(union) <= 0.35, "%s: sus dos ascendencias juegan distinto (%d de %d stats comunes)" % [cdef["id"], shared, union])
+		# Cada una tiene al menos un stat que la otra no toca.
+		for k in 2:
+			var unique := 0
+			for stat in stat_sets[k]:
+				if not stat_sets[1 - k].has(stat):
+					unique += 1
+			_check(unique >= 2, "%s: ascendencia %d con identidad propia (%d stats únicos)" % [cdef["id"], k, unique])
+	# Efectos nuevos: vida al matar, espinas y perforación extra.
+	var c := CharacterData.new(_class_def("guerrero"), _tree)
+	c.set_level(30)
+	c.set_ascendancy(&"guardian_firewall")
+	c.allocate_ascendancy_node(1)
+	_check(c.stats.get_value(Stat.THORNS) >= 45.0, "Honeypot da espinas")
+	c.set_ascendancy(&"berserker_hotfix")
+	c.allocate_ascendancy_node(2)
+	_check(c.stats.get_value(Stat.LIFE_ON_KILL) >= 12.0, "Sin fin de semana da vida al matar")
+	var ex := CharacterData.new(_class_def("exploradora"), _tree)
+	ex.set_level(30)
+	var base: int = SkillCalc.compute(Motherboard.new(_db.skills.skills["rafaga_de_paquetes"], 1, []), ex)["pierce"]
+	ex.set_ascendancy(&"francotiradora_bugs")
+	ex.allocate_ascendancy_node(1)
+	_check(SkillCalc.compute(Motherboard.new(_db.skills.skills["rafaga_de_paquetes"], 1, []), ex)["pierce"] == base + 2, "Stack trace: los proyectiles atraviesan 2 enemigos más")
+	# Un guardado con una ascendencia que ya no existe queda sin ascendencia y avisa.
+	var old := CharacterData.new(_class_def("guerrero"), _tree)
+	old.set_level(25)
+	var data = JSON.parse_string(JSON.stringify(old.to_dict()))
+	data["ascendancy_id"] = "senor_monolito"
+	var loaded := CharacterData.from_dict(data, _class_def("guerrero"), _tree, _db)
+	_check(loaded.ascendancy_def.is_empty() and loaded.flags.has("ascendancy_removed") and loaded.can_choose_ascendancy(), "ascendencia eliminada: vuelve a poder elegirse")
+
+
+## Estados sobre el jugador: shock, chill y freeze con resistencias, y thorns / vida al matar.
+func _test_player_statuses() -> void:
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	root.add_child(em)
+	var player: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(player)
+	var c := _new_character()
+	c.set_level(10)
+	player.setup(c, em)
+	em.player = player
+	player.global_position = Vector2(5000, 5000)
+	_check(not player.apply_status("burn", 3.0), "solo shock, chill y freeze son estados de estado")
+	_check(player.apply_status("shock", 3.0) and player.statuses.has("shock"), "el jugador se electrocuta")
+	player.life = player.max_life()
+	player.invulnerable = false
+	var before := player.life
+	# Con armadura/evasión del personaje de pruebas el golpe puede esquivarse: se repite hasta que entre.
+	var taken := 0.0
+	for k in 40:
+		player.life = player.max_life()
+		player.statuses.erase("shock")
+		player.take_damage(10.0)
+		var normal := player.max_life() - player.life
+		player.life = player.max_life()
+		player.statuses["shock"] = 3.0
+		player.take_damage(10.0)
+		var shocked := player.max_life() - player.life
+		if normal > 0.0 and shocked > 0.0:
+			taken = shocked / normal
+			break
+	_check(taken > 1.15, "electrocutado recibe más daño (×%.2f)" % taken)
+	player.statuses.clear()
+	player.apply_status("chill", 2.0)
+	_check(player.statuses.has("chill"), "helado")
+	# La resistencia reduce la duración.
+	var resist_char := _new_character()
+	resist_char.stats.add_modifier(Modifier.new(Stat.COLD_RES, Modifier.Type.FLAT, 75.0, [], "prueba"))
+	var p2: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(p2)
+	p2.setup(resist_char, em)
+	p2.apply_status("freeze", 2.0)
+	_check(p2.statuses.get("freeze", 0.0) < 0.6 and p2.statuses.get("freeze", 0.0) > 0.0, "75 %% de resistencia al frío: congelación mucho más corta (%.2f)" % p2.statuses.get("freeze", 0.0))
+	_check(p2.is_frozen(), "congelado: no puede actuar")
+	p2.statuses["freeze"] = 0.01
+	p2._physics_process(0.1)
+	_check(not p2.is_frozen() and not p2.apply_status("freeze", 2.0), "tras descongelarse no se vuelve a congelar enseguida")
+	p2.queue_free()
+	# Los enemigos con on_hit_status aplican el estado.
+	var cond := em.spawn(Vector2(5000, 5010), Rarity.Enemy.NORMAL, em.type_index_of("condensador"))
+	player.statuses.clear()
+	var applied := false
+	for k in 60:
+		em.apply_status_to_player({"id": "shock", "chance": 100.0, "duration": 2.0})
+		applied = applied or player.statuses.has("shock")
+	_check(applied, "los golpes de enemigos aplican estados al jugador")
+	_check(not em._status_of(em.index_of(cond)).is_empty(), "el Condensador electrocuta")
+	# Espinas: golpe recibido, daño devuelto.
+	var thorn_char := _new_character()
+	thorn_char.stats.add_modifier(Modifier.new(Stat.THORNS, Modifier.Type.FLAT, 50.0, [], "prueba"))
+	var p3: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(p3)
+	p3.setup(thorn_char, em)
+	p3.global_position = Vector2(8000, 8000)
+	var bug := em.spawn(Vector2(8010, 8000), Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+	var bi := em.index_of(bug)
+	em.lives[bi] = 1.0e6
+	em.max_lives[bi] = 1.0e6
+	var hit := false
+	for k in 40:
+		p3.life = p3.max_life()
+		var l0 := em.lives[bi]
+		p3.take_damage(5.0)
+		if em.lives[bi] < l0:
+			hit = true
+			break
+	_check(hit, "las espinas dañan al enemigo cercano")
+	var kill_char := _new_character()
+	kill_char.stats.add_modifier(Modifier.new(Stat.LIFE_ON_KILL, Modifier.Type.FLAT, 20.0, [], "prueba"))
+	p3.character = kill_char
+	p3.life = 10.0
+	p3.notify_kill()
+	_check(p3.life >= 29.9, "vida al matar")
+	p3.queue_free()
+	player.queue_free()
+	em.queue_free()
+
+
+## Rotura, sobrecarga e infección.
+func _test_state_interactions() -> void:
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	var bug := em.type_index_of("bug")
+	var id := em.spawn(Vector2.ZERO, Rarity.Enemy.NORMAL, bug)
+	var i := em.index_of(id)
+	em.lives[i] = 1.0e6
+	em.max_lives[i] = 1.0e6
+	# Rotura: golpe físico a un congelado.
+	em.freeze_time[i] = 2.0
+	em.hit_ailments = {"type": "physical", "chances": {}, "effect": 1.0, "duration": 1.0}
+	var before := em.lives[i]
+	em.hit_index(i, 100.0, 100.0, 0.0, 150.0)
+	_check(is_equal_approx(before - em.lives[i], 150.0) and em.freeze_time[i] == 0.0, "rotura: +50 % y se acaba el hielo")
+	# Sobrecarga: fuego sobre electrocutado explota.
+	var other := em.spawn(Vector2(40, 0), Rarity.Enemy.NORMAL, bug)
+	var oi := em.index_of(other)
+	em.lives[oi] = 1.0e6
+	em.max_lives[oi] = 1.0e6
+	em.shock_time[i] = 3.0
+	em.shock_amp[i] = 0.25
+	em.hit_ailments = {"type": "fire", "chances": {}, "effect": 1.0, "duration": 1.0}
+	var other_before := em.lives[oi]
+	em.hit_index(i, 100.0, 100.0, 0.0, 150.0)
+	_check(em._booms.size() == 1 and em.shock_time[i] == 0.0, "sobrecarga: el fuego gasta la descarga y encola una explosión")
+	em.hit_ailments = {}
+	em._update_booms()
+	_check(em.lives[em.index_of(other)] < other_before, "la explosión daña a los cercanos")
+	# Infección: envenenado + sangrando hace más daño por segundo.
+	var solo := em.spawn(Vector2(4000, 0), Rarity.Enemy.NORMAL, bug)
+	var si := em.index_of(solo)
+	em.lives[si] = 1.0e6
+	em.max_lives[si] = 1.0e6
+	em.apply_ailment(si, Ailments.POISON, 100.0)
+	var l1 := em.lives[si]
+	em._update_dots(1.0)
+	var poison_only := l1 - em.lives[si]
+	em.apply_ailment(si, Ailments.BLEED, 100.0)
+	var l2 := em.lives[si]
+	em._update_dots(1.0)
+	var both := l2 - em.lives[si]
+	_check(both > poison_only * 1.5, "infección: veneno + sangrado (%.1f vs %.1f)" % [both, poison_only])
+	em.free()
+
+
+## Afijos nuevos (escudo, reflejo, curandero, teletransportador, estados) y resistencias que cambian por fase.
+func _test_new_affixes_and_phase_resists() -> void:
+	var em := EnemyManager.new()
+	root.add_child(em)
+	var player: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(player)
+	player.setup(_new_character(), em)
+	em.player = player
+	player.global_position = Vector2(600, 0)
+	em.roll_affixes = false
+	var bug := em.type_index_of("bug")
+	var sh := em.spawn(Vector2(0, 0), Rarity.Enemy.ELITE, bug, "", 1.0, [], ["escudado"])
+	var si := em.index_of(sh)
+	var shield: float = em.traits[si]["shield"]
+	_check(shield > 0.0 and is_equal_approx(shield, em.max_lives[si] * 0.5), "el escudado lleva un escudo del 50 % de su vida")
+	var life0 := em.lives[si]
+	em.hit_ailments = {"type": "physical", "chances": {}, "effect": 1.0, "duration": 1.0}
+	em.hit_index(si, shield * 0.4, shield * 0.4, 0.0, 150.0)
+	_check(em.lives[si] == life0 and float(em.traits[si]["shield"]) < shield, "el escudo absorbe el daño primero")
+	em.hit_index(si, shield, shield, 0.0, 150.0)
+	_check(em.lives[em.index_of(sh)] < life0, "roto el escudo, el daño pasa")
+	# Reflejo.
+	var rf := em.spawn(Vector2(40, 0), Rarity.Enemy.ELITE, bug, "", 1.0, [], ["reflejo"])
+	var ri := em.index_of(rf)
+	em.lives[ri] = 1.0e7
+	em.max_lives[ri] = 1.0e7
+	player.invulnerable = false
+	var reflected := false
+	for k in 40:
+		player.life = player.max_life()
+		em.hit_ailments = {"type": "physical", "chances": {}, "effect": 1.0, "duration": 1.0}
+		em.hit_index(ri, 10.0, 10.0, 0.0, 150.0)
+		reflected = reflected or player.life < player.max_life()
+	_check(reflected, "el reflejo te devuelve daño")
+	em.hit_ailments = {}
+	# Curandero.
+	em.clear_all()
+	var heal_id := em.spawn(Vector2(0, 0), Rarity.Enemy.ELITE, bug, "", 1.0, [], ["curandero"])
+	var hurt_id := em.spawn(Vector2(60, 0), Rarity.Enemy.NORMAL, bug)
+	var hi := em.index_of(hurt_id)
+	em.lives[hi] = em.max_lives[hi] * 0.4
+	em._update_affixes(1.0)
+	_check(em.lives[em.index_of(hurt_id)] > em.max_lives[em.index_of(hurt_id)] * 0.4, "el curandero cura a sus vecinos")
+	# Teletransportador: se acerca al jugador.
+	em.clear_all()
+	var tp := em.spawn(Vector2(0, 0), Rarity.Enemy.ELITE, bug, "", 1.0, [], ["teletransportador"])
+	em._affix_timers["%d:teletransportador" % tp] = 0.0
+	em._update_affixes(0.1)
+	_check(em.positions[em.index_of(tp)].distance_to(player.global_position) < 400.0, "el teletransportador salta junto al jugador")
+	# Estados: electrizante y gélido aplican estado al jugador.
+	em.clear_all()
+	var el := em.spawn(Vector2(0, 0), Rarity.Enemy.ELITE, bug, "", 1.0, [], ["electrizante", "gelido"])
+	_check(em._status_of(em.index_of(el))["id"] == "shock" and em.is_immune_to(em.index_of(el), "chill"), "afijos con estado sobre el jugador")
+	# Resistencias por fase de jefe.
+	em.clear_all()
+	player.global_position = Vector2(3000, 3000)
+	var act1: Dictionary = DataLoader.load_json("res://data/act1.json")
+	var boss: Dictionary = act1["zones"].filter(func(z: Dictionary) -> bool: return z.has("boss"))[0]["boss"]
+	var bid := em.spawn(Vector2(0, 0), Rarity.Enemy.UNIQUE, em.type_index_of(boss["type"]), boss["name"], float(boss["life_mult"]), boss["abilities"])
+	em.set_phases(bid, boss["phases"])
+	var bi := em.index_of(bid)
+	_check(em.resist_of(bi, "cold") == -25.0, "fase 1: débil al frío")
+	em.lives[bi] = em.max_lives[bi] * 0.6
+	em._update_phases(0.1)
+	_check(em.resist_of(bi, "cold") == 40.0 and em.is_immune_to(bi, "chill"), "fase 2: resiste el frío y no se hiela")
+	em.lives[bi] = em.max_lives[bi] * 0.2
+	em._update_phases(5.0)
+	_check(em.resist_of(bi, "physical") == 40.0 and em.is_immune_to(bi, "bleed"), "fase 3: resiste lo físico y no sangra")
+	for aid in ["electrizante", "gelido", "reflejo", "escudado", "curandero", "teletransportador"]:
+		_check(EnemyManager.affix_defs().has(aid), "afijo %s" % aid)
+	em.queue_free()
+	player.queue_free()
+
+
+## RAM de grados nuevos: perforación y multicanal.
+func _test_ram_grades() -> void:
+	var gen := ItemGenerator.new(_db, 5)
+	var c := _new_character()
+	for family in [["puntero_salvaje_menor", "puntero_salvaje", "puntero_salvaje_mayor", "pierce"],
+			["multicanal_menor", "multicanal", "multicanal_mayor", "extra_projectiles"]]:
+		var values: Array = []
+		for k in 3:
+			var ram := gen.generate_ram(1, family[k])
+			values.append(ram.special(family[3]))
+			_check(ram.tier() == k + 1 or k == 1, "%s: grado %d" % [family[k], k + 1])
+		_check(values[0] < values[1] and values[1] < values[2], "%s: crece con el grado (%s)" % [family[3], str(values)])
+	var board := Motherboard.new(_db.skills.skills["rafaga_de_paquetes"], 1, ["DDR4"])
+	board.install(gen.generate_ram(1, "multicanal_mayor"), 0)
+	_check(SkillCalc.compute(board, c)["projectiles"] == 6, "multicanal mayor: +3 proyectiles")

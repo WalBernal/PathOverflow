@@ -195,6 +195,14 @@ func clear_auras() -> void:
 	_update_reservation()
 
 
+## Nombres de las auras activas (para la hoja de personaje).
+func active_auras() -> PackedStringArray:
+	var out := PackedStringArray()
+	for a in _auras:
+		out.append(String(a["profile"]["name"]).replace("Aura de ", ""))
+	return out
+
+
 func is_aura_active(skill_id: String) -> bool:
 	for a in _auras:
 		if a["skill_id"] == skill_id:
@@ -247,7 +255,7 @@ func _physics_process(delta: float) -> void:
 		_update_effects(delta)
 		queue_redraw()
 		return
-	if player.is_alive() and _busy <= 0.0 and not player.controls_locked:
+	if player.is_alive() and _busy <= 0.0 and not player.controls_locked and not player.is_frozen():
 		for i in ACTIONS.size():
 			if Input.is_action_pressed(ACTIONS[i]) and try_use(i):
 				break

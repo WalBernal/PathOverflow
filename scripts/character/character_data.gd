@@ -444,6 +444,9 @@ static func from_dict(d: Dictionary, p_class_def: Dictionary, tree: PassiveTree,
 	for a in p_class_def.get("ascendancies", []):
 		if a["id"] == d.get("ascendancy_id", ""):
 			c.ascendancy_def = a
+	if c.ascendancy_def.is_empty() and String(d.get("ascendancy_id", "")) != "":
+		# Ascendencia que ya no existe (ahora hay dos por clase): hay que elegir otra.
+		c.flags["ascendancy_removed"] = true
 	if not c.ascendancy_def.is_empty():
 		if c.level < ASCENDANCY_LEVEL:
 			# Antes se elegía en cualquier momento; ahora hace falta el nivel 20.

@@ -301,7 +301,8 @@ func _draw() -> void:
 		draw_rect(Rect2(bar.position, Vector2(bar.size.x * frac, bar.size.y)), Color(UiStyle.ACCENT, 0.8))
 	if _glitch > 0.0:
 		_draw_glitch(view)
-	if _black > 0.0:
+	# El negro no tapa la página del dinosaurio (la escena del túnel pasa de negro a dino y vuelve).
+	if _black > 0.0 and not _dino:
 		draw_rect(Rect2(Vector2.ZERO, view), Color(0, 0, 0, _black))
 
 

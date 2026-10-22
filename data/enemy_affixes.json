@@ -1,5 +1,5 @@
 {
-  "_doc": "Afijos de enemigos élite y únicos raros. name: prefijo del nombre. resist/immune: como en enemies.json (se suman). speed_mult: velocidad. regen: % de vida por segundo. on_hit: estado que aplican al jugador (dot: kind fire/chaos/cold/lightning, dps_mult del daño del enemigo, duration). death_explosion: explota al morir (radius, damage_mult, delay). summoner: invoca type cada cooldown s. min_level: nivel de zona mínimo. color: aura visual.",
+  "_doc": "Afijos de enemigos élite y únicos raros. name: prefijo del nombre. resist/immune: como en enemies.json (se suman). speed_mult: velocidad. regen: % de vida por segundo. on_hit: estado que aplican al jugador (dot: kind fire/chaos/cold/lightning, dps_mult del daño del enemigo, duration). death_explosion: explota al morir (radius, damage_mult, delay). summoner: invoca type cada cooldown s. min_level: nivel de zona mínimo. color: aura visual. Nuevos: on_hit.status (estado que aplica al jugador), reflect (fracción del daño que te devuelve), shield (escudo extra: fracción de su vida), healer (cura a los enemigos cercanos: radius, pct %/s), teleporter (se teletransporta cerca de ti: cooldown, range).",
   "affixes": [
     {
       "id": "ignifugo",
@@ -131,6 +131,82 @@
       },
       "min_level": 5,
       "description": "Invoca bugs cada pocos segundos."
+    },
+    {
+      "id": "electrizante",
+      "name": "Electrizante",
+      "color": "ffee55",
+      "immune": [
+        "shock"
+      ],
+      "min_level": 4,
+      "on_hit": {
+        "status": {
+          "id": "shock",
+          "chance": 50,
+          "duration": 3.0
+        }
+      },
+      "description": "Sus golpes te electrocutan (recibes más daño)."
+    },
+    {
+      "id": "gelido",
+      "name": "Gélido",
+      "color": "9fe0ff",
+      "resist": {
+        "cold": 50
+      },
+      "immune": [
+        "chill",
+        "freeze"
+      ],
+      "min_level": 4,
+      "on_hit": {
+        "status": {
+          "id": "chill",
+          "chance": 55,
+          "duration": 3.0
+        }
+      },
+      "description": "Sus golpes te hielan (te mueves más lento)."
+    },
+    {
+      "id": "reflejo",
+      "name": "Reflejo",
+      "color": "e0e0ff",
+      "reflect": 0.08,
+      "min_level": 6,
+      "description": "Te devuelve parte del daño de tus habilidades."
+    },
+    {
+      "id": "escudado",
+      "name": "Escudado",
+      "color": "88c8ff",
+      "shield": 0.5,
+      "min_level": 5,
+      "description": "Lleva un escudo extra de energía (50 % de su vida) que hay que romper primero."
+    },
+    {
+      "id": "curandero",
+      "name": "Curandero",
+      "color": "8affb0",
+      "healer": {
+        "radius": 230,
+        "pct": 3.0
+      },
+      "min_level": 6,
+      "description": "Cura a los enemigos cercanos. Mátalo primero."
+    },
+    {
+      "id": "teletransportador",
+      "name": "Teletransportador",
+      "color": "d89aff",
+      "teleporter": {
+        "cooldown": 6.0,
+        "range": 230
+      },
+      "min_level": 7,
+      "description": "Se teletransporta junto a ti cada pocos segundos."
     }
   ]
 }

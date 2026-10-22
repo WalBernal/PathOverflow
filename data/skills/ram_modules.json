@@ -21,7 +21,9 @@
       ],
       "special": {
         "extra_projectiles": 2
-      }
+      },
+      "tier": 2,
+      "min_level": 8
     },
     {
       "id": "overclock",
@@ -152,7 +154,8 @@
       "special": {
         "pierce": 2
       },
-      "tier": 1
+      "tier": 2,
+      "min_level": 8
     },
     {
       "id": "fuerza_bruta",
@@ -1026,6 +1029,98 @@
       "special": {
         "unit_reduction": 0.15
       }
+    },
+    {
+      "id": "puntero_salvaje_menor",
+      "name": "Puntero Salvaje Menor",
+      "generation": "DDR4",
+      "description": "Los proyectiles atraviesan a 1 enemigo más. Un solo array mal indexado.",
+      "requires_tags": [
+        "projectile"
+      ],
+      "excludes_tags": [],
+      "cost_multiplier": 1.1,
+      "mods": [
+        {
+          "stat": "damage",
+          "type": "more",
+          "value": 5
+        }
+      ],
+      "special": {
+        "pierce": 1
+      },
+      "tier": 1,
+      "min_level": 1
+    },
+    {
+      "id": "puntero_salvaje_mayor",
+      "name": "Puntero Salvaje Mayor",
+      "generation": "DDR4",
+      "description": "Los proyectiles atraviesan a 4 enemigos más. Segfault garantizado en producción.",
+      "requires_tags": [
+        "projectile"
+      ],
+      "excludes_tags": [],
+      "cost_multiplier": 1.35,
+      "mods": [
+        {
+          "stat": "damage",
+          "type": "more",
+          "value": 15
+        }
+      ],
+      "special": {
+        "pierce": 4
+      },
+      "tier": 3,
+      "min_level": 26
+    },
+    {
+      "id": "multicanal_menor",
+      "name": "RAM Multicanal Menor",
+      "generation": "DDR4",
+      "description": "Un canal extra: +1 proyectil, cada uno pega un poco menos.",
+      "requires_tags": [
+        "projectile"
+      ],
+      "excludes_tags": [],
+      "cost_multiplier": 1.15,
+      "mods": [
+        {
+          "stat": "damage",
+          "type": "more",
+          "value": -12
+        }
+      ],
+      "special": {
+        "extra_projectiles": 1
+      },
+      "tier": 1,
+      "min_level": 1
+    },
+    {
+      "id": "multicanal_mayor",
+      "name": "RAM Multicanal Mayor",
+      "generation": "DDR4",
+      "description": "Cuatro canales: +3 proyectiles con una penalización menor por cada uno.",
+      "requires_tags": [
+        "projectile"
+      ],
+      "excludes_tags": [],
+      "cost_multiplier": 1.5,
+      "mods": [
+        {
+          "stat": "damage",
+          "type": "more",
+          "value": -25
+        }
+      ],
+      "special": {
+        "extra_projectiles": 3
+      },
+      "tier": 3,
+      "min_level": 26
     }
   ]
 }

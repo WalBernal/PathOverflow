@@ -747,7 +747,7 @@
           {
             "at": 0.66,
             "name": "Fase 2: Borrado de sectores",
-            "text": "El firmware empieza a escribir sobre sí mismo: charcos de datos corruptos.",
+            "text": "El firmware empieza a escribir sobre sí mismo: charcos de datos corruptos. Ahora resiste el caos y no se envenena.",
             "speed_mult": 1.1,
             "damage_mult": 1.1,
             "invulnerable": 1.2,
@@ -755,12 +755,20 @@
               "radius": 240,
               "stun": 0.7,
               "color": "c08aff"
-            }
+            },
+            "resist": {
+              "chaos": 60,
+              "lightning": 20
+            },
+            "immune": [
+              "freeze",
+              "poison"
+            ]
           },
           {
             "at": 0.33,
             "name": "Fase 3: 99 %",
-            "text": "«99 %: Verificación final.» El flasheo no termina nunca. Rootkits de respaldo en camino.",
+            "text": "«99 %: Verificación final.» El flasheo no termina nunca. Rootkits de respaldo en camino. Ahora resiste el frío y no se hiela.",
             "speed_mult": 1.2,
             "damage_mult": 1.25,
             "invulnerable": 1.2,
@@ -768,7 +776,15 @@
               "radius": 300,
               "stun": 0.8,
               "color": "5cd0ff"
-            }
+            },
+            "resist": {
+              "cold": 50,
+              "physical": 20
+            },
+            "immune": [
+              "freeze",
+              "chill"
+            ]
           }
         ]
       },

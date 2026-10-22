@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_doc": "Tipos de enemigo. sprite_row: fila en assets/sprites/enemies/enemies.png. Los multiplicadores se aplican sobre los de su rareza; radius_mult cambia el tamaño del cuerpo (hitbox). boss_only: solo aparece como único. attack (opcional; sin él, cuerpo a cuerpo por contacto): kind ranged (dispara proyectiles y mantiene la distancia: range, keep_distance, projectiles, spread, projectile_speed), charge (embestida en línea: range, dash_speed, dash_time, width), slam (golpe en círculo alrededor: range, radius), cone (cono delante: range, angle), blink (se teletransporta cerca: range, jump), none (no se mueve ni ataca: candados). Todos con windup (tiempo telegrafiado en rojo), cooldown y damage_mult. Acto III: summon (invoca type, count, con tope max_alive; se queda a distancia), seeker (orbes lentos y persistentes que persiguen: projectile_speed, turn_rate, projectile_life; los bloquean los obstáculos), lob_pool (lanza un charco al sitio del jugador: radius, pool_time, dps_mult, dot_kind), ranged.dot y slam.pool (daño degenerativo). summon_only: solo aparece invocado. resist: % de daño que reducen por tipo (physical, fire, cold, lightning, chaos; negativo = más daño). immune: estados a los que son inmunes (burn, shock, chill, freeze, poison, bleed). Los afijos de élite están en data/enemy_affixes.json.",
+  "_doc": "Tipos de enemigo. sprite_row: fila en assets/sprites/enemies/enemies.png. Los multiplicadores se aplican sobre los de su rareza; radius_mult cambia el tamaño del cuerpo (hitbox). boss_only: solo aparece como único. attack (opcional; sin él, cuerpo a cuerpo por contacto): kind ranged (dispara proyectiles y mantiene la distancia: range, keep_distance, projectiles, spread, projectile_speed), charge (embestida en línea: range, dash_speed, dash_time, width), slam (golpe en círculo alrededor: range, radius), cone (cono delante: range, angle), blink (se teletransporta cerca: range, jump), none (no se mueve ni ataca: candados). Todos con windup (tiempo telegrafiado en rojo), cooldown y damage_mult. Acto III: summon (invoca type, count, con tope max_alive; se queda a distancia), seeker (orbes lentos y persistentes que persiguen: projectile_speed, turn_rate, projectile_life; los bloquean los obstáculos), lob_pool (lanza un charco al sitio del jugador: radius, pool_time, dps_mult, dot_kind), ranged.dot y slam.pool (daño degenerativo). summon_only: solo aparece invocado. resist: % de daño que reducen por tipo (physical, fire, cold, lightning, chaos; negativo = más daño). immune: estados a los que son inmunes (burn, shock, chill, freeze, poison, bleed). Los afijos de élite están en data/enemy_affixes.json. on_hit_status: estado que aplican a TI al golpearte (id shock|chill|freeze, chance %, duration s): shock = recibes +25 % de daño; chill = 30 % más lento; freeze = no puedes actuar (su duración baja con la resistencia al rayo o al frío).",
   "types": [
     {
       "id": "bug",
@@ -177,6 +177,11 @@
       "resist": {
         "chaos": -20,
         "fire": 20
+      },
+      "on_hit_status": {
+        "id": "chill",
+        "chance": 25,
+        "duration": 2.5
       }
     },
     {
@@ -205,7 +210,12 @@
       },
       "immune": [
         "shock"
-      ]
+      ],
+      "on_hit_status": {
+        "id": "shock",
+        "chance": 35,
+        "duration": 3.0
+      }
     },
     {
       "id": "mutex_lock",
@@ -319,7 +329,12 @@
       "immune": [
         "freeze",
         "burn"
-      ]
+      ],
+      "on_hit_status": {
+        "id": "shock",
+        "chance": 20,
+        "duration": 3.0
+      }
     },
     {
       "id": "rootkit",
@@ -398,7 +413,12 @@
       "immune": [
         "shock",
         "freeze"
-      ]
+      ],
+      "on_hit_status": {
+        "id": "chill",
+        "chance": 40,
+        "duration": 3.0
+      }
     },
     {
       "id": "gusano_firmware",
@@ -427,7 +447,12 @@
       },
       "immune": [
         "poison"
-      ]
+      ],
+      "on_hit_status": {
+        "id": "chill",
+        "chance": 20,
+        "duration": 2.5
+      }
     },
     {
       "id": "electromigracion",
@@ -463,7 +488,12 @@
       "immune": [
         "burn",
         "shock"
-      ]
+      ],
+      "on_hit_status": {
+        "id": "shock",
+        "chance": 25,
+        "duration": 3.0
+      }
     },
     {
       "id": "condensador",
@@ -494,7 +524,12 @@
       },
       "immune": [
         "shock"
-      ]
+      ],
+      "on_hit_status": {
+        "id": "shock",
+        "chance": 45,
+        "duration": 3.5
+      }
     },
     {
       "id": "fw_update",
@@ -514,7 +549,12 @@
       "immune": [
         "freeze",
         "shock"
-      ]
+      ],
+      "on_hit_status": {
+        "id": "freeze",
+        "chance": 12,
+        "duration": 1.2
+      }
     }
   ]
 }

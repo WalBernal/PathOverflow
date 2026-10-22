@@ -154,6 +154,8 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 		if bonus_text == "+1 proyectil":
 			extra_projectiles += milestones
 	extra_chains += int(stats.get_value(Stat.EXTRA_CHAINS, tags))
+	if skill.has("projectiles") or kind in ["unit", "drones"]:
+		pierce += int(stats.get_value(Stat.EXTRA_PIERCE, tags))
 	if bonus_text == "+1 salto de cadena":
 		extra_chains += milestones
 	var projectiles := int(skill.get("projectiles", 0)) + (extra_projectiles if skill.has("projectiles") else 0)

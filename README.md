@@ -94,6 +94,23 @@ Se definen en `data/skills/skills.json` y `data/skills/ram_modules.json`. Cada c
 **Enemigos**: cada tipo tiene resistencias (`resist`) e inmunidades a estados (`immune`) en `enemies.json`; los élite (y 1 de cada 4 especiales) tiran **afijos** de `enemy_affixes.json` (Ignífugo, Aislado, Criogenizado, Tóxico, Ardiente, Blindado, Veloz, Regenerador, Explosivo, Invocador). El marco del objetivo muestra afijos, resistencias e inmunidades.
 
 **Jefes**: los tres jefes tienen `phases` (umbral de vida, nombre, texto, velocidad, daño, invulnerabilidad breve y onda). La **barra de jefe** (arriba) lleva marco, porcentaje y marcas de fase.
+**Estados sobre el jugador**: los enemigos y algunos afijos (Electrizante, Gélido) te aplican **electrocutado** (recibes +25 % de daño), **helado** (30 % más lento) y **congelado** (no puedes actuar; luego 3 s sin poder volver a congelarte). Su duración baja con la resistencia al rayo (electrocutado) o al frío (helado y congelado). Una barra de **buffs y debuffs** sobre el orbe de vida muestra cada uno con su tiempo (borde rojo = debuff, verde = buff) y una ayuda al pasar el mouse.
+
+**Interacciones entre estados**: *rotura* (golpe físico a un congelado: +50 % y se acaba el hielo), *sobrecarga* (daño de fuego a un electrocutado: explosión en área y se gasta la descarga) e *infección* (veneno + sangrado a la vez: +50 % de daño del veneno).
+
+**Ascendencias** (14, dos por clase; se eligen al nivel 20): cada pareja juega distinto.
+
+| Clase | Ascendencia A | Ascendencia B |
+|---|---|---|
+| Técnico de Soporte | Ingeniero de Guardia: riesgo, vida baja, sangrado y vida al matar | Especialista en Ciberseguridad: armadura, bloqueo y **espinas** |
+| Tester QA | Revisor de Código: críticos y sangrado | Scrum Master: velocidad, enfriamientos y vida al matar |
+| Desarrolladora Frontend | Ingeniera de Rendimiento: críticos, proyectiles y **perforación** | Ingeniera de Depuración: veneno, trampas y minas |
+| Ingeniera de Prompts | Especialista Red Team: críticos y cadenas | Analista de Malware: caos, veneno y trampas |
+| Científico de Datos | Ingeniero de Machine Learning: velocidad de lanzamiento y proyectiles | Analista de Big Data: los tres elementos y sus estados |
+| Ingeniero DevOps | Ingeniero en Robótica: torretas y robot de compañía | Ingeniero de Confiabilidad (SRE): **auras** más potentes y baratas |
+| Full Stack | Arquitecto de Soluciones: atributos y un poco de cada estado | Líder Técnico: invocaciones, autómatas y enfriamientos |
+
+**Dónde están los diálogos y la historia**: `data/npcs.json` (personajes y todos sus diálogos), `data/cutscenes.json` (escenas: prólogo, llegadas, final de cada acto), `data/quests.json` (misiones), `data/tutorial.json` (pasos del tutorial) y `data/act1.json`, `act2.json`, `act3.json` (zonas, jefes y sus textos de fase).
 - **Ingeniero DevOps (robótica)**: empieza con la **Torreta de Integración Continua** (se despliega sola, sin RAM: `deploy` en `skills.json`, y dispara proyectiles teledirigidos), el **Robot Centinela** y los **Drones de Vigilancia**. Su ascendencia **Ingeniero en Robótica** da +2 torretas/trampas a la vez, +1 esbirro y el **robot de compañía R-2PL** (`CompanionRobot`): te sigue siempre y tiene su propio kit, **Láser de rastreo** (al enemigo más cercano) y **Pulso EMP** (aturde a lo que se te acerque). Las mejoras de esbirros le afectan.
 
 **Habilidades inspiradas en League of Legends** (sencillas de leer y de esquivar):
@@ -290,17 +307,17 @@ El personaje es un recién egresado que se enfrenta al mundo laboral: cada clase
 
 | Clase | Atributos | Ascendencias (carreras) |
 |---|---|---|
-| Técnico de Soporte | FUE | Ingeniero de Guardia, Especialista en Ciberseguridad, Administrador de Sistemas |
-| Tester QA | FUE/DES | Revisor de Código, Scrum Master, Project Manager |
-| Desarrolladora Frontend | DES | Ingeniera de Rendimiento, Ingeniera de Depuración, Diseñadora UX/UI |
-| Ingeniera de Prompts | DES/INT | Especialista Red Team, Ingeniera de IA, Analista de Malware |
-| Científico de Datos | INT | Ingeniero de Machine Learning, Analista de Big Data, Orquestador de Agentes IA |
-| Ingeniero DevOps | INT/FUE | Ingeniero de Confiabilidad (SRE), Ingeniero en Robótica, Release Manager |
-| Desarrollador Full Stack | las tres | Arquitecto de Soluciones, Líder Técnico (Tech Lead), CTO de Startup |
+| Técnico de Soporte | FUE | Ingeniero de Guardia, Especialista en Ciberseguridad |
+| Tester QA | FUE/DES | Revisor de Código, Scrum Master |
+| Desarrolladora Frontend | DES | Ingeniera de Rendimiento, Ingeniera de Depuración |
+| Ingeniera de Prompts | DES/INT | Especialista Red Team, Analista de Malware |
+| Científico de Datos | INT | Ingeniero de Machine Learning, Analista de Big Data |
+| Ingeniero DevOps | INT/FUE | Ingeniero en Robótica, Ingeniero de Confiabilidad (SRE) |
+| Desarrollador Full Stack | las tres | Arquitecto de Soluciones, Líder Técnico (Tech Lead) |
 
 (Los ids internos siguen siendo los de antes —`guerrero`, `duelista`...— para no romper los guardados.)
 
-**Ascendencia al nivel 20**: junto al inicio de tu clase en el árbol hay un **medallón**. Al pulsarlo se abre un panel circular: hasta el nivel 20 solo se pueden ver las tres opciones; a partir de ahí se elige una (permanente). Después, el panel muestra el inicio de la ascendencia y sus pasivas alrededor: cada una cuesta un **punto de ascendencia** (1 al nivel 20, +1 a los 25 y 30). En la pantalla de pruebas del árbol se puede cambiar libremente.
+**Ascendencia al nivel 20**: junto al inicio de tu clase en el árbol hay un **medallón**. Al pulsarlo se abre un panel circular: hasta el nivel 20 solo se pueden ver las dos opciones; a partir de ahí se elige una (permanente). Después, el panel muestra el inicio de la ascendencia y sus pasivas alrededor: cada una cuesta un **punto de ascendencia** (1 al nivel 20, +1 a los 25 y 30). En la pantalla de pruebas del árbol se puede cambiar libremente.
 
 ## Enemigos
 

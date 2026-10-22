@@ -20,7 +20,7 @@
         {
           "id": "berserker_hotfix",
           "name": "Ingeniero de Guardia",
-          "description": "Atiende incidentes a las 3 AM. Cuanto peor va todo, mejor rinde.",
+          "description": "Atiende incidentes a las 3 AM. Juega al límite: cuanto menos vida le queda, más pega, y cada baja le devuelve vida. Hemorragias y velocidad.",
           "passives": [
             {
               "name": "Directo a producción",
@@ -34,6 +34,14 @@
                   "stat": "attack_speed",
                   "type": "increased",
                   "value": 15
+                },
+                {
+                  "stat": "bleed_chance",
+                  "type": "flat",
+                  "value": 15,
+                  "tags": [
+                    "melee"
+                  ]
                 }
               ]
             },
@@ -51,7 +59,7 @@
                 {
                   "stat": "life_leech",
                   "type": "flat",
-                  "value": 2
+                  "value": 3
                 }
               ]
             },
@@ -59,25 +67,19 @@
               "name": "Sin fin de semana",
               "mods": [
                 {
+                  "stat": "life_on_kill",
+                  "type": "flat",
+                  "value": 12
+                },
+                {
                   "stat": "attack_speed",
                   "type": "more",
-                  "value": 15,
-                  "tags": [
-                    "recent_kill"
-                  ]
+                  "value": 15
                 },
                 {
                   "stat": "movement_speed",
                   "type": "increased",
-                  "value": 15,
-                  "tags": [
-                    "recent_kill"
-                  ]
-                },
-                {
-                  "stat": "life_regen",
-                  "type": "flat",
-                  "value": 30
+                  "value": 15
                 }
               ]
             }
@@ -86,7 +88,7 @@
         {
           "id": "guardian_firewall",
           "name": "Especialista en Ciberseguridad",
-          "description": "Bloquea todo el tráfico entrante. Incluido el que necesitabas.",
+          "description": "Bloquea todo el tráfico entrante y devuelve el golpe: armadura, bloqueo y espinas que dañan a quien se le acerca.",
           "passives": [
             {
               "name": "Reglas de denegación",
@@ -104,8 +106,18 @@
               ]
             },
             {
-              "name": "DMZ personal",
+              "name": "Honeypot",
               "mods": [
+                {
+                  "stat": "thorns",
+                  "type": "flat",
+                  "value": 45
+                },
+                {
+                  "stat": "chaos_res",
+                  "type": "flat",
+                  "value": 15
+                },
                 {
                   "stat": "fire_res",
                   "type": "flat",
@@ -120,11 +132,6 @@
                   "stat": "lightning_res",
                   "type": "flat",
                   "value": 25
-                },
-                {
-                  "stat": "chaos_res",
-                  "type": "flat",
-                  "value": 15
                 }
               ]
             },
@@ -140,61 +147,11 @@
                   "stat": "life_regen",
                   "type": "flat",
                   "value": 25
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "senor_monolito",
-          "name": "Administrador de Sistemas",
-          "description": "Mantiene servidores enormes que nadie se atreve a reiniciar. Lento, pesado e imparable.",
-          "passives": [
-            {
-              "name": "Acoplamiento total",
-              "mods": [
-                {
-                  "stat": "life",
-                  "type": "increased",
-                  "value": 40
                 },
                 {
-                  "stat": "strength",
+                  "stat": "thorns",
                   "type": "flat",
-                  "value": 40
-                }
-              ]
-            },
-            {
-              "name": "Dependencias circulares",
-              "mods": [
-                {
-                  "stat": "area_of_effect",
-                  "type": "increased",
-                  "value": 50
-                },
-                {
-                  "stat": "damage",
-                  "type": "more",
-                  "value": 20,
-                  "tags": [
-                    "area"
-                  ]
-                }
-              ]
-            },
-            {
-              "name": "Tiempo de arranque",
-              "mods": [
-                {
-                  "stat": "damage",
-                  "type": "more",
                   "value": 30
-                },
-                {
-                  "stat": "movement_speed",
-                  "type": "increased",
-                  "value": -10
                 }
               ]
             }
@@ -248,7 +205,7 @@
         {
           "id": "gladiador_review",
           "name": "Revisor de Código",
-          "description": "Encuentra el error en la línea 3482. Cada comentario suyo es un golpe crítico.",
+          "description": "Encuentra el error en la línea 3482. Cada comentario suyo es un golpe crítico, y los críticos hacen sangrar.",
           "passives": [
             {
               "name": "Nit:",
@@ -272,6 +229,14 @@
                   "stat": "damage",
                   "type": "more",
                   "value": 15
+                },
+                {
+                  "stat": "bleed_chance",
+                  "type": "flat",
+                  "value": 20,
+                  "tags": [
+                    "attack"
+                  ]
                 }
               ]
             },
@@ -295,7 +260,7 @@
         {
           "id": "campeon_sprint",
           "name": "Scrum Master",
-          "description": "Velocidad del equipo, dailies y sprints. Si el equipo acaba rápido, rinde todavía más.",
+          "description": "Velocidad del equipo, dailies y sprints. No depende del crítico: ataca sin parar, se mueve más y se cura con cada baja.",
           "passives": [
             {
               "name": "Velocidad del equipo",
@@ -318,10 +283,12 @@
                 {
                   "stat": "damage",
                   "type": "more",
-                  "value": 30,
-                  "tags": [
-                    "recent_kill"
-                  ]
+                  "value": 30
+                },
+                {
+                  "stat": "life_on_kill",
+                  "type": "flat",
+                  "value": 8
                 }
               ]
             },
@@ -334,56 +301,9 @@
                   "value": 60
                 },
                 {
-                  "stat": "life_leech",
-                  "type": "flat",
-                  "value": 1.5
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "asesino_deadlines",
-          "name": "Project Manager",
-          "description": "Todo es para ayer. Reparte el trabajo (y el daño) en todas direcciones.",
-          "passives": [
-            {
-              "name": "Entrega a las 23:59",
-              "mods": [
-                {
-                  "stat": "damage",
-                  "type": "more",
+                  "stat": "cooldown_recovery",
+                  "type": "increased",
                   "value": 30
-                }
-              ]
-            },
-            {
-              "name": "Scope creep",
-              "mods": [
-                {
-                  "stat": "area_of_effect",
-                  "type": "increased",
-                  "value": 40
-                },
-                {
-                  "stat": "extra_projectiles",
-                  "type": "flat",
-                  "value": 1
-                }
-              ]
-            },
-            {
-              "name": "Horas extra",
-              "mods": [
-                {
-                  "stat": "life_leech",
-                  "type": "flat",
-                  "value": 3
-                },
-                {
-                  "stat": "attack_speed",
-                  "type": "increased",
-                  "value": 10
                 }
               ]
             }
@@ -435,7 +355,7 @@
         {
           "id": "francotiradora_bugs",
           "name": "Ingeniera de Rendimiento",
-          "description": "Mide, optimiza y dispara. Cada milisegundo cuenta; cada proyectil, también.",
+          "description": "Mide, optimiza y dispara. Críticos de largo alcance con más proyectiles que atraviesan a los enemigos.",
           "passives": [
             {
               "name": "Breakpoint certero",
@@ -464,6 +384,11 @@
                   "stat": "projectile_speed",
                   "type": "increased",
                   "value": 40
+                },
+                {
+                  "stat": "extra_pierce",
+                  "type": "flat",
+                  "value": 2
                 }
               ]
             },
@@ -473,10 +398,7 @@
                 {
                   "stat": "damage",
                   "type": "more",
-                  "value": 25,
-                  "tags": [
-                    "projectile"
-                  ]
+                  "value": 25
                 }
               ]
             }
@@ -485,7 +407,7 @@
         {
           "id": "rastreadora_leaks",
           "name": "Ingeniera de Depuración",
-          "description": "Pone breakpoints como quien pone trampas. Y los bugs caen en ellos.",
+          "description": "Pone breakpoints como quien pone trampas. Veneno, trampas y minas: los bugs caen en ellos y se pudren.",
           "passives": [
             {
               "name": "Heap dump",
@@ -494,6 +416,11 @@
                   "stat": "evasion",
                   "type": "more",
                   "value": 40
+                },
+                {
+                  "stat": "poison_chance",
+                  "type": "flat",
+                  "value": 20
                 }
               ]
             },
@@ -521,58 +448,8 @@
                   "value": 40
                 },
                 {
-                  "stat": "damage",
+                  "stat": "ailing_damage",
                   "type": "more",
-                  "value": 30,
-                  "tags": [
-                    "trap"
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "danzarina_hilos",
-          "name": "Diseñadora UX/UI",
-          "description": "Fluida, responsiva y difícil de atrapar. Nunca está donde la esperas.",
-          "passives": [
-            {
-              "name": "Race condition",
-              "mods": [
-                {
-                  "stat": "attack_speed",
-                  "type": "more",
-                  "value": 20
-                }
-              ]
-            },
-            {
-              "name": "Sin mutex",
-              "mods": [
-                {
-                  "stat": "movement_speed",
-                  "type": "increased",
-                  "value": 25
-                },
-                {
-                  "stat": "evasion",
-                  "type": "increased",
-                  "value": 60
-                }
-              ]
-            },
-            {
-              "name": "Deadlock evitado",
-              "mods": [
-                {
-                  "stat": "skill_duration",
-                  "type": "increased",
-                  "value": 40
-                },
-                {
-                  "stat": "cooldown_recovery",
-                  "type": "increased",
                   "value": 30
                 }
               ]
@@ -622,7 +499,7 @@
         {
           "id": "asesina_sesiones",
           "name": "Especialista Red Team",
-          "description": "Ataca el sistema para encontrar sus fallos: críticos y saltos de un objetivo a otro.",
+          "description": "Ataca el sistema para encontrar sus fallos: críticos, saltos de un objetivo a otro y sigilo.",
           "passives": [
             {
               "name": "Token robado",
@@ -650,10 +527,7 @@
                 {
                   "stat": "damage",
                   "type": "more",
-                  "value": 15,
-                  "tags": [
-                    "chain"
-                  ]
+                  "value": 15
                 }
               ]
             },
@@ -675,51 +549,9 @@
           ]
         },
         {
-          "id": "ingeniera_social",
-          "name": "Ingeniera de IA",
-          "description": "Entrena modelos elementales. Sus instrucciones saltan de enemigo en enemigo.",
-          "passives": [
-            {
-              "name": "Phishing elemental",
-              "mods": [
-                {
-                  "stat": "elemental_damage",
-                  "type": "more",
-                  "value": 35
-                }
-              ]
-            },
-            {
-              "name": "Llamada del soporte técnico",
-              "mods": [
-                {
-                  "stat": "cast_speed",
-                  "type": "increased",
-                  "value": 25
-                },
-                {
-                  "stat": "extra_chains",
-                  "type": "flat",
-                  "value": 1
-                }
-              ]
-            },
-            {
-              "name": "Pretexto creíble",
-              "mods": [
-                {
-                  "stat": "energy_shield",
-                  "type": "more",
-                  "value": 30
-                }
-              ]
-            }
-          ]
-        },
-        {
           "id": "saboteadora",
           "name": "Analista de Malware",
-          "description": "Estudió tanto código malicioso que ya lo usa a su favor: caos, trampas y minas.",
+          "description": "Estudió tanto código malicioso que ya lo usa a su favor: caos, veneno y trampas que acaban el trabajo solas.",
           "passives": [
             {
               "name": "Supply chain",
@@ -728,6 +560,11 @@
                   "stat": "chaos_damage",
                   "type": "more",
                   "value": 40
+                },
+                {
+                  "stat": "poison_chance",
+                  "type": "flat",
+                  "value": 25
                 }
               ]
             },
@@ -742,10 +579,7 @@
                 {
                   "stat": "damage",
                   "type": "more",
-                  "value": 25,
-                  "tags": [
-                    "trap"
-                  ]
+                  "value": 25
                 }
               ]
             },
@@ -758,12 +592,14 @@
                   "value": 50
                 },
                 {
-                  "stat": "damage",
+                  "stat": "ailment_damage",
                   "type": "more",
-                  "value": 30,
-                  "tags": [
-                    "mine"
-                  ]
+                  "value": 30
+                },
+                {
+                  "stat": "ailment_duration",
+                  "type": "increased",
+                  "value": 30
                 }
               ]
             }
@@ -809,7 +645,7 @@
         {
           "id": "archimago_recursivo",
           "name": "Ingeniero de Machine Learning",
-          "description": "Recursivo y eficiente: lanza más rápido y multiplica sus proyectiles.",
+          "description": "Recursivo y eficiente: lanza más rápido, multiplica sus proyectiles y reduce los enfriamientos.",
           "passives": [
             {
               "name": "Caso base",
@@ -852,10 +688,7 @@
                 {
                   "stat": "damage",
                   "type": "more",
-                  "value": 15,
-                  "tags": [
-                    "spell"
-                  ]
+                  "value": 15
                 }
               ]
             }
@@ -864,7 +697,7 @@
         {
           "id": "elementalista_so",
           "name": "Analista de Big Data",
-          "description": "Procesa volúmenes enormes: área, daño elemental y resistencia a todo.",
+          "description": "Procesa volúmenes enormes: domina los tres elementos y sus estados (quemar, helar, electrocutar) y resiste a todos.",
           "passives": [
             {
               "name": "Respuesta aceptada",
@@ -890,17 +723,33 @@
               "name": "Pregunta duplicada",
               "mods": [
                 {
-                  "stat": "area_of_effect",
-                  "type": "increased",
-                  "value": 40
+                  "stat": "burn_chance",
+                  "type": "flat",
+                  "value": 15,
+                  "tags": [
+                    "spell"
+                  ]
+                },
+                {
+                  "stat": "chill_chance",
+                  "type": "flat",
+                  "value": 15,
+                  "tags": [
+                    "spell"
+                  ]
+                },
+                {
+                  "stat": "shock_chance",
+                  "type": "flat",
+                  "value": 15,
+                  "tags": [
+                    "spell"
+                  ]
                 },
                 {
                   "stat": "damage",
                   "type": "more",
-                  "value": 15,
-                  "tags": [
-                    "area"
-                  ]
+                  "value": 15
                 }
               ]
             },
@@ -921,53 +770,11 @@
                   "stat": "lightning_res",
                   "type": "flat",
                   "value": 25
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "nigromante_zombis",
-          "name": "Orquestador de Agentes IA",
-          "description": "No pelea: delega. Sus agentes (esbirros) hacen el trabajo sucio.",
-          "passives": [
-            {
-              "name": "fork()",
-              "mods": [
+                },
                 {
-                  "stat": "minion_damage",
+                  "stat": "ailing_damage",
                   "type": "more",
-                  "value": 60
-                }
-              ]
-            },
-            {
-              "name": "Proceso huérfano",
-              "mods": [
-                {
-                  "stat": "extra_minions",
-                  "type": "flat",
-                  "value": 2
-                },
-                {
-                  "stat": "skill_duration",
-                  "type": "increased",
-                  "value": 30
-                }
-              ]
-            },
-            {
-              "name": "PID 1",
-              "mods": [
-                {
-                  "stat": "minion_life",
-                  "type": "increased",
-                  "value": 80
-                },
-                {
-                  "stat": "energy_shield",
-                  "type": "increased",
-                  "value": 40
+                  "value": 25
                 }
               ]
             }
@@ -1024,56 +831,6 @@
         "intelligence": 23
       },
       "ascendancies": [
-        {
-          "id": "inquisidor_linter",
-          "name": "Ingeniero de Confiabilidad (SRE)",
-          "description": "Ningún warning sobrevive. Fuego y rayo para todo lo que no cumple el SLA.",
-          "passives": [
-            {
-              "name": "Falta un punto y coma",
-              "mods": [
-                {
-                  "stat": "fire_damage",
-                  "type": "more",
-                  "value": 30
-                },
-                {
-                  "stat": "lightning_damage",
-                  "type": "more",
-                  "value": 30
-                }
-              ]
-            },
-            {
-              "name": "Warnings como errores",
-              "mods": [
-                {
-                  "stat": "damage",
-                  "type": "more",
-                  "value": 25,
-                  "tags": [
-                    "spell"
-                  ]
-                },
-                {
-                  "stat": "crit_chance",
-                  "type": "increased",
-                  "value": 40
-                }
-              ]
-            },
-            {
-              "name": "Reglas estrictas",
-              "mods": [
-                {
-                  "stat": "armour",
-                  "type": "more",
-                  "value": 40
-                }
-              ]
-            }
-          ]
-        },
         {
           "id": "hierofante_docs",
           "name": "Ingeniero en Robótica",
@@ -1143,45 +900,67 @@
           ]
         },
         {
-          "id": "profeta_rollback",
-          "name": "Release Manager",
-          "description": "Si algo sale mal, hace rollback. Aguanta lo que sea y pega más fuerte al borde del desastre.",
+          "id": "inquisidor_linter",
+          "name": "Ingeniero de Confiabilidad (SRE)",
+          "description": "Nada se cae mientras suenen sus alertas: auras mucho más potentes y baratas, aliados más duros y fuego y rayo para lo que incumple el SLA.",
           "passives": [
             {
-              "name": "git revert",
+              "name": "Monitorización continua",
               "mods": [
                 {
-                  "stat": "life_regen",
-                  "type": "flat",
-                  "value": 60
+                  "stat": "aura_effect",
+                  "type": "increased",
+                  "value": 50
                 },
                 {
-                  "stat": "life",
-                  "type": "more",
+                  "stat": "reservation_efficiency",
+                  "type": "increased",
                   "value": 25
                 }
               ]
             },
             {
-              "name": "Copia de seguridad",
+              "name": "Warnings como errores",
               "mods": [
                 {
-                  "stat": "block_chance",
+                  "stat": "fire_damage",
+                  "type": "more",
+                  "value": 30
+                },
+                {
+                  "stat": "lightning_damage",
+                  "type": "more",
+                  "value": 30
+                },
+                {
+                  "stat": "burn_chance",
                   "type": "flat",
-                  "value": 20
+                  "value": 10
+                },
+                {
+                  "stat": "shock_chance",
+                  "type": "flat",
+                  "value": 10
                 }
               ]
             },
             {
-              "name": "Punto de restauración",
+              "name": "Reglas estrictas",
               "mods": [
                 {
-                  "stat": "damage",
+                  "stat": "armour",
                   "type": "more",
-                  "value": 35,
-                  "tags": [
-                    "low_life"
-                  ]
+                  "value": 40
+                },
+                {
+                  "stat": "minion_life",
+                  "type": "increased",
+                  "value": 40
+                },
+                {
+                  "stat": "life",
+                  "type": "more",
+                  "value": 15
                 }
               ]
             }
@@ -1230,7 +1009,7 @@
         {
           "id": "arquitecto_soluciones",
           "name": "Arquitecto de Soluciones",
-          "description": "Dibuja cajas y flechas. Los demás escriben el código.",
+          "description": "Dibuja cajas y flechas: de todo un poco. Atributos parejos y una probabilidad pequeña de cada estado.",
           "passives": [
             {
               "name": "Diagrama de todo",
@@ -1259,6 +1038,31 @@
                   "stat": "damage",
                   "type": "more",
                   "value": 25
+                },
+                {
+                  "stat": "burn_chance",
+                  "type": "flat",
+                  "value": 6
+                },
+                {
+                  "stat": "shock_chance",
+                  "type": "flat",
+                  "value": 6
+                },
+                {
+                  "stat": "chill_chance",
+                  "type": "flat",
+                  "value": 6
+                },
+                {
+                  "stat": "poison_chance",
+                  "type": "flat",
+                  "value": 6
+                },
+                {
+                  "stat": "bleed_chance",
+                  "type": "flat",
+                  "value": 6
                 }
               ]
             },
@@ -1282,7 +1086,7 @@
         {
           "id": "devops_integral",
           "name": "Líder Técnico (Tech Lead)",
-          "description": "Coordina, automatiza y delega: más torretas, más esbirros, menos enfriamiento.",
+          "description": "Coordina, automatiza y delega: torretas, esbirros e invocaciones persistentes baratas, más rápidas y con menos enfriamiento.",
           "passives": [
             {
               "name": "Integración continua",
@@ -1291,6 +1095,11 @@
                   "stat": "cooldown_recovery",
                   "type": "increased",
                   "value": 50
+                },
+                {
+                  "stat": "automaton_speed",
+                  "type": "increased",
+                  "value": 20
                 }
               ]
             },
@@ -1318,6 +1127,16 @@
               "name": "Autoescalado",
               "mods": [
                 {
+                  "stat": "reservation_efficiency",
+                  "type": "increased",
+                  "value": 25
+                },
+                {
+                  "stat": "life_regen",
+                  "type": "flat",
+                  "value": 30
+                },
+                {
                   "stat": "attack_speed",
                   "type": "increased",
                   "value": 20
@@ -1326,58 +1145,6 @@
                   "stat": "cast_speed",
                   "type": "increased",
                   "value": 20
-                },
-                {
-                  "stat": "life_regen",
-                  "type": "flat",
-                  "value": 30
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "desarrollador_10x",
-          "name": "CTO de Startup",
-          "description": "Hace de todo, rápido y sin documentación. Mucho daño, mucha área y cero procesos.",
-          "passives": [
-            {
-              "name": "Commits a las 4 AM",
-              "mods": [
-                {
-                  "stat": "damage",
-                  "type": "more",
-                  "value": 35
-                }
-              ]
-            },
-            {
-              "name": "Sin documentación",
-              "mods": [
-                {
-                  "stat": "skill_duration",
-                  "type": "increased",
-                  "value": 40
-                },
-                {
-                  "stat": "area_of_effect",
-                  "type": "increased",
-                  "value": 30
-                }
-              ]
-            },
-            {
-              "name": "Café intravenoso",
-              "mods": [
-                {
-                  "stat": "movement_speed",
-                  "type": "increased",
-                  "value": 20
-                },
-                {
-                  "stat": "extra_projectiles",
-                  "type": "flat",
-                  "value": 1
                 }
               ]
             }

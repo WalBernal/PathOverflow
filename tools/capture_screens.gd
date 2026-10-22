@@ -23,6 +23,8 @@ func _ready() -> void:
 
 func _run() -> void:
 	if OS.get_cmdline_user_args().has("combate"):
+		await _capture_tunnel_dino()
+		await _capture_player_states()
 		await _capture_paez()
 		await _capture_boss_and_affixes()
 		await _capture_icons()
@@ -255,6 +257,62 @@ func _capture_act3() -> void:
 	world.get("player").global_position += Vector2(700, 0)
 	await _wait(5.0)
 	_save("15_jefe_fw_update")
+	world.set("_since_save", -9999.0)
+
+
+## Escena del túnel del acto I (red_lince): debe verse el dinosaurio aunque la pantalla esté en negro.
+func _capture_tunnel_dino() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Tunel", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.flags["act1_reunion"] = true
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	world.call("play_cutscene", "red_lince")
+	var cut: Node = world.get("ui").get("cutscene")
+	cut.set("_black", 1.0)
+	cut.set("_black_target", 1.0)
+	cut.set("_index", 3)
+	cut.call("_next")
+	await _wait(0.8)
+	_save("22_tunel_dino")
+	cut.call("_finish")
+	world.set("_since_save", -9999.0)
+
+
+## Estados y buffs sobre el jugador (barra encima del orbe de vida).
+func _capture_player_states() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Estados2", &"hechicero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "zona1"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 14
+	var items: ItemDatabase = gd.get("items")
+	c.inventory.set_board(3, Motherboard.new(items.skills.skills["hiperthreading"], 3, ["DDR4"]))
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var player: Player = world.get("player")
+	var skills: SkillController = world.get("skills")
+	skills.call("_execute", skills.profile(3), player.global_position)
+	player.apply_status("shock", 6.0)
+	player.apply_status("chill", 6.0)
+	player.apply_dot("fuego", 0.1, 8.0, "fire")
+	player.apply_dot("veneno", 0.1, 8.0, "chaos")
+	player.invulnerable = true
+	await _wait(0.8)
+	_save("23_estados_jugador")
+	player.statuses["freeze"] = 3.0
+	await _wait(0.4)
+	_save("24_congelado")
 	world.set("_since_save", -9999.0)
 
 
