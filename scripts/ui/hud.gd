@@ -705,8 +705,10 @@ func _draw_skill_slot(i: int, font: Font) -> void:
 			var cd_text := ("%.1f" % left) if left < 3.0 else str(ceili(left))
 			draw_string_outline(font, r.position + Vector2(0, r.size.y * 0.5 + 7.0), cd_text, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 18, 5, Color.BLACK)
 			draw_string(font, r.position + Vector2(0, r.size.y * 0.5 + 7.0), cd_text, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 18, Color.WHITE)
+		# Insignias de las RAM instaladas en el borde derecho (como las gemas de soporte).
+		var ram_w := RamIcon.draw_board_column(self, r, board, 15.0)
 		if not p.is_empty():
-			SkillIcon.draw_ailment_pips(self, r, p.get("ailments", {}))
+			SkillIcon.draw_ailment_pips(self, Rect2(r.position, r.size - Vector2(ram_w, 0.0)), p.get("ailments", {}))
 			if p["kind"] == "unit":
 				# Invocaciones vivas / máximo, arriba a la izquierda.
 				var alive := 0

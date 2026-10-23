@@ -92,7 +92,7 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	skills_panel = SkillsPanel.new()
 	skills_panel.visible = false
 	_root.add_child(skills_panel)
-	skills_panel.position = Vector2(10, 170)
+	skills_panel.position = Vector2(10, 10)
 	skills_panel.setup(character, item_tooltip)
 	skills_panel.message.connect(hud.flash)
 	skills_panel.close_requested.connect(func() -> void: _on_menu_requested("skills"))

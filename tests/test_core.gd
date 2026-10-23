@@ -81,6 +81,7 @@ func _initialize() -> void:
 	_test_thermal_shock_and_status_resist()
 	_test_music_and_voices()
 	_test_quest_item_art()
+	_test_rams_everywhere()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
 	else:
@@ -479,7 +480,9 @@ func _test_skill_calc() -> void:
 	ping.install(gen.generate_ram(1, "multicanal"), 0)
 	var multi := SkillCalc.compute(ping, c)
 	_check(multi["projectiles"] == 3, "multicanal: +2 proyectiles")
-	_check(is_equal_approx(multi["max_damage"], base["max_damage"] * 0.75), "multicanal: 25% menos de daño")
+	_check(is_equal_approx(multi["max_damage"], base["max_damage"] * 0.55), "multicanal: 45% menos de daño en una placa de nivel 1")
+	_check(is_equal_approx(multi["spread_degrees"], 24.0), "multicanal: los 3 proyectiles salen en abanico (\\|/)")
+	_check(not multi["homing"], "ping: sin la etiqueta teledirigido, los proyectiles van rectos")
 	_check(multi["mana_cost"] == roundf(base["mana_cost"] * 1.3), "multicanal: coste ×1.3")
 	ping.install(gen.generate_ram(1, "overclock"), 1)
 	var fast := SkillCalc.compute(ping, c)
@@ -2458,6 +2461,73 @@ func _test_ram_grades() -> void:
 	var board := Motherboard.new(_db.skills.skills["rafaga_de_paquetes"], 1, ["DDR4"])
 	board.install(gen.generate_ram(1, "multicanal_mayor"), 0)
 	_check(SkillCalc.compute(board, c)["projectiles"] == 6, "multicanal mayor: +3 proyectiles")
+
+
+## RAM en drones e invocaciones, penalización del Multicanal por nivel, Pipeline en
+## invocaciones y que ninguna RAM compatible se quede sin efecto.
+func _test_rams_everywhere() -> void:
+	var c := _new_character()
+	c.set_level(30)
+	var rams: Dictionary = _db.skills.rams
+	var skills: Dictionary = _db.skills.skills
+	for id in ["drones_vigilancia", "robot_centinela", "dron_escolta", "agente_ia"]:
+		var board := Motherboard.new(skills[id], 1, ["DDR4"])
+		var before: Dictionary = SkillCalc.compute(board, c)
+		board.install(RamModule.new(rams["multicanal_menor"]), 0)
+		var after: Dictionary = SkillCalc.compute(board, c)
+		_check(before["projectiles"] == 1 and after["projectiles"] == 2, "%s: +1 proyectil con el Multicanal Menor (%d → %d)" % [id, before["projectiles"], after["projectiles"]])
+		_check(is_equal_approx(after["min_damage"], before["min_damage"] * 0.6), "%s: el Multicanal Menor quita un 40 %% en nivel 1" % id)
+	_check(SkillCalc.projectile_penalty(40.0, 11) == 30.0 and SkillCalc.projectile_penalty(40.0, 40) == 20.0, "multicanal: la penalización baja 1 punto por nivel, hasta la mitad")
+	_check(SkillCalc.compute(Motherboard.new(skills["paquete_rastreador"], 1, []), c)["homing"], "el Paquete Rastreador es teledirigido")
+	var laser := Motherboard.new(skills["rafaga_de_paquetes"], 1, ["DDR5"])
+	laser.install(RamModule.new(rams["guiado_laser"]), 0)
+	var guided: Dictionary = SkillCalc.compute(laser, c)
+	_check(guided["homing"] and guided["seek_range"] > 0.0, "Guiado por Láser: los proyectiles pasan a ser teledirigidos")
+	# Las RAM de daño también suben el daño de las invocaciones.
+	var golem := Motherboard.new(skills["golem_hardware"], 1, ["DDR3"])
+	var g0: float = SkillCalc.compute(golem, c)["min_damage"]
+	golem.install(RamModule.new(rams["fuerza_bruta"]), 0)
+	_check(SkillCalc.compute(golem, c)["min_damage"] > g0 * 1.3, "invocaciones: la Fuerza Bruta sube el daño del golem")
+	# Pipeline: la invocación ataca el doble de rápido en vez de invocarse dos veces.
+	var bot := Motherboard.new(skills["robot_centinela"], 1, ["DDR3"])
+	var i0: float = SkillCalc.compute(bot, c)["unit_interval"]
+	bot.install(RamModule.new(rams["pipeline"]), 0)
+	_check(is_equal_approx(SkillCalc.compute(bot, c)["unit_interval"], i0 / 2.0), "Pipeline: el robot centinela dispara el doble de rápido")
+	_check(not RamModule.new(rams["pipeline"]).supports(skills["aura_overclock"]), "Pipeline no encaja en auras (las apagaría)")
+	_check(not RamModule.new(rams["disparador_trampa"]).supports(skills["aura_mando"]), "una aura no se puede convertir en trampa")
+	_check(not RamModule.new(rams["pasta_termica"]).supports(skills["dron_medico"]), "las RAM de daño no encajan en habilidades sin daño")
+	# Auditoría: toda RAM que encaja en una habilidad cambia algo de su perfil.
+	var keys := ["dps", "min_damage", "projectiles", "pierce", "projectile_chains", "chains", "projectile_speed", "homing", "radius",
+		"width", "impact_radius", "rain_hits", "crit_chance", "life_leech", "ailments", "ailment_effect", "ailment_duration",
+		"ailing_bonus", "deploy", "max_units", "unit_interval", "unit_life", "unit_reduction", "reserve", "aura_mods",
+		"tick", "minion_interval", "drone_count", "count", "extra_devices", "uses_per_second", "repeats"]
+	var dead := PackedStringArray()
+	for sid in skills:
+		var base := SkillCalc.compute(Motherboard.new(skills[sid], 10, []), c)
+		for rid in rams:
+			var ram := RamModule.new(rams[rid])
+			if not ram.supports(skills[sid]):
+				continue
+			var board := Motherboard.new(skills[sid], 10, [ram.generation()])
+			board.install(ram, 0)
+			var p := SkillCalc.compute(board, c)
+			var changed := false
+			for k in keys + (["area_scale"] if base["kind"] == "unit" and base["unit_ability"].has("radius") else []):
+				if str(base[k]) != str(p[k]):
+					changed = true
+					break
+			if not changed:
+				dead.append("%s+%s" % [sid, rid])
+	_check(dead.is_empty(), "RAM compatibles sin efecto: %s" % ", ".join(dead))
+	# Ordenar la bolsa: placas primero y RAM por generación; lo demás no se mueve.
+	var inv := Inventory.new()
+	inv.bag[0] = RamModule.new(rams["pasta_termica"])
+	inv.bag[1] = Item.new({"id": "x", "name": "Espada", "slot": "weapon", "level": 1, "tags": []}, Rarity.Item.NORMAL, 1)
+	inv.bag[2] = Motherboard.new(skills["ping_letal"], 1, [])
+	inv.bag[5] = RamModule.new(rams["ecc"])
+	inv.sort_skill_items()
+	_check(inv.bag[0] is Motherboard and inv.bag[1].display_name() == "Espada" and (inv.bag[2] as RamModule).generation() == "DDR3"
+		and (inv.bag[5] as RamModule).generation() == "DDR5", "ordenar la bolsa: placas, luego RAM por generación, sin mover el resto")
 
 
 ## Objetos de misión: cada uno tiene su propio dibujo (solo la cinta del DBA es una cinta).

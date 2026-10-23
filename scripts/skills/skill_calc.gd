@@ -56,6 +56,25 @@ static func milestone_text(skill: Dictionary) -> String:
 	return "+10 % de daño"
 
 
+## % de daño que quita un módulo Multicanal en una placa de ese nivel.
+static func projectile_penalty(base_pct: float, board_level: int) -> float:
+	return maxf(base_pct / 2.0, base_pct - (board_level - 1))
+
+
+## ¿Dispara proyectiles? Las habilidades con "projectiles" y también los drones y
+## las invocaciones con la etiqueta proyectil (disparan uno; las RAM añaden más).
+static func shoots_projectiles(skill: Dictionary) -> bool:
+	if skill.has("projectiles"):
+		return true
+	return String(skill.get("kind", "")) in ["unit", "drones"] and "projectile" in skill.get("tags", []) \
+		and bool(skill.get("unit", {}).get("shoots", true))
+
+
+## Habilidades que invocan algo que ataca solo: la "repetición" (Pipeline) no las
+## vuelve a lanzar, sino que hace que ataquen más a menudo.
+const AUTOMATON_KINDS := ["unit", "drones", "minion"]
+
+
 static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 	var skill := board.skill_def
 	var tags: Array = []
@@ -75,6 +94,9 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 	# Encadenamiento: % de daño que se pierde en cada salto (-1 = sin penalización).
 	var chain_penalty := -1.0
 	var unit_reduction := 0.0
+	# Multicanal: cada módulo quita daño por los proyectiles que añade (−40 % el de +1
+	# en una placa de nivel 1); la penalización baja 1 punto por nivel, hasta la mitad.
+	var projectile_penalties: Array[float] = []
 	# Algunas habilidades se despliegan solas (p. ej. la Torreta de Integración Continua).
 	var deploy: String = skill.get("deploy", "")
 	var totem_duration: float = float(skill.get("totem_duration", 8.0)) if deploy != "" else 0.0
@@ -90,9 +112,15 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 		extra.append_array(ram.skill_modifiers())
 		cost_mult *= ram.cost_multiplier()
 		extra_projectiles += int(ram.special("extra_projectiles"))
+		if ram.special("projectile_penalty") > 0.0:
+			projectile_penalties.append(ram.special("projectile_penalty"))
+		if ram.special("homing") > 0.0 and not tags.has(&"homing"):
+			tags.append(&"homing")
 		pierce += int(ram.special("pierce"))
 		repeats += int(ram.special("repeats"))
 		area_mult *= ram.special("area_multiplier", 1.0)
+	for pen in projectile_penalties:
+		extra.append(Modifier.new(Stat.DAMAGE, Modifier.Type.MORE, -projectile_penalty(pen, board.level), [], "ram:multicanal"))
 	# Al convertirse en trampa, mina o torreta, la habilidad gana esa etiqueta
 	# (los modificadores "de trampas" le afectan).
 	if deploy != "" and not tags.has(StringName(deploy)):
@@ -143,13 +171,21 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 	if damage_stat != &"":
 		var b := stats.get_breakdown(damage_stat, tags)
 		mult = maxf(0.0, 1.0 + b.increased / 100.0) * b.more
+	if tags.has(&"minion"):
+		# Las invocaciones escalan con "daño de esbirros", pero las RAM de su placa
+		# (más daño, daño físico, elemental...) también les afectan, como en PoE.
+		var ram_block := StatBlock.new()
+		ram_block.add_modifiers(extra)
+		var rb := ram_block.get_breakdown(Stat.DAMAGE_STAT_BY_TYPE.get(damage_type, Stat.DAMAGE), tags)
+		mult *= maxf(0.0, 1.0 + rb.increased / 100.0) * rb.more
 	var min_damage := (min_base + flat_added) * mult
 	var max_damage := (max_base + flat_added) * mult
 	var crit_chance := minf(100.0, crit_base * stats.total_multiplier(Stat.CRIT_CHANCE, tags))
 	var crit_multiplier := stats.get_value(Stat.CRIT_MULTIPLIER, tags)
 	var average := (min_damage + max_damage) / 2.0 * (1.0 + crit_chance / 100.0 * (crit_multiplier / 100.0 - 1.0))
 	# Stats especiales (ascendencias): más proyectiles, cadenas, esbirros o dispositivos.
-	if skill.has("projectiles"):
+	var shoots := shoots_projectiles(skill)
+	if shoots:
 		extra_projectiles += int(stats.get_value(Stat.EXTRA_PROJECTILES, tags))
 		if bonus_text == "+1 proyectil":
 			extra_projectiles += milestones
@@ -158,7 +194,8 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 		pierce += int(stats.get_value(Stat.EXTRA_PIERCE, tags))
 	if bonus_text == "+1 salto de cadena":
 		extra_chains += milestones
-	var projectiles := int(skill.get("projectiles", 0)) + (extra_projectiles if skill.has("projectiles") else 0)
+	var base_projectiles := int(skill.get("projectiles", 1 if shoots else 0))
+	var projectiles := base_projectiles + (extra_projectiles if shoots else 0)
 	var mana_cost := roundf((float(skill.get("mana_cost", 0)) + float(skill.get("mana_per_level", 0)) * (board.level - 1)) * cost_mult)
 	var cooldown := float(skill.get("cooldown", 0.0)) / maxf(0.1, stats.total_multiplier(Stat.COOLDOWN_RECOVERY, tags) * lvl_mult)
 	var duration_mult := stats.total_multiplier(Stat.SKILL_DURATION, tags) * lvl_mult
@@ -168,15 +205,17 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 	# Autómatas: más velocidad = disparan y golpean más a menudo.
 	var automaton_speed := stats.total_multiplier(Stat.AUTOMATON_SPEED, tags) if tags.has(TAG_AUTOMATON) else 1.0
 	var tick := float(skill.get("tick", 0.0))
+	# Pipeline en invocaciones: no se vuelven a invocar, atacan más a menudo.
+	var attack_rate := float(1 + repeats) if kind in AUTOMATON_KINDS else 1.0
 	if kind == "drones":
-		tick /= maxf(0.1, automaton_speed)
-	var minion_interval := MINION_ATTACK_INTERVAL / maxf(0.1, automaton_speed)
+		tick /= maxf(0.1, automaton_speed) * attack_rate
+	var minion_interval := MINION_ATTACK_INTERVAL / (maxf(0.1, automaton_speed) * attack_rate)
 	# Invocaciones persistentes (kind "unit"): no caducan, reservan maná.
 	var unit: Dictionary = skill.get("unit", {})
 	var aura: Dictionary = skill.get("aura", {})
 	var extra_minions := int(stats.get_value(Stat.EXTRA_MINIONS, tags))
 	var max_units := int(skill.get("max_active", 1)) + extra_minions + (milestones if kind == "unit" else 0)
-	var unit_interval := float(unit.get("interval", 1.0)) / maxf(0.1, automaton_speed)
+	var unit_interval := float(unit.get("interval", 1.0)) / (maxf(0.1, automaton_speed) * attack_rate)
 	var unit_life := float(unit.get("life", 0.0)) * (1.0 + 0.12 * (board.level - 1)) * stats.total_multiplier(Stat.MINION_LIFE, tags)
 	var reserve := float(unit.get("reserve", aura.get("reserve", 0.0))) / maxf(0.1, stats.total_multiplier(Stat.RESERVATION_EFFICIENCY, tags))
 	# Auras: bonificaciones para tus aliados, escaladas por el nivel, los hitos y "efecto de aura".
@@ -189,8 +228,9 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 		aura_mods.append(scaled)
 	# Encadenamiento: la penalización mejora 1 punto por nivel de la placa (−30 % → −29 % → ...).
 	var chain_damage := 1.0 if chain_penalty < 0.0 else clampf(1.0 - chain_penalty / 100.0 + 0.01 * (board.level - 1), 0.0, 1.0)
-	var rain_hits := int(skill.get("count", 0)) + (2 * milestones if kind == "rain" else 0)
-	var hits_per_use := float(repeats + 1)
+	# Lluvia: cada proyectil extra son dos impactos más.
+	var rain_hits := int(skill.get("count", 0)) + (2 * milestones + 2 * extra_projectiles if kind == "rain" else 0)
+	var hits_per_use := 1.0 if kind in AUTOMATON_KINDS else float(repeats + 1)
 	match kind:
 		"spin":
 			hits_per_use *= maxf(1.0, floorf(duration / maxf(0.05, tick)))
@@ -233,8 +273,14 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 		"cooldown": cooldown,
 		"mana_cost": mana_cost,
 		"radius": float(skill.get("radius", 0.0)) * sqrt(stats.total_multiplier(Stat.AREA_OF_EFFECT, tags)) * area_mult * lvl_mult,
+		# Escala de área sin radio base: la usan las habilidades de las invocaciones
+		# (explosión de la mina, salto del bot, nube del agente IA).
+		"area_scale": sqrt(stats.total_multiplier(Stat.AREA_OF_EFFECT, tags)) * area_mult * lvl_mult,
 		"projectiles": projectiles,
-		"spread_degrees": float(skill.get("spread_degrees", 12.0 * maxi(0, projectiles - 1))) + 8.0 * extra_projectiles,
+		# Abanico: "|" con uno, "V" con dos, "\|/" con tres... (12° más por proyectil extra).
+		"spread_degrees": float(skill.get("spread_degrees", 12.0 * maxi(0, base_projectiles - 1))) + 12.0 * (projectiles - base_projectiles),
+		# Solo persiguen a los enemigos si la habilidad es teledirigida.
+		"homing": kind == "homing" or tags.has(&"homing"),
 		"projectile_speed": float(skill.get("projectile_speed", 0.0)) * stats.total_multiplier(Stat.PROJECTILE_SPEED, tags),
 		"pierce": pierce,
 		"range": float(skill.get("range", 0.0)),
@@ -254,7 +300,8 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 		"count": int(skill.get("count", 0)) + (int(stats.get_value(Stat.EXTRA_MINIONS, tags)) + milestones if skill.get("kind", "") == "minion" else 0),
 		"extra_devices": int(stats.get_value(Stat.EXTRA_DEVICES, tags)),
 		"drone_count": int(skill.get("count", 0)) + milestones + extra_minions if kind == "drones" else 0,
-		"seek_range": float(skill.get("seek_range", 0.0)),
+		# Alcance con el que buscan enemigo los teledirigidos (y los drones al disparar).
+		"seek_range": maxf(float(skill.get("seek_range", 0.0)), 450.0 if tags.has(&"homing") else 0.0),
 		"turn_rate": float(skill.get("turn_rate", 6.0)),
 		"buff_mods": skill.get("buff_mods", []),
 		"barrier": (float(skill.get("barrier", 0.0)) * (1.0 + 0.1 * (board.level - 1)) + float(skill.get("barrier_life", 0.0)) * stats.get_value(Stat.LIFE)) \

@@ -319,6 +319,9 @@ func try_use(index: int) -> bool:
 		skill_used.emit(index)
 		return true
 	_execute(p, target)
+	if p["kind"] in SkillCalc.AUTOMATON_KINDS or p["kind"] == "aura":
+		skill_used.emit(index)
+		return true   # en invocaciones la repetición ya va en su ritmo de ataque
 	for r in int(p["repeats"]):
 		_pending.append({"type": "repeat", "time": REPEAT_DELAY * (r + 1), "profile": p, "target": target})
 	skill_used.emit(index)
@@ -456,15 +459,7 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 			_effects.append({"type": "beam_marker", "pos": origin, "dir": dir, "radius": p["width"], "length": p["range"],
 				"time": 0.0, "duration": p["delay"], "color": color})
 		"boomerang":
-			var count: int = maxi(1, p["projectiles"])
-			var spread := deg_to_rad(p["spread_degrees"])
-			for k in count:
-				var angle := 0.0 if count == 1 else lerpf(-spread / 2.0, spread / 2.0, float(k) / (count - 1))
-				_projectiles.append({
-					"pos": origin, "vel": dir.rotated(angle) * float(p["projectile_speed"]),
-					"distance_left": float(p["range"]), "pierce_left": 999, "hit_ids": {}, "profile": p,
-					"color": color, "boomerang": true, "returning": false, "spin": 0.0,
-				})
+			_fire_volley(p, origin, dir, color, {"pierce_left": 999, "boomerang": true, "returning": false, "spin": 0.0, "homing": false})
 		"spin":
 			_spins.append({"time_left": p["duration"], "next_tick": 0.0, "profile": p, "color": color, "angle": 0.0,
 				"center": origin if device else Vector2.INF})
@@ -493,16 +488,7 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 			enemies.dot_in_radius(center, p["radius"], dps, p["duration"])
 			_effects.append({"type": "curse", "pos": center, "radius": p["radius"], "time": 0.0, "duration": 0.8, "color": color})
 		"dot_projectile", "homing":
-			var count: int = maxi(1, p["projectiles"])
-			var spread := deg_to_rad(p["spread_degrees"])
-			for k in count:
-				var angle := 0.0 if count == 1 else lerpf(-spread / 2.0, spread / 2.0, float(k) / (count - 1))
-				_projectiles.append({
-					"pos": origin, "vel": dir.rotated(angle) * float(p["projectile_speed"]),
-					"distance_left": float(p["range"]), "pierce_left": int(p["pierce"]),
-					"hit_ids": {}, "profile": p, "color": color, "chains_left": int(p["projectile_chains"]),
-					"dot": p["kind"] == "dot_projectile", "homing": p["kind"] == "homing",
-				})
+			_fire_volley(p, origin, dir, color, {"dot": p["kind"] == "dot_projectile"})
 		"drones":
 			var n: int = maxi(1, p["drone_count"])
 			for k in n:
@@ -521,15 +507,7 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 		"chain":
 			_chain(p, origin, target, color)
 		"projectile":
-			var count: int = maxi(1, p["projectiles"])
-			var spread := deg_to_rad(p["spread_degrees"])
-			for k in count:
-				var angle := 0.0 if count == 1 else lerpf(-spread / 2.0, spread / 2.0, float(k) / (count - 1))
-				_projectiles.append({
-					"pos": origin, "vel": dir.rotated(angle) * float(p["projectile_speed"]),
-					"distance_left": float(p["range"]), "pierce_left": int(p["pierce"]),
-					"hit_ids": {}, "profile": p, "color": color, "chains_left": int(p["projectile_chains"]),
-				})
+			_fire_volley(p, origin, dir, color)
 		"ground_aoe":
 			var offset := (target - origin).limit_length(p["range"])
 			_pending.append({"type": "blast", "time": p["delay"], "pos": origin + offset, "profile": p, "color": color})
@@ -542,6 +520,24 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 			player.global_position = origin + offset
 			player.stop_auto_move()
 			_effects.append({"type": "ring", "pos": player.global_position, "radius": 40.0, "time": 0.0, "duration": 0.3, "color": color})
+
+
+## Dispara los proyectiles de una habilidad en abanico hacia `dir`: uno sale recto
+## («|»), dos en «V», tres en «\|/»... Solo persiguen enemigos si la habilidad es
+## teledirigida (p["homing"]). `extra` añade o sustituye campos de cada proyectil.
+func _fire_volley(p: Dictionary, origin: Vector2, dir: Vector2, color: Color, extra := {}, reach := -1.0) -> void:
+	var count: int = maxi(1, int(p.get("projectiles", 1)))
+	var spread := deg_to_rad(float(p.get("spread_degrees", 0.0)))
+	for k in count:
+		var angle := 0.0 if count == 1 else lerpf(-spread / 2.0, spread / 2.0, float(k) / (count - 1))
+		var pr := {
+			"pos": origin, "vel": dir.rotated(angle) * float(p["projectile_speed"]),
+			"distance_left": reach if reach > 0.0 else float(p["range"]), "pierce_left": int(p["pierce"]),
+			"hit_ids": {}, "profile": p, "color": color, "chains_left": int(p["projectile_chains"]),
+			"homing": bool(p.get("homing", false)),
+		}
+		pr.merge(extra, true)
+		_projectiles.append(pr)
 
 
 ## Cadena: el enemigo más cercano al cursor (a tiro) y luego salta al más cercano no golpeado.
@@ -715,7 +711,7 @@ func _update_units(delta: float) -> void:
 			var death_color := Color("ff7a4a")
 			if String(p["unit_ability"].get("kind", "")) == "explode":
 				# Mina Rodante: explota al caer.
-				var boom_radius: float = float(p["unit_ability"].get("radius", 90.0)) * (p["radius"] / maxf(1.0, float(p["def"].get("radius", 1.0)))) if p["radius"] > 0.0 else 90.0
+				var boom_radius: float = float(p["unit_ability"].get("radius", 90.0)) * float(p.get("area_scale", 1.0))
 				_ctx(p)
 				_damage_area(u["pos"], boom_radius, p)
 				_effects.append({"type": "quake", "pos": u["pos"], "radius": boom_radius, "time": 0.0, "duration": 0.5, "color": u["color"]})
@@ -823,9 +819,10 @@ func _unit_ability(u: Dictionary, p: Dictionary, delta: float) -> void:
 			_effects.append({"type": "leap", "pos": pos, "end": land, "time": 0.0, "duration": 0.3, "color": u["color"]})
 			u["pos"] = land
 			_ctx(p)
-			enemies.hit_in_radius(land, float(ab.get("radius", 75.0)), p["min_damage"] * float(ab.get("damage_mult", 1.5)),
+			var leap_radius := float(ab.get("radius", 75.0)) * float(p.get("area_scale", 1.0))
+			enemies.hit_in_radius(land, leap_radius, p["min_damage"] * float(ab.get("damage_mult", 1.5)),
 				p["max_damage"] * float(ab.get("damage_mult", 1.5)), p["crit_chance"], p["crit_multiplier"])
-			_effects.append({"type": "quake", "pos": land, "radius": float(ab.get("radius", 75.0)), "time": 0.0, "duration": 0.4, "color": u["color"]})
+			_effects.append({"type": "quake", "pos": land, "radius": leap_radius, "time": 0.0, "duration": 0.4, "color": u["color"]})
 		"venom":
 			var t := enemies.nearest_index(pos, float(p["unit"].get("range", 520.0)))
 			if t == -1:
@@ -834,7 +831,7 @@ func _unit_ability(u: Dictionary, p: Dictionary, delta: float) -> void:
 			u["ab_cd"] = float(ab.get("cooldown", 7.0)) / speed
 			var cloud := p.duplicate()
 			cloud["tick"] = 0.5
-			cloud["radius"] = float(ab.get("radius", 95.0))
+			cloud["radius"] = float(ab.get("radius", 95.0)) * float(p.get("area_scale", 1.0))
 			cloud["duration"] = float(ab.get("duration", 4.0))
 			cloud["min_damage"] = p["min_damage"] * 1.1
 			cloud["max_damage"] = p["max_damage"] * 1.1
@@ -863,8 +860,7 @@ func _unit_shoot(u: Dictionary, p: Dictionary, reach_range: float) -> void:
 		return
 	u["cd"] = p["unit_interval"]
 	var dir: Vector2 = (enemies.positions[t] - pos).normalized()
-	_projectiles.append({"pos": pos, "vel": dir * float(p["projectile_speed"]), "distance_left": reach_range * 1.5,
-		"pierce_left": int(p["pierce"]), "hit_ids": {}, "profile": p, "color": u["color"], "chains_left": int(p["projectile_chains"]), "homing": true})
+	_fire_volley(p, pos, dir, u["color"], {}, reach_range * 1.5)
 	_effects.append({"type": "burst", "pos": pos + dir * 10.0, "radius": 8.0, "time": 0.0, "duration": 0.12, "color": u["color"]})
 
 
@@ -903,8 +899,7 @@ func _update_drones(delta: float) -> void:
 			if t != -1:
 				d["next"] = p["tick"]
 				var dir: Vector2 = (enemies.positions[t] - pos).normalized()
-				_projectiles.append({"pos": pos, "vel": dir * float(p["projectile_speed"]), "distance_left": p["seek_range"] * 1.5,
-					"pierce_left": int(p["pierce"]), "hit_ids": {}, "profile": p, "color": d["color"], "chains_left": int(p["projectile_chains"]), "homing": true})
+				_fire_volley(p, pos, dir, d["color"], {}, p["seek_range"] * 1.5)
 			else:
 				d["next"] = 0.2
 		still.append(d)

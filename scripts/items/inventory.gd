@@ -153,6 +153,31 @@ func install_board(bag_index: int, hotbar_index := -1) -> bool:
 	return true
 
 
+## Ordena las placas y los módulos RAM de la bolsa sin mover lo demás: ocupan
+## los mismos huecos, pero primero las placas (por nombre y nivel) y luego las RAM
+## (por generación, familia y grado).
+func sort_skill_items() -> void:
+	var spots: Array[int] = []
+	var items: Array = []
+	for i in BAG_SIZE:
+		if bag[i] is Motherboard or bag[i] is RamModule:
+			spots.append(i)
+			items.append(bag[i])
+	items.sort_custom(func(a: Item, b: Item) -> bool: return skill_item_key(a) < skill_item_key(b))
+	for k in spots.size():
+		bag[spots[k]] = items[k]
+	changed.emit()
+
+
+## Clave de orden de placas y RAM (también la usa el menú de habilidades).
+static func skill_item_key(item: Item) -> String:
+	if item is Motherboard:
+		var b := item as Motherboard
+		return "0|%s|%03d" % [b.skill_def.get("name", ""), 999 - b.level]
+	var r := item as RamModule
+	return "1|%s|%s|%d" % [r.generation(), r.family(), 9 - r.tier()]
+
+
 ## Intercambia dos ranuras de la barra (para elegir qué tecla usa cada placa).
 func swap_boards(a: int, b: int) -> void:
 	if a < 0 or b < 0 or a >= HOTBAR_SIZE or b >= HOTBAR_SIZE:

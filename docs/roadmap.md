@@ -17,7 +17,8 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 
 - **Auras con alcance** (S): hoy afectan a todos tus aliados; que dependan de la distancia al jugador y que haya auras que debiliten a los enemigos.
 - **Más invocaciones y auras** (M): una de cada por clase que aún no la tiene, mejoras por hito y modo «reservar más maná = más potencia».
-- **RAM de grados para más familias** (S): ya tienen grados el encadenamiento, la perforación, el multicanal, los estados, el crítico, el daño elemental y el robo de vida; faltan área, velocidad y pipeline. Módulos de efecto sobre aliados (estados en drones).
+- **RAM de grados para más familias** (S): ya tienen grados el encadenamiento, la perforación, el multicanal, los estados, el crítico, el daño elemental y el robo de vida; faltan área, velocidad, pipeline y guiado por láser.
+- **Equilibrar el Multicanal nuevo** (S): −40/45/50 % en nivel 1 que baja 1 punto por nivel; con 8 proyectiles en abanico la Ráfaga puede quedarse corta o pasarse según la distancia.
 - **Desbloqueo de habilidades por nivel** (M): que cada clase tenga progresión de kit propia, no solo botín.
 - **Más interacciones entre estados** (S): hoy hay rotura, sobrecarga, infección y choque térmico; falta una para helado + rayo y que las ascendencias las potencien.
 - **Resistencia a estados en objetos** (S): el árbol ya tiene nodos de «resistencia a estados»; faltan afijos en el equipo.
@@ -43,7 +44,8 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 
 ## 5. Interfaz
 
-- Pantalla K con filtros por tipo de habilidad, y vista previa de DPS con y sin RAM (M).
+- Pantalla K: filtros por tipo de habilidad y comparar el DPS con y sin una RAM antes de instalarla (S; el resumen por placa y las ranuras compatibles ya están).
+- El DPS estimado de las habilidades con varios proyectiles cuenta uno solo y el de esbirros temporales (Proceso Hijo) sale inflado con Pipeline y Enjambre: revisar la fórmula (S).
 - Tamaño de interfaz también en los menús fuera de partida (título, personajes, creador) y tamaños mayores que 120 %: hoy la barra inferior del HUD no cabe más allá (S).
 - Mando / gamepad (L).
 
@@ -72,6 +74,8 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 5. Arte final de personajes y enemigos.
 
 ## Hecho (no repetir)
+
+**RAM y habilidades (octubre 2026)**: proyectiles en abanico («|», «V», «\|/»...) y solo teledirigidos con la etiqueta `homing` (Paquete Rastreador, Torreta CI, Dron Escolta, Agente IA) o la RAM nueva **Guiado por Láser** · el Multicanal añade proyectiles a drones e invocaciones que disparan y quita un 40/45/50 % de daño en nivel 1 (1 punto menos por nivel, hasta la mitad) · las RAM de daño ya afectan a las invocaciones · Pipeline en invocaciones = atacan el doble de rápido (antes apagaba las auras o reinvocaba) · las RAM de área escalan las habilidades de las invocaciones · reglas de compatibilidad (`requires_all_tags`, `excludes_kinds`, sin RAM de daño en habilidades sin daño) y auditoría (`tools/audit_rams.gd` y una prueba): ninguna RAM compatible queda sin efecto · insignias de cada familia de RAM en el icono de la habilidad (barra, placas y módulos de la bolsa) · menú K con resumen por placa (DPS, maná, proyectiles, RAM activas), ranuras compatibles en verde y en rojo las que no harían nada, bolsa agrupada por generación y botón «Ordenar».
 
 **Minimapa y prólogo (octubre 2026)**: objetos de misión como insignia verde con «!» que pulsa · NPCs con silueta propia y «!»/«?» si ofrecen o entregan misión · enemigos por rareza (gris normal, azul claro mágico, amarillo raro, naranja único) con borde oscuro · jefe con su propio sprite en una insignia con ondas rojas (pegada al borde si queda fuera) · iconos de los objetos pendientes y recogidos en el registro de misiones · el «No» de la contratación encoge su tamaño y su letra hasta un mínimo legible (antes se escalaba hasta 8×2 px sin texto) y, ya pequeño, lo señala un recuadro punteado que parpadea.
 

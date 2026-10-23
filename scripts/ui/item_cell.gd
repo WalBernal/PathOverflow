@@ -119,8 +119,14 @@ func _draw() -> void:
 	var board := item as Motherboard
 	if board and show_skill_icon:
 		SkillIcon.draw(self, rect.grow(-3.0), board.skill_def)
+		RamIcon.draw_board_column(self, rect.grow(-3.0), board, 3.0)
 	else:
 		ItemIcons.draw_item(self, rect.grow(-3.0), item)
+	var ram := item as RamModule
+	if ram:
+		# Símbolo de su familia abajo a la derecha: así se distinguen en la bolsa.
+		var s := clampf(size.x * 0.36, 10.0, 18.0)
+		RamIcon.draw_badge(self, Rect2(size - Vector2(s + 3.0, s + 3.0), Vector2(s, s)), ram)
 	draw_rect(rect, color.darkened(0.15), false, 2.0 if item.rarity >= Rarity.Item.RARE else 1.0)
 	if item.rarity >= Rarity.Item.UNIQUE and not item is Flask and not item is KeyItem:
 		draw_rect(rect.grow(-3.0), Color(color, 0.35), false, 1.0)

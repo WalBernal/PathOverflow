@@ -22,6 +22,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("habilidades"):
+		await _capture_skills_with_rams()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("minimapa"):
 		await _capture_minimap()
 		await _capture_hire_no()
@@ -470,6 +474,94 @@ func _capture_quest_items() -> void:
 	_swap(sheet)
 	await _wait(0.5)
 	_save("20_objetos_mision")
+
+
+## Habilidades con 4-5 RAM, disparando de verdad: abanicos de proyectiles,
+## drones e invocaciones con Multicanal, teledirigidos y Pipeline. Imprime por
+## cada una las RAM activas y cuántos proyectiles salen.
+const RAM_BUILDS := [
+	["rafaga_de_paquetes", ["multicanal_mayor", "puntero_salvaje", "propagacion_excepciones", "ecc", "pipeline"]],
+	["drones_vigilancia", ["multicanal", "pipeline", "firmware_autonomo", "ecc", "sobretension"]],
+	["robot_centinela", ["multicanal_mayor", "puntero_salvaje", "redundancia_invocacion", "sensor_precision", "guiado_laser"]],
+	["dron_escolta", ["multicanal", "pipeline", "firmware_resiliente", "pasta_termica"]],
+	["paquete_rastreador", ["multicanal_menor", "puntero_salvaje_menor", "ecc_menor", "pipeline"]],
+	["cascada_css", ["multicanal", "disipador", "ecc", "refrigeracion_liquida"]],
+]
+
+
+func _capture_skills_with_rams() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var items: ItemDatabase = gd.get("items")
+	var c: CharacterData = gd.create_character("RAM", &"templario", CharacterAppearance.default(), false)
+	c.flags["zone"] = "zona1"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 30
+	for i in RAM_BUILDS.size():
+		var ids: Array = RAM_BUILDS[i][1]
+		var slots: Array = []
+		for rid in ids:
+			slots.append(items.skills.rams[rid]["generation"])
+		var board := Motherboard.new(items.skills.skills[RAM_BUILDS[i][0]], 20, slots)
+		for k in ids.size():
+			var problem := board.install(RamModule.new(items.skills.rams[ids[k]]), k)
+			if problem != "":
+				print("  no se instala %s: %s" % [ids[k], problem])
+		c.inventory.set_board(i, board)
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.2)
+	var skills: SkillController = world.get("skills")
+	var player: Player = world.get("player")
+	var em: EnemyManager = world.get("enemies")
+	player.invulnerable = true
+	player.mana_reserved = 0.0
+	em.clear_all()
+	var p := player.global_position
+	for k in 10:
+		var id := em.spawn(p + Vector2(330, -200 + k * 45), Rarity.Enemy.NORMAL)
+		em.lives[em.index_of(id)] *= 50.0
+		em.max_lives[em.index_of(id)] *= 50.0
+	for i in RAM_BUILDS.size():
+		var prof := skills.profile(i)
+		var board: Motherboard = c.inventory.boards[i]
+		var before: int = skills.get("_projectiles").size()
+		if prof["kind"] == "unit":
+			skills.call("_summon_unit", prof, p, Color.WHITE)
+		else:
+			skills.call("_execute", prof, p + Vector2(300, 0))
+		var fired: int = skills.get("_projectiles").size() - before
+		print("%s: activas %s · proyectiles %d (salieron %d) · abanico %.0f° · teledirigido %s · daño %.0f-%.0f" % [
+			RAM_BUILDS[i][0], str(board.active_supports().size()) if board else "?", prof["projectiles"], fired,
+			prof["spread_degrees"], prof["homing"], prof["min_damage"], prof["max_damage"]])
+		if i == 0:
+			await _wait(0.12)
+			_save("28_abanico_rafaga")
+	await _wait(2.5)
+	_save("29_drones_e_invocaciones")
+	var shots := 0
+	for pr in skills.get("_projectiles"):
+		shots += 1
+	print("proyectiles en vuelo tras 2.5 s: %d" % shots)
+	# Menú K: RAM y placas sueltas en la bolsa, una RAM seleccionada.
+	for rid in ["pipeline", "multicanal_menor", "ecc_mayor", "pasta_termica", "guiado_laser", "carcasa_reforzada", "fuerza_bruta", "sobretension_menor"]:
+		c.inventory.add_item(RamModule.new(items.skills.rams[rid]))
+	c.inventory.add_item(Motherboard.new(items.skills.skills["ping_letal"], 7, ["DDR5", "DDR4"]))
+	c.inventory.add_item(Motherboard.new(items.skills.skills["golem_hardware"], 3, ["DDR3"]))
+	c.inventory.boards[3].rams[3] = null   # una ranura libre en el dron escolta
+	var ui: GameUI = world.get("ui")
+	ui.skills_panel.visible = true
+	await _wait(0.2)
+	var panel: SkillsPanel = ui.skills_panel
+	for i in Inventory.BAG_SIZE:
+		var it: Variant = c.inventory.bag[i]
+		if it is RamModule and (it as RamModule).family() == "pasta_termica":
+			panel.call("_on_bag_clicked", i)
+	await _wait(0.4)
+	_save("30_menu_habilidades")
+	world.set("_since_save", -9999.0)
 
 
 ## Minimapa ampliado en tres sitios: el jefe del acto I con enemigos de cada

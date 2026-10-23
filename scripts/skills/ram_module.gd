@@ -29,6 +29,18 @@ func display_name() -> String:
 	return "%s (%s)" % [def.get("name", "?"), generation()]
 
 
+## Familia: el id sin el grado ("multicanal_mayor" → "multicanal").
+func family() -> String:
+	return family_of(String(def.get("id", "")))
+
+
+static func family_of(ram_id: String) -> String:
+	for suffix in ["_menor", "_mayor"]:
+		if ram_id.ends_with(suffix):
+			return ram_id.substr(0, ram_id.length() - suffix.length())
+	return ram_id
+
+
 ## 1 menor, 2 normal, 3 mayor.
 func tier() -> int:
 	return int(def.get("tier", 2))
@@ -42,11 +54,28 @@ func get_modifiers(_source: String) -> Array[Modifier]:
 	return []
 
 
+## Stats que solo sirven si la habilidad hace daño (golpes, estados, crítico, robo).
+const DAMAGE_STATS := ["damage", "physical_damage", "elemental_damage", "fire_damage", "cold_damage", "lightning_damage",
+	"chaos_damage", "minion_damage", "crit_chance", "crit_multiplier", "life_leech", "burn_chance", "shock_chance",
+	"chill_chance", "freeze_chance", "poison_chance", "bleed_chance", "ailment_damage", "ailment_duration", "ailing_damage"]
+
+
+## ¿Funciona con esa habilidad? requires_tags: alguna; requires_all_tags: todas;
+## excludes_tags: ninguna; excludes_kinds: no con ese tipo (p. ej. la lluvia de
+## la Cascada no tiene proyectiles que atraviesen o reboten). Y una RAM que solo mejora el daño no entra en una
+## habilidad que no hace daño (auras, drones de curación o de escudo).
 func supports(skill_def: Dictionary) -> bool:
 	var tags: Array = skill_def.get("tags", [])
 	for t in def.get("excludes_tags", []):
 		if tags.has(t):
 			return false
+	for t in def.get("requires_all_tags", []):
+		if not tags.has(t):
+			return false
+	if String(skill_def.get("kind", "")) in def.get("excludes_kinds", []):
+		return false
+	if only_damage() and String(skill_def.get("damage_type", "none")) == "none":
+		return false
 	var required: Array = def.get("requires_tags", [])
 	if required.is_empty():
 		return true
@@ -54,6 +83,17 @@ func supports(skill_def: Dictionary) -> bool:
 		if tags.has(t):
 			return true
 	return false
+
+
+## ¿Todos sus efectos son de daño? (sin efectos especiales como proyectiles o despliegue).
+func only_damage() -> bool:
+	var mods: Array = def.get("mods", [])
+	if mods.is_empty() or not def.get("special", {}).is_empty():
+		return false
+	for md in mods:
+		if not (String(md.get("stat", "")) in DAMAGE_STATS):
+			return false
+	return true
 
 
 func cost_multiplier() -> float:
@@ -84,7 +124,12 @@ func effect_lines() -> PackedStringArray:
 		lines.append(m.describe())
 	var sp: Dictionary = def.get("special", {})
 	if sp.has("extra_projectiles"):
-		lines.append("+%d proyectiles adicionales" % sp["extra_projectiles"])
+		lines.append("+%d proyectiles adicionales, en abanico (también los de drones e invocaciones)" % sp["extra_projectiles"])
+	if sp.has("projectile_penalty"):
+		lines.append("%d %% menos de daño en una placa de nivel 1 (1 punto menos por nivel, hasta %d %%)" % [
+			int(sp["projectile_penalty"]), int(sp["projectile_penalty"]) / 2])
+	if sp.has("homing"):
+		lines.append("Los proyectiles son teledirigidos: persiguen al enemigo más cercano")
 	if sp.has("pierce"):
 		lines.append("Los proyectiles atraviesan %d enemigos más" % sp["pierce"])
 	if sp.has("repeats"):

@@ -768,7 +768,8 @@
       "tags": [
         "attack",
         "projectile",
-        "physical"
+        "physical",
+        "homing"
       ],
       "lol": "Ezreal Q / Ashe W (teledirigido)",
       "description": "Disparas paquetes con seguimiento que buscan al enemigo más cercano. Nadie escapa del tracking.",
@@ -846,7 +847,8 @@
         "elemental",
         "totem",
         "duration",
-        "automaton"
+        "automaton",
+        "homing"
       ],
       "lol": "Heimerdinger Q (torreta)",
       "description": "Despliegas una torreta armada con piezas de servidor que dispara sola proyectiles teledirigidos al enemigo más cercano. Tú programas; ella pelea.",
@@ -1082,7 +1084,8 @@
         "persistent",
         "projectile",
         "fire",
-        "elemental"
+        "elemental",
+        "homing"
       ],
       "lol": "Zyra / Heimerdinger E",
       "description": "Un dron armado que orbita a tu alrededor y dispara bengalas incendiarias. Vuela demasiado alto para que lo golpeen. Persistente: reserva maná.",
@@ -1375,7 +1378,8 @@
         "persistent",
         "area",
         "chaos",
-        "projectile"
+        "projectile",
+        "homing"
       ],
       "lol": "Cassiopeia / Zyra",
       "description": "Un agente autónomo que alucina con confianza: dispara a distancia y, cada pocos segundos, escupe un charco tóxico sobre el grupo enemigo. Persistente.",
@@ -1386,7 +1390,7 @@
         ],
         "damage_growth": 0.16,
         "cast_time": 0.9,
-        "crit": 0.0
+        "crit": 5.0
       },
       "unit": {
         "behavior": "ranged",

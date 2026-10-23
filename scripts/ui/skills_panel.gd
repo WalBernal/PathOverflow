@@ -20,8 +20,11 @@ const ATTRIBUTE_COLORS := {"str": Color("c84b4b"), "dex": Color("5cb85c"), "int"
 var character: CharacterData
 var _tooltip: ItemTooltip
 var _rows: VBoxContainer
-var _bag_box: HFlowContainer
+var _bag_box: VBoxContainer
+var _hint: Label
 var _selected_ram := -1  # índice en la bolsa de la RAM seleccionada
+
+const HINT := "Arrastra placas a la barra y RAM a una ranura de su color; a la bolsa para quitar. Click en una RAM: se marcan en verde las ranuras donde funciona (doble click: a la primera)."
 
 
 func setup(p_character: CharacterData, tooltip: ItemTooltip) -> void:
@@ -39,21 +42,36 @@ func _ready() -> void:
 	add_child(box)
 	box.add_child(UiStyle.window_header("Habilidades", "Placas base (habilidades) y módulos RAM (soportes)  ·  K para cerrar",
 		func() -> void: close_requested.emit()))
-	box.add_child(UiStyle.label("Arrastra placas a la barra y RAM a una ranura de su color; a la bolsa para quitar. Click en la RAM y luego en la ranura, o doble click.", 11, UiStyle.MUTED))
+	_hint = UiStyle.label(HINT, 11, UiStyle.MUTED)
+	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_hint.custom_minimum_size.x = 640
+	box.add_child(_hint)
 	_rows = VBoxContainer.new()
 	_rows.add_theme_constant_override("separation", 6)
 	box.add_child(_rows)
-	box.add_child(UiStyle.section_header("En la bolsa  (suelta aquí para desinstalar)"))
+	var bag_title := HBoxContainer.new()
+	box.add_child(bag_title)
+	var header := UiStyle.section_header("En la bolsa  (suelta aquí para desinstalar)")
+	header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bag_title.add_child(header)
+	var sort := UiStyle.button("Ordenar", _sort_bag)
+	sort.custom_minimum_size = Vector2(90, 28)
+	sort.tooltip_text = "Ordena las placas y las RAM de la bolsa: placas por nombre y nivel; RAM por generación, tipo y grado."
+	bag_title.add_child(sort)
 	var bag_drop := _BagDropZone.new()
 	bag_drop.panel = self
 	bag_drop.custom_minimum_size = Vector2(640, 52)
 	box.add_child(bag_drop)
-	_bag_box = HFlowContainer.new()
-	_bag_box.add_theme_constant_override("h_separation", 4)
-	_bag_box.add_theme_constant_override("v_separation", 4)
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(640, 150)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.mouse_filter = Control.MOUSE_FILTER_PASS
+	bag_drop.add_child(scroll)
+	_bag_box = VBoxContainer.new()
+	_bag_box.add_theme_constant_override("separation", 4)
 	_bag_box.mouse_filter = Control.MOUSE_FILTER_PASS
-	bag_drop.add_child(_bag_box)
-	_bag_box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 4)
+	_bag_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(_bag_box)
 	if character:
 		_rebuild()
 
@@ -68,16 +86,66 @@ func _rebuild() -> void:
 		_selected_ram = -1
 	for i in Inventory.HOTBAR_SIZE:
 		_rows.add_child(_make_row(i))
-	var any := false
+	# Bolsa agrupada: placas, y RAM por generación (cada grupo ordenado).
+	var groups := {"Placas base": [], "RAM DDR3": [], "RAM DDR4": [], "RAM DDR5": []}
 	for i in Inventory.BAG_SIZE:
 		var item: Item = character.inventory.bag[i]
-		if item is Motherboard or item is RamModule:
-			_bag_box.add_child(_make_bag_cell(i))
-			any = true
+		if item is Motherboard:
+			groups["Placas base"].append(i)
+		elif item is RamModule:
+			groups["RAM " + (item as RamModule).generation()].append(i)
+	var any := false
+	for title in groups:
+		var ids: Array = groups[title]
+		if ids.is_empty():
+			continue
+		any = true
+		ids.sort_custom(func(a: int, b: int) -> bool:
+			return Inventory.skill_item_key(character.inventory.bag[a]) < Inventory.skill_item_key(character.inventory.bag[b]))
+		var line := HBoxContainer.new()
+		line.add_theme_constant_override("separation", 8)
+		line.mouse_filter = Control.MOUSE_FILTER_PASS
+		var gen: String = String(title).trim_prefix("RAM ")
+		var label := UiStyle.label("%s (%d)" % [title, ids.size()], 12, RamModule.GENERATION_COLORS.get(gen, Motherboard.COLOR).lightened(0.2))
+		label.custom_minimum_size.x = 104
+		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		line.add_child(label)
+		var flow := HFlowContainer.new()
+		flow.add_theme_constant_override("h_separation", 4)
+		flow.add_theme_constant_override("v_separation", 4)
+		flow.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		flow.mouse_filter = Control.MOUSE_FILTER_PASS
+		for i in ids:
+			flow.add_child(_make_bag_cell(i))
+		line.add_child(flow)
+		_bag_box.add_child(line)
 	if not any:
 		var empty := UiStyle.label("No tienes placas ni RAM sueltas. Mata cosas; algo caerá.", 13, UiStyle.MUTED)
 		empty.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_bag_box.add_child(empty)
+	_update_hint()
+
+
+func _sort_bag() -> void:
+	_selected_ram = -1
+	character.inventory.sort_skill_items()
+
+
+## Con una RAM seleccionada, el texto de ayuda dice en qué placas funciona.
+func _update_hint() -> void:
+	if _hint == null:
+		return
+	var ram: RamModule = character.inventory.bag[_selected_ram] if _selected_ram != -1 else null
+	if ram == null:
+		_hint.text = HINT
+		_hint.add_theme_color_override("font_color", UiStyle.MUTED)
+		return
+	var fits := PackedStringArray()
+	for b in character.inventory.boards:
+		if b and ram.supports(b.skill_def):
+			fits.append(b.skill_def["name"])
+	_hint.text = "%s: %s" % [ram.display_name(), ("funciona con " + ", ".join(fits)) if not fits.is_empty() else "no funciona con ninguna de tus placas instaladas"]
+	_hint.add_theme_color_override("font_color", Color("8fe08a") if not fits.is_empty() else Color("e06c6c"))
 
 
 func _make_row(index: int) -> Control:
@@ -134,6 +202,7 @@ func _make_row(index: int) -> Control:
 		tags.add_theme_font_size_override("normal_font_size", 11)
 		tags.text = SkillTags.bbcode(board.skill_def.get("tags", []))
 		info.add_child(tags)
+		info.add_child(_stats_label(board))
 	else:
 		info.alignment = BoxContainer.ALIGNMENT_CENTER
 		info.add_child(UiStyle.label("Arrastra aquí una placa base", 13, UiStyle.MUTED))
@@ -147,14 +216,44 @@ func _make_row(index: int) -> Control:
 			dimm.custom_minimum_size = DIMM_SIZE
 			var ram: RamModule = board.rams[d]
 			dimm.warning = ram != null and not ram.supports(board.skill_def)
+			if dimm.warning:
+				dimm.tooltip_text = "Esta RAM no funciona con %s: está instalada pero no hace nada." % board.skill_def["name"]
 			var selected: RamModule = character.inventory.bag[_selected_ram] if _selected_ram != -1 else null
-			dimm.selected = selected != null and ram == null and selected.generation() == board.slots[d]
+			if selected != null and ram == null and selected.generation() == board.slots[d]:
+				# Verde: aquí funciona. Rojo: encaja (mismo color) pero no haría nada.
+				dimm.selected = selected.supports(board.skill_def)
+				dimm.warning = not dimm.selected
 			row.add_child(dimm)
 	return card
+
+
+## "DPS ~120 · maná 14 · 3 proyectiles · RAM activas 2/3" bajo las etiquetas.
+func _stats_label(board: Motherboard) -> Label:
+	var p := SkillCalc.compute(board, character)
+	var parts := PackedStringArray()
+	if p["dps"] > 0.0:
+		parts.append("DPS ~%s" % _short(p["dps"]))
+	parts.append("maná %d" % int(p["mana_cost"]) if p["kind"] not in ["unit", "aura"] else "reserva %d %%" % roundi(p["reserve"]))
+	if p["projectiles"] > 1:
+		parts.append("%d proyectiles%s" % [p["projectiles"], " teledirigidos" if p["homing"] else ""])
+	var installed := 0
+	for ram in board.rams:
+		if ram != null:
+			installed += 1
+	if installed > 0:
+		parts.append("RAM activas %d/%d" % [board.active_supports().size(), installed])
+	var l := UiStyle.label("  ·  ".join(parts), 11, Color("b8ab90"))
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return l
+
+
+static func _short(v: float) -> String:
+	return "%.1fk" % (v / 1000.0) if v >= 10000.0 else str(roundi(v))
 
 func _make_bag_cell(bag_index: int) -> ItemCell:
 	var cell := _make_cell({"kind": "bag", "index": bag_index})
 	cell.custom_minimum_size = Vector2(44, 44)
+	cell.show_skill_icon = true   # las placas, con el icono de su habilidad
 	cell.selected = bag_index == _selected_ram
 	return cell
 

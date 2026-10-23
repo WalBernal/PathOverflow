@@ -9,6 +9,7 @@ const INFO := {
 	"spell": ["hechizo", "9a8ae0"],
 	"melee": ["cuerpo a cuerpo", "c89060"],
 	"projectile": ["proyectil", "c8c8c8"],
+	"homing": ["teledirigido", "e8a0ff"],
 	"area": ["área", "d9a441"],
 	"chain": ["cadena", "8888ff"],
 	"duration": ["duración", "6fd3c8"],
