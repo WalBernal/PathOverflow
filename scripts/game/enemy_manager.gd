@@ -342,8 +342,17 @@ func boss_info() -> Dictionary:
 			thresholds.append(float(ph["at"]))
 			names_list.append(String(ph.get("name", "")))
 		return {"id": id, "index": int(bp["next"]), "thresholds": thresholds, "phase_names": names_list,
-			"frac": lives[i] / max_lives[i], "shield": float(phase_shield.get(id, 0.0)), "name": names[i], "pos": positions[i], "rarity": rarities[i]}
+			"frac": lives[i] / max_lives[i], "shield": float(phase_shield.get(id, 0.0)), "name": names[i], "pos": positions[i], "rarity": rarities[i],
+			"sprite": sprite_region(i)}
 	return {}
+
+
+## Primer fotograma del sprite del enemigo `i` dentro de ATLAS (para el minimapa).
+func sprite_region(i: int) -> Rect2:
+	var all_types := enemy_types()
+	var t: Dictionary = all_types[types[i]] if types[i] < all_types.size() else {}
+	var frame := ATLAS.get_size() / Vector2(ATLAS_FRAMES, maxi(1, all_types.size()))
+	return Rect2(Vector2(0.0, int(t.get("sprite_row", 0)) * frame.y), frame)
 
 
 func _update_phases(delta: float) -> void:

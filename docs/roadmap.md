@@ -45,7 +45,6 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 
 - Pantalla K con filtros por tipo de habilidad, y vista previa de DPS con y sin RAM (M).
 - Tamaño de interfaz también en los menús fuera de partida (título, personajes, creador) y tamaños mayores que 120 %: hoy la barra inferior del HUD no cabe más allá (S).
-- Iconos de los objetos de misión en el registro de misiones (usar `QuestItemArt`) (S).
 - Mando / gamepad (L).
 
 ## 6. Arte y audio
@@ -73,6 +72,8 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 5. Arte final de personajes y enemigos.
 
 ## Hecho (no repetir)
+
+**Minimapa y prólogo (octubre 2026)**: objetos de misión como insignia verde con «!» que pulsa · NPCs con silueta propia y «!»/«?» si ofrecen o entregan misión · enemigos por rareza (gris normal, azul claro mágico, amarillo raro, naranja único) con borde oscuro · jefe con su propio sprite en una insignia con ondas rojas (pegada al borde si queda fuera) · iconos de los objetos pendientes y recogidos en el registro de misiones · el «No» de la contratación encoge su tamaño y su letra hasta un mínimo legible (antes se escalaba hasta 8×2 px sin texto) y, ya pequeño, lo señala un recuadro punteado que parpadea.
 
 **Interfaz y audio (octubre 2026)**: objetos de misión con dibujo propio (`QuestItemArt`: cinta LTO, papel continuo con sello, descriptor en blanco, bloques de caché en hielo, funda de Kindle con nota y etiqueta, Kindle con raya y batería al 1 %, concha, bolillo tibio con vapor y cuernito escarchado) · **bucles de música arreglados**: el final del bucle se calculaba con `data.size() / 2`, que con los .wav importados en QOA cortaba cada pista a una quinta parte; ahora cada pista tiene intro que suena una vez, cuerpo de 32 compases con partes A/B y redoble antes de volver, y el bucle empieza tras la intro (`data/music_loops.json`) · ambientes de 24 s con bucle real (antes 6 s con hueco al relanzarse) · campamento del acto III con balada original de melodía escrita · menú de pausa en dos columnas con volumen por canal (música, efectos, ambiente, voces), **tamaño de interfaz** (85-120 %, solo la capa de UI; el mundo no cambia), **modo daltónico** de los estados (paleta Okabe-Ito) · el buscador del árbol encuentra las temáticas por estado («veneno», «sangrado», «congelar», «torreta», «aura»...) · los efectos ya no leen settings.cfg en cada sonido.
 

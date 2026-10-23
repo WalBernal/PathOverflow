@@ -4,8 +4,10 @@ extends Control
 ## Windows 98 donde se elige el primer puesto (la clase) en un desplegable.
 ## El botón [ No ] no quiere que lo pulsen:
 ##   - al acercarse el ratón, salta (la primera vez 150 px a la derecha; luego a
-##     cualquier hueco de la ventana lejos del ratón), y encoge un poco cada vez;
-##   - cuando ya es diminuto deja de esquivar;
+##     cualquier hueco de la ventana lejos del ratón), y encoge un poco cada vez,
+##     pero nunca tanto como para que no se lea el «No»; ya pequeño, lo rodea un
+##     recuadro punteado que parpadea para no perderlo de vista;
+##   - cuando llega a su tamaño mínimo deja de esquivar;
 ##   - si se le atina, sale el error 0x80004005 y se convierte en «Pues ya que...»,
 ##     que acepta igual que [ Sí ].
 
@@ -19,9 +21,11 @@ const BLUE_B := Color("1084d0")
 const NO_JUMP := 150.0
 const NO_SIZE := Vector2(96, 30)
 const APPROACH := 26.0
-## Cuánto encoge en cada esquive y su tamaño mínimo (unos 8×2 px).
-const SHRINK := 0.8
-const MIN_SCALE := 0.085
+## Cuánto encoge en cada esquive y su tamaño mínimo (el «No» se sigue leyendo).
+const SHRINK := 0.86
+const MIN_SCALE := 0.45
+const MIN_NO_SIZE := Vector2(40, 22)
+const MIN_FONT := 10
 
 var _window: Control
 var _dropdown: OptionButton
@@ -29,6 +33,7 @@ var _info: RichTextLabel
 var _skills: HBoxContainer
 var _yes: Button
 var _no: Button
+var _focus: Control   # capa encima de todo con el recuadro punteado del «No»
 var _error: Label
 var _error_box: PanelContainer
 var _no_scale := 1.0
@@ -119,6 +124,11 @@ func _ready() -> void:
 	_no.focus_mode = Control.FOCUS_NONE
 	_no.pressed.connect(_on_no_pressed)
 	_window.add_child(_no)
+	_focus = Control.new()
+	_focus.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_focus.size = WIN_SIZE
+	_focus.draw.connect(_draw_no_focus)
+	_window.add_child(_focus)
 	# Globo de error amarillo (tooltip del sistema).
 	_error_box = PanelContainer.new()
 	var tip := StyleBoxFlat.new()
@@ -168,6 +178,19 @@ func _draw_window() -> void:
 	_window.draw_string(_font, x.position + Vector2(5, 14), "x", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color.BLACK)
 
 
+## Recuadro de foco punteado (como en Windows 98) alrededor del «No» cuando ya
+## encogió: parpadea para que no se pierda entre el resto de la ventana.
+func _draw_no_focus() -> void:
+	if _no_dead or _no_scale >= 0.95 or fmod(Time.get_ticks_msec() / 1000.0, 0.8) >= 0.55:
+		return
+	var box := Rect2(_no.position, _no.size).grow(4.0)
+	var corners := [box.position, Vector2(box.end.x, box.position.y), box.end, Vector2(box.position.x, box.end.y)]
+	for k in 4:
+		_focus.draw_dashed_line(corners[k], corners[(k + 1) % 4], Color.BLACK, 1.0, 3.0)
+	var outer := box.grow(2.0)
+	_focus.draw_rect(outer, Color(BLUE_A, 0.6), false, 1.0)
+
+
 func _refresh_info() -> void:
 	var c: Dictionary = GameData.classes[_dropdown.selected]
 	var attrs: Dictionary = c.get("base_attributes", {})
@@ -199,10 +222,12 @@ func _refresh_info() -> void:
 
 
 func _process(_delta: float) -> void:
+	if not _no_dead and _no_scale < 0.95:
+		_focus.queue_redraw()   # el recuadro punteado parpadea
 	if _no_dead or _no_scale <= MIN_SCALE:
-		return   # ya es diminuto: se queda quieto (y se le puede atinar)
+		return   # ya es pequeño: se queda quieto (y se le puede atinar)
 	var mouse := _window.get_local_mouse_position()
-	var area := Rect2(_no.position, NO_SIZE * _no_scale).grow(APPROACH)
+	var area := Rect2(_no.position, _no.size).grow(APPROACH)
 	if area.has_point(mouse):
 		if _no_armed:
 			_no_armed = false
@@ -217,7 +242,11 @@ func _dodge(mouse: Vector2) -> void:
 	_dodges += 1
 	_no_scale = maxf(MIN_SCALE, _no_scale * SHRINK)
 	var tiny := _no_scale <= MIN_SCALE
-	var w := NO_SIZE * _no_scale
+	# Encoge el botón y su letra (no con `scale`, que deja el texto ilegible).
+	var w := (NO_SIZE * _no_scale).max(MIN_NO_SIZE)
+	_no.add_theme_font_size_override("font_size", maxi(MIN_FONT, int(round(15.0 * _no_scale))))
+	_no.custom_minimum_size = w
+	_no.size = w
 	var area := Rect2(Vector2(12, 40), WIN_SIZE - Vector2(24, 52) - w)
 	var target := Vector2(_no.position.x + NO_JUMP, _no.position.y)
 	if _dodges > 1 or not area.has_point(target):
@@ -229,12 +258,10 @@ func _dodge(mouse: Vector2) -> void:
 				target = c
 				break
 	_no.position = target.clamp(area.position, area.end)
-	_no.scale = Vector2(_no_scale, _no_scale)
-	if _no_scale < 0.45:
-		_no.text = ""
 	Sfx.play("blink", -8.0, 1.0 + _dodges * 0.06)
 	if tiny:
 		_no.tooltip_text = "¿Seguro?"
+	_focus.queue_redraw()
 
 
 ## Si se le atina: error del sistema y el botón se rinde: «Pues ya que...».
@@ -248,10 +275,12 @@ func _on_no_pressed() -> void:
 	_error_box.position = Vector2(WIN_SIZE.x - _error_box.size.x - 16.0, WIN_SIZE.y - 60.0 - _error_box.size.y)
 	Sfx.play("player_hurt")
 	_no.pressed.disconnect(_on_no_pressed)
-	_no.scale = Vector2.ONE
+	_no.remove_theme_font_size_override("font_size")
 	_no.text = "Pues ya que..."
 	_no.tooltip_text = ""
+	_no.custom_minimum_size = Vector2.ZERO
 	_no.size = Vector2(150, NO_SIZE.y)
+	_focus.queue_redraw()
 	_no.position = Vector2(WIN_SIZE.x / 2.0 + 30, WIN_SIZE.y - 48)
 	_no.pressed.connect(_accept)
 

@@ -22,6 +22,11 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("minimapa"):
+		await _capture_minimap()
+		await _capture_hire_no()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("objetos"):
 		await _capture_quest_items()
 		await _capture_icons()
@@ -465,6 +470,74 @@ func _capture_quest_items() -> void:
 	_swap(sheet)
 	await _wait(0.5)
 	_save("20_objetos_mision")
+
+
+## Minimapa ampliado en tres sitios: el jefe del acto I con enemigos de cada
+## rareza, la Oblea (objetos de misión) y el puerto JTAG (NPCs).
+func _capture_minimap() -> void:
+	var gd: Node = get_node("/root/GameData")
+	for cfg in [["jefe", "boss"], ["oblea", "quest"], ["puerto_jtag", "npcs"]]:
+		var c: CharacterData = gd.create_character("Minimapa", &"guerrero", CharacterAppearance.default(), false)
+		c.flags["zone"] = cfg[0]
+		c.flags["tutorial_step"] = 99
+		c.flags["tutorial_seen_done"] = true
+		c.flags["quest_paez_kindle_started"] = true
+		c.flags["quest_eugenio_panes_started"] = true
+		c.level = 20
+		gd.current_character = c
+		var world: Node = load("res://scenes/game/world.tscn").instantiate()
+		_swap(world)
+		world.set("_since_save", -9999.0)
+		await _wait(1.2)
+		var player: Player = world.get("player")
+		var em: EnemyManager = world.get("enemies")
+		player.invulnerable = true
+		if cfg[1] == "boss":
+			for k in em.count():
+				if em.rarities[k] == Rarity.Enemy.UNIQUE:
+					player.global_position = em.positions[k] + Vector2(-700, 200)
+			var p := player.global_position
+			for r in 4:
+				for k in 3:
+					em.spawn(p + Vector2(-300 + r * 180, -350 + k * 60), r)
+		elif cfg[1] == "quest":
+			em.clear_all()
+			player.global_position = Vector2(2000, 900)
+			var quests: QuestLog = world.get("quests")
+			quests.start("eugenio_panes")
+			c.flags["item_pan_bolillo"] = true
+			quests.refresh()
+			await _wait(0.5)
+			var tracker: Control = world.get("ui").get("quest_tracker")
+			var timg := get_viewport().get_texture().get_image().get_region(Rect2i(tracker.get_global_rect().grow(6.0)))
+			timg.resize(timg.get_width() * 2, timg.get_height() * 2, Image.INTERPOLATE_NEAREST)
+			timg.save_png(ProjectSettings.globalize_path(OUT + "25_registro_objetos.png"))
+		await _wait(1.3)
+		var img := get_viewport().get_texture().get_image()
+		var mm: Control = world.get("ui").get("minimap")
+		var r := Rect2i(mm.get_global_rect().grow(16.0))
+		var crop := img.get_region(r)
+		crop.resize(crop.get_width() * 3, crop.get_height() * 3, Image.INTERPOLATE_NEAREST)
+		crop.save_png(ProjectSettings.globalize_path(OUT + "25_minimapa_%s.png" % cfg[1]))
+		print("captura: minimapa_", cfg[1])
+		world.set("_since_save", -9999.0)
+
+
+## El botón «No» de la contratación tras muchos esquives: pequeño pero legible.
+func _capture_hire_no() -> void:
+	var p: Node = load("res://scenes/prologue/prologue.tscn").instantiate()
+	_swap(p)
+	await _wait(0.8)
+	p.call("_skip_to_hire")
+	await _wait(0.6)
+	var hire: Node = p.get("_hire")
+	for k in 12:
+		hire.call("_dodge", Vector2(-500, -500))
+	await _wait(0.3)
+	_save("26_contratacion_no")
+	hire.call("_on_no_pressed")
+	await _wait(0.3)
+	_save("27_contratacion_pues_ya_que")
 
 
 ## Objetos de misión en la Oblea, el menú de pausa y la interfaz al 120 % con el

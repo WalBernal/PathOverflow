@@ -12,9 +12,15 @@ var collapsed := false:
 		collapsed = value
 		_refresh()
 
+const ICON_CELL := 32.0
+
 var _header: Button
 var _body: RichTextLabel
 var _flash := {}   # id -> segundos de resaltado restantes
+## Objetos que piden los pasos de "recoger" activos: [{id, done}], dibujados
+## con QuestItemArt bajo el texto (los ya recogidos, tenues y con una marca).
+var _items: Array[Dictionary] = []
+var _icons: Control
 
 
 func _ready() -> void:
@@ -49,6 +55,10 @@ func _ready() -> void:
 	_body.add_theme_font_size_override("normal_font_size", 13)
 	_body.add_theme_font_size_override("bold_font_size", 14)
 	box.add_child(_body)
+	_icons = Control.new()
+	_icons.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_icons.draw.connect(_draw_icons)
+	box.add_child(_icons)
 
 
 func setup(p_quests: QuestLog) -> void:
@@ -76,6 +86,17 @@ func _refresh() -> void:
 	var ids := quests.active_ids()
 	_header.text = ("▸ Misiones (%d)" if collapsed else "▾ Misiones (%d)") % ids.size()
 	_body.visible = not collapsed
+	_items.clear()
+	for id in ids:
+		var step := quests.current_step(id)
+		if step.get("type", "") != "collect":
+			continue
+		var wanted: Array = step.get("items", [step["item"]] if step.has("item") else [])
+		for item_id in wanted:
+			_items.append({"id": String(item_id), "done": quests.character.flags.has("item_" + String(item_id))})
+	_icons.visible = not collapsed and not _items.is_empty()
+	_icons.custom_minimum_size = Vector2(WIDTH - 16.0, ICON_CELL + 4.0)
+	_icons.queue_redraw()
 	if collapsed:
 		reset_size()
 		return
@@ -98,3 +119,17 @@ func _refresh() -> void:
 		lines.append("[color=#8a8293]Sin misiones activas. Disfruta del silencio.[/color]")
 	_body.text = "\n".join(lines)
 	reset_size()
+
+
+func _draw_icons() -> void:
+	for k in _items.size():
+		var c := Vector2(ICON_CELL * 0.5 + k * (ICON_CELL + 4.0), ICON_CELL * 0.5 + 2.0)
+		var done: bool = _items[k]["done"]
+		_icons.draw_rect(Rect2(c - Vector2(ICON_CELL, ICON_CELL) * 0.5, Vector2(ICON_CELL, ICON_CELL)),
+			Color(0.3, 0.8, 0.4, 0.15) if done else Color(1, 1, 1, 0.05))
+		_icons.draw_set_transform(c, 0.0, Vector2(0.6, 0.6))
+		QuestItemArt.draw(_icons, Vector2.ZERO, QuestItemArt.kind_for({"id": _items[k]["id"]}))
+		_icons.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		if done:
+			_icons.draw_rect(Rect2(c - Vector2(ICON_CELL, ICON_CELL) * 0.5, Vector2(ICON_CELL, ICON_CELL)), Color(0, 0, 0, 0.45))
+			_icons.draw_polyline(PackedVector2Array([c + Vector2(-6, 0), c + Vector2(-2, 5), c + Vector2(7, -6)]), Color("6fd36b"), 3.0, true)

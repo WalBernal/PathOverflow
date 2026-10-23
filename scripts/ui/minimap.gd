@@ -10,12 +10,16 @@ const RADIUS := 100.0
 const SCALE := 0.065
 const BG := Color("0d0b10e6")
 const RING := Color("8a6d3b")
+## Enemigos: gris (normales), azul claro (mágicos), amarillo (raros) y naranja (únicos).
 const ENEMY_COLORS := {
-	Rarity.Enemy.NORMAL: Color("c84b4b"),
-	Rarity.Enemy.SPECIAL: Color("8888ff"),
-	Rarity.Enemy.ELITE: Color("ffff77"),
+	Rarity.Enemy.NORMAL: Color("a8a8b0"),
+	Rarity.Enemy.SPECIAL: Color("7fd4ff"),
+	Rarity.Enemy.ELITE: Color("ffe14a"),
 	Rarity.Enemy.UNIQUE: Color("ff8c2a"),
 }
+const QUEST_COLOR := Color("4fd36b")
+const NPC_COLOR := Color("e8c87a")
+const OUTLINE := Color(0.03, 0.02, 0.05, 0.95)
 
 const FEATURE_COLORS := {
 	"lake": Color("1c3a55"), "bog": Color("3a2a4a"), "data_lake": Color("0c3a40"), "hill": Color("2c3a24"),
@@ -82,13 +86,7 @@ func _draw() -> void:
 					draw_colored_polygon(poly, FEATURE_COLORS.get(o["kind"], Color("4a4352")))
 		elif _inside(p):
 			draw_circle(p, maxf(1.5, o["radius"] * SCALE), Color("4a4352"))
-	for q in zone.quest_items:
-		var p := _to_map(q["pos"])
-		if zone.quest_item_visible(q):
-			if _inside(p):
-				draw_circle(p, 3.5, Color("ffd84a"))
-			else:
-				_edge_arrow(center, p, Color("ffd84a"))
+	var time := Time.get_ticks_msec() / 1000.0
 
 	# Salidas: dentro, un rombo; fuera, una flecha en el borde hacia ellas.
 	for e in zone.exits:
@@ -106,10 +104,18 @@ func _draw() -> void:
 			draw_arc(p, 6.0, 0.0, TAU, 16, Color("5cd0ff"), 1.0)
 		else:
 			_edge_arrow(center, p, Color("5cd0ff"))
+	# NPCs: una silueta (cabeza y hombros); con «!» si ofrecen misión y «?» si
+	# tienen una lista para entregar, como sobre su cabeza en el mundo.
 	for npc in zone.npcs:
 		var p := _to_map(zone.npc_position(npc))
-		if _inside(p):
-			draw_circle(p, 2.5, UiStyle.ACCENT)
+		if not _inside(p):
+			continue
+		var mark := ""
+		if zone.quests and zone.quests.npc_has_turn_in(npc["id"]):
+			mark = "?"
+		elif zone.quests and zone.quests.npc_offers_quest(npc["id"]):
+			mark = "!"
+		_draw_npc_icon(p, mark)
 
 	# Botín: solo lo que merece la pena mirar.
 	for d in loot.drops:
@@ -120,13 +126,19 @@ func _draw() -> void:
 		if _inside(p):
 			draw_rect(Rect2(p - Vector2(2, 2), Vector2(4, 4)), item.display_color())
 
-	# Enemigos.
+	# Enemigos: puntos con borde oscuro, más grandes cuanto más raros.
+	var boss := enemies.boss_info()
+	var boss_index := enemies.index_of(boss["id"]) if not boss.is_empty() else -1
 	for i in enemies.count():
+		if i == boss_index:
+			continue
 		var p := _to_map(enemies.positions[i])
 		if not _inside(p):
 			continue
 		var rarity := enemies.rarities[i]
-		draw_circle(p, 1.6 + rarity * 0.7, ENEMY_COLORS[rarity])
+		var r := 1.7 + rarity * 0.7
+		draw_circle(p, r + 0.9, OUTLINE)
+		draw_circle(p, r, ENEMY_COLORS[rarity])
 
 	# Aliados (invocaciones persistentes): puntos azules.
 	for a in enemies.allies:
@@ -134,18 +146,27 @@ func _draw() -> void:
 		if _inside(ap):
 			draw_circle(ap, 3.0, Color("9ad0ff"))
 			draw_arc(ap, 4.5, 0.0, TAU, 12, Color("1a2a40"), 1.0, true)
-	# Jefe con fases: marca roja que pulsa; si queda fuera del mapa, una flecha en el borde.
-	var boss := enemies.boss_info()
+	# Objetos de misión: insignia verde con «!» (encima de enemigos y aliados).
+	for q in zone.quest_items:
+		if not zone.quest_item_visible(q):
+			continue
+		var p := _to_map(q["pos"])
+		if _inside(p):
+			_draw_quest_icon(p, time)
+		else:
+			_edge_arrow(center, p, QUEST_COLOR)
+	# Jefe: su propio sprite en una insignia, con ondas rojas que se expanden.
+	# Si queda fuera del mapa, la insignia (más pequeña) se pega al borde.
 	if not boss.is_empty():
 		var bp := _to_map(boss["pos"])
-		var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 250.0)
 		if _inside(bp):
-			draw_circle(bp, 5.0 + pulse * 2.0, Color(1.0, 0.25, 0.2, 0.9))
-			draw_arc(bp, 8.0 + pulse * 3.0, 0.0, TAU, 16, Color(1.0, 0.8, 0.3, 0.8), 1.5, true)
+			_draw_boss_icon(bp, boss["sprite"], time, 1.0)
 		else:
 			var dir := (bp - center).normalized()
-			var edge := center + dir * (RADIUS - 8.0)
-			draw_colored_polygon(PackedVector2Array([edge + dir * 6.0, edge - dir * 4.0 + dir.orthogonal() * 5.0, edge - dir * 4.0 - dir.orthogonal() * 5.0]), Color(1.0, 0.3, 0.2))
+			var edge := center + dir * (RADIUS - 13.0)
+			_draw_boss_icon(edge, boss["sprite"], time, 0.75)
+			var tip := center + dir * (RADIUS + 2.0)
+			draw_colored_polygon(PackedVector2Array([tip, tip - dir * 6.0 + dir.orthogonal() * 4.0, tip - dir * 6.0 - dir.orthogonal() * 4.0]), Color(1.0, 0.3, 0.2))
 
 	# Jugador: flecha hacia donde mira.
 	var f := player.facing_direction()
@@ -161,6 +182,44 @@ func _draw() -> void:
 	draw_string(font, Vector2(0, RADIUS * 2.0 + 16.0), label, HORIZONTAL_ALIGNMENT_CENTER, RADIUS * 2.0, 12, UiStyle.TEXT)
 	draw_string_outline(font, Vector2(0, RADIUS * 2.0 + 32.0), sublabel, HORIZONTAL_ALIGNMENT_CENTER, RADIUS * 2.0, 11, 4, Color.BLACK)
 	draw_string(font, Vector2(0, RADIUS * 2.0 + 32.0), sublabel, HORIZONTAL_ALIGNMENT_CENTER, RADIUS * 2.0, 11, UiStyle.MUTED)
+
+
+func _draw_quest_icon(p: Vector2, time: float) -> void:
+	var pulse := 0.5 + 0.5 * sin(time * 4.0)
+	draw_circle(p, 9.0 + pulse * 2.0, Color(QUEST_COLOR, 0.18 + 0.12 * pulse))
+	draw_circle(p, 7.5, OUTLINE)
+	draw_circle(p, 6.3, QUEST_COLOR)
+	# El «!»: palo y punto.
+	draw_rect(Rect2(p + Vector2(-1.2, -4.2), Vector2(2.4, 5.0)), OUTLINE)
+	draw_circle(p + Vector2(0, 3.0), 1.3, OUTLINE)
+
+
+func _draw_npc_icon(p: Vector2, mark: String) -> void:
+	var col := NPC_COLOR
+	draw_circle(p + Vector2(0, -2.5), 3.4, OUTLINE)
+	draw_colored_polygon(PackedVector2Array([p + Vector2(-5.2, 5.0), p + Vector2(-3.6, 0.2), p + Vector2(3.6, 0.2), p + Vector2(5.2, 5.0)]), OUTLINE)
+	draw_colored_polygon(PackedVector2Array([p + Vector2(-4.0, 4.0), p + Vector2(-2.8, 1.2), p + Vector2(2.8, 1.2), p + Vector2(4.0, 4.0)]), col)
+	draw_circle(p + Vector2(0, -2.5), 2.4, col)
+	if mark != "":
+		var font := get_theme_default_font()
+		var mc := Color("ffd84a") if mark == "!" else QUEST_COLOR
+		draw_string_outline(font, p + Vector2(-6, -6), mark, HORIZONTAL_ALIGNMENT_CENTER, 12, 12, 4, OUTLINE)
+		draw_string(font, p + Vector2(-6, -6), mark, HORIZONTAL_ALIGNMENT_CENTER, 12, 12, mc)
+
+
+## Insignia del jefe: el primer fotograma de su sprite dentro de un círculo
+## oscuro con borde rojo, y dos ondas que salen hacia fuera y se apagan.
+func _draw_boss_icon(p: Vector2, region: Rect2, time: float, scale_factor: float) -> void:
+	var r := 11.0 * scale_factor
+	for k in 2:
+		var t := fmod(time * 0.9 + k * 0.5, 1.0)
+		draw_arc(p, r + 2.0 + t * 12.0 * scale_factor, 0.0, TAU, 24, Color(1.0, 0.3, 0.2, 0.8 * (1.0 - t)), 2.0, true)
+	draw_circle(p, r + 1.5, OUTLINE)
+	draw_circle(p, r, Color("2a0e10"))
+	var side := r * 1.9
+	draw_texture_rect_region(EnemyManager.ATLAS, Rect2(p - Vector2(side, side) / 2.0, Vector2(side, side)), region)
+	var beat := 0.5 + 0.5 * sin(time * 6.0)
+	draw_arc(p, r, 0.0, TAU, 24, Color(1.0, 0.25 + 0.3 * beat, 0.2), 2.0, true)
 
 
 func _edge_arrow(center: Vector2, target: Vector2, color: Color) -> void:
