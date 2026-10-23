@@ -121,6 +121,7 @@ func _ready() -> void:
 		start_zone = GameData.act.get("town", "campamento")
 	travel_to(start_zone, "waypoint" if GameData.zones[start_zone].get("waypoint") != null else "")
 	quests.start_auto()
+	_grant_unlocks.call_deferred()   # personajes que ya pasaron esos niveles antes del cambio
 
 	if character.flags.has("ascendancy_reset"):
 		character.flags.erase("ascendancy_reset")
@@ -621,6 +622,22 @@ func _on_leveled_up(new_level: int) -> void:
 		ui.hud.flash("¡Nivel %d! Nuevo punto de pasiva y de ascendencia (P)." % new_level, Color("ffd84a"))
 	else:
 		ui.hud.flash("¡Nivel %d! Tienes un punto de pasiva nuevo (P)." % new_level, UiStyle.ACCENT)
+	_grant_unlocks()
+
+
+## Progresión de kit: al llegar al nivel, la clase recibe la placa de su siguiente
+## habilidad (nivel 1, dos ranuras). También se entregan las atrasadas al cargar.
+func _grant_unlocks() -> void:
+	for u in character.due_unlocks():
+		var skill_id := String(u["skill"])
+		if not GameData.items.skills.skills.has(skill_id):
+			continue
+		character.flags["unlock_" + skill_id] = true
+		var board := item_generator.generate_motherboard(1, skill_id, 2)
+		board.level = 1
+		_give(board)
+		ui.hud.flash("Nueva habilidad de %s: %s. Está en tu bolsa; instálala con K." % [character.class_def.get("name", "tu clase"), board.skill_def["name"]], Color("ffd84a"))
+	_mark_dirty()
 
 
 ## Pistas la primera vez que se recoge una placa base o un módulo RAM.

@@ -22,7 +22,12 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("rendimiento"):
+		await _benchmark()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("habilidades"):
+		await _capture_unit_art()
 		await _capture_skills_with_rams()
 		get_tree().quit()
 		return
@@ -487,6 +492,124 @@ const RAM_BUILDS := [
 	["paquete_rastreador", ["multicanal_menor", "puntero_salvaje_menor", "ecc_menor", "pipeline"]],
 	["cascada_css", ["multicanal", "disipador", "ecc", "refrigeracion_liquida"]],
 ]
+
+
+## Rendimiento: 150 y 300 enemigos (con afijos y estados) contra 6 invocaciones,
+## drones y auras. Imprime la media y el peor fotograma, y la simulación de enemigos.
+func _benchmark() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var items: ItemDatabase = gd.get("items")
+	var c: CharacterData = gd.create_character("Bench", &"templario", CharacterAppearance.default(), false)
+	c.flags["zone"] = "zona1"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 40
+	var kit := ["robot_centinela", "golem_hardware", "dron_escolta", "drones_vigilancia", "aura_mando", "aura_throttling"]
+	for i in kit.size():
+		c.inventory.set_board(i, Motherboard.new(items.skills.skills[kit[i]], 20, []))
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var skills: SkillController = world.get("skills")
+	var player: Player = world.get("player")
+	var em: EnemyManager = world.get("enemies")
+	player.invulnerable = true
+	player.mana_reserved = 0.0
+	player.mana = 9999.0
+	for i in kit.size():
+		var prof := skills.profile(i)
+		if prof["kind"] == "unit":
+			for k in 2:
+				skills.call("_summon_unit", prof, player.global_position, Color.WHITE)
+		else:
+			skills.call("_execute", prof, player.global_position)
+	var states := [Ailments.BURN, Ailments.SHOCK, Ailments.CHILL, Ailments.POISON, Ailments.BLEED]
+	for n in [150, 300]:
+		em.clear_all()
+		em.roll_affixes = true
+		for k in n:
+			var id := em.spawn(player.global_position + Vector2.from_angle(randf() * TAU) * randf_range(150.0, 700.0),
+				Rarity.Enemy.ELITE if k % 15 == 0 else (Rarity.Enemy.SPECIAL if k % 5 == 0 else Rarity.Enemy.NORMAL))
+			var i := em.index_of(id)
+			em.lives[i] *= 40.0
+			em.max_lives[i] *= 40.0
+			em.apply_ailment(i, states[k % states.size()], 10.0, 1.0, 20.0)
+		await _wait(1.0)
+		var frames := 0
+		var total := 0.0
+		var worst := 0.0
+		var sim := 0.0
+		var draw_ms := 0.0
+		var mm_ms := 0.0
+		var calls := 0.0
+		var mm: Control = world.get("ui").get("minimap")
+		var start := Time.get_ticks_usec()
+		var last := start
+		while Time.get_ticks_usec() - start < 4000000:
+			await get_tree().process_frame
+			var now := Time.get_ticks_usec()
+			var dt := (now - last) / 1000.0
+			last = now
+			frames += 1
+			total += dt
+			worst = maxf(worst, dt)
+			sim += em.last_simulation_ms
+			draw_ms += em.last_draw_ms
+			mm_ms += float(mm.get("last_draw_ms"))
+			calls += Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)
+		print("  _draw de enemigos %.2f ms, _draw del minimapa %.2f ms, llamadas de dibujo %.0f" % [draw_ms / frames, mm_ms / frames, calls / frames])
+		print("rendimiento %d enemigos (%d vivos, %d en cámara): fotograma medio %.2f ms (%.0f FPS), peor %.2f ms, simulación de enemigos %.2f ms, invocaciones %d, proyectiles %d" % [
+			n, em.count(), em.last_drawn_count, total / frames, 1000.0 / (total / frames), worst, sim / frames, skills.get("_units").size(), skills.get("_projectiles").size()])
+		if n == 300:
+			_save("32_rendimiento_300")
+	# Qué cuesta: se oculta una capa cada vez (con 300 enemigos).
+	var ui: GameUI = world.get("ui")
+	var zone_node: Node = world.get("zone")
+	for layer in ["enemigos", "habilidades", "interfaz", "zona", "nada"]:
+		em.visible = layer != "enemigos"
+		skills.visible = layer != "habilidades"
+		ui.visible = layer != "interfaz"
+		if zone_node:
+			zone_node.visible = layer != "zona"
+		await _wait(0.5)
+		var frames := 0
+		var start := Time.get_ticks_usec()
+		while Time.get_ticks_usec() - start < 2000000:
+			await get_tree().process_frame
+			frames += 1
+		print("  sin %s: %.2f ms por fotograma" % [layer, 2000.0 / frames])
+	em.visible = true
+	skills.visible = true
+	ui.visible = true
+	world.set("_since_save", -9999.0)
+
+
+## Todas las invocaciones persistentes, ampliadas (arriba) y a tamaño real (abajo).
+func _capture_unit_art() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var skills: Dictionary = gd.get("items").skills.skills
+	var units: Array = []
+	for id in skills:
+		if skills[id]["kind"] == "unit":
+			units.append(skills[id])
+	var sheet := Control.new()
+	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sheet.draw.connect(func() -> void:
+		sheet.draw_rect(Rect2(Vector2.ZERO, sheet.size), Color("1d2a26"))
+		var font := sheet.get_theme_default_font()
+		for i in units.size():
+			var x := 80.0 + i * 135.0
+			var col := Color(units[i].get("icon", {}).get("color", "c8c8c8"))
+			sheet.draw_set_transform(Vector2(x, 360), 0.0, Vector2(3.0, 3.0))
+			UnitArt.draw(sheet, units[i]["id"], units[i]["unit"]["behavior"], Vector2.ZERO, 1.3, col)
+			sheet.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			UnitArt.draw(sheet, units[i]["id"], units[i]["unit"]["behavior"], Vector2(x, 620), 1.3, col)
+			sheet.draw_string(font, Vector2(x - 66, 700), units[i]["name"], HORIZONTAL_ALIGNMENT_CENTER, 132, 12))
+	_swap(sheet)
+	await _wait(0.5)
+	_save("31_invocaciones")
 
 
 func _capture_skills_with_rams() -> void:

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_doc": "Habilidades activas (lo que hace cada placa base). kind: melee_area, nova (stun opcional), projectile, ground_aoe, blink, dash (embestida que golpea en línea), cone (cono delante), beam (rayo en línea tras un retardo), boomerang (va y vuelve golpeando en los dos sentidos), spin (gira golpeando durante duration cada tick), trap (trampa que explota al acercarse un enemigo; max_active), chain (salta entre enemigos chains veces), minion (invoca count esbirros durante duration; max_active a la vez), degen_area (charco que hace base_damage por segundo durante duration), barrier (barrera que absorbe daño: barrier + barrier_life × vida máxima), buff (buff_mods sobre el personaje durante duration), curse_area (aplica daño degenerativo por segundo a todos los de una zona), dot_projectile (proyectil que deja daño degenerativo), homing (proyectiles teledirigidos al enemigo más cercano: seek_range, turn_rate), drones (count drones que orbitan y disparan proyectiles teledirigidos cada tick). tags: varias por habilidad (ver SkillTags): ataque/hechizo, forma (melee, projectile, area, chain), mecánica (duration, trap, mine, totem, minion, movement, degen) y tipo de daño (physical, fire, cold, lightning, chaos, elemental). duration y stun escalan con skill_duration; cooldown con cooldown_recovery. lol: en qué habilidad de League of Legends se inspira. attack: usa el arma (damage_effectiveness). spell: daño propio (base_damage) que crece un damage_growth por nivel de la placa. attribute: generación de RAM más probable en sus ranuras (str=DDR3, dex=DDR4, int=DDR5). leap_slam (salta hacia el cursor y golpea el suelo al caer: radius, range, stun), rain (count impactos de impact_radius repartidos en radius durante duration), unit (invocación PERSISTENTE: no caduca, reserva unit.reserve % del maná máximo mientras viva; unit.behavior: melee | ranged | orbit (dron invulnerable que orbita) | tank (provoca a los enemigos en unit.taunt); unit.life, unit.radius, unit.speed, unit.interval (s entre ataques), unit.range, unit.reduction (daño evitado); max_active a la vez). repeats: la habilidad se repite sola. ailments: probabilidad extra (%) de aplicar estados (burn, shock, chill, freeze, poison, bleed), además de la innata de su tipo de daño (ver Ailments). La etiqueta automaton (autómata) la llevan torretas, drones, esbirros y robots. aura: kind 'aura' (persistente, se activa y desactiva al relanzar; reserva aura.reserve % del maná): aura.mods son modificadores para tus aliados (se escalan con el nivel de la placa y con aura_effect), aura.regen: % de vida por segundo que recuperan tus invocaciones, aura.reduction: daño evitado por las invocaciones. unit.ability (invocaciones): heal (cura al jugador y a las invocaciones), barrier (barrera al jugador), leap (salta a un grupo y golpea el suelo), venom (escupe un charco venenoso), explode (explota al morir); unit.shoots=false: no dispara. unit.reduction ya existe.",
+  "_doc": "Habilidades activas (lo que hace cada placa base). kind: melee_area, nova (stun opcional), projectile, ground_aoe, blink, dash (embestida que golpea en línea), cone (cono delante), beam (rayo en línea tras un retardo), boomerang (va y vuelve golpeando en los dos sentidos), spin (gira golpeando durante duration cada tick), trap (trampa que explota al acercarse un enemigo; max_active), chain (salta entre enemigos chains veces), minion (invoca count esbirros durante duration; max_active a la vez), degen_area (charco que hace base_damage por segundo durante duration), barrier (barrera que absorbe daño: barrier + barrier_life × vida máxima), buff (buff_mods sobre el personaje durante duration), curse_area (aplica daño degenerativo por segundo a todos los de una zona), dot_projectile (proyectil que deja daño degenerativo), homing (proyectiles teledirigidos al enemigo más cercano: seek_range, turn_rate), drones (count drones que orbitan y disparan proyectiles teledirigidos cada tick). tags: varias por habilidad (ver SkillTags): ataque/hechizo, forma (melee, projectile, area, chain), mecánica (duration, trap, mine, totem, minion, movement, degen) y tipo de daño (physical, fire, cold, lightning, chaos, elemental). duration y stun escalan con skill_duration; cooldown con cooldown_recovery. lol: en qué habilidad de League of Legends se inspira. attack: usa el arma (damage_effectiveness). spell: daño propio (base_damage) que crece un damage_growth por nivel de la placa. attribute: generación de RAM más probable en sus ranuras (str=DDR3, dex=DDR4, int=DDR5). leap_slam (salta hacia el cursor y golpea el suelo al caer: radius, range, stun), rain (count impactos de impact_radius repartidos en radius durante duration), unit (invocación PERSISTENTE: no caduca, reserva unit.reserve % del maná máximo mientras viva; unit.behavior: melee | ranged | orbit (dron invulnerable que orbita) | tank (provoca a los enemigos en unit.taunt); unit.life, unit.radius, unit.speed, unit.interval (s entre ataques), unit.range, unit.reduction (daño evitado); max_active a la vez). repeats: la habilidad se repite sola. ailments: probabilidad extra (%) de aplicar estados (burn, shock, chill, freeze, poison, bleed), además de la innata de su tipo de daño (ver Ailments). La etiqueta automaton (autómata) la llevan torretas, drones, esbirros y robots. aura: kind 'aura' (persistente, se activa y desactiva al relanzar; reserva aura.reserve % del maná): aura.mods son modificadores para tus aliados (se escalan con el nivel de la placa y con aura_effect), aura.regen: % de vida por segundo que recuperan tus invocaciones, aura.reduction: daño evitado por las invocaciones. unit.ability (invocaciones): heal (cura al jugador y a las invocaciones), barrier (barrera al jugador), leap (salta a un grupo y golpea el suelo), venom (escupe un charco venenoso), explode (explota al morir); unit.shoots=false: no dispara. unit.reduction ya existe. aura.radius: alcance del aura alrededor del jugador (los aliados fuera no reciben sus bonos, ni la regeneración ni la reducción). aura.enemy: efectos sobre los enemigos dentro del radio: slow (más lentos al moverse y atacar) y damage_taken (reciben más daño).",
   "skills": [
     {
       "id": "barrido",
@@ -345,14 +345,14 @@
       "lol": "Garen E",
       "description": "while (true) { girar(); } Golpeas a tu alrededor sin parar durante unos segundos y puedes moverte mientras tanto.",
       "attack": {
-        "damage_effectiveness": 0.45
+        "damage_effectiveness": 0.6
       },
       "radius": 105,
       "duration": 2.4,
       "tick": 0.3,
       "mana_cost": 12,
       "mana_per_level": 0.5,
-      "cooldown": 6.0,
+      "cooldown": 4.0,
       "icon": {
         "shape": "spin",
         "color": "b8b8c8"
@@ -378,8 +378,8 @@
       "description": "Todos los procesos a tu alrededor se quedan esperando a otro proceso que les espera a ellos. Daño de frío y aturdimiento.",
       "spell": {
         "base_damage": [
-          10,
-          18
+          26,
+          42
         ],
         "damage_growth": 0.15,
         "cast_time": 0.75,
@@ -389,7 +389,7 @@
       "stun": 1.6,
       "mana_cost": 15,
       "mana_per_level": 0.6,
-      "cooldown": 9.0,
+      "cooldown": 7.0,
       "icon": {
         "shape": "lock",
         "color": "7fb8e0"
@@ -808,11 +808,11 @@
         "automaton"
       ],
       "lol": "Heimerdinger Q / Zyra",
-      "description": "Tres drones orbitan a tu alrededor y disparan rayos teledirigidos al enemigo más cercano.",
+      "description": "Tres drones orbitan a tu alrededor y disparan rayos en línea recta al enemigo más cercano (con Guiado por Láser, teledirigidos).",
       "spell": {
         "base_damage": [
-          6,
-          12
+          4,
+          8
         ],
         "damage_growth": 0.16,
         "cast_time": 0.7,
@@ -895,7 +895,7 @@
       "lol": "Malphite R / Sejuani Q",
       "description": "Saltas hacia el cursor y caes sobre los enemigos como quien reinicia un servidor a patadas: daño en área, aturdimiento corto y alguna hemorragia.",
       "attack": {
-        "damage_effectiveness": 1.35
+        "damage_effectiveness": 1.8
       },
       "radius": 110,
       "range": 340,
@@ -905,7 +905,7 @@
       },
       "mana_cost": 9,
       "mana_per_level": 0.4,
-      "cooldown": 4.0,
+      "cooldown": 3.0,
       "icon": {
         "shape": "leap",
         "color": "d9a441"
@@ -992,7 +992,7 @@
         "elemental"
       ],
       "lol": "Heimerdinger / Ivern (Daisy)",
-      "description": "Montas un robot centinela que te sigue y dispara láseres teledirigidos. No caduca: reserva maná mientras siga en pie. Si lo destruyen, vuelve a montarlo.",
+      "description": "Montas un robot centinela que te sigue y dispara láseres al enemigo más cercano. No caduca: reserva maná mientras siga en pie. Si lo destruyen, vuelve a montarlo.",
       "spell": {
         "base_damage": [
           8,
@@ -1461,7 +1461,8 @@
               "automaton"
             ]
           }
-        ]
+        ],
+        "radius": 420
       },
       "mana_cost": 0,
       "mana_per_level": 0,
@@ -1504,7 +1505,8 @@
             "type": "increased",
             "value": 40
           }
-        ]
+        ],
+        "radius": 420
       },
       "mana_cost": 0,
       "mana_per_level": 0,
@@ -1546,7 +1548,8 @@
             "type": "flat",
             "value": 4
           }
-        ]
+        ],
+        "radius": 420
       },
       "mana_cost": 0,
       "mana_per_level": 0,
@@ -1598,7 +1601,8 @@
               "automaton"
             ]
           }
-        ]
+        ],
+        "radius": 420
       },
       "mana_cost": 0,
       "mana_per_level": 0,
@@ -1606,6 +1610,187 @@
       "icon": {
         "shape": "aura_flag",
         "color": "d9a441"
+      }
+    },
+    {
+      "id": "aura_throttling",
+      "name": "Aura de Throttling",
+      "kind": "aura",
+      "damage_type": "none",
+      "attribute": "dex",
+      "tags": [
+        "spell",
+        "aura",
+        "persistent",
+        "duration",
+        "curse"
+      ],
+      "lol": "Nasus (Marchitar) / Zilean",
+      "description": "Limitas la tasa de peticiones a todo lo que se acerque: los enemigos dentro del aura se mueven y atacan más lento. Se activa y se apaga al relanzarla; reserva maná.",
+      "spell": {
+        "base_damage": [
+          0,
+          0
+        ],
+        "damage_growth": 0.0,
+        "cast_time": 0.5,
+        "crit": 0.0
+      },
+      "aura": {
+        "reserve": 18,
+        "radius": 360,
+        "mods": [],
+        "enemy": {
+          "slow": 0.15
+        }
+      },
+      "mana_cost": 0,
+      "mana_per_level": 0,
+      "cooldown": 0.6,
+      "icon": {
+        "shape": "aura_clock",
+        "color": "7fd0e8"
+      }
+    },
+    {
+      "id": "aura_exposicion",
+      "name": "Aura de Exposición de Vulnerabilidades",
+      "kind": "aura",
+      "damage_type": "none",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "aura",
+        "persistent",
+        "duration",
+        "curse"
+      ],
+      "lol": "Brand / Leblanc (marca)",
+      "description": "Publicas los CVE de todo lo que te rodea: los enemigos dentro del aura reciben más daño. Se activa y se apaga al relanzarla; reserva maná.",
+      "spell": {
+        "base_damage": [
+          0,
+          0
+        ],
+        "damage_growth": 0.0,
+        "cast_time": 0.5,
+        "crit": 0.0
+      },
+      "aura": {
+        "reserve": 22,
+        "radius": 360,
+        "mods": [],
+        "enemy": {
+          "damage_taken": 0.12
+        }
+      },
+      "mana_cost": 0,
+      "mana_per_level": 0,
+      "cooldown": 0.6,
+      "icon": {
+        "shape": "aura_shield",
+        "color": "e06c6c"
+      }
+    },
+    {
+      "id": "watchdog",
+      "name": "Watchdog",
+      "kind": "unit",
+      "damage_type": "physical",
+      "attribute": "str",
+      "tags": [
+        "spell",
+        "minion",
+        "automaton",
+        "persistent",
+        "melee",
+        "physical"
+      ],
+      "lol": "Nasus / Warwick",
+      "description": "Un perro guardián que reinicia todo lo que se cuelga: muerde a los enemigos cercanos (sangran) y salta sobre el más lejano cada pocos segundos. Persistente: reserva maná.",
+      "spell": {
+        "base_damage": [
+          7,
+          12
+        ],
+        "damage_growth": 0.16,
+        "cast_time": 0.8,
+        "crit": 5.0
+      },
+      "unit": {
+        "behavior": "melee",
+        "life": 110,
+        "radius": 13,
+        "speed": 290,
+        "interval": 0.8,
+        "range": 480,
+        "reserve": 13,
+        "ability": {
+          "kind": "leap",
+          "cooldown": 6.0,
+          "radius": 70,
+          "damage_mult": 1.4
+        }
+      },
+      "max_active": 2,
+      "ailments": {
+        "bleed": 20
+      },
+      "mana_cost": 12,
+      "mana_per_level": 0.4,
+      "cooldown": 1.0,
+      "icon": {
+        "shape": "testbot",
+        "color": "c89060"
+      }
+    },
+    {
+      "id": "bot_rastreador",
+      "name": "Bot Rastreador de Bugs",
+      "kind": "unit",
+      "damage_type": "chaos",
+      "attribute": "dex",
+      "tags": [
+        "spell",
+        "minion",
+        "automaton",
+        "persistent",
+        "projectile",
+        "chaos"
+      ],
+      "lol": "Teemo / Kindred",
+      "description": "Un bot de QA que no se cansa: dispara dardos envenenados al bug más cercano desde lejos. Persistente: reserva maná.",
+      "spell": {
+        "base_damage": [
+          8,
+          14
+        ],
+        "damage_growth": 0.16,
+        "cast_time": 0.9,
+        "crit": 5.0
+      },
+      "unit": {
+        "behavior": "ranged",
+        "life": 50,
+        "radius": 12,
+        "speed": 240,
+        "interval": 0.9,
+        "range": 560,
+        "reserve": 13
+      },
+      "max_active": 1,
+      "projectile_speed": 640,
+      "seek_range": 520,
+      "turn_rate": 8.0,
+      "ailments": {
+        "poison": 30
+      },
+      "mana_cost": 10,
+      "mana_per_level": 0.3,
+      "cooldown": 1.5,
+      "icon": {
+        "shape": "agent",
+        "color": "6fd36b"
       }
     }
   ]

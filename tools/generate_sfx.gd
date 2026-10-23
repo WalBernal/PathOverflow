@@ -30,6 +30,12 @@ func _initialize() -> void:
 		"summon": _summon, "trap": _trap, "enemy_death": _enemy_death, "player_hurt": _player_hurt,
 		"pickup": _pickup, "level_up": _level_up, "flask": _flask, "portal": _portal, "wave": _wave_horn, "coin": _coin,
 	}
+	# Estados, auras, invocaciones e interacciones (después de los ambientes, para
+	# no cambiar la secuencia aleatoria de los que ya existían).
+	var late_sfx := {
+		"poison": _poison, "bleed": _bleed, "freeze": _freeze, "aura_on": _aura_on, "aura_off": _aura_off,
+		"heal": _heal, "mine": _mine, "arc": _arc, "shatter": _shatter,
+	}
 	for name in sfx:
 		_save(SFX_DIR + name + ".wav", sfx[name].call())
 	var ambients := {
@@ -42,7 +48,9 @@ func _initialize() -> void:
 	}
 	for name in ambients:
 		_save(AMB_DIR + name + ".wav", _loopable(ambients[name].call()), float(AMBIENT_PEAK.get(name, 0.9)))
-	print("Sonidos generados: %d efectos y %d ambientes" % [sfx.size(), ambients.size()])
+	for name in late_sfx:
+		_save(SFX_DIR + name + ".wav", late_sfx[name].call())
+	print("Sonidos generados: %d efectos y %d ambientes" % [sfx.size() + late_sfx.size(), ambients.size()])
 	quit()
 
 
@@ -305,6 +313,118 @@ func _wave_horn() -> PackedFloat32Array:
 		var t := float(i) / RATE
 		ph += 110.0 / RATE
 		b[i] = ((fmod(ph, 1.0) - 0.5) + (fmod(ph * 1.5, 1.0) - 0.5) * 0.5) * _env(t, 0.08, 0.5)
+	return b
+
+
+# --- Estados, auras e invocaciones ---
+
+## Veneno: burbujeo ácido que sisea.
+func _poison() -> PackedFloat32Array:
+	var b := _buf(0.45)
+	var f := 0.0
+	for k in 4:
+		var start := k * 0.07
+		for i in int(0.1 * RATE):
+			var t := float(i) / RATE
+			var idx := int(start * RATE) + i
+			if idx < b.size():
+				b[idx] += sin(TAU * lerpf(220.0 + k * 60.0, 520.0 + k * 80.0, t / 0.1) * t) * _env(t, 0.004, 0.03) * 0.5
+	for i in b.size():
+		var t := float(i) / RATE
+		f = _lp(f, _noise(), 4500.0)
+		b[i] += f * 0.25 * _env(t, 0.05, 0.15)
+	return b
+
+
+## Sangrado: golpe húmedo y grave con un goteo.
+func _bleed() -> PackedFloat32Array:
+	var b := _buf(0.4)
+	var f := 0.0
+	var ph := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		f = _lp(f, _noise(), 700.0)
+		ph += lerpf(160.0, 70.0, t / 0.4) / RATE
+		b[i] = (f * 1.4 + sin(TAU * ph) * 0.6) * _env(t, 0.003, 0.07)
+		if t > 0.22:
+			b[i] += sin(TAU * lerpf(900.0, 1400.0, (t - 0.22) / 0.06) * (t - 0.22)) * _env(t - 0.22, 0.002, 0.03) * 0.4
+	return b
+
+
+## Congelación: hielo que cruje y se cierra.
+func _freeze() -> PackedFloat32Array:
+	var b := _buf(0.55)
+	for i in b.size():
+		var t := float(i) / RATE
+		var crack := _noise() * (1.0 if rng.randf() < 0.04 * exp(-t * 4.0) else 0.0)
+		b[i] = crack * 0.8 + sin(TAU * 2637.0 * t) * _env(t, 0.01, 0.2) * 0.25 + sin(TAU * 3520.0 * t) * _env(t - 0.1, 0.01, 0.15) * (0.2 if t > 0.1 else 0.0)
+	return b
+
+
+## Aura encendida: acorde que sube y se abre.
+func _aura_on() -> PackedFloat32Array:
+	var b := _buf(0.7)
+	for i in b.size():
+		var t := float(i) / RATE
+		var sweep := 1.0 + 0.5 * t
+		b[i] = (sin(TAU * 330.0 * sweep * t) + sin(TAU * 495.0 * sweep * t) * 0.7 + sin(TAU * 660.0 * sweep * t) * 0.4) * _env(t, 0.08, 0.3)
+	return b
+
+
+## Aura apagada: el mismo acorde, cayendo.
+func _aura_off() -> PackedFloat32Array:
+	var b := _buf(0.5)
+	for i in b.size():
+		var t := float(i) / RATE
+		var sweep := 1.0 - 0.45 * t
+		b[i] = (sin(TAU * 495.0 * sweep * t) + sin(TAU * 330.0 * sweep * t) * 0.7) * _env(t, 0.01, 0.16)
+	return b
+
+
+## Curación del dron: campanitas que suben.
+func _heal() -> PackedFloat32Array:
+	return _arpeggio([659.25, 830.61, 987.77, 1318.5], 0.06, 0.2)
+
+
+## Explosión de la Mina Rodante: más grave y con metralla.
+func _mine() -> PackedFloat32Array:
+	var b := _buf(0.9)
+	var f := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		f = _lp(f, _noise(), 800.0 * exp(-t * 2.5) + 80.0)
+		var shrapnel := _noise() * 0.5 if rng.randf() < 0.02 * exp(-t * 3.0) else 0.0
+		b[i] = f * 2.2 * _env(t, 0.002, 0.3) + sin(TAU * lerpf(70.0, 30.0, t / 0.9) * t) * _env(t, 0.002, 0.2) + shrapnel
+	return b
+
+
+## Superconductor (helado + rayo): un arco que salta entre enemigos.
+func _arc() -> PackedFloat32Array:
+	var b := _buf(0.35)
+	var ph := 0.0
+	var freq := 900.0
+	for i in b.size():
+		var t := float(i) / RATE
+		if i % 160 == 0:
+			freq = rng.randf_range(600.0, 2400.0)
+		ph += freq / RATE
+		b[i] = (_sq(ph) * 0.4 + sin(TAU * 2093.0 * t) * 0.3) * _env(t, 0.002, 0.1)
+	return b
+
+
+## Rotura: el hielo estalla en pedazos.
+func _shatter() -> PackedFloat32Array:
+	var b := _buf(0.5)
+	var f := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		f = _lp(f, _noise(), 7000.0)
+		var tinkle := 0.0
+		for k in 4:
+			var st := 0.03 + k * 0.05
+			if t > st:
+				tinkle += sin(TAU * (2200.0 + k * 470.0) * (t - st)) * _env(t - st, 0.001, 0.05)
+		b[i] = f * _env(t, 0.001, 0.05) + tinkle * 0.3
 	return b
 
 

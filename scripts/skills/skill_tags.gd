@@ -21,6 +21,7 @@ const INFO := {
 	"automaton": ["autómata", "7fd0e8"],
 	"persistent": ["persistente", "9ad0ff"],
 	"aura": ["aura", "d9b0ff"],
+	"curse": ["maldición", "e06c6c"],
 	"physical": ["físico", "c8b8a0"],
 	"fire": ["fuego", "e0652f"],
 	"cold": ["frío", "7fb8e0"],

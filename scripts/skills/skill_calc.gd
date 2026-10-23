@@ -10,9 +10,11 @@ const TAG_AUTOMATON := &"automaton"
 ## Daño por nivel de la placa base (sube con la experiencia, como las gemas de PoE):
 ## - Hechizos: base × (1 + growth × (nivel - 1)) × SPELL_LEVEL_MULT^(nivel - 1).
 ## - Ataques: arma × damage_effectiveness × (1 + ATTACK_GROWTH × (nivel - 1)).
+##   (0.15 desde octubre de 2026: con 0.12 los ataques quedaban muy por debajo de
+##   los hechizos a nivel 20 de placa; ver tools/balance_report.gd).
 ## Así el daño acompaña a la vida de los enemigos, que crece un 15 % por nivel de zona.
 const SPELL_LEVEL_MULT := 1.03
-const ATTACK_GROWTH := 0.12
+const ATTACK_GROWTH := 0.15
 ## Además del daño, cada nivel de la placa da +1 % de área, ancho y duración y
 ## -1 % de enfriamiento; y en los niveles hito, un efecto extra según la habilidad.
 const LEVEL_UTILITY := 0.01
@@ -54,6 +56,13 @@ static func milestone_text(skill: Dictionary) -> String:
 	if float(skill.get("radius", 0.0)) > 0.0:
 		return "+10 % de área"
 	return "+10 % de daño"
+
+
+## Proyectiles que cuentan para el DPS de las invocaciones que disparan: todos los
+## del abanico pueden acertar a enemigos distintos, pero se cuenta la mitad de los
+## extra (no todos aciertan).
+static func projectiles_or_one(n: int) -> float:
+	return 1.0 + maxf(0.0, n - 1) * 0.5
 
 
 ## % de daño que quita un módulo Multicanal en una placa de ese nivel.
@@ -245,10 +254,25 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 			hits_per_use *= float(int(skill.get("count", 1)) + milestones + extra_minions) * maxf(1.0, duration / maxf(0.1, tick))
 		"rain":
 			hits_per_use *= maxf(1.0, rain_hits * 0.5)   # no todos los impactos caen sobre el mismo
-	var dps := average * minf(uses_per_second, 1.0 / maxf(cooldown, 0.0001)) * hits_per_use
-	if kind == "unit":
-		# Daño sostenido de todas las invocaciones a la vez.
-		dps = average * max_units / maxf(0.1, unit_interval)
+	var casts := minf(uses_per_second, 1.0 / maxf(cooldown, 0.0001))
+	var dps := average * casts * hits_per_use
+	# Daño sostenido de lo que se queda en el campo: cuenta los que pueden estar
+	# vivos a la vez (los lanzamientos de más solo los renuevan).
+	match kind:
+		"unit":
+			dps = average * max_units * projectiles_or_one(projectiles) / maxf(0.1, unit_interval)
+		"minion":
+			var per_cast := float(int(skill.get("count", 1)) + extra_minions + milestones)
+			var alive := minf(per_cast + int(skill.get("max_active", 0)), per_cast * casts * maxf(1.0, duration))
+			dps = average * alive / maxf(0.1, minion_interval)
+		"drones":
+			var per_cast := float(int(skill.get("count", 1)) + milestones + extra_minions)
+			var alive := minf(per_cast * 2.0, per_cast * casts * maxf(1.0, duration))
+			dps = average * alive * projectiles_or_one(projectiles) / maxf(0.1, tick)
+		"curse_area", "dot_projectile":
+			dps = average   # el degenerativo no se acumula sobre el mismo enemigo: solo cuenta uno
+		"degen_area":
+			dps = average * clampf(casts * duration, 1.0, 3.0)   # charcos que se solapan (hasta 3)
 	# Estados alterados: probabilidad por tipo, potencia y duración.
 	var ailment_chances := Ailments.chances(stats, tags, skill)
 	var ailment_effect := stats.total_multiplier(Stat.AILMENT_DAMAGE, tags)
@@ -327,6 +351,12 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 		"aura_mods": aura_mods,
 		"aura_regen": float(aura.get("regen", 0.0)) * aura_scale,
 		"aura_reduction": minf(0.6, float(aura.get("reduction", 0.0)) * aura_scale),
+		# Alcance del aura alrededor del jugador (crece con el área y el nivel de la placa).
+		"aura_radius": float(aura.get("radius", 0.0)) * sqrt(stats.total_multiplier(Stat.AREA_OF_EFFECT, tags)) * lvl_mult,
+		# Auras que debilitan: efectos sobre los enemigos dentro del radio.
+		"aura_enemy": {} if not aura.has("enemy") else {
+			"slow": minf(0.5, float(aura["enemy"].get("slow", 0.0)) * aura_scale),
+			"damage_taken": minf(0.6, float(aura["enemy"].get("damage_taken", 0.0)) * aura_scale)},
 		"unit_reduction": minf(0.7, float(unit.get("reduction", 0.0)) + unit_reduction),
 		"unit_shoots": bool(unit.get("shoots", true)),
 		"unit_ability": unit.get("ability", {}),

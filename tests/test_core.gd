@@ -1287,7 +1287,8 @@ func _test_defense_and_dot_skills() -> void:
 	_check(kills[0] == 1, "el daño degenerativo mata")
 	em.free()
 	var dot := SkillCalc.compute(gen.generate_motherboard(1, "corrupcion_datos"), c)
-	_check(dot["dps"] > dot["max_damage"], "el DPS del degenerativo cuenta toda la duración")
+	_check(dot["dps"] >= dot["min_damage"] and dot["dps"] <= dot["max_damage"] * 1.5,
+		"el DPS del degenerativo es su daño por segundo (no se acumula sobre el mismo enemigo)")
 	var homing := SkillCalc.compute(gen.generate_motherboard(1, "paquete_rastreador"), c)
 	_check(homing["seek_range"] > 0.0 and homing["projectiles"] >= 3, "Paquete Rastreador busca enemigos")
 	var drones := SkillCalc.compute(gen.generate_motherboard(1, "drones_vigilancia"), c)
@@ -2500,7 +2501,8 @@ func _test_rams_everywhere() -> void:
 	var keys := ["dps", "min_damage", "projectiles", "pierce", "projectile_chains", "chains", "projectile_speed", "homing", "radius",
 		"width", "impact_radius", "rain_hits", "crit_chance", "life_leech", "ailments", "ailment_effect", "ailment_duration",
 		"ailing_bonus", "deploy", "max_units", "unit_interval", "unit_life", "unit_reduction", "reserve", "aura_mods",
-		"tick", "minion_interval", "drone_count", "count", "extra_devices", "uses_per_second", "repeats"]
+		"aura_regen", "aura_reduction", "aura_enemy", "tick", "minion_interval", "drone_count", "count", "extra_devices",
+		"uses_per_second", "repeats"]
 	var dead := PackedStringArray()
 	for sid in skills:
 		var base := SkillCalc.compute(Motherboard.new(skills[sid], 10, []), c)
@@ -2519,6 +2521,40 @@ func _test_rams_everywhere() -> void:
 			if not changed:
 				dead.append("%s+%s" % [sid, rid])
 	_check(dead.is_empty(), "RAM compatibles sin efecto: %s" % ", ".join(dead))
+	# Grados nuevos: área, velocidad, pipeline y guiado.
+	for fam in ["cache_l3", "overclock", "pipeline"]:
+		_check(rams.has(fam + "_menor") and rams.has(fam + "_mayor"), "RAM de grados: %s tiene menor y mayor" % fam)
+	_check(rams.has("guiado_laser_mayor"), "RAM de grados: Guiado por Láser de Precisión")
+	# Auras con alcance y auras que debilitan.
+	var thr := SkillCalc.compute(Motherboard.new(skills["aura_throttling"], 1, []), c)
+	_check(thr["aura_radius"] > 300.0 and thr["aura_enemy"]["slow"] > 0.1, "Aura de Throttling: radio y ralentiza a los enemigos")
+	var exp_aura := SkillCalc.compute(Motherboard.new(skills["aura_exposicion"], 1, []), c)
+	_check(exp_aura["aura_enemy"]["damage_taken"] > 0.1, "Aura de Exposición: los enemigos reciben más daño")
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	var near := em.index_of(em.spawn(Vector2(100, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug")))
+	var far_e := em.index_of(em.spawn(Vector2(900, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug")))
+	for k in [near, far_e]:
+		em.lives[k] = 1.0e6
+		em.max_lives[k] = 1.0e6
+	em.aura_fields = [{"pos": Vector2.ZERO, "radius": 360.0, "slow": 0.15, "damage_taken": 0.12}]
+	em.hit_index(near, 100.0, 100.0, 0.0, 150.0)
+	em.hit_index(far_e, 100.0, 100.0, 0.0, 150.0)
+	_check(is_equal_approx(1.0e6 - em.lives[near], 112.0) and is_equal_approx(1.0e6 - em.lives[far_e], 100.0), "aura que debilita: solo dentro de su radio")
+	em.free()
+	# Desbloqueos por nivel: cada clase tiene 4, con habilidades que existen, y al menos una invocación y una aura.
+	for cls in _classes:
+		var unlocks: Array = cls.get("unlocks", [])
+		var kinds := {}
+		for u in unlocks:
+			_check(skills.has(u["skill"]), "%s desbloquea %s, que existe" % [cls["id"], u["skill"]])
+			kinds[skills.get(u["skill"], {}).get("kind", "")] = true
+		_check(unlocks.size() == 4 and kinds.has("aura") and (kinds.has("unit") or kinds.has("minion")), "%s: 4 desbloqueos con invocación y aura" % cls["id"])
+	var lvl := CharacterData.new(_classes[0], _tree)
+	lvl.set_level(12)
+	_check(lvl.due_unlocks().size() == 2, "al nivel 12 el guerrero tiene 2 habilidades por recibir")
+	lvl.flags["unlock_aura_blindaje"] = true
+	_check(lvl.due_unlocks().size() == 1, "las ya recibidas no se repiten")
 	# Ordenar la bolsa: placas primero y RAM por generación; lo demás no se mueve.
 	var inv := Inventory.new()
 	inv.bag[0] = RamModule.new(rams["pasta_termica"])
@@ -2663,6 +2699,20 @@ func _test_thermal_shock_and_status_resist() -> void:
 	var before := em.lives[i]
 	em.hit_index(i, 100.0, 100.0, 0.0, 150.0)
 	_check(is_equal_approx(before - em.lives[i], 140.0) and em.burn_time[i] == 0.0, "choque térmico: +40 % y se apaga la quemadura")
+	# Superconductor: rayo a un helado → arcos a 2 vecinos con el 40 % (más con efecto de interacciones).
+	var n1 := em.index_of(em.spawn(Vector2(60, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug")))
+	var n2 := em.index_of(em.spawn(Vector2(0, 70), Rarity.Enemy.NORMAL, em.type_index_of("bug")))
+	var far := em.index_of(em.spawn(Vector2(900, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug")))
+	for k in [n1, n2, far]:
+		em.lives[k] = 1.0e6
+		em.max_lives[k] = 1.0e6
+	em.interaction_power = 1.5
+	em.chill_time[i] = 2.0
+	em.hit_ailments = {"type": "lightning", "chances": {}, "effect": 1.0, "duration": 1.0}
+	em.hit_index(i, 100.0, 100.0, 0.0, 150.0)
+	em.call("_update_arcs")
+	_check(is_equal_approx(1.0e6 - em.lives[n1], 60.0) and is_equal_approx(1.0e6 - em.lives[n2], 60.0) and em.lives[far] == 1.0e6 \
+		and em.chill_time[i] == 0.0, "superconductor: arcos del 40 % ×1.5 a los 2 vecinos y se gasta el frío")
 	em.free()
 	var base := _new_character()
 	var tough := _new_character()

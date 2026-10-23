@@ -53,6 +53,7 @@ const UNIT_LEASH := 900.0
 var _auras: Array[Dictionary] = []
 var _aura_regen := 0.0          # % de vida por segundo que recuperan las invocaciones
 var _aura_reduction := 0.0      # daño evitado extra de las invocaciones
+var _bare_profiles := {}         # skill_id -> perfil de la invocación sin auras (fuera de su radio)
 ## Lluvias en curso (Cascada de Estilos): impactos pendientes repartidos en el tiempo.
 var _rains: Array[Dictionary] = []
 ## Robot de compañía (ascendencia Ingeniero en Robótica): {pos, laser, emp, bob}.
@@ -89,6 +90,8 @@ func refresh_profiles() -> void:
 	_profiles.clear()
 	for i in ACTIONS.size():
 		_profiles.append(character.skill_profile(i))
+	if enemies:
+		enemies.interaction_power = character.stats.total_multiplier(Stat.INTERACTION_EFFECT)
 	_companion_laser = {}
 	_companion_emp = {}
 	if character.stats.get_value(Stat.COMPANION_ROBOT) > 0.0:
@@ -127,6 +130,7 @@ func _refresh_units() -> void:
 	for a in _auras:
 		_aura_regen += float(a["profile"]["aura_regen"])
 		_aura_reduction += float(a["profile"]["aura_reduction"])
+	_compute_bare_profiles()
 	var kept: Array[Dictionary] = []
 	var per_skill := {}
 	for u in _units:
@@ -144,6 +148,49 @@ func _refresh_units() -> void:
 		kept.append(u)
 	_units = kept
 	_update_reservation()
+
+
+## Perfiles de las invocaciones sin los bonos de las auras (para cuando se alejan
+## del jugador más que el radio del aura). Quita un momento los efectos "aura:*"
+## sin avisar a nadie y los vuelve a poner.
+func _compute_bare_profiles() -> void:
+	_bare_profiles = {}
+	if _auras.is_empty():
+		return
+	var saved: Array = character.timed_effects.duplicate()
+	character.timed_effects.assign(saved.filter(func(e: Dictionary) -> bool: return not String(e["id"]).begins_with("aura:")))
+	character.recalculate(false)
+	for i in ACTIONS.size():
+		var p := character.skill_profile(i)
+		if not p.is_empty() and p["kind"] == "unit":
+			_bare_profiles[p["id"]] = p
+	character.timed_effects.assign(saved)
+	character.recalculate(false)
+
+
+## Radio de las auras activas (el mayor; 0 si no hay ninguna).
+func aura_radius() -> float:
+	var r := 0.0
+	for a in _auras:
+		r = maxf(r, float(a["profile"].get("aura_radius", 0.0)))
+	return r
+
+
+## ¿Está ese punto dentro del alcance de las auras (alrededor del jugador)?
+func in_aura_range(pos: Vector2) -> bool:
+	return not _auras.is_empty() and player != null and pos.distance_to(player.global_position) <= aura_radius()
+
+
+## Auras que debilitan: cada fotograma le dicen al EnemyManager dónde están y qué hacen.
+func _update_aura_fields() -> void:
+	var fields: Array[Dictionary] = []
+	if player and player.is_alive():
+		for a in _auras:
+			var en: Dictionary = a["profile"].get("aura_enemy", {})
+			if not en.is_empty():
+				fields.append({"pos": player.global_position, "radius": float(a["profile"]["aura_radius"]),
+					"slow": float(en.get("slow", 0.0)), "damage_taken": float(en.get("damage_taken", 0.0))})
+	enemies.aura_fields = fields
 
 
 func _update_reservation() -> void:
@@ -223,11 +270,13 @@ func _toggle_aura(p: Dictionary, color: Color) -> void:
 		if _auras[k]["skill_id"] == p["id"]:
 			character.remove_timed_effect("aura:" + String(p["id"]))
 			_auras.remove_at(k)
+			Sfx.play("aura_off", -6.0)
 			_effects.append({"type": "ring", "pos": player.global_position, "radius": 70.0, "time": 0.0, "duration": 0.4, "color": Color(color, 0.5)})
 			refresh_profiles()
 			return
 	var a := {"skill_id": p["id"], "profile": p, "color": color, "sig": str(p["aura_mods"])}
 	_auras.append(a)
+	Sfx.play("aura_on", -4.0)
 	_effects.append({"type": "ring", "pos": player.global_position, "radius": 90.0, "time": 0.0, "duration": 0.7, "color": color})
 	_apply_aura_effect(a)   # recalcula las stats y, con ello, los perfiles y la reserva
 	_update_reservation()
@@ -259,6 +308,7 @@ func _physics_process(delta: float) -> void:
 		for i in ACTIONS.size():
 			if Input.is_action_pressed(ACTIONS[i]) and try_use(i):
 				break
+	_update_aura_fields()
 	_update_pending(delta)
 	_update_projectiles(delta)
 	_update_spin(delta)
@@ -703,9 +753,12 @@ func _update_units(delta: float) -> void:
 		u["hurt"] = maxf(0.0, float(u.get("hurt", 0.0)) - delta)
 		u["phase"] += delta * 6.0
 		u["cd"] -= delta
-		var p: Dictionary = u["profile"]
-		u["reduction"] = minf(0.8, float(u["base_reduction"]) + _aura_reduction)
-		if _aura_regen > 0.0 and u["behavior"] != "orbit":
+		# Auras con alcance: fuera del radio la invocación pelea con sus cifras sin auras.
+		var in_aura := in_aura_range(u["pos"])
+		u["in_aura"] = in_aura
+		var p: Dictionary = u["profile"] if in_aura else _bare_profiles.get(u["skill_id"], u["profile"])
+		u["reduction"] = minf(0.8, float(u["base_reduction"]) + (_aura_reduction if in_aura else 0.0))
+		if in_aura and _aura_regen > 0.0 and u["behavior"] != "orbit":
 			u["life"] = minf(u["max_life"], u["life"] + u["max_life"] * _aura_regen / 100.0 * delta)
 		if u["life"] <= 0.0:
 			var death_color := Color("ff7a4a")
@@ -714,6 +767,7 @@ func _update_units(delta: float) -> void:
 				var boom_radius: float = float(p["unit_ability"].get("radius", 90.0)) * float(p.get("area_scale", 1.0))
 				_ctx(p)
 				_damage_area(u["pos"], boom_radius, p)
+				Sfx.play("mine", -4.0)
 				_effects.append({"type": "quake", "pos": u["pos"], "radius": boom_radius, "time": 0.0, "duration": 0.5, "color": u["color"]})
 				death_color = u["color"]
 			_effects.append({"type": "burst", "pos": u["pos"], "radius": 36.0 + u["radius"], "time": 0.0, "duration": 0.4, "color": death_color})
@@ -788,6 +842,7 @@ func _unit_ability(u: Dictionary, p: Dictionary, delta: float) -> void:
 				return
 			u["ab_cd"] = float(p["unit_interval"])
 			player.heal(player.max_life() * float(ab.get("player_pct", 5)) / 100.0)
+			Sfx.play("heal", -8.0)
 			_effects.append({"type": "ring", "pos": player.global_position, "radius": 46.0, "time": 0.0, "duration": 0.5, "color": u["color"]})
 			for other in _units:
 				other["life"] = minf(other["max_life"], other["life"] + other["max_life"] * float(ab.get("unit_pct", 10)) / 100.0)
@@ -799,6 +854,7 @@ func _unit_ability(u: Dictionary, p: Dictionary, delta: float) -> void:
 				return
 			u["ab_cd"] = float(p["unit_interval"])
 			player.add_barrier(float(ab.get("barrier", 20)) + float(ab.get("barrier_life", 0.1)) * player.max_life(), 6.0)
+			Sfx.play("barrier", -8.0, 1.2)
 			_effects.append({"type": "ring", "pos": player.global_position, "radius": 60.0, "time": 0.0, "duration": 0.5, "color": Color("cfe8ff")})
 		"leap":
 			# Salta sobre el enemigo más lejano a su alcance y golpea el suelo al caer.
@@ -1281,6 +1337,16 @@ func _draw_auras() -> void:
 	if _auras.is_empty() or not player.is_alive():
 		return
 	var tt := Time.get_ticks_msec() / 1000.0
+	# Alcance: un círculo tenue con el radio de cada aura (las que debilitan, en rojo).
+	for a in _auras:
+		var ar := float(a["profile"].get("aura_radius", 0.0))
+		if ar > 0.0:
+			var hostile: bool = not a["profile"].get("aura_enemy", {}).is_empty()
+			var rc: Color = Color("e06c6c") if hostile else a["color"]
+			draw_set_transform(player.global_position, 0.0, Vector2(1.0, 0.62))
+			draw_circle(Vector2.ZERO, ar, Color(rc, 0.035 if hostile else 0.02))
+			draw_arc(Vector2.ZERO, ar, 0.0, TAU, 64, Color(rc, 0.28), 1.5, true)
+			draw_set_transform(Vector2.ZERO)
 	var k := 0
 	for a in _auras:
 		var c: Color = a["color"]
@@ -1298,7 +1364,6 @@ func _draw_auras() -> void:
 
 ## Invocaciones persistentes: cada comportamiento tiene su figura.
 func _draw_units() -> void:
-	var font := ThemeDB.fallback_font
 	for u in _units:
 		var p: Vector2 = u["pos"]
 		var ph: float = u["phase"]
@@ -1309,57 +1374,7 @@ func _draw_units() -> void:
 			draw_set_transform(p + Vector2(0, r * 0.7), 0.0, Vector2(1.0, 0.4))
 			draw_circle(Vector2.ZERO, r * 1.1, Color(0, 0, 0, 0.35))
 			draw_set_transform(Vector2.ZERO)
-		match String(u["behavior"]):
-			"ranged":
-				# Robot centinela: patas, torso con visor y un cañón.
-				var bob := sin(ph) * 1.5
-				for s in [-1.0, 1.0]:
-					draw_line(p + Vector2(s * 4, 2), p + Vector2(s * 6 + sin(ph + s) * 2.0, 10), Color("4a4f5c"), 3.0, true)
-				draw_rect(Rect2(p + Vector2(-9, -16 + bob), Vector2(18, 16)), Color("6e7480"))
-				draw_rect(Rect2(p + Vector2(-9, -16 + bob), Vector2(18, 16)), Color("2f333c"), false, 1.5)
-				draw_rect(Rect2(p + Vector2(-6, -13 + bob), Vector2(12, 5)), Color("10161c"))
-				draw_rect(Rect2(p + Vector2(-5, -12 + bob), Vector2(10 * (0.5 + 0.5 * sin(ph * 0.7)), 3)), c)
-				draw_rect(Rect2(p + Vector2(8, -8 + bob), Vector2(9, 4)), Color("3a3f4a"))
-				draw_line(p + Vector2(0, -16 + bob), p + Vector2(0, -22 + bob), Color("8a8a96"), 1.5)
-				draw_circle(p + Vector2(0, -23 + bob), 2.0, c)
-			"orbit":
-				# Dron escolta: cuatro rotores y un núcleo incandescente (cruz verde el médico, escudo el cortafuegos).
-				draw_circle(p + Vector2(0, 30), 5.0, Color(0, 0, 0, 0.22))
-				if u["skill_id"] == "dron_medico":
-					draw_rect(Rect2(p + Vector2(-1.5, -14), Vector2(3, 8)), c)
-					draw_rect(Rect2(p + Vector2(-4, -11.5), Vector2(8, 3)), c)
-				elif u["skill_id"] == "dron_escudo":
-					draw_arc(p + Vector2(0, -9), 6.0, PI, TAU, 8, c, 2.0, true)
-				for k in 4:
-					var arm := Vector2.from_angle(PI / 4.0 + PI / 2.0 * k) * 10.0
-					draw_line(p, p + arm, Color("5a5f6c"), 2.0, true)
-					draw_circle(p + arm, 4.0 + sin(ph * 6.0 + k) * 0.6, Color(0.85, 0.85, 0.9, 0.3))
-				draw_circle(p, 5.0, Color("3a3f4a"))
-				draw_circle(p, 2.6 + 0.6 * sin(ph * 2.0), c)
-			"tank":
-				# Golem de hardware: torres de PC apiladas con LEDs y un monitor por cabeza.
-				var sway := sin(ph * 0.5) * 1.5
-				draw_rect(Rect2(p + Vector2(-16, -28 + sway), Vector2(32, 30)), Color("5a5650"))
-				draw_rect(Rect2(p + Vector2(-16, -28 + sway), Vector2(32, 30)), Color("2a2724"), false, 2.0)
-				for k in 4:
-					draw_circle(p + Vector2(-10 + k * 6, -6 + sway), 1.6, c if fmod(ph + k, 3.0) < 1.5 else Color("2a2a20"))
-				for s in [-1.0, 1.0]:
-					draw_rect(Rect2(p + Vector2(s * 16 - (8 if s < 0 else 0), -24 + sway + sin(ph + s) * 2.0), Vector2(8, 22)), Color("47443f"))
-				draw_rect(Rect2(p + Vector2(-11, -44 + sway), Vector2(22, 16)), Color("b8b8b0"))
-				draw_rect(Rect2(p + Vector2(-9, -42 + sway), Vector2(18, 11)), Color("10200f"))
-				draw_string(font, p + Vector2(-8, -33 + sway), "ò_ó", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("3cff6a"))
-			_:
-				# Daemon (el de BSD): cuerpecillo rojo con cuernos y un tridente.
-				var hop := absf(sin(ph)) * 3.0
-				draw_circle(p + Vector2(0, -8 - hop), 9.0, Color("b8322a"))
-				draw_circle(p + Vector2(0, -19 - hop), 6.5, Color("c83a30"))
-				for s in [-1.0, 1.0]:
-					draw_colored_polygon(PackedVector2Array([p + Vector2(s * 3, -24 - hop), p + Vector2(s * 8, -31 - hop), p + Vector2(s * 6, -22 - hop)]), Color("f0e0c0"))
-				draw_circle(p + Vector2(-2.5, -19 - hop), 1.3, Color("ffe070"))
-				draw_circle(p + Vector2(2.5, -19 - hop), 1.3, Color("ffe070"))
-				draw_line(p + Vector2(11, -2 - hop), p + Vector2(11, -26 - hop), Color("c8c8c8"), 1.5, true)
-				for k in 3:
-					draw_line(p + Vector2(8 + k * 3, -26 - hop), p + Vector2(8 + k * 3, -31 - hop), Color("c8c8c8"), 1.5, true)
+		UnitArt.draw(self, String(u["skill_id"]), String(u["behavior"]), p, ph, c)
 		if hurt:
 			draw_circle(p + Vector2(0, -r), r * 1.1, Color(1, 1, 1, 0.35))
 		if u["behavior"] != "orbit":

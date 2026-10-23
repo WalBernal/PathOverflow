@@ -31,6 +31,14 @@ const ATTACK_INTERVAL := 1.2
 const AGGRO_RANGE := 850.0
 const FLASH_TIME := 0.12
 const GRID_CELL := 48.0
+## Dibujo: margen fuera de cámara que aún se dibuja, y cuántos enemigos en
+## pantalla puede haber antes de pasar a los efectos de estados simplificados.
+const CULL_MARGIN := 120.0
+const FX_DETAIL_LIMIT := 60
+## Superconductor (helado + rayo): % del golpe de cada arco, cuántos y su alcance.
+const SUPERCONDUCTOR_DAMAGE := 0.4
+const SUPERCONDUCTOR_TARGETS := 2
+const SUPERCONDUCTOR_RANGE := 180.0
 const RADIUS_BY_RARITY := {
 	Rarity.Enemy.NORMAL: 11.0,
 	Rarity.Enemy.SPECIAL: 14.0,
@@ -126,6 +134,23 @@ var roll_affixes := true
 var _affix_timers := {}
 ## Explosiones diferidas (Sobrecarga: electrocutado + daño de fuego) y último sonido de cada estado.
 var _booms: Array[Dictionary] = []
+## Superconductor pendientes: {from, damage} (arcos a enemigos cercanos).
+var _arcs: Array[Dictionary] = []
+## Potencia de las interacciones entre estados (1 = normal; las ascendencias la
+## suben con "efecto de las interacciones"). La fija SkillController.
+var interaction_power := 1.0
+## Auras del jugador que debilitan: [{pos, radius, slow, damage_taken}] (las pone
+## SkillController cada fotograma). No se acumulan entre sí: cuenta la más fuerte.
+var aura_fields: Array[Dictionary] = []
+
+
+## Efecto ("slow" o "damage_taken") de las auras que alcanzan al enemigo i.
+func _aura_effect(i: int, key: String) -> float:
+	var best := 0.0
+	for f in aura_fields:
+		if positions[i].distance_to(f["pos"]) <= float(f["radius"]) + radii[i]:
+			best = maxf(best, float(f[key]))
+	return best
 var _sfx_last := {}
 ## Aliados que los enemigos pueden atacar (invocaciones persistentes):
 ## [{pos, life, max_life, radius, taunt}]. Los mantiene SkillController.
@@ -145,6 +170,10 @@ var _flashes_fx: Array[Dictionary] = []  # destellos de impactos enemigos (solo 
 ## Coste del último tick de simulación (IA + separación), en milisegundos.
 ## Presupuesto orientativo: < 4 ms para dejar sitio al resto del juego.
 var last_simulation_ms := 0.0
+## Enemigos dibujados en el último fotograma (los que se ven en cámara).
+var last_drawn_count := 0
+## Tiempo de CPU del último _draw (ms), para la prueba de rendimiento.
+var last_draw_ms := 0.0
 
 var _next_id := 1
 var _multimesh: MultiMesh
@@ -418,7 +447,34 @@ func _start_phase(i: int, ph: Dictionary) -> void:
 	phase_started.emit(ids[i], String(ph.get("name", "")), String(ph.get("text", "")), color)
 
 
+## Superconductor: cada arco golpea a los SUPERCONDUCTOR_TARGETS enemigos más
+## cercanos al helado (sin encadenar más interacciones).
+func _update_arcs() -> void:
+	if _arcs.is_empty():
+		return
+	var list := _arcs
+	_arcs = []
+	var saved := hit_ailments
+	hit_ailments = {}
+	for a in list:
+		var src := index_of(a["id"])
+		if src == -1:
+			continue
+		var from := positions[src]
+		var skip := {a["id"]: true}   # por id: un golpe puede matar y mover los índices
+		for k in SUPERCONDUCTOR_TARGETS:
+			var t := nearest_index(from, SUPERCONDUCTOR_RANGE, skip)
+			if t == -1:
+				break
+			skip[ids[t]] = true
+			_flashes_fx.append({"type": "beam", "pos": from, "end": positions[t], "radius": 3.0, "time": 0.0, "color": Color("aee8ff")})
+			_damage(t, a["damage"], a["damage"], 0.0, 100.0)
+		_state_sfx("arc")
+	hit_ailments = saved
+
+
 func _update_booms() -> void:
+	_update_arcs()
 	if _booms.is_empty():
 		return
 	var list := _booms
@@ -495,7 +551,8 @@ func _state_sfx(id: String, on_player := false) -> void:
 		return
 	_sfx_last[id] = now
 	var table := {"burn": ["fire", -15.0, 1.5], "shock": ["lightning", -15.0, 1.4], "chill": ["cold", -14.0, 1.3],
-		"freeze": ["cold", -10.0, 0.85], "poison": ["flask", -14.0, 0.7], "bleed": ["swing", -16.0, 0.6]}
+		"freeze": ["freeze", -9.0, 1.0], "poison": ["poison", -12.0, 1.0], "bleed": ["bleed", -12.0, 1.0],
+		"shatter": ["shatter", -8.0, 1.0], "arc": ["arc", -10.0, 1.0]}
 	if table.has(id):
 		var t: Array = table[id]
 		Sfx.play(t[0], float(t[1]) + (6.0 if on_player else 0.0), float(t[2]))
@@ -707,7 +764,7 @@ func _update_dots(delta: float) -> void:
 			poison_time[i] -= delta
 			dps += poison_dps[i]
 			if bleed_time[i] > 0.0:
-				dps += poison_dps[i] * 0.5   # Infección: envenenado y sangrando a la vez
+				dps += poison_dps[i] * 0.5 * interaction_power   # Infección: envenenado y sangrando a la vez
 		if bleed_time[i] > 0.0:
 			bleed_time[i] -= delta
 			dps += bleed_dps[i] * (Ailments.BLEED_MOVING_MULT if _is_moving(i) else 1.0)
@@ -795,23 +852,31 @@ func _damage(i: int, min_damage: float, max_damage: float, crit_chance: float, c
 			damage *= ailing
 	if shock_time[i] > 0.0:
 		damage *= 1.0 + shock_amp[i]
+	if not aura_fields.is_empty():
+		damage *= 1.0 + _aura_effect(i, "damage_taken")
 	var dmg_type := String(hit_ailments.get("type", ""))
+	var power := interaction_power
 	if freeze_time[i] > 0.0 and dmg_type == "physical":
 		# Rotura: un golpe físico a un enemigo congelado lo hace pedazos (+50 % y se acaba el hielo).
-		damage *= 1.5
+		damage *= 1.0 + 0.5 * power
 		freeze_time[i] = 0.0
 		_flashes_fx.append({"type": "circle", "pos": positions[i], "radius": radii[i] * 2.0, "time": 0.0, "color": Color("bfe8ff")})
-		_state_sfx("freeze")
+		_state_sfx("shatter")
 	elif burn_time[i] > 0.0 and dmg_type == "cold":
 		# Choque térmico: el frío sobre un enemigo en llamas hace un 40 % más y apaga la quemadura.
-		damage *= 1.4
+		damage *= 1.0 + 0.4 * power
 		burn_time[i] = 0.0
 		_flashes_fx.append({"type": "circle", "pos": positions[i], "radius": radii[i] * 1.8, "time": 0.0, "color": Color("c8e8ff")})
 		_state_sfx("chill")
 	elif shock_time[i] > 0.0 and dmg_type == "fire":
 		# Sobrecarga: el fuego sobre un enemigo electrocutado hace saltar una explosión y gasta la descarga.
-		_booms.append({"pos": positions[i], "damage": damage * 0.5, "radius": 85.0})
+		_booms.append({"pos": positions[i], "damage": damage * 0.5 * power, "radius": 85.0})
 		shock_time[i] = 0.0
+	elif chill_time[i] > 0.0 and dmg_type == "lightning":
+		# Superconductor: el rayo sobre un enemigo helado salta en arcos a 2 enemigos
+		# cercanos (40 % del golpe) y gasta el frío.
+		_arcs.append({"from": i, "id": ids[i], "damage": damage * SUPERCONDUCTOR_DAMAGE * power})
+		chill_time[i] = 0.0
 	var traits_i: Dictionary = traits[i]
 	if traits_i.has("shield") and float(traits_i["shield"]) > 0.0:
 		var absorbed := minf(float(traits_i["shield"]), damage)
@@ -961,6 +1026,8 @@ func _physics_process(delta: float) -> void:
 		var move := Vector2.ZERO
 		# Helado: todo va más lento (movimiento, recarga y preparación de ataques).
 		var tempo := (1.0 - Ailments.CHILL_SLOW) if chill_time[i] > 0.0 else 1.0
+		if not aura_fields.is_empty():
+			tempo *= 1.0 - _aura_effect(i, "slow")
 		cooldowns[i] -= delta * tempo
 		flashes[i] = maxf(0.0, flashes[i] - delta)
 
@@ -1438,14 +1505,32 @@ func _process(_delta: float) -> void:
 ## Telegrafiados, proyectiles enemigos, barras de vida (solo heridos o no
 ## normales), nombres de élites y únicos, aturdimientos y lanzamientos.
 func _draw() -> void:
+	var t0 := Time.get_ticks_usec()
+	_draw_all()
+	last_draw_ms = (Time.get_ticks_usec() - t0) / 1000.0
+
+
+func _draw_all() -> void:
 	var font := ThemeDB.fallback_font
 	_draw_attacks(font)
 	var tt := Time.get_ticks_msec() / 1000.0
+	# Solo lo que se ve en cámara (con margen); con muchos enemigos en pantalla, los
+	# efectos de estados y afijos pasan a una versión simple (un halo por estado).
+	var view := (get_canvas_transform().affine_inverse() * get_viewport_rect()).grow(CULL_MARGIN)
+	var on_screen: Array[int] = []
 	for i in positions.size():
+		if view.has_point(positions[i]):
+			on_screen.append(i)
+	var simple := on_screen.size() > FX_DETAIL_LIMIT
+	last_drawn_count = on_screen.size()
+	for i in on_screen:
 		if stuns[i] > 0.0 and freeze_time[i] <= 0.0:
 			_draw_stun(positions[i] + Vector2(0, -radii[i] * SPRITE_SCALE * 1.1 - 18.0))
-		_draw_ailment_fx(i, tt)
-		_draw_affix_fx(i, tt)
+		if simple:
+			_draw_ailment_fx_simple(i)
+		else:
+			_draw_ailment_fx(i, tt)
+			_draw_affix_fx(i, tt)
 		if phase_shield.has(ids[i]):
 			var shield_pulse := 0.5 + 0.5 * sin(tt * 14.0)
 			draw_arc(positions[i], radii[i] * 2.0, 0.0, TAU, 32, Color(0.6, 0.85, 1.0, 0.5 + 0.4 * shield_pulse), 4.0, true)
@@ -1460,10 +1545,15 @@ func _draw() -> void:
 		# Iconos de estados encima de la barra (o donde iría).
 		var states := ailments_of(i)
 		if not states.is_empty():
-			var side := 11.0
+			var side := 11.0 if not simple else 5.0
 			var x0 := positions[i].x - (states.size() * (side + 2.0) - 2.0) / 2.0
 			for k in states.size():
-				StatusIcon.draw(self, Rect2(x0 + k * (side + 2.0), top.y - side - 3.0, side, side), states[k]["id"], true)
+				var sr := Rect2(x0 + k * (side + 2.0), top.y - side - 3.0, side, side)
+				if simple:
+					draw_rect(sr.grow(1.0), Color(0, 0, 0, 0.8))   # con muchos enemigos: un cuadrito del color del estado
+					draw_rect(sr, Ailments.color(states[k]["id"]))
+				else:
+					StatusIcon.draw(self, sr, states[k]["id"], true)
 		if not has_bar:
 			continue
 		draw_rect(Rect2(top - Vector2(1, 1), Vector2(w + 2.0, 6.0)), Color(0, 0, 0, 0.75))
@@ -1612,6 +1702,23 @@ static func _cone_points(origin: Vector2, dir: Vector2, radius: float, half: flo
 
 
 ## Efectos visuales baratos de cada estado sobre el enemigo.
+## Versión barata de los efectos (muchos enemigos en pantalla): un halo del color
+## de cada estado activo y un aro del primer afijo, sin partículas ni suavizado.
+func _draw_ailment_fx_simple(i: int) -> void:
+	var p := positions[i] + Vector2(0, -radii[i] * 0.4)
+	var r := radii[i] * 1.2
+	var k := 0
+	for st in [[burn_time, Ailments.BURN], [shock_time, Ailments.SHOCK], [chill_time, Ailments.CHILL], [poison_time, Ailments.POISON], [bleed_time, Ailments.BLEED]]:
+		if (st[0] as PackedFloat32Array)[i] > 0.0:
+			draw_circle(p, r + k * 2.0, Color(Ailments.color(st[1]), 0.22))
+			k += 1
+	if freeze_time[i] > 0.0:
+		draw_circle(p, r, Color(0.8, 0.95, 1.0, 0.45))
+	var aff: Array = traits[i].get("affixes", [])
+	if not aff.is_empty():
+		draw_arc(positions[i], radii[i] * 1.55, 0.0, TAU, 12, Color(affix_defs().get(aff[0], {}).get("color", "ffffff")), 2.0)
+
+
 func _draw_ailment_fx(i: int, tt: float) -> void:
 	var p := positions[i]
 	var r := radii[i]

@@ -1,6 +1,6 @@
 # Roadmap — Path Overflow: El Último Commit
 
-Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propios, 14 ascendencias (2 por clase, cada una con juego distinto), un árbol con las temáticas de estados y aliados repartidas por sectores (3-5 clusters cada una, sin nodos encimados), estados alterados sobre enemigos **y sobre el jugador**, interacciones entre estados, 9 invocaciones persistentes y 4 auras, RAM por grados (menor / normal / mayor), enemigos con resistencias, inmunidades y 16 afijos, jefes con fases (que además cambian de resistencias) y barra de jefe. Lo que **falta**, por prioridad. **S** = pequeño (≈ 1 sesión), **M** = mediano, **L** = grande.
+Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propios, 14 ascendencias (2 por clase, cada una con juego distinto), un árbol con las temáticas de estados y aliados repartidas por sectores (3-5 clusters cada una, sin nodos encimados), estados alterados sobre enemigos **y sobre el jugador**, interacciones entre estados, 11 invocaciones persistentes y 6 auras (con alcance; 2 debilitan a los enemigos), desbloqueo de habilidades por nivel, RAM por grados (menor / normal / mayor), enemigos con resistencias, inmunidades y 16 afijos, jefes con fases (que además cambian de resistencias) y barra de jefe. Lo que **falta**, por prioridad. **S** = pequeño (≈ 1 sesión), **M** = mediano, **L** = grande.
 
 > Descartado por ahora: escala de las invocaciones y escala de los obstáculos.
 
@@ -8,21 +8,16 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 
 | Qué | Tamaño | Notas |
 |---|---|---|
-| Equilibrar con partidas reales | M | Probabilidades de estado, reservas de maná, vida y daño de las 9 invocaciones, penalización del encadenamiento por grado, daño de espinas y de afijos (explosivo, reflejo, tóxico), duración de congelación/electrocución sobre el jugador y de las fases de jefe. Jugar cada clase hasta el nivel 30 con las dos ascendencias. |
-| Sprites propios para las invocaciones nuevas | M | Hoy son figuras dibujadas con formas. |
-| Sonidos propios por estado y habilidad | S | Hoy los estados reutilizan sonidos existentes (fuego, rayo, frío, poción, golpe) con otro tono; faltan los de veneno, sangrado, congelación, aura on/off, curación del dron y explosión de la mina. |
-| Rendimiento con 150+ enemigos con estados, afijos y aliados | M | Medir; si hace falta, limitar los efectos a lo que se ve en cámara. |
+| Equilibrar con partidas reales | M | La tabla de `tools/balance_report.gd` ya está dentro de rango (DPS medio ~210 a nivel 30, placa 20; las invocaciones por encima porque reservan maná). Falta jugarlo: probabilidades de estado, reservas, daño de espinas y afijos, duración de congelación/electrocución sobre el jugador, fases de jefe, el Multicanal nuevo y las auras con alcance. Jugar cada clase hasta el nivel 30 con las dos ascendencias. |
+| Rendimiento con 300 enemigos en pantalla | M | Con 150 en cámara ya va a 60 FPS; con 300 a ~32 FPS (dibujo de enemigos ~8 ms, simulación ~3.4 ms). Siguiente paso: barras de vida e iconos en un MultiMesh o en un único `_draw` por lotes. Medir con `capture_screens.tscn -- rendimiento`. |
+| Arte final de las invocaciones | L | Ya tienen figura propia cada una (`UnitArt`), pero dibujada con formas: necesita un artista. |
 
 ## 2. Combate y habilidades
 
-- **Auras con alcance** (S): hoy afectan a todos tus aliados; que dependan de la distancia al jugador y que haya auras que debiliten a los enemigos.
-- **Más invocaciones y auras** (M): una de cada por clase que aún no la tiene, mejoras por hito y modo «reservar más maná = más potencia».
-- **RAM de grados para más familias** (S): ya tienen grados el encadenamiento, la perforación, el multicanal, los estados, el crítico, el daño elemental y el robo de vida; faltan área, velocidad, pipeline y guiado por láser.
-- **Equilibrar el Multicanal nuevo** (S): −40/45/50 % en nivel 1 que baja 1 punto por nivel; con 8 proyectiles en abanico la Ráfaga puede quedarse corta o pasarse según la distancia.
-- **Desbloqueo de habilidades por nivel** (M): que cada clase tenga progresión de kit propia, no solo botín.
-- **Más interacciones entre estados** (S): hoy hay rotura, sobrecarga, infección y choque térmico; falta una para helado + rayo y que las ascendencias las potencien.
-- **Resistencia a estados en objetos** (S): el árbol ya tiene nodos de «resistencia a estados»; faltan afijos en el equipo.
-
+- **Más invocaciones y auras** (M): ya hay invocación y aura en la progresión de todas las clases; faltan mejoras por hito propias de cada invocación y el modo «reservar más maná = más potencia».
+- **Equilibrar el Multicanal y la Pipeline Superescalar** (S): la Pipeline mayor sigue siendo la mejor RAM de daño para casi todo (×1.5); probar en partida.
+- **Auras con alcance, siguiente paso** (S): hoy todas las auras se centran en el jugador; auras que se puedan dejar en el suelo o sobre una invocación.
+- **Desbloqueos por nivel** (S): hoy son 4 por clase (niveles 5, 10, 16 y 24) y entregan la placa en la bolsa; falta un aviso visual mayor y elegir entre dos opciones en algún nivel.
 ## 3. Enemigos y jefes
 
 - **Fases en subjefes y élites únicos** (M): los gemelos de la Carrera Crítica y los raros (Puntero Salvaje, Centinela del Cargador) también con barra y fases.
@@ -74,6 +69,8 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 5. Arte final de personajes y enemigos.
 
 ## Hecho (no repetir)
+
+**Pulido y combate (octubre 2026)**: sonidos propios de veneno, sangrado, congelación, rotura, superconductor, aura on/off, curación del dron y explosión de la mina · **Superconductor** (rayo a un helado: arcos a 2 enemigos con el 40 % del golpe) y «efecto de las interacciones» en tres ascendencias (Analista de Big Data, Ingeniera de Depuración, Analista de Malware) · afijo de resistencia a estados en armaduras y joyas · RAM por grados de área, velocidad, Pipeline y Guiado · **auras con alcance** (las invocaciones fuera del radio pelean sin los bonos) y dos auras que debilitan (Throttling: enemigos más lentos; Exposición: reciben más daño) · invocaciones nuevas Watchdog y Bot Rastreador de Bugs · **desbloqueo de habilidades por nivel** (4 por clase, con invocación y aura) · figura propia para las 11 invocaciones (UnitArt) · rendimiento: recorte a cámara, efectos simplificados con más de 60 enemigos en pantalla y minimapa a 30 Hz (150 enemigos: de 27 a 60 FPS) · equilibrio: DPS sostenido real de esbirros, drones y degenerativos, Pipeline Superescalar −50 %, ataques +25 % de crecimiento por nivel, Bucle Infinito, Reinicio Forzado, Deadlock y Drones ajustados · listado completo en docs/habilidades_y_ram.md.
 
 **RAM y habilidades (octubre 2026)**: proyectiles en abanico («|», «V», «\|/»...) y solo teledirigidos con la etiqueta `homing` (Paquete Rastreador, Torreta CI, Dron Escolta, Agente IA) o la RAM nueva **Guiado por Láser** · el Multicanal añade proyectiles a drones e invocaciones que disparan y quita un 40/45/50 % de daño en nivel 1 (1 punto menos por nivel, hasta la mitad) · las RAM de daño ya afectan a las invocaciones · Pipeline en invocaciones = atacan el doble de rápido (antes apagaba las auras o reinvocaba) · las RAM de área escalan las habilidades de las invocaciones · reglas de compatibilidad (`requires_all_tags`, `excludes_kinds`, sin RAM de daño en habilidades sin daño) y auditoría (`tools/audit_rams.gd` y una prueba): ninguna RAM compatible queda sin efecto · insignias de cada familia de RAM en el icono de la habilidad (barra, placas y módulos de la bolsa) · menú K con resumen por placa (DPS, maná, proyectiles, RAM activas), ranuras compatibles en verde y en rojo las que no harían nada, bolsa agrupada por generación y botón «Ordenar».
 

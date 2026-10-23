@@ -77,6 +77,16 @@ func _init(p_class_def: Dictionary, tree: PassiveTree) -> void:
 	recalculate()
 
 
+## Habilidades que la clase desbloquea por nivel (classes.json → unlocks) y que
+## este personaje aún no ha recibido: [{level, skill}].
+func due_unlocks() -> Array:
+	var out: Array = []
+	for u in class_def.get("unlocks", []):
+		if level >= int(u["level"]) and not flags.has("unlock_" + String(u["skill"])):
+			out.append(u)
+	return out
+
+
 func set_level(value: int) -> void:
 	level = clampi(value, 1, MAX_LEVEL)
 	experience = 0

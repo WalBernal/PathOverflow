@@ -42,7 +42,60 @@
           "value": 20
         }
       ],
-      "special": {}
+      "special": {},
+      "tier": 2
+    },
+    {
+      "id": "overclock_menor",
+      "name": "RAM con Overclock Suave",
+      "generation": "DDR4",
+      "description": "Un pequeño empujón: 10 % más de velocidad de ataque y de lanzamiento.",
+      "requires_tags": [],
+      "excludes_tags": [
+        "aura"
+      ],
+      "cost_multiplier": 1.15,
+      "mods": [
+        {
+          "stat": "attack_speed",
+          "type": "more",
+          "value": 10
+        },
+        {
+          "stat": "cast_speed",
+          "type": "more",
+          "value": 10
+        }
+      ],
+      "special": {},
+      "tier": 1,
+      "min_level": 1
+    },
+    {
+      "id": "overclock_mayor",
+      "name": "RAM con Overclock Extremo",
+      "generation": "DDR4",
+      "description": "Voltaje al límite: 32 % más de velocidad de ataque y de lanzamiento.",
+      "requires_tags": [],
+      "excludes_tags": [
+        "aura"
+      ],
+      "cost_multiplier": 1.5,
+      "mods": [
+        {
+          "stat": "attack_speed",
+          "type": "more",
+          "value": 32
+        },
+        {
+          "stat": "cast_speed",
+          "type": "more",
+          "value": 32
+        }
+      ],
+      "special": {},
+      "tier": 3,
+      "min_level": 26
     },
     {
       "id": "ecc",
@@ -89,7 +142,50 @@
           "value": 40
         }
       ],
-      "special": {}
+      "special": {},
+      "tier": 2
+    },
+    {
+      "id": "cache_l3_menor",
+      "name": "Caché L3 Menor",
+      "generation": "DDR5",
+      "description": "Un poco más de caché: +20 % de área.",
+      "requires_tags": [
+        "area"
+      ],
+      "excludes_tags": [],
+      "cost_multiplier": 1.15,
+      "mods": [
+        {
+          "stat": "area_of_effect",
+          "type": "increased",
+          "value": 20
+        }
+      ],
+      "special": {},
+      "tier": 1,
+      "min_level": 1
+    },
+    {
+      "id": "cache_l3_mayor",
+      "name": "Caché L3 Masiva",
+      "generation": "DDR5",
+      "description": "Caché de servidor: +65 % de área.",
+      "requires_tags": [
+        "area"
+      ],
+      "excludes_tags": [],
+      "cost_multiplier": 1.45,
+      "mods": [
+        {
+          "stat": "area_of_effect",
+          "type": "increased",
+          "value": 65
+        }
+      ],
+      "special": {},
+      "tier": 3,
+      "min_level": 26
     },
     {
       "id": "disipador",
@@ -133,7 +229,58 @@
       ],
       "special": {
         "repeats": 1
-      }
+      },
+      "tier": 2
+    },
+    {
+      "id": "pipeline_menor",
+      "name": "Pipeline Menor",
+      "generation": "DDR3",
+      "description": "Repite la habilidad una vez con más penalización (en invocaciones, atacan el doble de rápido).",
+      "requires_tags": [],
+      "excludes_tags": [
+        "movement",
+        "buff",
+        "aura"
+      ],
+      "cost_multiplier": 1.4,
+      "mods": [
+        {
+          "stat": "damage",
+          "type": "more",
+          "value": -40
+        }
+      ],
+      "special": {
+        "repeats": 1
+      },
+      "tier": 1,
+      "min_level": 4
+    },
+    {
+      "id": "pipeline_mayor",
+      "name": "Pipeline Superescalar",
+      "generation": "DDR3",
+      "description": "Repite la habilidad dos veces más con la mitad de daño (en invocaciones, atacan el triple de rápido).",
+      "requires_tags": [],
+      "excludes_tags": [
+        "movement",
+        "buff",
+        "aura"
+      ],
+      "cost_multiplier": 1.8,
+      "mods": [
+        {
+          "stat": "damage",
+          "type": "more",
+          "value": -50
+        }
+      ],
+      "special": {
+        "repeats": 2
+      },
+      "tier": 3,
+      "min_level": 30
     },
     {
       "id": "puntero_salvaje",
@@ -1332,6 +1479,34 @@
       },
       "tier": 2,
       "min_level": 6,
+      "excludes_kinds": [
+        "rain"
+      ]
+    },
+    {
+      "id": "guiado_laser_mayor",
+      "name": "Guiado por Láser de Precisión",
+      "generation": "DDR5",
+      "description": "Teledirigido y además más rápido: +15 % de velocidad de proyectiles.",
+      "requires_tags": [
+        "projectile"
+      ],
+      "excludes_tags": [
+        "homing"
+      ],
+      "cost_multiplier": 1.3,
+      "mods": [
+        {
+          "stat": "projectile_speed",
+          "type": "increased",
+          "value": 15
+        }
+      ],
+      "special": {
+        "homing": 1
+      },
+      "tier": 3,
+      "min_level": 24,
       "excludes_kinds": [
         "rain"
       ]

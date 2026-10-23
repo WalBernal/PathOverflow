@@ -184,7 +184,25 @@
             "value": 10
           }
         ]
-      }
+      },
+      "unlocks": [
+        {
+          "level": 5,
+          "skill": "aura_blindaje"
+        },
+        {
+          "level": 10,
+          "skill": "watchdog"
+        },
+        {
+          "level": 16,
+          "skill": "golem_hardware"
+        },
+        {
+          "level": 24,
+          "skill": "aura_mando"
+        }
+      ]
     },
     {
       "id": "duelista",
@@ -334,7 +352,25 @@
             ]
           }
         ]
-      }
+      },
+      "unlocks": [
+        {
+          "level": 5,
+          "skill": "aura_mando"
+        },
+        {
+          "level": 10,
+          "skill": "bot_pruebas"
+        },
+        {
+          "level": 16,
+          "skill": "watchdog"
+        },
+        {
+          "level": 24,
+          "skill": "aura_throttling"
+        }
+      ]
     },
     {
       "id": "exploradora",
@@ -436,6 +472,11 @@
                   "stat": "extra_devices",
                   "type": "flat",
                   "value": 2
+                },
+                {
+                  "stat": "interaction_effect",
+                  "type": "increased",
+                  "value": 50
                 }
               ]
             },
@@ -478,7 +519,25 @@
             "value": 5
           }
         ]
-      }
+      },
+      "unlocks": [
+        {
+          "level": 5,
+          "skill": "aura_throttling"
+        },
+        {
+          "level": 10,
+          "skill": "bot_rastreador"
+        },
+        {
+          "level": 16,
+          "skill": "mina_rodante"
+        },
+        {
+          "level": 24,
+          "skill": "paquete_rastreador"
+        }
+      ]
     },
     {
       "id": "hacker",
@@ -580,6 +639,11 @@
                   "stat": "damage",
                   "type": "more",
                   "value": 25
+                },
+                {
+                  "stat": "interaction_effect",
+                  "type": "increased",
+                  "value": 50
                 }
               ]
             },
@@ -624,7 +688,25 @@
             "value": 20
           }
         ]
-      }
+      },
+      "unlocks": [
+        {
+          "level": 5,
+          "skill": "aura_exposicion"
+        },
+        {
+          "level": 10,
+          "skill": "agente_ia"
+        },
+        {
+          "level": 16,
+          "skill": "bot_rastreador"
+        },
+        {
+          "level": 24,
+          "skill": "corrupcion_datos"
+        }
+      ]
     },
     {
       "id": "hechicero",
@@ -750,6 +832,11 @@
                   "stat": "damage",
                   "type": "more",
                   "value": 15
+                },
+                {
+                  "stat": "interaction_effect",
+                  "type": "increased",
+                  "value": 50
                 }
               ]
             },
@@ -813,7 +900,25 @@
             ]
           }
         ]
-      }
+      },
+      "unlocks": [
+        {
+          "level": 5,
+          "skill": "aura_overclock"
+        },
+        {
+          "level": 10,
+          "skill": "dron_escolta"
+        },
+        {
+          "level": 16,
+          "skill": "aura_exposicion"
+        },
+        {
+          "level": 24,
+          "skill": "proceso_hijo"
+        }
+      ]
     },
     {
       "id": "templario",
@@ -988,7 +1093,25 @@
             ]
           }
         ]
-      }
+      },
+      "unlocks": [
+        {
+          "level": 5,
+          "skill": "aura_mantenimiento"
+        },
+        {
+          "level": 10,
+          "skill": "dron_medico"
+        },
+        {
+          "level": 16,
+          "skill": "golem_hardware"
+        },
+        {
+          "level": 24,
+          "skill": "dron_escudo"
+        }
+      ]
     },
     {
       "id": "full_stack",
@@ -1174,7 +1297,25 @@
             "value": 15
           }
         ]
-      }
+      },
+      "unlocks": [
+        {
+          "level": 5,
+          "skill": "dron_escudo"
+        },
+        {
+          "level": 10,
+          "skill": "aura_mando"
+        },
+        {
+          "level": 16,
+          "skill": "dron_escolta"
+        },
+        {
+          "level": 24,
+          "skill": "aura_overclock"
+        }
+      ]
     }
   ]
 }

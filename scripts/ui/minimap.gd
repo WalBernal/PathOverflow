@@ -38,8 +38,16 @@ func _ready() -> void:
 	size = custom_minimum_size
 
 
-func _process(_delta: float) -> void:
-	queue_redraw()
+## Se redibuja a 30 Hz: el minimapa no necesita más y con cientos de enemigos se nota.
+const REDRAW_INTERVAL := 1.0 / 30.0
+var _redraw_left := 0.0
+
+
+func _process(delta: float) -> void:
+	_redraw_left -= delta
+	if _redraw_left <= 0.0:
+		_redraw_left = REDRAW_INTERVAL
+		queue_redraw()
 
 
 func _to_map(world: Vector2) -> Vector2:
@@ -50,7 +58,17 @@ func _inside(p: Vector2) -> bool:
 	return p.distance_to(Vector2(RADIUS, RADIUS)) <= RADIUS - 3.0
 
 
+## Tiempo de CPU del último _draw (ms), para la prueba de rendimiento.
+var last_draw_ms := 0.0
+
+
 func _draw() -> void:
+	var t0 := Time.get_ticks_usec()
+	_draw_map()
+	last_draw_ms = (Time.get_ticks_usec() - t0) / 1000.0
+
+
+func _draw_map() -> void:
 	if player == null:
 		return
 	var center := Vector2(RADIUS, RADIUS)
@@ -135,10 +153,11 @@ func _draw() -> void:
 		var p := _to_map(enemies.positions[i])
 		if not _inside(p):
 			continue
+		# Cuadritos (mucho más baratos que círculos cuando hay cientos).
 		var rarity := enemies.rarities[i]
-		var r := 1.7 + rarity * 0.7
-		draw_circle(p, r + 0.9, OUTLINE)
-		draw_circle(p, r, ENEMY_COLORS[rarity])
+		var r := 1.5 + rarity * 0.7
+		draw_rect(Rect2(p - Vector2(r + 1.0, r + 1.0), Vector2(r + 1.0, r + 1.0) * 2.0), OUTLINE)
+		draw_rect(Rect2(p - Vector2(r, r), Vector2(r, r) * 2.0), ENEMY_COLORS[rarity])
 
 	# Aliados (invocaciones persistentes): puntos azules.
 	for a in enemies.allies:

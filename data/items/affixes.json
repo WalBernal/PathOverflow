@@ -83,6 +83,10 @@
                  { "level": 18, "name": "del Reinicio", "min": 4, "max": 8, "weight": 500 } ] },
     { "id": "cast_speed", "kind": "suffix", "group": "cast_speed", "allowed": ["amulet", "ring", "int_armour"], "stat": "cast_speed", "type": "increased",
       "tiers": [ { "level": 5, "name": "del Script", "min": 5, "max": 9, "weight": 700 },
-                 { "level": 25, "name": "del Compilador JIT", "min": 10, "max": 15, "weight": 300 } ] }
+                 { "level": 25, "name": "del Compilador JIT", "min": 10, "max": 15, "weight": 300 } ] },
+    { "id": "status_resist", "kind": "suffix", "group": "status_resist", "allowed": ["armour", "jewellery"], "stat": "status_resist", "type": "flat",
+      "tiers": [ { "level": 8, "name": "del Antivirus", "min": 8, "max": 15, "weight": 500 },
+                 { "level": 22, "name": "del Sandbox", "min": 16, "max": 25, "weight": 350 },
+                 { "level": 38, "name": "del Kernel Inmutable", "min": 26, "max": 35, "weight": 200 } ] }
   ]
 }

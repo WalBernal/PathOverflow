@@ -957,7 +957,7 @@
           ]
         },
         "interacciones": {
-          "text": "Tres combos que importan: ROTURA (golpe físico a un congelado: +50 % y se acaba el hielo), SOBRECARGA (fuego a un electrocutado: explosión en área) y CHOQUE TÉRMICO (frío a un enemigo en llamas: +40 %). Y ojo: envenenado y sangrando a la vez es INFECCIÓN: el veneno pega la mitad más.",
+          "text": "Tres combos que importan: ROTURA (golpe físico a un congelado: +50 % y se acaba el hielo), SOBRECARGA (fuego a un electrocutado: explosión en área) CHOQUE TÉRMICO (frío a un enemigo en llamas: +40 %) y SUPERCONDUCTOR (rayo a un helado: el golpe salta en arcos a dos enemigos cercanos). Y ojo: envenenado y sangrando a la vez es INFECCIÓN: el veneno pega la mitad más.",
           "options": [
             {
               "text": "Entendido.",

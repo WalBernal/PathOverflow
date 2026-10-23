@@ -66,6 +66,9 @@ const AUTOMATON_SPEED := &"automaton_speed"
 const RESERVATION_EFFICIENCY := &"reservation_efficiency"
 ## Daño contra enemigos que ya sufren algún estado alterado.
 const AILING_DAMAGE := &"ailing_damage"
+## Potencia de las interacciones entre estados (rotura, choque térmico, sobrecarga,
+## infección, superconductor).
+const INTERACTION_EFFECT := &"interaction_effect"
 ## Potencia de las auras.
 const AURA_EFFECT := &"aura_effect"
 ## Vida que se recupera al matar (plano) y daño de espinas a los enemigos cercanos al recibir un golpe.
@@ -142,6 +145,7 @@ const NAMES := {
 	AUTOMATON_SPEED: "Velocidad de autómatas",
 	RESERVATION_EFFICIENCY: "Eficiencia de reserva de maná",
 	AILING_DAMAGE: "Daño contra enemigos con estados alterados",
+	INTERACTION_EFFECT: "Efecto de las interacciones de estados",
 	AURA_EFFECT: "Efecto de auras",
 	LIFE_ON_KILL: "Vida al matar",
 	THORNS: "Daño de espinas al recibir un golpe",
