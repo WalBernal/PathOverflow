@@ -1,5 +1,5 @@
 {
-  "_doc": "Música del juego. 'tracks' describe cada pista (la compone tools/generate_zone_music.gd en assets/audio/music/<id>.wav); 'zones' dice qué pista suena en cada zona. root = nota MIDI de la tónica; prog = [semitonos sobre la tónica, calidad]; bass: root|walk|eighth|pulse; arp: broken|up|ballad|none; lead: instrumento de la melodía; drums: none|soft|ballad|drive|boss. 'from' = compás de la intro en el que entra cada capa (la intro suena una vez; dura lo necesario para que entren todas, en vueltas enteras de 'prog', o 'intro' compases). 'bars' = compases del cuerpo, que se repite en bucle: la primera mitad (A) usa 'prog' y la segunda (B) 'prog_b' si existe; arp_lift sube el arpegio una octava en B. 'melody' (opcional) = la melodía escrita del cuerpo, un texto por compás con 'grado:tiempos' (grado 7 = tónica central, 'r' = silencio); sin ella, la melodía se improvisa con 'seed'.",
+  "_doc": "Música del juego. 'tracks' describe cada pista (la compone tools/generate_zone_music.gd en assets/audio/music/<id>.wav); 'zones' dice qué pista suena en cada zona. root = nota MIDI de la tónica; prog = [semitonos sobre la tónica, calidad]; bass: root|walk|eighth|pulse; arp: broken|up|ballad|none; lead: instrumento de la melodía; drums: none|soft|ballad|drive|boss. 'from' = compás de la intro en el que entra cada capa (la intro suena una vez; dura lo necesario para que entren todas, en vueltas enteras de 'prog', o 'intro' compases). 'bars' = compases del cuerpo, que se repite en bucle: la primera mitad (A) usa 'prog' y la segunda (B) 'prog_b' si existe; arp_lift sube el arpegio una octava en B. <pista>_fase: versión de fase de jefe (más rápida, batería 'frenzy'): MusicPlayer cambia a ella al empezar la primera fase. 'melody' (opcional) = la melodía escrita del cuerpo, un texto por compás con 'grado:tiempos' (grado 7 = tónica central, 'r' = silencio); sin ella, la melodía se improvisa con 'seed'.",
   "tracks": {
     "camp1": {
       "name": "Fogata de fósforo", "bpm": 84, "bars": 32, "chord_bars": 2, "seed": 11, "root": 48, "scale": "major",
@@ -82,6 +82,21 @@
       "prog": [[0, "m"], [1, "M"], [0, "m"], [10, "M"]],
       "pad": 0.04, "bass": "pulse", "arp": "up", "arp_wave": "saw", "lead": "square", "drums": "boss",
       "from": {"arp": 0, "lead": 2, "drums": 0}
+    },
+    "boss1_fase": {
+      "name": "Servidor principal (fase)", "bpm": 154, "bars": 24, "intro": 0, "chord_bars": 1, "seed": 141, "root": 40, "scale": "minor",
+      "prog": [[0, "m"], [0, "m"], [8, "M"], [7, "M"]], "prog_b": [[5, "m"], [8, "M"], [10, "M"], [7, "M"]],
+      "pad": 0.04, "bass": "pulse", "arp": "up", "arp_wave": "saw", "lead": "saw", "drums": "frenzy"
+    },
+    "boss2_fase": {
+      "name": "Anillo 0 (fase)", "bpm": 158, "bars": 24, "intro": 0, "chord_bars": 1, "seed": 142, "root": 36, "scale": "minor",
+      "prog": [[0, "m"], [8, "M"], [5, "m"], [7, "M"]], "prog_b": [[1, "M"], [0, "m"], [10, "M"], [7, "M"]],
+      "pad": 0.04, "bass": "pulse", "arp": "up", "arp_wave": "saw", "lead": "saw", "drums": "frenzy"
+    },
+    "boss3_fase": {
+      "name": "Cámara de reflasheo (fase)", "bpm": 162, "bars": 24, "intro": 0, "chord_bars": 1, "seed": 143, "root": 45, "scale": "phrygian",
+      "prog": [[0, "m"], [1, "M"], [0, "m"], [10, "M"]], "prog_b": [[1, "M"], [3, "M"], [1, "M"], [0, "m"]],
+      "pad": 0.04, "bass": "pulse", "arp": "up", "arp_wave": "saw", "lead": "saw", "drums": "frenzy"
     }
   },
   "zones": {

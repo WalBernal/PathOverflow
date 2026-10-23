@@ -10,6 +10,8 @@ const SILENT_DB := -60.0
 
 const TRACK_DIR := "res://assets/audio/music/"
 const LOOPS_FILE := "res://data/music_loops.json"
+## Sufijo de las pistas de fase de jefe (boss1 → boss1_fase).
+const PHASE_SUFFIX := "_fase"
 
 var muted := false
 ## 0..1; se guarda en user://settings.cfg.
@@ -89,9 +91,16 @@ func _loop_starts() -> Dictionary:
 	return _loops
 
 
-## Intensidad del combate: 0 normal; cada fase de jefe sube un poco el tempo.
+## Intensidad del combate: 0 normal; en las fases de jefe suena la versión de
+## fase de la pista (<pista>_fase: más rápida y con otra batería) si existe, y
+## cada fase más sube un poco el tempo.
 func set_intensity(level: int) -> void:
-	var pitch := 1.0 + 0.04 * clampi(level, 0, 3)
+	var base := _track.trim_suffix(PHASE_SUFFIX)
+	if base != "":
+		var want := base + PHASE_SUFFIX if level >= 1 and ResourceLoader.exists("%s%s%s.wav" % [TRACK_DIR, base, PHASE_SUFFIX]) else base
+		if want != _track:
+			play_track(want, 1.2)
+	var pitch := 1.0 + 0.03 * clampi(level - 1, 0, 3)
 	if _pitch_tween:
 		_pitch_tween.kill()
 	_pitch_tween = create_tween()

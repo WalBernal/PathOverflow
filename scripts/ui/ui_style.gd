@@ -206,6 +206,22 @@ static func _box(bg: Color, border: Color, border_width := 1) -> StyleBoxFlat:
 	return s
 
 
+## Tamaño de interfaz (menú de pausa → Interfaz) para los menús fuera de partida:
+## el control raíz se escala y ocupa la pantalla dividida por la escala.
+static func apply_ui_scale(root: Control) -> void:
+	var s := clampf(float(GameSettings.get_value("interface", "scale", 1.0)), 0.75, 1.25)
+	if is_equal_approx(s, 1.0) or not root.is_inside_tree():
+		return
+	var fit := func() -> void:
+		if not is_instance_valid(root) or not root.is_inside_tree():
+			return   # el menú ya se cerró
+		root.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		root.scale = Vector2(s, s)
+		root.size = root.get_viewport().get_visible_rect().size / s
+	root.get_viewport().size_changed.connect(fit)
+	fit.call()
+
+
 static func label(text: String, font_size := 16, color := TEXT) -> Label:
 	var l := Label.new()
 	l.text = text

@@ -22,7 +22,10 @@ var _tooltip: ItemTooltip
 var _rows: VBoxContainer
 var _bag_box: VBoxContainer
 var _hint: Label
+var _filter: OptionButton
 var _selected_ram := -1  # índice en la bolsa de la RAM seleccionada
+
+const FILTERS := ["Todo", "Ataques", "Hechizos", "Invocaciones", "Auras", "RAM que encajan"]
 
 const HINT := "Arrastra placas a la barra y RAM a una ranura de su color; a la bolsa para quitar. Click en una RAM: se marcan en verde las ranuras donde funciona (doble click: a la primera)."
 
@@ -54,6 +57,14 @@ func _ready() -> void:
 	var header := UiStyle.section_header("En la bolsa  (suelta aquí para desinstalar)")
 	header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bag_title.add_child(header)
+	_filter = OptionButton.new()
+	for f in FILTERS:
+		_filter.add_item(f)
+	_filter.focus_mode = Control.FOCUS_NONE
+	_filter.custom_minimum_size = Vector2(170, 28)
+	_filter.tooltip_text = "Qué se ve en la bolsa: por tipo de habilidad, o solo las RAM que funcionan con alguna placa instalada."
+	_filter.item_selected.connect(func(_i: int) -> void: _rebuild())
+	bag_title.add_child(_filter)
 	var sort := UiStyle.button("Ordenar", _sort_bag)
 	sort.custom_minimum_size = Vector2(90, 28)
 	sort.tooltip_text = "Ordena las placas y las RAM de la bolsa: placas por nombre y nivel; RAM por generación, tipo y grado."
@@ -63,7 +74,7 @@ func _ready() -> void:
 	bag_drop.custom_minimum_size = Vector2(640, 52)
 	box.add_child(bag_drop)
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(640, 150)
+	scroll.custom_minimum_size = Vector2(640, 110)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.mouse_filter = Control.MOUSE_FILTER_PASS
 	bag_drop.add_child(scroll)
@@ -90,6 +101,8 @@ func _rebuild() -> void:
 	var groups := {"Placas base": [], "RAM DDR3": [], "RAM DDR4": [], "RAM DDR5": []}
 	for i in Inventory.BAG_SIZE:
 		var item: Item = character.inventory.bag[i]
+		if not _passes_filter(item):
+			continue
 		if item is Motherboard:
 			groups["Placas base"].append(i)
 		elif item is RamModule:
@@ -124,6 +137,36 @@ func _rebuild() -> void:
 		empty.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_bag_box.add_child(empty)
 	_update_hint()
+
+
+## Filtro de la bolsa (ver FILTERS). Lo que no es placa ni RAM nunca se muestra.
+func _passes_filter(item: Item) -> bool:
+	if not (item is Motherboard or item is RamModule):
+		return false
+	var f: String = FILTERS[_filter.selected] if _filter and _filter.selected >= 0 else "Todo"
+	if f == "Todo":
+		return true
+	if f == "RAM que encajan":
+		if not item is RamModule:
+			return false
+		for b in character.inventory.boards:
+			if b and (item as RamModule).supports(b.skill_def):
+				return true
+		return false
+	if not item is Motherboard:
+		return true   # los filtros por tipo de habilidad dejan ver todas las RAM
+	var def: Dictionary = (item as Motherboard).skill_def
+	var tags: Array = def.get("tags", [])
+	match f:
+		"Ataques":
+			return tags.has("attack") and not def["kind"] in ["unit", "aura"]
+		"Hechizos":
+			return tags.has("spell") and not def["kind"] in ["unit", "aura", "minion", "drones"]
+		"Invocaciones":
+			return def["kind"] in ["unit", "minion", "drones"] or tags.has("totem")
+		"Auras":
+			return def["kind"] == "aura"
+	return true
 
 
 func _sort_bag() -> void:
@@ -242,7 +285,23 @@ func _stats_label(board: Motherboard) -> Label:
 			installed += 1
 	if installed > 0:
 		parts.append("RAM activas %d/%d" % [board.active_supports().size(), installed])
-	var l := UiStyle.label("  ·  ".join(parts), 11, Color("b8ab90"))
+	var text := "  ·  ".join(parts)
+	var color := Color("b8ab90")
+	# Comparación: con una RAM seleccionada, cuánto cambiaría el DPS al instalarla.
+	var ram: RamModule = character.inventory.bag[_selected_ram] if _selected_ram != -1 else null
+	if ram and ram.supports(board.skill_def) and p["dps"] > 0.0:
+		var slot := board.free_slot_for(ram)
+		if slot == -1:
+			text += "\nCon %s: no hay ranura %s libre" % [ram.def.get("name", "la RAM"), ram.generation()]
+		else:
+			var trial := Motherboard.new(board.skill_def, board.level, board.slots)
+			trial.rams = board.rams.duplicate()
+			trial.install(ram, slot)
+			var after: float = SkillCalc.compute(trial, character)["dps"]
+			var delta: float = (after / float(p["dps"]) - 1.0) * 100.0
+			text += "\nCon %s: DPS ~%s → ~%s (%+.0f %%)" % [ram.def.get("name", "la RAM"), _short(p["dps"]), _short(after), delta]
+			color = Color("8fe08a") if delta >= 0.0 else Color("e0a060")
+	var l := UiStyle.label(text, 11, color)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return l
 

@@ -35,6 +35,7 @@ var _skip_prologue: CheckBox
 
 func _ready() -> void:
 	theme = UiStyle.make_theme()
+	UiStyle.apply_ui_scale.call_deferred(self)
 	_rng.randomize()
 	_student_id = "%d%06d" % [Time.get_date_dict_from_system()["year"] % 100, _rng.randi_range(0, 999999)]
 	MusicPlayer.play_title()

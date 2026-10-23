@@ -2113,8 +2113,15 @@ func _test_resists_and_affixes() -> void:
 	var with := 0
 	for k in 30:
 		var e := em2.spawn(Vector2.ZERO, Rarity.Enemy.ELITE, bug)
-		with += 1 if em2.affixes_of(em2.index_of(e)).size() == 2 else 0
-	_check(with == 30, "los élite del nivel 10 llevan dos afijos")
+		var base_affixes: Array = em2.affixes_of(em2.index_of(e)).filter(func(a: String) -> bool: return not EnemyManager.affix_defs()[a].has("combo"))
+		with += 1 if base_affixes.size() == 2 and not EnemyManager._excluded(base_affixes[0], [base_affixes[1]]) else 0
+	_check(with == 30, "los élite del nivel 10 llevan dos afijos (y nunca dos que se excluyan)")
+	# Combinaciones: Ignífugo + Explosivo = Termonuclear (nombre propio, una sola explosión, la grande).
+	var combo_id := em2.spawn(Vector2.ZERO, Rarity.Enemy.ELITE, bug, "", 1.0, [], ["ignifugo", "explosivo"])
+	var ci := em2.index_of(combo_id)
+	_check(em2.affixes_of(ci).has("combo_termonuclear") and em2.names[ci].begins_with("Termonuclear"), "combinación: Termonuclear con nombre propio")
+	_check(em2.call("_hunts_allies", ci), "los que llevan carga explosiva van a por las invocaciones")
+	_check(EnemyManager._excluded("ignifugo", ["ardiente"]), "Ignífugo y Ardiente no salen juntos")
 	em2.area_level = 1
 	var e1 := em2.spawn(Vector2.ZERO, Rarity.Enemy.ELITE, bug)
 	_check(em2.affixes_of(em2.index_of(e1)).is_empty(), "sin afijos en el nivel 1")

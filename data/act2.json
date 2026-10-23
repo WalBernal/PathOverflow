@@ -227,7 +227,25 @@
           "Hilo Beta"
         ],
         "life_mult": 5.0,
-        "swap": 4.0
+        "swap": 4.0,
+        "phases": [
+          {
+            "at": 0.5,
+            "name": "Deadlock inminente",
+            "text": "Los hilos se bloquean entre sí y atacan con más rabia. Ahora resisten el rayo.",
+            "speed_mult": 1.15,
+            "damage_mult": 1.15,
+            "invulnerable": 0.8,
+            "nova": {
+              "radius": 180,
+              "stun": 0.4,
+              "color": "8ab0e0"
+            },
+            "resist": {
+              "lightning": 40
+            }
+          }
+        ]
       },
       "challenges": [
         {
@@ -556,7 +574,26 @@
           "name": "El Puntero Salvaje",
           "life_mult": 3.0,
           "requires_flag": "quest_puntero_salvaje_started",
-          "unless_flag": "puntero_cazado"
+          "unless_flag": "puntero_cazado",
+          "phases": [
+            {
+              "at": 0.5,
+              "name": "Desreferencia nula",
+              "text": "El Puntero Salvaje apunta a cualquier sitio: más rápido y ya no se hiela.",
+              "speed_mult": 1.3,
+              "damage_mult": 1.1,
+              "invulnerable": 0.8,
+              "nova": {
+                "radius": 180,
+                "stun": 0.4,
+                "color": "c08aff"
+              },
+              "immune": [
+                "chill",
+                "freeze"
+              ]
+            }
+          ]
         }
       ],
       "challenges": [

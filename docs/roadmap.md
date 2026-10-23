@@ -1,6 +1,6 @@
 # Roadmap — Path Overflow: El Último Commit
 
-Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propios, 14 ascendencias (2 por clase, cada una con juego distinto), un árbol con las temáticas de estados y aliados repartidas por sectores (3-5 clusters cada una, sin nodos encimados), estados alterados sobre enemigos **y sobre el jugador**, interacciones entre estados, 11 invocaciones persistentes y 6 auras (con alcance; 2 debilitan a los enemigos), desbloqueo de habilidades por nivel, RAM por grados (menor / normal / mayor), enemigos con resistencias, inmunidades y 16 afijos, jefes con fases (que además cambian de resistencias) y barra de jefe. Lo que **falta**, por prioridad. **S** = pequeño (≈ 1 sesión), **M** = mediano, **L** = grande.
+Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propios, 14 ascendencias (2 por clase, cada una con juego distinto), un árbol con las temáticas de estados y aliados repartidas por sectores (3-5 clusters cada una, sin nodos encimados), estados alterados sobre enemigos **y sobre el jugador**, interacciones entre estados, 11 invocaciones persistentes y 6 auras (con alcance; 2 debilitan a los enemigos), desbloqueo de habilidades por nivel, RAM por grados (menor / normal / mayor), enemigos con resistencias, inmunidades, 16 afijos y 6 combinaciones con nombre, cazadores de invocaciones, jefes y subjefes con fases (que además cambian de resistencias), barra de jefe y música de fase. Lo que **falta**, por prioridad. **S** = pequeño (≈ 1 sesión), **M** = mediano, **L** = grande.
 
 > Descartado por ahora: escala de las invocaciones y escala de los obstáculos.
 
@@ -18,13 +18,13 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 - **Equilibrar el Multicanal y la Pipeline Superescalar** (S): la Pipeline mayor sigue siendo la mejor RAM de daño para casi todo (×1.5); probar en partida.
 - **Auras con alcance, siguiente paso** (S): hoy todas las auras se centran en el jugador; auras que se puedan dejar en el suelo o sobre una invocación.
 - **Desbloqueos por nivel** (S): hoy son 4 por clase (niveles 5, 10, 16 y 24) y entregan la placa en la bolsa; falta un aviso visual mayor y elegir entre dos opciones en algún nivel.
+
 ## 3. Enemigos y jefes
 
-- **Fases en subjefes y élites únicos** (M): los gemelos de la Carrera Crítica y los raros (Puntero Salvaje, Centinela del Cargador) también con barra y fases.
-- **Afijos de combinación** (S): afijos que se prohíben entre sí y mezclas con nombre propio (p. ej. Ignífugo + Explosivo).
 - **Sprites de enemigos nuevos para el acto III y animaciones de ataque** (L).
-- **Comportamiento anti-invocaciones** (S): enemigos que priorizan al golem, explosivos contra torretas.
-- **Música por fase** (S): cada fase solo sube el tempo un 4 %; falta una capa nueva de batería o una pista propia por fase.
+- **Más combinaciones de afijos** (S): hoy hay 6 (Termonuclear, Cero Absoluto, Fantasma en la Red, Inmortal en Producción, Firewall Espejo, Plaga); añadir las de los afijos nuevos y que se vean en el marco del objetivo con su color.
+- **Cazadores de invocaciones, siguiente paso** (S): que también vayan a por torretas y minas desplegadas (hoy solo persiguen invocaciones persistentes).
+- **Música de fase para subjefes** (S): las pistas `_fase` solo existen para los tres jefes; los subjefes suben el tempo de la pista de la zona.
 
 ## 4. Contenido
 
@@ -33,42 +33,41 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 | **Acto IV** (zonas, NPCs, misiones, jefe con fases, escenas) | L |
 | Misiones secundarias con recompensas de RAM de grado alto, placas de invocación y auras | M |
 | Más objetos únicos y conjuntos con efectos de estados, auras, espinas y autómatas | M |
-| Afijos de objetos de estados (`+x % a quemar`) y de autómatas | M |
 | Mapas post-historia / modo de oleadas infinito reutilizando las pruebas de estrés | L |
 | Dificultades (normal, pesadilla, infierno) con más afijos y resistencias | M |
 
 ## 5. Interfaz
 
-- Pantalla K: filtros por tipo de habilidad y comparar el DPS con y sin una RAM antes de instalarla (S; el resumen por placa y las ranuras compatibles ya están).
-- El DPS estimado de las habilidades con varios proyectiles cuenta uno solo y el de esbirros temporales (Proceso Hijo) sale inflado con Pipeline y Enjambre: revisar la fórmula (S).
-- Tamaño de interfaz también en los menús fuera de partida (título, personajes, creador) y tamaños mayores que 120 %: hoy la barra inferior del HUD no cabe más allá (S).
+- Tamaños de interfaz mayores que 120 % (la barra inferior del HUD no cabe) y escala también en la pantalla de título y el prólogo (S).
+- Elegir el tamaño de interfaz también desde el menú principal, no solo desde la pausa (S).
 - Mando / gamepad (L).
 
 ## 6. Arte y audio
 
 - Sustituir los sprites provisionales dibujados con formas por arte final: personajes, NPC, invocaciones, iconos de habilidad y de estado (L). Necesita un artista: el código solo puede mejorar las figuras dibujadas.
 - Retratos de NPC más expresivos y personajes del acto III (M).
-- Sustituir la música generada por composiciones propias (S por pista): las 12 pistas actuales son de programador. Ya se puede escribir la melodía a mano en `music.json` (`melody`), como en `camp3`.
-- Peso del audio: los .wav suman unos 58 MB en el repositorio (música 34, ambientes 24); valorar OGG o Git LFS (S).
-- Música propia para los subjefes y las pruebas de estrés (S).
+- Sustituir la música generada por composiciones propias (S por pista): las 15 pistas actuales son de programador. Ya se puede escribir la melodía a mano en `music.json` (`melody`), como en `camp3`.
+- Peso del audio: los .wav suman unos 60 MB en el repositorio; valorar OGG o Git LFS (S).
+- Música propia para las pruebas de estrés (S).
 
 ## 7. Sistemas y calidad
 
 - **Guardado**: copia de seguridad automática y varios espacios por perfil; guardar qué auras estaban activas (M).
-- **Tests**: pruebas de integración que carguen cada zona y simulen 30 s de combate con cada clase y que fallen si aparece un `SCRIPT ERROR` (M).
+- **Tests**: pruebas de integración que carguen cada zona y simulen 30 s de combate con cada clase y que fallen si aparece un `SCRIPT ERROR` (M). Hoy hay pruebas de datos y lógica (`tests/test_core.gd`), la auditoría de RAM, la tabla de equilibrio y las capturas (`tools/capture_screens.tscn -- objetos | minimapa | habilidades | rendimiento`).
 - **Rendimiento**: portar `EnemyManager` a C# o GDExtension si el presupuesto de 4 ms se rompe con estados y aliados (L).
 - **Cliente/servidor** (L, largo plazo): aislar `SkillController` y `EnemyManager` de `Node2D` para un modo cooperativo.
-- **Exportación**: plantillas para Linux y macOS, e instalador de Windows (S).
+- **Exportación**: plantillas para Linux y macOS, e instalador de Windows (S). El ejecutable de Windows se genera con `--export-release Windows build/PathOverflow.exe`.
 
 ## 8. Próximos pasos sugeridos
 
-1. Jugar el build nuevo con las siete clases (las dos ascendencias de cada una) y equilibrar (sección 1).
-2. Pasivas de aliados en el árbol y auras con alcance.
-3. Sprites y sonidos propios de invocaciones y estados.
-4. Acto IV con jefe de fases y afijos propios.
-5. Arte final de personajes y enemigos.
-
+1. Jugar el build nuevo (`build/PathOverflow.exe`) con las siete clases y equilibrar (secciones 1 y 2): Multicanal, Pipeline, auras con alcance, combinaciones de afijos y fases de subjefes.
+2. Rendimiento con 300 enemigos en pantalla (sección 1).
+3. Acto IV con jefe de fases y afijos propios.
+4. Más únicos y conjuntos que usen los afijos nuevos (estados, autómatas, interacciones).
+5. Arte final de personajes, enemigos e invocaciones.
 ## Hecho (no repetir)
+
+**Enemigos, contenido e interfaz (23 octubre 2026)**: **afijos de combinación** (Ignífugo + Explosivo = Termonuclear, Criogenizado + Gélido = Cero Absoluto, Veloz + Teletransportador = Fantasma en la Red, Curandero + Regenerador = Inmortal en Producción, Escudado + Reflejo = Firewall Espejo, Tóxico + Invocador = Plaga) y afijos que se excluyen (Ignífugo/Ardiente, Aislado/Electrizante, Curandero/Invocador, Veloz/Blindado) · **enemigos que cazan invocaciones** (gusanos, IRQ, gusano de firmware y los que llevan carga explosiva) · **música propia de fase** para los tres jefes (más rápida, batería nueva y platillos; entra con fundido al empezar la primera fase) · **fases en subjefes**: los gemelos de la Carrera Crítica, el Puntero Salvaje y el Centinela del Cargador, con barra de jefe · **afijos de objetos** de probabilidad de estados (quemar, electrocutar, helar, envenenar, sangrar), daño de estados, velocidad de autómatas, daño y vida de esbirros · **menú K**: filtro de la bolsa por tipo y comparación de DPS al seleccionar una RAM · tamaño de interfaz también en el menú de personajes y el creador · nuevo ejecutable de Windows.
 
 **Pulido y combate (octubre 2026)**: sonidos propios de veneno, sangrado, congelación, rotura, superconductor, aura on/off, curación del dron y explosión de la mina · **Superconductor** (rayo a un helado: arcos a 2 enemigos con el 40 % del golpe) y «efecto de las interacciones» en tres ascendencias (Analista de Big Data, Ingeniera de Depuración, Analista de Malware) · afijo de resistencia a estados en armaduras y joyas · RAM por grados de área, velocidad, Pipeline y Guiado · **auras con alcance** (las invocaciones fuera del radio pelean sin los bonos) y dos auras que debilitan (Throttling: enemigos más lentos; Exposición: reciben más daño) · invocaciones nuevas Watchdog y Bot Rastreador de Bugs · **desbloqueo de habilidades por nivel** (4 por clase, con invocación y aura) · figura propia para las 11 invocaciones (UnitArt) · rendimiento: recorte a cámara, efectos simplificados con más de 60 enemigos en pantalla y minimapa a 30 Hz (150 enemigos: de 27 a 60 FPS) · equilibrio: DPS sostenido real de esbirros, drones y degenerativos, Pipeline Superescalar −50 %, ataques +25 % de crecimiento por nivel, Bucle Infinito, Reinicio Forzado, Deadlock y Drones ajustados · listado completo en docs/habilidades_y_ram.md.
 

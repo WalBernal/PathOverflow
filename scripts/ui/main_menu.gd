@@ -23,6 +23,7 @@ func _ready() -> void:
 	MusicPlayer.play_title()
 	_build()
 	_reload()
+	UiStyle.apply_ui_scale(self)
 
 
 func _draw() -> void:

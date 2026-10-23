@@ -367,7 +367,41 @@
           "life_mult": 3.0,
           "requires_flag": "quest_paez_cargador_started",
           "unless_flag": "cargador_recuperado",
-          "kill_flag": "cargador_recuperado"
+          "kill_flag": "cargador_recuperado",
+          "phases": [
+            {
+              "at": 0.6,
+              "name": "Carga rápida",
+              "text": "El Centinela se conecta a sí mismo: 100 W de pura rabia. Ahora resiste el fuego.",
+              "speed_mult": 1.2,
+              "damage_mult": 1.15,
+              "invulnerable": 0.8,
+              "nova": {
+                "radius": 180,
+                "stun": 0.4,
+                "color": "ffd84a"
+              },
+              "resist": {
+                "fire": 40
+              }
+            },
+            {
+              "at": 0.25,
+              "name": "Sobretensión",
+              "text": "Al 1 % de batería pelea como si no hubiera mañana. Ya no se electrocuta.",
+              "speed_mult": 1.25,
+              "damage_mult": 1.25,
+              "invulnerable": 0.8,
+              "nova": {
+                "radius": 220,
+                "stun": 0.4,
+                "color": "fff07a"
+              },
+              "immune": [
+                "shock"
+              ]
+            }
+          ]
         }
       ],
       "enemies": {

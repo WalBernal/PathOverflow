@@ -340,6 +340,9 @@ func _spawn_zone_specials() -> void:
 		var t := enemies.type_index_of("hilo_gemelo")
 		var a := enemies.spawn(p + Vector2(0, -90), Rarity.Enemy.UNIQUE, t, names[0], float(rc.get("life_mult", 4.0)))
 		var b := enemies.spawn(p + Vector2(0, 90), Rarity.Enemy.UNIQUE, t, names[1], float(rc.get("life_mult", 4.0)))
+		# Cada gemelo con sus fases (y su barra de jefe mientras pelea).
+		enemies.set_phases(a, rc.get("phases", []))
+		enemies.set_phases(b, rc.get("phases", []))
 		enemies.set_immune(b, true)
 		_twins = {"ids": [a, b], "names": names, "turn": 0, "timer": float(rc.get("swap", 4.0)),
 			"swap": float(rc.get("swap", 4.0)), "flag": rc.get("flag", ""), "pos": p}
@@ -352,7 +355,8 @@ func _spawn_zone_specials() -> void:
 			continue
 		if r.has("unless_flag") and character.flags.has(r["unless_flag"]):
 			continue
-		enemies.spawn(Zone._v(r["pos"]), Rarity.Enemy.UNIQUE, enemies.type_index_of(r["type"]), r.get("name", ""), float(r.get("life_mult", 1.0)))
+		var rid := enemies.spawn(Zone._v(r["pos"]), Rarity.Enemy.UNIQUE, enemies.type_index_of(r["type"]), r.get("name", ""), float(r.get("life_mult", 1.0)))
+		enemies.set_phases(rid, r.get("phases", []))   # subjefes raros con fases y barra
 
 
 # --- Carrera Crítica: los gemelos se turnan la vulnerabilidad ---

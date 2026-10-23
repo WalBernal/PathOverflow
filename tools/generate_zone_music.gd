@@ -206,6 +206,17 @@ func _drums(t0: float, beat: float, kind: String, bar: int, fill := false) -> vo
 					_snare(t0 + b * beat, 1.0)
 			for h in 8:
 				_hat(t0 + h * beat / 2.0, 0.035 if h % 2 == 0 else 0.02)
+		"frenzy":
+			# Fase de jefe: bombo a corcheas, caja doble en 2 y 4, platillo al empezar el compás.
+			for e in 8:
+				_kick(t0 + e * beat / 2.0, 0.5 if e % 2 == 0 else 0.32)
+			for b in [1, 3]:
+				_snare(t0 + b * beat, 1.1)
+				_snare(t0 + (b + 0.25) * beat, 0.45)
+			for h in 16:
+				_hat(t0 + h * beat / 4.0, 0.034 if h % 2 == 0 else 0.02)
+			if bar % 2 == 0:
+				_crash(t0, 0.5)
 		"boss":
 			for b in 4:
 				_kick(t0 + b * beat, 0.55)
@@ -343,6 +354,17 @@ func _snare(start: float, level: float) -> void:
 	for k in int(0.18 * RATE):
 		var t := float(k) / RATE
 		_put(i0 + k, (rng.randf_range(-1.0, 1.0) * 0.7 + sin(t * 190.0 * TAU) * 0.3) * exp(-t * 22.0) * 0.22 * level)
+
+
+## Platillo: ruido brillante que se apaga despacio.
+func _crash(start: float, level: float) -> void:
+	var i0 := int(start * RATE)
+	var last := 0.0
+	for k in int(0.9 * RATE):
+		var t := float(k) / RATE
+		var noise := rng.randf_range(-1.0, 1.0)
+		_put(i0 + k, (noise - last * 0.6) * exp(-t * 4.5) * 0.09 * level)
+		last = noise
 
 
 func _hat(start: float, gain: float) -> void:

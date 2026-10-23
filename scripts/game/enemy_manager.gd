@@ -34,6 +34,8 @@ const GRID_CELL := 48.0
 ## Dibujo: margen fuera de cámara que aún se dibuja, y cuántos enemigos en
 ## pantalla puede haber antes de pasar a los efectos de estados simplificados.
 const CULL_MARGIN := 120.0
+## Probabilidad de que una élite con dos afijos salga con una combinación con nombre.
+const COMBO_CHANCE := 0.25
 const FX_DETAIL_LIMIT := 60
 ## Superconductor (helado + rayo): % del golpe de cada arco, cuántos y su alcance.
 const SUPERCONDUCTOR_DAMAGE := 0.4
@@ -264,7 +266,7 @@ func spawn(pos: Vector2, rarity: Rarity.Enemy, type_index := -1, custom_name := 
 	poison_stacks.append(0)
 	bleed_dps.append(0.0)
 	bleed_time.append(0.0)
-	traits.append(_make_traits(t, rarity, affix_ids if not affix_ids.is_empty() or not roll_affixes else _roll_affixes(rarity), special_abilities.is_empty()))
+	traits.append(_make_traits(t, rarity, with_combos(affix_ids) if not affix_ids.is_empty() or not roll_affixes else _roll_affixes(rarity), special_abilities.is_empty()))
 	var tr: Dictionary = traits[traits.size() - 1]
 	if tr.has("affixes"):
 		var i_new := traits.size() - 1
@@ -277,7 +279,9 @@ func spawn(pos: Vector2, rarity: Rarity.Enemy, type_index := -1, custom_name := 
 		for aid in tr["affixes"]:
 			var def: Dictionary = affix_defs().get(aid, {})
 			affix_speed *= float(def.get("speed_mult", 1.0))
-			if prefix == "":
+			if def.has("combo"):
+				prefix = String(def.get("name", ""))   # la combinación da su nombre propio
+			elif prefix == "":
 				prefix = String(def.get("name", ""))
 		speeds[i_new] *= affix_speed
 		if rarity >= Rarity.Enemy.ELITE and prefix != "":
@@ -301,11 +305,54 @@ func _roll_affixes(rarity: int) -> Array:
 	if count == 0:
 		return []
 	var pool: Array = []
+	var combos: Array = []
 	for aid in affix_defs():
-		if int(affix_defs()[aid].get("min_level", 1)) <= area_level:
+		var def: Dictionary = affix_defs()[aid]
+		if def.has("combo"):
+			if _combo_available(def):
+				combos.append(aid)
+		elif int(def.get("min_level", 1)) <= area_level:
 			pool.append(aid)
-	pool.shuffle()
-	return pool.slice(0, mini(count, pool.size()))
+	var picked: Array = []
+	# A veces, una élite con dos afijos sale directamente con una combinación.
+	if count >= 2 and not combos.is_empty() and randf() < COMBO_CHANCE:
+		picked.append_array(affix_defs()[combos[randi() % combos.size()]]["combo"])
+	else:
+		pool.shuffle()
+		for aid in pool:
+			if picked.size() >= count:
+				break
+			if _excluded(aid, picked):
+				continue
+			picked.append(aid)
+	return with_combos(picked)
+
+
+## Añade a la lista los afijos de combinación cuyos componentes estén todos.
+static func with_combos(affix_ids: Array) -> Array:
+	var out := affix_ids.duplicate()
+	for aid in affix_defs():
+		var parts: Array = affix_defs()[aid].get("combo", [])
+		if parts.is_empty() or out.has(aid):
+			continue
+		if parts.all(func(x: String) -> bool: return affix_ids.has(x)):
+			out.append(aid)
+	return out
+
+
+func _combo_available(def: Dictionary) -> bool:
+	for part in def["combo"]:
+		if int(affix_defs().get(part, {}).get("min_level", 99)) > area_level:
+			return false
+	return true
+
+
+## ¿Choca `aid` con alguno de los ya elegidos (excludes en cualquiera de los dos)?
+static func _excluded(aid: String, picked: Array) -> bool:
+	for other in picked:
+		if affix_defs().get(aid, {}).get("excludes", []).has(other) or affix_defs().get(other, {}).get("excludes", []).has(aid):
+			return true
+	return false
 
 
 ## Resistencias, inmunidades y afijos de un enemigo (tipo + afijos).
@@ -1016,7 +1063,7 @@ func _physics_process(delta: float) -> void:
 		var dist := to_player.length()
 		var reach := r + Player.RADIUS + 2.0
 		# Objetivo: el jugador, salvo que un aliado (invocación) esté más a mano o provoque.
-		var ally := _pick_ally(pos, dist) if hunting and not allies.is_empty() else -1
+		var ally := _pick_ally(pos, dist, _hunts_allies(i)) if hunting and not allies.is_empty() else -1
 		var target_pos := player_pos if ally == -1 else (allies[ally]["pos"] as Vector2)
 		var to_target := target_pos - pos
 		var tdist := to_target.length()
@@ -1115,8 +1162,9 @@ func _physics_process(delta: float) -> void:
 
 
 ## Aliado al que irá el enemigo en `pos` (o -1 = el jugador): el que provoca
-## (golem) dentro de su radio, o uno claramente más cerca que el jugador.
-func _pick_ally(pos: Vector2, player_dist: float) -> int:
+## (golem) dentro de su radio, o uno claramente más cerca que el jugador. Los
+## cazadores (`hunter`) van a por la invocación más cercana aunque estés tú más cerca.
+func _pick_ally(pos: Vector2, player_dist: float, hunter := false) -> int:
 	var best := -1
 	var best_d := INF
 	for k in allies.size():
@@ -1125,12 +1173,24 @@ func _pick_ally(pos: Vector2, player_dist: float) -> int:
 			continue
 		var d := pos.distance_to(a["pos"])
 		var taunting := d <= float(a.get("taunt", 0.0))
-		if (taunting or d < player_dist * 0.7) and d < best_d:
+		if (taunting or d < player_dist * 0.7 or (hunter and d < aggro_range)) and d < best_d:
 			best_d = d
 			best = k
 			if taunting:
 				best_d = -1.0   # la provocación gana a cualquier otro
 	return best
+
+
+## ¿Prioriza a las invocaciones? Tipos con hunts_allies (gusanos, IRQ) y los que
+## llevan una carga explosiva (Explosivo, Termonuclear), que buscan torretas y robots.
+func _hunts_allies(i: int) -> bool:
+	var all_types := enemy_types()
+	if types[i] < all_types.size() and bool(all_types[types[i]].get("hunts_allies", false)):
+		return true
+	for aid in traits[i].get("affixes", []):
+		if affix_defs().get(aid, {}).has("death_explosion"):
+			return true
+	return false
 
 
 func _damage_ally(k: int, amount: float) -> void:
@@ -1837,11 +1897,17 @@ func _kill(i: int) -> void:
 	var xp := int(BASE_EXPERIENCE * info.xp_mult * type_mult * (1.0 + 0.15 * (area_level - 1)))
 	var pos := positions[i]
 	var type_id: String = types_list[types[i]]["id"] if types[i] < types_list.size() else ""
+	# Explosión al morir: solo la más grande (Termonuclear sustituye a Explosivo).
+	var best_boom := {}
+	var boom_color := Color("ffb030")
 	for aid in traits[i].get("affixes", []):
 		var boom: Dictionary = affix_defs().get(aid, {}).get("death_explosion", {})
-		if not boom.is_empty():
-			hazards.append({"pos": pos, "radius": float(boom.get("radius", 100.0)), "time": 0.0, "delay": float(boom.get("delay", 0.9)),
-				"damage": damages[i] * float(boom.get("damage_mult", 2.0)), "color": Color(affix_defs()[aid].get("color", "ffb030"))})
+		if not boom.is_empty() and float(boom.get("radius", 100.0)) > float(best_boom.get("radius", 0.0)):
+			best_boom = boom
+			boom_color = Color(affix_defs()[aid].get("color", "ffb030"))
+	if not best_boom.is_empty():
+		hazards.append({"pos": pos, "radius": float(best_boom.get("radius", 100.0)), "time": 0.0, "delay": float(best_boom.get("delay", 0.9)),
+			"damage": damages[i] * float(best_boom.get("damage_mult", 2.0)), "color": boom_color})
 	boss_phases.erase(ids[i])
 	phase_shield.erase(ids[i])
 	_remove(i)

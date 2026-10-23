@@ -1,5 +1,5 @@
 {
-  "_doc": "Afijos de enemigos élite y únicos raros. name: prefijo del nombre. resist/immune: como en enemies.json (se suman). speed_mult: velocidad. regen: % de vida por segundo. on_hit: estado que aplican al jugador (dot: kind fire/chaos/cold/lightning, dps_mult del daño del enemigo, duration). death_explosion: explota al morir (radius, damage_mult, delay). summoner: invoca type cada cooldown s. min_level: nivel de zona mínimo. color: aura visual. Nuevos: on_hit.status (estado que aplica al jugador), reflect (fracción del daño que te devuelve), shield (escudo extra: fracción de su vida), healer (cura a los enemigos cercanos: radius, pct %/s), teleporter (se teletransporta cerca de ti: cooldown, range).",
+  "_doc": "Afijos de enemigos élite y únicos raros. name: prefijo del nombre. resist/immune: como en enemies.json (se suman). speed_mult: velocidad. regen: % de vida por segundo. on_hit: estado que aplican al jugador (dot: kind fire/chaos/cold/lightning, dps_mult del daño del enemigo, duration). death_explosion: explota al morir (radius, damage_mult, delay). summoner: invoca type cada cooldown s. min_level: nivel de zona mínimo. color: aura visual. Nuevos: on_hit.status (estado que aplica al jugador), reflect (fracción del daño que te devuelve), shield (escudo extra: fracción de su vida), healer (cura a los enemigos cercanos: radius, pct %/s), teleporter (se teletransporta cerca de ti: cooldown, range). excludes: afijos con los que nunca sale. combo: afijo de combinación (no sale solo): si un enemigo tiene todos los afijos de 'combo', gana también este, con su nombre propio y sus efectos extra (las élites con dos afijos tiran a veces directamente una combinación).",
   "affixes": [
     {
       "id": "ignifugo",
@@ -12,7 +12,10 @@
         "burn"
       ],
       "min_level": 2,
-      "description": "Resiste el fuego (75 %) y no se quema."
+      "description": "Resiste el fuego (75 %) y no se quema.",
+      "excludes": [
+        "ardiente"
+      ]
     },
     {
       "id": "aislado",
@@ -25,7 +28,10 @@
         "shock"
       ],
       "min_level": 2,
-      "description": "Resiste el rayo (75 %) y no se electrocuta."
+      "description": "Resiste el rayo (75 %) y no se electrocuta.",
+      "excludes": [
+        "electrizante"
+      ]
     },
     {
       "id": "criogenizado",
@@ -76,7 +82,10 @@
           "duration": 3.0
         }
       },
-      "description": "Quema con sus golpes."
+      "description": "Quema con sus golpes.",
+      "excludes": [
+        "ignifugo"
+      ]
     },
     {
       "id": "blindado",
@@ -89,7 +98,10 @@
         "bleed"
       ],
       "min_level": 3,
-      "description": "Mucha armadura: resiste el daño físico (50 %) y no sangra."
+      "description": "Mucha armadura: resiste el daño físico (50 %) y no sangra.",
+      "excludes": [
+        "veloz"
+      ]
     },
     {
       "id": "veloz",
@@ -97,7 +109,10 @@
       "color": "7fffd4",
       "speed_mult": 1.35,
       "min_level": 2,
-      "description": "Se mueve mucho más rápido."
+      "description": "Se mueve mucho más rápido.",
+      "excludes": [
+        "blindado"
+      ]
     },
     {
       "id": "regenerador",
@@ -130,7 +145,10 @@
         "max_alive": 6
       },
       "min_level": 5,
-      "description": "Invoca bugs cada pocos segundos."
+      "description": "Invoca bugs cada pocos segundos.",
+      "excludes": [
+        "curandero"
+      ]
     },
     {
       "id": "electrizante",
@@ -147,7 +165,10 @@
           "duration": 3.0
         }
       },
-      "description": "Sus golpes te electrocutan (recibes más daño)."
+      "description": "Sus golpes te electrocutan (recibes más daño).",
+      "excludes": [
+        "aislado"
+      ]
     },
     {
       "id": "gelido",
@@ -195,7 +216,10 @@
         "pct": 3.0
       },
       "min_level": 6,
-      "description": "Cura a los enemigos cercanos. Mátalo primero."
+      "description": "Cura a los enemigos cercanos. Mátalo primero.",
+      "excludes": [
+        "invocador"
+      ]
     },
     {
       "id": "teletransportador",
@@ -207,6 +231,103 @@
       },
       "min_level": 7,
       "description": "Se teletransporta junto a ti cada pocos segundos."
+    },
+    {
+      "id": "combo_termonuclear",
+      "name": "Termonuclear",
+      "combo": [
+        "ignifugo",
+        "explosivo"
+      ],
+      "color": "ff4010",
+      "death_explosion": {
+        "radius": 170,
+        "damage_mult": 3.0,
+        "delay": 1.1
+      },
+      "on_hit": {
+        "dot": {
+          "kind": "fire",
+          "dps_mult": 0.3,
+          "duration": 3.0
+        }
+      },
+      "description": "Ignífugo + Explosivo: quema con sus golpes y al morir deja una carga enorme. Aléjate MUCHO."
+    },
+    {
+      "id": "combo_cero_absoluto",
+      "name": "Cero Absoluto",
+      "combo": [
+        "criogenizado",
+        "gelido"
+      ],
+      "color": "e0f8ff",
+      "on_hit": {
+        "status": {
+          "id": "freeze",
+          "chance": 18,
+          "duration": 1.0
+        }
+      },
+      "speed_mult": 0.9,
+      "description": "Criogenizado + Gélido: sus golpes pueden congelarte del todo. Más lento, eso sí."
+    },
+    {
+      "id": "combo_fantasma",
+      "name": "Fantasma en la Red",
+      "combo": [
+        "veloz",
+        "teletransportador"
+      ],
+      "color": "c0ffee",
+      "teleporter": {
+        "cooldown": 3.0,
+        "range": 180
+      },
+      "description": "Veloz + Teletransportador: aparece a tu lado cada 3 s. No hay dónde esconderse."
+    },
+    {
+      "id": "combo_inmortal",
+      "name": "Inmortal en Producción",
+      "combo": [
+        "curandero",
+        "regenerador"
+      ],
+      "color": "a0ffc8",
+      "regen": 2.0,
+      "healer": {
+        "radius": 260,
+        "pct": 2.0
+      },
+      "description": "Curandero + Regenerador: él y los suyos se curan sin parar. Revienta su vida de golpe."
+    },
+    {
+      "id": "combo_firewall_espejo",
+      "name": "Firewall Espejo",
+      "combo": [
+        "escudado",
+        "reflejo"
+      ],
+      "color": "c8d8ff",
+      "reflect": 0.07,
+      "shield": 0.25,
+      "description": "Escudado + Reflejo: más escudo y te devuelve aún más daño. Pega con invocaciones o con calma."
+    },
+    {
+      "id": "combo_plaga",
+      "name": "Plaga",
+      "combo": [
+        "toxico",
+        "invocador"
+      ],
+      "color": "70e060",
+      "summoner": {
+        "type": "bug",
+        "count": 3,
+        "cooldown": 7.0,
+        "max_alive": 9
+      },
+      "description": "Tóxico + Invocador: cría bugs más rápido y en mayor número."
     }
   ]
 }
