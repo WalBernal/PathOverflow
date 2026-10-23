@@ -2122,6 +2122,10 @@ func _test_resists_and_affixes() -> void:
 	_check(em2.affixes_of(ci).has("combo_termonuclear") and em2.names[ci].begins_with("Termonuclear"), "combinación: Termonuclear con nombre propio")
 	_check(em2.call("_hunts_allies", ci), "los que llevan carga explosiva van a por las invocaciones")
 	_check(EnemyManager._excluded("ignifugo", ["ardiente"]), "Ignífugo y Ardiente no salen juntos")
+	# Torretas: solo los cazadores van a por ellas, aunque el jugador esté más cerca.
+	em2.allies = [{"pos": Vector2(300, 0), "life": 50.0, "max_life": 50.0, "radius": 14.0, "device": true}]
+	_check(em2.call("_pick_ally", Vector2.ZERO, 100.0, true) == 0, "un cazador va a por la torreta")
+	_check(em2.call("_pick_ally", Vector2.ZERO, 1000.0, false) == -1, "un enemigo normal ignora la torreta (aunque esté más cerca que tú)")
 	em2.area_level = 1
 	var e1 := em2.spawn(Vector2.ZERO, Rarity.Enemy.ELITE, bug)
 	_check(em2.affixes_of(em2.index_of(e1)).is_empty(), "sin afijos en el nivel 1")
@@ -2508,7 +2512,7 @@ func _test_rams_everywhere() -> void:
 	var keys := ["dps", "min_damage", "projectiles", "pierce", "projectile_chains", "chains", "projectile_speed", "homing", "radius",
 		"width", "impact_radius", "rain_hits", "crit_chance", "life_leech", "ailments", "ailment_effect", "ailment_duration",
 		"ailing_bonus", "deploy", "max_units", "unit_interval", "unit_life", "unit_reduction", "reserve", "aura_mods",
-		"aura_regen", "aura_reduction", "aura_enemy", "tick", "minion_interval", "drone_count", "count", "extra_devices",
+		"aura_regen", "aura_reduction", "aura_enemy", "aura_radius", "aura_anchor", "ability_power", "tick", "minion_interval", "drone_count", "count", "extra_devices",
 		"uses_per_second", "repeats"]
 	var dead := PackedStringArray()
 	for sid in skills:
@@ -2553,15 +2557,43 @@ func _test_rams_everywhere() -> void:
 	for cls in _classes:
 		var unlocks: Array = cls.get("unlocks", [])
 		var kinds := {}
+		var choices := 0
 		for u in unlocks:
-			_check(skills.has(u["skill"]), "%s desbloquea %s, que existe" % [cls["id"], u["skill"]])
-			kinds[skills.get(u["skill"], {}).get("kind", "")] = true
-		_check(unlocks.size() == 4 and kinds.has("aura") and (kinds.has("unit") or kinds.has("minion")), "%s: 4 desbloqueos con invocación y aura" % cls["id"])
+			var ids: Array = u.get("choice", [u.get("skill", "")])
+			choices += 1 if u.has("choice") else 0
+			for sid in ids:
+				_check(skills.has(sid), "%s desbloquea %s, que existe" % [cls["id"], sid])
+				kinds[skills.get(sid, {}).get("kind", "")] = true
+		_check(unlocks.size() == 4 and choices == 1 and kinds.has("aura") and (kinds.has("unit") or kinds.has("minion")),
+			"%s: 4 desbloqueos (uno a elegir entre dos) con invocación y aura" % cls["id"])
 	var lvl := CharacterData.new(_classes[0], _tree)
 	lvl.set_level(12)
 	_check(lvl.due_unlocks().size() == 2, "al nivel 12 el guerrero tiene 2 habilidades por recibir")
 	lvl.flags["unlock_aura_blindaje"] = true
 	_check(lvl.due_unlocks().size() == 1, "las ya recibidas no se repiten")
+	lvl.set_level(16)
+	_check(lvl.due_unlocks().any(func(u: Dictionary) -> bool: return u.has("choice")), "al nivel 16 toca elegir entre dos")
+	lvl.flags["unlock_golem_hardware"] = true   # personaje de antes de la elección
+	_check(not lvl.due_unlocks().any(func(u: Dictionary) -> bool: return u.has("choice")), "quien ya recibió una de las dos no vuelve a elegir")
+	# Hitos propios de las invocaciones y Sobrealimentación.
+	var bot10 := SkillCalc.compute(Motherboard.new(skills["robot_centinela"], 10, []), c)
+	_check(bot10["projectiles"] == 2 and bot10["max_units"] == 1, "Robot Centinela: su hito da +1 proyectil, no +1 invocación")
+	var med1 := SkillCalc.compute(Motherboard.new(skills["dron_medico"], 1, []), c)
+	var med20 := SkillCalc.compute(Motherboard.new(skills["dron_medico"], 20, []), c)
+	_check(is_equal_approx(med20["ability_power"], 1.5) and med1["ability_power"] == 1.0, "Dron de Mantenimiento: +25 % de curación por hito")
+	var over := Motherboard.new(skills["golem_hardware"], 1, ["DDR3"])
+	var g_before := SkillCalc.compute(over, c)
+	over.install(RamModule.new(rams["sobrealimentacion"]), 0)
+	var g_after := SkillCalc.compute(over, c)
+	_check(is_equal_approx(g_after["reserve"], g_before["reserve"] * 1.5) and g_after["min_damage"] > g_before["min_damage"], "Sobrealimentación: más reserva, más potencia")
+	# Mando: los botones y ejes se añaden a las acciones existentes.
+	Gamepad.setup()
+	var pad_ok := InputMap.action_get_events(&"skill_1").any(func(e: InputEvent) -> bool: return e is InputEventJoypadButton) \
+		and InputMap.action_get_events(&"move_left").any(func(e: InputEvent) -> bool: return e is InputEventJoypadMotion)
+	_check(pad_ok, "mando: habilidades en botones y movimiento en el stick izquierdo")
+	var tower := Motherboard.new(skills["aura_mando"], 1, ["DDR5"])
+	tower.install(RamModule.new(rams["torre_senal"]), 0)
+	_check(SkillCalc.compute(tower, c)["aura_anchor"], "Torre de Señal: el aura queda anclada")
 	# Ordenar la bolsa: placas primero y RAM por generación; lo demás no se mueve.
 	var inv := Inventory.new()
 	inv.bag[0] = RamModule.new(rams["pasta_termica"])

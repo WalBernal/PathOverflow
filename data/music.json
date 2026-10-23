@@ -83,6 +83,11 @@
       "pad": 0.04, "bass": "pulse", "arp": "up", "arp_wave": "saw", "lead": "square", "drums": "boss",
       "from": {"arp": 0, "lead": 2, "drums": 0}
     },
+    "subjefe": {
+      "name": "Condición de carrera (subjefe)", "bpm": 148, "bars": 24, "intro": 0, "chord_bars": 1, "seed": 150, "root": 41, "scale": "phrygian",
+      "prog": [[0, "m"], [1, "M"], [10, "M"], [0, "m"]], "prog_b": [[8, "M"], [7, "M"], [1, "M"], [0, "m"]],
+      "pad": 0.04, "bass": "pulse", "arp": "up", "arp_wave": "square", "lead": "saw", "drums": "frenzy"
+    },
     "boss1_fase": {
       "name": "Servidor principal (fase)", "bpm": 154, "bars": 24, "intro": 0, "chord_bars": 1, "seed": 141, "root": 40, "scale": "minor",
       "prog": [[0, "m"], [0, "m"], [8, "M"], [7, "M"]], "prog_b": [[5, "m"], [8, "M"], [10, "M"], [7, "M"]],

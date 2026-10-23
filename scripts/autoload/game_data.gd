@@ -32,6 +32,7 @@ var pending_creation: Dictionary = {}
 
 
 func _ready() -> void:
+	Gamepad.setup()
 	var data = DataLoader.load_json(CLASSES_PATH)
 	if data is Dictionary:
 		classes = data.get("classes", [])
@@ -142,6 +143,7 @@ func save_character(c: CharacterData) -> Error:
 
 ## F11 o Alt+Enter: pantalla completa / ventana (en cualquier pantalla).
 func _input(event: InputEvent) -> void:
+	Gamepad.note_event(event)
 	var key := event as InputEventKey
 	if key == null or not key.pressed or key.echo:
 		return

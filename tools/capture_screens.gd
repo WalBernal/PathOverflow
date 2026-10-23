@@ -22,6 +22,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("combate2"):
+		await _capture_combat2()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("rendimiento"):
 		await _benchmark()
 		get_tree().quit()
@@ -492,6 +496,63 @@ const RAM_BUILDS := [
 	["paquete_rastreador", ["multicanal_menor", "puntero_salvaje_menor", "ecc_menor", "pipeline"]],
 	["cascada_css", ["multicanal", "disipador", "ecc", "refrigeracion_liquida"]],
 ]
+
+
+## Lo nuevo de combate: elección de habilidad al nivel 16, aura anclada (Torre de
+## Señal), torreta atacada por un cazador, una élite con combinación y el HUD al 140 %.
+func _capture_combat2() -> void:
+	var saved_scale: Variant = GameSettings.get_value("interface", "scale", 1.0)
+	GameSettings.set_value("interface", "scale", 1.0)
+	var gd: Node = get_node("/root/GameData")
+	var items: ItemDatabase = gd.get("items")
+	var c: CharacterData = gd.create_character("Combate2", &"templario", CharacterAppearance.default(), false)
+	c.flags["zone"] = "zona1"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 16
+	var mando := Motherboard.new(items.skills.skills["aura_mando"], 12, ["DDR5"])
+	mando.install(RamModule.new(items.skills.rams["torre_senal"]), 0)
+	c.inventory.set_board(0, mando)
+	var turret := Motherboard.new(items.skills.skills["ping_letal"], 12, ["DDR3"])
+	turret.install(RamModule.new(items.skills.rams["servidor_torreta"]), 0)
+	c.inventory.set_board(1, turret)
+	c.inventory.set_board(2, Motherboard.new(items.skills.skills["golem_hardware"], 20, []))
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.5)
+	_save("33_eleccion_nivel_16")
+	var ui: GameUI = world.get("ui")
+	if ui.is_choosing():
+		ui.call("_on_choice_picked", "golem_hardware", func(_s: String) -> void: pass)
+	var skills: SkillController = world.get("skills")
+	var player: Player = world.get("player")
+	var em: EnemyManager = world.get("enemies")
+	player.invulnerable = true
+	player.mana = 9999.0
+	em.clear_all()
+	var p := player.global_position
+	skills.call("_execute", skills.profile(0), p)
+	skills.call("_summon_unit", skills.profile(2), p, Color.WHITE)
+	skills.call("_deploy", skills.profile(1), p + Vector2(200, 0))
+	player.global_position = p + Vector2(-150, 60)
+	em.roll_affixes = false
+	for k in 3:
+		var hid := em.spawn(p + Vector2(420, -80 + k * 80), Rarity.Enemy.NORMAL, em.type_index_of("gusano"))
+		em.lives[em.index_of(hid)] *= 30.0
+	var elite := em.spawn(p + Vector2(330, 160), Rarity.Enemy.ELITE, em.type_index_of("bug"), "", 1.0, [], ["ignifugo", "explosivo"])
+	em.lives[em.index_of(elite)] *= 30.0
+	ui.hud.set("_target_id", elite)
+	ui.hud.set("_target_linger", 999.0)
+	await _wait(2.5)
+	_save("34_aura_anclada_y_cazadores")
+	GameSettings.set_value("interface", "scale", 1.4)
+	ui.apply_ui_scale()
+	await _wait(0.6)
+	_save("35_interfaz_140")
+	GameSettings.set_value("interface", "scale", saved_scale)
+	world.set("_since_save", -9999.0)
 
 
 ## Rendimiento: 150 y 300 enemigos (con afijos y estados) contra 6 invocaciones,

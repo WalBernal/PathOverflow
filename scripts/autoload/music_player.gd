@@ -12,6 +12,8 @@ const TRACK_DIR := "res://assets/audio/music/"
 const LOOPS_FILE := "res://data/music_loops.json"
 ## Sufijo de las pistas de fase de jefe (boss1 → boss1_fase).
 const PHASE_SUFFIX := "_fase"
+## Pista de las fases de subjefe en zonas sin pista de fase propia.
+const SUBBOSS_TRACK := "subjefe"
 
 var muted := false
 ## 0..1; se guarda en user://settings.cfg.
@@ -23,6 +25,7 @@ var _pitch_tween: Tween
 var _wanted := false
 var _track := ""
 var _loops := {}   # pista -> muestra donde empieza su bucle
+var _base_track := ""   # pista de la zona (a la que se vuelve al acabar las fases)
 
 
 func _ready() -> void:
@@ -92,12 +95,20 @@ func _loop_starts() -> Dictionary:
 
 
 ## Intensidad del combate: 0 normal; en las fases de jefe suena la versión de
-## fase de la pista (<pista>_fase: más rápida y con otra batería) si existe, y
-## cada fase más sube un poco el tempo.
+## fase de la pista (<pista>_fase: más rápida y con otra batería) si existe; si
+## no (subjefes en zonas normales), la pista común de subjefe. Cada fase más sube
+## un poco el tempo. Al volver a 0, vuelve la pista de la zona.
 func set_intensity(level: int) -> void:
-	var base := _track.trim_suffix(PHASE_SUFFIX)
+	if _base_track == "" or not (_track in [_base_track, _base_track + PHASE_SUFFIX, SUBBOSS_TRACK]):
+		_base_track = _track   # la pista de la zona (cambió de zona desde la última vez)
+	var base := _base_track
 	if base != "":
-		var want := base + PHASE_SUFFIX if level >= 1 and ResourceLoader.exists("%s%s%s.wav" % [TRACK_DIR, base, PHASE_SUFFIX]) else base
+		var want := base
+		if level >= 1:
+			if ResourceLoader.exists("%s%s%s.wav" % [TRACK_DIR, base, PHASE_SUFFIX]):
+				want = base + PHASE_SUFFIX
+			elif ResourceLoader.exists("%s%s.wav" % [TRACK_DIR, SUBBOSS_TRACK]):
+				want = SUBBOSS_TRACK
 		if want != _track:
 			play_track(want, 1.2)
 	var pitch := 1.0 + 0.03 * clampi(level - 1, 0, 3)

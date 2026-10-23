@@ -30,8 +30,13 @@ static func milestones_reached(level: int) -> int:
 	return n
 
 
-## Qué da cada hito a esta habilidad ("" si nada especial).
+## Qué da cada hito a esta habilidad ("" si nada especial). Las invocaciones
+## pueden definir el suyo en skills.json → milestone {kind, text}: units (+1 a la
+## vez), projectiles (+1 proyectil), ability (+25 % de potencia de su habilidad
+## propia) o toughness (+25 % de vida y +5 % de daño evitado).
 static func milestone_text(skill: Dictionary) -> String:
+	if skill.has("milestone"):
+		return String(skill["milestone"].get("text", ""))
 	match String(skill.get("kind", "")):
 		"chain":
 			return "+1 salto de cadena"
@@ -77,6 +82,10 @@ static func shoots_projectiles(skill: Dictionary) -> bool:
 		return true
 	return String(skill.get("kind", "")) in ["unit", "drones"] and "projectile" in skill.get("tags", []) \
 		and bool(skill.get("unit", {}).get("shoots", true))
+
+
+static func kind_of(skill: Dictionary) -> String:
+	return String(skill.get("kind", ""))
 
 
 ## Habilidades que invocan algo que ataca solo: la "repetición" (Pipeline) no las
@@ -142,6 +151,8 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 	var lvl_mult := 1.0 + LEVEL_UTILITY * (board.level - 1)
 	var milestones := milestones_reached(board.level)
 	var bonus_text := milestone_text(skill)
+	# Hito propio de la invocación (por defecto, +1 a la vez).
+	var unit_ms := String(skill.get("milestone", {}).get("kind", "units")) if kind_of(skill) == "unit" else ""
 	if bonus_text == "+10 % de área":
 		area_mult *= 1.0 + 0.10 * milestones
 	elif bonus_text == "+10 % de daño" and milestones > 0:
@@ -196,7 +207,7 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 	var shoots := shoots_projectiles(skill)
 	if shoots:
 		extra_projectiles += int(stats.get_value(Stat.EXTRA_PROJECTILES, tags))
-		if bonus_text == "+1 proyectil":
+		if bonus_text == "+1 proyectil" or unit_ms == "projectiles":
 			extra_projectiles += milestones
 	extra_chains += int(stats.get_value(Stat.EXTRA_CHAINS, tags))
 	if skill.has("projectiles") or kind in ["unit", "drones"]:
@@ -223,10 +234,20 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 	var unit: Dictionary = skill.get("unit", {})
 	var aura: Dictionary = skill.get("aura", {})
 	var extra_minions := int(stats.get_value(Stat.EXTRA_MINIONS, tags))
-	var max_units := int(skill.get("max_active", 1)) + extra_minions + (milestones if kind == "unit" else 0)
+	var max_units := int(skill.get("max_active", 1)) + extra_minions + (milestones if unit_ms == "units" else 0)
+	# Sobrealimentación (RAM): reserva más maná a cambio de más potencia.
+	var reserve_mult := 1.0
+	var aura_anchor := false
+	var aura_radius_mult := 1.0
+	for ram: RamModule in board.active_supports():
+		reserve_mult *= ram.special("reserve_mult", 1.0)
+		aura_anchor = aura_anchor or ram.special("aura_anchor") > 0.0
+		aura_radius_mult *= ram.special("aura_radius_mult", 1.0)
+	var ability_power := 1.0 + (0.25 * milestones if unit_ms == "ability" else 0.0)
 	var unit_interval := float(unit.get("interval", 1.0)) / (maxf(0.1, automaton_speed) * attack_rate)
-	var unit_life := float(unit.get("life", 0.0)) * (1.0 + 0.12 * (board.level - 1)) * stats.total_multiplier(Stat.MINION_LIFE, tags)
-	var reserve := float(unit.get("reserve", aura.get("reserve", 0.0))) / maxf(0.1, stats.total_multiplier(Stat.RESERVATION_EFFICIENCY, tags))
+	var unit_life := float(unit.get("life", 0.0)) * (1.0 + 0.12 * (board.level - 1)) * stats.total_multiplier(Stat.MINION_LIFE, tags) \
+		* (1.0 + 0.25 * milestones if unit_ms == "toughness" else 1.0)
+	var reserve := float(unit.get("reserve", aura.get("reserve", 0.0))) * reserve_mult / maxf(0.1, stats.total_multiplier(Stat.RESERVATION_EFFICIENCY, tags))
 	# Auras: bonificaciones para tus aliados, escaladas por el nivel, los hitos y "efecto de aura".
 	var aura_scale := stats.total_multiplier(Stat.AURA_EFFECT, tags) * (1.0 + 0.02 * (board.level - 1)) \
 		* (1.0 + 0.15 * milestones if kind == "aura" else 1.0)
@@ -352,12 +373,16 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 		"aura_regen": float(aura.get("regen", 0.0)) * aura_scale,
 		"aura_reduction": minf(0.6, float(aura.get("reduction", 0.0)) * aura_scale),
 		# Alcance del aura alrededor del jugador (crece con el área y el nivel de la placa).
-		"aura_radius": float(aura.get("radius", 0.0)) * sqrt(stats.total_multiplier(Stat.AREA_OF_EFFECT, tags)) * lvl_mult,
+		"aura_radius": float(aura.get("radius", 0.0)) * sqrt(stats.total_multiplier(Stat.AREA_OF_EFFECT, tags)) * lvl_mult * aura_radius_mult,
+		# Torre de Señal: el aura se queda donde se activa en vez de seguirte.
+		"aura_anchor": aura_anchor,
 		# Auras que debilitan: efectos sobre los enemigos dentro del radio.
 		"aura_enemy": {} if not aura.has("enemy") else {
 			"slow": minf(0.5, float(aura["enemy"].get("slow", 0.0)) * aura_scale),
 			"damage_taken": minf(0.6, float(aura["enemy"].get("damage_taken", 0.0)) * aura_scale)},
-		"unit_reduction": minf(0.7, float(unit.get("reduction", 0.0)) + unit_reduction),
+		"unit_reduction": minf(0.7, float(unit.get("reduction", 0.0)) + unit_reduction + (0.05 * milestones if unit_ms == "toughness" else 0.0)),
+		# Potencia de la habilidad propia de la invocación (curación, barrera, salto, veneno, explosión).
+		"ability_power": ability_power,
 		"unit_shoots": bool(unit.get("shoots", true)),
 		"unit_ability": unit.get("ability", {}),
 	}

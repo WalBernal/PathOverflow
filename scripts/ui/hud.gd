@@ -146,10 +146,21 @@ func _layout() -> void:
 		_place("flask_%d" % i, _flask_rect(i))
 	for i in SkillController.ACTIONS.size():
 		_place("skill_%d" % i, _slot_rect(i))
-	var plate := _plate_rect()
+	var origin := _menu_origin()
 	for i in _menu_buttons.size():
-		_menu_buttons[i].position = Vector2(plate.end.x - _menu_buttons.size() * 40.0 - 12.0 + i * 40.0, plate.position.y + 32.0)
+		_menu_buttons[i].position = origin + Vector2(i * 40.0, 8.0)
 		_menu_buttons[i].size = Vector2(34, 30)
+
+
+## Esquina de los botones de menú (C, I, K, P) y del "Nivel N": a la derecha de la
+## barra; si no caben junto a las habilidades (interfaz grande), encima de la barra.
+func _menu_origin() -> Vector2:
+	var plate := _plate_rect()
+	var x := plate.end.x - _menu_buttons.size() * 40.0 - 12.0
+	var skills_end := _slot_rect(SkillController.ACTIONS.size() - 1).end.x + 10.0
+	if x < skills_end:
+		return Vector2(plate.end.x - _menu_buttons.size() * 40.0 - 12.0, plate.position.y - 58.0)
+	return Vector2(x, plate.position.y + 24.0)
 
 
 func _place(key: String, rect: Rect2) -> void:
@@ -320,9 +331,7 @@ func _draw() -> void:
 		draw_line(Vector2(x, xp.position.y), Vector2(x, xp.end.y), Color(0, 0, 0, 0.5), 1.0)
 	draw_rect(xp, TRIM, false, 1.0)
 	var level_text := "Nivel %d" % character.level
-	var plate := _plate_rect()
-	draw_string(font, Vector2(plate.end.x - _menu_buttons.size() * 40.0 - 12.0, plate.position.y + 24.0), level_text,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 14, TEXT_COLOR)
+	draw_string(font, _menu_origin(), level_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, TEXT_COLOR)
 
 	# Pociones.
 	for i in Inventory.FLASK_SLOTS:
@@ -490,7 +499,19 @@ func _draw_target_frame(font: Font, top_offset := 0.0) -> void:
 	var tr: Dictionary = enemies.traits[i]
 	var resists: Dictionary = tr.get("res", {})
 	var immunes: Dictionary = tr.get("immune", {})
-	var affixes: Array = tr.get("affixes", [])
+	# Las combinaciones van primero y ocultan las chapas de sus componentes
+	# (la ayuda los nombra): así caben y se ve el nombre propio.
+	var affixes: Array = []
+	var hidden := {}
+	for aid in tr.get("affixes", []):
+		var parts: Array = EnemyManager.affix_defs().get(aid, {}).get("combo", [])
+		if not parts.is_empty():
+			affixes.push_front(aid)
+			for part in parts:
+				hidden[part] = true
+	for aid in tr.get("affixes", []):
+		if not hidden.has(aid) and not affixes.has(aid):
+			affixes.append(aid)
 	var extra_row := not resists.is_empty() or not immunes.is_empty() or not affixes.is_empty()
 	var box := Rect2(Vector2((size.x - TARGET_SIZE.x) / 2.0, 10.0 + top_offset),
 		TARGET_SIZE + Vector2(0, 22.0 * rows + (8.0 if rows > 0 else 0.0) + (24.0 if extra_row else 0.0)))
@@ -500,7 +521,16 @@ func _draw_target_frame(font: Font, top_offset := 0.0) -> void:
 		tip.append(StatusIcon.tooltip(s["id"], s["time"], int(s.get("stacks", 0))))
 	for aid in affixes:
 		var adef: Dictionary = EnemyManager.affix_defs().get(aid, {})
-		tip.append("%s: %s" % [adef.get("name", aid), adef.get("description", "")])
+		if adef.has("combo"):
+			var parts := PackedStringArray()
+			for part in adef["combo"]:
+				parts.append(String(EnemyManager.affix_defs().get(part, {}).get("name", part)))
+			tip.append("★ %s (%s): %s" % [adef.get("name", aid), " + ".join(parts), adef.get("description", "")])
+			for part in adef["combo"]:
+				var pdef: Dictionary = EnemyManager.affix_defs().get(part, {})
+				tip.append("   %s: %s" % [pdef.get("name", part), pdef.get("description", "")])
+		else:
+			tip.append("%s: %s" % [adef.get("name", aid), adef.get("description", "")])
 	if not immunes.is_empty():
 		var names_list := PackedStringArray()
 		for id in Ailments.ALL:
@@ -535,10 +565,13 @@ func _draw_target_frame(font: Font, top_offset := 0.0) -> void:
 		var fx := box.position.x + 10.0
 		for aid in affixes:
 			var def: Dictionary = EnemyManager.affix_defs().get(aid, {})
-			var aname := String(def.get("name", aid))
+			var combo: bool = def.has("combo")
+			var aname := ("★ " if combo else "") + String(def.get("name", aid))
 			var aw := font.get_string_size(aname, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x + 10.0
-			draw_rect(Rect2(fx, y, aw, 16), Color(Color(def.get("color", "ffffff")), 0.25))
+			draw_rect(Rect2(fx, y, aw, 16), Color(Color(def.get("color", "ffffff")), 0.4 if combo else 0.25))
 			draw_rect(Rect2(fx, y, aw, 16), Color(def.get("color", "ffffff")), false, 1.0)
+			if combo:   # doble borde dorado: es una combinación con nombre propio
+				draw_rect(Rect2(fx - 2.0, y - 2.0, aw + 4.0, 20), UiStyle.ACCENT, false, 1.0)
 			draw_string(font, Vector2(fx + 5.0, y + 12.0), aname, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(def.get("color", "ffffff")).lightened(0.3))
 			fx += aw + 6.0
 		var res_colors := {"physical": Color("c8b8a0"), "fire": Color("e0652f"), "cold": Color("7fb8e0"), "lightning": Color("e8d070"), "chaos": Color("b04ad9")}

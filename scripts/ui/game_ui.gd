@@ -13,7 +13,7 @@ signal shop_refresh_requested
 
 const TREE_SCREEN := preload("res://scenes/ui/passive_tree_screen.tscn")
 ## Tamaños de interfaz del menú de pausa.
-const UI_SCALES := [0.85, 1.0, 1.1, 1.2]
+const UI_SCALES := [0.85, 1.0, 1.1, 1.2, 1.3, 1.4]
 
 var hud: Hud
 var inventory_panel: InventoryPanel
@@ -419,7 +419,7 @@ func _build_pause_menu() -> Control:
 		func() -> float: return DialogueBox.voice_speed(),
 		func(v: float) -> void: GameSettings.set_value("dialogue", "voice_speed", v)))
 	right.add_child(UiStyle.section_header("Interfaz"))
-	var scale_button := _cycle_button("Tamaño de la interfaz", UI_SCALES, ["85 %", "100 %", "110 %", "120 %"],
+	var scale_button := _cycle_button("Tamaño de la interfaz", UI_SCALES, ["85 %", "100 %", "110 %", "120 %", "130 %", "140 %"],
 		func() -> float: return ui_scale(),
 		func(v: float) -> void:
 			GameSettings.set_value("interface", "scale", v)
@@ -465,7 +465,7 @@ func _cycle_button(text: String, values: Array, names: Array, current: Callable,
 
 
 static func ui_scale() -> float:
-	return clampf(float(GameSettings.get_value("interface", "scale", 1.0)), 0.75, 1.25)
+	return clampf(float(GameSettings.get_value("interface", "scale", 1.0)), 0.75, 1.45)
 
 
 ## Escala la interfaz (menús, HUD, textos): _root ocupa la pantalla dividida por
@@ -474,6 +474,77 @@ func apply_ui_scale() -> void:
 	var s := ui_scale()
 	_root.scale = Vector2(s, s)
 	_root.size = get_viewport().get_visible_rect().size / s
+
+
+# --- Elección de habilidad (desbloqueos por nivel con dos opciones) ---
+
+var _choice_panel: Control
+
+
+func is_choosing() -> bool:
+	return _choice_panel != null and is_instance_valid(_choice_panel)
+
+
+## Ventana con dos (o más) placas a elegir: icono, nombre, tipo y descripción.
+## Pausa el juego hasta que se elige; `on_pick` recibe el id de la habilidad.
+func show_skill_choice(title: String, defs: Array, on_pick: Callable) -> void:
+	if is_choosing() or defs.is_empty():
+		return
+	var overlay := ColorRect.new()
+	overlay.color = Color(0, 0, 0, 0.55)
+	overlay.theme = UiStyle.make_theme()
+	_root.add_child(overlay)
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_choice_panel = overlay
+	var center := CenterContainer.new()
+	overlay.add_child(center)
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var panel := PanelContainer.new()
+	UiStyle.decorate_window(panel)
+	center.add_child(panel)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 10)
+	panel.add_child(box)
+	box.add_child(UiStyle.window_header(title, "Solo una: la otra no volverá a ofrecerse (aunque puede caer como botín).", Callable()))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 16)
+	box.add_child(row)
+	for def in defs:
+		var card := PanelContainer.new()
+		card.add_theme_stylebox_override("panel", UiStyle.inset_style(Color(def.get("icon", {}).get("color", "8a6d3b"))))
+		card.custom_minimum_size = Vector2(300, 0)
+		row.add_child(card)
+		var col := VBoxContainer.new()
+		col.add_theme_constant_override("separation", 6)
+		card.add_child(col)
+		var icon := Control.new()
+		icon.custom_minimum_size = Vector2(64, 64)
+		icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		icon.draw.connect(func() -> void: SkillIcon.draw(icon, Rect2(Vector2.ZERO, icon.size), def))
+		col.add_child(icon)
+		var name_label := UiStyle.label(def["name"], 18, UiStyle.ACCENT)
+		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		col.add_child(name_label)
+		var tags := UiStyle.label(SkillTags.plain(def.get("tags", [])), 11, UiStyle.MUTED)
+		tags.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		tags.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		col.add_child(tags)
+		var desc := UiStyle.label(String(def.get("description", "")), 13)
+		desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		desc.custom_minimum_size.x = 280
+		col.add_child(desc)
+		var pick := UiStyle.button("Elegir", func() -> void: pass, 280)
+		pick.pressed.connect(_on_choice_picked.bind(String(def["id"]), on_pick))
+		col.add_child(pick)
+	get_tree().paused = true
+
+
+func _on_choice_picked(skill_id: String, on_pick: Callable) -> void:
+	if is_choosing():
+		_choice_panel.queue_free()
+	_choice_panel = null
+	get_tree().paused = false
+	on_pick.call(skill_id)
 
 
 func toggle_pause_menu() -> void:

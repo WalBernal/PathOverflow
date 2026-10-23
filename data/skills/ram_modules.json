@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_doc": "Módulos RAM (soportes). generation: DDR3/DDR4/DDR5, solo encajan en ranuras de su generación. requires_tags: la habilidad debe tener alguno (vacío = cualquiera); requires_all_tags: debe tenerlos todos; excludes_kinds: no encaja en ese tipo de habilidad (kind). Las RAM que solo mejoran el daño no encajan en habilidades sin daño (damage_type none: auras, drones de curación). excludes_tags: no funciona con habilidades que tengan alguno. cost_multiplier: multiplica el maná. mods: Modifiers que solo afectan a esa habilidad. special: extra_projectiles (en abanico; los drones e invocaciones que disparan también los usan), projectile_penalty (% de daño menos por el Multicanal en una placa de nivel 1, 1 punto menos por nivel hasta la mitad), homing (los proyectiles pasan a ser teledirigidos), pierce, repeats, area_multiplier, extra_chains (cadenas +N; en proyectiles, rebotes), deploy (trap | mine | totem: la habilidad se coloca en el suelo o en una torreta en vez de lanzarse), totem_duration. RAM de asistencia: mods con burn_chance, shock_chance, chill_chance, freeze_chance, poison_chance, bleed_chance (probabilidad plana de aplicar el estado al golpear), ailment_damage / ailment_duration (potencia y duración de los estados), automaton_speed (autómatas) y extra_minions / extra_devices. min_level: nivel mínimo de objeto para que caiga (por defecto 1). tier: 1 menor, 2 normal, 3 mayor (solo informativo). special.chain_penalty: % de daño que pierde el proyectil o la cadena en cada encadenamiento; sube 1 punto por nivel de la placa (−30 % → −29 % → ...) hasta llegar a 0. mods nuevos: ailing_damage (daño contra enemigos con algún estado), reservation_efficiency (invocaciones y auras reservan menos maná), aura_effect (potencia de las auras).",
+  "_doc": "Módulos RAM (soportes). generation: DDR3/DDR4/DDR5, solo encajan en ranuras de su generación. requires_tags: la habilidad debe tener alguno (vacío = cualquiera); requires_all_tags: debe tenerlos todos; excludes_kinds: no encaja en ese tipo de habilidad (kind). Las RAM que solo mejoran el daño no encajan en habilidades sin daño (damage_type none: auras, drones de curación). excludes_tags: no funciona con habilidades que tengan alguno. cost_multiplier: multiplica el maná. mods: Modifiers que solo afectan a esa habilidad. special: extra_projectiles (en abanico; los drones e invocaciones que disparan también los usan), projectile_penalty (% de daño menos por el Multicanal en una placa de nivel 1, 1 punto menos por nivel hasta la mitad), homing (los proyectiles pasan a ser teledirigidos), pierce, repeats, area_multiplier, extra_chains (cadenas +N; en proyectiles, rebotes), deploy (trap | mine | totem: la habilidad se coloca en el suelo o en una torreta en vez de lanzarse), totem_duration. RAM de asistencia: mods con burn_chance, shock_chance, chill_chance, freeze_chance, poison_chance, bleed_chance (probabilidad plana de aplicar el estado al golpear), ailment_damage / ailment_duration (potencia y duración de los estados), automaton_speed (autómatas) y extra_minions / extra_devices. min_level: nivel mínimo de objeto para que caiga (por defecto 1). tier: 1 menor, 2 normal, 3 mayor (solo informativo). special.chain_penalty: % de daño que pierde el proyectil o la cadena en cada encadenamiento; sube 1 punto por nivel de la placa (−30 % → −29 % → ...) hasta llegar a 0. mods nuevos: ailing_damage (daño contra enemigos con algún estado), reservation_efficiency (invocaciones y auras reservan menos maná), aura_effect (potencia de las auras). reserve_mult: multiplica la reserva de maná (Sobrealimentación). aura_anchor: el aura se queda en el suelo donde se activa; aura_radius_mult: alcance del aura.",
   "modules": [
     {
       "id": "multicanal",
@@ -1510,6 +1510,96 @@
       "excludes_kinds": [
         "rain"
       ]
+    },
+    {
+      "generation": "DDR3",
+      "requires_tags": [
+        "persistent"
+      ],
+      "excludes_tags": [],
+      "cost_multiplier": 1.0,
+      "id": "sobrealimentacion",
+      "name": "Fuente Sobrealimentada",
+      "tier": 2,
+      "min_level": 10,
+      "description": "Reservar más maná = más potencia: la invocación o el aura reserva un 50 % más, pero pega, aguanta y potencia mucho más.",
+      "mods": [
+        {
+          "stat": "minion_damage",
+          "type": "more",
+          "value": 30
+        },
+        {
+          "stat": "minion_life",
+          "type": "increased",
+          "value": 30
+        },
+        {
+          "stat": "aura_effect",
+          "type": "increased",
+          "value": 35
+        }
+      ],
+      "special": {
+        "reserve_mult": 1.5
+      }
+    },
+    {
+      "generation": "DDR3",
+      "requires_tags": [
+        "persistent"
+      ],
+      "excludes_tags": [],
+      "cost_multiplier": 1.0,
+      "id": "sobrealimentacion_mayor",
+      "name": "Fuente Sobrealimentada de Servidor",
+      "tier": 3,
+      "min_level": 28,
+      "description": "Reserva el doble de maná a cambio de un salto de potencia enorme.",
+      "mods": [
+        {
+          "stat": "minion_damage",
+          "type": "more",
+          "value": 55
+        },
+        {
+          "stat": "minion_life",
+          "type": "increased",
+          "value": 55
+        },
+        {
+          "stat": "aura_effect",
+          "type": "increased",
+          "value": 60
+        }
+      ],
+      "special": {
+        "reserve_mult": 2.0
+      }
+    },
+    {
+      "generation": "DDR5",
+      "requires_tags": [
+        "aura"
+      ],
+      "excludes_tags": [],
+      "cost_multiplier": 1.0,
+      "id": "torre_senal",
+      "name": "Torre de Señal",
+      "tier": 2,
+      "min_level": 12,
+      "description": "El aura ya no te sigue: se queda clavada donde la activas, con un 30 % más de efecto y un 25 % más de alcance. Ideal para defender una posición.",
+      "mods": [
+        {
+          "stat": "aura_effect",
+          "type": "increased",
+          "value": 30
+        }
+      ],
+      "special": {
+        "aura_anchor": 1,
+        "aura_radius_mult": 1.25
+      }
     }
   ]
 }

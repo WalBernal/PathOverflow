@@ -49,6 +49,8 @@ var _drones: Array[Dictionary] = []       # drones que orbitan y disparan (Drone
 ## enemigos pueden atacarlas (EnemyManager.allies). Ver _update_units.
 var _units: Array[Dictionary] = []
 const UNIT_LEASH := 900.0
+## Vida de las torretas desplegadas (fracción de la vida máxima del jugador).
+const TOTEM_LIFE_FRACTION := 0.4
 ## Auras activas: [{skill_id, profile, color, sig}]. Reservan maná y dan bonificaciones a los aliados.
 var _auras: Array[Dictionary] = []
 var _aura_regen := 0.0          # % de vida por segundo que recuperan las invocaciones
@@ -168,17 +170,24 @@ func _compute_bare_profiles() -> void:
 	character.recalculate(false)
 
 
-## Radio de las auras activas (el mayor; 0 si no hay ninguna).
-func aura_radius() -> float:
-	var r := 0.0
-	for a in _auras:
-		r = maxf(r, float(a["profile"].get("aura_radius", 0.0)))
-	return r
+## Centro de un aura: el jugador, o el punto donde se activó si está anclada
+## (Torre de Señal).
+func aura_center(a: Dictionary) -> Vector2:
+	if bool(a["profile"].get("aura_anchor", false)):
+		if a.get("anchor", Vector2.INF) == Vector2.INF:
+			a["anchor"] = player.global_position
+		return a["anchor"]
+	return player.global_position
 
 
-## ¿Está ese punto dentro del alcance de las auras (alrededor del jugador)?
+## ¿Está ese punto dentro del alcance de alguna aura activa?
 func in_aura_range(pos: Vector2) -> bool:
-	return not _auras.is_empty() and player != null and pos.distance_to(player.global_position) <= aura_radius()
+	if player == null:
+		return false
+	for a in _auras:
+		if pos.distance_to(aura_center(a)) <= float(a["profile"].get("aura_radius", 0.0)):
+			return true
+	return false
 
 
 ## Auras que debilitan: cada fotograma le dicen al EnemyManager dónde están y qué hacen.
@@ -188,7 +197,7 @@ func _update_aura_fields() -> void:
 		for a in _auras:
 			var en: Dictionary = a["profile"].get("aura_enemy", {})
 			if not en.is_empty():
-				fields.append({"pos": player.global_position, "radius": float(a["profile"]["aura_radius"]),
+				fields.append({"pos": aura_center(a), "radius": float(a["profile"]["aura_radius"]),
 					"slow": float(en.get("slow", 0.0)), "damage_taken": float(en.get("damage_taken", 0.0))})
 	enemies.aura_fields = fields
 
@@ -208,6 +217,8 @@ func _update_reservation() -> void:
 ## Al cambiar de zona: lo que estaba en el suelo desaparece y las invocaciones
 ## y esbirros llegan con el jugador.
 func on_zone_changed() -> void:
+	for a in _auras:
+		a["anchor"] = Vector2.INF   # las auras ancladas se mudan contigo (se fijan al llegar)
 	_projectiles.clear()
 	_effects.clear()
 	_pending.clear()
@@ -274,7 +285,7 @@ func _toggle_aura(p: Dictionary, color: Color) -> void:
 			_effects.append({"type": "ring", "pos": player.global_position, "radius": 70.0, "time": 0.0, "duration": 0.4, "color": Color(color, 0.5)})
 			refresh_profiles()
 			return
-	var a := {"skill_id": p["id"], "profile": p, "color": color, "sig": str(p["aura_mods"])}
+	var a := {"skill_id": p["id"], "profile": p, "color": color, "sig": str(p["aura_mods"]), "anchor": player.global_position}
 	_auras.append(a)
 	Sfx.play("aura_on", -4.0)
 	_effects.append({"type": "ring", "pos": player.global_position, "radius": 90.0, "time": 0.0, "duration": 0.7, "color": color})
@@ -361,7 +372,7 @@ func try_use(index: int) -> bool:
 	cooldowns[index] = p["cooldown"]
 	_busy = p["use_time"]
 	player.action_lock = minf(MAX_MOVE_LOCK, p["use_time"] * MOVE_LOCK_FRACTION)
-	var target := get_global_mouse_position()
+	var target := _aim_target()
 	player.face(target - player.global_position)
 	Sfx.play(Sfx.skill_sound("trap" if p["deploy"] != "" else String(p["kind"]), String(p["damage_type"])))
 	if p["deploy"] != "":
@@ -376,6 +387,19 @@ func try_use(index: int) -> bool:
 		_pending.append({"type": "repeat", "time": REPEAT_DELAY * (r + 1), "profile": p, "target": target})
 	skill_used.emit(index)
 	return true
+
+
+## Dónde se lanza la habilidad: el ratón; con mando, el stick derecho o, si está
+## suelto, el enemigo más cercano (o hacia donde mira el personaje).
+func _aim_target() -> Vector2:
+	if not Gamepad.active:
+		return get_global_mouse_position()
+	var stick := Vector2(Input.get_joy_axis(0, JOY_AXIS_RIGHT_X), Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y))
+	if stick.length() <= Gamepad.DEADZONE:
+		var i := enemies.nearest_index(player.global_position, Gamepad.AIM_DISTANCE * 1.6)
+		if i != -1:
+			return enemies.positions[i]
+	return Gamepad.aim_point(player.global_position, player.facing_direction())
 
 
 ## ¿Cabe otra invocación? Si ya están todas, volver a lanzarla las repara.
@@ -644,10 +668,16 @@ func _deploy(p: Dictionary, target: Vector2) -> void:
 	var inner := p.duplicate()
 	inner["deploy"] = ""
 	var life: float = p["totem_duration"] if kind == "totem" else rules["life"]
-	_devices.append({"kind": kind, "pos": origin + (target - origin).limit_length(rules["range"]), "armed_in": rules["armed"],
+	var dpos := origin + (target - origin).limit_length(rules["range"])
+	var device := {"kind": kind, "pos": dpos, "armed_in": rules["armed"],
 		"life": life, "total": life, "profile": inner, "next_use": 0.0,
 		"interval": maxf(0.35, float(p["use_time"]) * 1.25) / maxf(0.1, float(p["automaton_speed"])),
-		"color": DAMAGE_COLORS.get(p["damage_type"], Color.WHITE)})
+		"color": DAMAGE_COLORS.get(p["damage_type"], Color.WHITE)}
+	if kind == "totem":
+		# Las torretas tienen vida propia: los cazadores de invocaciones van a por ellas.
+		var hp := player.max_life() * TOTEM_LIFE_FRACTION
+		device["ally"] = {"pos": dpos, "life": hp, "max_life": hp, "radius": 14.0, "device": true, "hurt": 0.0}
+	_devices.append(device)
 	# Límite por tipo: se retira el más antiguo.
 	var same: Array = _devices.filter(func(d: Dictionary) -> bool: return d["kind"] == kind)
 	if same.size() > int(rules["max"]) + int(p.get("extra_devices", 0)):
@@ -656,11 +686,17 @@ func _deploy(p: Dictionary, target: Vector2) -> void:
 
 func _update_devices(delta: float) -> void:
 	var still: Array[Dictionary] = []
+	var proxies: Array = []
 	for d in _devices:
 		d["life"] -= delta
 		d["armed_in"] -= delta
 		if d["life"] <= 0.0:
 			continue
+		if d.has("ally"):
+			if float(d["ally"]["life"]) <= 0.0:
+				_effects.append({"type": "burst", "pos": d["pos"], "radius": 34.0, "time": 0.0, "duration": 0.4, "color": Color("ff7a4a")})
+				continue   # la destruyeron
+			proxies.append(d["ally"])
 		var rules: Dictionary = DEVICE_RULES[d["kind"]]
 		if d["armed_in"] > 0.0:
 			still.append(d)
@@ -679,6 +715,10 @@ func _update_devices(delta: float) -> void:
 		else:
 			still.append(d)
 	_devices = still
+	# Aliados que ve el EnemyManager: invocaciones persistentes y torretas.
+	var allies: Array = _units.filter(func(u: Dictionary) -> bool: return u["behavior"] != "orbit")
+	allies.append_array(proxies)
+	enemies.allies = allies
 
 
 # --- Esbirros ---
@@ -764,9 +804,12 @@ func _update_units(delta: float) -> void:
 			var death_color := Color("ff7a4a")
 			if String(p["unit_ability"].get("kind", "")) == "explode":
 				# Mina Rodante: explota al caer.
-				var boom_radius: float = float(p["unit_ability"].get("radius", 90.0)) * float(p.get("area_scale", 1.0))
+				var boom_radius: float = float(p["unit_ability"].get("radius", 90.0)) * float(p.get("area_scale", 1.0)) * sqrt(float(p.get("ability_power", 1.0)))
 				_ctx(p)
-				_damage_area(u["pos"], boom_radius, p)
+				var boom_p := p.duplicate()
+				boom_p["min_damage"] = float(p["min_damage"]) * float(p.get("ability_power", 1.0))
+				boom_p["max_damage"] = float(p["max_damage"]) * float(p.get("ability_power", 1.0))
+				_damage_area(u["pos"], boom_radius, boom_p)
 				Sfx.play("mine", -4.0)
 				_effects.append({"type": "quake", "pos": u["pos"], "radius": boom_radius, "time": 0.0, "duration": 0.5, "color": u["color"]})
 				death_color = u["color"]
@@ -841,11 +884,11 @@ func _unit_ability(u: Dictionary, p: Dictionary, delta: float) -> void:
 				u["ab_cd"] = 0.4
 				return
 			u["ab_cd"] = float(p["unit_interval"])
-			player.heal(player.max_life() * float(ab.get("player_pct", 5)) / 100.0)
+			player.heal(player.max_life() * float(ab.get("player_pct", 5)) / 100.0 * float(p.get("ability_power", 1.0)))
 			Sfx.play("heal", -8.0)
 			_effects.append({"type": "ring", "pos": player.global_position, "radius": 46.0, "time": 0.0, "duration": 0.5, "color": u["color"]})
 			for other in _units:
-				other["life"] = minf(other["max_life"], other["life"] + other["max_life"] * float(ab.get("unit_pct", 10)) / 100.0)
+				other["life"] = minf(other["max_life"], other["life"] + other["max_life"] * float(ab.get("unit_pct", 10)) / 100.0 * float(p.get("ability_power", 1.0)))
 				if other["behavior"] != "orbit":
 					_effects.append({"type": "ring", "pos": other["pos"], "radius": 26.0, "time": 0.0, "duration": 0.4, "color": u["color"]})
 		"barrier":
@@ -853,7 +896,7 @@ func _unit_ability(u: Dictionary, p: Dictionary, delta: float) -> void:
 				u["ab_cd"] = 0.5
 				return
 			u["ab_cd"] = float(p["unit_interval"])
-			player.add_barrier(float(ab.get("barrier", 20)) + float(ab.get("barrier_life", 0.1)) * player.max_life(), 6.0)
+			player.add_barrier((float(ab.get("barrier", 20)) + float(ab.get("barrier_life", 0.1)) * player.max_life()) * float(p.get("ability_power", 1.0)), 6.0)
 			Sfx.play("barrier", -8.0, 1.2)
 			_effects.append({"type": "ring", "pos": player.global_position, "radius": 60.0, "time": 0.0, "duration": 0.5, "color": Color("cfe8ff")})
 		"leap":
@@ -876,8 +919,9 @@ func _unit_ability(u: Dictionary, p: Dictionary, delta: float) -> void:
 			u["pos"] = land
 			_ctx(p)
 			var leap_radius := float(ab.get("radius", 75.0)) * float(p.get("area_scale", 1.0))
-			enemies.hit_in_radius(land, leap_radius, p["min_damage"] * float(ab.get("damage_mult", 1.5)),
-				p["max_damage"] * float(ab.get("damage_mult", 1.5)), p["crit_chance"], p["crit_multiplier"])
+			var leap_mult := float(ab.get("damage_mult", 1.5)) * float(p.get("ability_power", 1.0))
+			enemies.hit_in_radius(land, leap_radius, p["min_damage"] * leap_mult,
+				p["max_damage"] * leap_mult, p["crit_chance"], p["crit_multiplier"])
 			_effects.append({"type": "quake", "pos": land, "radius": leap_radius, "time": 0.0, "duration": 0.4, "color": u["color"]})
 		"venom":
 			var t := enemies.nearest_index(pos, float(p["unit"].get("range", 520.0)))
@@ -888,7 +932,7 @@ func _unit_ability(u: Dictionary, p: Dictionary, delta: float) -> void:
 			var cloud := p.duplicate()
 			cloud["tick"] = 0.5
 			cloud["radius"] = float(ab.get("radius", 95.0)) * float(p.get("area_scale", 1.0))
-			cloud["duration"] = float(ab.get("duration", 4.0))
+			cloud["duration"] = float(ab.get("duration", 4.0)) * float(p.get("ability_power", 1.0))
 			cloud["min_damage"] = p["min_damage"] * 1.1
 			cloud["max_damage"] = p["max_damage"] * 1.1
 			cloud["crit_chance"] = 0.0
@@ -1315,6 +1359,11 @@ func _draw_devices() -> void:
 					draw_circle(p + Vector2(6, -22 + k * 8), 2.0, c if on else Color("1a2a1a"))
 				draw_line(p + Vector2(0, -30), p + Vector2(0, -42), Color("8a8a8a"), 2.0)
 				draw_circle(p + Vector2(0, -43), 3.0, c)
+				var hp: Dictionary = d.get("ally", {})
+				if not hp.is_empty() and float(hp["life"]) < float(hp["max_life"]):
+					# Herida por un cazador: barra de vida.
+					draw_rect(Rect2(p + Vector2(-14, -52), Vector2(28, 4)), Color(0, 0, 0, 0.75))
+					draw_rect(Rect2(p + Vector2(-14, -52), Vector2(28.0 * clampf(hp["life"] / hp["max_life"], 0.0, 1.0), 4)), Color("6fd36b"))
 
 
 func _draw_minions() -> void:
@@ -1343,7 +1392,12 @@ func _draw_auras() -> void:
 		if ar > 0.0:
 			var hostile: bool = not a["profile"].get("aura_enemy", {}).is_empty()
 			var rc: Color = Color("e06c6c") if hostile else a["color"]
-			draw_set_transform(player.global_position, 0.0, Vector2(1.0, 0.62))
+			var ac := aura_center(a)
+			if bool(a["profile"].get("aura_anchor", false)):
+				# Torre de Señal: una antena en el centro del aura anclada.
+				draw_line(ac, ac + Vector2(0, -34), Color("8a8a96"), 3.0)
+				draw_circle(ac + Vector2(0, -36), 4.0 + sin(Time.get_ticks_msec() / 200.0), rc)
+			draw_set_transform(ac, 0.0, Vector2(1.0, 0.62))
 			draw_circle(Vector2.ZERO, ar, Color(rc, 0.035 if hostile else 0.02))
 			draw_arc(Vector2.ZERO, ar, 0.0, TAU, 64, Color(rc, 0.28), 1.5, true)
 			draw_set_transform(Vector2.ZERO)

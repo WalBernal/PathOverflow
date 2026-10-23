@@ -78,11 +78,19 @@ func _init(p_class_def: Dictionary, tree: PassiveTree) -> void:
 
 
 ## Habilidades que la clase desbloquea por nivel (classes.json → unlocks) y que
-## este personaje aún no ha recibido: [{level, skill}].
+## este personaje aún no ha recibido: [{level, skill}] o [{level, choice: [a, b]}]
+## (elige una de las dos; la elección se guarda como unlock_lvl_<nivel>).
 func due_unlocks() -> Array:
 	var out: Array = []
 	for u in class_def.get("unlocks", []):
-		if level >= int(u["level"]) and not flags.has("unlock_" + String(u["skill"])):
+		if level < int(u["level"]):
+			continue
+		if u.has("choice"):
+			# Los personajes de antes de la elección que ya recibieron una de las dos no eligen.
+			var got: bool = u["choice"].any(func(s: String) -> bool: return flags.has("unlock_" + s))
+			if not flags.has("unlock_lvl_%d" % int(u["level"])) and not got:
+				out.append(u)
+		elif not flags.has("unlock_" + String(u["skill"])):
 			out.append(u)
 	return out
 

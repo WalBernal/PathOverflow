@@ -128,6 +128,12 @@ func effect_lines() -> PackedStringArray:
 	if sp.has("projectile_penalty"):
 		lines.append("%d %% menos de daño en una placa de nivel 1 (1 punto menos por nivel, hasta %d %%)" % [
 			int(sp["projectile_penalty"]), int(sp["projectile_penalty"]) / 2])
+	if sp.has("reserve_mult"):
+		lines.append("Reserva un %d %% más de maná" % roundi((float(sp["reserve_mult"]) - 1.0) * 100.0))
+	if sp.has("aura_anchor"):
+		lines.append("El aura se queda en el suelo donde la activas (no te sigue)")
+	if sp.has("aura_radius_mult"):
+		lines.append("+%d %% de alcance del aura" % roundi((float(sp["aura_radius_mult"]) - 1.0) * 100.0))
 	if sp.has("homing"):
 		lines.append("Los proyectiles son teledirigidos: persiguen al enemigo más cercano")
 	if sp.has("pierce"):

@@ -196,7 +196,10 @@
         },
         {
           "level": 16,
-          "skill": "golem_hardware"
+          "choice": [
+            "golem_hardware",
+            "dron_escudo"
+          ]
         },
         {
           "level": 24,
@@ -364,7 +367,10 @@
         },
         {
           "level": 16,
-          "skill": "watchdog"
+          "choice": [
+            "watchdog",
+            "mina_rodante"
+          ]
         },
         {
           "level": 24,
@@ -531,7 +537,10 @@
         },
         {
           "level": 16,
-          "skill": "mina_rodante"
+          "choice": [
+            "mina_rodante",
+            "dron_escolta"
+          ]
         },
         {
           "level": 24,
@@ -700,7 +709,10 @@
         },
         {
           "level": 16,
-          "skill": "bot_rastreador"
+          "choice": [
+            "bot_rastreador",
+            "proceso_hijo"
+          ]
         },
         {
           "level": 24,
@@ -912,7 +924,10 @@
         },
         {
           "level": 16,
-          "skill": "aura_exposicion"
+          "choice": [
+            "aura_exposicion",
+            "aura_throttling"
+          ]
         },
         {
           "level": 24,
@@ -1105,7 +1120,10 @@
         },
         {
           "level": 16,
-          "skill": "golem_hardware"
+          "choice": [
+            "golem_hardware",
+            "watchdog"
+          ]
         },
         {
           "level": 24,
@@ -1309,7 +1327,10 @@
         },
         {
           "level": 16,
-          "skill": "dron_escolta"
+          "choice": [
+            "dron_escolta",
+            "bot_pruebas"
+          ]
         },
         {
           "level": 24,

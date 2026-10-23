@@ -303,7 +303,7 @@ Un agente autónomo que alucina con confianza: dispara a distancia y, cada pocos
 - **Etiquetas:** hechizo, esbirro, autómata, persistente, área, caos, proyectil, teledirigido
 - **Cifras:** reserva 15 % del maná, enfriamiento 1.0 s, daño 7-13, 1 proyectil teledirigidos
 - **Estados extra:** envenenado 30 %
-- **Hito (niveles 10, 20, 30):** +1 invocación a la vez
+- **Hito (niveles 10, 20, 30):** +25 % de duración y daño del charco venenoso
 - **Comportamiento:** a distancia: se queda a tu lado y dispara; hasta 1 a la vez; vida 65; ataca cada 1.4 s; alcance 540
 - **Habilidad propia:** cada 7 s escupe un charco venenoso (radio 95, 4 s) sobre el enemigo más cercano
 - **Se desbloquea con:** Ingeniera de Prompts (nv. 10)
@@ -317,9 +317,9 @@ Un bot de QA que no se cansa: dispara dardos envenenados al bug más cercano des
 - **Etiquetas:** hechizo, esbirro, autómata, persistente, proyectil, caos
 - **Cifras:** reserva 13 % del maná, enfriamiento 1.5 s, daño 8-14, 1 proyectil
 - **Estados extra:** envenenado 30 %
-- **Hito (niveles 10, 20, 30):** +1 invocación a la vez
+- **Hito (niveles 10, 20, 30):** +1 dardo por disparo
 - **Comportamiento:** a distancia: se queda a tu lado y dispara; hasta 1 a la vez; vida 50; ataca cada 0.9 s; alcance 560
-- **Se desbloquea con:** Desarrolladora Frontend (nv. 10), Ingeniera de Prompts (nv. 16)
+- **Se desbloquea con:** Desarrolladora Frontend (nv. 10), Ingeniera de Prompts (nv. 16, a elegir)
 
 ### Bot de Pruebas
 
@@ -330,10 +330,10 @@ Un script de QA que salta sobre el grupo enemigo más lejano y lo golpea en áre
 - **Etiquetas:** ataque, esbirro, autómata, persistente, cuerpo a cuerpo, físico
 - **Cifras:** reserva 12 % del maná, enfriamiento 1.0 s, daño 1-3
 - **Estados extra:** sangrando 20 %
-- **Hito (niveles 10, 20, 30):** +1 invocación a la vez
+- **Hito (niveles 10, 20, 30):** +25 % de daño del salto
 - **Comportamiento:** cuerpo a cuerpo: persigue al enemigo más cercano; hasta 2 a la vez; vida 70; ataca cada 0.6 s; alcance 520
 - **Habilidad propia:** cada 5 s salta sobre el enemigo más lejano a su alcance y golpea el suelo (radio 75, ×1.6 de daño)
-- **Se desbloquea con:** Tester QA (nv. 10)
+- **Se desbloquea con:** Tester QA (nv. 10), Desarrollador Full Stack (nv. 16, a elegir)
 
 ### Daemon en Segundo Plano
 
@@ -356,10 +356,10 @@ Un dron que levanta un cortafuegos sobre ti cada pocos segundos: una barrera que
 
 - **Etiquetas:** hechizo, esbirro, autómata, persistente, defensa
 - **Cifras:** reserva 14 % del maná, enfriamiento 1.0 s
-- **Hito (niveles 10, 20, 30):** +1 invocación a la vez
+- **Hito (niveles 10, 20, 30):** +25 % de barrera
 - **Comportamiento:** dron que orbita a tu alrededor (no se le puede dañar); hasta 1 a la vez; vida 1; ataca cada 7.0 s; alcance 600; no dispara
 - **Habilidad propia:** cada 7.0 s (si no tienes barrera) te da una barrera de 20 + 12 % de tu vida máxima durante 6 s
-- **Se desbloquea con:** Ingeniero DevOps (nv. 24), Desarrollador Full Stack (nv. 5)
+- **Se desbloquea con:** Técnico de Soporte (nv. 16, a elegir), Ingeniero DevOps (nv. 24), Desarrollador Full Stack (nv. 5)
 
 ### Dron Escolta
 
@@ -370,9 +370,9 @@ Un dron armado que orbita a tu alrededor y dispara bengalas incendiarias. Vuela 
 - **Etiquetas:** hechizo, esbirro, autómata, persistente, proyectil, fuego, elemental, teledirigido
 - **Cifras:** reserva 10 % del maná, enfriamiento 1.0 s, daño 6-11, 1 proyectil teledirigidos
 - **Estados extra:** quemado 20 %
-- **Hito (niveles 10, 20, 30):** +1 invocación a la vez
+- **Hito (niveles 10, 20, 30):** +1 proyectil por disparo
 - **Comportamiento:** dron que orbita a tu alrededor (no se le puede dañar); hasta 2 a la vez; vida 1; ataca cada 1.3 s; alcance 480
-- **Se desbloquea con:** Científico de Datos (nv. 10), Desarrollador Full Stack (nv. 16)
+- **Se desbloquea con:** Desarrolladora Frontend (nv. 16, a elegir), Científico de Datos (nv. 10), Desarrollador Full Stack (nv. 16, a elegir)
 
 ### Dron de Mantenimiento
 
@@ -382,7 +382,7 @@ Un dron con el botiquín de IT: orbita a tu alrededor y repara cada pocos segund
 
 - **Etiquetas:** hechizo, esbirro, autómata, persistente
 - **Cifras:** reserva 12 % del maná, enfriamiento 1.0 s
-- **Hito (niveles 10, 20, 30):** +1 invocación a la vez
+- **Hito (niveles 10, 20, 30):** +25 % de curación
 - **Comportamiento:** dron que orbita a tu alrededor (no se le puede dañar); hasta 1 a la vez; vida 1; ataca cada 3.5 s; alcance 600; no dispara
 - **Habilidad propia:** repara: cada 3.5 s te cura un 6 % de tu vida y a tus invocaciones un 12 % de la suya
 - **Se desbloquea con:** Ingeniero DevOps (nv. 10)
@@ -409,11 +409,11 @@ Ensamblas un golem con torres viejas y cables. Es lento y enorme: provoca a los 
 - **Etiquetas:** hechizo, esbirro, autómata, persistente, área, físico
 - **Cifras:** reserva 25 % del maná, enfriamiento 2.0 s, daño 12-20, radio 90, aturde 0.4 s
 - **Estados extra:** sangrando 10 %
-- **Hito (niveles 10, 20, 30):** +1 invocación a la vez
+- **Hito (niveles 10, 20, 30):** +25 % de vida y +5 % de daño evitado
 - **Comportamiento:** tanque: golpea en área y provoca a los enemigos; hasta 1 a la vez; vida 220; ataca cada 1.6 s; alcance 400
 - **Defensa:** recibe un 30 % menos de daño
 - **Provoca** a los enemigos a 230 de distancia (te los quita de encima)
-- **Se desbloquea con:** Técnico de Soporte (nv. 16), Ingeniero DevOps (nv. 16)
+- **Se desbloquea con:** Técnico de Soporte (nv. 16, a elegir), Ingeniero DevOps (nv. 16, a elegir)
 
 ### Mina Rodante
 
@@ -424,10 +424,10 @@ Una bomba con ruedas que persigue al enemigo más cercano y explota al morir (y 
 - **Etiquetas:** hechizo, esbirro, autómata, persistente, área, fuego, elemental
 - **Cifras:** reserva 10 % del maná, enfriamiento 1.0 s, daño 18-30, radio 95
 - **Estados extra:** quemado 30 %
-- **Hito (niveles 10, 20, 30):** +1 invocación a la vez
+- **Hito (niveles 10, 20, 30):** +25 % de daño y área de la explosión
 - **Comportamiento:** cuerpo a cuerpo: persigue al enemigo más cercano; hasta 2 a la vez; vida 55; ataca cada 1.4 s; alcance 480
 - **Habilidad propia:** kamikaze: al tocar a un enemigo (o al caer) explota en un radio de 95
-- **Se desbloquea con:** Desarrolladora Frontend (nv. 16)
+- **Se desbloquea con:** Tester QA (nv. 16, a elegir), Desarrolladora Frontend (nv. 16, a elegir)
 
 ### Proceso Hijo
 
@@ -439,7 +439,7 @@ fork() y dos procesos hijos salen a pelear por ti durante un rato. No los has do
 - **Cifras:** maná 14, enfriamiento 1.0 s, daño 6-11, dura 14.0 s
 - **Hito (niveles 10, 20, 30):** +1 esbirro
 - **Invoca:** 2 esbirros que duran 14 s y golpean cada 0.9 s
-- **Se desbloquea con:** Científico de Datos (nv. 24)
+- **Se desbloquea con:** Ingeniera de Prompts (nv. 16, a elegir), Científico de Datos (nv. 24)
 
 ### Robot Centinela
 
@@ -450,7 +450,7 @@ Montas un robot centinela que te sigue y dispara láseres al enemigo más cercan
 - **Etiquetas:** hechizo, esbirro, autómata, persistente, proyectil, rayo, elemental
 - **Cifras:** reserva 15 % del maná, enfriamiento 1.5 s, daño 8-14, 1 proyectil
 - **Estados extra:** electrocutado 10 %
-- **Hito (niveles 10, 20, 30):** +1 invocación a la vez
+- **Hito (niveles 10, 20, 30):** +1 proyectil por disparo
 - **Comportamiento:** a distancia: se queda a tu lado y dispara; hasta 1 a la vez; vida 60; ataca cada 1.1 s; alcance 520
 - **Inicial de:** Ingeniero DevOps
 
@@ -466,7 +466,7 @@ Un perro guardián que reinicia todo lo que se cuelga: muerde a los enemigos cer
 - **Hito (niveles 10, 20, 30):** +1 invocación a la vez
 - **Comportamiento:** cuerpo a cuerpo: persigue al enemigo más cercano; hasta 2 a la vez; vida 110; ataca cada 0.8 s; alcance 480
 - **Habilidad propia:** cada 6 s salta sobre el enemigo más lejano a su alcance y golpea el suelo (radio 70, ×1.4 de daño)
-- **Se desbloquea con:** Técnico de Soporte (nv. 10), Tester QA (nv. 16)
+- **Se desbloquea con:** Técnico de Soporte (nv. 10), Tester QA (nv. 16, a elegir), Ingeniero DevOps (nv. 16, a elegir)
 
 ## Auras
 
@@ -494,7 +494,7 @@ Publicas los CVE de todo lo que te rodea: los enemigos dentro del aura reciben m
 - **Hito (niveles 10, 20, 30):** +15 % de efecto
 - **Alcance:** 360 alrededor de ti (las invocaciones fuera no reciben sus bonos)
 - **Efectos:** los enemigos dentro reciben un 12 % más de daño
-- **Se desbloquea con:** Ingeniera de Prompts (nv. 5), Científico de Datos (nv. 16)
+- **Se desbloquea con:** Ingeniera de Prompts (nv. 5), Científico de Datos (nv. 16, a elegir)
 
 ### Aura de Mando
 
@@ -546,7 +546,7 @@ Limitas la tasa de peticiones a todo lo que se acerque: los enemigos dentro del 
 - **Hito (niveles 10, 20, 30):** +15 % de efecto
 - **Alcance:** 360 alrededor de ti (las invocaciones fuera no reciben sus bonos)
 - **Efectos:** los enemigos dentro se mueven y atacan un 15 % más lento
-- **Se desbloquea con:** Tester QA (nv. 24), Desarrolladora Frontend (nv. 5)
+- **Se desbloquea con:** Tester QA (nv. 24), Desarrolladora Frontend (nv. 5), Científico de Datos (nv. 16, a elegir)
 
 ## Módulos RAM (asistencias)
 
@@ -1092,6 +1092,26 @@ Despliega una torreta que usa la habilidad sola contra el enemigo más cercano d
 - **Etiquetas:** nunca con: movimiento, trampa, mina, tótem, esbirro, potenciador, aura, persistente, autómata
 - **Funciona con (19):** Barrido, Bucle Infinito, Cascada de Estilos, Corrupción de Datos, Deadlock, Despliegue Continuo, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Paquete Rastreador, Ping Letal, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow
 
+### Fuente Sobrealimentada
+
+*DDR3* · grado normal · cae desde el nivel 10
+
+Reservar más maná = más potencia: la invocación o el aura reserva un 50 % más, pero pega, aguanta y potencia mucho más.
+
+- **Efectos:** 30% más de Daño de esbirros; 30% de aumento de Vida de esbirros; 35% de aumento de Efecto de auras; Reserva un 50 % más de maná; Consumo de maná ×1.00
+- **Etiquetas:** con alguna de: persistente
+- **Funciona con (17):** Agente IA, Aura de Blindaje Redundante, Aura de Exposición de Vulnerabilidades, Aura de Mando, Aura de Mantenimiento Continuo, Aura de Overclock, Aura de Throttling, Bot Rastreador de Bugs, Bot de Pruebas, Daemon en Segundo Plano, Dron Cortafuegos, Dron Escolta, Dron de Mantenimiento, Golem de Hardware Reciclado, Mina Rodante, Robot Centinela, Watchdog
+
+### Fuente Sobrealimentada de Servidor
+
+*DDR3* · grado mayor · cae desde el nivel 28
+
+Reserva el doble de maná a cambio de un salto de potencia enorme.
+
+- **Efectos:** 55% más de Daño de esbirros; 55% de aumento de Vida de esbirros; 60% de aumento de Efecto de auras; Reserva un 100 % más de maná; Consumo de maná ×1.00
+- **Etiquetas:** con alguna de: persistente
+- **Funciona con (17):** Agente IA, Aura de Blindaje Redundante, Aura de Exposición de Vulnerabilidades, Aura de Mando, Aura de Mantenimiento Continuo, Aura de Overclock, Aura de Throttling, Bot Rastreador de Bugs, Bot de Pruebas, Daemon en Segundo Plano, Dron Cortafuegos, Dron Escolta, Dron de Mantenimiento, Golem de Hardware Reciclado, Mina Rodante, Robot Centinela, Watchdog
+
 ### Sobretensión Menor
 
 *DDR5* · grado menor · cae desde el nivel 1
@@ -1151,4 +1171,14 @@ Se alimenta del disco entero: mucho robo de vida.
 - **Efectos:** +6% de Robo de vida; Consumo de maná ×1.30
 - **Etiquetas:** nunca con: movimiento, potenciador
 - **Funciona con (32):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Cascada de Estilos, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem de Hardware Reciclado, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+
+### Torre de Señal
+
+*DDR5* · grado normal · cae desde el nivel 12
+
+El aura ya no te sigue: se queda clavada donde la activas, con un 30 % más de efecto y un 25 % más de alcance. Ideal para defender una posición.
+
+- **Efectos:** 30% de aumento de Efecto de auras; El aura se queda en el suelo donde la activas (no te sigue); +25 % de alcance del aura; Consumo de maná ×1.00
+- **Etiquetas:** con alguna de: aura
+- **Funciona con (6):** Aura de Blindaje Redundante, Aura de Exposición de Vulnerabilidades, Aura de Mando, Aura de Mantenimiento Continuo, Aura de Overclock, Aura de Throttling
 

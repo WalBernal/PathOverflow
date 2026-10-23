@@ -209,7 +209,7 @@ static func _box(bg: Color, border: Color, border_width := 1) -> StyleBoxFlat:
 ## Tamaño de interfaz (menú de pausa → Interfaz) para los menús fuera de partida:
 ## el control raíz se escala y ocupa la pantalla dividida por la escala.
 static func apply_ui_scale(root: Control) -> void:
-	var s := clampf(float(GameSettings.get_value("interface", "scale", 1.0)), 0.75, 1.25)
+	var s := clampf(float(GameSettings.get_value("interface", "scale", 1.0)), 0.75, 1.45)
 	if is_equal_approx(s, 1.0) or not root.is_inside_tree():
 		return
 	var fit := func() -> void:

@@ -36,6 +36,9 @@ const GRID_CELL := 48.0
 const CULL_MARGIN := 120.0
 ## Probabilidad de que una élite con dos afijos salga con una combinación con nombre.
 const COMBO_CHANCE := 0.25
+## Animación de ataque: duración de la embestida y cuánto avanza (px).
+const LUNGE_TIME := 0.16
+const LUNGE_DISTANCE := 9.0
 const FX_DETAIL_LIMIT := 60
 ## Superconductor (helado + rayo): % del golpe de cada arco, cuántos y su alcance.
 const SUPERCONDUCTOR_DAMAGE := 0.4
@@ -144,6 +147,8 @@ var interaction_power := 1.0
 ## Auras del jugador que debilitan: [{pos, radius, slow, damage_taken}] (las pone
 ## SkillController cada fotograma). No se acumulan entre sí: cuenta la más fuerte.
 var aura_fields: Array[Dictionary] = []
+## Embestidas de ataque en curso: id -> {t, dir}.
+var _lunges := {}
 
 
 ## Efecto ("slow" o "damage_taken") de las auras que alcanzan al enemigo i.
@@ -1093,6 +1098,7 @@ func _physics_process(delta: float) -> void:
 		elif windups[i] > 0.0:
 			windups[i] -= delta * tempo
 			if windups[i] <= 0.0 and hunting:
+				_lunge_to(i, target_pos)
 				_resolve_attack(i, atk, target_pos)
 				pos = positions[i]   # el teletransporte mueve al enemigo
 		elif casting.has(ids[i]):
@@ -1153,9 +1159,11 @@ func _physics_process(delta: float) -> void:
 		if kind == "melee" and stuns[i] <= 0.0 and hunting and cooldowns[i] <= 0.0:
 			if ally != -1 and tdist <= treach + 6.0:
 				cooldowns[i] = ATTACK_INTERVAL
+				_lunge_to(i, target_pos)
 				_damage_ally(ally, damages[i])
 			elif dist <= reach + 6.0:
 				cooldowns[i] = ATTACK_INTERVAL
+				_lunge_to(i, player_pos)
 				_hit_player(i, damages[i])
 		i += 1
 	last_simulation_ms = (Time.get_ticks_usec() - started) / 1000.0
@@ -1171,6 +1179,8 @@ func _pick_ally(pos: Vector2, player_dist: float, hunter := false) -> int:
 		var a: Dictionary = allies[k]
 		if float(a.get("life", 0.0)) <= 0.0:
 			continue
+		if a.get("device", false) and not hunter:
+			continue   # a las torretas solo van los cazadores de invocaciones
 		var d := pos.distance_to(a["pos"])
 		var taunting := d <= float(a.get("taunt", 0.0))
 		if (taunting or d < player_dist * 0.7 or (hunter and d < aggro_range)) and d < best_d:
@@ -1179,6 +1189,12 @@ func _pick_ally(pos: Vector2, player_dist: float, hunter := false) -> int:
 			if taunting:
 				best_d = -1.0   # la provocación gana a cualquier otro
 	return best
+
+
+## Animación de ataque: una embestida corta hacia el objetivo (la dibuja _process).
+func _lunge_to(i: int, target: Vector2) -> void:
+	var dir := (target - positions[i]).normalized()
+	_lunges[ids[i]] = {"t": LUNGE_TIME, "dir": dir if dir != Vector2.ZERO else Vector2.RIGHT}
 
 
 ## ¿Prioriza a las invocaciones? Tipos con hunts_allies (gusanos, IRQ) y los que
@@ -1544,17 +1560,31 @@ func _resolve_beam(h: Dictionary) -> void:
 			if lives[bi] <= 0.0:
 				_kill(bi)
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	var n := positions.size()
 	if n > _multimesh.instance_count:
 		_multimesh.instance_count = maxi(n, _multimesh.instance_count * 2)
 	_multimesh.visible_instance_count = n
 	var all_types := enemy_types()
+	# Embestidas: van y vuelven (seno) y caducan.
+	for id in _lunges.keys():
+		_lunges[id]["t"] -= delta
+		if _lunges[id]["t"] <= 0.0:
+			_lunges.erase(id)
 	for i in n:
 		var t: Dictionary = all_types[types[i]] if types[i] < all_types.size() else {}
 		var size := radii[i] * 2.0 * SPRITE_SCALE * float(t.get("scale", 1.0))
+		var sprite_scale := Vector2(size, size)
+		var offset := Vector2.ZERO
+		if windups[i] > 0.0:
+			# Cargando el golpe: se encoge y se ensancha, temblando un poco.
+			var squash := 0.08 + 0.03 * sin(Time.get_ticks_msec() / 40.0 + ids[i])
+			sprite_scale *= Vector2(1.0 + squash, 1.0 - squash)
+		if not _lunges.is_empty() and _lunges.has(ids[i]):
+			var l: Dictionary = _lunges[ids[i]]
+			offset = l["dir"] * sin(PI * (1.0 - float(l["t"]) / LUNGE_TIME)) * LUNGE_DISTANCE * (size / 40.0)
 		_multimesh.set_instance_transform_2d(i,
-			Transform2D(0.0, Vector2(size, size), 0.0, positions[i] - Vector2(0.0, size * 0.22)))
+			Transform2D(0.0, sprite_scale, 0.0, positions[i] + offset - Vector2(0.0, size * 0.22)))
 		var outline := Rarity.enemy_color(rarities[i])
 		outline.a = 0.0 if rarities[i] == Rarity.Enemy.NORMAL else 1.0
 		_multimesh.set_instance_color(i, outline)

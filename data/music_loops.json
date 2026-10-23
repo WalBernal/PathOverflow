@@ -1,10 +1,10 @@
 {
   "boss1": 108169.0,
-  "boss1_fase": 0,
+  "boss1_fase": 0.0,
   "boss2": 105205.0,
-  "boss2_fase": 0,
+  "boss2_fase": 0.0,
   "boss3": 102400.0,
-  "boss3_fase": 0,
+  "boss3_fase": 0.0,
   "camp1": 365714.0,
   "camp2": 333913.0,
   "camp3": 426666.0,
@@ -13,5 +13,6 @@
   "deep3": 365714.0,
   "field1": 274285.0,
   "field2": 260338.0,
-  "field3": 274285.0
+  "field3": 274285.0,
+  "subjefe": 0
 }

@@ -35,7 +35,9 @@ func _initialize() -> void:
 	var starters := {}
 	for c in classes:
 		for u in c.get("unlocks", []):
-			unlocks[u["skill"]] = unlocks.get(u["skill"], []) + ["%s (nv. %d)" % [c["name"], int(u["level"])]]
+			var choice: Array = u.get("choice", [])
+			for sid in (choice if not choice.is_empty() else [u["skill"]]):
+				unlocks[sid] = unlocks.get(sid, []) + ["%s (nv. %d%s)" % [c["name"], int(u["level"]), ", a elegir" if not choice.is_empty() else ""]]
 		for s in c.get("starter_skills", []):
 			starters[s] = starters.get(s, []) + [c["name"]]
 	var md := PackedStringArray()

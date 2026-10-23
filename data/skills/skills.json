@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_doc": "Habilidades activas (lo que hace cada placa base). kind: melee_area, nova (stun opcional), projectile, ground_aoe, blink, dash (embestida que golpea en línea), cone (cono delante), beam (rayo en línea tras un retardo), boomerang (va y vuelve golpeando en los dos sentidos), spin (gira golpeando durante duration cada tick), trap (trampa que explota al acercarse un enemigo; max_active), chain (salta entre enemigos chains veces), minion (invoca count esbirros durante duration; max_active a la vez), degen_area (charco que hace base_damage por segundo durante duration), barrier (barrera que absorbe daño: barrier + barrier_life × vida máxima), buff (buff_mods sobre el personaje durante duration), curse_area (aplica daño degenerativo por segundo a todos los de una zona), dot_projectile (proyectil que deja daño degenerativo), homing (proyectiles teledirigidos al enemigo más cercano: seek_range, turn_rate), drones (count drones que orbitan y disparan proyectiles teledirigidos cada tick). tags: varias por habilidad (ver SkillTags): ataque/hechizo, forma (melee, projectile, area, chain), mecánica (duration, trap, mine, totem, minion, movement, degen) y tipo de daño (physical, fire, cold, lightning, chaos, elemental). duration y stun escalan con skill_duration; cooldown con cooldown_recovery. lol: en qué habilidad de League of Legends se inspira. attack: usa el arma (damage_effectiveness). spell: daño propio (base_damage) que crece un damage_growth por nivel de la placa. attribute: generación de RAM más probable en sus ranuras (str=DDR3, dex=DDR4, int=DDR5). leap_slam (salta hacia el cursor y golpea el suelo al caer: radius, range, stun), rain (count impactos de impact_radius repartidos en radius durante duration), unit (invocación PERSISTENTE: no caduca, reserva unit.reserve % del maná máximo mientras viva; unit.behavior: melee | ranged | orbit (dron invulnerable que orbita) | tank (provoca a los enemigos en unit.taunt); unit.life, unit.radius, unit.speed, unit.interval (s entre ataques), unit.range, unit.reduction (daño evitado); max_active a la vez). repeats: la habilidad se repite sola. ailments: probabilidad extra (%) de aplicar estados (burn, shock, chill, freeze, poison, bleed), además de la innata de su tipo de daño (ver Ailments). La etiqueta automaton (autómata) la llevan torretas, drones, esbirros y robots. aura: kind 'aura' (persistente, se activa y desactiva al relanzar; reserva aura.reserve % del maná): aura.mods son modificadores para tus aliados (se escalan con el nivel de la placa y con aura_effect), aura.regen: % de vida por segundo que recuperan tus invocaciones, aura.reduction: daño evitado por las invocaciones. unit.ability (invocaciones): heal (cura al jugador y a las invocaciones), barrier (barrera al jugador), leap (salta a un grupo y golpea el suelo), venom (escupe un charco venenoso), explode (explota al morir); unit.shoots=false: no dispara. unit.reduction ya existe. aura.radius: alcance del aura alrededor del jugador (los aliados fuera no reciben sus bonos, ni la regeneración ni la reducción). aura.enemy: efectos sobre los enemigos dentro del radio: slow (más lentos al moverse y atacar) y damage_taken (reciben más daño).",
+  "_doc": "Habilidades activas (lo que hace cada placa base). kind: melee_area, nova (stun opcional), projectile, ground_aoe, blink, dash (embestida que golpea en línea), cone (cono delante), beam (rayo en línea tras un retardo), boomerang (va y vuelve golpeando en los dos sentidos), spin (gira golpeando durante duration cada tick), trap (trampa que explota al acercarse un enemigo; max_active), chain (salta entre enemigos chains veces), minion (invoca count esbirros durante duration; max_active a la vez), degen_area (charco que hace base_damage por segundo durante duration), barrier (barrera que absorbe daño: barrier + barrier_life × vida máxima), buff (buff_mods sobre el personaje durante duration), curse_area (aplica daño degenerativo por segundo a todos los de una zona), dot_projectile (proyectil que deja daño degenerativo), homing (proyectiles teledirigidos al enemigo más cercano: seek_range, turn_rate), drones (count drones que orbitan y disparan proyectiles teledirigidos cada tick). tags: varias por habilidad (ver SkillTags): ataque/hechizo, forma (melee, projectile, area, chain), mecánica (duration, trap, mine, totem, minion, movement, degen) y tipo de daño (physical, fire, cold, lightning, chaos, elemental). duration y stun escalan con skill_duration; cooldown con cooldown_recovery. lol: en qué habilidad de League of Legends se inspira. attack: usa el arma (damage_effectiveness). spell: daño propio (base_damage) que crece un damage_growth por nivel de la placa. attribute: generación de RAM más probable en sus ranuras (str=DDR3, dex=DDR4, int=DDR5). leap_slam (salta hacia el cursor y golpea el suelo al caer: radius, range, stun), rain (count impactos de impact_radius repartidos en radius durante duration), unit (invocación PERSISTENTE: no caduca, reserva unit.reserve % del maná máximo mientras viva; unit.behavior: melee | ranged | orbit (dron invulnerable que orbita) | tank (provoca a los enemigos en unit.taunt); unit.life, unit.radius, unit.speed, unit.interval (s entre ataques), unit.range, unit.reduction (daño evitado); max_active a la vez). repeats: la habilidad se repite sola. ailments: probabilidad extra (%) de aplicar estados (burn, shock, chill, freeze, poison, bleed), además de la innata de su tipo de daño (ver Ailments). La etiqueta automaton (autómata) la llevan torretas, drones, esbirros y robots. aura: kind 'aura' (persistente, se activa y desactiva al relanzar; reserva aura.reserve % del maná): aura.mods son modificadores para tus aliados (se escalan con el nivel de la placa y con aura_effect), aura.regen: % de vida por segundo que recuperan tus invocaciones, aura.reduction: daño evitado por las invocaciones. unit.ability (invocaciones): heal (cura al jugador y a las invocaciones), barrier (barrera al jugador), leap (salta a un grupo y golpea el suelo), venom (escupe un charco venenoso), explode (explota al morir); unit.shoots=false: no dispara. unit.reduction ya existe. aura.radius: alcance del aura alrededor del jugador (los aliados fuera no reciben sus bonos, ni la regeneración ni la reducción). aura.enemy: efectos sobre los enemigos dentro del radio: slow (más lentos al moverse y atacar) y damage_taken (reciben más daño). milestone (invocaciones): {kind, text}: lo que gana en los niveles 10, 20 y 30 de la placa: units (+1 a la vez), projectiles (+1 proyectil), ability (+25 % de potencia de su habilidad propia), toughness (+25 % de vida y +5 % de daño evitado).",
   "skills": [
     {
       "id": "barrido",
@@ -1024,6 +1024,10 @@
       "icon": {
         "shape": "robot",
         "color": "7fd0e8"
+      },
+      "milestone": {
+        "kind": "projectiles",
+        "text": "+1 proyectil por disparo"
       }
     },
     {
@@ -1069,6 +1073,10 @@
       "icon": {
         "shape": "daemon",
         "color": "7fd07f"
+      },
+      "milestone": {
+        "kind": "units",
+        "text": "+1 invocación a la vez"
       }
     },
     {
@@ -1120,6 +1128,10 @@
       "icon": {
         "shape": "escort",
         "color": "e0652f"
+      },
+      "milestone": {
+        "kind": "projectiles",
+        "text": "+1 proyectil por disparo"
       }
     },
     {
@@ -1170,6 +1182,10 @@
       "icon": {
         "shape": "golem",
         "color": "b8a888"
+      },
+      "milestone": {
+        "kind": "toughness",
+        "text": "+25 % de vida y +5 % de daño evitado"
       }
     },
     {
@@ -1217,6 +1233,10 @@
       "icon": {
         "shape": "medic",
         "color": "6fd36b"
+      },
+      "milestone": {
+        "kind": "ability",
+        "text": "+25 % de curación"
       }
     },
     {
@@ -1265,6 +1285,10 @@
       "icon": {
         "shape": "shielddrone",
         "color": "7fb8e0"
+      },
+      "milestone": {
+        "kind": "ability",
+        "text": "+25 % de barrera"
       }
     },
     {
@@ -1311,6 +1335,10 @@
       "icon": {
         "shape": "testbot",
         "color": "e8d9b0"
+      },
+      "milestone": {
+        "kind": "ability",
+        "text": "+25 % de daño del salto"
       }
     },
     {
@@ -1363,6 +1391,10 @@
       "icon": {
         "shape": "wheelbomb",
         "color": "e0652f"
+      },
+      "milestone": {
+        "kind": "ability",
+        "text": "+25 % de daño y área de la explosión"
       }
     },
     {
@@ -1420,6 +1452,10 @@
       "icon": {
         "shape": "agent",
         "color": "9a5ad0"
+      },
+      "milestone": {
+        "kind": "ability",
+        "text": "+25 % de duración y daño del charco venenoso"
       }
     },
     {
@@ -1742,6 +1778,10 @@
       "icon": {
         "shape": "testbot",
         "color": "c89060"
+      },
+      "milestone": {
+        "kind": "units",
+        "text": "+1 invocación a la vez"
       }
     },
     {
@@ -1791,6 +1831,10 @@
       "icon": {
         "shape": "agent",
         "color": "6fd36b"
+      },
+      "milestone": {
+        "kind": "projectiles",
+        "text": "+1 dardo por disparo"
       }
     }
   ]

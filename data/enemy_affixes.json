@@ -328,6 +328,59 @@
         "max_alive": 9
       },
       "description": "Tóxico + Invocador: cría bugs más rápido y en mayor número."
+    },
+    {
+      "id": "combo_hotfix_llamas",
+      "name": "Hotfix en Llamas",
+      "combo": [
+        "ardiente",
+        "veloz"
+      ],
+      "color": "ff7040",
+      "speed_mult": 1.1,
+      "on_hit": {
+        "dot": {
+          "kind": "fire",
+          "dps_mult": 0.35,
+          "duration": 4.0
+        }
+      },
+      "description": "Ardiente + Veloz: llega antes que nadie y sus quemaduras duran más. Desplegado un viernes a las 18:00."
+    },
+    {
+      "id": "combo_legacy",
+      "name": "Legacy Indestructible",
+      "combo": [
+        "blindado",
+        "regenerador"
+      ],
+      "color": "c8b090",
+      "resist": {
+        "physical": 70
+      },
+      "regen": 1.0,
+      "description": "Blindado + Regenerador: casi inmune al daño físico y se recupera. Nadie sabe quién lo escribió. Usa elementos o caos."
+    },
+    {
+      "id": "combo_rayo_fantasma",
+      "name": "Rayo Fantasma",
+      "combo": [
+        "electrizante",
+        "teletransportador"
+      ],
+      "color": "f0f080",
+      "teleporter": {
+        "cooldown": 4.5,
+        "range": 160
+      },
+      "on_hit": {
+        "dot": {
+          "kind": "lightning",
+          "dps_mult": 0.3,
+          "duration": 3.0
+        }
+      },
+      "description": "Electrizante + Teletransportador: salta a tu lado y sus descargas te siguen haciendo daño un rato."
     }
   ]
 }

@@ -556,6 +556,9 @@ func drop_test_loot() -> void:
 
 func _on_enemy_killed(rarity: int, experience: int, pos: Vector2, type_id: String = "") -> void:
 	Sfx.play("enemy_death", -6.0 + 2.0 * rarity, 1.0 - 0.08 * rarity)
+	if rarity == Rarity.Enemy.UNIQUE and _boss_phase > 0 and not _boss_alive and enemies.boss_info().is_empty():
+		_boss_phase = 0   # cayó el subjefe con fases: vuelve la música de la zona
+		MusicPlayer.set_intensity(0)
 	character.add_experience(experience)
 	character.flags["stat_kills"] = int(character.flags.get("stat_kills", 0)) + 1
 	player.add_flask_charges(rarity)
@@ -633,14 +636,30 @@ func _on_leveled_up(new_level: int) -> void:
 ## habilidad (nivel 1, dos ranuras). También se entregan las atrasadas al cargar.
 func _grant_unlocks() -> void:
 	for u in character.due_unlocks():
-		var skill_id := String(u["skill"])
-		if not GameData.items.skills.skills.has(skill_id):
+		if u.has("choice"):
+			# Elección entre dos: se pregunta (una a la vez) y se entrega la elegida.
+			if ui.is_choosing():
+				continue
+			var level := int(u["level"])
+			var defs: Array = u["choice"].filter(func(s: String) -> bool: return GameData.items.skills.skills.has(s)) \
+				.map(func(s: String) -> Dictionary: return GameData.items.skills.skills[s])
+			ui.show_skill_choice("Nivel %d: elige tu nueva habilidad" % level, defs, func(skill_id: String) -> void:
+				character.flags["unlock_lvl_%d" % level] = true
+				_grant_board(skill_id)
+				_grant_unlocks.call_deferred())
 			continue
-		character.flags["unlock_" + skill_id] = true
-		var board := item_generator.generate_motherboard(1, skill_id, 2)
-		board.level = 1
-		_give(board)
-		ui.hud.flash("Nueva habilidad de %s: %s. Está en tu bolsa; instálala con K." % [character.class_def.get("name", "tu clase"), board.skill_def["name"]], Color("ffd84a"))
+		_grant_board(String(u["skill"]))
+	_mark_dirty()
+
+
+func _grant_board(skill_id: String) -> void:
+	if not GameData.items.skills.skills.has(skill_id):
+		return
+	character.flags["unlock_" + skill_id] = true
+	var board := item_generator.generate_motherboard(1, skill_id, 2)
+	board.level = 1
+	_give(board)
+	ui.hud.flash("Nueva habilidad de %s: %s. Está en tu bolsa; instálala con K." % [character.class_def.get("name", "tu clase"), board.skill_def["name"]], Color("ffd84a"))
 	_mark_dirty()
 
 

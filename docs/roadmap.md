@@ -1,6 +1,6 @@
 # Roadmap — Path Overflow: El Último Commit
 
-Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propios, 14 ascendencias (2 por clase, cada una con juego distinto), un árbol con las temáticas de estados y aliados repartidas por sectores (3-5 clusters cada una, sin nodos encimados), estados alterados sobre enemigos **y sobre el jugador**, interacciones entre estados, 11 invocaciones persistentes y 6 auras (con alcance; 2 debilitan a los enemigos), desbloqueo de habilidades por nivel, RAM por grados (menor / normal / mayor), enemigos con resistencias, inmunidades, 16 afijos y 6 combinaciones con nombre, cazadores de invocaciones, jefes y subjefes con fases (que además cambian de resistencias), barra de jefe y música de fase. Lo que **falta**, por prioridad. **S** = pequeño (≈ 1 sesión), **M** = mediano, **L** = grande.
+Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propios, 14 ascendencias (2 por clase, cada una con juego distinto), un árbol con las temáticas de estados y aliados repartidas por sectores (3-5 clusters cada una, sin nodos encimados), estados alterados sobre enemigos **y sobre el jugador**, interacciones entre estados, 11 invocaciones persistentes y 6 auras (con alcance; 2 debilitan a los enemigos), desbloqueo de habilidades por nivel (con una elección entre dos), hitos propios por invocación, auras ancladas, mando básico, RAM por grados (menor / normal / mayor), enemigos con resistencias, inmunidades, 16 afijos y 9 combinaciones con nombre, cazadores de invocaciones, jefes y subjefes con fases (que además cambian de resistencias), barra de jefe y música de fase. Lo que **falta**, por prioridad. **S** = pequeño (≈ 1 sesión), **M** = mediano, **L** = grande.
 
 > Descartado por ahora: escala de las invocaciones y escala de los obstáculos.
 
@@ -14,18 +14,16 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 
 ## 2. Combate y habilidades
 
-- **Más invocaciones y auras** (M): ya hay invocación y aura en la progresión de todas las clases; faltan mejoras por hito propias de cada invocación y el modo «reservar más maná = más potencia».
-- **Equilibrar el Multicanal y la Pipeline Superescalar** (S): la Pipeline mayor sigue siendo la mejor RAM de daño para casi todo (×1.5); probar en partida.
-- **Auras con alcance, siguiente paso** (S): hoy todas las auras se centran en el jugador; auras que se puedan dejar en el suelo o sobre una invocación.
-- **Desbloqueos por nivel** (S): hoy son 4 por clase (niveles 5, 10, 16 y 24) y entregan la placa en la bolsa; falta un aviso visual mayor y elegir entre dos opciones en algún nivel.
+- **Equilibrar el Multicanal y la Pipeline Superescalar** (S): la Pipeline mayor sigue siendo la mejor RAM de daño para casi todo (×1.5); probar en partida. Igual con la Sobrealimentación (+50 % de reserva).
+- **Auras sobre una invocación** (S): hoy un aura sigue al jugador o, con Torre de Señal, se queda en el suelo; falta poder ponerla sobre el golem o un robot.
+- **Desbloqueos por nivel: aviso más visible** (S): hoy un mensaje en pantalla; un sonido y un destello en la barra o en el icono de K.
+- **Hitos propios para drones temporales, esbirros y torretas** (S): las invocaciones persistentes ya tienen el suyo; el resto sigue con el genérico.
 
 ## 3. Enemigos y jefes
 
-- **Sprites de enemigos nuevos para el acto III y animaciones de ataque** (L).
-- **Más combinaciones de afijos** (S): hoy hay 6 (Termonuclear, Cero Absoluto, Fantasma en la Red, Inmortal en Producción, Firewall Espejo, Plaga); añadir las de los afijos nuevos y que se vean en el marco del objetivo con su color.
-- **Cazadores de invocaciones, siguiente paso** (S): que también vayan a por torretas y minas desplegadas (hoy solo persiguen invocaciones persistentes).
-- **Música de fase para subjefes** (S): las pistas `_fase` solo existen para los tres jefes; los subjefes suben el tempo de la pista de la zona.
-
+- **Sprites de enemigos nuevos para el acto III** (L): necesita arte; las animaciones de ataque (carga y embestida) ya están para todos.
+- **Animaciones de ataque propias por tipo** (M): hoy todos usan la misma carga y la misma embestida; los que disparan podrían retroceder y los que embisten, estirarse.
+- **Cazadores contra minas y trampas** (S): hoy persiguen invocaciones y torretas; las minas están enterradas y no se ven.
 ## 4. Contenido
 
 | Qué | Tamaño |
@@ -38,10 +36,9 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 
 ## 5. Interfaz
 
-- Tamaños de interfaz mayores que 120 % (la barra inferior del HUD no cabe) y escala también en la pantalla de título y el prólogo (S).
-- Elegir el tamaño de interfaz también desde el menú principal, no solo desde la pausa (S).
-- Mando / gamepad (L).
-
+- **Mando, siguiente paso** (M): moverse, apuntar (stick derecho o el enemigo más cercano), habilidades, pociones y menús ya funcionan; falta recoger objetos, hablar con NPC, usar portales y navegar los menús (inventario, árbol, K) sin ratón.
+- Escala de interfaz en la pantalla de título y el prólogo (S); tamaños mayores que 140 % (S).
+- Rebindear teclas y botones desde la pausa (M).
 ## 6. Arte y audio
 
 - Sustituir los sprites provisionales dibujados con formas por arte final: personajes, NPC, invocaciones, iconos de habilidad y de estado (L). Necesita un artista: el código solo puede mejorar las figuras dibujadas.
@@ -66,6 +63,8 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 4. Más únicos y conjuntos que usen los afijos nuevos (estados, autómatas, interacciones).
 5. Arte final de personajes, enemigos e invocaciones.
 ## Hecho (no repetir)
+
+**Combate, enemigos e interfaz (23 octubre 2026, tarde)**: **hitos propios de cada invocación** (proyectiles para el robot, el dron escolta y el bot rastreador; potencia de su habilidad para los drones de curación y barrera, el bot de pruebas, la mina y el agente; vida y defensa para el golem) · **Fuente Sobrealimentada** (normal y de servidor): reservar más maná = más potencia · **Torre de Señal**: auras ancladas en el suelo con más efecto y alcance · **elección entre dos habilidades** al nivel 16 de cada clase · 3 combinaciones más de afijos (Hotfix en Llamas, Legacy Indestructible, Rayo Fantasma) y combinaciones destacadas con ★ y borde dorado en el marco del objetivo · **las torretas tienen vida** y los cazadores van a por ellas · pista de **fase de subjefe** (Condición de carrera) · **animaciones de ataque** de los enemigos (se encogen al cargar y embisten al golpear) · interfaz hasta **140 %** (los botones C/I/K/P suben sobre la barra si no caben) y tamaño elegible desde el menú de personajes · **mando básico** (moverse, apuntar, 6 habilidades, pociones, inventario, árbol, K, pausa) · nuevo ejecutable.
 
 **Enemigos, contenido e interfaz (23 octubre 2026)**: **afijos de combinación** (Ignífugo + Explosivo = Termonuclear, Criogenizado + Gélido = Cero Absoluto, Veloz + Teletransportador = Fantasma en la Red, Curandero + Regenerador = Inmortal en Producción, Escudado + Reflejo = Firewall Espejo, Tóxico + Invocador = Plaga) y afijos que se excluyen (Ignífugo/Ardiente, Aislado/Electrizante, Curandero/Invocador, Veloz/Blindado) · **enemigos que cazan invocaciones** (gusanos, IRQ, gusano de firmware y los que llevan carga explosiva) · **música propia de fase** para los tres jefes (más rápida, batería nueva y platillos; entra con fundido al empezar la primera fase) · **fases en subjefes**: los gemelos de la Carrera Crítica, el Puntero Salvaje y el Centinela del Cargador, con barra de jefe · **afijos de objetos** de probabilidad de estados (quemar, electrocutar, helar, envenenar, sangrar), daño de estados, velocidad de autómatas, daño y vida de esbirros · **menú K**: filtro de la bolsa por tipo y comparación de DPS al seleccionar una RAM · tamaño de interfaz también en el menú de personajes y el creador · nuevo ejecutable de Windows.
 

@@ -40,6 +40,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		_play()
 
 
+static func _closest_scale(v: float) -> float:
+	var best: float = GameUI.UI_SCALES[0]
+	for s in GameUI.UI_SCALES:
+		if absf(float(s) - v) < absf(best - v):
+			best = s
+	return best
+
+
 func _build() -> void:
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 18)
@@ -123,6 +131,17 @@ func _build() -> void:
 	var mute := UiStyle.button("Música: no" if MusicPlayer.muted else "Música: sí", func() -> void: pass, 140)
 	mute.pressed.connect(func() -> void: mute.text = "Música: no" if MusicPlayer.toggle_mute() else "Música: sí")
 	footer.add_child(mute)
+	# Tamaño de interfaz (también en la pausa): se aplica al volver a cargar el menú.
+	var ui_size := UiStyle.button("", func() -> void: pass, 190)
+	var refresh_size := func() -> void:
+		ui_size.text = "Interfaz: %d %%" % roundi(GameUI.ui_scale() * 100.0)
+	ui_size.tooltip_text = "Agranda o achica los menús, el HUD y los textos (el mundo se ve igual)."
+	ui_size.pressed.connect(func() -> void:
+		var k := GameUI.UI_SCALES.find(_closest_scale(GameUI.ui_scale()))
+		GameSettings.set_value("interface", "scale", GameUI.UI_SCALES[(k + 1) % GameUI.UI_SCALES.size()])
+		get_tree().reload_current_scene())
+	refresh_size.call()
+	footer.add_child(ui_size)
 	footer.add_child(UiStyle.button("Salir", func() -> void: get_tree().quit(), 140))
 
 	_confirm = ConfirmationDialog.new()
