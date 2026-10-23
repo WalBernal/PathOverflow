@@ -20,6 +20,10 @@ var _cache := {}
 var _ambient: AudioStreamPlayer
 var _ambient_name := ""
 var _tween: Tween
+## Volúmenes del menú (0..1), leídos una vez: los efectos suenan cientos de veces
+## por minuto y no deben leer settings.cfg cada vez.
+var _sfx_volume := 1.0
+var _ambient_volume := 1.0
 
 
 func _ready() -> void:
@@ -35,11 +39,17 @@ func _ready() -> void:
 	_ambient.finished.connect(func() -> void:
 		if _ambient_name != "":
 			_ambient.play())
+	_read_volumes()
+
+
+func _read_volumes() -> void:
+	_sfx_volume = Sfx.sfx_volume()
+	_ambient_volume = Sfx.ambient_volume()
 
 
 ## Reproduce un efecto. `volume` en dB relativos; `pitch` con una pequeña variación.
 func play_sfx(sfx_name: String, volume := 0.0, pitch := 1.0) -> void:
-	if _voices.is_empty() or not Sfx.sfx_enabled():   # aún sin iniciar (pruebas)
+	if _voices.is_empty() or _sfx_volume <= 0.001:   # aún sin iniciar (pruebas) o apagados
 		return
 	var now := Time.get_ticks_msec() / 1000.0
 	if now - float(_last_played.get(sfx_name, -1.0)) < MIN_GAP:
@@ -51,7 +61,7 @@ func play_sfx(sfx_name: String, volume := 0.0, pitch := 1.0) -> void:
 	var p := _voices[_next_voice]
 	_next_voice = (_next_voice + 1) % _voices.size()
 	p.stream = stream
-	p.volume_db = SFX_DB + volume
+	p.volume_db = SFX_DB + volume + linear_to_db(_sfx_volume)
 	p.pitch_scale = pitch * randf_range(0.94, 1.06)
 	p.play()
 
@@ -63,6 +73,9 @@ func play_ambient(style: String) -> void:
 		return
 	_ambient_name = amb
 	var stream: AudioStream = null if amb == "" else _load(Sfx.AMB_DIR + amb + ".wav")
+	if stream is AudioStreamWAV:
+		# Bucle real del propio stream: volver a lanzarlo al terminar deja un hueco.
+		Sfx.set_loop(stream as AudioStreamWAV)
 	if _tween:
 		_tween.kill()
 	_tween = create_tween()
@@ -78,8 +91,9 @@ func play_ambient(style: String) -> void:
 		_tween.tween_property(_ambient, "volume_db", _ambient_db(), 1.5)
 
 
-## Aplica los ajustes del menú (silenciar / reactivar el ambiente).
+## Aplica los ajustes del menú (volumen de efectos y ambiente).
 func refresh_settings() -> void:
+	_read_volumes()
 	if _ambient.playing:
 		if _tween:
 			_tween.kill()
@@ -88,7 +102,7 @@ func refresh_settings() -> void:
 
 
 func _ambient_db() -> float:
-	return AMBIENT_DB if Sfx.ambient_enabled() else SILENT_DB
+	return AMBIENT_DB + linear_to_db(_ambient_volume) if _ambient_volume > 0.001 else SILENT_DB
 
 
 func _load(path: String) -> AudioStream:

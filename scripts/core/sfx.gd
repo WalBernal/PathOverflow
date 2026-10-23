@@ -34,6 +34,37 @@ static func ambient_enabled() -> bool:
 	return bool(GameSettings.get_value("audio", "ambient", true))
 
 
+## Volumen de los efectos (0..1); 0 si están apagados.
+static func sfx_volume() -> float:
+	return clampf(float(GameSettings.get_value("audio", "sfx_volume", 1.0)), 0.0, 1.0) if sfx_enabled() else 0.0
+
+
+## Volumen del ambiente de las zonas (0..1); 0 si está apagado.
+static func ambient_volume() -> float:
+	return clampf(float(GameSettings.get_value("audio", "ambient_volume", 1.0)), 0.0, 1.0) if ambient_enabled() else 0.0
+
+
+## Guarda el volumen de un canal ("sfx" o "ambient"); 0 equivale a apagarlo.
+static func set_volume(channel: String, value: float) -> void:
+	GameSettings.set_value("audio", channel + "_volume", clampf(value, 0.0, 1.0))
+	GameSettings.set_value("audio", channel, value > 0.001)
+	refresh_settings()
+
+
+## Muestras de un .wav importado. No vale data.size() / 2: Godot los importa
+## comprimidos (QOA) y `data` no es PCM de 16 bits.
+static func frame_count(wav: AudioStreamWAV) -> int:
+	return int(round(wav.get_length() * wav.mix_rate))
+
+
+## Pone un .wav en bucle desde `begin` (en muestras) hasta el final.
+static func set_loop(wav: AudioStreamWAV, begin := 0) -> void:
+	var frames := frame_count(wav)
+	wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	wav.loop_begin = clampi(begin, 0, maxi(0, frames - 1))
+	wav.loop_end = frames
+
+
 ## Efecto al lanzar una habilidad, según su tipo y su daño principal.
 static func skill_sound(kind: String, damage_type := "") -> String:
 	match kind:

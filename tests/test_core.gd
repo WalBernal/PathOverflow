@@ -80,6 +80,7 @@ func _initialize() -> void:
 	_test_tree_themes_and_spacing()
 	_test_thermal_shock_and_status_resist()
 	_test_music_and_voices()
+	_test_quest_item_art()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
 	else:
@@ -2459,6 +2460,18 @@ func _test_ram_grades() -> void:
 	_check(SkillCalc.compute(board, c)["projectiles"] == 6, "multicanal mayor: +3 proyectiles")
 
 
+## Objetos de misión: cada uno tiene su propio dibujo (solo la cinta del DBA es una cinta).
+func _test_quest_item_art() -> void:
+	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json"]:
+		var act: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+		for z in act["zones"]:
+			for q in z.get("quest_items", []):
+				var kind := QuestItemArt.kind_for(q)
+				_check(kind != "tape" or q["id"] == "cinta_backup", "objeto de misión %s sin dibujo propio" % q["id"])
+	_check(QuestItemArt.kind_for({"id": "kindle_paez"}) == "kindle", "objeto de misión: el Kindle se dibuja como Kindle")
+	_check(QuestItemArt.kind_for({"id": "cache_2"}) == "ice_cache", "objeto de misión: los bloques de caché son de hielo")
+
+
 ## Música: cada zona de los tres actos tiene una pista que existe; Eugenio y las voces de los NPC.
 func _test_music_and_voices() -> void:
 	var music: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/music.json"))
@@ -2473,7 +2486,21 @@ func _test_music_and_voices() -> void:
 		_check(FileAccess.file_exists("res://assets/audio/music/%s.wav" % id), "música: existe %s.wav (tools/generate_zone_music.gd)" % id)
 	for z in zones:
 		_check(music["tracks"].has(zones[z]), "música: la pista %s de %s está definida" % [zones[z], z])
-	_check(String(music["tracks"]["camp3"]["name"]).begins_with("Expectativas"), "música: el campamento del acto III tiene su pista propia")
+	_check(music["tracks"]["camp3"].get("melody", []).size() == int(music["tracks"]["camp3"]["bars"]), "música: el campamento del acto III tiene su melodía escrita")
+	# Bucles: cada pista dice dónde empieza su bucle, después de la intro y antes del final.
+	var loops: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/music_loops.json"))
+	for id in music["tracks"]:
+		var wav := load("res://assets/audio/music/%s.wav" % id) as AudioStreamWAV
+		var start := int(loops.get(id, -1))
+		_check(wav != null and start >= 0 and start < Sfx.frame_count(wav), "música: %s tiene inicio de bucle válido" % id)
+		if wav:
+			_check(wav.get_length() - start / float(wav.mix_rate) >= 30.0, "música: el bucle de %s dura al menos 30 s" % id)
+			# El bucle tiene que llegar hasta el final real de la pista (no a data.size() / 2).
+			Sfx.set_loop(wav, start)
+			_check(absf(wav.loop_end / float(wav.mix_rate) - wav.get_length()) < 0.05, "música: el bucle de %s acaba al final de la pista" % id)
+	for amb in ["camp", "rom", "flash"]:
+		var a := load("res://assets/audio/ambient/%s.wav" % amb) as AudioStreamWAV
+		_check(a != null and a.get_length() >= 20.0, "ambiente: %s dura al menos 20 s" % amb)
 	var npcs: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/npcs.json"))
 	for id in npcs["npcs"]:
 		var voice: Dictionary = npcs["npcs"][id].get("voice", {})

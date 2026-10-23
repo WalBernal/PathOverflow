@@ -360,6 +360,19 @@ func _tree_summary() -> String:
 
 # --- Búsqueda ---
 
+## Palabras con las que el buscador también encuentra cada temática: los
+## estados por su nombre («veneno», «sangrado», «congelar»...) y los aliados por
+## lo que son («torreta», «golem», «aura»...).
+const THEME_KEYWORDS := {
+	"ignicion": "quemar quemado quemadura incendiar arder estado alterado",
+	"sobrecarga": "electrocutar electrocutado electrocucion descarga chispa estado alterado",
+	"criogenia": "helar helado congelar congelado congelacion escarcha hielo estado alterado",
+	"toxinas": "veneno envenenar envenenado toxico estado alterado",
+	"hemorragia": "sangrar sangrado sangrando sangre estado alterado",
+	"automatizacion": "torreta dron drones mina automata automatas invocacion invocaciones aliado aliados",
+	"legion": "aliado aliados invocacion invocaciones golem esbirro esbirros aura auras reserva",
+}
+
 func _on_search_changed(text: String) -> void:
 	_search_matches.clear()
 	_search_index = -1
@@ -368,7 +381,7 @@ func _on_search_changed(text: String) -> void:
 		var tree := _character.passives.tree
 		for id in tree.nodes:
 			var n: PassiveNode = tree.nodes[id]
-			var haystack := "%s %s %s" % [n.title, tree.theme_name(n.theme), tree.cluster_name(n.cluster)]
+			var haystack := "%s %s %s %s" % [n.title, tree.theme_name(n.theme), tree.cluster_name(n.cluster), THEME_KEYWORDS.get(n.theme, "")]
 			for m in n.mods:
 				haystack += " " + m.describe()
 			if _normalize(haystack).contains(query):

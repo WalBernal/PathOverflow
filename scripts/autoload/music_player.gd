@@ -9,6 +9,7 @@ const VOLUME_DB := -8.0
 const SILENT_DB := -60.0
 
 const TRACK_DIR := "res://assets/audio/music/"
+const LOOPS_FILE := "res://data/music_loops.json"
 
 var muted := false
 ## 0..1; se guarda en user://settings.cfg.
@@ -19,6 +20,7 @@ var _tween: Tween
 var _pitch_tween: Tween
 var _wanted := false
 var _track := ""
+var _loops := {}   # pista -> muestra donde empieza su bucle
 
 
 func _ready() -> void:
@@ -47,7 +49,10 @@ func play_title() -> void:
 	if not ResourceLoader.exists(TITLE_THEME):
 		push_warning("Falta %s: genera la música con tools/generate_music.gd" % TITLE_THEME)
 		return
-	_crossfade_to(load(TITLE_THEME), 1.5)
+	var stream := load(TITLE_THEME) as AudioStreamWAV
+	if stream:
+		Sfx.set_loop(stream)
+	_crossfade_to(stream, 1.5)
 
 
 ## Pista de una zona (data/music.json). Si ya suena, no se toca; si no, fundido cruzado.
@@ -69,12 +74,19 @@ func play_track(id: String, fade := 2.0) -> void:
 		return
 	var stream := load(path) as AudioStreamWAV
 	if stream:
-		# Bucle sin costura (las pistas están compuestas para enlazar).
-		stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
-		stream.loop_begin = 0
-		stream.loop_end = stream.data.size() / 2
+		# La intro suena una vez; el bucle empieza donde acaba (music_loops.json, lo
+		# escribe tools/generate_zone_music.gd) y enlaza sin costura.
+		Sfx.set_loop(stream, int(_loop_starts().get(id, 0)))
 	_track = id
 	_crossfade_to(stream, fade)
+
+
+func _loop_starts() -> Dictionary:
+	if _loops.is_empty() and FileAccess.file_exists(LOOPS_FILE):
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(LOOPS_FILE))
+		if parsed is Dictionary:
+			_loops = parsed
+	return _loops
 
 
 ## Intensidad del combate: 0 normal; cada fase de jefe sube un poco el tempo.

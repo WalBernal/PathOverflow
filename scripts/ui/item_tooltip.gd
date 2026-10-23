@@ -34,13 +34,16 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if not visible:
 		return
+	# En coordenadas de pantalla: la interfaz puede estar escalada (GameUI).
 	var view := get_viewport_rect().size
-	var pos := get_viewport().get_mouse_position() + Vector2(20, 20)
-	if pos.x + size.x > view.x:
-		pos.x = get_viewport().get_mouse_position().x - size.x - 20.0
-	pos.y = clampf(pos.y, 4.0, maxf(4.0, view.y - size.y - 4.0))
-	pos.x = clampf(pos.x, 4.0, maxf(4.0, view.x - size.x - 4.0))
-	position = pos
+	var shown := size * get_global_transform().get_scale()
+	var mouse := get_viewport().get_mouse_position()
+	var pos := mouse + Vector2(20, 20)
+	if pos.x + shown.x > view.x:
+		pos.x = mouse.x - shown.x - 20.0
+	pos.y = clampf(pos.y, 4.0, maxf(4.0, view.y - shown.y - 4.0))
+	pos.x = clampf(pos.x, 4.0, maxf(4.0, view.x - shown.x - 4.0))
+	global_position = pos
 
 
 func show_item(item: Item, character: CharacterData, compare: bool) -> void:

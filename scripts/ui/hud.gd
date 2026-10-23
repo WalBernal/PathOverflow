@@ -121,7 +121,9 @@ func _plate_rect() -> Rect2:
 func _slot_rect(i: int) -> Rect2:
 	var plate := _plate_rect()
 	var total := SkillController.ACTIONS.size() * SLOT + (SkillController.ACTIONS.size() - 1) * SLOT_GAP
-	var x := plate.get_center().x - total / 2.0 + i * (SLOT + SLOT_GAP)
+	# Centrada; si la pantalla es estrecha (o la interfaz grande), justo después de las pociones.
+	var left := maxf(plate.get_center().x - total / 2.0, _flask_rect(Inventory.FLASK_SLOTS - 1).end.x + 18.0)
+	var x := left + i * (SLOT + SLOT_GAP)
 	return Rect2(x, plate.position.y + 18.0, SLOT, SLOT)
 
 

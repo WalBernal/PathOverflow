@@ -27,6 +27,8 @@ const EXIT_RADIUS := 55.0
 const WAYPOINT_RADIUS := 46.0
 const STASH_RADIUS := 40.0
 const QUEST_ITEM_RADIUS := 40.0
+## Tamaño de los objetos de misión (QuestItemArt) en el mundo.
+const QUEST_ITEM_SCALE := 1.3
 const BORDER := 260.0
 ## Distancia mínima de un obstáculo a entradas, salidas, NPCs y waypoint.
 const CLEAR_RADIUS := 200.0
@@ -1399,15 +1401,14 @@ func _draw_quest_item(q: Dictionary) -> void:
 	var bob := sin(_time * 3.0) * 4.0
 	var glow := 0.5 + 0.5 * sin(_time * 4.0)
 	draw_circle(p, 34.0, Color(1.0, 0.8, 0.3, 0.08 + 0.08 * glow))
-	# Una cinta magnética (o lo que sea: todas las misiones son cintas en el fondo).
-	var box := Rect2(p + Vector2(-16, -12 + bob), Vector2(32, 22))
-	draw_rect(box, Color("2a2a30"))
-	draw_rect(box, Color("d9a441"), false, 2.0)
-	draw_circle(box.position + Vector2(10, 11), 5.0, Color("8a8a8a"))
-	draw_circle(box.position + Vector2(22, 11), 5.0, Color("8a8a8a"))
+	# Sombra en el suelo (no flota) y el objeto con su propio dibujo encima.
+	draw_colored_polygon(QuestItemArt.ellipse(p + Vector2(0, 30), 22.0 - bob * 0.5, 6.0), Color(0, 0, 0, 0.35))
+	draw_set_transform(p + Vector2(0, bob), 0.0, Vector2(QUEST_ITEM_SCALE, QUEST_ITEM_SCALE))
+	QuestItemArt.draw(self, Vector2.ZERO, QuestItemArt.kind_for(q), _time)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	var font := ThemeDB.fallback_font
-	draw_string_outline(font, p + Vector2(-110, -26 + bob), q["name"], HORIZONTAL_ALIGNMENT_CENTER, 220, 13, 5, Color.BLACK)
-	draw_string(font, p + Vector2(-110, -26 + bob), q["name"], HORIZONTAL_ALIGNMENT_CENTER, 220, 13, UiStyle.ACCENT)
+	draw_string_outline(font, p + Vector2(-110, -42 + bob), q["name"], HORIZONTAL_ALIGNMENT_CENTER, 220, 13, 5, Color.BLACK)
+	draw_string(font, p + Vector2(-110, -42 + bob), q["name"], HORIZONTAL_ALIGNMENT_CENTER, 220, 13, UiStyle.ACCENT)
 
 
 ## Un NPC que solo está "conectado": su cara en un monitor de fósforo verde.

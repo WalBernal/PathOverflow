@@ -44,15 +44,16 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 ## 5. Interfaz
 
 - Pantalla K con filtros por tipo de habilidad, y vista previa de DPS con y sin RAM (M).
-- Árbol pasivo: que el buscador reconozca también las temáticas nuevas por su nombre de estado (S).
-- Configuración: tamaño de interfaz, modo daltónico (los estados se distinguen en parte por color), volumen por canal (M).
+- Tamaño de interfaz también en los menús fuera de partida (título, personajes, creador) y tamaños mayores que 120 %: hoy la barra inferior del HUD no cabe más allá (S).
+- Iconos de los objetos de misión en el registro de misiones (usar `QuestItemArt`) (S).
 - Mando / gamepad (L).
 
 ## 6. Arte y audio
 
 - Sustituir los sprites provisionales dibujados con formas por arte final: personajes, NPC, invocaciones, iconos de habilidad y de estado (L). Necesita un artista: el código solo puede mejorar las figuras dibujadas.
 - Retratos de NPC más expresivos y personajes del acto III (M).
-- Sustituir la música generada por composiciones propias (S por pista): las 12 pistas actuales son de programador.
+- Sustituir la música generada por composiciones propias (S por pista): las 12 pistas actuales son de programador. Ya se puede escribir la melodía a mano en `music.json` (`melody`), como en `camp3`.
+- Peso del audio: los .wav suman unos 58 MB en el repositorio (música 34, ambientes 24); valorar OGG o Git LFS (S).
 - Música propia para los subjefes y las pruebas de estrés (S).
 
 ## 7. Sistemas y calidad
@@ -72,6 +73,8 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 5. Arte final de personajes y enemigos.
 
 ## Hecho (no repetir)
+
+**Interfaz y audio (octubre 2026)**: objetos de misión con dibujo propio (`QuestItemArt`: cinta LTO, papel continuo con sello, descriptor en blanco, bloques de caché en hielo, funda de Kindle con nota y etiqueta, Kindle con raya y batería al 1 %, concha, bolillo tibio con vapor y cuernito escarchado) · **bucles de música arreglados**: el final del bucle se calculaba con `data.size() / 2`, que con los .wav importados en QOA cortaba cada pista a una quinta parte; ahora cada pista tiene intro que suena una vez, cuerpo de 32 compases con partes A/B y redoble antes de volver, y el bucle empieza tras la intro (`data/music_loops.json`) · ambientes de 24 s con bucle real (antes 6 s con hueco al relanzarse) · campamento del acto III con balada original de melodía escrita · menú de pausa en dos columnas con volumen por canal (música, efectos, ambiente, voces), **tamaño de interfaz** (85-120 %, solo la capa de UI; el mundo no cambia), **modo daltónico** de los estados (paleta Okabe-Ito) · el buscador del árbol encuentra las temáticas por estado («veneno», «sangrado», «congelar», «torreta», «aura»...) · los efectos ya no leen settings.cfg en cada sonido.
 
 **Música de 12 pistas por zona y jefe** (campamento del acto III en estilo balada melancólica) con fundido cruzado y tempo por fase · Eugenio distraído, con datos de artistas · **partículas de estados**: escarcha que cubre el sprite, copos y cristales, arcos y chispas persistentes (enemigos y jugador) · voces con género y volumen por NPC y ajustes de velocidad y volumen en pausa · **Árbol reorganizado (versión 7)**: 7 temáticas nuevas con 3-5 clusters cada una y colocadas del lado de las clases que las usan (automatización y Legión de aliados/auras junto al DevOps y la puerta hacia el centro del Full Stack; hemorragia con guerrero y duelista; criogenia y toxinas con exploradora y hacker; ignición y sobrecarga con hechicero y DevOps), nodos de resistencia a estados, sin nodos encimados ni aristas sobre nodos (lo comprueban el generador y las pruebas) · choque térmico · RAM de grados de crítico, elemental y robo de vida · minimapa con aliados y marca del jefe · 
 Kits de 3 habilidades y rasgo por clase · estados alterados con iconos · RAM de asistencia y por grados (encadenamiento, perforación, multicanal, estados) con escala por nivel · invocaciones persistentes (9) y auras (4) con reserva de maná visible · resistencias, inmunidades y 16 afijos de enemigos · fases en los tres jefes con resistencias que cambian, barra de jefe segmentada y sacudida de cámara · marco del objetivo con resistencias, afijos, estados y ayuda al pasar el mouse · tutorial con enemigos lejos · escena final del acto I con el dinosaurio visible en el túnel · sprites +18 % · M. Páez con sonrisa fija · **estados sobre el jugador** (electrocutado, helado, congelado) y barra de buffs y debuffs con ayuda · **interacciones entre estados** (rotura, sobrecarga, infección) · sonidos de estados · hoja de personaje con estados, auras y aliados · **14 ascendencias** (2 por clase) con efectos nuevos (espinas, vida al matar, perforación, estados, auras) y aviso a los personajes que tenían una eliminada.

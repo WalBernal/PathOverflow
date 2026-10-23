@@ -12,6 +12,8 @@ signal waypoint_selected(zone_id: String)
 signal shop_refresh_requested
 
 const TREE_SCREEN := preload("res://scenes/ui/passive_tree_screen.tscn")
+## Tamaños de interfaz del menú de pausa.
+const UI_SCALES := [0.85, 1.0, 1.1, 1.2]
 
 var hud: Hud
 var inventory_panel: InventoryPanel
@@ -37,6 +39,7 @@ var _waypoint_panel: WaypointPanel
 var _zone_banner: Label
 var _act_banner: PanelContainer
 var _pause_panel: Control
+var _root: Control
 
 
 func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot: LootManager,
@@ -45,13 +48,20 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	_character = character
 	_player = player
 	_loot = loot
+	# Toda la interfaz cuelga de _root, que se escala con el tamaño de interfaz
+	# del menú de pausa (el mundo no cambia).
+	_root = Control.new()
+	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_root)
+	get_viewport().size_changed.connect(apply_ui_scale)
+	apply_ui_scale()
 
 	hud = Hud.new()
 	hud.player = player
 	hud.enemies = enemies
 	hud.character = character
 	hud.skills = skills
-	add_child(hud)
+	_root.add_child(hud)
 	hud.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	hud.menu_requested.connect(_on_menu_requested)
 
@@ -60,14 +70,14 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	item_tooltip = ItemTooltip.new()
 
 	tutorial = TutorialPanel.new()
-	add_child(tutorial)
+	_root.add_child(tutorial)
 	tutorial.position = Vector2(10, 34)
 	tutorial.setup(character, player)
 	tutorial.step_completed.connect(func(text: String) -> void: hud.flash(text, Color("6fb36b")))
 
 	inventory_panel = InventoryPanel.new()
 	inventory_panel.visible = false
-	add_child(inventory_panel)
+	_root.add_child(inventory_panel)
 	inventory_panel.anchor_left = 1.0
 	inventory_panel.anchor_right = 1.0
 	inventory_panel.offset_left = -10.0
@@ -81,7 +91,7 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 
 	skills_panel = SkillsPanel.new()
 	skills_panel.visible = false
-	add_child(skills_panel)
+	_root.add_child(skills_panel)
 	skills_panel.position = Vector2(10, 170)
 	skills_panel.setup(character, item_tooltip)
 	skills_panel.message.connect(hud.flash)
@@ -91,7 +101,7 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 
 	character_sheet = CharacterSheet.new()
 	character_sheet.visible = false
-	add_child(character_sheet)
+	_root.add_child(character_sheet)
 	character_sheet.position = Vector2(10, 34)
 	character_sheet.setup(character, player, skills)
 	character_sheet.close_requested.connect(func() -> void: _on_menu_requested("character"))
@@ -99,14 +109,14 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 
 	# Comerciante y alijo: a la izquierda, con el inventario abierto a la derecha.
 	shop_panel = ShopPanel.new()
-	add_child(shop_panel)
+	_root.add_child(shop_panel)
 	shop_panel.position = Vector2(10, 34)
 	shop_panel.setup(character, item_tooltip)
 	shop_panel.message.connect(hud.flash)
 	shop_panel.close_requested.connect(close_trade_panels)
 	shop_panel.refresh_requested.connect(func() -> void: shop_refresh_requested.emit())
 	stash_panel = StashPanel.new()
-	add_child(stash_panel)
+	_root.add_child(stash_panel)
 	stash_panel.position = Vector2(10, 34)
 	stash_panel.message.connect(hud.flash)
 	stash_panel.close_requested.connect(close_trade_panels)
@@ -116,7 +126,7 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	minimap.player = player
 	minimap.enemies = enemies
 	minimap.loot = loot
-	add_child(minimap)
+	_root.add_child(minimap)
 	minimap.anchor_left = 1.0
 	minimap.anchor_right = 1.0
 	minimap.offset_left = -Minimap.RADIUS * 2.0 - 18.0
@@ -126,7 +136,7 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 
 	# Registro de misiones, debajo del minimapa.
 	quest_tracker = QuestTracker.new()
-	add_child(quest_tracker)
+	_root.add_child(quest_tracker)
 	quest_tracker.anchor_left = 1.0
 	quest_tracker.anchor_right = 1.0
 	quest_tracker.offset_left = -QuestTracker.WIDTH - 10.0
@@ -140,13 +150,13 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 
 	dialogue_box = DialogueBox.new()
 	dialogue_box.character = character
-	add_child(dialogue_box)
+	_root.add_child(dialogue_box)
 	dialogue_box.action_requested.connect(func(action: Dictionary) -> void: dialogue_action.emit(action))
 
 	tree_screen = TREE_SCREEN.instantiate() as PassiveTreeScreen
 	tree_screen.standalone = false
 	tree_screen.visible = false
-	add_child(tree_screen)
+	_root.add_child(tree_screen)
 	tree_screen.show_character(character)
 	tree_screen.closed.connect(toggle_passive_tree)
 
@@ -158,12 +168,12 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	label.add_theme_color_override("font_color", Color("e06c6c"))
 	_death_panel.add_child(label)
 	_death_panel.visible = false
-	add_child(_death_panel)
+	_root.add_child(_death_panel)
 	_death_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 
 	_waypoint_panel = WaypointPanel.new()
 	_waypoint_panel.visible = false
-	add_child(_waypoint_panel)
+	_root.add_child(_waypoint_panel)
 	_waypoint_panel.selected.connect(func(zone_id: String) -> void:
 		_waypoint_panel.visible = false
 		waypoint_selected.emit(zone_id))
@@ -173,16 +183,16 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	_zone_banner.add_theme_constant_override("outline_size", 8)
 	_zone_banner.add_theme_color_override("font_outline_color", Color.BLACK)
 	_zone_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_zone_banner)
+	_root.add_child(_zone_banner)
 	_zone_banner.anchor_right = 1.0
 	_zone_banner.offset_top = 165.0
 	_zone_banner.modulate.a = 0.0
 
 	_act_banner = _build_act_banner()
-	add_child(_act_banner)
+	_root.add_child(_act_banner)
 
 	challenge_panel = ChallengePanel.new()
-	add_child(challenge_panel)
+	_root.add_child(challenge_panel)
 	challenge_panel.setup(item_tooltip, character)
 
 	_wave_label = UiStyle.label("", 20, Color("ff9a4a"))
@@ -191,7 +201,7 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	_wave_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	_wave_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_wave_label.visible = false
-	add_child(_wave_label)
+	_root.add_child(_wave_label)
 	_wave_label.anchor_right = 1.0
 	_wave_label.offset_top = 60.0
 
@@ -199,13 +209,13 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	cutscene.player = player
 	cutscene.speakers = {"player": {"name": character.character_name, "appearance": character.appearance,
 		"color": character.class_def.get("color", "d9a441")}}
-	add_child(cutscene)
+	_root.add_child(cutscene)
 
 	_pause_panel = _build_pause_menu()
-	add_child(_pause_panel)
+	_root.add_child(_pause_panel)
 	_pause_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
-	add_child(item_tooltip)
+	_root.add_child(item_tooltip)
 	loot.hovered_item_changed.connect(_on_ground_item_hovered)
 	loot.pickup_failed.connect(hud.flash)
 	loot.picked_up.connect(func(_item: Item) -> void: tutorial.notify("picked_up"))
@@ -336,7 +346,8 @@ func _process(_delta: float) -> void:
 
 
 func _build_pause_menu() -> Control:
-	# Capa oscura a pantalla completa con un panel centrado.
+	# Capa oscura a pantalla completa con un panel centrado: arriba el título,
+	# en medio dos columnas (sonido | diálogos e interfaz) y abajo las salidas.
 	var overlay := ColorRect.new()
 	overlay.color = Color(0, 0, 0, 0.6)
 	overlay.visible = false
@@ -346,8 +357,9 @@ func _build_pause_menu() -> Control:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var panel := PanelContainer.new()
 	center.add_child(panel)
+	UiStyle.decorate_window(panel)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 12)
+	box.add_theme_constant_override("separation", 10)
 	panel.add_child(box)
 	var title := UiStyle.label("Pausa", 32, UiStyle.ACCENT)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -355,9 +367,34 @@ func _build_pause_menu() -> Control:
 	var hint := UiStyle.label("La partida se guarda sola. Pero por si acaso.", 14, UiStyle.MUTED)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(hint)
-	box.add_child(UiStyle.button("Continuar", toggle_pause_menu, 320))
-	# Sonido de los diálogos.
-	var narrator := UiStyle.button("", func() -> void: pass, 320)
+	box.add_child(UiStyle.ornament())
+	var columns := HBoxContainer.new()
+	columns.add_theme_constant_override("separation", 36)
+	box.add_child(columns)
+
+	# --- Sonido: un deslizador por canal ---
+	var sound := VBoxContainer.new()
+	sound.add_theme_constant_override("separation", 8)
+	columns.add_child(sound)
+	sound.add_child(UiStyle.section_header("Sonido"))
+	sound.add_child(UiStyle.slider_row("Música", 0.0 if MusicPlayer.muted else MusicPlayer.music_volume,
+		func(v: float) -> void:
+			if MusicPlayer.muted and v > 0.0:
+				MusicPlayer.toggle_mute()
+			MusicPlayer.set_volume(v)))
+	sound.add_child(UiStyle.slider_row("Efectos", Sfx.sfx_volume(), func(v: float) -> void: Sfx.set_volume("sfx", v)))
+	sound.add_child(UiStyle.slider_row("Ambiente", Sfx.ambient_volume(), func(v: float) -> void: Sfx.set_volume("ambient", v)))
+	sound.add_child(UiStyle.slider_row("Voces", DialogueBox.voice_volume(),
+		func(v: float) -> void: GameSettings.set_value("dialogue", "voice_volume", v)))
+	var sound_hint := UiStyle.label("Al 0 % el canal se apaga del todo.", 12, UiStyle.MUTED)
+	sound.add_child(sound_hint)
+
+	# --- Diálogos e interfaz ---
+	var right := VBoxContainer.new()
+	right.add_theme_constant_override("separation", 8)
+	columns.add_child(right)
+	right.add_child(UiStyle.section_header("Diálogos"))
+	var narrator := UiStyle.button("", func() -> void: pass, 300)
 	var refresh_narrator := func() -> void:
 		if not DialogueBox.narrator_available():
 			narrator.text = "Narrador: sin voz en español"
@@ -369,74 +406,74 @@ func _build_pause_menu() -> Control:
 	narrator.pressed.connect(func() -> void:
 		GameSettings.set_value("dialogue", "narrator", not DialogueBox.narrator_enabled())
 		refresh_narrator.call())
-	box.add_child(narrator)
-	var blips := UiStyle.button("", func() -> void: pass, 320)
+	right.add_child(narrator)
+	var blips := UiStyle.button("", func() -> void: pass, 300)
 	blips.text = "Pitidos del texto: " + ("sí" if DialogueBox.blips_enabled() else "no")
 	blips.tooltip_text = "Sonido retro mientras se escribe el texto (cuando no habla el narrador)."
 	blips.pressed.connect(func() -> void:
 		GameSettings.set_value("dialogue", "blips", not DialogueBox.blips_enabled())
 		blips.text = "Pitidos del texto: " + ("sí" if DialogueBox.blips_enabled() else "no"))
-	box.add_child(blips)
-	# Voz: velocidad y volumen (cada NPC además tiene su tono, velocidad, género y volumen en npcs.json).
-	var speed_steps := [0.8, 1.0, 1.25]
-	var speed_names := ["lenta", "normal", "rápida"]
-	var speed := UiStyle.button("", func() -> void: pass, 320)
-	var speed_index := func() -> int:
-		var cur := 1
-		for k in speed_steps.size():
-			if absf(speed_steps[k] - DialogueBox.voice_speed()) < 0.05:
-				cur = k
-		return cur
-	var refresh_speed := func() -> void:
-		speed.text = "Velocidad de la voz: " + speed_names[speed_index.call()]
-	speed.pressed.connect(func() -> void:
-		GameSettings.set_value("dialogue", "voice_speed", speed_steps[(speed_index.call() + 1) % speed_steps.size()])
-		refresh_speed.call())
-	refresh_speed.call()
-	box.add_child(speed)
-	var vol_steps := [0.4, 0.7, 1.0]
-	var vol := UiStyle.button("", func() -> void: pass, 320)
-	var refresh_vol := func() -> void:
-		vol.text = "Volumen de la voz: %d %%" % int(round(DialogueBox.voice_volume() * 100.0))
-	vol.pressed.connect(func() -> void:
-		var cur := 0
-		for k in vol_steps.size():
-			if absf(vol_steps[k] - DialogueBox.voice_volume()) < 0.05:
-				cur = k
-		GameSettings.set_value("dialogue", "voice_volume", vol_steps[(cur + 1) % vol_steps.size()])
-		refresh_vol.call())
-	refresh_vol.call()
-	box.add_child(vol)
-	var music_steps := [0.0, 0.4, 0.7, 1.0]
-	var music := UiStyle.button("", func() -> void: pass, 320)
-	var refresh_music := func() -> void:
-		music.text = "Volumen de la música: %d %%" % int(round(MusicPlayer.music_volume * 100.0))
-	music.pressed.connect(func() -> void:
-		var cur := 0
-		for k in music_steps.size():
-			if absf(music_steps[k] - MusicPlayer.music_volume) < 0.05:
-				cur = k
-		MusicPlayer.set_volume(music_steps[(cur + 1) % music_steps.size()])
-		refresh_music.call())
-	refresh_music.call()
-	box.add_child(music)
-	# Efectos de habilidades y ambiente de las zonas.
-	var sfx :=UiStyle.button("", func() -> void: pass, 320)
-	sfx.text = "Efectos de sonido: " + ("sí" if Sfx.sfx_enabled() else "no")
-	sfx.pressed.connect(func() -> void:
-		GameSettings.set_value("audio", "sfx", not Sfx.sfx_enabled())
-		sfx.text = "Efectos de sonido: " + ("sí" if Sfx.sfx_enabled() else "no"))
-	box.add_child(sfx)
-	var ambient := UiStyle.button("", func() -> void: pass, 320)
-	ambient.text = "Sonido ambiente: " + ("sí" if Sfx.ambient_enabled() else "no")
-	ambient.pressed.connect(func() -> void:
-		GameSettings.set_value("audio", "ambient", not Sfx.ambient_enabled())
-		Sfx.refresh_settings()
-		ambient.text = "Sonido ambiente: " + ("sí" if Sfx.ambient_enabled() else "no"))
-	box.add_child(ambient)
-	box.add_child(UiStyle.button("Guardar y volver al menú", func() -> void: return_to_menu_requested.emit(), 320))
-	box.add_child(UiStyle.button("Guardar y salir del juego", func() -> void: quit_requested.emit(), 320))
+	right.add_child(blips)
+	# Voz: velocidad (cada NPC además tiene su tono, velocidad, género y volumen en npcs.json).
+	right.add_child(_cycle_button("Velocidad de la voz", [0.8, 1.0, 1.25], ["lenta", "normal", "rápida"],
+		func() -> float: return DialogueBox.voice_speed(),
+		func(v: float) -> void: GameSettings.set_value("dialogue", "voice_speed", v)))
+	right.add_child(UiStyle.section_header("Interfaz"))
+	var scale_button := _cycle_button("Tamaño de la interfaz", UI_SCALES, ["85 %", "100 %", "110 %", "120 %"],
+		func() -> float: return ui_scale(),
+		func(v: float) -> void:
+			GameSettings.set_value("interface", "scale", v)
+			apply_ui_scale())
+	scale_button.tooltip_text = "Agranda o achica los menús, el HUD y los textos. El mundo se ve igual."
+	right.add_child(scale_button)
+	var colorblind := UiStyle.button("", func() -> void: pass, 300)
+	colorblind.text = "Modo daltónico: " + ("sí" if Ailments.colorblind else "no")
+	colorblind.tooltip_text = "Colores de estados alterados que se distinguen con cualquier tipo de daltonismo\n(quemado, sangrando, envenenado, helado, corrompido...)."
+	colorblind.pressed.connect(func() -> void:
+		Ailments.set_colorblind(not Ailments.colorblind)
+		colorblind.text = "Modo daltónico: " + ("sí" if Ailments.colorblind else "no"))
+	right.add_child(colorblind)
+
+	box.add_child(UiStyle.ornament())
+	var exits := HBoxContainer.new()
+	exits.add_theme_constant_override("separation", 10)
+	exits.alignment = BoxContainer.ALIGNMENT_CENTER
+	box.add_child(exits)
+	exits.add_child(UiStyle.button("Continuar", toggle_pause_menu, 200))
+	exits.add_child(UiStyle.button("Guardar y volver al menú", func() -> void: return_to_menu_requested.emit(), 240))
+	exits.add_child(UiStyle.button("Guardar y salir del juego", func() -> void: quit_requested.emit(), 240))
 	return overlay
+
+
+## Botón que recorre una lista de valores ("Velocidad de la voz: normal").
+## `current` devuelve el valor guardado; `on_pick` guarda el nuevo.
+func _cycle_button(text: String, values: Array, names: Array, current: Callable, on_pick: Callable) -> Button:
+	var b := UiStyle.button("", func() -> void: pass, 300)
+	var index := func() -> int:
+		var best := 0
+		for k in values.size():
+			if absf(float(values[k]) - float(current.call())) < absf(float(values[best]) - float(current.call())):
+				best = k
+		return best
+	var refresh := func() -> void:
+		b.text = "%s: %s" % [text, names[index.call()]]
+	b.pressed.connect(func() -> void:
+		on_pick.call(values[(index.call() + 1) % values.size()])
+		refresh.call())
+	refresh.call()
+	return b
+
+
+static func ui_scale() -> float:
+	return clampf(float(GameSettings.get_value("interface", "scale", 1.0)), 0.75, 1.25)
+
+
+## Escala la interfaz (menús, HUD, textos): _root ocupa la pantalla dividida por
+## la escala y se agranda por ella, así los anclajes siguen cuadrando.
+func apply_ui_scale() -> void:
+	var s := ui_scale()
+	_root.scale = Vector2(s, s)
+	_root.size = get_viewport().get_visible_rect().size / s
 
 
 func toggle_pause_menu() -> void:
@@ -534,7 +571,7 @@ func _on_drop_to_ground(location: Dictionary) -> void:
 	for panel: Control in [inventory_panel, skills_panel, character_sheet, shop_panel, stash_panel, hud]:
 		if panel != hud and panel.visible and panel.get_global_rect().has_point(mouse):
 			return  # soltado sobre un panel, en un sitio que no admite objetos
-	if hud.is_over_hud(mouse):
+	if hud.is_over_hud(hud.get_global_transform().affine_inverse() * mouse):
 		return
 	if ItemTransfer.get_at(_character.inventory, location) is KeyItem:
 		hud.flash("Es un objeto clave. Mejor no tirarlo: abre caminos que necesitarás.", UiStyle.ACCENT)

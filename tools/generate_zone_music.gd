@@ -1,12 +1,20 @@
 extends SceneTree
 ## Compone la música de las zonas y los jefes a partir de data/music.json y la
-## guarda en assets/audio/music/<id>.wav (mono, bucle sin costuras). Es música de
-## programador, con sonido retro: si tienes un compositor, sustituye los .wav.
+## guarda en assets/audio/music/<id>.wav (mono). Es música de programador, con
+## sonido retro: si tienes un compositor, sustituye los .wav.
+##
+## Cada pista tiene una intro (las capas van entrando según "from") que suena una
+## sola vez, y un cuerpo de "bars" compases (A y B, con redoble al final de cada
+## parte) que se repite: el bucle empieza donde acaba la intro. El inicio del
+## bucle de cada pista (en muestras) se guarda en data/music_loops.json,
+## y las colas de las notas del último compás se escriben al inicio del bucle,
+## para que la vuelta no tenga costura.
 ##
 ## Uso:  Godot_v4.7.2-stable_win64_console.exe --headless --path . -s res://tools/generate_zone_music.gd [-- id1 id2]
 
 const RATE := 16000
 const OUT_DIR := "res://assets/audio/music/"
+const LOOPS_FILE := "res://data/music_loops.json"
 const SCALES := {
 	"major": [0, 2, 4, 5, 7, 9, 11], "minor": [0, 2, 3, 5, 7, 8, 10], "dorian": [0, 2, 3, 5, 7, 9, 10],
 	"phrygian": [0, 1, 3, 5, 7, 8, 10], "lydian": [0, 2, 4, 6, 7, 9, 11],
@@ -22,6 +30,10 @@ const RHYTHMS := [
 
 var buf := PackedFloat32Array()
 var rng := RandomNumberGenerator.new()
+## Primera muestra del bucle: las colas que pasan del final vuelven aquí.
+var loop_start := 0
+## Grado de la primera nota del último compás compuesto por _melody.
+var _first_idx := 7
 
 
 func _initialize() -> void:
@@ -29,28 +41,54 @@ func _initialize() -> void:
 	var data: Dictionary = JSON.parse_string(f.get_as_text())
 	var only: PackedStringArray = OS.get_cmdline_user_args()
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT_DIR))
+	var loops := {}
+	if FileAccess.file_exists(LOOPS_FILE):
+		loops = JSON.parse_string(FileAccess.get_file_as_string(LOOPS_FILE))
 	for id in data["tracks"]:
 		if not only.is_empty() and not (id in only):
 			continue
-		_compose(id, data["tracks"][id])
+		loops[id] = _compose(id, data["tracks"][id])
+	FileAccess.open(LOOPS_FILE, FileAccess.WRITE).store_string(JSON.stringify(loops, "  ", true))
 	quit()
 
 
-func _compose(id: String, t: Dictionary) -> void:
+## Compases de intro: los necesarios para que entren todas las capas, redondeados
+## a vueltas enteras de la progresión (así el bucle empieza en el primer acorde).
+static func intro_bars(t: Dictionary) -> int:
+	if t.has("intro"):
+		return int(t["intro"])
+	var cycle: int = t["prog"].size() * int(t.get("chord_bars", 1))
+	var latest := 0
+	for v in t.get("from", {}).values():
+		latest = maxi(latest, int(v))
+	return int(ceil(latest / float(cycle))) * cycle
+
+
+## Devuelve la muestra donde empieza el bucle.
+func _compose(id: String, t: Dictionary) -> int:
 	rng.seed = int(t.get("seed", 1))
 	var bpm := float(t["bpm"])
 	var beat := 60.0 / bpm
-	var bars := int(t["bars"])
+	var intro := intro_bars(t)
+	var body := int(t["bars"])
+	var half := body / 2
 	var chord_bars := int(t.get("chord_bars", 1))
 	var root := int(t["root"])
 	var scale: Array = SCALES[t.get("scale", "minor")]
-	var prog: Array = t["prog"]
 	var from: Dictionary = t.get("from", {})
+	var written: Array = t.get("melody", [])
+	var lead := String(t.get("lead", "none"))
 	buf.clear()
-	buf.resize(int(bars * 4 * beat * RATE))
+	buf.resize(int((intro + body) * 4 * beat * RATE))
+	loop_start = int(intro * 4 * beat * RATE)
 	var mel_idx := 7  # grado actual de la melodía (índice sobre la escala extendida)
-	for bar in bars:
-		var spec: Array = prog[(bar / chord_bars) % prog.size()]
+	var body_first_idx := -1
+	for bar in intro + body:
+		var b := bar - intro   # compás dentro del cuerpo (negativo en la intro)
+		var part_b := b >= half and t.has("prog_b")
+		var prog: Array = t["prog_b"] if part_b else t["prog"]
+		var chord_bar := bar if b < 0 else (b - half if part_b else b)
+		var spec: Array = prog[(chord_bar / chord_bars) % prog.size()]
 		var croot: int = root + int(spec[0])
 		var tones: Array = QUALITIES[spec[1]]
 		var t0 := bar * 4 * beat
@@ -59,12 +97,23 @@ func _compose(id: String, t: Dictionary) -> void:
 			for tone in tones:
 				_note(t0, 4.0 * beat, croot + int(tone), "pad", pad_gain * 0.9)
 		_bass(t0, beat, croot, String(t.get("bass", "root")))
-		if bar >= int(from.get("arp", 0)):
-			_arp(t0, beat, croot, tones, String(t.get("arp", "none")), String(t.get("arp_wave", "square")))
-		if bar >= int(from.get("drums", 0)):
-			_drums(t0, beat, String(t.get("drums", "none")), bar)
-		if bar >= int(from.get("lead", 0)) and String(t.get("lead", "none")) != "none":
-			mel_idx = _melody(t0, beat, croot, tones, root, scale, mel_idx, String(t["lead"]))
+		if b >= 0 or bar >= int(from.get("arp", 0)):
+			# En la parte B el arpegio sube una octava: la misma canción, otro color.
+			_arp(t0, beat, croot + (12 if b >= half and t.get("arp_lift", false) else 0), tones,
+				String(t.get("arp", "none")), String(t.get("arp_wave", "square")))
+		if b >= 0 or bar >= int(from.get("drums", 0)):
+			var fill := b == half - 1 or b == body - 1
+			_drums(t0, beat, String(t.get("drums", "none")), bar, fill)
+		if lead == "none" or (b < 0 and bar < int(from.get("lead", 0))):
+			continue
+		if b >= 0 and not written.is_empty():
+			_written_bar(t0, beat, String(written[b % written.size()]), root, scale, lead, float(t.get("lead_gain", 0.09)))
+		elif b == body - 1 and body_first_idx >= 0:
+			mel_idx = _melody_to(t0, beat, root, scale, mel_idx, body_first_idx, lead)
+		else:
+			mel_idx = _melody(t0, beat, croot, tones, root, scale, mel_idx, lead)
+			if b == 0:
+				body_first_idx = _first_idx
 	var peak := 0.0001
 	for v in buf:
 		peak = maxf(peak, absf(v))
@@ -78,7 +127,8 @@ func _compose(id: String, t: Dictionary) -> void:
 	stream.stereo = false
 	stream.data = bytes
 	stream.save_to_wav(ProjectSettings.globalize_path(OUT_DIR + id + ".wav"))
-	print("Escrito %s%s.wav (%.1f s)" % [OUT_DIR, id, buf.size() / float(RATE)])
+	print("Escrito %s%s.wav (%.1f s, bucle desde %.1f s)" % [OUT_DIR, id, buf.size() / float(RATE), loop_start / float(RATE)])
+	return loop_start
 
 
 func _bass(t0: float, beat: float, croot: int, kind: String) -> void:
@@ -121,7 +171,19 @@ func _arp(t0: float, beat: float, croot: int, tones: Array, kind: String, wave: 
 				_note(t0 + e * beat / 2.0, beat * 1.6, m, wave, 0.075 if e % 2 == 0 else 0.055)
 
 
-func _drums(t0: float, beat: float, kind: String, bar: int) -> void:
+## `fill`: último compás de una parte; la segunda mitad es un redoble que
+## anuncia la vuelta (o el paso a la parte B).
+func _drums(t0: float, beat: float, kind: String, bar: int, fill := false) -> void:
+	if kind == "none":
+		return
+	if fill:
+		_kick(t0, 0.3)
+		_snare(t0 + beat, 0.35 if kind in ["soft", "ballad"] else 0.8)
+		var steps := 4 if kind in ["soft", "ballad"] else 8
+		for s in steps:
+			var level := (0.15 + 0.5 * s / steps) * (0.6 if kind in ["soft", "ballad"] else 1.2)
+			_snare(t0 + 2.0 * beat + s * 2.0 * beat / steps, level)
+		return
 	match kind:
 		"soft":
 			_kick(t0, 0.3)
@@ -165,6 +227,7 @@ func _melody(t0: float, beat: float, croot: int, tones: Array, root: int, scale:
 		if d > 0.0:
 			if first:
 				idx = _nearest_chord_degree(idx, croot, tones, root, scale)
+				_first_idx = idx
 			else:
 				var step: int = [-2, -1, -1, 1, 1, 2][rng.randi() % 6]
 				idx = clampi(idx + step, 3, 13)
@@ -172,6 +235,33 @@ func _melody(t0: float, beat: float, croot: int, tones: Array, root: int, scale:
 			first = false
 		pos += dur
 	return idx
+
+
+## Último compás antes de la vuelta: la melodía camina por grados hacia la
+## primera nota del bucle y se queda a un paso de ella (la vuelta la resuelve).
+func _melody_to(t0: float, beat: float, root: int, scale: Array, idx: int, target: int, lead: String) -> int:
+	var pos := 0.0
+	for d in [1.0, 1.0, 2.0]:
+		var gap := target - idx
+		if absi(gap) > 1:
+			idx += clampi(gap - signi(gap), -2, 2)
+		_note(t0 + pos * beat, d * beat * 0.95, _degree_midi(idx, root, scale) + 12, lead, 0.075)
+		pos += d
+	return idx
+
+
+## Un compás de melodía escrita: "grado:tiempos grado:tiempos ...", con "r" para
+## los silencios. El grado 7 es la tónica central (Re4 si la tónica es Re).
+func _written_bar(t0: float, beat: float, bar: String, root: int, scale: Array, lead: String, gain: float) -> void:
+	var pos := 0.0
+	for token in bar.split(" ", false):
+		var parts := token.split(":")
+		var dur := float(parts[1]) if parts.size() > 1 else 1.0
+		if parts[0] != "r":
+			_note(t0 + pos * beat, dur * beat * 0.95, _degree_midi(int(parts[0]), root, scale), lead, gain)
+		pos += dur
+	if absf(pos - 4.0) > 0.01:
+		push_warning("Compás de melodía que no suma 4 tiempos (%.2f): %s" % [pos, bar])
 
 
 func _degree_midi(idx: int, root: int, scale: Array) -> int:
@@ -194,9 +284,11 @@ func _freq(midi: float) -> float:
 	return 440.0 * pow(2.0, (midi - 69.0) / 12.0)
 
 
-## Escribe con vuelta al principio, para que el bucle no tenga costura.
+## Escribe con vuelta al inicio del bucle, para que no tenga costura.
 func _put(i: int, v: float) -> void:
-	buf[i % buf.size()] += v
+	if i >= buf.size():
+		i = loop_start + (i - buf.size()) % (buf.size() - loop_start)
+	buf[i] += v
 
 
 func _note(start: float, duration: float, midi: int, wave: String, gain: float) -> void:

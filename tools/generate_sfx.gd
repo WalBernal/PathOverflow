@@ -10,7 +10,10 @@ extends SceneTree
 const RATE := 22050
 const SFX_DIR := "res://assets/audio/sfx/"
 const AMB_DIR := "res://assets/audio/ambient/"
-const AMBIENT_SECONDS := 6.0
+## Duración generada de cada ambiente; el bucle final dura AMBIENT_FADE menos
+## (24 s), múltiplo de los latidos de 0.5, 0.75 y 1 s para que no se descuadren.
+const AMBIENT_SECONDS := 26.0
+const AMBIENT_FADE := 2.0
 ## Ambientes más bajos que el resto (los del prólogo no deben tapar los diálogos).
 const AMBIENT_PEAK := {"oficina": 0.28, "pasillo": 0.4, "calle": 0.5}
 
@@ -70,7 +73,7 @@ func _save(path: String, samples: PackedFloat32Array, target_peak := 0.9) -> voi
 
 ## Cola mezclada con el principio para que el bucle no se note.
 func _loopable(s: PackedFloat32Array) -> PackedFloat32Array:
-	var fade := int(0.5 * RATE)
+	var fade := int(AMBIENT_FADE * RATE)
 	var out := s.slice(0, s.size() - fade)
 	for i in fade:
 		var t := float(i) / fade
@@ -311,6 +314,12 @@ func _amb_base() -> PackedFloat32Array:
 	return _buf(AMBIENT_SECONDS)
 
 
+## Cantidad de sucesos sueltos (gotas, pitidos...) pensada para 6 s, escalada a la
+## duración real del ambiente.
+func _n(count_per_6s: int) -> int:
+	return int(round(count_per_6s * AMBIENT_SECONDS / 6.0))
+
+
 func _add_drone(b: PackedFloat32Array, freq: float, amount: float, wobble := 0.3) -> void:
 	for i in b.size():
 		var t := float(i) / RATE
@@ -326,7 +335,7 @@ func _add_wind(b: PackedFloat32Array, amount: float, cut: float, lfo := 0.17) ->
 
 
 func _add_pings(b: PackedFloat32Array, count: int, freq_lo: float, freq_hi: float, amount: float, decay: float) -> void:
-	for k in count:
+	for k in _n(count):
 		var start := rng.randi_range(0, b.size() - int(RATE * decay * 4.0) - 1)
 		var freq := rng.randf_range(freq_lo, freq_hi)
 		for i in int(RATE * decay * 4.0):
@@ -388,7 +397,7 @@ func _amb_swamp() -> PackedFloat32Array:
 	var b := _amb_base()
 	_add_drone(b, 48.0, 0.15, 0.2)
 	_add_wind(b, 0.15, 250.0)
-	for k in 14:   # burbujas
+	for k in _n(14):   # burbujas
 		var start := rng.randi_range(0, b.size() - 4000)
 		for i in 2500:
 			var t := float(i) / RATE
@@ -423,7 +432,7 @@ func _amb_kernel() -> PackedFloat32Array:
 	var b := _amb_base()
 	_add_drone(b, 36.0, 0.3, 0.05)
 	_add_wind(b, 0.12, 800.0)
-	for k in 8:   # ráfagas de glitch
+	for k in _n(8):   # ráfagas de glitch
 		var start := rng.randi_range(0, b.size() - 3000)
 		var ph := 0.0
 		for i in 1500:
@@ -436,7 +445,7 @@ func _amb_terminal() -> PackedFloat32Array:
 	var b := _amb_base()
 	_add_drone(b, 60.0, 0.1, 0.0)
 	_add_drone(b, 3150.0, 0.012, 0.0)   # pitido del CRT
-	for k in 26:   # teclado
+	for k in _n(26):   # teclado
 		var start := rng.randi_range(0, b.size() - 600)
 		for i in 400:
 			b[start + i] += _noise() * exp(-i / 40.0) * 0.35
@@ -472,7 +481,7 @@ func _amb_pit() -> PackedFloat32Array:
 func _amb_rift() -> PackedFloat32Array:
 	var b := _amb_base()
 	_add_drone(b, 33.0, 0.3, 0.04)
-	for k in 3:   # crujido de metal
+	for k in _n(3):   # crujido de metal
 		var start := rng.randi_range(0, b.size() - RATE)
 		for i in RATE:
 			var t := float(i) / RATE
@@ -501,7 +510,7 @@ func _amb_street() -> PackedFloat32Array:
 	_add_wind(b, 0.3, 700.0, 0.12)        # brisa del malecón
 	_add_wind(b, 0.25, 220.0, 0.08)       # olas
 	_add_drone(b, 85.0, 0.05, 0.6)        # tráfico lejano
-	for k in 3:   # gaviotas
+	for k in _n(3):   # gaviotas
 		var start := rng.randi_range(0, b.size() - RATE)
 		for i in int(RATE * 0.35):
 			var t := float(i) / RATE
@@ -526,7 +535,7 @@ func _amb_office() -> PackedFloat32Array:
 	_add_drone(b, 120.0, 0.1, 0.0)
 	_add_drone(b, 180.0, 0.04, 0.0)
 	_add_wind(b, 0.18, 380.0, 0.03)       # ventiladores amortiguados por la carcasa
-	for k in 9:   # el disco duro buscando sectores
+	for k in _n(9):   # el disco duro buscando sectores
 		var start := rng.randi_range(0, b.size() - 400)
 		for i in 300:
 			b[start + i] += _noise() * exp(-i / 25.0) * 0.12
@@ -546,7 +555,7 @@ func _amb_bios() -> PackedFloat32Array:
 	var b := _amb_base()
 	_add_drone(b, 60.0, 0.12, 0.0)
 	_add_wind(b, 0.12, 900.0, 0.05)
-	for k in 4:   # pitidos del POST
+	for k in _n(4):   # pitidos del POST
 		var start := rng.randi_range(0, b.size() - 3000)
 		for i in 2600:
 			b[start + i] += _sq(i * 1000.0 / RATE) * 0.06 * (1.0 if i < 2200 else 0.0)

@@ -22,6 +22,12 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("objetos"):
+		await _capture_quest_items()
+		await _capture_icons()
+		await _capture_interface()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("combate"):
 		await _capture_tree_sectors()
 		await _capture_tunnel_dino()
@@ -439,6 +445,78 @@ func _capture_icons() -> void:
 	_swap(sheet)
 	await _wait(0.5)
 	_save("16_iconos")
+
+
+## Objetos de misión del suelo: a tamaño real (abajo) y ampliados (arriba).
+func _capture_quest_items() -> void:
+	var kinds := ["tape", "log", "descriptor", "ice_cache", "kindle_case", "kindle", "concha", "bolillo", "cuernito"]
+	var sheet := Control.new()
+	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sheet.draw.connect(func() -> void:
+		sheet.draw_rect(Rect2(Vector2.ZERO, sheet.size), Color("1d2a26"))
+		var font := sheet.get_theme_default_font()
+		for i in kinds.size():
+			var x := 90.0 + i * 170.0
+			sheet.draw_set_transform(Vector2(x, 300), 0.0, Vector2(3.5, 3.5))
+			QuestItemArt.draw(sheet, Vector2.ZERO, kinds[i], 0.3)
+			sheet.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			QuestItemArt.draw(sheet, Vector2(x, 620), kinds[i], 0.3)
+			sheet.draw_string(font, Vector2(x - 80, 720), kinds[i], HORIZONTAL_ALIGNMENT_CENTER, 160, 14))
+	_swap(sheet)
+	await _wait(0.5)
+	_save("20_objetos_mision")
+
+
+## Objetos de misión en la Oblea, el menú de pausa y la interfaz al 120 % con el
+## modo daltónico. Deja los ajustes del jugador como estaban.
+func _capture_interface() -> void:
+	var saved_scale: Variant = GameSettings.get_value("interface", "scale", 1.0)
+	var saved_cb: bool = Ailments.colorblind
+	GameSettings.set_value("interface", "scale", 1.0)
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Interfaz", &"hechicero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "oblea"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.flags["quest_paez_kindle_started"] = true
+	c.flags["quest_eugenio_panes_started"] = true
+	c.level = 20
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var player: Player = world.get("player")
+	var em: EnemyManager = world.get("enemies")
+	player.invulnerable = true
+	em.clear_all()
+	player.global_position = Vector2(2450, 620)
+	await _wait(1.0)
+	_save("21_funda_en_la_oblea")
+	var ui: GameUI = world.get("ui")
+	ui.toggle_pause_menu()
+	await _wait(0.4)
+	_save("22_pausa")
+	ui.toggle_pause_menu()
+	GameSettings.set_value("interface", "scale", 1.2)
+	Ailments.colorblind = true
+	ui.apply_ui_scale()
+	var p := player.global_position
+	var states := [Ailments.BURN, Ailments.SHOCK, Ailments.CHILL, Ailments.POISON, Ailments.BLEED, Ailments.FREEZE]
+	for k in 6:
+		var id := em.spawn(p + Vector2.from_angle(TAU * k / 6.0) * 260.0, Rarity.Enemy.NORMAL)
+		em.apply_ailment(em.index_of(id), states[k], 30.0)
+	ui.hud.set("_target_id", em.ids[0])
+	ui.hud.set("_target_linger", 999.0)
+	await _wait(1.0)
+	_save("23_interfaz_120_daltonico")
+	ui.toggle_pause_menu()
+	await _wait(0.4)
+	_save("24_pausa_120")
+	ui.toggle_pause_menu()
+	GameSettings.set_value("interface", "scale", saved_scale)
+	Ailments.colorblind = saved_cb
+	world.set("_since_save", -9999.0)
 
 
 ## Combate con estados alterados, invocaciones persistentes y el HUD nuevo.

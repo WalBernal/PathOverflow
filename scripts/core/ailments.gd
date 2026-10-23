@@ -62,7 +62,25 @@ static func display_name(id: String) -> String:
 	return INFO.get(id, {}).get("name", id)
 
 
+## Modo daltónico (menú de pausa → Interfaz): los estados que se confunden por
+## color (quemado/sangrando, envenenado/sangrando, helado/corrompido) pasan a la
+## paleta de Okabe-Ito, que se distingue con cualquier tipo de daltonismo. Las
+## formas de los iconos (StatusIcon) ya son distintas de por sí.
+const COLORBLIND_COLORS := {
+	BURN: "d55e00", SHOCK: "f0e442", CHILL: "56b4e9", FREEZE: "e0f4ff", POISON: "009e73",
+	BLEED: "cc79a7", "corrupt": "0072b2",
+}
+static var colorblind := bool(GameSettings.get_value("interface", "colorblind", false))
+
+
+static func set_colorblind(on: bool) -> void:
+	colorblind = on
+	GameSettings.set_value("interface", "colorblind", on)
+
+
 static func color(id: String) -> Color:
+	if colorblind and COLORBLIND_COLORS.has(id):
+		return Color(COLORBLIND_COLORS[id])
 	return Color(INFO.get(id, {}).get("color", "c8c8c8"))
 
 

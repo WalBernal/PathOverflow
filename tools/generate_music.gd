@@ -83,9 +83,7 @@ func _note(start: float, duration: float, midi: int, wave: String, gain: float) 
 	var i0 := int(start * RATE)
 	var n := int(duration * RATE)
 	for k in n:
-		var i := i0 + k
-		if i >= buf.size():
-			break
+		var i := (i0 + k) % buf.size()   # las colas vuelven al principio: bucle sin costura
 		var t := float(k) / RATE
 		var phase := fmod(t * f, 1.0)
 		var v := 0.0
@@ -108,9 +106,7 @@ func _kick(start: float) -> void:
 	var i0 := int(start * RATE)
 	var phase := 0.0
 	for k in int(0.25 * RATE):
-		var i := i0 + k
-		if i >= buf.size():
-			break
+		var i := (i0 + k) % buf.size()   # las colas vuelven al principio: bucle sin costura
 		var t := float(k) / RATE
 		phase += (45.0 + 90.0 * exp(-t * 30.0)) / RATE
 		buf[i] += sin(phase * TAU) * exp(-t * 12.0) * 0.5
@@ -119,9 +115,7 @@ func _kick(start: float) -> void:
 func _snare(start: float) -> void:
 	var i0 := int(start * RATE)
 	for k in int(0.18 * RATE):
-		var i := i0 + k
-		if i >= buf.size():
-			break
+		var i := (i0 + k) % buf.size()   # las colas vuelven al principio: bucle sin costura
 		var t := float(k) / RATE
 		buf[i] += (rng.randf_range(-1.0, 1.0) * 0.7 + sin(t * 190.0 * TAU) * 0.3) * exp(-t * 22.0) * 0.22
 
@@ -130,9 +124,7 @@ func _hat(start: float, gain: float) -> void:
 	var i0 := int(start * RATE)
 	var last := 0.0
 	for k in int(0.04 * RATE):
-		var i := i0 + k
-		if i >= buf.size():
-			break
+		var i := (i0 + k) % buf.size()   # las colas vuelven al principio: bucle sin costura
 		var t := float(k) / RATE
 		var noise := rng.randf_range(-1.0, 1.0)
 		buf[i] += (noise - last) * exp(-t * 90.0) * gain * 4.0

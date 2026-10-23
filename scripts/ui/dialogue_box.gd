@@ -390,7 +390,7 @@ func _stop_voice() -> void:
 ## Centrada abajo, por encima del HUD (se recalcula porque la altura cambia con el texto).
 func _reposition() -> void:
 	reset_size()
-	var view := get_viewport_rect().size
+	var view := get_parent_area_size()   # la interfaz puede estar escalada (GameUI)
 	position = Vector2((view.x - size.x) / 2.0, view.y - BOTTOM_MARGIN - size.y)
 
 

@@ -37,6 +37,21 @@ static func make_theme() -> Theme:
 	theme.set_color("font_placeholder_color", "LineEdit", Color("5a5363"))
 	theme.set_color("caret_color", "LineEdit", ACCENT)
 
+	# Deslizadores (volúmenes): pista hundida, relleno dorado y un tirador redondo.
+	var track := _box(Color("0d0b10"), BORDER)
+	track.set_corner_radius_all(4)
+	track.content_margin_top = 3
+	track.content_margin_bottom = 3
+	theme.set_stylebox("slider", "HSlider", track)
+	for state in ["grabber_area", "grabber_area_highlight"]:
+		var fill := _box(ACCENT.darkened(0.45 if state == "grabber_area" else 0.3), ACCENT.darkened(0.2))
+		fill.set_corner_radius_all(4)
+		fill.content_margin_top = 3
+		fill.content_margin_bottom = 3
+		theme.set_stylebox(state, "HSlider", fill)
+	theme.set_icon("grabber", "HSlider", _dot_texture(16, ACCENT))
+	theme.set_icon("grabber_highlight", "HSlider", _dot_texture(16, ACCENT.lightened(0.35)))
+
 	var tip := _box(Color("0d0b10f5"), ACCENT.darkened(0.4))
 	tip.set_content_margin_all(10)
 	theme.set_stylebox("panel", "TooltipPanel", tip)
@@ -197,6 +212,50 @@ static func label(text: String, font_size := 16, color := TEXT) -> Label:
 	l.add_theme_font_size_override("font_size", font_size)
 	l.add_theme_color_override("font_color", color)
 	return l
+
+
+## Círculo relleno con borde oscuro (tirador de los deslizadores).
+static func _dot_texture(diameter: int, color: Color) -> ImageTexture:
+	var img := Image.create(diameter, diameter, false, Image.FORMAT_RGBA8)
+	var c := (diameter - 1) / 2.0
+	for y in diameter:
+		for x in diameter:
+			var d := Vector2(x - c, y - c).length()
+			if d <= c - 1.5:
+				img.set_pixel(x, y, color if d < c - 4.0 else color.darkened(0.25))
+			elif d <= c + 0.5:
+				img.set_pixel(x, y, Color("100d14"))
+	return ImageTexture.create_from_image(img)
+
+
+## Fila de ajuste: nombre, deslizador de 0 a 100 % y el valor. `on_change`
+## recibe el valor entre 0 y 1.
+static func slider_row(text: String, value: float, on_change: Callable, width := 360.0) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	row.custom_minimum_size = Vector2(width, 32)
+	var name_label := label(text, 15)
+	name_label.custom_minimum_size.x = 110
+	row.add_child(name_label)
+	var slider := HSlider.new()
+	slider.min_value = 0
+	slider.max_value = 100
+	slider.step = 5
+	slider.value = roundf(value * 100.0)
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	slider.focus_mode = Control.FOCUS_NONE
+	row.add_child(slider)
+	var value_label := label("%d %%" % int(slider.value), 14, MUTED)
+	value_label.custom_minimum_size.x = 48
+	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	row.add_child(value_label)
+	slider.value_changed.connect(func(v: float) -> void:
+		value_label.text = "%d %%" % int(v) if v > 0.0 else "no"
+		on_change.call(v / 100.0))
+	if slider.value <= 0.0:
+		value_label.text = "no"
+	return row
 
 
 static func button(text: String, callback: Callable, min_width := 0.0) -> Button:
