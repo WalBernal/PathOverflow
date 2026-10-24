@@ -29,17 +29,46 @@ var coins: Array[Dictionary] = []
 
 var _pending: Dictionary = {}
 var _hovered := -1
+var _alt_was := false
 
 
 func _ready() -> void:
 	z_index = 2  # etiquetas por encima de enemigos y jugador
 
 
+## Filtro de botín (Pausa → Interfaz): 0 todo, 1 sin equipo normal, 2 solo raros
+## y mejores. Placas, RAM, pociones, objetos clave, únicos y conjuntos siempre se
+## ven. Con Alt pulsado se ve todo.
+const FILTER_NAMES := ["Todo", "Ocultar normales", "Solo raros y mejores"]
+
+
+static func filter_level() -> int:
+	return int(GameSettings.get_value("interface", "loot_filter", 0))
+
+
+static func passes_filter(item: Item, level: int) -> bool:
+	if level <= 0 or not item.is_equipment() or item.rarity >= Rarity.Item.UNIQUE:
+		return true
+	if level == 1:
+		return item.rarity != Rarity.Item.NORMAL
+	return item.rarity >= Rarity.Item.RARE
+
+
+func _visible(d: Dictionary) -> bool:
+	return Input.is_key_pressed(KEY_ALT) or passes_filter(d["item"], filter_level())
+
+
 func drop_item(item: Item, pos: Vector2) -> void:
 	var font := ThemeDB.fallback_font
 	var text := item.display_name()
 	var label_size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE) + PADDING * 2.0
-	drops.append({"item": item, "rect": find_spot(pos, label_size), "text": text})
+	drops.append({"item": item, "rect": find_spot(pos, label_size), "text": text, "age": 0.0})
+	# Botín bueno: haz de luz del color de la rareza y su propio sonido.
+	if item.is_equipment() and passes_filter(item, filter_level()):
+		if item.rarity >= Rarity.Item.UNIQUE:
+			Sfx.play("level_up", -4.0, 1.6)
+		elif item.rarity >= Rarity.Item.RARE:
+			Sfx.play("coin", -2.0, 0.65)
 	queue_redraw()
 
 
@@ -89,9 +118,18 @@ func _draw() -> void:
 		_draw_coin(c, font)
 	for i in drops.size():
 		var d := drops[i]
+		if not _visible(d):
+			continue
 		var item: Item = d["item"]
 		var rect: Rect2 = d["rect"]
 		var color := item.display_color()
+		if item.is_equipment() and item.rarity >= Rarity.Item.RARE:
+			# Haz de luz: fuerte los primeros segundos, luego queda tenue (se ve de lejos).
+			var strength := 0.35 + 0.4 * clampf(1.0 - float(d.get("age", 0.0)) / 4.0, 0.0, 1.0)
+			var bx := rect.get_center().x
+			for k in 6:
+				var w := 10.0 - k * 1.4
+				draw_rect(Rect2(bx - w / 2.0, rect.position.y - 260.0 + k * 40.0, w, 40.0), Color(color, strength * (0.15 + 0.12 * k)))
 		draw_rect(rect, Color(0.18, 0.16, 0.22, 0.95) if i == _hovered else Color(0, 0, 0, 0.8))
 		if item.rarity >= Rarity.Item.UNIQUE or not item.is_equipment() or i == _hovered:
 			draw_rect(rect, color, false, 1.5)
@@ -114,6 +152,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 	_update_coins(delta)
+	var beams := false
+	for d in drops:
+		if float(d.get("age", 0.0)) < 4.0:
+			d["age"] = float(d.get("age", 0.0)) + delta
+			beams = true
+	if beams or Input.is_key_pressed(KEY_ALT) != _alt_was:
+		_alt_was = Input.is_key_pressed(KEY_ALT)
+		queue_redraw()
 	if _pending.is_empty() or player == null:
 		return
 	if not drops.has(_pending):
@@ -140,6 +186,8 @@ func pick_near(pos: Vector2, radius: float) -> bool:
 	var best := -1
 	var best_d := radius
 	for i in drops.size():
+		if not _visible(drops[i]):
+			continue
 		var d: float = (drops[i]["rect"] as Rect2).get_center().distance_to(pos)
 		if d < best_d:
 			best_d = d
@@ -154,7 +202,7 @@ func pick_near(pos: Vector2, radius: float) -> bool:
 func _index_at(world_pos: Vector2) -> int:
 	# De atrás hacia delante: la última etiqueta dibujada está encima.
 	for i in range(drops.size() - 1, -1, -1):
-		if drops[i]["rect"].has_point(world_pos):
+		if drops[i]["rect"].has_point(world_pos) and _visible(drops[i]):
 			return i
 	return -1
 

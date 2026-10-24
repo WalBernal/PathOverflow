@@ -224,11 +224,14 @@ func _on_cell_clicked(cell: ItemCell, button: MouseButton) -> void:
 		message.emit("Objeto clave: se usa solo al llegar a lo que abre.")
 		return
 	if cell.location["kind"] == "bag":
+		if cell.item is ExpansionChip:
+			message.emit("Los chips de expansión se engastan en el árbol pasivo (P): click en una ranura hexagonal asignada.")
+			return
 		if not cell.item.is_equipment():
 			message.emit("Las placas base y la RAM se instalan en el menú de habilidades (K).")
 			return
 		if not character.can_equip(cell.item):
-			message.emit("Requiere nivel %d. Vuelve cuando seas senior." % cell.item.required_level())
+			message.emit(ItemTransfer.equip_refusal(character, cell.item))
 			return
 		if inv.equip_from_bag(cell.location["index"]):
 			item_equipped.emit()

@@ -13,6 +13,8 @@ static func draw(ci: CanvasItem, skill_id: String, behavior: String, p: Vector2,
 			_daemon(ci, p, ph)
 		"golem_hardware":
 			_golem(ci, p, ph, c)
+		"mainframe_titan":
+			_titan(ci, p, ph, c)
 		"dron_escolta", "dron_medico", "dron_escudo":
 			_drone(ci, skill_id, p, ph, c)
 		"bot_pruebas":
@@ -77,6 +79,41 @@ static func _golem(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
 	ci.draw_rect(Rect2(p + Vector2(-11, -44 + sway), Vector2(22, 16)), Color("b8b8b0"))
 	ci.draw_rect(Rect2(p + Vector2(-9, -42 + sway), Vector2(18, 11)), Color("10200f"))
 	ci.draw_string(ThemeDB.fallback_font, p + Vector2(-8, -33 + sway), "ò_ó", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("3cff6a"))
+
+
+## Mainframe Titán: un armario de servidores con piernas, hombreras de ventilador,
+## un ojo-láser y LEDs que corren por el pecho. El doble de grande que el golem.
+static func _titan(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
+	var sway := sin(ph * 0.4) * 2.0
+	ci.draw_set_transform(p + Vector2(0, 4), 0.0, Vector2(1.0, 0.35))
+	ci.draw_circle(Vector2.ZERO, 34.0, Color(0, 0, 0, 0.35))
+	ci.draw_set_transform(Vector2.ZERO)
+	for s in [-1.0, 1.0]:   # piernas
+		ci.draw_rect(Rect2(p + Vector2(s * 12 - 7, -14 + sin(ph + s) * 2.0), Vector2(14, 16)), Color("3a3f4a"))
+		ci.draw_rect(Rect2(p + Vector2(s * 12 - 9, 0), Vector2(18, 5)), Color("2a2e36"))
+	var body := Rect2(p + Vector2(-24, -62 + sway), Vector2(48, 50))
+	ci.draw_rect(body, Color("2c3038"))
+	ci.draw_rect(body, Color("14161a"), false, 2.0)
+	for k in 5:   # bahías de discos con LEDs
+		var y := body.position.y + 6 + k * 9
+		ci.draw_rect(Rect2(body.position.x + 6, y, 36, 6), Color("1c1f26"))
+		ci.draw_rect(Rect2(body.position.x + 8 + fmod(ph * 12.0 + k * 7.0, 30.0), y + 2, 3, 2), c)
+		ci.draw_rect(Rect2(body.end.x - 10, y + 2, 2, 2), Color("40ff70") if int(ph * 3.0 + k) % 2 else Color("1a3020"))
+	for s in [-1.0, 1.0]:   # hombreras con ventilador y brazos
+		var sh := p + Vector2(s * 30, -54 + sway)
+		ci.draw_circle(sh, 10.0, Color("4a4f5c"))
+		ci.draw_circle(sh, 7.0, Color("1c1f26"))
+		for k in 3:
+			var a := ph * 6.0 + k * TAU / 3.0
+			ci.draw_line(sh, sh + Vector2.from_angle(a) * 6.0, Color("8a8f9c"), 2.0)
+		ci.draw_rect(Rect2(sh + Vector2(-5, 8), Vector2(10, 24 + sin(ph + s) * 2.0)), Color("3a3f4a"))
+		ci.draw_rect(Rect2(sh + Vector2(-7, 30), Vector2(14, 8)), Color("4a4f5c"))
+	var head := Rect2(p + Vector2(-14, -82 + sway), Vector2(28, 18))
+	ci.draw_rect(head, Color("4a4f5c"))
+	ci.draw_rect(Rect2(head.position + Vector2(4, 6), Vector2(20, 6)), Color("10161c"))
+	ci.draw_rect(Rect2(head.position + Vector2(8 + 6.0 * sin(ph * 0.8), 7), Vector2(6, 4)), Color("ff3a3a"))   # ojo-láser
+	ci.draw_line(head.position + Vector2(14, 0), head.position + Vector2(14, -8), Color("8a8f9c"), 2.0)
+	ci.draw_circle(head.position + Vector2(14, -9), 2.5, c)
 
 
 ## Drones que orbitan: cuatro rotores y un núcleo (cruz el médico, escudo el cortafuegos, llama el escolta).

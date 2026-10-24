@@ -76,6 +76,11 @@ func supports(skill_def: Dictionary) -> bool:
 		return false
 	if only_damage() and String(skill_def.get("damage_type", "none")) == "none":
 		return false
+	# Pagar con vida o gastar cargas solo tiene sentido en habilidades que hacen daño.
+	var sp: Dictionary = def.get("special", {})
+	if (sp.has("life_cost") or sp.has("spend_buffer") or sp.has("spend_multihilo") or sp.has("spend_overclock")) \
+			and String(skill_def.get("damage_type", "none")) == "none":
+		return false
 	var required: Array = def.get("requires_tags", [])
 	if required.is_empty():
 		return true
@@ -130,6 +135,11 @@ func effect_lines() -> PackedStringArray:
 			int(sp["projectile_penalty"]), int(sp["projectile_penalty"]) / 2])
 	if sp.has("reserve_mult"):
 		lines.append("Reserva un %d %% más de maná" % roundi((float(sp["reserve_mult"]) - 1.0) * 100.0))
+	if sp.has("life_cost"):
+		lines.append("El %d %% del costo se paga con vida" % roundi(float(sp["life_cost"]) * 100.0))
+	for t in Charges.TYPES:
+		if sp.has("spend_" + t):
+			lines.append(Charges.SPEND_TEXT[t])
 	if sp.has("aura_on_unit"):
 		lines.append("El aura sigue a tu invocación más resistente (el tanque primero), no a ti; con varias auras enlazadas, cada una va a una invocación distinta")
 	if sp.has("aura_anchor"):

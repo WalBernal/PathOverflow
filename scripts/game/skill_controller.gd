@@ -7,6 +7,8 @@ extends Node2D
 
 signal skill_used(hotbar_index: int)
 signal not_enough_mana
+## La habilidad cuesta vida y no te sobra.
+signal not_enough_life
 ## No queda maná sin reservar para otra invocación persistente.
 signal reservation_full(skill_name: String)
 ## Una invocación persistente ha caído.
@@ -86,6 +88,7 @@ func setup(p_player: Player, p_enemies: EnemyManager, p_character: CharacterData
 	character.inventory.changed.connect(refresh_profiles)
 	character.conditions_changed.connect(refresh_profiles)
 	player.hit_taken.connect(on_player_hit)
+	enemies.crit_dealt.connect(on_crit)
 	var saved_auras: Array = character.flags.get("active_auras", []).duplicate()
 	refresh_profiles()
 	_restore_auras(saved_auras)
@@ -369,8 +372,52 @@ var _nova_cooldown := 0.0
 var _pending_explosions: Array[Vector2] = []
 
 
+## Probabilidad de ganar una carga: la base del tipo más la de los stats.
+func _roll_charge(t: String) -> void:
+	if randf() * 100.0 < Charges.BASE_CHANCE[t] + character.stats.get_value(Charges.chance_stat(t)):
+		if character.gain_charge(t):
+			_effects.append({"type": "ring", "pos": player.global_position, "radius": 34.0, "time": 0.0, "duration": 0.3, "color": Charges.COLORS[t]})
+
+
+var _crit_charge_cd := 0.0
+
+
+func on_crit() -> void:
+	if _crit_charge_cd <= 0.0:
+		_crit_charge_cd = 0.25   # un área con 20 críticos no da 20 tiradas
+		_roll_charge("overclock")
+
+
+## Gasto de cargas (RAM "spend_<tipo>"): devuelve una copia del perfil con el
+## bono de las cargas gastadas (más daño, crítico seguro) y cura con las de Buffer.
+func _spend_charges(p: Dictionary) -> Dictionary:
+	var spend: Dictionary = p.get("spend_charges", {})
+	if spend.is_empty():
+		return p
+	var q := p.duplicate()
+	var mult := 1.0
+	for t in spend:
+		var n := character.spend_charges(t)
+		if n <= 0:
+			continue
+		match t:
+			"buffer":
+				player.heal(player.max_life() * 0.06 * n)
+				mult *= 1.0 + 0.10 * n
+			"multihilo":
+				mult *= 1.0 + 0.15 * n
+			"overclock":
+				q["crit_chance"] = 100.0
+				q["crit_multiplier"] = float(q["crit_multiplier"]) + 20.0 * n
+		_effects.append({"type": "burst", "pos": player.global_position, "radius": 40.0 + 12.0 * n, "time": 0.0, "duration": 0.35, "color": Charges.COLORS[t]})
+	q["min_damage"] = float(q["min_damage"]) * mult
+	q["max_damage"] = float(q["max_damage"]) * mult
+	return q
+
+
 ## Lo llama World al morir un enemigo.
 func on_enemy_killed(pos: Vector2) -> void:
+	_roll_charge("multihilo")
 	var chance := character.stats.get_value(Stat.KILL_EXPLOSION)
 	if chance > 0.0 and randf() * 100.0 < chance and _pending_explosions.size() < 8:
 		_pending_explosions.append(pos)
@@ -378,6 +425,7 @@ func on_enemy_killed(pos: Vector2) -> void:
 
 ## Lo llama el jugador al recibir un golpe (Player.hit_taken).
 func on_player_hit() -> void:
+	_roll_charge("buffer")
 	var chance := character.stats.get_value(Stat.RETALIATION_NOVA)
 	if chance <= 0.0 or _nova_cooldown > 0.0 or randf() * 100.0 >= chance:
 		return
@@ -393,6 +441,7 @@ func on_player_hit() -> void:
 
 func _update_ascendancy_procs(delta: float) -> void:
 	_nova_cooldown = maxf(0.0, _nova_cooldown - delta)
+	_crit_charge_cd = maxf(0.0, _crit_charge_cd - delta)
 	var explosions := _pending_explosions.duplicate()
 	_pending_explosions.clear()
 	for pos in explosions:
@@ -481,7 +530,17 @@ func try_use(index: int) -> bool:
 			_mana_warning_cooldown = 1.5
 			reservation_full.emit(String(p["name"]))
 		return false
+	# Costo en vida (RAM de alimentación por vida): nunca te mata, pero no alcanza si no te sobra.
+	var life_cost := float(p.get("life_cost", 0.0))
+	if life_cost > 0.0 and player.life <= life_cost + 1.0:
+		if _mana_warning_cooldown <= 0.0:
+			_mana_warning_cooldown = 1.5
+			not_enough_life.emit()
+		return false
 	player.mana -= p["mana_cost"]
+	if life_cost > 0.0:
+		player.life -= life_cost
+	p = _spend_charges(p)
 	cooldowns[index] = p["cooldown"]
 	_busy = p["use_time"]
 	player.action_lock = minf(MAX_MOVE_LOCK, p["use_time"] * MOVE_LOCK_FRACTION)
@@ -978,9 +1037,24 @@ func _update_units(delta: float) -> void:
 		_update_reservation()
 
 
-## Habilidad propia de la invocación (unit.ability): cura, barrera, salto o veneno.
+## Habilidades propias de la invocación (unit.ability o unit.abilities): cada una
+## con su enfriamiento (u["ab_cds"]).
 func _unit_ability(u: Dictionary, p: Dictionary, delta: float) -> void:
-	var ab: Dictionary = p["unit_ability"]
+	var list: Array = p.get("unit_abilities", [])
+	if list.is_empty():
+		return
+	if not u.has("ab_cds") or (u["ab_cds"] as Array).size() != list.size():
+		u["ab_cds"] = []
+		for k in list.size():
+			u["ab_cds"].append(u["ab_cd"] if k == 0 else float(list[k].get("cooldown", p["unit_interval"])) * (0.5 + 0.3 * k))
+	for k in list.size():
+		u["ab_cd"] = u["ab_cds"][k]
+		_one_unit_ability(u, p, list[k], delta)
+		u["ab_cds"][k] = u["ab_cd"]
+
+
+## Una habilidad de invocación: cura, barrera, salto, veneno, terremoto o láser.
+func _one_unit_ability(u: Dictionary, p: Dictionary, ab: Dictionary, delta: float) -> void:
 	if ab.is_empty():
 		return
 	u["ab_cd"] -= delta
@@ -1008,7 +1082,7 @@ func _unit_ability(u: Dictionary, p: Dictionary, delta: float) -> void:
 			if player.barrier > 0.0:
 				u["ab_cd"] = 0.5
 				return
-			u["ab_cd"] = float(p["unit_interval"])
+			u["ab_cd"] = float(ab["cooldown"]) / speed if ab.has("cooldown") else float(p["unit_interval"])
 			player.add_barrier((float(ab.get("barrier", 20)) + float(ab.get("barrier_life", 0.1)) * player.max_life()) * float(p.get("ability_power", 1.0)), 6.0)
 			Sfx.play("barrier", -8.0, 1.2)
 			_effects.append({"type": "ring", "pos": player.global_position, "radius": 60.0, "time": 0.0, "duration": 0.5, "color": Color("cfe8ff")})
@@ -1050,6 +1124,42 @@ func _unit_ability(u: Dictionary, p: Dictionary, delta: float) -> void:
 			cloud["max_damage"] = p["max_damage"] * 1.1
 			cloud["crit_chance"] = 0.0
 			_clouds.append({"pos": enemies.positions[t], "life": cloud["duration"], "next": 0.0, "profile": cloud, "color": u["color"], "seed": randi()})
+		"quake":
+			# Terremoto: golpe enorme alrededor que aturde (si hay enemigos cerca).
+			var quake_radius := float(ab.get("radius", 150.0)) * float(p.get("area_scale", 1.0))
+			if enemies.nearest_index(pos, quake_radius) == -1:
+				u["ab_cd"] = 0.5
+				return
+			u["ab_cd"] = float(ab.get("cooldown", 6.0)) / speed
+			_ctx(p)
+			var qm := float(ab.get("damage_mult", 2.0)) * float(p.get("ability_power", 1.0))
+			enemies.stun_in_radius(pos, quake_radius, float(ab.get("stun", 1.0)))
+			enemies.hit_in_radius(pos, quake_radius, p["min_damage"] * qm, p["max_damage"] * qm, p["crit_chance"], p["crit_multiplier"])
+			Sfx.play("mine", -6.0, 0.7)
+			player.camera_shake(4.0, 0.25)
+			_effects.append({"type": "quake", "pos": pos, "radius": quake_radius, "time": 0.0, "duration": 0.55, "color": u["color"]})
+		"beam":
+			# Láser: una línea hasta el enemigo más lejano a su alcance; daña a todos en ella.
+			var reach := float(p["unit"].get("range", 520.0))
+			var far := -1
+			var far_d := 0.0
+			for i in enemies.positions.size():
+				var d: float = enemies.positions[i].distance_to(pos)
+				if d <= reach and d > far_d:
+					far_d = d
+					far = i
+			if far == -1:
+				u["ab_cd"] = 0.5
+				return
+			u["ab_cd"] = float(ab.get("cooldown", 4.0)) / speed
+			var from := pos + Vector2(0, -74)
+			var to: Vector2 = from + (enemies.positions[far] - from).normalized() * reach
+			_ctx(p)
+			var bm := float(ab.get("damage_mult", 1.6)) * float(p.get("ability_power", 1.0))
+			enemies.hit_in_segment(from, to, float(ab.get("width", 22.0)) * 0.5, p["min_damage"] * bm, p["max_damage"] * bm, p["crit_chance"], p["crit_multiplier"])
+			Sfx.play("arc", -8.0, 0.8)
+			_effects.append({"type": "beam", "pos": from, "dir": (to - from).normalized(), "radius": float(ab.get("width", 22.0)), "length": reach,
+				"time": 0.0, "duration": 0.3, "color": Color("ff4a3a")})
 
 
 ## Avanza hacia `goal` hasta quedarse a `stop` de él, sin salirse del terreno.

@@ -65,6 +65,25 @@ func neighbors(id: int) -> Array:
 	return adjacency.get(id, [])
 
 
+## Ranuras de chip de expansión: 12 notables repartidas alrededor del árbol (una
+## de cada seis, por ángulo). Con el nodo asignado, admiten un ExpansionChip.
+const SOCKET_EVERY := 6
+var _sockets: Array[int] = []
+
+
+func socket_ids() -> Array[int]:
+	if _sockets.is_empty():
+		var notables: Array = nodes.values().filter(func(n: PassiveNode) -> bool: return n.kind == PassiveNode.Kind.NOTABLE)
+		notables.sort_custom(func(a: PassiveNode, b: PassiveNode) -> bool: return a.position.angle() < b.position.angle())
+		for k in range(0, notables.size(), SOCKET_EVERY):
+			_sockets.append((notables[k] as PassiveNode).id)
+	return _sockets
+
+
+func is_socket(id: int) -> bool:
+	return id in socket_ids()
+
+
 func get_start_node_for_class(class_id: StringName) -> int:
 	for id in nodes:
 		var n: PassiveNode = nodes[id]

@@ -76,7 +76,7 @@ static func fits(character: CharacterData, loc: Dictionary, item: Item) -> Strin
 			if not ok:
 				return "Eso no va en esa ranura. Ni con cinta americana."
 			if not character.can_equip(item):
-				return "Requiere nivel %d. Vuelve cuando seas senior." % item.required_level()
+				return equip_refusal(character, item)
 			return ""
 		"board":
 			return "" if item is Motherboard else "Ahí solo caben placas base."
@@ -97,6 +97,17 @@ static func fits(character: CharacterData, loc: Dictionary, item: Item) -> Strin
 				return "Requiere nivel %d. Este café es demasiado fuerte para ti." % item.required_level()
 			return ""
 	return "Destino desconocido."
+
+
+## Por qué no puedes equipar un objeto (nivel o atributos).
+static func equip_refusal(character: CharacterData, item: Item) -> String:
+	if character.level < item.required_level():
+		return "Requiere nivel %d. Vuelve cuando seas senior." % item.required_level()
+	var lack := PackedStringArray()
+	var missing := character.missing_attributes(item)
+	for a in missing:
+		lack.append("%d de %s" % [missing[a], Item.ATTR_NAMES[a]])
+	return "Te faltan %s para usar esto. Al árbol (P) o a buscar un anillo." % " y ".join(lack)
 
 
 ## Mueve (intercambia) lo que hay en `from` con lo que hay en `to`.

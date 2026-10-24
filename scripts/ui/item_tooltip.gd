@@ -76,8 +76,20 @@ static func build_text(item: Item, character: CharacterData, compare: bool) -> S
 
 	t += _section(_base_lines(item))
 	t += "[color=#%s]Nivel de objeto: %d   ·   Requiere nivel %d[/color]\n" % [GREY, item.item_level, item.required_level()]
-	if character and not character.can_equip(item):
+	var req := item.attribute_requirements()
+	if not req.is_empty():
+		var parts := PackedStringArray()
+		var missing := character.missing_attributes(item) if character else {}
+		for a in req:
+			parts.append("[color=#%s]%s %d[/color]" % [DOWN if missing.has(a) else GREY, Item.ATTR_NAMES[a], req[a]])
+		t += "[color=#%s]Requiere:[/color] %s\n" % [GREY, "  ·  ".join(parts)]
+	if character and character.level < item.required_level():
 		t += "[color=#%s]Nivel insuficiente[/color]\n" % DOWN
+	elif character and not character.missing_attributes(item).is_empty():
+		var lack := PackedStringArray()
+		for a in character.missing_attributes(item):
+			lack.append("%d de %s" % [character.missing_attributes(item)[a], Item.ATTR_NAMES[a]])
+		t += "[color=#%s]Te faltan %s[/color]\n" % [DOWN, " y ".join(lack)]
 
 	var implicits := PackedStringArray()
 	for m in item.implicit_mods():

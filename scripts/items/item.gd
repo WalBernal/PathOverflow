@@ -88,6 +88,35 @@ func required_level() -> int:
 	return level
 
 
+## Atributos que pide la base (como en PoE): las armas de fuerza piden Fuerza, la
+## ropa de seda Inteligencia... Crece con el nivel requerido; los objetos de
+## nivel bajo y la joyería no piden nada. {"strength": 40, "dexterity": 24}
+const ATTR_BY_TAG := {
+	"sword": ["strength", "dexterity"], "axe": ["strength"], "mace": ["strength"], "dagger": ["dexterity", "intelligence"],
+	"str_armour": ["strength"], "dex_armour": ["dexterity"], "int_armour": ["intelligence"],
+}
+const ATTR_NAMES := {"strength": "Fuerza", "dexterity": "Destreza", "intelligence": "Inteligencia"}
+
+
+func attribute_requirements() -> Dictionary:
+	if not is_equipment() or base.get("slot", "") in ["ring", "amulet", "belt"]:
+		return {}
+	var attrs: Array = []
+	for tag in base.get("tags", []):
+		for a in ATTR_BY_TAG.get(tag, []):
+			if not a in attrs:
+				attrs.append(a)
+	if attrs.is_empty():
+		return {}
+	var per := float(required_level()) * (2.0 if is_weapon() else 1.6) * (1.0 if attrs.size() == 1 else 0.6)
+	if per < 14.0:
+		return {}
+	var out := {}
+	for a in attrs:
+		out[a] = int(per)
+	return out
+
+
 func implicit_mods() -> Array:
 	return base.get("implicits", [])
 
@@ -188,6 +217,8 @@ static func from_dict(d: Dictionary, db: ItemDatabase) -> Item:
 			return Flask.from_save(d, db)
 		"key":
 			return KeyItem.from_save(d)
+		"chip":
+			return ExpansionChip.from_save(d)
 	if not db.bases.has(d.get("base", "")):
 		push_warning("Objeto guardado con base desconocida '%s': se descarta" % d.get("base", ""))
 		return null

@@ -17,8 +17,8 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 | **Esquiva / "git stash"**: un salto corto con invulnerabilidad breve (Espacio o B en el mando), con su propio enfriamiento y un pequeño gasto de energía | M | ★★★ | Hoy defenderse es solo vida y pociones; la esquiva da habilidad al jugador y permite jefes con ataques telegrafiados de verdad. |
 | **Ataques enemigos telegrafiados**: zonas rojas en el suelo antes de los golpes fuertes de raros, únicos y jefes (ya hay carga y embestida; falta el aviso en el suelo) | M | ★★★ | Junto con la esquiva, convierte las peleas de jefe en peleas de reflejos, no de vida. |
 | **Hitstop y retroceso**: 2-4 fotogramas de pausa al dar un crítico o matar a un raro, y empujón a los enemigos golpeados | S | ★★★ | El "peso" del golpe es lo que más mejora la sensación sin cambiar números. |
-| **Eventos en las zonas**: emboscadas, cofres de "datos huérfanos" con oleada, santuarios temporales (más daño, más velocidad), "deploy fallido" que hace aparecer élites | M | ★★ | Las zonas más grandes necesitan sorpresas, no solo más manadas. |
-| **Botín más legible**: rayo de luz del color de la rareza al caer un raro/único, sonido propio por rareza, filtro de botín configurable (ocultar normales, resaltar bases) | M | ★★★ | Con 200 enemigos por zona, el botín se vuelve ruido sin filtro. |
+| **Más eventos de zona**: hoy hay 4 (datos huérfanos, santuario, emboscada, deploy fallido); faltan eventos con mecánica propia (escoltar un proceso, desactivar bombas lógicas a tiempo, un comerciante ambulante) | M | ★★ | Variedad entre visitas. |
+| **Filtro de botín, siguiente paso**: reglas por base, nivel y afijos (como los filtros de PoE), y resaltar bases buenas | M | ★★ | Ya hay 3 niveles, haz de luz y sonido por rareza. |
 | **Pociones con estilo**: pociones que quitan estados, que dan carga de esquiva, que curan a las invocaciones | S | ★★ | Más decisiones en el cinturón (1-5). |
 | **Escalado de dificultad por zona**: nivel de zona que sigue al del personaje en las zonas ya completadas (opcional) | M | ★ | Repetir zonas sin que se vuelvan triviales. |
 
@@ -26,10 +26,10 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 
 | Mejora | Tamaño | Prioridad | Idea |
 |---|---|---|---|
-| **Cargas** (como las de PoE): *Cafeína* (velocidad), *Contexto* (daño crítico), *Uptime* (defensa). Se ganan con habilidades, nodos o al matar, y se gastan con habilidades que las consumen | L | ★★★ | Un sistema transversal que crea builds nuevas: "gasto todas mis cargas en un golpe". |
+| **Cargas, siguiente paso**: nodos del árbol y de ascendencia que den cargas o las usen (p. ej. "+1 de Buffer máximo", "al gastar Overclock, recupera maná"), y habilidades propias que las consuman | M | ★★ | El sistema ya está (Buffer, Multihilos, Overclock; RAM que las gastan; afijos de objetos). |
 | **Conversión de daño**: nodos/RAM que convierten físico → rayo, fuego → caos, etc. | M | ★★★ | Permite builds temáticas (un Guerrero eléctrico) sin habilidades nuevas. |
-| **Builds de "sacrificio"**: habilidades que gastan vida en vez de maná (Hotfix en caliente), con nodos que lo premian | M | ★★ | Encaja con el Ingeniero de Guardia y su "logs en rojo". |
-| **Builds de invocación masiva vs. invocación única**: un nodo clave "Monolito" (una sola invocación con ×3 vida y daño) frente a "Microservicios" (+2 invocaciones, −30 % cada una) | M | ★★★ | Dos formas claras de jugar invocador. |
+| **Builds de "sacrificio", siguiente paso**: nodos que premien pagar con vida (más daño con vida baja, robo de vida extra) | S | ★★ | Ya hay RAM que pagan con vida (Alimentación por Vida, Hotfix en Caliente). |
+| **Nodos clave de invocador**: "Monolito" (una sola invocación con ×3 vida y daño) frente a "Microservicios" (+2 invocaciones, −30 % cada una) en el árbol | M | ★★ | Ya existen el Mainframe Titán (una invocación con 3 habilidades) y la variante de tres golems. |
 | **Builds de trampas y minas con detonación encadenada** | S | ★★ | Detonar una mina detona las vecinas: satisfactorio y legible. |
 | **Totems/torretas que copian tu habilidad** (soporte "Contenedor Docker") | M | ★★ | Un estilo "pongo y me alejo" para cualquier habilidad. |
 | **Hechizos canalizados** (mantener pulsado: rayo continuo, tormenta que crece) | M | ★★ | Hoy casi todo es de un toque; da variedad de ritmo. |
@@ -43,7 +43,7 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 | **Gritos / buffs temporales** ("¡Está en producción!": +daño a aliados 6 s) | S | ★★ | Juego de equipo con invocaciones. |
 | **RAM de activación** (*triggers*): "al recibir un golpe, lanza la habilidad", "al hacer crítico, lanza", "cada 2 s, lanza" | L | ★★★ | El tipo de soporte más divertido de PoE; da builds automáticas. |
 | **RAM con desventaja fuerte** (más 60 % de daño pero las habilidades cuestan vida, etc.) | S | ★★ | Decisiones con riesgo. |
-| **Evolución de habilidades al nivel 20 de la placa**: una variante alternativa (p. ej. el Golem se divide en tres pequeños) | L | ★★ | Recompensa subir placas y da metas a largo plazo. |
+| **Más variantes**: hoy hay variantes en 10 habilidades (`data/skills/variants.json`); faltan las de auras, drones y trampas | M | ★★ | Se eligen en K desde el nivel 10-15 de la placa. |
 | **Comparador de placas**: ver dos placas lado a lado con DPS, coste y área | S | ★★ | Ya existe la comparación de DPS para RAM; ampliarla. |
 
 ## 4. Pasivas de tipos nuevos
@@ -52,18 +52,15 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 |---|---|---|---|
 | **Nodos clave (keystones)**: cambian una regla del juego. Ejemplos: *Tipado estático* (no puedes ser crítico, pero tu daño nunca varía), *Recolector de basura* (al matar recuperas 2 % de maná, el maná no se regenera solo), *Modo seguro* (no puedes bajar del 1 de vida durante 2 s cada 30 s), *Código espagueti* (tus proyectiles rebotan al azar) | M | ★★★ | Lo que más define builds en un ARPG. |
 | **Maestrías**: en cada sector del árbol, un nodo donde eliges 1 de 3 bonos (como las Masteries de PoE) | M | ★★★ | Más elección sin agrandar el árbol. |
-| **Chips de expansión** (equivalente a las joyas): objetos que se engastan en ranuras del árbol, con afijos propios y únicos que transforman los nodos cercanos ("los nodos de fuego de alrededor dan frío") | L | ★★ | Botín nuevo que interactúa con el árbol. |
+| **Chips únicos que transforman nodos cercanos** ("los nodos de fuego de alrededor dan frío") y más ranuras en el árbol | M | ★★ | Los chips ya existen (12 ranuras, mágicos/raros/4 únicos). |
 | **Nodos condicionales**: "si tienes 3 invocaciones", "si no te moviste en 1 s", "contra enemigos aturdidos", "si tu vida está llena" | S | ★★ | Recompensa jugar de cierta manera. |
-| **Pasivas de atributo con umbral**: cada 50 de Fuerza = +1 carga máxima, cada 50 de Inteligencia = +1 RAM activa | S | ★★ | Hace interesante invertir en atributos. |
 | **Árbol de "deuda técnica"**: un pequeño árbol aparte, de fin de juego, donde cada nodo da un bono fuerte y una penalización | L | ★ | Endgame con riesgo y humor. |
 
 ## 5. Interfaz y experiencia
 
 | Mejora | Tamaño | Prioridad | Idea |
 |---|---|---|---|
-| **Números de daño legibles con el filtro de pixel art**: dibujarlos en la capa de interfaz (no en el mundo) con fuente de píxel y colores por tipo, y apilarlos | S | ★★★ | Hoy el filtro los pixela y pierden nitidez. Igual con los nombres de NPC y puertas. |
 | **Barra de habilidades con información**: enfriamiento en reloj, cargas, coste de maná en rojo si no alcanza | S | ★★★ | Leer el estado de la build sin abrir menús. |
-| **Panel de estado del personaje en combate**: iconos de bonos activos (auras, cargas, pociones, santuarios) con duración | S | ★★★ | Ya hay estados sobre el jugador; faltan los buenos. |
 | **Ventana de comparación de objetos** al pasar sobre uno de la bolsa (mostrar el equipado al lado, con diferencias en verde y rojo) | M | ★★★ | Lo más usado en un ARPG. |
 | **Construcciones guardadas**: guardar y cargar combinaciones de árbol + barra de habilidades | M | ★★ | Probar builds sin rehacer todo. |
 | **Navegación total con mando** en inventario, árbol, K, tienda y diálogos | L | ★★ | Ya está en el roadmap 1; aquí con cursor libre y atajos. |
@@ -137,7 +134,11 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 
 ## Plan sugerido por fases
 
-1. **Fase "Sensación"** (★★★ rápidas): hitstop, números de daño en la interfaz, sonido por material y rareza, luces dinámicas, filtro de botín.
+1. **Fase "Sensación"** (★★★ rápidas): hitstop, sonido por material, luces dinámicas, comparación de objetos.
 2. **Fase "Habilidad del jugador"**: esquiva, telegrafiados en el suelo, habilidades de movimiento, roles de enemigo.
-3. **Fase "Profundidad de builds"**: cargas, conversión de daño, nodos clave, maestrías, RAM de activación.
-4. **Fase "Largo plazo"**: crafteo con parches, atlas de incidentes, chips de expansión, temporadas.
+3. **Fase "Profundidad de builds"**: conversión de daño, nodos clave, maestrías, RAM de activación, nodos que usen las cargas.
+4. **Fase "Largo plazo"**: crafteo con parches, atlas de incidentes, chips únicos que transforman nodos, temporadas.
+
+## Hecho del roadmap 2.0 (no repetir)
+
+**Primera tanda (23 octubre 2026, noche 5)**: **texto y personajes nítidos** con el filtro: el pixelado solo va al suelo y el decorado; la luz (gradación, viñeta, oscuridad) va aparte y los nombres, placas, botín y números quedan encima · **eventos de zona**: datos huérfanos (dos oleadas y botín), santuarios (Turbo, Firewall, Debug, Overclock), emboscadas y deploys fallidos (dos raros), distintos en cada visita · **filtro de botín** (Todo / Ocultar normales / Solo raros y mejores; Alt para ver todo), **haz de luz** y sonido para raros y únicos · **cargas de Buffer, Multihilos y Overclock**: se ganan al recibir golpes, al matar y con críticos (más con afijos nuevos), duran 10 s, se ven sobre el orbe de vida y se gastan con RAM nuevas (Volcado de Buffer, Ráfaga Multihilo, Pico de Overclock) · **costo de vida**: RAM Alimentación por Vida (50 %) y Hotfix en Caliente (100 %, +35 % de daño) · **Mainframe Titán**: una sola invocación enorme con terremoto, láser y barrera; el golem gana terremoto · **variantes de habilidades** en K (golem de tres, golem blindado, titán de asedio o guardián, Broadcast/Unicast, Ping flood, Barrido amplio o certero, etc.) · **chips de expansión**: caen de los enemigos, se engastan en 12 ranuras hexagonales del árbol y cuentan con la ranura asignada; 4 únicos · **atributos**: +1 carga máxima de su tipo cada 50 y **requisitos de Fuerza/Destreza/Inteligencia** para armas y armaduras (la ropa de seda pide Inteligencia, el hacha Fuerza); sin ellos no se equipa y, si ya lo llevabas, se desactiva.

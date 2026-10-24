@@ -114,6 +114,21 @@
                  { "level": 28, "name": "Liderado", "min": 21, "max": 35, "weight": 200 } ] },
     { "id": "minion_life", "kind": "prefix", "group": "minion_life", "allowed": ["str_armour", "belt", "amulet"], "stat": "minion_life", "type": "increased",
       "tiers": [ { "level": 8, "name": "Redundante", "min": 12, "max": 22, "weight": 350 },
-                 { "level": 28, "name": "Replicado", "min": 23, "max": 38, "weight": 200 } ] }
+                 { "level": 28, "name": "Replicado", "min": 23, "max": 38, "weight": 200 } ] },
+    { "id": "buffer_charge_chance", "kind": "suffix", "group": "charge_chance", "allowed": ["str_armour", "belt"], "stat": "buffer_charge_chance", "type": "flat",
+      "tiers": [ { "level": 6, "name": "del Búfer Lleno", "min": 6, "max": 12, "weight": 350 },
+                 { "level": 26, "name": "del Desbordamiento Controlado", "min": 13, "max": 22, "weight": 200 } ] },
+    { "id": "multihilo_charge_chance", "kind": "suffix", "group": "charge_chance", "allowed": ["dex_armour", "gloves", "ring"], "stat": "multihilo_charge_chance", "type": "flat",
+      "tiers": [ { "level": 6, "name": "del Hilo Extra", "min": 6, "max": 12, "weight": 350 },
+                 { "level": 26, "name": "del Pool de Hilos", "min": 13, "max": 22, "weight": 200 } ] },
+    { "id": "overclock_charge_chance", "kind": "suffix", "group": "charge_chance", "allowed": ["int_armour", "amulet", "ring"], "stat": "overclock_charge_chance", "type": "flat",
+      "tiers": [ { "level": 6, "name": "del Turbo", "min": 6, "max": 12, "weight": 350 },
+                 { "level": 26, "name": "del Nitrógeno en la CPU", "min": 13, "max": 22, "weight": 200 } ] },
+    { "id": "max_charges", "kind": "prefix", "group": "max_charges", "allowed": ["amulet", "body"], "stat": "max_buffer_charges", "type": "flat",
+      "tiers": [ { "level": 30, "name": "Sobredimensionado", "min": 1, "max": 1, "weight": 120 } ] },
+    { "id": "max_multihilo", "kind": "prefix", "group": "max_charges", "allowed": ["amulet", "gloves"], "stat": "max_multihilo_charges", "type": "flat",
+      "tiers": [ { "level": 30, "name": "Hiperhilado", "min": 1, "max": 1, "weight": 120 } ] },
+    { "id": "max_overclock", "kind": "prefix", "group": "max_charges", "allowed": ["amulet", "helmet"], "stat": "max_overclock_charges", "type": "flat",
+      "tiers": [ { "level": 30, "name": "Sobrevoltado", "min": 1, "max": 1, "weight": 120 } ] }
   ]
 }

@@ -94,6 +94,35 @@ const AUTOMATON_KINDS := ["unit", "drones", "minion"]
 
 
 static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
+	return apply_variant(_compute_base(board, character), board)
+
+
+## Variantes de habilidad (skills.json → "variants"): se eligen en el menú K
+## desde cierto nivel de la placa y cambian cifras del perfil ("mult", "add") o
+## las habilidades de la invocación ("abilities").
+static func apply_variant(p: Dictionary, board: Motherboard) -> Dictionary:
+	var v := board.active_variant()
+	if v.is_empty():
+		return p
+	for key in v.get("mult", {}):
+		var f := float(v["mult"][key])
+		if key == "damage":
+			for k in ["min_damage", "max_damage", "dps"]:
+				p[k] = float(p[k]) * f
+		elif p.has(key):
+			p[key] = maxi(1, roundi(float(p[key]) * f)) if p[key] is int else float(p[key]) * f
+	for key in v.get("add", {}):
+		if p.has(key):
+			p[key] = maxi(0, int(p[key]) + int(v["add"][key])) if p[key] is int else float(p[key]) + float(v["add"][key])
+			if key == "max_units":
+				p["dps"] = float(p["dps"]) * float(p["max_units"]) / maxf(1.0, float(p["max_units"]) - float(v["add"][key]))
+	if v.has("abilities"):
+		p["unit_abilities"] = v["abilities"]
+	p["variant"] = v["id"]
+	return p
+
+
+static func _compute_base(board: Motherboard, character: CharacterData) -> Dictionary:
 	var skill := board.skill_def
 	var tags: Array = []
 	for t in skill.get("tags", []):
@@ -240,7 +269,15 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 	var aura_anchor := false
 	var aura_on_unit := false
 	var aura_radius_mult := 1.0
+	# Costo en vida (RAM de "alimentación por vida"): parte del maná se paga con vida.
+	var life_cost_frac := 0.0
+	# Gasto de cargas al usar la habilidad (Buffer, Multihilos, Overclock).
+	var spend := {}
 	for ram: RamModule in board.active_supports():
+		life_cost_frac += ram.special("life_cost")
+		for t in Charges.TYPES:
+			if ram.special("spend_" + t) > 0.0:
+				spend[t] = true
 		reserve_mult *= ram.special("reserve_mult", 1.0)
 		aura_anchor = aura_anchor or ram.special("aura_anchor") > 0.0
 		aura_on_unit = aura_on_unit or ram.special("aura_on_unit") > 0.0
@@ -318,7 +355,9 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 		"uses_per_second": uses_per_second,
 		"use_time": 1.0 / maxf(0.1, uses_per_second),
 		"cooldown": cooldown,
-		"mana_cost": mana_cost,
+		"mana_cost": roundf(mana_cost * (1.0 - clampf(life_cost_frac + float(skill.get("life_cost", 0.0)), 0.0, 1.0))),
+		"life_cost": roundf(mana_cost * clampf(life_cost_frac + float(skill.get("life_cost", 0.0)), 0.0, 1.0)),
+		"spend_charges": spend,
 		"radius": float(skill.get("radius", 0.0)) * sqrt(stats.total_multiplier(Stat.AREA_OF_EFFECT, tags)) * area_mult * lvl_mult,
 		# Escala de área sin radio base: la usan las habilidades de las invocaciones
 		# (explosión de la mina, salto del bot, nube del agente IA).
@@ -389,4 +428,6 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 		"ability_power": ability_power,
 		"unit_shoots": bool(unit.get("shoots", true)),
 		"unit_ability": unit.get("ability", {}),
+		# Invocaciones fuertes con varias habilidades (cada una con su enfriamiento).
+		"unit_abilities": unit.get("abilities", [unit["ability"]] if unit.has("ability") else []),
 	}

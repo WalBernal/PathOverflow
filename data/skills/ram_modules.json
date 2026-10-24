@@ -1623,6 +1623,85 @@
       "special": {
         "aura_on_unit": 1
       }
+    },
+    {
+      "id": "alimentacion_por_vida",
+      "name": "Alimentación por Vida",
+      "generation": "DDR4",
+      "tier": 2,
+      "min_level": 8,
+      "description": "La habilidad toma la mitad de su costo de tu vida en vez del maná, y pega más fuerte por el riesgo. Ideal con robo de vida o vida al matar.",
+      "requires_tags": [],
+      "excludes_tags": ["aura", "persistent"],
+      "cost_multiplier": 1.0,
+      "mods": [
+        {"stat": "damage", "type": "more", "value": 15}
+      ],
+      "special": {
+        "life_cost": 0.5
+      }
+    },
+    {
+      "id": "hotfix_en_caliente",
+      "name": "Hotfix en Caliente",
+      "generation": "DDR5",
+      "tier": 3,
+      "min_level": 18,
+      "description": "Todo el costo se paga con vida: nada de maná. A cambio, 35 % más de daño. Para los que despliegan a producción un viernes a las 6.",
+      "requires_tags": [],
+      "excludes_tags": ["aura", "persistent"],
+      "cost_multiplier": 1.2,
+      "mods": [
+        {"stat": "damage", "type": "more", "value": 35}
+      ],
+      "special": {
+        "life_cost": 1.0
+      }
+    },
+    {
+      "id": "volcado_de_buffer",
+      "name": "Volcado de Buffer",
+      "generation": "DDR3",
+      "tier": 2,
+      "min_level": 6,
+      "description": "Al usar la habilidad gasta todas tus cargas de Buffer: te cura un 6 % de vida y la habilidad hace un 10 % más de daño por carga.",
+      "requires_tags": [],
+      "excludes_tags": ["aura", "persistent"],
+      "cost_multiplier": 1.1,
+      "mods": [],
+      "special": {
+        "spend_buffer": 1
+      }
+    },
+    {
+      "id": "rafaga_multihilo",
+      "name": "Ráfaga Multihilo",
+      "generation": "DDR4",
+      "tier": 2,
+      "min_level": 10,
+      "description": "Al usar la habilidad gasta todas tus cargas de Multihilos: 15 % más de daño por carga.",
+      "requires_tags": [],
+      "excludes_tags": ["aura", "persistent"],
+      "cost_multiplier": 1.1,
+      "mods": [],
+      "special": {
+        "spend_multihilo": 1
+      }
+    },
+    {
+      "id": "pico_de_overclock",
+      "name": "Pico de Overclock",
+      "generation": "DDR5",
+      "tier": 2,
+      "min_level": 14,
+      "description": "Al usar la habilidad gasta todas tus cargas de Overclock: si había al menos una, el golpe es crítico seguro y gana +20 % de multiplicador de crítico por carga.",
+      "requires_tags": [],
+      "excludes_tags": ["aura", "persistent"],
+      "cost_multiplier": 1.1,
+      "mods": [],
+      "special": {
+        "spend_overclock": 1
+      }
     }
   ]
 }

@@ -1,18 +1,19 @@
 shader_type canvas_item;
-// Filtro del mundo (debajo de la interfaz): lo lleva a pixel art de verdad.
-// - Rejilla de píxeles: todo (formas, textos del mundo, efectos) se ve en
-//   bloques de `pixel` px de pantalla.
-// - Paleta reducida con tramado ordenado (Bayer 4×4).
-// - Gradación de color de la zona, viñeta en escalones y oscuridad con luz
-//   alrededor del jugador (catacumbas, pantano...), también en escalones.
+// Filtro del mundo en dos pasadas (ver scripts/game/world_post.gd):
+// - Pasada de pixel art (justo después de la zona): suelo, decorado y puertas en
+//   bloques de `pixel` px, con paleta reducida y tramado ordenado (Bayer 4×4).
+//   Lo que se dibuja después (jugador, enemigos, botín, textos) queda nítido.
+// - Pasada de luz (encima de todo menos el botín y los textos): gradación de la
+//   zona, viñeta en escalones y oscuridad con luz alrededor del jugador.
 
 uniform sampler2D screen_tex : hint_screen_texture, filter_nearest;
 uniform float pixel = 2.0;
+uniform bool posterize = true;
 uniform float levels = 20.0;
 uniform vec4 tint : source_color = vec4(1.0);
 uniform float tint_amount = 0.0;
-uniform float saturation = 1.05;
-uniform float vignette = 0.35;
+uniform float saturation = 1.0;
+uniform float vignette = 0.0;
 uniform float darkness = 0.0;
 uniform vec2 light_pos = vec2(0.0);
 uniform float light_radius = 420.0;
@@ -29,22 +30,22 @@ void fragment() {
 	vec2 cell = floor(FRAGCOORD.xy / pixel);
 	vec2 center = (cell + 0.5) * pixel;
 	vec3 col = texture(screen_tex, center * SCREEN_PIXEL_SIZE).rgb;
-	// Gradación: saturación y tinte de la zona.
 	float luma = dot(col, vec3(0.299, 0.587, 0.114));
 	col = mix(vec3(luma), col, saturation);
 	col = mix(col, col * tint.rgb * 1.25, tint_amount);
-	// Viñeta en 3 escalones.
 	vec2 uv = center * SCREEN_PIXEL_SIZE;
-	float d = length((uv - 0.5) * vec2(1.0, 0.8));
-	float v = floor(smoothstep(0.38, 0.78, d) * 3.0) / 3.0;
-	col *= 1.0 - v * vignette;
-	// Oscuridad con luz alrededor del jugador (4 bandas).
+	if (vignette > 0.0) {
+		float d = length((uv - 0.5) * vec2(1.0, 0.8));
+		float v = floor(smoothstep(0.38, 0.78, d) * 3.0) / 3.0;
+		col *= 1.0 - v * vignette;
+	}
 	if (darkness > 0.0) {
-		float l = 1.0 - clamp(distance(center, light_pos) / light_radius, 0.0, 1.0);
+		float l = 1.0 - clamp(distance(FRAGCOORD.xy, light_pos) / light_radius, 0.0, 1.0);
 		l = floor(l * 4.0 + 0.5) / 4.0;
 		col *= mix(1.0 - darkness, 1.0, l);
 	}
-	// Paleta reducida con tramado.
-	col = floor(col * levels + 0.5 + bayer4(cell) * 0.9) / levels;
+	if (posterize) {
+		col = floor(col * levels + 0.5 + bayer4(cell) * 0.9) / levels;
+	}
 	COLOR = vec4(clamp(col, 0.0, 1.0), 1.0);
 }

@@ -249,6 +249,22 @@ func _make_row(index: int) -> Control:
 		tags.text = SkillTags.bbcode(board.skill_def.get("tags", []))
 		info.add_child(tags)
 		info.add_child(_stats_label(board))
+		# Variantes: botón que alterna entre la normal y las desbloqueadas por nivel de placa.
+		if not board.variants().is_empty():
+			var v := board.active_variant()
+			var next_locked: Array = board.variants().filter(func(x: Dictionary) -> bool: return board.level < int(x.get("min_level", 1)))
+			var vb := UiStyle.button("Variante: %s" % v.get("name", "Normal"), func() -> void:
+				board.cycle_variant()
+				character.recalculate()
+				_rebuild(), 230)
+			vb.custom_minimum_size.y = 22
+			vb.add_theme_font_size_override("font_size", 11)
+			var lines := PackedStringArray(["Click: cambiar de variante."])
+			for x in board.variants():
+				lines.append("• %s (nv. %d de placa): %s" % [x["name"], int(x.get("min_level", 1)), x.get("description", "")])
+			vb.tooltip_text = "\n".join(lines)
+			vb.disabled = next_locked.size() == board.variants().size()
+			info.add_child(vb)
 	else:
 		info.alignment = BoxContainer.ALIGNMENT_CENTER
 		info.add_child(UiStyle.label("Arrastra aquí una placa base", 13, UiStyle.MUTED))

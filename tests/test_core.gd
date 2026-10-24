@@ -55,6 +55,7 @@ func _initialize() -> void:
 	_test_latam_spanish()
 	_test_ascendancy_rules()
 	_test_zone_scale()
+	_test_roadmap2()
 	_test_board_milestones()
 	_test_shaped_clusters()
 	_test_defense_and_dot_skills()
@@ -1204,6 +1205,105 @@ func _collect_banned(value: Variant, banned: RegEx, path: String, found: PackedS
 		var m := banned.search(value)
 		if m:
 			found.append("%s: «%s»" % [path.get_file(), m.get_string()])
+
+
+## Roadmap 2.0: cargas, costo de vida, requisitos de atributos, variantes, chips,
+## invocación con varias habilidades, filtro de botín y eventos de zona.
+func _test_roadmap2() -> void:
+	var c := _new_character()
+	c.set_level(30)
+	# Cargas: se ganan hasta el máximo (3 + 1 cada 50 del atributo), dan sus bonos y se gastan.
+	var crit_before := c.stats.get_value(Stat.CRIT_CHANCE)
+	var max_oc := c.max_charges("overclock")
+	_check(max_oc >= 3, "al menos 3 cargas de cada tipo (%d)" % max_oc)
+	for k in max_oc + 2:
+		c.gain_charge("overclock")
+	_check(int(c.charges["overclock"]) == max_oc, "las cargas no pasan del máximo")
+	_check(c.stats.total_multiplier(Stat.CRIT_CHANCE, []) > 1.0 + 0.3 * max_oc, "las cargas de Overclock dan probabilidad de crítico")
+	_check(c.spend_charges("overclock") == max_oc and int(c.charges["overclock"]) == 0, "gastar devuelve cuántas había y las vacía")
+	c.gain_charge("multihilo")
+	c.tick_timed_effects(Charges.DURATION + 0.1)
+	_check(int(c.charges["multihilo"]) == 0, "las cargas caducan a los %d s" % int(Charges.DURATION))
+	var strong := _new_character()
+	strong.set_level(30)
+	strong.stats.set_base(Stat.STRENGTH, 0.0)
+	strong.inventory.equipment.clear()
+	var base_max := strong.max_charges("buffer")
+	strong.add_timed_effect("prueba_fuerza", [Modifier.new(Stat.STRENGTH, Modifier.Type.FLAT, 100.0, [], "prueba")], 5.0)
+	_check(strong.max_charges("buffer") >= base_max + 2, "cada 50 de Fuerza da una carga de Buffer más")
+	# Costo de vida: la RAM pasa parte del maná a la vida.
+	var rams: Dictionary = _db.skills.rams
+	var skills: Dictionary = _db.skills.skills
+	var b := Motherboard.new(skills["barrido"], 5, ["DDR4"])
+	var cost0: float = SkillCalc.compute(b, c)["mana_cost"]
+	b.install(RamModule.new(rams["alimentacion_por_vida"]), 0)
+	var p := SkillCalc.compute(b, c)
+	_check(p["life_cost"] > 0.0 and p["mana_cost"] < cost0, "Alimentación por Vida: parte del costo es vida (%d maná, %d vida)" % [p["mana_cost"], p["life_cost"]])
+	var b2 := Motherboard.new(skills["barrido"], 5, ["DDR3"])
+	b2.install(RamModule.new(rams["volcado_de_buffer"]), 0)
+	_check(SkillCalc.compute(b2, c)["spend_charges"].has("buffer"), "Volcado de Buffer marca la habilidad para gastar cargas")
+	_check(not RamModule.new(rams["hotfix_en_caliente"]).supports(skills["teleport_tcp"]), "pagar con vida no encaja en habilidades sin daño")
+	# Requisitos de atributos: armas y armaduras de nivel alto piden su atributo.
+	var axe := Item.new(_db.bases["hacha_de_guerra"], Rarity.Item.NORMAL, 20)
+	var req := axe.attribute_requirements()
+	_check(req.has("strength") and int(req["strength"]) >= 30, "el hacha de guerra pide Fuerza (%s)" % str(req))
+	_check(Item.new(_db.bases["tunica_de_seda"], Rarity.Item.NORMAL, 1).attribute_requirements().is_empty(), "lo de nivel 1 no pide atributos")
+	_check(Item.new(_db.bases["anillo_de_rubi"], Rarity.Item.NORMAL, 30).attribute_requirements().is_empty(), "la joyería no pide atributos")
+	var weak := _new_character()
+	weak.set_level(25)
+	weak.stats.set_base(Stat.STRENGTH, 0.0)
+	weak.recalculate()
+	if weak.stats.get_value(Stat.STRENGTH) < float(req["strength"]):
+		_check(not weak.can_equip(axe) and weak.missing_attributes(axe).has("strength"), "sin Fuerza suficiente no se equipa")
+		weak.inventory.equipment["weapon"] = axe
+		weak.recalculate()
+		_check("weapon" in weak.disabled_equipment, "un arma equipada sin atributos queda desactivada")
+	# Variantes: cambian el perfil desde su nivel de placa.
+	var golem := Motherboard.new(skills["golem_hardware"], 12, [])
+	var g0 := SkillCalc.compute(golem, c)
+	_check(golem.cycle_variant() == "Clúster de tres", "el golem tiene la variante de tres a nivel 12")
+	var g1 := SkillCalc.compute(golem, c)
+	_check(g1["max_units"] == g0["max_units"] + 2 and g1["unit_life"] < g0["unit_life"], "Clúster de tres: más golems y menos vida cada uno")
+	var saved := Item.from_dict(JSON.parse_string(JSON.stringify(golem.to_dict())), _db) as Motherboard
+	_check(saved.variant == "trio", "la variante se guarda con la placa")
+	var low := Motherboard.new(skills["golem_hardware"], 1, [])
+	low.variant = "trio"
+	_check(SkillCalc.compute(low, c)["max_units"] == g0["max_units"], "sin el nivel de placa la variante no aplica")
+	var rafaga := Motherboard.new(skills["rafaga_de_paquetes"], 10, [])
+	var r0: int = SkillCalc.compute(rafaga, c)["projectiles"]
+	rafaga.cycle_variant()
+	_check(SkillCalc.compute(rafaga, c)["projectiles"] == r0 + 3, "Broadcast: +3 proyectiles (variantes de variants.json)")
+	# Invocación fuerte con varias habilidades.
+	var titan := SkillCalc.compute(Motherboard.new(skills["mainframe_titan"], 1, []), c)
+	_check(titan["unit_abilities"].size() == 3 and titan["max_units"] == 1, "Mainframe Titán: una invocación con 3 habilidades")
+	_check(g0["unit_abilities"].size() == 1 and g0["unit_abilities"][0]["kind"] == "quake", "el golem ahora tiene terremoto")
+	# Chips de expansión: solo cuentan con la ranura asignada; se guardan.
+	var sockets := _tree.socket_ids()
+	_check(sockets.size() >= 10, "ranuras de chip repartidas por el árbol (%d)" % sockets.size())
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var chip := ExpansionChip.roll(30, rng)
+	_check(not chip.fixed_mods.is_empty() and chip.display_name() != "", "un chip tiene mods y nombre")
+	var cc := _new_character()
+	var life0 := cc.stats.get_value(Stat.LIFE)
+	var big := ExpansionChip.new(Rarity.Item.MAGIC, 10)
+	big.fixed_mods.append({"stat": "life", "type": "flat", "value": 100})
+	cc.inventory.bag[0] = big
+	_check(cc.inventory.socket_chip(0, sockets[0]) and cc.inventory.bag[0] == null, "el chip pasa de la bolsa a la ranura")
+	cc.recalculate()
+	_check(is_equal_approx(cc.stats.get_value(Stat.LIFE), life0), "con la ranura sin asignar el chip no da nada")
+	cc.passives._allocated[sockets[0]] = true
+	cc.recalculate()
+	_check(cc.stats.get_value(Stat.LIFE) > life0 + 50.0, "con la ranura asignada el chip suma sus mods")
+	var inv2 := Inventory.new()
+	inv2.load_dict(JSON.parse_string(JSON.stringify(cc.inventory.to_dict())), _db)
+	_check(inv2.chips.has(sockets[0]) and inv2.chips[sockets[0]] is ExpansionChip, "los chips engastados se guardan")
+	# Filtro de botín.
+	var normal := Item.new(_db.bases["espada_oxidada"], Rarity.Item.NORMAL, 5)
+	var magic := Item.new(_db.bases["espada_oxidada"], Rarity.Item.MAGIC, 5)
+	_check(LootManager.passes_filter(normal, 0) and not LootManager.passes_filter(normal, 1), "el filtro oculta el equipo normal")
+	_check(LootManager.passes_filter(magic, 1) and not LootManager.passes_filter(magic, 2), "y, en el nivel 2, también el mágico")
+	_check(LootManager.passes_filter(chip, 2), "los chips (y placas, RAM...) siempre se ven")
 
 
 ## Acto I más grande: "scale" agranda tamaño y posiciones, y las manadas crecen con el área.
@@ -2606,7 +2706,7 @@ func _test_rams_everywhere() -> void:
 		"width", "impact_radius", "rain_hits", "crit_chance", "life_leech", "ailments", "ailment_effect", "ailment_duration",
 		"ailing_bonus", "deploy", "max_units", "unit_interval", "unit_life", "unit_reduction", "reserve", "aura_mods",
 		"aura_regen", "aura_reduction", "aura_enemy", "aura_radius", "aura_anchor", "ability_power", "tick", "minion_interval", "drone_count", "count", "extra_devices",
-		"uses_per_second", "repeats"]
+		"uses_per_second", "repeats", "spend_charges", "life_cost"]
 	var dead := PackedStringArray()
 	for sid in skills:
 		var base := SkillCalc.compute(Motherboard.new(skills[sid], 10, []), c)

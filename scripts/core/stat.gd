@@ -80,6 +80,13 @@ const KILL_EXPLOSION := &"kill_explosion"
 const STATIC_PULSE := &"static_pulse"
 ## % de soltar una nova de hielo al recibir un golpe (daña y aturde).
 const RETALIATION_NOVA := &"retaliation_nova"
+## Cargas (ver Charges): probabilidad extra de ganarlas y máximo extra.
+const BUFFER_CHARGE_CHANCE := &"buffer_charge_chance"
+const MULTIHILO_CHARGE_CHANCE := &"multihilo_charge_chance"
+const OVERCLOCK_CHARGE_CHANCE := &"overclock_charge_chance"
+const MAX_BUFFER_CHARGES := &"max_buffer_charges"
+const MAX_MULTIHILO_CHARGES := &"max_multihilo_charges"
+const MAX_OVERCLOCK_CHARGES := &"max_overclock_charges"
 const THORNS := &"thorns"
 ## Enemigos extra que atraviesan los proyectiles (suma a la RAM de perforación).
 const EXTRA_PIERCE := &"extra_pierce"
@@ -158,6 +165,12 @@ const NAMES := {
 	KILL_EXPLOSION: "Probabilidad de que los enemigos que matas exploten (fuego)",
 	STATIC_PULSE: "Pulso de estática cada 3 s (daño de rayo por nivel)",
 	RETALIATION_NOVA: "Probabilidad de soltar una nova de hielo al recibir un golpe",
+	BUFFER_CHARGE_CHANCE: "Probabilidad de ganar una carga de Buffer al recibir un golpe",
+	MULTIHILO_CHARGE_CHANCE: "Probabilidad de ganar una carga de Multihilos al matar",
+	OVERCLOCK_CHARGE_CHANCE: "Probabilidad de ganar una carga de Overclock al hacer un crítico",
+	MAX_BUFFER_CHARGES: "Cargas de Buffer máximas",
+	MAX_MULTIHILO_CHARGES: "Cargas de Multihilos máximas",
+	MAX_OVERCLOCK_CHARGES: "Cargas de Overclock máximas",
 	THORNS: "Daño de espinas al recibir un golpe",
 	EXTRA_PIERCE: "Enemigos extra que atraviesan los proyectiles",
 	STATUS_RESIST: "Resistencia a estados (electrocutado, helado, congelado)",
@@ -177,7 +190,7 @@ const PARENTS := {
 const PERCENT_STATS := [
 	BLOCK_CHANCE, FIRE_RES, COLD_RES, LIGHTNING_RES, CHAOS_RES, CRIT_MULTIPLIER, LIFE_LEECH,
 	BURN_CHANCE, SHOCK_CHANCE, CHILL_CHANCE, FREEZE_CHANCE, POISON_CHANCE, BLEED_CHANCE, STATUS_RESIST,
-	KILL_EXPLOSION, RETALIATION_NOVA,
+	KILL_EXPLOSION, RETALIATION_NOVA, BUFFER_CHARGE_CHANCE, MULTIHILO_CHARGE_CHANCE, OVERCLOCK_CHARGE_CHANCE,
 ]
 
 const TAG_NAMES := {

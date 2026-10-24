@@ -227,6 +227,7 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	skills.skill_used.connect(func(_i: int) -> void: tutorial.notify("skill_used"))
 	skills.skill_used.connect(hud.notify_skill_used)
 	skills.not_enough_mana.connect(func() -> void: hud.flash("Sin maná. Bebe un refresco (teclas 1-5) o espera, como con el compilador."))
+	skills.not_enough_life.connect(func() -> void: hud.flash("Esa habilidad se paga con vida y no te sobra. Cúrate antes de hacer otro hotfix."))
 	skills.reservation_full.connect(func(skill_name: String) -> void:
 		hud.flash("No queda maná sin reservar para otra invocación de %s. Tus procesos en segundo plano ya se lo comen todo." % skill_name))
 	skills.unit_lost.connect(func(skill_name: String) -> void:
@@ -447,6 +448,13 @@ func _build_pause_menu() -> Control:
 		for p in get_tree().get_nodes_in_group(&"world_post"):
 			p.call("refresh"))
 	right.add_child(pixel)
+	var loot_filter := _cycle_button("Filtro de botín", [0, 1, 2], LootManager.FILTER_NAMES,
+		func() -> float: return float(LootManager.filter_level()),
+		func(v: float) -> void:
+			GameSettings.set_value("interface", "loot_filter", int(v))
+			_loot.queue_redraw())
+	loot_filter.tooltip_text = "Oculta el equipo normal (o también el mágico) en el suelo.\nPlacas, RAM, pociones, únicos y conjuntos siempre se ven. Mantén Alt para ver todo."
+	right.add_child(loot_filter)
 
 	box.add_child(UiStyle.ornament())
 	var exits := HBoxContainer.new()

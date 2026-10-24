@@ -51,6 +51,10 @@ var stats := StatBlock.new()
 var timed_effects: Array[Dictionary] = []
 ## Condiciones activas en este momento (las pone Player): StringName -> true.
 var conditions: Dictionary = {}
+## Cargas temporales (ver Charges): cuántas hay de cada tipo y cuánto les queda.
+var charges := {"buffer": 0, "multihilo": 0, "overclock": 0}
+var charge_time := {"buffer": 0.0, "multihilo": 0.0, "overclock": 0.0}
+signal charges_changed
 
 
 ## Activa o desactiva una condición (Stat.COND_*). Emite conditions_changed si cambia.
@@ -191,7 +195,23 @@ func passive_points_available() -> int:
 
 
 func can_equip(item: Item) -> bool:
-	return level >= item.required_level()
+	return level >= item.required_level() and missing_attributes(item).is_empty()
+
+
+## Atributos que te faltan para un objeto: {"strength": 12} (vacío si cumples).
+## `attrs` permite medir contra otros valores (al recalcular el equipo).
+func missing_attributes(item: Item, attrs: Dictionary = {}) -> Dictionary:
+	var out := {}
+	var req := item.attribute_requirements()
+	for a in req:
+		var have: float = attrs[a] if attrs.has(a) else stats.get_value(StringName(a))
+		if have < float(req[a]):
+			out[a] = int(ceilf(float(req[a]) - have))
+	return out
+
+
+## Objetos equipados que no aplican sus mods porque te faltan atributos.
+var disabled_equipment: Array[String] = []
 
 
 ## Piezas equipadas de cada conjunto: set_id -> cantidad.
@@ -217,6 +237,10 @@ func recalculate(emit := true) -> void:
 	stats.set_base(Stat.CRIT_MULTIPLIER, 150.0)
 	stats.set_base(Stat.MOVEMENT_SPEED, 100.0)
 	stats.add_modifiers(passives.collect_modifiers())
+	# Chips de expansión: solo cuentan si su ranura del árbol está asignada.
+	for node_id in inventory.chips:
+		if passives.is_allocated(int(node_id)):
+			stats.add_modifiers((inventory.chips[node_id] as ExpansionChip).chip_modifiers("chip:%d" % node_id))
 	# Rasgo de clase (classes.json → trait): siempre activo, lo que la hace única.
 	for md in class_def.get("trait", {}).get("mods", []):
 		stats.add_modifier(Modifier.from_dict(md, "class_trait"))
@@ -228,15 +252,31 @@ func recalculate(emit := true) -> void:
 	_apply_equipment()
 	for effect in timed_effects:
 		stats.add_modifiers(effect["mods"])
+	for t in Charges.TYPES:
+		if int(charges[t]) > 0:
+			stats.add_modifiers(Charges.mods_for(t, int(charges[t])))
 	_apply_attribute_bonuses()
 	if emit:
 		stats_changed.emit()
 
 
 func _apply_equipment() -> void:
+	# Atributos para los requisitos: los del personaje (clase, árbol, ascendencia)
+	# más los que dan todos los objetos equipados (así un anillo de Fuerza habilita el hacha).
+	var attrs := {}
+	for a in ["strength", "dexterity", "intelligence"]:
+		attrs[a] = stats.get_value(StringName(a))
+	for slot in inventory.equipment:
+		for m: Modifier in (inventory.equipment[slot] as Item).get_modifiers(""):
+			if attrs.has(String(m.stat)) and m.type == Modifier.Type.FLAT:
+				attrs[String(m.stat)] += m.value
+	disabled_equipment.clear()
 	var set_defs := {}
 	for slot in inventory.equipment:
 		var item: Item = inventory.equipment[slot]
+		if not missing_attributes(item, attrs).is_empty():
+			disabled_equipment.append(slot)   # sin atributos suficientes: no da nada
+			continue
 		stats.add_modifiers(item.get_modifiers("item:" + slot))
 		if not item.set_def.is_empty():
 			set_defs[item.set_def["id"]] = item.set_def
@@ -278,8 +318,41 @@ func remove_timed_effect(id: String) -> void:
 		recalculate()
 
 
-## Lo llama Player cada frame: quita los efectos caducados.
+## Cargas máximas de un tipo: 3 + 1 por cada 50 del atributo de su color + las de stats.
+func max_charges(t: String) -> int:
+	return Charges.BASE_MAX + int(stats.get_value(Charges.ATTRS[t]) / Charges.ATTR_STEP) + int(stats.get_value(Charges.max_stat(t)))
+
+
+## Gana una carga (si cabe) y renueva el tiempo de las de su tipo.
+func gain_charge(t: String) -> bool:
+	charge_time[t] = Charges.DURATION
+	if int(charges[t]) >= max_charges(t):
+		return false
+	charges[t] = int(charges[t]) + 1
+	recalculate()
+	charges_changed.emit()
+	return true
+
+
+## Gasta todas las cargas de un tipo; devuelve cuántas había.
+func spend_charges(t: String) -> int:
+	var n: int = charges[t]
+	if n > 0:
+		charges[t] = 0
+		recalculate()
+		charges_changed.emit()
+	return n
+
+
+## Lo llama Player cada frame: quita los efectos caducados y las cargas vencidas.
 func tick_timed_effects(delta: float) -> void:
+	for t in Charges.TYPES:
+		if int(charges[t]) > 0:
+			charge_time[t] = float(charge_time[t]) - delta
+			if float(charge_time[t]) <= 0.0:
+				charges[t] = 0
+				recalculate()
+				charges_changed.emit()
 	if timed_effects.is_empty():
 		return
 	var expired := false

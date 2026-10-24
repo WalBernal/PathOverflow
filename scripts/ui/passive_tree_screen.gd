@@ -196,6 +196,9 @@ func show_character(character: CharacterData) -> void:
 
 func _on_node_clicked(id: int, button: MouseButton) -> void:
 	var alloc := _character.passives
+	if button == MOUSE_BUTTON_LEFT and alloc.is_allocated(id) and alloc.tree.is_socket(id):
+		_open_chip_menu(id)
+		return
 	if button == MOUSE_BUTTON_LEFT and not alloc.is_allocated(id):
 		var cost := alloc.find_path(id).size()
 		if cost > 0 and alloc.allocate_path(id, _character.passive_points_available()) == 0:
@@ -204,6 +207,41 @@ func _on_node_clicked(id: int, button: MouseButton) -> void:
 		if not alloc.refund(id):
 			_flash("No se puede quitar: desconectaría otros nodos")
 	_on_node_hovered(id)
+
+
+## Menú de la ranura de chip: engastar uno de la bolsa o sacar el que hay.
+func _open_chip_menu(node_id: int) -> void:
+	var inv := _character.inventory
+	var menu := PopupMenu.new()
+	menu.theme = UiStyle.make_theme()
+	var actions: Array = []
+	if inv.chips.has(node_id):
+		menu.add_item("Sacar «%s» a la bolsa" % (inv.chips[node_id] as Item).display_name())
+		actions.append(-1)
+	for i in inv.bag.size():
+		if inv.bag[i] is ExpansionChip:
+			var chip: ExpansionChip = inv.bag[i]
+			var mods := PackedStringArray()
+			for m in chip.chip_modifiers(""):
+				mods.append(m.describe())
+			menu.add_item("Engastar «%s»: %s" % [chip.display_name(), ", ".join(mods)])
+			actions.append(i)
+	if actions.is_empty():
+		_flash("No tienes chips de expansión en la bolsa. Caen de los enemigos (más de los raros y únicos).")
+		menu.queue_free()
+		return
+	add_child(menu)
+	menu.id_pressed.connect(func(k: int) -> void:
+		if actions[k] == -1:
+			if not inv.unsocket_chip(node_id):
+				_flash("La bolsa está llena: haz sitio para sacar el chip.")
+		else:
+			inv.socket_chip(actions[k], node_id)
+			Sfx.play("coin", -6.0, 1.4)
+		_refresh())
+	menu.popup_hide.connect(menu.queue_free)
+	menu.position = Vector2i(get_global_mouse_position()) + Vector2i(get_window().position)
+	menu.popup()
 
 
 func _on_node_hovered(id: int) -> void:
@@ -226,6 +264,7 @@ func _flash(message: String) -> void:
 func _refresh() -> void:
 	var available := _character.passive_points_available()
 	_view.available_points = available
+	_view.chips = _character.inventory.chips
 	_view.queue_redraw()
 	_points_label.text = "Puntos: %d / %d" % [available, _character.passive_points_total()]
 	if _character.ascendancy_points_total() > 0:
@@ -258,6 +297,15 @@ func _build_tooltip(node: PassiveNode) -> String:
 		t += "• %s\n" % m.describe()
 	if node.flavor != "":
 		t += "\n[i][color=#a08f6a]%s[/color][/i]\n" % node.flavor
+	if tree.is_socket(node.id):
+		var chip: ExpansionChip = _character.inventory.chips.get(node.id, null)
+		if chip:
+			t += "\n[color=#%s]Chip: %s[/color]\n" % [Rarity.item_color(chip.rarity).to_html(false), chip.display_name()]
+			for m in chip.chip_modifiers(""):
+				t += "  [color=#a8c8ff]• %s[/color]\n" % m.describe()
+		else:
+			t += "\n[color=#c8a050]Ranura de chip de expansión vacía[/color]\n"
+		t += "[color=#8a8293]%s[/color]\n" % ("Click izquierdo: engastar o sacar un chip" if alloc.is_allocated(node.id) else "Asígnala para poder engastar un chip")
 	t += "\n"
 	if node.kind == PassiveNode.Kind.CLASS_START:
 		t += "[color=#8a8293]Punto de inicio[/color]"

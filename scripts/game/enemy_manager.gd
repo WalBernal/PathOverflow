@@ -14,6 +14,8 @@ extends Node2D
 signal enemy_killed(rarity: Rarity.Enemy, experience: int, position: Vector2, type_id: String)
 ## Un golpe a un enemigo inmune (para el aviso "INMUNE").
 signal immune_hit(position: Vector2)
+## Un golpe tuyo (o de tus aliados) fue crítico: cargas de Overclock.
+signal crit_dealt
 ## Un jefe cruza el umbral de una fase: (id, nombre de la fase, texto, color).
 signal phase_started(id: int, phase_name: String, text: String, color: Color)
 
@@ -897,6 +899,7 @@ func _damage(i: int, min_damage: float, max_damage: float, crit_chance: float, c
 	var damage := randf_range(min_damage, max_damage)
 	if randf() * 100.0 < crit_chance:
 		damage *= crit_multiplier / 100.0
+		crit_dealt.emit()
 	if not hit_ailments.is_empty():
 		var dtype := String(hit_ailments.get("type", ""))
 		if dtype != "" and dtype != "none":

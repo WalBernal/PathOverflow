@@ -147,6 +147,8 @@ func _process(delta: float) -> void:
 	character.play_time += delta
 	_update_twins(delta)
 	_update_challenge(delta)
+	if not _event_fights.is_empty():
+		_update_event_fights()
 	_immune_warning = maxf(0.0, _immune_warning - delta)
 	_since_save += delta
 	if (_dirty and _since_save >= AUTOSAVE_DELAY) or _since_save >= AUTOSAVE_INTERVAL:
@@ -205,8 +207,11 @@ func travel_to(zone_id: String, entry := "") -> void:
 	zone.setup(def, player, character, quests)
 	add_child(zone)
 	move_child(zone, 0)  # debajo de todo lo demás
+	post.attach(self, zone)   # el pixelado justo después de la zona; la luz, encima
 	post.set_style(zone.style)
 	zone.npc_interacted.connect(_on_npc_interacted)
+	zone.events.triggered.connect(_on_zone_event)
+	_event_fights.clear()
 	zone.exit_reached.connect(_on_exit_reached)
 	zone.quest_item_picked.connect(_on_quest_item_picked)
 	zone.key_item_picked.connect(_on_key_item_picked)
@@ -572,6 +577,90 @@ func drop_test_loot() -> void:
 		loot.drop_item(items[i], player.global_position + offset)
 
 
+# --- Eventos de zona (ZoneEvents) ---
+
+## Peleas de evento en curso: {event, ids: Array[int], waves_left, reward}.
+var _event_fights: Array[Dictionary] = []
+
+
+func _on_zone_event(e: Dictionary) -> void:
+	var p: Vector2 = e["pos"]
+	match String(e["kind"]):
+		"shrine":
+			var info: Dictionary = ZoneEvents.SHRINES[e["shrine"]]
+			if e["shrine"] == "overclock":
+				for t in Charges.TYPES:
+					for k in character.max_charges(t):
+						character.gain_charge(t)
+			else:
+				var mods: Array[Modifier] = []
+				for md in info["mods"]:
+					mods.append(Modifier.from_dict(md, "shrine"))
+				character.add_timed_effect("shrine:" + String(e["shrine"]), mods, ZoneEvents.SHRINE_SECONDS)
+			ui.hud.flash(info["text"], Color(info["color"]))
+			Sfx.play("aura_on", -2.0, 1.2)
+		"cache":
+			ui.hud.flash("¡Datos huérfanos! Sus dueños vienen a reclamarlos: aguanta dos oleadas.", Color("f2c14e"))
+			Sfx.play("wave")
+			_event_fights.append({"event": e, "ids": _spawn_event_wave(p, 9, 0.25, 0.0), "waves_left": 1, "reward": 3})
+		"ambush":
+			ui.hud.flash("¡Emboscada! Era un honeypot.", Color("ff6a5a"))
+			Sfx.play("wave")
+			var ids := _spawn_event_wave(player.global_position, 12, 0.2, 0.12, 320.0)
+			_event_fights.append({"event": e, "ids": ids, "waves_left": 0, "reward": 1})
+		"deploy":
+			ui.hud.flash("Deploy fallido: dos procesos raros se escaparon a producción.", Color("ff6a5a"))
+			Sfx.play("wave")
+			var ids := _spawn_event_wave(p, 4, 0.0, 0.0)
+			var cfg: Dictionary = zone.def.get("enemies", {})
+			var types: Array = cfg.get("types", [])
+			for k in 2:
+				var t := enemies.type_index_of(types[randi() % types.size()]) if not types.is_empty() else -1
+				ids.append(enemies.spawn(zone.free_spot_near(p + Vector2.from_angle(PI * k) * 90.0), Rarity.Enemy.ELITE, t))
+			_event_fights.append({"event": e, "ids": ids, "waves_left": 0, "reward": 3})
+
+
+## Una oleada alrededor de `center`: `count` enemigos de los tipos de la zona.
+func _spawn_event_wave(center: Vector2, count: int, magic_chance: float, rare_chance: float, ring := 160.0) -> Array[int]:
+	var cfg: Dictionary = zone.def.get("enemies", {})
+	var types: Array = cfg.get("types", [])
+	var ids: Array[int] = []
+	for k in count:
+		var rarity := Rarity.Enemy.NORMAL
+		if randf() < rare_chance:
+			rarity = Rarity.Enemy.ELITE
+		elif randf() < magic_chance:
+			rarity = Rarity.Enemy.SPECIAL
+		var t := enemies.type_index_of(types[randi() % types.size()]) if not types.is_empty() else -1
+		var q := center + Vector2.from_angle(TAU * k / count + randf() * 0.4) * ring * randf_range(0.8, 1.2)
+		ids.append(enemies.spawn(zone.free_spot_near(q), rarity, t))
+	return ids
+
+
+## Comprueba cada fotograma si se limpió una pelea de evento (siguiente oleada o botín).
+func _update_event_fights() -> void:
+	for f in _event_fights.duplicate():
+		var alive: Array = f["ids"].filter(func(id: int) -> bool: return enemies.index_of(id) != -1)
+		f["ids"] = alive
+		if not alive.is_empty():
+			continue
+		var e: Dictionary = f["event"]
+		if int(f["waves_left"]) > 0:
+			f["waves_left"] = int(f["waves_left"]) - 1
+			f["ids"] = _spawn_event_wave(e["pos"], 11, 0.35, 0.12, 200.0)
+			ui.hud.flash("Segunda oleada: vienen con refuerzos.", Color("f2c14e"))
+			continue
+		_event_fights.erase(f)
+		e["state"] = "done"
+		var at: Vector2 = e["pos"] if e["kind"] != "ambush" else player.global_position
+		for k in int(f["reward"]):
+			var bonus := 1.5 if k == 0 else 0.5   # el primero, con más rareza
+			loot.drop_item(item_generator.roll_drop(enemies.area_level, bonus), zone.free_spot_near(at + Vector2.from_angle(TAU * k / maxf(1.0, f["reward"])) * 70.0))
+		loot.drop_tokens(Economy.drop_amount(enemies.area_level, Rarity.Enemy.ELITE, _rng) * 2, zone.free_spot_near(at))
+		ui.hud.flash("Evento superado: botín en el suelo.", Color("6fd36b"))
+		Sfx.play("level_up", -6.0, 1.3)
+
+
 func _on_enemy_killed(rarity: int, experience: int, pos: Vector2, type_id: String = "") -> void:
 	Sfx.play("enemy_death", -6.0 + 2.0 * rarity, 1.0 - 0.08 * rarity)
 	if rarity == Rarity.Enemy.UNIQUE and _boss_phase > 0 and not _boss_alive and enemies.boss_info().is_empty():
@@ -593,6 +682,9 @@ func _on_enemy_killed(rarity: int, experience: int, pos: Vector2, type_id: Strin
 		if randf() < float(info["drop_chance"]) * drop_mult:
 			var item := item_generator.roll_drop(enemies.area_level, info["item_rarity_bonus"])
 			loot.drop_item(item, zone.free_spot_near(pos + Vector2(randf_range(-30.0, 30.0), randf_range(-20.0, 20.0))))
+	# Chips de expansión (para las ranuras del árbol pasivo): raros, más de los enemigos fuertes.
+	if randf() < [0.004, 0.015, 0.06, 0.25][clampi(rarity, 0, 3)] * drop_mult:
+		loot.drop_item(ExpansionChip.roll(enemies.area_level, _rng), zone.free_spot_near(pos + Vector2(randf_range(-30.0, 30.0), 20.0)))
 	# Enemigos raros con kill_flag (p. ej. el Centinela del Cargador): que no reaparezcan.
 	if rarity == Rarity.Enemy.UNIQUE:
 		for r in zone.def.get("rare_spawns", []):

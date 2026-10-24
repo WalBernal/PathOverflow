@@ -44,6 +44,8 @@ var _drag_distance := 0.0
 var _search: Dictionary = {}   # ids que coinciden con la búsqueda -> true
 ## Estado del medallón de ascendencia: {unlocked, pending, name}.
 var ascendancy_info: Dictionary = {}
+## Chips engastados (id de nodo -> ExpansionChip), los pone la pantalla del árbol.
+var chips: Dictionary = {}
 var _medallion_hover := false
 const MEDALLION_RADIUS := 30.0
 
@@ -182,6 +184,15 @@ func _draw() -> void:
 				var label_pos := n.position + Vector2(-150.0, r + 34.0)
 				draw_string_outline(font, label_pos, n.title, HORIZONTAL_ALIGNMENT_CENTER, 300.0, 26, 8, COLOR_BG)
 				draw_string(font, label_pos, n.title, HORIZONTAL_ALIGNMENT_CENTER, 300.0, 26, COLOR_TEXT)
+		if tree.is_socket(n.id):
+			# Ranura de chip: hexágono dorado alrededor y, si tiene chip, el chip encima.
+			var hexa := PackedVector2Array()
+			for k in 7:
+				hexa.append(n.position + Vector2.from_angle(PI / 6.0 + TAU * k / 6.0) * (r + 11.0))
+			draw_polyline(hexa, Color("c8a050") if on else Color("6a5a3a"), 3.0, true)
+			var chip: Item = chips.get(n.id, null)
+			if chip:
+				ItemIcons.draw_item(self, Rect2(n.position + Vector2(r * 0.4, -r * 1.3), Vector2(r, r)), chip, Color.WHITE if on else Color(1, 1, 1, 0.4))
 		if _search.has(n.id):
 			draw_arc(n.position, r + 8.0 + pulse * 4.0, 0.0, TAU, 32, Color(1.0, 0.85, 0.2, 0.5 + 0.5 * pulse), 3.0, true)
 		if n.id == _hovered_id:

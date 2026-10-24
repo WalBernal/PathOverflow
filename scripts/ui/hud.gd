@@ -436,7 +436,10 @@ func _player_buffs() -> Array[Dictionary]:
 		var eid: String = effect["id"]
 		if eid.begins_with("aura:"):
 			continue   # las auras salen en los recuadros de activos
-		if eid.begins_with("skill:"):
+		if eid.begins_with("shrine:"):
+			var info: Dictionary = ZoneEvents.SHRINES.get(eid.trim_prefix("shrine:"), {})
+			out.append({"name": info.get("name", "Santuario"), "skill": {}, "shrine": info.get("color", "ffffff"), "time": effect["time_left"], "desc": info.get("text", "")})
+		elif eid.begins_with("skill:"):
 			var skill: Dictionary = GameData.items.skills.skills.get(eid.trim_prefix("skill:"), {})
 			out.append({"name": skill.get("name", "Efecto"), "skill": skill, "time": effect["time_left"], "desc": skill.get("description", "")})
 		else:
@@ -450,7 +453,8 @@ func _draw_player_states(life_center: Vector2, font: Font) -> void:
 	var debuffs := _player_states()
 	var buffs := _player_buffs()
 	_states_rect = Rect2()
-	if debuffs.is_empty() and buffs.is_empty():
+	var charge_types: Array = Charges.TYPES.filter(func(t: String) -> bool: return int(character.charges[t]) > 0)
+	if debuffs.is_empty() and buffs.is_empty() and charge_types.is_empty():
 		return
 	var side := 26.0
 	var x0 := 24.0
@@ -467,7 +471,11 @@ func _draw_player_states(life_center: Vector2, font: Font) -> void:
 	for b in buffs:
 		var r := Rect2(x, y, side, side)
 		draw_rect(r, Color(0, 0, 0, 0.7))
-		if b.has("flask"):
+		if b.has("shrine"):
+			var sc := Color(b["shrine"])
+			draw_rect(Rect2(r.get_center() - Vector2(5, 8), Vector2(10, 16)), sc.darkened(0.3))
+			draw_rect(Rect2(r.get_center() - Vector2(3, 3), Vector2(6, 6)), sc.lightened(0.3))
+		elif b.has("flask"):
 			ItemIcons.draw(self, r.grow(-2.0), b["flask"], Color.WHITE, false)
 		elif not b["skill"].is_empty():
 			SkillIcon.draw(self, r, b["skill"])
@@ -475,6 +483,21 @@ func _draw_player_states(life_center: Vector2, font: Font) -> void:
 		var blabel := "%.0fs" % ceilf(b["time"])
 		draw_string_outline(font, r.position + Vector2(0, side + 11.0), blabel, HORIZONTAL_ALIGNMENT_CENTER, side, 10, 3, Color.BLACK)
 		draw_string(font, r.position + Vector2(0, side + 11.0), blabel, HORIZONTAL_ALIGNMENT_CENTER, side, 10, Color("9ae09a"))
+		x += side + 4.0
+	# Cargas: rombo de su color con cuántas hay (y el máximo) y el tiempo que les queda.
+	for t in charge_types:
+		var r := Rect2(x, y, side, side)
+		var col: Color = Charges.COLORS[t]
+		var c := r.get_center()
+		draw_rect(r, Color(0, 0, 0, 0.7))
+		draw_colored_polygon(PackedVector2Array([c + Vector2(0, -11), c + Vector2(11, 0), c + Vector2(0, 11), c + Vector2(-11, 0)]), col.darkened(0.2))
+		draw_colored_polygon(PackedVector2Array([c + Vector2(0, -7), c + Vector2(7, 0), c + Vector2(0, 7), c + Vector2(-7, 0)]), col.lightened(0.25))
+		draw_string_outline(font, r.position + Vector2(0, 18), str(character.charges[t]), HORIZONTAL_ALIGNMENT_CENTER, side, 13, 4, Color.BLACK)
+		draw_string(font, r.position + Vector2(0, 18), str(character.charges[t]), HORIZONTAL_ALIGNMENT_CENTER, side, 13, Color.WHITE)
+		draw_rect(r.grow(1.0), col, false, 1.5)
+		var clabel := "%.0fs" % ceilf(float(character.charge_time[t]))
+		draw_string_outline(font, r.position + Vector2(0, side + 11.0), clabel, HORIZONTAL_ALIGNMENT_CENTER, side, 10, 3, Color.BLACK)
+		draw_string(font, r.position + Vector2(0, side + 11.0), clabel, HORIZONTAL_ALIGNMENT_CENTER, side, 10, col.lightened(0.3))
 		x += side + 4.0
 	_states_rect = Rect2(x0, y, x - x0 - 4.0, side + 14.0)
 
@@ -625,6 +648,8 @@ func _draw_status_boxes(font: Font) -> void:
 		var eid: String = effect["id"]
 		if eid.begins_with("aura:"):
 			continue   # las auras salen en active_summaries()
+		if eid.begins_with("shrine:"):
+			continue   # los santuarios salen en la barra de estados, sobre el orbe de vida
 		if eid.begins_with("skill:"):
 			# Potenciadores de habilidades (Modo Seguro, Hiperthreading...).
 			var skill: Dictionary = GameData.items.skills.skills.get(eid.trim_prefix("skill:"), {})

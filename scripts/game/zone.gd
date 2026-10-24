@@ -116,6 +116,10 @@ var _edges := {}                        # "top"/"bottom"/"left"/"right" -> Packe
 var _edge_props: Array[Dictionary] = [] # adornos del borde: {pos, out, seed}
 var _decals: Array[Dictionary] = []
 var _ground_layer: Node2D
+var events: ZoneEvents
+var _npc_layer: Node2D
+var _label_layer: Node2D
+var _labels: Array = []   # [pos, texto, ancho, tamaño, color, contorno] (ver _label)
 var _pending: Dictionary = {}           # {"kind": "npc"|"waypoint", "npc": {...}}
 var _hovered_npc := -1
 var _time := 0.0
@@ -229,6 +233,21 @@ func setup(p_def: Dictionary, p_player: Player, p_character: CharacterData, p_qu
 	_ground_layer.show_behind_parent = true
 	_ground_layer.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 	_ground_layer.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	# Por encima del filtro de pixel art: NPC (z 1, con la luz de la zona) y textos (z 3).
+	_npc_layer = Node2D.new()
+	_npc_layer.z_index = 1
+	_npc_layer.draw.connect(func() -> void: _draw_npcs(_npc_layer))
+	add_child(_npc_layer)
+	_label_layer = Node2D.new()
+	_label_layer.z_index = 3
+	_label_layer.draw.connect(_draw_labels)
+	add_child(_label_layer)
+	# Eventos (datos huérfanos, santuarios, emboscadas, deploys fallidos): cambian en cada visita.
+	events = ZoneEvents.new()
+	add_child(events)
+	var event_rng := RandomNumberGenerator.new()
+	event_rng.randomize()
+	events.setup(self, event_rng)
 	_ground_layer.draw.connect(_draw_static)
 	add_child(_ground_layer)
 
@@ -707,7 +726,7 @@ func interact_near(pos: Vector2, radius: float) -> bool:
 		_pending = {"kind": "stash"}
 		player.move_to(stash_pos + Vector2(0, 34))
 		return true
-	return false
+	return events != null and events.interact_near(pos, radius)
 
 
 func _npc_at(pos: Vector2) -> int:
@@ -1050,8 +1069,24 @@ func _draw() -> void:
 	for q in quest_items:
 		if quest_item_visible(q):
 			_draw_quest_item(q)
-	_draw_npcs()
 	_draw_ambient()
+	_npc_layer.queue_redraw()
+	_label_layer.queue_redraw()
+
+
+## Texto del mundo que no debe pixelarse (nombres, placas, avisos): se guarda y
+## lo dibuja la capa de etiquetas (z 3), encima de los filtros.
+func _label(pos: Vector2, text: String, width: float, font_size: int, color: Color, outline := true) -> void:
+	_labels.append([pos, text, width, font_size, color, outline])
+
+
+func _draw_labels() -> void:
+	var font := ThemeDB.fallback_font
+	for l in _labels:
+		if l[5]:
+			_label_layer.draw_string_outline(font, l[0], l[1], HORIZONTAL_ALIGNMENT_CENTER, l[2], l[3], 5, Color(0, 0, 0, 0.85))
+		_label_layer.draw_string(font, l[0], l[1], HORIZONTAL_ALIGNMENT_CENTER, l[2], l[3], l[4])
+	_labels.clear()
 
 
 ## Partículas de ambiente alrededor de la cámara, según el estilo: luciérnagas y
@@ -1505,7 +1540,7 @@ func _draw_exit(e: Dictionary) -> void:
 	draw_rect(plate.grow(2), Color("120f16"))
 	draw_rect(plate, Color("221d28"))
 	draw_rect(plate, Color(color, 0.9), false, 2.0)
-	draw_string(font, plate.position + Vector2(0, 16), label, HORIZONTAL_ALIGNMENT_CENTER, w, 14, color.lightened(0.4))
+	_label(plate.position + Vector2(0, 16), label, w, 14, color.lightened(0.4), false)
 
 
 func _draw_waypoint() -> void:
@@ -1524,8 +1559,7 @@ func _draw_waypoint() -> void:
 	# Columna de luz.
 	draw_rect(Rect2(p + Vector2(-5, -70), Vector2(10, 70)), Color(color, 0.25 + 0.15 * sin(_time * 4.0)))
 	var font := ThemeDB.fallback_font
-	draw_string_outline(font, p + Vector2(-80, -80), "Waypoint", HORIZONTAL_ALIGNMENT_CENTER, 160, 14, 5, Color.BLACK)
-	draw_string(font, p + Vector2(-80, -80), "Waypoint", HORIZONTAL_ALIGNMENT_CENTER, 160, 14, color)
+	_label(p + Vector2(-80, -80), "Waypoint", 160, 14, color)
 
 
 ## Alijo: un NAS (servidor de archivos) con lucecitas, compartido por la cuenta.
@@ -1546,8 +1580,7 @@ func _draw_stash() -> void:
 	draw_rect(box, Color("f2c14e").darkened(0.35), false, 2.0)
 	var font := ThemeDB.fallback_font
 	var label := "Alijo (NAS compartido)"
-	draw_string_outline(font, p + Vector2(-100, -50), label, HORIZONTAL_ALIGNMENT_CENTER, 200, 14, 5, Color.BLACK)
-	draw_string(font, p + Vector2(-100, -50), label, HORIZONTAL_ALIGNMENT_CENTER, 200, 14, Color("f2c14e"))
+	_label(p + Vector2(-100, -50), label, 200, 14, Color("f2c14e"))
 
 
 func _draw_key_item(k: Dictionary) -> void:
@@ -1557,8 +1590,7 @@ func _draw_key_item(k: Dictionary) -> void:
 	ItemIcons.draw(self, Rect2(p + Vector2(-18, -22 + bob), Vector2(36, 36)), KeyItem.DEFS.get(k["id"], {}).get("icon", "key_card"))
 	var name: String = KeyItem.DEFS.get(k["id"], {}).get("name", k["id"])
 	var font := ThemeDB.fallback_font
-	draw_string_outline(font, p + Vector2(-120, -30 + bob), name, HORIZONTAL_ALIGNMENT_CENTER, 240, 13, 5, Color.BLACK)
-	draw_string(font, p + Vector2(-120, -30 + bob), name, HORIZONTAL_ALIGNMENT_CENTER, 240, 13, KeyItem.COLOR)
+	_label(p + Vector2(-120, -30 + bob), name, 240, 13, KeyItem.COLOR)
 
 
 ## Banco de Pruebas de Estrés: tócalo para ver la recompensa y aceptar las oleadas.
@@ -1584,11 +1616,9 @@ func _draw_challenge(c: Dictionary) -> void:
 	var font := ThemeDB.fallback_font
 	var label: String = c.get("name", "Banco de Pruebas de Estrés")
 	var bob := sin(_time * 3.0) * 3.0
-	draw_string_outline(font, p + Vector2(-140, -62 + bob), label, HORIZONTAL_ALIGNMENT_CENTER, 280, 14, 5, Color.BLACK)
-	draw_string(font, p + Vector2(-140, -62 + bob), label, HORIZONTAL_ALIGNMENT_CENTER, 280, 14, Color("ff9a4a"))
+	_label(p + Vector2(-140, -62 + bob), label, 280, 14, Color("ff9a4a"))
 	if not active:
-		draw_string_outline(font, p + Vector2(-10, -80 + bob), "!", HORIZONTAL_ALIGNMENT_CENTER, 20, 24, 5, Color.BLACK)
-		draw_string(font, p + Vector2(-10, -80 + bob), "!", HORIZONTAL_ALIGNMENT_CENTER, 20, 24, Color("ff9a4a"))
+		_label(p + Vector2(-10, -80 + bob), "!", 20, 24, Color("ff9a4a"))
 
 
 ## Gigantes de hierro de la Grieta del Deadlock: encadenados mientras no se abra.
@@ -1639,24 +1669,24 @@ func _draw_quest_item(q: Dictionary) -> void:
 	QuestItemArt.draw(self, Vector2.ZERO, QuestItemArt.kind_for(q), _time)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	var font := ThemeDB.fallback_font
-	draw_string_outline(font, p + Vector2(-110, -42 + bob), q["name"], HORIZONTAL_ALIGNMENT_CENTER, 220, 13, 5, Color.BLACK)
-	draw_string(font, p + Vector2(-110, -42 + bob), q["name"], HORIZONTAL_ALIGNMENT_CENTER, 220, 13, UiStyle.ACCENT)
+	_label(p + Vector2(-110, -42 + bob), q["name"], 220, 13, UiStyle.ACCENT)
 
 
 ## Un NPC que solo está "conectado": su cara en un monitor de fósforo verde.
-func _draw_terminal_npc(pos: Vector2, appearance: Dictionary) -> void:
-	draw_rect(Rect2(pos + Vector2(-34, -6), Vector2(68, 10)), Color("3a2e26"))          # mesa
+func _draw_terminal_npc(ci: CanvasItem, pos: Vector2, appearance: Dictionary) -> void:
+	ci.draw_rect(Rect2(pos + Vector2(-34, -6), Vector2(68, 10)), Color("3a2e26"))          # mesa
 	var screen := Rect2(pos + Vector2(-28, -52), Vector2(56, 44))
-	draw_rect(screen.grow(4), Color("2a2a2e"))
-	draw_rect(screen, Color("031007"))
+	ci.draw_rect(screen.grow(4), Color("2a2a2e"))
+	ci.draw_rect(screen, Color("031007"))
 	var flicker := 0.7 + 0.3 * sin(_time * 23.0) * sin(_time * 7.0)
-	CharacterAppearance.draw(self, screen.position + Vector2(28, 52), 0.75, appearance, Vector2.DOWN, Color(PHOSPHOR, flicker))
-	draw_rect(screen.grow(4), Color(0.03, 0.06, 0.04), false, 2.0)
+	CharacterAppearance.draw(ci, screen.position + Vector2(28, 52), 0.75, appearance, Vector2.DOWN, Color(PHOSPHOR, flicker))
+	ci.draw_rect(screen.grow(4), Color(0.03, 0.06, 0.04), false, 2.0)
 	for y in range(int(screen.position.y), int(screen.end.y), 3):
-		draw_line(Vector2(screen.position.x, y), Vector2(screen.end.x, y), Color(0, 0, 0, 0.3), 1.0)
+		ci.draw_line(Vector2(screen.position.x, y), Vector2(screen.end.x, y), Color(0, 0, 0, 0.3), 1.0)
 
 
-func _draw_npcs() -> void:
+## Los NPC van en su propia capa (z 1): sin pixelar, con la luz de la zona.
+func _draw_npcs(ci: CanvasItem) -> void:
 	var font := ThemeDB.fallback_font
 	for i in npcs.size():
 		var npc: Dictionary = npcs[i]
@@ -1664,13 +1694,13 @@ func _draw_npcs() -> void:
 		var appearance := CharacterAppearance.sanitize(npc.get("appearance", {}))
 		var to_player := player.global_position - pos if player else Vector2.DOWN
 		if npc.get("terminal", false):
-			_draw_terminal_npc(pos, appearance)
+			_draw_terminal_npc(ci, pos, appearance)
 		else:
-			CharacterAppearance.draw(self, pos, 1.12, appearance, Vector2(signf(to_player.x) * 0.5, 1.0))
+			CharacterAppearance.draw(ci, pos, 1.12, appearance, Vector2(signf(to_player.x) * 0.5, 1.0))
 		var label_color := UiStyle.ACCENT if i == _hovered_npc else UiStyle.TEXT
 		var label_pos := pos + Vector2(-110.0, -52.0)
-		draw_string_outline(font, label_pos, npc["name"], HORIZONTAL_ALIGNMENT_CENTER, 220.0, 14, 5, Color(0, 0, 0, 0.8))
-		draw_string(font, label_pos, npc["name"], HORIZONTAL_ALIGNMENT_CENTER, 220.0, 14, label_color)
+		ci.draw_string_outline(font, label_pos, npc["name"], HORIZONTAL_ALIGNMENT_CENTER, 220.0, 14, 5, Color(0, 0, 0, 0.8))
+		ci.draw_string(font, label_pos, npc["name"], HORIZONTAL_ALIGNMENT_CENTER, 220.0, 14, label_color)
 		# "?" si tiene una misión lista para entregar; "!" si hay algo nuevo que hablar.
 		var mark := ""
 		var mark_color := UiStyle.ACCENT
@@ -1684,5 +1714,5 @@ func _draw_npcs() -> void:
 			mark = "!"
 		if mark != "":
 			var bounce := sin(_time * 4.0) * 3.0
-			draw_string_outline(font, pos + Vector2(-10.0, -70.0 + bounce), mark, HORIZONTAL_ALIGNMENT_CENTER, 20.0, 22, 5, Color.BLACK)
-			draw_string(font, pos + Vector2(-10.0, -70.0 + bounce), mark, HORIZONTAL_ALIGNMENT_CENTER, 20.0, 22, mark_color)
+			ci.draw_string_outline(font, pos + Vector2(-10.0, -70.0 + bounce), mark, HORIZONTAL_ALIGNMENT_CENTER, 20.0, 22, 5, Color.BLACK)
+			ci.draw_string(font, pos + Vector2(-10.0, -70.0 + bounce), mark, HORIZONTAL_ALIGNMENT_CENTER, 20.0, 22, mark_color)

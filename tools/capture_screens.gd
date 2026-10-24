@@ -44,6 +44,10 @@ func _run() -> void:
 		await _capture_hire_no()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("roadmap2"):
+		await _capture_roadmap2()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("ascendencia"):
 		await _capture_ascendancy()
 		get_tree().quit()
@@ -282,6 +286,72 @@ func _capture_ascendancy() -> void:
 	panel.set("_hover", 9)
 	await _wait(0.3)
 	_save("53_ascendencia_arbol_bloqueado")
+	world.set("_since_save", -9999.0)
+
+
+## Roadmap 2.0: eventos de zona, cargas en el HUD, variante en K, Mainframe Titán
+## y ranuras de chip en el árbol.
+func _capture_roadmap2() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Roadmap2", &"templario", CharacterAppearance.default(), false)
+	c.flags["zone"] = "zona1"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 30
+	var items: ItemDatabase = gd.get("items")
+	var titan := Motherboard.new(items.skills.skills["mainframe_titan"], 12, ["DDR4", "DDR5"])
+	titan.variant = ""
+	c.inventory.boards[2] = titan
+	var golem := Motherboard.new(items.skills.skills["golem_hardware"], 12, ["DDR4"])
+	golem.variant = "trio"
+	c.inventory.boards[3] = golem
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 3
+	for k in 3:
+		c.inventory.add_item(ExpansionChip.roll(30, rng))
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(4.0)
+	var ui: Node = world.get("ui")
+	var choice: Variant = ui.get("_choice_panel")
+	if choice is Node and is_instance_valid(choice):
+		(choice as Node).queue_free()
+	get_tree().paused = false
+	var zone: Zone = world.get("zone")
+	var player: Node2D = world.get("player")
+	var enemies: EnemyManager = world.get("enemies")
+	for i in range(enemies.positions.size() - 1, -1, -1):
+		if enemies.positions[i].distance_to(player.global_position) < 900.0:
+			enemies.lives[i] = 0.0
+	for t in Charges.TYPES:
+		for k in 3:
+			c.gain_charge(t)
+	var skills: Node = world.get("skills")
+	skills.call("_execute", skills.call("profile", 2), player.global_position)
+	skills.call("_execute", skills.call("profile", 3), player.global_position)
+	print("eventos: ", zone.events.events.map(func(e: Dictionary) -> String: return "%s@%s" % [e["kind"], str(Vector2i(e["pos"]))]))
+	# Junto a un evento visible (santuario, datos huérfanos o deploy).
+	for e in zone.events.events:
+		if e["kind"] != "ambush":
+			player.global_position = zone.free_spot_near(e["pos"] + Vector2(-140, 60))
+			break
+	await _wait(1.2)
+	_save("70_roadmap2_evento_y_cargas")
+	ui.call("_on_menu_requested", "skills")
+	await _wait(0.5)
+	_save("71_roadmap2_variantes_k")
+	ui.call("_on_menu_requested", "skills")
+	ui.call("_on_menu_requested", "passives")
+	await _wait(0.4)
+	var view: Node = ui.get("tree_screen").get("_view")
+	var sock := c.passives.tree.socket_ids()[0]
+	view.set("zoom", 0.9)
+	view.call("center_on", c.passives.tree.get_node_data(sock).position)
+	await _wait(0.5)
+	_save("72_roadmap2_ranura_chip")
+	ui.call("_on_menu_requested", "passives")
 	world.set("_since_save", -9999.0)
 
 

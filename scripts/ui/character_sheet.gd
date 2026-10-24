@@ -214,6 +214,15 @@ func _refresh() -> void:
 	_bars["str"].setup("Fuerza", "%d" % attrs[0], attrs[0] / top_attr, Color("e06c6c"))
 	_bars["dex"].setup("Destreza", "%d" % attrs[1], attrs[1] / top_attr, Color("6fb36b"))
 	_bars["int"].setup("Inteligencia", "%d" % attrs[2], attrs[2] / top_attr, Color("7fb8e0"))
+	# Qué da cada atributo (al pasar el mouse) y cuántas cargas permite.
+	var bonus := {
+		"str": "+5 de vida cada 10 · +1 %% de daño físico cuerpo a cuerpo cada 4\n+1 carga de Buffer máxima cada 50 (tienes %d)",
+		"dex": "+2 de precisión por punto · +1 %% de evasión cada 5 · +1 %% de velocidad de ataque cada 10\n+1 %% de daño de proyectiles cada 4 · +1 carga de Multihilos máxima cada 50 (tienes %d)",
+		"int": "+5 de maná cada 10 · +1 %% de escudo de energía cada 5 · +1 %% de daño de hechizos cada 4\n+1 carga de Overclock máxima cada 50 (tienes %d)",
+	}
+	for k in bonus:
+		var t: String = {"str": "buffer", "dex": "multihilo", "int": "overclock"}[k]
+		_bars[k].tooltip_text = (bonus[k] % character.max_charges(t)) + "\nTambién son requisito de armas y armaduras."
 
 	for i in RESISTANCES.size():
 		var entry: Array = RESISTANCES[i]

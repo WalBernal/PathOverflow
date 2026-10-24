@@ -17,6 +17,34 @@ var experience := 0
 var slots: Array[String] = []
 ## RamModule instalado en cada ranura, o null.
 var rams: Array = []
+## Variante elegida (skills.json → "variants"; "" = la normal).
+var variant := ""
+
+
+## Variantes de la habilidad.
+func variants() -> Array:
+	return skill_def.get("variants", [])
+
+
+## La variante elegida, si la placa ya tiene nivel para usarla.
+func active_variant() -> Dictionary:
+	if variant == "":
+		return {}
+	for v in variants():
+		if v["id"] == variant and level >= int(v.get("min_level", 1)):
+			return v
+	return {}
+
+
+## Pasa a la siguiente variante disponible (la normal incluida). Devuelve su nombre.
+func cycle_variant() -> String:
+	var ids: Array = [""]
+	for v in variants():
+		if level >= int(v.get("min_level", 1)):
+			ids.append(v["id"])
+	variant = ids[(ids.find(variant) + 1) % ids.size()]
+	var v := active_variant()
+	return v.get("name", "Normal")
 
 
 func _init(p_skill_def: Dictionary = {}, p_level := 1, p_slots: Array = []) -> void:
@@ -114,6 +142,7 @@ func to_dict() -> Dictionary:
 		"item_level": item_level,
 		"slots": slots,
 		"rams": ram_data,
+		"variant": variant,
 	}
 
 
@@ -125,6 +154,7 @@ static func from_save(d: Dictionary, db: ItemDatabase) -> Motherboard:
 	var board := Motherboard.new(def, int(d.get("level", 1)), d.get("slots", []))
 	board.item_level = int(d.get("item_level", 1))
 	board.experience = int(d.get("experience", 0))
+	board.variant = String(d.get("variant", ""))
 	var ram_data: Array = d.get("rams", [])
 	for i in mini(ram_data.size(), board.slots.size()):
 		if ram_data[i] is Dictionary:

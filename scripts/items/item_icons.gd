@@ -62,4 +62,7 @@ static func draw(ci: CanvasItem, rect: Rect2, id: String, modulate := Color.WHIT
 
 
 static func draw_item(ci: CanvasItem, rect: Rect2, item: Item, modulate := Color.WHITE) -> void:
+	if item is ExpansionChip:
+		ExpansionChip.draw_icon(ci, rect, item, modulate)
+		return
 	draw(ci, rect, icon_id(item), modulate)

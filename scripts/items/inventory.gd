@@ -24,9 +24,36 @@ const SLOT_NAMES := {
 	"motherboard": "Placa base",
 	"ram": "Módulo RAM",
 	"flask": "Poción",
+	"chip": "Chip de expansión (árbol pasivo)",
 }
 
 var equipment: Dictionary = {}  # ranura -> Item
+## Chips de expansión engastados en el árbol pasivo: id de nodo -> ExpansionChip.
+var chips: Dictionary = {}
+
+
+## Engasta el chip de la bolsa (índice) en la ranura `node_id`; el que hubiera vuelve a la bolsa.
+func socket_chip(bag_index: int, node_id: int) -> bool:
+	var chip := bag[bag_index] as ExpansionChip
+	if chip == null:
+		return false
+	bag[bag_index] = chips.get(node_id, null)
+	chips[node_id] = chip
+	changed.emit()
+	return true
+
+
+## Saca el chip de la ranura a la bolsa (si cabe).
+func unsocket_chip(node_id: int) -> bool:
+	if not chips.has(node_id):
+		return false
+	var free := bag.find(null)
+	if free == -1:
+		return false
+	bag[free] = chips[node_id]
+	chips.erase(node_id)
+	changed.emit()
+	return true
 var bag: Array = []             # Item o null
 ## Placa base instalada en cada ranura de la barra de habilidades, o null.
 var boards: Array = []
@@ -239,7 +266,10 @@ func to_dict() -> Dictionary:
 	var flask_data: Array = []
 	for f in flasks:
 		flask_data.append(f.to_dict() if f else null)
-	return {"equipment": equip, "bag": bag_data, "boards": board_data, "flasks": flask_data}
+	var chip_data := {}
+	for id in chips:
+		chip_data[str(id)] = chips[id].to_dict()
+	return {"equipment": equip, "bag": bag_data, "boards": board_data, "flasks": flask_data, "chips": chip_data}
 
 
 ## Restaura equipo, bolsa y placas. Lo que ya no se puede cargar se descarta.
@@ -251,6 +281,11 @@ func load_dict(d: Dictionary, db: ItemDatabase) -> void:
 	boards.resize(HOTBAR_SIZE)
 	flasks.clear()
 	flasks.resize(FLASK_SLOTS)
+	chips.clear()
+	var chip_data: Dictionary = d.get("chips", {})
+	for key in chip_data:
+		if chip_data[key] is Dictionary:
+			chips[int(key)] = ExpansionChip.from_save(chip_data[key])
 	var equip: Dictionary = d.get("equipment", {})
 	for slot in equip:
 		if EQUIP_SLOTS.has(slot):
