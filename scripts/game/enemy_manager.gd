@@ -39,6 +39,8 @@ const COMBO_CHANCE := 0.25
 ## Animación de ataque: duración de la embestida y cuánto avanza (px).
 const LUNGE_TIME := 0.16
 const LUNGE_DISTANCE := 9.0
+## Ataques a distancia: al soltarlos el enemigo retrocede en vez de embestir.
+const RECOIL_ATTACKS := ["ranged", "lob_pool", "seeker", "summon"]
 const FX_DETAIL_LIMIT := 60
 ## Superconductor (helado + rayo): % del golpe de cada arco, cuántos y su alcance.
 const SUPERCONDUCTOR_DAMAGE := 0.4
@@ -1098,7 +1100,8 @@ func _physics_process(delta: float) -> void:
 		elif windups[i] > 0.0:
 			windups[i] -= delta * tempo
 			if windups[i] <= 0.0 and hunting:
-				_lunge_to(i, target_pos)
+				# Los que disparan retroceden (culatazo); el resto embiste hacia el objetivo.
+				_lunge_to(i, target_pos, -0.6 if String(atk.get("kind", "")) in RECOIL_ATTACKS else 1.0)
 				_resolve_attack(i, atk, target_pos)
 				pos = positions[i]   # el teletransporte mueve al enemigo
 		elif casting.has(ids[i]):
@@ -1192,9 +1195,10 @@ func _pick_ally(pos: Vector2, player_dist: float, hunter := false) -> int:
 
 
 ## Animación de ataque: una embestida corta hacia el objetivo (la dibuja _process).
-func _lunge_to(i: int, target: Vector2) -> void:
+## `amount`: 1 = embestida hacia el objetivo; negativo = retroceso al disparar.
+func _lunge_to(i: int, target: Vector2, amount := 1.0) -> void:
 	var dir := (target - positions[i]).normalized()
-	_lunges[ids[i]] = {"t": LUNGE_TIME, "dir": dir if dir != Vector2.ZERO else Vector2.RIGHT}
+	_lunges[ids[i]] = {"t": LUNGE_TIME, "dir": (dir if dir != Vector2.ZERO else Vector2.RIGHT) * amount}
 
 
 ## ¿Prioriza a las invocaciones? Tipos con hunts_allies (gusanos, IRQ) y los que
@@ -1576,7 +1580,10 @@ func _process(delta: float) -> void:
 		var size := radii[i] * 2.0 * SPRITE_SCALE * float(t.get("scale", 1.0))
 		var sprite_scale := Vector2(size, size)
 		var offset := Vector2.ZERO
-		if windups[i] > 0.0:
+		if dashes[i] > 0.0:
+			# Embistiendo: se estira en la dirección de la carga.
+			sprite_scale *= Vector2(1.0 + 0.18 * absf(attack_dirs[i].x), 1.0 - 0.1 * absf(attack_dirs[i].x) + 0.12 * absf(attack_dirs[i].y))
+		elif windups[i] > 0.0:
 			# Cargando el golpe: se encoge y se ensancha, temblando un poco.
 			var squash := 0.08 + 0.03 * sin(Time.get_ticks_msec() / 40.0 + ids[i])
 			sprite_scale *= Vector2(1.0 + squash, 1.0 - squash)

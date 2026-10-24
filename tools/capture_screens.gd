@@ -514,7 +514,7 @@ func _capture_prologue_walk() -> void:
 	p.set("_phase", "walk")
 	p.set("_fade", 0.0)
 	var stage: PrologueStage = p.get("_stage")
-	for x in [40.0, 300.0, 9999.0]:
+	for x in [120.0, 448.0, 9999.0]:
 		Input.action_press(&"move_right")
 		var t := 0.0
 		while stage.player_x < minf(x, 9000.0) and t < 14.0:
@@ -526,8 +526,8 @@ func _capture_prologue_walk() -> void:
 		print("prólogo calle: player_x %.0f cam_x %.0f → en pantalla x %.0f de 400 %s" % [stage.player_x, stage.cam_x, screen_x, "OK" if screen_x > 12.0 and screen_x < 388.0 else "FUERA"])
 		_save("36_prologo_calle_%d" % int(minf(x, 999.0)))
 	# Click en la entrada desde lejos: camina y entra solo.
-	p.call("_go_room", "calle", 40.0)
-	p.set("_target", Vector2(300.0, PrologueStage.FLOOR_Y))
+	p.call("_go_room", "calle", 120.0)
+	p.set("_target", Vector2(PrologueStage.ENTRANCE_X, PrologueStage.FLOOR_Y))
 	p.set("_pending_action", "to_hallway")
 	var waited := 0.0
 	while stage.room != "pasillo" and waited < 12.0:
@@ -566,6 +566,16 @@ func _capture_prologue_walk() -> void:
 	print("prólogo: click en Rafa → conversación %s en %.1f s (x %.0f)" % ["sí" if cut.is_playing() else "NO", waited, stage.player_x])
 	await _wait(1.0)
 	_save("39_prologo_rafa")
+	# La absorción: Mario y Aida llegan y el servidor se los traga (y luego al jugador).
+	cut.call("_finish")
+	stage.rafa_standing = true
+	stage.visitors_x = 112.0
+	stage.player_x = 300.0
+	p.call("_start_absorb")
+	for shot in [[1.0, "40_absorcion_mario"], [1.0, "41_absorcion_aida_rafa"], [2.3, "42_caida_jugador"]]:
+		await _wait(shot[0])
+		_save(shot[1])
+	print("prólogo: absorción %.2f, jugador %.2f, fase %s" % [stage.absorb, stage.player_pull, p.get("_phase")])
 
 
 ## Lo nuevo de combate: elección de habilidad al nivel 16, aura anclada (Torre de
@@ -580,8 +590,9 @@ func _capture_combat2() -> void:
 	c.flags["tutorial_step"] = 99
 	c.flags["tutorial_seen_done"] = true
 	c.level = 16
-	var mando := Motherboard.new(items.skills.skills["aura_mando"], 12, ["DDR5"])
+	var mando := Motherboard.new(items.skills.skills["aura_mando"], 12, ["DDR5", "DDR4"])
 	mando.install(RamModule.new(items.skills.rams["torre_senal"]), 0)
+	mando.install(RamModule.new(items.skills.rams["enlace_aura"]), 1)
 	c.inventory.set_board(0, mando)
 	var turret := Motherboard.new(items.skills.skills["ping_letal"], 12, ["DDR3"])
 	turret.install(RamModule.new(items.skills.rams["servidor_torreta"]), 0)

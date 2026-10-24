@@ -27,6 +27,8 @@ const HALL_DEPTH_SPEED := 0.38
 const INTRO_MIN_READ := 0.6
 ## Velocidad de la máquina de escribir de la introducción (caracteres por segundo).
 const INTRO_CPS := 60.0
+## Segundos que tarda el servidor en tragarse al carrito, Mario, Aida y Rafa.
+const ABSORB_TIME := 3.4
 const INTRO_LINES := [
 	"Licenciatura concluida. Promedio: 9.2. Vacantes aplicadas: 147.",
 	"",
@@ -80,6 +82,8 @@ var _target := Vector2.INF
 ## Acción que se hará al llegar al destino (click sobre un punto de interés lejano).
 var _pending_action := ""
 var _intro_done_at := -10.0
+var _absorb_time := 0.0
+var _absorb_cues := {}   # quién ya gritó (cada uno una vez)
 
 
 func _ready() -> void:
@@ -99,7 +103,7 @@ func _ready() -> void:
 		_fade = 0.0
 		_open_hire()
 	else:
-		_go_room("calle", 40.0)
+		_go_room("calle", 120.0)
 		Sfx.ambient("calle")
 
 
@@ -177,6 +181,8 @@ func _process(delta: float) -> void:
 				get_tree().create_timer(1.4).timeout.connect(_start_arrival)
 		"arrival":
 			_update_arrival(delta)
+		"absorb":
+			_update_absorb(delta)
 		"fall":
 			_update_fall(delta)
 		"title":
@@ -539,7 +545,36 @@ func _update_arrival(delta: float) -> void:
 	if _stage.visitors_x >= 112.0:
 		_stage.visitors_walk = -1.0
 		_phase = "busy"
-		_play("prologo_mario", _start_fall)
+		_play("prologo_mario", _start_absorb)
+
+
+## «Profe Rafa, ¿va a querer churr...?» y el servidor se los traga: primero el
+## carrito, luego Mario, Aida y Rafa, cada uno con su grito, mientras el rack se
+## abre en un vórtice. Después cae el jugador (en la caída).
+func _start_absorb() -> void:
+	_phase = "absorb"
+	_absorb_time = 0.0
+	_absorb_cues = {}
+	_stage.absorb = 0.0
+	Sfx.ambient("kernel")
+	Sfx.play("suction", -2.0)
+	Sfx.play("glitch_burst", -4.0)
+	_flash = 0.6
+
+
+func _update_absorb(delta: float) -> void:
+	_absorb_time += delta
+	_stage.absorb = clampf(_absorb_time / ABSORB_TIME, 0.0, 1.0)
+	_stage.rack_shake = 1.6
+	_glitch = maxf(_glitch, 0.25 + 0.45 * _stage.absorb)
+	# Cada uno grita al empezar a volar hacia el servidor.
+	for cue in [["cart", "glitch_burst", 1.0], ["mario", "scream_m", 1.0], ["aida", "scream_f", 1.0], ["rafa", "scream_m", 0.82]]:
+		if not _absorb_cues.has(cue[0]) and _stage.pull_of(cue[0]) > 0.02:
+			_absorb_cues[cue[0]] = true
+			Sfx.play(cue[1], 0.0, cue[2])
+			_glitch = maxf(_glitch, 0.9)
+	if _absorb_time >= ABSORB_TIME + 0.4:
+		_start_fall()
 
 
 ## La oficina se pixela: papeles en logs, cables en cobre y la ropa en binario.
@@ -557,6 +592,16 @@ func _update_fall(delta: float) -> void:
 	_stage.outfit_shift = clampf((_fall_time - 1.0) / 2.5, 0.0, 1.0)
 	_stage.kneeling = _fall_time < 1.0
 	_glitch = maxf(_glitch, 0.3 + 0.6 * t)
+	# El último: el vórtice arrastra al jugador mientras su ropa se vuelve binario.
+	_stage.player_pull = clampf((_fall_time - 0.8) / 2.8, 0.0, 1.0)
+	if not _absorb_cues.has("player") and _stage.player_pull > 0.02:
+		_absorb_cues["player"] = true
+		Sfx.play("scream_m", 0.0, 1.12)
+		Sfx.play("suction", -4.0, 1.2)
+	if not _absorb_cues.has("player_gone") and _stage.player_pull >= 1.0:
+		_absorb_cues["player_gone"] = true
+		Sfx.play("glitch_burst", -2.0, 0.8)
+		_flash = 1.0
 	if _fall_time > 4.5:
 		_fade_target = 1.0
 	if _fall_time > 5.6:

@@ -173,6 +173,16 @@ func _compute_bare_profiles() -> void:
 ## Centro de un aura: el jugador, o el punto donde se activó si está anclada
 ## (Torre de Señal).
 func aura_center(a: Dictionary) -> Vector2:
+	if bool(a["profile"].get("aura_on_unit", false)):
+		# Enlace de Aura: sobre la invocación más resistente (el tanque primero).
+		var best: Dictionary = {}
+		for u in _units:
+			if u["behavior"] == "orbit":
+				continue
+			if best.is_empty() or (u["behavior"] == "tank" and best["behavior"] != "tank") or float(u["max_life"]) > float(best["max_life"]):
+				best = u
+		if not best.is_empty():
+			return best["pos"]
 	if bool(a["profile"].get("aura_anchor", false)):
 		if a.get("anchor", Vector2.INF) == Vector2.INF:
 			a["anchor"] = player.global_position
@@ -317,6 +327,8 @@ func _physics_process(delta: float) -> void:
 		return
 	if player.is_alive() and _busy <= 0.0 and not player.controls_locked and not player.is_frozen():
 		for i in ACTIONS.size():
+			if i == 0 and Gamepad.skill_1_blocked():
+				continue   # A se usó para recoger o hablar (mando)
 			if Input.is_action_pressed(ACTIONS[i]) and try_use(i):
 				break
 	_update_aura_fields()

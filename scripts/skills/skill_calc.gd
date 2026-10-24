@@ -238,10 +238,12 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 	# Sobrealimentación (RAM): reserva más maná a cambio de más potencia.
 	var reserve_mult := 1.0
 	var aura_anchor := false
+	var aura_on_unit := false
 	var aura_radius_mult := 1.0
 	for ram: RamModule in board.active_supports():
 		reserve_mult *= ram.special("reserve_mult", 1.0)
 		aura_anchor = aura_anchor or ram.special("aura_anchor") > 0.0
+		aura_on_unit = aura_on_unit or ram.special("aura_on_unit") > 0.0
 		aura_radius_mult *= ram.special("aura_radius_mult", 1.0)
 	var ability_power := 1.0 + (0.25 * milestones if unit_ms == "ability" else 0.0)
 	var unit_interval := float(unit.get("interval", 1.0)) / (maxf(0.1, automaton_speed) * attack_rate)
@@ -376,6 +378,8 @@ static func compute(board: Motherboard, character: CharacterData) -> Dictionary:
 		"aura_radius": float(aura.get("radius", 0.0)) * sqrt(stats.total_multiplier(Stat.AREA_OF_EFFECT, tags)) * lvl_mult * aura_radius_mult,
 		# Torre de Señal: el aura se queda donde se activa en vez de seguirte.
 		"aura_anchor": aura_anchor,
+		# Enlace de Aura: el aura va sobre la invocación más resistente.
+		"aura_on_unit": aura_on_unit,
 		# Auras que debilitan: efectos sobre los enemigos dentro del radio.
 		"aura_enemy": {} if not aura.has("enemy") else {
 			"slow": minf(0.5, float(aura["enemy"].get("slow", 0.0)) * aura_scale),

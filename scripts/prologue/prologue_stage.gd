@@ -15,13 +15,15 @@ const ROOM_WIDTH := {"calle": 700.0, "pasillo": 400.0, "oficina": 400.0}
 ## Hasta dónde se puede caminar en cada sitio (vista lateral). En la calle, poco
 ## más allá de la entrada de la UAdeO: el resto de la avenida no lleva a nada y
 ## el personaje acababa fuera de la pantalla.
-const WALK_LIMITS := {"calle": Vector2(14.0, 330.0), "oficina": Vector2(16.0, 384.0)}
+const WALK_LIMITS := {"calle": Vector2(14.0, 470.0), "oficina": Vector2(16.0, 384.0)}
+## Centro de la entrada blanca del bloque principal de la UAdeO (calle).
+const ENTRANCE_X := 448.0
 ## Dónde se dibuja la flecha del siguiente objetivo (sobre lo que se ve: las
 ## escaleras de la UAdeO, la puerta de Informática, Rafa y el rack negro).
-const GOAL_MARKERS := {"to_hallway": Vector2(300, 140), "to_office": Vector2(85, 64), "talk_rafa": Vector2(314, 148), "rack": Vector2(371, 62)}
+const GOAL_MARKERS := {"to_hallway": Vector2(448, 126), "to_office": Vector2(85, 64), "talk_rafa": Vector2(314, 148), "rack": Vector2(371, 62)}
 ## Puntos de interés por sitio: x en el mundo (o lat/depth en el pasillo), texto del aviso y acción.
 const HOTSPOTS := {
-	"calle": [{"x": 300.0, "text": "E · Cruzar la avenida y entrar a la UAdeO", "action": "to_hallway"}],
+	"calle": [{"x": 448.0, "text": "E · Cruzar la avenida y entrar a la UAdeO", "action": "to_hallway"}],
 	"pasillo": [{"lat": -0.85, "depth": 0.8, "text": "E · Departamento de Informática", "action": "to_office"},
 		{"lat": -0.12, "depth": 0.96, "text": "E · Caja de trámites", "action": "window"},
 		{"lat": 0.5, "depth": 0.96, "text": "E · Ver la TV", "action": "tv"}],
@@ -77,6 +79,15 @@ var time := 0.0
 var flicker := 0.0
 var rack_shake := 0.0
 var dissolve := 0.0
+## Absorción por el servidor: 0 → 1 (Mario, Aida, el carrito y Rafa, por turnos)
+## y, aparte, la del jugador (en la caída).
+var absorb := 0.0
+var player_pull := 0.0
+## Centro del vórtice: la cara del rack negro («El Monolito»).
+const VORTEX := Vector2(371, 112)
+## Turno de cada uno en la absorción (fracción de `absorb` en que empieza a volar).
+const PULL_DELAY := {"cart": 0.0, "mario": 0.12, "aida": 0.3, "rafa": 0.5}
+const PULL_SPAN := 0.42
 ## Hotspot resaltado: {pos: Vector2 (en el mundo), text}
 var prompt: Dictionary = {}
 ## Siguiente objetivo (en el mundo): una flecha que rebota encima. INF = ninguno.
@@ -170,6 +181,15 @@ func _draw_player() -> void:
 		sc = hall_scale(player_depth)
 	if kneeling:
 		look["height"] = 0.72
+	if player_pull > 0.0:
+		# El último en caer: el vórtice también lo arrastra a él.
+		if player_pull >= 1.0:
+			return
+		var home := feet
+		feet = home.lerp(VORTEX + Vector2(0, 16), player_pull * player_pull) + Vector2.from_angle(time * 9.0) * 10.0 * player_pull * (1.0 - player_pull)
+		sc *= 1.0 - 0.85 * player_pull * player_pull
+		_draw_pull_trail(home, feet, player_pull, Color("3cff6a"))
+		_draw_scream(feet, player_pull, "¡¿QUÉ PASA?!")
 	CharacterAppearance.draw(self, feet, sc, look, player_facing, Color(0, 0, 0, 0), walk_phase)
 	if outfit_shift < 0.5:
 		# Marcas de sudor y el portafolio de plástico bajo el brazo (de espaldas no se ven).
@@ -202,59 +222,32 @@ func _draw_street() -> void:
 	for k in 12:
 		var a := TAU * k / 12.0 + time * 0.2
 		draw_line(sun + Vector2.from_angle(a) * 16.0, sun + Vector2.from_angle(a) * (21.0 + 3.0 * sin(time * 3.0 + k)), Color("fff6d0"), 1.0)
+	_draw_clouds(w)
 	# Torre de departamentos color salmón detrás de la escuela.
-	var tower := Rect2(470, 22, 150, 120)
+	var tower := Rect2(470, 18, 150, 124)
 	draw_rect(tower, Color("d99a7c"))
 	draw_rect(Rect2(tower.position, Vector2(tower.size.x, 5)), Color("e8b49a"))
+	draw_rect(Rect2(tower.end.x - 18, tower.position.y, 18, tower.size.y), Color("c4846a"))   # cara en sombra
 	for row in 7:
 		var y := tower.position.y + 10 + row * 16
 		draw_rect(Rect2(tower.position.x + 4, y + 9, tower.size.x - 8, 2), Color("c08066"))   # balcones
 		for col in 6:
 			draw_rect(Rect2(tower.position.x + 8 + col * 24, y, 12, 8), Color("f0e6d8") if (row + col) % 3 else Color("7aa0b8"))
-	# Palmeras detrás.
-	for px in [200.0, 452.0, 660.0]:
-		_draw_palm(Vector2(px, 150))
-	# Reja beige a la izquierda de la escuela, con su pilar de piedra.
-	draw_rect(Rect2(0, 122, 262, 4), Color("d8c8a0"))
-	draw_rect(Rect2(0, 164, 262, 4), Color("d8c8a0"))
-	for k in 27:
-		draw_rect(Rect2(k * 10.0, 122, 3, 46), Color("e2d4b0"))
-	draw_rect(Rect2(250, 104, 16, 64), Color("8e8a82"))
-	for k in 6:
-		draw_line(Vector2(250, 108 + k * 10), Vector2(266, 108 + k * 10), Color("7a766e"), 1.0)
-	# La UAdeO: fachada guinda con franja crema, letras, ventanas de marco blanco y escudo.
-	var b := Rect2(266, 66, 380, 102)
-	var maroon := Color("8e2c34")
-	draw_rect(b, maroon)
-	draw_rect(Rect2(b.position, Vector2(b.size.x, 4)), Color("e8dcc4"))
-	draw_rect(Rect2(b.position.x, b.position.y + 32, b.size.x, 4), Color("e8dcc4"))
-	draw_string(_font, Vector2(b.position.x + 30, b.position.y + 17), "UNIVERSIDAD AUTÓNOMA DE OCCIDENTE", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("f0e4cc"))
-	draw_string(_font, Vector2(b.position.x + 70, b.position.y + 29), "UNIDAD REGIONAL MAZATLÁN", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("f0e4cc"))
-	for k in 6:
-		var win := Rect2(b.position.x + 22 + k * 52, b.position.y + 44, 34, 22)
-		draw_rect(win, Color("f4f0e8"))
-		draw_rect(win.grow(-2), Color("2a3442"))
-		draw_line(win.position + Vector2(win.size.x / 2.0, 2), win.position + Vector2(win.size.x / 2.0, win.size.y - 2), Color("f4f0e8"), 1.0)
-	# Escudo y letras «UAdeO».
-	var logo := Vector2(b.end.x - 34, b.position.y + 54)
-	draw_circle(logo, 12, Color("f0e4cc"))
-	draw_circle(logo, 10, maroon)
-	draw_arc(logo, 6, PI, TAU, 10, Color("f0e4cc"), 1.0)
-	for k in 3:
-		draw_line(logo + Vector2(-5, 1 + k * 2.5), logo + Vector2(5, 1 + k * 2.5), Color("f0e4cc"), 1.0)
-	draw_string(_font, Vector2(logo.x - 18, b.position.y + 82), "UAdeO", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("f0e4cc"))
-	# Escaleras rojas (entrada peatonal) y el acceso al estacionamiento.
-	for k in 5:
-		draw_rect(Rect2(b.position.x + 8 + k * 4, b.position.y + 82 + k * 4, 40 - k * 4, 4), maroon.darkened(0.15 + k * 0.03))
-	draw_rect(Rect2(b.position.x + 4, b.position.y + 78, 46, 24), Color(0, 0, 0, 0.0))
-	var garage := Rect2(b.position.x + 120, b.position.y + 72, 110, 30)
-	draw_rect(garage, Color("e8e2d8"))
-	draw_rect(garage.grow(-3), Color("1e1e22"))
-	for k in 3:
-		draw_line(garage.position + Vector2(20 + k * 30, 22), garage.position + Vector2(36 + k * 30, 14), Color("e8c040"), 1.0)
-	# Poste de luz blanco.
-	draw_rect(Rect2(244, 30, 3, 140), Color("f0f0ec"))
-	draw_rect(Rect2(236, 28, 12, 3), Color("f0f0ec"))
+	# Palmeras a los lados del edificio.
+	for px in [36.0, 598.0, 660.0]:
+		_draw_palm(Vector2(px, 160))
+	# Reja beige a la izquierda, hasta el anexo.
+	draw_rect(Rect2(0, 126, 66, 3), Color("d8c8a0"))
+	draw_rect(Rect2(0, 164, 66, 3), Color("d8c8a0"))
+	for k in 7:
+		draw_rect(Rect2(k * 10.0, 126, 3, 41), Color("e2d4b0"))
+		draw_rect(Rect2(k * 10.0 + 2, 126, 1, 41), Color("c4b48e"))
+	_draw_uadeo()
+	# Poste de luz blanco (a la izquierda, sin tapar la fachada).
+	draw_rect(Rect2(20, 34, 3, 136), Color("f0f0ec"))
+	draw_rect(Rect2(22, 34, 1, 136), Color("c8c8c2"))
+	draw_rect(Rect2(12, 32, 12, 3), Color("f0f0ec"))
+	draw_rect(Rect2(12, 35, 5, 2), Color("fff6c8"))
 	# Banqueta de la escuela, la avenida y el camellón.
 	draw_rect(Rect2(0, 168, w, 8), Color("cfcac0"))
 	draw_rect(Rect2(0, 176, w, 16), Color("6c6c6e"))
@@ -270,6 +263,137 @@ func _draw_street() -> void:
 		var x := k * 20.0 + fmod(time * 5.0, 20.0)
 		draw_line(Vector2(x, 216 + (k % 2) * 4), Vector2(x + 8, 216 + (k % 2) * 4), Color("9fd0e4"), 1.0)
 	draw_line(Vector2(0, 211), Vector2(w, 211), Color("f0ece0"), 1.0)
+
+
+## Nubes de pixel art que cruzan despacio (con sombra abajo y brillo arriba).
+func _draw_clouds(w: float) -> void:
+	for k in 4:
+		var x := fposmod(80.0 + k * 190.0 + time * (3.0 + k), w + 120.0) - 60.0
+		var y := 14.0 + (k % 2) * 12.0
+		for blob: Vector3 in [Vector3(0, 4, 9), Vector3(10, 0, 11), Vector3(22, 4, 8), Vector3(-9, 6, 6)]:
+			draw_circle(Vector2(x + blob.x, y + blob.y + 2), blob.z, Color("c9dfe8"))
+			draw_circle(Vector2(x + blob.x, y + blob.y), blob.z, Color("f4f8f8"))
+
+
+## Pilastra de piedra (como las del edificio): sillares con juntas y luz a la izquierda.
+func _stone_pillar(r: Rect2) -> void:
+	draw_rect(r, Color("b8946a"))
+	var row := 0
+	var y := r.position.y
+	while y < r.end.y:
+		var h := minf(5.0, r.end.y - y)
+		var off := 0.0 if row % 2 == 0 else r.size.x * 0.5
+		draw_line(Vector2(r.position.x, y), Vector2(r.end.x, y), Color("8e7050"), 1.0)
+		draw_line(Vector2(r.position.x + off + r.size.x * 0.25, y), Vector2(r.position.x + off + r.size.x * 0.25, y + h), Color("9a7c58"), 1.0)
+		if (row + int(r.position.x)) % 3 == 0:
+			draw_rect(Rect2(r.position.x + 1, y + 1, r.size.x - 2, h - 1), Color("c4a276"))   # sillar más claro
+		y += 5.0
+		row += 1
+	draw_rect(Rect2(r.position, Vector2(1, r.size.y)), Color("dcc29a"))   # luz
+	draw_rect(Rect2(r.end.x - 1, r.position.y, 1, r.size.y), Color("6e5640"))   # sombra
+
+
+## La UAdeO, según la fachada del modelo 3D: anexo blanco, atrio de vidrio con
+## parasoles y plantas sobre una escalinata de madera, segundo piso detrás y el
+## bloque principal terracota con el letrero, el escudo y la entrada blanca.
+func _draw_uadeo() -> void:
+	var terra := Color("b4544a")
+	var terra_dark := Color("923e38")
+	var terra_light := Color("c86c5e")
+	# Segundo piso, al fondo: franja de ventanas.
+	var back := Rect2(176, 50, 268, 26)
+	draw_rect(back, Color("bb6658"))
+	draw_rect(Rect2(back.position, Vector2(back.size.x, 2)), terra_light)
+	for k in 17:
+		var win := Rect2(back.position.x + 6 + k * 15.5, back.position.y + 8, 10, 7)
+		draw_rect(win, Color("f0ece4"))
+		draw_rect(win.grow(-1), Color("4e6e7c") if k % 4 else Color("8ab0c0"))
+	draw_rect(Rect2(back.position.x, back.end.y - 3, back.size.x, 3), terra_dark)
+	# Anexo blanco a la izquierda.
+	var annex := Rect2(68, 84, 96, 84)
+	draw_rect(annex, Color("e2e2de"))
+	draw_rect(Rect2(annex.position, Vector2(annex.size.x, 3)), Color("8e3a34"))   # cornisa
+	draw_rect(Rect2(annex.position.x, annex.position.y + 3, annex.size.x, 2), Color("c8c8c2"))
+	draw_rect(Rect2(annex.end.x - 10, annex.position.y + 3, 10, annex.size.y - 3), Color("c8c8c4"))   # cara en sombra
+	for k in 4:
+		draw_line(Vector2(annex.position.x + 20 + k * 20, annex.position.y + 8), Vector2(annex.position.x + 20 + k * 20, annex.end.y), Color("d0d0cc"), 1.0)
+	# Atrio: pilastras, banda terracota, vidrio con parasoles y plantas, escalinata.
+	var atrium := Rect2(170, 76, 160, 92)
+	draw_rect(Rect2(atrium.position, Vector2(atrium.size.x, 12)), terra)
+	draw_rect(Rect2(atrium.position, Vector2(atrium.size.x, 2)), terra_light)
+	draw_rect(Rect2(atrium.position.x, atrium.position.y + 10, atrium.size.x, 2), terra_dark)
+	var glass := Rect2(atrium.position.x, atrium.position.y + 12, atrium.size.x, 62)
+	for k in 8:   # vidrio: del cielo reflejado (arriba) al interior en sombra
+		draw_rect(Rect2(glass.position.x, glass.position.y + k * 7.75, glass.size.x, 8), Color("7ea4b2").lerp(Color("3e5a66"), k / 7.0))
+	# Plantas dentro del atrio (helechos y palmitas).
+	for px in [190.0, 222.0, 258.0, 296.0]:
+		var base := Vector2(px, glass.end.y - 6)
+		draw_rect(Rect2(base.x - 1, base.y - 14, 2, 14), Color("6a5034"))
+		for a in 5:
+			var dir := Vector2.from_angle(PI + PI * (a + 0.5) / 5.0)
+			draw_line(base + Vector2(0, -14), base + Vector2(0, -14) + dir * 10.0, Color("4f8a46"), 2.0)
+			draw_line(base + Vector2(0, -15), base + Vector2(0, -15) + dir * 7.0, Color("7ab86a"), 1.0)
+	# Parasoles verticales blancos (con su sombra) y un travesaño.
+	var x := glass.position.x + 4.0
+	while x < glass.end.x - 2.0:
+		draw_rect(Rect2(x, glass.position.y, 2, glass.size.y), Color("eeeae2"))
+		draw_rect(Rect2(x + 2, glass.position.y, 1, glass.size.y), Color("9aa8ae"))
+		x += 8.0
+	draw_rect(Rect2(glass.position.x, glass.position.y + 30, glass.size.x, 2), Color("dcd8d0"))
+	# Reflejos diagonales en el vidrio.
+	for k in 3:
+		var rx := glass.position.x + 20 + k * 52
+		draw_colored_polygon(PackedVector2Array([Vector2(rx, glass.position.y), Vector2(rx + 8, glass.position.y),
+			Vector2(rx - 12, glass.end.y), Vector2(rx - 20, glass.end.y)]), Color(1, 1, 1, 0.08))
+	# Escalinata de madera.
+	for k in 4:
+		var step := Rect2(atrium.position.x - 2, glass.end.y + k * 4.5, atrium.size.x + 4, 4.5)
+		draw_rect(step, Color("c8a070") if k % 2 == 0 else Color("b48c5c"))
+		draw_line(step.position, Vector2(step.end.x, step.position.y), Color("e0c08e"), 1.0)
+	_stone_pillar(Rect2(162, 72, 9, 96))
+	_stone_pillar(Rect2(329, 70, 9, 98))
+	# Bloque principal: terracota con textura (tramado), letrero, ventanas, escudo y entrada.
+	var b := Rect2(338, 62, 222, 106)
+	draw_rect(b, terra)
+	for yy in range(int(b.position.y) + 4, int(b.end.y), 4):   # tramado sutil del aplanado
+		for xx in range(int(b.position.x) + (yy / 4) % 2 * 2, int(b.end.x), 4):
+			draw_rect(Rect2(xx, yy, 1, 1), Color(terra_dark, 0.35))
+	draw_rect(Rect2(b.position, Vector2(b.size.x, 3)), terra_light)
+	draw_rect(Rect2(b.position.x, b.end.y - 5, b.size.x, 5), terra_dark)   # zócalo en sombra
+	draw_string(_font, Vector2(b.position.x + 22, b.position.y + 14), "UNIVERSIDAD AUTÓNOMA DE OCCIDENTE", HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("f6eee0"))
+	for ly in [18.0, 21.0]:
+		draw_rect(Rect2(b.position.x + 8, b.position.y + ly, 176, 1), Color("f6eee0"))
+	# Escudo dorado con centro blanco y las letras «UAdeO».
+	var logo := Vector2(b.end.x - 26, b.position.y + 22)
+	draw_circle(logo + Vector2(1, 1), 14, terra_dark)
+	draw_circle(logo, 14, Color("d4a848"))
+	draw_circle(logo, 11, Color("b88a30"))
+	draw_circle(logo, 8, Color("f6eee0"))
+	draw_circle(logo, 4, Color("d4a848"))
+	draw_arc(logo, 14, PI * 1.1, PI * 1.5, 6, Color("f0d080"), 1.0)   # brillo
+	draw_string(_font, Vector2(logo.x - 18, b.position.y + 50), "UAdeO", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("f6eee0"))
+	# Fila de ventanas con marco blanco y reflejo.
+	for k in 7:
+		var win := Rect2(b.position.x + 30 + k * 20 + (8 if k >= 4 else 0), b.position.y + 32, 16, 13)
+		draw_rect(win, Color("f2efe8"))
+		draw_rect(win.grow(-1), Color("2e4450"))
+		draw_rect(Rect2(win.position.x + 1, win.position.y + 1, win.size.x - 2, 4), Color("587884"))
+		draw_line(win.position + Vector2(win.size.x / 2.0, 1), win.position + Vector2(win.size.x / 2.0, win.size.y - 1), Color("f2efe8"), 1.0)
+		draw_line(win.position + Vector2(3, win.size.y - 3), win.position + Vector2(6, 3), Color(1, 1, 1, 0.35), 1.0)
+	# Rampa roja a la izquierda y la entrada blanca (por donde se entra).
+	draw_colored_polygon(PackedVector2Array([Vector2(b.position.x + 2, b.end.y - 34), Vector2(b.position.x + 12, b.end.y - 34),
+		Vector2(b.position.x + 30, b.end.y), Vector2(b.position.x + 2, b.end.y)]), Color("8a3630"))
+	draw_line(Vector2(b.position.x + 12, b.end.y - 34), Vector2(b.position.x + 30, b.end.y), Color("a84a40"), 1.0)
+	var door := Rect2(ENTRANCE_X - 28, b.end.y - 32, 56, 32)
+	draw_rect(door, Color("efede6"))
+	draw_rect(Rect2(door.position.x + 4, door.position.y + 5, door.size.x - 8, door.size.y - 5), Color("c6c4be"))
+	draw_rect(Rect2(door.position.x + 8, door.position.y + 9, door.size.x - 16, door.size.y - 9), Color("9eb4bc"))   # puertas de vidrio
+	draw_line(Vector2(ENTRANCE_X, door.position.y + 9), Vector2(ENTRANCE_X, door.end.y), Color("e8e6e0"), 1.0)
+	draw_rect(Rect2(door.position.x + 8, door.position.y + 9, door.size.x - 16, 3), Color(1, 1, 1, 0.3))
+	_stone_pillar(Rect2(556, 58, 9, 110))
+	# Base de concreto y la sombra del edificio sobre la banqueta.
+	draw_rect(Rect2(64, 166, 504, 3), Color("9a9a9e"))
+	draw_rect(Rect2(64, 168, 504, 3), Color(0.25, 0.2, 0.3, 0.25))
 
 
 ## El barandal del malecón va delante del jugador.
@@ -442,10 +566,72 @@ func _draw_office() -> void:
 		var on := sin(time * (6.0 + k * 2.0) + k) > 0.0 or rack_shake > 0.3
 		draw_circle(Vector2(rack.end.x - 8, y + 4.5), 1.2, Color("ff4a3a") if rack_shake > 0.3 else (Color("3cff6a") if on else Color("1a4a2a")))
 	draw_string(_font, rack.position + Vector2(2, -3), "EL MONOLITO (2004)", HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color("4a4a4a"))
+	if absorb > 0.0 or player_pull > 0.0:
+		_draw_vortex()
 	# Rafa, de pie o sentado tras la barricada.
 	# Sentado solo asoma la cabeza sobre el escritorio; al levantarse de golpe, medio cuerpo.
 	var rafa_feet := Vector2(314, FLOOR_Y - (12.0 if rafa_standing else 0.0))
-	CharacterAppearance.draw(self, rafa_feet, 1.0, rafa_look, Vector2.LEFT if rafa_standing else Vector2(-0.3, 1.0))
+	var rp := pull_of("rafa")
+	if rp < 1.0:
+		var at := pulled_pos(rafa_feet, rp)
+		_draw_pull_trail(rafa_feet, at, rp, Color("e06c6c"))
+		CharacterAppearance.draw(self, at, 1.0 - 0.85 * rp * rp, rafa_look, Vector2.LEFT if rafa_standing else Vector2(-0.3, 1.0))
+		_draw_scream(at, rp, "¡MI MONOLITOOO!")
+
+
+## 0 → 1: cuánto ha volado ya `who` hacia el servidor (1 = absorbido, no se dibuja).
+func pull_of(who: String) -> float:
+	return clampf((absorb - float(PULL_DELAY.get(who, 0.0))) / PULL_SPAN, 0.0, 1.0)
+
+
+## Posición de algo que vuela al vórtice: arranca despacio, acelera y gira en espiral.
+func pulled_pos(from: Vector2, k: float) -> Vector2:
+	if k <= 0.0:
+		return from + Vector2(sin(time * 40.0) * 0.6 * absorb, 0)   # tiembla mientras espera su turno
+	var e := k * k
+	var spiral := Vector2.from_angle(time * 9.0 + from.x) * 14.0 * (1.0 - e) * e
+	return from.lerp(VORTEX + Vector2(0, 16), e) + spiral
+
+
+## Estela de píxeles entre la posición original y el personaje que vuela.
+func _draw_pull_trail(from: Vector2, at: Vector2, k: float, color: Color) -> void:
+	if k <= 0.02:
+		return
+	for j in 8:
+		var t := float(j) / 8.0
+		var p := from.lerp(at, t) + Vector2(sin(time * 20.0 + j) * 3.0, -12.0 * (1.0 - k))
+		draw_rect(Rect2(p, Vector2(2, 2)), Color(color, 0.5 * t))
+
+
+## Grito en letras de cómic sobre quien está siendo absorbido.
+func _draw_scream(at: Vector2, k: float, text: String) -> void:
+	if k <= 0.03 or k >= 0.85:
+		return
+	var a := clampf(k / 0.1, 0.0, 1.0) * clampf((0.85 - k) / 0.15, 0.0, 1.0)
+	var shake := Vector2(sin(time * 50.0) * 1.0, cos(time * 43.0) * 1.0)
+	var pos := at + Vector2(-40, -50) + shake
+	draw_string_outline(_font, pos, text, HORIZONTAL_ALIGNMENT_CENTER, 80, 9, 3, Color(0.1, 0.0, 0.0, a))
+	draw_string(_font, pos, text, HORIZONTAL_ALIGNMENT_CENTER, 80, 9, Color(1.0, 0.85, 0.2, a))
+
+
+## El rack se abre en un vórtice: núcleo negro que crece, anillos rojos y verdes
+## que giran y píxeles que entran en espiral.
+func _draw_vortex() -> void:
+	var power := maxf(absorb, player_pull)
+	var r := 8.0 + 18.0 * power
+	for k in 4:
+		var rr := r + 6.0 + k * 6.0
+		var a0 := time * (5.0 + k * 1.7) * (1.0 if k % 2 == 0 else -1.0)
+		var col := Color("ff3a2a") if k % 2 == 0 else Color("3cff6a")
+		for s in 3:
+			draw_arc(VORTEX, rr, a0 + TAU * s / 3.0, a0 + TAU * s / 3.0 + 1.3, 10, Color(col, 0.55 - k * 0.1), 2.0)
+	draw_circle(VORTEX, r + 3.0, Color(0.9, 0.2, 0.2, 0.35))
+	draw_circle(VORTEX, r, Color("050307"))
+	for k in 24:   # píxeles que entran en espiral
+		var t := fmod(time * 0.9 + k / 24.0, 1.0)
+		var ang := k * 2.4 + t * 6.0
+		var p := VORTEX + Vector2.from_angle(ang) * (r + 70.0 * (1.0 - t))
+		draw_rect(Rect2(p, Vector2(2, 2)), Color("3cff6a") if k % 3 else Color("ffd84a"))
 
 
 ## Lo que va delante de Rafa y del jugador (la barricada, los cables, los papeles).
@@ -506,6 +692,17 @@ func _draw_visitors() -> void:
 		return
 	var mx := visitors_x
 	var feet_y := FLOOR_Y + 4.0
+	# El carrito es lo primero que se traga el servidor (luego Mario y Aida).
+	var cp := pull_of("cart")
+	if cp >= 1.0:
+		_draw_visitor_people(mx, feet_y)
+		return
+	var cart_home := Vector2(mx - 31, feet_y - 12)
+	var cart_at := pulled_pos(cart_home, cp)
+	_draw_pull_trail(cart_home, cart_at, cp, Color("e8a020"))
+	# Gira y encoge alrededor de su propio centro mientras vuela.
+	var spin := Transform2D(cp * 6.0, Vector2.ONE * (1.0 - 0.8 * cp), 0.0, cart_at) * Transform2D(0.0, -cart_home)
+	draw_set_transform_matrix(Transform2D(0.0, Vector2(-roundf(cam_x), 0)) * spin)
 	# Carrito: lona negra con el armazón en X, cuatro ruedas y el asa hacia Mario.
 	var cart := Rect2(mx - 46, feet_y - 19, 30, 13)
 	for wx in [cart.position.x + 3, cart.end.x - 3]:
@@ -523,9 +720,23 @@ func _draw_visitors() -> void:
 	for chip in [[Vector2(-5, -17), Color("e8a020")], [Vector2(1, -19), Color("d83a2a")], [Vector2(6, -16), Color("f0d040")], [Vector2(-1, -14), Color("3a8ad0")]]:
 		draw_rect(Rect2(cart.get_center() + chip[0], Vector2(4, 5)), chip[1])
 	draw_line(cart.get_center() + Vector2(-2, -18), cart.get_center() + Vector2(2, -20), Color("0c0c0e"), 1.0)   # nudo
-	CharacterAppearance.draw(self, Vector2(mx, feet_y), 1.0, mario_look, Vector2.RIGHT, Color(0, 0, 0, 0), visitors_walk)
-	CharacterAppearance.draw(self, Vector2(mx + 20, feet_y + 2), 1.0, aida_look, Vector2.RIGHT, Color(0, 0, 0, 0),
-		visitors_walk + 1.4 if visitors_walk >= 0.0 else -1.0)
+	draw_set_transform(Vector2(-roundf(cam_x), 0))
+	_draw_visitor_people(mx, feet_y)
+
+
+## Mario y Aida (y, si el servidor ya tira de ellos, volando hacia él).
+func _draw_visitor_people(mx: float, feet_y: float) -> void:
+	for who in ["mario", "aida"]:
+		var home := Vector2(mx, feet_y) if who == "mario" else Vector2(mx + 20, feet_y + 2)
+		var k := pull_of(who)
+		if k >= 1.0:
+			continue
+		var at := pulled_pos(home, k)
+		_draw_pull_trail(home, at, k, Color("ffd84a") if who == "mario" else Color("d9b0ff"))
+		var look: Dictionary = mario_look if who == "mario" else aida_look
+		var phase := visitors_walk if who == "mario" else (visitors_walk + 1.4 if visitors_walk >= 0.0 else -1.0)
+		CharacterAppearance.draw(self, at, 1.0 - 0.85 * k * k, look, Vector2.RIGHT, Color(0, 0, 0, 0), phase if k <= 0.0 else -1.0)
+		_draw_scream(at, k, "¡MIS CHURROS!" if who == "mario" else "¡AAAAH!")
 	if dissolve > 0.0:
 		for k in 8:
 			var y := feet_y - 8.0 - fmod(time * 26.0 + k * 9.0, 34.0)

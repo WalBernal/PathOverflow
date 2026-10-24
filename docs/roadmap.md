@@ -14,16 +14,14 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 
 ## 2. Combate y habilidades
 
-- **Equilibrar el Multicanal y la Pipeline Superescalar** (S): la Pipeline mayor sigue siendo la mejor RAM de daño para casi todo (×1.5); probar en partida. Igual con la Sobrealimentación (+50 % de reserva).
-- **Auras sobre una invocación** (S): hoy un aura sigue al jugador o, con Torre de Señal, se queda en el suelo; falta poder ponerla sobre el golem o un robot.
-- **Desbloqueos por nivel: aviso más visible** (S): hoy un mensaje en pantalla; un sonido y un destello en la barra o en el icono de K.
-- **Hitos propios para drones temporales, esbirros y torretas** (S): las invocaciones persistentes ya tienen el suyo; el resto sigue con el genérico.
+- **Equilibrar el Multicanal y la Pipeline Superescalar** (S): la Pipeline mayor sigue siendo la mejor RAM de daño para casi todo (×1.5); probar en partida. Igual con la Sobrealimentación (+50 % de reserva) y el Enlace de Aura.
+- **Varias auras con Enlace de Aura** (S): hoy todas se montan sobre la misma invocación (la más resistente); elegir cuál.
 
 ## 3. Enemigos y jefes
 
-- **Sprites de enemigos nuevos para el acto III** (L): necesita arte; las animaciones de ataque (carga y embestida) ya están para todos.
-- **Animaciones de ataque propias por tipo** (M): hoy todos usan la misma carga y la misma embestida; los que disparan podrían retroceder y los que embisten, estirarse.
-- **Cazadores contra minas y trampas** (S): hoy persiguen invocaciones y torretas; las minas están enterradas y no se ven.
+- **Sprites de enemigos nuevos para el acto III** (L): necesita arte; las animaciones de ataque (carga, embestida estirada y retroceso al disparar) ya están para todos.
+- **Cazadores contra minas y trampas** (descartado por ahora): las minas están enterradas y no se ven; no tendría sentido que las encontraran.
+
 ## 4. Contenido
 
 | Qué | Tamaño |
@@ -36,9 +34,11 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 
 ## 5. Interfaz
 
-- **Mando, siguiente paso** (M): moverse, apuntar (stick derecho o el enemigo más cercano), habilidades, pociones y menús ya funcionan; falta recoger objetos, hablar con NPC, usar portales y navegar los menús (inventario, árbol, K) sin ratón.
+- **Mando, siguiente paso** (M): moverse, apuntar, habilidades, pociones, abrir menús, recoger objetos y hablar con NPC (A contextual) ya funcionan; falta navegar dentro de los menús (inventario, árbol, K, diálogos) sin ratón.
 - Escala de interfaz en la pantalla de título y el prólogo (S); tamaños mayores que 140 % (S).
 - Rebindear teclas y botones desde la pausa (M).
+- **Prólogo en pixel art 2.0, siguiente paso** (M): la fachada de la UAdeO ya sigue el modelo 3D (anexo, atrio de vidrio, bloque terracota, escudo, entrada); faltan el pasillo y la oficina con el mismo nivel de detalle (luz, tramado, sombras).
+
 ## 6. Arte y audio
 
 - Sustituir los sprites provisionales dibujados con formas por arte final: personajes, NPC, invocaciones, iconos de habilidad y de estado (L). Necesita un artista: el código solo puede mejorar las figuras dibujadas.
@@ -63,6 +63,8 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 4. Más únicos y conjuntos que usen los afijos nuevos (estados, autómatas, interacciones).
 5. Arte final de personajes, enemigos e invocaciones.
 ## Hecho (no repetir)
+
+**Prólogo 2.0 y más roadmap (23 octubre 2026, noche)**: **fachada de la UAdeO según el modelo 3D** (anexo blanco, atrio de vidrio con parasoles, plantas y escalinata de madera, pilastras de piedra, segundo piso, bloque terracota con letrero de doble línea, ventanas, escudo dorado, rampa y entrada blanca), nubes y sombras; la entrada pasa a la puerta blanca · **arreglado de raíz el personaje que se salía de la pantalla**: CharacterAppearance.draw dejaba la transformación del lienzo en cero y el jugador se dibujaba sin la cámara · **absorción por el servidor**: tras «Profe Rafa, ¿va a querer churr...?», vórtice en el rack, el carrito, Mario, Aida y Rafa vuelan al servidor por turnos con gritos («¡MIS CHURROS!», «¡AAAAH!», «¡MI MONOLITOOO!»), succión y ráfagas digitales; luego el jugador · sonidos nuevos: gritos (voz grave y aguda), succión, ráfaga digital · **«!» en los botones K y P** al desbloquear una habilidad o subir de nivel, con sonido · **Enlace de Aura** (el aura sigue a tu invocación más resistente) · animaciones por tipo: los que disparan retroceden y los que embisten se estiran · **mando: A contextual** (recoge objetos, habla con NPC, usa waypoint y alijo; si no hay nada cerca, habilidad 1).
 
 **Prólogo pulido (23 octubre 2026)**: el personaje ya no sale de la pantalla en la calle (se camina hasta poco más allá de la entrada de la UAdeO) · en el pasillo ya no va el triple de rápido de lado · **flecha dorada** sobre el siguiente objetivo (escaleras, puerta de Informática, Rafa, rack negro) · **click en un objetivo lejano: camina y entra solo** · el punto para entrar al departamento está en la puerta de Informática y el de hablar con Rafa, junto a su escritorio · la introducción se escribe más rápido y no se salta sin leerla · en todas las escenas, un doble click ya no se salta líneas · el «No» de la contratación ya no tiene el borde azul (solo el punteado de Windows 98).
 

@@ -608,6 +608,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_menu_requested(menu: String) -> void:
 	if tree_screen.visible and menu != "passives":
 		return
+	hud.attention.erase(menu)   # ya se vio la novedad
 	item_tooltip.hide()
 	if menu != "inventory" or inventory_panel.visible:
 		close_trade_panels()   # cerrar el inventario (u abrir otra ventana) cierra la tienda

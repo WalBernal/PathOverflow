@@ -32,6 +32,10 @@ var _message_tween: Tween
 var _info_timer := 0.0
 var _hotspots := {}            # nombre -> Control (para tooltips de ayuda)
 var _menu_buttons: Array[Button] = []
+## Menús con algo nuevo que ver ("skills", "passives"...): su botón lleva un «!»
+## dorado que late hasta que se abre (p. ej. al desbloquear una habilidad).
+var attention := {}
+const MENU_IDS := ["character", "inventory", "skills", "passives"]
 ## Destello de cada ranura de la barra al usarla (segundos restantes).
 var _slot_flash: Array[float] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 ## Marco del objetivo: enemigo bajo el cursor (índice) y cuánto se mantiene tras salir.
@@ -332,6 +336,17 @@ func _draw() -> void:
 	draw_rect(xp, TRIM, false, 1.0)
 	var level_text := "Nivel %d" % character.level
 	draw_string(font, _menu_origin(), level_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, TEXT_COLOR)
+	# «!» sobre los botones de menú con novedades.
+	for k in _menu_buttons.size():
+		if not attention.get(MENU_IDS[k], false):
+			continue
+		var br := Rect2(_menu_buttons[k].position, _menu_buttons[k].size)
+		var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 160.0)
+		draw_rect(br.grow(2.0 + pulse * 2.0), Color(1.0, 0.85, 0.3, 0.35 + 0.4 * pulse), false, 2.0)
+		var c := br.position + Vector2(br.size.x - 2, 2)
+		draw_circle(c, 7.0, Color("1a1208"))
+		draw_circle(c, 6.0, Color("ffd84a"))
+		draw_string(font, c + Vector2(-2, 5), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("1a1208"))
 
 	# Pociones.
 	for i in Inventory.FLASK_SLOTS:

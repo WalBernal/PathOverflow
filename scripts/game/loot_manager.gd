@@ -135,6 +135,22 @@ func _physics_process(delta: float) -> void:
 		_pending = {}  # el jugador cambió de idea
 
 
+## Mando: recoge el objeto más cercano a `pos` (a menos de `radius`). true si hay alguno.
+func pick_near(pos: Vector2, radius: float) -> bool:
+	var best := -1
+	var best_d := radius
+	for i in drops.size():
+		var d: float = (drops[i]["rect"] as Rect2).get_center().distance_to(pos)
+		if d < best_d:
+			best_d = d
+			best = i
+	if best == -1:
+		return false
+	_pending = drops[best]
+	player.move_to(_pending["rect"].get_center())
+	return true
+
+
 func _index_at(world_pos: Vector2) -> int:
 	# De atrás hacia delante: la última etiqueta dibujada está encima.
 	for i in range(drops.size() - 1, -1, -1):

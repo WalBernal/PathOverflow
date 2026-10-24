@@ -524,6 +524,14 @@ func respawn() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Mando: A es contextual. Con un objeto, un NPC, el waypoint o el alijo cerca,
+	# los usa; si no, es la habilidad 1 (SkillController la lee aparte).
+	var pad := event as InputEventJoypadButton
+	if pad and pad.pressed and pad.button_index == JOY_BUTTON_A and player.is_alive():
+		if loot.pick_near(player.global_position, Gamepad.INTERACT_RANGE) or zone.interact_near(player.global_position, Gamepad.INTERACT_RANGE):
+			Gamepad.block_skill_1()
+			get_viewport().set_input_as_handled()
+			return
 	if event.is_action_pressed(&"debug_spawn_wave"):
 		for k in 30:
 			enemies.spawn(zone.free_spot_near(player.global_position + Vector2.from_angle(randf() * TAU) * randf_range(300, 600)),
@@ -623,6 +631,7 @@ func _on_mutex_broken() -> void:
 ## Los monstruos tienen el nivel de su zona; subir de nivel solo avisa.
 func _on_leveled_up(new_level: int) -> void:
 	Sfx.play("level_up")
+	ui.hud.attention["passives"] = true   # punto nuevo: «!» en el botón P
 	if new_level == CharacterData.ASCENDANCY_LEVEL:
 		ui.hud.flash("¡Nivel %d! Ya puedes elegir tu ascendencia: abre el árbol (P) y pulsa el medallón junto a tu clase." % new_level, Color("ffd84a"))
 	elif new_level > CharacterData.ASCENDANCY_LEVEL and (new_level - CharacterData.ASCENDANCY_LEVEL) % 5 == 0 and new_level <= 30:
@@ -660,6 +669,8 @@ func _grant_board(skill_id: String) -> void:
 	board.level = 1
 	_give(board)
 	ui.hud.flash("Nueva habilidad de %s: %s. Está en tu bolsa; instálala con K." % [character.class_def.get("name", "tu clase"), board.skill_def["name"]], Color("ffd84a"))
+	ui.hud.attention["skills"] = true   # «!» en el botón K hasta que se abra
+	Sfx.play("level_up", -2.0, 1.25)
 	_mark_dirty()
 
 

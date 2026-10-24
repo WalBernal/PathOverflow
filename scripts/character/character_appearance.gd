@@ -98,6 +98,19 @@ static func height_index(a: Dictionary) -> int:
 	return best
 
 
+## Elipse rellena como polígono. No usa draw_set_transform: así respeta la
+## transformación que tenga quien dibuja (p. ej. la cámara del prólogo; antes la
+## dejaba en cero y el personaje se iba de la pantalla al moverse la cámara).
+static func _ellipse(ci: CanvasItem, c: Vector2, rx: float, ry: float, color: Color) -> void:
+	if rx <= 0.0 or ry <= 0.0:
+		return
+	var pts := PackedVector2Array()
+	for k in 16:
+		var a := TAU * k / 16.0
+		pts.append(c + Vector2(cos(a) * rx, sin(a) * ry))
+	ci.draw_colored_polygon(pts, color)
+
+
 ## Dibuja la figura con los pies en `feet`. A escala 1 mide unos 40 px de alto.
 ## `facing`: hacia dónde mira (si mira hacia arriba, se ve de espaldas).
 ## `tint`: si su alfa > 0, tiñe toda la figura (daño, muerte).
@@ -124,9 +137,8 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 	var u := func(x: float, y: float) -> Vector2: return feet + Vector2(x, (y - bob) * hs) * scale
 
 	# Sombra (se encoge un poco cuando el cuerpo sube).
-	ci.draw_set_transform(feet, 0.0, Vector2(1.0, 0.4))
-	ci.draw_circle(Vector2.ZERO, (11.0 - bob * 0.6) * scale * width, Color(0, 0, 0, 0.4))
-	ci.draw_set_transform(Vector2.ZERO)
+	var shadow_r := (11.0 - bob * 0.6) * scale * width
+	_ellipse(ci, feet, shadow_r, shadow_r * 0.4, Color(0, 0, 0, 0.4))
 
 	# Piernas: cada una se levanta en su fase; de perfil, además, avanzan y retroceden.
 	var legs := outfit.darkened(0.35)
@@ -355,9 +367,7 @@ static func _draw_face(ci: CanvasItem, head: Vector2, r: float, a: Dictionary, o
 	var m := head + Vector2(0.0, 0.52) * r + Vector2(shift.x * 0.4, 0)
 	var smile: float = opts.get("smile", 0.0)
 	if mouth > 0.05:
-		ci.draw_set_transform(m, 0.0, Vector2(1.0, 0.35 + mouth * 0.65))
-		ci.draw_circle(Vector2.ZERO, 0.13 * r, MOUTH)
-		ci.draw_set_transform(Vector2.ZERO)
+		_ellipse(ci, m, 0.13 * r, 0.13 * r * (0.35 + mouth * 0.65), MOUTH)
 	elif absf(smile) > 0.1:
 		var from := PI * 0.15 if smile > 0.0 else PI * 1.15
 		ci.draw_arc(m - Vector2(0, 0.1 * r * signf(smile)), 0.2 * r, from, from + PI * 0.7, 12, MOUTH, lw)
@@ -403,9 +413,7 @@ static func _draw_beard(ci: CanvasItem, head: Vector2, r: float, beard: int, hai
 			if detail and float(opts.get("smile", 0.0)) < 0.5:
 				var mouth: float = opts.get("mouth", 0.0)
 				var m := head + Vector2(0.0, 0.52) * r
-				ci.draw_set_transform(m, 0.0, Vector2(1.0, 0.35 + maxf(0.0, mouth) * 0.65))
-				ci.draw_circle(Vector2.ZERO, 0.15 * r, MOUTH)
-				ci.draw_set_transform(Vector2.ZERO)
+				_ellipse(ci, m, 0.15 * r, 0.15 * r * (0.35 + maxf(0.0, mouth) * 0.65), MOUTH)
 		3, 4:  # bigote (y candado: bigote + perilla)
 			ci.draw_colored_polygon(PackedVector2Array([head + Vector2(-0.36, 0.44) * r, head + Vector2(0.0, 0.36) * r,
 				head + Vector2(0.36, 0.44) * r, head + Vector2(0.3, 0.52) * r, head + Vector2(0.0, 0.45) * r,

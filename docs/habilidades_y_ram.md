@@ -702,6 +702,16 @@ Corrección de errores de grado servidor: muchísimo más crítico.
 - **Etiquetas:** nunca con: movimiento, potenciador, degenerativo
 - **Funciona con (29):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Cascada de Estilos, Daemon en Segundo Plano, Deadlock, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuzzing, Golem de Hardware Reciclado, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
 
+### Enlace de Aura
+
+*DDR4* · grado normal · cae desde el nivel 14
+
+El aura se monta sobre tu invocación más resistente (el golem, si lo tienes) y la sigue a ella en vez de a ti: tus aliados pelean dentro y tú puedes quedarte atrás.
+
+- **Efectos:** 15% de aumento de Efecto de auras; El aura sigue a tu invocación más resistente (el tanque primero), no a ti; Consumo de maná ×1.00
+- **Etiquetas:** con alguna de: aura
+- **Funciona con (6):** Aura de Blindaje Redundante, Aura de Exposición de Vulnerabilidades, Aura de Mando, Aura de Mantenimiento Continuo, Aura de Overclock, Aura de Throttling
+
 ### Explotador de Vulnerabilidades
 
 *DDR3* · grado normal · cae desde el nivel 8

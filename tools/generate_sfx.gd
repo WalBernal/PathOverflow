@@ -35,6 +35,8 @@ func _initialize() -> void:
 	var late_sfx := {
 		"poison": _poison, "bleed": _bleed, "freeze": _freeze, "aura_on": _aura_on, "aura_off": _aura_off,
 		"heal": _heal, "mine": _mine, "arc": _arc, "shatter": _shatter,
+		# Prólogo: el servidor se traga a todos.
+		"scream_m": _scream.bind(150.0, 1.0), "scream_f": _scream.bind(330.0, 1.18), "suction": _suction, "glitch_burst": _glitch_burst,
 	}
 	for name in sfx:
 		_save(SFX_DIR + name + ".wav", sfx[name].call())
@@ -425,6 +427,69 @@ func _shatter() -> PackedFloat32Array:
 			if t > st:
 				tinkle += sin(TAU * (2200.0 + k * 470.0) * (t - st)) * _env(t - st, 0.001, 0.05)
 		b[i] = f * _env(t, 0.001, 0.05) + tinkle * 0.3
+	return b
+
+
+# --- Prólogo: absorción por el servidor ---
+
+## Grito «¡AAAH!» sintetizado: armónicos de una voz (f0 que sube y cae) pesados
+## por los formantes de la vocal A, con vibrato y aliento; al final la voz se
+## «digitaliza» (cae de golpe y se entrecorta) porque se la traga el servidor.
+## `formant_shift` sube los formantes (voz más aguda).
+func _scream(f0: float, formant_shift: float) -> PackedFloat32Array:
+	var dur := 1.5
+	var b := _buf(dur)
+	var formants := [Vector2(800.0, 120.0), Vector2(1200.0, 160.0), Vector2(2500.0, 260.0)]
+	var ph := 0.0
+	var f := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		var contour := 1.0 + 0.35 * sin(PI * minf(1.0, t / 0.9)) - (2.2 * pow((t - 1.0) / 0.5, 2.0) if t > 1.0 else 0.0)
+		var pitch := f0 * maxf(0.25, contour) * (1.0 + 0.03 * sin(TAU * 6.0 * t))
+		ph += pitch / RATE
+		var v := 0.0
+		for n in range(1, 18):
+			var hz := pitch * n
+			var amp := 0.0
+			for fm: Vector2 in formants:
+				var center := fm.x * formant_shift
+				amp += exp(-pow((hz - center) / (fm.y * 2.0), 2.0))
+			v += sin(TAU * ph * n) * amp / n * 2.0
+		f = _lp(f, _noise(), 3000.0)
+		v += f * 0.25   # aliento
+		var env := _env(t, 0.04, 2.0) * clampf((dur - t) / 0.15, 0.0, 1.0)
+		if t > 1.0 and fmod(t * 40.0, 1.0) < 0.35:
+			v = floorf(v * 3.0) / 3.0   # entrecortado digital
+		b[i] = v * env
+	return b
+
+
+## Succión del servidor: ruido que sube de agudo, un zumbido grave que acelera.
+func _suction() -> PackedFloat32Array:
+	var dur := 3.2
+	var b := _buf(dur)
+	var f := 0.0
+	var ph := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		var k := t / dur
+		f = _lp(f, _noise(), lerpf(150.0, 3800.0, k * k))
+		ph += lerpf(40.0, 140.0, k) / RATE
+		b[i] = (f * 1.6 + sin(TAU * ph) * 0.5 + sin(TAU * ph * 1.5) * 0.2) * minf(1.0, t / 0.4) * (0.4 + 0.6 * k) * clampf((dur - t) / 0.25, 0.0, 1.0)
+	return b
+
+
+## Ráfaga digital: chasquidos de bits y un barrido cuadrado.
+func _glitch_burst() -> PackedFloat32Array:
+	var b := _buf(0.5)
+	var ph := 0.0
+	var hz := 800.0
+	for i in b.size():
+		var t := float(i) / RATE
+		if i % 300 == 0:
+			hz = rng.randf_range(200.0, 3000.0)
+		ph += hz / RATE
+		b[i] = (_sq(ph) * 0.5 + (_noise() if rng.randf() < 0.1 else 0.0)) * _env(t, 0.002, 0.18)
 	return b
 
 

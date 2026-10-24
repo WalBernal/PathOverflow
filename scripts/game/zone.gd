@@ -646,6 +646,31 @@ func _physics_process(_delta: float) -> void:
 		_pending = {}
 
 
+## Mando: habla con el NPC más cercano, o usa el waypoint o el alijo, si están a
+## menos de `radius` de `pos`. true si había algo.
+func interact_near(pos: Vector2, radius: float) -> bool:
+	var best := -1
+	var best_d := radius
+	for i in npcs.size():
+		var d := npc_position(npcs[i]).distance_to(pos)
+		if d < best_d:
+			best_d = d
+			best = i
+	if best != -1:
+		_pending = {"kind": "npc", "npc": npcs[best]}
+		player.move_to(npc_position(npcs[best]) + Vector2(0, 40))
+		return true
+	if has_waypoint and waypoint.distance_to(pos) < radius:
+		_pending = {"kind": "waypoint"}
+		player.move_to(waypoint + Vector2(0, 30))
+		return true
+	if has_stash and stash_pos.distance_to(pos) < radius:
+		_pending = {"kind": "stash"}
+		player.move_to(stash_pos + Vector2(0, 34))
+		return true
+	return false
+
+
 func _npc_at(pos: Vector2) -> int:
 	for i in npcs.size():
 		if pos.distance_to(npc_position(npcs[i]) + Vector2(0, -18)) <= CLICK_RADIUS:

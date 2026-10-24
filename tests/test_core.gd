@@ -2592,6 +2592,11 @@ func _test_rams_everywhere() -> void:
 	var pad_ok := InputMap.action_get_events(&"skill_1").any(func(e: InputEvent) -> bool: return e is InputEventJoypadButton) \
 		and InputMap.action_get_events(&"move_left").any(func(e: InputEvent) -> bool: return e is InputEventJoypadMotion)
 	_check(pad_ok, "mando: habilidades en botones y movimiento en el stick izquierdo")
+	Gamepad.block_skill_1()
+	_check(Gamepad.skill_1_blocked(), "mando: tras interactuar con A, la habilidad 1 no se lanza a la vez")
+	var link := Motherboard.new(skills["aura_mando"], 1, ["DDR4"])
+	link.install(RamModule.new(rams["enlace_aura"]), 0)
+	_check(SkillCalc.compute(link, c)["aura_on_unit"], "Enlace de Aura: el aura sigue a una invocación")
 	var tower := Motherboard.new(skills["aura_mando"], 1, ["DDR5"])
 	tower.install(RamModule.new(rams["torre_senal"]), 0)
 	_check(SkillCalc.compute(tower, c)["aura_anchor"], "Torre de Señal: el aura queda anclada")
@@ -2619,7 +2624,7 @@ func _test_prologue_reachable() -> void:
 	for action in ["to_hallway", "to_office", "talk_rafa", "rack"]:
 		_check(PrologueStage.GOAL_MARKERS.has(action), "prólogo: el objetivo %s tiene flecha" % action)
 	var calle: Vector2 = PrologueStage.WALK_LIMITS["calle"]
-	_check(calle.y - calle.x <= PrologueStage.VIEW.x, "prólogo: la calle caminable cabe en la cámara (el personaje no sale de la pantalla)")
+	_check(calle.y <= float(PrologueStage.ROOM_WIDTH["calle"]) - PrologueStage.VIEW.x / 2.0, "prólogo: en el límite de la calle la cámara aún centra al personaje (no sale de la pantalla)")
 
 
 ## Objetos de misión: cada uno tiene su propio dibujo (solo la cinta del DBA es una cinta).

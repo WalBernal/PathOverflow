@@ -9,9 +9,21 @@ class_name Gamepad
 
 const AIM_DISTANCE := 320.0
 const DEADZONE := 0.3
+## A interactúa con lo que haya a esta distancia (objetos, NPC, waypoint, alijo).
+const INTERACT_RANGE := 110.0
 
 ## true desde que se toca el mando; false al mover el ratón (lo pone GameData).
 static var active := false
+## Si A acaba de usarse para interactuar, la habilidad 1 no sale hasta este instante (ms).
+static var _skill_1_blocked_until := 0
+
+
+static func block_skill_1() -> void:
+	_skill_1_blocked_until = Time.get_ticks_msec() + 400
+
+
+static func skill_1_blocked() -> bool:
+	return Time.get_ticks_msec() < _skill_1_blocked_until
 
 
 static func setup() -> void:
