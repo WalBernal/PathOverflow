@@ -19,6 +19,8 @@ const NARRATED_CPS := 15.0
 const READ_BASE := 1.4
 const READ_PER_CHAR := 0.035
 const DINO_TIME := 4.5
+## Pausa mínima entre dos avances (completar línea / pasar a la siguiente).
+const ADVANCE_COOLDOWN := 0.3
 const STYLE_COLORS := {
 	"npc": Color("d9a441"), "boss": Color("e0503a"), "console": Color("3cff6a"),
 	"system": Color("8ab0e0"), "phone": Color("6fd36b"),
@@ -33,6 +35,7 @@ var _index := -1
 var _on_done: Callable
 var _wait := 0.0
 var _waiting_input := false
+var _last_advance := -10.0
 var _time := 0.0
 var _glitch := 0.0          # intensidad (decae sola)
 var _shake := 0.0
@@ -278,9 +281,13 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
+## Click / Espacio: completa la línea que se escribe o pasa a la siguiente. Con
+## una pausa mínima entre las dos cosas, para que un doble click (o machacar el
+## botón) no se salte líneas sin leerlas.
 func _advance() -> void:
-	if not _waiting_input:
+	if not _waiting_input or _time - _last_advance < ADVANCE_COOLDOWN:
 		return
+	_last_advance = _time
 	if _box.visible and _shown < _total:
 		_shown = _total
 		_text.visible_characters = -1

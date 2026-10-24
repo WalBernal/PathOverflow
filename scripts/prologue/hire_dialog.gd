@@ -187,8 +187,6 @@ func _draw_no_focus() -> void:
 	var corners := [box.position, Vector2(box.end.x, box.position.y), box.end, Vector2(box.position.x, box.end.y)]
 	for k in 4:
 		_focus.draw_dashed_line(corners[k], corners[(k + 1) % 4], Color.BLACK, 1.0, 3.0)
-	var outer := box.grow(2.0)
-	_focus.draw_rect(outer, Color(BLUE_A, 0.6), false, 1.0)
 
 
 func _refresh_info() -> void:

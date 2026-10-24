@@ -82,6 +82,7 @@ func _initialize() -> void:
 	_test_music_and_voices()
 	_test_quest_item_art()
 	_test_rams_everywhere()
+	_test_prologue_reachable()
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
 	else:
@@ -2603,6 +2604,22 @@ func _test_rams_everywhere() -> void:
 	inv.sort_skill_items()
 	_check(inv.bag[0] is Motherboard and inv.bag[1].display_name() == "Espada" and (inv.bag[2] as RamModule).generation() == "DDR3"
 		and (inv.bag[5] as RamModule).generation() == "DDR5", "ordenar la bolsa: placas, luego RAM por generación, sin mover el resto")
+
+
+## Prólogo: todo punto de interés se alcanza caminando (dentro de los límites que
+## impiden salir de la pantalla) y tiene flecha de objetivo si es parte de la historia.
+func _test_prologue_reachable() -> void:
+	for room in PrologueStage.HOTSPOTS:
+		for h in PrologueStage.HOTSPOTS[room]:
+			if room == "pasillo":
+				_check(absf(float(h["lat"])) <= 0.85 and float(h["depth"]) <= 1.0, "prólogo: %s se alcanza en el pasillo" % h["action"])
+			else:
+				var lim: Vector2 = PrologueStage.WALK_LIMITS.get(room, Vector2(12, 9999))
+				_check(float(h["x"]) >= lim.x and float(h["x"]) <= lim.y, "prólogo: %s queda dentro de los límites de %s" % [h["action"], room])
+	for action in ["to_hallway", "to_office", "talk_rafa", "rack"]:
+		_check(PrologueStage.GOAL_MARKERS.has(action), "prólogo: el objetivo %s tiene flecha" % action)
+	var calle: Vector2 = PrologueStage.WALK_LIMITS["calle"]
+	_check(calle.y - calle.x <= PrologueStage.VIEW.x, "prólogo: la calle caminable cabe en la cámara (el personaje no sale de la pantalla)")
 
 
 ## Objetos de misión: cada uno tiene su propio dibujo (solo la cinta del DBA es una cinta).

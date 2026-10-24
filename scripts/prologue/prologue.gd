@@ -16,6 +16,17 @@ extends Control
 const STAGE_SIZE := Vector2i(400, 225)
 const WALK_SPEED := 56.0
 const INTERACT_RANGE := 26.0
+## Límites de caminata, puntos de interés y flechas: en PrologueStage (sin
+## dependencias, así las pruebas los pueden leer).
+const WALK_LIMITS := PrologueStage.WALK_LIMITS
+const GOAL_MARKERS := PrologueStage.GOAL_MARKERS
+const HOTSPOTS := PrologueStage.HOTSPOTS
+## En el pasillo, la velocidad hacia el fondo (profundidad por segundo).
+const HALL_DEPTH_SPEED := 0.38
+## Tiempo mínimo antes de poder pasar el texto de la introducción ya escrito.
+const INTRO_MIN_READ := 0.6
+## Velocidad de la máquina de escribir de la introducción (caracteres por segundo).
+const INTRO_CPS := 60.0
 const INTRO_LINES := [
 	"Licenciatura concluida. Promedio: 9.2. Vacantes aplicadas: 147.",
 	"",
@@ -35,14 +46,6 @@ const CONSOLE_LINES := [
 	"Status: 500 Internal Server Error",
 	"Dropping user session into Ring 3 sandbox...",
 ]
-## Puntos de interés por sitio: x en el mundo, texto del aviso y acción.
-const HOTSPOTS := {
-	"calle": [{"x": 300.0, "text": "E · Cruzar la avenida y entrar a la UAdeO", "action": "to_hallway"}],
-	"pasillo": [{"lat": -0.72, "depth": 0.86, "text": "E · Departamento de Informática", "action": "to_office"},
-		{"lat": -0.12, "depth": 0.96, "text": "E · Caja de trámites", "action": "window"},
-		{"lat": 0.5, "depth": 0.96, "text": "E · Ver la TV", "action": "tv"}],
-	"oficina": [{"x": 170.0, "text": "E · Hablar con el encargado", "action": "talk_rafa"}],
-}
 
 var _name := "Egresado"
 var _appearance: Dictionary = CharacterAppearance.default()
@@ -74,6 +77,9 @@ var _glitch := 0.0
 var _flash := 0.0
 ## Destino del click en coordenadas del escenario (INF = ninguno).
 var _target := Vector2.INF
+## Acción que se hará al llegar al destino (click sobre un punto de interés lejano).
+var _pending_action := ""
+var _intro_done_at := -10.0
 
 
 func _ready() -> void:
@@ -147,13 +153,18 @@ func _stage_look() -> Dictionary:
 
 func _process(delta: float) -> void:
 	_time += delta
+	if _phase != "walk":
+		_stage.goal = Vector2.INF   # la flecha de objetivo solo mientras se camina
 	_fade = move_toward(_fade, _fade_target, delta * 1.6)
 	_glitch = maxf(0.0, _glitch - delta * 0.6)
 	_flash = maxf(0.0, _flash - delta * 1.5)
 	_skip_hint = maxf(0.0, _skip_hint - delta)
 	match _phase:
 		"intro":
-			_intro_chars = minf(_intro_total, _intro_chars + delta * 42.0)
+			var was_done := _intro_chars >= _intro_total
+			_intro_chars = minf(_intro_total, _intro_chars + delta * INTRO_CPS)
+			if not was_done and _intro_chars >= _intro_total:
+				_intro_done_at = _time
 			if int(_intro_chars) % 3 == 0 and _intro_chars < _intro_total:
 				Sfx.play("trap", -18.0, 2.2)
 		"walk":
@@ -199,6 +210,7 @@ func _update_screen() -> void:
 func _update_walk(delta: float) -> void:
 	if _cutscene.is_playing():
 		_stage.prompt = {}
+		_stage.goal = Vector2.INF
 		_stage.walk_phase = -1.0
 		return
 	if _stage.room == "pasillo":
@@ -206,6 +218,13 @@ func _update_walk(delta: float) -> void:
 	else:
 		_walk_side(delta)
 	var spot := _nearest_hotspot()
+	if _pending_action != "" and not spot.is_empty() and String(spot["action"]) == _pending_action:
+		var action := _pending_action
+		_pending_action = ""
+		_target = Vector2.INF
+		_interact(action)
+		return
+	_stage.goal = _goal_pos() if spot.is_empty() else Vector2.INF
 	if spot.is_empty():
 		_stage.prompt = {}
 	else:
@@ -219,13 +238,17 @@ func _walk_side(delta: float) -> void:
 	var dir := Input.get_axis(&"move_left", &"move_right")
 	if dir != 0.0:
 		_target = Vector2.INF
+		_pending_action = ""
 	elif _target != Vector2.INF:
 		if absf(_target.x - _stage.player_x) > 2.0:
 			dir = signf(_target.x - _stage.player_x)
 		else:
 			_target = Vector2.INF
+	var limits: Vector2 = WALK_LIMITS.get(_stage.room, Vector2(12.0, _stage.width() - 12.0))
+	if _target != Vector2.INF:
+		_target.x = clampf(_target.x, limits.x, limits.y)   # un click más allá del límite camina hasta el límite
 	if dir != 0.0:
-		_stage.player_x = clampf(_stage.player_x + dir * WALK_SPEED * delta, 12.0, _stage.width() - 12.0)
+		_stage.player_x = clampf(_stage.player_x + dir * WALK_SPEED * delta, limits.x, limits.y)
 		if _target != Vector2.INF and signf(_target.x - _stage.player_x) != dir:
 			_stage.player_x = _target.x   # llegó: no se pasa del punto
 			_target = Vector2.INF
@@ -243,6 +266,7 @@ func _walk_hallway(delta: float) -> void:
 	var move := Vector2(Input.get_axis(&"move_left", &"move_right"), Input.get_axis(&"move_down", &"move_up"))
 	if move != Vector2.ZERO:
 		_target = Vector2.INF
+		_pending_action = ""
 	elif _target != Vector2.INF:
 		var goal := PrologueStage.hall_from_screen(_target)
 		var diff := Vector2(goal.x - _stage.player_lat, goal.y - _stage.player_depth)
@@ -252,8 +276,11 @@ func _walk_hallway(delta: float) -> void:
 			_target = Vector2.INF
 	if move != Vector2.ZERO:
 		var step := move.normalized() * delta
-		_stage.player_lat = clampf(_stage.player_lat + step.x * 0.9, -0.85, 0.85)
-		_stage.player_depth = clampf(_stage.player_depth + step.y * 0.34, 0.0, 1.0)
+		# De lado, la misma velocidad en pantalla que en la calle (antes era el triple):
+		# el ancho del pasillo se estrecha con la profundidad, así que se compensa.
+		var half_width := lerpf(185.0, 88.0, _stage.player_depth)
+		_stage.player_lat = clampf(_stage.player_lat + step.x * WALK_SPEED / half_width, -0.85, 0.85)
+		_stage.player_depth = clampf(_stage.player_depth + step.y * HALL_DEPTH_SPEED, 0.0, 1.0)
 		_stage.player_facing = Vector2(move.x, -move.y).normalized()
 		_stage.walk_phase = fmod(maxf(_stage.walk_phase, 0.0) + delta * 2.6 * PI, TAU)
 	else:
@@ -269,6 +296,34 @@ func _nearest_hotspot() -> Dictionary:
 		elif absf(float(h["x"]) - _stage.player_x) <= INTERACT_RANGE:
 			return h
 	return {}
+
+
+## Punto de interés bajo el ratón (en el escenario), o {}.
+func _hotspot_under(p: Vector2) -> Dictionary:
+	for h in _hotspots():
+		var marker: Vector2 = GOAL_MARKERS.get(String(h["action"]), Vector2.INF)
+		# Vale el sitio donde hay que ponerse, lo que se ve (la puerta, Rafa, el rack) o su flecha.
+		if p.distance_to(_hotspot_pos(h)) < 36.0 or (marker != Vector2.INF and absf(p.x - marker.x) < 26.0 and p.y > marker.y - 12.0) \
+				or (_stage.room != "pasillo" and absf(p.x - float(h["x"])) < 22.0 and p.y > 120.0):
+			return h
+	return {}
+
+
+## Siguiente objetivo de la historia (una flecha que rebota encima): la entrada
+## de la UAdeO, la puerta del departamento, Rafa y, al final, el rack negro.
+func _goal_pos() -> Vector2:
+	var action := ""
+	match _stage.room:
+		"calle":
+			action = "to_hallway"
+		"pasillo":
+			action = "to_office"
+		"oficina":
+			action = "rack" if _flags.has("hired") else ("talk_rafa" if not _flags.has("talked") else "")
+	for h in _hotspots():
+		if String(h["action"]) == action:
+			return GOAL_MARKERS.get(action, _hotspot_pos(h) - Vector2(0, 50))
+	return Vector2.INF
 
 
 ## Dónde está un punto de interés en el escenario.
@@ -316,7 +371,10 @@ func _input(event: InputEvent) -> void:
 		return
 	# Arrastrar con el botón pulsado mueve el destino (sigue al ratón).
 	if event is InputEventMouseMotion and _phase == "walk" and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-		_target = _mouse_stage()
+		# (si va camino de un punto de interés, un temblor del ratón no lo desvía)
+		if _pending_action == "" or _target == Vector2.INF or _mouse_stage().distance_to(_target) > 40.0:
+			_pending_action = ""
+			_target = _mouse_stage()
 		return
 	var pressed := (key and key.pressed and not key.echo and key.keycode in [KEY_E, KEY_SPACE, KEY_ENTER, KEY_KP_ENTER]) \
 		or (mb and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT)
@@ -326,16 +384,21 @@ func _input(event: InputEvent) -> void:
 		"intro":
 			if _intro_chars < _intro_total:
 				_intro_chars = _intro_total
-			else:
-				_phase = "walk"
+				_intro_done_at = _time
+			elif _time - _intro_done_at >= INTRO_MIN_READ:
+				_phase = "walk"   # (un doble click no se salta el texto sin leerlo)
 		"walk":
 			var spot := _nearest_hotspot()
 			if not spot.is_empty() and (key != null or _mouse_stage().distance_to(_hotspot_pos(spot)) < 40.0):
 				_target = Vector2.INF
+				_pending_action = ""
 				_interact(String(spot["action"]))
 				get_viewport().set_input_as_handled()
 			elif mb != null:
-				_target = _mouse_stage()
+				# Click sobre un punto de interés lejano: camina hasta él y lo usa al llegar.
+				var far := _hotspot_under(_mouse_stage())
+				_target = _mouse_stage() if far.is_empty() else _hotspot_pos(far)
+				_pending_action = "" if far.is_empty() else String(far["action"])
 
 
 # --- Acciones ---
@@ -396,7 +459,10 @@ func _play(id: String, on_done: Callable) -> void:
 			on_done.call()
 		return
 	_stage.prompt = {}
+	_stage.goal = Vector2.INF
 	_stage.walk_phase = -1.0
+	_pending_action = ""
+	_target = Vector2.INF
 	_cutscene.play(data, on_done)
 
 
@@ -533,7 +599,7 @@ func _draw_overlay() -> void:
 		"title":
 			_draw_title(view)
 	if _phase == "walk" and not _cutscene.is_playing():
-		var hint := ("WASD o click: caminar" if _stage.room == "pasillo" else "A / D o click: caminar") + "   ·   E / click: interactuar   ·   Esc: saltar prólogo"
+		var hint := ("WASD o click: caminar" if _stage.room == "pasillo" else "A / D o click: caminar") + "   ·   E, o click en la flecha: ir e interactuar   ·   Esc: saltar prólogo"
 		_overlay.draw_string(font, Vector2(0, view.y - 14), hint, HORIZONTAL_ALIGNMENT_CENTER, view.x, 13, Color(1, 1, 1, 0.45))
 		var place: String = String({"calle": "Av. del Mar, frente al malecón · Mazatlán · 13:47 · 38 °C", "pasillo": "UAdeO · Pasillo del Departamento de Informática",
 			"oficina": "Departamento de Informática"}.get(_stage.room, ""))
@@ -557,7 +623,7 @@ func _draw_intro(view: Vector2) -> void:
 			y += 26.0
 	if int(_time * 2.0) % 2 == 0:
 		_overlay.draw_string(_mono, Vector2(box.position.x, y), "█", HORIZONTAL_ALIGNMENT_LEFT, -1, 19, Color("e8e0c8"))
-	if _intro_chars >= _intro_total:
+	if _intro_chars >= _intro_total and _time - _intro_done_at >= INTRO_MIN_READ:
 		_overlay.draw_string(get_theme_default_font(), Vector2(0, view.y - 40), "Click o Espacio para continuar", HORIZONTAL_ALIGNMENT_CENTER, view.x, 15, Color(1, 1, 1, 0.5 + 0.3 * sin(_time * 4.0)))
 
 

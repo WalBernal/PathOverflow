@@ -12,6 +12,21 @@ extends Node2D
 const VIEW := Vector2(400, 225)
 const FLOOR_Y := 198.0
 const ROOM_WIDTH := {"calle": 700.0, "pasillo": 400.0, "oficina": 400.0}
+## Hasta dónde se puede caminar en cada sitio (vista lateral). En la calle, poco
+## más allá de la entrada de la UAdeO: el resto de la avenida no lleva a nada y
+## el personaje acababa fuera de la pantalla.
+const WALK_LIMITS := {"calle": Vector2(14.0, 330.0), "oficina": Vector2(16.0, 384.0)}
+## Dónde se dibuja la flecha del siguiente objetivo (sobre lo que se ve: las
+## escaleras de la UAdeO, la puerta de Informática, Rafa y el rack negro).
+const GOAL_MARKERS := {"to_hallway": Vector2(300, 140), "to_office": Vector2(85, 64), "talk_rafa": Vector2(314, 148), "rack": Vector2(371, 62)}
+## Puntos de interés por sitio: x en el mundo (o lat/depth en el pasillo), texto del aviso y acción.
+const HOTSPOTS := {
+	"calle": [{"x": 300.0, "text": "E · Cruzar la avenida y entrar a la UAdeO", "action": "to_hallway"}],
+	"pasillo": [{"lat": -0.85, "depth": 0.8, "text": "E · Departamento de Informática", "action": "to_office"},
+		{"lat": -0.12, "depth": 0.96, "text": "E · Caja de trámites", "action": "window"},
+		{"lat": 0.5, "depth": 0.96, "text": "E · Ver la TV", "action": "tv"}],
+	"oficina": [{"x": 272.0, "text": "E · Hablar con el encargado", "action": "talk_rafa"}],
+}
 ## Pasillo en perspectiva: profundidad 0 (cerca) .. 1 (al fondo) y lateral -1..1.
 const HALL_NEAR_Y := 214.0
 const HALL_FAR_Y := 150.0
@@ -64,6 +79,8 @@ var rack_shake := 0.0
 var dissolve := 0.0
 ## Hotspot resaltado: {pos: Vector2 (en el mundo), text}
 var prompt: Dictionary = {}
+## Siguiente objetivo (en el mundo): una flecha que rebota encima. INF = ninguno.
+var goal := Vector2.INF
 var _font: Font
 var _papers: Array[Dictionary] = []
 
@@ -128,6 +145,12 @@ func _draw() -> void:
 		draw_rect(Rect2(p + Vector2(-w / 2.0, -14 + bob), Vector2(w, 12)), Color(0, 0, 0, 0.75))
 		draw_rect(Rect2(p + Vector2(-w / 2.0, -14 + bob), Vector2(w, 12)), Color("d9a441"), false, 1.0)
 		draw_string(_font, p + Vector2(-w / 2.0 + 5, -5 + bob), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("f2e6c0"))
+	elif goal != Vector2.INF:
+		# Flecha dorada que rebota sobre el siguiente objetivo.
+		var g := goal + Vector2(0, sin(time * 4.0) * 2.5)
+		var arrow := PackedVector2Array([g + Vector2(-5, -7), g + Vector2(5, -7), g])
+		draw_colored_polygon(PackedVector2Array([g + Vector2(-6, -8), g + Vector2(6, -8), g + Vector2(0, 1)]), Color(0, 0, 0, 0.6))
+		draw_colored_polygon(arrow, Color("d9a441"))
 	draw_set_transform(Vector2.ZERO)
 	if flicker > 0.0 and fmod(time * 23.0, 1.0) < 0.5:
 		draw_rect(Rect2(Vector2.ZERO, VIEW), Color(0, 0, 0, 0.45))

@@ -22,6 +22,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("prologo"):
+		await _capture_prologue_walk()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("combate2"):
 		await _capture_combat2()
 		get_tree().quit()
@@ -496,6 +500,72 @@ const RAM_BUILDS := [
 	["paquete_rastreador", ["multicanal_menor", "puntero_salvaje_menor", "ecc_menor", "pipeline"]],
 	["cascada_css", ["multicanal", "disipador", "ecc", "refrigeracion_liquida"]],
 ]
+
+
+## Prólogo: la calle con el personaje caminando hasta el final (¿se sale de la
+## pantalla?), el pasillo y la oficina.
+func _capture_prologue_walk() -> void:
+	var gd: Node = get_node("/root/GameData")
+	gd.set("pending_creation", {"name": "Prueba", "appearance": CharacterAppearance.default()})
+	var p: Node = load("res://scenes/prologue/prologue.tscn").instantiate()
+	_swap(p)
+	await _wait(0.5)
+	p.set("_intro_chars", 99999.0)
+	p.set("_phase", "walk")
+	p.set("_fade", 0.0)
+	var stage: PrologueStage = p.get("_stage")
+	for x in [40.0, 300.0, 9999.0]:
+		Input.action_press(&"move_right")
+		var t := 0.0
+		while stage.player_x < minf(x, 9000.0) and t < 14.0:
+			await get_tree().process_frame
+			t += get_process_delta_time()
+		Input.action_release(&"move_right")
+		await _wait(0.6)
+		var screen_x := stage.player_x - stage.cam_x
+		print("prólogo calle: player_x %.0f cam_x %.0f → en pantalla x %.0f de 400 %s" % [stage.player_x, stage.cam_x, screen_x, "OK" if screen_x > 12.0 and screen_x < 388.0 else "FUERA"])
+		_save("36_prologo_calle_%d" % int(minf(x, 999.0)))
+	# Click en la entrada desde lejos: camina y entra solo.
+	p.call("_go_room", "calle", 40.0)
+	p.set("_target", Vector2(300.0, PrologueStage.FLOOR_Y))
+	p.set("_pending_action", "to_hallway")
+	var waited := 0.0
+	while stage.room != "pasillo" and waited < 12.0:
+		await get_tree().process_frame
+		waited += get_process_delta_time()
+	print("prólogo: click en la entrada → %s en %.1f s" % [stage.room, waited])
+	await _wait(0.9)
+	# Pasillo: velocidad lateral en pantalla (debe parecerse a la de la calle, 56 px/s).
+	var x0 := PrologueStage.hall_to_screen(stage.player_lat, stage.player_depth).x
+	Input.action_press(&"move_right")
+	await _wait(1.0)
+	Input.action_release(&"move_right")
+	var x1 := PrologueStage.hall_to_screen(stage.player_lat, stage.player_depth).x
+	print("prólogo pasillo: %.0f px/s de lado" % (x1 - x0))
+	_save("37_prologo_pasillo")
+	# Click en la puerta de Informática (donde se dibuja): camina y entra.
+	var door: Dictionary = p.call("_hotspot_under", Vector2(85, 120))
+	p.set("_target", p.call("_hotspot_pos", door) if not door.is_empty() else Vector2.INF)
+	p.set("_pending_action", String(door.get("action", "")))
+	waited = 0.0
+	while stage.room != "oficina" and waited < 12.0:
+		await get_tree().process_frame
+		waited += get_process_delta_time()
+	print("prólogo: click en la puerta de Informática → %s en %.1f s" % [stage.room, waited])
+	await _wait(0.9)
+	_save("38_prologo_oficina")
+	# Click sobre Rafa: camina hasta el escritorio y empieza la conversación.
+	var rafa: Dictionary = p.call("_hotspot_under", Vector2(314, 170))
+	p.set("_target", p.call("_hotspot_pos", rafa) if not rafa.is_empty() else Vector2.INF)
+	p.set("_pending_action", String(rafa.get("action", "")))
+	var cut: CutscenePlayer = p.get("_cutscene")
+	waited = 0.0
+	while not cut.is_playing() and waited < 12.0:
+		await get_tree().process_frame
+		waited += get_process_delta_time()
+	print("prólogo: click en Rafa → conversación %s en %.1f s (x %.0f)" % ["sí" if cut.is_playing() else "NO", waited, stage.player_x])
+	await _wait(1.0)
+	_save("39_prologo_rafa")
 
 
 ## Lo nuevo de combate: elección de habilidad al nivel 16, aura anclada (Torre de
