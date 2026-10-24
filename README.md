@@ -361,7 +361,8 @@ Nueve tipos con sprites animados (`data/enemies.json`, `assets/sprites/enemies/e
 - Un archivo JSON por personaje en `user://characters/<id>.json`. En Windows es `%APPDATA%\Godot\app_userdata\Path Overflow\characters`. Al renombrar el proyecto, los guardados de la carpeta antigua (`Exile Overflow`) se **copian** a la nueva la primera vez; la carpeta vieja no se toca.
 - Se guarda **todo el personaje**: nombre, clase, ascendencia, nivel, experiencia, apariencia, pasivas, equipo, bolsa, placas y RAM, banderas (diálogos, tutorial) y tiempo jugado.
 - **Autoguardado**: unos segundos después de cada cambio, cada minuto, al volver al menú y al cerrar la ventana.
-- **Seguro ante cortes**: se escribe en un `.tmp` y luego se sustituye el archivo; la versión anterior queda como `.bak` y se usa si el principal está dañado.
+- **Seguro ante cortes**: se escribe en un `.tmp` y luego se sustituye el archivo; las tres versiones anteriores quedan como `.bak`, `.bak2` y `.bak3` y, si el principal está dañado o falta, se carga la copia más reciente que se pueda leer. El alijo también guarda un `.bak` y se recupera de él (el dañado se aparta como `.danado`).
+- **Espacios de guardado**: tres, elegibles en el menú de personajes («Espacio 1 de 3»); cada uno con sus personajes y su alijo. El 1 usa las carpetas de siempre (`user://characters`, `user://stash.json`); los demás, `user://espacio_N/`. El activo se recuerda en `settings.cfg`.
 - **Tolerante a cambios de datos**: lo que deja de existir (nodos, objetos, habilidades) se descarta al cargar en vez de romper la partida.
 - **Versiones**: `save_version` 2 añadió las placas base; los guardados v1 reciben las placas iniciales de su clase al cargarse.
 

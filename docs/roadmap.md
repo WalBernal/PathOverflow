@@ -41,7 +41,7 @@ Origen: R1 §7, R2 §12 ★★★
 - Documentar cómo correrla en `README.md` (sección *Pruebas y comprobaciones*) y en el paso 5 del protocolo.
 - Hecho cuando: corre todas las zonas × clases en una sola orden y devuelve código de salida ≠ 0 si algo falla.
 
-### [ ] T02 · Guardado con copias de seguridad y varios espacios · M
+### [x] T02 · Guardado con copias de seguridad y varios espacios · M
 Origen: R1 §7
 - Copia automática del guardado antes de sobrescribir (rotación de 3) y recuperación si el archivo principal está corrupto.
 - Varios espacios por perfil, elegibles en el menú de personajes.
@@ -367,3 +367,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 
 <!-- Una línea por tarea terminada: AAAA-MM-DD · TXX · qué se hizo -->
 - 2026-10-24 · T01 · Prueba de integración (`tests/test_integration.tscn`): 7 clases × 24 zonas, 30 s de combate con piloto automático, falla con cualquier error del motor, pausa atascada, jugador fuera de la zona o sin combate; `tools/run_checks.ps1` corre todo. Encontró y arregló un Tween vacío de la música en las arenas de jefe.
+- 2026-10-24 · T02 · Guardado con tres copias rotativas (`.bak`..`.bak3`), recuperación desde la copia legible más reciente (también si falta el principal), copia y recuperación del alijo, y tres espacios de guardado con sus personajes y alijo, elegibles en el menú de personajes.

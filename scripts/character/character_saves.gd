@@ -3,17 +3,54 @@ class_name CharacterSaves
 ## En Windows, user:// es %APPDATA%\Godot\app_userdata\Exile Overflow.
 ##
 ## Escritura segura: se escribe en <id>.json.tmp y luego se sustituye el
-## archivo; la versión anterior se conserva como <id>.json.bak. Si el juego se
-## cierra a mitad de guardado, nunca queda un archivo a medias.
+## archivo; las versiones anteriores se conservan como <id>.json.bak, .bak2 y
+## .bak3 (de la más nueva a la más vieja). Si el juego se cierra a mitad de
+## guardado, nunca queda un archivo a medias, y si el principal se daña se
+## carga la copia más reciente que se pueda leer.
+##
+## Espacios de guardado: cada uno tiene sus personajes y su alijo. El 1 usa las
+## carpetas de siempre (user://characters, user://stash.json); los demás,
+## user://espacio_N/. El activo se recuerda en settings.cfg.
 
 const SAVE_DIR := "user://characters"
 const NAME_MIN := 2
 const NAME_MAX := 20
+const BACKUPS := [".bak", ".bak2", ".bak3"]
+const SLOTS := 3
+
+static var _slot := 0   # 0 = sin leer todavía de settings.cfg
 
 
 ## Nombres anteriores del proyecto: Godot guarda en app_userdata/<nombre>, así
 ## que al renombrar el juego hay que traer los personajes de la carpeta antigua.
 const OLD_PROJECT_NAMES := ["Exile Overflow"]
+
+
+## Espacio de guardado activo (1..SLOTS).
+static func slot() -> int:
+	if _slot == 0:
+		_slot = clampi(int(GameSettings.get_value("saves", "slot", 1)), 1, SLOTS)
+	return _slot
+
+
+static func set_slot(n: int) -> void:
+	_slot = clampi(n, 1, SLOTS)
+	GameSettings.set_value("saves", "slot", _slot)
+
+
+## Carpeta raíz del espacio (donde van sus personajes y su alijo).
+static func slot_root(n: int) -> String:
+	return "user://" if n <= 1 else "user://espacio_%d/" % n
+
+
+## Carpeta de personajes del espacio activo.
+static func current_dir() -> String:
+	return SAVE_DIR if slot() <= 1 else slot_root(slot()) + "characters"
+
+
+## Alijo del espacio activo.
+static func stash_path() -> String:
+	return slot_root(slot()) + "stash.json"
 
 
 ## Copia (sin borrar nada) los guardados de una carpeta de un nombre anterior
@@ -39,15 +76,15 @@ static func new_id() -> String:
 	return "%d_%04d" % [Time.get_unix_time_from_system(), randi() % 10000]
 
 
-static func path_for(id: String, dir := SAVE_DIR) -> String:
-	return "%s/%s.json" % [dir, id]
+static func path_for(id: String, dir := "") -> String:
+	return "%s/%s.json" % [dir if dir != "" else current_dir(), id]
 
 
-static func write(data: Dictionary, dir := SAVE_DIR) -> Error:
-	var err := DirAccess.make_dir_recursive_absolute(dir)
+static func write(data: Dictionary, dir := "") -> Error:
+	var path := path_for(data["id"], dir)
+	var err := DirAccess.make_dir_recursive_absolute(path.get_base_dir())
 	if err != OK:
 		return err
-	var path := path_for(data["id"], dir)
 	var tmp := path + ".tmp"
 	var file := FileAccess.open(tmp, FileAccess.WRITE)
 	if file == null:
@@ -55,41 +92,57 @@ static func write(data: Dictionary, dir := SAVE_DIR) -> Error:
 	file.store_string(JSON.stringify(data, "\t"))
 	file.close()
 	if FileAccess.file_exists(path):
-		DirAccess.remove_absolute(path + ".bak")
-		DirAccess.rename_absolute(path, path + ".bak")
+		# Rotación: .bak2 -> .bak3, .bak -> .bak2, principal -> .bak
+		DirAccess.remove_absolute(path + BACKUPS[-1])
+		for k in range(BACKUPS.size() - 1, 0, -1):
+			if FileAccess.file_exists(path + BACKUPS[k - 1]):
+				DirAccess.rename_absolute(path + BACKUPS[k - 1], path + BACKUPS[k])
+		DirAccess.rename_absolute(path, path + BACKUPS[0])
 	return DirAccess.rename_absolute(tmp, path)
 
 
-## Lee un guardado. Si el principal está dañado, intenta con la copia .bak.
-static func read(id: String, dir := SAVE_DIR) -> Dictionary:
+## Lee un guardado. Si el principal está dañado (o falta), prueba las copias de
+## la más nueva a la más vieja.
+static func read(id: String, dir := "") -> Dictionary:
 	var path := path_for(id, dir)
-	for candidate in [path, path + ".bak"]:
+	for candidate in [path] + BACKUPS.map(func(b: String) -> String: return path + b):
 		if not FileAccess.file_exists(candidate):
 			continue
 		var data = JSON.parse_string(FileAccess.get_file_as_string(candidate))
 		if data is Dictionary and data.has("id") and data.has("class_id"):
+			if candidate != path:
+				push_warning("Guardado dañado o ausente: se cargó la copia %s" % candidate)
 			return data
 		push_warning("Guardado dañado: %s" % candidate)
 	return {}
 
 
-static func delete(id: String, dir := SAVE_DIR) -> void:
+static func delete(id: String, dir := "") -> void:
 	var path := path_for(id, dir)
-	for p in [path, path + ".bak", path + ".tmp"]:
+	for p in [path, path + ".tmp"] + BACKUPS.map(func(b: String) -> String: return path + b):
 		if FileAccess.file_exists(p):
 			DirAccess.remove_absolute(p)
 
 
-## Todos los personajes guardados, el último jugado primero.
+## Todos los personajes guardados, el último jugado primero. También los que
+## solo tienen copias (si el juego se cerró justo al sustituir el principal).
 ## Los archivos ilegibles se ignoran (y se avisa en la consola).
-static func list_all(dir := SAVE_DIR) -> Array[Dictionary]:
+static func list_all(dir := "") -> Array[Dictionary]:
+	if dir == "":
+		dir = current_dir()
 	var result: Array[Dictionary] = []
 	if not DirAccess.dir_exists_absolute(dir):
 		return result
+	var ids: Array[String] = []
 	for file_name in DirAccess.get_files_at(dir):
-		if not file_name.ends_with(".json"):
-			continue
-		var data := read(file_name.get_basename(), dir)
+		for suffix in [".json"] + BACKUPS.map(func(b: String) -> String: return ".json" + b):
+			if file_name.ends_with(suffix):
+				var id := file_name.trim_suffix(suffix)
+				if not ids.has(id):
+					ids.append(id)
+				break
+	for id in ids:
+		var data := read(id, dir)
 		if not data.is_empty():
 			result.append(data)
 	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:

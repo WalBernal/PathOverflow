@@ -65,7 +65,7 @@ func _ready() -> void:
 		character = GameData.create_character("Desarrollador", DEV_CLASS, CharacterAppearance.default(), false)
 	item_generator = ItemGenerator.new(GameData.items)
 	_rng.randomize()
-	stash = Stash.load_from(Stash.DEFAULT_PATH, GameData.items)
+	stash = Stash.load_from(CharacterSaves.stash_path(), GameData.items)   # cada espacio de guardado tiene el suyo
 	ItemTransfer.stash = stash
 	tree_exiting.connect(func() -> void: ItemTransfer.stash = null)
 	character.leveled_up.connect(_on_leveled_up)

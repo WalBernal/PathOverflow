@@ -1,6 +1,7 @@
 class_name MainMenu
 extends Control
-## Pantalla de inicio: lista de personajes guardados, jugar, crear y borrar.
+## Pantalla de inicio: lista de personajes guardados, jugar, crear y borrar,
+## y el espacio de guardado activo.
 
 const CARD_HEIGHT := 84.0
 
@@ -80,7 +81,22 @@ func _build() -> void:
 	var list_box := VBoxContainer.new()
 	list_box.add_theme_constant_override("separation", 10)
 	list_panel.add_child(list_box)
-	list_box.add_child(UiStyle.label("Personajes", 22, UiStyle.ACCENT))
+	var header := HBoxContainer.new()
+	list_box.add_child(header)
+	var title := UiStyle.label("Personajes", 22, UiStyle.ACCENT)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(title)
+	# Espacios de guardado: cada uno con sus personajes y su alijo.
+	var slot_button := UiStyle.button("", func() -> void: pass, 170)
+	slot_button.tooltip_text = "Cada espacio de guardado tiene sus propios personajes y su propio alijo."
+	var refresh_slot := func() -> void:
+		slot_button.text = "Espacio %d de %d" % [CharacterSaves.slot(), CharacterSaves.SLOTS]
+	slot_button.pressed.connect(func() -> void:
+		CharacterSaves.set_slot(CharacterSaves.slot() % CharacterSaves.SLOTS + 1)
+		refresh_slot.call()
+		_reload())
+	refresh_slot.call()
+	header.add_child(slot_button)
 	_scroll = ScrollContainer.new()
 	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED

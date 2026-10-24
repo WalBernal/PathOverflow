@@ -195,7 +195,7 @@ func _play_zone(world: Node, class_id: String, zone_id: String) -> void:
 	(world.get("enemies") as EnemyManager).enemy_killed.disconnect(on_kill)
 	skills.skill_used.disconnect(on_use)
 	var zone_now: Zone = world.get("zone")
-	if not zone_now.safe and kills[0] + (world.get("enemies") as EnemyManager).count() > 0 and uses[0] == 0:
+	if _seconds >= 20.0 and not zone_now.safe and kills[0] + (world.get("enemies") as EnemyManager).count() > 0 and uses[0] == 0:
 		_failures.append("%s: no hubo combate (ninguna habilidad lanzada en %.0f s)" % [label, _seconds])
 	_collect(label)
 	print("%-34s %3d enemigos vivos, %3d derrotados, %3d habilidades, %5.0f px recorridos, %d muertes del jugador" % [

@@ -404,6 +404,38 @@ func _test_save_files() -> void:
 	f.close()
 	_check(CharacterSaves.read("a", dir).get("name") == "Viejo", "recupera la copia .bak si el principal está dañado")
 
+	# Rotación de tres copias: la más vieja se descarta; si fallan principal y .bak, se usa .bak2.
+	for n in ["Viejo 3", "Viejo 4", "Viejo 5"]:
+		older["name"] = n
+		CharacterSaves.write(older, dir)
+	var base := CharacterSaves.path_for("a", dir)
+	_check(FileAccess.file_exists(base + ".bak3") and not FileAccess.file_exists(base + ".bak4"), "tres copias rotativas")
+	_check(CharacterSaves.read("a", dir).get("name") == "Viejo 5", "lee la versión más reciente")
+	for p in [base, base + ".bak"]:
+		var bad := FileAccess.open(p, FileAccess.WRITE)
+		bad.store_string("{ roto")
+		bad.close()
+	_check(CharacterSaves.read("a", dir).get("name") == "Viejo 3", "con principal y .bak dañados, carga .bak2")
+	# Cierre a mitad de guardado (sin principal): el personaje sigue en la lista desde su copia.
+	DirAccess.remove_absolute(base)
+	_check(CharacterSaves.list_all(dir).any(func(d: Dictionary) -> bool: return d["id"] == "a"), "sin principal, aparece desde las copias")
+
+	# Espacios de guardado: el 1 usa las rutas de siempre; los demás, su carpeta con su alijo.
+	_check(CharacterSaves.slot_root(1) == "user://" and CharacterSaves.slot_root(2) == "user://espacio_2/", "carpetas de los espacios")
+
+	# Alijo: copia .bak al guardar y recuperación si el principal está dañado.
+	var stash_path := dir + "/alijo.json"
+	var st := Stash.new(stash_path)
+	st.save()
+	st.save()
+	_check(FileAccess.file_exists(stash_path + ".bak"), "el alijo guarda copia .bak")
+	var bad_stash := FileAccess.open(stash_path, FileAccess.WRITE)
+	bad_stash.store_string("{ roto")
+	bad_stash.close()
+	_check(Stash.load_from(stash_path, _db) != null and FileAccess.file_exists(stash_path + ".danado"), "alijo dañado: se aparta y se carga la copia")
+	for p in [stash_path, stash_path + ".bak", stash_path + ".danado"]:
+		DirAccess.remove_absolute(p)
+
 	var junk := FileAccess.open(dir + "/basura.json", FileAccess.WRITE)
 	junk.store_string("[]")
 	junk.close()

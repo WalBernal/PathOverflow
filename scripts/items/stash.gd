@@ -81,6 +81,7 @@ func load_dict(d: Dictionary, db: ItemDatabase) -> void:
 
 
 func save() -> void:
+	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
 	var tmp := path + ".tmp"
 	var f := FileAccess.open(tmp, FileAccess.WRITE)
 	if f == null:
@@ -88,16 +89,21 @@ func save() -> void:
 		return
 	f.store_string(JSON.stringify(to_dict()))
 	f.close()
+	if FileAccess.file_exists(path):   # copia de la versión anterior
+		DirAccess.copy_absolute(ProjectSettings.globalize_path(path), ProjectSettings.globalize_path(path + ".bak"))
 	DirAccess.rename_absolute(ProjectSettings.globalize_path(tmp), ProjectSettings.globalize_path(path))
 
 
+## Si el alijo está dañado se conserva aparte (.danado) y se carga la copia .bak.
 static func load_from(p_path: String, db: ItemDatabase) -> Stash:
 	var s := Stash.new(p_path)
-	if FileAccess.file_exists(p_path):
-		var parsed = JSON.parse_string(FileAccess.get_file_as_string(p_path))
+	for candidate in [p_path, p_path + ".bak"]:
+		if not FileAccess.file_exists(candidate):
+			continue
+		var parsed = JSON.parse_string(FileAccess.get_file_as_string(candidate))
 		if parsed is Dictionary:
 			s.load_dict(parsed, db)
-		else:
-			push_warning("Alijo dañado: %s (se conserva el archivo, se empieza vacío)" % p_path)
-			DirAccess.copy_absolute(ProjectSettings.globalize_path(p_path), ProjectSettings.globalize_path(p_path + ".danado"))
+			return s
+		push_warning("Alijo dañado: %s (se conserva aparte como .danado)" % candidate)
+		DirAccess.copy_absolute(ProjectSettings.globalize_path(candidate), ProjectSettings.globalize_path(candidate + ".danado"))
 	return s
