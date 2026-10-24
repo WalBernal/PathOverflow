@@ -44,6 +44,10 @@ func _run() -> void:
 		await _capture_hire_no()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("sensacion"):
+		await _capture_feel()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("roadmap2b"):
 		await _capture_roadmap2b()
 		get_tree().quit()
@@ -356,6 +360,61 @@ func _capture_roadmap2() -> void:
 	await _wait(0.5)
 	_save("72_roadmap2_ranura_chip")
 	ui.call("_on_menu_requested", "passives")
+	world.set("_since_save", -9999.0)
+
+
+## Fase "Sensación": catacumbas oscuras con antorchas, proyectiles de fuego y
+## rayo que alumbran y enemigos muriendo de cada tipo de daño.
+func _capture_feel() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var items: ItemDatabase = gd.get("items")
+	var c: CharacterData = gd.create_character("Sensacion", &"hechicero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "zona4"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 20
+	c.inventory.set_board(0, Motherboard.new(items.skills.skills["ping_letal"], 10, []))
+	c.inventory.set_board(1, Motherboard.new(items.skills.skills["fork_bomb"], 10, []))
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(3.5)
+	var ui: GameUI = world.get("ui")
+	if ui.is_choosing():
+		ui.call("_on_choice_picked", "golem_hardware", func(_s: String) -> void: pass)
+	get_tree().paused = false
+	var zone: Zone = world.get("zone")
+	var player: Player = world.get("player")
+	var em: EnemyManager = world.get("enemies")
+	var skills: SkillController = world.get("skills")
+	var post: WorldPost = world.get("post")
+	player.invulnerable = true
+	em.clear_all()
+	em.roll_affixes = false
+	print("antorchas: %d" % zone.torches.size())
+	if not zone.torches.is_empty():
+		player.global_position = zone.free_spot_near(zone.torches[0]["pos"] + Vector2(-260, 40))
+	await _wait(0.6)
+	_save("90_catacumbas_antorchas")
+	var p := player.global_position
+	for k in 8:
+		var id := em.spawn(p + Vector2(280, -180 + k * 50), Rarity.Enemy.NORMAL, em.type_index_of("daemon" if k % 2 == 0 else "bug"))
+		em.lives[em.index_of(id)] *= 30.0
+	for k in 3:
+		skills.call("_execute", skills.profile(0), p + Vector2(400, -100 + k * 100))
+	await _wait(0.12)
+	print("luces en pantalla: %d" % post.last_lights.size())
+	_save("91_proyectiles_que_alumbran")
+	for k in em.count():
+		em.lives[k] = 1.0
+	var kinds := ["fire", "cold", "lightning", "chaos", "physical"]
+	for k in range(em.count() - 1, -1, -1):
+		em.hit_ailments = {"type": kinds[k % kinds.size()]}
+		em.hit_index(k, 10.0, 10.0, 0.0, 150.0)
+	em.hit_ailments = {}
+	await _wait(0.15)
+	_save("92_muertes_con_estilo")
 	world.set("_since_save", -9999.0)
 
 

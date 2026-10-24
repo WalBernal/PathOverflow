@@ -116,6 +116,8 @@ func _ready() -> void:
 
 	post = WorldPost.new()
 	post.player = player
+	post.skills = skills
+	post.enemies = enemies
 	add_child(post)
 	ui = GameUI.new()
 	ui.layer = 5   # encima del filtro de pixel art (capa 1)

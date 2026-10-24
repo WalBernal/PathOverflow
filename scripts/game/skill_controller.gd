@@ -417,6 +417,26 @@ func _spend_charges(p: Dictionary) -> Dictionary:
 	return q
 
 
+## Luces de las explosiones y destellos recientes (para WorldPost): {pos, radius, color, power}.
+func light_effects() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for e in _effects:
+		if e.get("type", "") == "burst" and float(e["radius"]) >= 30.0:
+			out.append({"pos": e["pos"], "radius": float(e["radius"]) * 2.2, "color": e["color"],
+				"power": 1.0 - float(e["time"]) / maxf(0.01, float(e["duration"]))})
+	return out
+
+
+## Proyectiles que alumbran (fuego, rayo, frío y caos): {pos, color}.
+func light_projectiles() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for pr in _projectiles:
+		var dt := String(pr["profile"].get("damage_type", ""))
+		if WorldPost.PROJECTILE_LIGHT.has(dt):
+			out.append({"pos": pr["pos"], "color": WorldPost.PROJECTILE_LIGHT[dt]})
+	return out
+
+
 ## Cura a las invocaciones persistentes y a las torretas una fracción de su vida
 ## máxima (poción "Termo de café para el equipo").
 func heal_units(fraction: float) -> void:

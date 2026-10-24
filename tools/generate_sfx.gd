@@ -20,7 +20,25 @@ const AMBIENT_PEAK := {"oficina": 0.28, "pasillo": 0.4, "calle": 0.5}
 var rng := RandomNumberGenerator.new()
 
 
+## Golpes por material, clic de crítico, botín único y muertes con estilo. Con
+## `-- golpes` solo se generan estos (no se tocan los demás, por si alguno se ha
+## sustituido a mano).
+func _hit_sfx() -> Dictionary:
+	return {
+		"hit_flesh": _hit_flesh, "hit_metal": _hit_metal, "hit_crystal": _hit_crystal, "hit_digital": _hit_digital,
+		"crit_click": _crit_click, "unique_drop": _unique_drop, "death_ash": _death_ash, "death_decompile": _death_decompile,
+	}
+
+
 func _initialize() -> void:
+	if OS.get_cmdline_user_args().has("golpes"):
+		rng.seed = 4242
+		var only := _hit_sfx()
+		for name in only:
+			_save(SFX_DIR + name + ".wav", only[name].call())
+		print("Sonidos de golpe generados: %d" % only.size())
+		quit()
+		return
 	rng.seed = 1337
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(SFX_DIR))
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(AMB_DIR))
@@ -52,6 +70,11 @@ func _initialize() -> void:
 		_save(AMB_DIR + name + ".wav", _loopable(ambients[name].call()), float(AMBIENT_PEAK.get(name, 0.9)))
 	for name in late_sfx:
 		_save(SFX_DIR + name + ".wav", late_sfx[name].call())
+	rng.seed = 4242
+	var hit_sfx := _hit_sfx()
+	for name in hit_sfx:
+		_save(SFX_DIR + name + ".wav", hit_sfx[name].call())
+		late_sfx[name] = hit_sfx[name]
 	print("Sonidos generados: %d efectos y %d ambientes" % [sfx.size() + late_sfx.size(), ambients.size()])
 	quit()
 
@@ -427,6 +450,102 @@ func _shatter() -> PackedFloat32Array:
 			if t > st:
 				tinkle += sin(TAU * (2200.0 + k * 470.0) * (t - st)) * _env(t - st, 0.001, 0.05)
 		b[i] = f * _env(t, 0.001, 0.05) + tinkle * 0.3
+	return b
+
+
+# --- Golpes por material y muertes ---
+
+## Carne (bichos, gusanos): golpe sordo y grave.
+func _hit_flesh() -> PackedFloat32Array:
+	var b := _buf(0.12)
+	var f := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		f = _lp(f, _noise(), 500.0)
+		b[i] = (sin(TAU * lerpf(140.0, 70.0, t / 0.12) * t) * 0.7 + f * 1.6) * _env(t, 0.001, 0.035)
+	return b
+
+
+## Metal (racks, daemons, robots): clang con parciales inarmónicos.
+func _hit_metal() -> PackedFloat32Array:
+	var b := _buf(0.3)
+	for i in b.size():
+		var t := float(i) / RATE
+		var ring := sin(TAU * 523.0 * t) + 0.6 * sin(TAU * 1371.0 * t) + 0.4 * sin(TAU * 2419.0 * t)
+		b[i] = ring * _env(t, 0.001, 0.07) * 0.5 + _noise() * _env(t, 0.0005, 0.008)
+	return b
+
+
+## Cristal (ROM, silicio, hielo): ping agudo y corto.
+func _hit_crystal() -> PackedFloat32Array:
+	var b := _buf(0.25)
+	for i in b.size():
+		var t := float(i) / RATE
+		b[i] = (sin(TAU * 2637.0 * t) + 0.5 * sin(TAU * 3951.0 * t)) * _env(t, 0.0008, 0.05) + _noise() * 0.3 * _env(t, 0.0005, 0.005)
+	return b
+
+
+## Digital (procesos, fantasmas, glitches): chasquido de bits a 2 bits.
+func _hit_digital() -> PackedFloat32Array:
+	var b := _buf(0.1)
+	var ph := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		ph += (1800.0 if int(t * 120.0) % 2 == 0 else 900.0) / RATE
+		b[i] = floorf(_sq(ph) * 2.0) / 2.0 * _env(t, 0.001, 0.025)
+	return b
+
+
+## Crítico: el clic de un teclado mecánico (switch azul): chasquido + resorte.
+func _crit_click() -> PackedFloat32Array:
+	var b := _buf(0.09)
+	var f := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		f = _lp(f, _noise(), 6000.0)
+		var click := f * _env(t, 0.0003, 0.004) * 2.0
+		var second := f * _env(maxf(0.0, t - 0.018), 0.0003, 0.004) * 1.4 if t > 0.018 else 0.0
+		b[i] = click + second + sin(TAU * 3200.0 * t) * _env(t, 0.0005, 0.01) * 0.3
+	return b
+
+
+## Objeto único en el suelo: fanfarria corta, inconfundible (sube y brilla).
+func _unique_drop() -> PackedFloat32Array:
+	var notes := [783.99, 1046.5, 1318.5, 1567.98, 2093.0]
+	var b := _buf(1.1)
+	for i in b.size():
+		var t := float(i) / RATE
+		var s := 0.0
+		for k in notes.size():
+			var st := k * 0.07
+			if t > st:
+				s += (sin(TAU * notes[k] * (t - st)) + 0.3 * _sq(notes[k] * 0.5 * (t - st))) * _env(t - st, 0.004, 0.35)
+		s += sin(TAU * 4186.0 * t) * 0.15 * sin(TAU * 7.0 * t) * _env(t, 0.3, 0.4)   # brillo final
+		b[i] = s
+	return b
+
+
+## Muerte por fuego: chisporroteo que se apaga en ceniza.
+func _death_ash() -> PackedFloat32Array:
+	var b := _buf(0.45)
+	var f := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		f = _lp(f, _noise(), 2500.0)
+		var crackle := _noise() if rng.randf() < 0.02 * (1.0 - t / 0.45) else 0.0
+		b[i] = f * 0.4 * _env(t, 0.01, 0.15) + crackle
+	return b
+
+
+## Muerte por daño físico o caos: el enemigo se "descompila" en bits que caen.
+func _death_decompile() -> PackedFloat32Array:
+	var b := _buf(0.35)
+	var ph := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		var step := floorf(t * 40.0)
+		ph += (1600.0 - step * 90.0) / RATE
+		b[i] = floorf(_sq(ph) * 1.5) / 1.5 * _env(t, 0.002, 0.12) * (0.6 if int(step) % 2 == 0 else 1.0)
 	return b
 
 

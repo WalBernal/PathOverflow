@@ -228,6 +228,7 @@ func setup(p_def: Dictionary, p_player: Player, p_character: CharacterData, p_qu
 	_place_features(rng)
 	_place_obstacles(rng)
 	_make_decals(rng)
+	_place_torches()
 	_build_collision()
 	_ground_layer = Node2D.new()
 	_ground_layer.show_behind_parent = true
@@ -538,6 +539,84 @@ func _spot_is_free(p: Vector2, radius: float, keys: Array[Vector2], path: Array[
 		if p.distance_to(o["pos"]) < radius + o["radius"] + spacing:
 			return false
 	return true
+
+
+## Antorchas (o su versión de la zona: LED de estado, fuego fatuo...) solo en las
+## zonas oscuras: decorado sin colisión que da luz (WorldPost). Usa su propio
+## generador para no cambiar el resto de la zona.
+const TORCH_STYLES := {
+	"servers": ["led", "6ab8ff"], "kernel": ["led", "8ab4ff"], "bios": ["led", "8aa8ff"], "rom": ["led", "d0a8ff"],
+	"swamp": ["wisp", "a0ff80"], "grieta": ["wisp", "c08aff"], "alcantarillas": ["wisp", "70e0c0"],
+}
+## {pos, kind ("torch", "led", "wisp"), color}
+var torches: Array[Dictionary] = []
+
+
+func _place_torches() -> void:
+	var dark := float(WorldPost.GRADES.get(style, {}).get("dark", 0.0))
+	if dark < 0.25 or safe:
+		return
+	var trng := RandomNumberGenerator.new()
+	trng.seed = hash(id) + 7
+	var look: Array = TORCH_STYLES.get(style, ["torch", "ffa040"])
+	var wanted := clampi(int(rect.get_area() / 650000.0), 4, 28)
+	var keys := key_points()
+	var path := _key_path(keys)
+	var inner := rect.grow(-120.0)
+	for attempt in wanted * 30:
+		if torches.size() >= wanted:
+			break
+		var p := Vector2(trng.randf_range(inner.position.x, inner.end.x), trng.randf_range(inner.position.y, inner.end.y))
+		if not _spot_is_free(p, 12.0, keys, path, 30.0):
+			continue
+		if torches.any(func(t: Dictionary) -> bool: return (t["pos"] as Vector2).distance_to(p) < 380.0):
+			continue
+		torches.append({"pos": p, "kind": look[0], "color": Color(look[1])})
+
+
+## Puntos de luz fijos de la zona (para WorldPost): antorchas, hoguera del
+## campamento, salidas y waypoint. {pos, radius, color, power}
+func light_points() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for t in torches:
+		out.append({"pos": t["pos"] + Vector2(0, -30), "radius": 230.0, "color": t["color"], "power": 0.85})
+	if style == "camp":
+		out.append({"pos": rect.get_center() + Vector2(0, -20), "radius": 320.0, "color": Color("ff9a40"), "power": 0.9})
+	for e in exits:
+		if exit_visible(e) and exit_open(e):
+			out.append({"pos": e["pos"], "radius": 170.0, "color": Color("60d0ff") if not e.has("portal") else Color("c08aff"), "power": 0.6})
+	if has_waypoint:
+		out.append({"pos": waypoint, "radius": 160.0, "color": Color("7fb8ff"), "power": 0.6})
+	return out
+
+
+func _draw_torch(t: Dictionary) -> void:
+	var p: Vector2 = t["pos"]
+	var c: Color = t["color"]
+	var flick := 0.8 + 0.2 * sin(_time * 10.0 + p.x) * sin(_time * 6.1 + p.y)
+	match t["kind"]:
+		"led":
+			# Poste con un LED de estado que parpadea.
+			draw_rect(Rect2(p + Vector2(-3, -34), Vector2(6, 34)), Color("2a2e38"))
+			draw_rect(Rect2(p + Vector2(-6, -40), Vector2(12, 8)), Color("3a4050"))
+			draw_rect(Rect2(p + Vector2(-3, -38), Vector2(6, 4)), Color(c, 0.6 + 0.4 * flick))
+			draw_circle(p + Vector2(0, -36), 10.0 * flick, Color(c, 0.12))
+		"wisp":
+			# Fuego fatuo: una llama suelta que flota.
+			var f := p + Vector2(sin(_time * 1.3 + p.y) * 6.0, -30.0 + sin(_time * 2.1 + p.x) * 4.0)
+			draw_circle(f, 12.0 * flick, Color(c, 0.18))
+			draw_circle(f, 5.0 * flick, Color(c, 0.8))
+			draw_circle(f, 2.0, Color(1, 1, 1, 0.9))
+		_:
+			# Antorcha: palo, cuenco y llama de tres capas.
+			draw_rect(Rect2(p + Vector2(-2, -30), Vector2(4, 30)), WOOD)
+			draw_rect(Rect2(p + Vector2(-6, -34), Vector2(12, 5)), Color("3a3430"))
+			for layer in [[Color("e0652f"), 7.0, 18.0], [Color("f0a030"), 5.0, 13.0], [Color("ffe070"), 3.0, 7.0]]:
+				var w: float = layer[1]
+				var h: float = layer[2] * flick
+				var sway := sin(_time * 7.0 + w + p.x) * 2.0
+				var base := p + Vector2(0, -34)
+				draw_colored_polygon(PackedVector2Array([base + Vector2(-w, 0), base + Vector2(sway, -h), base + Vector2(w, 0)]), layer[0])
 
 
 func _make_decals(rng: RandomNumberGenerator) -> void:
@@ -1045,6 +1124,8 @@ func _draw() -> void:
 			_draw_feature_anim(o)
 		else:
 			_draw_obstacle(o)
+	for t in torches:
+		_draw_torch(t)
 	if style == "camp":
 		_draw_campfire(rect.get_center() + Vector2(0, -20))
 	elif style == "terminal":

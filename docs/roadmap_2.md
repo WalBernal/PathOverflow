@@ -75,20 +75,17 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 
 | Mejora | Tamaño | Prioridad | Idea |
 |---|---|---|---|
-| **Sonido por tipo de daño y por material**: golpe en metal (racks), en carne, en cristal (ROM); crítico con un "clic" de teclado mecánico | M | ★★★ | El audio es la mitad de la sensación de golpe. |
+| **Materiales en los datos**: mover el material de cada enemigo a `enemies.json` y darle uno propio a cada tipo nuevo (hoy hay una tabla en `EnemyManager.MATERIALS`; lo que falta suena "digital") | S | ★ | Ya suenan carne, metal, cristal y digital al golpear. |
 | **Capas de música por intensidad**: la pista de la zona sube una capa (batería) cuando hay más de 15 enemigos cerca, y baja al limpiar | M | ★★★ | Ya hay intensidad para jefes; extenderla. |
 | **Ambiente posicional**: zumbido de racks que suena más cerca de ellos, goteo en las alcantarillas, viento en la grieta | S | ★★ | Las zonas grandes se sienten vivas. |
 | **Voces cortas de los NPC** (gruñidos o frases de 1 palabra al hablar) y del personaje al subir de nivel o con poca vida | M | ★★ | |
-| **Sonido de "objeto único" inconfundible** (y uno distinto por rareza) | S | ★★★ | Ya suena algo al caer raros y únicos; falta que el único sea inconfundible. |
 | **Música compuesta** (sustituir las pistas generadas), con leitmotiv por acto y por jefe | L | ★★ | Ya en el roadmap 1. |
 
 ## 8. Efectos visuales y sensación
 
 | Mejora | Tamaño | Prioridad | Idea |
 |---|---|---|---|
-| **Luces dinámicas en el filtro**: proyectiles de fuego y rayos que iluminan en zonas oscuras (catacumbas, alcantarillas), antorchas en las paredes | M | ★★★ | Aprovecha la oscuridad del filtro de pixel art: el combate ilumina la zona. |
-| **Partículas de impacto en pixel art** por tipo de daño (chispas, astillas de hielo, gotas de veneno, bits) | M | ★★★ | |
-| **Muertes con estilo**: los enemigos se "descompilan" en píxeles, se congelan y se rompen, se queman a ceniza según el daño que los mató | M | ★★ | Ya existe la explosión de afijos; esto da variedad. |
+| **Luces, siguiente paso**: que alumbren también las auras, las invocaciones con luz propia (láser del Titán, drones) y el botín único; y opción para bajar las luces si el equipo es lento | S | ★★ | Las luces dinámicas ya existen (hasta 32 en pantalla, `WorldPost.last_lights`). |
 | **Sombras de proyectiles y de enemigos voladores** | S | ★ | Lectura de altura en vista cenital. |
 | **Clima por zona**: lluvia de datos en la brecha, niebla que se mueve con el jugador en el pantano | S | ★ | |
 
@@ -127,7 +124,7 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 
 ## Plan sugerido por fases
 
-1. **Fase "Sensación"** (★★★ rápidas): sonido por material, luces dinámicas, partículas de impacto.
+1. **Fase "Sensación", lo que queda**: capas de música por intensidad, ambiente posicional.
 2. **Fase "Habilidad del jugador"**: habilidades de movimiento, roles de enemigo, jefes con mecánicas de arena.
 3. **Fase "Profundidad de builds"**: nodos clave, maestrías, RAM de activación, nodos que usen las cargas.
 4. **Fase "Largo plazo"**: crafteo con parches, atlas de incidentes, chips únicos que transforman nodos, temporadas.
@@ -137,3 +134,5 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 **Primera tanda (23 octubre 2026, noche 5)**: **texto y personajes nítidos** con el filtro: el pixelado solo va al suelo y el decorado; la luz (gradación, viñeta, oscuridad) va aparte y los nombres, placas, botín y números quedan encima · **eventos de zona**: datos huérfanos (dos oleadas y botín), santuarios (Turbo, Firewall, Debug, Overclock), emboscadas y deploys fallidos (dos raros), distintos en cada visita · **filtro de botín** (Todo / Ocultar normales / Solo raros y mejores; Alt para ver todo), **haz de luz** y sonido para raros y únicos · **cargas de Buffer, Multihilos y Overclock**: se ganan al recibir golpes, al matar y con críticos (más con afijos nuevos), duran 10 s, se ven sobre el orbe de vida y se gastan con RAM nuevas (Volcado de Buffer, Ráfaga Multihilo, Pico de Overclock) · **costo de vida**: RAM Alimentación por Vida (50 %) y Hotfix en Caliente (100 %, +35 % de daño) · **Mainframe Titán**: una sola invocación enorme con terremoto, láser y barrera; el golem gana terremoto · **variantes de habilidades** en K (golem de tres, golem blindado, titán de asedio o guardián, Broadcast/Unicast, Ping flood, Barrido amplio o certero, etc.) · **chips de expansión**: caen de los enemigos, se engastan en 12 ranuras hexagonales del árbol y cuentan con la ranura asignada; 4 únicos · **atributos**: +1 carga máxima de su tipo cada 50 y **requisitos de Fuerza/Destreza/Inteligencia** para armas y armaduras (la ropa de seda pide Inteligencia, el hacha Fuerza); sin ellos no se equipa y, si ya lo llevabas, se desactiva.
 
 **Segunda tanda (24 octubre 2026)**: **esquiva "git stash"** (Shift o gatillo derecho; la hoja de personaje pasa a Share/Captura en el mando): salto corto con 0,3 s de invulnerabilidad contra golpes, charcos y estados, 2 cargas que se recargan cada 1,6 s, siluetas y casilla propia junto a la barra · **golpes pesados telegrafiados**: los raros y únicos cuerpo a cuerpo se paran, marcan un círculo rojo con "!" y pegan ×2,4; las novas de proyectiles de los jefes avisan con las líneas por donde saldrán · **hitstop** (crítico y muerte de raro o único, con opción en Pausa) y **retroceso** según el daño (las élites un tercio, los únicos nada) · **sacudida de cámara graduada** (golpes fuertes recibidos, críticos, muertes, jefes) con opción no / suave / normal · **raros con nombre generado y frase** al verte ("Off-by-one el Sin Tests": «Me arreglaron con un try vacío.») · **conversión de daño** con RAM (Transformador de Tensión físico → rayo, Nitrógeno Líquido físico → frío, Sobrecalentamiento frío/rayo → fuego, Corrupción de Datos elemental → caos; escalan con los dos tipos) · **RAM con desventaja fuerte** (Turbo sin Disipador, Compilación -O3, Memoria sin ECC) · **pociones con estilo**: Manzanilla con breakpoint (quita estados), Klub-Mate de emergencia (recarga esquivas y da una más), Termo de café para el equipo (cura invocaciones) · **comparación de objetos lado a lado** (el equipado junto al tooltip) · **barra de habilidades**: cuántas cargas gastaría cada habilidad y la conversión en su ayuda.
+
+**Tercera tanda, fase "Sensación" (24 octubre 2026)**: **sonido por material** al golpear (carne, metal, cristal y digital, según el tipo de enemigo) y **crítico con clic de teclado mecánico** · **objeto único con fanfarria propia** al caer · **luces dinámicas en el filtro**: proyectiles de fuego, rayo, frío y caos (tuyos y enemigos), explosiones, destellos de golpes y muertes, salidas, waypoint y hoguera alumbran en escalones de pixel art; tiñen un poco en todas las zonas y mucho en las oscuras · **antorchas** (o LED de estado en servidores, BIOS y ROM, y fuegos fatuos en el pantano, la grieta y las alcantarillas) repartidas por las zonas oscuras · **partículas de impacto en pixel art** por tipo de daño (astillas y bits, chispas, esquirlas de hielo, chispazos, gotas verdes) · **muertes con estilo** según lo que mató al enemigo: se descompila en píxeles y bits, se quema a ceniza, se rompe en hielo, salta en chispas o se disuelve (también al morir por quemadura o veneno), cada una con su sonido. Sonidos nuevos con `generate_sfx.gd -- golpes`.

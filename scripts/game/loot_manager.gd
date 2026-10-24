@@ -66,7 +66,7 @@ func drop_item(item: Item, pos: Vector2) -> void:
 	# Botín bueno: haz de luz del color de la rareza y su propio sonido.
 	if item.is_equipment() and passes_filter(item, filter_level()):
 		if item.rarity >= Rarity.Item.UNIQUE:
-			Sfx.play("level_up", -4.0, 1.6)
+			Sfx.play("unique_drop", -3.0)
 		elif item.rarity >= Rarity.Item.RARE:
 			Sfx.play("coin", -2.0, 0.65)
 	queue_redraw()

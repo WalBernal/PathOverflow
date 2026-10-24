@@ -156,6 +156,18 @@ var bleed_dps := PackedFloat32Array()
 var bleed_time := PackedFloat32Array()
 ## Retroceso: empuje que reciben al ser golpeados y que se frena solo.
 var knocks := PackedVector2Array()
+## Partículas de impacto y muertes con estilo (solo visual).
+var impact: ImpactFx
+## Tipo de daño del golpe (o degenerativo) que está matando al enemigo: decide su muerte.
+var _kill_type := ""
+## Material de cada tipo de enemigo (sonido al golpearlo). enemies.json → "material" manda.
+const MATERIALS := {
+	"bug": "flesh", "gusano": "flesh", "troll_foro": "flesh", "gusano_firmware": "flesh", "memory_leak": "flesh",
+	"daemon": "metal", "bot_spam": "metal", "mutex_lock": "metal", "centinela_bios": "metal", "condensador": "metal",
+	"init": "metal", "init_fork": "metal", "fw_update": "metal",
+	"electromigracion": "crystal",
+}
+const MATERIAL_SFX := {"flesh": "hit_flesh", "metal": "hit_metal", "crystal": "hit_crystal", "digital": "hit_digital"}
 
 ## Estados que puede aplicar el golpe en curso (lo prepara SkillController antes
 ## de llamar a hit_*): {chances: {burn: %, ...}, effect: mult. de daño, duration: mult.}.
@@ -252,6 +264,31 @@ func _ready() -> void:
 	mm_instance.material = sprite_material
 	mm_instance.show_behind_parent = true  # barras de vida y nombres encima
 	add_child(mm_instance)
+
+
+func _init() -> void:
+	impact = ImpactFx.new()
+	add_child(impact)
+
+
+## Material del enemigo i: "flesh", "metal", "crystal" o "digital" (procesos, hilos, fantasmas).
+func material_of(i: int) -> String:
+	var all_types := enemy_types()
+	if types[i] >= all_types.size():
+		return "digital"
+	var t: Dictionary = all_types[types[i]]
+	return String(t.get("material", MATERIALS.get(String(t.get("id", "")), "digital")))
+
+
+## Partículas y sonido de un golpe que no mata (el de muerte lo pone _kill).
+func _hit_feedback(i: int, damage: float, crit: bool) -> void:
+	var dtype := String(hit_ailments.get("type", "physical"))
+	if impact:
+		impact.hit(positions[i] - Vector2(0.0, radii[i] * 0.6), dtype, crit, damage / maxf(1.0, max_lives[i]))
+	if crit:
+		Sfx.play("crit_click", -6.0, randf_range(0.95, 1.1))
+	else:
+		Sfx.play(MATERIAL_SFX[material_of(i)], -15.0, 1.15 - 0.08 * rarities[i])
 
 
 func count() -> int:
@@ -728,6 +765,8 @@ func clear_all() -> void:
 	phase_shield.clear()
 	_affix_timers.clear()
 	_booms.clear()
+	if impact:
+		impact.clear()
 
 
 ## Ataque del tipo (enemies.json → attack); {} = cuerpo a cuerpo por contacto.
@@ -870,6 +909,9 @@ func _update_dots(delta: float) -> void:
 		last_damage_dealt += minf(dmg, lives[i])
 		lives[i] -= dmg
 		if lives[i] <= 0.0:
+			# Muere del degenerativo más fuerte: quemado (ceniza), envenenado o corrompido (se disuelve).
+			_kill_type = "fire" if burn_dps[i] > 0.0 and burn_time[i] > 0.0 and burn_dps[i] >= poison_dps[i] \
+				else ("chaos" if poison_time[i] > 0.0 or dot_time[i] > 0.0 else "physical")
 			_kill(i)
 
 
@@ -933,8 +975,10 @@ func _damage(i: int, min_damage: float, max_damage: float, crit_chance: float, c
 		flashes[i] = FLASH_TIME * 0.5   # entre fases, el jefe es invulnerable
 		return
 	var damage := randf_range(min_damage, max_damage)
+	var crit := false
 	if randf() * 100.0 < crit_chance:
 		damage *= crit_multiplier / 100.0
+		crit = true
 		crit_dealt.emit()
 	if not hit_ailments.is_empty():
 		var dtype := String(hit_ailments.get("type", ""))
@@ -987,8 +1031,12 @@ func _damage(i: int, min_damage: float, max_damage: float, crit_chance: float, c
 	lives[i] -= damage
 	flashes[i] = FLASH_TIME
 	if lives[i] <= 0.0:
+		_kill_type = String(hit_ailments.get("type", "physical"))
+		if crit:
+			Sfx.play("crit_click", -6.0)
 		_kill(i)
 		return
+	_hit_feedback(i, damage, crit)
 	_knock(i, damage)
 	if not hit_ailments.is_empty() and damage > 0.0:
 		_roll_ailments(i, damage)
@@ -2078,8 +2126,29 @@ func _kill(i: int) -> void:
 			"damage": damages[i] * float(best_boom.get("damage_mult", 2.0)), "color": boom_color})
 	boss_phases.erase(ids[i])
 	phase_shield.erase(ids[i])
+	_death_feedback(i)
 	_remove(i)
 	enemy_killed.emit(rarity, xp, pos, type_id)
+
+
+## Muerte con estilo según lo que lo mató (ver ImpactFx.death) y su sonido.
+func _death_feedback(i: int) -> void:
+	var kind := _kill_type if _kill_type != "" else "physical"
+	_kill_type = ""
+	if impact:
+		var tint := Rarity.enemy_color(rarities[i]) if rarities[i] != Rarity.Enemy.NORMAL else Color("c8b8a0")
+		impact.death(positions[i] - Vector2(0.0, radii[i] * 0.6), kind, radii[i] * SPRITE_SCALE * 0.5, tint)
+	match kind:
+		"fire":
+			Sfx.play("death_ash", -10.0)
+		"cold":
+			Sfx.play("shatter", -12.0)
+		"lightning":
+			Sfx.play("arc", -14.0)
+		"chaos":
+			Sfx.play("poison", -14.0)
+		_:
+			Sfx.play("death_decompile", -14.0)
 
 
 ## Borrado O(1): el último enemigo ocupa el hueco.

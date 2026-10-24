@@ -57,6 +57,7 @@ func _initialize() -> void:
 	_test_zone_scale()
 	_test_roadmap2()
 	_test_roadmap2_second_batch()
+	_test_roadmap2_feel()
 	_test_board_milestones()
 	_test_shaped_clusters()
 	_test_defense_and_dot_skills()
@@ -1319,6 +1320,61 @@ func _test_roadmap2_second_batch() -> void:
 	for m in DataLoader.load_json("res://data/skills/ram_modules.json")["modules"]:
 		_check(not seen.has(m["id"]), "id de RAM repetido: %s" % m["id"])
 		seen[m["id"]] = true
+
+
+## Roadmap 2.0, fase "Sensación": partículas de impacto, muertes con estilo,
+## materiales, antorchas y luces de la zona, y los sonidos nuevos.
+func _test_roadmap2_feel() -> void:
+	var em := EnemyManager.new()
+	root.add_child(em)
+	_check(em.impact != null, "el gestor de enemigos crea sus partículas de impacto")
+	em.area_level = 5
+	var id := em.spawn(Vector2(100, 100), Rarity.Enemy.NORMAL, em.type_index_of("daemon"))
+	var i := em.index_of(id)
+	_check(em.material_of(i) == "metal" and em.material_of(em.index_of(em.spawn(Vector2(300, 100), Rarity.Enemy.NORMAL, em.type_index_of("proceso_fantasma")))) == "digital",
+		"materiales: el daemon es metal, el proceso fantasma digital")
+	em.max_lives[i] = 1000.0
+	em.lives[i] = 1000.0
+	em.hit_ailments = {"type": "fire"}
+	em.hit_index(i, 50.0, 50.0, 0.0, 150.0)
+	_check(em.impact.count() > 0, "un golpe suelta partículas")
+	var before := em.impact.count()
+	em.hit_index(em.index_of(id), 5000.0, 5000.0, 0.0, 150.0)
+	_check(em.impact.count() > before + 10 and not em.impact.flashes.is_empty(), "morir por fuego: ceniza y un destello que alumbra")
+	em.hit_ailments = {}
+	# Muerte por degenerativo: el tipo lo decide la quemadura.
+	var b := em.spawn(Vector2(500, 100), Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+	var bi := em.index_of(b)
+	em.lives[bi] = 1.0
+	em.burn_dps[bi] = 100.0
+	em.burn_time[bi] = 2.0
+	em.impact.clear()
+	em._update_dots(0.1)
+	_check(not em.is_alive_id(b) and em.impact.count() > 0, "morir quemado también deja su muerte con estilo")
+	em.clear_all()
+	_check(em.impact.count() == 0, "limpiar la zona borra las partículas")
+	em.queue_free()
+	# Antorchas solo en las zonas oscuras, y dan luz.
+	var dark := Zone.new()
+	dark.setup(_zone_def("zona4"), null, null)
+	_check(not dark.torches.is_empty() and dark.light_points().size() >= dark.torches.size(), "las catacumbas tienen antorchas que alumbran (%d)" % dark.torches.size())
+	for t in dark.torches:
+		_check(dark.is_walkable(t["pos"]), "antorcha en suelo transitable")
+	var lit := Zone.new()
+	lit.setup(_zone_def("zona2"), null, null)
+	_check(lit.torches.is_empty(), "las ruinas (sin oscuridad) no tienen antorchas")
+	dark.free()
+	lit.free()
+	for s in ["hit_flesh", "hit_metal", "hit_crystal", "hit_digital", "crit_click", "unique_drop", "death_ash", "death_decompile"]:
+		_check(ResourceLoader.exists(Sfx.SFX_DIR + s + ".wav"), "existe el sonido %s" % s)
+
+
+func _zone_def(zone_id: String) -> Dictionary:
+	for f in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json"]:
+		for z in DataLoader.load_json(f).get("zones", []):
+			if z["id"] == zone_id:
+				return z
+	return {}
 
 
 func _test_roadmap2() -> void:
