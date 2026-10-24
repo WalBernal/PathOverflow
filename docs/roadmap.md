@@ -1,96 +1,373 @@
-# Roadmap — Path Overflow: El Último Commit
+# Roadmap unificado — Path Overflow: El Último Commit
 
-Estado a octubre de 2026: Actos I a III jugables (más grandes, con filtro y suelos en pixel art; ver también `docs/roadmap_2.md` con las mejoras de fondo), 7 clases con kit y rasgo propios, 14 ascendencias (2 por clase, con árbol de 20 nodos y habilidades únicas), un árbol con las temáticas de estados y aliados repartidas por sectores (3-5 clusters cada una, sin nodos encimados), estados alterados sobre enemigos **y sobre el jugador**, interacciones entre estados, 11 invocaciones persistentes y 6 auras (con alcance; 2 debilitan a los enemigos), desbloqueo de habilidades por nivel (con una elección entre dos), hitos propios por invocación, auras ancladas, mando básico, RAM por grados (menor / normal / mayor), enemigos con resistencias, inmunidades, 16 afijos y 9 combinaciones con nombre, cazadores de invocaciones, jefes y subjefes con fases (que además cambian de resistencias), barra de jefe y música de fase. Lo que **falta**, por prioridad. **S** = pequeño (≈ 1 sesión), **M** = mediano, **L** = grande.
+Une el roadmap 1 (lo que faltaba del juego planeado) y el roadmap 2.0 (mejoras de fondo), sin lo ya hecho. Lo hecho antes de esta unificación está en `docs/roadmap_historial.md`.
 
-> Descartado por ahora: escala de las invocaciones y de los obstáculos; cazadores contra minas y trampas (las minas están enterradas y no se ven).
+Las tareas van **en orden de prioridad**: se hacen de arriba abajo, una por vez. Cada una cabe en una sesión de trabajo (las grandes están partidas en partes).
 
-## 1. Pulido inmediato
+**Tamaño:** S ≈ 1 sesión · M mediana · L grande (partida en varias tareas). **Origen:** R1 = roadmap 1, R2 = roadmap 2.0 (★★★ alta, ★★ media, ★ baja).
 
-| Qué | Tamaño | Notas |
-|---|---|---|
-| Equilibrar con partidas reales | M | La tabla de `tools/balance_report.gd` ya está dentro de rango (DPS medio ~210 a nivel 30, placa 20; las invocaciones por encima porque reservan maná). Falta jugarlo: probabilidades de estado, reservas, daño de espinas y afijos, duración de congelación/electrocución sobre el jugador, fases de jefe, el Multicanal nuevo y las auras con alcance. Jugar cada clase hasta el nivel 30 con las dos ascendencias. |
-| Rendimiento con 300 enemigos en pantalla | M | Con 150 en cámara ya va a 60 FPS; con 300 a ~32 FPS (dibujo de enemigos ~8 ms, simulación ~3.4 ms). Siguiente paso: barras de vida e iconos en un MultiMesh o en un único `_draw` por lotes. Medir con `capture_screens.tscn -- rendimiento`. |
-| Arte final de las invocaciones | L | Ya tienen figura propia cada una (`UnitArt`), pero dibujada con formas: necesita un artista. |
+**Pilares** (toda tarea debe reforzar al menos uno):
+1. Cada build se siente distinta en las manos, no solo en los números.
+2. Leer el combate de un vistazo.
+3. El humor de programador en nombres, efectos, sonidos y textos.
+4. Pixel art coherente: lo nuevo se dibuja en la rejilla de píxeles del filtro del mundo.
 
-## 2. Combate y habilidades
+---
 
-- **Equilibrar el Multicanal y la Pipeline Superescalar** (S): la Pipeline mayor sigue siendo la mejor RAM de daño para casi todo (×1.5); probar en partida. Igual con la Sobrealimentación (+50 % de reserva) y el Enlace de Aura.
-- **Equilibrar los árboles de ascendencia** (M): con 10 puntos se llega a 3-4 notables; probar cada una hasta el nivel 60. Las habilidades únicas (explosión al matar, pulso de estática, nova de hielo) escalan con el nivel, no con el daño del personaje.
-- **Más habilidades únicas de ascendencia** (M): hoy hay 4 mecánicas (explosión al matar, pulso de estática, nova de hielo, robot de compañía); faltan algunas propias de cada clase (p. ej. un muro de fuego del Firewall, un sprint del Scrum Master).
+## Cómo se ejecuta (protocolo para Claude)
 
-## 3. Enemigos y jefes
+Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha · `[!]` bloqueada (con el motivo en la línea siguiente) · 🛑 = punto de revisión: al terminarla, **parar y esperar el visto bueno del usuario** antes de seguir.
 
-- **Sprites de enemigos nuevos para el acto III** (L): necesita arte; las animaciones de ataque (carga, embestida estirada y retroceso al disparar) ya están para todos.
+1. **Elegir**: la primera tarea `[ ]` de la cola, de arriba abajo. Si hay una `[~]`, retomarla primero (quedó a medias).
+2. **Marcar** `[~]` antes de empezar.
+3. **Entender**: leer los archivos que cita la tarea, `README.md` y los docs relacionados (`docs/estilo.md`, `docs/lore.md`, `docs/habilidades_y_ram.md`). Seguir el estilo del código existente.
+4. **Hacer** lo que dice la tarea, sin ampliar el alcance. Si aparece trabajo extra, añadirlo como tarea nueva en la fase que toque, no hacerlo ahora.
+5. **Comprobar** (las dos deben pasar sin errores):
+   ```
+   & "$env:USERPROFILE\Downloads\Godot_v4.7.2-stable_win64_console.exe" --headless --path . -s res://tools/check_scripts.gd
+   & "$env:USERPROFILE\Downloads\Godot_v4.7.2-stable_win64_console.exe" --headless --path . -s res://tests/test_core.gd
+   ```
+   Añadir pruebas en `tests/test_core.gd` para la lógica nueva. Cuando exista la prueba de integración (T01), correrla también.
+6. **Cerrar**: cambiar `[~]` por `[x]`, añadir una línea al **Registro** del final (fecha, ID, qué se hizo en una frase) y actualizar `README.md` si cambia algo visible para el jugador.
+7. **Commit** con mensaje en español al estilo del repositorio (qué se añadió, en una línea). Sin push.
+8. **Bloqueo**: si algo impide terminarla (falta una decisión, arte o una prueba que no se puede arreglar en la tarea), marcarla `[!]`, escribir el motivo debajo, revertir lo que quede roto y pasar a la siguiente.
+9. **Seguir** con la siguiente tarea, salvo que la recién hecha sea 🛑 o el usuario haya pedido solo una.
 
-## 4. Contenido
+Para encadenarlas sin intervención: `/siguiente-tarea` hace una; `/loop /siguiente-tarea` las va haciendo una tras otra hasta acabar la cola o llegar a un 🛑.
 
-| Qué | Tamaño |
-|---|---|
-| **Siguiente paso visual de los tres actos**: obstáculos y bordes (árboles de cables, rocas, lápidas, racks, pistones...) dibujados en pixel art con sombra y luz, como el suelo | M |
-| **Equilibrar la densidad**: las zonas tienen ahora 110-300 enemigos (el Bus del Sistema, 298); jugar y ajustar `enemy_density` por zona, y medir FPS en las más llenas | S |
-| **Acto IV** (zonas, NPCs, misiones, jefe con fases, escenas) | L |
-| Misiones secundarias con recompensas de RAM de grado alto, placas de invocación y auras | M |
-| Más objetos únicos y conjuntos con efectos de estados, auras, espinas y autómatas | M |
-| Mapas post-historia / modo de oleadas infinito reutilizando las pruebas de estrés | L |
-| Dificultades (normal, pesadilla, infierno) con más afijos y resistencias | M |
+---
 
-## 5. Interfaz
+## Fase 0 — Base para trabajar en automático
 
-- **Mando, siguiente paso** (M): moverse, apuntar, habilidades, pociones, abrir menús, recoger objetos y hablar con NPC (A contextual) ya funcionan; falta navegar dentro de los menús (inventario, árbol, K, diálogos) sin ratón.
-- Rebindear teclas y botones desde la pausa (M).
-- **Prólogo en pixel art 2.0, siguiente paso** (M): la calle ya sigue el modelo 3D y la foto real (UAdeO, calle lateral que baja, torre a la derecha); faltan el pasillo y la oficina con el mismo nivel de detalle (luz, tramado, sombras).
-- **Ventanas grandes con el minimapa** (S): a 160 % la hoja de personaje llega bajo el minimapa y las misiones; ocultarlos o correr la ventana mientras esté abierta. Revisar también alijo, tienda y waypoints a 160 % en 900 px.
+### [ ] T01 · Pruebas de integración por zona y clase · M
+Origen: R1 §7, R2 §12 ★★★
+- Script de prueba que cargue cada zona y simule 30 s de combate con cada una de las 7 clases (auto-movimiento y habilidades de la barra), sin ventana.
+- Falla si aparece un `SCRIPT ERROR`, un error del motor o el jugador queda fuera de los límites de la zona.
+- Documentar cómo correrla en `README.md` (sección *Pruebas y comprobaciones*) y en el paso 5 del protocolo.
+- Hecho cuando: corre todas las zonas × clases en una sola orden y devuelve código de salida ≠ 0 si algo falla.
 
-## 6. Arte y audio
+### [ ] T02 · Guardado con copias de seguridad y varios espacios · M
+Origen: R1 §7
+- Copia automática del guardado antes de sobrescribir (rotación de 3) y recuperación si el archivo principal está corrupto.
+- Varios espacios por perfil, elegibles en el menú de personajes.
+- Hecho cuando: una prueba corrompe el guardado y el juego carga la copia.
 
-- Sustituir los sprites provisionales dibujados con formas por arte final: personajes, NPC, invocaciones, iconos de habilidad y de estado (L). Necesita un artista: el código solo puede mejorar las figuras dibujadas.
-- Retratos de NPC más expresivos y personajes del acto III (M).
-- Sustituir la música generada por composiciones propias (S por pista): las 15 pistas actuales son de programador. Ya se puede escribir la melodía a mano en `music.json` (`melody`) o en un archivo aparte nota por nota (`melody_file`, como `camp3`).
-- **Campamento III**: suena tu melodía de prueba (`data/music/camp3_eptns.json`). Si es la transcripción de una canción con derechos, cambiarla por una propia antes de publicar.
-- Peso del audio: los .wav suman unos 60 MB en el repositorio; valorar OGG o Git LFS (S).
-- Música propia para las pruebas de estrés (S).
+### [ ] T03 · Rendimiento con 300 enemigos en pantalla · M
+Origen: R1 §1, R2 §12 ★★★
+- Barras de vida e iconos de estado de enemigos en un MultiMesh o en un único `_draw` por lotes.
+- Medir antes y después con `tools/capture_screens.tscn -- rendimiento` y anotar las cifras en `README.md` (*Rendimiento*).
+- Objetivo: 300 enemigos ≥ 50 FPS (hoy ~32).
 
-## 7. Sistemas y calidad
+### [ ] T04 · Ventanas grandes sin chocar con el minimapa · S
+Origen: R1 §5
+- A 160 % la hoja de personaje queda bajo el minimapa y las misiones: ocultarlos o desplazar la ventana mientras esté abierta.
+- Revisar alijo, tienda y waypoints a 160 % en 900 px de alto (capturas con `capture_screens`).
 
-- **Guardado**: copia de seguridad automática y varios espacios por perfil (M).
-- **Tests**: pruebas de integración que carguen cada zona y simulen 30 s de combate con cada clase y que fallen si aparece un `SCRIPT ERROR` (M). Hoy hay pruebas de datos y lógica (`tests/test_core.gd`), la auditoría de RAM, la tabla de equilibrio y las capturas (`tools/capture_screens.tscn -- objetos | minimapa | habilidades | rendimiento`).
-- **Rendimiento**: portar `EnemyManager` a C# o GDExtension si el presupuesto de 4 ms se rompe con estados y aliados (L).
-- **Cliente/servidor** (L, largo plazo): aislar `SkillController` y `EnemyManager` de `Node2D` para un modo cooperativo.
-- **Exportación**: plantillas para Linux y macOS, e instalador de Windows (S). El ejecutable de Windows se genera con `--export-release Windows build/PathOverflow.exe`.
+---
 
-## 8. Próximos pasos sugeridos
+## Fase 1 — Habilidad del jugador
 
-1. Jugar el build nuevo (`build/PathOverflow.exe`) con las siete clases y equilibrar (secciones 1 y 2): Multicanal, Pipeline, auras con alcance, combinaciones de afijos y fases de subjefes.
-2. Rendimiento con 300 enemigos en pantalla (sección 1).
-3. Acto IV con jefe de fases y afijos propios.
-4. Más únicos y conjuntos que usen los afijos nuevos (estados, autómatas, interacciones).
-5. Arte final de personajes, enemigos e invocaciones.
+### [ ] T05 · Habilidades de movimiento · M
+Origen: R2 §3 ★★★
+- *ssh* (teletransporte corto), *force push* (carga hacia el enemigo), *rollback* (salto atrás).
+- Repartidas por clase según su identidad; compatibles con las RAM que tengan sentido (área, velocidad, estados).
+- Iconos propios y entrada en el catálogo (B).
 
-## Hecho (no repetir)
+### [ ] T06 · Esquiva, siguiente paso · S
+Origen: R2 §1 ★★
+- Nodos y afijos de +cargas de esquiva y recarga más rápida.
+- RAM o ascendencias que actúen al esquivar (dejar una trampa, ganar una carga de Multihilos).
 
-**Roadmap 2.0, primera tanda (23 octubre 2026, noche 5)**: textos y personajes nítidos con el filtro de pixel art, eventos de zona, filtro de botín, cargas (Buffer, Multihilos, Overclock), costo de vida, Mainframe Titán, variantes de habilidades, chips de expansión en el árbol y requisitos de atributos. Detalle en `docs/roadmap_2.md`.
+### [ ] T07 · Habilidades que dejan terreno y combos · M
+Origen: R2 §3 ★★★
+- Charco de aceite, campo de estática, zona helada.
+- Combos entre terrenos y estados (fuego + aceite = explosión; rayo + charco helado, etc.) usando las interacciones de estados existentes.
+- Legibles: cada terreno con su color/patrón (y patrón alternativo en modo daltónico).
 
-**Actos II y III renovados, árboles con forma propia y menús con desplazamiento (23 octubre 2026, noche 4)**: **las zonas de combate de los actos II y III crecen ×1.4** (Módulo de Refrigeración ×1.25) con 25 % más densidad (195-298 enemigos); se agrandan también los cerrojos mutex, la condición de carrera y los puntos extra; campamentos y arenas de jefe quedan igual · **suelos en pixel art para los 13 estilos** de los actos II y III (pizarra del kernel, CRT del Socket, planchas con franja de peligro, ladrillo húmedo, baldosas heladas, ceniza con lápidas, grietas violetas, carriles del bus, cobre con pistas, oblea, BIOS azul, cristales de ROM, celdas flash) con su **gradación de luz** (alcantarillas, fosa y grieta oscuras) y **ambiente** (nieve en el módulo frío, destellos en la ROM, datos, brasas, burbujas, polvo) · **cada árbol de ascendencia con su forma** (abanico, corazón, corona, espiral o ancho, y en espejo; las dos de una clase nunca iguales), sin nodos encimados · **hoja de personaje (C) y menú K con desplazamiento**: ahora 160 % cabe en pantallas de 900 px.
+### [ ] T08 · Mecánicas de arena para jefes (parte 1: motor) · M
+Origen: R2 §6 ★★★
+- Sistema reutilizable de: suelo que se rompe (aviso → caída/daño), zonas seguras que rotan, adds que hay que interrumpir (canalizan un efecto si no se matan a tiempo).
+- Avisos en el suelo consistentes con los golpes pesados telegrafiados.
 
-**Ascendencias de 20 nodos y acto I renovado (23 octubre 2026, noche 3)**: **árboles de ascendencia como en PoE 2**: 20 nodos por ascendencia (12 menores, 6 notables y 2 habilidades únicas al fondo) en 4 ramas sobre un disco ilustrado; cada nodo tiene que tocar el inicio o uno asignado y solo se quita el del final del camino · **puntos de ascendencia: 2 al nivel 20 y 2 más cada 10 niveles, hasta 10** (nivel 60); los guardados con el árbol antiguo recuperan sus puntos · **14 ilustraciones en pixel art** alusivas a cada ascendencia (rack en llamas a las 3 AM, firewall con candado, lupa sobre el código, tablero kanban, mira sobre un bug, telaraña, encapuchado del Red Team, virus, red neuronal, bases de datos con orbes, robot, monitoreo, plano de arquitectura, organigrama con corona) · **elección con dos discos ilustrados** (nombre en placa, vista previa del árbol, descripción y habilidades únicas) · habilidades únicas nuevas: **explosión al matar, pulso de estática y nova de hielo** · **acto I más grande**: zonas ×1.5 (jefe ×1.25) y 25 % más densidad: 110-220 enemigos por zona · **filtro de pixel art del mundo** (rejilla de píxeles, paleta con tramado, gradación por zona, viñeta en escalones y oscuridad con luz alrededor del jugador en pantano, catacumbas y servidores; se apaga en Pausa) · **suelos en pixel art** sin costuras para los 8 estilos del acto I · **partículas de ambiente** (luciérnagas, hojas, niebla, burbujas, polvo, datos, brasas) · **puertas de salida nuevas**: arco de piedra con runas, energía girando, glifos en el suelo y placa con el destino, con color e icono según adónde llevan (campamento, zona, jefe, portal) y cadenas si están cerradas.
+### [ ] T09 · Mecánicas de arena para jefes (parte 2: los tres jefes) · M
+Origen: R2 §6 ★★★
+- Aplicar al menos una mecánica de arena distinta por fase a los jefes de los actos I, II y III.
+- Pruebas: cada fase activa su mecánica.
 
-**Calle real, canción de prueba y más roadmap (23 octubre 2026, noche 2)**: la **torre de departamentos pasa a la derecha** de la UAdeO, separada por una **calle lateral que baja** en perspectiva (muro de block de la escuela con ventanitas, autos estacionados, casas y poste al fondo); la torre con balcones corridos, seto y palmeras · **música del campamento III desde tu JSON** (`melody_file`, notas con velocidad; acordes de Sol mayor, 24 compases, bucle sin intro) · **Enlace de Aura con varias auras**: cada una va a una invocación distinta (tanques primero) · **las auras activas se guardan** con el personaje y se encienden solas al cargar · interfaz hasta **160 %** (se limita a lo que quepa en pantallas bajas), también en los textos del prólogo y la contratación · **el inventario se desplaza** si no cabe (antes la bolsa se salía por abajo desde 110 % en 900 px).
+### [ ] T10 · Tutorial contextual de mecánicas · S
+Origen: R2 §5 ★★
+- Aviso breve la primera vez que aparecen: cargas, esquiva, golpes pesados, terrenos, mecánicas de arena (y RAM de activación cuando existan).
+- Se guarda qué se ha visto; opción en Pausa para desactivarlo.
 
-**Prólogo 2.0 y más roadmap (23 octubre 2026, noche)**: **fachada de la UAdeO según el modelo 3D** (anexo blanco, atrio de vidrio con parasoles, plantas y escalinata de madera, pilastras de piedra, segundo piso, bloque terracota con letrero de doble línea, ventanas, escudo dorado, rampa y entrada blanca), nubes y sombras; la entrada pasa a la puerta blanca · **arreglado de raíz el personaje que se salía de la pantalla**: CharacterAppearance.draw dejaba la transformación del lienzo en cero y el jugador se dibujaba sin la cámara · **absorción por el servidor**: tras «Profe Rafa, ¿va a querer churr...?», vórtice en el rack, el carrito, Mario, Aida y Rafa vuelan al servidor por turnos con gritos («¡MIS CHURROS!», «¡AAAAH!», «¡MI MONOLITOOO!»), succión y ráfagas digitales; luego el jugador · sonidos nuevos: gritos (voz grave y aguda), succión, ráfaga digital · **«!» en los botones K y P** al desbloquear una habilidad o subir de nivel, con sonido · **Enlace de Aura** (el aura sigue a tu invocación más resistente) · animaciones por tipo: los que disparan retroceden y los que embisten se estiran · **mando: A contextual** (recoge objetos, habla con NPC, usa waypoint y alijo; si no hay nada cerca, habilidad 1).
+---
 
-**Prólogo pulido (23 octubre 2026)**: el personaje ya no sale de la pantalla en la calle (se camina hasta poco más allá de la entrada de la UAdeO) · en el pasillo ya no va el triple de rápido de lado · **flecha dorada** sobre el siguiente objetivo (escaleras, puerta de Informática, Rafa, rack negro) · **click en un objetivo lejano: camina y entra solo** · el punto para entrar al departamento está en la puerta de Informática y el de hablar con Rafa, junto a su escritorio · la introducción se escribe más rápido y no se salta sin leerla · en todas las escenas, un doble click ya no se salta líneas · el «No» de la contratación ya no tiene el borde azul (solo el punteado de Windows 98).
+## Fase 2 — Profundidad de builds
 
-**Combate, enemigos e interfaz (23 octubre 2026, tarde)**: **hitos propios de cada invocación** (proyectiles para el robot, el dron escolta y el bot rastreador; potencia de su habilidad para los drones de curación y barrera, el bot de pruebas, la mina y el agente; vida y defensa para el golem) · **Fuente Sobrealimentada** (normal y de servidor): reservar más maná = más potencia · **Torre de Señal**: auras ancladas en el suelo con más efecto y alcance · **elección entre dos habilidades** al nivel 16 de cada clase · 3 combinaciones más de afijos (Hotfix en Llamas, Legacy Indestructible, Rayo Fantasma) y combinaciones destacadas con ★ y borde dorado en el marco del objetivo · **las torretas tienen vida** y los cazadores van a por ellas · pista de **fase de subjefe** (Condición de carrera) · **animaciones de ataque** de los enemigos (se encogen al cargar y embisten al golpear) · interfaz hasta **140 %** (los botones C/I/K/P suben sobre la barra si no caben) y tamaño elegible desde el menú de personajes · **mando básico** (moverse, apuntar, 6 habilidades, pociones, inventario, árbol, K, pausa) · nuevo ejecutable.
+### [ ] T11 · Nodos clave que cambian reglas · M
+Origen: R2 §4 ★★★
+- Los 7 keystones actuales del árbol solo dan stats. Añadir nodos clave que cambien una regla: *Tipado estático*, *Recolector de basura*, *Modo seguro*, *Código espagueti* (y los que encajen).
+- Visibles en el árbol con su marco y buscables.
 
-**Enemigos, contenido e interfaz (23 octubre 2026)**: **afijos de combinación** (Ignífugo + Explosivo = Termonuclear, Criogenizado + Gélido = Cero Absoluto, Veloz + Teletransportador = Fantasma en la Red, Curandero + Regenerador = Inmortal en Producción, Escudado + Reflejo = Firewall Espejo, Tóxico + Invocador = Plaga) y afijos que se excluyen (Ignífugo/Ardiente, Aislado/Electrizante, Curandero/Invocador, Veloz/Blindado) · **enemigos que cazan invocaciones** (gusanos, IRQ, gusano de firmware y los que llevan carga explosiva) · **música propia de fase** para los tres jefes (más rápida, batería nueva y platillos; entra con fundido al empezar la primera fase) · **fases en subjefes**: los gemelos de la Carrera Crítica, el Puntero Salvaje y el Centinela del Cargador, con barra de jefe · **afijos de objetos** de probabilidad de estados (quemar, electrocutar, helar, envenenar, sangrar), daño de estados, velocidad de autómatas, daño y vida de esbirros · **menú K**: filtro de la bolsa por tipo y comparación de DPS al seleccionar una RAM · tamaño de interfaz también en el menú de personajes y el creador · nuevo ejecutable de Windows.
+### [ ] T12 · Maestrías · M
+Origen: R2 §4 ★★★
+- Un nodo por sector del árbol donde se elige 1 de 3 bonos; cambiable con reembolso.
+- El generador y las pruebas del árbol siguen sin nodos encimados.
 
-**Pulido y combate (octubre 2026)**: sonidos propios de veneno, sangrado, congelación, rotura, superconductor, aura on/off, curación del dron y explosión de la mina · **Superconductor** (rayo a un helado: arcos a 2 enemigos con el 40 % del golpe) y «efecto de las interacciones» en tres ascendencias (Analista de Big Data, Ingeniera de Depuración, Analista de Malware) · afijo de resistencia a estados en armaduras y joyas · RAM por grados de área, velocidad, Pipeline y Guiado · **auras con alcance** (las invocaciones fuera del radio pelean sin los bonos) y dos auras que debilitan (Throttling: enemigos más lentos; Exposición: reciben más daño) · invocaciones nuevas Watchdog y Bot Rastreador de Bugs · **desbloqueo de habilidades por nivel** (4 por clase, con invocación y aura) · figura propia para las 11 invocaciones (UnitArt) · rendimiento: recorte a cámara, efectos simplificados con más de 60 enemigos en pantalla y minimapa a 30 Hz (150 enemigos: de 27 a 60 FPS) · equilibrio: DPS sostenido real de esbirros, drones y degenerativos, Pipeline Superescalar −50 %, ataques +25 % de crecimiento por nivel, Bucle Infinito, Reinicio Forzado, Deadlock y Drones ajustados · listado completo en docs/habilidades_y_ram.md.
+### [ ] T13 · RAM de activación (parte 1: sistema) · M
+Origen: R2 §3 ★★★
+- Soporte que lanza la habilidad enlazada: "al recibir un golpe", "al hacer crítico".
+- Con enfriamiento interno y coste de maná claro; sin bucles infinitos.
 
-**RAM y habilidades (octubre 2026)**: proyectiles en abanico («|», «V», «\|/»...) y solo teledirigidos con la etiqueta `homing` (Paquete Rastreador, Torreta CI, Dron Escolta, Agente IA) o la RAM nueva **Guiado por Láser** · el Multicanal añade proyectiles a drones e invocaciones que disparan y quita un 40/45/50 % de daño en nivel 1 (1 punto menos por nivel, hasta la mitad) · las RAM de daño ya afectan a las invocaciones · Pipeline en invocaciones = atacan el doble de rápido (antes apagaba las auras o reinvocaba) · las RAM de área escalan las habilidades de las invocaciones · reglas de compatibilidad (`requires_all_tags`, `excludes_kinds`, sin RAM de daño en habilidades sin daño) y auditoría (`tools/audit_rams.gd` y una prueba): ninguna RAM compatible queda sin efecto · insignias de cada familia de RAM en el icono de la habilidad (barra, placas y módulos de la bolsa) · menú K con resumen por placa (DPS, maná, proyectiles, RAM activas), ranuras compatibles en verde y en rojo las que no harían nada, bolsa agrupada por generación y botón «Ordenar».
+### [ ] T14 · RAM de activación (parte 2: más disparadores e interfaz) · M
+Origen: R2 §3 ★★★
+- "Cada 2 s", "al esquivar", "al matar".
+- Menú K y barra muestran qué dispara qué; `tools/audit_rams.gd` cubre las nuevas.
 
-**Minimapa y prólogo (octubre 2026)**: objetos de misión como insignia verde con «!» que pulsa · NPCs con silueta propia y «!»/«?» si ofrecen o entregan misión · enemigos por rareza (gris normal, azul claro mágico, amarillo raro, naranja único) con borde oscuro · jefe con su propio sprite en una insignia con ondas rojas (pegada al borde si queda fuera) · iconos de los objetos pendientes y recogidos en el registro de misiones · el «No» de la contratación encoge su tamaño y su letra hasta un mínimo legible (antes se escalaba hasta 8×2 px sin texto) y, ya pequeño, lo señala un recuadro punteado que parpadea.
+### [ ] T15 · Cargas en el árbol, ascendencias y habilidades · M
+Origen: R2 §2 ★★
+- Nodos de "+1 de Buffer máximo", "al gastar Overclock, recupera maná", etc.
+- Al menos una habilidad propia que consuma cargas.
 
-**Interfaz y audio (octubre 2026)**: objetos de misión con dibujo propio (`QuestItemArt`: cinta LTO, papel continuo con sello, descriptor en blanco, bloques de caché en hielo, funda de Kindle con nota y etiqueta, Kindle con raya y batería al 1 %, concha, bolillo tibio con vapor y cuernito escarchado) · **bucles de música arreglados**: el final del bucle se calculaba con `data.size() / 2`, que con los .wav importados en QOA cortaba cada pista a una quinta parte; ahora cada pista tiene intro que suena una vez, cuerpo de 32 compases con partes A/B y redoble antes de volver, y el bucle empieza tras la intro (`data/music_loops.json`) · ambientes de 24 s con bucle real (antes 6 s con hueco al relanzarse) · campamento del acto III con balada original de melodía escrita · menú de pausa en dos columnas con volumen por canal (música, efectos, ambiente, voces), **tamaño de interfaz** (85-120 %, solo la capa de UI; el mundo no cambia), **modo daltónico** de los estados (paleta Okabe-Ito) · el buscador del árbol encuentra las temáticas por estado («veneno», «sangrado», «congelar», «torreta», «aura»...) · los efectos ya no leen settings.cfg en cada sonido.
+### [ ] T16 · Conversión de daño en el árbol · S
+Origen: R2 §2 ★★
+- Nodos (o un nodo clave) que conviertan daño para toda la build, reutilizando `convert_to` / `convert_from` de SkillCalc.
 
-**Música de 12 pistas por zona y jefe** (campamento del acto III en estilo balada melancólica) con fundido cruzado y tempo por fase · Eugenio distraído, con datos de artistas · **partículas de estados**: escarcha que cubre el sprite, copos y cristales, arcos y chispas persistentes (enemigos y jugador) · voces con género y volumen por NPC y ajustes de velocidad y volumen en pausa · **Árbol reorganizado (versión 7)**: 7 temáticas nuevas con 3-5 clusters cada una y colocadas del lado de las clases que las usan (automatización y Legión de aliados/auras junto al DevOps y la puerta hacia el centro del Full Stack; hemorragia con guerrero y duelista; criogenia y toxinas con exploradora y hacker; ignición y sobrecarga con hechicero y DevOps), nodos de resistencia a estados, sin nodos encimados ni aristas sobre nodos (lo comprueban el generador y las pruebas) · choque térmico · RAM de grados de crítico, elemental y robo de vida · minimapa con aliados y marca del jefe · 
-Kits de 3 habilidades y rasgo por clase · estados alterados con iconos · RAM de asistencia y por grados (encadenamiento, perforación, multicanal, estados) con escala por nivel · invocaciones persistentes (9) y auras (4) con reserva de maná visible · resistencias, inmunidades y 16 afijos de enemigos · fases en los tres jefes con resistencias que cambian, barra de jefe segmentada y sacudida de cámara · marco del objetivo con resistencias, afijos, estados y ayuda al pasar el mouse · tutorial con enemigos lejos · escena final del acto I con el dinosaurio visible en el túnel · sprites +18 % · M. Páez con sonrisa fija · **estados sobre el jugador** (electrocutado, helado, congelado) y barra de buffs y debuffs con ayuda · **interacciones entre estados** (rotura, sobrecarga, infección) · sonidos de estados · hoja de personaje con estados, auras y aliados · **14 ascendencias** (2 por clase) con efectos nuevos (espinas, vida al matar, perforación, estados, auras) y aviso a los personajes que tenían una eliminada.
+### [ ] T17 · Nodos de sacrificio y condicionales · S
+Origen: R2 §2, §4 ★★
+- Sacrificio: más daño con vida baja, robo de vida extra.
+- Condicionales: "si tienes 3 invocaciones", "si no te moviste en 1 s", "contra aturdidos", "con la vida llena".
+
+### [ ] T18 · Nodos clave de invocador: Monolito y Microservicios · M
+Origen: R2 §2 ★★
+- *Monolito*: una sola invocación con ×3 vida y daño. *Microservicios*: +2 invocaciones, −30 % cada una.
+
+### [ ] T19 · Minas con detonación encadenada · S
+Origen: R2 §2 ★★
+- Detonar una mina detona las vecinas, con retardo corto y efecto en cadena legible.
+
+### [ ] T20 · Gritos y buffs temporales · S
+Origen: R2 §3 ★★
+- "¡Está en producción!" (+daño a aliados 6 s) y uno o dos más; afectan a invocaciones.
+
+### [ ] T21 · Soporte "Contenedor Docker" (torreta que copia tu habilidad) · M
+Origen: R2 §2 ★★
+- RAM que convierte la habilidad en una torreta que la lanza sola; regla de compatibilidad y auditoría.
+
+### [ ] T22 · Hechizos canalizados · M
+Origen: R2 §2 ★★
+- Mantener pulsado: rayo continuo, tormenta que crece. Coste por segundo; funciona con teclado y mando.
+
+### [ ] T23 · Más variantes de habilidades · M
+Origen: R2 §3 ★★
+- Variantes para auras, drones y trampas en `data/skills/variants.json`.
+
+### [ ] T24 · Más habilidades únicas de ascendencia · M
+Origen: R1 §2
+- Una propia por clase que aún no la tenga (p. ej. muro de fuego del Firewall, sprint del Scrum Master), escalando con el daño del personaje y no solo con el nivel.
+
+### [ ] T25 · Chips únicos que transforman nodos cercanos · M
+Origen: R2 §4 ★★
+- "Los nodos de fuego alrededor dan frío" y similares; más ranuras si hace falta.
+
+### [ ] T26 · Comparador de placas y construcciones guardadas · M
+Origen: R2 §3, §5 ★★
+- Dos placas lado a lado con DPS, coste y área.
+- Guardar y cargar combinaciones de árbol + barra de habilidades.
+
+---
+
+## Fase 3 — Acto IV
+
+### [ ] T27 · Diseño del acto IV · S 🛑
+Origen: R1 §4, §8
+- Documento en `docs/acto4.md` siguiendo `docs/lore.md` y `docs/estilo.md`: zonas, NPC, misiones, enemigos nuevos, jefe con fases y escenas.
+- **Revisión del usuario antes de construirlo.**
+
+### [ ] T28 · Acto IV: zonas, campamento y enemigos · M
+- Zonas jugables con suelo en pixel art, ambiente, densidad y salidas; enemigos con afijos propios.
+
+### [ ] T29 · Acto IV: NPC, misiones y diálogos · M
+- Misiones principales del acto; diálogos validados por las pruebas de JSON.
+
+### [ ] T30 · Acto IV: jefe con fases y escenas · M
+- Jefe con fases, resistencias cambiantes, mecánica de arena (T08) y música de fase; escenas de entrada y cierre.
+
+---
+
+## Fase 4 — Enemigos y mundo
+
+### [ ] T31 · Más eventos de zona · M
+Origen: R2 §1 ★★
+- Escoltar un proceso, desactivar bombas lógicas a tiempo, comerciante ambulante.
+
+### [ ] T32 · Roles de enemigo, siguiente paso · S
+Origen: R2 §6 ★★
+- Sprites distintos para sanador y francotirador, roles en élites y afijo «Comandante».
+
+### [ ] T33 · Enemigos que reaccionan a los estados · M
+Origen: R2 §6 ★★
+- Huyen si se queman, se agrupan con un aura enemiga, etc.
+
+### [ ] T34 · Lore coleccionable · S
+Origen: R2 §10 ★★
+- Commits perdidos, logs y correos de la UAdeO por las zonas; registro para leerlos.
+
+### [ ] T35 · Diálogos con decisiones · M
+Origen: R2 §10 ★★
+- Decisiones que cambian recompensas o qué NPC te acompaña.
+
+### [ ] T36 · Campamentos que evolucionan · M
+Origen: R2 §10 ★★
+- Aida, Mario y Rafa mejoran el campamento al avanzar (tienda nueva, mesa de crafteo).
+
+### [ ] T37 · Némesis · M
+Origen: R2 §6 ★
+- El raro que te mató reaparece más fuerte con tu nombre y mejor botín.
+
+---
+
+## Fase 5 — Fin de juego y progresión
+
+### [ ] T38 · Crafteo con parches · M
+Origen: R2 §9 ★★★
+- Monedas que rehacen afijos, añaden uno, mejoran rareza y fijan un afijo. Encaja con la mesa de crafteo (T36).
+
+### [ ] T39 · Atlas de incidentes (parte 1: mapas con modificadores) · M
+Origen: R2 §9 ★★★
+- Zona aleatoria con modificadores (más enemigos, explotan, sin regeneración) a cambio de más botín.
+
+### [ ] T40 · Atlas de incidentes (parte 2: atlas y progresión) · M
+Origen: R2 §9 ★★★
+- Pantalla de atlas, desbloqueo de mapas, niveles y botín de mapas.
+
+### [ ] T41 · Dificultades: normal, pesadilla, infierno · M
+Origen: R1 §4
+- Más afijos y resistencias por dificultad.
+
+### [ ] T42 · Escalado opcional del nivel de zona · M
+Origen: R2 §1 ★
+- Zonas completadas que siguen el nivel del personaje (opción).
+
+### [ ] T43 · Misiones secundarias con recompensas · M
+Origen: R1 §4
+- Recompensas de RAM de grado alto, placas de invocación y auras.
+
+### [ ] T44 · Más únicos y conjuntos · M
+Origen: R1 §4, §8
+- Con efectos de estados, auras, espinas, autómatas, cargas y terrenos.
+
+### [ ] T45 · Desafíos y logros con cosméticos · M
+Origen: R2 §9 ★★
+- Sombreros, colores de aura, efectos de pasos.
+
+### [ ] T46 · Modo oleadas infinito y ladder local · M
+Origen: R1 §4, R2 §9 ★
+- Oleadas reutilizando las pruebas de estrés; récords de tiempo en oleadas y jefes.
+
+### [ ] T47 · Árbol de deuda técnica · L
+Origen: R2 §4 ★
+- Árbol aparte de fin de juego: cada nodo, bono fuerte y penalización.
+
+---
+
+## Fase 6 — Interfaz, mando y accesibilidad
+
+### [ ] T48 · Mando en menús (parte 1: inventario, K y tienda) · M
+Origen: R1 §5, R2 §5 ★★
+- Navegar sin ratón con cursor libre y atajos.
+
+### [ ] T49 · Mando en menús (parte 2: árbol, diálogos y comparación) · M
+Origen: R1 §5, R2 §5 ★★
+- Incluye comparación contra los dos anillos y atajo para fijarla.
+
+### [ ] T50 · Rebindear teclas y botones desde la pausa · M
+Origen: R1 §5
+
+### [ ] T51 · Accesibilidad: destellos, texto del mundo y daltonismo · S
+Origen: R2 §11 ★★
+- Reducir parpadeos y destellos (fases de jefe, absorción del prólogo).
+- Texto del mundo con tamaño propio, independiente de la interfaz.
+- Paletas alternativas para auras y cargas.
+
+### [ ] T52 · Auto-ataque y mantener para mover · S
+Origen: R2 §11 ★
+
+### [ ] T53 · Mapa grande: marcas propias y zoom · S
+Origen: R2 §5 ★
+
+### [ ] T54 · Filtro de botín, siguiente paso · M
+Origen: R2 §1 ★★
+- Reglas por base, nivel de objeto y afijos; resaltar bases buenas; varios filtros con nombre.
+
+---
+
+## Fase 7 — Sensación y presentación
+
+### [ ] T55 · Ambiente posicional · S
+Origen: R2 §7 ★★
+- Zumbido de racks cerca de ellos, goteo en alcantarillas, viento en la grieta.
+
+### [ ] T56 · Voces cortas · M
+Origen: R2 §7 ★★
+- Gruñidos o palabras sueltas de los NPC al hablar; voz del personaje al subir de nivel o con poca vida.
+
+### [ ] T57 · Materiales de enemigos en los datos · S
+Origen: R2 §7 ★
+- Mover `EnemyManager.MATERIALS` a `enemies.json` y dar material propio a cada tipo.
+
+### [ ] T58 · Luces, sombras y clima · S
+Origen: R2 §8 ★★/★
+- Luz en auras, invocaciones con luz propia y botín único; opción para bajar luces.
+- Sombras de proyectiles y voladores; lluvia de datos y niebla del pantano.
+
+### [ ] T59 · Obstáculos en pixel art: acto I · M
+Origen: R1 §4
+- Árboles de cables, rocas, lápidas... con sombra y luz como el suelo.
+
+### [ ] T60 · Obstáculos en pixel art: actos II y III · M
+Origen: R1 §4
+
+### [ ] T61 · Prólogo en pixel art: pasillo y oficina · M
+Origen: R1 §5
+- Mismo nivel de detalle que la calle (luz, tramado, sombras).
+
+### [ ] T62 · Música para las pruebas de estrés · S
+Origen: R1 §6
+- Con `tools/generate_zone_music.gd`.
+
+---
+
+## Fase 8 — Técnica
+
+### [ ] T63 · Audio en OGG y sprites en atlas · S
+Origen: R1 §6, R2 §12 ★★
+- Los .wav suman ~60 MB; los bucles de `data/music_loops.json` deben seguir cuadrando.
+
+### [ ] T64 · Telemetría local de equilibrio · M
+Origen: R2 §12 ★★
+- Registrar DPS, muertes y tiempo por zona en cada partida (archivo local) y una herramienta que lo resuma.
+
+### [ ] T65 · Exportación a Linux y macOS e instalador de Windows · S
+Origen: R1 §7
+
+### [ ] T66 · `EnemyManager` en C# o GDExtension · L — solo si hace falta
+Origen: R1 §7, R2 §12
+- Hacerla solo si tras T03 la simulación pasa de 4 ms con estados y aliados; si no, marcar `[x]` con la medición como motivo.
+
+---
+
+## Fuera de la cola (necesitan una persona)
+
+No las ejecuta Claude solo; quedan aquí para no perderlas.
+
+- **Equilibrar con partidas reales**: cada clase hasta nivel 30 con sus dos ascendencias; Multicanal, Pipeline Superescalar (la mayor sigue siendo la mejor RAM de daño), Sobrealimentación, Enlace de Aura, auras con alcance, afijos y fases de subjefes; árboles de ascendencia hasta nivel 60; densidad de enemigos por zona. Con T64 se puede ajustar con datos.
+- **Arte final**: personajes, NPC, invocaciones, iconos de habilidad y estado, sprites del acto III, retratos más expresivos. Necesita artista.
+- **Música compuesta** con leitmotiv por acto y jefe (se puede escribir en `music.json` → `melody` o en `melody_file`).
+- **Campamento III**: si `data/music/camp3_eptns.json` transcribe una canción con derechos, cambiarla antes de publicar.
+- **Cliente/servidor para cooperativo** (largo plazo): aislar `SkillController` y `EnemyManager` de `Node2D`.
+
+---
+
+## Registro
+
+<!-- Una línea por tarea terminada: AAAA-MM-DD · TXX · qué se hizo -->
