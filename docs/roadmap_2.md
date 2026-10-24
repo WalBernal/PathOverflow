@@ -15,8 +15,8 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 | Mejora | Tamaño | Prioridad | Por qué |
 |---|---|---|---|
 | **Más eventos de zona**: hoy hay 4 (datos huérfanos, santuario, emboscada, deploy fallido); faltan eventos con mecánica propia (escoltar un proceso, desactivar bombas lógicas a tiempo, un comerciante ambulante) | M | ★★ | Variedad entre visitas. |
-| **Filtro de botín, siguiente paso**: reglas por base, nivel y afijos (como los filtros de PoE), y resaltar bases buenas | M | ★★ | Ya hay 3 niveles, haz de luz y sonido por rareza. |
-| **Esquiva, siguiente paso**: nodos y afijos con +cargas de esquiva o recarga más rápida, y RAM/ascendencias que hagan algo al esquivar (dejar una trampa, ganar una carga de Multihilos) | S | ★★ | La esquiva ya existe (Shift / RT, 2 cargas, stat `dodge_charges`). |
+| **Filtro de botín, siguiente paso**: reglas por base concreta, nivel de objeto y afijos (como los filtros de PoE), resaltar bases buenas y guardar varios filtros con nombre | M | ★★ | Ya hay ventana con reglas por categoría y rareza, atajos, haz de luz configurable y Shift para ver lo oculto. |
+| **Esquiva, siguiente paso**: nodos y afijos con +cargas de esquiva o recarga más rápida, y RAM/ascendencias que hagan algo al esquivar (dejar una trampa, ganar una carga de Multihilos) | S | ★★ | La esquiva ya existe (Espacio / RT, 2 cargas, stat `dodge_charges`). |
 | **Escalado de dificultad por zona**: nivel de zona que sigue al del personaje en las zonas ya completadas (opcional) | M | ★ | Repetir zonas sin que se vuelvan triviales. |
 
 ## 2. Estilos de juego (builds)
@@ -58,7 +58,7 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 |---|---|---|---|
 | **Construcciones guardadas**: guardar y cargar combinaciones de árbol + barra de habilidades | M | ★★ | Probar builds sin rehacer todo. |
 | **Navegación total con mando** en inventario, árbol, K, tienda y diálogos | L | ★★ | Ya está en el roadmap 1; aquí con cursor libre y atajos. |
-| **Mapa grande (Tab)** superpuesto, con niebla de guerra y marcas | M | ★★ | Las zonas ahora son 1.4-1.5 veces más grandes. |
+| **Mapa grande, siguiente paso**: marcas propias del jugador (click derecho en el mapa) y zoom con la rueda | S | ★ | El mapa grande (Tab) con niebla de guerra guardada ya existe. |
 | **Tutorial contextual** de mecánicas nuevas (cargas, esquiva, golpes pesados, RAM de activación) la primera vez que aparecen | S | ★★ | |
 | **Comparación con mando**: con dos anillos, comparar contra los dos; y un atajo para fijar la comparación | S | ★ | La comparación lado a lado ya existe con el ratón. |
 
@@ -66,7 +66,7 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 
 | Mejora | Tamaño | Prioridad | Idea |
 |---|---|---|---|
-| **Roles de enemigo claros**: tanque que protege, sanador que hay que matar primero, francotirador que se aleja, enjambre que rodea | M | ★★★ | Decisiones tácticas dentro de cada manada. |
+| **Roles de enemigo, siguiente paso**: roles con tipos propios (sprites distintos para sanador y francotirador), roles en élites y un afijo «Comandante» que da rol a toda la manada | S | ★★ | Ya existen guardián, sanador, francotirador y enjambre en las manadas desde el nivel 2. |
 | **Jefes con mecánicas de arena**: suelo que se rompe, adds que hay que interrumpir, zonas seguras que rotan | L | ★★★ | Con la esquiva y los avisos en el suelo. |
 | **Enemigos que reaccionan a los estados**: huyen si se queman, se agrupan si hay un aura enemiga | M | ★★ | Más vida en las manadas. |
 | **Némesis**: un raro que te mató reaparece más fuerte con tu nombre y suelta mejor botín | M | ★ | Historias emergentes. |
@@ -125,7 +125,7 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 ## Plan sugerido por fases
 
 1. **Fase "Sensación", lo que queda**: capas de música por intensidad, ambiente posicional.
-2. **Fase "Habilidad del jugador"**: habilidades de movimiento, roles de enemigo, jefes con mecánicas de arena.
+2. **Fase "Habilidad del jugador"**: habilidades de movimiento, jefes con mecánicas de arena, daltonismo en todo (rarezas, telegrafiados).
 3. **Fase "Profundidad de builds"**: nodos clave, maestrías, RAM de activación, nodos que usen las cargas.
 4. **Fase "Largo plazo"**: crafteo con parches, atlas de incidentes, chips únicos que transforman nodos, temporadas.
 
@@ -136,3 +136,5 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 **Segunda tanda (24 octubre 2026)**: **esquiva "git stash"** (Shift o gatillo derecho; la hoja de personaje pasa a Share/Captura en el mando): salto corto con 0,3 s de invulnerabilidad contra golpes, charcos y estados, 2 cargas que se recargan cada 1,6 s, siluetas y casilla propia junto a la barra · **golpes pesados telegrafiados**: los raros y únicos cuerpo a cuerpo se paran, marcan un círculo rojo con "!" y pegan ×2,4; las novas de proyectiles de los jefes avisan con las líneas por donde saldrán · **hitstop** (crítico y muerte de raro o único, con opción en Pausa) y **retroceso** según el daño (las élites un tercio, los únicos nada) · **sacudida de cámara graduada** (golpes fuertes recibidos, críticos, muertes, jefes) con opción no / suave / normal · **raros con nombre generado y frase** al verte ("Off-by-one el Sin Tests": «Me arreglaron con un try vacío.») · **conversión de daño** con RAM (Transformador de Tensión físico → rayo, Nitrógeno Líquido físico → frío, Sobrecalentamiento frío/rayo → fuego, Corrupción de Datos elemental → caos; escalan con los dos tipos) · **RAM con desventaja fuerte** (Turbo sin Disipador, Compilación -O3, Memoria sin ECC) · **pociones con estilo**: Manzanilla con breakpoint (quita estados), Klub-Mate de emergencia (recarga esquivas y da una más), Termo de café para el equipo (cura invocaciones) · **comparación de objetos lado a lado** (el equipado junto al tooltip) · **barra de habilidades**: cuántas cargas gastaría cada habilidad y la conversión en su ayuda.
 
 **Tercera tanda, fase "Sensación" (24 octubre 2026)**: **sonido por material** al golpear (carne, metal, cristal y digital, según el tipo de enemigo) y **crítico con clic de teclado mecánico** · **objeto único con fanfarria propia** al caer · **luces dinámicas en el filtro**: proyectiles de fuego, rayo, frío y caos (tuyos y enemigos), explosiones, destellos de golpes y muertes, salidas, waypoint y hoguera alumbran en escalones de pixel art; tiñen un poco en todas las zonas y mucho en las oscuras · **antorchas** (o LED de estado en servidores, BIOS y ROM, y fuegos fatuos en el pantano, la grieta y las alcantarillas) repartidas por las zonas oscuras · **partículas de impacto en pixel art** por tipo de daño (astillas y bits, chispas, esquirlas de hielo, chispazos, gotas verdes) · **muertes con estilo** según lo que mató al enemigo: se descompila en píxeles y bits, se quema a ceniza, se rompe en hielo, salta en chispas o se disuelve (también al morir por quemadura o veneno), cada una con su sonido. Sonidos nuevos con `generate_sfx.gd -- golpes`.
+
+**Cuarta tanda (24 octubre 2026)**: **controles nuevos**: habilidades en **Q W E R T Y**, movimiento con **flechas** (o click), **Espacio** esquiva, **Tab** mapa grande, **Shift** (mantener) muestra el botín filtrado atenuado, **B** catálogo · **iconos de habilidad únicos** (el Mainframe Titán, Watchdog, Bot Rastreador, Aura de Overclock y Aura de Exposición tienen forma propia; una prueba lo vigila) · **catálogo de hardware** (B) estilo bestiario: placas base y RAM con icono, descripción, cifras con tu personaje, etiquetas, requisitos, nivel de caída, kit de clase, variantes y compatibilidad; lo encontrado queda marcado y se guarda · **filtro de botín en ventana propia**: gemas de rareza por categoría (armas, armaduras, joyería, chips), mostrar u ocultar placas, RAM y pociones, haz de luz desde la rareza que elijas, atajos (Ver todo, Equilibrado, Estricto, Fin de juego) y vista previa de las etiquetas · **mapa grande** con niebla de guerra que se guarda por zona, salidas con su destino, waypoint, NPC, misiones, botín bueno y enemigos · **menos botín**: de 20-45 objetos por zona a unos 8-14, algo mejores · **roles de enemigo** en las manadas: guardián (protege un 40 % a los de alrededor), sanador (cura a los heridos), francotirador (se aleja y dispara un tiro avisado con una línea roja) y enjambre (rápidos, frágiles y por los lados), con insignia sobre la cabeza y en el marco del objetivo.

@@ -51,6 +51,26 @@ const HEAVY_RADIUS := 105.0
 const HEAVY_DAMAGE := 2.4
 ## Segundos que se ve la frase de un raro al verte.
 const QUOTE_TIME := 3.5
+## Roles dentro de las manadas (traits["role"]):
+##   tank: protege a los de alrededor (reciben ROLE_TANK_REDUCTION menos de daño).
+##   healer: se queda atrás y cura a los heridos cercanos cada pocos segundos.
+##   sniper: se aleja y dispara un tiro avisado con una línea roja, muy fuerte.
+##   swarm: rápidos y frágiles; te rodean por los lados.
+const ROLES := ["tank", "healer", "sniper", "swarm"]
+const ROLE_NAMES := {"tank": "Guardián", "healer": "Sanador", "sniper": "Francotirador", "swarm": "Enjambre"}
+const ROLE_COLORS := {"tank": Color("7fb8e0"), "healer": Color("6fd36b"), "sniper": Color("ff6a50"), "swarm": Color("e8d070")}
+const ROLE_TANK_RADIUS := 170.0
+const ROLE_TANK_REDUCTION := 0.4
+const ROLE_HEAL_RADIUS := 260.0
+const ROLE_HEAL_INTERVAL := 3.0
+const ROLE_HEAL_FRACTION := 0.12
+const ROLE_SNIPE_WINDUP := 1.1
+const ROLE_SNIPE_COOLDOWN := 4.0
+const ROLE_SNIPE_RANGE := 760.0
+const ROLE_SNIPE_DAMAGE := 2.6
+const ROLE_KEEP := {"healer": 330.0, "sniper": 470.0}
+## Posiciones de los guardianes en este fotograma (para la reducción de daño).
+var _tank_spots := PackedVector2Array()
 ## Ataques a distancia: al soltarlos el enemigo retrocede en vez de embestir.
 const RECOIL_ATTACKS := ["ranged", "lob_pool", "seeker", "summon"]
 const FX_DETAIL_LIMIT := 60
@@ -373,6 +393,24 @@ func spawn(pos: Vector2, rarity: Rarity.Enemy, type_index := -1, custom_name := 
 			list.append({"def": a, "timer": float(a.get("first", a.get("cooldown", 6.0) * 0.5))})
 		abilities[ids[ids.size() - 1]] = list
 	return ids[ids.size() - 1]
+
+
+## Da un rol al enemigo `id` y ajusta su vida, velocidad y tamaño (ver ROLES).
+func set_role(id: int, role: String) -> void:
+	var i := index_of(id)
+	if i == -1 or not ROLES.has(role):
+		return
+	var mult := {"tank": [2.2, 0.8, 1.25], "healer": [1.2, 1.0, 1.0], "sniper": [0.9, 1.05, 1.0], "swarm": [0.45, 1.55, 0.75]}[role] as Array
+	lives[i] *= mult[0]
+	max_lives[i] *= mult[0]
+	speeds[i] *= mult[1]
+	radii[i] *= mult[2]
+	traits[i]["role"] = role
+	traits[i]["role_t"] = randf() * 2.0   # que no actúen todos a la vez
+
+
+func role_of(i: int) -> String:
+	return String((traits[i] as Dictionary).get("role", ""))
 
 
 ## Afijos al azar según la rareza y el nivel de la zona: élite 1 (2 desde el nivel 8),
@@ -935,6 +973,7 @@ func stun_index(i: int, time: float) -> void:
 	dashes[i] = 0.0
 	casting.erase(ids[i])
 	(traits[i] as Dictionary).erase("heavy_on")
+	(traits[i] as Dictionary).erase("snipe_on")
 
 
 ## Índice del enemigo más cercano a `pos` (dentro de max_dist), ignorando ids; -1 si no hay.
@@ -991,6 +1030,8 @@ func _damage(i: int, min_damage: float, max_damage: float, crit_chance: float, c
 		damage *= 1.0 + shock_amp[i]
 	if not aura_fields.is_empty():
 		damage *= 1.0 + _aura_effect(i, "damage_taken")
+	if _tank_protected(i):
+		damage *= 1.0 - ROLE_TANK_REDUCTION
 	var dmg_type := String(hit_ailments.get("type", ""))
 	var power := interaction_power
 	if freeze_time[i] > 0.0 and dmg_type == "physical":
@@ -1161,6 +1202,10 @@ func _physics_process(delta: float) -> void:
 		return
 	var started := Time.get_ticks_usec()
 	_rebuild_grid()
+	_tank_spots.clear()
+	for k in positions.size():
+		if (traits[k] as Dictionary).get("role", "") == "tank":
+			_tank_spots.append(positions[k])
 	var player_pos := player.global_position
 	# En el campamento el jugador es intocable: los enemigos ni le persiguen.
 	var hunting := player.is_alive() and not is_in_safe_zone(player_pos)
@@ -1212,6 +1257,11 @@ func _physics_process(delta: float) -> void:
 				if hunting:
 					_lunge_to(i, target_pos, 1.6)
 					_resolve_heavy(i)
+			elif windups[i] <= 0.0 and tr_i.get("snipe_on", false):
+				tr_i.erase("snipe_on")
+				if hunting:
+					_lunge_to(i, target_pos, -0.8)
+					_resolve_snipe(i)
 			elif windups[i] <= 0.0 and hunting:
 				# Los que disparan retroceden (culatazo); el resto embiste hacia el objetivo.
 				_lunge_to(i, target_pos, -0.6 if String(atk.get("kind", "")) in RECOIL_ATTACKS else 1.0)
@@ -1229,6 +1279,12 @@ func _physics_process(delta: float) -> void:
 			if tr_i.has("quote_t") and float(tr_i["quote_t"]) < 0.0 and dist < aggro_range * 0.7:
 				tr_i["quote_t"] = QUOTE_TIME   # te ha visto: suelta su frase
 			var started_ability := _try_ability(i, delta, dist, player_pos)
+			var role := String(tr_i.get("role", ""))
+			if role != "" and not started_ability:
+				var role_move: Variant = _role_step(i, tr_i, role, delta, to_target, tdist, treach, ally == -1)
+				if role_move is Vector2:
+					move = (role_move as Vector2) * tempo
+					started_ability = true   # el rol ya decidió el movimiento
 			if not started_ability and tr_i.has("heavy") and float(tr_i["heavy"]) <= 0.0 and ally == -1 \
 					and dist <= _heavy_radius(i) * 0.75:
 				# Golpe pesado: se para, avisa en el suelo y golpea fuerte (esquivable).
@@ -1286,7 +1342,8 @@ func _physics_process(delta: float) -> void:
 		positions[i] = walk_clamp.call(new_pos, r) if walk_clamp.is_valid() else new_pos
 
 		# Cuerpo a cuerpo por contacto (los que no tienen ataque especial).
-		if kind == "melee" and stuns[i] <= 0.0 and windups[i] <= 0.0 and hunting and cooldowns[i] <= 0.0:
+		if kind == "melee" and stuns[i] <= 0.0 and windups[i] <= 0.0 and hunting and cooldowns[i] <= 0.0 \
+				and not String(tr_i.get("role", "")) in ["healer", "sniper"]:
 			if ally != -1 and tdist <= treach + 6.0:
 				cooldowns[i] = ATTACK_INTERVAL
 				_lunge_to(i, target_pos)
@@ -1414,6 +1471,78 @@ func _decide(i: int, atk: Dictionary, kind: String, to_player: Vector2, dist: fl
 			return Vector2.ZERO
 	# Cuerpo a cuerpo normal: persigue hasta tocar.
 	return dir * speed if dist > reach else Vector2.ZERO
+
+
+## Comportamiento del rol: devuelve el movimiento (Vector2) o null para el normal
+## de su tipo. `vs_player`: su objetivo es el jugador (no una invocación).
+func _role_step(i: int, tr_i: Dictionary, role: String, delta: float, to_target: Vector2, dist: float, reach: float, vs_player: bool) -> Variant:
+	tr_i["role_t"] = float(tr_i.get("role_t", 0.0)) - delta
+	var dir := to_target / maxf(dist, 0.001)
+	match role:
+		"healer":
+			if float(tr_i["role_t"]) <= 0.0:
+				tr_i["role_t"] = ROLE_HEAL_INTERVAL
+				_heal_around(i)
+			return _keep_distance(i, dir, dist, ROLE_KEEP["healer"])
+		"sniper":
+			if vs_player and cooldowns[i] <= 0.0 and dist <= ROLE_SNIPE_RANGE:
+				cooldowns[i] = ROLE_SNIPE_COOLDOWN + ROLE_SNIPE_WINDUP
+				windups[i] = ROLE_SNIPE_WINDUP
+				attack_dirs[i] = dir
+				tr_i["snipe_on"] = true
+				return Vector2.ZERO
+			return _keep_distance(i, dir, dist, ROLE_KEEP["sniper"])
+		"swarm":
+			# Rodean: cada uno entra por su lado (según su id) y cierra al final.
+			if dist <= reach:
+				return Vector2.ZERO
+			var side := 1.0 if ids[i] % 2 == 0 else -1.0
+			var flank := clampf((dist - reach) / 220.0, 0.0, 1.0) * 0.9
+			return (dir + dir.orthogonal() * side * flank).normalized() * speeds[i]
+	return null
+
+
+func _keep_distance(i: int, dir: Vector2, dist: float, keep: float) -> Vector2:
+	if dist > keep + 50.0:
+		return dir * speeds[i]
+	if dist < keep - 60.0:
+		return -dir * speeds[i] * 0.85
+	return dir.orthogonal() * speeds[i] * 0.35 * (1.0 if ids[i] % 2 == 0 else -1.0)
+
+
+## Sanador: cura a los heridos de alrededor (y a sí mismo un poco), con un rayo verde.
+func _heal_around(i: int) -> void:
+	var healed := 0
+	for k in positions.size():
+		if k == i or lives[k] >= max_lives[k] or positions[k].distance_to(positions[i]) > ROLE_HEAL_RADIUS:
+			continue
+		lives[k] = minf(max_lives[k], lives[k] + max_lives[k] * ROLE_HEAL_FRACTION)
+		_flashes_fx.append({"type": "beam", "pos": positions[i], "end": positions[k], "radius": 3.0, "time": 0.0, "color": ROLE_COLORS["healer"]})
+		healed += 1
+		if healed >= 5:
+			break
+	lives[i] = minf(max_lives[i], lives[i] + max_lives[i] * ROLE_HEAL_FRACTION * 0.5)
+	if healed > 0:
+		_flashes_fx.append({"type": "circle", "pos": positions[i], "radius": ROLE_HEAL_RADIUS * 0.4, "time": 0.0, "color": ROLE_COLORS["healer"]})
+		Sfx.play("heal", -14.0, 1.2)
+
+
+## Tiro del francotirador: un proyectil muy rápido en la dirección avisada.
+func _resolve_snipe(i: int) -> void:
+	projectiles.append({"pos": positions[i] + attack_dirs[i] * (radii[i] + 6.0), "vel": attack_dirs[i] * 1100.0,
+		"damage": damages[i] * ROLE_SNIPE_DAMAGE, "radius": 6.0, "life": ROLE_SNIPE_RANGE / 1100.0 + 0.2,
+		"color": ROLE_COLORS["sniper"]})
+	Sfx.play("projectile", -8.0, 0.7)
+
+
+## ¿Lo protege un guardián cercano? (los guardianes no se protegen entre sí).
+func _tank_protected(i: int) -> bool:
+	if _tank_spots.is_empty() or role_of(i) == "tank":
+		return false
+	for p in _tank_spots:
+		if p.distance_to(positions[i]) <= ROLE_TANK_RADIUS:
+			return true
+	return false
 
 
 ## Radio del golpe pesado (crece con el tamaño del enemigo).
@@ -1768,6 +1897,9 @@ func _draw_all() -> void:
 	var simple := on_screen.size() > FX_DETAIL_LIMIT
 	last_drawn_count = on_screen.size()
 	for i in on_screen:
+		var role := role_of(i)
+		if role != "":
+			_draw_role(i, role, tt)
 		if stuns[i] > 0.0 and freeze_time[i] <= 0.0:
 			_draw_stun(positions[i] + Vector2(0, -radii[i] * SPRITE_SCALE * 1.1 - 18.0))
 		if simple:
@@ -1822,6 +1954,32 @@ func _draw_all() -> void:
 const TELEGRAPH := Color(1.0, 0.25, 0.2)
 
 
+## Rol: insignia sobre la cabeza (escudo, cruz, mira, chevrones) y, el guardián,
+## el círculo de los que protege.
+func _draw_role(i: int, role: String, tt: float) -> void:
+	var c: Color = ROLE_COLORS[role]
+	var p := positions[i] + Vector2(0, -radii[i] * SPRITE_SCALE * 1.1 - 24.0)
+	if role == "tank":
+		var pulse := 0.5 + 0.5 * sin(tt * 3.0 + ids[i])
+		draw_arc(positions[i], ROLE_TANK_RADIUS, 0.0, TAU, 40, Color(c, 0.18 + 0.12 * pulse), 2.0, true)
+	draw_circle(p, 7.5, Color(0.04, 0.03, 0.06, 0.9))
+	draw_arc(p, 7.5, 0.0, TAU, 16, c, 1.5, true)
+	match role:
+		"tank":
+			draw_colored_polygon(PackedVector2Array([p + Vector2(-4, -4), p + Vector2(4, -4), p + Vector2(3.5, 1), p + Vector2(0, 5), p + Vector2(-3.5, 1)]), c)
+		"healer":
+			draw_rect(Rect2(p + Vector2(-1.5, -4.5), Vector2(3, 9)), c)
+			draw_rect(Rect2(p + Vector2(-4.5, -1.5), Vector2(9, 3)), c)
+		"sniper":
+			draw_arc(p, 3.5, 0.0, TAU, 12, c, 1.5, true)
+			for k in 4:
+				var d := Vector2.from_angle(PI / 2.0 * k)
+				draw_line(p + d * 2.0, p + d * 5.5, c, 1.5)
+		"swarm":
+			for k in 2:
+				draw_polyline(PackedVector2Array([p + Vector2(-4, -1 + k * 4 - 2), p + Vector2(0, -4 + k * 4 - 2), p + Vector2(4, -1 + k * 4 - 2)]), c, 1.5)
+
+
 ## Bocadillo con la frase de un raro, centrado en `x` y con el pico hacia abajo en `bottom`.
 func _draw_quote(font: Font, x: float, bottom: float, text: String, alpha: float) -> void:
 	var size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13)
@@ -1849,6 +2007,13 @@ func _draw_attacks(font: Font) -> void:
 			var mark := pos + Vector2(-20.0, -radii[i] * SPRITE_SCALE * 1.1 - 30.0)
 			draw_string_outline(font, mark, "!", HORIZONTAL_ALIGNMENT_CENTER, 40.0, 26, 6, Color.BLACK)
 			draw_string(font, mark, "!", HORIZONTAL_ALIGNMENT_CENTER, 40.0, 26, TELEGRAPH.lerp(Color.WHITE, ht * 0.5))
+		elif windups[i] > 0.0 and (traits[i] as Dictionary).get("snipe_on", false):
+			# Francotirador: línea roja que se estrecha y brilla justo antes del disparo.
+			var st := clampf(1.0 - windups[i] / ROLE_SNIPE_WINDUP, 0.0, 1.0)
+			var end := pos + dir * ROLE_SNIPE_RANGE
+			draw_line(pos, end, Color(TELEGRAPH, 0.08 + 0.1 * st), 14.0 * (1.0 - st) + 3.0)
+			draw_line(pos, end, Color(TELEGRAPH, 0.35 + 0.6 * st), 1.5 + st, true)
+			draw_circle(pos + dir * (radii[i] + 6.0), 3.0 + 5.0 * st, Color(1.0, 0.8, 0.6, 0.5 + 0.5 * st))
 		elif windups[i] > 0.0:
 			var total := maxf(0.05, float(atk.get("windup", 0.5)))
 			var t := clampf(1.0 - windups[i] / total, 0.0, 1.0)

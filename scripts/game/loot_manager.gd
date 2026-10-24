@@ -36,26 +36,14 @@ func _ready() -> void:
 	z_index = 2  # etiquetas por encima de enemigos y jugador
 
 
-## Filtro de botín (Pausa → Interfaz): 0 todo, 1 sin equipo normal, 2 solo raros
-## y mejores. Placas, RAM, pociones, objetos clave, únicos y conjuntos siempre se
-## ven. Con Alt pulsado se ve todo.
-const FILTER_NAMES := ["Todo", "Ocultar normales", "Solo raros y mejores"]
-
-
-static func filter_level() -> int:
-	return int(GameSettings.get_value("interface", "loot_filter", 0))
-
-
-static func passes_filter(item: Item, level: int) -> bool:
-	if level <= 0 or not item.is_equipment() or item.rarity >= Rarity.Item.UNIQUE:
-		return true
-	if level == 1:
-		return item.rarity != Rarity.Item.NORMAL
-	return item.rarity >= Rarity.Item.RARE
+## Filtro de botín (ver LootFilter y su ventana). Con Shift pulsado se ve todo,
+## y lo que el filtro oculta aparece atenuado.
+static func show_all_held() -> bool:
+	return InputMap.has_action(&"show_all_loot") and Input.is_action_pressed(&"show_all_loot")
 
 
 func _visible(d: Dictionary) -> bool:
-	return Input.is_key_pressed(KEY_ALT) or passes_filter(d["item"], filter_level())
+	return show_all_held() or LootFilter.passes(d["item"])
 
 
 func drop_item(item: Item, pos: Vector2) -> void:
@@ -64,11 +52,10 @@ func drop_item(item: Item, pos: Vector2) -> void:
 	var label_size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE) + PADDING * 2.0
 	drops.append({"item": item, "rect": find_spot(pos, label_size), "text": text, "age": 0.0})
 	# Botín bueno: haz de luz del color de la rareza y su propio sonido.
-	if item.is_equipment() and passes_filter(item, filter_level()):
-		if item.rarity >= Rarity.Item.UNIQUE:
-			Sfx.play("unique_drop", -3.0)
-		elif item.rarity >= Rarity.Item.RARE:
-			Sfx.play("coin", -2.0, 0.65)
+	if item.is_equipment() and (item.rarity == Rarity.Item.UNIQUE or item.rarity == Rarity.Item.SET):
+		Sfx.play("unique_drop", -3.0)
+	elif LootFilter.beams(item):
+		Sfx.play("coin", -2.0, 0.65)
 	queue_redraw()
 
 
@@ -123,7 +110,10 @@ func _draw() -> void:
 		var item: Item = d["item"]
 		var rect: Rect2 = d["rect"]
 		var color := item.display_color()
-		if item.is_equipment() and item.rarity >= Rarity.Item.RARE:
+		var filtered := not LootFilter.passes(item)   # solo se ve con Shift: atenuado
+		if filtered:
+			color = Color(color, 0.55)
+		if not filtered and (LootFilter.beams(item) or item.rarity == Rarity.Item.UNIQUE or item.rarity == Rarity.Item.SET):
 			# Haz de luz: fuerte los primeros segundos, luego queda tenue (se ve de lejos).
 			var strength := 0.35 + 0.4 * clampf(1.0 - float(d.get("age", 0.0)) / 4.0, 0.0, 1.0)
 			var bx := rect.get_center().x
@@ -157,8 +147,8 @@ func _physics_process(delta: float) -> void:
 		if float(d.get("age", 0.0)) < 4.0:
 			d["age"] = float(d.get("age", 0.0)) + delta
 			beams = true
-	if beams or Input.is_key_pressed(KEY_ALT) != _alt_was:
-		_alt_was = Input.is_key_pressed(KEY_ALT)
+	if beams or show_all_held() != _alt_was:
+		_alt_was = show_all_held()
 		queue_redraw()
 	if _pending.is_empty() or player == null:
 		return

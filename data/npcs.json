@@ -838,7 +838,7 @@
           ]
         },
         "lucha": {
-          "text": "Primero lo primero: aquí estás a salvo, los bugs están al este y no vienen hasta que te acercas. Click derecho o Espacio usan tu primera habilidad; Q, E, R y F, las demás. Mantén el click izquierdo para caminar. Si te quedas sin vida, café (tecla 1). Sin maná, un refresco (tecla 2).",
+          "text": "Primero lo primero: aquí estás a salvo, los bugs están al este y no vienen hasta que te acercas. Q, W, E, R, T e Y usan tus habilidades. Camina con las flechas o manteniendo el click izquierdo; Espacio te aparta de un golpe. Si te quedas sin vida, café (tecla 1). Sin maná, un refresco (tecla 2).",
           "next": "lucha2"
         },
         "lucha2": {

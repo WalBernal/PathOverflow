@@ -1248,7 +1248,7 @@
       "cooldown": 3.0,
       "min_level": 18,
       "icon": {
-        "shape": "golem",
+        "shape": "titan",
         "color": "8ab0ff"
       },
       "milestone": {
@@ -1581,7 +1581,7 @@
       "mana_per_level": 0,
       "cooldown": 0.6,
       "icon": {
-        "shape": "aura_clock",
+        "shape": "aura_bolt",
         "color": "e8d070"
       }
     },
@@ -1801,7 +1801,7 @@
       "mana_per_level": 0,
       "cooldown": 0.6,
       "icon": {
-        "shape": "aura_shield",
+        "shape": "aura_target",
         "color": "e06c6c"
       }
     },
@@ -1853,7 +1853,7 @@
       "mana_per_level": 0.4,
       "cooldown": 1.0,
       "icon": {
-        "shape": "testbot",
+        "shape": "watchdog",
         "color": "c89060"
       },
       "milestone": {
@@ -1906,7 +1906,7 @@
       "mana_per_level": 0.3,
       "cooldown": 1.5,
       "icon": {
-        "shape": "agent",
+        "shape": "tracker",
         "color": "6fd36b"
       },
       "milestone": {

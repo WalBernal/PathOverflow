@@ -14,9 +14,12 @@ Por ahora es solo para un jugador en local, pero la lógica está escrita para p
 
 | Tecla | Acción |
 |---|---|
-| WASD / mantener click izq. | Mover |
-| Click der. · Espacio · Q · E · R · F | Las 6 habilidades de la barra |
-| Shift | Esquiva (*git stash*): salto corto con un instante de invulnerabilidad; 2 cargas que se recargan solas |
+| Flechas / mantener click izq. | Mover |
+| Q · W · E · R · T · Y | Las 6 habilidades de la barra |
+| Espacio | Esquiva (*git stash*): salto corto con un instante de invulnerabilidad; 2 cargas que se recargan solas |
+| Tab | Mapa grande de la zona (con niebla de guerra) |
+| Shift (mantener) | Ver el botín que oculta el filtro (atenuado) |
+| B | Catálogo de hardware: todas las placas base y RAM |
 | 1 - 5 | Pociones del cinturón (cafés, bebidas y de utilidad) |
 | Click en un objeto o NPC | Ir a recogerlo / hablar |
 | I | Inventario: arrastra para mover y equipar; click equipa o quita |
@@ -155,13 +158,13 @@ Stats nuevas para ellas: **Recuperación de enfriamientos** (acorta los enfriami
 Al crear un personaje (apariencia y nombre; ya no se elige clase en el creador, que muestra el **expediente** del recién egresado) empieza el prólogo (`scenes/prologue/prologue.tscn`), en pixel art de verdad: un escenario de 400×225 escalado sin suavizado, con un shader que lo pinta descolorido por el calor (`prologue_screen.gdshader`).
 
 1. **El Desembarco de la Realidad**: texto mecanografiado (147 vacantes, 5 años de experiencia requerida, café soluble y agua de garrafón) y la Av. del Mar, con la UAdeO (fachada guinda, reja beige) frente al malecón, con camisa formal, marcas de sudor y un portafolio de plástico.
-2. **Retorno a la UAdeO**: el pasillo en perspectiva, de sur a norte (se camina de frente con WASD o click): al fondo la caja de trámites («Regreso en 15 minutos»), a la izquierda la puerta gris de Informática y, junto a la caja, una TV plana que alterna «Ingeniería de Software» y el **Hackatón LinceCode 2026** con su lince en pixel art.
+2. **Retorno a la UAdeO**: el pasillo en perspectiva, de sur a norte (se camina de frente con las flechas o click): al fondo la caja de trámites («Regreso en 15 minutos»), a la izquierda la puerta gris de Informática y, junto a la caja, una TV plana que alterna «Ingeniería de Software» y el **Hackatón LinceCode 2026** con su lince en pixel art.
 3. **El Error 404 del Archivo Muerto**: el departamento destrozado (archivadores volcados, CRT beige, el minisplit goteando sobre una torre quemada) y Rafa, que busca tu servicio social con `grep`: el Inge Pepe anotaba a los prestadores en una libreta Scribe de gatitos y se la llevó.
 4. **El Incidente del Viernes a las 6:00 PM**: se cae el SICE; el backend corre en «El Monolito» (2004). Rafa propone un trato.
 5. **La Elección Forzada**: ventana al estilo Windows 98, «Confirmar Contratación de Emergencia», con un desplegable para el **primer puesto (la clase)**. El botón **No** esquiva el ratón sin salir de la ventana (el primer salto, 150 px a la derecha; luego a cualquier hueco) y encoge cada vez; ya diminuto deja de huir, y si se le atina sale `Error 0x80004005` y se convierte en «Pues ya que...», que acepta igual.
 6. **Clímax**: Mario llega jalando un carrito con una bolsa de frituras, Aida con él («Profe Rafa, ¿va a querer churr...?»), y la caída se los lleva a todos. Antes: la carpeta lila «NO TOCAR - CONFIG_PROD» detrás del rack, la descarga, la consola roja (`POST /api/v1/deploy/force --user admin`), la oficina pixelándose (papeles en logs, cables en cobre, la ropa en binario) y el título **EL ÚLTIMO COMMIT**. Despiertas en el Sandbox (escena `llegada_sandbox`).
 
-Se camina con A/D o flechas (en el pasillo, WASD) o con click, que fija un destino en el mundo; E, Espacio o click para interactuar. Esc (dos veces) salta a la elección de puesto; en el creador, «Saltar prólogo» va directo a ella.
+Se camina con las flechas o con click, que fija un destino en el mundo; E, Espacio o click para interactuar. Esc (dos veces) salta a la elección de puesto; en el creador, «Saltar prólogo» va directo a ella.
 
 ## Acto I: El Último Commit
 

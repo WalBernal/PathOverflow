@@ -4,7 +4,7 @@ extends CharacterBody2D
 ## CharacterData, así que el árbol pasivo, el equipo y las ascendencias afectan
 ## al juego. Las habilidades las lanza SkillController; las pociones, este nodo.
 ##
-## Movimiento: WASD o mantener click izquierdo (estilo PoE).
+## Movimiento: flechas o mantener click izquierdo (estilo PoE).
 
 signal died
 ## Golpe recibido que no se esquivó ni bloqueó (nova de hielo de ascendencia).
@@ -30,7 +30,7 @@ const LOW_LIFE_FRACTION := 0.5
 const RECENT_KILL_TIME := 4.0
 ## Teclas del cinturón de pociones (Inventory.FLASK_SLOTS).
 const FLASK_ACTIONS := [&"flask_1", &"flask_2", &"flask_3", &"flask_4", &"flask_5"]
-## Esquiva ("git stash", Shift o RT): un salto corto con invulnerabilidad breve.
+## Esquiva ("git stash", Espacio o RT): un salto corto con invulnerabilidad breve.
 ## Tiene cargas (2 + Stat.DODGE_CHARGES) que se recargan solas una a una.
 const DODGE_DISTANCE := 175.0
 const DODGE_TIME := 0.18

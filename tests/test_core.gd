@@ -58,6 +58,8 @@ func _initialize() -> void:
 	_test_roadmap2()
 	_test_roadmap2_second_batch()
 	_test_roadmap2_feel()
+	_test_controls_map_catalog()
+	_test_enemy_roles()
 	_test_board_milestones()
 	_test_shaped_clusters()
 	_test_defense_and_dot_skills()
@@ -1369,6 +1371,132 @@ func _test_roadmap2_feel() -> void:
 		_check(ResourceLoader.exists(Sfx.SFX_DIR + s + ".wav"), "existe el sonido %s" % s)
 
 
+## Controles nuevos (QWERTY, flechas, Espacio, Tab, Shift, B), iconos únicos,
+## catálogo, mapa grande con niebla y menos botín.
+func _test_controls_map_catalog() -> void:
+	var key_of := func(action: StringName) -> int:
+		for e in InputMap.action_get_events(action):
+			if e is InputEventKey:
+				return (e as InputEventKey).physical_keycode
+		return -1
+	var expected := {&"skill_1": KEY_Q, &"skill_2": KEY_W, &"skill_3": KEY_E, &"skill_4": KEY_R, &"skill_5": KEY_T, &"skill_6": KEY_Y,
+		&"move_up": KEY_UP, &"move_down": KEY_DOWN, &"move_left": KEY_LEFT, &"move_right": KEY_RIGHT,
+		&"dodge": KEY_SPACE, &"toggle_map": KEY_TAB, &"show_all_loot": KEY_SHIFT, &"toggle_catalog": KEY_B}
+	for a in expected:
+		_check(key_of.call(a) == expected[a], "tecla de %s: %s" % [a, OS.get_keycode_string(expected[a])])
+	_check(SkillController.KEY_LABELS == ["Q", "W", "E", "R", "T", "Y"], "la barra muestra Q W E R T Y")
+	# Cada habilidad con su propio icono.
+	var shapes := {}
+	for id in _db.skills.skills:
+		var shape := String(_db.skills.skills[id].get("icon", {}).get("shape", ""))
+		_check(shape != "" and not shapes.has(shape), "icono propio para %s (forma «%s» ya usada por %s)" % [id, shape, shapes.get(shape, "-")])
+		shapes[shape] = id
+	# Catálogo: ficha completa y lo encontrado.
+	var c := _new_character()
+	var cat := CatalogPanel.new()
+	cat.setup(c, _db.skills)
+	var ping := String(_db.skills.skills["ping_letal"]["name"])
+	_check(cat.entries().size() == _db.skills.skills.size(), "el catálogo lista todas las placas")
+	var text := cat.detail_text("ping_letal")
+	_check(text.contains(ping) and text.contains("Aún no encontrada") and text.contains("RAM compatibles"), "ficha de placa con nombre, estado y compatibilidad")
+	CatalogPanel.note_item(c, Motherboard.new(_db.skills.skills["ping_letal"], 1, []))
+	_check(cat.is_seen("ping_letal") and cat.detail_text("ping_letal").contains("Encontrada"), "lo recogido queda marcado como encontrado")
+	cat._set_tab("rams")
+	_check(cat.entries().size() == _db.skills.rams.size() and cat.detail_text("multicanal").contains("Funciona con"), "pestaña de RAM con sus placas compatibles")
+	cat.free()
+	# Mapa grande: niebla, lo explorado se guarda y se recupera.
+	var zone := Zone.new()
+	zone.setup(_zone_def("zona1"), null, null)
+	var p: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(p)
+	p.setup(c, EnemyManager.new())
+	p.global_position = zone.rect.position + Vector2(200, 200)
+	var wm := WorldMap.new()
+	wm.player = p
+	wm.character = c
+	wm.set_zone(zone)
+	var first := wm.explored_fraction()
+	_check(first > 0.0 and first < 0.3 and wm.is_explored(p.global_position), "al entrar solo se ve lo de alrededor (%.0f %%)" % (first * 100.0))
+	_check(not wm.is_explored(zone.rect.end - Vector2(100, 100)), "la otra punta sigue en la niebla")
+	p.global_position = zone.rect.get_center()
+	wm.reveal()
+	wm.save_explored()
+	var wm2 := WorldMap.new()
+	wm2.player = p
+	wm2.character = c
+	p.global_position = zone.rect.position + Vector2(200, 200)
+	wm2.set_zone(zone)
+	_check(wm2.is_explored(zone.rect.get_center()) and wm2.explored_fraction() > first, "lo explorado se guarda en el personaje")
+	wm.free()
+	wm2.free()
+	p.queue_free()
+	zone.free()
+	# Menos botín: una zona media suelta una docena de objetos, no treinta.
+	var expected_items := 80.0 * 0.8 * float(Rarity.ENEMY_INFO[Rarity.Enemy.NORMAL]["drop_chance"]) \
+		+ 80.0 * 0.2 * float(Rarity.ENEMY_INFO[Rarity.Enemy.SPECIAL]["drop_chance"]) + 2.0 * 2.0 * float(Rarity.ENEMY_INFO[Rarity.Enemy.ELITE]["drop_chance"])
+	_check(expected_items < 14.0, "una zona de 80 enemigos suelta ~%.0f objetos" % expected_items)
+
+
+## Roles en las manadas: guardián, sanador, francotirador y enjambre.
+func _test_enemy_roles() -> void:
+	var c := _new_character()
+	c.set_level(10)
+	var em := EnemyManager.new()
+	root.add_child(em)
+	var player: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(player)
+	player.setup(c, em)
+	player.global_position = Vector2(20000, 20000)
+	player.invulnerable = true
+	em.player = player
+	em.area_level = 10
+	var bug := em.type_index_of("bug")
+	var base := Vector2(20000, 20600)
+	# Guardián: más vida y protege a los de al lado (no a los lejanos).
+	var tank := em.spawn(base, Rarity.Enemy.NORMAL, bug)
+	var plain_life := em.max_lives[em.index_of(tank)]
+	em.set_role(tank, "tank")
+	_check(em.max_lives[em.index_of(tank)] > plain_life * 2.0 and em.role_of(em.index_of(tank)) == "tank", "el guardián tiene más del doble de vida")
+	var near := em.spawn(base + Vector2(80, 0), Rarity.Enemy.NORMAL, bug)
+	var far := em.spawn(base + Vector2(900, 0), Rarity.Enemy.NORMAL, bug)
+	for id in [near, far]:
+		em.max_lives[em.index_of(id)] = 10000.0
+		em.lives[em.index_of(id)] = 10000.0
+	em._physics_process(0.016)
+	em.hit_index(em.index_of(near), 100.0, 100.0, 0.0, 150.0)
+	var near_taken := 10000.0 - em.lives[em.index_of(near)]
+	em.hit_index(em.index_of(far), 100.0, 100.0, 0.0, 150.0)
+	var far_taken := 10000.0 - em.lives[em.index_of(far)]
+	_check(near_taken < far_taken * 0.7, "junto al guardián se recibe menos daño (%.0f frente a %.0f)" % [near_taken, far_taken])
+	# Sanador: cura a los heridos de alrededor.
+	var healer := em.spawn(base + Vector2(40, 60), Rarity.Enemy.NORMAL, bug)
+	em.set_role(healer, "healer")
+	var hurt_before := em.lives[em.index_of(near)]
+	em._heal_around(em.index_of(healer))
+	_check(em.lives[em.index_of(near)] > hurt_before, "el sanador cura a los heridos cercanos")
+	# Francotirador: se para, avisa con la línea y dispara un tiro rápido y fuerte.
+	em.clear_all()
+	var sniper := em.spawn(player.global_position + Vector2(500, 0), Rarity.Enemy.NORMAL, bug)
+	em.set_role(sniper, "sniper")
+	var si := em.index_of(sniper)
+	em.cooldowns[si] = 0.0
+	em._physics_process(0.016)
+	si = em.index_of(sniper)
+	_check(em.traits[si].get("snipe_on", false) and em.windups[si] > 0.0, "el francotirador apunta (aviso con línea)")
+	for k in 90:
+		em._physics_process(0.016)
+	_check(not em.projectiles.is_empty() or em.cooldowns[em.index_of(sniper)] > 0.0, "y dispara")
+	# Enjambre: rápido y frágil, entra por el costado.
+	var sw := em.spawn(player.global_position + Vector2(600, 0), Rarity.Enemy.NORMAL, bug)
+	var speed0 := em.speeds[em.index_of(sw)]
+	em.set_role(sw, "swarm")
+	_check(em.speeds[em.index_of(sw)] > speed0 * 1.4, "el enjambre es más rápido")
+	var step: Variant = em._role_step(em.index_of(sw), em.traits[em.index_of(sw)], "swarm", 0.016, Vector2(-600, 0), 600.0, 30.0, true)
+	_check(step is Vector2 and absf((step as Vector2).y) > 1.0, "el enjambre rodea en vez de ir en línea recta")
+	player.queue_free()
+	em.queue_free()
+
+
 func _zone_def(zone_id: String) -> Dictionary:
 	for f in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json"]:
 		for z in DataLoader.load_json(f).get("zones", []):
@@ -1469,9 +1597,19 @@ func _test_roadmap2() -> void:
 	# Filtro de botín.
 	var normal := Item.new(_db.bases["espada_oxidada"], Rarity.Item.NORMAL, 5)
 	var magic := Item.new(_db.bases["espada_oxidada"], Rarity.Item.MAGIC, 5)
-	_check(LootManager.passes_filter(normal, 0) and not LootManager.passes_filter(normal, 1), "el filtro oculta el equipo normal")
-	_check(LootManager.passes_filter(magic, 1) and not LootManager.passes_filter(magic, 2), "y, en el nivel 2, también el mágico")
-	_check(LootManager.passes_filter(chip, 2), "los chips (y placas, RAM...) siempre se ven")
+	var saved_rules: Dictionary = LootFilter.rules().duplicate()
+	LootFilter.apply_preset("todo")
+	_check(LootFilter.passes(normal), "con «Ver todo» se ve el equipo normal")
+	LootFilter.apply_preset("equilibrado")
+	_check(not LootFilter.passes(normal) and LootFilter.passes(magic), "«Equilibrado» oculta las armas normales")
+	LootFilter.apply_preset("estricto")
+	_check(not LootFilter.passes(magic) and LootFilter.passes(chip), "«Estricto» oculta también las mágicas; los chips se ven")
+	LootFilter.set_rule("chip", "hidden")
+	_check(not LootFilter.passes(chip), "una categoría se puede ocultar del todo")
+	var uniq := Item.new(_db.bases["espada_oxidada"], Rarity.Item.UNIQUE, 5)
+	_check(LootFilter.passes(uniq), "los únicos se ven siempre")
+	for k in saved_rules:
+		LootFilter.set_rule(k, saved_rules[k])
 
 
 ## Acto I más grande: "scale" agranda tamaño y posiciones, y las manadas crecen con el área.

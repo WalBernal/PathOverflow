@@ -35,7 +35,7 @@ var _menu_buttons: Array[Button] = []
 ## Menús con algo nuevo que ver ("skills", "passives"...): su botón lleva un «!»
 ## dorado que late hasta que se abre (p. ej. al desbloquear una habilidad).
 var attention := {}
-const MENU_IDS := ["character", "inventory", "skills", "passives"]
+const MENU_IDS := ["character", "inventory", "skills", "passives", "catalog"]
 ## Destello de cada ranura de la barra al usarla (segundos restantes).
 var _slot_flash: Array[float] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 ## Marco del objetivo: enemigo bajo el cursor (índice) y cuánto se mantiene tras salir.
@@ -72,7 +72,8 @@ func _ready() -> void:
 	for entry in [["C", "character", "Personaje (C): stats, resistencias y opiniones no solicitadas."],
 			["I", "inventory", "Inventario (I): equipo y bolsa."],
 			["K", "skills", "Habilidades (K): placas base y módulos RAM."],
-			["P", "passives", "Árbol pasivo (P): gasta tus puntos. O no, y quéjate en los foros."]]:
+			["P", "passives", "Árbol pasivo (P): gasta tus puntos. O no, y quéjate en los foros."],
+			["B", "catalog", "Catálogo de hardware (B): todas las placas base y módulos RAM, con lo que ya encontraste."]]:
 		var b := Button.new()
 		b.text = entry[0]
 		b.tooltip_text = entry[2]
@@ -229,7 +230,7 @@ func _update_tooltips() -> void:
 			f.charges, f.max_charges()]
 	for i in SkillController.ACTIONS.size():
 		_hotspots["skill_%d" % i].tooltip_text = _skill_tooltip(i)
-	_hotspots["dodge"].tooltip_text = "Esquiva · git stash (Shift · gatillo derecho)\nUn salto corto en la dirección en que te mueves (o hacia el ratón) con un instante de invulnerabilidad: evita golpes, charcos y estados.\nCargas: %d / %d. Se recarga una cada %.1f s." % [
+	_hotspots["dodge"].tooltip_text = "Esquiva · git stash (Espacio · gatillo derecho)\nUn salto corto en la dirección en que te mueves (o hacia el ratón) con un instante de invulnerabilidad: evita golpes, charcos y estados.\nCargas: %d / %d. Se recarga una cada %.1f s." % [
 		floori(player.dodge_charges), player.max_dodge_charges(), Player.DODGE_RECHARGE]
 
 
@@ -532,6 +533,9 @@ func _draw_target_frame(font: Font, top_offset := 0.0) -> void:
 	var types := EnemyManager.enemy_types()
 	var type_name: String = types[enemies.types[i]].get("name", "") if enemies.types[i] < types.size() else ""
 	var title: String = enemies.names[i] if enemies.names[i] != "" else type_name
+	var role := enemies.role_of(i)
+	if role != "":
+		title = "%s · %s" % [EnemyManager.ROLE_NAMES[role], title]
 	var states := enemies.ailments_of(i)
 	# Estados en filas: cada uno es icono + "Nombre ×n 3s".
 	var labels: Array[String] = []
@@ -867,7 +871,7 @@ func _draw_dodge(font: Font) -> void:
 	var key_rect := Rect2(r.position.x - 2.0, r.end.y - 12.0, r.size.x + 4.0, 14.0)
 	draw_rect(key_rect, Color(PLATE, 0.95))
 	draw_rect(key_rect, TRIM.darkened(0.2), false, 1.0)
-	draw_string(font, key_rect.position + Vector2(0, 11.0), "Shift", HORIZONTAL_ALIGNMENT_CENTER, key_rect.size.x, 10,
+	draw_string(font, key_rect.position + Vector2(0, 11.0), "Esp.", HORIZONTAL_ALIGNMENT_CENTER, key_rect.size.x, 10,
 		TEXT_COLOR if player.dodge_charges >= 1.0 else Color("e06c6c"))
 
 

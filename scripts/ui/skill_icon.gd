@@ -130,6 +130,48 @@ static func draw(ci: CanvasItem, rect: Rect2, skill_def: Dictionary, dimmed := f
 				ci.draw_circle(c + Vector2(-r * 0.4 + k * r * 0.4, r * 0.4), r * 0.09, color if k != 1 else Color("e06c6c"))
 			ci.draw_rect(Rect2(c + Vector2(-r * 1.05, -r * 0.1), Vector2(r * 0.3, r * 0.8)), Color("47443f"))
 			ci.draw_rect(Rect2(c + Vector2(r * 0.75, -r * 0.1), Vector2(r * 0.3, r * 0.8)), Color("47443f"))
+		"titan":
+			# Mainframe: torre de racks con tres hileras de LED y un ojo central.
+			ci.draw_rect(Rect2(c + Vector2(-r * 0.75, -r * 1.0), Vector2(r * 1.5, r * 2.0)), Color("2a3040"))
+			ci.draw_rect(Rect2(c + Vector2(-r * 0.75, -r * 1.0), Vector2(r * 1.5, r * 2.0)), color, false, 2.0)
+			for row in 3:
+				var y := -r * 0.75 + row * r * 0.55
+				ci.draw_rect(Rect2(c + Vector2(-r * 0.6, y), Vector2(r * 1.2, r * 0.32)), Color("1a1e28"))
+				for k in 4:
+					ci.draw_rect(Rect2(c + Vector2(-r * 0.5 + k * r * 0.28, y + r * 0.1), Vector2(r * 0.12, r * 0.12)),
+						Color("3cff6a") if (k + row) % 3 != 0 else color)
+			ci.draw_circle(c + Vector2(0, r * 0.05), r * 0.18, Color("e06c6c"))
+		"watchdog":
+			# Perro guardián con un reloj (el temporizador que vigila).
+			ci.draw_rect(Rect2(c + Vector2(-r * 0.7, -r * 0.05), Vector2(r * 1.1, r * 0.55)), color.darkened(0.2))
+			ci.draw_circle(c + Vector2(r * 0.45, -r * 0.25), r * 0.38, color)
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(r * 0.25, -r * 0.55), c + Vector2(r * 0.35, -r * 0.95), c + Vector2(r * 0.5, -r * 0.55)]), color.darkened(0.3))
+			ci.draw_circle(c + Vector2(r * 0.55, -r * 0.3), r * 0.07, Color("1a1620"))
+			for k in 4:
+				ci.draw_line(c + Vector2(-r * 0.6 + k * r * 0.3, r * 0.5), c + Vector2(-r * 0.6 + k * r * 0.3, r * 0.85), color.darkened(0.35), 3.0)
+			ci.draw_circle(c + Vector2(-r * 0.55, -r * 0.55), r * 0.32, Color("e8d9b0"))
+			ci.draw_line(c + Vector2(-r * 0.55, -r * 0.55), c + Vector2(-r * 0.55, -r * 0.78), Color("1a1620"), 2.0)
+			ci.draw_line(c + Vector2(-r * 0.55, -r * 0.55), c + Vector2(-r * 0.4, -r * 0.5), Color("1a1620"), 2.0)
+		"tracker":
+			# Bot rastreador: antena parabólica con ondas.
+			ci.draw_rect(Rect2(c + Vector2(-r * 0.45, r * 0.3), Vector2(r * 0.9, r * 0.5)), Color("3a3f4a"))
+			ci.draw_line(c + Vector2(0, r * 0.3), c + Vector2(0, -r * 0.1), Color("8a8a96"), 3.0)
+			ci.draw_arc(c + Vector2(-r * 0.1, -r * 0.2), r * 0.55, PI * 0.15, PI * 0.95, 12, color, 3.0, true)
+			for k in 3:
+				ci.draw_arc(c + Vector2(r * 0.15, -r * 0.45), r * (0.3 + 0.25 * k), -PI * 0.45, -PI * 0.05, 8, Color(color, 0.9 - 0.25 * k), 2.0, true)
+		"aura_bolt", "aura_target":
+			ci.draw_arc(c, r * 1.0, 0.0, TAU, 28, Color(color, 0.5), 2.0, true)
+			ci.draw_arc(c, r * 0.78, 0.4, TAU - 0.4, 24, Color(color, 0.8), 2.0, true)
+			if icon.get("shape", "") == "aura_bolt":
+				ci.draw_colored_polygon(PackedVector2Array([c + Vector2(r * 0.1, -r * 0.55), c + Vector2(-r * 0.3, r * 0.05), c + Vector2(-r * 0.02, r * 0.05),
+					c + Vector2(-r * 0.12, r * 0.55), c + Vector2(r * 0.3, -r * 0.08), c + Vector2(r * 0.02, -r * 0.08)]), color)
+			else:
+				# Diana: los enemigos dentro quedan expuestos.
+				ci.draw_arc(c, r * 0.45, 0.0, TAU, 20, color, 2.0, true)
+				ci.draw_circle(c, r * 0.12, color)
+				for k in 4:
+					var d := Vector2.from_angle(PI / 2.0 * k)
+					ci.draw_line(c + d * r * 0.25, c + d * r * 0.6, color, 2.0, true)
 		"ring":
 			ci.draw_arc(c, r, 0.0, TAU, 32, color, r * 0.28, true)
 			ci.draw_line(c + Vector2(-r * 0.2, r * 0.2), c + Vector2(r * 0.9, -r * 0.9), color, 3.0, true)

@@ -28,6 +28,9 @@ var dialogue_box: DialogueBox
 var tutorial: TutorialPanel
 var item_tooltip: ItemTooltip
 var minimap: Minimap
+var world_map: WorldMap
+var catalog: CatalogPanel
+var loot_filter_panel: LootFilterPanel
 var quest_tracker: QuestTracker
 var cutscene: CutscenePlayer
 var challenge_panel: ChallengePanel
@@ -139,6 +142,15 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	minimap.offset_top = 14.0
 	minimap.offset_bottom = 14.0 + minimap.custom_minimum_size.y
 
+	# Mapa grande (Tab), por encima del HUD y debajo de las ventanas.
+	world_map = WorldMap.new()
+	world_map.player = player
+	world_map.enemies = enemies
+	world_map.loot = loot
+	world_map.character = character
+	_root.add_child(world_map)
+	world_map.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
 	# Registro de misiones, debajo del minimapa.
 	quest_tracker = QuestTracker.new()
 	_root.add_child(quest_tracker)
@@ -216,6 +228,17 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 		"color": character.class_def.get("color", "d9a441")}}
 	_root.add_child(cutscene)
 
+	catalog = CatalogPanel.new()
+	_root.add_child(catalog)
+	catalog.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	catalog.setup(character, (get_node("/root/GameData").get("items") as ItemDatabase).skills)
+	catalog.close_requested.connect(toggle_catalog)
+	loot_filter_panel = LootFilterPanel.new()
+	_root.add_child(loot_filter_panel)
+	loot_filter_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	loot_filter_panel.setup(loot)
+	loot_filter_panel.close_requested.connect(toggle_loot_filter)
+
 	_pause_panel = _build_pause_menu()
 	_root.add_child(_pause_panel)
 	_pause_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -223,7 +246,9 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	_root.add_child(item_tooltip)
 	loot.hovered_item_changed.connect(_on_ground_item_hovered)
 	loot.pickup_failed.connect(hud.flash)
-	loot.picked_up.connect(func(_item: Item) -> void: tutorial.notify("picked_up"))
+	loot.picked_up.connect(func(item: Item) -> void:
+		tutorial.notify("picked_up")
+		CatalogPanel.note_item(character, item))
 	skills.skill_used.connect(func(_i: int) -> void: tutorial.notify("skill_used"))
 	skills.skill_used.connect(hud.notify_skill_used)
 	skills.not_enough_mana.connect(func() -> void: hud.flash("Sin maná. Bebe un refresco (teclas 1-5) o espera, como con el compilador."))
@@ -238,6 +263,7 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 ## Al entrar en una zona: minimapa, tutorial y el nombre de la zona en grande.
 func on_zone_changed(zone: Zone) -> void:
 	minimap.zone = zone
+	world_map.set_zone(zone)
 	tutorial.zone = zone
 	dialogue_box.close()
 	close_trade_panels()
@@ -448,12 +474,8 @@ func _build_pause_menu() -> Control:
 		for p in get_tree().get_nodes_in_group(&"world_post"):
 			p.call("refresh"))
 	right.add_child(pixel)
-	var loot_filter := _cycle_button("Filtro de botín", [0, 1, 2], LootManager.FILTER_NAMES,
-		func() -> float: return float(LootManager.filter_level()),
-		func(v: float) -> void:
-			GameSettings.set_value("interface", "loot_filter", int(v))
-			_loot.queue_redraw())
-	loot_filter.tooltip_text = "Oculta el equipo normal (o también el mágico) en el suelo.\nPlacas, RAM, pociones, únicos y conjuntos siempre se ven. Mantén Alt para ver todo."
+	var loot_filter := UiStyle.button("Filtro de botín...", toggle_loot_filter, 300)
+	loot_filter.tooltip_text = "Qué se ve en el suelo, por tipo y rareza, y desde qué rareza sale el haz de luz.\nMantén Shift para ver lo oculto."
 	right.add_child(loot_filter)
 	# --- Combate (en la columna del sonido, que es más corta) ---
 	sound.add_child(UiStyle.section_header("Combate"))
@@ -602,7 +624,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed(&"ui_cancel"):
 		# Esc cierra lo que esté abierto; si no hay nada, pausa.
-		if challenge_panel.visible:
+		if loot_filter_panel.visible:
+			toggle_loot_filter()
+		elif catalog.visible:
+			toggle_catalog()
+		elif world_map.visible:
+			world_map.toggle()
+		elif challenge_panel.visible:
 			challenge_panel._close()
 		elif shop_panel.visible or stash_panel.visible:
 			close_trade_panels()
@@ -642,6 +670,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed(&"toggle_quests"):
 		quest_tracker.collapsed = not quest_tracker.collapsed
 		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(&"toggle_map"):
+		world_map.toggle()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(&"toggle_catalog"):
+		toggle_catalog()
+		get_viewport().set_input_as_handled()
 
 
 func _on_menu_requested(menu: String) -> void:
@@ -663,7 +697,30 @@ func _on_menu_requested(menu: String) -> void:
 		"character":
 			character_sheet.visible = not character_sheet.visible
 			skills_panel.visible = skills_panel.visible and not character_sheet.visible
+		"catalog":
+			toggle_catalog()
 	_update_minimap()
+
+
+## Catálogo de hardware (B): pausa el juego mientras está abierto, como el árbol.
+func toggle_catalog() -> void:
+	if catalog.visible:
+		catalog.visible = false
+	else:
+		item_tooltip.hide()
+		catalog.open()
+	get_tree().paused = catalog.visible or tree_screen.visible or _pause_panel.visible
+
+
+## Filtro de botín: ventana propia (también desde Pausa e inventario).
+func toggle_loot_filter() -> void:
+	if loot_filter_panel.visible:
+		loot_filter_panel.visible = false
+	else:
+		item_tooltip.hide()
+		_pause_panel.visible = false   # desde Pausa: la ventana del filtro la sustituye
+		loot_filter_panel.open()
+	get_tree().paused = loot_filter_panel.visible or catalog.visible or tree_screen.visible or _pause_panel.visible
 
 
 ## El minimapa comparte esquina con el inventario: se oculta mientras está abierto.

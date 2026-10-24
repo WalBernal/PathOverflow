@@ -648,7 +648,7 @@ func _draw_overlay() -> void:
 		"title":
 			_draw_title(view)
 	if _phase == "walk" and not _cutscene.is_playing():
-		var hint := ("WASD o click: caminar" if _stage.room == "pasillo" else "A / D o click: caminar") + "   ·   E, o click en la flecha: ir e interactuar   ·   Esc: saltar prólogo"
+		var hint := "Flechas o click: caminar" + "   ·   E, o click en la flecha: ir e interactuar   ·   Esc: saltar prólogo"
 		_overlay.draw_string(font, Vector2(0, view.y - 14), hint, HORIZONTAL_ALIGNMENT_CENTER, view.x, 13, Color(1, 1, 1, 0.45))
 		var place: String = String({"calle": "Av. del Mar, frente al malecón · Mazatlán · 13:47 · 38 °C", "pasillo": "UAdeO · Pasillo del Departamento de Informática",
 			"oficina": "Departamento de Informática"}.get(_stage.room, ""))

@@ -44,6 +44,10 @@ func _run() -> void:
 		await _capture_hire_no()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("ventanas"):
+		await _capture_windows()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("sensacion"):
 		await _capture_feel()
 		get_tree().quit()
@@ -360,6 +364,99 @@ func _capture_roadmap2() -> void:
 	await _wait(0.5)
 	_save("72_roadmap2_ranura_chip")
 	ui.call("_on_menu_requested", "passives")
+	world.set("_since_save", -9999.0)
+
+
+## Mapa grande (Tab), catálogo de hardware (B), ventana del filtro de botín,
+## Shift mostrando lo filtrado y la barra con Q W E R T Y.
+func _capture_windows() -> void:
+	var saved_scale: Variant = GameSettings.get_value("interface", "scale", 1.0)
+	GameSettings.set_value("interface", "scale", 1.0)
+	var gd: Node = get_node("/root/GameData")
+	var items: ItemDatabase = gd.get("items")
+	var c: CharacterData = gd.create_character("Ventanas", &"templario", CharacterAppearance.default(), false)
+	c.flags["zone"] = "zona2"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 20
+	c.inventory.add_item(Motherboard.new(items.skills.skills["ping_letal"], 3, []))
+	c.inventory.add_item(RamModule.new(items.skills.rams["multicanal"]))
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(3.5)
+	var ui: GameUI = world.get("ui")
+	if ui.is_choosing():
+		ui.call("_on_choice_picked", "golem_hardware", func(_s: String) -> void: pass)
+	get_tree().paused = false
+	var player: Player = world.get("player")
+	var zone: Zone = world.get("zone")
+	player.invulnerable = true
+	# Un paseo para que el mapa tenga algo explorado.
+	for k in 6:
+		player.global_position = zone.free_spot_near(zone.rect.position + zone.rect.size * Vector2(0.15 + k * 0.1, 0.5 + 0.08 * sin(k)))
+		ui.world_map.reveal()
+	ui.world_map.toggle()
+	await _wait(0.4)
+	_save("93_mapa_grande")
+	ui.world_map.toggle()
+	ui.toggle_catalog()
+	await _wait(0.4)
+	_save("94_catalogo_placas")
+	ui.catalog._set_tab("rams")
+	await _wait(0.3)
+	_save("95_catalogo_ram")
+	ui.toggle_catalog()
+	# Botín en el suelo con un filtro estricto; luego «con Shift».
+	var loot: LootManager = world.get("loot")
+	var gen := ItemGenerator.new(items)
+	var p := player.global_position
+	for k in 10:
+		loot.drop_item(gen.generate(20, [Rarity.Item.NORMAL, Rarity.Item.MAGIC, Rarity.Item.RARE][k % 3]), p + Vector2(120 + (k % 5) * 60, -60 + (k / 5) * 80))
+	var saved_rules: Dictionary = LootFilter.rules().duplicate()
+	LootFilter.apply_preset("estricto")
+	ui.toggle_loot_filter()
+	await _wait(0.4)
+	_save("96_filtro_botin")
+	ui.toggle_loot_filter()
+	await _wait(0.3)
+	_save("97_suelo_filtrado")
+	Input.action_press(&"show_all_loot")
+	loot.queue_redraw()
+	await _wait(0.3)
+	_save("98_suelo_con_shift")
+	Input.action_release(&"show_all_loot")
+	loot.clear_all()
+	# Roles: guardián con su aura, sanador curando, francotirador apuntando y un enjambre.
+	var em: EnemyManager = world.get("enemies")
+	em.clear_all()
+	em.roll_affixes = false
+	var bug := em.type_index_of("bug")
+	var base := player.global_position + Vector2(300, 0)
+	var role_ids := {}
+	for role in EnemyManager.ROLES:
+		var off: Vector2 = {"tank": Vector2(0, -60), "healer": Vector2(160, -20), "sniper": Vector2(330, 120), "swarm": Vector2(80, 150)}[role]
+		var id := em.spawn(base + off, Rarity.Enemy.NORMAL, bug)
+		em.set_role(id, role)
+		role_ids[role] = id
+	for k in 3:
+		var id := em.spawn(base + Vector2(-40 + k * 50, 30), Rarity.Enemy.NORMAL, bug)
+		em.lives[em.index_of(id)] *= 0.5
+	for k in 3:
+		em.set_role(em.spawn(base + Vector2(60 + k * 40, 190), Rarity.Enemy.NORMAL, bug), "swarm")
+	var si := em.index_of(role_ids["sniper"])
+	em.traits[si]["snipe_on"] = true
+	em.windups[si] = EnemyManager.ROLE_SNIPE_WINDUP * 0.4
+	em.attack_dirs[si] = (player.global_position - em.positions[si]).normalized()
+	em._heal_around(em.index_of(role_ids["healer"]))
+	ui.hud.set("_target_id", role_ids["healer"])
+	ui.hud.set("_target_linger", 999.0)
+	await _wait(0.1)
+	_save("99_roles_de_enemigo")
+	for k in saved_rules:
+		LootFilter.set_rule(k, saved_rules[k])
+	GameSettings.set_value("interface", "scale", saved_scale)
 	world.set("_since_save", -9999.0)
 
 

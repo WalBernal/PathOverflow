@@ -19,10 +19,12 @@ const ITEM_INFO := {
 
 ## Multiplicadores sobre las stats base del monstruo y su botín.
 ## drop_chance: probabilidad de soltar cada uno de sus drop_count objetos.
+## (Octubre 2026: con zonas más grandes y manadas más densas caían 20-45 objetos
+## por zona; ahora ~8-14, y de algo más de calidad.)
 const ENEMY_INFO := {
-	Enemy.NORMAL: {"name": "Normal", "color": Color("c8c8c8"), "life_mult": 1.0, "damage_mult": 1.0, "extra_mods": 0, "xp_mult": 1.0, "item_rarity_bonus": 0.0, "drop_chance": 0.12, "drop_count": 1},
-	Enemy.SPECIAL: {"name": "Especial", "color": Color("8888ff"), "life_mult": 2.0, "damage_mult": 1.2, "extra_mods": 1, "xp_mult": 3.0, "item_rarity_bonus": 50.0, "drop_chance": 0.4, "drop_count": 1},
-	Enemy.ELITE: {"name": "Élite", "color": Color("ffff77"), "life_mult": 5.0, "damage_mult": 1.5, "extra_mods": 3, "xp_mult": 7.5, "item_rarity_bonus": 200.0, "drop_chance": 1.0, "drop_count": 2},
+	Enemy.NORMAL: {"name": "Normal", "color": Color("c8c8c8"), "life_mult": 1.0, "damage_mult": 1.0, "extra_mods": 0, "xp_mult": 1.0, "item_rarity_bonus": 20.0, "drop_chance": 0.045, "drop_count": 1},
+	Enemy.SPECIAL: {"name": "Especial", "color": Color("8888ff"), "life_mult": 2.0, "damage_mult": 1.2, "extra_mods": 1, "xp_mult": 3.0, "item_rarity_bonus": 60.0, "drop_chance": 0.2, "drop_count": 1},
+	Enemy.ELITE: {"name": "Élite", "color": Color("ffff77"), "life_mult": 5.0, "damage_mult": 1.5, "extra_mods": 3, "xp_mult": 7.5, "item_rarity_bonus": 200.0, "drop_chance": 0.85, "drop_count": 2},
 	# Los únicos tienen habilidades y botín propios; esto es solo la base.
 	Enemy.UNIQUE: {"name": "Único", "color": Color("af6025"), "life_mult": 10.0, "damage_mult": 2.0, "extra_mods": 0, "xp_mult": 15.0, "item_rarity_bonus": 500.0, "drop_chance": 1.0, "drop_count": 5},
 }

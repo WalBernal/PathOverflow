@@ -15,7 +15,7 @@ signal reservation_full(skill_name: String)
 signal unit_lost(skill_name: String)
 
 const ACTIONS := [&"skill_1", &"skill_2", &"skill_3", &"skill_4", &"skill_5", &"skill_6"]
-const KEY_LABELS := ["Der.", "Esp.", "Q", "E", "R", "F"]
+const KEY_LABELS := ["Q", "W", "E", "R", "T", "Y"]
 const REPEAT_DELAY := 0.15
 ## El personaje solo se detiene un instante al lanzar (fracción del tiempo de
 ## uso, con tope), para no quedarse vendido entre enemigos.

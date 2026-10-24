@@ -171,6 +171,8 @@ func _notification(what: int) -> void:
 
 
 func save_now() -> void:
+	if ui and ui.world_map:
+		ui.world_map.save_explored()
 	GameData.save_character(character)
 	if stash:
 		stash.save()
@@ -337,6 +339,7 @@ func _spawn_zone_enemies() -> void:
 		for center in zone.pack_centers(int(cfg.get("packs", 0)), rng, float(cfg.get("keep_away", 0.0))):
 			var type := enemies.type_index_of(type_ids[rng.randi_range(0, type_ids.size() - 1)]) if not type_ids.is_empty() else -1
 			var pack := rng.randi_range(int(size_range[0]), int(size_range[1]))
+			var pack_ids: Array[int] = []
 			for k in pack:
 				var rarity := Rarity.Enemy.NORMAL
 				if k == 0 and rng.randf() < float(cfg.get("elite_chance", 0.0)):
@@ -344,7 +347,8 @@ func _spawn_zone_enemies() -> void:
 				elif rng.randf() < float(cfg.get("special_chance", 0.0)):
 					rarity = Rarity.Enemy.SPECIAL
 				var p := zone.free_spot_near(center + Vector2(rng.randf_range(-70, 70), rng.randf_range(-70, 70)))
-				enemies.spawn(p, rarity, type)
+				pack_ids.append(enemies.spawn(p, rarity, type))
+			_assign_role(pack_ids, center, type, cfg, rng)
 	_spawn_zone_specials()
 	_boss_alive = false
 	var boss: Dictionary = zone.def.get("boss", {}) if zone.def.get("boss") is Dictionary else {}
@@ -353,6 +357,33 @@ func _spawn_zone_enemies() -> void:
 			boss.get("name", ""), float(boss.get("life_mult", 1.0)), boss.get("abilities", []))
 		enemies.set_phases(enemies.ids[enemies.ids.size() - 1], boss.get("phases", []))
 		_boss_alive = true
+
+
+## Roles en las manadas (desde el nivel de zona 2): a veces un guardián, un
+## sanador o un francotirador entre los normales, o un enjambre que se suma.
+## La zona puede limitarlos con enemies.roles (lista) y role_chance.
+const ROLE_CHANCE := 0.4
+const SWARM_SIZE := 4
+
+
+func _assign_role(pack_ids: Array[int], center: Vector2, type: int, cfg: Dictionary, rng: RandomNumberGenerator) -> void:
+	if zone.level < 2 or rng.randf() >= float(cfg.get("role_chance", ROLE_CHANCE)):
+		return
+	var allowed: Array = cfg.get("roles", EnemyManager.ROLES)
+	if allowed.is_empty():
+		return
+	var role := String(allowed[rng.randi_range(0, allowed.size() - 1)])
+	if role == "swarm":
+		for k in SWARM_SIZE:
+			var p := zone.free_spot_near(center + Vector2.from_angle(TAU * k / SWARM_SIZE) * 90.0)
+			enemies.set_role(enemies.spawn(p, Rarity.Enemy.NORMAL, type), "swarm")
+		return
+	# El rol va a un normal (no al élite que encabeza la manada).
+	for id in pack_ids:
+		var i := enemies.index_of(id)
+		if i != -1 and enemies.rarities[i] != Rarity.Enemy.ELITE:
+			enemies.set_role(id, role)
+			return
 
 
 ## Subjefes, candados y enemigos raros definidos en la zona.
