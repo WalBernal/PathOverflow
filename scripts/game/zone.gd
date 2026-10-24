@@ -123,6 +123,37 @@ var _exits_armed := false
 var _challenge_armed := true
 
 
+## Agranda una zona según su "scale" (act*.json): tamaño y todas las posiciones
+## (entradas, salidas, NPC, waypoint, alijo, objetos, jefe...). Las manadas, los
+## obstáculos y los accidentes crecen con el área, y "enemy_density" añade más
+## enemigos por pantalla. Lo llama GameData al cargar los actos.
+static func scale_def(z: Dictionary) -> void:
+	var s := float(z.get("scale", 1.0))
+	if is_equal_approx(s, 1.0) or z.get("_scaled", false):
+		return
+	z["_scaled"] = true
+	var mul := func(v: Variant) -> Array: return [float(v[0]) * s, float(v[1]) * s]
+	z["size"] = mul.call(z["size"])
+	for k in z.get("entries", {}):
+		z["entries"][k] = mul.call(z["entries"][k])
+	for key in ["waypoint", "stash"]:
+		if z.has(key):
+			z[key] = mul.call(z[key])
+	for list in ["exits", "npcs", "quest_items", "key_items", "challenges", "props", "rare_spawns"]:
+		for e in z.get(list, []):
+			if e is Dictionary and e.has("pos"):
+				e["pos"] = mul.call(e["pos"])
+	if z.has("boss") and z["boss"].has("pos"):
+		z["boss"]["pos"] = mul.call(z["boss"]["pos"])
+	var area := s * s
+	if z.has("enemies"):
+		z["enemies"]["packs"] = roundi(float(z["enemies"].get("packs", 0)) * area * float(z.get("enemy_density", 1.0)))
+	if z.has("obstacles"):
+		z["obstacles"]["count"] = roundi(float(z["obstacles"].get("count", 0)) * area)
+	if z.has("features"):
+		z["features"]["count"] = roundi(float(z["features"].get("count", 0)) * s)
+
+
 static func npc_database() -> Dictionary:
 	if _npc_db.is_empty():
 		var data = DataLoader.load_json(NPC_DATA_PATH)
@@ -190,6 +221,8 @@ func setup(p_def: Dictionary, p_player: Player, p_character: CharacterData, p_qu
 	_build_collision()
 	_ground_layer = Node2D.new()
 	_ground_layer.show_behind_parent = true
+	_ground_layer.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+	_ground_layer.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_ground_layer.draw.connect(_draw_static)
 	add_child(_ground_layer)
 
@@ -685,11 +718,22 @@ func _draw_static() -> void:
 	var ground := Color(s["ground"])
 	var layer := _ground_layer
 	layer.draw_rect(rect.grow(BORDER), Color(s["outside"]))
-	if walk_polygon.size() >= 3:
-		layer.draw_colored_polygon(walk_polygon, ground)
+	if ZoneArt.has_ground(style):
+		# Suelo en pixel art: baldosa sin costuras repetida (UV en el mundo).
+		var tex := ZoneArt.ground(style)
+		var area := walk_polygon if walk_polygon.size() >= 3 else PackedVector2Array([rect.position, Vector2(rect.end.x, rect.position.y), rect.end, Vector2(rect.position.x, rect.end.y)])
+		var uvs := PackedVector2Array()
+		for q in area:
+			uvs.append(q / ZoneArt.tile_world())
+		layer.draw_colored_polygon(area, Color.WHITE, uvs, tex)
+		if style == "forest" or style == "ruins":
+			_draw_decals(layer, Color(s["decal"]))
 	else:
-		layer.draw_rect(rect, ground)
-	_draw_decals(layer, Color(s["decal"]))
+		if walk_polygon.size() >= 3:
+			layer.draw_colored_polygon(walk_polygon, ground)
+		else:
+			layer.draw_rect(rect, ground)
+		_draw_decals(layer, Color(s["decal"]))
 	if style == "camp":
 		_draw_camp(layer)
 	elif style == "terminal":
@@ -999,6 +1043,62 @@ func _draw() -> void:
 		if quest_item_visible(q):
 			_draw_quest_item(q)
 	_draw_npcs()
+	_draw_ambient()
+
+
+## Partículas de ambiente alrededor de la cámara, según el estilo: luciérnagas y
+## hojas en el bosque, niebla y burbujas en el pantano, polvo en ruinas y
+## catacumbas, motas de datos en los servidores, brasas en la sala del jefe.
+func _draw_ambient() -> void:
+	var view := get_viewport_rect()
+	var inv := get_canvas_transform().affine_inverse()
+	var cam := Rect2(inv * view.position, view.size / get_canvas_transform().get_scale()).grow(60.0)
+	var t := _time
+	var spot := func(k: int, vx: float, vy: float) -> Vector2:
+		var hx := fmod(k * 0.6180339 + 0.13, 1.0)
+		var hy := fmod(k * 0.7548776 + 0.41, 1.0)
+		return cam.position + Vector2(fposmod(hx * cam.size.x + t * vx, cam.size.x), fposmod(hy * cam.size.y + t * vy, cam.size.y))
+	match style:
+		"forest":
+			for k in 26:   # luciérnagas
+				var q: Vector2 = spot.call(k, 6.0 * sin(k), -4.0) + Vector2(sin(t * 1.3 + k) * 10.0, cos(t + k * 2.0) * 6.0)
+				var blink := maxf(0.0, sin(t * 2.0 + k * 1.7))
+				draw_rect(Rect2(q, Vector2(3, 3)), Color(0.85, 1.0, 0.4, 0.75 * blink))
+				draw_rect(Rect2(q - Vector2(2, 2), Vector2(7, 7)), Color(0.85, 1.0, 0.4, 0.12 * blink))
+			for k in 10:   # hojas que caen
+				var q: Vector2 = spot.call(k + 50, 14.0, 22.0) + Vector2(sin(t * 2.0 + k) * 12.0, 0)
+				draw_rect(Rect2(q, Vector2(4, 2)), [Color("6a8a3a"), Color("8a6a2a")][k % 2])
+		"swamp":
+			for k in 9:   # bancos de niebla
+				var q: Vector2 = spot.call(k, 10.0, 2.0)
+				draw_set_transform(q, 0.0, Vector2(1.0, 0.4))
+				draw_circle(Vector2.ZERO, 90.0 + 30.0 * sin(k), Color(0.6, 0.55, 0.75, 0.06))
+				draw_set_transform(Vector2.ZERO)
+			for k in 14:   # burbujas
+				var q: Vector2 = spot.call(k + 30, 0.0, -18.0)
+				draw_rect(Rect2(q, Vector2(3, 3)), Color(0.75, 0.55, 1.0, 0.45))
+		"ruins", "catacombs":
+			for k in 30:   # polvo flotando
+				var q: Vector2 = spot.call(k, 5.0, 3.0) + Vector2(sin(t * 0.7 + k) * 8.0, 0)
+				draw_rect(Rect2(q, Vector2(2, 2)), Color(1.0, 0.9, 0.7, 0.3 if style == "ruins" else 0.18))
+		"servers":
+			for k in 28:   # motas de datos que suben
+				var q: Vector2 = spot.call(k, 0.0, -26.0)
+				var on := sin(t * 5.0 + k) > 0.0
+				draw_rect(Rect2(q, Vector2(2, 4)), Color(0.35, 0.9, 1.0, 0.6 if on else 0.2))
+		"boss":
+			for k in 30:   # brasas
+				var q: Vector2 = spot.call(k, 4.0 * sin(k), -34.0) + Vector2(sin(t * 3.0 + k) * 6.0, 0)
+				draw_rect(Rect2(q, Vector2(3, 3)), Color(1.0, 0.45 + 0.3 * sin(k), 0.15, 0.7))
+		"camp":
+			for k in 12:
+				var q: Vector2 = spot.call(k, 3.0, -6.0)
+				draw_rect(Rect2(q, Vector2(2, 2)), Color(1.0, 0.8, 0.4, 0.35 * maxf(0.0, sin(t * 1.5 + k))))
+		"sandbox":
+			var font := ThemeDB.fallback_font
+			for k in 14:
+				var q: Vector2 = spot.call(k, 0.0, 16.0)
+				draw_string(font, q, "1" if (k + int(t * 2.0)) % 2 == 0 else "0", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.3, 0.6, 1.0, 0.3))
 
 
 func _draw_feature_anim(o: Dictionary) -> void:
@@ -1269,36 +1369,121 @@ func _draw_campfire(pos: Vector2) -> void:
 		draw_colored_polygon(PackedVector2Array([pos + Vector2(-w, 0), pos + Vector2(sway, -h), pos + Vector2(w, 0)]), layer[0])
 
 
+## Puerta de salida en pixel art: arco de piedra con runas, energía girando
+## dentro, círculo de glifos en el suelo y una placa con el destino. El color
+## dice adónde lleva: campamento (dorado), jefe (rojo), portal (violeta), zona
+## (cian); bloqueada, apagada y con cadenas.
 func _draw_exit(e: Dictionary) -> void:
 	var p: Vector2 = e["pos"]
-	var glow := 0.5 + 0.5 * sin(_time * 3.0)
 	var portal: bool = e.get("portal", false)
 	var locked := exit_blocked_reason(e) != ""
-	var color := Color(0.75, 0.45, 1.0) if portal else Color(0.5, 0.8, 1.0)
+	if not e.has("target_def"):
+		# Sin depender del autoload (las pruebas cargan la zona sin él).
+		var gd := get_node_or_null("/root/GameData")
+		e["target_def"] = gd.get("zones").get(e["target"], {}) if gd else {}
+	var target: Dictionary = e["target_def"]
+	var color := Color("5ad8ff")
+	var icon := "arrow"
+	if bool(target.get("safe", false)):
+		color = Color("ffc860")
+		icon = "camp"
+	elif target.has("boss"):
+		color = Color("ff5a4a")
+		icon = "skull"
+	elif portal:
+		color = Color("c08aff")
+		icon = "swirl"
 	if locked:
-		color = Color(0.85, 0.3, 0.3)
-		# Candado delante de la salida.
-		draw_rect(Rect2(p + Vector2(-12, -8), Vector2(24, 20)), Color("8a8e98"))
-		draw_arc(p + Vector2(0, -8), 8.0, PI, TAU, 12, Color("8a8e98"), 4.0)
-		draw_circle(p + Vector2(0, 1), 3.0, Color("1a1a1e"))
-	draw_set_transform(p, 0.0, Vector2(0.55, 1.0))
-	draw_circle(Vector2.ZERO, EXIT_RADIUS + 10.0, Color(color, 0.08 + 0.06 * glow))
-	draw_circle(Vector2.ZERO, EXIT_RADIUS, Color(color.darkened(0.6), 0.45))
-	draw_arc(Vector2.ZERO, EXIT_RADIUS, 0.0, TAU, 40, Color(color, 0.6 + 0.4 * glow), 3.0, true)
-	if portal:
-		# Remolino girando.
-		for k in 3:
-			var a := _time * 2.5 + k * TAU / 3.0
-			draw_arc(Vector2.ZERO, EXIT_RADIUS * (0.35 + 0.18 * k), a, a + 2.2, 16, Color(color.lightened(0.3), 0.7), 2.5, true)
+		color = Color("8a4a4a")
+	var stone := Color("4a4652")
+	var stone_dark := Color("2e2b34")
+	var stone_light := Color("68636e")
+	var base := p + Vector2(0, 24)
+	# Círculo de glifos en el suelo (girando).
+	draw_set_transform(base, 0.0, Vector2(1.0, 0.42))
+	draw_circle(Vector2.ZERO, 62.0, Color(color, 0.08 if locked else 0.14))
+	draw_arc(Vector2.ZERO, 62.0, 0.0, TAU, 48, Color(color, 0.35 if locked else 0.7), 3.0)
+	draw_arc(Vector2.ZERO, 50.0, 0.0, TAU, 48, Color(color, 0.2 if locked else 0.4), 2.0)
+	if not locked:
+		for k in 12:
+			var a := TAU * k / 12.0 + _time * 0.6
+			var q := Vector2.from_angle(a) * 56.0
+			draw_rect(Rect2(q - Vector2(3, 3), Vector2(6, 6)), Color(color.lightened(0.3), 0.8))
 	draw_set_transform(Vector2.ZERO)
+	# Energía dentro del arco (o vacío si está cerrada).
+	var inner := Rect2(p + Vector2(-26, -56), Vector2(52, 80))
+	if locked:
+		draw_rect(inner, Color(0.05, 0.03, 0.04, 0.85))
+	else:
+		for k in 6:   # bandas de luz que suben
+			var t := fmod(_time * 0.5 + k / 6.0, 1.0)
+			var y := inner.end.y - t * inner.size.y
+			draw_rect(Rect2(inner.position.x, y, inner.size.x, 6), Color(color.lightened(0.2), 0.10 + 0.2 * sin(t * PI)))
+		draw_rect(inner, Color(color.darkened(0.55), 0.55))
+		draw_circle(inner.get_center() + Vector2(0, -inner.size.y * 0.25), 26.0, Color(color.darkened(0.55), 0.55))
+		for k in 3:   # remolino
+			var a := _time * 2.2 + k * TAU / 3.0
+			draw_arc(inner.get_center() + Vector2(0, -6), 10.0 + 7.0 * k, a, a + 2.0, 10, Color(color.lightened(0.35), 0.8), 3.0)
+		for k in 8:   # chispas que suben
+			var t := fmod(_time * 0.7 + k * 0.137, 1.0)
+			var x := inner.position.x + fmod(k * 13.7, inner.size.x)
+			draw_rect(Rect2(x, inner.end.y - t * (inner.size.y + 30.0), 3, 3), Color(color.lightened(0.5), 1.0 - t))
+	# Pilares de bloques de piedra con runas que brillan.
+	for side in [-1.0, 1.0]:
+		var px: float = p.x + side * 36.0
+		for b in 7:
+			var block := Rect2(px - 9, base.y - 10 - b * 12, 18, 11)
+			draw_rect(block, stone if b % 2 == 0 else stone.darkened(0.08))
+			draw_rect(Rect2(block.position, Vector2(block.size.x, 2)), stone_light)
+			draw_rect(Rect2(block.position.x + (block.size.x - 3 if side > 0 else 0), block.position.y, 3, block.size.y), stone_dark)
+			if b in [2, 4] and not locked:
+				var rune := 0.5 + 0.5 * sin(_time * 3.0 + b + side)
+				draw_rect(Rect2(block.get_center() - Vector2(2, 3), Vector2(4, 6)), Color(color.lightened(0.3), 0.4 + 0.6 * rune))
+		draw_rect(Rect2(px - 12, base.y - 6, 24, 8), stone_dark)   # zócalo
+	# Arco: bloques en semicírculo y piedra clave con el icono del destino.
+	var arch := p + Vector2(0, -60)
+	for k in 9:
+		var a := PI + PI * k / 8.0
+		var q := arch + Vector2.from_angle(a) * 36.0
+		draw_rect(Rect2(q - Vector2(8, 7), Vector2(16, 14)), stone if k % 2 == 0 else stone.darkened(0.08))
+		draw_rect(Rect2(q - Vector2(8, 7), Vector2(16, 2)), stone_light)
+	var key := arch + Vector2(0, -38)
+	draw_rect(Rect2(key - Vector2(12, 11), Vector2(24, 22)), stone_light)
+	draw_rect(Rect2(key - Vector2(10, 9), Vector2(20, 18)), stone_dark)
+	var ic := color.lightened(0.3)
+	match icon:
+		"camp":
+			draw_colored_polygon(PackedVector2Array([key + Vector2(0, -6), key + Vector2(7, 6), key + Vector2(-7, 6)]), ic)
+		"skull":
+			draw_rect(Rect2(key - Vector2(5, 6), Vector2(10, 8)), ic)
+			draw_rect(Rect2(key + Vector2(-3, 2), Vector2(6, 4)), ic)
+			draw_rect(Rect2(key + Vector2(-3, -4), Vector2(2, 2)), stone_dark)
+			draw_rect(Rect2(key + Vector2(1, -4), Vector2(2, 2)), stone_dark)
+		"swirl":
+			draw_arc(key, 6.0, _time * 3.0, _time * 3.0 + 4.5, 10, ic, 2.0)
+		_:
+			var dir := -1.0 if p.x < rect.get_center().x else 1.0
+			draw_colored_polygon(PackedVector2Array([key + Vector2(dir * 7, 0), key + Vector2(-dir * 4, -6), key + Vector2(-dir * 4, 6)]), ic)
+	if locked:
+		# Cadenas cruzadas y candado.
+		for d in [1.0, -1.0]:
+			for k in 8:
+				var q := p + Vector2(-30 * d + k * 7.5 * d, -50 + k * 9.0)
+				draw_rect(Rect2(q - Vector2(3, 2), Vector2(6, 4)), Color("8a8e98") if k % 2 == 0 else Color("6a6e78"))
+		draw_rect(Rect2(p + Vector2(-10, -14), Vector2(20, 16)), Color("b8a060"))
+		draw_arc(p + Vector2(0, -14), 7.0, PI, TAU, 10, Color("b8a060"), 3.0)
+		draw_rect(Rect2(p + Vector2(-1, -9), Vector2(2, 5)), Color("2a2010"))
+	# Placa con el destino.
 	var font := ThemeDB.fallback_font
 	var label: String = e["label"]
-	if not portal:
-		label = ("← %s" if p.x < rect.get_center().x else "%s →") % label
 	if locked:
-		label = "[bloqueado] " + label
-	draw_string_outline(font, p + Vector2(-130, -EXIT_RADIUS - 18), label, HORIZONTAL_ALIGNMENT_CENTER, 260, 15, 5, Color.BLACK)
-	draw_string(font, p + Vector2(-130, -EXIT_RADIUS - 18), label, HORIZONTAL_ALIGNMENT_CENTER, 260, 15, color.lightened(0.3))
+		label = "Bloqueado · " + label
+	var w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x + 22.0
+	var plate := Rect2(Vector2(p.x - w / 2.0, key.y - 44), Vector2(w, 22))
+	draw_rect(plate.grow(2), Color("120f16"))
+	draw_rect(plate, Color("221d28"))
+	draw_rect(plate, Color(color, 0.9), false, 2.0)
+	draw_string(font, plate.position + Vector2(0, 16), label, HORIZONTAL_ALIGNMENT_CENTER, w, 14, color.lightened(0.4))
 
 
 func _draw_waypoint() -> void:

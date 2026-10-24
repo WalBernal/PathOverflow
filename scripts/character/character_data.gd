@@ -141,11 +141,20 @@ func set_ascendancy(asc_id: StringName) -> void:
 const ASCENDANCY_LEVEL := 20
 
 
-## Puntos de ascendencia: 1 al nivel 20, 2 al 25 y 3 al 30.
+## Puntos de ascendencia: 2 al nivel 20 y 2 más cada 10 niveles, hasta 10 (nivel 60).
+const ASCENDANCY_MAX_POINTS := 10
+
+
 func ascendancy_points_total() -> int:
 	if level < ASCENDANCY_LEVEL:
 		return 0
-	return clampi(1 + (level - ASCENDANCY_LEVEL) / 5, 1, 3)
+	return mini(2 * (1 + (level - ASCENDANCY_LEVEL) / 10), ASCENDANCY_MAX_POINTS)
+
+
+## ¿Se puede asignar ese nodo? (hay puntos y está pegado al inicio o a otro asignado)
+func can_allocate_ascendancy_node(index: int) -> bool:
+	return not ascendancy_def.is_empty() and ascendancy_points_available() > 0 \
+		and AscendancyTree.can_allocate(ascendancy_def.get("passives", []), ascendancy_nodes, index)
 
 
 func ascendancy_points_available() -> int:
@@ -157,17 +166,16 @@ func can_choose_ascendancy() -> bool:
 
 
 func allocate_ascendancy_node(index: int) -> bool:
-	if ascendancy_def.is_empty() or ascendancy_nodes.has(index) or ascendancy_points_available() <= 0:
-		return false
-	if index < 0 or index >= ascendancy_def.get("passives", []).size():
+	if not can_allocate_ascendancy_node(index):
 		return false
 	ascendancy_nodes.append(index)
 	recalculate()
 	return true
 
 
+## Quita un nodo si los demás siguen conectados al inicio.
 func refund_ascendancy_node(index: int) -> bool:
-	if not ascendancy_nodes.has(index):
+	if not AscendancyTree.can_refund(ascendancy_def.get("passives", []), ascendancy_nodes, index):
 		return false
 	ascendancy_nodes.erase(index)
 	recalculate()
@@ -430,6 +438,7 @@ func to_dict() -> Dictionary:
 		"class_id": class_def["id"],
 		"ascendancy_id": ascendancy_def.get("id", ""),
 		"ascendancy_nodes": ascendancy_nodes,
+		"ascendancy_tree_version": int(ascendancy_def.get("tree_version", 1)),
 		"level": level,
 		"experience": experience,
 		"appearance": appearance,
@@ -470,16 +479,22 @@ static func from_dict(d: Dictionary, p_class_def: Dictionary, tree: PassiveTree,
 			# Antes se elegía en cualquier momento; ahora hace falta el nivel 20.
 			c.ascendancy_def = {}
 			c.flags["ascendancy_reset"] = true
-		elif d.has("ascendancy_nodes"):
-			for i in d["ascendancy_nodes"]:
-				if int(i) < c.ascendancy_def.get("passives", []).size() and not c.ascendancy_nodes.has(int(i)):
-					c.ascendancy_nodes.append(int(i))
+		elif int(d.get("ascendancy_tree_version", 1)) != int(c.ascendancy_def.get("tree_version", 1)):
+			# Árbol de ascendencia nuevo (20 nodos): los índices antiguos no valen, se devuelven los puntos.
+			if not d.get("ascendancy_nodes", []).is_empty():
+				c.flags["ascendancy_refunded"] = true
 		else:
-			# Guardados de antes: se asignan las que permitan sus puntos.
-			for i in mini(c.ascendancy_points_total(), c.ascendancy_def.get("passives", []).size()):
-				c.ascendancy_nodes.append(i)
-		while c.ascendancy_nodes.size() > c.ascendancy_points_total():
-			c.ascendancy_nodes.pop_back()
+			# Se vuelven a asignar en orden, solo los que sigan conectados al inicio.
+			var nodes: Array = c.ascendancy_def.get("passives", [])
+			var pending: Array = d.get("ascendancy_nodes", []).map(func(x) -> int: return int(x))
+			var progress := true
+			while progress and c.ascendancy_nodes.size() < c.ascendancy_points_total():
+				progress = false
+				for i: int in pending:
+					if c.ascendancy_nodes.size() < c.ascendancy_points_total() and AscendancyTree.can_allocate(nodes, c.ascendancy_nodes, i):
+						c.ascendancy_nodes.append(i)
+						progress = true
+				pending = pending.filter(func(x: int) -> bool: return not c.ascendancy_nodes.has(x))
 	c.inventory.load_dict(d.get("inventory", {}), db)
 	if int(d.get("passive_tree_version", 1)) == tree.version:
 		c.passives.load_ids(d.get("passives", []))  # también recalcula las stats

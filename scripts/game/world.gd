@@ -25,6 +25,8 @@ var skills: SkillController
 var zone: Zone
 var item_generator: ItemGenerator
 var ui: GameUI
+## Filtro de pixel art del mundo (debajo de la interfaz).
+var post: WorldPost
 var quests: QuestLog
 
 var _dirty := false
@@ -105,7 +107,11 @@ func _ready() -> void:
 	quests.quest_started.connect(_on_quest_started)
 	quests.quest_completed.connect(_on_quest_completed)
 
+	post = WorldPost.new()
+	post.player = player
+	add_child(post)
 	ui = GameUI.new()
+	ui.layer = 5   # encima del filtro de pixel art (capa 1)
 	add_child(ui)
 	ui.setup(player, enemies, character, loot, skills, quests)
 	player.died.connect(_on_player_died)
@@ -129,6 +135,9 @@ func _ready() -> void:
 	if character.flags.has("ascendancy_removed"):
 		character.flags.erase("ascendancy_removed")
 		ui.hud.flash.call_deferred("Las ascendencias ahora son dos por clase: tu elección ya no existe, elige otra en el árbol (P).", UiStyle.ACCENT)
+	if character.flags.has("ascendancy_refunded"):
+		character.flags.erase("ascendancy_refunded")
+		ui.hud.flash.call_deferred("Tu ascendencia tiene un árbol nuevo de 20 nodos: te devolvimos los puntos (P → medallón).", UiStyle.ACCENT)
 	if character.flags.has("passives_refunded"):
 		character.flags.erase("passives_refunded")
 		ui.hud.flash.call_deferred("El árbol pasivo ha cambiado: te hemos devuelto todos los puntos (P).", UiStyle.ACCENT)
@@ -196,6 +205,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 	zone.setup(def, player, character, quests)
 	add_child(zone)
 	move_child(zone, 0)  # debajo de todo lo demás
+	post.set_style(zone.style)
 	zone.npc_interacted.connect(_on_npc_interacted)
 	zone.exit_reached.connect(_on_exit_reached)
 	zone.quest_item_picked.connect(_on_quest_item_picked)
@@ -571,6 +581,7 @@ func _on_enemy_killed(rarity: int, experience: int, pos: Vector2, type_id: Strin
 	character.flags["stat_kills"] = int(character.flags.get("stat_kills", 0)) + 1
 	player.add_flask_charges(rarity)
 	player.notify_kill()
+	skills.on_enemy_killed(pos)
 	ui.tutorial.notify("kill")
 	quests.notify_kill(zone.id, rarity, type_id)
 	var coins := Economy.drop_amount(enemies.area_level, rarity, _rng)

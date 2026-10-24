@@ -285,8 +285,17 @@ func _build_stats_text() -> String:
 		var a := _character.ascendancy_def
 		t += "\n[b][color=#d9a441]%s[/color][/b]\n[i][color=#a08f6a]%s[/color][/i]\n" % [a["name"], a["description"]]
 		var passives: Array = a.get("passives", [])
+		# Los menores se repiten por el árbol: se agrupan por nombre («Pairing ×2»).
+		var counts := {}
+		var order: Array[int] = []
 		for i in _character.ascendancy_nodes:
-			t += "[b]%s[/b]\n" % passives[i]["name"]
+			var n: String = passives[i]["name"]
+			if not counts.has(n):
+				order.append(i)
+			counts[n] = int(counts.get(n, 0)) + 1
+		for i in order:
+			var n: String = passives[i]["name"]
+			t += "[b]%s[/b]%s\n" % [n, "  ×%d" % counts[n] if counts[n] > 1 else ""]
 			for md in passives[i].get("mods", []):
 				t += "   • %s\n" % Modifier.from_dict(md).describe()
 		if _character.ascendancy_points_available() > 0:

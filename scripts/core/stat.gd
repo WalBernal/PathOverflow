@@ -73,6 +73,13 @@ const INTERACTION_EFFECT := &"interaction_effect"
 const AURA_EFFECT := &"aura_effect"
 ## Vida que se recupera al matar (plano) y daño de espinas a los enemigos cercanos al recibir un golpe.
 const LIFE_ON_KILL := &"life_on_kill"
+## Habilidades únicas de ascendencia (las procesa SkillController):
+## % de que un enemigo que matas explote (fuego, alrededor).
+const KILL_EXPLOSION := &"kill_explosion"
+## Pulso de estática cada 3 s: daño de rayo = valor × nivel alrededor tuyo.
+const STATIC_PULSE := &"static_pulse"
+## % de soltar una nova de hielo al recibir un golpe (daña y aturde).
+const RETALIATION_NOVA := &"retaliation_nova"
 const THORNS := &"thorns"
 ## Enemigos extra que atraviesan los proyectiles (suma a la RAM de perforación).
 const EXTRA_PIERCE := &"extra_pierce"
@@ -148,6 +155,9 @@ const NAMES := {
 	INTERACTION_EFFECT: "Efecto de las interacciones de estados",
 	AURA_EFFECT: "Efecto de auras",
 	LIFE_ON_KILL: "Vida al matar",
+	KILL_EXPLOSION: "Probabilidad de que los enemigos que matas exploten (fuego)",
+	STATIC_PULSE: "Pulso de estática cada 3 s (daño de rayo por nivel)",
+	RETALIATION_NOVA: "Probabilidad de soltar una nova de hielo al recibir un golpe",
 	THORNS: "Daño de espinas al recibir un golpe",
 	EXTRA_PIERCE: "Enemigos extra que atraviesan los proyectiles",
 	STATUS_RESIST: "Resistencia a estados (electrocutado, helado, congelado)",
@@ -167,6 +177,7 @@ const PARENTS := {
 const PERCENT_STATS := [
 	BLOCK_CHANCE, FIRE_RES, COLD_RES, LIGHTNING_RES, CHAOS_RES, CRIT_MULTIPLIER, LIFE_LEECH,
 	BURN_CHANCE, SHOCK_CHANCE, CHILL_CHANCE, FREEZE_CHANCE, POISON_CHANCE, BLEED_CHANCE, STATUS_RESIST,
+	KILL_EXPLOSION, RETALIATION_NOVA,
 ]
 
 const TAG_NAMES := {

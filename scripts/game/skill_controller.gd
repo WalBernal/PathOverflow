@@ -85,6 +85,7 @@ func setup(p_player: Player, p_enemies: EnemyManager, p_character: CharacterData
 	character.stats_changed.connect(refresh_profiles)
 	character.inventory.changed.connect(refresh_profiles)
 	character.conditions_changed.connect(refresh_profiles)
+	player.hit_taken.connect(on_player_hit)
 	var saved_auras: Array = character.flags.get("active_auras", []).duplicate()
 	refresh_profiles()
 	_restore_auras(saved_auras)
@@ -354,6 +355,65 @@ func cooldown_fraction(index: int) -> float:
 	return clampf(cooldowns[index] / total, 0.0, 1.0) if total > 0.0 else 0.0
 
 
+# --- Habilidades únicas de ascendencia (Stat.KILL_EXPLOSION, STATIC_PULSE, RETALIATION_NOVA) ---
+
+const PULSE_INTERVAL := 3.0
+const PULSE_RADIUS := 150.0
+const EXPLOSION_RADIUS := 95.0
+const NOVA_RADIUS := 135.0
+const NOVA_COOLDOWN := 1.0
+var _pulse_timer := PULSE_INTERVAL
+var _nova_cooldown := 0.0
+## Explosiones pendientes (se resuelven en el siguiente fotograma: así una muerte
+## dentro de un golpe no toca la lista de enemigos mientras se recorre).
+var _pending_explosions: Array[Vector2] = []
+
+
+## Lo llama World al morir un enemigo.
+func on_enemy_killed(pos: Vector2) -> void:
+	var chance := character.stats.get_value(Stat.KILL_EXPLOSION)
+	if chance > 0.0 and randf() * 100.0 < chance and _pending_explosions.size() < 8:
+		_pending_explosions.append(pos)
+
+
+## Lo llama el jugador al recibir un golpe (Player.hit_taken).
+func on_player_hit() -> void:
+	var chance := character.stats.get_value(Stat.RETALIATION_NOVA)
+	if chance <= 0.0 or _nova_cooldown > 0.0 or randf() * 100.0 >= chance:
+		return
+	_nova_cooldown = NOVA_COOLDOWN
+	var dmg := 3.0 * character.level + 10.0
+	var pos := player.global_position
+	enemies.hit_in_radius(pos, NOVA_RADIUS, dmg * 0.9, dmg * 1.1, 0.0, 150.0)
+	enemies.stun_in_radius(pos, NOVA_RADIUS, 0.8)
+	Sfx.play("shatter", -6.0)
+	_effects.append({"type": "ring", "pos": pos, "radius": NOVA_RADIUS, "time": 0.0, "duration": 0.45, "color": Color("9fe0ff")})
+	_effects.append({"type": "burst", "pos": pos, "radius": NOVA_RADIUS * 0.8, "time": 0.0, "duration": 0.35, "color": Color("d8f4ff")})
+
+
+func _update_ascendancy_procs(delta: float) -> void:
+	_nova_cooldown = maxf(0.0, _nova_cooldown - delta)
+	var explosions := _pending_explosions.duplicate()
+	_pending_explosions.clear()
+	for pos in explosions:
+		var dmg := 4.0 * character.level + 12.0
+		enemies.hit_in_radius(pos, EXPLOSION_RADIUS, dmg * 0.9, dmg * 1.1, 5.0, 150.0)
+		Sfx.play("mine", -8.0, randf_range(0.9, 1.1))
+		_effects.append({"type": "burst", "pos": pos, "radius": EXPLOSION_RADIUS, "time": 0.0, "duration": 0.35, "color": Color("ff9a3a")})
+		_effects.append({"type": "ring", "pos": pos, "radius": EXPLOSION_RADIUS, "time": 0.0, "duration": 0.4, "color": Color("ffd060")})
+	var pulse := character.stats.get_value(Stat.STATIC_PULSE)
+	if pulse <= 0.0 or not player.is_alive():
+		return
+	_pulse_timer -= delta
+	if _pulse_timer > 0.0:
+		return
+	_pulse_timer = PULSE_INTERVAL
+	var pos := player.global_position
+	if enemies.hit_in_radius(pos, PULSE_RADIUS, pulse * character.level * 0.9, pulse * character.level * 1.1, 5.0, 150.0) > 0:
+		Sfx.play("arc", -10.0)
+	_effects.append({"type": "ring", "pos": pos, "radius": PULSE_RADIUS, "time": 0.0, "duration": 0.5, "color": Color("8ad8ff")})
+
+
 func _physics_process(delta: float) -> void:
 	for i in cooldowns.size():
 		cooldowns[i] = maxf(0.0, cooldowns[i] - delta)
@@ -383,6 +443,7 @@ func _physics_process(delta: float) -> void:
 	_update_clouds(delta)
 	_update_drones(delta)
 	_update_companion(delta)
+	_update_ascendancy_procs(delta)
 	_update_effects(delta)
 	enemies.hit_ailments = {}
 	queue_redraw()

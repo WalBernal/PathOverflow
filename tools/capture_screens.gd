@@ -44,6 +44,14 @@ func _run() -> void:
 		await _capture_hire_no()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("ascendencia"):
+		await _capture_ascendancy()
+		get_tree().quit()
+		return
+	if OS.get_cmdline_user_args().has("acto1"):
+		await _capture_act1()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("objetos"):
 		await _capture_quest_items()
 		await _capture_icons()
@@ -216,6 +224,92 @@ func _capture_game() -> void:
 	world.set("_since_save", -9999.0)
 	await _wait(3.5)
 	_save("09_acto2_zona")
+	world.set("_since_save", -9999.0)
+
+
+## Ascendencias: el muestrario de las 14 ilustraciones, la elección (dos discos)
+## y el árbol de 20 nodos con varios asignados y la ayuda de un nodo.
+func _capture_ascendancy() -> void:
+	var grid := Control.new()
+	grid.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var ids := []
+	for cdef in get_node("/root/GameData").get("classes"):
+		for a in cdef["ascendancies"]:
+			ids.append([String(a["id"]), String(a["name"])])
+	grid.draw.connect(func() -> void:
+		grid.draw_rect(Rect2(0, 0, 1600, 900), Color("0c0a10"))
+		for k in ids.size():
+			var pos := Vector2(20 + (k % 7) * 225, 30 + (k / 7) * 430)
+			grid.draw_texture_rect(AscendancyArt.texture(ids[k][0]), Rect2(pos, Vector2(210, 210) * 1.0), false)
+			grid.draw_string(grid.get_theme_default_font(), pos + Vector2(0, 236), ids[k][1], HORIZONTAL_ALIGNMENT_CENTER, 210, 14, Color.WHITE))
+	_swap(grid)
+	await _wait(0.5)
+	_save("50_ascendencias_arte")
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Ascendencia", &"full_stack", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 40
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(4.0)   # que se vaya el título de la zona
+	var ui: Node = world.get("ui")
+	var choice: Variant = ui.get("_choice_panel")
+	if choice is Node and is_instance_valid(choice):
+		(choice as Node).queue_free()   # la elección de habilidad del nivel 16
+	get_tree().paused = false
+	ui.call("_on_menu_requested", "passives")
+	await _wait(0.4)
+	var panel: AscendancyPanel = ui.get("tree_screen").get("_ascendancy_panel")
+	panel.open(c)
+	panel.set("_hover", 1)
+	panel.set("_selected", 0)
+	await _wait(0.5)
+	_save("51_ascendencia_eleccion")
+	c.set_ascendancy(&"devops_integral")
+	for n in [15, 16, 17, 18, 19, 13]:
+		c.allocate_ascendancy_node(n)
+	panel.set("_hover", 14)
+	await _wait(0.5)
+	_save("52_ascendencia_arbol")
+	panel.set("_hover", 9)
+	await _wait(0.3)
+	_save("53_ascendencia_arbol_bloqueado")
+	world.set("_since_save", -9999.0)
+
+
+## Acto I: cada zona con el jugador en el centro y junto a un portal.
+func _capture_act1() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("ActoI", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 12
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var player: Node2D = world.get("player")
+	for zid in ["tutorial", "campamento", "zona1", "zona2", "zona3", "zona4", "zona5", "jefe"]:
+		world.call("travel_to", zid, "")
+		world.set("_since_save", -9999.0)
+		var zone: Zone = world.get("zone")
+		var enemies: EnemyManager = world.get("enemies")
+		print("%s: %dx%d, %d enemigos" % [zid, zone.rect.size.x, zone.rect.size.y, enemies.positions.size()])
+		await _wait(3.2)   # que pase el título de la zona
+		player.global_position = zone.free_spot_near(zone.rect.get_center())
+		await _wait(0.6)
+		_save("60_acto1_%s" % zid)
+		if not zone.exits.is_empty():
+			var e: Dictionary = zone.exits[0]
+			player.global_position = zone.free_spot_near(e["pos"] + Vector2(150.0 if e["pos"].x < zone.rect.get_center().x else -150.0, 60.0))
+			await _wait(0.5)
+			_save("61_acto1_%s_salida" % zid)
 	world.set("_since_save", -9999.0)
 
 

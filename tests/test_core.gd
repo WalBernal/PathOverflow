@@ -12,6 +12,7 @@ func _initialize() -> void:
 	_tree = PassiveTree.load_from_json("res://data/passive_tree.json")
 	_db = ItemDatabase.load_from_dir()
 	_classes = DataLoader.load_json("res://data/classes.json")["classes"]
+	AscendancyTree.expand_classes(_classes)
 	_test_stat_formula()
 	_test_passive_tree()
 	_test_data_integrity()
@@ -53,6 +54,7 @@ func _initialize() -> void:
 	_test_progression_rules()
 	_test_latam_spanish()
 	_test_ascendancy_rules()
+	_test_zone_scale()
 	_test_board_milestones()
 	_test_shaped_clusters()
 	_test_defense_and_dot_skills()
@@ -1158,15 +1160,17 @@ func _test_progression_rules() -> void:
 						big = true
 					if String(md["stat"]).begins_with("extra_"):
 						specials += 1
-			_check(big or a["passives"].any(func(p: Dictionary) -> bool: return p["mods"].any(func(md: Dictionary) -> bool: return String(md["stat"]).begins_with("extra_") or float(md["value"]) >= 60.0)), "%s debe tener un efecto fuerte" % a["id"])
+			_check(big or a["passives"].any(func(p: Dictionary) -> bool: return p["mods"].any(func(md: Dictionary) -> bool:
+				return String(md["stat"]).begins_with("extra_") or md["stat"] in ["kill_explosion", "static_pulse", "retaliation_nova", "companion_robot"])), "%s debe tener un efecto fuerte" % a["id"])
 	_check(specials >= 8, "varias ascendencias cambian cómo funcionan las habilidades (%d)" % specials)
 	var hacker: Dictionary = _classes.filter(func(x: Dictionary) -> bool: return x["id"] == "hacker")[0]
 	var ch := CharacterData.new(hacker, _tree)
 	var chain_board := Motherboard.new(_db.skills.skills["excepcion_en_cadena"], 1, ["DDR5"])
 	var chains_before: int = SkillCalc.compute(chain_board, ch)["chains"]
-	ch.set_level(20)
+	ch.set_level(40)
 	ch.set_ascendancy(&"asesina_sesiones")
-	ch.allocate_ascendancy_node(1)
+	for n in [15, 16, 5, 6, 7]:   # Sesión persistente (16) y Movimiento lateral (7)
+		ch.allocate_ascendancy_node(n)
 	_check(SkillCalc.compute(chain_board, ch)["chains"] == chains_before + 2, "la Asesina de Sesiones encadena 2 veces más")
 	# Los atributos dan daño a su estilo.
 	var warrior := CharacterData.new(_classes.filter(func(x: Dictionary) -> bool: return x["id"] == "guerrero")[0], _tree)
@@ -1202,25 +1206,73 @@ func _collect_banned(value: Variant, banned: RegEx, path: String, found: PackedS
 			found.append("%s: «%s»" % [path.get_file(), m.get_string()])
 
 
+## Acto I más grande: "scale" agranda tamaño y posiciones, y las manadas crecen con el área.
+func _test_zone_scale() -> void:
+	var act: Dictionary = DataLoader.load_json("res://data/act1.json")
+	for z in act["zones"]:
+		if not String(z["id"]).begins_with("zona"):
+			continue
+		var raw: Dictionary = z.duplicate(true)
+		Zone.scale_def(z)
+		var s := float(raw.get("scale", 1.0))
+		_check(s >= 1.5, "%s: zona del acto I agrandada (×%.2f)" % [z["id"], s])
+		_check(is_equal_approx(float(z["size"][0]), float(raw["size"][0]) * s), "%s: el tamaño crece" % z["id"])
+		_check(is_equal_approx(float(z["exits"][0]["pos"][0]), float(raw["exits"][0]["pos"][0]) * s), "%s: las salidas se mueven con la zona" % z["id"])
+		_check(int(z["enemies"]["packs"]) >= int(raw["enemies"]["packs"]) * 2, "%s: más del doble de manadas (%d → %d)" % [z["id"], raw["enemies"]["packs"], z["enemies"]["packs"]])
+		for e in z["exits"]:
+			_check(Rect2(Vector2.ZERO, Vector2(z["size"][0], z["size"][1])).has_point(Vector2(e["pos"][0], e["pos"][1])), "%s: salida dentro de la zona" % z["id"])
+		Zone.scale_def(z)
+		_check(is_equal_approx(float(z["size"][0]), float(raw["size"][0]) * s), "%s: no se agranda dos veces" % z["id"])
+	# Suelos en pixel art de todos los estilos del acto I.
+	for style in ["sandbox", "camp", "forest", "ruins", "swamp", "catacombs", "servers", "boss"]:
+		_check(ZoneArt.has_ground(style) and ZoneArt.ground(style).get_width() == ZoneArt.SIZE, "suelo en pixel art: %s" % style)
+
+
 func _test_ascendancy_rules() -> void:
 	var c := _new_character()
 	c.set_level(19)
 	_check(not c.can_choose_ascendancy() and c.ascendancy_points_total() == 0, "sin ascendencia antes del nivel 20")
 	c.set_level(20)
-	_check(c.can_choose_ascendancy() and c.ascendancy_points_total() == 1, "al nivel 20 se elige y hay 1 punto")
+	_check(c.can_choose_ascendancy() and c.ascendancy_points_total() == 2, "al nivel 20 se elige y hay 2 puntos")
 	var asc_id := StringName(c.class_def["ascendancies"][0]["id"])
 	c.set_ascendancy(asc_id)
-	var life_before := c.stats.get_value(Stat.LIFE)
+	var nodes: Array = c.ascendancy_def["passives"]
+	_check(nodes.size() == 20, "la ascendencia tiene 20 nodos")
 	_check(c.ascendancy_nodes.is_empty(), "al elegirla no hay pasivas asignadas")
-	_check(c.allocate_ascendancy_node(0) and not c.allocate_ascendancy_node(1), "un punto, una pasiva")
+	_check(not c.allocate_ascendancy_node(1), "un nodo suelto no se puede asignar (tiene que tocar el inicio o uno asignado)")
+	_check(c.allocate_ascendancy_node(0) and c.allocate_ascendancy_node(1) and not c.allocate_ascendancy_node(2), "dos puntos al nivel 20, en camino")
 	_check(not c.can_choose_ascendancy(), "la elección queda hecha")
 	c.set_level(30)
-	_check(c.ascendancy_points_total() == 3 and c.allocate_ascendancy_node(1) and c.allocate_ascendancy_node(2), "3 puntos al nivel 30")
-	_check(c.refund_ascendancy_node(2) and c.ascendancy_points_available() == 1, "se pueden quitar")
+	_check(c.ascendancy_points_total() == 4 and c.allocate_ascendancy_node(2) and c.allocate_ascendancy_node(5), "4 puntos al nivel 30")
+	_check(not c.refund_ascendancy_node(1), "no se quita un nodo del que dependen otros")
+	_check(c.refund_ascendancy_node(2) and c.ascendancy_points_available() == 1, "se quita el del final del camino")
+	c.set_level(100)
+	_check(c.ascendancy_points_total() == CharacterData.ASCENDANCY_MAX_POINTS and c.ascendancy_points_total() == 10, "como mucho 10 puntos")
+	c.set_level(60)
+	_check(c.ascendancy_points_total() == 10, "los 10 puntos al nivel 60")
+	c.set_level(30)
 	# Solo cuentan las pasivas asignadas.
 	var data = JSON.parse_string(JSON.stringify(c.to_dict()))
 	var loaded := CharacterData.from_dict(data, _classes[0], _tree, _db)
-	_check(loaded.ascendancy_nodes.size() == 2 and loaded.ascendancy_def.get("id", "") == String(asc_id), "ascendancia y pasivas guardadas")
+	_check(loaded.ascendancy_nodes.size() == 3 and loaded.ascendancy_def.get("id", "") == String(asc_id), "ascendancia y pasivas guardadas")
+	# Guardado con el árbol antiguo (3 pasivas): se devuelven los puntos.
+	var old_save: Dictionary = data.duplicate(true)
+	old_save.erase("ascendancy_tree_version")
+	var old_char := CharacterData.from_dict(old_save, _classes[0], _tree, _db)
+	_check(old_char.ascendancy_nodes.is_empty() and old_char.flags.has("ascendancy_refunded"), "guardado con el árbol antiguo: puntos devueltos")
+	# Cada árbol: 20 nodos alcanzables, 8 notables (2 únicas con habilidad propia) y 10 puntos llegan a 2+ notables.
+	for cdef in _classes:
+		for a in cdef["ascendancies"]:
+			var ns: Array = a["passives"]
+			var all := range(ns.size())
+			_check(ns.size() == 20 and AscendancyTree.connected(ns, all).size() == 20, "%s: 20 nodos, todos conectados al inicio" % a["id"])
+			_check(ns.filter(func(n: Dictionary) -> bool: return n["kind"] == "unique").size() == 2 and ns.filter(func(n: Dictionary) -> bool: return n["kind"] == "notable").size() == 6,
+				"%s: 6 notables y 2 únicas" % a["id"])
+			var special := ns.filter(func(n: Dictionary) -> bool: return n["kind"] == "unique").any(func(n: Dictionary) -> bool:
+				return n["mods"].any(func(md: Dictionary) -> bool: return md["stat"] in ["kill_explosion", "static_pulse", "retaliation_nova", "companion_robot"]))
+			_check(special, "%s: una de sus únicas da una habilidad propia" % a["id"])
+	# Habilidades únicas: el pulso de estática daña a los enemigos cercanos cada 3 s.
+	_check(Stat.exists(Stat.STATIC_PULSE) and Stat.exists(Stat.KILL_EXPLOSION) and Stat.exists(Stat.RETALIATION_NOVA), "stats de habilidades únicas de ascendencia")
 	# Guardado antiguo con ascendencia por debajo del nivel 20: se reinicia.
 	data["level"] = 12
 	var young := CharacterData.from_dict(data, _classes[0], _tree, _db)
@@ -2225,7 +2277,7 @@ func _test_ascendancy_identity() -> void:
 				for md in p["mods"]:
 					set[md["stat"]] = true
 			stat_sets.append(set)
-			_check(a["passives"].size() == 3 and not str(a["description"]).is_empty(), "%s: 3 pasivas y descripción" % a["id"])
+			_check(a["passives"].size() == 20 and not str(a["description"]).is_empty(), "%s: 20 nodos y descripción" % a["id"])
 		var shared := 0
 		for k in stat_sets[0]:
 			if stat_sets[1].has(k):
@@ -2243,17 +2295,21 @@ func _test_ascendancy_identity() -> void:
 	var c := CharacterData.new(_class_def("guerrero"), _tree)
 	c.set_level(30)
 	c.set_ascendancy(&"guardian_firewall")
-	c.allocate_ascendancy_node(1)
-	_check(c.stats.get_value(Stat.THORNS) >= 45.0, "Honeypot da espinas")
+	c.allocate_ascendancy_node(15)
+	c.allocate_ascendancy_node(16)
+	_check(c.stats.get_value(Stat.THORNS) >= 30.0, "Honeypot da espinas")
 	c.set_ascendancy(&"berserker_hotfix")
-	c.allocate_ascendancy_node(2)
-	_check(c.stats.get_value(Stat.LIFE_ON_KILL) >= 12.0, "Sin fin de semana da vida al matar")
+	c.allocate_ascendancy_node(15)
+	c.allocate_ascendancy_node(16)
+	_check(c.stats.get_value(Stat.LIFE_ON_KILL) >= 8.0, "Sin fin de semana da vida al matar")
 	var ex := CharacterData.new(_class_def("exploradora"), _tree)
 	ex.set_level(30)
 	var base: int = SkillCalc.compute(Motherboard.new(_db.skills.skills["rafaga_de_paquetes"], 1, []), ex)["pierce"]
+	ex.set_level(60)
 	ex.set_ascendancy(&"francotiradora_bugs")
-	ex.allocate_ascendancy_node(1)
-	_check(SkillCalc.compute(Motherboard.new(_db.skills.skills["rafaga_de_paquetes"], 1, []), ex)["pierce"] == base + 2, "Stack trace: los proyectiles atraviesan 2 enemigos más")
+	for n in [15, 16, 5, 6, 7, 8, 9]:   # Stack trace (16) y Perfilado total (9): +1 y +1
+		ex.allocate_ascendancy_node(n)
+	_check(SkillCalc.compute(Motherboard.new(_db.skills.skills["rafaga_de_paquetes"], 1, []), ex)["pierce"] == base + 2, "Stack trace y Perfilado total: los proyectiles atraviesan 2 enemigos más")
 	# Un guardado con una ascendencia que ya no existe queda sin ascendencia y avisa.
 	var old := CharacterData.new(_class_def("guerrero"), _tree)
 	old.set_level(25)

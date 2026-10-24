@@ -1,0 +1,241 @@
+{
+  "_info": "Árbol de cada ascendencia (ver scripts/passives/ascendancy_tree.gd). minors: 3 nodos menores que se repiten por el árbol. notables, en orden: 1ª izquierda, 1ª derecha, centro izquierda, centro derecha, final izquierda, final derecha, única izquierda, única derecha (las dos últimas, al fondo, con su habilidad propia). Modificadores: 'stat tipo valor [tags]'.",
+  "berserker_hotfix": {
+    "minors": [
+      {"name": "Café frío", "mods": ["attack_speed increased 4"]},
+      {"name": "Turno extra", "mods": ["physical_damage increased 10"]},
+      {"name": "Pulso acelerado", "mods": ["life_leech flat 0.5"]}
+    ],
+    "notables": [
+      {"name": "Directo a producción", "mods": ["physical_damage more 15", "bleed_chance flat 10 melee"]},
+      {"name": "Sin fin de semana", "mods": ["life_on_kill flat 8", "movement_speed increased 10"]},
+      {"name": "Logs en rojo", "mods": ["damage more 25 low_life"]},
+      {"name": "Rollback en caliente", "mods": ["attack_speed more 10", "life_leech flat 1"]},
+      {"name": "Pager a las 3 AM", "mods": ["attack_speed increased 15 recent_kill", "damage increased 20 recent_kill"]},
+      {"name": "Post-mortem", "mods": ["bleed_chance flat 10", "ailment_damage increased 30"]},
+      {"name": "Incendio en producción", "mods": ["kill_explosion flat 25", "fire_res flat 15"]},
+      {"name": "Guardia infinita", "mods": ["damage more 15 low_life", "life more 8", "life_regen flat 20"]}
+    ]
+  },
+  "guardian_firewall": {
+    "minors": [
+      {"name": "Puerto cerrado", "mods": ["armour increased 10"]},
+      {"name": "Regla de entrada", "mods": ["block_chance flat 2"]},
+      {"name": "Cifrado", "mods": ["fire_res flat 4", "cold_res flat 4", "lightning_res flat 4"]}
+    ],
+    "notables": [
+      {"name": "Reglas de denegación", "mods": ["armour more 30", "block_chance flat 8"]},
+      {"name": "Honeypot", "mods": ["thorns flat 30", "chaos_res flat 10"]},
+      {"name": "Lista blanca", "mods": ["life more 10", "life_regen flat 15"]},
+      {"name": "Parche de seguridad", "mods": ["status_resist flat 25", "fire_res flat 10", "cold_res flat 10", "lightning_res flat 10"]},
+      {"name": "Doble factor", "mods": ["block_chance flat 8", "energy_shield increased 25"]},
+      {"name": "Contraataque", "mods": ["thorns flat 25", "damage increased 20"]},
+      {"name": "Firewall de hielo", "mods": ["retaliation_nova flat 30", "armour increased 20"]},
+      {"name": "Escaneo de puertos", "mods": ["static_pulse flat 5", "life more 5"]}
+    ]
+  },
+  "gladiador_review": {
+    "minors": [
+      {"name": "Comentario", "mods": ["crit_chance increased 12"]},
+      {"name": "Sugerencia", "mods": ["crit_multiplier flat 6"]},
+      {"name": "Lectura atenta", "mods": ["accuracy increased 10"]}
+    ],
+    "notables": [
+      {"name": "Nit:", "mods": ["crit_chance increased 50"]},
+      {"name": "Request changes", "mods": ["crit_multiplier flat 25", "bleed_chance flat 10 attack"]},
+      {"name": "Línea 3482", "mods": ["damage more 15"]},
+      {"name": "LGTM", "mods": ["life more 8", "block_chance flat 6"]},
+      {"name": "Git blame", "mods": ["bleed_chance flat 10", "ailment_duration increased 30"]},
+      {"name": "Squash", "mods": ["attack_speed increased 15", "crit_chance increased 25"]},
+      {"name": "Revisión exhaustiva", "mods": ["crit_multiplier flat 40", "damage more 10 full_life"]},
+      {"name": "Rechazo automático", "mods": ["kill_explosion flat 20", "crit_chance increased 20"]}
+    ]
+  },
+  "campeon_sprint": {
+    "minors": [
+      {"name": "Daily", "mods": ["movement_speed increased 4"]},
+      {"name": "Story point", "mods": ["attack_speed increased 4"]},
+      {"name": "Retro", "mods": ["damage increased 8"]}
+    ],
+    "notables": [
+      {"name": "Velocidad del equipo", "mods": ["movement_speed increased 12", "attack_speed increased 10"]},
+      {"name": "Daily de 45 minutos", "mods": ["damage more 15", "life_on_kill flat 5"]},
+      {"name": "Burndown", "mods": ["damage increased 30", "cooldown_recovery increased 15"]},
+      {"name": "Planning poker", "mods": ["cast_speed increased 15", "attack_speed increased 10"]},
+      {"name": "Sprint final", "mods": ["damage increased 30 recent_kill", "movement_speed increased 10 recent_kill"]},
+      {"name": "Impedimento resuelto", "mods": ["status_resist flat 30", "life more 8"]},
+      {"name": "Kick-off", "mods": ["static_pulse flat 6", "movement_speed increased 6"]},
+      {"name": "Entrega continua", "mods": ["cooldown_recovery increased 30", "damage more 12"]}
+    ]
+  },
+  "francotiradora_bugs": {
+    "minors": [
+      {"name": "Benchmark", "mods": ["projectile_speed increased 10"]},
+      {"name": "Mira fina", "mods": ["crit_chance increased 12"]},
+      {"name": "Caché caliente", "mods": ["damage increased 8 projectile"]}
+    ],
+    "notables": [
+      {"name": "Breakpoint certero", "mods": ["crit_chance increased 50", "crit_multiplier flat 15"]},
+      {"name": "Stack trace", "mods": ["extra_pierce flat 1", "projectile_speed increased 20"]},
+      {"name": "Reproducible", "mods": ["damage more 12"]},
+      {"name": "Paralelismo", "mods": ["extra_projectiles flat 1"]},
+      {"name": "Hot path", "mods": ["attack_speed increased 12", "cast_speed increased 12"]},
+      {"name": "Latencia cero", "mods": ["movement_speed increased 12", "evasion increased 25"]},
+      {"name": "Perfilado total", "mods": ["extra_projectiles flat 1", "extra_pierce flat 1", "damage more 8 full_life"]},
+      {"name": "Cuello de botella", "mods": ["retaliation_nova flat 25", "evasion increased 20"]}
+    ]
+  },
+  "rastreadora_leaks": {
+    "minors": [
+      {"name": "Watchpoint", "mods": ["poison_chance flat 3"]},
+      {"name": "Trampa lista", "mods": ["damage increased 10 trap"]},
+      {"name": "Paso a paso", "mods": ["evasion increased 10"]}
+    ],
+    "notables": [
+      {"name": "Heap dump", "mods": ["evasion more 20", "poison_chance flat 10"]},
+      {"name": "Referencias débiles", "mods": ["chaos_damage more 20", "extra_devices flat 1"]},
+      {"name": "Profiler", "mods": ["dexterity flat 20", "ailing_damage more 15"]},
+      {"name": "Fuga encontrada", "mods": ["ailment_damage increased 30", "ailment_duration increased 20"]},
+      {"name": "Breakpoint condicional", "mods": ["interaction_effect increased 40", "damage increased 20 mine"]},
+      {"name": "Valgrind", "mods": ["chaos_res flat 20", "life more 6"]},
+      {"name": "Volcado de memoria", "mods": ["kill_explosion flat 25", "chaos_damage increased 20"]},
+      {"name": "Trampa de depuración", "mods": ["extra_devices flat 1", "skill_duration increased 30", "damage more 10 trap"]}
+    ]
+  },
+  "asesina_sesiones": {
+    "minors": [
+      {"name": "Phishing", "mods": ["crit_chance increased 12"]},
+      {"name": "Pivote", "mods": ["movement_speed increased 4"]},
+      {"name": "Sigilo", "mods": ["evasion increased 10"]}
+    ],
+    "notables": [
+      {"name": "Token robado", "mods": ["crit_chance increased 40", "crit_multiplier flat 20"]},
+      {"name": "Sesión persistente", "mods": ["extra_chains flat 1"]},
+      {"name": "Movimiento lateral", "mods": ["extra_chains flat 1", "damage increased 15 chain"]},
+      {"name": "Sin rastro en los logs", "mods": ["evasion more 20", "movement_speed increased 10"]},
+      {"name": "Escalada de privilegios", "mods": ["damage more 15 full_life"]},
+      {"name": "Persistencia", "mods": ["life_on_kill flat 6", "attack_speed increased 10"]},
+      {"name": "Día cero", "mods": ["crit_multiplier flat 40", "crit_chance increased 30"]},
+      {"name": "Botnet", "mods": ["static_pulse flat 6", "evasion increased 15"]}
+    ]
+  },
+  "saboteadora": {
+    "minors": [
+      {"name": "Payload", "mods": ["chaos_damage increased 10"]},
+      {"name": "Ofuscación", "mods": ["poison_chance flat 3"]},
+      {"name": "Latencia", "mods": ["skill_duration increased 8"]}
+    ],
+    "notables": [
+      {"name": "Supply chain", "mods": ["chaos_damage more 20", "poison_chance flat 10"]},
+      {"name": "Dependencia transitiva", "mods": ["extra_devices flat 2"]},
+      {"name": "Versión fijada", "mods": ["skill_duration increased 30", "ailment_duration increased 20"]},
+      {"name": "Gusano", "mods": ["ailment_damage more 15"]},
+      {"name": "Rootkit", "mods": ["chaos_res flat 20", "energy_shield increased 20"]},
+      {"name": "Ransomware", "mods": ["interaction_effect increased 40", "ailing_damage more 15"]},
+      {"name": "Bomba lógica", "mods": ["kill_explosion flat 30"]},
+      {"name": "Puerta trasera", "mods": ["extra_devices flat 1", "damage more 15 trap"]}
+    ]
+  },
+  "archimago_recursivo": {
+    "minors": [
+      {"name": "Época", "mods": ["cast_speed increased 4"]},
+      {"name": "Gradiente", "mods": ["elemental_damage increased 10"]},
+      {"name": "Regularización", "mods": ["mana increased 6"]}
+    ],
+    "notables": [
+      {"name": "Caso base", "mods": ["cast_speed more 8", "mana more 15"]},
+      {"name": "Pila profunda", "mods": ["extra_projectiles flat 1"]},
+      {"name": "Memoización", "mods": ["cooldown_recovery increased 25", "damage more 8"]},
+      {"name": "Ajuste fino", "mods": ["elemental_damage more 12"]},
+      {"name": "Aprendizaje por refuerzo", "mods": ["damage increased 25 recent_kill", "cast_speed increased 10 recent_kill"]},
+      {"name": "Dropout", "mods": ["energy_shield increased 30", "mana_regen increased 30"]},
+      {"name": "Red neuronal profunda", "mods": ["static_pulse flat 8", "lightning_damage increased 20"]},
+      {"name": "Recursión de cola", "mods": ["extra_projectiles flat 1", "cooldown_recovery increased 20", "damage more 8"]}
+    ]
+  },
+  "elementalista_so": {
+    "minors": [
+      {"name": "Ingesta", "mods": ["fire_damage increased 10"]},
+      {"name": "Partición", "mods": ["cold_damage increased 10"]},
+      {"name": "Shard", "mods": ["lightning_damage increased 10"]}
+    ],
+    "notables": [
+      {"name": "Respuesta aceptada", "mods": ["fire_damage increased 35", "cold_damage increased 35", "lightning_damage increased 35"]},
+      {"name": "Pregunta duplicada", "mods": ["burn_chance flat 8 spell", "chill_chance flat 8 spell", "shock_chance flat 8 spell"]},
+      {"name": "Pipeline ETL", "mods": ["interaction_effect increased 40", "damage more 8"]},
+      {"name": "Un millón de reputación", "mods": ["fire_res flat 12", "cold_res flat 12", "lightning_res flat 12"]},
+      {"name": "Data lake", "mods": ["ailing_damage more 15"]},
+      {"name": "MapReduce", "mods": ["area_of_effect increased 20", "elemental_damage increased 20"]},
+      {"name": "Tormenta de datos", "mods": ["static_pulse flat 8", "shock_chance flat 5"]},
+      {"name": "Cero absoluto", "mods": ["retaliation_nova flat 30", "chill_chance flat 10"]}
+    ]
+  },
+  "hierofante_docs": {
+    "minors": [
+      {"name": "Tornillería", "mods": ["minion_damage increased 10"]},
+      {"name": "Batería", "mods": ["minion_life increased 10"]},
+      {"name": "Servomotor", "mods": ["automaton_speed increased 5"]}
+    ],
+    "notables": [
+      {"name": "Ensamble en serie", "mods": ["extra_devices flat 1", "damage more 10 totem"]},
+      {"name": "Sensores de proximidad", "mods": ["damage more 10 projectile", "crit_chance increased 20"]},
+      {"name": "Línea de montaje", "mods": ["extra_minions flat 1"]},
+      {"name": "Firmware 2.0", "mods": ["minion_damage increased 25", "automaton_speed increased 10"]},
+      {"name": "Chasis reforzado", "mods": ["minion_life increased 30", "armour increased 20"]},
+      {"name": "Mantenimiento predictivo", "mods": ["skill_duration increased 25", "cooldown_recovery increased 15"]},
+      {"name": "Robot de compañía R-2PL", "mods": ["companion_robot flat 1", "minion_damage increased 20"]},
+      {"name": "Enjambre", "mods": ["extra_devices flat 1", "extra_minions flat 1"]}
+    ]
+  },
+  "inquisidor_linter": {
+    "minors": [
+      {"name": "Alerta", "mods": ["aura_effect increased 5"]},
+      {"name": "Uptime", "mods": ["life increased 4"]},
+      {"name": "SLO", "mods": ["reservation_efficiency increased 5"]}
+    ],
+    "notables": [
+      {"name": "Monitorización continua", "mods": ["aura_effect increased 25", "reservation_efficiency increased 10"]},
+      {"name": "Warnings como errores", "mods": ["fire_damage more 15", "lightning_damage more 15"]},
+      {"name": "Reglas estrictas", "mods": ["armour more 20", "minion_life increased 25"]},
+      {"name": "Presupuesto de errores", "mods": ["burn_chance flat 8", "shock_chance flat 8"]},
+      {"name": "Runbook", "mods": ["life more 8", "life_regen flat 15"]},
+      {"name": "Escalado horizontal", "mods": ["reservation_efficiency increased 15", "aura_effect increased 10"]},
+      {"name": "Pager de guardia", "mods": ["static_pulse flat 7", "lightning_damage increased 20"]},
+      {"name": "Chaos engineering", "mods": ["retaliation_nova flat 25", "status_resist flat 25"]}
+    ]
+  },
+  "arquitecto_soluciones": {
+    "minors": [
+      {"name": "Caja", "mods": ["strength flat 8"]},
+      {"name": "Flecha", "mods": ["dexterity flat 8"]},
+      {"name": "Nube", "mods": ["intelligence flat 8"]}
+    ],
+    "notables": [
+      {"name": "Diagrama de todo", "mods": ["strength flat 15", "dexterity flat 15", "intelligence flat 15"]},
+      {"name": "Patrón de diseño", "mods": ["burn_chance flat 4", "shock_chance flat 4", "chill_chance flat 4", "poison_chance flat 4", "bleed_chance flat 4", "damage more 8"]},
+      {"name": "Alta disponibilidad", "mods": ["life more 8", "energy_shield increased 25"]},
+      {"name": "Microservicios", "mods": ["area_of_effect increased 20", "damage increased 20"]},
+      {"name": "Monolito modular", "mods": ["armour increased 25", "evasion increased 25"]},
+      {"name": "Documentación viva", "mods": ["ailment_damage increased 25", "interaction_effect increased 30"]},
+      {"name": "Orientado a eventos", "mods": ["kill_explosion flat 20", "static_pulse flat 4"]},
+      {"name": "Teorema CAP", "mods": ["damage more 15", "life more 5", "retaliation_nova flat 15"]}
+    ]
+  },
+  "devops_integral": {
+    "minors": [
+      {"name": "Uno a uno", "mods": ["minion_damage increased 8"]},
+      {"name": "Code review", "mods": ["cooldown_recovery increased 5"]},
+      {"name": "Pairing", "mods": ["automaton_speed increased 5"]}
+    ],
+    "notables": [
+      {"name": "Integración continua", "mods": ["cooldown_recovery increased 25", "automaton_speed increased 10"]},
+      {"name": "Infraestructura como código", "mods": ["extra_devices flat 1", "damage more 8"]},
+      {"name": "Delegar", "mods": ["extra_minions flat 1"]},
+      {"name": "Autoescalado", "mods": ["reservation_efficiency increased 15", "life_regen flat 15"]},
+      {"name": "Reunión de alineación", "mods": ["attack_speed increased 12", "cast_speed increased 12"]},
+      {"name": "Onboarding", "mods": ["minion_life increased 30", "minion_damage increased 20"]},
+      {"name": "Bot de despliegue", "mods": ["companion_robot flat 1", "automaton_speed increased 10"]},
+      {"name": "Equipo de alto rendimiento", "mods": ["static_pulse flat 6", "automaton_speed increased 15"]}
+    ]
+  }
+}

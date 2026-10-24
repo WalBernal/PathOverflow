@@ -438,6 +438,15 @@ func _build_pause_menu() -> Control:
 		Ailments.set_colorblind(not Ailments.colorblind)
 		colorblind.text = "Modo daltónico: " + ("sí" if Ailments.colorblind else "no"))
 	right.add_child(colorblind)
+	var pixel := UiStyle.button("", func() -> void: pass, 300)
+	pixel.text = "Filtro pixel art: " + ("sí" if WorldPost.enabled() else "no")
+	pixel.tooltip_text = "Rejilla de píxeles, paleta con tramado, luz y sombra de cada zona.\nApágalo si prefieres el mundo nítido."
+	pixel.pressed.connect(func() -> void:
+		GameSettings.set_value("interface", "pixel_filter", not WorldPost.enabled())
+		pixel.text = "Filtro pixel art: " + ("sí" if WorldPost.enabled() else "no")
+		for p in get_tree().get_nodes_in_group(&"world_post"):
+			p.call("refresh"))
+	right.add_child(pixel)
 
 	box.add_child(UiStyle.ornament())
 	var exits := HBoxContainer.new()

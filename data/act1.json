@@ -188,6 +188,7 @@
       "id": "zona1",
       "name": "El Bosque de Cables",
       "level": 2,
+      "scale": 1.5, "enemy_density": 1.25,
       "style": "forest",
       "size": [
         3400,
@@ -265,6 +266,7 @@
       "id": "zona2",
       "name": "Las Ruinas del Monolito",
       "level": 4,
+      "scale": 1.5, "enemy_density": 1.25,
       "style": "ruins",
       "size": [
         3400,
@@ -341,6 +343,7 @@
       "id": "zona3",
       "name": "El Pantano de Memory Leaks",
       "level": 6,
+      "scale": 1.5, "enemy_density": 1.25,
       "style": "swamp",
       "size": [
         3600,
@@ -418,6 +421,7 @@
       "id": "zona4",
       "name": "Las Catacumbas del Legacy",
       "level": 8,
+      "scale": 1.5, "enemy_density": 1.25,
       "style": "catacombs",
       "size": [
         3600,
@@ -505,6 +509,7 @@
       "id": "zona5",
       "name": "La Granja de Servidores",
       "level": 10,
+      "scale": 1.5, "enemy_density": 1.25,
       "style": "servers",
       "size": [
         3600,
@@ -592,6 +597,7 @@
       "id": "jefe",
       "name": "Sala del Servidor Principal",
       "level": 12,
+      "scale": 1.25, "enemy_density": 1.0,
       "style": "boss",
       "size": [
         2200,

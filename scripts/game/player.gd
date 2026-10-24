@@ -7,6 +7,8 @@ extends CharacterBody2D
 ## Movimiento: WASD o mantener click izquierdo (estilo PoE).
 
 signal died
+## Golpe recibido que no se esquivó ni bloqueó (nova de hielo de ascendencia).
+signal hit_taken
 signal flask_used(index: int)
 
 const RADIUS := 14.0
@@ -408,6 +410,7 @@ func take_damage(amount: float) -> void:
 	_since_damage = 0.0
 	_hurt_time = 0.12
 	Sfx.play("player_hurt", -4.0)
+	hit_taken.emit()
 	var thorns := _stat(Stat.THORNS)
 	if thorns > 0.0 and enemies != null:
 		# Espinas: el golpe recibido se devuelve a quien esté cerca.

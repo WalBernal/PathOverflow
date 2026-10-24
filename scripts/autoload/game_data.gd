@@ -36,6 +36,7 @@ func _ready() -> void:
 	var data = DataLoader.load_json(CLASSES_PATH)
 	if data is Dictionary:
 		classes = data.get("classes", [])
+		AscendancyTree.expand_classes(classes)   # árboles de 20 nodos (ascendancy_trees.json)
 	passive_tree = PassiveTree.load_from_json(PASSIVE_TREE_PATH)
 	items = ItemDatabase.load_from_dir()
 	var migrated := CharacterSaves.migrate_from_old_project_names()
@@ -48,6 +49,7 @@ func _ready() -> void:
 		acts.append(act_data)
 		for z in act_data.get("zones", []):
 			z["act"] = act_data["id"]
+			Zone.scale_def(z)   # zonas agrandadas ("scale" en el act*.json)
 			zones[z["id"]] = z
 	act = acts[0] if not acts.is_empty() else {}
 	var cutscene_data = DataLoader.load_json(CUTSCENES_PATH)

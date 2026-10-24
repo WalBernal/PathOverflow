@@ -1,6 +1,6 @@
 # Roadmap — Path Overflow: El Último Commit
 
-Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propios, 14 ascendencias (2 por clase, cada una con juego distinto), un árbol con las temáticas de estados y aliados repartidas por sectores (3-5 clusters cada una, sin nodos encimados), estados alterados sobre enemigos **y sobre el jugador**, interacciones entre estados, 11 invocaciones persistentes y 6 auras (con alcance; 2 debilitan a los enemigos), desbloqueo de habilidades por nivel (con una elección entre dos), hitos propios por invocación, auras ancladas, mando básico, RAM por grados (menor / normal / mayor), enemigos con resistencias, inmunidades, 16 afijos y 9 combinaciones con nombre, cazadores de invocaciones, jefes y subjefes con fases (que además cambian de resistencias), barra de jefe y música de fase. Lo que **falta**, por prioridad. **S** = pequeño (≈ 1 sesión), **M** = mediano, **L** = grande.
+Estado a octubre de 2026: Actos I a III jugables (el I más grande y con filtro de pixel art), 7 clases con kit y rasgo propios, 14 ascendencias (2 por clase, con árbol de 20 nodos y habilidades únicas), un árbol con las temáticas de estados y aliados repartidas por sectores (3-5 clusters cada una, sin nodos encimados), estados alterados sobre enemigos **y sobre el jugador**, interacciones entre estados, 11 invocaciones persistentes y 6 auras (con alcance; 2 debilitan a los enemigos), desbloqueo de habilidades por nivel (con una elección entre dos), hitos propios por invocación, auras ancladas, mando básico, RAM por grados (menor / normal / mayor), enemigos con resistencias, inmunidades, 16 afijos y 9 combinaciones con nombre, cazadores de invocaciones, jefes y subjefes con fases (que además cambian de resistencias), barra de jefe y música de fase. Lo que **falta**, por prioridad. **S** = pequeño (≈ 1 sesión), **M** = mediano, **L** = grande.
 
 > Descartado por ahora: escala de las invocaciones y de los obstáculos; cazadores contra minas y trampas (las minas están enterradas y no se ven).
 
@@ -15,6 +15,9 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 ## 2. Combate y habilidades
 
 - **Equilibrar el Multicanal y la Pipeline Superescalar** (S): la Pipeline mayor sigue siendo la mejor RAM de daño para casi todo (×1.5); probar en partida. Igual con la Sobrealimentación (+50 % de reserva) y el Enlace de Aura.
+- **Equilibrar los árboles de ascendencia** (M): con 10 puntos se llega a 3-4 notables; probar cada una hasta el nivel 60. Las habilidades únicas (explosión al matar, pulso de estática, nova de hielo) escalan con el nivel, no con el daño del personaje.
+- **Árboles de ascendencia con forma propia** (S): hoy las 14 comparten la plantilla de 4 ramas; variar la posición de los nodos por ascendencia (como en PoE 2).
+- **Más habilidades únicas de ascendencia** (M): hoy hay 4 mecánicas (explosión al matar, pulso de estática, nova de hielo, robot de compañía); faltan algunas propias de cada clase (p. ej. un muro de fuego del Firewall, un sprint del Scrum Master).
 
 ## 3. Enemigos y jefes
 
@@ -24,6 +27,8 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 
 | Qué | Tamaño |
 |---|---|
+| **Hacer crecer los actos II y III** como el I: zonas ×1.5 (`"scale"` en el act*.json), más enemigos (`"enemy_density"`), suelos en pixel art propios de sus estilos (fábrica, alcantarillas, fosa, grieta, bus, anillo, frío, silicio, BIOS, ROM, flash) y gradación de luz | M |
+| **Acto I, siguiente paso visual**: obstáculos y bordes (árboles de cables, rocas, lápidas, racks) dibujados en pixel art con sombra y luz, como el suelo; y equilibrar el número de enemigos (zonas con 110-220) jugando | M |
 | **Acto IV** (zonas, NPCs, misiones, jefe con fases, escenas) | L |
 | Misiones secundarias con recompensas de RAM de grado alto, placas de invocación y auras | M |
 | Más objetos únicos y conjuntos con efectos de estados, auras, espinas y autómatas | M |
@@ -63,6 +68,8 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 5. Arte final de personajes, enemigos e invocaciones.
 
 ## Hecho (no repetir)
+
+**Ascendencias de 20 nodos y acto I renovado (23 octubre 2026, noche 3)**: **árboles de ascendencia como en PoE 2**: 20 nodos por ascendencia (12 menores, 6 notables y 2 habilidades únicas al fondo) en 4 ramas sobre un disco ilustrado; cada nodo tiene que tocar el inicio o uno asignado y solo se quita el del final del camino · **puntos de ascendencia: 2 al nivel 20 y 2 más cada 10 niveles, hasta 10** (nivel 60); los guardados con el árbol antiguo recuperan sus puntos · **14 ilustraciones en pixel art** alusivas a cada ascendencia (rack en llamas a las 3 AM, firewall con candado, lupa sobre el código, tablero kanban, mira sobre un bug, telaraña, encapuchado del Red Team, virus, red neuronal, bases de datos con orbes, robot, monitoreo, plano de arquitectura, organigrama con corona) · **elección con dos discos ilustrados** (nombre en placa, vista previa del árbol, descripción y habilidades únicas) · habilidades únicas nuevas: **explosión al matar, pulso de estática y nova de hielo** · **acto I más grande**: zonas ×1.5 (jefe ×1.25) y 25 % más densidad: 110-220 enemigos por zona · **filtro de pixel art del mundo** (rejilla de píxeles, paleta con tramado, gradación por zona, viñeta en escalones y oscuridad con luz alrededor del jugador en pantano, catacumbas y servidores; se apaga en Pausa) · **suelos en pixel art** sin costuras para los 8 estilos del acto I · **partículas de ambiente** (luciérnagas, hojas, niebla, burbujas, polvo, datos, brasas) · **puertas de salida nuevas**: arco de piedra con runas, energía girando, glifos en el suelo y placa con el destino, con color e icono según adónde llevan (campamento, zona, jefe, portal) y cadenas si están cerradas.
 
 **Calle real, canción de prueba y más roadmap (23 octubre 2026, noche 2)**: la **torre de departamentos pasa a la derecha** de la UAdeO, separada por una **calle lateral que baja** en perspectiva (muro de block de la escuela con ventanitas, autos estacionados, casas y poste al fondo); la torre con balcones corridos, seto y palmeras · **música del campamento III desde tu JSON** (`melody_file`, notas con velocidad; acordes de Sol mayor, 24 compases, bucle sin intro) · **Enlace de Aura con varias auras**: cada una va a una invocación distinta (tanques primero) · **las auras activas se guardan** con el personaje y se encienden solas al cargar · interfaz hasta **160 %** (se limita a lo que quepa en pantallas bajas), también en los textos del prólogo y la contratación · **el inventario se desplaza** si no cabe (antes la bolsa se salía por abajo desde 110 % en 900 px).
 
