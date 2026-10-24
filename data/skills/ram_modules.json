@@ -1607,7 +1607,7 @@
       "generation": "DDR4",
       "tier": 2,
       "min_level": 14,
-      "description": "El aura se monta sobre tu invocación más resistente (el golem, si lo tienes) y la sigue a ella en vez de a ti: tus aliados pelean dentro y tú puedes quedarte atrás.",
+      "description": "El aura se monta sobre tu invocación más resistente (el golem, si lo tienes) y la sigue a ella en vez de a ti: tus aliados pelean dentro y tú puedes quedarte atrás. Si enlazas varias auras, cada una va a una invocación distinta.",
       "requires_tags": [
         "aura"
       ],

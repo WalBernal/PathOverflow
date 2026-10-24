@@ -50,20 +50,11 @@
       "from": {"arp": 0, "lead": 4, "drums": 0}
     },
     "camp3": {
-      "name": "Puerto JTAG, 3 a. m. (balada)", "bpm": 72, "bars": 32, "chord_bars": 2, "seed": 13, "root": 50, "scale": "minor",
-      "prog": [[0, "m"], [8, "M"], [3, "M"], [10, "M"]], "prog_b": [[8, "M"], [10, "M"], [3, "M"], [7, "M"]], "arp_lift": true,
-      "pad": 0.05, "bass": "root", "arp": "ballad", "arp_wave": "piano", "lead": "piano", "lead_gain": 0.1, "drums": "ballad",
-      "from": {"arp": 0, "lead": 8, "drums": 6},
-      "melody": [
-        "11:1.5 10:0.5 9:1 8:1", "9:3 r:1", "12:1 11:1 9:1 7:1", "9:2 7:2",
-        "9:1 11:1 14:1.5 13:0.5", "11:3 r:1", "13:1 11:1 10:1 8:1", "10:4",
-        "11:1.5 10:0.5 9:1 11:1", "14:3 r:1", "12:1 14:1 12:1 11:1", "9:3 r:1",
-        "9:1 8:1 9:1 11:1", "13:2 11:2", "10:1.5 11:0.5 10:1 8:1", "8:2 10:2",
-        "14:1.5 13:0.5 12:2", "11:1 12:1 14:2", "15:1.5 14:0.5 13:2", "10:3 r:1",
-        "14:1 13:1 11:1 13:1", "16:2 14:2", "15:2 11:2", "15:1 14:1 11:2",
-        "14:1.5 13:0.5 12:1 14:1", "16:3 r:1", "15:1 14:1 13:1 10:1", "13:3 r:1",
-        "11:1 13:1 14:1 16:1", "14:2 13:2", "11:1.5 r:0.5 11:1 15:1", "15:2 14:1 r:1"
-      ]
+      "name": "Camp III: Eptns (prueba)", "bpm": 86, "bars": 24, "intro": 0, "chord_bars": 1, "seed": 13, "root": 43, "scale": "major",
+      "prog": [[9, "m"], [0, "M"], [9, "m"], [7, "M"], [5, "M"], [7, "M"], [0, "M"], [9, "m"], [5, "M"], [9, "m"], [4, "m"], [7, "sus"]],
+      "arp_lift": true, "bass_shift": 12,
+      "pad": 0.05, "bass": "root", "arp": "ballad", "arp_wave": "piano", "lead": "piano", "lead_gain": 0.11, "drums": "ballad",
+      "melody_file": "res://data/music/camp3_eptns.json"
     },
     "field3": {
       "name": "Silicio en marcha", "bpm": 112, "bars": 32, "chord_bars": 1, "seed": 23, "root": 43, "scale": "minor",

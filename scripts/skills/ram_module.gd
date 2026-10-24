@@ -131,7 +131,7 @@ func effect_lines() -> PackedStringArray:
 	if sp.has("reserve_mult"):
 		lines.append("Reserva un %d %% más de maná" % roundi((float(sp["reserve_mult"]) - 1.0) * 100.0))
 	if sp.has("aura_on_unit"):
-		lines.append("El aura sigue a tu invocación más resistente (el tanque primero), no a ti")
+		lines.append("El aura sigue a tu invocación más resistente (el tanque primero), no a ti; con varias auras enlazadas, cada una va a una invocación distinta")
 	if sp.has("aura_anchor"):
 		lines.append("El aura se queda en el suelo donde la activas (no te sigue)")
 	if sp.has("aura_radius_mult"):

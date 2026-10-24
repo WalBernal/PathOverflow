@@ -35,6 +35,9 @@ var _flask_cells: Array[ItemCell] = []
 var _summary: RichTextLabel
 var _silhouette: AppearancePreview
 var _bag_header: Control
+var _scroll: ScrollContainer
+var _content: VBoxContainer
+var _box: VBoxContainer
 ## Silueta de lo que va en cada ranura vacía.
 const SLOT_ICONS := {
 	"weapon": "espada_oxidada", "helmet": "casco_de_hierro", "body": "cota_de_placas", "gloves": "guantes_de_cuero",
@@ -61,6 +64,19 @@ func _ready() -> void:
 	add_child(box)
 	box.add_child(UiStyle.window_header("Inventario", "Equipo, pociones y bolsa  ·  I para cerrar",
 		func() -> void: close_requested.emit()))
+	# El resto va en un área con desplazamiento: con la interfaz grande en una
+	# pantalla baja, la bolsa no se sale por abajo (ver fit_height).
+	_scroll = ScrollContainer.new()
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	box.add_child(_scroll)
+	var header_box := box
+	box = VBoxContainer.new()
+	box.add_theme_constant_override("separation", 8)
+	_scroll.add_child(box)
+	_content = box
+	_box = header_box
+	visibility_changed.connect(fit_height)
+	get_viewport().size_changed.connect(fit_height.call_deferred)
 
 	# Muñeco: silueta del personaje detrás de las ranuras de equipo.
 	var doll := Control.new()
@@ -124,6 +140,21 @@ func _ready() -> void:
 		_bag_cells.append(cell)
 
 	box.add_child(UiStyle.label("Arrastra para mover o equipar  ·  Click: equipar / quitar (también pociones)  ·  Arrastra fuera para tirar", 11, UiStyle.MUTED))
+	fit_height.call_deferred()
+
+
+## Ajusta el alto del área con desplazamiento a lo que queda de pantalla (todo
+## el contenido si cabe).
+func fit_height() -> void:
+	var parent := get_parent_control()
+	if _scroll == null or parent == null:
+		return
+	var full := _content.get_combined_minimum_size().y
+	var overhead := _box.get_combined_minimum_size().y - _scroll.get_combined_minimum_size().y
+	overhead += get_theme_stylebox("panel").get_minimum_size().y
+	var avail := parent.size.y - offset_top - 10.0 - overhead
+	_scroll.custom_minimum_size = Vector2(_content.get_combined_minimum_size().x, clampf(avail, 160.0, full))
+	reset_size()
 
 func _make_cell(location: Dictionary) -> ItemCell:
 	var cell := ItemCell.new()

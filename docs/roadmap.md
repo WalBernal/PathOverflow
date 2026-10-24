@@ -2,7 +2,7 @@
 
 Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propios, 14 ascendencias (2 por clase, cada una con juego distinto), un árbol con las temáticas de estados y aliados repartidas por sectores (3-5 clusters cada una, sin nodos encimados), estados alterados sobre enemigos **y sobre el jugador**, interacciones entre estados, 11 invocaciones persistentes y 6 auras (con alcance; 2 debilitan a los enemigos), desbloqueo de habilidades por nivel (con una elección entre dos), hitos propios por invocación, auras ancladas, mando básico, RAM por grados (menor / normal / mayor), enemigos con resistencias, inmunidades, 16 afijos y 9 combinaciones con nombre, cazadores de invocaciones, jefes y subjefes con fases (que además cambian de resistencias), barra de jefe y música de fase. Lo que **falta**, por prioridad. **S** = pequeño (≈ 1 sesión), **M** = mediano, **L** = grande.
 
-> Descartado por ahora: escala de las invocaciones y escala de los obstáculos.
+> Descartado por ahora: escala de las invocaciones y de los obstáculos; cazadores contra minas y trampas (las minas están enterradas y no se ven).
 
 ## 1. Pulido inmediato
 
@@ -15,12 +15,10 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 ## 2. Combate y habilidades
 
 - **Equilibrar el Multicanal y la Pipeline Superescalar** (S): la Pipeline mayor sigue siendo la mejor RAM de daño para casi todo (×1.5); probar en partida. Igual con la Sobrealimentación (+50 % de reserva) y el Enlace de Aura.
-- **Varias auras con Enlace de Aura** (S): hoy todas se montan sobre la misma invocación (la más resistente); elegir cuál.
 
 ## 3. Enemigos y jefes
 
 - **Sprites de enemigos nuevos para el acto III** (L): necesita arte; las animaciones de ataque (carga, embestida estirada y retroceso al disparar) ya están para todos.
-- **Cazadores contra minas y trampas** (descartado por ahora): las minas están enterradas y no se ven; no tendría sentido que las encontraran.
 
 ## 4. Contenido
 
@@ -35,21 +33,22 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 ## 5. Interfaz
 
 - **Mando, siguiente paso** (M): moverse, apuntar, habilidades, pociones, abrir menús, recoger objetos y hablar con NPC (A contextual) ya funcionan; falta navegar dentro de los menús (inventario, árbol, K, diálogos) sin ratón.
-- Escala de interfaz en la pantalla de título y el prólogo (S); tamaños mayores que 140 % (S).
 - Rebindear teclas y botones desde la pausa (M).
-- **Prólogo en pixel art 2.0, siguiente paso** (M): la fachada de la UAdeO ya sigue el modelo 3D (anexo, atrio de vidrio, bloque terracota, escudo, entrada); faltan el pasillo y la oficina con el mismo nivel de detalle (luz, tramado, sombras).
+- **Prólogo en pixel art 2.0, siguiente paso** (M): la calle ya sigue el modelo 3D y la foto real (UAdeO, calle lateral que baja, torre a la derecha); faltan el pasillo y la oficina con el mismo nivel de detalle (luz, tramado, sombras).
+- **Menús con desplazamiento** (S): el inventario ya se desplaza si no cabe con la interfaz grande; falta lo mismo en la hoja de personaje (C) y el menú K, que por ahora limitan la escala a lo que quepa (160 % solo en 1080p o más).
 
 ## 6. Arte y audio
 
 - Sustituir los sprites provisionales dibujados con formas por arte final: personajes, NPC, invocaciones, iconos de habilidad y de estado (L). Necesita un artista: el código solo puede mejorar las figuras dibujadas.
 - Retratos de NPC más expresivos y personajes del acto III (M).
-- Sustituir la música generada por composiciones propias (S por pista): las 15 pistas actuales son de programador. Ya se puede escribir la melodía a mano en `music.json` (`melody`), como en `camp3`.
+- Sustituir la música generada por composiciones propias (S por pista): las 15 pistas actuales son de programador. Ya se puede escribir la melodía a mano en `music.json` (`melody`) o en un archivo aparte nota por nota (`melody_file`, como `camp3`).
+- **Campamento III**: suena tu melodía de prueba (`data/music/camp3_eptns.json`). Si es la transcripción de una canción con derechos, cambiarla por una propia antes de publicar.
 - Peso del audio: los .wav suman unos 60 MB en el repositorio; valorar OGG o Git LFS (S).
 - Música propia para las pruebas de estrés (S).
 
 ## 7. Sistemas y calidad
 
-- **Guardado**: copia de seguridad automática y varios espacios por perfil; guardar qué auras estaban activas (M).
+- **Guardado**: copia de seguridad automática y varios espacios por perfil (M).
 - **Tests**: pruebas de integración que carguen cada zona y simulen 30 s de combate con cada clase y que fallen si aparece un `SCRIPT ERROR` (M). Hoy hay pruebas de datos y lógica (`tests/test_core.gd`), la auditoría de RAM, la tabla de equilibrio y las capturas (`tools/capture_screens.tscn -- objetos | minimapa | habilidades | rendimiento`).
 - **Rendimiento**: portar `EnemyManager` a C# o GDExtension si el presupuesto de 4 ms se rompe con estados y aliados (L).
 - **Cliente/servidor** (L, largo plazo): aislar `SkillController` y `EnemyManager` de `Node2D` para un modo cooperativo.
@@ -62,7 +61,10 @@ Estado a octubre de 2026: Actos I a III jugables, 7 clases con kit y rasgo propi
 3. Acto IV con jefe de fases y afijos propios.
 4. Más únicos y conjuntos que usen los afijos nuevos (estados, autómatas, interacciones).
 5. Arte final de personajes, enemigos e invocaciones.
+
 ## Hecho (no repetir)
+
+**Calle real, canción de prueba y más roadmap (23 octubre 2026, noche 2)**: la **torre de departamentos pasa a la derecha** de la UAdeO, separada por una **calle lateral que baja** en perspectiva (muro de block de la escuela con ventanitas, autos estacionados, casas y poste al fondo); la torre con balcones corridos, seto y palmeras · **música del campamento III desde tu JSON** (`melody_file`, notas con velocidad; acordes de Sol mayor, 24 compases, bucle sin intro) · **Enlace de Aura con varias auras**: cada una va a una invocación distinta (tanques primero) · **las auras activas se guardan** con el personaje y se encienden solas al cargar · interfaz hasta **160 %** (se limita a lo que quepa en pantallas bajas), también en los textos del prólogo y la contratación · **el inventario se desplaza** si no cabe (antes la bolsa se salía por abajo desde 110 % en 900 px).
 
 **Prólogo 2.0 y más roadmap (23 octubre 2026, noche)**: **fachada de la UAdeO según el modelo 3D** (anexo blanco, atrio de vidrio con parasoles, plantas y escalinata de madera, pilastras de piedra, segundo piso, bloque terracota con letrero de doble línea, ventanas, escudo dorado, rampa y entrada blanca), nubes y sombras; la entrada pasa a la puerta blanca · **arreglado de raíz el personaje que se salía de la pantalla**: CharacterAppearance.draw dejaba la transformación del lienzo en cero y el jugador se dibujaba sin la cámara · **absorción por el servidor**: tras «Profe Rafa, ¿va a querer churr...?», vórtice en el rack, el carrito, Mario, Aida y Rafa vuelan al servidor por turnos con gritos («¡MIS CHURROS!», «¡AAAAH!», «¡MI MONOLITOOO!»), succión y ráfagas digitales; luego el jugador · sonidos nuevos: gritos (voz grave y aguda), succión, ráfaga digital · **«!» en los botones K y P** al desbloquear una habilidad o subir de nivel, con sonido · **Enlace de Aura** (el aura sigue a tu invocación más resistente) · animaciones por tipo: los que disparan retroceden y los que embisten se estiran · **mando: A contextual** (recoge objetos, habla con NPC, usa waypoint y alijo; si no hay nada cerca, habilidad 1).
 

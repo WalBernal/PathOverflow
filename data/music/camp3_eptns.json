@@ -1,0 +1,63 @@
+{
+  "title": "Camp III: Eptns",
+  "bpm": 86,
+  "time_signature": "4/4",
+  "loop": true,
+  "loop_start_bar": 1,
+  "total_bars": 12,
+  "tracks": {
+    "melody": [
+      { "bar": 1, "note": "REST", "duration": "1/4" },
+      { "bar": 1, "note": "B3",   "duration": "1/8", "velocity": 0.65 },
+      { "bar": 1, "note": "D4",   "duration": "1/8", "velocity": 0.70 },
+      { "bar": 1, "note": "E4",   "duration": "1/4", "velocity": 0.75 },
+      { "bar": 1, "note": "D4",   "duration": "1/4", "velocity": 0.65 },
+
+      { "bar": 2, "note": "B3",   "duration": "1/4", "velocity": 0.70 },
+      { "bar": 2, "note": "A3",   "duration": "1/4", "velocity": 0.65 },
+      { "bar": 2, "note": "G3",   "duration": "1/2", "velocity": 0.75 },
+
+      { "bar": 3, "note": "REST", "duration": "1/4" },
+      { "bar": 3, "note": "B3",   "duration": "1/8", "velocity": 0.65 },
+      { "bar": 3, "note": "D4",   "duration": "1/8", "velocity": 0.70 },
+      { "bar": 3, "note": "E4",   "duration": "1/4", "velocity": 0.75 },
+      { "bar": 3, "note": "G4",   "duration": "1/4", "velocity": 0.80 },
+
+      { "bar": 4, "note": "F#4",  "duration": "1/4", "velocity": 0.75 },
+      { "bar": 4, "note": "E4",   "duration": "1/4", "velocity": 0.70 },
+      { "bar": 4, "note": "D4",   "duration": "1/2", "velocity": 0.75 },
+
+      { "bar": 5, "note": "E4",   "duration": "1/4", "velocity": 0.75 },
+      { "bar": 5, "note": "E4",   "duration": "1/8", "velocity": 0.75 },
+      { "bar": 5, "note": "F#4",  "duration": "1/8", "velocity": 0.80 },
+      { "bar": 5, "note": "G4",   "duration": "1/2", "velocity": 0.85 },
+
+      { "bar": 6, "note": "A4",   "duration": "1/4", "velocity": 0.85 },
+      { "bar": 6, "note": "G4",   "duration": "1/4", "velocity": 0.80 },
+      { "bar": 6, "note": "F#4",  "duration": "1/4", "velocity": 0.75 },
+      { "bar": 6, "note": "REST", "duration": "1/4" },
+
+      { "bar": 7, "note": "B4",   "duration": "1/2", "velocity": 0.95 },
+      { "bar": 7, "note": "A4",   "duration": "1/4", "velocity": 0.90 },
+      { "bar": 7, "note": "G4",   "duration": "1/4", "velocity": 0.85 },
+
+      { "bar": 8, "note": "E4",   "duration": "1/4", "velocity": 0.85 },
+      { "bar": 8, "note": "G4",   "duration": "1/2", "velocity": 0.90 },
+      { "bar": 8, "note": "REST", "duration": "1/4" },
+
+      { "bar": 9, "note": "B4",   "duration": "1/4", "velocity": 0.95 },
+      { "bar": 9, "note": "C5",   "duration": "1/4", "velocity": 1.00 },
+      { "bar": 9, "note": "B4",   "duration": "1/4", "velocity": 0.90 },
+      { "bar": 9, "note": "A4",   "duration": "1/4", "velocity": 0.85 },
+
+      { "bar": 10, "note": "G4",  "duration": "1/2", "velocity": 0.85 },
+      { "bar": 10, "note": "E4",  "duration": "1/2", "velocity": 0.80 },
+
+      { "bar": 11, "note": "D4",  "duration": "1/2", "velocity": 0.75 },
+      { "bar": 11, "note": "B3",  "duration": "1/2", "velocity": 0.70 },
+
+      { "bar": 12, "note": "G3",  "duration": "1/2", "velocity": 0.70 },
+      { "bar": 12, "note": "REST","duration": "1/2" }
+    ]
+  }
+}

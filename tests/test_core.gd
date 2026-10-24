@@ -2033,6 +2033,18 @@ func _test_auras_and_unit_abilities() -> void:
 	_check(player.mana_reserved > 0.0, "la aura reserva maná")
 	sk._execute(sk.profile(1), Vector2.ZERO)
 	_check(not sk.is_aura_active("aura_overclock") and is_equal_approx(sk.profile(0)["automaton_speed"], before["automaton_speed"]) and player.mana_reserved == 0.0, "relanzarla la apaga y libera la reserva")
+	# Las auras activas se guardan con el personaje y se vuelven a encender al cargar.
+	sk._execute(sk.profile(1), Vector2.ZERO)
+	_check(c.flags.get("active_auras", []) == ["aura_overclock"], "el aura activa queda en el guardado")
+	var reloaded := SkillController.new()
+	root.add_child(reloaded)
+	c.timed_effects.clear()
+	reloaded.setup(player, em, c)
+	_check(reloaded.is_aura_active("aura_overclock") and player.mana_reserved > 0.0, "al cargar, el aura vuelve a estar activa y reserva maná")
+	reloaded.clear_auras()
+	reloaded.queue_free()
+	_check(c.flags.get("active_auras", ["x"]).is_empty(), "al morir se apagan y ya no se guardan")
+	sk._auras.clear()
 	sk._execute(sk.profile(5), Vector2.ZERO)
 	sk._execute(sk.profile(0), Vector2.ZERO)
 	sk._update_units(0.05)
@@ -2653,7 +2665,15 @@ func _test_music_and_voices() -> void:
 		_check(FileAccess.file_exists("res://assets/audio/music/%s.wav" % id), "música: existe %s.wav (tools/generate_zone_music.gd)" % id)
 	for z in zones:
 		_check(music["tracks"].has(zones[z]), "música: la pista %s de %s está definida" % [zones[z], z])
-	_check(music["tracks"]["camp3"].get("melody", []).size() == int(music["tracks"]["camp3"]["bars"]), "música: el campamento del acto III tiene su melodía escrita")
+	var camp3_bars: Array = load("res://tools/generate_zone_music.gd").load_melody_file(String(music["tracks"]["camp3"]["melody_file"]))
+	_check(camp3_bars.size() == 12 and int(music["tracks"]["camp3"]["bars"]) % camp3_bars.size() == 0, "música: el campamento del acto III usa la melodía del archivo (12 compases)")
+	var camp3_ok := true
+	for bar: Array in camp3_bars:
+		var beats := 0.0
+		for ev: Array in bar:
+			beats += float(ev[1])
+		camp3_ok = camp3_ok and absf(beats - 4.0) < 0.01
+	_check(camp3_ok, "música: cada compás de la melodía del campamento III suma 4 tiempos")
 	# Bucles: cada pista dice dónde empieza su bucle, después de la intro y antes del final.
 	var loops: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/music_loops.json"))
 	for id in music["tracks"]:

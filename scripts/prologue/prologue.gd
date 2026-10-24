@@ -144,6 +144,9 @@ func _build() -> void:
 	_cutscene.speakers = {"player": {"name": _name, "appearance": _stage_look(), "color": "e9e5d8"}}
 	add_child(_cutscene)
 	_cutscene.effect.connect(_on_cutscene_effect)
+	# Tamaño de interfaz: textos y diálogos (el escenario se ve igual).
+	UiStyle.apply_ui_scale.call_deferred(_overlay)
+	UiStyle.apply_ui_scale.call_deferred(_cutscene)
 
 
 ## El jugador en el mundo real: con su camisa formal.
@@ -510,6 +513,7 @@ func _open_hire() -> void:
 	_glitch = 0.4
 	_hire = HireDialog.new()
 	add_child(_hire)
+	UiStyle.apply_ui_scale.call_deferred(_hire)
 	_hire.hired.connect(func(class_id: StringName) -> void:
 		_class_id = class_id
 		_hire.queue_free()
@@ -630,7 +634,7 @@ func _finish() -> void:
 # --- Capa de arriba: texto mecanografiado, consola, fundidos y título ---
 
 func _draw_overlay() -> void:
-	var view := size
+	var view := _overlay.size   # ya dividido por el tamaño de interfaz
 	var font := get_theme_default_font()
 	if _fade > 0.0:
 		_overlay.draw_rect(Rect2(Vector2.ZERO, view), Color(0, 0, 0, _fade))

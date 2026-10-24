@@ -13,7 +13,12 @@ signal shop_refresh_requested
 
 const TREE_SCREEN := preload("res://scenes/ui/passive_tree_screen.tscn")
 ## Tamaños de interfaz del menú de pausa.
-const UI_SCALES := [0.85, 1.0, 1.1, 1.2, 1.3, 1.4]
+const UI_SCALES := [0.85, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6]
+## Tope de la escala (por si el archivo de ajustes trae un valor a mano).
+const UI_SCALE_MAX := 1.6
+## Alto mínimo (en px de interfaz) para que quepan el inventario y los menús: en
+## pantallas bajas la escala elegida se reduce hasta caber (160 % necesita 1080p).
+const UI_MIN_HEIGHT := 640.0
 
 var hud: Hud
 var inventory_panel: InventoryPanel
@@ -419,7 +424,7 @@ func _build_pause_menu() -> Control:
 		func() -> float: return DialogueBox.voice_speed(),
 		func(v: float) -> void: GameSettings.set_value("dialogue", "voice_speed", v)))
 	right.add_child(UiStyle.section_header("Interfaz"))
-	var scale_button := _cycle_button("Tamaño de la interfaz", UI_SCALES, ["85 %", "100 %", "110 %", "120 %", "130 %", "140 %"],
+	var scale_button := _cycle_button("Tamaño de la interfaz", UI_SCALES, UI_SCALES.map(func(v: float) -> String: return "%d %%" % roundi(v * 100.0)),
 		func() -> float: return ui_scale(),
 		func(v: float) -> void:
 			GameSettings.set_value("interface", "scale", v)
@@ -465,15 +470,17 @@ func _cycle_button(text: String, values: Array, names: Array, current: Callable,
 
 
 static func ui_scale() -> float:
-	return clampf(float(GameSettings.get_value("interface", "scale", 1.0)), 0.75, 1.45)
+	return clampf(float(GameSettings.get_value("interface", "scale", 1.0)), 0.75, UI_SCALE_MAX)
 
 
 ## Escala la interfaz (menús, HUD, textos): _root ocupa la pantalla dividida por
 ## la escala y se agranda por ella, así los anclajes siguen cuadrando.
 func apply_ui_scale() -> void:
-	var s := ui_scale()
+	var s := minf(ui_scale(), maxf(1.0, get_viewport().get_visible_rect().size.y / UI_MIN_HEIGHT))
 	_root.scale = Vector2(s, s)
 	_root.size = get_viewport().get_visible_rect().size / s
+	if inventory_panel:
+		inventory_panel.fit_height.call_deferred()
 
 
 # --- Elección de habilidad (desbloqueos por nivel con dos opciones) ---

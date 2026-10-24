@@ -11,11 +11,11 @@ extends Node2D
 
 const VIEW := Vector2(400, 225)
 const FLOOR_Y := 198.0
-const ROOM_WIDTH := {"calle": 700.0, "pasillo": 400.0, "oficina": 400.0}
+const ROOM_WIDTH := {"calle": 760.0, "pasillo": 400.0, "oficina": 400.0}
 ## Hasta dónde se puede caminar en cada sitio (vista lateral). En la calle, poco
 ## más allá de la entrada de la UAdeO: el resto de la avenida no lleva a nada y
 ## el personaje acababa fuera de la pantalla.
-const WALK_LIMITS := {"calle": Vector2(14.0, 470.0), "oficina": Vector2(16.0, 384.0)}
+const WALK_LIMITS := {"calle": Vector2(14.0, 540.0), "oficina": Vector2(16.0, 384.0)}
 ## Centro de la entrada blanca del bloque principal de la UAdeO (calle).
 const ENTRANCE_X := 448.0
 ## Dónde se dibuja la flecha del siguiente objetivo (sobre lo que se ve: las
@@ -223,19 +223,10 @@ func _draw_street() -> void:
 		var a := TAU * k / 12.0 + time * 0.2
 		draw_line(sun + Vector2.from_angle(a) * 16.0, sun + Vector2.from_angle(a) * (21.0 + 3.0 * sin(time * 3.0 + k)), Color("fff6d0"), 1.0)
 	_draw_clouds(w)
-	# Torre de departamentos color salmón detrás de la escuela.
-	var tower := Rect2(470, 18, 150, 124)
-	draw_rect(tower, Color("d99a7c"))
-	draw_rect(Rect2(tower.position, Vector2(tower.size.x, 5)), Color("e8b49a"))
-	draw_rect(Rect2(tower.end.x - 18, tower.position.y, 18, tower.size.y), Color("c4846a"))   # cara en sombra
-	for row in 7:
-		var y := tower.position.y + 10 + row * 16
-		draw_rect(Rect2(tower.position.x + 4, y + 9, tower.size.x - 8, 2), Color("c08066"))   # balcones
-		for col in 6:
-			draw_rect(Rect2(tower.position.x + 8 + col * 24, y, 12, 8), Color("f0e6d8") if (row + col) % 3 else Color("7aa0b8"))
-	# Palmeras a los lados del edificio.
-	for px in [36.0, 598.0, 660.0]:
-		_draw_palm(Vector2(px, 160))
+	# A la derecha de la escuela: la calle que baja y la torre de departamentos.
+	_draw_side_street()
+	_draw_tower()
+	_draw_palm(Vector2(36, 160))
 	# Reja beige a la izquierda, hasta el anexo.
 	draw_rect(Rect2(0, 126, 66, 3), Color("d8c8a0"))
 	draw_rect(Rect2(0, 164, 66, 3), Color("d8c8a0"))
@@ -263,6 +254,93 @@ func _draw_street() -> void:
 		var x := k * 20.0 + fmod(time * 5.0, 20.0)
 		draw_line(Vector2(x, 216 + (k % 2) * 4), Vector2(x + 8, 216 + (k % 2) * 4), Color("9fd0e4"), 1.0)
 	draw_line(Vector2(0, 211), Vector2(w, 211), Color("f0ece0"), 1.0)
+
+
+## Calle lateral que baja hacia el fondo (separa la escuela de la torre): el muro
+## de block de la escuela en perspectiva, autos estacionados y casas a lo lejos.
+func _draw_side_street() -> void:
+	var vp := Vector2(611, 140)   # punto de fuga
+	# Fondo: casas blancas, un edificio rojo y copas de árboles junto al horizonte.
+	draw_rect(Rect2(596, 124, 34, 22), Color("cfe0dc"))
+	draw_rect(Rect2(598, 128, 8, 18), Color("f2f0ea"))
+	draw_rect(Rect2(606, 132, 6, 14), Color("e6e2da"))
+	draw_rect(Rect2(614, 130, 7, 16), Color("f4f2ec"))
+	for k in 3:
+		draw_rect(Rect2(599 + k * 2.5, 131, 1, 2), Color("8aa4b0"))
+	draw_circle(Vector2(624, 136), 6, Color("5f8a4a"))
+	draw_circle(Vector2(630, 138), 5, Color("4f7a40"))
+	draw_rect(Rect2(608, 112, 1, 34), Color("8a7a66"))   # poste de luz al fondo
+	draw_line(Vector2(566, 96), Vector2(608, 114), Color(0.3, 0.3, 0.3, 0.5), 1.0)   # cables
+	draw_line(Vector2(608, 114), Vector2(660, 104), Color(0.3, 0.3, 0.3, 0.5), 1.0)
+	# La calle: asfalto que se angosta, banquetas a los lados.
+	draw_colored_polygon(PackedVector2Array([Vector2(570, 168), Vector2(662, 168), Vector2(vp.x + 6, 146), Vector2(vp.x - 6, 146)]), Color("76767a"))
+	draw_colored_polygon(PackedVector2Array([Vector2(566, 168), Vector2(574, 168), Vector2(vp.x - 6, 146), Vector2(vp.x - 8, 146)]), Color("c8c2b6"))
+	draw_colored_polygon(PackedVector2Array([Vector2(658, 168), Vector2(668, 168), Vector2(vp.x + 9, 146), Vector2(vp.x + 6, 146)]), Color("c8c2b6"))
+	for k in 4:   # línea central discontinua, cada vez más corta
+		var t0 := 0.15 + k * 0.22
+		var a := Vector2(616, 168).lerp(Vector2(vp.x, 146), t0)
+		var b := Vector2(616, 168).lerp(Vector2(vp.x, 146), t0 + 0.1)
+		draw_line(a, b, Color("e8e4d8"), 1.0)
+	# Muro lateral de la escuela (block gris) en perspectiva, con sus ventanitas.
+	draw_colored_polygon(PackedVector2Array([Vector2(565, 58), Vector2(596, 100), Vector2(596, 147), Vector2(565, 168)]), Color("a8a49c"))
+	for k in 9:
+		var t := k / 9.0
+		var x := lerpf(566, 596, t)
+		draw_line(Vector2(x, lerpf(58, 100, t)), Vector2(x, lerpf(168, 147, t)), Color("928e86"), 1.0)
+	for k in 6:
+		var y0 := lerpf(70.0, 160.0, k / 5.0)
+		draw_line(Vector2(565, y0), Vector2(596, lerpf(104.0, 145.0, k / 5.0)), Color("bab6ae"), 1.0)
+	for k in 4:
+		var t := 0.2 + k * 0.19
+		var x := lerpf(566, 596, t)
+		var top := lerpf(58, 100, t) + lerpf(30, 14, t)
+		draw_rect(Rect2(x, top, lerpf(5, 2, t), lerpf(12, 6, t)), Color("f0ede6"))
+		draw_rect(Rect2(x + 1, top + 1, maxf(1.0, lerpf(3, 1, t)), lerpf(10, 4, t)), Color("4e6470"))
+	# Autos estacionados junto al muro, cada vez más chicos.
+	for car: Array in [[586.0, 166.0, 22.0, Color("eeeeec")], [599.0, 157.0, 13.0, Color("7a6a62")], [605.0, 151.0, 8.0, Color("c03a3a")]]:
+		var cx: float = car[0]
+		var cy: float = car[1]
+		var cw: float = car[2]
+		var col: Color = car[3]
+		var ch := cw * 0.42
+		draw_rect(Rect2(cx - cw / 2.0, cy - ch, cw, ch * 0.6), col)
+		draw_rect(Rect2(cx - cw * 0.3, cy - ch * 1.35, cw * 0.6, ch * 0.4), col)
+		draw_rect(Rect2(cx - cw * 0.26, cy - ch * 1.25, cw * 0.52, ch * 0.28), Color("5a7684"))
+		draw_rect(Rect2(cx - cw / 2.0, cy - ch * 0.45, cw, ch * 0.08), col.darkened(0.25))
+		draw_circle(Vector2(cx - cw * 0.3, cy - ch * 0.35), maxf(1.0, cw * 0.1), Color("26262a"))
+		draw_circle(Vector2(cx + cw * 0.3, cy - ch * 0.35), maxf(1.0, cw * 0.1), Color("26262a"))
+
+
+## Torre de departamentos color salmón, a la derecha de la calle lateral, con
+## balcones corridos, palmeras y un seto delante.
+func _draw_tower() -> void:
+	var tower := Rect2(626, 22, 140, 130)
+	# Cara lateral que da a la calle (en perspectiva, más clara: le pega el sol).
+	draw_colored_polygon(PackedVector2Array([Vector2(616, 40), Vector2(tower.position.x, tower.position.y),
+		Vector2(tower.position.x, tower.end.y), Vector2(616, 148)]), Color("e6ae8c"))
+	for row in 7:
+		var y := tower.position.y + 12 + row * 17
+		draw_line(Vector2(617, y * 0.86 + 6), Vector2(tower.position.x, y + 9), Color("c98a6c"), 2.0)
+	draw_rect(tower, Color("d99a7c"))
+	draw_rect(Rect2(tower.position.x - 2, tower.position.y - 4, tower.size.x + 2, 5), Color("c4846a"))   # azotea
+	draw_rect(Rect2(tower.position.x, tower.position.y + 1, tower.size.x, 2), Color("eab89c"))
+	for row in 7:
+		var y := tower.position.y + 10 + row * 17
+		for col in 6:
+			var win := Rect2(tower.position.x + 8 + col * 22, y, 13, 9)
+			draw_rect(win, Color("f0e6d8") if (row * 2 + col) % 5 else Color("7aa0b8"))
+			draw_rect(Rect2(win.position.x + 1, win.position.y + 1, win.size.x - 2, 3), Color("5e7a88"))
+		draw_rect(Rect2(tower.position.x - 2, y + 10, tower.size.x + 2, 3), Color("eec6aa"))   # balcón corrido
+		draw_rect(Rect2(tower.position.x - 2, y + 13, tower.size.x + 2, 1), Color("b07258"))   # su sombra
+	# Seto, barda y palmeras al frente.
+	draw_rect(Rect2(618, 146, 150, 6), Color("c9a088"))
+	for k in 34:
+		var hx := 620.0 + k * 4.5
+		draw_circle(Vector2(hx, 158 + (k % 2)), 5.0, Color("3f7a3a") if k % 3 else Color("4f8a46"))
+		draw_rect(Rect2(hx - 1, 154 + (k % 3), 2, 1), Color("7ab86a"))
+	draw_rect(Rect2(618, 164, 150, 4), Color("2f5a2c"))
+	for px in [640.0, 676.0, 724.0]:
+		_draw_palm(Vector2(px, 156))
 
 
 ## Nubes de pixel art que cruzan despacio (con sombra abajo y brillo arriba).

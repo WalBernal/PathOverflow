@@ -77,6 +77,7 @@ func _compose(id: String, t: Dictionary) -> int:
 	var scale: Array = SCALES[t.get("scale", "minor")]
 	var from: Dictionary = t.get("from", {})
 	var written: Array = t.get("melody", [])
+	var from_file: Array = load_melody_file(String(t["melody_file"])) if t.has("melody_file") else []
 	var lead := String(t.get("lead", "none"))
 	buf.clear()
 	buf.resize(int((intro + body) * 4 * beat * RATE))
@@ -96,7 +97,7 @@ func _compose(id: String, t: Dictionary) -> int:
 		if pad_gain > 0.0:
 			for tone in tones:
 				_note(t0, 4.0 * beat, croot + int(tone), "pad", pad_gain * 0.9)
-		_bass(t0, beat, croot, String(t.get("bass", "root")))
+		_bass(t0, beat, croot + int(t.get("bass_shift", 0)), String(t.get("bass", "root")))
 		if b >= 0 or bar >= int(from.get("arp", 0)):
 			# En la parte B el arpegio sube una octava: la misma canción, otro color.
 			_arp(t0, beat, croot + (12 if b >= half and t.get("arp_lift", false) else 0), tones,
@@ -106,7 +107,9 @@ func _compose(id: String, t: Dictionary) -> int:
 			_drums(t0, beat, String(t.get("drums", "none")), bar, fill)
 		if lead == "none" or (b < 0 and bar < int(from.get("lead", 0))):
 			continue
-		if b >= 0 and not written.is_empty():
+		if b >= 0 and not from_file.is_empty():
+			_file_bar(t0, beat, from_file[b % from_file.size()], lead, float(t.get("lead_gain", 0.09)))
+		elif b >= 0 and not written.is_empty():
 			_written_bar(t0, beat, String(written[b % written.size()]), root, scale, lead, float(t.get("lead_gain", 0.09)))
 		elif b == body - 1 and body_first_idx >= 0:
 			mel_idx = _melody_to(t0, beat, root, scale, mel_idx, body_first_idx, lead)
@@ -273,6 +276,48 @@ func _written_bar(t0: float, beat: float, bar: String, root: int, scale: Array, 
 		pos += dur
 	if absf(pos - 4.0) > 0.01:
 		push_warning("Compás de melodía que no suma 4 tiempos (%.2f): %s" % [pos, bar])
+
+
+## Melodía en un archivo aparte (formato de nota por nota: {"bar", "note" como
+## "F#4" o "REST", "duration" como "1/8", "velocity"}). Devuelve un arreglo por
+## compás con [midi (-1 = silencio), tiempos, velocidad].
+static func load_melody_file(path: String) -> Array:
+	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+	var bars := []
+	bars.resize(int(data.get("total_bars", 1)))
+	for i in bars.size():
+		bars[i] = []
+	for ev: Dictionary in data["tracks"]["melody"]:
+		var frac := String(ev["duration"]).split("/")
+		var beats := 4.0 * float(frac[0]) / float(frac[1]) if frac.size() == 2 else float(frac[0])
+		(bars[int(ev["bar"]) - 1] as Array).append([note_midi(String(ev["note"])), beats, float(ev.get("velocity", 0.8))])
+	return bars
+
+
+## "C4" = 60; admite "#" y "b". "REST" (o cualquier otra cosa) = -1.
+static func note_midi(note: String) -> int:
+	var pcs := {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
+	if note.length() < 2 or not pcs.has(note[0]):
+		return -1
+	var pc: int = pcs[note[0]]
+	var rest := note.substr(1)
+	if rest.begins_with("#"):
+		pc += 1
+		rest = rest.substr(1)
+	elif rest.begins_with("b"):
+		pc -= 1
+		rest = rest.substr(1)
+	return 12 * (int(rest) + 1) + pc
+
+
+func _file_bar(t0: float, beat: float, events: Array, lead: String, gain: float) -> void:
+	var pos := 0.0
+	for ev: Array in events:
+		if int(ev[0]) >= 0:
+			_note(t0 + pos * beat, float(ev[1]) * beat * 0.95, int(ev[0]), lead, gain * float(ev[2]))
+		pos += float(ev[1])
+	if absf(pos - 4.0) > 0.01:
+		push_warning("Compás de melodía que no suma 4 tiempos (%.2f)" % pos)
 
 
 func _degree_midi(idx: int, root: int, scale: Array) -> int:

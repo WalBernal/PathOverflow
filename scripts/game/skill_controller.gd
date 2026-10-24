@@ -85,7 +85,26 @@ func setup(p_player: Player, p_enemies: EnemyManager, p_character: CharacterData
 	character.stats_changed.connect(refresh_profiles)
 	character.inventory.changed.connect(refresh_profiles)
 	character.conditions_changed.connect(refresh_profiles)
+	var saved_auras: Array = character.flags.get("active_auras", []).duplicate()
 	refresh_profiles()
+	_restore_auras(saved_auras)
+
+
+## Vuelve a encender las auras que estaban activas al guardar (o al cambiar de
+## zona), sin sonido ni destello; las que ya no están en la barra se ignoran.
+func _restore_auras(ids: Array) -> void:
+	for p in _profiles:
+		if not p.is_empty() and p["kind"] == "aura" and String(p["id"]) in ids:
+			var a := {"skill_id": p["id"], "profile": p, "color": DAMAGE_COLORS.get(p["damage_type"], Color.WHITE), "sig": str(p["aura_mods"]), "anchor": Vector2.INF}
+			_auras.append(a)
+			_apply_aura_effect(a)
+	_update_reservation()
+	_remember_auras()
+
+
+## Las auras activas se guardan con el personaje (en sus flags).
+func _remember_auras() -> void:
+	character.flags["active_auras"] = _auras.map(func(a: Dictionary) -> String: return String(a["skill_id"]))
 
 
 func refresh_profiles() -> void:
@@ -126,7 +145,10 @@ func _refresh_units() -> void:
 			a["sig"] = sig
 			_apply_aura_effect(a)
 		keep_auras.append(a)
+	var aura_removed := keep_auras.size() != _auras.size()
 	_auras = keep_auras
+	if aura_removed:
+		_remember_auras()
 	_aura_regen = 0.0
 	_aura_reduction = 0.0
 	for a in _auras:
@@ -174,20 +196,35 @@ func _compute_bare_profiles() -> void:
 ## (Torre de Señal).
 func aura_center(a: Dictionary) -> Vector2:
 	if bool(a["profile"].get("aura_on_unit", false)):
-		# Enlace de Aura: sobre la invocación más resistente (el tanque primero).
-		var best: Dictionary = {}
-		for u in _units:
-			if u["behavior"] == "orbit":
-				continue
-			if best.is_empty() or (u["behavior"] == "tank" and best["behavior"] != "tank") or float(u["max_life"]) > float(best["max_life"]):
-				best = u
-		if not best.is_empty():
-			return best["pos"]
+		# Enlace de Aura: sobre la invocación más resistente (el tanque primero); con
+		# varias auras enlazadas, cada una va a una invocación distinta, en ese orden.
+		var hosts := aura_hosts()
+		if not hosts.is_empty():
+			var k := 0
+			for other in _auras:
+				if other == a:
+					break
+				if bool(other["profile"].get("aura_on_unit", false)):
+					k += 1
+			return hosts[k % hosts.size()]["pos"]
 	if bool(a["profile"].get("aura_anchor", false)):
 		if a.get("anchor", Vector2.INF) == Vector2.INF:
 			a["anchor"] = player.global_position
 		return a["anchor"]
 	return player.global_position
+
+
+## Invocaciones que pueden llevar un aura enlazada, de la más resistente a la
+## menos (los tanques primero; las que orbitan al jugador no cuentan).
+func aura_hosts() -> Array:
+	var hosts := _units.filter(func(u: Dictionary) -> bool: return u["behavior"] != "orbit")
+	hosts.sort_custom(func(x: Dictionary, y: Dictionary) -> bool:
+		var tx: bool = x["behavior"] == "tank"
+		var ty: bool = y["behavior"] == "tank"
+		if tx != ty:
+			return tx
+		return float(x["max_life"]) > float(y["max_life"]))
+	return hosts
 
 
 ## ¿Está ese punto dentro del alcance de alguna aura activa?
@@ -258,6 +295,7 @@ func clear_auras() -> void:
 	for a in _auras:
 		character.remove_timed_effect("aura:" + String(a["skill_id"]))
 	_auras.clear()
+	_remember_auras()
 	_aura_regen = 0.0
 	_aura_reduction = 0.0
 	_update_reservation()
@@ -291,12 +329,14 @@ func _toggle_aura(p: Dictionary, color: Color) -> void:
 		if _auras[k]["skill_id"] == p["id"]:
 			character.remove_timed_effect("aura:" + String(p["id"]))
 			_auras.remove_at(k)
+			_remember_auras()
 			Sfx.play("aura_off", -6.0)
 			_effects.append({"type": "ring", "pos": player.global_position, "radius": 70.0, "time": 0.0, "duration": 0.4, "color": Color(color, 0.5)})
 			refresh_profiles()
 			return
 	var a := {"skill_id": p["id"], "profile": p, "color": color, "sig": str(p["aura_mods"]), "anchor": player.global_position}
 	_auras.append(a)
+	_remember_auras()
 	Sfx.play("aura_on", -4.0)
 	_effects.append({"type": "ring", "pos": player.global_position, "radius": 90.0, "time": 0.0, "duration": 0.7, "color": color})
 	_apply_aura_effect(a)   # recalcula las stats y, con ello, los perfiles y la reserva
