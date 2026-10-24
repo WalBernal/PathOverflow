@@ -10,6 +10,7 @@
       "id": "brecha_503",
       "name": "La Brecha del 503",
       "level": 13,
+      "scale": 1.4, "enemy_density": 1.25,
       "style": "kernel",
       "size": [
         3600,
@@ -173,6 +174,7 @@
       "id": "fabrica",
       "name": "La Fábrica de Hilos",
       "level": 15,
+      "scale": 1.4, "enemy_density": 1.25,
       "style": "fabrica",
       "size": [
         3800,
@@ -302,6 +304,7 @@
       "id": "alcantarillas",
       "name": "Las Alcantarillas del Buffer Overflow",
       "level": 17,
+      "scale": 1.4, "enemy_density": 1.25,
       "style": "alcantarillas",
       "size": [
         3800,
@@ -408,6 +411,7 @@
       "id": "modulo_frio",
       "name": "El Módulo de Refrigeración",
       "level": 18,
+      "scale": 1.25, "enemy_density": 1.2,
       "style": "frio",
       "size": [
         2400,
@@ -512,6 +516,7 @@
       "id": "fosa",
       "name": "La Fosa de los Procesos Huérfanos",
       "level": 19,
+      "scale": 1.4, "enemy_density": 1.25,
       "style": "fosa",
       "size": [
         3600,
@@ -652,6 +657,7 @@
       "id": "grieta",
       "name": "La Grieta del Deadlock",
       "level": 21,
+      "scale": 1.4, "enemy_density": 1.25,
       "style": "grieta",
       "size": [
         3400,
@@ -792,6 +798,7 @@
       "id": "bus",
       "name": "El Bus del Sistema",
       "level": 23,
+      "scale": 1.4, "enemy_density": 1.25,
       "style": "bus",
       "size": [
         4200,

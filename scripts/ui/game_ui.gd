@@ -18,7 +18,7 @@ const UI_SCALES := [0.85, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6]
 const UI_SCALE_MAX := 1.6
 ## Alto mínimo (en px de interfaz) para que quepan el inventario y los menús: en
 ## pantallas bajas la escala elegida se reduce hasta caber (160 % necesita 1080p).
-const UI_MIN_HEIGHT := 640.0
+const UI_MIN_HEIGHT := 560.0
 
 var hud: Hud
 var inventory_panel: InventoryPanel
@@ -490,6 +490,7 @@ func apply_ui_scale() -> void:
 	_root.size = get_viewport().get_visible_rect().size / s
 	if inventory_panel:
 		inventory_panel.fit_height.call_deferred()
+	get_tree().call_group.call_deferred(&"fit_scroll", &"fit")
 
 
 # --- Elección de habilidad (desbloqueos por nivel con dos opciones) ---

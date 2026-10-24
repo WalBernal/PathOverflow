@@ -10,6 +10,7 @@
       "id": "controladora_bus",
       "name": "La Controladora de Bus",
       "level": 26,
+      "scale": 1.4, "enemy_density": 1.25,
       "style": "silicio",
       "size": [
         3400,
@@ -180,6 +181,7 @@
       "id": "oblea",
       "name": "La Oblea de Silicio",
       "level": 28,
+      "scale": 1.4, "enemy_density": 1.25,
       "style": "silicio",
       "size": [
         3800,
@@ -289,6 +291,7 @@
       "id": "memoria_rom",
       "name": "Los Cristales de la ROM",
       "level": 30,
+      "scale": 1.4, "enemy_density": 1.25,
       "style": "rom",
       "size": [
         3600,
@@ -437,6 +440,7 @@
       "id": "cache_l3",
       "name": "La Caché L3 Abandonada",
       "level": 32,
+      "scale": 1.4, "enemy_density": 1.25,
       "style": "rom",
       "size": [
         3000,
@@ -524,6 +528,7 @@
       "id": "sector_arranque",
       "name": "El Sector de Arranque",
       "level": 34,
+      "scale": 1.4, "enemy_density": 1.25,
       "style": "bios",
       "size": [
         4000,

@@ -48,6 +48,10 @@ func _run() -> void:
 		await _capture_ascendancy()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("actos23"):
+		await _capture_act1(["brecha_503", "fabrica", "alcantarillas", "modulo_frio", "fosa", "grieta", "bus", "oblea", "puerto_jtag", "memoria_rom", "camara_flash"])
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("acto1"):
 		await _capture_act1()
 		get_tree().quit()
@@ -282,7 +286,7 @@ func _capture_ascendancy() -> void:
 
 
 ## Acto I: cada zona con el jugador en el centro y junto a un portal.
-func _capture_act1() -> void:
+func _capture_act1(zone_ids: Array = ["tutorial", "campamento", "zona1", "zona2", "zona3", "zona4", "zona5", "jefe"]) -> void:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("ActoI", &"guerrero", CharacterAppearance.default(), false)
 	c.flags["zone"] = "campamento"
@@ -295,7 +299,7 @@ func _capture_act1() -> void:
 	world.set("_since_save", -9999.0)
 	await _wait(1.0)
 	var player: Node2D = world.get("player")
-	for zid in ["tutorial", "campamento", "zona1", "zona2", "zona3", "zona4", "zona5", "jefe"]:
+	for zid in zone_ids:
 		world.call("travel_to", zid, "")
 		world.set("_since_save", -9999.0)
 		var zone: Zone = world.get("zone")
@@ -304,12 +308,12 @@ func _capture_act1() -> void:
 		await _wait(3.2)   # que pase el título de la zona
 		player.global_position = zone.free_spot_near(zone.rect.get_center())
 		await _wait(0.6)
-		_save("60_acto1_%s" % zid)
+		_save("60_zona_%s" % zid)
 		if not zone.exits.is_empty():
 			var e: Dictionary = zone.exits[0]
 			player.global_position = zone.free_spot_near(e["pos"] + Vector2(150.0 if e["pos"].x < zone.rect.get_center().x else -150.0, 60.0))
 			await _wait(0.5)
-			_save("61_acto1_%s_salida" % zid)
+			_save("61_zona_%s_salida" % zid)
 	world.set("_since_save", -9999.0)
 
 
@@ -734,6 +738,14 @@ func _capture_combat2() -> void:
 	await _wait(0.4)
 	_save("35_interfaz_160_inventario")
 	ui.call("_on_menu_requested", "inventory")
+	ui.call("_on_menu_requested", "character")
+	await _wait(0.4)
+	_save("35_interfaz_160_personaje")
+	ui.call("_on_menu_requested", "character")
+	ui.call("_on_menu_requested", "skills")
+	await _wait(0.4)
+	_save("35_interfaz_160_habilidades")
+	ui.call("_on_menu_requested", "skills")
 	GameSettings.set_value("interface", "scale", saved_scale)
 	world.set("_since_save", -9999.0)
 

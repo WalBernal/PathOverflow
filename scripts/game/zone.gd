@@ -145,6 +145,12 @@ static func scale_def(z: Dictionary) -> void:
 				e["pos"] = mul.call(e["pos"])
 	if z.has("boss") and z["boss"].has("pos"):
 		z["boss"]["pos"] = mul.call(z["boss"]["pos"])
+	if z.has("extra_points"):
+		z["extra_points"] = z["extra_points"].map(mul)
+	if z.get("mutex") is Dictionary and z["mutex"].has("positions"):
+		z["mutex"]["positions"] = z["mutex"]["positions"].map(mul)
+	if z.get("race_condition") is Dictionary and z["race_condition"].has("pos"):
+		z["race_condition"]["pos"] = mul.call(z["race_condition"]["pos"])
 	var area := s * s
 	if z.has("enemies"):
 		z["enemies"]["packs"] = roundi(float(z["enemies"].get("packs", 0)) * area * float(z.get("enemy_density", 1.0)))
@@ -726,7 +732,9 @@ func _draw_static() -> void:
 		for q in area:
 			uvs.append(q / ZoneArt.tile_world())
 		layer.draw_colored_polygon(area, Color.WHITE, uvs, tex)
-		if style == "forest" or style == "ruins":
+		# Las marcas temáticas (cables, losas rotas, <defunct>, texto del BIOS...) siguen
+		# encima; en el resto del acto I el suelo ya lo dice todo.
+		if not style in ["camp", "swamp", "catacombs", "servers", "boss", "sandbox"]:
 			_draw_decals(layer, Color(s["decal"]))
 	else:
 		if walk_polygon.size() >= 3:
@@ -1058,7 +1066,21 @@ func _draw_ambient() -> void:
 		var hx := fmod(k * 0.6180339 + 0.13, 1.0)
 		var hy := fmod(k * 0.7548776 + 0.41, 1.0)
 		return cam.position + Vector2(fposmod(hx * cam.size.x + t * vx, cam.size.x), fposmod(hy * cam.size.y + t * vy, cam.size.y))
-	match style:
+	# Los estilos de los actos II y III reutilizan uno de estos ambientes.
+	var kind: String = {"kernel": "servers", "bus": "servers", "silicio": "servers", "bios": "servers", "terminal": "camp",
+		"fabrica": "ruins", "alcantarillas": "swamp", "fosa": "catacombs", "grieta": "catacombs", "anillo": "boss",
+		"flash": "boss", "frio": "snow", "rom": "sparkle"}.get(style, style)
+	match kind:
+		"snow":
+			for k in 40:   # nieve de refrigerante
+				var q: Vector2 = spot.call(k, 8.0 * sin(k), 30.0) + Vector2(sin(t + k) * 10.0, 0)
+				draw_rect(Rect2(q, Vector2(2, 2)), Color(0.85, 0.95, 1.0, 0.55))
+		"sparkle":
+			for k in 22:   # destellos de cristal
+				var q: Vector2 = spot.call(k, 0.0, 0.0)
+				var on := maxf(0.0, sin(t * 2.5 + k * 1.3))
+				draw_rect(Rect2(q - Vector2(1, 3), Vector2(2, 6)), Color(0.85, 0.7, 1.0, 0.6 * on))
+				draw_rect(Rect2(q - Vector2(3, 1), Vector2(6, 2)), Color(0.85, 0.7, 1.0, 0.6 * on))
 		"forest":
 			for k in 26:   # luciérnagas
 				var q: Vector2 = spot.call(k, 6.0 * sin(k), -4.0) + Vector2(sin(t * 1.3 + k) * 10.0, cos(t + k * 2.0) * 6.0)
@@ -1080,7 +1102,7 @@ func _draw_ambient() -> void:
 		"ruins", "catacombs":
 			for k in 30:   # polvo flotando
 				var q: Vector2 = spot.call(k, 5.0, 3.0) + Vector2(sin(t * 0.7 + k) * 8.0, 0)
-				draw_rect(Rect2(q, Vector2(2, 2)), Color(1.0, 0.9, 0.7, 0.3 if style == "ruins" else 0.18))
+				draw_rect(Rect2(q, Vector2(2, 2)), Color(1.0, 0.9, 0.7, 0.3 if kind == "ruins" else 0.18))
 		"servers":
 			for k in 28:   # motas de datos que suben
 				var q: Vector2 = spot.call(k, 0.0, -26.0)

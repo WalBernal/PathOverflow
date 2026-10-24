@@ -215,8 +215,8 @@ static func apply_ui_scale(root: Control) -> void:
 	var fit := func() -> void:
 		if not is_instance_valid(root) or not root.is_inside_tree():
 			return   # el menú ya se cerró
-		# Igual que GameUI.apply_ui_scale: en pantallas bajas se reduce hasta caber (640 px de alto).
-		var s := minf(chosen, maxf(1.0, root.get_viewport().get_visible_rect().size.y / 640.0))
+		# Igual que GameUI.apply_ui_scale: en pantallas bajas se reduce hasta caber (560 px de alto).
+		var s := minf(chosen, maxf(1.0, root.get_viewport().get_visible_rect().size.y / 560.0))
 		root.set_anchors_preset(Control.PRESET_TOP_LEFT)
 		root.scale = Vector2(s, s)
 		root.size = root.get_viewport().get_visible_rect().size / s

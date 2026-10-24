@@ -68,6 +68,13 @@ func _ready() -> void:
 	box.add_theme_constant_override("separation", 10)
 	add_child(box)
 	box.add_child(UiStyle.window_header("Personaje", "Tus cifras, sin maquillaje  ·  C para cerrar", func() -> void: close_requested.emit()))
+	# El resto se desplaza si no cabe (interfaz grande en pantallas bajas).
+	var scroll := FitScroll.new(self)
+	box.add_child(scroll)
+	box = VBoxContainer.new()
+	box.add_theme_constant_override("separation", 10)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(box)
 
 	# Cabecera: medallón + nombre, clase, ascendencia, experiencia y datos curiosos.
 	var top := HBoxContainer.new()

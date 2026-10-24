@@ -51,7 +51,10 @@ func _ready() -> void:
 	box.add_child(_hint)
 	_rows = VBoxContainer.new()
 	_rows.add_theme_constant_override("separation", 6)
-	box.add_child(_rows)
+	# Las 6 placas se desplazan si la ventana no cabe (interfaz grande).
+	var rows_scroll := FitScroll.new(self)
+	box.add_child(rows_scroll)
+	rows_scroll.add_child(_rows)
 	var bag_title := HBoxContainer.new()
 	box.add_child(bag_title)
 	var header := UiStyle.section_header("En la bolsa  (suelta aquí para desinstalar)")

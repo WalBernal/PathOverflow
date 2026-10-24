@@ -57,25 +57,62 @@ static func data() -> Dictionary:
 ## Sustituye las pasivas de cada ascendencia por su árbol de 20 nodos (si está
 ## en ascendancy_trees.json). Se llama al cargar classes.json.
 static func expand_classes(classes: Array) -> void:
+	var k := 0
 	for c in classes:
 		for a in c.get("ascendancies", []):
-			var def: Dictionary = data().get(String(a["id"]), {})
+			var def: Dictionary = data().get(String(a["id"]), {}).duplicate()
 			if not def.is_empty():
-				a["passives"] = build(def)
+				# Forma por orden (las dos de una clase nunca comparten forma ni lado).
+				if not def.has("shape"):
+					def["shape"] = SHAPES[(k * 3 + k / SHAPES.size()) % SHAPES.size()]
+				if not def.has("mirror"):
+					def["mirror"] = k % 2 == 1
+				a["passives"] = build(def, String(a["id"]))
 				a["tree_version"] = VERSION
+			k += 1
 
 
-static func build(def: Dictionary) -> Array:
+static func build(def: Dictionary, asc_id := "") -> Array:
 	var minors: Array = def.get("minors", [])
 	var notables: Array = def.get("notables", [])
+	var shape: String = def.get("shape", SHAPES[absi(hash(asc_id)) % SHAPES.size()] if asc_id != "" else "fan")
+	var mirror: bool = def.get("mirror", false)
 	var nodes := []
 	for t: Dictionary in TEMPLATE:
 		var src: Dictionary = minors[int(t["minor"]) % minors.size()] if t["kind"] == "minor" else notables[int(t["notable"])]
 		var mods := []
 		for m in src.get("mods", []):
 			mods.append(parse_mod(m) if m is String else m)
-		nodes.append({"name": src["name"], "mods": mods, "pos": t["pos"], "links": t["links"].duplicate(), "kind": t["kind"]})
+		nodes.append({"name": src["name"], "mods": mods, "pos": shape_pos(t["pos"], shape, mirror), "links": t["links"].duplicate(), "kind": t["kind"]})
 	return nodes
+
+
+## Formas del árbol: cada ascendencia dobla la plantilla a su manera (los enlaces
+## no cambian, solo dónde se dibuja cada nodo). Se puede fijar con "shape" y
+## "mirror" en ascendancy_trees.json.
+const SHAPES := ["fan", "heart", "crown", "spiral", "wide"]
+
+
+static func shape_pos(p: Vector2, shape: String, mirror: bool) -> Vector2:
+	var q := p
+	match shape:
+		"heart":   # las ramas se cierran abajo, hacia el centro
+			q.x *= 1.0 - 0.35 * maxf(q.y, 0.0)
+			q.y += 0.06 * absf(q.x)
+		"crown":   # las ramas de fuera suben como las puntas de una corona
+			q.y -= 0.22 * absf(q.x) - 0.05
+		"spiral":   # gira más cuanto más lejos del inicio
+			var d := q.distance_to(START_POS)
+			# (todo hacia el mismo lado: si cada mitad girara al contrario, se juntarían abajo)
+			q = START_POS + (q - START_POS).rotated(0.22 * d)
+		"wide":
+			q = Vector2(q.x * 1.08, q.y * 0.9 + 0.04)
+	if mirror:
+		q.x = -q.x
+	# Que nada se salga del disco.
+	if q.length() > 0.84:
+		q = q.normalized() * 0.84
+	return q
 
 
 ## "stat tipo valor [tags...]" → {"stat", "type", "value", "tags"}.

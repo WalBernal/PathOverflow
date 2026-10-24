@@ -15,6 +15,21 @@ const GRADES := {
 	"catacombs": {"tint": "a0b8ff", "amount": 0.25, "sat": 0.85, "vignette": 0.55, "dark": 0.58, "radius": 400.0},
 	"servers": {"tint": "90e8ff", "amount": 0.22, "sat": 1.1, "vignette": 0.45, "dark": 0.3, "radius": 560.0},
 	"boss": {"tint": "ff8a70", "amount": 0.25, "sat": 1.15, "vignette": 0.55, "dark": 0.25, "radius": 600.0},
+	# Acto II: el sistema operativo.
+	"kernel": {"tint": "8ab4ff", "amount": 0.2, "sat": 1.05, "vignette": 0.5, "dark": 0.2, "radius": 600.0},
+	"terminal": {"tint": "a0ffb0", "amount": 0.18, "sat": 1.05, "vignette": 0.45, "dark": 0.1, "radius": 640.0},
+	"fabrica": {"tint": "ffcc90", "amount": 0.2, "sat": 1.0, "vignette": 0.45, "dark": 0.15, "radius": 620.0},
+	"alcantarillas": {"tint": "90e0d0", "amount": 0.22, "sat": 0.95, "vignette": 0.55, "dark": 0.42, "radius": 480.0},
+	"frio": {"tint": "b0d8ff", "amount": 0.28, "sat": 0.85, "vignette": 0.45, "dark": 0.1, "radius": 640.0},
+	"fosa": {"tint": "e0c8a0", "amount": 0.2, "sat": 0.85, "vignette": 0.55, "dark": 0.35, "radius": 500.0},
+	"grieta": {"tint": "c0a0ff", "amount": 0.24, "sat": 1.0, "vignette": 0.55, "dark": 0.4, "radius": 480.0},
+	"bus": {"tint": "90b8ff", "amount": 0.2, "sat": 1.1, "vignette": 0.45, "dark": 0.15, "radius": 620.0},
+	"anillo": {"tint": "ffa070", "amount": 0.25, "sat": 1.15, "vignette": 0.55, "dark": 0.25, "radius": 600.0},
+	# Acto III: el silicio.
+	"silicio": {"tint": "a8c8ff", "amount": 0.2, "sat": 1.05, "vignette": 0.45, "dark": 0.15, "radius": 620.0},
+	"bios": {"tint": "8aa8ff", "amount": 0.25, "sat": 1.1, "vignette": 0.45, "dark": 0.1, "radius": 640.0},
+	"rom": {"tint": "d0a8ff", "amount": 0.25, "sat": 1.1, "vignette": 0.5, "dark": 0.3, "radius": 540.0},
+	"flash": {"tint": "ff9080", "amount": 0.25, "sat": 1.15, "vignette": 0.55, "dark": 0.25, "radius": 600.0},
 }
 
 var player: Node2D

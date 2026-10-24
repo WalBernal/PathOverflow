@@ -1208,24 +1208,37 @@ func _collect_banned(value: Variant, banned: RegEx, path: String, found: PackedS
 
 ## Acto I más grande: "scale" agranda tamaño y posiciones, y las manadas crecen con el área.
 func _test_zone_scale() -> void:
-	var act: Dictionary = DataLoader.load_json("res://data/act1.json")
-	for z in act["zones"]:
-		if not String(z["id"]).begins_with("zona"):
-			continue
+	var scaled := 0
+	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json"]:
+		for z in DataLoader.load_json(path)["zones"]:
+			if not z.has("scale"):
+				_check(bool(z.get("safe", false)) or z.has("boss") or not z.has("enemies") or String(z["id"]) == "tutorial",
+					"%s: las zonas de combate se agrandan (solo quedan igual campamentos, arenas de jefe y el tutorial)" % z["id"])
+				continue
+			scaled += 1
+			_check_scaled_zone(z)
+	_check(scaled >= 17, "zonas agrandadas en los tres actos (%d)" % scaled)
+	# Suelos en pixel art de todos los estilos de los actos I a III.
+	for style in ZoneArt.STYLES:
+		_check(ZoneArt.has_ground(style) and ZoneArt.ground(style).get_width() == ZoneArt.SIZE, "suelo en pixel art: %s" % style)
+
+
+func _check_scaled_zone(z: Dictionary) -> void:
+	if true:
 		var raw: Dictionary = z.duplicate(true)
 		Zone.scale_def(z)
 		var s := float(raw.get("scale", 1.0))
-		_check(s >= 1.5, "%s: zona del acto I agrandada (×%.2f)" % [z["id"], s])
+		_check(s >= 1.25, "%s: zona agrandada (×%.2f)" % [z["id"], s])
 		_check(is_equal_approx(float(z["size"][0]), float(raw["size"][0]) * s), "%s: el tamaño crece" % z["id"])
 		_check(is_equal_approx(float(z["exits"][0]["pos"][0]), float(raw["exits"][0]["pos"][0]) * s), "%s: las salidas se mueven con la zona" % z["id"])
-		_check(int(z["enemies"]["packs"]) >= int(raw["enemies"]["packs"]) * 2, "%s: más del doble de manadas (%d → %d)" % [z["id"], raw["enemies"]["packs"], z["enemies"]["packs"]])
+		_check(int(z["enemies"]["packs"]) >= floori(int(raw["enemies"]["packs"]) * s * s),"%s: más manadas con el área (%d → %d)" % [z["id"], raw["enemies"]["packs"], z["enemies"]["packs"]])
+		var area := Rect2(Vector2.ZERO, Vector2(z["size"][0], z["size"][1]))
 		for e in z["exits"]:
-			_check(Rect2(Vector2.ZERO, Vector2(z["size"][0], z["size"][1])).has_point(Vector2(e["pos"][0], e["pos"][1])), "%s: salida dentro de la zona" % z["id"])
+			_check(area.has_point(Vector2(e["pos"][0], e["pos"][1])), "%s: salida dentro de la zona" % z["id"])
+		for p in z.get("extra_points", []) + (z["mutex"]["positions"] if z.get("mutex") is Dictionary else []):
+			_check(area.has_point(Vector2(p[0], p[1])), "%s: puntos especiales dentro de la zona" % z["id"])
 		Zone.scale_def(z)
 		_check(is_equal_approx(float(z["size"][0]), float(raw["size"][0]) * s), "%s: no se agranda dos veces" % z["id"])
-	# Suelos en pixel art de todos los estilos del acto I.
-	for style in ["sandbox", "camp", "forest", "ruins", "swamp", "catacombs", "servers", "boss"]:
-		_check(ZoneArt.has_ground(style) and ZoneArt.ground(style).get_width() == ZoneArt.SIZE, "suelo en pixel art: %s" % style)
 
 
 func _test_ascendancy_rules() -> void:
@@ -1271,6 +1284,17 @@ func _test_ascendancy_rules() -> void:
 			var special := ns.filter(func(n: Dictionary) -> bool: return n["kind"] == "unique").any(func(n: Dictionary) -> bool:
 				return n["mods"].any(func(md: Dictionary) -> bool: return md["stat"] in ["kill_explosion", "static_pulse", "retaliation_nova", "companion_robot"]))
 			_check(special, "%s: una de sus únicas da una habilidad propia" % a["id"])
+			# Forma propia: dentro del disco y sin nodos encimados.
+			var closest := 9.0
+			for i in ns.size():
+				_check(Vector2(ns[i]["pos"]).length() <= 0.85, "%s: nodo %d dentro del disco" % [a["id"], i])
+				closest = minf(closest, Vector2(ns[i]["pos"]).distance_to(AscendancyTree.START_POS))
+				for j in range(i + 1, ns.size()):
+					closest = minf(closest, Vector2(ns[i]["pos"]).distance_to(ns[j]["pos"]))
+			_check(closest >= 0.13, "%s: nodos separados (mínimo %.2f)" % [a["id"], closest])
+		var p0: Array = cdef["ascendancies"][0]["passives"].map(func(n: Dictionary) -> Vector2: return n["pos"])
+		var p1: Array = cdef["ascendancies"][1]["passives"].map(func(n: Dictionary) -> Vector2: return n["pos"])
+		_check(p0 != p1, "%s: sus dos ascendencias tienen árboles con forma distinta" % cdef["id"])
 	# Habilidades únicas: el pulso de estática daña a los enemigos cercanos cada 3 s.
 	_check(Stat.exists(Stat.STATIC_PULSE) and Stat.exists(Stat.KILL_EXPLOSION) and Stat.exists(Stat.RETALIATION_NOVA), "stats de habilidades únicas de ascendencia")
 	# Guardado antiguo con ascendencia por debajo del nivel 20: se reinicia.

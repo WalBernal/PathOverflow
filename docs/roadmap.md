@@ -1,6 +1,6 @@
 # Roadmap — Path Overflow: El Último Commit
 
-Estado a octubre de 2026: Actos I a III jugables (el I más grande y con filtro de pixel art), 7 clases con kit y rasgo propios, 14 ascendencias (2 por clase, con árbol de 20 nodos y habilidades únicas), un árbol con las temáticas de estados y aliados repartidas por sectores (3-5 clusters cada una, sin nodos encimados), estados alterados sobre enemigos **y sobre el jugador**, interacciones entre estados, 11 invocaciones persistentes y 6 auras (con alcance; 2 debilitan a los enemigos), desbloqueo de habilidades por nivel (con una elección entre dos), hitos propios por invocación, auras ancladas, mando básico, RAM por grados (menor / normal / mayor), enemigos con resistencias, inmunidades, 16 afijos y 9 combinaciones con nombre, cazadores de invocaciones, jefes y subjefes con fases (que además cambian de resistencias), barra de jefe y música de fase. Lo que **falta**, por prioridad. **S** = pequeño (≈ 1 sesión), **M** = mediano, **L** = grande.
+Estado a octubre de 2026: Actos I a III jugables (más grandes, con filtro y suelos en pixel art; ver también `docs/roadmap_2.md` con las mejoras de fondo), 7 clases con kit y rasgo propios, 14 ascendencias (2 por clase, con árbol de 20 nodos y habilidades únicas), un árbol con las temáticas de estados y aliados repartidas por sectores (3-5 clusters cada una, sin nodos encimados), estados alterados sobre enemigos **y sobre el jugador**, interacciones entre estados, 11 invocaciones persistentes y 6 auras (con alcance; 2 debilitan a los enemigos), desbloqueo de habilidades por nivel (con una elección entre dos), hitos propios por invocación, auras ancladas, mando básico, RAM por grados (menor / normal / mayor), enemigos con resistencias, inmunidades, 16 afijos y 9 combinaciones con nombre, cazadores de invocaciones, jefes y subjefes con fases (que además cambian de resistencias), barra de jefe y música de fase. Lo que **falta**, por prioridad. **S** = pequeño (≈ 1 sesión), **M** = mediano, **L** = grande.
 
 > Descartado por ahora: escala de las invocaciones y de los obstáculos; cazadores contra minas y trampas (las minas están enterradas y no se ven).
 
@@ -16,7 +16,6 @@ Estado a octubre de 2026: Actos I a III jugables (el I más grande y con filtro 
 
 - **Equilibrar el Multicanal y la Pipeline Superescalar** (S): la Pipeline mayor sigue siendo la mejor RAM de daño para casi todo (×1.5); probar en partida. Igual con la Sobrealimentación (+50 % de reserva) y el Enlace de Aura.
 - **Equilibrar los árboles de ascendencia** (M): con 10 puntos se llega a 3-4 notables; probar cada una hasta el nivel 60. Las habilidades únicas (explosión al matar, pulso de estática, nova de hielo) escalan con el nivel, no con el daño del personaje.
-- **Árboles de ascendencia con forma propia** (S): hoy las 14 comparten la plantilla de 4 ramas; variar la posición de los nodos por ascendencia (como en PoE 2).
 - **Más habilidades únicas de ascendencia** (M): hoy hay 4 mecánicas (explosión al matar, pulso de estática, nova de hielo, robot de compañía); faltan algunas propias de cada clase (p. ej. un muro de fuego del Firewall, un sprint del Scrum Master).
 
 ## 3. Enemigos y jefes
@@ -27,8 +26,8 @@ Estado a octubre de 2026: Actos I a III jugables (el I más grande y con filtro 
 
 | Qué | Tamaño |
 |---|---|
-| **Hacer crecer los actos II y III** como el I: zonas ×1.5 (`"scale"` en el act*.json), más enemigos (`"enemy_density"`), suelos en pixel art propios de sus estilos (fábrica, alcantarillas, fosa, grieta, bus, anillo, frío, silicio, BIOS, ROM, flash) y gradación de luz | M |
-| **Acto I, siguiente paso visual**: obstáculos y bordes (árboles de cables, rocas, lápidas, racks) dibujados en pixel art con sombra y luz, como el suelo; y equilibrar el número de enemigos (zonas con 110-220) jugando | M |
+| **Siguiente paso visual de los tres actos**: obstáculos y bordes (árboles de cables, rocas, lápidas, racks, pistones...) dibujados en pixel art con sombra y luz, como el suelo | M |
+| **Equilibrar la densidad**: las zonas tienen ahora 110-300 enemigos (el Bus del Sistema, 298); jugar y ajustar `enemy_density` por zona, y medir FPS en las más llenas | S |
 | **Acto IV** (zonas, NPCs, misiones, jefe con fases, escenas) | L |
 | Misiones secundarias con recompensas de RAM de grado alto, placas de invocación y auras | M |
 | Más objetos únicos y conjuntos con efectos de estados, auras, espinas y autómatas | M |
@@ -40,7 +39,7 @@ Estado a octubre de 2026: Actos I a III jugables (el I más grande y con filtro 
 - **Mando, siguiente paso** (M): moverse, apuntar, habilidades, pociones, abrir menús, recoger objetos y hablar con NPC (A contextual) ya funcionan; falta navegar dentro de los menús (inventario, árbol, K, diálogos) sin ratón.
 - Rebindear teclas y botones desde la pausa (M).
 - **Prólogo en pixel art 2.0, siguiente paso** (M): la calle ya sigue el modelo 3D y la foto real (UAdeO, calle lateral que baja, torre a la derecha); faltan el pasillo y la oficina con el mismo nivel de detalle (luz, tramado, sombras).
-- **Menús con desplazamiento** (S): el inventario ya se desplaza si no cabe con la interfaz grande; falta lo mismo en la hoja de personaje (C) y el menú K, que por ahora limitan la escala a lo que quepa (160 % solo en 1080p o más).
+- **Ventanas grandes con el minimapa** (S): a 160 % la hoja de personaje llega bajo el minimapa y las misiones; ocultarlos o correr la ventana mientras esté abierta. Revisar también alijo, tienda y waypoints a 160 % en 900 px.
 
 ## 6. Arte y audio
 
@@ -68,6 +67,8 @@ Estado a octubre de 2026: Actos I a III jugables (el I más grande y con filtro 
 5. Arte final de personajes, enemigos e invocaciones.
 
 ## Hecho (no repetir)
+
+**Actos II y III renovados, árboles con forma propia y menús con desplazamiento (23 octubre 2026, noche 4)**: **las zonas de combate de los actos II y III crecen ×1.4** (Módulo de Refrigeración ×1.25) con 25 % más densidad (195-298 enemigos); se agrandan también los cerrojos mutex, la condición de carrera y los puntos extra; campamentos y arenas de jefe quedan igual · **suelos en pixel art para los 13 estilos** de los actos II y III (pizarra del kernel, CRT del Socket, planchas con franja de peligro, ladrillo húmedo, baldosas heladas, ceniza con lápidas, grietas violetas, carriles del bus, cobre con pistas, oblea, BIOS azul, cristales de ROM, celdas flash) con su **gradación de luz** (alcantarillas, fosa y grieta oscuras) y **ambiente** (nieve en el módulo frío, destellos en la ROM, datos, brasas, burbujas, polvo) · **cada árbol de ascendencia con su forma** (abanico, corazón, corona, espiral o ancho, y en espejo; las dos de una clase nunca iguales), sin nodos encimados · **hoja de personaje (C) y menú K con desplazamiento**: ahora 160 % cabe en pantallas de 900 px.
 
 **Ascendencias de 20 nodos y acto I renovado (23 octubre 2026, noche 3)**: **árboles de ascendencia como en PoE 2**: 20 nodos por ascendencia (12 menores, 6 notables y 2 habilidades únicas al fondo) en 4 ramas sobre un disco ilustrado; cada nodo tiene que tocar el inicio o uno asignado y solo se quita el del final del camino · **puntos de ascendencia: 2 al nivel 20 y 2 más cada 10 niveles, hasta 10** (nivel 60); los guardados con el árbol antiguo recuperan sus puntos · **14 ilustraciones en pixel art** alusivas a cada ascendencia (rack en llamas a las 3 AM, firewall con candado, lupa sobre el código, tablero kanban, mira sobre un bug, telaraña, encapuchado del Red Team, virus, red neuronal, bases de datos con orbes, robot, monitoreo, plano de arquitectura, organigrama con corona) · **elección con dos discos ilustrados** (nombre en placa, vista previa del árbol, descripción y habilidades únicas) · habilidades únicas nuevas: **explosión al matar, pulso de estática y nova de hielo** · **acto I más grande**: zonas ×1.5 (jefe ×1.25) y 25 % más densidad: 110-220 enemigos por zona · **filtro de pixel art del mundo** (rejilla de píxeles, paleta con tramado, gradación por zona, viñeta en escalones y oscuridad con luz alrededor del jugador en pantano, catacumbas y servidores; se apaga en Pausa) · **suelos en pixel art** sin costuras para los 8 estilos del acto I · **partículas de ambiente** (luciérnagas, hojas, niebla, burbujas, polvo, datos, brasas) · **puertas de salida nuevas**: arco de piedra con runas, energía girando, glifos en el suelo y placa con el destino, con color e icono según adónde llevan (campamento, zona, jefe, portal) y cadenas si están cerradas.
 
