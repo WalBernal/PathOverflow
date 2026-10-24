@@ -449,6 +449,9 @@ func _regenerate(delta: float) -> void:
 	life = minf(max_life(), life + life_gain * delta)
 	mana = minf(max_mana(), mana + mana_gain * delta)
 	_since_damage += delta
+	var es_regen := _stat(Stat.ENERGY_SHIELD_REGEN)
+	if es_regen > 0.0:
+		energy_shield = minf(max_energy_shield(), energy_shield + es_regen * delta)
 	if _since_damage >= ES_RECHARGE_DELAY:
 		energy_shield = minf(max_energy_shield(),
 			energy_shield + max_energy_shield() * ES_RECHARGE_PERCENT / 100.0 * delta)

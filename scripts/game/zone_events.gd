@@ -16,6 +16,8 @@ const KINDS := ["cache", "shrine", "ambush", "deploy"]
 const WEIGHTS := [30, 35, 20, 15]
 const RADIUS := 46.0
 const AMBUSH_RADIUS := 170.0
+## Los datos huérfanos se abren solos al pasar a esta distancia (sin tener que tocarlos).
+const CACHE_TRIGGER_RADIUS := 230.0
 const SHRINES := {
 	"turbo": {"name": "Santuario Turbo", "color": "6ad07a", "text": "Turbo: +30 % de velocidad de ataque, lanzamiento y movimiento (20 s)",
 		"mods": [{"stat": "attack_speed", "type": "increased", "value": 30}, {"stat": "cast_speed", "type": "increased", "value": 30},
@@ -80,6 +82,10 @@ func _process(delta: float) -> void:
 	for i in events.size():
 		var e := events[i]
 		if e["kind"] == "ambush" and e["state"] == "ready" and pp.distance_to(e["pos"]) < AMBUSH_RADIUS:
+			_fire(i)
+		elif e["kind"] == "cache" and e["state"] == "ready" and pp.distance_to(e["pos"]) < CACHE_TRIGGER_RADIUS:
+			if _pending == i:
+				_pending = -1
 			_fire(i)
 	if _pending != -1:
 		var e := events[_pending]
@@ -154,6 +160,10 @@ func _draw_cache(e: Dictionary) -> void:
 	_shadow(p + Vector2(0, 18), 34.0)
 	if ready:
 		draw_circle(p, 44.0, Color(1.0, 0.8, 0.3, 0.06 + 0.04 * sin(_time * 3.0)))
+		# Aro de activación: al cruzarlo se abre (trazos que giran despacio).
+		for k in 24:
+			var a := TAU * k / 24.0 + _time * 0.3
+			draw_arc(p, CACHE_TRIGGER_RADIUS, a, a + TAU / 48.0, 3, Color(1.0, 0.8, 0.3, 0.28), 2.0)
 	var box := Rect2(p - Vector2(30, 18), Vector2(60, 34))
 	draw_rect(box, Color("4a4350"))
 	draw_rect(Rect2(box.position, Vector2(box.size.x, 4)), Color("6a6372"))

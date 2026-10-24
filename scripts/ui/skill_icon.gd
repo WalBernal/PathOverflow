@@ -130,6 +130,14 @@ static func draw(ci: CanvasItem, rect: Rect2, skill_def: Dictionary, dimmed := f
 				ci.draw_circle(c + Vector2(-r * 0.4 + k * r * 0.4, r * 0.4), r * 0.09, color if k != 1 else Color("e06c6c"))
 			ci.draw_rect(Rect2(c + Vector2(-r * 1.05, -r * 0.1), Vector2(r * 0.3, r * 0.8)), Color("47443f"))
 			ci.draw_rect(Rect2(c + Vector2(r * 0.75, -r * 0.1), Vector2(r * 0.3, r * 0.8)), Color("47443f"))
+		"golem_silicio", "golem_overclock", "golem_utp", "golem_gpu", "golem_kernel":
+			# Golems: su propio sprite, en pequeño (cada uno con su silueta).
+			var gs := rect.size.y / 66.0
+			ci.draw_set_transform(c + Vector2(0, rect.size.y * 0.36), 0.0, Vector2(gs, gs))
+			UnitArt.draw(ci, String(icon["shape"]), "tank", Vector2.ZERO, 1.2, color)
+			ci.draw_set_transform(Vector2.ZERO)
+			if dimmed:
+				ci.draw_rect(rect, Color(0, 0, 0, 0.45))
 		"titan":
 			# Mainframe: torre de racks con tres hileras de LED y un ojo central.
 			ci.draw_rect(Rect2(c + Vector2(-r * 0.75, -r * 1.0), Vector2(r * 1.5, r * 2.0)), Color("2a3040"))

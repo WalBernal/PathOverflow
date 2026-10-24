@@ -36,6 +36,13 @@ func _ready() -> void:
 	z_index = 2  # etiquetas por encima de enemigos y jugador
 
 
+## Letra de la rareza para el modo daltónico ("" en el equipo normal y lo que no es equipo).
+static func rarity_tag(item: Item) -> String:
+	if not item.is_equipment():
+		return ""
+	return {Rarity.Item.MAGIC: "M", Rarity.Item.RARE: "R", Rarity.Item.ULTRA_RARE: "UR", Rarity.Item.UNIQUE: "Ú", Rarity.Item.SET: "C"}.get(item.rarity, "")
+
+
 ## Filtro de botín (ver LootFilter y su ventana). Con Shift pulsado se ve todo,
 ## y lo que el filtro oculta aparece atenuado.
 static func show_all_held() -> bool:
@@ -125,6 +132,14 @@ func _draw() -> void:
 			draw_rect(rect, color, false, 1.5)
 		draw_string(font, rect.position + Vector2(PADDING.x, PADDING.y + ascent), d["text"],
 			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)
+		var tag := rarity_tag(item)
+		if Ailments.colorblind and tag != "":
+			# Modo daltónico: la rareza también en letra, en una chapita a la izquierda.
+			var tw := font.get_string_size(tag, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x + 6.0
+			var tr := Rect2(rect.position.x - tw - 2.0, rect.position.y + 2.0, tw, rect.size.y - 4.0)
+			draw_rect(tr, Color(0, 0, 0, 0.9))
+			draw_rect(tr, color, false, 1.0)
+			draw_string(font, tr.position + Vector2(3, tr.size.y - 4.0), tag, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color.WHITE)
 
 
 func _unhandled_input(event: InputEvent) -> void:

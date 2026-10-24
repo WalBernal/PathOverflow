@@ -1954,6 +1954,24 @@ func _draw_all() -> void:
 const TELEGRAPH := Color(1.0, 0.25, 0.2)
 
 
+## Modo daltónico: rayas diagonales dentro de un círculo de aviso, para que el
+## peligro se lea por la forma y no solo por el rojo.
+func _hatch_circle(c: Vector2, r: float, color: Color) -> void:
+	if not Ailments.colorblind or r < 8.0:
+		return
+	var step := 14.0
+	var k := -r
+	while k <= r:
+		# Cuerda a 45°: recta x - y = k cortada con el círculo.
+		var d := absf(k) / sqrt(2.0)
+		if d < r:
+			var half := sqrt(r * r - d * d)
+			var mid := c + Vector2(k, -k) * 0.5
+			var along := Vector2(1, 1).normalized() * half
+			draw_line(mid - along, mid + along, Color(color, 0.55), 2.0)
+		k += step
+
+
 ## Rol: insignia sobre la cabeza (escudo, cruz, mira, chevrones) y, el guardián,
 ## el círculo de los que protege.
 func _draw_role(i: int, role: String, tt: float) -> void:
@@ -2004,6 +2022,7 @@ func _draw_attacks(font: Font) -> void:
 			draw_circle(pos, hr, Color(TELEGRAPH, 0.12))
 			draw_circle(pos, hr * ht, Color(TELEGRAPH, 0.26))
 			draw_arc(pos, hr, 0.0, TAU, 48, Color(TELEGRAPH, 0.6 + 0.4 * ht), 3.0, true)
+			_hatch_circle(pos, hr, Color.WHITE)
 			var mark := pos + Vector2(-20.0, -radii[i] * SPRITE_SCALE * 1.1 - 30.0)
 			draw_string_outline(font, mark, "!", HORIZONTAL_ALIGNMENT_CENTER, 40.0, 26, 6, Color.BLACK)
 			draw_string(font, mark, "!", HORIZONTAL_ALIGNMENT_CENTER, 40.0, 26, TELEGRAPH.lerp(Color.WHITE, ht * 0.5))
@@ -2023,6 +2042,7 @@ func _draw_attacks(font: Font) -> void:
 					draw_circle(pos, radius, Color(TELEGRAPH, 0.10))
 					draw_circle(pos, radius * t, Color(TELEGRAPH, 0.22))
 					draw_arc(pos, radius, 0.0, TAU, 40, Color(TELEGRAPH, 0.7), 2.0, true)
+					_hatch_circle(pos, radius, Color.WHITE)
 				"cone":
 					var radius := float(atk.get("range", 160.0)) + 20.0
 					var half := deg_to_rad(float(atk.get("angle", 60.0))) / 2.0
@@ -2061,6 +2081,7 @@ func _draw_attacks(font: Font) -> void:
 					draw_circle(target, pr_radius, Color(lc, 0.08))
 					draw_circle(target, pr_radius * t, Color(lc, 0.2))
 					draw_arc(target, pr_radius, 0.0, TAU, 32, Color(lc, 0.7), 2.0, true)
+					_hatch_circle(target, pr_radius, Color.WHITE)
 					var arc_top := pos.lerp(target, t) + Vector2(0, -sin(t * PI) * 90.0)
 					draw_circle(arc_top, 6.0, lc)
 				"ranged":
@@ -2108,6 +2129,7 @@ func _draw_attacks(font: Font) -> void:
 		draw_circle(h["pos"], h["radius"], Color(c, 0.10))
 		draw_circle(h["pos"], h["radius"] * t, Color(c, 0.25))
 		draw_arc(h["pos"], h["radius"], 0.0, TAU, 40, Color(c, 0.8), 2.0, true)
+		_hatch_circle(h["pos"], h["radius"], Color.WHITE)
 	for fx in _flashes_fx:
 		var a: float = 1.0 - fx["time"] / 0.25
 		var c: Color = fx["color"]

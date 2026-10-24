@@ -1913,6 +1913,153 @@
         "kind": "projectiles",
         "text": "+1 dardo por disparo"
       }
+    },
+    {
+      "id": "golem_silicio",
+      "name": "Golem del Silicio",
+      "kind": "unit",
+      "damage_type": "physical",
+      "attribute": "str",
+      "min_level": 8,
+      "tags": ["spell", "minion", "automaton", "persistent", "area", "physical", "golem"],
+      "lol": "Malphite / Taliyah",
+      "description": "Un coloso de obleas de silicio y cristal en bruto. Provoca a los enemigos y golpea el suelo. Mientras viva, te da armadura y regenera poco a poco tu escudo de energía. Persistente: reserva maná.",
+      "spell": {"base_damage": [10, 17], "damage_growth": 0.15, "cast_time": 1.0, "crit": 5.0},
+      "unit": {
+        "behavior": "tank", "life": 240, "radius": 21, "speed": 160, "interval": 1.7, "range": 400, "taunt": 210, "reduction": 0.3, "reserve": 25,
+        "owner_buff": [
+          {"stat": "armour", "type": "flat", "value": 70},
+          {"stat": "energy_shield", "type": "flat", "value": 15},
+          {"stat": "energy_shield_regen", "type": "flat", "value": 2.5}
+        ],
+        "buff_growth": 0.05,
+        "abilities": [{"kind": "quake", "cooldown": 9.0, "radius": 130, "damage_mult": 1.6, "stun": 0.7}]
+      },
+      "max_active": 1,
+      "radius": 85,
+      "stun": 0.3,
+      "mana_cost": 14,
+      "mana_per_level": 0.5,
+      "cooldown": 2.0,
+      "icon": {"shape": "golem_silicio", "color": "8ad0e8"},
+      "milestone": {"kind": "toughness", "text": "+25 % de vida y +5 % de daño evitado"}
+    },
+    {
+      "id": "golem_overclock",
+      "name": "Golem de Overclock",
+      "kind": "unit",
+      "damage_type": "fire",
+      "attribute": "dex",
+      "min_level": 10,
+      "tags": ["spell", "minion", "automaton", "persistent", "melee", "fire", "elemental", "golem"],
+      "lol": "Hecarim / Master Yi",
+      "description": "Un disipador al rojo vivo que nunca para quieto: corre a los enemigos, golpea rápido y salta sobre los lejanos. Mientras viva, tú también vas más rápido: ataque, lanzamiento y movimiento. Persistente: reserva maná.",
+      "spell": {"base_damage": [7, 11], "damage_growth": 0.15, "cast_time": 1.0, "crit": 6.0},
+      "unit": {
+        "behavior": "melee", "life": 150, "radius": 15, "speed": 330, "interval": 0.7, "range": 480, "reduction": 0.1, "reserve": 25,
+        "owner_buff": [
+          {"stat": "attack_speed", "type": "increased", "value": 5},
+          {"stat": "cast_speed", "type": "increased", "value": 5},
+          {"stat": "movement_speed", "type": "increased", "value": 4}
+        ],
+        "buff_growth": 0.04,
+        "abilities": [{"kind": "leap", "cooldown": 5.0, "radius": 70, "damage_mult": 1.4}]
+      },
+      "max_active": 1,
+      "ailments": {"burn": 15},
+      "mana_cost": 14,
+      "mana_per_level": 0.5,
+      "cooldown": 2.0,
+      "icon": {"shape": "golem_overclock", "color": "ff7a3a"},
+      "milestone": {"kind": "ability", "text": "+25 % de potencia de su salto"}
+    },
+    {
+      "id": "golem_utp",
+      "name": "Golem UTP",
+      "kind": "unit",
+      "damage_type": "physical",
+      "attribute": "dex",
+      "min_level": 12,
+      "tags": ["spell", "minion", "automaton", "persistent", "area", "physical", "golem"],
+      "lol": "Ivern / Zac",
+      "description": "Un monstruo de cables UTP enredados con conectores RJ45 colgando. Barre el área a latigazos y enreda a los grupos, atrayéndolos y aturdiéndolos. Mientras viva, tus autómatas hacen más daño y actúan más rápido. Persistente: reserva maná.",
+      "spell": {"base_damage": [9, 15], "damage_growth": 0.15, "cast_time": 1.0, "crit": 5.0},
+      "unit": {
+        "behavior": "tank", "life": 190, "radius": 19, "speed": 200, "interval": 1.3, "range": 430, "taunt": 120, "reduction": 0.2, "reserve": 25,
+        "owner_buff": [
+          {"stat": "damage", "type": "increased", "value": 15, "tags": ["automaton"]},
+          {"stat": "automaton_speed", "type": "increased", "value": 10}
+        ],
+        "buff_growth": 0.04,
+        "abilities": [
+          {"kind": "tangle", "cooldown": 7.0, "radius": 170, "damage_mult": 1.2, "stun": 0.9, "pull": 0.6},
+          {"kind": "quake", "cooldown": 10.0, "radius": 150, "damage_mult": 1.8, "stun": 0.4}
+        ]
+      },
+      "max_active": 1,
+      "radius": 120,
+      "ailments": {"bleed": 10},
+      "mana_cost": 15,
+      "mana_per_level": 0.5,
+      "cooldown": 2.0,
+      "icon": {"shape": "golem_utp", "color": "4b8bd6"},
+      "milestone": {"kind": "ability", "text": "+25 % de potencia del enredo y el latigazo"}
+    },
+    {
+      "id": "golem_gpu",
+      "name": "Golem GPU",
+      "kind": "unit",
+      "damage_type": "lightning",
+      "attribute": "int",
+      "min_level": 14,
+      "tags": ["spell", "minion", "automaton", "persistent", "projectile", "lightning", "elemental", "golem"],
+      "lol": "Viktor / Vel'Koz",
+      "description": "Una tarjeta gráfica con patas, dos ventiladores en el pecho y luces RGB. Dispara a distancia y cada poco traza un rayo en línea (ray tracing, literalmente). Mientras viva, tus habilidades cuestan menos maná y se enfrían antes. Persistente: reserva maná.",
+      "spell": {"base_damage": [8, 13], "damage_growth": 0.15, "cast_time": 1.0, "crit": 6.0},
+      "unit": {
+        "behavior": "ranged", "life": 140, "radius": 17, "speed": 210, "interval": 1.2, "range": 520, "reduction": 0.15, "reserve": 25, "beam_height": 30,
+        "owner_buff": [
+          {"stat": "mana_cost_reduction", "type": "flat", "value": 8},
+          {"stat": "cooldown_recovery", "type": "increased", "value": 8}
+        ],
+        "buff_growth": 0.04,
+        "abilities": [{"kind": "beam", "cooldown": 5.0, "damage_mult": 1.5, "width": 20}]
+      },
+      "max_active": 1,
+      "projectile_speed": 620,
+      "ailments": {"shock": 10},
+      "mana_cost": 15,
+      "mana_per_level": 0.5,
+      "cooldown": 2.0,
+      "icon": {"shape": "golem_gpu", "color": "6fd36b"},
+      "milestone": {"kind": "projectiles", "text": "+1 proyectil por disparo"}
+    },
+    {
+      "id": "golem_kernel",
+      "name": "Golem de Kernel",
+      "kind": "unit",
+      "damage_type": "chaos",
+      "attribute": "int",
+      "min_level": 16,
+      "tags": ["spell", "minion", "automaton", "persistent", "area", "chaos", "golem"],
+      "lol": "Mordekaiser / Karthus",
+      "description": "Un espectro del espacio de kernel que flota entre volcados de memoria. Todo enemigo cerca de él sufre daño de caos continuo (corrupción). Mientras viva, te da resistencia al caos. Persistente: reserva maná.",
+      "spell": {"base_damage": [7, 12], "damage_growth": 0.15, "cast_time": 1.0, "crit": 5.0},
+      "unit": {
+        "behavior": "melee", "life": 170, "radius": 18, "speed": 190, "interval": 1.1, "range": 420, "reduction": 0.2, "reserve": 25,
+        "owner_buff": [
+          {"stat": "chaos_res", "type": "flat", "value": 15}
+        ],
+        "buff_growth": 0.04,
+        "abilities": [{"kind": "corrode", "cooldown": 1.0, "radius": 150, "dps_mult": 0.45}]
+      },
+      "max_active": 1,
+      "ailments": {"poison": 10},
+      "mana_cost": 15,
+      "mana_per_level": 0.5,
+      "cooldown": 2.0,
+      "icon": {"shape": "golem_kernel", "color": "9a5ad0"},
+      "milestone": {"kind": "ability", "text": "+25 % de potencia y alcance de la corrupción"}
     }
   ]
 }

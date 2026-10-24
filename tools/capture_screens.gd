@@ -44,6 +44,12 @@ func _run() -> void:
 		await _capture_hire_no()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("golems"):
+		await _capture_unit_art()
+		await _capture_icons()
+		await _capture_golems_in_world()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("ventanas"):
 		await _capture_windows()
 		get_tree().quit()
@@ -364,6 +370,63 @@ func _capture_roadmap2() -> void:
 	await _wait(0.5)
 	_save("72_roadmap2_ranura_chip")
 	ui.call("_on_menu_requested", "passives")
+	world.set("_since_save", -9999.0)
+
+
+## Los cinco golems nuevos en el mundo, peleando, con sus bonos en el HUD.
+func _capture_golems_in_world() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var items: ItemDatabase = gd.get("items")
+	var c: CharacterData = gd.create_character("Golems", &"templario", CharacterAppearance.default(), false)
+	c.flags["zone"] = "zona4"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 30
+	var ids := ["golem_silicio", "golem_overclock", "golem_utp", "golem_gpu", "golem_kernel"]
+	for k in ids.size():
+		c.inventory.set_board(k, Motherboard.new(items.skills.skills[ids[k]], 15, []))
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(3.5)
+	var ui: GameUI = world.get("ui")
+	if ui.is_choosing():
+		ui.call("_on_choice_picked", "golem_hardware", func(_s: String) -> void: pass)
+	get_tree().paused = false
+	var skills: SkillController = world.get("skills")
+	var player: Player = world.get("player")
+	var em: EnemyManager = world.get("enemies")
+	player.invulnerable = true
+	player.mana_reserved = 0.0
+	em.clear_all()
+	var p := player.global_position
+	for k in ids.size():
+		skills.call("_summon_unit", skills.profile(k), p + Vector2(-120 + k * 60, 40), Color(items.skills.skills[ids[k]]["icon"]["color"]))
+	await _wait(0.5)
+	_save("101_golems_quietos")
+	for k in 8:
+		var id := em.spawn(p + Vector2(260, -150 + k * 40), Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+		em.lives[em.index_of(id)] *= 40.0
+		em.max_lives[em.index_of(id)] *= 40.0
+	for k in 12:
+		var id := em.spawn(p + Vector2(-300, -200 + k * 35), Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+		em.lives[em.index_of(id)] *= 40.0
+	await _wait(2.0)
+	_save("102_golems_peleando")
+	print("música: ", MusicPlayer.current_track(), " · capa de combate: ", MusicPlayer.combat_layer())
+	# Modo daltónico: avisos rayados en el suelo.
+	var saved_cb := Ailments.colorblind
+	Ailments.colorblind = true
+	var elite := em.spawn(player.global_position + Vector2(0, -160), Rarity.Enemy.ELITE, em.type_index_of("bug"))
+	var ei := em.index_of(elite)
+	em.traits[ei]["heavy_on"] = true
+	em.windups[ei] = EnemyManager.HEAVY_WINDUP * 0.5
+	em.speeds[ei] = 0.0
+	await _wait(0.1)
+	_save("103_daltonico_aviso_rayado")
+	Ailments.colorblind = saved_cb
+	print("bonos de golem: ", c.timed_effects.filter(func(e: Dictionary) -> bool: return String(e["id"]).begins_with("golem:")).map(func(e: Dictionary) -> String: return e["id"]))
 	world.set("_since_save", -9999.0)
 
 
@@ -1161,14 +1224,17 @@ func _capture_unit_art() -> void:
 	sheet.draw.connect(func() -> void:
 		sheet.draw_rect(Rect2(Vector2.ZERO, sheet.size), Color("1d2a26"))
 		var font := sheet.get_theme_default_font()
+		# Dos filas: ampliadas ×2.5 y, al lado de cada una, a tamaño real.
+		var per_row := ceili(units.size() / 2.0)
 		for i in units.size():
-			var x := 80.0 + i * 135.0
+			var x := 70.0 + (i % per_row) * (1480.0 / per_row)
+			var y := 330.0 + (i / per_row) * 400.0
 			var col := Color(units[i].get("icon", {}).get("color", "c8c8c8"))
-			sheet.draw_set_transform(Vector2(x, 360), 0.0, Vector2(3.0, 3.0))
+			sheet.draw_set_transform(Vector2(x, y), 0.0, Vector2(2.5, 2.5))
 			UnitArt.draw(sheet, units[i]["id"], units[i]["unit"]["behavior"], Vector2.ZERO, 1.3, col)
 			sheet.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-			UnitArt.draw(sheet, units[i]["id"], units[i]["unit"]["behavior"], Vector2(x, 620), 1.3, col)
-			sheet.draw_string(font, Vector2(x - 66, 700), units[i]["name"], HORIZONTAL_ALIGNMENT_CENTER, 132, 12))
+			UnitArt.draw(sheet, units[i]["id"], units[i]["unit"]["behavior"], Vector2(x + 38, y + 60), 1.3, col)
+			sheet.draw_string(font, Vector2(x - 66, y + 90), units[i]["name"], HORIZONTAL_ALIGNMENT_CENTER, 132, 12))
 	_swap(sheet)
 	await _wait(0.5)
 	_save("31_invocaciones")

@@ -265,7 +265,8 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 		extra_chains += milestones
 	var base_projectiles := int(skill.get("projectiles", 1 if shoots else 0))
 	var projectiles := base_projectiles + (extra_projectiles if shoots else 0)
-	var mana_cost := roundf((float(skill.get("mana_cost", 0)) + float(skill.get("mana_per_level", 0)) * (board.level - 1)) * cost_mult)
+	var mana_cost := roundf((float(skill.get("mana_cost", 0)) + float(skill.get("mana_per_level", 0)) * (board.level - 1)) * cost_mult
+		* (1.0 - clampf(stats.get_value(Stat.MANA_COST_REDUCTION, tags), 0.0, 50.0) / 100.0))
 	var cooldown := float(skill.get("cooldown", 0.0)) / maxf(0.1, stats.total_multiplier(Stat.COOLDOWN_RECOVERY, tags) * lvl_mult)
 	var duration_mult := stats.total_multiplier(Stat.SKILL_DURATION, tags) * lvl_mult
 	var duration := float(skill.get("duration", 0.0)) * duration_mult
@@ -310,6 +311,14 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 	# Auras: bonificaciones para tus aliados, escaladas por el nivel, los hitos y "efecto de aura".
 	var aura_scale := stats.total_multiplier(Stat.AURA_EFFECT, tags) * (1.0 + 0.02 * (board.level - 1)) \
 		* (1.0 + 0.15 * milestones if kind == "aura" else 1.0)
+	# Golems: bono para su creador mientras vivan (unit.owner_buff), que crece con el
+	# nivel de la placa (unit.buff_growth por nivel) y con el efecto de auras.
+	var owner_buff: Array = []
+	var buff_scale := (1.0 + float(unit.get("buff_growth", 0.0)) * (board.level - 1)) * stats.total_multiplier(Stat.AURA_EFFECT, tags)
+	for md in unit.get("owner_buff", []):
+		var scaled_buff: Dictionary = md.duplicate()
+		scaled_buff["value"] = snappedf(float(md["value"]) * buff_scale, 0.1)
+		owner_buff.append(scaled_buff)
 	var aura_mods: Array = []
 	for md in aura.get("mods", []):
 		var scaled: Dictionary = md.duplicate()
@@ -433,6 +442,7 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 		"chain_damage": chain_damage,
 		"ailing_bonus": ailing_bonus,
 		"aura_mods": aura_mods,
+		"owner_buff": owner_buff,
 		"aura_regen": float(aura.get("regen", 0.0)) * aura_scale,
 		"aura_reduction": minf(0.6, float(aura.get("reduction", 0.0)) * aura_scale),
 		# Alcance del aura alrededor del jugador (crece con el área y el nivel de la placa).

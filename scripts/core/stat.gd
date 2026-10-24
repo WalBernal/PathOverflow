@@ -94,6 +94,10 @@ const EXTRA_PIERCE := &"extra_pierce"
 const STATUS_RESIST := &"status_resist"
 ## Cargas de esquiva (git stash) extra.
 const DODGE_CHARGES := &"dodge_charges"
+## Escudo de energía que se regenera por segundo siempre (aparte de la recarga tras no recibir daño).
+const ENERGY_SHIELD_REGEN := &"energy_shield_regen"
+## % menos de coste de maná de las habilidades (máximo 50 %).
+const MANA_COST_REDUCTION := &"mana_cost_reduction"
 
 # --- Tags (condiciones de los modificadores) ---
 const TAG_ATTACK := &"attack"
@@ -177,6 +181,8 @@ const NAMES := {
 	EXTRA_PIERCE: "Enemigos extra que atraviesan los proyectiles",
 	STATUS_RESIST: "Resistencia a estados (electrocutado, helado, congelado)",
 	DODGE_CHARGES: "Cargas de esquiva",
+	ENERGY_SHIELD_REGEN: "Regeneración de escudo de energía por segundo",
+	MANA_COST_REDUCTION: "Reducción del coste de maná",
 }
 
 ## Los aumentos/más de los padres también aplican al hijo:
@@ -194,6 +200,7 @@ const PERCENT_STATS := [
 	BLOCK_CHANCE, FIRE_RES, COLD_RES, LIGHTNING_RES, CHAOS_RES, CRIT_MULTIPLIER, LIFE_LEECH,
 	BURN_CHANCE, SHOCK_CHANCE, CHILL_CHANCE, FREEZE_CHANCE, POISON_CHANCE, BLEED_CHANCE, STATUS_RESIST,
 	KILL_EXPLOSION, RETALIATION_NOVA, BUFFER_CHARGE_CHANCE, MULTIHILO_CHARGE_CHANCE, OVERCLOCK_CHARGE_CHANCE,
+	MANA_COST_REDUCTION,
 ]
 
 const TAG_NAMES := {
@@ -218,6 +225,7 @@ const TAG_NAMES := {
 	&"lightning": "de rayo",
 	&"chaos": "de caos",
 	&"elemental": "elementales",
+	&"golem": "de golems",
 	COND_LOW_LIFE: "con la vida baja",
 	COND_FULL_LIFE: "con la vida al máximo",
 	COND_RECENT_KILL: "si has matado recientemente",

@@ -187,6 +187,11 @@ static func _motherboard_text(board: Motherboard, character: CharacterData) -> S
 		if p["kind"] == "unit":
 			lines.append("[color=#9ad0ff]Persistente[/color]: hasta [color=#e8d9b0]%d[/color] a la vez · vida [color=#e8d9b0]%d[/color] · reserva [color=#7fa8e0]%d %%[/color] del maná cada una" % [
 				p["max_units"], p["unit_life"], roundi(p["reserve"])])
+		if not (p.get("owner_buff", []) as Array).is_empty():
+			var buff_lines := PackedStringArray()
+			for md in p["owner_buff"]:
+				buff_lines.append(Modifier.from_dict(md).describe())
+			lines.append("[color=#c8a878]Mientras viva, te da:[/color] [color=#%s]%s[/color]" % [MOD_COLOR, " · ".join(buff_lines)])
 		if p["automaton_speed"] != 1.0:
 			lines.append("Velocidad de autómata: [color=#e8d9b0]×%.2f[/color]" % p["automaton_speed"])
 		if not p["ailments"].is_empty():

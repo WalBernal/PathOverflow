@@ -60,6 +60,8 @@ func _initialize() -> void:
 	_test_roadmap2_feel()
 	_test_controls_map_catalog()
 	_test_enemy_roles()
+	_test_golems()
+	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
 	_test_defense_and_dot_skills()
@@ -1495,6 +1497,100 @@ func _test_enemy_roles() -> void:
 	_check(step is Vector2 and absf((step as Vector2).y) > 1.0, "el enjambre rodea en vez de ir en línea recta")
 	player.queue_free()
 	em.queue_free()
+
+
+## Golems nuevos: cada uno da su bono al creador mientras vive (y crece con el
+## nivel de la placa); habilidades de enredo y corrupción.
+func _test_golems() -> void:
+	var skills: Dictionary = _db.skills.skills
+	var c := _new_character()
+	c.set_level(20)
+	var expected := {"golem_silicio": [Stat.ARMOUR, Stat.ENERGY_SHIELD_REGEN], "golem_overclock": [Stat.ATTACK_SPEED, Stat.CAST_SPEED, Stat.MOVEMENT_SPEED],
+		"golem_utp": [Stat.AUTOMATON_SPEED], "golem_gpu": [Stat.MANA_COST_REDUCTION, Stat.COOLDOWN_RECOVERY], "golem_kernel": [Stat.CHAOS_RES]}
+	for gid in expected:
+		_check(skills.has(gid) and "golem" in skills[gid]["tags"], "existe la placa %s" % gid)
+		var p1 := SkillCalc.compute(Motherboard.new(skills[gid], 1, []), c)
+		var p20 := SkillCalc.compute(Motherboard.new(skills[gid], 20, []), c)
+		var stats_in := (p1["owner_buff"] as Array).map(func(md: Dictionary) -> StringName: return StringName(md["stat"]))
+		for st in expected[gid]:
+			_check(stats_in.has(st), "%s da %s" % [gid, st])
+		_check(float(p20["owner_buff"][0]["value"]) > float(p1["owner_buff"][0]["value"]), "el bono de %s crece con el nivel de la placa" % gid)
+	# El bono está solo mientras el golem vive.
+	var em := EnemyManager.new()
+	root.add_child(em)
+	var player: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(player)
+	player.setup(c, em)
+	player.global_position = Vector2(30000, 30000)
+	var sc := SkillController.new()
+	root.add_child(sc)
+	c.inventory.set_board(0, Motherboard.new(skills["golem_silicio"], 10, []))
+	sc.setup(player, em, c)
+	var armour0 := c.stats.get_value(Stat.ARMOUR)
+	sc._summon_unit(sc.profile(0), player.global_position, Color.WHITE)
+	sc._sync_golem_buffs()
+	_check(c.stats.get_value(Stat.ARMOUR) > armour0 + 50.0 and c.stats.get_value(Stat.ENERGY_SHIELD_REGEN) > 0.0, "con el Golem del Silicio vivo: más armadura y regeneración de escudo")
+	sc.clear_units()
+	_check(is_equal_approx(c.stats.get_value(Stat.ARMOUR), armour0) and not c.has_timed_effect("golem:golem_silicio"), "al caer el golem, el bono se va")
+	# El escudo se regenera solo con el stat.
+	c.add_timed_effect("prueba_es", [Modifier.new(Stat.ENERGY_SHIELD, Modifier.Type.FLAT, 100.0, [], "p"), Modifier.new(Stat.ENERGY_SHIELD_REGEN, Modifier.Type.FLAT, 10.0, [], "p")], 60.0)
+	player.energy_shield = 0.0
+	player._since_damage = 0.0
+	player._regenerate(1.0)
+	_check(player.energy_shield >= 9.9, "regeneración de escudo de energía: %.1f por segundo" % player.energy_shield)
+	# Golem GPU: las habilidades cuestan menos.
+	var ping := Motherboard.new(skills["ping_letal"], 10, [])
+	var cost0: float = SkillCalc.compute(ping, c)["mana_cost"]
+	c.add_timed_effect("prueba_gpu", [Modifier.new(Stat.MANA_COST_REDUCTION, Modifier.Type.FLAT, 30.0, [], "p")], 60.0)
+	_check(SkillCalc.compute(ping, c)["mana_cost"] < cost0 * 0.8, "la reducción de coste abarata las habilidades")
+	# Enredo (UTP) y corrupción (Kernel).
+	var utp := SkillCalc.compute(Motherboard.new(skills["golem_utp"], 10, []), c)
+	var u := {"pos": Vector2(30000, 30400), "color": Color.WHITE, "ab_cd": 0.0}
+	var bug := em.spawn(Vector2(30140, 30400), Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+	em.max_lives[em.index_of(bug)] = 99999.0
+	em.lives[em.index_of(bug)] = 99999.0
+	sc._one_unit_ability(u, utp, utp["unit_abilities"][0], 0.1)
+	var bi := em.index_of(bug)
+	_check(em.positions[bi].x < 30140.0 and em.stuns[bi] > 0.0, "el enredo atrae y aturde")
+	var kernel := SkillCalc.compute(Motherboard.new(skills["golem_kernel"], 10, []), c)
+	u["ab_cd"] = 0.0
+	sc._one_unit_ability(u, kernel, kernel["unit_abilities"][0], 0.1)
+	_check(em.dot_time[em.index_of(bug)] > 0.0, "la corrupción del Golem de Kernel daña con el tiempo")
+	sc.queue_free()
+	player.queue_free()
+	em.queue_free()
+
+
+## Datos huérfanos al acercarse, capas de combate de la música y letras de rareza
+## del modo daltónico.
+func _test_events_music_colorblind() -> void:
+	var zone := Zone.new()
+	var c := _new_character()
+	var player: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(player)
+	player.setup(c, EnemyManager.new())
+	zone.setup(_zone_def("zona1"), player, c)
+	var ev := zone.events
+	var at := zone.rect.get_center()
+	ev.events = [{"kind": "cache", "pos": at, "state": "ready"}]
+	var fired: Array = []
+	ev.triggered.connect(func(e: Dictionary) -> void: fired.append(e))
+	player.global_position = at + Vector2(ZoneEvents.CACHE_TRIGGER_RADIUS + 60.0, 0)
+	ev._process(0.1)
+	_check(fired.is_empty(), "los datos huérfanos no saltan desde lejos")
+	player.global_position = at + Vector2(ZoneEvents.CACHE_TRIGGER_RADIUS - 30.0, 0)
+	ev._process(0.1)
+	_check(fired.size() == 1 and ev.events[0]["state"] == "active", "al pasar cerca, los datos huérfanos se abren solos")
+	player.queue_free()
+	zone.free()
+	# Capas de combate: existen y empiezan el bucle en la misma muestra que su pista.
+	var loops: Dictionary = DataLoader.load_json("res://data/music_loops.json")
+	for t in ["field1", "field2", "field3", "dark1", "cold2", "deep3"]:
+		_check(ResourceLoader.exists("res://assets/audio/music/%s_combate.wav" % t) and int(loops.get(t + "_combate", -1)) == int(loops.get(t, -2)),
+			"capa de combate de %s sincronizada con la pista" % t)
+	# Modo daltónico: la rareza también en letra.
+	_check(LootManager.rarity_tag(Item.new(_db.bases["espada_oxidada"], Rarity.Item.RARE, 5)) == "R"
+		and LootManager.rarity_tag(Item.new(_db.bases["espada_oxidada"], Rarity.Item.NORMAL, 5)) == "", "chapita de rareza para daltónicos")
 
 
 func _zone_def(zone_id: String) -> Dictionary:
@@ -3024,7 +3120,9 @@ func _test_rams_everywhere() -> void:
 			board.install(ram, 0)
 			var p := SkillCalc.compute(board, c)
 			var changed := false
-			for k in keys + (["area_scale"] if base["kind"] == "unit" and base["unit_ability"].has("radius") else []):
+			var has_area_ability: bool = base["kind"] == "unit" and (base["unit_ability"].has("radius")
+				or (base["unit_abilities"] as Array).any(func(a: Dictionary) -> bool: return a.has("radius")))
+			for k in keys + (["area_scale"] if has_area_ability else []):
 				if str(base[k]) != str(p[k]):
 					changed = true
 					break

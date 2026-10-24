@@ -26,6 +26,12 @@ var _wanted := false
 var _track := ""
 var _loops := {}   # pista -> muestra donde empieza su bucle
 var _base_track := ""   # pista de la zona (a la que se vuelve al acabar las fases)
+## Capa de combate: batería y bajo (<pista>_combate) sonando encima de la pista,
+## sincronizada con ella, que entra con muchos enemigos cerca (ver set_combat).
+const COMBAT_SUFFIX := "_combate"
+var _layer: AudioStreamPlayer
+var _layer_tween: Tween
+var combat := false
 
 
 func _ready() -> void:
@@ -34,6 +40,8 @@ func _ready() -> void:
 	_other = AudioStreamPlayer.new()
 	add_child(_player)
 	add_child(_other)
+	_layer = AudioStreamPlayer.new()
+	add_child(_layer)
 	# Bucle del tema del título: al terminar vuelve a empezar (las pistas de zona enlazan solas).
 	for p in [_player, _other]:
 		(p as AudioStreamPlayer).finished.connect(func() -> void:
@@ -73,6 +81,7 @@ func play_track(id: String, fade := 2.0) -> void:
 	var path := "%s%s.wav" % [TRACK_DIR, id]
 	if id == _track and _wanted:
 		return
+	set_combat(false)   # la capa es de la pista anterior
 	_wanted = true
 	if not ResourceLoader.exists(path):
 		push_warning("Falta %s: genera la música con tools/generate_zone_music.gd" % path)
@@ -122,6 +131,40 @@ func current_track() -> String:
 	return _track
 
 
+## Capa de combate encima de la pista de la zona: entra con un fundido, en el
+## mismo punto de la canción (misma intro y mismo bucle, ver generate_zone_music),
+## y sale igual. Si la pista no tiene capa (campamentos, jefes), no hace nada.
+func set_combat(on: bool) -> void:
+	if on == combat:
+		return
+	combat = on
+	if _layer_tween:
+		_layer_tween.kill()
+	_layer_tween = create_tween()
+	if not on:
+		_layer_tween.tween_property(_layer, "volume_db", SILENT_DB, 2.5)
+		_layer_tween.tween_callback(_layer.stop)
+		return
+	var id := _track + COMBAT_SUFFIX
+	var path := "%s%s.wav" % [TRACK_DIR, id]
+	if _track == "" or not ResourceLoader.exists(path):
+		return
+	var stream := load(path) as AudioStreamWAV
+	if stream == null:
+		return
+	Sfx.set_loop(stream, int(_loop_starts().get(id, 0)))
+	_layer.stream = stream
+	_layer.pitch_scale = _player.pitch_scale
+	_layer.volume_db = SILENT_DB
+	_layer.play(_player.get_playback_position())
+	_layer_tween.tween_property(_layer, "volume_db", _target_db() - 2.0, 1.2)
+
+
+## Nombre de la capa que suena ahora ("" si ninguna), para pruebas y depuración.
+func combat_layer() -> String:
+	return _layer.stream.resource_path.get_file().get_basename() if combat and _layer.playing and _layer.stream else ""
+
+
 func set_volume(value: float) -> void:
 	music_volume = clampf(value, 0.0, 1.0)
 	if _player.playing:
@@ -150,6 +193,7 @@ func _crossfade_to(stream: AudioStream, fade: float) -> void:
 
 
 func stop_music(fade := 1.0) -> void:
+	set_combat(false)
 	_wanted = false
 	_track = ""
 	for p in [_player, _other]:
@@ -177,6 +221,8 @@ func _target_db() -> float:
 
 
 func _fade_to(db: float, seconds: float) -> void:
+	if combat and _layer.playing:
+		_layer.volume_db = db - 2.0 if db > SILENT_DB else SILENT_DB   # la capa sigue al volumen y al silencio
 	if _tween:
 		_tween.kill()
 	_tween = create_tween().set_parallel(true)

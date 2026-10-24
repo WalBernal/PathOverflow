@@ -293,6 +293,45 @@ func on_zone_changed() -> void:
 func clear_units() -> void:
 	_units.clear()
 	_update_reservation()
+	_sync_golem_buffs()
+
+
+## Bonos de los golems vivos (unit.owner_buff) como efectos "golem:<habilidad>"
+## en el personaje; se quitan al caer el último de esa habilidad. Solo se tocan si
+## cambian (recalcular las stats rehace los perfiles).
+var _golem_sigs := {}
+
+
+func _sync_golem_buffs() -> void:
+	var want := {}
+	for u in _units:
+		var ob: Array = u["profile"].get("owner_buff", [])
+		if not ob.is_empty():
+			want[String(u["skill_id"])] = ob
+	for e in character.timed_effects.duplicate():
+		var eid := String(e["id"])
+		if eid.begins_with("golem:") and not want.has(eid.trim_prefix("golem:")):
+			character.remove_timed_effect(eid)
+			_golem_sigs.erase(eid.trim_prefix("golem:"))
+	for sid in want:
+		var sig := str(want[sid])
+		if _golem_sigs.get(sid, "") == sig:
+			continue
+		_golem_sigs[sid] = sig
+		var mods: Array[Modifier] = []
+		for md in want[sid]:
+			mods.append(Modifier.from_dict(md, "golem:" + sid))
+		character.set_timed_effect("golem:" + sid, mods)
+
+
+## Bono que da ahora mismo el golem de esa habilidad (para tooltips): [Modifier].
+func golem_buff_lines(skill_id: String) -> PackedStringArray:
+	var out := PackedStringArray()
+	for e in character.timed_effects:
+		if e["id"] == "golem:" + skill_id:
+			for m in e["mods"]:
+				out.append((m as Modifier).describe())
+	return out
 
 
 ## Al morir se apagan también las auras (se vuelven a activar relanzándolas).
@@ -524,6 +563,7 @@ func _physics_process(delta: float) -> void:
 	_update_devices(delta)
 	_update_minions(delta)
 	_update_units(delta)
+	_sync_golem_buffs()
 	_update_rains(delta)
 	_update_clouds(delta)
 	_update_drones(delta)
@@ -1174,6 +1214,34 @@ func _one_unit_ability(u: Dictionary, p: Dictionary, ab: Dictionary, delta: floa
 			Sfx.play("mine", -6.0, 0.7)
 			player.camera_shake(4.0, 0.25)
 			_effects.append({"type": "quake", "pos": pos, "radius": quake_radius, "time": 0.0, "duration": 0.55, "color": u["color"]})
+		"tangle":
+			# Enredo (Golem UTP): lanza cables a los de alrededor, los atrae hacia él y los aturde.
+			var tangle_radius := float(ab.get("radius", 170.0)) * float(p.get("area_scale", 1.0))
+			if enemies.nearest_index(pos, tangle_radius) == -1:
+				u["ab_cd"] = 0.5
+				return
+			u["ab_cd"] = float(ab.get("cooldown", 7.0)) / speed
+			var pull := float(ab.get("pull", 0.6))
+			for i in enemies.positions.size():
+				var to_e: Vector2 = enemies.positions[i] - pos
+				if to_e.length() <= tangle_radius + enemies.radii[i] and enemies.speeds[i] > 0.0:
+					_effects.append({"type": "cable", "pos": pos, "end": enemies.positions[i], "time": 0.0, "duration": 0.35, "color": u["color"]})
+					var dest: Vector2 = pos + to_e * (1.0 - pull)
+					enemies.positions[i] = enemies.walk_clamp.call(dest, enemies.radii[i]) if enemies.walk_clamp.is_valid() else dest
+			_ctx(p)
+			var tm := float(ab.get("damage_mult", 1.2)) * float(p.get("ability_power", 1.0))
+			enemies.stun_in_radius(pos, tangle_radius * (1.0 - pull * 0.5), float(ab.get("stun", 0.9)))
+			enemies.hit_in_radius(pos, tangle_radius * (1.0 - pull * 0.5), p["min_damage"] * tm, p["max_damage"] * tm, p["crit_chance"], p["crit_multiplier"])
+			Sfx.play("swing", -6.0, 0.6)
+		"corrode":
+			# Corrupción (Golem de Kernel): daño de caos continuo a todo lo que esté cerca.
+			u["ab_cd"] = float(ab.get("cooldown", 1.0))
+			var corrode_radius := float(ab.get("radius", 150.0)) * float(p.get("area_scale", 1.0)) * sqrt(float(p.get("ability_power", 1.0)))
+			var avg := (float(p["min_damage"]) + float(p["max_damage"])) * 0.5
+			var hit := enemies.dot_in_radius(pos, corrode_radius, avg * float(ab.get("dps_mult", 0.45)) * float(p.get("ability_power", 1.0)), 1.6)
+			u["corrode_radius"] = corrode_radius
+			if hit > 0:
+				_effects.append({"type": "ring", "pos": pos, "radius": corrode_radius, "time": 0.0, "duration": 0.5, "color": Color(u["color"], 0.6)})
 		"beam":
 			# Láser: una línea hasta el enemigo más lejano a su alcance; daña a todos en ella.
 			var reach := float(p["unit"].get("range", 520.0))
@@ -1188,7 +1256,7 @@ func _one_unit_ability(u: Dictionary, p: Dictionary, ab: Dictionary, delta: floa
 				u["ab_cd"] = 0.5
 				return
 			u["ab_cd"] = float(ab.get("cooldown", 4.0)) / speed
-			var from := pos + Vector2(0, -74)
+			var from := pos + Vector2(0, -float(p["unit"].get("beam_height", 74.0)))
 			var to: Vector2 = from + (enemies.positions[far] - from).normalized() * reach
 			_ctx(p)
 			var bm := float(ab.get("damage_mult", 1.6)) * float(p.get("ability_power", 1.0))
@@ -1495,6 +1563,17 @@ func _draw() -> void:
 					var s := k / 8.0
 					pts.append(a.lerp(b, s) + Vector2(0, -sin(s * PI) * 60.0))
 				draw_polyline(pts, Color(c, 0.6 * (1.0 - t)), 4.0 * (1.0 - t) + 1.0, true)
+			"cable":
+				# Enredo: un cable UTP ondulado que sale del golem hasta el enemigo y se recoge.
+				var a2: Vector2 = e["pos"] + Vector2(0, -20)
+				var b2: Vector2 = (e["end"] as Vector2).lerp(a2, t * 0.6)
+				var side := (b2 - a2).orthogonal().normalized()
+				var cable := PackedVector2Array()
+				for k in 11:
+					var s := k / 10.0
+					cable.append(a2.lerp(b2, s) + side * sin(s * TAU * 1.5 + t * 8.0) * 6.0 * (1.0 - s))
+				draw_polyline(cable, Color(c, 0.9 * (1.0 - t)), 3.0, true)
+				draw_rect(Rect2(b2 - Vector2(3, 3), Vector2(6, 6)), Color(0.9, 0.9, 0.9, 1.0 - t))   # el RJ45
 			"quake":
 				# Golpe al suelo: anillo que se expande y grietas.
 				var r: float = e["radius"]
@@ -1698,6 +1777,11 @@ func _draw_units() -> void:
 			draw_rect(Rect2(top, Vector2(w * clampf(u["life"] / u["max_life"], 0.0, 1.0), 3.0)), Color("6fd36b"))
 			if u["taunt"] > 0.0:
 				draw_arc(p, u["taunt"], 0.0, TAU, 48, Color(Ailments.color("taunt"), 0.12), 1.5, true)
+			if u.has("corrode_radius"):
+				# Golem de Kernel: el campo de corrupción, siempre visible y latiendo.
+				var cr: float = u["corrode_radius"]
+				draw_circle(p, cr, Color(c, 0.05 + 0.03 * sin(ph * 0.8)))
+				draw_arc(p, cr, ph * 0.2, ph * 0.2 + TAU * 0.85, 40, Color(c, 0.35), 1.5, true)
 
 
 func _draw_clouds() -> void:

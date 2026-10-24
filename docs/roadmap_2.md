@@ -76,7 +76,6 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 | Mejora | Tamaño | Prioridad | Idea |
 |---|---|---|---|
 | **Materiales en los datos**: mover el material de cada enemigo a `enemies.json` y darle uno propio a cada tipo nuevo (hoy hay una tabla en `EnemyManager.MATERIALS`; lo que falta suena "digital") | S | ★ | Ya suenan carne, metal, cristal y digital al golpear. |
-| **Capas de música por intensidad**: la pista de la zona sube una capa (batería) cuando hay más de 15 enemigos cerca, y baja al limpiar | M | ★★★ | Ya hay intensidad para jefes; extenderla. |
 | **Ambiente posicional**: zumbido de racks que suena más cerca de ellos, goteo en las alcantarillas, viento en la grieta | S | ★★ | Las zonas grandes se sienten vivas. |
 | **Voces cortas de los NPC** (gruñidos o frases de 1 palabra al hablar) y del personaje al subir de nivel o con poca vida | M | ★★ | |
 | **Música compuesta** (sustituir las pistas generadas), con leitmotiv por acto y por jefe | L | ★★ | Ya en el roadmap 1. |
@@ -108,7 +107,7 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 
 ## 11. Accesibilidad y opciones
 
-- **Daltonismo en todo** (ya hay modo para estados): rarezas del botín, auras, telegrafiados. (S, ★★★)
+- **Daltonismo, siguiente paso**: paletas alternativas para las auras y los colores de las cargas (las rarezas del botín ya llevan letra y los avisos del suelo, rayas). (S, ★★)
 - **Texto más grande en el mundo** independiente de la interfaz. (S, ★★)
 - **Reducir parpadeos y destellos** (fases de jefe, absorción del prólogo). (S, ★★)
 - **Auto-ataque / mantener pulsado para mover** y modos de un solo botón. (S, ★)
@@ -124,8 +123,8 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 
 ## Plan sugerido por fases
 
-1. **Fase "Sensación", lo que queda**: capas de música por intensidad, ambiente posicional.
-2. **Fase "Habilidad del jugador"**: habilidades de movimiento, jefes con mecánicas de arena, daltonismo en todo (rarezas, telegrafiados).
+1. **Fase "Sensación", lo que queda**: ambiente posicional, voces cortas de los NPC.
+2. **Fase "Habilidad del jugador"**: habilidades de movimiento, jefes con mecánicas de arena.
 3. **Fase "Profundidad de builds"**: nodos clave, maestrías, RAM de activación, nodos que usen las cargas.
 4. **Fase "Largo plazo"**: crafteo con parches, atlas de incidentes, chips únicos que transforman nodos, temporadas.
 
@@ -138,3 +137,5 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 **Tercera tanda, fase "Sensación" (24 octubre 2026)**: **sonido por material** al golpear (carne, metal, cristal y digital, según el tipo de enemigo) y **crítico con clic de teclado mecánico** · **objeto único con fanfarria propia** al caer · **luces dinámicas en el filtro**: proyectiles de fuego, rayo, frío y caos (tuyos y enemigos), explosiones, destellos de golpes y muertes, salidas, waypoint y hoguera alumbran en escalones de pixel art; tiñen un poco en todas las zonas y mucho en las oscuras · **antorchas** (o LED de estado en servidores, BIOS y ROM, y fuegos fatuos en el pantano, la grieta y las alcantarillas) repartidas por las zonas oscuras · **partículas de impacto en pixel art** por tipo de daño (astillas y bits, chispas, esquirlas de hielo, chispazos, gotas verdes) · **muertes con estilo** según lo que mató al enemigo: se descompila en píxeles y bits, se quema a ceniza, se rompe en hielo, salta en chispas o se disuelve (también al morir por quemadura o veneno), cada una con su sonido. Sonidos nuevos con `generate_sfx.gd -- golpes`.
 
 **Cuarta tanda (24 octubre 2026)**: **controles nuevos**: habilidades en **Q W E R T Y**, movimiento con **flechas** (o click), **Espacio** esquiva, **Tab** mapa grande, **Shift** (mantener) muestra el botín filtrado atenuado, **B** catálogo · **iconos de habilidad únicos** (el Mainframe Titán, Watchdog, Bot Rastreador, Aura de Overclock y Aura de Exposición tienen forma propia; una prueba lo vigila) · **catálogo de hardware** (B) estilo bestiario: placas base y RAM con icono, descripción, cifras con tu personaje, etiquetas, requisitos, nivel de caída, kit de clase, variantes y compatibilidad; lo encontrado queda marcado y se guarda · **filtro de botín en ventana propia**: gemas de rareza por categoría (armas, armaduras, joyería, chips), mostrar u ocultar placas, RAM y pociones, haz de luz desde la rareza que elijas, atajos (Ver todo, Equilibrado, Estricto, Fin de juego) y vista previa de las etiquetas · **mapa grande** con niebla de guerra que se guarda por zona, salidas con su destino, waypoint, NPC, misiones, botín bueno y enemigos · **menos botín**: de 20-45 objetos por zona a unos 8-14, algo mejores · **roles de enemigo** en las manadas: guardián (protege un 40 % a los de alrededor), sanador (cura a los heridos), francotirador (se aleja y dispara un tiro avisado con una línea roja) y enjambre (rápidos, frágiles y por los lados), con insignia sobre la cabeza y en el marco del objetivo.
+
+**Quinta tanda (24 octubre 2026)**: **datos huérfanos** que se abren solos al pasar a 230 px (con un aro que marca la distancia) · **cinco golems nuevos** (placas con la etiqueta golem, una invocación cada uno, con sprite e icono propios) que dan un bono a su creador mientras viven, creciente con el nivel de la placa: **Golem del Silicio** (coloso de cristal: armadura, algo de escudo y regeneración de escudo de energía; provoca y hace terremotos), **Golem de Overclock** (disipador al rojo: velocidad de ataque, lanzamiento y movimiento; rápido, quema y salta), **Golem UTP** (maraña de cables: más daño y velocidad para los autómatas; enreda a los grupos atrayéndolos y aturdiéndolos, y golpea en área), **Golem GPU** (tarjeta gráfica con patas: menos coste de maná y enfriamientos más rápidos; dispara y traza un rayo), **Golem de Kernel** (espectro del kernel: resistencia al caos; corrompe con daño de caos continuo a todo lo cercano). Stats nuevos: regeneración de escudo de energía y reducción del coste de maná · **capa de combate en la música**: con 15 enemigos cerca (o un raro y media manada) entra una capa de batería y bajo sincronizada con la pista de la zona, y sale al calmarse (`generate_zone_music.gd -- <pista>_combate`) · **daltonismo en todo**: con el modo activo, el botín lleva la letra de su rareza y los avisos del suelo van rayados.

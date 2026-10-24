@@ -254,6 +254,11 @@ func _skill_tooltip(i: int) -> String:
 	if p["kind"] == "unit":
 		text += "\nPersistente: hasta %d a la vez  ·  Vida %d  ·  Reserva %d %% de maná cada una" % [
 			p["max_units"], p["unit_life"], roundi(p["reserve"])]
+		if not (p.get("owner_buff", []) as Array).is_empty():
+			var buff_lines := PackedStringArray()
+			for md in p["owner_buff"]:
+				buff_lines.append(Modifier.from_dict(md).describe())
+			text += "\nMientras viva, te da: " + " · ".join(buff_lines)
 	elif p["kind"] == "aura":
 		var lines := PackedStringArray()
 		for md in p["aura_mods"]:
@@ -450,8 +455,8 @@ func _player_buffs() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for effect in character.timed_effects:
 		var eid: String = effect["id"]
-		if eid.begins_with("aura:"):
-			continue   # las auras salen en los recuadros de activos
+		if eid.begins_with("aura:") or eid.begins_with("golem:"):
+			continue   # las auras y los bonos de golem salen en los recuadros de activos
 		if eid.begins_with("shrine:"):
 			var info: Dictionary = ZoneEvents.SHRINES.get(eid.trim_prefix("shrine:"), {})
 			out.append({"name": info.get("name", "Santuario"), "skill": {}, "shrine": info.get("color", "ffffff"), "time": effect["time_left"], "desc": info.get("text", "")})
@@ -665,8 +670,8 @@ func _draw_status_boxes(font: Font) -> void:
 	var entries: Array[Dictionary] = skills.active_summaries() if skills else []
 	for effect in character.timed_effects:
 		var eid: String = effect["id"]
-		if eid.begins_with("aura:"):
-			continue   # las auras salen en active_summaries()
+		if eid.begins_with("aura:") or eid.begins_with("golem:"):
+			continue   # las auras y los golems salen en active_summaries()
 		if eid.begins_with("shrine:"):
 			continue   # los santuarios salen en la barra de estados, sobre el orbe de vida
 		if eid.begins_with("skill:"):

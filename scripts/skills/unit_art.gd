@@ -27,6 +27,16 @@ static func draw(ci: CanvasItem, skill_id: String, behavior: String, p: Vector2,
 			_watchdog(ci, p, ph, c)
 		"bot_rastreador":
 			_bug_hunter(ci, p, ph, c)
+		"golem_silicio":
+			_golem_silicon(ci, p, ph, c)
+		"golem_overclock":
+			_golem_overclock(ci, p, ph, c)
+		"golem_utp":
+			_golem_utp(ci, p, ph, c)
+		"golem_gpu":
+			_golem_gpu(ci, p, ph, c)
+		"golem_kernel":
+			_golem_kernel(ci, p, ph, c)
 		_:
 			match behavior:
 				"orbit":
@@ -218,3 +228,210 @@ static func _bug_hunter(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void
 	ci.draw_line(p + Vector2(-9, -13 + bob), p + Vector2(-6, -10 + bob), Color("8a6d3b"), 1.5)
 	ci.draw_line(p + Vector2(7, -14 + bob), p + Vector2(16, -16 + bob), Color("6a5a4a"), 2.0)
 	ci.draw_circle(p + Vector2(16, -16 + bob), 1.2, c)
+
+
+# --- Golems (cada uno con su silueta: nada de cajas con patas) ---
+
+## Golem del Silicio: coloso de cristal en bruto, con un die de chip brillando
+## en el pecho, esquirlas en los hombros y obleas que orbitan a su alrededor.
+static func _golem_silicon(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
+	var sway := sin(ph * 0.45) * 1.5
+	var dark := Color("3e5866")
+	var mid := Color("6f93a6")
+	var light := Color("b8dcec")
+	for s in [-1.0, 1.0]:   # piernas: columnas hexagonales
+		var lp := p + Vector2(s * 9, -2 + sin(ph + s) * 1.5)
+		ci.draw_colored_polygon(PackedVector2Array([lp + Vector2(-6, 2), lp + Vector2(-7, -10), lp + Vector2(-3, -16), lp + Vector2(4, -16), lp + Vector2(7, -10), lp + Vector2(6, 2)]), dark)
+		ci.draw_line(lp + Vector2(-3, -15), lp + Vector2(-5, 0), mid, 1.5)
+	# Torso: una gema irregular con caras claras y oscuras.
+	var t := p + Vector2(0, -32 + sway)
+	var torso := PackedVector2Array([t + Vector2(-20, -8), t + Vector2(-9, -20), t + Vector2(10, -19), t + Vector2(21, -6), t + Vector2(15, 14), t + Vector2(-14, 15)])
+	ci.draw_colored_polygon(torso, mid)
+	ci.draw_colored_polygon(PackedVector2Array([t + Vector2(-9, -20), t + Vector2(10, -19), t + Vector2(2, -6)]), light)
+	ci.draw_colored_polygon(PackedVector2Array([t + Vector2(21, -6), t + Vector2(15, 14), t + Vector2(4, 4)]), dark)
+	ci.draw_polyline(torso + PackedVector2Array([torso[0]]), Color("22343d"), 1.5)
+	# El die del chip: cuadrado con rejilla que late.
+	var glow := 0.6 + 0.4 * sin(ph * 1.6)
+	ci.draw_rect(Rect2(t + Vector2(-7, -5), Vector2(14, 12)), Color("101a20"))
+	for k in 3:
+		ci.draw_line(t + Vector2(-6 + k * 5, -4), t + Vector2(-6 + k * 5, 6), Color(c, glow), 1.0)
+		ci.draw_line(t + Vector2(-6, -3 + k * 4), t + Vector2(6, -3 + k * 4), Color(c, glow * 0.7), 1.0)
+	# Hombros: racimos de esquirlas.
+	for s in [-1.0, 1.0]:
+		for k in 3:
+			var base := t + Vector2(s * (17 + k * 3), -12 + k * 3)
+			ci.draw_colored_polygon(PackedVector2Array([base + Vector2(-3, 2), base + Vector2(s * 2, -10 + k * 2), base + Vector2(3, 2)]), light if k == 0 else mid)
+		var arm := t + Vector2(s * 20, 2 + sin(ph * 0.9 + s) * 2.0)
+		ci.draw_colored_polygon(PackedVector2Array([arm + Vector2(-4, -4), arm + Vector2(4, -4), arm + Vector2(6, 12), arm + Vector2(0, 18), arm + Vector2(-6, 12)]), dark)
+	# Cabeza: gema pequeña con dos ojos.
+	var h := t + Vector2(0, -27)
+	ci.draw_colored_polygon(PackedVector2Array([h + Vector2(-7, 2), h + Vector2(-4, -7), h + Vector2(5, -7), h + Vector2(8, 2), h + Vector2(0, 7)]), mid)
+	ci.draw_rect(Rect2(h + Vector2(-4, -2), Vector2(2, 2)), c)
+	ci.draw_rect(Rect2(h + Vector2(2, -2), Vector2(2, 2)), c)
+	# Obleas en órbita (detrás y delante).
+	for k in 3:
+		var a := ph * 0.6 + TAU * k / 3.0
+		var wp := t + Vector2(cos(a) * 30.0, sin(a) * 9.0 - 4.0)
+		ci.draw_set_transform(wp, 0.0, Vector2(1.0, 0.45))
+		ci.draw_circle(Vector2.ZERO, 5.0, Color(light, 0.85 if sin(a) > 0.0 else 0.4))
+		ci.draw_arc(Vector2.ZERO, 5.0, 0.0, TAU, 10, Color(c, 0.7), 1.0)
+		ci.draw_set_transform(Vector2.ZERO)
+
+
+## Golem de Overclock: un disipador de aletas al rojo vivo, inclinado hacia
+## delante como si corriera, con un ventilador por cabeza y llamas de calor.
+static func _golem_overclock(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
+	var run := sin(ph * 2.2)
+	var lean := 4.0
+	for s in [-1.0, 1.0]:   # piernas de muelle (zigzag)
+		var hip := p + Vector2(s * 5 + lean * 0.3, -14)
+		var foot := p + Vector2(s * 5 + run * s * 6.0, 0)
+		var pts := PackedVector2Array([hip])
+		for k in 5:
+			var q := hip.lerp(foot, (k + 1) / 6.0)
+			pts.append(q + Vector2(3.0 if k % 2 == 0 else -3.0, 0))
+		pts.append(foot)
+		ci.draw_polyline(pts, Color("9a9aa6"), 2.0)
+		ci.draw_rect(Rect2(foot + Vector2(-4, -1), Vector2(8, 3)), Color("4a4a56"))
+	# Cuerpo: aletas verticales que pasan de aluminio a rojo vivo abajo.
+	var body := p + Vector2(lean, -38)
+	for k in 7:
+		var x := -12.0 + k * 4.0
+		var heat := 0.5 + 0.5 * sin(ph * 3.0 + k)
+		ci.draw_rect(Rect2(body + Vector2(x, 0), Vector2(2.5, 24)), Color("b8bcc6").lerp(Color("ff5a20"), 0.35 + 0.25 * heat))
+		ci.draw_rect(Rect2(body + Vector2(x, 16), Vector2(2.5, 8)), Color("ff8a3a").lerp(Color("ffe070"), heat * 0.6))
+	ci.draw_rect(Rect2(body + Vector2(-14, 22), Vector2(28, 4)), Color("6a4a3a"))
+	# Núcleo al rojo con destello.
+	var core := body + Vector2(0, 12)
+	ci.draw_circle(core, 7.0 + run, Color(c, 0.35))
+	ci.draw_circle(core, 4.0, Color("ffe070"))
+	# Brazos: barras de cobre (heatpipes) que bracean al correr.
+	for s in [-1.0, 1.0]:
+		var sh := body + Vector2(s * 14, 4)
+		ci.draw_line(sh, sh + Vector2(s * 4 - run * s * 5.0, 16), Color("c87a3a"), 3.0)
+		ci.draw_circle(sh + Vector2(s * 4 - run * s * 5.0, 16), 2.5, Color("e0a060"))
+	# Cabeza: carcasa de ventilador con aspas girando muy rápido.
+	var head := body + Vector2(2, -9)
+	ci.draw_circle(head, 9.0, Color("2a2a30"))
+	ci.draw_arc(head, 9.0, 0.0, TAU, 16, Color("8a8a96"), 1.5)
+	for k in 5:
+		var a := ph * 14.0 + TAU * k / 5.0
+		ci.draw_line(head, head + Vector2.from_angle(a) * 7.0, Color("d8d8e0", 0.8), 2.0)
+	ci.draw_circle(head, 2.5, c)
+	# Calor: llamitas que suben de las aletas.
+	for k in 3:
+		var f := fmod(ph * 0.9 + k * 0.33, 1.0)
+		var fp := body + Vector2(-8 + k * 8, -2 - f * 18.0)
+		ci.draw_colored_polygon(PackedVector2Array([fp + Vector2(-2.5, 0), fp + Vector2(0, -6), fp + Vector2(2.5, 0)]), Color(c, 0.8 * (1.0 - f)))
+
+
+## Golem UTP: una maraña de cables de red (azul, naranja, verde y marrón) que se
+## retuercen, con dos LEDs de puerto por ojos y brazos que acaban en conectores RJ45.
+static func _golem_utp(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
+	var cols := [Color("3a6fd0"), Color("e0802a"), Color("3aa04a"), Color("8a5a30"), Color("d8d8d8")]
+	var center := p + Vector2(0, -26)
+	# La maraña: lazos de cable alrededor del centro, cada uno moviéndose un poco.
+	for k in 14:
+		var col: Color = cols[k % cols.size()]
+		var a0 := k * 2.4 + ph * 0.15 * (1.0 if k % 2 == 0 else -1.0)
+		var rad := 10.0 + float(k % 4) * 3.5
+		var loop := PackedVector2Array()
+		for q in 9:
+			var a := a0 + q * 0.55
+			loop.append(center + Vector2(cos(a) * rad * 1.25, sin(a) * rad) + Vector2(sin(ph + k + q) * 1.5, 0))
+		ci.draw_polyline(loop, col.darkened(0.15), 2.5, true)
+	# Patas: tres manojos de cable que llegan al suelo.
+	for s in [-1.0, 0.0, 1.0]:
+		var top := center + Vector2(s * 9, 12)
+		var foot := p + Vector2(s * 12 + sin(ph + s) * 2.0, 0)
+		ci.draw_line(top, foot, cols[int(s + 1)], 3.0)
+		ci.draw_line(top + Vector2(2, 0), foot + Vector2(3, 0), Color(cols[4], 0.7), 1.5)
+	# Brazos: cables largos que cuelgan y se balancean, con un RJ45 al final.
+	for s in [-1.0, 1.0]:
+		var sh := center + Vector2(s * 16, -4)
+		var hand := sh + Vector2(s * 10 + sin(ph * 1.3 + s) * 4.0, 20)
+		var mid := sh.lerp(hand, 0.5) + Vector2(s * 6, 0)
+		ci.draw_polyline(PackedVector2Array([sh, mid, hand]), cols[0 if s < 0 else 1], 3.0, true)
+		ci.draw_rect(Rect2(hand + Vector2(-4, 0), Vector2(8, 7)), Color(0.85, 0.9, 0.95, 0.8))
+		for k in 3:
+			ci.draw_rect(Rect2(hand + Vector2(-3 + k * 2.5, 5), Vector2(1.5, 2)), Color("e0b050"))
+	# Ojos: LEDs de enlace (verde fijo y naranja que parpadea con la actividad).
+	ci.draw_rect(Rect2(center + Vector2(-7, -6), Vector2(5, 4)), Color("1a1a1a"))
+	ci.draw_rect(Rect2(center + Vector2(2, -6), Vector2(5, 4)), Color("1a1a1a"))
+	ci.draw_rect(Rect2(center + Vector2(-6, -5), Vector2(3, 2)), Color("40ff70"))
+	ci.draw_rect(Rect2(center + Vector2(3, -5), Vector2(3, 2)), Color("ffa030") if int(ph * 5.0) % 2 == 0 else Color("3a2a10"))
+
+
+## Golem GPU: una tarjeta gráfica que camina: carcasa ancha con dos
+## ventiladores en el pecho, tira RGB que cambia de color, dientes de contacto
+## PCIe dorados por mandíbula y patas de heatpipe de cobre.
+static func _golem_gpu(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
+	var bob := sin(ph) * 1.2
+	for s in [-1.0, 1.0]:   # patas de heatpipe (curvas de cobre)
+		var hip := p + Vector2(s * 12, -14 + bob)
+		var foot := p + Vector2(s * 14 + sin(ph + s) * 3.0, 0)
+		ci.draw_polyline(PackedVector2Array([hip, hip.lerp(foot, 0.5) + Vector2(s * 4, 0), foot]), Color("c87a3a"), 3.0, true)
+		ci.draw_rect(Rect2(foot + Vector2(-4, -1), Vector2(8, 3)), Color("3a3a42"))
+	var body := Rect2(p + Vector2(-24, -38 + bob), Vector2(48, 24))
+	ci.draw_rect(body, Color("1e2026"))
+	ci.draw_rect(Rect2(body.position, Vector2(body.size.x, 3)), Color("3a3e48"))
+	ci.draw_rect(body, Color("0c0d10"), false, 1.5)
+	# Tira RGB por el borde de arriba, que recorre el arcoíris.
+	for k in 12:
+		ci.draw_rect(Rect2(body.position + Vector2(2 + k * 3.8, 1), Vector2(3, 2)), Color.from_hsv(fmod(ph * 0.15 + k / 12.0, 1.0), 0.8, 1.0))
+	# Dos ventiladores girando.
+	for s in [-1.0, 1.0]:
+		var fan := body.get_center() + Vector2(s * 11, 1)
+		ci.draw_circle(fan, 9.0, Color("2c2f38"))
+		ci.draw_arc(fan, 9.0, 0.0, TAU, 16, Color("5a5e6a"), 1.0)
+		for k in 7:
+			var a: float = ph * 9.0 * s + TAU * k / 7.0
+			ci.draw_line(fan + Vector2.from_angle(a) * 2.0, fan + Vector2.from_angle(a + 0.5) * 8.0, Color("8a8e9a"), 1.5)
+		ci.draw_circle(fan, 2.5, c)
+	# Mandíbula: los dientes dorados del conector PCIe.
+	for k in 10:
+		ci.draw_rect(Rect2(body.position + Vector2(5 + k * 4, body.size.y), Vector2(2.5, 4)), Color("e0b050"))
+	# Cabeza: el bloque de puertos de vídeo, con dos LEDs por ojos.
+	var head := Rect2(p + Vector2(-9, -49 + bob), Vector2(18, 11))
+	ci.draw_rect(head, Color("3a3e48"))
+	ci.draw_rect(Rect2(head.position + Vector2(2, 3), Vector2(6, 4)), Color("0c0d10"))
+	ci.draw_rect(Rect2(head.position + Vector2(10, 3), Vector2(6, 4)), Color("0c0d10"))
+	ci.draw_rect(Rect2(head.position + Vector2(3, 4), Vector2(3, 2)), c)
+	ci.draw_rect(Rect2(head.position + Vector2(11, 4), Vector2(3, 2)), c)
+
+
+## Golem de Kernel: un espectro que flota sobre una cola de píxeles que se
+## deshace, con una pantalla «:(» por cara, volcados de memoria girando a su
+## alrededor y gotas de caos cayendo.
+static func _golem_kernel(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
+	var hover := sin(ph * 0.7) * 3.0
+	var top := p + Vector2(0, -50 + hover)
+	# Cola que se deshace en píxeles.
+	for k in 8:
+		var f := fmod(ph * 0.4 + k * 0.125, 1.0)
+		ci.draw_rect(Rect2(p + Vector2(-6 + (k % 4) * 3.5, -10 + f * 10.0 + hover), Vector2(3, 3)), Color(c, 0.7 * (1.0 - f)))
+	# Túnica: silueta que se estrecha hacia abajo, con borde que brilla.
+	var robe := PackedVector2Array([top + Vector2(-15, 8), top + Vector2(-8, -2), top + Vector2(8, -2), top + Vector2(15, 8),
+		top + Vector2(11, 30), top + Vector2(5, 40), top + Vector2(0, 36), top + Vector2(-5, 40), top + Vector2(-11, 30)])
+	ci.draw_colored_polygon(robe, Color("1c1028"))
+	ci.draw_polyline(robe + PackedVector2Array([robe[0]]), Color(c, 0.6 + 0.3 * sin(ph * 1.4)), 1.5, true)
+	# Cara: una pantalla con «:(» (el pánico del kernel).
+	var face := Rect2(top + Vector2(-9, -16), Vector2(18, 14))
+	ci.draw_rect(face, Color("2a1640"))
+	ci.draw_rect(face, Color(c, 0.9), false, 1.0)
+	ci.draw_string(ThemeDB.fallback_font, face.position + Vector2(3, 11), ":(", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("e0d0ff"))
+	# Manos espectrales.
+	for s in [-1.0, 1.0]:
+		var hand := top + Vector2(s * 19, 14 + sin(ph + s) * 3.0)
+		ci.draw_circle(hand, 3.5, Color(c, 0.5))
+		ci.draw_circle(hand, 2.0, Color("b0ff90"))
+	# Volcados de memoria girando: «0x», «#», «$», «PID».
+	var glyphs := ["0x", "#", "$", "PID"]
+	for k in glyphs.size():
+		var a := ph * 0.5 + TAU * k / glyphs.size()
+		var gp := top + Vector2(cos(a) * 24.0, 12.0 + sin(a) * 8.0)
+		ci.draw_string(ThemeDB.fallback_font, gp, glyphs[k], HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(c.lightened(0.4), 0.5 + 0.4 * sin(a)))
+	# Gotas de caos.
+	for k in 3:
+		var f := fmod(ph * 0.6 + k * 0.33, 1.0)
+		ci.draw_rect(Rect2(top + Vector2(-8 + k * 8, 30 + f * 20.0), Vector2(2, 3)), Color("8aff70", 0.8 * (1.0 - f)))

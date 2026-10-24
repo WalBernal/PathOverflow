@@ -15,6 +15,10 @@ extends SceneTree
 const RATE := 16000
 const OUT_DIR := "res://assets/audio/music/"
 const LOOPS_FILE := "res://data/music_loops.json"
+## Capa de combate de las pistas de zona: solo batería y bajo, con la misma
+## duración de intro y bucle, para sonar sincronizada encima (MusicPlayer.set_combat).
+const COMBAT_SUFFIX := "_combate"
+const COMBAT_DRUMS := ["soft", "drive", "ballad", "none"]
 const SCALES := {
 	"major": [0, 2, 4, 5, 7, 9, 11], "minor": [0, 2, 3, 5, 7, 8, 10], "dorian": [0, 2, 3, 5, 7, 9, 10],
 	"phrygian": [0, 1, 3, 5, 7, 8, 10], "lydian": [0, 2, 4, 6, 7, 9, 11],
@@ -45,9 +49,22 @@ func _initialize() -> void:
 	if FileAccess.file_exists(LOOPS_FILE):
 		loops = JSON.parse_string(FileAccess.get_file_as_string(LOOPS_FILE))
 	for id in data["tracks"]:
-		if not only.is_empty() and not (id in only):
+		if not only.is_empty() and not (id in only) and not ((id + COMBAT_SUFFIX) in only):
 			continue
-		loops[id] = _compose(id, data["tracks"][id])
+		if only.is_empty() or id in only:
+			loops[id] = _compose(id, data["tracks"][id])
+		# Versión de combate: misma pista (tempo, compases y acordes) con batería
+		# frenética y bajo pulsante; MusicPlayer cambia a ella en el mismo punto.
+		if String(data["tracks"][id].get("drums", "none")) in COMBAT_DRUMS and not id.ends_with("_fase") \
+				and not id.begins_with("camp") and not id.begins_with("boss"):
+			var t: Dictionary = data["tracks"][id].duplicate(true)
+			t["drums"] = "frenzy"
+			t["bass"] = "pulse"   # "from" igual: la intro dura lo mismo y el bucle empieza en el mismo sitio
+			# Solo batería y bajo: es una capa que suena ENCIMA de la pista de la zona.
+			t["lead"] = "none"
+			t["arp"] = "none"
+			t["pad"] = 0.0
+			loops[id + COMBAT_SUFFIX] = _compose(id + COMBAT_SUFFIX, t)
 	FileAccess.open(LOOPS_FILE, FileAccess.WRITE).store_string(JSON.stringify(loops, "  ", true))
 	quit()
 

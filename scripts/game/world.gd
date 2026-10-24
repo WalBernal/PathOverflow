@@ -87,7 +87,9 @@ func _ready() -> void:
 	enemies.crit_dealt.connect(func() -> void:
 		player.camera_shake(1.5, 0.06)
 		hitstop(0.035))
-	tree_exiting.connect(func() -> void: Engine.time_scale = 1.0)
+	tree_exiting.connect(func() -> void:
+		Engine.time_scale = 1.0
+		MusicPlayer.set_combat(false))
 	enemies.phase_started.connect(func(_id: int, phase_name: String, text: String, color: Color) -> void:
 		ui.hud.flash("%s\n%s" % [phase_name, text], color)
 		Sfx.play("wave")
@@ -152,8 +154,43 @@ func _ready() -> void:
 		ui.hud.flash.call_deferred("El árbol pasivo ha cambiado: te hemos devuelto todos los puntos (P).", UiStyle.ACCENT)
 
 
+## Capa de batería de combate: entra con COMBAT_ON enemigos cerca (o un raro y
+## media manada) y sale tras COMBAT_CALM segundos con menos de COMBAT_OFF.
+const COMBAT_RANGE := 700.0
+const COMBAT_ON := 15
+const COMBAT_OFF := 6
+const COMBAT_CALM := 4.0
+var _combat_check := 0.0
+var _combat_calm := 0.0
+
+
+func _update_combat_music(delta: float) -> void:
+	_combat_check -= delta
+	if _combat_check > 0.0:
+		return
+	_combat_check = 0.5
+	if zone == null or zone.safe or _boss_phase > 0 or not player.is_alive():
+		MusicPlayer.set_combat(false)
+		return
+	var near := 0
+	var strong := false
+	var pp := player.global_position
+	for i in enemies.count():
+		if enemies.positions[i].distance_to(pp) <= COMBAT_RANGE:
+			near += 1
+			strong = strong or enemies.rarities[i] >= Rarity.Enemy.ELITE
+	if near >= COMBAT_ON or (strong and near >= COMBAT_ON / 2):
+		_combat_calm = COMBAT_CALM
+		MusicPlayer.set_combat(true)
+	elif near < COMBAT_OFF:
+		_combat_calm -= 0.5
+		if _combat_calm <= 0.0:
+			MusicPlayer.set_combat(false)
+
+
 func _process(delta: float) -> void:
 	character.play_time += delta
+	_update_combat_music(delta)
 	_update_twins(delta)
 	_update_challenge(delta)
 	if not _event_fights.is_empty():
