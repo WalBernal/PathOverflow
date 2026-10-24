@@ -64,7 +64,7 @@ func _ready() -> void:
 	_message.offset_top = -245.0
 	_message.offset_bottom = -215.0
 
-	for key in ["life", "mana", "xp", "states", "target", "flask_0", "flask_1", "flask_2", "flask_3", "flask_4", "skill_0", "skill_1", "skill_2", "skill_3", "skill_4", "skill_5"]:
+	for key in ["life", "mana", "xp", "states", "target", "flask_0", "flask_1", "flask_2", "flask_3", "flask_4", "skill_0", "skill_1", "skill_2", "skill_3", "skill_4", "skill_5", "dodge"]:
 		var spot := Control.new()
 		spot.mouse_filter = Control.MOUSE_FILTER_STOP
 		add_child(spot)
@@ -136,6 +136,12 @@ func _flask_rect(i: int) -> Rect2:
 	return Rect2(plate.position.x + 16.0 + i * (FLASK_SIZE.x + 6.0), plate.position.y + 8.0, FLASK_SIZE.x, FLASK_SIZE.y)
 
 
+## Casilla de la esquiva, a la derecha de la barra de habilidades.
+func _dodge_rect() -> Rect2:
+	var last := _slot_rect(SkillController.ACTIONS.size() - 1)
+	return Rect2(last.end.x + 14.0, last.position.y, 34.0, SLOT)
+
+
 func _xp_rect() -> Rect2:
 	var plate := _plate_rect()
 	return Rect2(plate.position.x, plate.position.y - 9.0, plate.size.x, 7.0)
@@ -150,6 +156,7 @@ func _layout() -> void:
 		_place("flask_%d" % i, _flask_rect(i))
 	for i in SkillController.ACTIONS.size():
 		_place("skill_%d" % i, _slot_rect(i))
+	_place("dodge", _dodge_rect())
 	var origin := _menu_origin()
 	for i in _menu_buttons.size():
 		_menu_buttons[i].position = origin + Vector2(i * 40.0, 8.0)
@@ -161,7 +168,7 @@ func _layout() -> void:
 func _menu_origin() -> Vector2:
 	var plate := _plate_rect()
 	var x := plate.end.x - _menu_buttons.size() * 40.0 - 12.0
-	var skills_end := _slot_rect(SkillController.ACTIONS.size() - 1).end.x + 10.0
+	var skills_end := _dodge_rect().end.x + 10.0
 	if x < skills_end:
 		return Vector2(plate.end.x - _menu_buttons.size() * 40.0 - 12.0, plate.position.y - 58.0)
 	return Vector2(x, plate.position.y + 24.0)
@@ -222,6 +229,8 @@ func _update_tooltips() -> void:
 			f.charges, f.max_charges()]
 	for i in SkillController.ACTIONS.size():
 		_hotspots["skill_%d" % i].tooltip_text = _skill_tooltip(i)
+	_hotspots["dodge"].tooltip_text = "Esquiva · git stash (Shift · gatillo derecho)\nUn salto corto en la dirección en que te mueves (o hacia el ratón) con un instante de invulnerabilidad: evita golpes, charcos y estados.\nCargas: %d / %d. Se recarga una cada %.1f s." % [
+		floori(player.dodge_charges), player.max_dodge_charges(), Player.DODGE_RECHARGE]
 
 
 func _skill_tooltip(i: int) -> String:
@@ -231,6 +240,11 @@ func _skill_tooltip(i: int) -> String:
 		return "Ranura vacía (%s).\nInstala una placa base desde el menú de habilidades (K)." % key
 	var p := skills.profile(i)
 	var text := "%s · nivel %d (%s)\n%s\n" % [p["name"], board.level, key, board.skill_def.get("description", "")]
+	if String(p.get("converted_from", "")) != "":
+		text += "\nDaño convertido: %s → %s" % [RamModule.DAMAGE_TYPE_NAMES.get(p["converted_from"], p["converted_from"]),
+			RamModule.DAMAGE_TYPE_NAMES.get(p["damage_type"], p["damage_type"])]
+	for t in p.get("spend_charges", {}):
+		text += "\n%s (tienes %d)" % [Charges.SPEND_TEXT[t], int(character.charges.get(t, 0))]
 	if p["max_damage"] > 0.0:
 		text += "\nDaño: %d-%d  ·  Crítico: %.1f%%" % [p["min_damage"], p["max_damage"], p["crit_chance"]]
 	text += "\nCoste: %d de maná  ·  %.2f usos/s" % [p["mana_cost"], p["uses_per_second"]]
@@ -355,6 +369,7 @@ func _draw() -> void:
 	# Habilidades.
 	for i in SkillController.ACTIONS.size():
 		_draw_skill_slot(i, font)
+	_draw_dodge(font)
 
 	_draw_status_boxes(font)
 	var boss_bar := _draw_boss_bar(font)
@@ -798,6 +813,17 @@ func _draw_skill_slot(i: int, font: Font) -> void:
 		draw_rect(cost_rect, Color(0.04, 0.06, 0.14, 0.85))
 		draw_string(font, cost_rect.position + Vector2(0, 10.5), cost_text, HORIZONTAL_ALIGNMENT_CENTER, cost_w, 10,
 			Color("e06c6c") if no_mana else Color("8ab8ff"))
+		# Habilidades que gastan cargas: cuántas gastaría ahora (chapitas de su color, arriba a la izquierda).
+		var spend: Dictionary = p.get("spend_charges", {})
+		var cx := r.position.x + 2.0
+		for t in spend:
+			var n := int(character.charges.get(t, 0))
+			var chip := Rect2(cx, r.position.y + 2.0, 16.0, 13.0)
+			draw_rect(chip, Color(0, 0, 0, 0.8))
+			draw_rect(chip, Charges.COLORS[t] if n > 0 else Color(Charges.COLORS[t], 0.35), false, 1.0)
+			draw_string(font, chip.position + Vector2(0, 10.0), str(n), HORIZONTAL_ALIGNMENT_CENTER, chip.size.x, 10,
+				Charges.COLORS[t] if n > 0 else MUTED)
+			cx += 18.0
 		var flash := _slot_flash[i] / 0.25
 		draw_rect(r, Motherboard.COLOR.darkened(0.2).lerp(Color("ffe8a0"), flash), false, 1.5 + 1.5 * flash)
 		if not p.is_empty() and p["kind"] == "aura" and skills.is_aura_active(p["id"]):
@@ -816,6 +842,33 @@ func _draw_skill_slot(i: int, font: Font) -> void:
 	draw_rect(key_rect, Color(PLATE, 0.95))
 	draw_rect(key_rect, TRIM.darkened(0.2), false, 1.0)
 	draw_string(font, key_rect.position + Vector2(0, 11.0), key, HORIZONTAL_ALIGNMENT_CENTER, key_w, 11, key_color)
+
+
+## Casilla de la esquiva: una pastilla por carga (la que se recarga, a medias) y la tecla.
+func _draw_dodge(font: Font) -> void:
+	var r := _dodge_rect()
+	draw_rect(r.grow(3.0), Color(0, 0, 0, 0.75))
+	draw_rect(r.grow(3.0), TRIM.darkened(0.45), false, 1.0)
+	draw_rect(r, Color(0, 0, 0, 0.7))
+	var total := player.max_dodge_charges()
+	var shown := maxi(total, ceili(player.dodge_charges))   # la poción puede dar una de más
+	var pip_h := minf(16.0, (r.size.y - 22.0 - (shown - 1) * 3.0) / maxf(1.0, shown))
+	var color := Color("8ad8ff")
+	for k in shown:
+		var pr := Rect2(r.position.x + 6.0, r.position.y + 6.0 + k * (pip_h + 3.0), r.size.x - 12.0, pip_h)
+		var fill := clampf(player.dodge_charges - (shown - 1 - k), 0.0, 1.0)   # se llenan de abajo arriba
+		draw_rect(pr, Color(0.1, 0.16, 0.22))
+		if fill > 0.0:
+			draw_rect(Rect2(pr.position + Vector2(0, pr.size.y * (1.0 - fill)), Vector2(pr.size.x, pr.size.y * fill)),
+				color if fill >= 1.0 else Color(color, 0.45))
+		draw_rect(pr, color.darkened(0.4), false, 1.0)
+	if player.is_dodging():
+		draw_rect(r.grow(1.0), Color(color, 0.8), false, 2.0)
+	var key_rect := Rect2(r.position.x - 2.0, r.end.y - 12.0, r.size.x + 4.0, 14.0)
+	draw_rect(key_rect, Color(PLATE, 0.95))
+	draw_rect(key_rect, TRIM.darkened(0.2), false, 1.0)
+	draw_string(font, key_rect.position + Vector2(0, 11.0), "Shift", HORIZONTAL_ALIGNMENT_CENTER, key_rect.size.x, 10,
+		TEXT_COLOR if player.dodge_charges >= 1.0 else Color("e06c6c"))
 
 
 ## Sector circular para el enfriamiento (empieza arriba, sentido horario).

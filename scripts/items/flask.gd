@@ -95,6 +95,12 @@ func effect_lines() -> PackedStringArray:
 		"mana":
 			lines.append("Recupera %d de maná en %.1f s" % [recover(), duration()])
 		_:
+			if def.get("cleanse", false):
+				lines.append("Quita al momento los estados y daños degenerativos que sufres")
+			if def.has("dodge_refill"):
+				lines.append("Recarga todas tus esquivas (git stash)")
+			if def.has("heal_minions"):
+				lines.append("Cura a tus invocaciones un %d %% de su vida" % roundi(float(def["heal_minions"]) * 100.0))
 			lines.append("Durante %.1f s:" % duration())
 			for m in timed_modifiers():
 				lines.append("  " + m.describe())

@@ -94,6 +94,32 @@ func get_breakdown(stat: StringName, tags: Array = []) -> Dictionary:
 	}
 
 
+## Desglose de varios stats a la vez (daño convertido, como en PoE: le afectan los
+## aumentos de su tipo original y los del nuevo; los padres compartidos, como
+## «Daño», cuentan una sola vez). El plano suma el de todos los stats de la lista.
+func get_breakdown_union(stat_list: Array, tags: Array = []) -> Dictionary:
+	var related: Array = []
+	for s in stat_list:
+		for r in [s] + Stat.PARENTS.get(s, []):
+			if not related.has(r):
+				related.append(r)
+	var flat := 0.0
+	var increased := 0.0
+	var more := 1.0
+	for mod in _modifiers:
+		if not mod.applies_to(tags):
+			continue
+		if mod.type == Modifier.Type.FLAT:
+			if stat_list.has(mod.stat):
+				flat += mod.value
+		elif related.has(mod.stat):
+			if mod.type == Modifier.Type.INCREASED:
+				increased += mod.value
+			else:
+				more *= 1.0 + mod.value / 100.0
+	return {"base": 0.0, "flat": flat, "increased": increased, "more": more}
+
+
 static func _cache_key(stat: StringName, tags: Array) -> String:
 	if tags.is_empty():
 		return String(stat)

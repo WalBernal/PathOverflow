@@ -1702,6 +1702,126 @@
       "special": {
         "spend_overclock": 1
       }
+    },
+    {
+      "id": "transformador_de_tension",
+      "name": "Transformador de Tensión",
+      "generation": "DDR3",
+      "tier": 2,
+      "min_level": 10,
+      "description": "Convierte el daño físico de la habilidad en daño de rayo. Le siguen afectando los aumentos de daño físico, y ahora también los de rayo y elemental. Un Guerrero eléctrico, sin cambiar de oficio.",
+      "requires_tags": [],
+      "excludes_tags": [],
+      "cost_multiplier": 1.15,
+      "mods": [],
+      "special": {
+        "convert_to": "lightning",
+        "convert_from": ["physical"]
+      }
+    },
+    {
+      "id": "nitrogeno_liquido",
+      "name": "Nitrógeno Líquido",
+      "generation": "DDR4",
+      "tier": 2,
+      "min_level": 10,
+      "description": "Convierte el daño físico de la habilidad en daño de frío. Escala con los aumentos de físico y de frío. Para overclockers sin miedo.",
+      "requires_tags": [],
+      "excludes_tags": [],
+      "cost_multiplier": 1.15,
+      "mods": [],
+      "special": {
+        "convert_to": "cold",
+        "convert_from": ["physical"]
+      }
+    },
+    {
+      "id": "sobrecalentamiento",
+      "name": "Sobrecalentamiento",
+      "generation": "DDR3",
+      "tier": 2,
+      "min_level": 14,
+      "description": "Convierte el daño de frío o de rayo de la habilidad en daño de fuego. Escala con los dos tipos. El ventilador ya no da más.",
+      "requires_tags": [],
+      "excludes_tags": [],
+      "cost_multiplier": 1.15,
+      "mods": [],
+      "special": {
+        "convert_to": "fire",
+        "convert_from": ["cold", "lightning"]
+      }
+    },
+    {
+      "id": "corrupcion_de_datos",
+      "name": "Corrupción de Datos",
+      "generation": "DDR5",
+      "tier": 3,
+      "min_level": 18,
+      "description": "Convierte el daño elemental (fuego, frío o rayo) de la habilidad en daño de caos. Escala con ambos tipos. Ninguna resistencia elemental te salva de un disco corrupto.",
+      "requires_tags": [],
+      "excludes_tags": [],
+      "cost_multiplier": 1.2,
+      "mods": [],
+      "special": {
+        "convert_to": "chaos",
+        "convert_from": ["fire", "cold", "lightning"]
+      }
+    },
+    {
+      "id": "turbo_sin_disipador",
+      "name": "Turbo sin Disipador",
+      "generation": "DDR3",
+      "tier": 3,
+      "min_level": 12,
+      "description": "60 % más de daño, pero la habilidad se usa un 30 % más lento. Mucha potencia, cero refrigeración.",
+      "requires_tags": [],
+      "excludes_tags": ["aura", "persistent"],
+      "cost_multiplier": 1.2,
+      "mods": [
+        {"stat": "damage", "type": "more", "value": 60},
+        {"stat": "attack_speed", "type": "more", "value": -30},
+        {"stat": "cast_speed", "type": "more", "value": -30}
+      ],
+      "special": {
+        "downside": 1
+      }
+    },
+    {
+      "id": "compilacion_o3",
+      "name": "Compilación -O3",
+      "generation": "DDR4",
+      "tier": 3,
+      "min_level": 12,
+      "description": "50 % más de daño y 10 % más de velocidad, a cambio de gastar el doble de maná. Optimizado para todo menos para tu presupuesto.",
+      "requires_tags": [],
+      "excludes_tags": ["aura", "persistent"],
+      "cost_multiplier": 2.0,
+      "mods": [
+        {"stat": "damage", "type": "more", "value": 50},
+        {"stat": "attack_speed", "type": "increased", "value": 10},
+        {"stat": "cast_speed", "type": "increased", "value": 10}
+      ],
+      "special": {
+        "downside": 1
+      }
+    },
+    {
+      "id": "memoria_sin_ecc",
+      "name": "Memoria sin ECC",
+      "generation": "DDR5",
+      "tier": 3,
+      "min_level": 16,
+      "description": "70 % más de daño, pero la habilidad nunca hace críticos. Sin corrección de errores: lo que sale, sale.",
+      "requires_tags": [],
+      "excludes_tags": ["aura", "persistent"],
+      "cost_multiplier": 1.2,
+      "mods": [
+        {"stat": "damage", "type": "more", "value": 70},
+        {"stat": "crit_chance", "type": "more", "value": -100}
+      ],
+      "special": {
+        "downside": 1
+      }
     }
   ]
 }

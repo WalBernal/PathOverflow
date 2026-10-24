@@ -47,6 +47,9 @@ var stash: Stash
 var _shop_stock: Array[Item] = []
 var _shop_level := 0
 var _rng := RandomNumberGenerator.new()
+## Hitstop: hasta cuándo no puede repetirse (ms) y la pausa mínima entre dos.
+var _hitstop_ready_at := 0
+const HITSTOP_GAP_MS := 250
 
 
 func _ready() -> void:
@@ -81,6 +84,10 @@ func _ready() -> void:
 	enemies.player = player
 	enemies.enemy_killed.connect(_on_enemy_killed)
 	enemies.immune_hit.connect(_on_immune_hit)
+	enemies.crit_dealt.connect(func() -> void:
+		player.camera_shake(1.5, 0.06)
+		hitstop(0.035))
+	tree_exiting.connect(func() -> void: Engine.time_scale = 1.0)
 	enemies.phase_started.connect(func(_id: int, phase_name: String, text: String, color: Color) -> void:
 		ui.hud.flash("%s\n%s" % [phase_name, text], color)
 		Sfx.play("wave")
@@ -661,8 +668,37 @@ func _update_event_fights() -> void:
 		Sfx.play("level_up", -6.0, 1.3)
 
 
+## Hitstop: el juego se congela unos milisegundos (tiempo real) para dar peso al
+## golpe. Con pausa entre uno y otro para que una lluvia de críticos no tartamudee.
+func hitstop(seconds: float) -> void:
+	if not hitstop_enabled() or Engine.time_scale < 1.0 or get_tree().paused:
+		return
+	var now := Time.get_ticks_msec()
+	if now < _hitstop_ready_at:
+		return
+	_hitstop_ready_at = now + HITSTOP_GAP_MS + int(seconds * 1000.0)
+	Engine.time_scale = 0.05
+	await get_tree().create_timer(seconds, true, false, true).timeout
+	Engine.time_scale = 1.0
+
+
+static var _hitstop_on := bool(GameSettings.get_value("interface", "hitstop", true))
+
+
+static func hitstop_enabled() -> bool:
+	return _hitstop_on
+
+
+static func set_hitstop(on: bool) -> void:
+	_hitstop_on = on
+	GameSettings.set_value("interface", "hitstop", on)
+
+
 func _on_enemy_killed(rarity: int, experience: int, pos: Vector2, type_id: String = "") -> void:
 	Sfx.play("enemy_death", -6.0 + 2.0 * rarity, 1.0 - 0.08 * rarity)
+	if rarity >= Rarity.Enemy.ELITE:
+		hitstop(0.06 if rarity == Rarity.Enemy.ELITE else 0.1)
+		player.camera_shake(3.0 if rarity == Rarity.Enemy.ELITE else 6.0, 0.15)
 	if rarity == Rarity.Enemy.UNIQUE and _boss_phase > 0 and not _boss_alive and enemies.boss_info().is_empty():
 		_boss_phase = 0   # cayó el subjefe con fases: vuelve la música de la zona
 		MusicPlayer.set_intensity(0)

@@ -92,6 +92,8 @@ const THORNS := &"thorns"
 const EXTRA_PIERCE := &"extra_pierce"
 ## % menos de duración de electrocutado, helado y congelado sobre ti.
 const STATUS_RESIST := &"status_resist"
+## Cargas de esquiva (git stash) extra.
+const DODGE_CHARGES := &"dodge_charges"
 
 # --- Tags (condiciones de los modificadores) ---
 const TAG_ATTACK := &"attack"
@@ -174,6 +176,7 @@ const NAMES := {
 	THORNS: "Daño de espinas al recibir un golpe",
 	EXTRA_PIERCE: "Enemigos extra que atraviesan los proyectiles",
 	STATUS_RESIST: "Resistencia a estados (electrocutado, helado, congelado)",
+	DODGE_CHARGES: "Cargas de esquiva",
 }
 
 ## Los aumentos/más de los padres también aplican al hijo:

@@ -14,12 +14,9 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 
 | Mejora | Tamaño | Prioridad | Por qué |
 |---|---|---|---|
-| **Esquiva / "git stash"**: un salto corto con invulnerabilidad breve (Espacio o B en el mando), con su propio enfriamiento y un pequeño gasto de energía | M | ★★★ | Hoy defenderse es solo vida y pociones; la esquiva da habilidad al jugador y permite jefes con ataques telegrafiados de verdad. |
-| **Ataques enemigos telegrafiados**: zonas rojas en el suelo antes de los golpes fuertes de raros, únicos y jefes (ya hay carga y embestida; falta el aviso en el suelo) | M | ★★★ | Junto con la esquiva, convierte las peleas de jefe en peleas de reflejos, no de vida. |
-| **Hitstop y retroceso**: 2-4 fotogramas de pausa al dar un crítico o matar a un raro, y empujón a los enemigos golpeados | S | ★★★ | El "peso" del golpe es lo que más mejora la sensación sin cambiar números. |
 | **Más eventos de zona**: hoy hay 4 (datos huérfanos, santuario, emboscada, deploy fallido); faltan eventos con mecánica propia (escoltar un proceso, desactivar bombas lógicas a tiempo, un comerciante ambulante) | M | ★★ | Variedad entre visitas. |
 | **Filtro de botín, siguiente paso**: reglas por base, nivel y afijos (como los filtros de PoE), y resaltar bases buenas | M | ★★ | Ya hay 3 niveles, haz de luz y sonido por rareza. |
-| **Pociones con estilo**: pociones que quitan estados, que dan carga de esquiva, que curan a las invocaciones | S | ★★ | Más decisiones en el cinturón (1-5). |
+| **Esquiva, siguiente paso**: nodos y afijos con +cargas de esquiva o recarga más rápida, y RAM/ascendencias que hagan algo al esquivar (dejar una trampa, ganar una carga de Multihilos) | S | ★★ | La esquiva ya existe (Shift / RT, 2 cargas, stat `dodge_charges`). |
 | **Escalado de dificultad por zona**: nivel de zona que sigue al del personaje en las zonas ya completadas (opcional) | M | ★ | Repetir zonas sin que se vuelvan triviales. |
 
 ## 2. Estilos de juego (builds)
@@ -27,7 +24,7 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 | Mejora | Tamaño | Prioridad | Idea |
 |---|---|---|---|
 | **Cargas, siguiente paso**: nodos del árbol y de ascendencia que den cargas o las usen (p. ej. "+1 de Buffer máximo", "al gastar Overclock, recupera maná"), y habilidades propias que las consuman | M | ★★ | El sistema ya está (Buffer, Multihilos, Overclock; RAM que las gastan; afijos de objetos). |
-| **Conversión de daño**: nodos/RAM que convierten físico → rayo, fuego → caos, etc. | M | ★★★ | Permite builds temáticas (un Guerrero eléctrico) sin habilidades nuevas. |
+| **Conversión de daño en el árbol**: nodos (o un nodo clave) que conviertan como las RAM nuevas, para toda la build y no solo una habilidad | S | ★★ | Las RAM de conversión ya existen (`convert_to` / `convert_from` en SkillCalc). |
 | **Builds de "sacrificio", siguiente paso**: nodos que premien pagar con vida (más daño con vida baja, robo de vida extra) | S | ★★ | Ya hay RAM que pagan con vida (Alimentación por Vida, Hotfix en Caliente). |
 | **Nodos clave de invocador**: "Monolito" (una sola invocación con ×3 vida y daño) frente a "Microservicios" (+2 invocaciones, −30 % cada una) en el árbol | M | ★★ | Ya existen el Mainframe Titán (una invocación con 3 habilidades) y la variante de tres golems. |
 | **Builds de trampas y minas con detonación encadenada** | S | ★★ | Detonar una mina detona las vecinas: satisfactorio y legible. |
@@ -42,7 +39,6 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 | **Habilidades que dejan terreno**: charco de aceite que se enciende, campo de estática, zona helada; y **combos** entre ellas (fuego + aceite = explosión) | M | ★★★ | Aprovecha las interacciones de estados que ya existen. |
 | **Gritos / buffs temporales** ("¡Está en producción!": +daño a aliados 6 s) | S | ★★ | Juego de equipo con invocaciones. |
 | **RAM de activación** (*triggers*): "al recibir un golpe, lanza la habilidad", "al hacer crítico, lanza", "cada 2 s, lanza" | L | ★★★ | El tipo de soporte más divertido de PoE; da builds automáticas. |
-| **RAM con desventaja fuerte** (más 60 % de daño pero las habilidades cuestan vida, etc.) | S | ★★ | Decisiones con riesgo. |
 | **Más variantes**: hoy hay variantes en 10 habilidades (`data/skills/variants.json`); faltan las de auras, drones y trampas | M | ★★ | Se eligen en K desde el nivel 10-15 de la placa. |
 | **Comparador de placas**: ver dos placas lado a lado con DPS, coste y área | S | ★★ | Ya existe la comparación de DPS para RAM; ampliarla. |
 
@@ -60,12 +56,11 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 
 | Mejora | Tamaño | Prioridad | Idea |
 |---|---|---|---|
-| **Barra de habilidades con información**: enfriamiento en reloj, cargas, coste de maná en rojo si no alcanza | S | ★★★ | Leer el estado de la build sin abrir menús. |
-| **Ventana de comparación de objetos** al pasar sobre uno de la bolsa (mostrar el equipado al lado, con diferencias en verde y rojo) | M | ★★★ | Lo más usado en un ARPG. |
 | **Construcciones guardadas**: guardar y cargar combinaciones de árbol + barra de habilidades | M | ★★ | Probar builds sin rehacer todo. |
 | **Navegación total con mando** en inventario, árbol, K, tienda y diálogos | L | ★★ | Ya está en el roadmap 1; aquí con cursor libre y atajos. |
 | **Mapa grande (Tab)** superpuesto, con niebla de guerra y marcas | M | ★★ | Las zonas ahora son 1.4-1.5 veces más grandes. |
-| **Tutorial contextual** de mecánicas nuevas (cargas, esquiva, RAM de activación) la primera vez que aparecen | S | ★★ | |
+| **Tutorial contextual** de mecánicas nuevas (cargas, esquiva, golpes pesados, RAM de activación) la primera vez que aparecen | S | ★★ | |
+| **Comparación con mando**: con dos anillos, comparar contra los dos; y un atajo para fijar la comparación | S | ★ | La comparación lado a lado ya existe con el ratón. |
 
 ## 6. Enemigos, jefes e IA
 
@@ -74,7 +69,6 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 | **Roles de enemigo claros**: tanque que protege, sanador que hay que matar primero, francotirador que se aleja, enjambre que rodea | M | ★★★ | Decisiones tácticas dentro de cada manada. |
 | **Jefes con mecánicas de arena**: suelo que se rompe, adds que hay que interrumpir, zonas seguras que rotan | L | ★★★ | Con la esquiva y los avisos en el suelo. |
 | **Enemigos que reaccionan a los estados**: huyen si se queman, se agrupan si hay un aura enemiga | M | ★★ | Más vida en las manadas. |
-| **Raros con nombre generado y frase** ("Excepción no controlada de Juan", "Null Pointer el Breve") | S | ★★ | Humor y reconocimiento. |
 | **Némesis**: un raro que te mató reaparece más fuerte con tu nombre y suelta mejor botín | M | ★ | Historias emergentes. |
 
 ## 7. Sonido y música
@@ -85,7 +79,7 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 | **Capas de música por intensidad**: la pista de la zona sube una capa (batería) cuando hay más de 15 enemigos cerca, y baja al limpiar | M | ★★★ | Ya hay intensidad para jefes; extenderla. |
 | **Ambiente posicional**: zumbido de racks que suena más cerca de ellos, goteo en las alcantarillas, viento en la grieta | S | ★★ | Las zonas grandes se sienten vivas. |
 | **Voces cortas de los NPC** (gruñidos o frases de 1 palabra al hablar) y del personaje al subir de nivel o con poca vida | M | ★★ | |
-| **Sonido de botín por rareza** y de "objeto único" inconfundible | S | ★★★ | Ver sección 1. |
+| **Sonido de "objeto único" inconfundible** (y uno distinto por rareza) | S | ★★★ | Ya suena algo al caer raros y únicos; falta que el único sea inconfundible. |
 | **Música compuesta** (sustituir las pistas generadas), con leitmotiv por acto y por jefe | L | ★★ | Ya en el roadmap 1. |
 
 ## 8. Efectos visuales y sensación
@@ -95,7 +89,6 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 | **Luces dinámicas en el filtro**: proyectiles de fuego y rayos que iluminan en zonas oscuras (catacumbas, alcantarillas), antorchas en las paredes | M | ★★★ | Aprovecha la oscuridad del filtro de pixel art: el combate ilumina la zona. |
 | **Partículas de impacto en pixel art** por tipo de daño (chispas, astillas de hielo, gotas de veneno, bits) | M | ★★★ | |
 | **Muertes con estilo**: los enemigos se "descompilan" en píxeles, se congelan y se rompen, se queman a ceniza según el daño que los mató | M | ★★ | Ya existe la explosión de afijos; esto da variedad. |
-| **Sacudida de cámara graduada** y una opción para reducirla | S | ★★ | Accesibilidad y sensación. |
 | **Sombras de proyectiles y de enemigos voladores** | S | ★ | Lectura de altura en vista cenital. |
 | **Clima por zona**: lluvia de datos en la brecha, niebla que se mueve con el jugador en el pantano | S | ★ | |
 
@@ -134,11 +127,13 @@ El roadmap 1 (`docs/roadmap.md`) cierra lo que falta del juego tal como está pl
 
 ## Plan sugerido por fases
 
-1. **Fase "Sensación"** (★★★ rápidas): hitstop, sonido por material, luces dinámicas, comparación de objetos.
-2. **Fase "Habilidad del jugador"**: esquiva, telegrafiados en el suelo, habilidades de movimiento, roles de enemigo.
-3. **Fase "Profundidad de builds"**: conversión de daño, nodos clave, maestrías, RAM de activación, nodos que usen las cargas.
+1. **Fase "Sensación"** (★★★ rápidas): sonido por material, luces dinámicas, partículas de impacto.
+2. **Fase "Habilidad del jugador"**: habilidades de movimiento, roles de enemigo, jefes con mecánicas de arena.
+3. **Fase "Profundidad de builds"**: nodos clave, maestrías, RAM de activación, nodos que usen las cargas.
 4. **Fase "Largo plazo"**: crafteo con parches, atlas de incidentes, chips únicos que transforman nodos, temporadas.
 
 ## Hecho del roadmap 2.0 (no repetir)
 
 **Primera tanda (23 octubre 2026, noche 5)**: **texto y personajes nítidos** con el filtro: el pixelado solo va al suelo y el decorado; la luz (gradación, viñeta, oscuridad) va aparte y los nombres, placas, botín y números quedan encima · **eventos de zona**: datos huérfanos (dos oleadas y botín), santuarios (Turbo, Firewall, Debug, Overclock), emboscadas y deploys fallidos (dos raros), distintos en cada visita · **filtro de botín** (Todo / Ocultar normales / Solo raros y mejores; Alt para ver todo), **haz de luz** y sonido para raros y únicos · **cargas de Buffer, Multihilos y Overclock**: se ganan al recibir golpes, al matar y con críticos (más con afijos nuevos), duran 10 s, se ven sobre el orbe de vida y se gastan con RAM nuevas (Volcado de Buffer, Ráfaga Multihilo, Pico de Overclock) · **costo de vida**: RAM Alimentación por Vida (50 %) y Hotfix en Caliente (100 %, +35 % de daño) · **Mainframe Titán**: una sola invocación enorme con terremoto, láser y barrera; el golem gana terremoto · **variantes de habilidades** en K (golem de tres, golem blindado, titán de asedio o guardián, Broadcast/Unicast, Ping flood, Barrido amplio o certero, etc.) · **chips de expansión**: caen de los enemigos, se engastan en 12 ranuras hexagonales del árbol y cuentan con la ranura asignada; 4 únicos · **atributos**: +1 carga máxima de su tipo cada 50 y **requisitos de Fuerza/Destreza/Inteligencia** para armas y armaduras (la ropa de seda pide Inteligencia, el hacha Fuerza); sin ellos no se equipa y, si ya lo llevabas, se desactiva.
+
+**Segunda tanda (24 octubre 2026)**: **esquiva "git stash"** (Shift o gatillo derecho; la hoja de personaje pasa a Share/Captura en el mando): salto corto con 0,3 s de invulnerabilidad contra golpes, charcos y estados, 2 cargas que se recargan cada 1,6 s, siluetas y casilla propia junto a la barra · **golpes pesados telegrafiados**: los raros y únicos cuerpo a cuerpo se paran, marcan un círculo rojo con "!" y pegan ×2,4; las novas de proyectiles de los jefes avisan con las líneas por donde saldrán · **hitstop** (crítico y muerte de raro o único, con opción en Pausa) y **retroceso** según el daño (las élites un tercio, los únicos nada) · **sacudida de cámara graduada** (golpes fuertes recibidos, críticos, muertes, jefes) con opción no / suave / normal · **raros con nombre generado y frase** al verte ("Off-by-one el Sin Tests": «Me arreglaron con un try vacío.») · **conversión de daño** con RAM (Transformador de Tensión físico → rayo, Nitrógeno Líquido físico → frío, Sobrecalentamiento frío/rayo → fuego, Corrupción de Datos elemental → caos; escalan con los dos tipos) · **RAM con desventaja fuerte** (Turbo sin Disipador, Compilación -O3, Memoria sin ECC) · **pociones con estilo**: Manzanilla con breakpoint (quita estados), Klub-Mate de emergencia (recarga esquivas y da una más), Termo de café para el equipo (cura invocaciones) · **comparación de objetos lado a lado** (el equipado junto al tooltip) · **barra de habilidades**: cuántas cargas gastaría cada habilidad y la conversión en su ayuda.

@@ -455,6 +455,20 @@ func _build_pause_menu() -> Control:
 			_loot.queue_redraw())
 	loot_filter.tooltip_text = "Oculta el equipo normal (o también el mágico) en el suelo.\nPlacas, RAM, pociones, únicos y conjuntos siempre se ven. Mantén Alt para ver todo."
 	right.add_child(loot_filter)
+	# --- Combate (en la columna del sonido, que es más corta) ---
+	sound.add_child(UiStyle.section_header("Combate"))
+	var shake := _cycle_button("Sacudida de cámara", [0.0, 0.5, 1.0], ["no", "suave", "normal"],
+		func() -> float: return Player.shake_scale,
+		func(v: float) -> void: Player.set_shake_scale(v))
+	shake.tooltip_text = "Cuánto tiembla la pantalla con golpes fuertes, críticos, jefes y explosiones."
+	sound.add_child(shake)
+	var hitstop := UiStyle.button("", func() -> void: pass, 300)
+	hitstop.text = "Pausa al golpear (hitstop): " + ("sí" if World.hitstop_enabled() else "no")
+	hitstop.tooltip_text = "Una pausa de milésimas al hacer un crítico o matar a un raro: da peso al golpe."
+	hitstop.pressed.connect(func() -> void:
+		World.set_hitstop(not World.hitstop_enabled())
+		hitstop.text = "Pausa al golpear (hitstop): " + ("sí" if World.hitstop_enabled() else "no"))
+	sound.add_child(hitstop)
 
 	box.add_child(UiStyle.ornament())
 	var exits := HBoxContainer.new()

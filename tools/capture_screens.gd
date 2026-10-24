@@ -44,6 +44,10 @@ func _run() -> void:
 		await _capture_hire_no()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("roadmap2b"):
+		await _capture_roadmap2b()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("roadmap2"):
 		await _capture_roadmap2()
 		get_tree().quit()
@@ -352,6 +356,82 @@ func _capture_roadmap2() -> void:
 	await _wait(0.5)
 	_save("72_roadmap2_ranura_chip")
 	ui.call("_on_menu_requested", "passives")
+	world.set("_since_save", -9999.0)
+
+
+## Roadmap 2.0, segunda tanda: golpe pesado de un raro con su frase, esquiva con
+## siluetas, casilla de esquiva y cargas en la barra, comparación de objetos y pausa.
+func _capture_roadmap2b() -> void:
+	var saved_scale: Variant = GameSettings.get_value("interface", "scale", 1.0)
+	GameSettings.set_value("interface", "scale", 1.0)
+	var gd: Node = get_node("/root/GameData")
+	var items: ItemDatabase = gd.get("items")
+	var c: CharacterData = gd.create_character("Roadmap2b", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "zona1"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 20
+	var conv := Motherboard.new(items.skills.skills["barrido"], 12, ["DDR3", "DDR3"])
+	conv.install(RamModule.new(items.skills.rams["transformador_de_tension"]), 0)
+	conv.install(RamModule.new(items.skills.rams["volcado_de_buffer"]), 1)
+	c.inventory.set_board(0, conv)
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(3.5)
+	var ui: GameUI = world.get("ui")
+	if ui.is_choosing():
+		ui.call("_on_choice_picked", "golem_hardware", func(_s: String) -> void: pass)
+	get_tree().paused = false
+	var player: Player = world.get("player")
+	var em: EnemyManager = world.get("enemies")
+	player.invulnerable = true
+	em.clear_all()
+	em.roll_affixes = false
+	for k in 2:
+		c.gain_charge("buffer")
+	var p := player.global_position
+	var melee := em.type_index_of("bug")
+	var rare := em.spawn(p + Vector2(150, -40), Rarity.Enemy.ELITE, melee)
+	var ri := em.index_of(rare)
+	em.lives[ri] *= 20.0
+	em.max_lives[ri] *= 20.0
+	em.traits[ri]["quote_t"] = EnemyManager.QUOTE_TIME
+	em.traits[ri]["heavy_on"] = true
+	em.windups[ri] = EnemyManager.HEAVY_WINDUP * 0.45
+	em.speeds[ri] = 0.0
+	for k in 3:
+		em.spawn(p + Vector2(-260, -120 + k * 110), Rarity.Enemy.NORMAL)
+	player.dodge()
+	await _wait(0.12)
+	_save("80_golpe_pesado_esquiva")
+	await _wait(0.5)
+	var hud: Node = ui.get("hud")
+	var plate := Rect2(380, 760, 900, 140)
+	var img := get_viewport().get_texture().get_image().get_region(Rect2i(plate))
+	img.resize(img.get_width() * 2, img.get_height() * 2, Image.INTERPOLATE_NEAREST)
+	img.save_png(ProjectSettings.globalize_path(OUT + "81_barra_esquiva_cargas.png"))
+	print("captura: 81_barra_esquiva_cargas (", hud.get("_hotspots")["dodge"].get_global_rect(), ")")
+	# Comparación lado a lado: un arma nueva frente a la equipada.
+	var gen := ItemGenerator.new(items)
+	var weapon: Item = null
+	for k in 40:
+		var it := gen.generate(20, Rarity.Item.RARE)
+		if it.is_equipment() and c.inventory.target_slot_for(it) == "weapon" and c.inventory.equipped("weapon") != null:
+			weapon = it
+			break
+	if weapon:
+		ui.item_tooltip.show_item(weapon, c, true)
+		Input.warp_mouse(Vector2(800, 120))
+		await _wait(0.4)
+		_save("82_comparacion_lado_a_lado")
+		ui.item_tooltip.hide()
+	ui.toggle_pause_menu()
+	await _wait(0.4)
+	_save("83_pausa_combate")
+	ui.toggle_pause_menu()
+	GameSettings.set_value("interface", "scale", saved_scale)
 	world.set("_since_save", -9999.0)
 
 

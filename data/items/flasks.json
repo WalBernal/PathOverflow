@@ -54,7 +54,20 @@
       "description": "Con nubes. Abrazo líquido para días de deploy." },
     { "id": "kombucha", "name": "Kombucha", "kind": "utility", "level": 30, "max_charges": 30, "charges_per_use": 15, "duration": 5.0,
       "mods": [ { "stat": "chaos_res", "type": "flat", "value": 25 }, { "stat": "crit_chance", "type": "increased", "value": 40 } ],
-      "description": "Fermentada. Como ese ticket de 2019." }
+      "description": "Fermentada. Como ese ticket de 2019." },
+
+    { "id": "manzanilla_debug", "name": "Manzanilla con breakpoint", "kind": "utility", "level": 6, "max_charges": 30, "charges_per_use": 15, "duration": 4.0,
+      "icon": "te_matcha", "cleanse": true,
+      "mods": [ { "stat": "status_resist", "type": "flat", "value": 50 } ],
+      "description": "Detiene la ejecución, limpia el estado y sigue. Quita quemaduras, venenos, hielo y descargas." },
+    { "id": "klub_mate", "name": "Klub-Mate de emergencia", "kind": "utility", "level": 9, "max_charges": 30, "charges_per_use": 10, "duration": 6.0,
+      "icon": "monstruo", "dodge_refill": 1,
+      "mods": [ { "stat": "dodge_charges", "type": "flat", "value": 1 }, { "stat": "movement_speed", "type": "increased", "value": 10 } ],
+      "description": "git stash en lata: recarga todas tus esquivas y te da una más mientras dura." },
+    { "id": "cafe_para_el_equipo", "name": "Termo de café para el equipo", "kind": "utility", "level": 14, "max_charges": 40, "charges_per_use": 20, "duration": 6.0,
+      "icon": "latte", "heal_minions": 0.5,
+      "mods": [ { "stat": "minion_damage", "type": "increased", "value": 25 }, { "stat": "automaton_speed", "type": "increased", "value": 15 } ],
+      "description": "Nadie trabaja sin café. Ni los golems. Cura la mitad de la vida de tus invocaciones." }
   ],
   "starter": ["cafe_maquina", "pepsy"]
 }

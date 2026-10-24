@@ -16,6 +16,7 @@ Por ahora es solo para un jugador en local, pero la lógica está escrita para p
 |---|---|
 | WASD / mantener click izq. | Mover |
 | Click der. · Espacio · Q · E · R · F | Las 6 habilidades de la barra |
+| Shift | Esquiva (*git stash*): salto corto con un instante de invulnerabilidad; 2 cargas que se recargan solas |
 | 1 - 5 | Pociones del cinturón (cafés, bebidas y de utilidad) |
 | Click en un objeto o NPC | Ir a recogerlo / hablar |
 | I | Inventario: arrastra para mover y equipar; click equipa o quita |

@@ -10,6 +10,9 @@ signal died
 ## Golpe recibido que no se esquivó ni bloqueó (nova de hielo de ascendencia).
 signal hit_taken
 signal flask_used(index: int)
+## Poción que cura a las invocaciones (fracción de su vida máxima); la atiende SkillController.
+signal heal_minions_requested(fraction: float)
+signal dodged
 
 const RADIUS := 14.0
 ## Tamaño del dibujo del personaje (0.9 antes; +18 % para que no quede más pequeño que las cajas).
@@ -27,6 +30,13 @@ const LOW_LIFE_FRACTION := 0.5
 const RECENT_KILL_TIME := 4.0
 ## Teclas del cinturón de pociones (Inventory.FLASK_SLOTS).
 const FLASK_ACTIONS := [&"flask_1", &"flask_2", &"flask_3", &"flask_4", &"flask_5"]
+## Esquiva ("git stash", Shift o RT): un salto corto con invulnerabilidad breve.
+## Tiene cargas (2 + Stat.DODGE_CHARGES) que se recargan solas una a una.
+const DODGE_DISTANCE := 175.0
+const DODGE_TIME := 0.18
+const DODGE_IFRAMES := 0.3
+const DODGE_CHARGES := 2
+const DODGE_RECHARGE := 1.6
 
 var character: CharacterData
 var enemies: EnemyManager
@@ -68,6 +78,15 @@ func add_barrier(amount: float, seconds: float) -> void:
 	barrier = maxf(barrier, amount)
 	barrier_max = maxf(barrier, 1.0)
 	barrier_time = seconds
+
+## Cargas de esquiva (fraccionarias: la parte decimal es la que se está recargando).
+var dodge_charges := float(DODGE_CHARGES)
+var _dodge_time := 0.0
+var _dodge_dir := Vector2.RIGHT
+var _iframes := 0.0
+## Siluetas que deja la esquiva: {pos, t}.
+var _ghosts: Array[Dictionary] = []
+var _stash_label := 0.0
 
 var _move_held := false
 var _since_kill := 99.0
@@ -120,6 +139,7 @@ func is_alive() -> bool:
 func refill() -> void:
 	dots.clear()
 	statuses.clear()
+	dodge_charges = float(max_dodge_charges())
 	life = max_life()
 	mana = max_mana()
 	energy_shield = max_energy_shield()
@@ -138,9 +158,48 @@ func facing_direction() -> Vector2:
 	return _facing
 
 
+# --- Esquiva ---
+
+func max_dodge_charges() -> int:
+	return DODGE_CHARGES + maxi(0, int(_stat(Stat.DODGE_CHARGES)))
+
+
+## ¿Está en los fotogramas invulnerables de la esquiva?
+func is_dodging() -> bool:
+	return _iframes > 0.0
+
+
+## Esquiva hacia donde se mueve (o hacia el ratón / el stick si está quieto).
+## Cancela el bloqueo de lanzar una habilidad. Devuelve false si no hay carga.
+func dodge() -> bool:
+	if not is_alive() or controls_locked or is_frozen() or _dodge_time > 0.0 or dodge_charges < 1.0:
+		return false
+	var dir := Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down")
+	if dir == Vector2.ZERO:
+		dir = (Gamepad.aim_point(global_position, _facing) if Gamepad.active else get_global_mouse_position()) - global_position
+	if dir == Vector2.ZERO:
+		dir = _facing
+	dodge_charges -= 1.0
+	_dodge_dir = dir.normalized()
+	_facing = _dodge_dir
+	_dodge_time = DODGE_TIME
+	_iframes = DODGE_IFRAMES
+	_stash_label = 0.6
+	action_lock = 0.0
+	_has_auto_target = false
+	Sfx.play("blink", -8.0, 1.35)
+	dodged.emit()
+	return true
+
+
+## Devuelve cargas de esquiva (poción "Stash de emergencia"); `extra` puede pasar del máximo un rato.
+func refill_dodge(extra := 0) -> void:
+	dodge_charges = maxf(dodge_charges, float(max_dodge_charges() + extra))
+
+
 ## Aplica un estado al jugador (shock, chill, freeze). Devuelve true si entró.
 func apply_status(id: String, duration: float) -> bool:
-	if not is_alive() or invulnerable or not STATUS_RES.has(id):
+	if not is_alive() or invulnerable or is_dodging() or not STATUS_RES.has(id):
 		return false
 	if id == "freeze" and (_freeze_grace > 0.0 or statuses.has("freeze")):
 		return false
@@ -156,8 +215,21 @@ func is_frozen() -> bool:
 	return statuses.has("freeze")
 
 
-## Sacude la cámara un instante (cambios de fase de los jefes, explosiones grandes).
+## Intensidad de la sacudida de cámara elegida en Pausa (0 = nada, 0.5 = suave, 1 = normal).
+static var shake_scale := clampf(float(GameSettings.get_value("interface", "camera_shake", 1.0)), 0.0, 1.0)
+
+
+static func set_shake_scale(value: float) -> void:
+	shake_scale = clampf(value, 0.0, 1.0)
+	GameSettings.set_value("interface", "camera_shake", shake_scale)
+
+
+## Sacude la cámara un instante (cambios de fase de los jefes, explosiones grandes,
+## golpes fuertes). Graduada: cada causa pide su fuerza y la opción la escala.
 func camera_shake(amount: float, seconds: float) -> void:
+	amount *= shake_scale
+	if amount <= 0.0:
+		return
 	_shake_amount = maxf(_shake_amount, amount)
 	_shake_time = maxf(_shake_time, seconds)
 
@@ -209,6 +281,15 @@ func use_flask(index: int) -> bool:
 				"flask": f.def["id"]})
 		_:
 			character.add_timed_effect("flask:" + String(f.def["id"]), f.timed_modifiers(), f.duration())
+	# Pociones con efecto propio (además de sus mods).
+	if f.def.get("cleanse", false):
+		statuses.clear()
+		dots.clear()
+		_freeze_grace = FREEZE_GRACE
+	if f.def.has("dodge_refill"):
+		refill_dodge(int(f.def["dodge_refill"]))
+	if f.def.has("heal_minions"):
+		heal_minions_requested.emit(float(f.def["heal_minions"]))
 	Sfx.play("flask")
 	flask_used.emit(index)
 	return true
@@ -290,6 +371,20 @@ func _physics_process(delta: float) -> void:
 		if barrier_time <= 0.0:
 			barrier = 0.0
 	action_lock = maxf(0.0, action_lock - delta)
+	_iframes = maxf(0.0, _iframes - delta)
+	# Por sondeo (no por evento): el gatillo del mando manda muchos eventos al apretarlo.
+	if InputMap.has_action(&"dodge") and Input.is_action_just_pressed(&"dodge"):
+		dodge()
+	if dodge_charges < max_dodge_charges():
+		dodge_charges = minf(float(max_dodge_charges()), dodge_charges + delta / DODGE_RECHARGE)
+	if _dodge_time > 0.0:
+		# Esquivando: en línea recta, rápido, sin control (choca con las paredes).
+		_dodge_time -= delta
+		velocity = _dodge_dir * DODGE_DISTANCE / DODGE_TIME
+		move_and_slide()
+		_ghosts.append({"pos": global_position, "t": 0.25})
+		_walk_phase = -1.0
+		return
 
 	var dir := Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down")
 	if _move_held and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
@@ -323,6 +418,10 @@ func _physics_process(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	_hurt_time = maxf(0.0, _hurt_time - delta)
+	_stash_label = maxf(0.0, _stash_label - delta)
+	for g in _ghosts:
+		g["t"] -= delta
+	_ghosts.assign(_ghosts.filter(func(g: Dictionary) -> bool: return g["t"] > 0.0))
 	var cam := get_node_or_null("Camera2D") as Camera2D
 	if cam:
 		if _shake_time > 0.0:
@@ -358,7 +457,7 @@ func _regenerate(delta: float) -> void:
 ## Daño degenerativo: no se esquiva, no se bloquea y la armadura no lo reduce,
 ## pero sí la resistencia de su tipo. La misma clave renueva (no acumula).
 func apply_dot(key: String, dps: float, duration: float, kind := "chaos") -> void:
-	if not is_alive() or invulnerable or dps <= 0.0:
+	if not is_alive() or invulnerable or is_dodging() or dps <= 0.0:
 		return
 	var old: Dictionary = dots.get(key, {})
 	dots[key] = {"dps": maxf(dps, float(old.get("dps", 0.0))), "time": maxf(duration, float(old.get("time", 0.0))), "kind": kind}
@@ -395,7 +494,7 @@ func _tick_dots(delta: float) -> void:
 
 
 func take_damage(amount: float) -> void:
-	if not is_alive() or invulnerable:
+	if not is_alive() or invulnerable or is_dodging():
 		return
 	var evasion := _stat(Stat.EVASION)
 	if randf() < minf(MAX_EVADE_CHANCE, evasion / (evasion + 600.0)):
@@ -409,6 +508,8 @@ func take_damage(amount: float) -> void:
 	amount *= 1.0 - minf(0.9, armour / (armour + 5.0 * amount))
 	_since_damage = 0.0
 	_hurt_time = 0.12
+	if amount > max_life() * 0.08:
+		camera_shake(clampf(amount / max_life() * 30.0, 2.0, 9.0), 0.18)   # cuanto más duele, más tiembla
 	Sfx.play("player_hurt", -4.0)
 	hit_taken.emit()
 	var thorns := _stat(Stat.THORNS)
@@ -430,6 +531,17 @@ func take_damage(amount: float) -> void:
 
 func _draw() -> void:
 	# Figura provisional con la apariencia elegida en el creador, hasta tener sprites.
+	# Esquiva: siluetas translúcidas por donde pasó y el "git stash" encima.
+	for g in _ghosts:
+		var gp: Vector2 = to_local(g["pos"])
+		var ga: float = g["t"] / 0.25 * 0.4
+		draw_rect(Rect2(gp + Vector2(-8.0, -30.0), Vector2(16.0, 30.0)), Color(0.55, 0.85, 1.0, ga))
+		draw_circle(gp + Vector2(0.0, -38.0), 8.0, Color(0.55, 0.85, 1.0, ga))
+	if _stash_label > 0.0:
+		var font := ThemeDB.fallback_font
+		var fy := -64.0 - (0.6 - _stash_label) * 30.0
+		draw_string_outline(font, Vector2(-60.0, fy), "git stash", HORIZONTAL_ALIGNMENT_CENTER, 120.0, 14, 4, Color(0, 0, 0, _stash_label / 0.6))
+		draw_string(font, Vector2(-60.0, fy), "git stash", HORIZONTAL_ALIGNMENT_CENTER, 120.0, 14, Color(0.6, 0.9, 1.0, _stash_label / 0.6))
 	var tint := Color(0, 0, 0, 0)
 	if not is_alive():
 		tint = Color("444444")

@@ -168,6 +168,22 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 		area_mult *= ram.special("area_multiplier", 1.0)
 	for pen in projectile_penalties:
 		extra.append(Modifier.new(Stat.DAMAGE, Modifier.Type.MORE, -projectile_penalty(pen, board.level), [], "ram:multicanal"))
+	# Conversión de daño (RAM "convert_to"): la habilidad pasa a hacer daño de otro
+	# tipo (colores, resistencias, estados innatos y etiqueta del nuevo), y la
+	# escalan los aumentos de los dos tipos. Solo cuenta el primer módulo que aplique.
+	var damage_type: String = skill.get("damage_type", "none")
+	var converted_from := ""
+	for ram: RamModule in board.active_supports():
+		var to := ram.special_string("convert_to")
+		var from: Array = ram.def.get("special", {}).get("convert_from", [])
+		if to != "" and damage_type != "none" and damage_type != to and (from.is_empty() or from.has(damage_type)):
+			converted_from = damage_type
+			damage_type = to
+			if not tags.has(StringName(to)):
+				tags.append(StringName(to))
+			if to in ["fire", "cold", "lightning"] and not tags.has(&"elemental"):
+				tags.append(&"elemental")
+			break
 	# Al convertirse en trampa, mina o torreta, la habilidad gana esa etiqueta
 	# (los modificadores "de trampas" le afectan).
 	if deploy != "" and not tags.has(StringName(deploy)):
@@ -194,11 +210,15 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 	var flat_added := 0.0
 	var uses_per_second := 1.0
 	var crit_base := 0.0
-	var damage_type: String = skill.get("damage_type", "none")
 	var damage_stat: StringName = Stat.DAMAGE_STAT_BY_TYPE.get(damage_type, &"")
+	# Stats de daño que escalan la habilidad (con conversión, el original y el nuevo).
+	var damage_stats: Array = [damage_stat]
+	if converted_from != "" and Stat.DAMAGE_STAT_BY_TYPE.has(converted_from):
+		damage_stats.append(Stat.DAMAGE_STAT_BY_TYPE[converted_from])
 	# Los esbirros escalan con "daño de esbirros", no con el daño del personaje.
 	if tags.has(&"minion"):
 		damage_stat = Stat.MINION_DAMAGE
+		damage_stats = [damage_stat]
 	if is_attack:
 		var weapon := character.weapon_values()
 		var eff: float = skill["attack"].get("damage_effectiveness", 1.0) * (1.0 + ATTACK_GROWTH * (board.level - 1))
@@ -207,7 +227,7 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 		uses_per_second = weapon["aps"] * stats.total_multiplier(Stat.ATTACK_SPEED, tags)
 		crit_base = weapon["crit"]
 		if damage_stat != &"":
-			flat_added = stats.get_breakdown(damage_stat, tags)["flat"] * eff
+			flat_added = stats.get_breakdown_union(damage_stats, tags)["flat"] * eff
 	else:
 		var spell: Dictionary = skill.get("spell", {})
 		var growth := (1.0 + float(spell.get("damage_growth", 0.0)) * (board.level - 1)) * pow(SPELL_LEVEL_MULT, board.level - 1)
@@ -218,7 +238,7 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 
 	var mult := 0.0
 	if damage_stat != &"":
-		var b := stats.get_breakdown(damage_stat, tags)
+		var b := stats.get_breakdown(damage_stat, tags) if damage_stats.size() == 1 else stats.get_breakdown_union(damage_stats, tags)
 		mult = maxf(0.0, 1.0 + b.increased / 100.0) * b.more
 	if tags.has(&"minion"):
 		# Las invocaciones escalan con "daño de esbirros", pero las RAM de su placa
@@ -334,7 +354,7 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 		"degen_area":
 			dps = average * clampf(casts * duration, 1.0, 3.0)   # charcos que se solapan (hasta 3)
 	# Estados alterados: probabilidad por tipo, potencia y duración.
-	var ailment_chances := Ailments.chances(stats, tags, skill)
+	var ailment_chances := Ailments.chances(stats, tags, skill if converted_from == "" else skill.merged({"damage_type": damage_type}, true))
 	var ailment_effect := stats.total_multiplier(Stat.AILMENT_DAMAGE, tags)
 	var ailment_duration := stats.total_multiplier(Stat.AILMENT_DURATION, tags)
 	var ailing_bonus := stats.total_multiplier(Stat.AILING_DAMAGE, tags)
@@ -347,6 +367,8 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 		"name": skill["name"],
 		"kind": skill["kind"],
 		"damage_type": damage_type,
+		# Tipo original si una RAM lo convirtió ("" si no).
+		"converted_from": converted_from,
 		"tags": tags,
 		"min_damage": min_damage,
 		"max_damage": max_damage,

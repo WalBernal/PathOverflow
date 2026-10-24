@@ -56,6 +56,7 @@ func _initialize() -> void:
 	_test_ascendancy_rules()
 	_test_zone_scale()
 	_test_roadmap2()
+	_test_roadmap2_second_batch()
 	_test_board_milestones()
 	_test_shaped_clusters()
 	_test_defense_and_dot_skills()
@@ -1209,6 +1210,117 @@ func _collect_banned(value: Variant, banned: RegEx, path: String, found: PackedS
 
 ## Roadmap 2.0: cargas, costo de vida, requisitos de atributos, variantes, chips,
 ## invocación con varias habilidades, filtro de botín y eventos de zona.
+## Roadmap 2.0, segunda tanda: esquiva, golpes pesados, retroceso, nombres de
+## raros, conversión de daño, RAM con desventaja y pociones con estilo.
+func _test_roadmap2_second_batch() -> void:
+	var rams: Dictionary = _db.skills.rams
+	var skills: Dictionary = _db.skills.skills
+	var c := _new_character()
+	c.set_level(20)
+	var em := EnemyManager.new()
+	root.add_child(em)
+	var player: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(player)
+	player.setup(c, em)
+	em.player = player
+	player.global_position = Vector2(9000, 9000)
+	# Esquiva: gasta una carga, da invulnerabilidad breve y se recarga sola.
+	_check(player.dodge_charges == Player.DODGE_CHARGES, "empieza con %d esquivas" % Player.DODGE_CHARGES)
+	_check(player.dodge() and player.is_dodging() and player.dodge_charges < Player.DODGE_CHARGES, "esquivar gasta una carga y vuelve invulnerable")
+	player.life = player.max_life()
+	player.take_damage(player.max_life() * 0.5)
+	player.apply_dot("prueba", 50.0, 2.0, "fire")
+	_check(player.life == player.max_life() and player.dots.is_empty(), "durante la esquiva no entran golpes ni charcos")
+	player._iframes = 0.0
+	player._dodge_time = 0.0
+	player.dodge_charges = 0.0
+	_check(not player.dodge(), "sin cargas no se esquiva")
+	# Pociones con estilo.
+	var mate := Flask.new(_db.flasks["klub_mate"], 10)
+	c.inventory.flasks[0] = mate
+	player.use_flask(0)
+	_check(player.max_dodge_charges() == Player.DODGE_CHARGES + 1 and player.dodge_charges >= Player.DODGE_CHARGES + 1,
+		"Klub-Mate: recarga las esquivas y da una más (%.1f / %d)" % [player.dodge_charges, player.max_dodge_charges()])
+	var tea := Flask.new(_db.flasks["manzanilla_debug"], 10)
+	c.inventory.flasks[1] = tea
+	player.statuses["chill"] = 3.0
+	player.dots["x"] = {"dps": 5.0, "time": 3.0, "kind": "chaos"}
+	player.use_flask(1)
+	_check(player.statuses.is_empty() and player.dots.is_empty(), "Manzanilla con breakpoint: quita estados y degenerativos")
+	_check(_db.flasks["cafe_para_el_equipo"].has("heal_minions") and Flask.new(_db.flasks["cafe_para_el_equipo"], 20).effect_lines()[0].contains("invocaciones"),
+		"Termo de café: cura invocaciones y lo dice")
+	# Golpe pesado de raros: telegrafiado, y golpea fuerte en su radio.
+	em.area_level = 10
+	var melee := -1
+	for k in EnemyManager.enemy_types().size():
+		var t: Dictionary = EnemyManager.enemy_types()[k]
+		if String(t.get("attack", {}).get("kind", "melee")) == "melee" and not t.get("boss_only", false) and float(t.get("speed_mult", 1.0)) > 0.0 and not t.get("summon_only", false):
+			melee = k
+			break
+	var rare_id := em.spawn(player.global_position + Vector2(40, 0), Rarity.Enemy.ELITE, melee)
+	var ri := em.index_of(rare_id)
+	_check(em.traits[ri].has("heavy") and em.traits[ri].has("quote"), "los raros cuerpo a cuerpo tienen golpe pesado y frase")
+	_check(em.names[ri].length() > 8, "nombre generado de raro: «%s»" % em.names[ri])
+	player.life = player.max_life()
+	player.invulnerable = false
+	var hit := false
+	for k in 30:   # la evasión del personaje puede esquivarlo
+		player.life = player.max_life()
+		em._resolve_heavy(ri)
+		if player.life < player.max_life():
+			hit = true
+			break
+	_check(hit, "el golpe pesado daña al jugador dentro del círculo")
+	# Retroceso: un golpe empuja a los enemigos normales, no a los únicos.
+	var n_id := em.spawn(player.global_position + Vector2(60, 0), Rarity.Enemy.NORMAL, melee)
+	var ni := em.index_of(n_id)
+	em.max_lives[ni] = 1000.0
+	em.lives[ni] = 1000.0
+	em.hit_index(ni, 100.0, 100.0, 0.0, 150.0)
+	ni = em.index_of(n_id)
+	_check(em.knocks[ni].x > 0.0, "el golpe empuja al enemigo lejos del jugador")
+	var u_id := em.spawn(player.global_position + Vector2(-60, 0), Rarity.Enemy.UNIQUE, melee)
+	em.hit_index(em.index_of(u_id), 10.0, 10.0, 0.0, 150.0)
+	_check(em.knocks[em.index_of(u_id)] == Vector2.ZERO, "los únicos no retroceden")
+	em.clear_all()
+	_check(em.knocks.is_empty(), "limpiar enemigos vacía el retroceso")
+	player.queue_free()
+	em.queue_free()
+	# Conversión de daño: físico → rayo, con los aumentos de ambos.
+	var b := Motherboard.new(skills["barrido"], 5, ["DDR3"])
+	var plain := SkillCalc.compute(b, c)
+	b.install(RamModule.new(rams["transformador_de_tension"]), 0)
+	var conv := SkillCalc.compute(b, c)
+	_check(conv["damage_type"] == "lightning" and conv["converted_from"] == "physical" and conv["tags"].has(&"lightning"),
+		"Transformador de Tensión: el Barrido hace daño de rayo")
+	c.add_timed_effect("prueba_rayo", [Modifier.new(Stat.LIGHTNING_DAMAGE, Modifier.Type.INCREASED, 100.0, [], "prueba")], 5.0)
+	var boosted := SkillCalc.compute(b, c)
+	_check(boosted["max_damage"] > conv["max_damage"] * 1.3 and is_equal_approx(SkillCalc.compute(Motherboard.new(skills["barrido"], 5, []), c)["max_damage"], plain["max_damage"]),
+		"el daño convertido escala con los aumentos del tipo nuevo; sin la RAM, no")
+	_check(not RamModule.new(rams["transformador_de_tension"]).supports(skills["ping_letal"]), "convertir físico no encaja en un hechizo de rayo")
+	_check(RamModule.new(rams["sobrecalentamiento"]).supports(skills["stack_overflow"]), "Sobrecalentamiento sí encaja en frío")
+	var s := StatBlock.new()
+	s.add_modifier(Modifier.new(Stat.DAMAGE, Modifier.Type.INCREASED, 10.0))
+	_check(is_equal_approx(s.get_breakdown_union([Stat.PHYSICAL_DAMAGE, Stat.LIGHTNING_DAMAGE])["increased"], 10.0), "el «Daño» compartido no cuenta dos veces")
+	# RAM con desventaja fuerte.
+	var nocrit := Motherboard.new(skills["ping_letal"], 5, ["DDR5"])
+	nocrit.install(RamModule.new(rams["memoria_sin_ecc"]), 0)
+	var pn := SkillCalc.compute(nocrit, c)
+	_check(pn["crit_chance"] == 0.0 and pn["max_damage"] > SkillCalc.compute(Motherboard.new(skills["ping_letal"], 5, []), c)["max_damage"] * 1.5,
+		"Memoria sin ECC: mucho más daño, ningún crítico")
+	_check(not RamModule.new(rams["turbo_sin_disipador"]).supports(skills["teleport_tcp"]), "las RAM con desventaja no encajan en habilidades sin daño")
+	var o3 := Motherboard.new(skills["ping_letal"], 5, ["DDR4"])
+	var cost_before: float = SkillCalc.compute(o3, c)["mana_cost"]
+	o3.install(RamModule.new(rams["compilacion_o3"]), 0)
+	var cost_after: float = SkillCalc.compute(o3, c)["mana_cost"]
+	_check(cost_after >= cost_before * 1.8, "Compilación -O3: el doble de maná (%d → %d)" % [cost_before, cost_after])
+	_check(InputMap.has_action(&"dodge"), "existe la acción de esquivar (Shift)")
+	var seen := {}
+	for m in DataLoader.load_json("res://data/skills/ram_modules.json")["modules"]:
+		_check(not seen.has(m["id"]), "id de RAM repetido: %s" % m["id"])
+		seen[m["id"]] = true
+
+
 func _test_roadmap2() -> void:
 	var c := _new_character()
 	c.set_level(30)

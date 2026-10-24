@@ -88,6 +88,7 @@ func setup(p_player: Player, p_enemies: EnemyManager, p_character: CharacterData
 	character.inventory.changed.connect(refresh_profiles)
 	character.conditions_changed.connect(refresh_profiles)
 	player.hit_taken.connect(on_player_hit)
+	player.heal_minions_requested.connect(heal_units)
 	enemies.crit_dealt.connect(on_crit)
 	var saved_auras: Array = character.flags.get("active_auras", []).duplicate()
 	refresh_profiles()
@@ -407,12 +408,27 @@ func _spend_charges(p: Dictionary) -> Dictionary:
 			"multihilo":
 				mult *= 1.0 + 0.15 * n
 			"overclock":
-				q["crit_chance"] = 100.0
+				if float(q["crit_chance"]) > 0.0:   # Memoria sin ECC: nunca hace críticos
+					q["crit_chance"] = 100.0
 				q["crit_multiplier"] = float(q["crit_multiplier"]) + 20.0 * n
 		_effects.append({"type": "burst", "pos": player.global_position, "radius": 40.0 + 12.0 * n, "time": 0.0, "duration": 0.35, "color": Charges.COLORS[t]})
 	q["min_damage"] = float(q["min_damage"]) * mult
 	q["max_damage"] = float(q["max_damage"]) * mult
 	return q
+
+
+## Cura a las invocaciones persistentes y a las torretas una fracción de su vida
+## máxima (poción "Termo de café para el equipo").
+func heal_units(fraction: float) -> void:
+	for u in _units:
+		u["life"] = minf(u["max_life"], u["life"] + u["max_life"] * fraction)
+		_effects.append({"type": "ring", "pos": u["pos"], "radius": 30.0, "time": 0.0, "duration": 0.4, "color": Color("6fd36b")})
+	for d in _devices:
+		var hp: Dictionary = d.get("ally", {})
+		if not hp.is_empty():
+			hp["life"] = minf(float(hp["max_life"]), float(hp["life"]) + float(hp["max_life"]) * fraction)
+	if not _units.is_empty():
+		Sfx.play("heal", -8.0)
 
 
 ## Lo llama World al morir un enemigo.

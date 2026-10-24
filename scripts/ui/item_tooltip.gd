@@ -1,7 +1,8 @@
 class_name ItemTooltip
 extends PanelContainer
 ## Tooltip flotante de objetos que sigue al ratón. Con `compare`, muestra cómo
-## cambiarían las cifras del personaje al equiparlo (verde mejora, rojo empeora).
+## cambiarían las cifras del personaje al equiparlo (verde mejora, rojo empeora)
+## y, al lado, otro tooltip con lo que llevas equipado en esa ranura.
 
 const WIDTH := 360.0
 const GREY := "8a8293"
@@ -12,11 +13,17 @@ const UP := "6fb36b"
 const DOWN := "e06c6c"
 
 var _label: RichTextLabel
+## Tooltip del objeto equipado (comparación lado a lado); lo coloca este.
+var _side: ItemTooltip
+var _is_side := false
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	visible = false
+	visibility_changed.connect(func() -> void:
+		if not visible and _side:
+			_side.hide())
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color("0d0b10f5")
 	style.set_border_width_all(1)
@@ -32,7 +39,7 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	if not visible:
+	if not visible or _is_side:
 		return
 	# En coordenadas de pantalla: la interfaz puede estar escalada (GameUI).
 	var view := get_viewport_rect().size
@@ -44,6 +51,14 @@ func _process(_delta: float) -> void:
 	pos.y = clampf(pos.y, 4.0, maxf(4.0, view.y - shown.y - 4.0))
 	pos.x = clampf(pos.x, 4.0, maxf(4.0, view.x - shown.x - 4.0))
 	global_position = pos
+	if _side and _side.visible:
+		# El equipado, al lado: a la izquierda si cabe; si no, a la derecha.
+		var side_shown := _side.size * _side.get_global_transform().get_scale()
+		var side_pos := Vector2(pos.x - side_shown.x - 8.0, pos.y)
+		if side_pos.x < 4.0:
+			side_pos.x = pos.x + shown.x + 8.0
+		side_pos.y = clampf(side_pos.y, 4.0, maxf(4.0, view.y - side_shown.y - 4.0))
+		_side.global_position = side_pos
 
 
 func show_item(item: Item, character: CharacterData, compare: bool) -> void:
@@ -53,8 +68,29 @@ func show_item(item: Item, character: CharacterData, compare: bool) -> void:
 	var border: StyleBoxFlat = get_theme_stylebox("panel")
 	border.border_color = Rarity.item_color(item.rarity).darkened(0.3)
 	_label.text = build_text(item, character, compare)
+	if _is_side:
+		_label.text = "[center][color=#%s]· Equipado ahora ·[/color][/center]\n%s" % [GREY, _label.text]
 	reset_size()
 	show()
+	_update_side(item, character, compare)
+
+
+## Muestra (o esconde) al lado el objeto que llevas en la ranura donde iría `item`.
+func _update_side(item: Item, character: CharacterData, compare: bool) -> void:
+	if _is_side:
+		return
+	var equipped: Item = null
+	if compare and character and item.is_equipment():
+		equipped = character.inventory.equipped(character.inventory.target_slot_for(item))
+	if equipped == null or equipped == item:
+		if _side:
+			_side.hide()
+		return
+	if _side == null:
+		_side = ItemTooltip.new()
+		_side._is_side = true
+		get_parent().add_child(_side)
+	_side.show_item(equipped, character, false)
 
 
 static func build_text(item: Item, character: CharacterData, compare: bool) -> String:
@@ -136,6 +172,9 @@ static func _motherboard_text(board: Motherboard, character: CharacterData) -> S
 		var lines := PackedStringArray()
 		if p["max_damage"] > 0.0:
 			lines.append("Daño: [color=#e8d9b0]%d-%d[/color]  ·  Crítico: [color=#e8d9b0]%.1f%%[/color]" % [p["min_damage"], p["max_damage"], p["crit_chance"]])
+		if String(p.get("converted_from", "")) != "":
+			lines.append("Daño convertido: [color=#e8d9b0]%s → %s[/color]" % [RamModule.DAMAGE_TYPE_NAMES.get(p["converted_from"], ""),
+				RamModule.DAMAGE_TYPE_NAMES.get(p["damage_type"], "")])
 		lines.append("Coste: [color=#7fa8e0]%d de maná[/color]  ·  [color=#e8d9b0]%.2f[/color] usos/s" % [p["mana_cost"], p["uses_per_second"]])
 		if p["radius"] > 0.0:
 			lines.append("Radio: [color=#e8d9b0]%d[/color]" % p["radius"])

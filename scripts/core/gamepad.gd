@@ -2,8 +2,9 @@ class_name Gamepad
 ## Soporte básico de mando (Xbox / PlayStation, con la disposición de Godot):
 ##   stick izquierdo: moverse · stick derecho: apuntar (sin él, se apunta hacia
 ##   donde mira el personaje) · A/B/X/Y y LB/RB: las 6 habilidades · cruceta y
-##   gatillo izquierdo: pociones 1-5 · Back/Select: inventario · Start: pausa ·
-##   gatillo derecho: hoja de personaje · clic del stick derecho: árbol pasivo.
+##   gatillo izquierdo: pociones 1-5 · gatillo derecho: esquiva (git stash) ·
+##   Back/Select: inventario · Start: pausa · Share/Captura: hoja de personaje ·
+##   clic del stick derecho: árbol pasivo.
 ## Los eventos se añaden al InputMap al arrancar (no tocan project.godot), así
 ## que el teclado y el ratón siguen igual.
 
@@ -38,7 +39,8 @@ static func setup() -> void:
 	for k in flasks.size():
 		_button(StringName("flask_%d" % (k + 1)), flasks[k])
 	_axis(&"flask_5", JOY_AXIS_TRIGGER_LEFT, 1.0)
-	_axis(&"toggle_character", JOY_AXIS_TRIGGER_RIGHT, 1.0)
+	_axis(&"dodge", JOY_AXIS_TRIGGER_RIGHT, 1.0)
+	_button(&"toggle_character", JOY_BUTTON_MISC1)
 	_button(&"toggle_inventory", JOY_BUTTON_BACK)
 	_button(&"toggle_passives", JOY_BUTTON_RIGHT_STICK)
 	_button(&"toggle_skills", JOY_BUTTON_LEFT_STICK)

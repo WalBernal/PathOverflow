@@ -9,6 +9,8 @@ const GENERATION_COLORS := {
 	"DDR4": Color("5cb85c"),
 	"DDR5": Color("4b8bd6"),
 }
+## Para los textos de conversión ("el daño físico en daño de rayo").
+const DAMAGE_TYPE_NAMES := {"physical": "físico", "fire": "de fuego", "cold": "de frío", "lightning": "de rayo", "chaos": "de caos"}
 ## Atributo asociado a cada generación (como los colores de engarce de PoE).
 const GENERATION_BY_ATTRIBUTE := {"str": "DDR3", "dex": "DDR4", "int": "DDR5"}
 
@@ -78,8 +80,12 @@ func supports(skill_def: Dictionary) -> bool:
 		return false
 	# Pagar con vida o gastar cargas solo tiene sentido en habilidades que hacen daño.
 	var sp: Dictionary = def.get("special", {})
-	if (sp.has("life_cost") or sp.has("spend_buffer") or sp.has("spend_multihilo") or sp.has("spend_overclock")) \
-			and String(skill_def.get("damage_type", "none")) == "none":
+	if (sp.has("life_cost") or sp.has("spend_buffer") or sp.has("spend_multihilo") or sp.has("spend_overclock")
+			or sp.has("downside") or sp.has("convert_to")) and String(skill_def.get("damage_type", "none")) == "none":
+		return false
+	# Conversión: solo si la habilidad hace daño de uno de los tipos que convierte.
+	var from: Array = sp.get("convert_from", [])
+	if sp.has("convert_to") and not from.is_empty() and not from.has(String(skill_def.get("damage_type", "none"))):
 		return false
 	var required: Array = def.get("requires_tags", [])
 	if required.is_empty():
@@ -137,6 +143,14 @@ func effect_lines() -> PackedStringArray:
 		lines.append("Reserva un %d %% más de maná" % roundi((float(sp["reserve_mult"]) - 1.0) * 100.0))
 	if sp.has("life_cost"):
 		lines.append("El %d %% del costo se paga con vida" % roundi(float(sp["life_cost"]) * 100.0))
+	if sp.has("convert_to"):
+		var names := PackedStringArray()
+		for t in sp.get("convert_from", []):
+			names.append(DAMAGE_TYPE_NAMES.get(t, t))
+		lines.append("Convierte el daño %s en daño %s (le afectan los aumentos de ambos)" % [
+			" o ".join(names) if not names.is_empty() else "de la habilidad", DAMAGE_TYPE_NAMES.get(sp["convert_to"], sp["convert_to"])])
+	if sp.has("downside"):
+		lines.append("Desventaja fuerte: piensa bien dónde la instalas")
 	for t in Charges.TYPES:
 		if sp.has("spend_" + t):
 			lines.append(Charges.SPEND_TEXT[t])

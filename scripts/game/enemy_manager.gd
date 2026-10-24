@@ -41,6 +41,16 @@ const COMBO_CHANCE := 0.25
 ## Animación de ataque: duración de la embestida y cuánto avanza (px).
 const LUNGE_TIME := 0.16
 const LUNGE_DISTANCE := 9.0
+## Retroceso máximo (px/s) y lo rápido que se frena (por segundo).
+const KNOCK_SPEED := 320.0
+const KNOCK_DECAY := 12.0
+## Golpe pesado de raros y únicos sin ataque propio: telegrafiado en el suelo.
+const HEAVY_WINDUP := 0.8
+const HEAVY_COOLDOWN := 5.5
+const HEAVY_RADIUS := 105.0
+const HEAVY_DAMAGE := 2.4
+## Segundos que se ve la frase de un raro al verte.
+const QUOTE_TIME := 3.5
 ## Ataques a distancia: al soltarlos el enemigo retrocede en vez de embestir.
 const RECOIL_ATTACKS := ["ranged", "lob_pool", "seeker", "summon"]
 const FX_DETAIL_LIMIT := 60
@@ -60,8 +70,24 @@ const SPEED_BY_RARITY := {
 	Rarity.Enemy.ELITE: 125.0,
 	Rarity.Enemy.UNIQUE: 105.0,
 }
-const ELITE_PREFIXES := ["Excepción", "Segfault", "Proceso", "Demonio", "Hilo", "Cron"]
-const ELITE_SUFFIXES := ["sin control", "del viernes", "huérfano", "zombi", "bloqueante", "de las 3 AM", "en producción"]
+## Nombres de los raros: un fallo (con su género) y un dueño o un epíteto
+## ("Excepción no controlada de Juan", "Null Pointer el Breve").
+const RARE_BUGS := [["Excepción no controlada", "f"], ["Null Pointer", "m"], ["Segfault", "m"], ["Fuga de memoria", "f"],
+	["Race condition", "f"], ["Deadlock", "m"], ["Off-by-one", "m"], ["Proceso zombi", "m"], ["Hilo bloqueante", "m"],
+	["Cron huérfano", "m"], ["Merge conflict", "m"], ["Warning ignorado", "m"], ["Consulta N+1", "f"], ["Variable global", "f"],
+	["Excepción silenciada", "f"], ["Timeout", "m"]]
+const RARE_OWNERS := ["de Juan", "de Marta", "del becario", "de la última release", "del viernes", "de las 3 AM",
+	"de producción", "del código legacy", "del jefe", "de Stack Overflow", "del cliente", "de nadie"]
+const RARE_EPITHETS := [["el Breve", "la Breve"], ["el Recursivo", "la Recursiva"], ["el Inmortal", "la Inmortal"],
+	["el Indocumentado", "la Indocumentada"], ["el Intermitente", "la Intermitente"], ["el Deprecado", "la Deprecada"],
+	["el Sin Tests", "la Sin Tests"], ["el Hardcodeado", "la Hardcodeada"], ["el Irreproducible", "la Irreproducible"],
+	["el Heredado", "la Heredada"]]
+## Lo que dicen los raros al verte por primera vez.
+const RARE_QUOTES := ["¡Funciona en mi máquina!", "No soy un bug, soy una feature.", "¿Has probado a reiniciarme?",
+	"Compilé sin warnings. Sin ninguno.", "Nadie lee los logs.", "¡Tus tests no me encontrarán!",
+	"Me cerraron como «no se puede reproducir».", "Llevo aquí desde la versión 0.1.", "TODO: borrarte.",
+	"git blame dirá que fuiste tú.", "Solo pasa en producción.", "Me arreglaron con un try vacío.",
+	"¿Code review? Qué es eso.", "Un hotfix más y me voy. Mentira.", "Tu deploy es mío."]
 const UNIQUE_NAMES := [
 	"El Arquitecto del Monolito",
 	"El Backlog Infinito",
@@ -128,6 +154,8 @@ var poison_time := PackedFloat32Array()
 var poison_stacks := PackedInt32Array()
 var bleed_dps := PackedFloat32Array()
 var bleed_time := PackedFloat32Array()
+## Retroceso: empuje que reciben al ser golpeados y que se frena solo.
+var knocks := PackedVector2Array()
 
 ## Estados que puede aplicar el golpe en curso (lo prepara SkillController antes
 ## de llamar a hit_*): {chances: {burn: %, ...}, effect: mult. de daño, duration: mult.}.
@@ -275,6 +303,7 @@ func spawn(pos: Vector2, rarity: Rarity.Enemy, type_index := -1, custom_name := 
 	poison_stacks.append(0)
 	bleed_dps.append(0.0)
 	bleed_time.append(0.0)
+	knocks.append(Vector2.ZERO)
 	traits.append(_make_traits(t, rarity, with_combos(affix_ids) if not affix_ids.is_empty() or not roll_affixes else _roll_affixes(rarity), special_abilities.is_empty()))
 	var tr: Dictionary = traits[traits.size() - 1]
 	if tr.has("affixes"):
@@ -295,6 +324,12 @@ func spawn(pos: Vector2, rarity: Rarity.Enemy, type_index := -1, custom_name := 
 		speeds[i_new] *= affix_speed
 		if rarity >= Rarity.Enemy.ELITE and prefix != "":
 			names[i_new] = "%s %s" % [prefix, names[i_new]]
+	var i_last := traits.size() - 1
+	if rarity >= Rarity.Enemy.ELITE and String(t.get("attack", {}).get("kind", "melee")) == "melee" and speeds[i_last] > 0.0:
+		tr["heavy"] = HEAVY_COOLDOWN * randf_range(0.3, 0.8)
+	if rarity >= Rarity.Enemy.ELITE and custom_name == "":
+		tr["quote"] = RARE_QUOTES.pick_random()
+		tr["quote_t"] = -1.0   # aún no la ha dicho: al verte por primera vez
 	if not special_abilities.is_empty():
 		var list: Array = []
 		for a in special_abilities:
@@ -857,6 +892,7 @@ func stun_index(i: int, time: float) -> void:
 	windups[i] = 0.0
 	dashes[i] = 0.0
 	casting.erase(ids[i])
+	(traits[i] as Dictionary).erase("heavy_on")
 
 
 ## Índice del enemigo más cercano a `pos` (dentro de max_dist), ignorando ids; -1 si no hay.
@@ -952,8 +988,24 @@ func _damage(i: int, min_damage: float, max_damage: float, crit_chance: float, c
 	flashes[i] = FLASH_TIME
 	if lives[i] <= 0.0:
 		_kill(i)
-	elif not hit_ailments.is_empty() and damage > 0.0:
+		return
+	_knock(i, damage)
+	if not hit_ailments.is_empty() and damage > 0.0:
 		_roll_ailments(i, damage)
+
+
+## Retroceso: el golpe empuja al enemigo lejos del jugador, más cuanto más vida
+## le quita. Las élites lo notan un tercio; los únicos y los estáticos, nada.
+func _knock(i: int, damage: float) -> void:
+	if speeds[i] <= 0.0 or rarities[i] == Rarity.Enemy.UNIQUE or player == null:
+		return
+	var away := positions[i] - player.global_position
+	if away == Vector2.ZERO:
+		return
+	var push := clampf(damage / maxf(1.0, max_lives[i]) * 3.0, 0.15, 1.0) * KNOCK_SPEED
+	if rarities[i] == Rarity.Enemy.ELITE:
+		push *= 0.35
+	knocks[i] = (knocks[i] + away.normalized() * push).limit_length(KNOCK_SPEED)
 
 
 ## Tira los dados de cada estado alterado del golpe en curso (hit_ailments).
@@ -1087,6 +1139,11 @@ func _physics_process(delta: float) -> void:
 			tempo *= 1.0 - _aura_effect(i, "slow")
 		cooldowns[i] -= delta * tempo
 		flashes[i] = maxf(0.0, flashes[i] - delta)
+		var tr_i: Dictionary = traits[i]
+		if tr_i.has("heavy"):
+			tr_i["heavy"] = float(tr_i["heavy"]) - delta * tempo
+		if tr_i.has("quote_t") and float(tr_i["quote_t"]) > 0.0:
+			tr_i["quote_t"] = float(tr_i["quote_t"]) - delta
 
 		if stuns[i] > 0.0:
 			stuns[i] -= delta
@@ -1102,7 +1159,12 @@ func _physics_process(delta: float) -> void:
 				dash_hit[i] = 1
 		elif windups[i] > 0.0:
 			windups[i] -= delta * tempo
-			if windups[i] <= 0.0 and hunting:
+			if windups[i] <= 0.0 and tr_i.get("heavy_on", false):
+				tr_i.erase("heavy_on")
+				if hunting:
+					_lunge_to(i, target_pos, 1.6)
+					_resolve_heavy(i)
+			elif windups[i] <= 0.0 and hunting:
 				# Los que disparan retroceden (culatazo); el resto embiste hacia el objetivo.
 				_lunge_to(i, target_pos, -0.6 if String(atk.get("kind", "")) in RECOIL_ATTACKS else 1.0)
 				_resolve_attack(i, atk, target_pos)
@@ -1113,11 +1175,20 @@ func _physics_process(delta: float) -> void:
 			if cast["time"] <= 0.0:
 				casting.erase(ids[i])
 				if hunting:
-					_resolve_ability(i, cast["def"], cast["target"])
+					_resolve_ability(i, cast["def"], cast["target"], float(cast.get("offset", randf() * TAU)))
 		elif hunting and tdist < aggro_range:
 			facings[i] = 1.0 if to_target.x < 0.0 else 0.0
+			if tr_i.has("quote_t") and float(tr_i["quote_t"]) < 0.0 and dist < aggro_range * 0.7:
+				tr_i["quote_t"] = QUOTE_TIME   # te ha visto: suelta su frase
 			var started_ability := _try_ability(i, delta, dist, player_pos)
-			if not started_ability:
+			if not started_ability and tr_i.has("heavy") and float(tr_i["heavy"]) <= 0.0 and ally == -1 \
+					and dist <= _heavy_radius(i) * 0.75:
+				# Golpe pesado: se para, avisa en el suelo y golpea fuerte (esquivable).
+				tr_i["heavy"] = HEAVY_COOLDOWN
+				tr_i["heavy_on"] = true
+				windups[i] = HEAVY_WINDUP
+				attack_dirs[i] = to_player / maxf(dist, 0.001)
+			elif not started_ability:
 				move = _decide(i, atk, kind, to_target, tdist, treach, target_pos) * tempo
 
 		# Separación entre enemigos (rejilla espacial: solo celdas vecinas).
@@ -1147,6 +1218,11 @@ func _physics_process(delta: float) -> void:
 		if dist < reach and dist > 0.001:
 			push -= to_player / dist * (reach - dist)
 		var new_pos := pos + move * delta + push * 0.5
+		if knocks[i] != Vector2.ZERO:
+			new_pos += knocks[i] * delta
+			knocks[i] *= exp(-KNOCK_DECAY * delta)
+			if knocks[i].length_squared() < 4.0:
+				knocks[i] = Vector2.ZERO
 		# Ni dentro del campamento.
 		if safe_radius > 0.0:
 			var from_safe := new_pos - safe_center
@@ -1162,7 +1238,7 @@ func _physics_process(delta: float) -> void:
 		positions[i] = walk_clamp.call(new_pos, r) if walk_clamp.is_valid() else new_pos
 
 		# Cuerpo a cuerpo por contacto (los que no tienen ataque especial).
-		if kind == "melee" and stuns[i] <= 0.0 and hunting and cooldowns[i] <= 0.0:
+		if kind == "melee" and stuns[i] <= 0.0 and windups[i] <= 0.0 and hunting and cooldowns[i] <= 0.0:
 			if ally != -1 and tdist <= treach + 6.0:
 				cooldowns[i] = ATTACK_INTERVAL
 				_lunge_to(i, target_pos)
@@ -1292,6 +1368,26 @@ func _decide(i: int, atk: Dictionary, kind: String, to_player: Vector2, dist: fl
 	return dir * speed if dist > reach else Vector2.ZERO
 
 
+## Radio del golpe pesado (crece con el tamaño del enemigo).
+func _heavy_radius(i: int) -> float:
+	return HEAVY_RADIUS + radii[i] * 1.5
+
+
+## Golpe pesado de un raro o único: todo lo que esté en el círculo avisado recibe
+## HEAVY_DAMAGE veces su daño (la esquiva lo evita entero).
+func _resolve_heavy(i: int) -> void:
+	var pos := positions[i]
+	var radius := _heavy_radius(i)
+	var damage := damages[i] * HEAVY_DAMAGE
+	_flashes_fx.append({"type": "circle", "pos": pos, "radius": radius, "time": 0.0, "color": TELEGRAPH})
+	if player and pos.distance_to(player.global_position) <= radius + Player.RADIUS:
+		_hit_player(i, damage)
+	_damage_allies_near(pos, radius, damage)
+	if player and pos.distance_to(player.global_position) < 700.0:
+		player.camera_shake(5.0, 0.22)
+	Sfx.play("explosion", -10.0, 0.7)
+
+
 func _start_windup(i: int, atk: Dictionary, dir: Vector2) -> void:
 	windups[i] = float(atk.get("windup", 0.5))
 	attack_dirs[i] = dir
@@ -1400,18 +1496,18 @@ func _try_ability(i: int, delta: float, dist: float, player_pos: Vector2) -> boo
 		if a["timer"] <= 0.0 and dist < float(d.get("range", 700.0)):
 			a["timer"] = float(a["def"].get("cooldown", 6.0))
 			var windup := float(a["def"].get("windup", 0.8))
-			casting[ids[i]] = {"def": a["def"], "time": windup, "total": windup, "target": player_pos}
+			casting[ids[i]] = {"def": a["def"], "time": windup, "total": windup, "target": player_pos, "offset": randf() * TAU}
 			return true
 	return false
 
 
-func _resolve_ability(i: int, def: Dictionary, target: Vector2) -> void:
+## `offset`: ángulo del primer proyectil de la nova (el mismo que se avisó al cargarla).
+func _resolve_ability(i: int, def: Dictionary, target: Vector2, offset := 0.0) -> void:
 	var pos := positions[i]
 	var damage := damages[i] * float(def.get("damage_mult", 1.0))
 	match String(def.get("kind", "")):
 		"projectile_nova":
 			var count := int(def.get("count", 12))
-			var offset := randf() * TAU
 			for k in count:
 				var dir := Vector2.from_angle(offset + TAU * k / count)
 				projectiles.append({"pos": pos + dir * radii[i], "vel": dir * float(def.get("speed", 300.0)),
@@ -1670,9 +1766,23 @@ func _draw_all() -> void:
 			draw_string_outline(font, top + Vector2(-80.0, name_y), names[i], HORIZONTAL_ALIGNMENT_CENTER, w + 160.0, 14, 4, Color(0, 0, 0, 0.8))
 			draw_string(font, top + Vector2(-80.0, name_y), names[i], HORIZONTAL_ALIGNMENT_CENTER,
 				w + 160.0, 14, Rarity.enemy_color(rarity))
+			var quote_t := float((traits[i] as Dictionary).get("quote_t", 0.0))
+			if quote_t > 0.0:
+				_draw_quote(font, positions[i].x, top.y + name_y - 18.0, String(traits[i]["quote"]), clampf(quote_t / 0.4, 0.0, 1.0))
 
 
 const TELEGRAPH := Color(1.0, 0.25, 0.2)
+
+
+## Bocadillo con la frase de un raro, centrado en `x` y con el pico hacia abajo en `bottom`.
+func _draw_quote(font: Font, x: float, bottom: float, text: String, alpha: float) -> void:
+	var size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13)
+	var box := Rect2(x - size.x / 2.0 - 8.0, bottom - size.y - 8.0, size.x + 16.0, size.y + 6.0)
+	draw_rect(box, Color(0.95, 0.92, 0.82, 0.92 * alpha))
+	draw_rect(box, Color(0.1, 0.08, 0.1, alpha), false, 1.5)
+	draw_colored_polygon(PackedVector2Array([Vector2(x - 6.0, box.end.y), Vector2(x + 6.0, box.end.y), Vector2(x, box.end.y + 7.0)]),
+		Color(0.95, 0.92, 0.82, 0.92 * alpha))
+	draw_string(font, Vector2(box.position.x + 8.0, box.end.y - 6.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(0.12, 0.1, 0.12, alpha))
 
 
 func _draw_attacks(font: Font) -> void:
@@ -1681,7 +1791,17 @@ func _draw_attacks(font: Font) -> void:
 		var atk: Dictionary = all_types[types[i]].get("attack", {}) if types[i] < all_types.size() else {}
 		var pos := positions[i]
 		var dir := attack_dirs[i]
-		if windups[i] > 0.0:
+		if windups[i] > 0.0 and (traits[i] as Dictionary).get("heavy_on", false):
+			# Golpe pesado: círculo rojo que se llena y un "!" encima.
+			var ht := clampf(1.0 - windups[i] / HEAVY_WINDUP, 0.0, 1.0)
+			var hr := _heavy_radius(i)
+			draw_circle(pos, hr, Color(TELEGRAPH, 0.12))
+			draw_circle(pos, hr * ht, Color(TELEGRAPH, 0.26))
+			draw_arc(pos, hr, 0.0, TAU, 48, Color(TELEGRAPH, 0.6 + 0.4 * ht), 3.0, true)
+			var mark := pos + Vector2(-20.0, -radii[i] * SPRITE_SCALE * 1.1 - 30.0)
+			draw_string_outline(font, mark, "!", HORIZONTAL_ALIGNMENT_CENTER, 40.0, 26, 6, Color.BLACK)
+			draw_string(font, mark, "!", HORIZONTAL_ALIGNMENT_CENTER, 40.0, 26, TELEGRAPH.lerp(Color.WHITE, ht * 0.5))
+		elif windups[i] > 0.0:
 			var total := maxf(0.05, float(atk.get("windup", 0.5)))
 			var t := clampf(1.0 - windups[i] / total, 0.0, 1.0)
 			match String(atk.get("kind", "")):
@@ -1704,7 +1824,8 @@ func _draw_attacks(font: Font) -> void:
 					var w := float(atk.get("width", 30.0)) + radii[i]
 					var side := dir.orthogonal() * w * 0.5
 					draw_colored_polygon(PackedVector2Array([pos + side, pos + side + dir * length, pos - side + dir * length, pos - side]), Color(TELEGRAPH, 0.10))
-					draw_colored_polygon(PackedVector2Array([pos + side, pos + side + dir * length * t, pos - side + dir * length * t, pos - side]), Color(TELEGRAPH, 0.22))
+					if t > 0.03:   # con t = 0 el polígono no tiene área y no se puede triangular
+						draw_colored_polygon(PackedVector2Array([pos + side, pos + side + dir * length * t, pos - side + dir * length * t, pos - side]), Color(TELEGRAPH, 0.22))
 				"blink":
 					var dest := attack_dirs[i]
 					draw_arc(dest, radii[i] + 6.0, 0.0, TAU, 24, Color(Color(atk.get("color", "c08aff")), 0.4 + 0.5 * t), 2.0, true)
@@ -1741,6 +1862,13 @@ func _draw_attacks(font: Font) -> void:
 			draw_string_outline(font, top, label, HORIZONTAL_ALIGNMENT_CENTER, 300.0, 18, 5, Color.BLACK)
 			draw_string(font, top, label, HORIZONTAL_ALIGNMENT_CENTER, 300.0, 18, Color(def.get("color", "ff8c2a")))
 			draw_arc(pos, radii[i] + 10.0, -PI / 2.0, -PI / 2.0 + TAU * t, 40, Color(def.get("color", "ff8c2a")), 3.0, true)
+			if String(def.get("kind", "")) == "projectile_nova":
+				# Aviso de la nova: las líneas por donde saldrán los proyectiles (los huecos son seguros).
+				var count := int(def.get("count", 12))
+				var nc := Color(def.get("color", "ff5050"))
+				for k in count:
+					var ray := Vector2.from_angle(float(cast.get("offset", 0.0)) + TAU * k / count)
+					draw_line(pos + ray * (radii[i] + 14.0), pos + ray * (radii[i] + 60.0 + 260.0 * t), Color(nc, 0.15 + 0.35 * t), 3.0, true)
 	# Charcos de daño degenerativo: burbujean y se desvanecen al final.
 	var now := Time.get_ticks_msec() / 1000.0
 	for pool in pools:
@@ -1993,6 +2121,7 @@ func _remove(i: int) -> void:
 		poison_stacks[i] = poison_stacks[last]
 		bleed_dps[i] = bleed_dps[last]
 		bleed_time[i] = bleed_time[last]
+		knocks[i] = knocks[last]
 		traits[i] = traits[last]
 	_resize_all(last)
 
@@ -2031,6 +2160,7 @@ func _resize_all(n: int) -> void:
 	poison_stacks.resize(n)
 	bleed_dps.resize(n)
 	bleed_time.resize(n)
+	knocks.resize(n)
 	traits.resize(n)
 
 
@@ -2049,10 +2179,18 @@ func _cell_of(p: Vector2) -> Vector2i:
 	return Vector2i(floori(p.x / GRID_CELL), floori(p.y / GRID_CELL))
 
 
+## Nombre generado de un raro: "<fallo> <dueño>" o "<fallo> <epíteto>" (con su género).
+static func rare_name() -> String:
+	var bug: Array = RARE_BUGS.pick_random()
+	if randf() < 0.5:
+		return "%s %s" % [bug[0], RARE_OWNERS.pick_random()]
+	return "%s %s" % [bug[0], RARE_EPITHETS.pick_random()[0 if bug[1] == "m" else 1]]
+
+
 func _random_name(rarity: Rarity.Enemy) -> String:
 	match rarity:
 		Rarity.Enemy.ELITE:
-			return "%s %s" % [ELITE_PREFIXES.pick_random(), ELITE_SUFFIXES.pick_random()]
+			return rare_name()
 		Rarity.Enemy.UNIQUE:
 			return UNIQUE_NAMES.pick_random()
 	return ""
