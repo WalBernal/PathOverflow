@@ -427,6 +427,19 @@ Godot_v4.7.2-stable_win64_console.exe --path . res://tools/capture_screens.tscn
 La primera ejecuta las pruebas de lógica: stats, árbol, objetos, guardado, placas base y RAM (compatibilidad, generaciones, cálculo de daño, coste, proyectiles, área) y la integridad de los JSON (diálogos que apuntan a nodos que existen, pasos del tutorial, regalos válidos...).
 La segunda carga todos los scripts, escenas y shaders para detectar errores de compilación sin abrir el editor.
 
+```bash
+Godot_v4.7.2-stable_win64_console.exe --headless --fixed-fps 60 --path . res://tests/test_integration.tscn
+# Opciones: -- segundos=10 clases=guerrero,hechicero zonas=zona1,oblea
+```
+
+La prueba de integración carga cada zona con cada una de las 7 clases (un personaje por acto con el nivel del acto y, desde el 20, una ascendencia) y juega 30 s simulados: se mueve hacia los enemigos, lanza las habilidades de la barra, usa pociones y esquiva. Falla (código de salida 1) si aparece cualquier error del motor o `SCRIPT ERROR`, o si el jugador sale de la zona. Con `--fixed-fps` va más rápido que el tiempo real.
+
+```bash
+powershell -File tools/run_checks.ps1
+```
+
+Corre las tres comprobaciones seguidas y sale con código 1 si alguna falla (con `-Rapida`, la integración va a 5 s por zona). Busca Godot en el Escritorio o en Descargas, o en la variable `GODOT`. El `_console.exe` necesita el ejecutable normal en la misma carpeta.
+
 ## Rendimiento
 
 Benchmark del 18-10-2026 (antes de los sprites), RTX 4050 Laptop, vsync desactivado, todos los enemigos amontonados alrededor del jugador:

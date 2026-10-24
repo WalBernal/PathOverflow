@@ -140,8 +140,9 @@ func set_combat(on: bool) -> void:
 	combat = on
 	if _layer_tween:
 		_layer_tween.kill()
-	_layer_tween = create_tween()
+		_layer_tween = null
 	if not on:
+		_layer_tween = create_tween()
 		_layer_tween.tween_property(_layer, "volume_db", SILENT_DB, 2.5)
 		_layer_tween.tween_callback(_layer.stop)
 		return
@@ -157,6 +158,7 @@ func set_combat(on: bool) -> void:
 	_layer.pitch_scale = _player.pitch_scale
 	_layer.volume_db = SILENT_DB
 	_layer.play(_player.get_playback_position())
+	_layer_tween = create_tween()
 	_layer_tween.tween_property(_layer, "volume_db", _target_db() - 2.0, 1.2)
 
 

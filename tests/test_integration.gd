@@ -1,0 +1,228 @@
+extends Node
+## Prueba de integración: carga cada zona con cada clase y juega N segundos
+## (moverse, lanzar las habilidades de la barra, pociones y esquiva). Falla si
+## aparece cualquier error del motor o de script (SCRIPT ERROR) o si el jugador
+## sale de los límites de la zona. No guarda personajes ni toca el alijo.
+##
+## Uso (sin ventana y con fotogramas fijos, va más rápido que el tiempo real):
+##   Godot_v4.7.2-stable_win64_console.exe --headless --fixed-fps 60 --path . res://tests/test_integration.tscn
+## Opciones después de "--":  segundos=10  clases=guerrero,hechicero  zonas=zona1,oblea
+## Devuelve código de salida 1 si algo falla.
+
+const WORLD_SCENE := "res://scenes/game/world.tscn"
+const FPS := 60
+const OUT_OF_BOUNDS_MARGIN := 40.0
+## Distancia a la que el piloto automático empieza a lanzar habilidades.
+const CAST_RANGE := 420.0
+
+
+## Cuenta los errores que pasan por el registro del motor (también los de otros hilos).
+class ErrorCounter extends Logger:
+	var mutex := Mutex.new()
+	var errors: PackedStringArray = []
+
+	func _log_error(function: String, file: String, line: int, code: String, rationale: String, _editor_notify: bool,
+			error_type: int, _script_backtraces: Array[ScriptBacktrace]) -> void:
+		if error_type == ERROR_TYPE_WARNING:
+			return
+		var kind: String = ["ERROR", "WARNING", "SCRIPT ERROR", "SHADER ERROR"][clampi(error_type, 0, 3)]
+		mutex.lock()
+		errors.append("%s: %s (%s:%d, %s)" % [kind, rationale if rationale != "" else code, file, line, function])
+		mutex.unlock()
+
+	func _log_message(_message: String, _error: bool) -> void:
+		pass
+
+	func take() -> PackedStringArray:
+		mutex.lock()
+		var out := errors.duplicate()
+		errors.clear()
+		mutex.unlock()
+		return out
+
+
+var _counter := ErrorCounter.new()
+var _failures: PackedStringArray = []
+var _seconds := 30.0
+var _rng := RandomNumberGenerator.new()
+
+
+func _ready() -> void:
+	OS.add_logger(_counter)
+	_rng.seed = 2026
+	_run.call_deferred()
+
+
+func _run() -> void:
+	var class_filter: PackedStringArray = []
+	var zone_filter: PackedStringArray = []
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("segundos="):
+			_seconds = maxf(1.0, arg.get_slice("=", 1).to_float())
+		elif arg.begins_with("clases="):
+			class_filter = arg.get_slice("=", 1).split(",", false)
+		elif arg.begins_with("zonas="):
+			zone_filter = arg.get_slice("=", 1).split(",", false)
+	var gd: Node = get_node("/root/GameData")
+	var started := Time.get_ticks_msec()
+	var runs := 0
+	for class_def in gd.get("classes"):
+		var class_id: String = class_def["id"]
+		if not class_filter.is_empty() and not class_filter.has(class_id):
+			continue
+		for act_index in gd.get("acts").size():
+			var act: Dictionary = gd.get("acts")[act_index]
+			var zone_ids: Array = []
+			for z in act.get("zones", []):
+				if zone_filter.is_empty() or zone_filter.has(z["id"]):
+					zone_ids.append(z["id"])
+			if zone_ids.is_empty():
+				continue
+			runs += await _play_act(class_def, act, act_index, zone_ids)
+	_counter.take()   # lo que salga al cerrar no cuenta
+	print("")
+	print("Integración: %d zonas × clase de %.0f s en %.1f s reales" % [runs, _seconds, (Time.get_ticks_msec() - started) / 1000.0])
+	if _failures.is_empty():
+		print("OK: sin errores.")
+	else:
+		print("FALLOS (%d):" % _failures.size())
+		for f in _failures:
+			print("  " + f)
+	OS.remove_logger(_counter)
+	get_tree().quit(1 if not _failures.is_empty() else 0)
+
+
+## Un personaje por clase y acto, con el nivel de la última zona del acto (y una
+## ascendencia distinta en cada acto desde el nivel 20), que recorre sus zonas.
+func _play_act(class_def: Dictionary, act: Dictionary, act_index: int, zone_ids: Array) -> int:
+	var gd: Node = get_node("/root/GameData")
+	var level := 1
+	for z in act.get("zones", []):
+		level = maxi(level, int(z.get("level", 1)))
+	var c: CharacterData = gd.create_character("Integración", StringName(class_def["id"]), CharacterAppearance.default(), false)
+	c.flags["zone"] = act.get("town", "campamento")
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	for k in act_index:
+		c.flags["act%d_complete" % (k + 1)] = true
+	c.level = level
+	var ascendancies: Array = class_def.get("ascendancies", [])
+	if level >= 20 and not ascendancies.is_empty():
+		c.set_ascendancy(StringName(ascendancies[act_index % ascendancies.size()]["id"]))
+		for node_id in range(1, 6):
+			c.allocate_ascendancy_node(node_id)
+	gd.set("current_character", c)
+	var world: Node = load(WORLD_SCENE).instantiate()
+	add_child(world)
+	world.set("_since_save", -9999.0)
+	await _frames(2)
+	_collect("%s · acto %d · al cargar" % [class_def["id"], act_index + 1])
+	var count := 0
+	for zid in zone_ids:
+		await _play_zone(world, class_def["id"], zid)
+		count += 1
+	world.set("_since_save", -9999.0)
+	remove_child(world)
+	world.queue_free()
+	get_tree().paused = false   # que una pausa de este personaje no frene al siguiente
+	await _frames(2)
+	gd.set("current_character", null)
+	_collect("%s · acto %d · al cerrar" % [class_def["id"], act_index + 1])
+	return count
+
+
+func _play_zone(world: Node, class_id: String, zone_id: String) -> void:
+	var label := "%s · %s" % [class_id, zone_id]
+	world.call("travel_to", zone_id, "")
+	world.set("_since_save", -9999.0)
+	var player: Player = world.get("player")
+	var skills: SkillController = world.get("skills")
+	var ui: GameUI = world.get("ui")
+	Gamepad.active = true   # apunta al enemigo más cercano en vez de al ratón
+	var deaths := 0
+	var kills := [0]
+	var on_kill := func(_rarity: int, _xp: int, _pos: Vector2, _type: String) -> void: kills[0] += 1
+	(world.get("enemies") as EnemyManager).enemy_killed.connect(on_kill)
+	var uses := [0]
+	var on_use := func(_i: int) -> void: uses[0] += 1
+	skills.skill_used.connect(on_use)
+	var start_pos := player.global_position
+	var travelled := 0.0
+	var out_reported := false
+	var pause_reported := false
+	var frames := int(_seconds * FPS)
+	for f in frames:
+		await get_tree().process_frame
+		world.set("_since_save", -9999.0)
+		var zone: Zone = world.get("zone")
+		var enemies: EnemyManager = world.get("enemies")
+		if ui.cutscene.visible:
+			ui.cutscene.call("_finish")
+		if ui.dialogue_box.visible:
+			ui.dialogue_box.close()
+		if ui.is_choosing():   # elección entre dos habilidades: la primera
+			_press_first_button(ui.get("_choice_panel"))
+		elif get_tree().paused and not pause_reported:
+			pause_reported = true
+			_failures.append("%s: el juego quedó en pausa sin ninguna ventana que la explique" % label)
+			get_tree().paused = false
+		# Que el combate siga: sin muertes definitivas ni falta de maná.
+		if not player.is_alive():
+			deaths += 1
+			player.refill()
+			ui.hide_death()
+		elif player.life < player.max_life() * 0.5:
+			player.life = player.max_life()
+		if player.mana < player.unreserved_mana_max() * 0.2:
+			player.mana = player.unreserved_mana_max()
+		# Lanzar solo con un enemigo a tiro (lanzar frena al personaje); si no, caminar hacia ellos.
+		var in_range := enemies.nearest_index(player.global_position, CAST_RANGE) != -1
+		if f % FPS == 0 or (not in_range and not player.has_auto_target()):
+			player.move_to(_move_target(zone, enemies, player.global_position))
+		if in_range and f % 12 == 6:
+			skills.try_use((f / 12) % Inventory.HOTBAR_SIZE)
+		if f % (FPS * 5) == FPS * 2:
+			player.use_flask((f / (FPS * 5)) % Inventory.FLASK_SLOTS)
+		if f % (FPS * 4) == FPS * 3:
+			player.dodge()
+		var pos := player.global_position
+		travelled += pos.distance_to(start_pos)
+		start_pos = pos
+		if not out_reported and (not pos.is_finite() or not zone.rect.grow(OUT_OF_BOUNDS_MARGIN).has_point(pos)):
+			out_reported = true
+			_failures.append("%s: el jugador salió de la zona en %s (zona %s)" % [label, pos, zone.rect])
+	Gamepad.active = false
+	(world.get("enemies") as EnemyManager).enemy_killed.disconnect(on_kill)
+	skills.skill_used.disconnect(on_use)
+	var zone_now: Zone = world.get("zone")
+	if not zone_now.safe and kills[0] + (world.get("enemies") as EnemyManager).count() > 0 and uses[0] == 0:
+		_failures.append("%s: no hubo combate (ninguna habilidad lanzada en %.0f s)" % [label, _seconds])
+	_collect(label)
+	print("%-34s %3d enemigos vivos, %3d derrotados, %3d habilidades, %5.0f px recorridos, %d muertes del jugador" % [
+		label, (world.get("enemies") as EnemyManager).count(), kills[0], uses[0], travelled, deaths])
+
+
+## Hacia el enemigo más cercano (sin pegarse) o, de vez en cuando o si no hay, a un punto libre al azar.
+func _move_target(zone: Zone, enemies: EnemyManager, from: Vector2) -> Vector2:
+	var i := enemies.nearest_index(from, 4000.0)
+	if i != -1 and _rng.randf() < 0.85:
+		var to := enemies.positions[i]
+		return zone.free_spot_near(to + (from - to).normalized() * 90.0)
+	var r := zone.rect
+	return zone.free_spot_near(Vector2(_rng.randf_range(r.position.x, r.end.x), _rng.randf_range(r.position.y, r.end.y)))
+
+
+func _press_first_button(root: Node) -> void:
+	for b in root.find_children("*", "Button", true, false):
+		(b as Button).pressed.emit()
+		return
+
+
+func _collect(label: String) -> void:
+	for e in _counter.take():
+		_failures.append("%s: %s" % [label, e])
+
+
+func _frames(n: int) -> void:
+	for k in n:
+		await get_tree().process_frame

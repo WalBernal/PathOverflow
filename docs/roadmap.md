@@ -22,12 +22,7 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha · `[!]` bloqueada (co
 2. **Marcar** `[~]` antes de empezar.
 3. **Entender**: leer los archivos que cita la tarea, `README.md` y los docs relacionados (`docs/estilo.md`, `docs/lore.md`, `docs/habilidades_y_ram.md`). Seguir el estilo del código existente.
 4. **Hacer** lo que dice la tarea, sin ampliar el alcance. Si aparece trabajo extra, añadirlo como tarea nueva en la fase que toque, no hacerlo ahora.
-5. **Comprobar** (las dos deben pasar sin errores):
-   ```
-   & "$env:USERPROFILE\Downloads\Godot_v4.7.2-stable_win64_console.exe" --headless --path . -s res://tools/check_scripts.gd
-   & "$env:USERPROFILE\Downloads\Godot_v4.7.2-stable_win64_console.exe" --headless --path . -s res://tests/test_core.gd
-   ```
-   Añadir pruebas en `tests/test_core.gd` para la lógica nueva. Cuando exista la prueba de integración (T01), correrla también.
+5. **Comprobar**: `powershell -File tools/run_checks.ps1` debe terminar con las tres en `[OK]` (scripts, lógica e integración). Mientras se itera, `-Rapida` acorta la integración; antes del commit, la completa (en segundo plano: tarda ~30 min). Añadir pruebas en `tests/test_core.gd` para la lógica nueva.
 6. **Cerrar**: cambiar `[~]` por `[x]`, añadir una línea al **Registro** del final (fecha, ID, qué se hizo en una frase) y actualizar `README.md` si cambia algo visible para el jugador.
 7. **Commit** con mensaje en español al estilo del repositorio (qué se añadió, en una línea). Sin push.
 8. **Bloqueo**: si algo impide terminarla (falta una decisión, arte o una prueba que no se puede arreglar en la tarea), marcarla `[!]`, escribir el motivo debajo, revertir lo que quede roto y pasar a la siguiente.
@@ -39,7 +34,7 @@ Para encadenarlas sin intervención: `/siguiente-tarea` hace una; `/loop /siguie
 
 ## Fase 0 — Base para trabajar en automático
 
-### [ ] T01 · Pruebas de integración por zona y clase · M
+### [x] T01 · Pruebas de integración por zona y clase · M
 Origen: R1 §7, R2 §12 ★★★
 - Script de prueba que cargue cada zona y simule 30 s de combate con cada una de las 7 clases (auto-movimiento y habilidades de la barra), sin ventana.
 - Falla si aparece un `SCRIPT ERROR`, un error del motor o el jugador queda fuera de los límites de la zona.
@@ -371,3 +366,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 ## Registro
 
 <!-- Una línea por tarea terminada: AAAA-MM-DD · TXX · qué se hizo -->
+- 2026-10-24 · T01 · Prueba de integración (`tests/test_integration.tscn`): 7 clases × 24 zonas, 30 s de combate con piloto automático, falla con cualquier error del motor, pausa atascada, jugador fuera de la zona o sin combate; `tools/run_checks.ps1` corre todo. Encontró y arregló un Tween vacío de la música en las arenas de jefe.
