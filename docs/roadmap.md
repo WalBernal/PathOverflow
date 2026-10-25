@@ -47,11 +47,18 @@ Origen: R1 §7
 - Varios espacios por perfil, elegibles en el menú de personajes.
 - Hecho cuando: una prueba corrompe el guardado y el juego carga la copia.
 
-### [ ] T03 · Rendimiento con 300 enemigos en pantalla · M
+### [x] T03 · Rendimiento con 300 enemigos en pantalla · M
 Origen: R1 §1, R2 §12 ★★★
 - Barras de vida e iconos de estado de enemigos en un MultiMesh o en un único `_draw` por lotes.
 - Medir antes y después con `tools/capture_screens.tscn -- rendimiento` y anotar las cifras en `README.md` (*Rendimiento*).
 - Objetivo: 300 enemigos ≥ 50 FPS (hoy ~32).
+- Resultado: lo que cuestan los enemigos bajó ~30 % (48.7 → 38-42 ms con 300); el objetivo de 50 FPS depende de la zona y la interfaz y pasa a T03b.
+
+### [ ] T03b · Rendimiento: aligerar la zona y la interfaz · M
+Origen: medición de T03
+- Sin ningún enemigo el fotograma ya cuesta ~20 ms en 1600×900: ocultar la zona ahorra ~16 ms y la interfaz ~9 ms. Perfilar qué parte (suelo, decorado, filtro de pixel art, luces, minimapa, HUD) y cachear o simplificar lo que se redibuja cada fotograma.
+- Medir con `capture_screens.tscn -- rendimiento` y actualizar la tabla del `README.md`.
+- Objetivo: 300 enemigos ≥ 50 FPS en el benchmark (con T03 quedó en 24-26 FPS).
 
 ### [ ] T04 · Ventanas grandes sin chocar con el minimapa · S
 Origen: R1 §5
@@ -368,3 +375,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 <!-- Una línea por tarea terminada: AAAA-MM-DD · TXX · qué se hizo -->
 - 2026-10-24 · T01 · Prueba de integración (`tests/test_integration.tscn`): 7 clases × 24 zonas, 30 s de combate con piloto automático, falla con cualquier error del motor, pausa atascada, jugador fuera de la zona o sin combate; `tools/run_checks.ps1` corre todo. Encontró y arregló un Tween vacío de la música en las arenas de jefe.
 - 2026-10-24 · T02 · Guardado con tres copias rotativas (`.bak`..`.bak3`), recuperación desde la copia legible más reciente (también si falta el principal), copia y recuperación del alijo, y tres espacios de guardado con sus personajes y alijo, elegibles en el menú de personajes.
+- 2026-10-24 · T03 · Barras, estados, halos, aturdidos, insignias de rol y avisos de los enemigos en un solo arreglo de triángulos y sin avisos fuera de cámara: 300 enemigos de 48.7 a 38-42 ms; el benchmark ya no mide en pausa. Lo que falta para 50 FPS (zona e interfaz) pasa a T03b.

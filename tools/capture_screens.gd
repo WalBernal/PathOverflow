@@ -1140,6 +1140,13 @@ func _benchmark() -> void:
 	var skills: SkillController = world.get("skills")
 	var player: Player = world.get("player")
 	var em: EnemyManager = world.get("enemies")
+	# A nivel 40 sale la elección de habilidad (que pausa el juego): la primera.
+	var bench_ui: GameUI = world.get("ui")
+	if bench_ui.is_choosing():
+		for b in (bench_ui.get("_choice_panel") as Node).find_children("*", "Button", true, false):
+			(b as Button).pressed.emit()
+			break
+	get_tree().paused = false
 	player.invulnerable = true
 	player.mana_reserved = 0.0
 	player.mana = 9999.0

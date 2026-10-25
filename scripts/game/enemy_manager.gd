@@ -1885,11 +1885,12 @@ func _draw() -> void:
 
 func _draw_all() -> void:
 	var font := ThemeDB.fallback_font
-	_draw_attacks(font)
-	var tt := Time.get_ticks_msec() / 1000.0
 	# Solo lo que se ve en cámara (con margen); con muchos enemigos en pantalla, los
 	# efectos de estados y afijos pasan a una versión simple (un halo por estado).
 	var view := (get_canvas_transform().affine_inverse() * get_viewport_rect()).grow(CULL_MARGIN)
+	_draw_attacks(font, view)
+	var tt := Time.get_ticks_msec() / 1000.0
+	var labels: Array[int] = []   # élites y únicos: nombre (y frase) encima de las barras
 	var on_screen: Array[int] = []
 	for i in positions.size():
 		if view.has_point(positions[i]):
@@ -1919,39 +1920,126 @@ func _draw_all() -> void:
 		var top := positions[i] + Vector2(-w / 2.0, -r * SPRITE_SCALE * 1.1 - 8.0)
 		var has_bar := not (rarity == Rarity.Enemy.NORMAL and lives[i] >= max_lives[i])
 		# Iconos de estados encima de la barra (o donde iría).
-		var states := ailments_of(i)
+		var states := _state_ids(i)
 		if not states.is_empty():
 			var side := 11.0 if not simple else 5.0
 			var x0 := positions[i].x - (states.size() * (side + 2.0) - 2.0) / 2.0
 			for k in states.size():
 				var sr := Rect2(x0 + k * (side + 2.0), top.y - side - 3.0, side, side)
 				if simple:
-					draw_rect(sr.grow(1.0), Color(0, 0, 0, 0.8))   # con muchos enemigos: un cuadrito del color del estado
-					draw_rect(sr, Ailments.color(states[k]["id"]))
+					_batch_rect(sr.grow(1.0), Color(0, 0, 0, 0.8))   # con muchos enemigos: un cuadrito del color del estado
+					_batch_rect(sr, Ailments.color(states[k]))
 				else:
-					StatusIcon.draw(self, sr, states[k]["id"], true)
+					StatusIcon.draw(self, sr, states[k], true)
 		if not has_bar:
 			continue
-		draw_rect(Rect2(top - Vector2(1, 1), Vector2(w + 2.0, 6.0)), Color(0, 0, 0, 0.75))
+		_batch_rect(Rect2(top - Vector2(1, 1), Vector2(w + 2.0, 6.0)), Color(0, 0, 0, 0.75))
 		var frac := lives[i] / max_lives[i]
-		var bar_color := Color("c83232")
+		var bar_color := BAR_LIFE
 		if poison_time[i] > 0.0:
-			bar_color = Color("4fa04a")
+			bar_color = BAR_POISON
 		elif freeze_time[i] > 0.0 or chill_time[i] > 0.0:
-			bar_color = Color("5a9ad0")
-		draw_rect(Rect2(top, Vector2(w * frac, 4.0)), bar_color)
-		draw_rect(Rect2(top, Vector2(w * frac, 1.0)), Color(1, 1, 1, 0.25))
+			bar_color = BAR_COLD
+		_batch_rect(Rect2(top, Vector2(w * frac, 4.0)), bar_color)
+		_batch_rect(Rect2(top, Vector2(w * frac, 1.0)), Color(1, 1, 1, 0.25))
 		if rarity >= Rarity.Enemy.ELITE:
-			var name_y := -6.0 - (14.0 if not states.is_empty() else 0.0)
-			draw_string_outline(font, top + Vector2(-80.0, name_y), names[i], HORIZONTAL_ALIGNMENT_CENTER, w + 160.0, 14, 4, Color(0, 0, 0, 0.8))
-			draw_string(font, top + Vector2(-80.0, name_y), names[i], HORIZONTAL_ALIGNMENT_CENTER,
-				w + 160.0, 14, Rarity.enemy_color(rarity))
-			var quote_t := float((traits[i] as Dictionary).get("quote_t", 0.0))
-			if quote_t > 0.0:
-				_draw_quote(font, positions[i].x, top.y + name_y - 18.0, String(traits[i]["quote"]), clampf(quote_t / 0.4, 0.0, 1.0))
+			labels.append(i)
+	# Barras, cuadritos y halos de todos los enemigos: una sola llamada de dibujo.
+	_flush_batch()
+	_draw_role_marks()
+	for i in labels:
+		var r := radii[i]
+		var w := maxf(r * 2.0, 30.0)
+		var top := positions[i] + Vector2(-w / 2.0, -r * SPRITE_SCALE * 1.1 - 8.0)
+		var name_y := -6.0 - (14.0 if not _state_ids(i).is_empty() else 0.0)
+		draw_string_outline(font, top + Vector2(-80.0, name_y), names[i], HORIZONTAL_ALIGNMENT_CENTER, w + 160.0, 14, 4, Color(0, 0, 0, 0.8))
+		draw_string(font, top + Vector2(-80.0, name_y), names[i], HORIZONTAL_ALIGNMENT_CENTER,
+			w + 160.0, 14, Rarity.enemy_color(rarities[i]))
+		var quote_t := float((traits[i] as Dictionary).get("quote_t", 0.0))
+		if quote_t > 0.0:
+			_draw_quote(font, positions[i].x, top.y + name_y - 18.0, String(traits[i]["quote"]), clampf(quote_t / 0.4, 0.0, 1.0))
+
+
+# --- Dibujo por lotes: rectángulos, círculos y aros como triángulos de un solo arreglo ---
+
+const BAR_LIFE := Color("c83232")
+const BAR_POISON := Color("4fa04a")
+const BAR_COLD := Color("5a9ad0")
+
+var _state_buf := PackedStringArray()
+
+
+## Ids de los estados del enemigo, en el mismo orden que ailments_of(), sin crear
+## diccionarios (para el dibujo de cada fotograma). Se reutiliza el mismo arreglo.
+func _state_ids(i: int) -> PackedStringArray:
+	_state_buf.clear()
+	if freeze_time[i] > 0.0:
+		_state_buf.append(Ailments.FREEZE)
+	elif stuns[i] > 0.0:
+		_state_buf.append("stun")
+	if burn_time[i] > 0.0:
+		_state_buf.append(Ailments.BURN)
+	if shock_time[i] > 0.0:
+		_state_buf.append(Ailments.SHOCK)
+	if chill_time[i] > 0.0:
+		_state_buf.append(Ailments.CHILL)
+	if poison_time[i] > 0.0:
+		_state_buf.append(Ailments.POISON)
+	if bleed_time[i] > 0.0:
+		_state_buf.append(Ailments.BLEED)
+	if dot_time[i] > 0.0:
+		_state_buf.append("corrupt")
+	return _state_buf
+
+var _batch_points := PackedVector2Array()
+var _batch_colors := PackedColorArray()
+var _batch_indices := PackedInt32Array()
+
+
+func _batch_rect(r: Rect2, c: Color) -> void:
+	var b := _batch_points.size()
+	_batch_points.append_array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)])
+	for k in 4:
+		_batch_colors.append(c)
+	_batch_indices.append_array([b, b + 1, b + 2, b, b + 2, b + 3])
+
+
+func _batch_circle(p: Vector2, radius: float, c: Color, segments := 12) -> void:
+	var b := _batch_points.size()
+	_batch_points.append(p)
+	_batch_colors.append(c)
+	for k in segments:
+		_batch_points.append(p + Vector2.from_angle(TAU * k / segments) * radius)
+		_batch_colors.append(c)
+		_batch_indices.append_array([b, b + 1 + k, b + 1 + (k + 1) % segments])
+
+
+func _batch_ring(p: Vector2, radius: float, width: float, c: Color, segments := 12) -> void:
+	_batch_arc(p, radius, 0.0, TAU, width, c, segments)
+
+
+## Arco de `from` a `to` (radianes) con grosor `width`.
+func _batch_arc(p: Vector2, radius: float, from: float, to: float, width: float, c: Color, segments := 12) -> void:
+	var b := _batch_points.size()
+	for k in segments + 1:
+		var d := Vector2.from_angle(lerpf(from, to, float(k) / segments))
+		_batch_points.append_array([p + d * (radius - width * 0.5), p + d * (radius + width * 0.5)])
+		_batch_colors.append_array([c, c])
+		if k < segments:
+			_batch_indices.append_array([b + k * 2, b + k * 2 + 1, b + k * 2 + 3, b + k * 2, b + k * 2 + 3, b + k * 2 + 2])
+
+
+func _flush_batch() -> void:
+	if not _batch_indices.is_empty():
+		RenderingServer.canvas_item_add_triangle_array(get_canvas_item(), _batch_indices, _batch_points, _batch_colors)
+	_batch_points.clear()
+	_batch_colors.clear()
+	_batch_indices.clear()
 
 
 const TELEGRAPH := Color(1.0, 0.25, 0.2)
+const STUN_ORBIT := Color("7fb8e0")
+const STUN_LOCK := Color("c8c8d0")
 
 
 ## Modo daltónico: rayas diagonales dentro de un círculo de aviso, para que el
@@ -1979,9 +2067,26 @@ func _draw_role(i: int, role: String, tt: float) -> void:
 	var p := positions[i] + Vector2(0, -radii[i] * SPRITE_SCALE * 1.1 - 24.0)
 	if role == "tank":
 		var pulse := 0.5 + 0.5 * sin(tt * 3.0 + ids[i])
-		draw_arc(positions[i], ROLE_TANK_RADIUS, 0.0, TAU, 40, Color(c, 0.18 + 0.12 * pulse), 2.0, true)
-	draw_circle(p, 7.5, Color(0.04, 0.03, 0.06, 0.9))
-	draw_arc(p, 7.5, 0.0, TAU, 16, c, 1.5, true)
+		_batch_ring(positions[i], ROLE_TANK_RADIUS, 2.0, Color(c, 0.18 + 0.12 * pulse), 40)
+	# Fondo y aro de la insignia por lotes; el símbolo encima (se dibuja después del lote).
+	_batch_circle(p, 7.5, Color(0.04, 0.03, 0.06, 0.9), 12)
+	_batch_ring(p, 7.5, 1.5, c, 16)
+	_role_marks.append([p, role, c])
+
+
+var _role_marks: Array = []
+
+
+## Símbolo de cada insignia de rol (escudo, cruz, mira, chevrones), sobre su fondo.
+func _draw_role_marks() -> void:
+	for m in _role_marks:
+		var p: Vector2 = m[0]
+		var c: Color = m[2]
+		_draw_role_symbol(p, String(m[1]), c)
+	_role_marks.clear()
+
+
+func _draw_role_symbol(p: Vector2, role: String, c: Color) -> void:
 	match role:
 		"tank":
 			draw_colored_polygon(PackedVector2Array([p + Vector2(-4, -4), p + Vector2(4, -4), p + Vector2(3.5, 1), p + Vector2(0, 5), p + Vector2(-3.5, 1)]), c)
@@ -2009,9 +2114,13 @@ func _draw_quote(font: Font, x: float, bottom: float, text: String, alpha: float
 	draw_string(font, Vector2(box.position.x + 8.0, box.end.y - 6.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(0.12, 0.1, 0.12, alpha))
 
 
-func _draw_attacks(font: Font) -> void:
+func _draw_attacks(font: Font, view: Rect2) -> void:
 	var all_types := enemy_types()
+	var far_view := view.grow(ROLE_SNIPE_RANGE)   # los avisos grandes (cargas, francotiradores) se ven desde lejos
+	var marks: Array = []   # "!" de los golpes pesados: encima de los círculos (que van por lotes)
 	for i in positions.size():
+		if not far_view.has_point(positions[i]) or (windups[i] <= 0.0 and not casting.has(ids[i])):
+			continue
 		var atk: Dictionary = all_types[types[i]].get("attack", {}) if types[i] < all_types.size() else {}
 		var pos := positions[i]
 		var dir := attack_dirs[i]
@@ -2019,13 +2128,11 @@ func _draw_attacks(font: Font) -> void:
 			# Golpe pesado: círculo rojo que se llena y un "!" encima.
 			var ht := clampf(1.0 - windups[i] / HEAVY_WINDUP, 0.0, 1.0)
 			var hr := _heavy_radius(i)
-			draw_circle(pos, hr, Color(TELEGRAPH, 0.12))
-			draw_circle(pos, hr * ht, Color(TELEGRAPH, 0.26))
-			draw_arc(pos, hr, 0.0, TAU, 48, Color(TELEGRAPH, 0.6 + 0.4 * ht), 3.0, true)
+			_batch_circle(pos, hr, Color(TELEGRAPH, 0.12), 32)
+			_batch_circle(pos, hr * ht, Color(TELEGRAPH, 0.26), 32)
+			_batch_ring(pos, hr, 3.0, Color(TELEGRAPH, 0.6 + 0.4 * ht), 40)
 			_hatch_circle(pos, hr, Color.WHITE)
-			var mark := pos + Vector2(-20.0, -radii[i] * SPRITE_SCALE * 1.1 - 30.0)
-			draw_string_outline(font, mark, "!", HORIZONTAL_ALIGNMENT_CENTER, 40.0, 26, 6, Color.BLACK)
-			draw_string(font, mark, "!", HORIZONTAL_ALIGNMENT_CENTER, 40.0, 26, TELEGRAPH.lerp(Color.WHITE, ht * 0.5))
+			marks.append([pos + Vector2(-20.0, -radii[i] * SPRITE_SCALE * 1.1 - 30.0), TELEGRAPH.lerp(Color.WHITE, ht * 0.5)])
 		elif windups[i] > 0.0 and (traits[i] as Dictionary).get("snipe_on", false):
 			# Francotirador: línea roja que se estrecha y brilla justo antes del disparo.
 			var st := clampf(1.0 - windups[i] / ROLE_SNIPE_WINDUP, 0.0, 1.0)
@@ -2039,9 +2146,9 @@ func _draw_attacks(font: Font) -> void:
 			match String(atk.get("kind", "")):
 				"slam":
 					var radius := float(atk.get("radius", 100.0))
-					draw_circle(pos, radius, Color(TELEGRAPH, 0.10))
-					draw_circle(pos, radius * t, Color(TELEGRAPH, 0.22))
-					draw_arc(pos, radius, 0.0, TAU, 40, Color(TELEGRAPH, 0.7), 2.0, true)
+					_batch_circle(pos, radius, Color(TELEGRAPH, 0.10), 32)
+					_batch_circle(pos, radius * t, Color(TELEGRAPH, 0.22), 32)
+					_batch_ring(pos, radius, 2.0, Color(TELEGRAPH, 0.7), 40)
 					_hatch_circle(pos, radius, Color.WHITE)
 				"cone":
 					var radius := float(atk.get("range", 160.0)) + 20.0
@@ -2078,9 +2185,9 @@ func _draw_attacks(font: Font) -> void:
 					var target: Vector2 = attack_dirs[i]
 					var pr_radius := float(atk.get("radius", 70.0))
 					var lc := Color(atk.get("color", "6fd36b"))
-					draw_circle(target, pr_radius, Color(lc, 0.08))
-					draw_circle(target, pr_radius * t, Color(lc, 0.2))
-					draw_arc(target, pr_radius, 0.0, TAU, 32, Color(lc, 0.7), 2.0, true)
+					_batch_circle(target, pr_radius, Color(lc, 0.08), 28)
+					_batch_circle(target, pr_radius * t, Color(lc, 0.2), 28)
+					_batch_ring(target, pr_radius, 2.0, Color(lc, 0.7), 32)
 					_hatch_circle(target, pr_radius, Color.WHITE)
 					var arc_top := pos.lerp(target, t) + Vector2(0, -sin(t * PI) * 90.0)
 					draw_circle(arc_top, 6.0, lc)
@@ -2103,6 +2210,10 @@ func _draw_attacks(font: Font) -> void:
 				for k in count:
 					var ray := Vector2.from_angle(float(cast.get("offset", 0.0)) + TAU * k / count)
 					draw_line(pos + ray * (radii[i] + 14.0), pos + ray * (radii[i] + 60.0 + 260.0 * t), Color(nc, 0.15 + 0.35 * t), 3.0, true)
+	_flush_batch()   # círculos de aviso de todos los enemigos: una llamada
+	for m in marks:
+		draw_string_outline(font, m[0], "!", HORIZONTAL_ALIGNMENT_CENTER, 40.0, 26, 6, Color.BLACK)
+		draw_string(font, m[0], "!", HORIZONTAL_ALIGNMENT_CENTER, 40.0, 26, m[1])
 	# Charcos de daño degenerativo: burbujean y se desvanecen al final.
 	var now := Time.get_ticks_msec() / 1000.0
 	for pool in pools:
@@ -2171,15 +2282,25 @@ func _draw_ailment_fx_simple(i: int) -> void:
 	var p := positions[i] + Vector2(0, -radii[i] * 0.4)
 	var r := radii[i] * 1.2
 	var k := 0
-	for st in [[burn_time, Ailments.BURN], [shock_time, Ailments.SHOCK], [chill_time, Ailments.CHILL], [poison_time, Ailments.POISON], [bleed_time, Ailments.BLEED]]:
-		if (st[0] as PackedFloat32Array)[i] > 0.0:
-			draw_circle(p, r + k * 2.0, Color(Ailments.color(st[1]), 0.22))
-			k += 1
+	if burn_time[i] > 0.0:
+		_batch_circle(p, r, Color(Ailments.color(Ailments.BURN), 0.22))
+		k += 1
+	if shock_time[i] > 0.0:
+		_batch_circle(p, r + k * 2.0, Color(Ailments.color(Ailments.SHOCK), 0.22))
+		k += 1
+	if chill_time[i] > 0.0:
+		_batch_circle(p, r + k * 2.0, Color(Ailments.color(Ailments.CHILL), 0.22))
+		k += 1
+	if poison_time[i] > 0.0:
+		_batch_circle(p, r + k * 2.0, Color(Ailments.color(Ailments.POISON), 0.22))
+		k += 1
+	if bleed_time[i] > 0.0:
+		_batch_circle(p, r + k * 2.0, Color(Ailments.color(Ailments.BLEED), 0.22))
 	if freeze_time[i] > 0.0:
-		draw_circle(p, r, Color(0.8, 0.95, 1.0, 0.45))
+		_batch_circle(p, r, Color(0.8, 0.95, 1.0, 0.45))
 	var aff: Array = traits[i].get("affixes", [])
 	if not aff.is_empty():
-		draw_arc(positions[i], radii[i] * 1.55, 0.0, TAU, 12, Color(affix_defs().get(aff[0], {}).get("color", "ffffff")), 2.0)
+		_batch_ring(positions[i], radii[i] * 1.55, 2.0, Color(affix_defs().get(aff[0], {}).get("color", "ffffff")))
 
 
 func _draw_ailment_fx(i: int, tt: float) -> void:
@@ -2287,9 +2408,9 @@ func _draw_stun(p: Vector2) -> void:
 	var a := Time.get_ticks_msec() / 300.0
 	for k in 3:
 		var q := p + Vector2.from_angle(a + TAU * k / 3.0) * Vector2(12, 5)
-		draw_circle(q, 2.5, Color("7fb8e0"))
-	draw_rect(Rect2(p + Vector2(-5, -3), Vector2(10, 8)), Color("c8c8d0"))
-	draw_arc(p + Vector2(0, -3), 4.0, PI, TAU, 8, Color("c8c8d0"), 2.0)
+		_batch_circle(q, 2.5, STUN_ORBIT, 6)
+	_batch_rect(Rect2(p + Vector2(-5, -3), Vector2(10, 8)), STUN_LOCK)
+	_batch_arc(p + Vector2(0, -3), 4.0, PI, TAU, 2.0, STUN_LOCK, 6)
 
 
 func _kill(i: int) -> void:

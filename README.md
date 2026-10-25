@@ -453,6 +453,15 @@ Benchmark del 18-10-2026 (antes de los sprites), RTX 4050 Laptop, vsync desactiv
 
 GDScript va sobrado para densidades tipo PoE (300-600). Por encima de unos 800, el siguiente paso sería portar **solo** `EnemyManager` a C# o GDExtension.
 
+Benchmark del 24-10-2026 con el juego completo (sprites, filtro de pixel art, HUD, afijos, estados en todos y 6 invocaciones y auras; ventana de 1600×900, vsync desactivado): `Godot --path . --disable-vsync res://tools/capture_screens.tscn -- rendimiento`.
+
+| | 150 enemigos | 300 enemigos | Sin enemigos (300 ocultos) |
+|---|---|---|---|
+| Antes de los lotes | 27.8 ms (36 FPS) | 48.7 ms (21 FPS) | 20.8 ms |
+| Con barras, estados y avisos por lotes | 22-24 ms (42-45 FPS) | 38-42 ms (24-26 FPS) | 20-22 ms |
+
+Las barras de vida, los cuadritos de estado, los halos del modo simple, los candados de aturdido, las insignias de rol y los círculos de aviso de todos los enemigos se dibujan en **un solo arreglo de triángulos** por fotograma (`EnemyManager._batch_*`), y los avisos de enemigos fuera de cámara no se dibujan: lo que cuestan los enemigos con 300 en pantalla baja de ~28 a ~19 ms. Lo que queda está repartido: `_draw` de enemigos ~8 ms, simulación ~4.5 ms y el resto en GPU. Ojo: incluso sin enemigos el fotograma cuesta ~20 ms (la zona ~16 ms y la interfaz ~9 ms al ocultarlas), así que pasar de 50 FPS con 300 enemigos pide aligerar también esas capas. (Antes el benchmark medía con el juego en pausa por la elección de habilidad del nivel 16: ahora la resuelve.)
+
 ## Árbol pasivo
 
 - **734 pasivas en 67 clusters con forma** (como en PoE 2: cada temática dibuja su símbolo: corazón para vida, llama para fuego, rayo en zigzag, copo de nieve para frío, escudo para armadura, gota para maná, mira para crítico, flecha para proyectiles, estrella para área, hexágono para escudo de energía, espiral para caos, colmillos para robo de vida, pluma para evasión, chevrons para velocidad y movilidad, reloj de arena para enfriamientos, libro para hechizos, prisma para resistencias y martillo para daño físico; los de atributos siguen siendo anillos) (7 clases: 6 alrededor y el Full Stack en el centro): cada anillo o rueda es de un solo tipo (vida, armadura, fuego, crítico, maná, robo de vida…). Sus pasivas menores son variaciones de ese tema (p. ej. vida plana, vida + regeneración, vida + armadura, % de vida) y su notable tiene nombre, texto sarcástico e icono propio. Entre clusters hay caminos de atributos, puentes temáticos entre clases vecinas y un anillo central de atributos.
