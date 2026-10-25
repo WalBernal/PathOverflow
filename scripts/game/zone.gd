@@ -81,6 +81,9 @@ const TERMINAL_LINES := [
 	"$ ps aux | wc -l", "8193", "$ kill -9 1", "bash: kill: (1) - Operation not permitted",
 ]
 const WOOD := Color("5b3f27")
+## Margen alrededor de la cámara para dibujar obstáculos y objetos (que no
+## aparezcan de golpe en el borde: el mayor obstáculo mide ~2 × 46 px más su sombra).
+const DRAW_MARGIN := 160.0
 
 static var _npc_db: Dictionary = {}
 
@@ -1119,13 +1122,18 @@ static func _blob_points(o: Dictionary, scale: float, offset := Vector2.ZERO) ->
 # --- Dibujo animado (cada frame) ---
 
 func _draw() -> void:
+	# Solo lo que cae en cámara (las zonas grandes tienen cientos de obstáculos).
+	var view := _camera_rect().grow(DRAW_MARGIN)
 	for o in obstacles:
+		if not view.grow(float(o.get("visual", 0.0))).has_point(o["pos"]):   # accidentes: hasta 160 px de radio
+			continue
 		if o.get("feature", false):
 			_draw_feature_anim(o)
 		else:
 			_draw_obstacle(o)
 	for t in torches:
-		_draw_torch(t)
+		if view.has_point(t["pos"]):
+			_draw_torch(t)
 	if style == "camp":
 		_draw_campfire(rect.get_center() + Vector2(0, -20))
 	elif style == "terminal":
@@ -1133,15 +1141,16 @@ func _draw() -> void:
 	elif style == "kernel":
 		_draw_kernel_flicker()
 	for p in props:
-		_draw_prop(p)
+		if view.grow(400.0).has_point(p["pos"]):
+			_draw_prop(p)
 	for e in exits:
-		if exit_visible(e):
+		if exit_visible(e) and view.has_point(e["pos"]):
 			_draw_exit(e)
 	for k in key_items:
-		if key_item_visible(k):
+		if key_item_visible(k) and view.has_point(k["pos"]):
 			_draw_key_item(k)
 	for c in challenges:
-		if character and not character.flags.has("challenge_done_" + String(c["id"])):
+		if character and not character.flags.has("challenge_done_" + String(c["id"])) and (view.grow(CHALLENGE_ARENA).has_point(c["pos"])):
 			_draw_challenge(c)
 	if has_waypoint:
 		_draw_waypoint()
@@ -1153,6 +1162,13 @@ func _draw() -> void:
 	_draw_ambient()
 	_npc_layer.queue_redraw()
 	_label_layer.queue_redraw()
+
+
+## Lo que ve la cámara, en coordenadas del mundo.
+func _camera_rect() -> Rect2:
+	var view := get_viewport_rect()
+	var inv := get_canvas_transform().affine_inverse()
+	return Rect2(inv * view.position, view.size / get_canvas_transform().get_scale())
 
 
 ## Texto del mundo que no debe pixelarse (nombres, placas, avisos): se guarda y
@@ -1174,9 +1190,7 @@ func _draw_labels() -> void:
 ## hojas en el bosque, niebla y burbujas en el pantano, polvo en ruinas y
 ## catacumbas, motas de datos en los servidores, brasas en la sala del jefe.
 func _draw_ambient() -> void:
-	var view := get_viewport_rect()
-	var inv := get_canvas_transform().affine_inverse()
-	var cam := Rect2(inv * view.position, view.size / get_canvas_transform().get_scale()).grow(60.0)
+	var cam := _camera_rect().grow(60.0)
 	var t := _time
 	var spot := func(k: int, vx: float, vy: float) -> Vector2:
 		var hx := fmod(k * 0.6180339 + 0.13, 1.0)

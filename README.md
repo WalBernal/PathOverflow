@@ -459,8 +459,9 @@ Benchmark del 24-10-2026 con el juego completo (sprites, filtro de pixel art, HU
 |---|---|---|---|
 | Antes de los lotes | 27.8 ms (36 FPS) | 48.7 ms (21 FPS) | 20.8 ms |
 | Con barras, estados y avisos por lotes | 22-24 ms (42-45 FPS) | 38-42 ms (24-26 FPS) | 20-22 ms |
+| Y la zona solo dibuja lo que cae en cámara | 16.5 ms (60 FPS) | 30-31 ms (32-34 FPS) | 13-13.5 ms |
 
-Las barras de vida, los cuadritos de estado, los halos del modo simple, los candados de aturdido, las insignias de rol y los círculos de aviso de todos los enemigos se dibujan en **un solo arreglo de triángulos** por fotograma (`EnemyManager._batch_*`), y los avisos de enemigos fuera de cámara no se dibujan: lo que cuestan los enemigos con 300 en pantalla baja de ~28 a ~19 ms. Lo que queda está repartido: `_draw` de enemigos ~8 ms, simulación ~4.5 ms y el resto en GPU. Ojo: incluso sin enemigos el fotograma cuesta ~20 ms (la zona ~16 ms y la interfaz ~9 ms al ocultarlas), así que pasar de 50 FPS con 300 enemigos pide aligerar también esas capas. (Antes el benchmark medía con el juego en pausa por la elección de habilidad del nivel 16: ahora la resuelve.)
+Las barras de vida, los cuadritos de estado, los halos del modo simple, los candados de aturdido, las insignias de rol y los círculos de aviso de todos los enemigos se dibujan en **un solo arreglo de triángulos** por fotograma (`EnemyManager._batch_*`), y los avisos de enemigos fuera de cámara no se dibujan: lo que cuestan los enemigos con 300 en pantalla baja de ~28 a ~19 ms. Lo que queda está repartido: `_draw` de enemigos ~8 ms, simulación ~4.5 ms y el resto en GPU. La zona redibujaba cada fotograma **todos** sus obstáculos, antorchas, props y salidas (cientos en las zonas grandes); ahora solo los que caen en cámara (con margen), y sin enemigos el fotograma baja de ~20 a ~13 ms. Lo que queda con 300 enemigos: `_draw` de enemigos ~7 ms, simulación ~4.5 ms, interfaz ~8 ms (el `_draw` del HUD solo ~2.4 ms; el resto, textos, iconos y GPU) y la zona ~5 ms. (Antes el benchmark medía con el juego en pausa por la elección de habilidad del nivel 16: ahora la resuelve.)
 
 ## Árbol pasivo
 
