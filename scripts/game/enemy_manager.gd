@@ -801,6 +801,7 @@ func clear_all() -> void:
 	_flashes_fx.clear()
 	boss_phases.clear()
 	phase_shield.clear()
+	_channels.clear()
 	_affix_timers.clear()
 	_booms.clear()
 	if impact:
@@ -1207,6 +1208,7 @@ func _physics_process(delta: float) -> void:
 	_update_pools(delta)
 	_update_dots(delta)
 	_update_phases(delta)
+	_update_channels(delta)
 	_update_affixes(delta)
 	_update_booms()
 	n = positions.size()
@@ -1734,6 +1736,47 @@ func _resolve_ability(i: int, def: Dictionary, target: Vector2, offset := 0.0) -
 					"delay": float(def.get("delay", 0.9)) + k * 0.15, "damage": damage, "color": Color(def.get("color", "6fd36b")),
 					"pool": {"dps": damages[i] * float(def.get("dps_mult", 0.5)), "time": float(def.get("pool_time", 5.0)),
 						"kind": String(def.get("dot_kind", "chaos"))}})
+		"floor_break":
+			# Mecánica de arena: losas que se agrietan (aviso) y se rompen; quien esté
+			# encima recibe el golpe y queda un agujero que hace daño al pisarlo.
+			var n := int(def.get("count", 5))
+			var spread := float(def.get("spread", 260.0))
+			for k in n:
+				var bp := target if k == 0 else target + Vector2.from_angle(randf() * TAU) * randf_range(spread * 0.35, spread)
+				if walk_clamp.is_valid():
+					bp = walk_clamp.call(bp, 20.0)
+				hazards.append({"kind": "break", "pos": bp, "radius": float(def.get("radius", 85.0)), "time": 0.0,
+					"delay": float(def.get("delay", 1.6)) + k * 0.12, "damage": damage, "color": Color(def.get("color", "c8a070")),
+					"hole_time": float(def.get("hole_time", 6.0)), "hole_dps": damages[i] * float(def.get("hole_dps_mult", 0.6)), "seed": randi() % 997})
+		"safe_zones":
+			# Mecánica de arena: toda la arena se marca salvo unos círculos seguros que
+			# giran alrededor del centro; al acabar el aviso, daña a quien siga fuera.
+			var center := pos
+			if def.has("center"):
+				center = Vector2(def["center"][0], def["center"][1])
+			var safe: Array = []
+			var n := int(def.get("safe_count", 2))
+			var start := randf() * TAU
+			for k in n:
+				safe.append({"angle": start + TAU * k / n, "dist": float(def.get("safe_distance", 260.0)), "radius": float(def.get("safe_radius", 110.0))})
+			hazards.append({"kind": "safe_zones", "pos": center, "radius": float(def.get("radius", 900.0)), "time": 0.0,
+				"delay": float(def.get("delay", 3.2)), "damage": damage, "color": Color(def.get("color", "ff4040")),
+				"safe": safe, "spin": float(def.get("spin", 0.6)) * (1.0 if randf() < 0.5 else -1.0)})
+		"channel_adds":
+			# Mecánica de arena: adds que canalizan hacia el jefe; si no se matan a
+			# tiempo, el jefe se cura, gana un escudo o suelta una nova (y vuelven a empezar).
+			var type_index := type_index_of(def.get("type", "bug"))
+			var n := int(def.get("count", 2))
+			var start := randf() * TAU
+			for k in n:
+				var ap := pos + Vector2.from_angle(start + TAU * k / maxf(1.0, n)) * float(def.get("distance", 320.0))
+				if walk_clamp.is_valid():
+					ap = walk_clamp.call(ap, 16.0)
+				var add_id := spawn(ap, Rarity.Enemy.SPECIAL, type_index, def.get("summon_name", ""), float(def.get("summon_life", 1.5)))
+				var total := float(def.get("channel_time", 8.0))
+				_channels[add_id] = {"time": total, "total": total, "effect": String(def.get("effect", "heal")), "boss_id": ids[i],
+					"amount": float(def.get("amount", 0.08)), "damage": damage, "radius": float(def.get("nova_radius", 520.0)),
+					"color": Color(def.get("color", "7a4ad9"))}
 		"oom_beam":
 			# OOM Killer: un rayo desde un núcleo de la CPU a través del jugador.
 			# Si al disparar atraviesa al propio jefe, se lo come él.
@@ -1818,12 +1861,27 @@ func _update_hazards(delta: float) -> void:
 	var still: Array[Dictionary] = []
 	for h in hazards:
 		h["time"] += delta
+		if h.get("kind", "") == "safe_zones":
+			for s in h["safe"]:
+				s["angle"] += float(h["spin"]) * delta
 		if h["time"] < h["delay"]:
 			still.append(h)
 			continue
-		if h.get("kind", "") == "beam":
-			_resolve_beam(h)
-			continue
+		match String(h.get("kind", "")):
+			"beam":
+				_resolve_beam(h)
+				continue
+			"safe_zones":
+				_resolve_safe_zones(h)
+				continue
+			"break":
+				_flashes_fx.append({"type": "circle", "pos": h["pos"], "radius": h["radius"], "time": 0.0, "color": h["color"]})
+				if player and player.is_alive() and h["pos"].distance_to(player.global_position) <= h["radius"] + Player.RADIUS:
+					player.take_damage(h["damage"])
+				_damage_allies_near(h["pos"], h["radius"], h["damage"])
+				pools.append({"pos": h["pos"], "radius": h["radius"], "life": h["hole_time"], "total": h["hole_time"], "dps": h["hole_dps"],
+					"kind": "chaos", "color": Color("0a0810"), "pit": true, "seed": h["seed"]})
+				continue
 		_flashes_fx.append({"type": "circle", "pos": h["pos"], "radius": h["radius"], "time": 0.0, "color": h["color"]})
 		if player and player.is_alive() and h["pos"].distance_to(player.global_position) <= h["radius"] + Player.RADIUS:
 			player.take_damage(h["damage"])
@@ -1833,6 +1891,69 @@ func _update_hazards(delta: float) -> void:
 			pools.append({"pos": h["pos"], "radius": h["radius"], "life": pool["time"], "total": pool["time"], "dps": pool["dps"],
 				"kind": pool["kind"], "color": h["color"]})
 	hazards = still
+
+
+## ¿Está `p` dentro de alguno de los círculos seguros de una mecánica de zonas seguras?
+static func in_safe_zone(h: Dictionary, p: Vector2) -> bool:
+	for s in h["safe"]:
+		var sc: Vector2 = h["pos"] + Vector2.from_angle(s["angle"]) * float(s["dist"])
+		if p.distance_to(sc) <= float(s["radius"]):
+			return true
+	return false
+
+
+func _resolve_safe_zones(h: Dictionary) -> void:
+	_flashes_fx.append({"type": "circle", "pos": h["pos"], "radius": h["radius"], "time": 0.0, "color": h["color"]})
+	if player and player.is_alive() and h["pos"].distance_to(player.global_position) <= h["radius"] and not in_safe_zone(h, player.global_position):
+		player.take_damage(h["damage"])
+		if player:
+			player.camera_shake(6.0, 0.4)
+	for k in range(allies.size() - 1, -1, -1):
+		var ap: Vector2 = allies[k]["pos"]
+		if ap.distance_to(h["pos"]) <= h["radius"] and not in_safe_zone(h, ap):
+			_damage_ally(k, h["damage"])
+
+
+## Adds que canalizan (mecánica de arena "channel_adds"): id del add -> {time, total,
+## effect (heal | shield | nova), boss_id, amount, damage, radius, color}.
+var _channels := {}
+
+
+func _update_channels(delta: float) -> void:
+	if _channels.is_empty():
+		return
+	for add_id in _channels.keys():
+		var ai := index_of(add_id)
+		var ch: Dictionary = _channels[add_id]
+		var bi := index_of(ch["boss_id"])
+		if ai == -1 or bi == -1:
+			_channels.erase(add_id)   # muerto (o el jefe ya no está): canalización interrumpida
+			continue
+		if stuns[ai] > 0.0 or freeze_time[ai] > 0.0:
+			continue   # aturdido o congelado: no avanza
+		ch["time"] -= delta
+		if ch["time"] > 0.0:
+			continue
+		ch["time"] = ch["total"]
+		var c: Color = ch["color"]
+		match String(ch["effect"]):
+			"heal":
+				lives[bi] = minf(max_lives[bi], lives[bi] + max_lives[bi] * float(ch["amount"]))
+			"shield":
+				phase_shield[ch["boss_id"]] = maxf(float(phase_shield.get(ch["boss_id"], 0.0)), float(ch["amount"]))
+			"nova":
+				if player and player.is_alive() and positions[bi].distance_to(player.global_position) <= float(ch["radius"]) + Player.RADIUS:
+					player.take_damage(ch["damage"])
+				_damage_allies_near(positions[bi], float(ch["radius"]), ch["damage"])
+		_flashes_fx.append({"type": "circle", "pos": positions[bi], "radius": radii[bi] * 2.5 if ch["effect"] != "nova" else float(ch["radius"]), "time": 0.0, "color": c})
+		Sfx.play("wave", -6.0)
+
+
+## Lo que queda de canalización de un add (0..1, 1 = acaba de empezar); -1 si no canaliza.
+func channel_fraction(add_id: int) -> float:
+	if not _channels.has(add_id):
+		return -1.0
+	return float(_channels[add_id]["time"]) / maxf(0.01, float(_channels[add_id]["total"]))
 
 
 func _resolve_beam(h: Dictionary) -> void:
@@ -2233,6 +2354,9 @@ func _draw_attacks(font: Font, view: Rect2) -> void:
 		var fade: float = clampf(pool["life"] / 0.8, 0.0, 1.0)
 		var pc: Color = pool["color"]
 		var pp: Vector2 = pool["pos"]
+		if pool.get("pit", false):
+			_draw_pit(pp, pool["radius"], int(pool.get("seed", 0)), fade)
+			continue
 		draw_set_transform(pp, 0.0, Vector2(1.0, 0.6))
 		draw_circle(Vector2.ZERO, pool["radius"], Color(pc, 0.22 * fade))
 		draw_circle(Vector2.ZERO, pool["radius"] * 0.7, Color(pc, 0.18 * fade))
@@ -2250,10 +2374,17 @@ func _draw_attacks(font: Font, view: Rect2) -> void:
 			draw_line(h["pos"], b, Color(c, 0.10), h["radius"] * 2.0)
 			draw_line(h["pos"], b, Color(c, 0.25 + 0.5 * t), 2.0 + 4.0 * t, true)
 			continue
+		if h.get("kind", "") == "safe_zones":
+			_draw_safe_zones(h, t)
+			continue
+		if h.get("kind", "") == "break":
+			_draw_breaking_floor(h, t)
+			continue
 		draw_circle(h["pos"], h["radius"], Color(c, 0.10))
 		draw_circle(h["pos"], h["radius"] * t, Color(c, 0.25))
 		draw_arc(h["pos"], h["radius"], 0.0, TAU, 40, Color(c, 0.8), 2.0, true)
 		_hatch_circle(h["pos"], h["radius"], Color.WHITE)
+	_draw_channels()
 	for fx in _flashes_fx:
 		var a: float = 1.0 - fx["time"] / 0.25
 		var c: Color = fx["color"]
@@ -2279,6 +2410,69 @@ func _draw_attacks(font: Font, view: Rect2) -> void:
 		draw_line(pr["pos"] - dir * 16.0, pr["pos"], Color(c, 0.45), pr["radius"], true)
 		draw_circle(pr["pos"], pr["radius"], c)
 		draw_circle(pr["pos"], pr["radius"] * 0.45, Color.WHITE)
+
+
+## Losa a punto de romperse: grietas que crecen desde el centro y un relleno rojo
+## que se llena como el de los golpes pesados.
+func _draw_breaking_floor(h: Dictionary, t: float) -> void:
+	var p: Vector2 = h["pos"]
+	var r: float = h["radius"]
+	var sd: int = h["seed"]
+	draw_circle(p, r, Color(TELEGRAPH, 0.10))
+	draw_circle(p, r * t, Color(TELEGRAPH, 0.24))
+	draw_arc(p, r, 0.0, TAU, 40, Color(TELEGRAPH, 0.55 + 0.45 * t), 3.0, true)
+	for k in 6:
+		var a := TAU * k / 6.0 + sd
+		var mid := p + Vector2.from_angle(a + 0.3) * r * 0.45 * t
+		var tip := p + Vector2.from_angle(a - 0.15) * r * 0.95 * t
+		draw_polyline(PackedVector2Array([p, mid, tip]), Color(0.1, 0.07, 0.05, 0.85), 2.5)
+	_hatch_circle(p, r, Color.WHITE)
+
+
+## Agujero en el suelo (losa rota): negro con borde irregular de cascotes.
+func _draw_pit(p: Vector2, r: float, sd: int, fade: float) -> void:
+	var pts := PackedVector2Array()
+	for k in 16:
+		pts.append(p + Vector2.from_angle(TAU * k / 16.0) * r * (0.85 + 0.15 * sin(k * 2.3 + sd)) * Vector2(1.0, 0.75))
+	draw_colored_polygon(pts, Color(0.02, 0.01, 0.03, 0.92 * fade))
+	draw_polyline(pts + PackedVector2Array([pts[0]]), Color(0.45, 0.38, 0.3, 0.8 * fade), 3.0)
+	_hatch_circle(p, r * 0.8, Color(0.6, 0.2, 0.9))
+
+
+## Zonas seguras: la arena entera en rojo que se oscurece con el aviso y unos
+## círculos verdes (con cruces en modo daltónico) que giran: ahí no te toca.
+func _draw_safe_zones(h: Dictionary, t: float) -> void:
+	var c: Color = h["color"]
+	var center: Vector2 = h["pos"]
+	draw_circle(center, h["radius"], Color(c, 0.06 + 0.12 * t))
+	draw_arc(center, h["radius"], 0.0, TAU, 64, Color(c, 0.4 + 0.5 * t), 4.0, true)
+	for s in h["safe"]:
+		var sc: Vector2 = center + Vector2.from_angle(s["angle"]) * float(s["dist"])
+		var sr: float = s["radius"]
+		draw_circle(sc, sr, Color(0.15, 0.6, 0.3, 0.45))
+		draw_arc(sc, sr, 0.0, TAU, 36, Color(0.6, 1.0, 0.7, 0.9), 3.0, true)
+		if Ailments.colorblind:
+			for k in 4:
+				var d := Vector2.from_angle(PI / 4.0 + PI / 2.0 * k) * sr * 0.5
+				draw_line(sc - d, sc + d, Color(1, 1, 1, 0.7), 3.0)
+	if Ailments.colorblind:
+		_hatch_circle(center, h["radius"], Color.WHITE)
+
+
+## Adds que canalizan: un hilo hacia el jefe que se tensa y un aro con lo que les queda.
+func _draw_channels() -> void:
+	for add_id in _channels:
+		var ai := index_of(add_id)
+		var ch: Dictionary = _channels[add_id]
+		var bi := index_of(ch["boss_id"])
+		if ai == -1 or bi == -1:
+			continue
+		var frac := 1.0 - float(ch["time"]) / maxf(0.01, float(ch["total"]))
+		var c: Color = ch["color"]
+		draw_line(positions[ai], positions[bi], Color(c, 0.25 + 0.6 * frac), 2.0 + 4.0 * frac, true)
+		draw_arc(positions[ai], radii[ai] + 12.0, -PI / 2.0, -PI / 2.0 + TAU * frac, 32, Color(c.lerp(TELEGRAPH, frac), 0.95), 4.0, true)
+		if frac > 0.75:
+			draw_arc(positions[ai], radii[ai] + 18.0, 0.0, TAU, 24, Color(TELEGRAPH, 0.4 + 0.5 * sin(Time.get_ticks_msec() / 60.0)), 2.0, true)
 
 
 static func _cone_points(origin: Vector2, dir: Vector2, radius: float, half: float) -> PackedVector2Array:

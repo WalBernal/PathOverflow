@@ -6,9 +6,30 @@ var _failures := 0
 var _tree: PassiveTree
 var _db: ItemDatabase
 var _classes: Array
+var _script_errors := ScriptErrorCounter.new()
+
+
+## Un SCRIPT ERROR dentro de una prueba la corta sin que falle ningún _check:
+## se cuentan aparte y hacen fallar la tanda (los errores normales que provocan
+## a propósito las pruebas de guardados dañados no cuentan).
+class ScriptErrorCounter extends Logger:
+	var mutex := Mutex.new()
+	var errors: PackedStringArray = []
+
+	func _log_error(function: String, file: String, line: int, code: String, rationale: String, _editor_notify: bool,
+			error_type: int, _script_backtraces: Array[ScriptBacktrace]) -> void:
+		if error_type != ERROR_TYPE_SCRIPT:
+			return
+		mutex.lock()
+		errors.append("%s (%s:%d, %s)" % [rationale if rationale != "" else code, file, line, function])
+		mutex.unlock()
+
+	func _log_message(_message: String, _error: bool) -> void:
+		pass
 
 
 func _initialize() -> void:
+	OS.add_logger(_script_errors)
 	_tree = PassiveTree.load_from_json("res://data/passive_tree.json")
 	_db = ItemDatabase.load_from_dir()
 	_classes = DataLoader.load_json("res://data/classes.json")["classes"]
@@ -64,6 +85,7 @@ func _initialize() -> void:
 	_test_movement_skills()
 	_test_dodge_upgrades()
 	_test_terrains()
+	_test_arena_mechanics()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -95,6 +117,9 @@ func _initialize() -> void:
 	_test_quest_item_art()
 	_test_rams_everywhere()
 	_test_prologue_reachable()
+	OS.remove_logger(_script_errors)
+	for e in _script_errors.errors:
+		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
 	if _failures == 0:
 		print("OK: todas las pruebas pasaron")
 	else:
@@ -1863,6 +1888,57 @@ func _test_board_milestones() -> void:
 	_check(d20["radius"] > d1["radius"] and d20["cooldown"] < d1["cooldown"] and d20["stun"] > d1["stun"], "cada nivel mejora área, enfriamiento y duración")
 	_check(SkillCalc.milestone_text(_db.skills.skills["proceso_hijo"]) == "+1 esbirro", "hito de esbirros")
 	_check(SkillCalc.compute(Motherboard.new(_db.skills.skills["proceso_hijo"], 20, ["DDR5"]), c)["count"] == 4, "esbirros extra por nivel")
+
+
+## Mecánicas de arena de los jefes: suelo que se rompe, zonas seguras que rotan
+## y adds que hay que interrumpir.
+func _test_arena_mechanics() -> void:
+	var c := CharacterData.new(_classes[0], _tree)
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	var pl := Player.new()
+	pl.character = c
+	em.player = pl
+	var boss_id := em.spawn(Vector2(600, 0), Rarity.Enemy.UNIQUE, em.type_index_of("bug"))
+	var bi := em.index_of(boss_id)
+	em.damages[bi] = 50.0
+	# Suelo que se rompe: aviso, golpe a quien está encima y agujero que hace daño.
+	pl.life = pl.max_life()
+	em._resolve_ability(bi, {"kind": "floor_break", "count": 1, "radius": 80.0, "delay": 0.5, "hole_time": 3.0}, Vector2.ZERO)
+	_check(em.hazards.size() == 1 and em.hazards[0]["kind"] == "break", "suelo que se rompe: una losa avisada")
+	em._update_hazards(0.2)
+	_check(is_equal_approx(pl.life, pl.max_life()), "durante el aviso no hace daño")
+	em._update_hazards(0.4)
+	_check(pl.life < pl.max_life() and em.pools.any(func(p: Dictionary) -> bool: return p.get("pit", false)), "al romperse golpea y deja un agujero")
+	# Zonas seguras: fuera de ellas te toca; dentro, no.
+	em.pools.clear()
+	pl.life = pl.max_life()
+	em._resolve_ability(bi, {"kind": "safe_zones", "center": [0, 0], "radius": 900.0, "delay": 1.0, "safe_count": 2,
+		"safe_distance": 300.0, "safe_radius": 100.0, "spin": 0.5}, Vector2.ZERO)
+	var zones: Dictionary = em.hazards[0]
+	var first_angle: float = zones["safe"][0]["angle"]
+	em._update_hazards(0.5)
+	_check(not is_equal_approx(float(zones["safe"][0]["angle"]), first_angle), "las zonas seguras giran")
+	var safe_spot: Vector2 = Vector2.from_angle(zones["safe"][0]["angle"]) * 300.0
+	_check(EnemyManager.in_safe_zone(zones, safe_spot) and not EnemyManager.in_safe_zone(zones, Vector2.ZERO), "dentro y fuera de una zona segura")
+	em._update_hazards(0.6)
+	_check(pl.life < pl.max_life() and em.hazards.is_empty(), "fuera de las zonas seguras, al acabar el aviso, te toca")
+	# Adds que canalizan: si no se matan, el jefe se cura; al morir, se interrumpe.
+	em.lives[bi] = em.max_lives[bi] * 0.5
+	var before := em.index_of(boss_id)
+	em._resolve_ability(before, {"kind": "channel_adds", "count": 1, "channel_time": 1.0, "effect": "heal", "amount": 0.1, "distance": 200.0}, Vector2.ZERO)
+	var add_id: int = em._channels.keys()[0]
+	_check(em.channel_fraction(add_id) > 0.99, "el add empieza a canalizar")
+	em._update_channels(1.05)
+	bi = em.index_of(boss_id)
+	_check(em.lives[bi] > em.max_lives[bi] * 0.55, "canalización completa: el jefe se cura")
+	var ai := em.index_of(add_id)
+	em.lives[ai] = 0.0
+	em._kill(ai)
+	em._update_channels(0.1)
+	_check(em.channel_fraction(add_id) < 0.0, "matar al add interrumpe la canalización")
+	pl.free()
+	em.free()
 
 
 ## Terrenos (aceite, estática, refrigerante) y sus combos: aceite + fuego =

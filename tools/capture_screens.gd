@@ -50,6 +50,10 @@ func _run() -> void:
 		await _capture_golems_in_world()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("arena"):
+		await _capture_arena()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("terrenos"):
 		await _capture_terrains()
 		get_tree().quit()
@@ -528,6 +532,50 @@ func _capture_windows() -> void:
 	for k in saved_rules:
 		LootFilter.set_rule(k, saved_rules[k])
 	GameSettings.set_value("interface", "scale", saved_scale)
+	world.set("_since_save", -9999.0)
+
+
+## Mecánicas de arena: losas agrietándose y un agujero, zonas seguras que giran
+## y dos adds canalizando hacia el jefe (también en modo daltónico).
+func _capture_arena() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Arena", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "zona2"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 12
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.5)
+	var ui: GameUI = world.get("ui")
+	if ui.is_choosing():
+		ui.call("_on_choice_picked", "golem_hardware", func(_s: String) -> void: pass)
+	get_tree().paused = false
+	await _wait(2.5)   # que pase el título de la zona
+	var player: Player = world.get("player")
+	var em: EnemyManager = world.get("enemies")
+	player.invulnerable = true
+	em.clear_all()
+	var p := player.global_position
+	var boss := em.spawn(p + Vector2(320, -60), Rarity.Enemy.UNIQUE, em.type_index_of("bug"))
+	var bi := em.index_of(boss)
+	em.speeds[bi] = 0.0
+	em._resolve_ability(bi, {"kind": "floor_break", "count": 4, "radius": 80.0, "delay": 3.0, "spread": 260.0}, p + Vector2(-260, 120))
+	em._resolve_ability(bi, {"kind": "floor_break", "count": 1, "radius": 80.0, "delay": 0.05, "hole_time": 30.0}, p + Vector2(-420, -150))
+	em._resolve_ability(bi, {"kind": "safe_zones", "center": [p.x, p.y], "radius": 700.0, "delay": 6.0, "safe_count": 2,
+		"safe_distance": 280.0, "safe_radius": 110.0, "spin": 0.4}, p)
+	em._resolve_ability(bi, {"kind": "channel_adds", "count": 2, "channel_time": 6.0, "distance": 260.0}, p)
+	for id in em._channels:
+		em.speeds[em.index_of(id)] = 0.0
+	await _wait(1.8)
+	_save("127_mecanicas_arena")
+	var was_cb := Ailments.colorblind
+	Ailments.colorblind = true
+	await _wait(0.2)
+	_save("128_mecanicas_arena_daltonico")
+	Ailments.colorblind = was_cb
 	world.set("_since_save", -9999.0)
 
 
