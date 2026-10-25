@@ -513,6 +513,9 @@ func _build_pause_menu() -> Control:
 	var achievements := UiStyle.button("Logros y cosméticos...", open_achievements, 300)
 	achievements.tooltip_text = "Tus logros y los sombreros, auras y pisadas que te dan."
 	right.add_child(achievements)
+	var ladder := UiStyle.button("Récords...", open_ladder, 300)
+	ladder.tooltip_text = "Tus récords y la tabla local: oleadas sin fin y tiempo contra cada jefe."
+	right.add_child(ladder)
 	var lore := UiStyle.button("Archivos encontrados...", open_lore_log, 300)
 	lore.tooltip_text = "Commits perdidos, logs y correos de la UAdeO que has encontrado por las zonas."
 	right.add_child(lore)
@@ -741,10 +744,16 @@ func _on_menu_requested(menu: String) -> void:
 	_update_minimap()
 
 
-## Catálogo de hardware (B): pausa el juego mientras está abierto, como el árbol.
 ## Logros y cosméticos (desde la pausa).
 func open_achievements() -> void:
 	var panel := AchievementsPanel.new(GameData.current_character)
+	_root.add_child(panel)
+	panel.popup_centered()
+
+
+## Récords del banco de oleadas y de los jefes (pausa o Aida).
+func open_ladder() -> void:
+	var panel := LadderPanel.new(GameData.current_character)
 	_root.add_child(panel)
 	panel.popup_centered()
 
@@ -756,6 +765,7 @@ func open_lore_log() -> void:
 	lore_log.popup_centered()
 
 
+## Catálogo de hardware (B): pausa el juego mientras está abierto, como el árbol.
 func toggle_catalog() -> void:
 	if catalog.visible:
 		catalog.visible = false

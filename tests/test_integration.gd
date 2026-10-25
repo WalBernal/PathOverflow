@@ -160,6 +160,19 @@ func _play_incident(class_def: Dictionary) -> int:
 	await _frames(2)
 	_collect("%s · incidente · al abrir" % class_def["id"])
 	await _play_zone(world, class_def["id"], "incidente")
+	# Banco de oleadas (Ladder) desde el diálogo de Aida, con la tabla abierta y cerrada antes.
+	world.call("_on_dialogue_action", {"type": "open_ladder"})
+	await _frames(2)
+	for child in (world.get("ui").get("_root") as Control).get_children():
+		if child is LadderPanel:
+			child.queue_free()
+	world.call("_on_dialogue_action", {"type": "open_waves"})
+	await _frames(2)
+	_collect("%s · oleadas · al abrir" % class_def["id"])
+	await _play_zone(world, class_def["id"], "oleadas", false)
+	var waves: Dictionary = world.get("_waves")
+	if not waves.is_empty() and int(waves["wave"]) == 0:   # vacío: caíste o saliste, y ya se anotó
+		_failures.append("%s · oleadas: no salió ninguna oleada" % class_def["id"])
 	world.set("_since_save", -9999.0)
 	remove_child(world)
 	world.queue_free()
@@ -170,9 +183,10 @@ func _play_incident(class_def: Dictionary) -> int:
 	return 1
 
 
-func _play_zone(world: Node, class_id: String, zone_id: String) -> void:
+func _play_zone(world: Node, class_id: String, zone_id: String, travel := true) -> void:
 	var label := "%s · %s" % [class_id, zone_id]
-	world.call("travel_to", zone_id, "")
+	if travel:
+		world.call("travel_to", zone_id, "")
 	world.set("_since_save", -9999.0)
 	var player: Player = world.get("player")
 	var skills: SkillController = world.get("skills")

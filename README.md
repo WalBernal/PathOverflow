@@ -420,6 +420,10 @@ Por las zonas de los cuatro actos hay **commits perdidos, logs y correos de la U
 
 Hay **10 logros** (`scripts/game/achievements.gd`): tu primer enemigo, cada jefe de acto, 1000 enemigos, vengarte de tu némesis, 9 archivos de lore, el atlas a nivel 3 y terminar el Acto IV en Pesadilla. Cada uno regala un **cosmético** que no da stats: sombreros (gorra del hackatón, casco de obra, sombrero de pescador, corona de admin), auras (dorada, silicio, morada) y pisadas que se quedan un momento en el suelo (bits, llamas, glitch). Se revisan al eliminar enemigos y al cambiar de zona; se ven y se equipan en **Pausa → Logros y cosméticos** y se guardan con el personaje.
 
+## Banco de oleadas y récords
+
+Desde el **puesto de Aida** (tras el Acto I) se abre el **banco de oleadas sin fin** (`scripts/game/ladder.gd`): una zona que ya conoces, vacía, donde llegan oleadas cada vez más grandes y fuertes (más especiales y élites, +1 nivel de área cada 5) con un **jefe de oleada** cada 5, que deja botín. Dura hasta que caes o sales por el portal. Se anotan tus récords (más oleadas, luego menos tiempo) y tu **mejor tiempo contra cada jefe de acto** (desde que entras a su zona). Además hay una **tabla local** con el top 10 de todos los personajes de este equipo (`user://ladder.json`). Se ve en **Pausa → Récords** o con Aida.
+
 ## Eventos de zona
 
 En cada visita a una zona de combate aparecen al azar algunos eventos (`scripts/game/zone_events.gd`): **Datos huérfanos** (dos oleadas y botín), **Santuarios** (bono temporal o cargas llenas), **Emboscadas** (invisibles) y **Deploy fallido** (dos raros con escolta). Nuevos:

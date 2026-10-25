@@ -121,6 +121,7 @@ func _initialize() -> void:
 	_test_side_quest_rewards()
 	_test_more_uniques_and_sets()
 	_test_achievements()
+	_test_ladder()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -2878,6 +2879,58 @@ func _test_achievements() -> void:
 	_check(Achievements.equipped(saved, "hat") == "casco_obra" and Achievements.unlocked_ids(saved).size() == 3, "logros y cosméticos se guardan")
 	var panel := AchievementsPanel.new(c)
 	panel.free()
+
+
+## Banco de oleadas sin fin y ladder local (T46).
+func _test_ladder() -> void:
+	var zones := {}
+	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json", "res://data/act4.json"]:
+		var act: Dictionary = DataLoader.load_json(path)
+		for z in act["zones"]:
+			z["act"] = act["id"]
+			Zone.scale_def(z)
+			zones[z["id"]] = z
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var def := Ladder.build_arena(zones, 20, "campamento", rng)
+	_check(def["id"] == Ladder.ZONE_ID and int(def["enemies"]["packs"]) == 0 and not def["enemies"].get("types", []).is_empty(),
+		"la arena es una zona vacía que sabe qué enemigos soltar")
+	_check(def["exits"].size() == 1 and def["exits"][0]["target"] == "campamento" and not def.has("npcs") and not def.has("challenges"), "solo la salida al campamento")
+	_check(int(zones[def["waves_mode"]["from"]]["enemies"].get("packs", 0)) > 0, "no vacía la zona original")
+	var w1 := Ladder.wave_plan(1)
+	var w10 := Ladder.wave_plan(10)
+	_check(int(w10["count"]) > int(w1["count"]) and float(w10["special_chance"]) > float(w1["special_chance"]) and int(w10["elites"]) > int(w1["elites"]),
+		"las oleadas crecen")
+	_check(not w1["boss"] and Ladder.wave_plan(5)["boss"] and int(w10["level_bonus"]) == 2 and int(Ladder.wave_plan(500)["count"]) == Ladder.MAX_COUNT,
+		"jefe cada 5, nivel que sube y un tope de enemigos")
+	_check(Ladder.boss_life_mult(10) > Ladder.boss_life_mult(5), "cada jefe de oleada aguanta más")
+	# Récords del personaje.
+	var c := CharacterData.new(_classes[0], _tree)
+	_check(not Ladder.record_waves(c, 0, 10.0) and Ladder.record_waves(c, 6, 300.0), "una partida con oleadas es récord")
+	_check(not Ladder.record_waves(c, 5, 100.0) and Ladder.record_waves(c, 6, 250.0) and not Ladder.record_waves(c, 6, 260.0),
+		"récord: más oleadas, o las mismas en menos tiempo")
+	_check(Ladder.record_boss(c, "daemon", 90.0) and not Ladder.record_boss(c, "daemon", 95.0) and Ladder.record_boss(c, "daemon", 80.0), "récord de jefe: menos tiempo")
+	var saved := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())), _classes[0], _tree, _db)
+	_check(int(Ladder.personal(saved)["best_wave"]) == 6 and float(Ladder.personal(saved)["bosses"]["daemon"]) == 80.0, "los récords se guardan")
+	# Tabla local: top ordenado, guardado y cargado.
+	var path := "user://test_ladder.json"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	var board := Ladder.load_board(path)
+	_check(board["waves"].is_empty() and board["bosses"].is_empty(), "tabla vacía sin archivo")
+	for k in Ladder.TOP_SIZE:
+		Ladder.submit_waves(board, Ladder.entry(c, 3 + k, 100.0))
+	_check(Ladder.submit_waves(board, Ladder.entry(c, 1, 5.0)) == 0 and board["waves"].size() == Ladder.TOP_SIZE, "lo que no entra en el top se descarta")
+	_check(Ladder.submit_waves(board, Ladder.entry(c, 12, 90.0)) == 1 and Ladder.submit_waves(board, Ladder.entry(c, 12, 95.0)) == 2, "más oleadas primero, empate por tiempo")
+	_check(Ladder.submit_boss(board, "daemon", Ladder.entry(c, 0, 60.0)) == 1 and Ladder.submit_boss(board, "daemon", Ladder.entry(c, 0, 50.0)) == 1, "jefes: menos tiempo primero")
+	Ladder.save_board(board, path)
+	var loaded := Ladder.load_board(path)
+	_check(loaded["waves"].size() == Ladder.TOP_SIZE and int(loaded["waves"][0]["waves"]) == 12 and loaded["bosses"]["daemon"].size() == 2, "la tabla se guarda en disco")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	_check(Ladder.format_time(125.4) == "2:05", "tiempo en m:ss")
+	# Aida abre el banco y la tabla.
+	var npcs: Dictionary = DataLoader.load_json("res://data/npcs.json")
+	var text := JSON.stringify(npcs)
+	_check(text.contains("\"open_waves\"") and text.contains("\"open_ladder\""), "Aida abre el banco de oleadas y los récords")
 
 
 func _db_enemies() -> Array:

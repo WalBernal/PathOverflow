@@ -34,6 +34,10 @@ var _since_save := 0.0
 var _boss_alive := false
 ## Fases de jefe ya iniciadas en esta zona (la música acelera con cada una).
 var _boss_phase := 0
+## Cuándo apareció el jefe de la zona (play_time), para su récord de tiempo.
+var _boss_started := 0.0
+## Banco de oleadas en curso (Ladder): {wave, ids, next_in, time, base_level}.
+var _waves: Dictionary = {}
 ## Prueba de estrés en curso: {def, wave, total, ids, next_in, rewards}.
 var _challenge: Dictionary = {}
 ## Recompensas ya enseñadas por prueba (para no cambiarlas al volver a mirar).
@@ -195,6 +199,7 @@ func _process(delta: float) -> void:
 	_update_combat_music(delta)
 	_update_twins(delta)
 	_update_challenge(delta)
+	_update_waves(delta)
 	if not _event_fights.is_empty():
 		_update_event_fights()
 	_immune_warning = maxf(0.0, _immune_warning - delta)
@@ -247,6 +252,8 @@ func travel_to(zone_id: String, entry := "") -> void:
 		return
 	if not _challenge.is_empty():
 		_fail_challenge("Has salido de la zona: la prueba de estrés se cancela.")
+	if not _waves.is_empty():
+		_end_waves("Sales del banco de oleadas.")
 	_twins = {}
 	if zone:
 		remove_child(zone)
@@ -503,6 +510,7 @@ func _spawn_zone_enemies() -> void:
 			boss.get("name", ""), float(boss.get("life_mult", 1.0)), boss.get("abilities", []))
 		enemies.set_phases(enemies.ids[enemies.ids.size() - 1], boss.get("phases", []))
 		_boss_alive = true
+		_boss_started = character.play_time
 
 
 ## Roles en las manadas (desde el nivel de zona 2): a veces un guardián, un
@@ -738,6 +746,93 @@ func _fail_challenge(message: String) -> void:
 	ui.hud.flash(message, Color("e06c6c"))
 
 
+# --- Banco de oleadas sin fin y récords (Ladder) ---
+
+func open_waves() -> void:
+	var def := Ladder.build_arena(GameData.zones, character.level, GameData.town_for_zone(zone.id), _rng)
+	if def.is_empty():
+		ui.hud.flash("Todavía no hay ninguna zona para el banco de oleadas.", Color("e0a060"))
+		return
+	GameData.zones[Ladder.ZONE_ID] = def
+	travel_to(Ladder.ZONE_ID, "")
+	_waves = {"wave": 0, "ids": [], "next_in": 3.0, "time": 0.0, "base_level": enemies.area_level}
+	var best := int(Ladder.personal(character).get("best_wave", 0))
+	ui.hud.flash("%s\nOleadas sin fin: aguanta todo lo que puedas.%s" % [def["name"], " Tu récord: %d." % best if best > 0 else ""], Color("ff9a4a"))
+
+
+func _update_waves(delta: float) -> void:
+	if _waves.is_empty() or enemies.frozen or zone == null or zone.id != Ladder.ZONE_ID:
+		return
+	_waves["time"] += delta
+	var ids: Array = _waves["ids"]
+	_waves["ids"] = ids.filter(func(id: int) -> bool: return enemies.is_alive_id(id))
+	var left: int = _waves["ids"].size()
+	var clock := Ladder.format_time(_waves["time"])
+	if left > 0:
+		ui.set_wave_text("OLEADAS · %d · Enemigos: %d · %s" % [_waves["wave"], left, clock])
+		return
+	if _waves["wave"] > 0 and _waves.get("cleared", 0) < _waves["wave"]:
+		_waves["cleared"] = _waves["wave"]
+		if Ladder.wave_plan(_waves["wave"])["boss"]:   # botín por cada jefe de oleada
+			for k in 2:
+				loot.drop_item(item_generator.roll_drop(enemies.area_level, 1.0), zone.free_spot_near(player.global_position + Vector2.from_angle(PI * k) * 70.0))
+	_waves["next_in"] -= delta
+	ui.set_wave_text("OLEADAS · %d en %d… · %s" % [_waves["wave"] + 1, ceili(maxf(0.0, _waves["next_in"])), clock])
+	if _waves["next_in"] <= 0.0:
+		_waves["wave"] += 1
+		_waves["next_in"] = 3.0
+		_spawn_endless_wave(_waves["wave"])
+
+
+func _spawn_endless_wave(wave: int) -> void:
+	var plan := Ladder.wave_plan(wave)
+	enemies.area_level = int(_waves["base_level"]) + int(plan["level_bonus"])
+	var types: Array = zone.def.get("enemies", {}).get("types", [])
+	var center := player.global_position
+	var count := int(plan["count"])
+	for k in count:
+		var rarity := Rarity.Enemy.NORMAL
+		if k < int(plan["elites"]):
+			rarity = Rarity.Enemy.ELITE
+		elif _rng.randf() < float(plan["special_chance"]):
+			rarity = Rarity.Enemy.SPECIAL
+		var type := enemies.type_index_of(types[_rng.randi_range(0, types.size() - 1)]) if not types.is_empty() else -1
+		var p := zone.free_spot_near(center + Vector2.from_angle(TAU * k / count + _rng.randf() * 0.3) * _rng.randf_range(300.0, 480.0))
+		_waves["ids"].append(enemies.spawn(p, rarity, type))
+	if plan["boss"]:
+		var type := enemies.type_index_of(types[_rng.randi_range(0, types.size() - 1)]) if not types.is_empty() else -1
+		_waves["ids"].append(enemies.spawn(zone.free_spot_near(center + Vector2(0, -360)), Rarity.Enemy.UNIQUE, type,
+			"Jefe de oleada %d" % wave, Ladder.boss_life_mult(wave)))
+	ui.hud.flash("Oleada %d%s" % [wave, " · ¡jefe de oleada!" if plan["boss"] else ""], Color("ff9a4a"))
+	Sfx.play("wave")
+
+
+## Fin de la partida de oleadas (caída o salida): récord personal y tabla local.
+func _end_waves(reason: String) -> void:
+	var done := int(_waves.get("cleared", 0))
+	var seconds := float(_waves["time"])
+	_waves = {}
+	ui.set_wave_text("")
+	if done <= 0:
+		return
+	var best := Ladder.record_waves(character, done, seconds)
+	var board := Ladder.load_board()
+	var rank := Ladder.submit_waves(board, Ladder.entry(character, done, seconds))
+	Ladder.save_board(board)
+	ui.hud.flash("%s %d oleadas en %s.%s%s" % [reason, done, Ladder.format_time(seconds), " ¡Récord personal!" if best else "",
+		" Puesto %d en la tabla local." % rank if rank > 0 else ""], Color("ffd24a") if best else Color("ff9a4a"))
+	_mark_dirty()
+
+
+func _record_boss_time(boss_id: String, seconds: float) -> void:
+	var best := Ladder.record_boss(character, boss_id, seconds)
+	var board := Ladder.load_board()
+	var rank := Ladder.submit_boss(board, boss_id, Ladder.entry(character, 0, seconds))
+	Ladder.save_board(board)
+	if best:
+		ui.hud.flash("Récord contra este jefe: %s.%s" % [Ladder.format_time(seconds), " Puesto %d en la tabla local." % rank if rank > 0 else ""], Color("ffd24a"))
+
+
 func _discover_waypoint() -> void:
 	var found: Array = character.flags.get("waypoints", [])
 	if not found.has(zone.id):
@@ -749,6 +844,8 @@ func _discover_waypoint() -> void:
 
 func _on_player_died() -> void:
 	skills.clear_auras()
+	if not _waves.is_empty():
+		_end_waves("Caíste en el banco de oleadas.")
 	character.flags["stat_deaths"] = int(character.flags.get("stat_deaths", 0)) + 1
 	if zone and Nemesis.record(character, enemies.last_hitter, zone.id, String(GameData.act_of_zone(zone.id).get("id", "")), Time.get_ticks_msec()):
 		ui.hud.flash("%s te recordará. Y tú a él: ahora es tu némesis." % Nemesis.current(character).get("name", "Ese élite"), Color("e0503a"))
@@ -1007,6 +1104,7 @@ func _on_boss_defeated(pos: Vector2) -> void:
 	MusicPlayer.set_intensity(0)
 	MusicPlayer.play_track(String(GameData.music.get("zones", {}).get(GameData.town_for_zone(zone.id), "camp1")), 3.0)
 	var boss: Dictionary = zone.def.get("boss", {})
+	_record_boss_time(String(boss.get("type", "daemon")), character.play_time - _boss_started)
 	var done_flag: String = boss.get("complete_flag", "act1_complete")
 	var newly_unlocked := Difficulty.unlocked(character)
 	character.flags[done_flag] = true
@@ -1167,6 +1265,10 @@ func _on_dialogue_action(action: Dictionary) -> void:
 				ui.hud.flash(Difficulty.describe(d), Difficulty.COLORS[d])
 		"open_incident":
 			open_incident()
+		"open_waves":
+			open_waves()
+		"open_ladder":
+			ui.open_ladder()
 		"open_atlas":
 			var atlas := AtlasPanel.new(character, open_incident)
 			ui.add_child(atlas)
