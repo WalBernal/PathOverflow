@@ -233,6 +233,55 @@
       "description": "Se teletransporta junto a ti cada pocos segundos."
     },
     {
+      "id": "codigo_error",
+      "name": "Código de error",
+      "color": "ffe050",
+      "innate_only": true,
+      "on_hit": {"status": {"id": "chill", "chance": 35, "duration": 2.5}},
+      "description": "Rasgo del Beep Code: sus pitidos te dejan lento (código 1: memoria lenta)."
+    },
+    {
+      "id": "puenteado",
+      "name": "Puenteado",
+      "color": "c8c8c8",
+      "innate_only": true,
+      "teleporter": {"cooldown": 5.0, "range": 200},
+      "description": "Rasgo del Jumper Suelto: salta de pin en pin hasta caer a tu lado."
+    },
+    {
+      "id": "fuga_acido",
+      "name": "Fuga de ácido",
+      "color": "a0ff60",
+      "innate_only": true,
+      "death_explosion": {"radius": 130, "damage_mult": 2.0, "delay": 0.8},
+      "description": "Rasgo de la Pila Hinchada: al morir revienta en un área grande. Apártate."
+    },
+    {
+      "id": "bad_block",
+      "name": "Bad block",
+      "color": "aa0000",
+      "innate_only": true,
+      "reflect": 0.15,
+      "resist": {"physical": 30},
+      "description": "Rasgo del Sector Defectuoso: un trozo de disco dañado que te devuelve parte del daño."
+    },
+    {
+      "id": "legado",
+      "name": "Legado",
+      "color": "55ffff",
+      "innate_only": true,
+      "shield": 0.4,
+      "description": "Rasgo de la Option ROM: viene con su propio escudo de compatibilidad (40 % de su vida)."
+    },
+    {
+      "id": "reinicio_watchdog",
+      "name": "Reinicio",
+      "color": "ff6a40",
+      "innate_only": true,
+      "healer": {"radius": 220, "pct": 4.0},
+      "description": "Rasgo del Watchdog Timer: «reinicia» a los enemigos cercanos y les devuelve vida. Mátalo primero."
+    },
+    {
       "id": "combo_termonuclear",
       "name": "Termonuclear",
       "combo": [

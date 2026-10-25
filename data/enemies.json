@@ -558,6 +558,89 @@
         "chance": 12,
         "duration": 1.2
       }
+    },
+    {
+      "id": "beep_code",
+      "name": "Beep Code",
+      "sprite_row": 22,
+      "life_mult": 0.8,
+      "speed_mult": 1.25,
+      "damage_mult": 0.9,
+      "xp_mult": 1.0,
+      "scale": 0.9,
+      "innate_affixes": ["codigo_error"],
+      "attack": {"kind": "charge", "range": 320, "dash_speed": 620, "dash_time": 0.35, "width": 34, "windup": 0.6, "cooldown": 3.0, "damage_mult": 1.2, "color": "ffe050"},
+      "resist": {"lightning": 30, "cold": 30}
+    },
+    {
+      "id": "jumper_suelto",
+      "name": "Jumper suelto",
+      "sprite_row": 23,
+      "life_mult": 1.0,
+      "speed_mult": 1.1,
+      "damage_mult": 1.1,
+      "xp_mult": 1.1,
+      "scale": 0.95,
+      "innate_affixes": ["puenteado"],
+      "attack": {"kind": "slam", "range": 80, "radius": 85, "windup": 0.7, "cooldown": 2.8, "damage_mult": 1.4, "color": "c8c8c8"},
+      "resist": {"physical": 25, "lightning": -20}
+    },
+    {
+      "id": "pila_hinchada",
+      "name": "Pila hinchada",
+      "sprite_row": 24,
+      "life_mult": 2.0,
+      "speed_mult": 0.55,
+      "damage_mult": 1.1,
+      "xp_mult": 1.4,
+      "scale": 1.15,
+      "innate_affixes": ["fuga_acido"],
+      "attack": {"kind": "slam", "range": 90, "radius": 105, "windup": 1.0, "cooldown": 3.4, "damage_mult": 1.6, "color": "a0ff60",
+        "pool": {"dps_mult": 0.35, "time": 4.0, "kind": "chaos"}},
+      "resist": {"lightning": 50, "chaos": 30},
+      "immune": ["shock"]
+    },
+    {
+      "id": "sector_defectuoso",
+      "name": "Sector defectuoso",
+      "sprite_row": 25,
+      "life_mult": 1.6,
+      "speed_mult": 0.0,
+      "damage_mult": 1.3,
+      "xp_mult": 1.2,
+      "scale": 1.0,
+      "innate_affixes": ["bad_block"],
+      "attack": {"kind": "slam", "range": 120, "radius": 120, "windup": 0.8, "cooldown": 2.6, "damage_mult": 1.6, "color": "aa0000"},
+      "resist": {"fire": 30, "cold": 30},
+      "immune": ["freeze", "bleed"]
+    },
+    {
+      "id": "option_rom",
+      "name": "Option ROM",
+      "sprite_row": 26,
+      "life_mult": 1.4,
+      "speed_mult": 0.6,
+      "damage_mult": 0.9,
+      "xp_mult": 1.4,
+      "scale": 1.05,
+      "innate_affixes": ["legado"],
+      "attack": {"kind": "summon", "type": "beep_code", "count": 2, "max_alive": 8, "range": 520, "keep_distance": 360, "windup": 1.0, "cooldown": 6.0, "color": "55ffff"},
+      "resist": {"cold": 40, "chaos": 20},
+      "immune": ["poison"]
+    },
+    {
+      "id": "watchdog_timer",
+      "name": "Watchdog Timer",
+      "sprite_row": 27,
+      "life_mult": 1.2,
+      "speed_mult": 1.15,
+      "damage_mult": 1.0,
+      "xp_mult": 1.3,
+      "scale": 1.0,
+      "innate_affixes": ["reinicio_watchdog"],
+      "hunts_allies": true,
+      "resist": {"fire": 40, "physical": 15},
+      "on_hit_status": {"id": "shock", "chance": 25, "duration": 3.0}
     }
   ]
 }

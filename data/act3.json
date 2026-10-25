@@ -627,6 +627,10 @@
         "from_sector": [
           200,
           1200
+        ],
+        "from_post": [
+          2190,
+          1200
         ]
       },
       "cutscene_on_enter": {
@@ -659,11 +663,10 @@
             2300,
             1200
           ],
-          "target": "",
-          "entry": "",
+          "target": "post",
+          "entry": "from_camara",
           "label": "Bus de la BIOS",
-          "requires_flag": "act3_complete",
-          "message": "Más abajo solo queda la BIOS... (el Acto IV está en desarrollo)."
+          "requires_flag": "act3_complete"
         }
       ],
       "boss": {

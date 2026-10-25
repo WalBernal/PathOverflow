@@ -186,7 +186,7 @@ Origen: R1 §4, §8
 - Documento en `docs/acto4.md` siguiendo `docs/lore.md` y `docs/estilo.md`: zonas, NPC, misiones, enemigos nuevos, jefe con fases y escenas.
 - **Revisión del usuario antes de construirlo.** Aprobado el 2026-10-25, con las respuestas a las preguntas abiertas al final de `docs/acto4.md`: El Pepe no aparece hasta el Acto V (solo se le menciona), la contraseña se guarda, la decisión sobre los huérfanos va en este acto, Mario acompaña a Rafa al hub, las zonas se bifurcan y la historia sigue en el Acto V; el nombre se queda.
 
-### [ ] T28 · Acto IV: zonas, campamento y enemigos · M
+### [x] T28 · Acto IV: zonas, campamento y enemigos · M
 - Zonas jugables con suelo en pixel art, ambiente, densidad y salidas; enemigos con afijos propios.
 - Según `docs/acto4.md`: estilos `setup` y `vga16`, hub La Pila del CMOS, **zonas bifurcadas** (dos caminos que se separan y se vuelven a unir antes del jefe).
 
@@ -367,6 +367,7 @@ Origen: R1 §7, R2 §12
 Origen: comprobaciones de T16
 - El 25-10-2026, entre las 00:56 y las 00:58, Godot se cerró 4 veces sin ningún mensaje (código de salida -1, sin evento de Windows) jugando el Tester QA en el acto III (Oblea / Memoria ROM). Después, 0 de 19 pasadas fallaron, y 0 de 6 en el commit 1a91bf1.
 - Probar varias decenas de pasadas de esa clase y zonas (con y sin `--verbose`), revisar hilos (FreezeWatch, el `Logger` de la prueba) y, si vuelve a pasar, sacar la traza con el ejecutable de consola o un volcado.
+- El 25-10-2026 entre las 08:00 y las 08:40 (durante T28) volvió: 6 de 8 pasadas de la integración rápida completa se cerraron igual (código -1, sin salida ni evento), en zonas distintas de los actos I a III y también **sin cargar el Acto IV**. Nunca en tandas cortas (una clase o pocas zonas: 0 de 8). Memoria, handles e hilos del proceso estables durante la pasada; el sistema tenía 1,6 GB de RAM libre y otra instancia de Godot grabando vídeo. Sospecha: depende de la carga de la máquina o de algo que se acumula entre mundos (la prueba crea y libera un `World` por clase y acto).
 
 ---
 
@@ -413,3 +414,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T25 · Cuatro chips únicos que transforman los nodos asignados en su radio (Criogénico: fuego → frío; Sobretensión: frío → rayo; Monohilo: esbirros → tú; Blindado: evasión → armadura y destreza → fuerza), con aro de radio en el árbol y línea en el tooltip; las pruebas comprueban que cada uno tiene nodos que transformar junto a alguna ranura. No hicieron falta más ranuras.
 - 2026-10-25 · T26 · En el menú K: comparador de dos placas (DPS, daño, usos/s, crítico, maná, área, proyectiles, enfriamiento y duración, la mejor en verde) y construcciones guardadas (`Builds`, en flags del personaje: árbol, maestrías y barra; hasta 8; cargar reasigna gratis y coloca las placas que tengas, avisa de las que faltan y no cambia nada si faltan puntos o sitio en la bolsa).
 - 2026-10-25 · T27 · Borrador de diseño del Acto IV en `docs/acto4.md` («El Setup de la BIOS», niveles 38–48): premisa (la cuenta de fábrica admin/admin firmó el Último Commit), hub con Berta la Pila CR2032, seis zonas, seis enemigos con afijos, misiones, jefe admin/admin con tres fases (resistencias, mecánica de arena y música por fase), escenas y gancho del Acto V. **Pendiente de revisión del usuario** (preguntas abiertas al final del documento) antes de T28.
+- 2026-10-25 · T28 · Acto IV jugable sin historia todavía (`data/act4.json`): POST, hub La Pila del CMOS, Menú Advanced que se bifurca en la Secuencia de Arranque y la ROM de Video Legada, que se juntan en el Sector Oculto, y la arena del Modo de Gestión del Sistema (sin jefe hasta T30). Estilos `setup` y `vga16` (suelo, decorado, luces, posproceso y ambientes generados con `generate_sfx.gd -- acto4`), seis enemigos con sprite y afijo innato (`innate_affixes`; `innate_only` no sale al azar). La Cámara de Reflasheo lleva al POST. Comprobación: lógica + integración rápida de las zonas del Acto IV; la integración completa se cae al azar también sin el Acto IV (ver T67).

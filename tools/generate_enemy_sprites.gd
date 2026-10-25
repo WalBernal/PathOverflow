@@ -21,7 +21,8 @@ var oy := 0
 
 func _initialize() -> void:
 	var rows: Array[Callable] = [_bug, _zombie_process, _memory_leak, _worm, _daemon, _spam_bot, _thread, _node_modules, _troll, _irq, _mutex, _wild_pointer, _twin_thread, _init_fork, _init_core,
-		_rootkit, _ghost_process, _bios_sentinel, _firmware_worm, _electromigration, _capacitor, _fw_update]
+		_rootkit, _ghost_process, _bios_sentinel, _firmware_worm, _electromigration, _capacitor, _fw_update,
+		_beep_code, _jumper, _swollen_battery, _bad_sector, _option_rom, _watchdog]
 	img = Image.create_empty(S * FRAMES, S * rows.size(), false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
 	for row in rows.size():
@@ -436,3 +437,74 @@ func _fw_update(f: int) -> void:
 	_rect(7, 17, 24, 21, Color("0a0a0e"))
 	_rect(8, 18, 8 + 3 + f * 4, 20, Color("3cff6a"))   # la barra de progreso avanza
 	_px(26, 6, Color("5cd0ff"))
+
+
+# --- Acto IV: el Setup de la BIOS ---
+
+## Beep Code: un altavoz del POST con ondas de sonido que laten.
+func _beep_code(f: int) -> void:
+	var bob: int = [0, -1, 0, 1][f]
+	_rect(8, 12 + bob, 14, 22 + bob, Color("3a3a42"))
+	for y in range(9, 26):   # cono del altavoz
+		var w := (y - 9) / 3
+		if y >= 9 + bob and y <= 25 + bob:
+			_line(14, y, 14 + mini(w, 6), y, Color("5a5a66"))
+	_ellipse(12, 17 + bob, 2, 2, Color("ffe050"))
+	for k in (f % 2) + 1:   # ondas
+		_line(23 + k * 3, 12 + bob, 25 + k * 3, 17 + bob, Color("ffe050"))
+		_line(25 + k * 3, 17 + bob, 23 + k * 3, 22 + bob, Color("ffe050"))
+
+
+## Jumper suelto: un puente de plástico negro sobre dos pines dorados, saltando.
+func _jumper(f: int) -> void:
+	var hop: int = [0, -3, -4, -2][f]
+	_rect(10, 10 + hop, 21, 20 + hop, Color("1a1a1e"))
+	_rect(11, 11 + hop, 20, 13 + hop, Color("3a3a42"))
+	_line(13, 21 + hop, 13, 27, Color("d0a040"))
+	_line(18, 21 + hop, 18, 27, Color("d0a040"))
+	_px(13, 16 + hop, Color("ffffff"))
+	_px(18, 16 + hop, Color("ffffff"))
+
+
+## Pila hinchada: una CR2032 abombada que gotea ácido.
+func _swollen_battery(f: int) -> void:
+	var swell: int = [0, 1, 2, 1][f]
+	_ellipse(16, 18, 10 + swell * 0.5, 8 + swell, Color("b0b0b8"))
+	_ellipse(16, 16 - swell * 0.5, 7, 4 + swell * 0.5, Color("d8d8e0"))
+	_line(12, 16, 20, 16, Color("8a8a92"))
+	_line(16, 13, 16, 19, Color("8a8a92"))   # el «+»
+	_px(8, 24 + (f % 2), Color("a0ff60"))
+	_px(23, 25 - (f % 2), Color("a0ff60"))
+
+
+## Sector defectuoso: un cuadro de disco rojo con una X, que parpadea.
+func _bad_sector(f: int) -> void:
+	var lit := f % 2 == 0
+	_rect(7, 9, 24, 26, Color("2a0a0a"))
+	_rect(8, 10, 23, 25, Color("aa0000") if lit else Color("6a0000"))
+	_line(9, 11, 22, 24, Color("ff5050") if lit else Color("aa2020"))
+	_line(22, 11, 9, 24, Color("ff5050") if lit else Color("aa2020"))
+
+
+## Option ROM: tarjeta de expansión con su chip y conector de pines.
+func _option_rom(f: int) -> void:
+	_rect(6, 8, 25, 22, Color("1a5a2a"))
+	_rect(10, 11, 17, 18, Color("1c1c22"))
+	for k in 8:
+		_px(7 + k * 2, 24, Color("d0a040"))
+		_px(7 + k * 2, 25, Color("d0a040"))
+	var c: Color = [Color("55ffff"), Color("5555ff"), Color("ff55ff"), Color("55ff55")][f]
+	_rect(19, 11, 22, 14, c)
+
+
+## Watchdog Timer: un perro de reloj con la cuenta atrás en la panza.
+func _watchdog(f: int) -> void:
+	var step: int = [0, 1, 0, -1][f]
+	_rect(8, 14, 23, 22, Color("6a4a30"))
+	_rect(20, 9, 27, 16, Color("7a5a3a"))     # cabeza
+	_px(25, 11, Color("ff6a40"))
+	_line(8, 14, 5, 11, Color("6a4a30"))        # cola
+	for x in [10, 14, 18, 21]:
+		_line(x, 23, x + step, 27, Color("4a3220"))
+	_rect(11, 16, 17, 20, Color("0a0a0e"))
+	_line(12, 18, 12 + f, 18, Color("ff6a40"))   # la cuenta atrás

@@ -278,6 +278,29 @@ Se llega por la **controladora de bus** del Anillo 0 (tras derrotar a init). Dat
 - Suelos propios (silicio, BIOS, ROM, flash), obstáculos nuevos (condensadores y chips) y ambientes.
 - `tests/test_core.gd` simula el combate contra cada enemigo nuevo y contra el jefe (`_test_act3_mechanics`).
 
+## Acto IV: El Setup de la BIOS (en construcción)
+
+Diseño en `docs/acto4.md`. Se llega por el **Bus de la BIOS** de la Cámara de Reflasheo (tras detener el reflasheo). Datos en `data/act4.json`. Ya están las zonas y los enemigos; faltan los NPC, las misiones (T29) y el jefe (T30).
+
+| Zona | Nivel | Qué hay |
+|---|---|---|
+| El POST | 38 | Llegada: los pitidos del Power-On Self-Test. |
+| **La Pila del CMOS** (campamento) | 39 | Hub con alijo, waypoint y túnel al Puerto JTAG. |
+| El Menú Advanced | 39 | Aquí el camino **se bifurca**: |
+| ↳ La Secuencia de Arranque | 41 | camino A |
+| ↳ La ROM de Video Legada | 43 | camino B, en 16 colores |
+| El Sector Oculto | 45 | Los dos caminos se juntan; waypoint. |
+| El Modo de Gestión del Sistema | 48 | La arena del jefe (admin/admin, pendiente). |
+
+- **Estilos nuevos**: `setup` (azul del Setup con opciones y la seleccionada en amarillo) y `vga16` (píxeles gordos de la paleta EGA), con suelo en pixel art, luces y ambientes propios (`tools/generate_sfx.gd -- acto4`).
+- **Enemigos nuevos**, cada uno con un **afijo innato** (`innate_affixes` en `enemies.json`; los afijos con `innate_only` no salen al azar en otras élites):
+  - **Beep Code** (embestida): *Código de error*, sus pitidos te hielan.
+  - **Jumper suelto** (golpe en área): *Puenteado*, salta de pin en pin hasta tu lado.
+  - **Pila hinchada** (golpe con charco de caos): *Fuga de ácido*, revienta al morir.
+  - **Sector defectuoso** (no se mueve; golpe en área): *Bad block*, devuelve parte del daño.
+  - **Option ROM** (invoca Beep Codes): *Legado*, escudo del 40 % de su vida.
+  - **Watchdog Timer** (va a por tus invocaciones): *Reinicio*, cura a los enemigos cercanos.
+
 ## Misiones
 
 Definidas en `data/quests.json` y gestionadas por `QuestLog` (lógica pura, guardada en el personaje).

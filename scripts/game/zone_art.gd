@@ -15,10 +15,10 @@ static func has_ground(style: String) -> bool:
 	return style in STYLES
 
 
-## Estilos con suelo en pixel art (actos I a III).
+## Estilos con suelo en pixel art (actos I a IV).
 const STYLES := ["sandbox", "camp", "forest", "ruins", "swamp", "catacombs", "servers", "boss",
 	"kernel", "terminal", "fabrica", "alcantarillas", "frio", "fosa", "grieta", "bus", "anillo",
-	"silicio", "bios", "rom", "flash"]
+	"silicio", "bios", "rom", "flash", "setup", "vga16"]
 
 
 ## Tamaño de la baldosa en el mundo (para las UV).
@@ -250,6 +250,29 @@ static func _paint(img: Image, style: String, rng: RandomNumberGenerator) -> voi
 				var cy := rng.randi_range(0, 7) * 16 + 7
 				for x in rng.randi_range(2, 10):
 					_px(img, cx + x, cy, Color("6a2020"))
+		# --- Acto IV: el Setup de la BIOS ---
+		"setup":   # azul del Setup con marcos de doble línea y renglones grises
+			_noise_fill(img, rng, [Color("0a1a6a"), Color("0c1e74"), Color("0e227e")], 4)
+			for i in SIZE:   # marco doble cada 64 texels
+				for o in [0, 3]:
+					_px(img, i, o, Color("8a96c8"))
+					_px(img, o, i, Color("8a96c8"))
+			for k in 9:
+				var x := rng.randi_range(8, SIZE - 30)
+				var y := rng.randi_range(8, SIZE - 4)
+				for j in rng.randi_range(8, 22):
+					if j % 5 != 4:
+						_px(img, x + j, y, Color("c8c8c8") if k % 4 else Color("e8e040"))
+		"vga16":   # cuadrícula de 16 colores, píxeles gordos de 4×4
+			_noise_fill(img, rng, [Color("141414"), Color("181818"), Color("1c1c1c")], 4)
+			var ega := [Color("0000aa"), Color("00aa00"), Color("00aaaa"), Color("aa0000"), Color("aa00aa"), Color("aa5500"), Color("555555"), Color("5555ff")]
+			for k in 26:
+				var cx := rng.randi_range(0, 31) * 4
+				var cy := rng.randi_range(0, 31) * 4
+				var c: Color = ega[k % ega.size()].darkened(0.55)
+				for y in 4:
+					for x in 4:
+						_px(img, cx + x, cy + y, c)
 		"sandbox":
 			_noise_fill(img, rng, [Color("18202a"), Color("1c2630"), Color("202c38")], 5)
 			for i in SIZE:   # rejilla brillante cada 32 texels

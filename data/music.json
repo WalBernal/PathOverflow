@@ -101,6 +101,8 @@
     "brecha_503": "field2", "socket_seguro": "camp2", "fabrica": "field2", "alcantarillas": "dark1",
     "modulo_frio": "cold2", "fosa": "cold2", "grieta": "cold2", "bus": "field2", "anillo0": "boss2",
     "controladora_bus": "field3", "puerto_jtag": "camp3", "oblea": "field3", "memoria_rom": "deep3",
-    "cache_l3": "deep3", "sector_arranque": "field3", "camara_flash": "boss3"
+    "cache_l3": "deep3", "sector_arranque": "field3", "camara_flash": "boss3",
+    "post": "field3", "pila_cmos": "camp3", "menu_advanced": "field3", "secuencia_arranque": "field3",
+    "rom_video": "deep3", "sector_oculto": "deep3", "modo_smm": "boss3"
   }
 }

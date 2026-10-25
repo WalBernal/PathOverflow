@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "_doc": "Acto IV: El Setup de la BIOS (diseño en docs/acto4.md). Mismo formato que act3.json. Estilos nuevos: setup (menús azules del Setup) y vga16 (16 colores). Camino bifurcado: desde el Menú Advanced se va por la Secuencia de Arranque o por la ROM de Video Legada, y los dos llegan al Sector Oculto. Enemigos nuevos con afijos innatos (innate_affixes en enemies.json). La arena del Modo de Gestión del Sistema espera a su jefe (T30).",
+  "id": "act4",
+  "name": "Acto IV: El Setup de la BIOS",
+  "start_zone": "post",
+  "town": "pila_cmos",
+  "zones": [
+    {
+      "id": "post",
+      "name": "El POST",
+      "level": 38,
+      "scale": 1.4,
+      "enemy_density": 1.25,
+      "style": "setup",
+      "size": [3600, 1800],
+      "entries": {"from_camara": [190, 900], "from_cmos": [3410, 900]},
+      "exits": [
+        {"pos": [80, 900], "target": "camara_flash", "entry": "from_post", "label": "La Cámara de Reflasheo"},
+        {"pos": [3520, 900], "target": "pila_cmos", "entry": "from_post", "label": "La Pila del CMOS"}
+      ],
+      "enemies": {"packs": 12, "pack_size": [5, 8], "types": ["beep_code", "jumper_suelto", "centinela_bios"], "special_chance": 0.24, "elite_chance": 0.14},
+      "features": {"count": 2, "kinds": ["void"]},
+      "obstacles": {"count": 26, "kinds": ["rack", "chip_die", "capacitor"]}
+    },
+    {
+      "id": "pila_cmos",
+      "name": "La Pila del CMOS",
+      "level": 39,
+      "style": "setup",
+      "size": [1900, 1400],
+      "safe": true,
+      "entries": {"from_post": [190, 700], "waypoint": [950, 900], "from_advanced": [1710, 700]},
+      "exits": [
+        {"pos": [80, 700], "target": "post", "entry": "from_cmos", "label": "El POST"},
+        {"pos": [1820, 700], "target": "menu_advanced", "entry": "from_cmos", "label": "El Menú Advanced"},
+        {"pos": [1500, 1180], "target": "puerto_jtag", "entry": "waypoint", "label": "Túnel al Puerto JTAG", "portal": true}
+      ],
+      "stash": [790, 960],
+      "waypoint": [950, 1000],
+      "npcs": [],
+      "obstacles": {"count": 0, "kinds": []}
+    },
+    {
+      "id": "menu_advanced",
+      "name": "El Menú Advanced",
+      "level": 39,
+      "scale": 1.4,
+      "enemy_density": 1.25,
+      "style": "setup",
+      "size": [3800, 2000],
+      "entries": {"from_cmos": [190, 1000], "from_arranque": [3610, 600], "from_rom": [3610, 1400]},
+      "exits": [
+        {"pos": [80, 1000], "target": "pila_cmos", "entry": "from_advanced", "label": "La Pila del CMOS"},
+        {"pos": [3720, 600], "target": "secuencia_arranque", "entry": "from_advanced", "label": "La Secuencia de Arranque"},
+        {"pos": [3720, 1400], "target": "rom_video", "entry": "from_advanced", "label": "La ROM de Video Legada"}
+      ],
+      "enemies": {"packs": 14, "pack_size": [5, 9], "types": ["beep_code", "jumper_suelto", "pila_hinchada", "watchdog_timer"], "special_chance": 0.25, "elite_chance": 0.15},
+      "features": {"count": 2, "kinds": ["void"]},
+      "obstacles": {"count": 28, "kinds": ["rack", "chip_die", "cable_coil"]}
+    },
+    {
+      "id": "secuencia_arranque",
+      "name": "La Secuencia de Arranque",
+      "level": 41,
+      "scale": 1.4,
+      "enemy_density": 1.25,
+      "style": "setup",
+      "size": [4000, 1800],
+      "entries": {"from_advanced": [190, 900], "from_oculto": [3810, 900]},
+      "exits": [
+        {"pos": [80, 900], "target": "menu_advanced", "entry": "from_arranque", "label": "El Menú Advanced"},
+        {"pos": [3920, 900], "target": "sector_oculto", "entry": "from_arranque", "label": "El Sector Oculto"}
+      ],
+      "enemies": {"packs": 15, "pack_size": [6, 9], "types": ["beep_code", "sector_defectuoso", "watchdog_timer", "rootkit"], "special_chance": 0.26, "elite_chance": 0.16},
+      "features": {"count": 2, "kinds": ["void"]},
+      "obstacles": {"count": 30, "kinds": ["rack", "capacitor", "cable_coil"]}
+    },
+    {
+      "id": "rom_video",
+      "name": "La ROM de Video Legada",
+      "level": 43,
+      "scale": 1.4,
+      "enemy_density": 1.25,
+      "style": "vga16",
+      "size": [3800, 2000],
+      "entries": {"from_advanced": [190, 1000], "from_oculto": [3610, 1000]},
+      "exits": [
+        {"pos": [80, 1000], "target": "menu_advanced", "entry": "from_rom", "label": "El Menú Advanced"},
+        {"pos": [3720, 1000], "target": "sector_oculto", "entry": "from_rom", "label": "El Sector Oculto"}
+      ],
+      "enemies": {"packs": 15, "pack_size": [6, 9], "types": ["option_rom", "pila_hinchada", "jumper_suelto", "electromigracion"], "special_chance": 0.26, "elite_chance": 0.16},
+      "features": {"count": 2, "kinds": ["void"]},
+      "obstacles": {"count": 28, "kinds": ["chip_die", "capacitor", "rack"]}
+    },
+    {
+      "id": "sector_oculto",
+      "name": "El Sector Oculto",
+      "level": 45,
+      "scale": 1.4,
+      "enemy_density": 1.25,
+      "style": "bios",
+      "size": [4000, 2000],
+      "entries": {"from_arranque": [190, 600], "from_rom": [190, 1400], "waypoint": [1100, 1000], "from_smm": [3810, 1000]},
+      "waypoint": [1100, 1100],
+      "exits": [
+        {"pos": [80, 600], "target": "secuencia_arranque", "entry": "from_oculto", "label": "La Secuencia de Arranque"},
+        {"pos": [80, 1400], "target": "rom_video", "entry": "from_oculto", "label": "La ROM de Video Legada"},
+        {"pos": [3920, 1000], "target": "modo_smm", "entry": "from_oculto", "label": "El Modo de Gestión del Sistema"}
+      ],
+      "enemies": {"packs": 16, "pack_size": [6, 10], "types": ["sector_defectuoso", "watchdog_timer", "option_rom", "beep_code", "pila_hinchada"], "special_chance": 0.27, "elite_chance": 0.17},
+      "features": {"count": 3, "kinds": ["void"]},
+      "obstacles": {"count": 32, "kinds": ["rack", "chip_die", "capacitor"]}
+    },
+    {
+      "id": "modo_smm",
+      "name": "El Modo de Gestión del Sistema",
+      "level": 48,
+      "scale": 1.3,
+      "style": "flash",
+      "size": [2600, 2200],
+      "entries": {"from_oculto": [190, 1100]},
+      "exits": [
+        {"pos": [80, 1100], "target": "sector_oculto", "entry": "from_smm", "label": "El Sector Oculto"}
+      ],
+      "enemies": {"packs": 8, "pack_size": [5, 8], "types": ["watchdog_timer", "option_rom", "sector_defectuoso"], "special_chance": 0.3, "elite_chance": 0.2},
+      "obstacles": {"count": 10, "kinds": ["chip_die", "capacitor"]}
+    }
+  ]
+}

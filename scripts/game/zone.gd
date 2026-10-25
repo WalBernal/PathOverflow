@@ -73,6 +73,9 @@ const STYLES := {
 	"bios": {"ground": "0e1a3c", "decal": "1a2c60", "edge": "racks", "outside": "040818"},
 	"rom": {"ground": "1a1428", "decal": "2c2244", "edge": "cliff", "outside": "0a0612"},
 	"flash": {"ground": "1e1418", "decal": "321c26", "edge": "lava", "outside": "1c0606"},
+	# Acto IV: el Setup de la BIOS.
+	"setup": {"ground": "0a1a6a", "decal": "1a2c8a", "edge": "racks", "outside": "000844"},
+	"vga16": {"ground": "141414", "decal": "2a2a2a", "edge": "void", "outside": "000000"},
 }
 const PHOSPHOR := Color("3cff6a")
 const TERMINAL_LINES := [
@@ -555,6 +558,7 @@ func _spot_is_free(p: Vector2, radius: float, keys: Array[Vector2], path: Array[
 ## generador para no cambiar el resto de la zona.
 const TORCH_STYLES := {
 	"servers": ["led", "6ab8ff"], "kernel": ["led", "8ab4ff"], "bios": ["led", "8aa8ff"], "rom": ["led", "d0a8ff"],
+	"setup": ["led", "ffe050"], "vga16": ["led", "55ffff"],
 	"swamp": ["wisp", "a0ff80"], "grieta": ["wisp", "c08aff"], "alcantarillas": ["wisp", "70e0c0"],
 }
 ## {pos, kind ("torch", "led", "wisp"), color}
@@ -966,6 +970,23 @@ func _draw_decals(ci: CanvasItem, c: Color) -> void:
 				var words := ["Boot Order", "Secure Boot [ON]", "SATA Mode", "CPU Ratio", "F10: Save", "Fan: Auto"]
 				ci.draw_string(ThemeDB.fallback_font, cell + Vector2(6, 20), words[int(d["seed"]) % words.size()],
 					HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.85, 0.9, 1.0, 0.16))
+			"setup":
+				# Setup de la BIOS: opciones con su valor; la seleccionada, en amarillo.
+				var tile := 64.0
+				var cell := (p / tile).floor() * tile
+				var opts := ["Quick Boot  [Enabled]", "Halt On  [All Errors]", "Boot Seq  [A,C,SCSI]", "Virus Warning [Disabled]",
+					"CPU Cache  [Enabled]", "Password  [admin]"]
+				var picked := int(d["seed"]) % 5 == 0
+				if picked:
+					ci.draw_rect(Rect2(cell + Vector2(2, 8), Vector2(tile * 2.2, 16)), Color(0.9, 0.85, 0.2, 0.12))
+				ci.draw_string(ThemeDB.fallback_font, cell + Vector2(6, 20), opts[int(d["seed"]) % opts.size()],
+					HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1.0, 0.95, 0.4, 0.22) if picked else Color(0.85, 0.9, 1.0, 0.16))
+			"vga16":
+				# Modo VGA de 16 colores: bloques de píxeles gordos de la paleta EGA.
+				var ega := [Color("0000aa"), Color("00aa00"), Color("00aaaa"), Color("aa0000"), Color("aa00aa"), Color("aa5500"), Color("5555ff"), Color("55ffff")]
+				var b := sz * 0.25
+				for k in 3:
+					ci.draw_rect(Rect2(p + Vector2((k - 1) * b, (k % 2) * b), Vector2(b, b)), Color(ega[(int(d["seed"]) + k) % ega.size()], 0.18))
 			"rom":
 				# Cristales de la ROM: rombos de solo lectura.
 				var s := sz * 0.35
@@ -1205,7 +1226,7 @@ func _draw_ambient() -> void:
 	# Los estilos de los actos II y III reutilizan uno de estos ambientes.
 	var kind: String = {"kernel": "servers", "bus": "servers", "silicio": "servers", "bios": "servers", "terminal": "camp",
 		"fabrica": "ruins", "alcantarillas": "swamp", "fosa": "catacombs", "grieta": "catacombs", "anillo": "boss",
-		"flash": "boss", "frio": "snow", "rom": "sparkle"}.get(style, style)
+		"flash": "boss", "frio": "snow", "rom": "sparkle", "setup": "servers", "vga16": "sparkle"}.get(style, style)
 	match kind:
 		"snow":
 			for k in 40:   # nieve de refrigerante

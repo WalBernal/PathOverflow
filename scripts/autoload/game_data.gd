@@ -4,7 +4,7 @@ extends Node
 
 const CLASSES_PATH := "res://data/classes.json"
 const PASSIVE_TREE_PATH := "res://data/passive_tree.json"
-const ACT_PATHS := ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json"]
+const ACT_PATHS := ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json", "res://data/act4.json"]
 const CUTSCENES_PATH := "res://data/cutscenes.json"
 const TITLE_SCENE := "res://scenes/menu/title_screen.tscn"
 const MAIN_MENU_SCENE := "res://scenes/menu/main_menu.tscn"

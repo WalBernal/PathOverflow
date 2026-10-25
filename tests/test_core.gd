@@ -103,6 +103,7 @@ func _initialize() -> void:
 	_test_class_signatures()
 	_test_transforming_chips()
 	_test_builds_and_compare()
+	_test_act4_world()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -656,12 +657,12 @@ func _test_camp_and_tutorial_data() -> void:
 func _test_act(npc_data: Dictionary) -> void:
 	var all_zones: Array = []
 	var zones := {}
-	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json"]:
+	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json", "res://data/act4.json"]:
 		var a: Dictionary = DataLoader.load_json(path)
 		for z in a["zones"]:
 			zones[z["id"]] = z
 			all_zones.append(z)
-	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json"]:
+	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json", "res://data/act4.json"]:
 		var a: Dictionary = DataLoader.load_json(path)
 		_check(zones.has(a["start_zone"]) and zones.has(a["town"]), "%s: zona inicial y pueblo existen" % a["id"])
 		_check(zones[a["town"]].has("waypoint"), "%s: el pueblo tiene waypoint (reaparición)" % a["id"])
@@ -1268,7 +1269,7 @@ func _test_progression_rules() -> void:
 func _test_latam_spanish() -> void:
 	var banned := RegEx.create_from_string("(*UCP)(?i)\\b(vosotr\\w*|vuestr\\w*|os|\\w+áis|\\w+éis|portátil\\w*|ordenador\\w*|móvil\\w*|vale|coger|ratón|gafas|zumo|guay|becari\\w*|marchando|cuidaos|proteged)\\b")
 	var files := ["res://data/npcs.json", "res://data/cutscenes.json", "res://data/quests.json", "res://data/tutorial.json",
-		"res://data/act1.json", "res://data/act2.json", "res://data/act3.json", "res://data/classes.json", "res://data/passive_themes.json",
+		"res://data/act1.json", "res://data/act2.json", "res://data/act3.json", "res://data/act4.json", "res://data/classes.json", "res://data/passive_themes.json",
 		"res://data/items/flasks.json", "res://data/items/uniques.json", "res://data/items/bases.json",
 		"res://data/skills/skills.json", "res://data/skills/ram_modules.json", "res://data/enemies.json"]
 	var found := PackedStringArray()
@@ -1672,7 +1673,7 @@ func _test_events_music_colorblind() -> void:
 
 
 func _zone_def(zone_id: String) -> Dictionary:
-	for f in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json"]:
+	for f in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json", "res://data/act4.json"]:
 		for z in DataLoader.load_json(f).get("zones", []):
 			if z["id"] == zone_id:
 				return z
@@ -1789,7 +1790,7 @@ func _test_roadmap2() -> void:
 ## Acto I más grande: "scale" agranda tamaño y posiciones, y las manadas crecen con el área.
 func _test_zone_scale() -> void:
 	var scaled := 0
-	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json"]:
+	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json", "res://data/act4.json"]:
 		for z in DataLoader.load_json(path)["zones"]:
 			if not z.has("scale"):
 				_check(bool(z.get("safe", false)) or z.has("boss") or not z.has("enemies") or String(z["id"]) == "tutorial",
@@ -2244,6 +2245,58 @@ func _test_builds_and_compare() -> void:
 	_check(rows.any(func(x: Dictionary) -> bool: return x["label"] == "Área (radio)"), "y enseña el área")
 
 
+## Acto IV (T28): zonas con camino bifurcado, estilos nuevos y enemigos con afijos innatos.
+func _test_act4_world() -> void:
+	var act4: Dictionary = DataLoader.load_json("res://data/act4.json")
+	var zones := {}
+	for z in act4.get("zones", []):
+		zones[z["id"]] = z
+	_check(act4.get("town", "") == "pila_cmos" and zones.has(act4.get("start_zone", "")) and zones["pila_cmos"].get("safe", false), "Acto IV: empieza en el POST y su hub es la Pila del CMOS")
+	for style in ["setup", "vga16"]:
+		_check(Zone.STYLES.has(style) and ZoneArt.has_ground(style), "estilo %s con suelo en pixel art" % style)
+	# Bifurcación: el Menú Advanced lleva a dos caminos que vuelven a unirse en el Sector Oculto.
+	var targets := func(id: String) -> Array:
+		return zones[id]["exits"].map(func(e: Dictionary) -> String: return e["target"])
+	_check(targets.call("menu_advanced").has("secuencia_arranque") and targets.call("menu_advanced").has("rom_video"), "el Menú Advanced se bifurca")
+	_check(targets.call("secuencia_arranque").has("sector_oculto") and targets.call("rom_video").has("sector_oculto"), "los dos caminos llegan al Sector Oculto")
+	_check(targets.call("sector_oculto").has("modo_smm"), "del Sector Oculto se llega a la arena del jefe")
+	# El Acto III ya lleva al IV.
+	var act3: Dictionary = DataLoader.load_json("res://data/act3.json")
+	var camara: Dictionary = act3["zones"].filter(func(z: Dictionary) -> bool: return z["id"] == "camara_flash")[0]
+	_check(camara.get("exits", []).any(func(e: Dictionary) -> bool: return e["target"] == "post" and e.get("requires_flag", "") == "act3_complete"),
+		"tras el reflasheo, la Cámara lleva al POST")
+	_check(camara["entries"].has("from_post"), "y se puede volver del POST a la Cámara")
+	var act_paths: Array = (load("res://scripts/autoload/game_data.gd") as GDScript).get_script_constant_map()["ACT_PATHS"]
+	_check(act_paths.has("res://data/act4.json"), "el juego carga el Acto IV")
+	# Enemigos nuevos: cada uno con su afijo innato, que no sale al azar en otros.
+	var types := {}
+	for t in _db_enemies():
+		types[t["id"]] = t
+	var defs := EnemyManager.affix_defs()
+	for id in ["beep_code", "jumper_suelto", "pila_hinchada", "sector_defectuoso", "option_rom", "watchdog_timer"]:
+		_check(types.has(id), "enemigo %s definido" % id)
+		for aid in types.get(id, {}).get("innate_affixes", []):
+			_check(defs.has(aid) and defs[aid].get("innate_only", false), "%s: su afijo innato %s existe y solo es suyo" % [id, aid])
+		_check(not types.get(id, {}).get("innate_affixes", []).is_empty(), "%s tiene afijo propio" % id)
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	em.spawn(Vector2.ZERO, Rarity.Enemy.NORMAL, em.type_index_of("pila_hinchada"))
+	_check(em.affixes_of(0).has("fuga_acido"), "una Pila Hinchada normal ya trae su Fuga de ácido")
+	em.roll_affixes = true
+	em.area_level = 60
+	var leaked := false
+	for k in 300:
+		for aid in em._roll_affixes(Rarity.Enemy.ELITE):
+			leaked = leaked or defs.get(aid, {}).get("innate_only", false)
+	_check(not leaked, "los afijos innatos no salen al azar en las élites")
+	em.free()
+
+
+func _db_enemies() -> Array:
+	var data: Dictionary = DataLoader.load_json("res://data/enemies.json")
+	return data.get("types", [])
+
+
 const CHAIN_STEP := 0.1   # menor que SkillController.CHAIN_DELAY: hacen falta dos pasos por eslabón
 
 
@@ -2562,7 +2615,7 @@ func _test_mechanic_tips() -> void:
 func _test_boss_arena_phases() -> void:
 	const ARENA := ["floor_break", "safe_zones", "channel_adds"]
 	var bosses := 0
-	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json"]:
+	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json", "res://data/act4.json"]:
 		for z in DataLoader.load_json(path).get("zones", []):
 			var boss: Dictionary = z.get("boss", {})
 			if boss.is_empty() or not boss.has("phases"):
@@ -2942,7 +2995,7 @@ func _test_tree_version_refund() -> void:
 
 ## Cada estilo de zona tiene su ambiente y cada habilidad su efecto.
 func _test_audio_assets() -> void:
-	for act_path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json"]:
+	for act_path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json", "res://data/act4.json"]:
 		var act: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(act_path))
 		for z in act.get("zones", []):
 			var style := String(z.get("style", ""))
@@ -3675,7 +3728,7 @@ func _test_resists_and_affixes() -> void:
 
 ## Fases de jefe: aviso, más velocidad, invulnerabilidad breve y barra de jefe con umbrales.
 func _test_boss_phases() -> void:
-	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json"]:
+	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json", "res://data/act4.json"]:
 		var act: Dictionary = DataLoader.load_json(path)
 		for z in act["zones"]:
 			if z.has("boss"):
@@ -4160,7 +4213,7 @@ func _test_prologue_reachable() -> void:
 
 ## Objetos de misión: cada uno tiene su propio dibujo (solo la cinta del DBA es una cinta).
 func _test_quest_item_art() -> void:
-	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json"]:
+	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json", "res://data/act4.json"]:
 		var act: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
 		for z in act["zones"]:
 			for q in z.get("quest_items", []):
@@ -4174,7 +4227,7 @@ func _test_quest_item_art() -> void:
 func _test_music_and_voices() -> void:
 	var music: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/music.json"))
 	var zones: Dictionary = music["zones"]
-	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json"]:
+	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json", "res://data/act4.json"]:
 		var act: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
 		for z in act["zones"]:
 			_check(zones.has(z["id"]), "música: la zona %s tiene pista" % z["id"])

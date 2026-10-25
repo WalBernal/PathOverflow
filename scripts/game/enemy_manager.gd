@@ -186,6 +186,8 @@ const MATERIALS := {
 	"daemon": "metal", "bot_spam": "metal", "mutex_lock": "metal", "centinela_bios": "metal", "condensador": "metal",
 	"init": "metal", "init_fork": "metal", "fw_update": "metal",
 	"electromigracion": "crystal",
+	"beep_code": "digital", "jumper_suelto": "metal", "pila_hinchada": "metal", "sector_defectuoso": "digital",
+	"option_rom": "crystal", "watchdog_timer": "metal",
 }
 const MATERIAL_SFX := {"flesh": "hit_flesh", "metal": "hit_metal", "crystal": "hit_crystal", "digital": "hit_digital"}
 
@@ -427,6 +429,8 @@ func _roll_affixes(rarity: int) -> Array:
 	var combos: Array = []
 	for aid in affix_defs():
 		var def: Dictionary = affix_defs()[aid]
+		if def.get("innate_only", false):
+			continue   # rasgo propio de un tipo de enemigo (enemies.json → innate_affixes)
 		if def.has("combo"):
 			if _combo_available(def):
 				combos.append(aid)
@@ -483,7 +487,12 @@ func _make_traits(t: Dictionary, _rarity: int, affix_ids: Array, _normal_spawn: 
 	for k in t.get("immune", []):
 		immune_set[k] = true
 	var applied: Array = []
+	# Afijos innatos del tipo (los del Acto IV): siempre, sea cual sea su rareza.
+	var all_affixes: Array = t.get("innate_affixes", []).duplicate()
 	for aid in affix_ids:
+		if not all_affixes.has(aid):
+			all_affixes.append(aid)
+	for aid in all_affixes:
 		var def: Dictionary = affix_defs().get(aid, {})
 		if def.is_empty():
 			continue

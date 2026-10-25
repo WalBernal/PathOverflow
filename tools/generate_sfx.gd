@@ -30,7 +30,20 @@ func _hit_sfx() -> Dictionary:
 	}
 
 
+## Ambientes del Acto IV. Con `-- acto4` solo se generan estos (como `-- golpes`).
+func _act4_ambients() -> Dictionary:
+	return {"setup": _amb_setup, "vga16": _amb_vga16}
+
+
 func _initialize() -> void:
+	if OS.get_cmdline_user_args().has("acto4"):
+		rng.seed = 4444
+		var act4 := _act4_ambients()
+		for name in act4:
+			_save(AMB_DIR + name + ".wav", _loopable(act4[name].call()), float(AMBIENT_PEAK.get(name, 0.9)))
+		print("Ambientes del Acto IV generados: %d" % act4.size())
+		quit()
+		return
 	if OS.get_cmdline_user_args().has("golpes"):
 		rng.seed = 4242
 		var only := _hit_sfx()
@@ -75,6 +88,11 @@ func _initialize() -> void:
 	for name in hit_sfx:
 		_save(SFX_DIR + name + ".wav", hit_sfx[name].call())
 		late_sfx[name] = hit_sfx[name]
+	rng.seed = 4444
+	var act4 := _act4_ambients()
+	for name in act4:
+		_save(AMB_DIR + name + ".wav", _loopable(act4[name].call()), float(AMBIENT_PEAK.get(name, 0.9)))
+		ambients[name] = act4[name]
 	print("Sonidos generados: %d efectos y %d ambientes" % [sfx.size() + late_sfx.size(), ambients.size()])
 	quit()
 
@@ -870,6 +888,28 @@ func _amb_rom() -> PackedFloat32Array:
 	var b := _amb_base()
 	_add_drone(b, 70.0, 0.14, 0.08)
 	_add_pings(b, 10, 1800.0, 2900.0, 0.18, 0.22)   # cristales que resuenan
+	return b
+
+
+## Setup de la BIOS: zumbido de la fuente, ventilador y los pitidos del POST (uno largo y dos cortos).
+func _amb_setup() -> PackedFloat32Array:
+	var b := _amb_base()
+	_add_drone(b, 50.0, 0.1, 0.0)
+	_add_wind(b, 0.2, 1500.0, 0.04)
+	for k in _n(3):
+		var start := rng.randi_range(0, b.size() - 30000)
+		for beep in [[0, 6000], [9000, 2200], [13000, 2200]]:
+			for i in beep[1]:
+				b[start + beep[0] + i] += _sq(i * 880.0 / RATE) * 0.05
+	return b
+
+
+## VGA de 16 colores: zumbido del monitor CRT (15,7 kHz, aquí más grave) y chirridos de módem.
+func _amb_vga16() -> PackedFloat32Array:
+	var b := _amb_base()
+	_add_drone(b, 55.0, 0.1, 0.04)
+	_add_pings(b, 12, 1200.0, 3200.0, 0.08, 0.05)
+	_add_wind(b, 0.08, 2400.0, 0.3)
 	return b
 
 

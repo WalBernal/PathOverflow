@@ -34,6 +34,8 @@ const GRADES := {
 	"bios": {"tint": "8aa8ff", "amount": 0.25, "sat": 1.1, "vignette": 0.45, "dark": 0.1, "radius": 640.0},
 	"rom": {"tint": "d0a8ff", "amount": 0.25, "sat": 1.1, "vignette": 0.5, "dark": 0.3, "radius": 540.0},
 	"flash": {"tint": "ff9080", "amount": 0.25, "sat": 1.15, "vignette": 0.55, "dark": 0.25, "radius": 600.0},
+	"setup": {"tint": "6a80ff", "amount": 0.2, "sat": 1.1, "vignette": 0.4, "dark": 0.08, "radius": 660.0},
+	"vga16": {"tint": "c0c0c0", "amount": 0.1, "sat": 1.3, "vignette": 0.5, "dark": 0.2, "radius": 560.0},
 }
 
 ## Luces dinámicas (máx. MAX_LIGHTS en pantalla, como el shader): las fijas de la
