@@ -339,6 +339,18 @@ func _update_conditions(delta: float) -> void:
 	character.set_condition(Stat.COND_LOW_LIFE, is_alive() and life <= max_life() * LOW_LIFE_FRACTION)
 	character.set_condition(Stat.COND_FULL_LIFE, life >= max_life() - 0.5)
 	character.set_condition(Stat.COND_RECENT_KILL, _since_kill <= RECENT_KILL_TIME)
+	# Quieto: sin moverse (más de 2 px) durante STILL_TIME.
+	if global_position.distance_to(_still_pos) > 2.0:
+		_still_pos = global_position
+		_still_time = 0.0
+	else:
+		_still_time += delta
+	character.set_condition(Stat.COND_STILL, _still_time >= STILL_TIME)
+
+
+const STILL_TIME := 1.0
+var _still_pos := Vector2.INF
+var _still_time := 0.0
 
 
 # --- Bucle ---

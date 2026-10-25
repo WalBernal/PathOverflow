@@ -5755,6 +5755,14 @@
      "stat": "life_regen",
      "type": "flat",
      "value": 6
+    },
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 20,
+     "tags": [
+      "full_life"
+     ]
     }
    ],
    "flavor": "Late a 3,2 GHz. Con ventilador.",
@@ -7030,6 +7038,11 @@
      "stat": "strength",
      "type": "flat",
      "value": 10
+    },
+    {
+     "stat": "stunned_damage",
+     "type": "increased",
+     "value": 30
     }
    ],
    "flavor": "Si no compila, más fuerza.",
@@ -8485,6 +8498,14 @@
      "stat": "life",
      "type": "increased",
      "value": 6
+    },
+    {
+     "stat": "damage",
+     "type": "more",
+     "value": 15,
+     "tags": [
+      "low_life"
+     ]
     }
    ],
    "flavor": "Usa la memoria de los demás sin pedir permiso.",
@@ -13924,6 +13945,14 @@
      "stat": "reservation_efficiency",
      "type": "increased",
      "value": 10
+    },
+    {
+     "stat": "minion_damage",
+     "type": "increased",
+     "value": 25,
+     "tags": [
+      "three_allies"
+     ]
     }
    ],
    "flavor": "Si cae uno, ya hay otro corriendo.",
@@ -14136,6 +14165,14 @@
      "stat": "life",
      "type": "increased",
      "value": 6
+    },
+    {
+     "stat": "damage",
+     "type": "increased",
+     "value": 20,
+     "tags": [
+      "stationary"
+     ]
     }
    ],
    "flavor": "Capas y capas de seguridad. Y de burocracia.",
@@ -14266,6 +14303,14 @@
      "stat": "life",
      "type": "increased",
      "value": 8
+    },
+    {
+     "stat": "life_leech",
+     "type": "flat",
+     "value": 1,
+     "tags": [
+      "low_life"
+     ]
     }
    ],
    "flavor": "Cuanto peor va, mejor rindes. Como en cada entrega.",

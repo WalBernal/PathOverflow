@@ -94,6 +94,8 @@ const THORNS := &"thorns"
 const EXTRA_PIERCE := &"extra_pierce"
 ## % menos de duración de electrocutado, helado y congelado sobre ti.
 const STATUS_RESIST := &"status_resist"
+## Daño contra enemigos aturdidos o congelados (aumentos/más).
+const STUNNED_DAMAGE := &"stunned_damage"
 ## Cargas de esquiva (git stash) extra.
 const DODGE_CHARGES := &"dodge_charges"
 ## % más rápido que se recargan las esquivas.
@@ -138,6 +140,10 @@ const TAG_MOVEMENT := &"movement"
 const COND_LOW_LIFE := &"low_life"
 const COND_FULL_LIFE := &"full_life"
 const COND_RECENT_KILL := &"recent_kill"
+## Con 3 o más invocaciones o esbirros vivos (lo pone SkillController).
+const COND_ALLIES := &"three_allies"
+## Si no te has movido en 1 s (lo pone Player).
+const COND_STILL := &"stationary"
 
 const RESISTANCE_CAP := 75.0
 
@@ -210,6 +216,7 @@ const NAMES := {
 	EXTRA_PIERCE: "Enemigos extra que atraviesan los proyectiles",
 	STATUS_RESIST: "Resistencia a estados (electrocutado, helado, congelado)",
 	DODGE_CHARGES: "Cargas de esquiva",
+	STUNNED_DAMAGE: "Daño contra enemigos aturdidos o congelados",
 	DODGE_RECOVERY: "Recarga de esquiva más rápida",
 	DODGE_MULTIHILO: "Cargas de Multihilos al esquivar",
 	DODGE_BLAST: "Al esquivar, git stash pop: explosión de fuego (de tu vida máxima)",
@@ -279,6 +286,8 @@ const TAG_NAMES := {
 	COND_LOW_LIFE: "con la vida baja",
 	COND_FULL_LIFE: "con la vida al máximo",
 	COND_RECENT_KILL: "si has matado recientemente",
+	COND_ALLIES: "con 3 o más aliados",
+	COND_STILL: "si no te has movido en 1 s",
 }
 
 ## Stat de daño de cada tipo de daño de las habilidades.

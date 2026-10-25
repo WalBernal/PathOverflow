@@ -87,6 +87,14 @@
        "stat": "life_regen",
        "type": "flat",
        "value": 6
+      },
+      {
+       "stat": "damage",
+       "type": "increased",
+       "value": 20,
+       "tags": [
+        "full_life"
+       ]
       }
      ]
     ],
@@ -106,6 +114,14 @@
        "stat": "life",
        "type": "increased",
        "value": 8
+      },
+      {
+       "stat": "life_leech",
+       "type": "flat",
+       "value": 1,
+       "tags": [
+        "low_life"
+       ]
       }
      ]
     ],
@@ -265,6 +281,14 @@
        "stat": "life",
        "type": "increased",
        "value": 6
+      },
+      {
+       "stat": "damage",
+       "type": "increased",
+       "value": 20,
+       "tags": [
+        "stationary"
+       ]
       }
      ]
     ],
@@ -377,6 +401,11 @@
        "stat": "strength",
        "type": "flat",
        "value": 10
+      },
+      {
+       "stat": "stunned_damage",
+       "type": "increased",
+       "value": 30
       }
      ]
     ],
@@ -2248,6 +2277,14 @@
        "stat": "life",
        "type": "increased",
        "value": 6
+      },
+      {
+       "stat": "damage",
+       "type": "more",
+       "value": 15,
+       "tags": [
+        "low_life"
+       ]
       }
      ]
     ],
@@ -3952,6 +3989,14 @@
        "stat": "reservation_efficiency",
        "type": "increased",
        "value": 10
+      },
+      {
+       "stat": "minion_damage",
+       "type": "increased",
+       "value": 25,
+       "tags": [
+        "three_allies"
+       ]
       }
      ]
     ],

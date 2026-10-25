@@ -397,7 +397,8 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 	var ailment_duration := stats.total_multiplier(Stat.AILMENT_DURATION, tags)
 	var ailing_bonus := stats.total_multiplier(Stat.AILING_DAMAGE, tags)
 	# Contexto de cada golpe: tipo de daño (resistencias del enemigo), estados y bonus contra enemigos con estados.
-	var ailment_ctx := {"type": damage_type, "chances": ailment_chances, "effect": ailment_effect, "duration": ailment_duration, "ailing": ailing_bonus}
+	var ailment_ctx := {"type": damage_type, "chances": ailment_chances, "effect": ailment_effect, "duration": ailment_duration, "ailing": ailing_bonus,
+		"stunned": stats.total_multiplier(Stat.STUNNED_DAMAGE, tags)}
 
 	return {
 		"id": skill["id"],

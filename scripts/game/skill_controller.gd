@@ -703,6 +703,7 @@ func _physics_process(delta: float) -> void:
 			if Input.is_action_pressed(ACTIONS[i]) and try_use(i):
 				break
 	_update_aura_fields()
+	character.set_condition(Stat.COND_ALLIES, _units.size() + _minions.size() + _drones.size() >= 3)
 	_update_triggers(delta)
 	_update_pending(delta)
 	_update_projectiles(delta)

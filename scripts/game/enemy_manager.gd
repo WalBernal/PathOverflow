@@ -1027,6 +1027,9 @@ func _damage(i: int, min_damage: float, max_damage: float, crit_chance: float, c
 		var ailing := float(hit_ailments.get("ailing", 1.0))
 		if ailing != 1.0 and not ailments_of(i).is_empty():
 			damage *= ailing
+		var stunned := float(hit_ailments.get("stunned", 1.0))   # nodos "contra aturdidos"
+		if stunned != 1.0 and (stuns[i] > 0.0 or freeze_time[i] > 0.0):
+			damage *= stunned
 	if shock_time[i] > 0.0:
 		damage *= 1.0 + shock_amp[i]
 	if not aura_fields.is_empty():

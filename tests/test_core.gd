@@ -93,6 +93,7 @@ func _initialize() -> void:
 	_test_trigger_rams()
 	_test_charges_build()
 	_test_tree_conversion()
+	_test_sacrifice_and_conditions()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -1896,6 +1897,51 @@ func _test_board_milestones() -> void:
 	_check(d20["radius"] > d1["radius"] and d20["cooldown"] < d1["cooldown"] and d20["stun"] > d1["stun"], "cada nivel mejora área, enfriamiento y duración")
 	_check(SkillCalc.milestone_text(_db.skills.skills["proceso_hijo"]) == "+1 esbirro", "hito de esbirros")
 	_check(SkillCalc.compute(Motherboard.new(_db.skills.skills["proceso_hijo"], 20, ["DDR5"]), c)["count"] == 4, "esbirros extra por nivel")
+
+
+## Nodos de sacrificio (vida baja) y condicionales: 3 aliados, quieto 1 s, contra
+## aturdidos y con la vida llena.
+func _test_sacrifice_and_conditions() -> void:
+	var cond_tags := {}
+	var tree_stats := {}
+	for n in _tree.nodes.values():
+		for m in n.mods:
+			tree_stats[String(m.stat)] = true
+			for tg in m.tags:
+				cond_tags[String(tg)] = true
+	for tg in ["low_life", "full_life", "three_allies", "stationary"]:
+		_check(cond_tags.has(tg), "nodos del árbol con la condición %s" % tg)
+	_check(tree_stats.has("stunned_damage"), "nodo del árbol con daño contra aturdidos")
+	# Quieto: tras 1 s sin moverse se activa y los modificadores «quieto» cuentan.
+	var c := CharacterData.new(_classes[0], _tree)
+	c.add_timed_effect("prueba_quieto", [Modifier.from_dict({"stat": "damage", "type": "increased", "value": 50, "tags": ["stationary"]}, "prueba")] as Array[Modifier], 99.0)
+	var pl := Player.new()
+	pl.character = c
+	var base := c.stats.total_multiplier(Stat.DAMAGE, c.condition_tags())
+	for k in 6:
+		pl._update_conditions(0.25)
+	_check(c.condition_tags().has(Stat.COND_STILL) and c.stats.total_multiplier(Stat.DAMAGE, c.condition_tags()) > base, "quieto 1 s: activa los modificadores «si no te has movido»")
+	pl.position = Vector2(50, 0)
+	pl._update_conditions(0.25)
+	_check(not c.condition_tags().has(Stat.COND_STILL), "al moverte se apaga")
+	pl.free()
+	# Contra aturdidos: más daño solo si el enemigo está aturdido o congelado.
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	var a := em.index_of(em.spawn(Vector2(0, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug")))
+	var b := em.index_of(em.spawn(Vector2(500, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug")))
+	for i in [a, b]:
+		em.lives[i] = 1.0e6
+		em.max_lives[i] = 1.0e6
+	em.stuns[a] = 2.0
+	em.hit_ailments = {"type": "physical", "chances": {}, "stunned": 1.5}
+	em.hit_index(a, 100.0, 100.0, 0.0, 150.0)
+	em.hit_index(b, 100.0, 100.0, 0.0, 150.0)
+	_check(1.0e6 - em.lives[a] > (1.0e6 - em.lives[b]) * 1.4, "contra aturdidos: más daño al aturdido")
+	em.free()
+	var c2 := CharacterData.new(_classes[0], _tree)
+	c2.add_timed_effect("prueba_aturdidos", [Modifier.from_dict({"stat": "stunned_damage", "type": "increased", "value": 30}, "prueba")] as Array[Modifier], 99.0)
+	_check(is_equal_approx(float(SkillCalc.compute(Motherboard.new(_db.skills.skills["barrido"], 1, []), c2)["ailment_ctx"]["stunned"]), 1.3), "el perfil lleva el bono contra aturdidos")
 
 
 ## Conversión de daño desde el árbol: para toda la build, sin ocupar ranura; si una
