@@ -210,7 +210,7 @@ Origen: R2 §1 ★★
 Origen: R2 §6 ★★
 - Sprites distintos para sanador y francotirador, roles en élites y afijo «Comandante».
 
-### [ ] T33 · Enemigos que reaccionan a los estados · M
+### [x] T33 · Enemigos que reaccionan a los estados · M
 Origen: R2 §6 ★★
 - Huyen si se queman, se agrupan con un aura enemiga, etc.
 
@@ -419,3 +419,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T30 · Jefe admin/admin en el Modo de Gestión del Sistema: tres fases con resistencias distintas y una mecánica de arena por fase (zonas seguras, suelo que se rompe, adds que canalizan su reinstalación), sprite propio y música `boss4`/`boss4_fase`. Escenas `bios_post`, `admin_entrada` y `admin_cambia_password`, con un paso nuevo de escena `input` donde el jugador escribe la contraseña (validación sarcástica; se guarda en `flags.admin_password`, «admin2» si se salta). Lore actualizado.
 - 2026-10-25 · T31 · Tres eventos de zona nuevos: Bombas lógicas (tres bombas con cuenta atrás de 25 s; se desactivan quedándose al lado; las que quedan estallan), Proceso perdido (escolta que solo avanza contigo cerca y sin enemigos a su lado, con dos emboscadas) y Comerciante ambulante (objeto misterioso por fichas). World da el botín según salga bien o mal.
 - 2026-10-25 · T32 · Sanador y francotirador con aspecto propio dibujado sobre el sprite (halo y brazalete con cruz; visor y rifle que apunta, con láser al cargar), roles en las élites (35 % de las manadas con rol; el rol sale en el nombre) y afijo de élite Comandante (aro dorado: +25 % de daño y +15 % de velocidad a los de alrededor).
+- 2026-10-25 · T33 · Enemigos que reaccionan a su estado (`EnemyManager._react`, salvo jefes y únicos): pánico al quemarse (50 %, huyen 1,6 s), buscan al sanador con poca vida y se reagrupan con el comandante si no están peleando; marca sobre la cabeza («!», «+», «»»).

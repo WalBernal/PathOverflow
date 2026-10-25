@@ -405,6 +405,8 @@ En cada visita a una zona de combate aparecen al azar algunos eventos (`scripts/
 
 **Roles en las manadas** (desde el nivel 2): *Guardián* (protege a los de alrededor), *Sanador* (cura a los heridos; lleva halo verde y brazalete con la cruz), *Francotirador* (tiro fuerte avisado; visor rojo y rifle que apunta hacia ti, con láser mientras carga) y *Enjambre*. Una de cada tres veces el rol va a la **élite** que encabeza la manada, y se ve en su nombre («Bug corrupto (Sanador)»). Afijo de élite **Comandante** (desde el nivel 9): los enemigos en su aro dorado pegan un 25 % más y se mueven un 15 % más rápido.
 
+**Reaccionan a su estado** (salvo jefes y únicos), con una marca sobre la cabeza: quemados, la mitad de las veces **entran en pánico** y huyen 1,6 s («!»); con menos del 35 % de vida **van hacia el sanador** más cercano («+»); y si no están peleando **se reagrupan** dentro del aro de un comandante («»»).
+
 Nueve tipos con sprites animados (`data/enemies.json`, `assets/sprites/enemies/enemies.png`). Los nuevos tienen ataques **telegrafiados en rojo** (se ve la forma del golpe antes de que llegue) y cuerpos de distinto tamaño:
 
 | Enemigo | Ataque | Forma del golpe |

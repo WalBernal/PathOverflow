@@ -108,6 +108,7 @@ func _initialize() -> void:
 	_test_act4_boss()
 	_test_new_zone_events()
 	_test_roles_and_commander()
+	_test_state_reactions()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -2450,6 +2451,45 @@ func _test_roles_and_commander() -> void:
 	em._update_commanders()
 	_check(float(em.command_bonus(em.index_of(near))["damage"]) > 0.2 and float(em.command_bonus(em.index_of(near))["speed"]) > 0.1, "el de al lado recibe sus órdenes")
 	_check(is_zero_approx(float(em.command_bonus(em.index_of(far))["damage"])) and is_zero_approx(float(em.command_bonus(em.index_of(boss))["damage"])), "ni el lejano ni él mismo")
+	em.free()
+
+
+## Enemigos que reaccionan a su estado (T33): pánico al quemarse, buscar al
+## sanador con poca vida y agruparse con el comandante.
+func _test_state_reactions() -> void:
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	var bug := em.type_index_of("bug")
+	var a := em.index_of(em.spawn(Vector2.ZERO, Rarity.Enemy.NORMAL, bug))
+	var to_player := Vector2(200, 0)
+	_check(em._react(a, em.traits[a], 0.1, to_player, 200.0) == null, "sin nada raro, sigue a lo suyo")
+	# Pánico: quemado y con el pánico activo, huye del jugador.
+	em.burn_time[a] = 3.0
+	em.traits[a]["burn_seen"] = true
+	em.traits[a]["panic"] = 1.0
+	var flee: Variant = em._react(a, em.traits[a], 0.1, to_player, 200.0)
+	_check(flee is Vector2 and (flee as Vector2).x < 0.0 and em.traits[a].get("react", "") == "panic", "quemado y en pánico, huye")
+	em.burn_time[a] = 0.0
+	em.traits[a].erase("panic")
+	# Con poca vida busca al sanador.
+	var h := em.spawn(Vector2(0, 400), Rarity.Enemy.NORMAL, bug)
+	em.set_role(h, "healer")
+	em.lives[a] = em.max_lives[a] * 0.2
+	em._update_commanders()
+	var go: Variant = em._react(a, em.traits[a], 0.1, to_player, 200.0)
+	_check(go is Vector2 and (go as Vector2).y > 0.0 and em.traits[a].get("react", "") == "healer", "con poca vida va hacia el sanador")
+	em.lives[a] = em.max_lives[a]
+	# Sin estar peleando, se arrima al comandante.
+	em.spawn(Vector2(-500, 0), Rarity.Enemy.ELITE, bug, "", 1.0, [], ["comandante"])
+	em._update_commanders()
+	var rally: Variant = em._react(a, em.traits[a], 0.1, Vector2(900, 0), 900.0)
+	_check(rally is Vector2 and (rally as Vector2).x < 0.0 and em.traits[a].get("react", "") == "rally", "lejos del combate, se reagrupa con el comandante")
+	_check(em._react(a, em.traits[a], 0.1, Vector2(150, 0), 150.0) == null, "si ya está peleando, no se va")
+	# Los jefes no reaccionan.
+	var boss := em.index_of(em.spawn(Vector2(3000, 0), Rarity.Enemy.UNIQUE, bug))
+	em.burn_time[boss] = 3.0
+	em.traits[boss]["panic"] = 1.0
+	_check(em._react(boss, em.traits[boss], 0.1, to_player, 200.0) == null, "los jefes no entran en pánico")
 	em.free()
 
 

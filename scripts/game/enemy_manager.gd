@@ -718,12 +718,63 @@ var _commanders: Array[Dictionary] = []
 
 func _update_commanders() -> void:
 	_commanders.clear()
+	_healers.clear()
 	for i in positions.size():
+		if String(traits[i].get("role", "")) == "healer":
+			_healers.append({"id": ids[i], "pos": positions[i]})
 		for aid in traits[i].get("affixes", []):
 			var cmd: Dictionary = affix_defs().get(aid, {}).get("commander", {})
 			if not cmd.is_empty():
 				_commanders.append({"id": ids[i], "pos": positions[i], "radius": float(cmd.get("radius", 300.0)),
 					"damage": float(cmd.get("damage", 0.2)), "speed": float(cmd.get("speed", 0.1))})
+
+
+## Reacciones a su estado (traits["react"]: "panic" | "healer" | "rally"), salvo
+## jefes y únicos. Devuelve el movimiento o null para seguir con lo normal:
+## - quemado: la mitad de las veces entra en pánico y huye un momento;
+## - con poca vida: va hacia el sanador más cercano;
+## - sin estar peleando: se arrima al aro de un comandante.
+const PANIC_CHANCE := 0.5
+const PANIC_TIME := 1.6
+const SEEK_HEALER_LIFE := 0.35
+const SEEK_HEALER_RANGE := 650.0
+const RALLY_RANGE := 600.0
+const RALLY_ENGAGED := 300.0
+var _healers: Array[Dictionary] = []
+
+
+func _react(i: int, tr_i: Dictionary, delta: float, to_target: Vector2, dist: float) -> Variant:
+	tr_i.erase("react")
+	if rarities[i] >= Rarity.Enemy.UNIQUE or speeds[i] <= 0.0:
+		return null
+	var pos := positions[i]
+	var dir := to_target / maxf(dist, 0.001)
+	if burn_time[i] > 0.0:
+		if not tr_i.has("burn_seen"):
+			tr_i["burn_seen"] = true
+			if randf() < PANIC_CHANCE:
+				tr_i["panic"] = PANIC_TIME
+	else:
+		tr_i.erase("burn_seen")
+	if float(tr_i.get("panic", 0.0)) > 0.0:
+		tr_i["panic"] = float(tr_i["panic"]) - delta
+		tr_i["react"] = "panic"
+		return (-dir + dir.orthogonal() * sin(float(tr_i["panic"]) * 9.0) * 0.6).normalized() * speeds[i] * 1.25
+	if lives[i] < max_lives[i] * SEEK_HEALER_LIFE and String(tr_i.get("role", "")) != "healer":
+		var best := Vector2.INF
+		for h in _healers:
+			if h["id"] != ids[i] and pos.distance_to(h["pos"]) < SEEK_HEALER_RANGE and pos.distance_to(h["pos"]) < pos.distance_to(best):
+				best = h["pos"]
+		if best != Vector2.INF and pos.distance_to(best) > 110.0:
+			tr_i["react"] = "healer"
+			return (best - pos).normalized() * speeds[i]
+	if dist > RALLY_ENGAGED:
+		for c in _commanders:
+			var d := pos.distance_to(c["pos"])
+			if c["id"] != ids[i] and d < RALLY_RANGE and d > float(c["radius"]) * 0.6:
+				tr_i["react"] = "rally"
+				return (Vector2(c["pos"]) - pos).normalized() * speeds[i]
+	return null
 
 
 ## Bono de comandante que recibe el enemigo i: {damage, speed} (el mayor, no se suman).
@@ -1335,7 +1386,13 @@ func _physics_process(delta: float) -> void:
 			facings[i] = 1.0 if to_target.x < 0.0 else 0.0
 			if tr_i.has("quote_t") and float(tr_i["quote_t"]) < 0.0 and dist < aggro_range * 0.7:
 				tr_i["quote_t"] = QUOTE_TIME   # te ha visto: suelta su frase
-			var started_ability := _try_ability(i, delta, dist, player_pos)
+			var react: Variant = _react(i, tr_i, delta, to_target, tdist)
+			var started_ability := false
+			if react is Vector2:
+				move = (react as Vector2) * tempo   # reacciona a su estado: no ataca ni sigue su rol
+				started_ability = true
+			else:
+				started_ability = _try_ability(i, delta, dist, player_pos)
 			var role := String(tr_i.get("role", ""))
 			if role != "" and not started_ability:
 				var role_move: Variant = _role_step(i, tr_i, role, delta, to_target, tdist, treach, ally == -1)
@@ -2082,6 +2139,12 @@ func _draw_all() -> void:
 		var role := role_of(i)
 		if role != "":
 			_draw_role(i, role, tt)
+		var react := String((traits[i] as Dictionary).get("react", ""))
+		if react != "":
+			# Lo que le pasa por la cabeza: «!» de pánico, «+» busca sanador, «»» va con el comandante.
+			var mark: Array = {"panic": ["!", Color("ff8a3a")], "healer": ["+", Color("6fd36b")], "rally": ["»", Color("ffd24a")]}[react]
+			draw_string(font, positions[i] + Vector2(radii[i] * SPRITE_SCALE * 0.6, -radii[i] * SPRITE_SCALE * 1.1), mark[0],
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 16, mark[1])
 		if stuns[i] > 0.0 and freeze_time[i] <= 0.0:
 			_draw_stun(positions[i] + Vector2(0, -radii[i] * SPRITE_SCALE * 1.1 - 18.0))
 		if simple:
