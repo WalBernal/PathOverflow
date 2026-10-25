@@ -133,6 +133,7 @@ func _initialize() -> void:
 	_test_ambient_emitters()
 	_test_barks()
 	_test_enemy_materials()
+	_test_lights_weather()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3263,6 +3264,42 @@ func _test_enemy_materials() -> void:
 		counts[m] = int(counts.get(m, 0)) + 1
 	_check(counts.size() == EnemyManager.MATERIAL_SFX.size(), "se usan los cuatro materiales: %s" % str(counts))
 	_check(not (load("res://scripts/game/enemy_manager.gd") as GDScript).get_script_constant_map().has("MATERIALS"), "la tabla fija ya no está en el código")
+
+
+## Luces, sombras y clima (T58).
+func _test_lights_weather() -> void:
+	WorldPost.enabled()   # que corra su inicialización estática antes de tocar `reduced`
+	var was := WorldPost.reduced
+	WorldPost.reduced = false
+	_check(Weather.kind_for("terminal") == "data_rain" and Weather.kind_for("swamp") == "fog" and Weather.kind_for("forest") == "", "lluvia de datos en la terminal, niebla en el pantano")
+	var rain := Weather.new()
+	rain.kind = "data_rain"
+	var view := Rect2(0, 0, 1600, 900)
+	for k in Weather.RAIN_DROPS:
+		rain._parts.append(rain._spawn(view, true))
+	for k in 120:   # 6 s de lluvia
+		rain.step(0.05, view)
+	_check(rain.particle_count() == Weather.RAIN_DROPS and rain._parts.all(func(p: Dictionary) -> bool: return view.grow(200.0).has_point(p["pos"])),
+		"la lluvia cae y vuelve a entrar por arriba (sigue en pantalla)")
+	rain.free()
+	var fog := Weather.new()
+	fog.kind = "fog"
+	for k in Weather.FOG_BANKS:
+		fog._parts.append(fog._spawn(view, true))
+	var x0: float = fog._parts[0]["pos"].x
+	fog.step(1.0, view)
+	_check(fog._parts[0]["pos"].x > x0, "la niebla deriva")
+	fog.free()
+	WorldPost.reduced = true
+	_check(Weather.kind_for("terminal") == "", "con luces y clima reducidos, no hay clima")
+	WorldPost.reduced = was
+	# Luz propia de las invocaciones.
+	var sc := SkillController.new()
+	sc._minions.append({"pos": Vector2(50, 60), "color": Color.RED})
+	var allies := sc.light_allies()
+	_check(allies.size() == 1 and allies[0]["pos"] == Vector2(50, 60) and allies[0]["color"] == Color.RED and float(allies[0]["power"]) > 0.0, "las invocaciones dan luz de su color")
+	sc.free()
+	_check(SkillController.PROJECTILE_SHADOW_DROP > 0.0, "los proyectiles proyectan sombra un poco más abajo")
 
 
 func _db_enemies() -> Array:

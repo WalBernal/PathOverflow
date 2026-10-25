@@ -729,6 +729,28 @@ func light_effects() -> Array[Dictionary]:
 	return out
 
 
+## Cuánto más abajo cae la sombra de un proyectil (como si volara a esa altura).
+const PROJECTILE_SHADOW_DROP := 16.0
+
+
+## Luz propia de los aliados (WorldPost): cada aura alrededor de su centro y las
+## invocaciones persistentes, los esbirros y los drones, cada uno de su color.
+## {pos, radius, color, power}.
+func light_allies() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var t := Time.get_ticks_msec() / 1000.0
+	for a in _auras:
+		var c := Accessibility.aura_color(String(a["profile"].get("damage_type", "")), a["color"])
+		out.append({"pos": aura_center(a), "radius": maxf(140.0, float(a["profile"].get("aura_radius", 0.0)) * 0.6), "color": c, "power": 0.35 + 0.05 * sin(t * 2.0)})
+	for u in _units:
+		out.append({"pos": u["pos"], "radius": 70.0 + float(u["radius"]) * 2.0, "color": u["color"], "power": 0.5})
+	for m in _minions:
+		out.append({"pos": m["pos"], "radius": 60.0, "color": m["color"], "power": 0.4})
+	for d in _drones:
+		out.append({"pos": _drone_pos(d), "radius": 60.0, "color": d["color"], "power": 0.45})
+	return out
+
+
 ## Proyectiles que alumbran (fuego, rayo, frío y caos): {pos, color}.
 func light_projectiles() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
@@ -2430,6 +2452,11 @@ func _draw() -> void:
 			"marker":
 				draw_arc(e["pos"], e["radius"], 0.0, TAU, 48, Color(c, 0.35 + 0.4 * t), 2.0, true)
 				draw_circle(e["pos"], e["radius"] * t, Color(c, 0.12))
+	# Sombra de cada proyectil en el suelo (vuelan): primero todas, debajo.
+	for pr in _projectiles:
+		draw_set_transform(pr["pos"] + Vector2(0, PROJECTILE_SHADOW_DROP), 0.0, Vector2(1.0, 0.45))
+		draw_circle(Vector2.ZERO, 6.0, Color(0, 0, 0, 0.22))
+	draw_set_transform(Vector2.ZERO)
 	for pr in _projectiles:
 		if pr.get("boomerang", false):
 			# Arma girando: dos aspas.

@@ -520,6 +520,14 @@ func _build_pause_menu() -> Control:
 		for p in get_tree().get_nodes_in_group(&"world_post"):
 			p.call("refresh"))
 	right.add_child(pixel)
+	var lights := UiStyle.button("", func() -> void: pass, 300)
+	lights.text = "Luces y clima: " + ("reducidos" if WorldPost.reduced else "completos")
+	lights.tooltip_text = "Reducidos: sin luz de golpes ni de proyectiles, como mucho %d luces a la vez\ny sin lluvia de datos ni niebla. Se nota al cambiar de zona (el clima)." % WorldPost.LOW_LIGHTS
+	lights.pressed.connect(func() -> void:
+		WorldPost.reduced = not WorldPost.reduced
+		GameSettings.set_value("interface", "reduced_lights", WorldPost.reduced)
+		lights.text = "Luces y clima: " + ("reducidos" if WorldPost.reduced else "completos"))
+	right.add_child(lights)
 	var tips_button := UiStyle.button("", func() -> void: pass, 300)
 	tips_button.text = "Consejos de mecánicas: " + ("sí" if TipPanel.enabled() else "no")
 	tips_button.tooltip_text = "Un aviso corto la primera vez que aparece la esquiva, las cargas, los golpes pesados,\nlos terrenos o una mecánica de arena de jefe."

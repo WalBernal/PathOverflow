@@ -321,7 +321,7 @@ Origen: R2 §7 ★★
 Origen: R2 §7 ★
 - Mover `EnemyManager.MATERIALS` a `enemies.json` y dar material propio a cada tipo.
 
-### [ ] T58 · Luces, sombras y clima · S
+### [x] T58 · Luces, sombras y clima · S
 Origen: R2 §8 ★★/★
 - Luz en auras, invocaciones con luz propia y botín único; opción para bajar luces.
 - Sombras de proyectiles y voladores; lluvia de datos y niebla del pantano.
@@ -444,3 +444,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T55 · Ambiente posicional: zumbido de racks, goteo y viento como fuentes 2D que se oyen de cerca, sacadas de los obstáculos (y del estilo en servidores, alcantarillas y la Grieta); tres sonidos nuevos con generate_sfx.gd -- posicional.
 - 2026-10-25 · T56 · Voces cortas sintetizadas: murmullo de cada NPC al hablar (saludo, pregunta, exclamación, duda) con su tono y género, y la voz del personaje al subir de nivel y con poca vida; opción en Pausa → Diálogos.
 - 2026-10-25 · T57 · Material de cada tipo de enemigo en enemies.json (los 29 con el suyo, documentado en _doc); fuera la tabla EnemyManager.MATERIALS. Las pruebas exigen un material válido por tipo.
+- 2026-10-25 · T58 · Luz de auras, invocaciones, drones y botín único; sombras de proyectiles; lluvia de datos (terminal, kernel, servidores) y niebla (pantano, alcantarillas, fosa); opción «Luces y clima: reducidos». No hay enemigos voladores en los datos: las sombras de vuelo quedan en proyectiles y drones (ya la tenían).

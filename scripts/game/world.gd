@@ -126,6 +126,7 @@ func _ready() -> void:
 	post.player = player
 	post.skills = skills
 	post.enemies = enemies
+	post.loot = loot
 	add_child(post)
 	ui = GameUI.new()
 	ui.layer = 5   # encima del filtro de pixel art (capa 1)
@@ -290,6 +291,9 @@ func travel_to(zone_id: String, entry := "") -> void:
 	var emitters := AmbientEmitters.new()   # racks, goteo y viento que suenan cerca
 	zone.add_child(emitters)
 	emitters.setup(zone)
+	var weather := Weather.new()   # lluvia de datos o niebla, según el estilo
+	zone.add_child(weather)
+	weather.setup(zone.style)
 	post.attach(self, zone)   # el pixelado justo después de la zona; la luz, encima
 	post.set_style(zone.style)
 	zone.npc_interacted.connect(_on_npc_interacted)

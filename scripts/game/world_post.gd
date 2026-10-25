@@ -45,9 +45,15 @@ const MAX_LIGHTS := 32
 ## Colores de los proyectiles de cada tipo que alumbran (los físicos no).
 const PROJECTILE_LIGHT := {"fire": Color("ff8a3a"), "lightning": Color("fff0a0"), "cold": Color("9fd8ff"), "chaos": Color("8aff70")}
 
+## Luces y clima reducidos (Pausa → Interfaz): sin destellos de golpes ni de
+## proyectiles, como mucho LOW_LIGHTS luces y sin lluvia ni niebla (Weather).
+const LOW_LIGHTS := 10
+static var reduced := bool(GameSettings.get_value("interface", "reduced_lights", false))
+
 var player: Node2D
 var skills: SkillController
 var enemies: EnemyManager
+var loot: LootManager
 var _zone: Zone
 var _pixel: _Pass
 var _light: _Pass
@@ -111,25 +117,36 @@ func _send_lights(ratio: Vector2) -> void:
 	var canvas := player.get_canvas_transform()
 	var view := (canvas.affine_inverse() * get_viewport().get_visible_rect()).grow(260.0)
 	var found: Array[Dictionary] = []
+	var limit := LOW_LIGHTS if reduced else MAX_LIGHTS
 	var add := func(pos: Vector2, radius: float, color: Color, power: float) -> void:
-		if found.size() < MAX_LIGHTS and view.has_point(pos):
+		if found.size() < limit and view.has_point(pos):
 			found.append({"pos": pos, "radius": radius, "color": color, "power": clampf(power, 0.0, 1.0)})
 	var t := Time.get_ticks_msec() / 1000.0
-	if enemies and enemies.impact:
-		for f in enemies.impact.flashes:
-			add.call(f["pos"], f["radius"], f["color"], f["life"] / f["max"])
-	if skills:
-		for e in skills.light_effects():
-			add.call(e["pos"], e["radius"], e["color"], e["power"])
-		for pr in skills.light_projectiles():
-			add.call(pr["pos"], 110.0, pr["color"], 0.85)
-	if enemies:
-		for pr in enemies.projectiles:
-			add.call(pr["pos"], 80.0 + float(pr["radius"]) * 3.0, pr["color"], 0.7)
+	# Primero las que dan forma al sitio (si hay que recortar, se van los destellos).
 	if _zone:
 		for l in _zone.light_points():
 			var flick := 0.85 + 0.15 * sin(t * 9.0 + l["pos"].x) * sin(t * 5.3 + l["pos"].y)
 			add.call(l["pos"], float(l["radius"]) * flick, l["color"], float(l.get("power", 0.9)) * flick)
+	if loot:   # el botín único y de conjunto brilla en el suelo
+		for d in loot.drops:
+			var item: Item = d["item"]
+			if item.rarity == Rarity.Item.UNIQUE or item.rarity == Rarity.Item.SET:
+				add.call((d["rect"] as Rect2).get_center(), 120.0, item.display_color(), 0.55 + 0.1 * sin(t * 3.0))
+	if skills:   # auras e invocaciones con luz propia
+		for l in skills.light_allies():
+			add.call(l["pos"], l["radius"], l["color"], l["power"])
+	if not reduced:
+		if enemies and enemies.impact:
+			for f in enemies.impact.flashes:
+				add.call(f["pos"], f["radius"], f["color"], f["life"] / f["max"])
+		if skills:
+			for e in skills.light_effects():
+				add.call(e["pos"], e["radius"], e["color"], e["power"])
+			for pr in skills.light_projectiles():
+				add.call(pr["pos"], 110.0, pr["color"], 0.85)
+		if enemies:
+			for pr in enemies.projectiles:
+				add.call(pr["pos"], 80.0 + float(pr["radius"]) * 3.0, pr["color"], 0.7)
 	last_lights = found
 	var data := PackedVector4Array()
 	var colors := PackedColorArray()

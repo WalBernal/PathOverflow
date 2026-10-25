@@ -2560,6 +2560,10 @@ func _draw_attacks(font: Font, view: Rect2) -> void:
 			draw_colored_polygon(_cone_points(fx["pos"], fx["dir"], fx["radius"], fx["half"]), Color(c, 0.45 * a))
 		else:
 			draw_circle(fx["pos"], fx["radius"], Color(c, 0.45 * a))
+	for pr in projectiles:   # sombras en el suelo, debajo de todos los proyectiles
+		draw_set_transform(pr["pos"] + Vector2(0, SkillController.PROJECTILE_SHADOW_DROP), 0.0, Vector2(1.0, 0.45))
+		draw_circle(Vector2.ZERO, maxf(4.0, float(pr["radius"])), Color(0, 0, 0, 0.22))
+	draw_set_transform(Vector2.ZERO)
 	for pr in projectiles:
 		var c: Color = pr["color"]
 		if pr.has("orb"):
