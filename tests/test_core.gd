@@ -139,6 +139,7 @@ func _initialize() -> void:
 	_test_audio_ogg()
 	_test_telemetry()
 	_test_render_batching()
+	_test_skill_balance()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3432,6 +3433,32 @@ func _test_render_batching() -> void:
 	# Sin pantalla la caché no crea texturas: se dibuja con formas como siempre.
 	var calls := [0]
 	_check(IconCache.texture("prueba", func(_ci, _r, _m) -> void: calls[0] += 1) == null and IconCache.cached_count() == 0, "sin pantalla, IconCache no crea nada")
+
+
+## Balance de habilidades iniciales (T69): banda de DPS a placa 1 y tiempo contra el primer jefe.
+func _test_skill_balance() -> void:
+	var ch := CharacterData.new(_classes[0], _tree)
+	var values: Array = []
+	var dps_of := {}
+	for id in _db.skills.skills:
+		var dps := float(SkillCalc.compute(Motherboard.new(_db.skills.skills[id], 1, []), ch).get("dps", 0.0))
+		dps_of[id] = dps
+		if dps > 0.0:
+			values.append(dps)
+	values.sort()
+	var median: float = values[values.size() / 2]
+	for id in dps_of:
+		_check(dps_of[id] <= median * 2.2, "%s: a placa 1 no pasa de ~2× la mediana (%.1f, mediana %.1f)" % [id, dps_of[id], median])
+	_check(int(_db.skills.skills["proceso_hijo"].get("min_level", 1)) >= 6, "Proceso Hijo ya no cae al principio")
+	# Con su arma y sus iniciales, cada clase tumba al Arquitecto en un tiempo razonable.
+	var bal: GDScript = load("res://tools/skill_balance.gd")
+	var boss_life: float = bal.act1_boss_life()
+	_check(boss_life > 1000.0, "vida del primer jefe (%.0f)" % boss_life)
+	for c in _classes:
+		var best := INF
+		for row in bal.starter_rows(c, _db, _tree, boss_life):
+			best = minf(best, float(row[2]))
+		_check(best >= 35.0 and best <= 130.0, "%s: su mejor habilidad inicial tumba al primer jefe en %.0f s (entre 35 y 130)" % [c["id"], best])
 
 
 func _db_enemies() -> Array:

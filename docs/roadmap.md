@@ -388,12 +388,13 @@ Medición de partida (`tools/skill_balance.gd`, personaje de nivel 1 sin pasivas
 
 ## Fase 9 — Balance y tienda
 
-### [ ] T69 · Balance de las habilidades iniciales · M
+### [x] T69 · Balance de las habilidades iniciales · M
 Origen: R3 (pedido del usuario)
 - Banda objetivo a placa de nivel 1 y personaje de nivel 1 sin nada: ninguna habilidad por encima de ~2× la mediana; las invocaciones, trampas, terrenos y degenerativos bajan (daño base, intervalo, tope de unidades o duración) y las más fuertes piden nivel (`min_level`: p. ej. Proceso Hijo 6, Drones de Vigilancia 8, Bomba Lógica 4).
 - Que la curva por nivel de placa siga premiando subirla (p10 ≈ 3× p1) y que los ataques con arma no queden atrás con el arma inicial de su clase (medir con el arma inicial, no a puño).
 - Comprobar contra el primer jefe: con la habilidad inicial de cada clase y sin pasivas, ni en segundos ni en una eternidad (rango a fijar con la herramienta: tiempo para vaciar su vida).
 - `tools/skill_balance.gd` gana columnas: arma inicial de la clase y tiempo contra el jefe del Acto I. Prueba en `test_core` que exija la banda, para que una habilidad nueva no se cuele por arriba.
+- Hecho: daño base bajado en proporción a ~21 DPS (placa 1) en Proceso Hijo, Bomba Lógica, Derrame de Aceite, Mina Rodante, Fuga de Memoria, Drones de Vigilancia, Pipe de Datos, Campo de Estática, Flamewar, Watchdog, Tormenta de Tickets y Fork Bomb; Drones con crecimiento 0,11 (ganan un dron por hito); Ráfaga de Paquetes 0,9 → 1,2 de efectividad; `min_level` 4-6 en las que solo caen como botín. Mejor inicial contra el Arquitecto: Guerrero 92 s, Duelista 68, Exploradora 90, Hacker 55, Hechicero 59, Templario 43, Full Stack 53.
 
 ### [ ] T70 · Tienda de Nacho, parte 1: más surtido · M
 Origen: R3
@@ -573,3 +574,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T67 · Cierre sin traza investigado: ~150 mundos en tandas cortas sin un cierre; descartada la acumulación entre mundos (tabla nueva de lo que queda vivo al final de la integración) y revisados los hilos; queda como sospecha la carga de la máquina. Pasos para la próxima vez bajo la tarea.
 - 2026-10-25 · T68 · Barras, cuadritos de estado y halos de enemigos en MultiMesh, avisos de cono y carga en el lote, círculos con direcciones precalculadas e iconos del HUD cacheados en texturas (IconCache): 300 enemigos 33,4 → ~29,9 ms y 150 enemigos 18,2 → 14-16,6 ms. T66 sigue bloqueada.
 - 2026-10-25 · Pausa en tres columnas con desplazamiento (no se veían todas las opciones) y Roadmap 3.0 (T69-T87): balance de habilidades iniciales, tienda de Nacho con gabardina, sprites, animación, sonido, ventanas de gestión, árbol pasivo y botín; herramienta tools/skill_balance.gd.
+- 2026-10-25 · T69 · Balance de habilidades iniciales con tools/skill_balance.gd: nada por encima de ~2× la mediana a placa 1 y la mejor inicial de cada clase tumba al primer jefe en 43-92 s (antes 24-120 s); prueba que exige la banda.

@@ -600,7 +600,7 @@ Con **Pausa → Interfaz → Registro local de partidas** (activado por defecto)
 Godot_v4.7.2-stable_win64_console.exe --headless --path . -s res://tools/telemetry_summary.gd -- clase=hacker zona=zona3
 ```
 
-**Balance de habilidades** (`tools/skill_balance.gd`): DPS de cada placa a nivel 1 y 10 con un personaje de nivel 1 sin pasivas ni objetos, ordenado, con el nivel que pide y su maná (`-- clase=hacker` para otra clase). Base del T69.
+**Balance de habilidades** (`tools/skill_balance.gd`): DPS de cada placa a nivel 1 y 10 con un personaje de nivel 1 sin pasivas ni objetos, ordenado, con el nivel que pide y su maná (`-- clase=hacker` para otra clase). También muestra, para cada clase, sus habilidades iniciales con su arma inicial (personaje nv 10, placa nv 8) y cuánto tardan en tumbar al jefe del Acto I. Tras el balance del 25-10-2026 (T69) ninguna habilidad pasa de ~2× la mediana a placa 1 (las invocaciones, trampas, terrenos y degenerativos más fuertes bajaron su daño base, y Proceso Hijo, Derrame de Aceite, Mina Rodante, Fuga de Memoria y Pipe de Datos caen más tarde), y la mejor inicial de cada clase tumba al primer jefe en 43-92 s (antes, Drones de Vigilancia 24 s y Bomba Lógica 30 s; Ráfaga de Paquetes 120 s). Una prueba lo exige.
 
 Al terminar, la integración imprime **lo que queda vivo tras cerrar cada mundo** (objetos, nodos, huérfanos y memoria): si algo se acumulara entre partidas, se vería crecer ahí. Medido el 25-10-2026 (T67): tras 28 mundos se mantienen 19 nodos, 0 huérfanos y ~84 MB; los objetos se estabilizan en ~+120 (las cachés de sprites y voces).
 

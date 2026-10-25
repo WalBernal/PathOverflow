@@ -43,7 +43,7 @@
       ],
       "description": "Lanza varios paquetes afilados en abanico. Algunos llegan. Es UDP.",
       "attack": {
-        "damage_effectiveness": 0.9
+        "damage_effectiveness": 1.2
       },
       "projectiles": 3,
       "spread_degrees": 24,
@@ -112,8 +112,8 @@
       "description": "Marca un punto y deja que se replique hasta explotar. :(){ :|:& };:",
       "spell": {
         "base_damage": [
-          13,
-          22
+          12,
+          19.9
         ],
         "damage_growth": 0.15,
         "cast_time": 0.8,
@@ -241,8 +241,8 @@
       "description": "Un cono de fuego delante de ti. Como un hilo de comentarios sobre tabuladores contra espacios.",
       "spell": {
         "base_damage": [
-          11,
-          19
+          9,
+          16.3
         ],
         "damage_growth": 0.15,
         "cast_time": 0.65,
@@ -300,6 +300,7 @@
     },
     {
       "id": "pipe_de_datos",
+      "min_level": 4,
       "name": "Pipe de Datos",
       "kind": "channel_beam",
       "damage_type": "lightning",
@@ -314,8 +315,8 @@
       "description": "Canalizado: mantén pulsada la tecla para abrir un flujo continuo de datos que electrocuta todo lo que cruza. Gasta maná por segundo y no te deja moverte; apunta con el cursor o el stick.",
       "spell": {
         "base_damage": [
-          5,
-          9
+          4,
+          6.4
         ],
         "damage_growth": 0.15,
         "cast_time": 0.25,
@@ -351,8 +352,8 @@
       "description": "Canalizado: mientras la mantienes, una tormenta de tickets sin resolver crece donde apuntas (hasta el triple de tamaño y el doble de daño en 3 s) y sigue al cursor. Gasta maná por segundo.",
       "spell": {
         "base_damage": [
-          6,
-          10
+          5,
+          8.7
         ],
         "damage_growth": 0.15,
         "cast_time": 0.35,
@@ -488,8 +489,8 @@
       "description": "Escondes una bomba en el suelo. Explota cuando un enemigo cumple la condición: acercarse. Hasta 3 a la vez.",
       "spell": {
         "base_damage": [
-          22,
-          36
+          12,
+          19.7
         ],
         "damage_growth": 0.16,
         "cast_time": 0.5,
@@ -550,6 +551,7 @@
     },
     {
       "id": "proceso_hijo",
+      "min_level": 6,
       "name": "Proceso Hijo",
       "kind": "minion",
       "damage_type": "physical",
@@ -565,8 +567,8 @@
       "description": "fork() y dos procesos hijos salen a pelear por ti durante un rato. No los has documentado, pero obedecen.",
       "spell": {
         "base_damage": [
-          6,
-          11
+          2,
+          4
         ],
         "damage_growth": 0.16,
         "cast_time": 0.8,
@@ -585,6 +587,7 @@
     },
     {
       "id": "fuga_de_memoria",
+      "min_level": 4,
       "name": "Fuga de Memoria",
       "kind": "degen_area",
       "damage_type": "chaos",
@@ -600,8 +603,8 @@
       "description": "Deja un charco de memoria sin liberar que corroe a quien lo pisa. Daño por segundo mientras estén dentro.",
       "spell": {
         "base_damage": [
-          9,
-          13
+          6,
+          8
         ],
         "damage_growth": 0.16,
         "cast_time": 0.7,
@@ -1033,10 +1036,10 @@
       "description": "Tres drones orbitan a tu alrededor y disparan rayos en línea recta al enemigo más cercano (con Guiado por Láser, teledirigidos).",
       "spell": {
         "base_damage": [
-          4,
-          8
+          3,
+          5.2
         ],
-        "damage_growth": 0.16,
+        "damage_growth": 0.11,
         "cast_time": 0.7,
         "crit": 5.0
       },
@@ -1275,6 +1278,7 @@
     },
     {
       "id": "derrame_aceite",
+      "min_level": 4,
       "name": "Derrame de Aceite",
       "kind": "terrain",
       "terrain": "oil",
@@ -1291,8 +1295,8 @@
       "description": "Tiras el aceite del ventilador en el suelo: los enemigos resbalan y van más lentos. Si algo en llamas lo toca (un enemigo quemándose, un proyectil o una explosión de fuego), estalla y el suelo queda ardiendo.",
       "spell": {
         "base_damage": [
-          9,
-          14
+          5,
+          8
         ],
         "damage_growth": 0.16,
         "cast_time": 0.6,
@@ -1329,8 +1333,8 @@
       "description": "Cargas el suelo de electricidad estática: daño de rayo por segundo a quien lo pise y alguna electrocución. Encima de un charco de refrigerante se vuelve superconductor.",
       "spell": {
         "base_damage": [
-          6,
-          10
+          5,
+          8.5
         ],
         "damage_growth": 0.16,
         "cast_time": 0.6,
@@ -1901,6 +1905,7 @@
     },
     {
       "id": "mina_rodante",
+      "min_level": 4,
       "name": "Mina Rodante",
       "kind": "unit",
       "damage_type": "fire",
@@ -1918,8 +1923,8 @@
       "description": "Una bomba con ruedas que persigue al enemigo más cercano y explota al morir (y a veces antes). Cuando estalla, la vuelves a lanzar. Persistente.",
       "spell": {
         "base_damage": [
-          18,
-          30
+          11,
+          17.9
         ],
         "damage_growth": 0.16,
         "cast_time": 0.7,
@@ -2304,8 +2309,8 @@
       "description": "Un perro guardián que reinicia todo lo que se cuelga: muerde a los enemigos cercanos (sangran) y salta sobre el más lejano cada pocos segundos. Persistente: reserva maná.",
       "spell": {
         "base_damage": [
-          7,
-          12
+          6,
+          10.4
         ],
         "damage_growth": 0.16,
         "cast_time": 0.8,

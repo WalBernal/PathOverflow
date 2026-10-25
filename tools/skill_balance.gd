@@ -37,4 +37,45 @@ func _initialize() -> void:
 	dps_values.sort()
 	if not dps_values.is_empty():
 		print("Mediana del DPS a nivel 1: %.1f" % dps_values[dps_values.size() / 2])
+	# Habilidades iniciales de cada clase, con su arma inicial, contra el primer jefe.
+	var boss_life := act1_boss_life()
+	print("")
+	print("Iniciales de cada clase con su arma (personaje nv %d, placa nv %d) contra El Arquitecto (%.0f de vida):" % [BOSS_CHAR_LEVEL, BOSS_BOARD_LEVEL, boss_life])
+	for c in classes:
+		for row in starter_rows(c, db, tree, boss_life):
+			print("  %-12s %-24s %8.1f DPS  %6.0f s" % [c["id"], row[0], row[1], row[2]])
 	quit()
+
+
+const BOSS_CHAR_LEVEL := 10
+const BOSS_BOARD_LEVEL := 8
+
+
+## Vida del jefe del Acto I tal como la pone EnemyManager.spawn (dificultad Normal).
+static func act1_boss_life() -> float:
+	var act: Dictionary = DataLoader.load_json("res://data/act1.json")
+	for z in act["zones"]:
+		if z.get("boss") is Dictionary:
+			var em := EnemyManager.new()
+			em.area_level = int(z.get("level", 1))
+			em.spawn(Vector2.ZERO, Rarity.Enemy.UNIQUE, em.type_index_of(String(z["boss"].get("type", "daemon"))), "", float(z["boss"].get("life_mult", 1.0)))
+			var life := em.max_lives[0]
+			em.free()
+			return life
+	return 0.0
+
+
+## [habilidad, DPS, segundos contra `boss_life`] de las iniciales de la clase, con su arma.
+static func starter_rows(class_def: Dictionary, db: ItemDatabase, tree: PassiveTree, boss_life: float) -> Array:
+	var ch := CharacterData.new(class_def, tree)
+	ch.level = BOSS_CHAR_LEVEL
+	var weapon_id := String(class_def.get("starter_weapon", ""))
+	if db.bases.has(weapon_id):
+		ch.inventory.set_equipped("weapon", ItemGenerator.new(db, 1).generate(1, Rarity.Item.NORMAL, weapon_id))
+	ch.recalculate()
+	var out: Array = []
+	for id in class_def.get("starter_skills", []):
+		var p := SkillCalc.compute(Motherboard.new(db.skills.skills[id], BOSS_BOARD_LEVEL, []), ch)
+		var dps := float(p.get("dps", 0.0))
+		out.append([id, dps, boss_life / dps if dps > 0.0 else INF])
+	return out
