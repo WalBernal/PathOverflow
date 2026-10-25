@@ -113,17 +113,34 @@ static func apply_variant(p: Dictionary, board: Motherboard) -> Dictionary:
 		if key == "damage":
 			for k in ["min_damage", "max_damage", "dps"]:
 				p[k] = float(p[k]) * f
+		elif key == "aura_effect":
+			_scale_aura(p, f)
 		elif p.has(key):
 			p[key] = maxi(1, roundi(float(p[key]) * f)) if p[key] is int else float(p[key]) * f
 	for key in v.get("add", {}):
 		if p.has(key):
 			p[key] = maxi(0, int(p[key]) + int(v["add"][key])) if p[key] is int else float(p[key]) + float(v["add"][key])
-			if key == "max_units":
-				p["dps"] = float(p["dps"]) * float(p["max_units"]) / maxf(1.0, float(p["max_units"]) - float(v["add"][key]))
+			if key in ["max_units", "drone_count"]:
+				p["dps"] = float(p["dps"]) * float(p[key]) / maxf(1.0, float(p[key]) - float(v["add"][key]))
 	if v.has("abilities"):
 		p["unit_abilities"] = v["abilities"]
 	p["variant"] = v["id"]
 	return p
+
+
+## "Efecto de aura" de una variante: escala los bonos del aura (con los mismos topes que en el cálculo base).
+static func _scale_aura(p: Dictionary, f: float) -> void:
+	var mods: Array = []
+	for md in p["aura_mods"]:
+		var scaled: Dictionary = md.duplicate()
+		scaled["value"] = float(md["value"]) * f
+		mods.append(scaled)
+	p["aura_mods"] = mods
+	p["aura_regen"] = float(p["aura_regen"]) * f
+	p["aura_reduction"] = minf(0.6, float(p["aura_reduction"]) * f)
+	if not (p["aura_enemy"] as Dictionary).is_empty():
+		p["aura_enemy"] = {"slow": minf(0.5, float(p["aura_enemy"]["slow"]) * f),
+			"damage_taken": minf(0.6, float(p["aura_enemy"]["damage_taken"]) * f)}
 
 
 static func _compute_base(board: Motherboard, character: CharacterData) -> Dictionary:

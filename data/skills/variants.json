@@ -1,5 +1,5 @@
 {
-  "_doc": "Variantes de habilidad: se eligen en el menú K (botón de la placa) desde 'min_level' de la placa. 'mult' multiplica cifras del perfil (damage = daño y DPS), 'add' suma (projectiles, max_units, repeats, chains, pierce...), 'abilities' cambia las habilidades de una invocación.",
+  "_doc": "Variantes de habilidad: se eligen en el menú K (botón de la placa) desde 'min_level' de la placa. 'mult' multiplica cifras del perfil (damage = daño y DPS; aura_effect = bonos del aura), 'add' suma (projectiles, max_units, repeats, chains, pierce...), 'abilities' cambia las habilidades de una invocación.",
   "variants": {
     "barrido": [
       {"id": "torbellino", "name": "Barrido amplio", "min_level": 10,
@@ -46,6 +46,52 @@
       {"id": "important", "name": "!important", "min_level": 12,
         "description": "Menos impactos (la mitad), pero cada uno hace el doble de daño y área un 30 % mayor.",
         "mult": {"rain_hits": 0.5, "damage": 2.0, "radius": 1.3}}
+    ],
+    "aura_overclock": [
+      {"id": "overclock_extremo", "name": "Overclock extremo", "min_level": 12,
+        "description": "40 % más de efecto del aura, pero reserva un 50 % más de maná.",
+        "mult": {"aura_effect": 1.4, "reserve": 1.5}}
+    ],
+    "aura_blindaje": [
+      {"id": "blindaje_concentrado", "name": "Blindaje concentrado", "min_level": 12,
+        "description": "Radio un 40 % menor y 50 % más de efecto: para quien pelea pegado al grupo.",
+        "mult": {"aura_radius": 0.6, "aura_effect": 1.5}}
+    ],
+    "aura_mantenimiento": [
+      {"id": "mantenimiento_remoto", "name": "Mantenimiento remoto", "min_level": 12,
+        "description": "Radio un 60 % mayor y 25 % menos de efecto: llega a las invocaciones que se alejan.",
+        "mult": {"aura_radius": 1.6, "aura_effect": 0.75}}
+    ],
+    "aura_mando": [
+      {"id": "mando_ligero", "name": "Mando ligero", "min_level": 12,
+        "description": "Reserva la mitad de maná con un 40 % menos de efecto: cabe junto a otra aura.",
+        "mult": {"reserve": 0.5, "aura_effect": 0.6}}
+    ],
+    "aura_throttling": [
+      {"id": "rate_limit_agresivo", "name": "Rate limit agresivo", "min_level": 12,
+        "description": "Ralentiza un 50 % más, en un radio un 30 % menor.",
+        "mult": {"aura_effect": 1.5, "aura_radius": 0.7}}
+    ],
+    "aura_exposicion": [
+      {"id": "escaneo_amplio", "name": "Escaneo amplio", "min_level": 12,
+        "description": "Radio un 50 % mayor, pero reserva un 30 % más de maná.",
+        "mult": {"aura_radius": 1.5, "reserve": 1.3}}
+    ],
+    "drones_vigilancia": [
+      {"id": "enjambre", "name": "Enjambre", "min_level": 10,
+        "description": "+2 drones, cada uno con un 40 % menos de daño.",
+        "add": {"drone_count": 2}, "mult": {"damage": 0.6}},
+      {"id": "patrulla_larga", "name": "Patrulla larga", "min_level": 15,
+        "description": "Los drones duran el doble con un 15 % menos de daño.",
+        "mult": {"duration": 2.0, "damage": 0.85}}
+    ],
+    "bomba_logica": [
+      {"id": "bomba_racimo", "name": "Bomba de racimo", "min_level": 10,
+        "description": "+3 bombas a la vez, con un 40 % menos de daño y un 15 % menos de área.",
+        "add": {"max_active": 3}, "mult": {"damage": 0.6, "radius": 0.85}},
+      {"id": "detonacion_remota", "name": "Detonación remota", "min_level": 15,
+        "description": "Se activa con enemigos al doble de distancia y explota en un área un 25 % mayor, con un 20 % menos de daño.",
+        "mult": {"trigger_radius": 2.0, "radius": 1.25, "damage": 0.8}}
     ]
   }
 }

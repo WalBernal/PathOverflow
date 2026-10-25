@@ -99,6 +99,7 @@ func _initialize() -> void:
 	_test_warcries()
 	_test_docker_container()
 	_test_channelled_spells()
+	_test_more_variants()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -2056,6 +2057,34 @@ func _test_channelled_spells() -> void:
 	sc.free()
 	pl.free()
 	em.free()
+
+
+## Variantes de auras, drones y trampas (variants.json).
+func _test_more_variants() -> void:
+	var c := CharacterData.new(_classes[5], _tree)
+	var with_variant := func(id: String, variant: String) -> Array:
+		var board := Motherboard.new(_db.skills.skills[id], 20, [])
+		var base := SkillCalc.compute(board, c)
+		board.variant = variant
+		return [base, SkillCalc.compute(board, c)]
+	# Todas las auras, los drones y la trampa tienen al menos una variante.
+	for id in _db.skills.skills:
+		var def: Dictionary = _db.skills.skills[id]
+		if def["kind"] in ["aura", "drones", "trap"]:
+			_check(not def.get("variants", []).is_empty(), "%s tiene variante" % id)
+	var r: Array = with_variant.call("aura_blindaje", "blindaje_concentrado")
+	_check(float(r[1]["aura_radius"]) < float(r[0]["aura_radius"]) and float(r[1]["aura_mods"][0]["value"]) > float(r[0]["aura_mods"][0]["value"]),
+		"Blindaje concentrado: menos radio y más efecto")
+	r = with_variant.call("aura_mando", "mando_ligero")
+	_check(float(r[1]["reserve"]) < float(r[0]["reserve"]), "Mando ligero reserva menos maná")
+	r = with_variant.call("aura_throttling", "rate_limit_agresivo")
+	_check(float(r[1]["aura_enemy"]["slow"]) > float(r[0]["aura_enemy"]["slow"]), "Rate limit agresivo ralentiza más")
+	r = with_variant.call("drones_vigilancia", "enjambre")
+	_check(int(r[1]["drone_count"]) == int(r[0]["drone_count"]) + 2 and float(r[1]["max_damage"]) < float(r[0]["max_damage"]), "Enjambre: +2 drones que pegan menos")
+	r = with_variant.call("bomba_logica", "bomba_racimo")
+	_check(int(r[1]["max_active"]) == int(r[0]["max_active"]) + 3, "Bomba de racimo: +3 bombas a la vez")
+	r = with_variant.call("bomba_logica", "detonacion_remota")
+	_check(float(r[1]["trigger_radius"]) > float(r[0]["trigger_radius"]) * 1.9, "Detonación remota: se activa más lejos")
 
 
 const CHAIN_STEP := 0.1   # menor que SkillController.CHAIN_DELAY: hacen falta dos pasos por eslabón
