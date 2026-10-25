@@ -428,9 +428,10 @@ Origen: R3 (Grim Dawn: peso de los golpes)
 - Cadáveres que se quedan unos segundos y se desvanecen.
 - Hecho: al cargar el golpe se echa hacia atrás (además de aplastarse y temblar) y en los últimos 0,12 s destella en blanco; un crítico da un respingo (atrás, aplastado y ladeado, también los jefes) y empuja más. Las muertes por tipo de daño ya existían (hielo, ceniza, chispas, disolverse, descompilarse); ahora las físicas dependen del material: chatarra con chispas (metal), añicos (cristal), gotas (carne) o bits (digital), con su sonido. Cadáveres: tumbados, oscuros y quietos 4 s, desvaneciéndose en el último segundo y medio (máx. 60), en una MultiMesh aparte por debajo de los vivos; los quemados, los congelados y los de cristal no dejan cuerpo.
 
-### [ ] T74 · Efectos de habilidades con más cuerpo · M
+### [x] T74 · Efectos de habilidades con más cuerpo · M
 Origen: R3 (PoE: cada habilidad se reconoce de lejos)
 - Cada habilidad con lanzamiento, trayecto e impacto propios en la rejilla de píxeles (no solo color por tipo de daño), partículas que respetan «Menos destellos», y una versión más ligera con muchos enemigos en pantalla.
+- Hecho: `SkillFx` da a cada habilidad su firma (proyectil, estela, lanzamiento e impacto), con forma propia para la ráfaga de paquetes (paquete con cabecera), el paquete rastreador (con antena que parpadea), la corrupción de datos (glitch), el ping y la torreta (rayo en zigzag) y la cascada CSS (esquirla); el resto, la de su tipo de daño (bola de fuego con llamitas, esquirla de hielo, rayo, gota de caos, orbe). `ImpactFx` suma destello al lanzar, estela y estallido de firma en la rejilla de 2 px; con Menos destellos, menos partículas y sin núcleos blancos; con más enemigos en pantalla que `FX_DETAIL_LIMIT`, sin estelas ni estallidos y con proyectiles simples. Las novas, conos y demás formas de área siguen con su dibujo por tipo (ya eran distintas entre sí).
 
 ### [ ] T75 · Iconos en pixel art dibujado · M
 Origen: R3
@@ -588,3 +589,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T72 · Partida en dos (T72b: daño en el cuadro de impacto). Parte 1: poses del jugador por estado (respira, camina, corre, golpe por arma, disparo, hechizo, canalizar, golpe recibido, esquiva y muerte) con el arma equipada en la mano.
 - 2026-10-25 · T72b · Los ataques golpean en el cuadro de impacto de la animación (cuando el arma pasa por delante o al soltar lo lanzado), con tope de 0,3 s.
 - 2026-10-25 · T73 · Enemigos con más peso: se echan atrás y destellan antes de golpear, respingo con los críticos, muertes físicas por material y cadáveres que se desvanecen.
+- 2026-10-25 · T74 · Firma visual por habilidad: forma de proyectil, estela, destello al lanzar y estallido al golpear, con versión ligera y respetando Menos destellos.

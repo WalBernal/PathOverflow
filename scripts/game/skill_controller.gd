@@ -1017,6 +1017,8 @@ func try_use(index: int) -> bool:
 	var target := _aim_target()
 	player.face(target - player.global_position)
 	player.play_action(Player.action_for(p), float(p["use_time"]), Player.DOT_COLORS.get(String(p["damage_type"]), Color("c8d8ff")))
+	if not (p["kind"] in SkillCalc.AUTOMATON_KINDS or p["kind"] == "aura"):
+		_cast_fx(p, target)
 	Sfx.play(Sfx.skill_sound("trap" if p["deploy"] != "" else String(p["kind"]), String(p["damage_type"])))
 	if p["deploy"] != "":
 		_deploy(p, target)
@@ -1403,6 +1405,7 @@ func _fire_volley(p: Dictionary, origin: Vector2, dir: Vector2, color: Color, ex
 			"homing": bool(p.get("homing", false)),
 			# Código Espagueti: rebotes al azar tras golpear (sin gastar perforación).
 			"ricochets_left": int(character.stats.get_value(Stat.SPAGHETTI_CODE)) if character else 0,
+			"fx": SkillFx.signature(p), "trail_t": 0.0, "phase": randf() * 10.0,
 		}
 		pr.merge(extra, true)
 		_projectiles.append(pr)
@@ -2279,6 +2282,7 @@ func _update_pending(delta: float) -> void:
 
 func _update_projectiles(delta: float) -> void:
 	var still: Array[Dictionary] = []
+	var light := fx_light()
 	for pr in _projectiles:
 		var p: Dictionary = pr["profile"]
 		if pr.get("boomerang", false):
@@ -2304,6 +2308,12 @@ func _update_projectiles(delta: float) -> void:
 		pr["pos"] += step
 		if not pr.get("returning", false):
 			pr["distance_left"] -= step.length()
+		if pr.has("fx") and enemies.impact and not light:
+			# Estela de su firma (T74): una partícula cada TRAIL_EVERY segundos.
+			pr["trail_t"] = float(pr["trail_t"]) + delta
+			if pr["trail_t"] >= SkillFx.TRAIL_EVERY:
+				pr["trail_t"] = 0.0
+				enemies.impact.trail(pr["pos"], pr["fx"]["trail"], pr["color"], (pr["vel"] as Vector2).normalized())
 		var hit := -1
 		_ctx(p)
 		_triggering = bool(pr.get("triggered", false))
@@ -2330,10 +2340,27 @@ func _update_projectiles(delta: float) -> void:
 			else:
 				pr["pierce_left"] -= 1
 			_effects.append({"type": "burst", "pos": pr["pos"], "radius": 14.0, "time": 0.0, "duration": 0.15, "color": pr["color"]})
+			if pr.has("fx") and enemies.impact and not light:
+				enemies.impact.skill_impact(pr["pos"], pr["fx"]["impact"], pr["color"], (pr["vel"] as Vector2).normalized())
 		if pr.get("boomerang", false) or (pr["distance_left"] > 0.0 and pr["pierce_left"] >= 0):
 			still.append(pr)
 	_projectiles = still
 	_triggering = false
+
+
+## Versión ligera de los efectos (T74): con muchos enemigos en pantalla, sin estelas
+## ni estallidos de firma y con proyectiles simples (el mismo umbral que EnemyManager).
+func fx_light() -> bool:
+	return enemies != null and enemies.last_drawn_count > EnemyManager.FX_DETAIL_LIMIT
+
+
+## Destello al lanzar desde la mano del jugador, con la firma de la habilidad.
+func _cast_fx(p: Dictionary, target: Vector2) -> void:
+	if enemies == null or enemies.impact == null or fx_light() or String(p.get("damage_type", "none")) == "none":
+		return
+	var dir := (target - player.global_position).normalized() if target != player.global_position else Vector2.RIGHT
+	var color: Color = Player.DOT_COLORS.get(String(p["damage_type"]), Color("e8e0d0"))
+	enemies.impact.cast(player.global_position + dir * 16.0 + Vector2(0, -24.0), SkillFx.signature(p)["cast"], color, dir)
 
 
 func _update_effects(delta: float) -> void:
@@ -2474,6 +2501,8 @@ func _draw() -> void:
 			"marker":
 				draw_arc(e["pos"], e["radius"], 0.0, TAU, 48, Color(c, 0.35 + 0.4 * t), 2.0, true)
 				draw_circle(e["pos"], e["radius"] * t, Color(c, 0.12))
+	var light := fx_light()
+	var fx_time := Time.get_ticks_msec() / 1000.0
 	# Sombra de cada proyectil en el suelo (vuelan): primero todas, debajo.
 	for pr in _projectiles:
 		draw_set_transform(pr["pos"] + Vector2(0, PROJECTILE_SHADOW_DROP), 0.0, Vector2(1.0, 0.45))
@@ -2488,13 +2517,9 @@ func _draw() -> void:
 				draw_line(pr["pos"] - d * 12.0, pr["pos"] + d * 12.0, pr["color"], 4.0, true)
 			continue
 		var dir: Vector2 = pr["vel"].normalized()
-		if pr.get("dot", false):
-			# Paquete corrupto: borroso y con glitch.
-			draw_circle(pr["pos"], 7.0, Color(pr["color"], 0.6))
-			draw_rect(Rect2(pr["pos"] - Vector2(5, 2) + dir.orthogonal() * randf_range(-3, 3), Vector2(10, 4)), Color(0.3, 1.0, 0.6, 0.7))
-			continue
-		draw_line(pr["pos"] - dir * (26.0 if pr.get("homing", false) else 18.0), pr["pos"], Color(pr["color"], 0.5), 4.0, true)
-		draw_circle(pr["pos"], 5.0, pr["color"])
+		# Cada habilidad con su forma (SkillFx): paquete, esquirla, rayo, bola de fuego, gota…
+		var shape: String = pr["fx"]["projectile"] if pr.has("fx") else ("glitch" if pr.get("dot", false) else "orb")
+		SkillFx.draw_projectile(self, pr["pos"], dir, pr["color"], shape, fx_time + float(pr.get("phase", 0.0)), light, Accessibility.reduce_flashes)
 
 
 func _draw_devices() -> void:

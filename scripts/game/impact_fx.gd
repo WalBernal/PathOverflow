@@ -154,6 +154,116 @@ func death(pos: Vector2, damage_type: String, radius: float, tint: Color, materi
 		_flash(pos, LIGHT_COLORS[t], 140.0 + radius * 2.0, 0.3)
 
 
+## Destello al lanzar una habilidad (T74, ver SkillFx): `kind` "flare" (brasas en
+## corona), "frost" (esquirlas lentas), "spark" (chispazos), "glitch" (cuadros
+## verdes que saltan) o "flick" (unos píxeles hacia delante).
+func cast(pos: Vector2, kind: String, color: Color, dir := Vector2.RIGHT) -> void:
+	if _parts.size() > MAX_PARTICLES * 0.7:
+		return
+	var n := 4 if Accessibility.reduce_flashes else 7   # menos destellos: menos partículas
+	for k in n:
+		var a := TAU * k / n
+		var p := {"pos": pos, "life": 0.22, "size": 2.0, "kind": "sq", "grav": 0.0, "color": color.lightened(0.3 * (k % 2))}
+		match kind:
+			"flare":
+				p["vel"] = Vector2.from_angle(a) * 70.0 + Vector2(0, -30.0)
+				p["grav"] = -80.0
+				p["color"] = Color("ffd060") if k % 2 == 0 else color
+			"frost":
+				p["vel"] = Vector2.from_angle(a) * 45.0
+				p["kind"] = "shard"
+				p["size"] = 3.0
+				p["life"] = 0.3
+			"spark":
+				p["vel"] = Vector2.from_angle(a) * 220.0
+				p["kind"] = "spark"
+				p["life"] = 0.12
+			"glitch":
+				p["pos"] = pos + Vector2(randf_range(-8, 8), randf_range(-8, 8)).snapped(Vector2(GRID, GRID))
+				p["vel"] = Vector2.ZERO
+				p["size"] = 4.0
+				p["color"] = Color("6fd36b") if k % 2 == 0 else color
+			_:
+				p["vel"] = dir.rotated(randf_range(-0.4, 0.4)) * randf_range(80.0, 150.0)
+				p["life"] = 0.15
+		p["max"] = p["life"]
+		_parts.append(p)
+	if kind in ["flare", "spark"]:
+		_flash(pos, color, 50.0, 0.1)
+
+
+## Una partícula de estela detrás de un proyectil: brasas que suben, escarcha que
+## cae, chispas cortas, gotas, bits o puntitos de rastreo.
+func trail(pos: Vector2, kind: String, color: Color, dir := Vector2.RIGHT) -> void:
+	if _parts.size() > MAX_PARTICLES * 0.5:
+		return
+	var p := {"pos": pos - dir * 6.0 + Vector2(randf_range(-2, 2), randf_range(-2, 2)), "life": 0.3, "size": 2.0, "kind": "sq", "grav": 0.0,
+		"color": color, "vel": -dir * 20.0}
+	match kind:
+		"embers":
+			p["vel"] = Vector2(randf_range(-15, 15), -randf_range(30, 60))
+			p["color"] = Color("ffd060") if randf() < 0.5 else Color("e0452f")
+		"frost":
+			p["vel"] = Vector2(randf_range(-10, 10), randf_range(10, 30))
+			p["grav"] = 60.0
+			p["color"] = Color("e8f8ff")
+			p["life"] = 0.4
+		"sparks":
+			p["vel"] = dir.orthogonal() * randf_range(-120, 120)
+			p["kind"] = "spark"
+			p["life"] = 0.08
+		"drips":
+			p["vel"] = Vector2(0, 20)
+			p["grav"] = 260.0
+		"dots":
+			p["life"] = 0.5
+			p["vel"] = Vector2.ZERO
+		_:
+			if randf() < 0.35:
+				p["kind"] = "bit"
+				p["text"] = "0" if randf() < 0.5 else "1"
+	p["max"] = p["life"]
+	_parts.append(p)
+
+
+## Estallido de un proyectil al golpear, según su firma: "splash" (fuego), "shatter"
+## (hielo), "zapburst" (rayo), "splat" (caos) o "shards" (físico, salen hacia delante).
+func skill_impact(pos: Vector2, kind: String, color: Color, dir := Vector2.RIGHT) -> void:
+	if _parts.size() > MAX_PARTICLES * 0.8:
+		return
+	var n := 5 if Accessibility.reduce_flashes else 9
+	for k in n:
+		var a := TAU * k / n + randf() * 0.3
+		var p := {"pos": pos, "life": randf_range(0.2, 0.35), "size": 2.0 if k % 3 else 4.0, "kind": "sq", "grav": 0.0, "color": color,
+			"vel": Vector2.from_angle(a) * randf_range(60.0, 140.0)}
+		match kind:
+			"splash":
+				p["grav"] = -40.0
+				p["color"] = Color("ffd060") if k % 3 == 0 else (Color("ff8a2a") if k % 3 == 1 else color)
+			"shatter":
+				p["kind"] = "shard"
+				p["grav"] = 300.0
+				p["size"] = randf_range(3.0, 5.0)
+				p["color"] = Color("e8f8ff") if k % 2 == 0 else color
+			"zapburst":
+				p["kind"] = "spark"
+				p["vel"] = Vector2.from_angle(a) * randf_range(180.0, 300.0)
+				p["life"] = randf_range(0.08, 0.16)
+			"splat":
+				p["vel"] = Vector2.from_angle(a) * randf_range(40.0, 90.0) + Vector2(0, -40.0)
+				p["grav"] = 320.0
+			_:
+				p["vel"] = dir.rotated(randf_range(-1.0, 1.0)) * randf_range(60.0, 160.0)
+				p["grav"] = 220.0
+				if k % 4 == 0:
+					p["kind"] = "bit"
+					p["text"] = "0" if randf() < 0.5 else "1"
+		p["max"] = p["life"]
+		_parts.append(p)
+	if LIGHT_COLORS.has(String({"splash": "fire", "zapburst": "lightning"}.get(kind, ""))):
+		_flash(pos, color, 70.0, 0.12)
+
+
 func _flash(pos: Vector2, color: Color, radius: float, life: float) -> void:
 	if flashes.size() < 12:
 		if Accessibility.reduce_flashes:   # menos destellos: un fogonazo más chico y tenue

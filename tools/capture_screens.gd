@@ -1135,6 +1135,23 @@ func _capture_poses() -> void:
 	_swap(sheet)
 	await _wait(0.5)
 	_save("72_poses")
+	# T74: cada forma de proyectil (normal, ligera y con Menos destellos), a escala 3.
+	var shapes := ["orb", "packet", "tracker", "fireball", "shard", "bolt", "glob", "glitch"]
+	var colors := [Color("e8e0d0"), Color("e8e0d0"), Color("e8e0d0"), Color("e0652f"), Color("7fb8e0"), Color("e8d070"), Color("6fd36b"), Color("6fd36b")]
+	var fx_sheet := Control.new()
+	fx_sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	fx_sheet.draw.connect(func() -> void:
+		UiStyle.draw_background(fx_sheet, fx_sheet.size)
+		var font := ThemeDB.fallback_font
+		for i in shapes.size():
+			fx_sheet.draw_string(font, Vector2(40 + i * 190, 60), shapes[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 18)
+			for row in 3:
+				fx_sheet.draw_set_transform(Vector2(110 + i * 190, 180 + row * 220), 0.0, Vector2(3, 3))
+				SkillFx.draw_projectile(fx_sheet, Vector2.ZERO, Vector2.RIGHT, colors[i], shapes[i], 0.37, row == 1, row == 2)
+				fx_sheet.draw_set_transform(Vector2.ZERO))
+	_swap(fx_sheet)
+	await _wait(0.5)
+	_save("74_proyectiles")
 
 
 ## M. Páez: retrato grande, sprite del juego y su aspecto lado a lado con otros NPC.

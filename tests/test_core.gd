@@ -145,6 +145,7 @@ func _initialize() -> void:
 	_test_player_poses()
 	_test_impact_frame()
 	_test_enemy_weight()
+	_test_skill_fx()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3618,6 +3619,37 @@ func _test_enemy_weight() -> void:
 	_check(em.knocks[0].length() > em.knocks[1].length(), "y empuja más")
 	em.free()
 	pl.free()
+
+
+## Efectos de habilidades con más cuerpo (T74): firma por habilidad y partículas con tope.
+func _test_skill_fx() -> void:
+	var skills: Dictionary = _db.skills.skills
+	_check(SkillFx.signature(skills["ping_letal"])["projectile"] == "bolt" and SkillFx.signature(skills["rafaga_de_paquetes"])["projectile"] == "packet",
+		"el ping es un rayo en zigzag y la ráfaga, paquetes")
+	_check(SkillFx.signature({"id": "nueva", "damage_type": "fire"})["projectile"] == "fireball", "sin firma propia: la de su tipo de daño")
+	var shapes := {}
+	for id in skills:
+		if String(skills[id].get("kind", "")) in ["projectile", "homing", "dot_projectile"]:
+			var sig := SkillFx.signature(skills[id])
+			for part in ["projectile", "trail", "cast", "impact"]:
+				_check(String(sig.get(part, "")) != "", "%s tiene %s" % [id, part])
+			shapes[sig["projectile"]] = true
+	_check(shapes.size() >= 4, "los proyectiles se distinguen de lejos (%d formas)" % shapes.size())
+	var fx := ImpactFx.new()
+	var was: bool = Accessibility.reduce_flashes
+	Accessibility.reduce_flashes = false
+	fx.skill_impact(Vector2.ZERO, "splash", Color.ORANGE)
+	var full := fx.count()
+	fx.clear()
+	Accessibility.reduce_flashes = true
+	fx.skill_impact(Vector2.ZERO, "splash", Color.ORANGE)
+	_check(fx.count() < full and fx.flashes.size() <= 1, "con Menos destellos, menos partículas")
+	Accessibility.reduce_flashes = was
+	fx.clear()
+	for k in 2000:
+		fx.trail(Vector2.ZERO, "embers", Color.ORANGE)
+	_check(fx.count() <= int(ImpactFx.MAX_PARTICLES * 0.5) + 1, "las estelas no pasan del tope de partículas")
+	fx.free()
 
 
 ## Parte 2 (T72b): el ataque golpea en el cuadro de impacto de la animación.
