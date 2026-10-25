@@ -372,6 +372,37 @@ func _on_quest_item_picked(q: Dictionary) -> void:
 		play_cutscene(q["cutscene"])
 
 
+## Incidente (Incidents): al azar, o el de un mapa (`map`: {zone, mods}). Usa el
+## nivel del atlas (Atlas) para su dificultad y su botín.
+func open_incident(map: Dictionary = {}) -> void:
+	var def := Incidents.build(GameData.zones, character.level, GameData.town_for_zone(zone.id), _rng, -1,
+		String(map.get("zone", "")), map.get("mods", []), Atlas.level_bonus(character), Atlas.loot_bonus(character))
+	if def.is_empty():
+		ui.hud.flash("No hay incidentes para tu nivel todavía.", Color("e0a060"))
+		return
+	GameData.zones[Incidents.ZONE_ID] = def
+	travel_to(Incidents.ZONE_ID, "")
+	ui.hud.flash("%s · nivel %d (+%d %% de botín)\n%s\nLimpia la zona para completarlo en el atlas." % [def["name"], int(def["level"]),
+		roundi((float(def["drop_multiplier"]) - 1.0) * 100.0), Incidents.describe(def)], Color("ff8a5a"))
+
+
+## Incidente limpio: se marca en el atlas, suelta un mapa y un botín extra.
+func _check_incident_done() -> void:
+	if zone == null or zone.id != Incidents.ZONE_ID or zone.def.get("incident_done", false) or enemies.count() > 0:
+		return
+	zone.def["incident_done"] = true
+	var src := String(zone.def["incident"]["from"])
+	var up := Atlas.mark_done(character, src)
+	var m := Atlas.roll_map(GameData.zones, character.level, Atlas.tier(character), _rng)
+	var got_map := not m.is_empty() and Atlas.add_map(character, m)
+	for k in 3:
+		loot.drop_item(item_generator.roll_drop(enemies.area_level, 2.0), zone.free_spot_near(player.global_position + Vector2.from_angle(TAU * k / 3.0) * 80.0))
+	ui.hud.flash("Incidente resuelto. %s%s" % ["¡El atlas sube a nivel %d! " % Atlas.tier(character) if up else "",
+		("Nuevo %s en el atlas." % m["name"]) if got_map else ""], Color("6fd36b"))
+	Sfx.play("level_up", -4.0, 1.1)
+	_mark_dirty()
+
+
 ## Mejoras del campamento (se abren al terminar cada acto): puesto de Aida,
 ## mesa de crafteo de Mario y antena de Rafa.
 const CAMP_ANTENNA_SECONDS := 180.0
@@ -924,6 +955,12 @@ func _on_enemy_killed(rarity: int, experience: int, pos: Vector2, type_id: Strin
 	if patch != "":
 		Crafting.add(character, patch)
 		ui.hud.flash("+1 %s (mesa de crafteo de Mario)." % Crafting.NAMES[patch].to_lower(), Crafting.COLORS[patch])
+	if zone.id == Incidents.ZONE_ID:
+		if rarity == Rarity.Enemy.ELITE and _rng.randf() < Atlas.ELITE_MAP_CHANCE:
+			var m := Atlas.roll_map(GameData.zones, character.level, Atlas.tier(character), _rng)
+			if not m.is_empty() and Atlas.add_map(character, m):
+				ui.hud.flash("El élite soltó un %s (atlas)." % m["name"], Color("ff8a5a"))
+		_check_incident_done.call_deferred()
 	player.add_flask_charges(rarity)
 	player.notify_kill()
 	skills.on_enemy_killed(pos)
@@ -1108,13 +1145,11 @@ func _on_dialogue_action(action: Dictionary) -> void:
 		"reforge_weapon":
 			_reforge_weapon()
 		"open_incident":
-			var def := Incidents.build(GameData.zones, character.level, GameData.town_for_zone(zone.id), _rng)
-			if def.is_empty():
-				ui.hud.flash("No hay incidentes para tu nivel todavía.", Color("e0a060"))
-			else:
-				GameData.zones[Incidents.ZONE_ID] = def
-				travel_to(Incidents.ZONE_ID, "")
-				ui.hud.flash("%s (+%d %% de botín)\n%s" % [def["name"], roundi((float(def["drop_multiplier"]) - 1.0) * 100.0), Incidents.describe(def)], Color("ff8a5a"))
+			open_incident()
+		"open_atlas":
+			var atlas := AtlasPanel.new(character, open_incident)
+			ui.add_child(atlas)
+			atlas.popup_centered()
 		"open_crafting":
 			var panel := CraftingPanel.new(character, item_generator)
 			ui.add_child(panel)

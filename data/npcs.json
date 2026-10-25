@@ -380,7 +380,7 @@
       ],
       "nodes": {
         "puesto": {"text": "Desde que cayó el Arquitecto puse un puesto con lo que sobró de las migraciones: equipo de verdad, no placas como las de Nacho, y café en botella. Precios de senior, eso sí.", "options": [{"text": "A ver qué tienes.", "next": "", "action": {"type": "open_gear_shop"}}, {"text": "¿Tienes algún incidente abierto? (zona difícil con más botín)", "next": "incidente"}, {"text": "Luego paso.", "next": "hola"}]},
-        "incidente": {"text": "Siempre hay un incidente abierto, mijo. Te mando a una zona que ya conoces, pero con todo lo que puede salir mal: más enemigos, que explotan, que no regeneres... Lo que caiga allí es mejor. Para volver, el portal te trae de regreso.", "options": [{"text": "Mándame.", "next": "", "action": {"type": "open_incident"}}, {"text": "Hoy no.", "next": "hola"}]},
+        "incidente": {"text": "Siempre hay un incidente abierto, mijo. Te mando a una zona que ya conoces, pero con todo lo que puede salir mal: más enemigos, que explotan, que no regeneres... Lo que caiga allí es mejor. Para volver, el portal te trae de regreso.", "options": [{"text": "Abre el atlas (mapas y progreso).", "next": "", "action": {"type": "open_atlas"}}, {"text": "Mándame a uno al azar.", "next": "", "action": {"type": "open_incident"}}, {"text": "Hoy no.", "next": "hola"}]},
         "hola": {
           "text": "Vaya, un recién egresado. Te tiraron a producción sin pasar por staging, ¿eh? Soy Aida. Llevo aquí desde que El Pepe programaba todo en COBOL.",
           "options": [

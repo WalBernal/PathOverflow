@@ -79,6 +79,10 @@ func _run() -> void:
 			if zone_ids.is_empty():
 				continue
 			runs += await _play_act(class_def, act, act_index, zone_ids)
+		# Una vez (con la primera clase): un incidente del atlas y su pantalla.
+		if runs > 0 and not _incident_played and (zone_filter.is_empty() or zone_filter.has("incidente")):
+			_incident_played = true
+			runs += await _play_incident(class_def)
 	_counter.take()   # lo que salga al cerrar no cuenta
 	print("")
 	print("Integración: %d zonas × clase de %.0f s en %.1f s reales" % [runs, _seconds, (Time.get_ticks_msec() - started) / 1000.0])
@@ -129,6 +133,41 @@ func _play_act(class_def: Dictionary, act: Dictionary, act_index: int, zone_ids:
 	gd.set("current_character", null)
 	_collect("%s · acto %d · al cerrar" % [class_def["id"], act_index + 1])
 	return count
+
+
+var _incident_played := false
+
+
+## Un incidente (Incidents) desde el campamento del acto I, con el atlas abierto y cerrado antes.
+func _play_incident(class_def: Dictionary) -> int:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Integración", StringName(class_def["id"]), CharacterAppearance.default(), false)
+	c.flags["zone"] = gd.get("act").get("town", "campamento")
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 20
+	gd.set("current_character", c)
+	var world: Node = load(WORLD_SCENE).instantiate()
+	add_child(world)
+	world.set("_since_save", -9999.0)
+	await _frames(2)
+	world.call("_on_dialogue_action", {"type": "open_atlas"})
+	await _frames(2)
+	for child in world.get("ui").get_children():
+		if child is AtlasPanel:
+			child.queue_free()
+	world.call("open_incident")
+	await _frames(2)
+	_collect("%s · incidente · al abrir" % class_def["id"])
+	await _play_zone(world, class_def["id"], "incidente")
+	world.set("_since_save", -9999.0)
+	remove_child(world)
+	world.queue_free()
+	get_tree().paused = false
+	await _frames(2)
+	gd.set("current_character", null)
+	_collect("%s · incidente · al cerrar" % class_def["id"])
+	return 1
 
 
 func _play_zone(world: Node, class_id: String, zone_id: String) -> void:

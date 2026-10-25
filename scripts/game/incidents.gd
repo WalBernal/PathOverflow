@@ -35,22 +35,28 @@ static func candidates(zones: Dictionary, level: int) -> Array:
 	return out
 
 
-## Arma el incidente: copia de una zona al azar, al nivel del personaje, con sus
-## modificadores y la salida al campamento. {} si no hay ninguna zona posible.
-static func build(zones: Dictionary, level: int, town: String, rng: RandomNumberGenerator, count := -1) -> Dictionary:
-	var pool := candidates(zones, level)
-	if pool.is_empty():
-		return {}
-	var src: Dictionary = pool[rng.randi_range(0, pool.size() - 1)]
+## Arma el incidente: copia de una zona (al azar o `zone_id`, la de un mapa), al
+## nivel del personaje más `extra_level` (atlas), con sus modificadores (al azar o
+## `fixed_mods`) y la salida al campamento. {} si no hay ninguna zona posible.
+static func build(zones: Dictionary, level: int, town: String, rng: RandomNumberGenerator, count := -1,
+		zone_id := "", fixed_mods: Array = [], extra_level := 0, extra_loot := 0.0) -> Dictionary:
+	var src: Dictionary = zones.get(zone_id, {}) if zone_id != "" else {}
+	if src.is_empty():
+		var pool := candidates(zones, level)
+		if pool.is_empty():
+			return {}
+		src = pool[rng.randi_range(0, pool.size() - 1)]
 	var def: Dictionary = src.duplicate(true)
-	var ids: Array = MODS.keys()
-	for k in range(ids.size() - 1, 0, -1):   # barajar con el rng (para que las pruebas se repitan)
-		var j := rng.randi_range(0, k)
-		var tmp = ids[k]
-		ids[k] = ids[j]
-		ids[j] = tmp
-	var mods: Array = ids.slice(0, count if count > 0 else rng.randi_range(2, 3))
-	var loot := 1.0
+	var mods: Array = fixed_mods.duplicate()
+	if mods.is_empty():
+		var ids: Array = MODS.keys()
+		for k in range(ids.size() - 1, 0, -1):   # barajar con el rng (para que las pruebas se repitan)
+			var j := rng.randi_range(0, k)
+			var tmp = ids[k]
+			ids[k] = ids[j]
+			ids[j] = tmp
+		mods = ids.slice(0, count if count > 0 else rng.randi_range(2, 3))
+	var loot := 1.0 + extra_loot
 	var en: Dictionary = def["enemies"]
 	for m in mods:
 		var info: Dictionary = MODS[m]
@@ -61,7 +67,7 @@ static func build(zones: Dictionary, level: int, town: String, rng: RandomNumber
 			en["elite_chance"] = minf(0.6, float(en.get("elite_chance", 0.1)) * float(info["elite"]))
 	def["id"] = ZONE_ID
 	def["name"] = "Incidente: %s" % src.get("name", "")
-	def["level"] = maxi(int(src.get("level", 1)), level)
+	def["level"] = maxi(int(src.get("level", 1)), level) + extra_level
 	def["drop_multiplier"] = float(def.get("drop_multiplier", 1.0)) * loot
 	def["incident"] = {"mods": mods, "from": src["id"]}
 	for key in ["cutscene_on_enter", "quest_items", "key_items", "rare_spawns", "race_condition", "challenges", "waypoint", "npcs", "props", "locks", "subboss"]:

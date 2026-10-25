@@ -242,7 +242,7 @@ Origen: R2 §9 ★★★
 Origen: R2 §9 ★★★
 - Zona aleatoria con modificadores (más enemigos, explotan, sin regeneración) a cambio de más botín.
 
-### [ ] T40 · Atlas de incidentes (parte 2: atlas y progresión) · M
+### [x] T40 · Atlas de incidentes (parte 2: atlas y progresión) · M
 Origen: R2 §9 ★★★
 - Pantalla de atlas, desbloqueo de mapas, niveles y botín de mapas.
 
@@ -426,3 +426,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T37 · Némesis (`Nemesis`): el élite que te mató (golpe propio o proyectil en los últimos 4 s; `EnemyManager.last_hitter`) vuelve con tu nombre, sus afijos, ×2,5 de vida y más daño; seguro en la zona donde te mató y a veces en el resto del acto; más fuerte si te vuelve a matar; al vencerlo, cuatro objetos buenos y fichas. T67: otra pasada larga cortada sin traza, ahora sin otra instancia de Godot pero con solo 1,2 GB de RAM libre en el sistema; las cortas pasaron 3 de 3.
 - 2026-10-25 · T38 · Crafteo con parches (`Crafting`, `CraftingPanel` en la mesa de Mario): refactor (rehace los afijos no fijados), feature (añade uno), versión mayor (normal → mágico → raro) y hotfix (fija un afijo para el siguiente refactor); caen de élites y únicos y se compran por fichas; el tooltip marca el afijo fijado. `ItemGenerator._roll_affixes` ahora respeta los afijos que ya tenga el objeto.
 - 2026-10-25 · T39 · Atlas de incidentes, parte 1 (`Incidents`): desde el puesto de Aida, una zona de combate al azar ya jugable, a tu nivel, con 2-3 de siete modificadores (más grupos, explotan, veloces, blindados, más élites, sin regeneración, −20 a resistencias) que suman botín (`drop_multiplier`); afijos forzados en `EnemyManager.forced_affixes` y mods del jugador mientras dura; salida por portal al campamento.
+- 2026-10-25 · T40 · Atlas de incidentes, parte 2 (`Atlas`, `AtlasPanel`): completar un incidente lo marca y suelta un mapa; cada tres zonas distintas sube el nivel del atlas (+2 niveles y +10 % de botín por nivel, hasta 10); mapas (zona + modificadores) que caen al completar y de los élites de dentro, y pantalla del atlas desde el puesto de Aida. La integración juega ahora un incidente (con el atlas abierto antes) una vez por pasada.

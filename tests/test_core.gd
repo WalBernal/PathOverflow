@@ -115,6 +115,7 @@ func _initialize() -> void:
 	_test_nemesis()
 	_test_crafting_patches()
 	_test_incidents()
+	_test_atlas()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -2711,6 +2712,37 @@ func _test_incidents() -> void:
 	_check(zone.rect.size.x > 0 and zone.entry_point("") != Vector2.ZERO, "la zona del incidente se arma")
 	zone.free()
 	_check(Incidents.describe(def).count("\n") == 2, "se explican sus modificadores")
+
+
+## Atlas de incidentes, parte 2 (T40): progresión por zonas completadas y mapas.
+func _test_atlas() -> void:
+	var zones := {}
+	for path in ["res://data/act1.json", "res://data/act2.json"]:
+		var act: Dictionary = DataLoader.load_json(path)
+		for z in act["zones"]:
+			z["act"] = act["id"]
+			zones[z["id"]] = z
+	var c := CharacterData.new(_classes[0], _tree)
+	c.set_level(20)
+	_check(Atlas.tier(c) == 1 and Atlas.level_bonus(c) == 0 and is_zero_approx(Atlas.loot_bonus(c)), "el atlas empieza en nivel 1")
+	_check(not Atlas.mark_done(c, "zona1") and not Atlas.mark_done(c, "zona1") and Atlas.done(c).size() == 1, "completar la misma zona dos veces cuenta una")
+	Atlas.mark_done(c, "zona2")
+	_check(Atlas.mark_done(c, "zona3") and Atlas.tier(c) == 2 and Atlas.level_bonus(c) == Atlas.LEVEL_PER_TIER, "tres zonas distintas suben el nivel del atlas")
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var m := Atlas.roll_map(zones, 20, 3, rng)
+	_check(zones.has(m["zone"]) and m["mods"].size() == 3 and String(m["name"]).begins_with("Mapa"), "un mapa: zona válida y tres modificadores desde el nivel 3")
+	for k in Atlas.MAX_MAPS:
+		Atlas.add_map(c, m)
+	_check(not Atlas.add_map(c, m) and Atlas.maps(c).size() == Atlas.MAX_MAPS, "caben %d mapas" % Atlas.MAX_MAPS)
+	var taken := Atlas.take_map(c, 0)
+	_check(taken["zone"] == m["zone"] and Atlas.maps(c).size() == Atlas.MAX_MAPS - 1, "abrir un mapa lo gasta")
+	# El incidente de un mapa usa su zona y sus modificadores, y el nivel del atlas.
+	var def := Incidents.build(zones, 20, "campamento", rng, -1, taken["zone"], taken["mods"], Atlas.level_bonus(c), Atlas.loot_bonus(c))
+	_check(def["incident"]["from"] == taken["zone"] and def["incident"]["mods"] == taken["mods"], "el incidente del mapa es el del mapa")
+	_check(int(def["level"]) >= 20 + Atlas.LEVEL_PER_TIER, "con el nivel del atlas sube la dificultad")
+	var saved := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())), _classes[0], _tree, _db)
+	_check(Atlas.tier(saved) == 2 and Atlas.maps(saved).size() == Atlas.MAX_MAPS - 1, "el atlas se guarda con el personaje")
 
 
 func _db_enemies() -> Array:

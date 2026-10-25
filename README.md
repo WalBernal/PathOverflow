@@ -396,9 +396,13 @@ El personaje es un recién egresado que se enfrenta al mundo laboral: cada clase
 
 **Ascendencia al nivel 20**: junto al inicio de tu clase en el árbol hay un **medallón**. Al pulsarlo se abre un panel circular: hasta el nivel 20 solo se pueden ver las dos opciones; a partir de ahí se elige una (permanente). Después, el panel muestra el inicio de la ascendencia y sus pasivas alrededor: cada una cuesta un **punto de ascendencia** (1 al nivel 20, +1 a los 25 y 30). En la pantalla de pruebas del árbol se puede cambiar libremente.
 
-## Atlas de incidentes (parte 1)
+## Atlas de incidentes
 
-En el puesto de Aida (campamento, tras el Acto I) se pide un **incidente**: una zona de combate al azar que ya puedes jugar, a tu nivel, con 2 o 3 modificadores que la ponen difícil a cambio de **más botín** (cada uno suma): *Pico de tráfico* (+50 % de grupos), *Procesos zombi* (todos explotan al morir), *Hilos desbocados* (todos veloces), *Firewall mal configurado* (todos blindados), *Escalada de privilegios* (el doble de élites), *Fuga de memoria* (no regeneras vida) y *Configuración por defecto* (−20 a tus resistencias). Se vuelve por un portal al campamento. La zona se arma al vuelo (`Incidents`) y no se guarda: si sales del juego dentro, vuelves al campamento. La pantalla de atlas y la progresión llegan en la parte 2.
+En el puesto de Aida (campamento, tras el Acto I) se pide un **incidente**: una zona de combate al azar que ya puedes jugar, a tu nivel, con 2 o 3 modificadores que la ponen difícil a cambio de **más botín** (cada uno suma): *Pico de tráfico* (+50 % de grupos), *Procesos zombi* (todos explotan al morir), *Hilos desbocados* (todos veloces), *Firewall mal configurado* (todos blindados), *Escalada de privilegios* (el doble de élites), *Fuga de memoria* (no regeneras vida) y *Configuración por defecto* (−20 a tus resistencias). Se vuelve por un portal al campamento. La zona se arma al vuelo (`Incidents`) y no se guarda: si sales del juego dentro, vuelves al campamento.
+
+- **Completar un incidente** (limpiar la zona) lo marca en el **atlas**, suelta tres objetos y un **mapa**. Cada tres zonas distintas completadas sube el **nivel del atlas** (hasta 10): los incidentes salen 2 niveles más altos y con un 10 % más de botín por nivel.
+- **Mapas**: incidentes guardados (zona + modificadores; tres modificadores desde el nivel 3 del atlas). Caen al completar incidentes y, un 15 % de las veces, de los élites de dentro. Caben 12.
+- **Pantalla del atlas** (puesto de Aida → «Abre el atlas»): nivel y lo que falta para el siguiente, zonas completadas por acto, tus mapas con su botón «Abrir» y el incidente al azar (`Atlas`, `AtlasPanel`; se guarda en `flags.atlas`).
 
 ## Lore coleccionable
 
