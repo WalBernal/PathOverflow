@@ -1320,7 +1320,7 @@ func _on_dialogue_action(action: Dictionary) -> void:
 			if _gear_stock.is_empty() or _gear_level != character.level:
 				_gear_stock = Economy.generate_gear_stock(item_generator, character.level)
 				_gear_level = character.level
-			ui.open_shop(_gear_stock)
+			ui.open_shop(_gear_stock, "aida")
 		"reforge_weapon":
 			_reforge_weapon()
 		"set_difficulty":

@@ -350,11 +350,11 @@ func _build_act_banner() -> PanelContainer:
 	return panel
 
 
-## Tienda de Nacho (con el inventario al lado para vender).
-func open_shop(stock: Array[Item]) -> void:
+## Tienda de Nacho, o el puesto de Aida con vendor "aida" (con el inventario al lado para vender).
+func open_shop(stock: Array[Item], vendor := "nacho") -> void:
 	dialogue_box.close()
 	_open_trade_panel(shop_panel)
-	shop_panel.open(stock)
+	shop_panel.open(stock, vendor)
 
 
 ## Alijo de la cuenta: click en la bolsa guarda, click en el alijo saca.

@@ -141,6 +141,7 @@ func _initialize() -> void:
 	_test_render_batching()
 	_test_skill_balance()
 	_test_shop_stock()
+	_test_shop_coat()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3508,6 +3509,42 @@ func _test_shop_stock() -> void:
 		"filtros por tipo y atributo")
 	c.inventory.add_item(boards[0].duplicate_item() if boards[0].has_method("duplicate_item") else boards[0])
 	_check(ShopPanel.owned_board_level(c, boards[0]) > 0, "avisa si ya tienes esa habilidad")
+	panel.free()
+
+
+## Tienda de Nacho, parte 2 (T71): la gabardina, sus frases y el puesto de Aida.
+func _test_shop_coat() -> void:
+	for vendor in ["nacho", "aida"]:
+		for event in ["enter", "hover", "buy", "sell", "broke", "full", "refresh"]:
+			_check(ShopLines.pick(vendor, event) != "", "%s tiene frase para «%s»" % [vendor, event])
+	var wav := ShopVendorArt.cloth_stream(true)
+	_check(wav.data.size() > 4000 and wav.data != ShopVendorArt.cloth_stream(false).data, "sonido de tela al abrir y al cerrar (distintos)")
+	var gen := ItemGenerator.new(_db, 71)
+	var c := CharacterData.new(_classes[0], _tree)
+	var panel := ShopPanel.new()
+	panel.character = c
+	panel._ready()
+	panel.open(Economy.generate_stock(gen, 12))
+	_check(panel.last_line in ShopLines.LINES["nacho"]["enter"], "Nacho saluda al abrir la gabardina")
+	_check(panel._art.frame == ShopVendorArt.FRAMES - 1, "la gabardina acaba abierta")
+	var hooks := panel._grid.get_children().filter(func(col: Node) -> bool: return col.get_child(0) is Control and not (col.get_child(0) is Label))
+	_check(hooks.size() == panel._grid.get_child_count() and hooks.size() > 0, "cada artículo cuelga de un gancho del forro")
+	_check(not panel.contraband_open and panel._special.get_child_count() == 2, "dos bolsillos: la oferta y el contrabando (cerrado)")
+	var contra_i := panel.stock.find(panel.stock.filter(func(it: Item) -> bool: return Economy.shop_tag(it) == Economy.TAG_CONTRABAND)[0])
+	c.tokens = 0
+	_check(not panel.buy(contra_i) and panel.last_line in ShopLines.LINES["nacho"]["broke"], "sin tokens: no compra y Nacho se burla")
+	panel.open_contraband()
+	_check(panel.contraband_open and panel.last_line in ShopLines.LINES["nacho"]["pocket"], "el bolsillo secreto se abre aparte")
+	c.tokens = 100000
+	_check(panel.buy(contra_i) and panel.stock[contra_i] == null and panel.last_line in ShopLines.LINES["nacho"]["buy"], "comprar sigue funcionando (y comenta)")
+	panel.refreshes = 1
+	panel.open(Economy.generate_stock(gen, 12))
+	_check(panel.last_line in ShopLines.LINES["nacho"]["refresh"] and not panel.contraband_open, "al renovar comenta la caja nueva, no vuelve a saludar")
+	panel.filter = "ram"
+	panel.open(Economy.generate_gear_stock(gen, 12), "aida")
+	_check(panel.vendor == "aida" and panel.last_line in ShopLines.LINES["aida"]["enter"], "Aida tiene su propio saludo")
+	_check(not panel._filter_row.visible and not panel._pockets_box.visible and not panel._refresh_button.visible, "el puesto de Aida: sin filtros, bolsillos ni bodega")
+	_check(panel._grid.get_child_count() == panel.stock.size() and panel._grid.get_child(0).get_child(0) is ItemCell, "Aida enseña todo en la mesa, sin ganchos")
 	panel.free()
 
 

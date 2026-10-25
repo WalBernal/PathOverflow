@@ -756,6 +756,12 @@ func _capture_windows_160() -> void:
 	ui.open_shop(Economy.generate_stock(ItemGenerator.new(gd.get("items")), c.level))
 	await _wait(0.5)
 	_save("123_160_tienda")
+	ui.shop_panel.open_contraband()
+	await _wait(0.5)
+	_save("123b_160_contrabando")
+	ui.open_shop(Economy.generate_gear_stock(ItemGenerator.new(gd.get("items")), c.level), "aida")
+	await _wait(0.5)
+	_save("123c_160_aida")
 	ui.close_trade_panels()
 	ui.inventory_panel.visible = false
 	ui.open_waypoints("campamento")

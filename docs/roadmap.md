@@ -403,11 +403,12 @@ Origen: R3
 - Precios revisados con la economía de tokens (cuánto se gana por zona de cada acto), vender por lote (todo lo normal / mágico de la bolsa) y recomprar lo último vendido.
 - Hecho: 9 placas (3 por atributo, sin repetir), hasta 10 RAM distintas, 2 pociones, oferta del día (4 ranuras, 60 %) y contrabando (+2 niveles, 5 ranuras, ×2,5); renovar cada vez más caro (se reinicia al cambiar de zona); filtros; aviso de «ya la tienes»; venta por lote y recompra; la tienda se desplaza si no cabe. Arreglo de T69: `ItemGenerator.generate_motherboard` ignoraba `min_level` de las habilidades (solo lo miraban las RAM). Pendiente para T71: la comparación al pasar el ratón sigue siendo la del tooltip (solo equipo).
 
-### [ ] T71 · Tienda de Nacho, parte 2: la gabardina · M 🛑
+### [x] T71 · Tienda de Nacho, parte 2: la gabardina · M 🛑
 Origen: R3 (idea del usuario)
 - La tienda como escena: Nacho abre la gabardina (animación de dos o tres cuadros en pixel art) y los artículos cuelgan del forro en ganchos y bolsillos; la oferta del día en el bolsillo de dentro, el contrabando en un bolsillo que se abre aparte.
 - Frases sarcásticas al entrar, al pasar el ratón por un artículo, al comprar, al vender, al regatear sin tokens o al renovar («Original, original. Bueno, original de algún lado», «Esta RAM se cayó de un camión. De un camión de Amazon.»), con su voz corta (Barks) y un sonido de tela al abrir y cerrar.
 - Mismo funcionamiento que la tienda actual (arrastrar para vender, clic para comprar, mando), y la de Aida (equipo) con el mismo marco pero su propio estilo (puesto ordenado, sin gabardina).
+- Hecho: `ShopVendorArt` dibuja a Nacho en pixel art (sombrero, gafas de sol, gabardina cerrada → entreabierta → abierta con RAM, placas y relojes colgando) y a Aida tras su puesto con toldo (tres cuadros: se ajusta las gafas); la mercancía cuelga de ganchos en un forro morado, la oferta va en el «bolsillo de dentro» y el contrabando en un «bolsillo secreto» que se abre con un botón. `ShopLines`: frases de Nacho y de Aida para entrar, mirar (con pausa de 4 s; frases propias para la oferta y el contrabando), comprar, recomprar, vender, vender por lote, sin tokens, bolsa llena, renovar y abrir el bolsillo; bocadillo, boca que se mueve y voz con Barks. Tela sintetizada al abrir y cerrar. El puesto de Aida usa el mismo panel sin filtros, bolsillos ni bodega. Sigue pendiente comparar placas y RAM con lo equipado al pasar el ratón.
 
 ## Fase 10 — Diseño visual, sprites y animación
 
@@ -577,3 +578,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · Pausa en tres columnas con desplazamiento (no se veían todas las opciones) y Roadmap 3.0 (T69-T87): balance de habilidades iniciales, tienda de Nacho con gabardina, sprites, animación, sonido, ventanas de gestión, árbol pasivo y botín; herramienta tools/skill_balance.gd.
 - 2026-10-25 · T69 · Balance de habilidades iniciales con tools/skill_balance.gd: nada por encima de ~2× la mediana a placa 1 y la mejor inicial de cada clase tumba al primer jefe en 43-92 s (antes 24-120 s); prueba que exige la banda.
 - 2026-10-25 · T70 · Tienda de Nacho con más surtido: placas de los tres atributos, RAM distintas, pociones, oferta del día y contrabando; renovar con precio creciente, filtros, venta por lote y recompra. De paso, las placas respetan ya el min_level de su habilidad.
+- 2026-10-25 · T71 · La gabardina de Nacho: tienda como escena (pixel art en tres cuadros, forro con ganchos, bolsillo de la oferta y bolsillo secreto del contrabando), frases sarcásticas con voz y sonido de tela; el puesto de Aida con su propio estilo. Parada para revisión.
