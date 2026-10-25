@@ -15,6 +15,7 @@ var _loot: LootManager
 var _rows: Array[Control] = []
 var _preview: Control
 var _ground_label: Label
+var _extra: VBoxContainer
 
 
 func setup(loot: LootManager) -> void:
@@ -72,6 +73,11 @@ func setup(loot: LootManager) -> void:
 	right.add_child(_preview)
 	_ground_label = UiStyle.label("", 12, UiStyle.MUTED)
 	right.add_child(_ground_label)
+	# Reglas finas y filtros con nombre (se rehace al cambiar algo).
+	_extra = VBoxContainer.new()
+	_extra.add_theme_constant_override("separation", 6)
+	_extra.custom_minimum_size.x = 300
+	columns.add_child(_extra)
 	var hint := UiStyle.label("Los únicos, los de conjunto y los objetos clave se ven siempre.\nMantén Shift en el juego: lo oculto aparece atenuado.", 12, UiStyle.MUTED)
 	box.add_child(hint)
 
@@ -82,6 +88,7 @@ func open() -> void:
 
 
 func _refresh() -> void:
+	_build_extra()
 	for r in _rows:
 		r.queue_redraw()
 	if _preview:
@@ -93,6 +100,95 @@ func _refresh() -> void:
 				hidden += 1
 		_ground_label.text = "En el suelo ahora: %d visibles · %d ocultos" % [_loot.drops.size() - hidden, hidden]
 		_loot.queue_redraw()
+
+
+## Columna de la derecha: nivel de objeto mínimo, bases buenas, afijos buscados
+## y filtros guardados.
+func _build_extra() -> void:
+	if _extra == null:
+		return
+	for child in _extra.get_children():
+		_extra.remove_child(child)
+		child.queue_free()
+	var r := LootFilter.rules()
+	_extra.add_child(UiStyle.section_header("Reglas finas"))
+	var ilvl := HBoxContainer.new()
+	var min_ilvl := int(r["min_ilvl"])
+	ilvl.add_child(UiStyle.label("Nivel de objeto mínimo: %s" % (str(min_ilvl) if min_ilvl > 0 else "sin mínimo"), 13))
+	ilvl.add_child(UiStyle.button("−", func() -> void: _change(func() -> void: LootFilter.set_min_ilvl(min_ilvl - 5)), 36))
+	ilvl.add_child(UiStyle.button("+", func() -> void: _change(func() -> void: LootFilter.set_min_ilvl(min_ilvl + 5)), 36))
+	_extra.add_child(ilvl)
+	_extra.add_child(_list_editor("bases", "Bases buenas (siempre visibles, con estrella)", _base_options()))
+	_extra.add_child(_list_editor("stats", "Afijos buscados (siempre visibles, con estrella)", _stat_options()))
+	_extra.add_child(UiStyle.section_header("Filtros guardados"))
+	var save_row := HBoxContainer.new()
+	var name_edit := LineEdit.new()
+	name_edit.placeholder_text = "Nombre del filtro"
+	name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	save_row.add_child(name_edit)
+	save_row.add_child(UiStyle.button("Guardar", func() -> void:
+		if name_edit.text.strip_edges() != "":
+			_change(func() -> void: LootFilter.save_profile(name_edit.text)), 90))
+	_extra.add_child(save_row)
+	for p in LootFilter.profiles():
+		var row := HBoxContainer.new()
+		var l := UiStyle.label(p, 13, UiStyle.TEXT)
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(l)
+		row.add_child(UiStyle.button("Cargar", func() -> void: _change(func() -> void: LootFilter.load_profile(p)), 80))
+		row.add_child(UiStyle.button("Borrar", func() -> void: _change(func() -> void: LootFilter.delete_profile(p)), 80))
+		_extra.add_child(row)
+
+
+## Lista editable (bases o afijos): un desplegable para añadir y una fila por elegido.
+func _list_editor(kind: String, title: String, options: Array) -> Control:
+	var box := VBoxContainer.new()
+	box.add_child(UiStyle.label(title, 13, UiStyle.GOLD))
+	var pick := OptionButton.new()
+	pick.add_item("Añadir...")
+	var names := {}
+	for o in options:
+		names[o[0]] = o[1]
+		pick.add_item(o[1])
+	pick.item_selected.connect(func(i: int) -> void:
+		if i > 0 and not (LootFilter.rules()[kind] as Array).has(options[i - 1][0]):
+			_change(func() -> void: LootFilter.toggle_listed(kind, options[i - 1][0])))
+	box.add_child(pick)
+	for id in LootFilter.rules()[kind]:
+		box.add_child(UiStyle.button("x  " + String(names.get(id, id)), func() -> void: _change(func() -> void: LootFilter.toggle_listed(kind, id)), 300))
+	return box
+
+
+func _change(action: Callable) -> void:
+	action.call()
+	Sfx.play("pickup", -10.0, 1.2)
+	_refresh.call_deferred()   # se rehace la columna desde la que se llamó
+
+
+## [id, nombre] de las bases de equipo, por nombre.
+func _base_options() -> Array:
+	var out: Array = []
+	var db: ItemDatabase = GameData.items
+	for id in db.bases:
+		var b: Dictionary = db.bases[id]
+		if b.has("slot") and String(b["slot"]) != "chip":
+			out.append([String(id), String(b.get("name", id))])
+	out.sort_custom(func(a: Array, b: Array) -> bool: return a[1] < b[1])
+	return out
+
+
+## [stat, nombre] de los afijos que pueden salir en el equipo.
+func _stat_options() -> Array:
+	var seen := {}
+	for a in GameData.items.affixes:
+		var st := String(a.get("stat", ""))
+		if st != "" and not seen.has(st):
+			seen[st] = Stat.display_name(StringName(st))
+	var out: Array = []
+	for st in seen:
+		out.append([st, seen[st]])
+	out.sort_custom(func(a: Array, b: Array) -> bool: return a[1] < b[1])
+	return out
 
 
 ## Fila: icono y nombre de la categoría y una gema por escalón.

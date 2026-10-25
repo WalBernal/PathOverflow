@@ -130,6 +130,14 @@ func _draw() -> void:
 		draw_rect(rect, Color(0.18, 0.16, 0.22, 0.95) if i == _hovered else Color(0, 0, 0, 0.8))
 		if item.rarity >= Rarity.Item.UNIQUE or not item.is_equipment() or i == _hovered:
 			draw_rect(rect, color, false, 1.5)
+		if not filtered and LootFilter.highlighted(item):
+			# Base buena o afijo buscado (filtro de botín): marco dorado y estrella.
+			draw_rect(rect.grow(2.0), LootFilter.HIGHLIGHT, false, 2.0)
+			var sc := Vector2(rect.end.x + 9.0, rect.get_center().y)
+			var star := PackedVector2Array()
+			for k in 10:
+				star.append(sc + Vector2.from_angle(-PI / 2.0 + PI * k / 5.0) * (6.0 if k % 2 == 0 else 2.6))
+			draw_colored_polygon(star, LootFilter.HIGHLIGHT)
 		draw_string(font, rect.position + Vector2(PADDING.x, PADDING.y + ascent), d["text"],
 			HORIZONTAL_ALIGNMENT_LEFT, -1, Accessibility.world_size(FONT_SIZE), color)
 		var tag := rarity_tag(item)

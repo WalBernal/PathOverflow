@@ -301,7 +301,7 @@ Origen: R2 §11 ★
 ### [x] T53 · Mapa grande: marcas propias y zoom · S
 Origen: R2 §5 ★
 
-### [ ] T54 · Filtro de botín, siguiente paso · M
+### [x] T54 · Filtro de botín, siguiente paso · M
 Origen: R2 §1 ★★
 - Reglas por base, nivel de objeto y afijos; resaltar bases buenas; varios filtros con nombre.
 
@@ -440,3 +440,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T51 · Accesibilidad en Pausa → Interfaz: «menos destellos» (fogonazos de enemigos y de impactos, glitches de escenas y del prólogo, sin parpadeos), tamaño propio del texto del mundo y paletas daltónicas para auras y cargas con el modo daltónico.
 - 2026-10-25 · T52 · Auto-ataque opcional (habilidad 1 contra el enemigo más cercano si no pulsas nada ni te mueves) y tres modos de moverse con el ratón (mantener, alternar, clic para ir) en Pausa → Combate. De paso: Controls ya no llena el log de errores al leer controles sin guardar.
 - 2026-10-25 · T53 · Mapa grande con zoom (rueda o +/−, cinco niveles centrados en el jugador) y marcas propias con clic derecho (hasta 12 por zona, guardadas en el personaje y visibles en el minimapa). La integración prueba zoom y marcas.
+- 2026-10-25 · T54 · Filtro de botín con nivel de objeto mínimo, bases buenas y afijos buscados (se ven siempre, con estrella y haz) y filtros con nombre. Arreglo: las pruebas de Controls y del filtro escribían en el settings.cfg del jugador (la inicialización estática de la clase volvía a poner persist = true); ahora no, y lo comprueban.

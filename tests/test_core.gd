@@ -129,6 +129,7 @@ func _initialize() -> void:
 	_test_accessibility()
 	_test_auto_attack()
 	_test_map_marks()
+	_test_loot_filter_rules()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -1808,8 +1809,8 @@ func _test_roadmap2() -> void:
 	_check(not LootFilter.passes(chip), "una categoría se puede ocultar del todo")
 	var uniq := Item.new(_db.bases["espada_oxidada"], Rarity.Item.UNIQUE, 5)
 	_check(LootFilter.passes(uniq), "los únicos se ven siempre")
-	for k in saved_rules:
-		LootFilter.set_rule(k, saved_rules[k])
+	LootFilter._rules = saved_rules.duplicate(true)   # tal como estaba (rarezas y reglas finas)
+	LootFilter._save()
 
 
 ## Acto I más grande: "scale" agranda tamaño y posiciones, y las manadas crecen con el área.
@@ -3032,6 +3033,8 @@ func _test_ring_comparison() -> void:
 
 ## Rebindear teclas y botones (T50). Sin tocar el settings.cfg del jugador.
 func _test_controls() -> void:
+	var settings_before := FileAccess.get_file_as_string(GameSettings.PATH)
+	Controls.allows_pad(&"skill_1")   # que corra antes su inicialización estática (ver _test_loot_filter_rules)
 	Controls.persist = false
 	Controls.setup()
 	var pad_default := Controls.pad_of(&"skill_1")
@@ -3057,6 +3060,7 @@ func _test_controls() -> void:
 	_check(Controls.key_of(&"skill_1") == KEY_Q and Controls.key_of(&"skill_2") == KEY_W and Controls.pad_of(&"skill_1") == pad_default,
 		"restaurar deja todo como de fábrica")
 	Controls.persist = true
+	_check(FileAccess.get_file_as_string(GameSettings.PATH) == settings_before, "las pruebas de controles no tocan el settings.cfg del jugador")
 
 
 ## Accesibilidad (T51): menos destellos, texto del mundo y paletas daltónicas.
@@ -3159,6 +3163,52 @@ func _test_map_marks() -> void:
 	var back: Array = saved.flags.get("marks_zona1", [])
 	_check(back.size() == 2 and Vector2(back[1][0], back[1][1]) == Vector2(1400, 300), "las marcas se guardan con el personaje")
 	_check(WorldMap.ZOOMS[0] == 1.0 and WorldMap.ZOOMS.size() >= 4, "niveles de zoom, empezando por la zona entera")
+
+
+## Filtro de botín, siguiente paso (T54): nivel de objeto, bases, afijos y filtros con nombre.
+## Sin tocar el settings.cfg del jugador.
+func _test_loot_filter_rules() -> void:
+	var settings_before := FileAccess.get_file_as_string(GameSettings.PATH)
+	# Primero una llamada a la clase: su inicialización estática (persist = true)
+	# corre en la primera llamada y pisaría lo que se ponga antes.
+	LootFilter.reload()
+	LootFilter.persist = false
+	LootFilter._test_profiles = {}
+	LootFilter.apply_preset("estricto")
+	var gen := ItemGenerator.new(_db, 54)
+	var low := Item.new(_db.bases["espada_oxidada"], Rarity.Item.RARE, 3)
+	var high := Item.new(_db.bases["espada_oxidada"], Rarity.Item.RARE, 30)
+	var normal := Item.new(_db.bases["hacha_de_lenador"], Rarity.Item.NORMAL, 30)
+	_check(LootFilter.passes(low) and LootFilter.passes(high) and not LootFilter.passes(normal), "de partida: raros sí, normales no")
+	LootFilter.set_min_ilvl(10)
+	_check(not LootFilter.passes(low) and LootFilter.passes(high), "nivel de objeto mínimo: esconde lo de nivel bajo")
+	LootFilter.toggle_listed("bases", "hacha_de_lenador")
+	_check(LootFilter.passes(normal) and LootFilter.highlighted(normal) and LootFilter.beams(normal), "una base buena se ve siempre, con estrella y haz")
+	LootFilter.toggle_listed("bases", "hacha_de_lenador")
+	_check(not LootFilter.passes(normal) and not LootFilter.highlighted(normal), "y se puede quitar")
+	var magic := gen.generate(30, Rarity.Item.MAGIC, "espada_oxidada")
+	var stat := String(magic.affixes[0]["stat"])
+	_check(not LootFilter.passes(magic), "un mágico no pasa el filtro estricto")
+	LootFilter.toggle_listed("stats", stat)
+	_check(LootFilter.passes(magic) and LootFilter.highlighted(magic), "con un afijo buscado (%s), sí" % stat)
+	var flask := gen.generate_flask(10)
+	_check(flask == null or not LootFilter.highlighted(flask), "las pociones no llevan estrella")
+	# Los atajos no borran las reglas finas.
+	LootFilter.apply_preset("todo")
+	_check(int(LootFilter.rules()["min_ilvl"]) == 10 and (LootFilter.rules()["stats"] as Array).has(stat), "un atajo cambia rarezas y respeta las reglas finas")
+	# Filtros con nombre.
+	LootFilter.save_profile("Mapas")
+	LootFilter.apply_preset("endgame")
+	LootFilter.set_min_ilvl(0)
+	_check(LootFilter.profiles().has("Mapas") and LootFilter.load_profile("Mapas"), "se guarda y se carga un filtro con nombre")
+	_check(String(LootFilter.rules()["weapon"]) == "normal" and int(LootFilter.rules()["min_ilvl"]) == 10, "cargarlo devuelve todas sus reglas")
+	_check(not LootFilter.load_profile("No existe"), "uno que no existe no se carga")
+	LootFilter.save_profile("   ")
+	LootFilter.delete_profile("Mapas")
+	_check(LootFilter.profiles().is_empty(), "sin nombre no se guarda; y se pueden borrar")
+	LootFilter.persist = true
+	LootFilter.reload()
+	_check(FileAccess.get_file_as_string(GameSettings.PATH) == settings_before, "las pruebas no tocan el settings.cfg del jugador")
 
 
 func _db_enemies() -> Array:

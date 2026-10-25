@@ -376,6 +376,15 @@ En el mundo (`scripts/core/gamepad.gd`): stick izquierdo para moverse, derecho p
 
 **En las ventanas** (inventario, habilidades K, hoja de personaje, tienda, alijo y la elección de habilidad) aparece un **cursor libre** (`scripts/ui/gamepad_cursor.gd`): el stick izquierdo lo mueve, **A** es clic izquierdo (mantener y mover = arrastrar), **X** clic derecho, la **cruceta** salta a la casilla o botón más cercano en esa dirección, **LB/RB** cambian de ventana y **B** cierra como Esc. Mientras está activo, el personaje no se mueve ni lanza nada; al abrir otra ventana el cursor salta a ella. También funciona en el **árbol pasivo** (la cruceta salta entre los nodos que se ven, el stick derecho hace zoom como la rueda y A mantenida arrastra para mover el árbol) y en los **diálogos**. **Y** (o **F** en el teclado) **fija la comparación** del objeto: deja una copia quieta en pantalla para mover el cursor y compararlo con calma; otra vez la suelta, y se quita sola al cerrar las ventanas. Un anillo con los dos anillos puestos se compara **contra cada uno** (dos secciones y los dos equipados al lado).
 
+## Filtro de botín
+
+**Pausa → Filtro de botín** (`scripts/items/loot_filter.gd`): rareza mínima por categoría (armas, armaduras, joyería, chips), mostrar u ocultar placas, RAM y pociones, desde qué rareza sale el haz de luz y atajos (Ver todo, Equilibrado, Estricto, Fin de juego). Reglas finas:
+- **Nivel de objeto mínimo**: esconde el equipo de nivel menor.
+- **Bases buenas** y **afijos buscados**: el equipo con esa base o con ese afijo se ve siempre, con **marco dorado, estrella y haz de luz**, aunque su rareza no pase.
+- **Filtros con nombre**: guarda el filtro actual con un nombre y cárgalo o bórralo cuando quieras (p. ej. uno para subir de nivel y otro para el atlas). Los atajos cambian las rarezas y respetan las reglas finas.
+
+Los únicos, los de conjunto y los objetos clave se ven siempre; Shift muestra lo oculto atenuado.
+
 ## Accesibilidad
 
 En **Pausa → Interfaz** (`scripts/core/accessibility.gd`):
