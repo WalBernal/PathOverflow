@@ -100,6 +100,7 @@ func _initialize() -> void:
 	_test_docker_container()
 	_test_channelled_spells()
 	_test_more_variants()
+	_test_class_signatures()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -1243,7 +1244,7 @@ func _test_progression_rules() -> void:
 					if String(md["stat"]).begins_with("extra_"):
 						specials += 1
 			_check(big or a["passives"].any(func(p: Dictionary) -> bool: return p["mods"].any(func(md: Dictionary) -> bool:
-				return String(md["stat"]).begins_with("extra_") or md["stat"] in ["kill_explosion", "static_pulse", "retaliation_nova", "companion_robot"])), "%s debe tener un efecto fuerte" % a["id"])
+				return String(md["stat"]).begins_with("extra_") or md["stat"] in ["kill_explosion", "static_pulse", "retaliation_nova", "companion_robot"] + SIGNATURE_STATS)), "%s debe tener un efecto fuerte" % a["id"])
 	_check(specials >= 8, "varias ascendencias cambian cómo funcionan las habilidades (%d)" % specials)
 	var hacker: Dictionary = _classes.filter(func(x: Dictionary) -> bool: return x["id"] == "hacker")[0]
 	var ch := CharacterData.new(hacker, _tree)
@@ -1859,7 +1860,7 @@ func _test_ascendancy_rules() -> void:
 			_check(ns.filter(func(n: Dictionary) -> bool: return n["kind"] == "unique").size() == 2 and ns.filter(func(n: Dictionary) -> bool: return n["kind"] == "notable").size() == 6,
 				"%s: 6 notables y 2 únicas" % a["id"])
 			var special := ns.filter(func(n: Dictionary) -> bool: return n["kind"] == "unique").any(func(n: Dictionary) -> bool:
-				return n["mods"].any(func(md: Dictionary) -> bool: return md["stat"] in ["kill_explosion", "static_pulse", "retaliation_nova", "companion_robot"]))
+				return n["mods"].any(func(md: Dictionary) -> bool: return md["stat"] in ["kill_explosion", "static_pulse", "retaliation_nova", "companion_robot"] + SIGNATURE_STATS))
 			_check(special, "%s: una de sus únicas da una habilidad propia" % a["id"])
 			# Forma propia: dentro del disco y sin nodos encimados.
 			var closest := 9.0
@@ -2085,6 +2086,59 @@ func _test_more_variants() -> void:
 	_check(int(r[1]["max_active"]) == int(r[0]["max_active"]) + 3, "Bomba de racimo: +3 bombas a la vez")
 	r = with_variant.call("bomba_logica", "detonacion_remota")
 	_check(float(r[1]["trigger_radius"]) > float(r[0]["trigger_radius"]) * 1.9, "Detonación remota: se activa más lejos")
+
+
+const SIGNATURE_STATS := ["fire_wall", "sprint_demo", "profiled_shot", "botnet", "blue_screen", "pager_strike", "blue_green"]
+
+
+## Habilidades propias de clase: una por clase, en una única de una de sus
+## ascendencias, y su daño escala con el del personaje (no solo con el nivel).
+func _test_class_signatures() -> void:
+	var seen := {}
+	for cdef in _classes:
+		var mine := []
+		for a in cdef["ascendancies"]:
+			for n in a["passives"]:
+				for md in n["mods"]:
+					if md["stat"] in SIGNATURE_STATS:
+						_check(n["kind"] == "unique", "%s: %s va en una única" % [a["id"], md["stat"]])
+						mine.append(md["stat"])
+		_check(mine.size() == 1, "%s tiene una habilidad propia de clase (%s)" % [cdef["id"], str(mine)])
+		for s in mine:
+			_check(not seen.has(s), "%s y %s comparten %s" % [cdef["id"], seen.get(s, ""), s])
+			seen[s] = cdef["id"]
+	_check(seen.size() == SIGNATURE_STATS.size() and SkillController.SIGNATURES.size() == SIGNATURE_STATS.size(), "las siete habilidades propias se usan")
+	for s in SIGNATURE_STATS:
+		_check(Stat.exists(StringName(s)) and Stat.RULE_TEXT.has(StringName(s)), "%s tiene nombre y descripción" % s)
+	var c := CharacterData.new(_classes[0], _tree)
+	c.set_level(20)
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	var pl := Player.new()
+	pl.character = c
+	var sc := SkillController.new()
+	sc.player = pl
+	sc.enemies = em
+	sc.character = c
+	var d0 := sc.signature_damage(Stat.FIRE_WALL)
+	c.stats.add_modifier(Modifier.new(Stat.FIRE_DAMAGE, Modifier.Type.INCREASED, 100.0))
+	_check(d0 > 0.0 and is_equal_approx(sc.signature_damage(Stat.FIRE_WALL), d0 * 2.0), "escalan con el daño del personaje de su tipo")
+	c.stats.add_modifier(Modifier.new(Stat.FIRE_WALL, Modifier.Type.FLAT, 1.0))
+	sc._update_signatures(0.1)
+	_check(sc._fire_walls.is_empty(), "sin enemigos cerca no se usa")
+	em.spawn(Vector2(150, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+	sc._update_signatures(0.1)
+	_check(sc._fire_walls.size() == 1 and float(sc._sig_timers[Stat.FIRE_WALL]) > 6.0, "Muro de fuego: se levanta y espera su enfriamiento")
+	em.spawn(Vector2(260, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+	em.spawn(Vector2(370, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+	sc._effects.clear()
+	sc._fire_signature(Stat.BOTNET)
+	_check(sc._effects.filter(func(e: Dictionary) -> bool: return e["type"] == "zap").size() >= 3, "Botnet salta entre varios enemigos")
+	sc._fire_signature(Stat.SPRINT_DEMO)
+	_check(c.timed_effects.any(func(e: Dictionary) -> bool: return e["id"] == "asc:sprint") and sc._sig_pending.size() == 1, "Sprint: acelera y deja la demo para el final")
+	sc.free()
+	pl.free()
+	em.free()
 
 
 const CHAIN_STEP := 0.1   # menor que SkillController.CHAIN_DELAY: hacen falta dos pasos por eslabón

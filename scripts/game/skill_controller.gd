@@ -298,6 +298,7 @@ func on_zone_changed() -> void:
 	_devices.clear()
 	_update_reservation()   # los contenedores se quedan en la zona anterior
 	_channel = {}
+	_fire_walls.clear()
 	_clouds.clear()
 	_terrains.clear()
 	_rains.clear()
@@ -433,6 +434,168 @@ var _nova_cooldown := 0.0
 ## Explosiones pendientes (se resuelven en el siguiente fotograma: así una muerte
 ## dentro de un golpe no toca la lista de enemigos mientras se recorre).
 var _pending_explosions: Array[Vector2] = []
+
+
+# --- Habilidades propias de clase (Stat.FIRE_WALL, SPRINT_DEMO, ...) ---
+
+## Cada una: cada cuánto se usa, a qué distancia tiene que haber un enemigo, su
+## tipo de daño y su daño base (por_nivel × nivel + plano), que luego multiplica
+## el daño del personaje de ese tipo (signature_damage).
+const SIGNATURES := {
+	Stat.FIRE_WALL: {"interval": 7.0, "range": 320.0, "type": "fire", "per_level": 1.6, "flat": 6.0, "color": Color("ff7a3a")},
+	Stat.SPRINT_DEMO: {"interval": 10.0, "range": 400.0, "type": "physical", "per_level": 6.0, "flat": 20.0, "color": Color("e8d9b0")},
+	Stat.PROFILED_SHOT: {"interval": 5.0, "range": 650.0, "type": "physical", "per_level": 5.0, "flat": 18.0, "color": Color("c8f0a0")},
+	Stat.BOTNET: {"interval": 4.0, "range": 350.0, "type": "chaos", "per_level": 2.6, "flat": 9.0, "color": Color("b04ad9")},
+	Stat.BLUE_SCREEN: {"interval": 9.0, "range": 170.0, "type": "cold", "per_level": 4.5, "flat": 14.0, "color": Color("4a8ae8")},
+	Stat.PAGER_STRIKE: {"interval": 3.0, "range": 450.0, "type": "lightning", "per_level": 3.5, "flat": 12.0, "color": Color("e8d070")},
+	Stat.BLUE_GREEN: {"interval": 7.0, "range": 200.0, "type": "fire", "per_level": 3.5, "flat": 12.0, "color": Color("ff9a3a")},
+}
+const FIRE_WALL_LENGTH := 240.0
+const FIRE_WALL_TICK := 0.5
+const SPRINT_TIME := 3.0
+const SIG_NOVA_RADIUS := 140.0
+var _sig_timers := {}
+## Muros de fuego en pie: {a, b, life, next, dmg}.
+var _fire_walls: Array[Dictionary] = []
+## Golpes retrasados (fin del sprint, segunda nova): {time, kind, dmg}.
+var _sig_pending: Array[Dictionary] = []
+
+
+## Daño de una habilidad propia: escala con el nivel y con el daño del personaje de su tipo.
+func signature_damage(stat: StringName) -> float:
+	var s: Dictionary = SIGNATURES[stat]
+	var base := float(s["per_level"]) * character.level + float(s["flat"])
+	return base * character.stats.total_multiplier(Stat.DAMAGE_STAT_BY_TYPE[s["type"]])
+
+
+func _update_signatures(delta: float) -> void:
+	_update_fire_walls(delta)
+	_update_sig_pending(delta)
+	if not player.is_alive():
+		return
+	for stat: StringName in SIGNATURES:
+		if character.stats.get_value(stat) <= 0.0:
+			continue
+		var s: Dictionary = SIGNATURES[stat]
+		var t := float(_sig_timers.get(stat, 0.0)) - delta
+		if t <= 0.0 and enemies.nearest_index(player.global_position, s["range"]) != -1:
+			t = s["interval"]
+			_fire_signature(stat)
+		_sig_timers[stat] = maxf(0.0, t)
+
+
+func _fire_signature(stat: StringName) -> void:
+	var s: Dictionary = SIGNATURES[stat]
+	var dmg := signature_damage(stat)
+	var pos := player.global_position
+	var c: Color = s["color"]
+	enemies.hit_ailments = {}
+	match stat:
+		Stat.FIRE_WALL:
+			# Perpendicular a la línea hacia el enemigo más cercano, a medio camino.
+			var i := enemies.nearest_index(pos, s["range"])
+			var to := enemies.positions[i] - pos
+			var mid := pos + to * 0.5
+			var side := to.orthogonal().normalized() * FIRE_WALL_LENGTH * 0.5
+			_fire_walls.append({"a": mid - side, "b": mid + side, "life": 3.0, "next": 0.0, "dmg": dmg})
+			Sfx.play("fire", -8.0)
+		Stat.SPRINT_DEMO:
+			character.add_timed_effect("asc:sprint", [Modifier.new(Stat.MOVEMENT_SPEED, Modifier.Type.INCREASED, 30.0, [], "asc:sprint"),
+				Modifier.new(Stat.ATTACK_SPEED, Modifier.Type.INCREASED, 30.0, [], "asc:sprint")] as Array[Modifier], SPRINT_TIME)
+			_sig_pending.append({"time": SPRINT_TIME, "kind": "demo", "dmg": dmg})
+			_effects.append({"type": "ring", "pos": pos, "radius": 40.0, "time": 0.0, "duration": 0.4, "color": c})
+			Sfx.play("buff", -8.0)
+		Stat.PROFILED_SHOT:
+			var far := -1
+			var far_d := 0.0
+			for k in enemies.positions.size():
+				var d := enemies.positions[k].distance_to(pos)
+				if d <= s["range"] and d > far_d:
+					far_d = d
+					far = k
+			var end := pos + (enemies.positions[far] - pos).normalized() * float(s["range"])
+			enemies.hit_in_segment(pos, end, 14.0, dmg * 0.9, dmg * 1.1, 30.0, 175.0)
+			_effects.append({"type": "beam", "pos": pos, "dir": (end - pos).normalized(), "radius": 8.0, "length": s["range"], "time": 0.0, "duration": 0.3, "color": c})
+			Sfx.play("projectile", -6.0)
+		Stat.BOTNET:
+			var hit := {}
+			var from := pos
+			for k in 5:
+				var i := enemies.nearest_index(from, s["range"] if k == 0 else 220.0, hit)
+				if i == -1:
+					break
+				var to: Vector2 = enemies.positions[i]
+				hit[enemies.ids[i]] = true
+				_effects.append({"type": "zap", "pos": from, "end": to, "time": 0.0, "duration": 0.25, "color": c})
+				enemies.hit_index(i, dmg * 0.9, dmg * 1.1, 5.0, 150.0)
+				from = to
+			Sfx.play("chaos", -8.0)
+		Stat.BLUE_SCREEN:
+			enemies.stun_in_radius(pos, s["range"], 1.0)
+			enemies.hit_in_radius(pos, s["range"], dmg * 0.9, dmg * 1.1, 5.0, 150.0)
+			_effects.append({"type": "lock", "pos": pos, "radius": s["range"], "time": 0.0, "duration": 0.8, "color": c})
+			Sfx.play("cold", -6.0)
+		Stat.PAGER_STRIKE:
+			var near: Array[int] = []
+			for k in enemies.positions.size():
+				if enemies.positions[k].distance_to(pos) <= s["range"]:
+					near.append(k)
+			var at: Vector2 = enemies.positions[near.pick_random()]
+			enemies.hit_in_radius(at, 60.0, dmg * 0.9, dmg * 1.1, 5.0, 150.0)
+			_effects.append({"type": "zap", "pos": at + Vector2(randf_range(-30, 30), -260), "end": at, "time": 0.0, "duration": 0.3, "color": c})
+			_effects.append({"type": "ring", "pos": at, "radius": 60.0, "time": 0.0, "duration": 0.3, "color": c})
+			Sfx.play("arc", -8.0)
+		Stat.BLUE_GREEN:
+			enemies.hit_in_radius(pos, SIG_NOVA_RADIUS, dmg * 0.9, dmg * 1.1, 5.0, 150.0)
+			_effects.append({"type": "ring", "pos": pos, "radius": SIG_NOVA_RADIUS, "time": 0.0, "duration": 0.35, "color": Color("4a9ae0")})
+			var cold_dmg := dmg / character.stats.total_multiplier(Stat.FIRE_DAMAGE) * character.stats.total_multiplier(Stat.COLD_DAMAGE)
+			_sig_pending.append({"time": 0.45, "kind": "green", "dmg": cold_dmg})
+			Sfx.play("fire", -8.0)
+
+
+func _update_fire_walls(delta: float) -> void:
+	var still: Array[Dictionary] = []
+	for w in _fire_walls:
+		w["life"] -= delta
+		w["next"] -= delta
+		if w["next"] <= 0.0:
+			w["next"] = FIRE_WALL_TICK
+			enemies.hit_ailments = {}
+			enemies.hit_in_segment(w["a"], w["b"], 18.0, w["dmg"] * 0.9, w["dmg"] * 1.1, 5.0, 150.0)
+		if w["life"] > 0.0:
+			still.append(w)
+	_fire_walls = still
+
+
+func _update_sig_pending(delta: float) -> void:
+	var still: Array[Dictionary] = []
+	for e in _sig_pending:
+		e["time"] -= delta
+		if e["time"] > 0.0:
+			still.append(e)
+			continue
+		if not player.is_alive():
+			continue
+		var pos := player.global_position
+		enemies.hit_ailments = {}
+		enemies.hit_in_radius(pos, SIG_NOVA_RADIUS, e["dmg"] * 0.9, e["dmg"] * 1.1, 5.0, 150.0)
+		var c := Color("e8d9b0") if e["kind"] == "demo" else Color("6fd36b")
+		_effects.append({"type": "burst", "pos": pos, "radius": SIG_NOVA_RADIUS, "time": 0.0, "duration": 0.35, "color": c})
+		_effects.append({"type": "ring", "pos": pos, "radius": SIG_NOVA_RADIUS, "time": 0.0, "duration": 0.4, "color": c})
+	_sig_pending = still
+
+
+func _draw_fire_walls() -> void:
+	var t := Time.get_ticks_msec() / 1000.0
+	for w in _fire_walls:
+		var a: Vector2 = w["a"]
+		var b: Vector2 = w["b"]
+		var fade := clampf(float(w["life"]) / 0.5, 0.0, 1.0)
+		draw_line(a, b, Color(1.0, 0.35, 0.1, 0.35 * fade), 30.0, true)
+		for k in 9:
+			var p := a.lerp(b, k / 8.0)
+			var h := 18.0 + 8.0 * sin(t * 9.0 + k * 1.7)
+			draw_colored_polygon(PackedVector2Array([p + Vector2(-8, 0), p + Vector2(0, -h), p + Vector2(8, 0)]), Color(1.0, 0.55 + 0.3 * sin(t * 7.0 + k), 0.15, 0.8 * fade))
 
 
 ## Probabilidad de ganar una carga: la base del tipo más la de los stats.
@@ -691,6 +854,7 @@ func _update_ascendancy_procs(delta: float) -> void:
 	_nova_cooldown = maxf(0.0, _nova_cooldown - delta)
 	_crit_charge_cd = maxf(0.0, _crit_charge_cd - delta)
 	_update_stash_pops(delta)
+	_update_signatures(delta)
 	var explosions := _pending_explosions.duplicate()
 	_pending_explosions.clear()
 	for pos in explosions:
@@ -2113,6 +2277,7 @@ func _draw() -> void:
 		draw_arc(trap["pos"], trap["profile"]["trigger_radius"], 0.0, TAU, 24, Color(trap["color"], 0.18), 1.0, true)
 	_draw_auras()
 	_draw_terrains()
+	_draw_fire_walls()
 	_draw_clouds()
 	_draw_devices()
 	_draw_channel()

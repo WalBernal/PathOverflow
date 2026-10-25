@@ -685,6 +685,11 @@ func _draw_status_boxes(font: Font) -> void:
 			entries.append({"name": skill.get("name", "Efecto"), "skill": skill, "count": 1, "remaining": effect["time_left"],
 				"total": effect.get("total", effect["time_left"]), "kind": "buff"})
 			continue
+		if eid == "asc:sprint":
+			# Sprint del Scrum Master (habilidad propia de clase).
+			entries.append({"name": "Sprint", "skill": GameData.items.skills.skills.get("hiperthreading", {}), "count": 1,
+				"remaining": effect["time_left"], "total": effect.get("total", effect["time_left"]), "kind": "buff"})
+			continue
 		var flask_id: String = eid.trim_prefix("flask:")
 		entries.append({"name": GameData.items.flasks.get(flask_id, {}).get("name", flask_id), "flask": flask_id,
 			"count": 1, "remaining": effect["time_left"], "total": effect.get("total", effect["time_left"]), "kind": "flask"})

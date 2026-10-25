@@ -164,7 +164,7 @@ Origen: R2 §2 ★★
 Origen: R2 §3 ★★
 - Variantes para auras, drones y trampas en `data/skills/variants.json`.
 
-### [ ] T24 · Más habilidades únicas de ascendencia · M
+### [x] T24 · Más habilidades únicas de ascendencia · M
 Origen: R1 §2
 - Una propia por clase que aún no la tenga (p. ej. muro de fuego del Firewall, sprint del Scrum Master), escalando con el daño del personaje y no solo con el nivel.
 
@@ -406,3 +406,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T21 · RAM Contenedor Docker (DDR4): la habilidad pasa a un contenedor que no caduca y la lanza solo (−35 % de daño), reserva un 20 % del maná, uno por habilidad (relanzarla lo mueve), cuenta como torreta persistente, sigue a su placa y libera el maná si lo destruyen o al cambiar de zona; mismas exclusiones que la torreta, auditoría sin RAM sin efecto.
 - 2026-10-25 · T22 · Hechizos canalizados (tipos `channel_beam` y `channel_storm`, etiqueta `channel`): Pipe de Datos (rayo continuo) y Tormenta de Tickets (crece ×3 de tamaño y ×2 de daño en 3 s y sigue al cursor); maná por segundo mientras se mantiene la tecla o el botón, sin moverse, se cortan al soltar o sin maná; tooltips con maná/s; excluidos de despliegues y activaciones.
 - 2026-10-25 · T23 · Diez variantes nuevas en `variants.json`: una por aura (efecto frente a radio o reserva), dos para los Drones de Vigilancia (Enjambre, Patrulla larga) y dos para la Bomba Lógica (racimo, detonación remota); clave nueva `mult.aura_effect` que escala los bonos del aura con sus topes, y el DPS sigue a `add.drone_count`.
+- 2026-10-25 · T24 · Siete habilidades propias de clase, una por clase en una única de ascendencia (en el lugar de un pulso de estática, nova o explosión genéricos; sin reembolso): Muro de fuego, Sprint con demo, Disparo perfilado, Botnet, Pantallazo azul, Alerta del pager y Despliegue azul-verde. Se usan solas con un enemigo cerca y escalan con el nivel y con el daño del personaje de su tipo.

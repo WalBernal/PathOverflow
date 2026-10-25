@@ -134,6 +134,18 @@ Cada jefe usa una distinta en cada fase: **El Arquitecto** — Código Legado Fr
 | Ingeniero DevOps | Ingeniero en Robótica: torretas y robot de compañía | Ingeniero de Confiabilidad (SRE): **auras** más potentes y baratas |
 | Full Stack | Arquitecto de Soluciones: atributos y un poco de cada estado | Líder Técnico: invocaciones, autómatas y enfriamientos |
 
+**Habilidades propias de clase** (una por clase, en una de las dos únicas del fondo de una ascendencia). Se usan solas cuando hay un enemigo cerca, y su daño escala con el nivel **y con tu daño de su tipo**:
+
+| Ascendencia | Habilidad |
+|---|---|
+| Especialista en Ciberseguridad | **Muro de fuego**: cada 7 s, un muro ardiente entre tú y el enemigo más cercano (3 s) |
+| Scrum Master | **Sprint**: cada 10 s, 3 s de +30 % de movimiento y ataque; al acabar, la demo estalla a tu alrededor |
+| Ingeniera de Rendimiento | **Disparo perfilado**: cada 5 s, atraviesa todo hasta el enemigo más lejano (más crítico) |
+| Especialista Red Team | **Botnet**: cada 4 s, una descarga de caos salta entre hasta 5 enemigos |
+| Analista de Big Data | **Pantallazo azul**: cada 9 s, aturde 1 s a los que tienes alrededor (daño de frío) |
+| Ingeniero de Confiabilidad (SRE) | **Alerta del pager**: cada 3 s cae un rayo sobre un enemigo cercano |
+| Arquitecto de Soluciones | **Despliegue azul-verde**: cada 7 s, una nova de fuego y otra de frío |
+
 **Árbol pasivo (versión 7)**: además de las temáticas de siempre, hay siete de estados y aliados: *Ignición*, *Sobrecarga*, *Criogenia*, *Toxinas*, *Hemorragia*, *Automatización* y *Legión* (vida, daño, reserva y auras de los aliados). Cada una tiene entre 3 y 5 clusters y están del lado de las clases que las usan: Automatización y Legión alrededor del Ingeniero DevOps y de las puertas hacia el centro (Full Stack); Hemorragia con el Técnico de Soporte y el Tester QA; Criogenia y Toxinas con la Desarrolladora Frontend y la Ingeniera de Prompts; Ignición y Sobrecarga con el Científico de Datos y el DevOps. Hay nodos de *resistencia a estados*. `tools/generate_passive_tree.py` separa los nodos (tamaño mínimo entre ellos según su radio) y falla si queda alguno encimado o una arista sobre un nodo ajeno. Los personajes guardados recuperan sus puntos de pasiva al cargar.
 
 **Choque térmico**: daño de frío a un enemigo en llamas = +40 % y se apaga la quemadura (junto a rotura, sobrecarga e infección). **Superconductor**: daño de rayo a un enemigo helado = arcos a 2 enemigos cercanos con el 40 % del golpe. Algunas ascendencias suben el «efecto de las interacciones».

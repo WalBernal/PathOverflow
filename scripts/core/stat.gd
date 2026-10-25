@@ -80,6 +80,16 @@ const KILL_EXPLOSION := &"kill_explosion"
 const STATIC_PULSE := &"static_pulse"
 ## % de soltar una nova de hielo al recibir un golpe (daña y aturde).
 const RETALIATION_NOVA := &"retaliation_nova"
+## Habilidades propias de clase (una por clase, en una única de una de sus
+## ascendencias). Valor > 0 = activa; las procesa SkillController (SIGNATURES) y
+## su daño escala con el nivel y con el daño del personaje de su tipo.
+const FIRE_WALL := &"fire_wall"
+const SPRINT_DEMO := &"sprint_demo"
+const PROFILED_SHOT := &"profiled_shot"
+const BOTNET := &"botnet"
+const BLUE_SCREEN := &"blue_screen"
+const PAGER_STRIKE := &"pager_strike"
+const BLUE_GREEN := &"blue_green"
 ## Cargas (ver Charges): probabilidad extra de ganarlas y máximo extra.
 const BUFFER_CHARGE_CHANCE := &"buffer_charge_chance"
 const MULTIHILO_CHARGE_CHANCE := &"multihilo_charge_chance"
@@ -209,6 +219,13 @@ const NAMES := {
 	KILL_EXPLOSION: "Probabilidad de que los enemigos que matas exploten (fuego)",
 	STATIC_PULSE: "Pulso de estática cada 3 s (daño de rayo por nivel)",
 	RETALIATION_NOVA: "Probabilidad de soltar una nova de hielo al recibir un golpe",
+	FIRE_WALL: "Muro de fuego",
+	SPRINT_DEMO: "Sprint con demo",
+	PROFILED_SHOT: "Disparo perfilado",
+	BOTNET: "Botnet",
+	BLUE_SCREEN: "Pantallazo azul",
+	PAGER_STRIKE: "Alerta del pager",
+	BLUE_GREEN: "Despliegue azul-verde",
 	BUFFER_CHARGE_CHANCE: "Probabilidad de ganar una carga de Buffer al recibir un golpe",
 	MULTIHILO_CHARGE_CHANCE: "Probabilidad de ganar una carga de Multihilos al matar",
 	OVERCLOCK_CHARGE_CHANCE: "Probabilidad de ganar una carga de Overclock al hacer un crítico",
@@ -239,6 +256,13 @@ const NAMES := {
 
 ## Texto de los modificadores que cambian una regla (en lugar de "+1 de ..."); %s = el valor.
 const RULE_TEXT := {
+	FIRE_WALL: "Muro de fuego: cada 7 s levantas un muro ardiente entre tú y el enemigo más cercano (3 s; daño de fuego)",
+	SPRINT_DEMO: "Sprint: cada 10 s, 3 s de +30 % de velocidad de movimiento y de ataque; al acabar, la demo estalla a tu alrededor (físico)",
+	PROFILED_SHOT: "Disparo perfilado: cada 5 s, un disparo que atraviesa todo hasta el enemigo más lejano a tu alcance (físico, más crítico)",
+	BOTNET: "Botnet: cada 4 s, una descarga salta entre hasta 5 enemigos cercanos (caos)",
+	BLUE_SCREEN: "Pantallazo azul: cada 9 s, cuelga 1 s (aturde) a los enemigos a tu alrededor (frío)",
+	PAGER_STRIKE: "Alerta del pager: cada 3 s cae un rayo sobre un enemigo cercano (rayo)",
+	BLUE_GREEN: "Despliegue azul-verde: cada 7 s, una nova de fuego y, al poco, otra de frío a tu alrededor",
 	STATIC_TYPING: "No puedes hacer críticos, pero el daño de tus habilidades nunca varía",
 	GARBAGE_COLLECTOR: "Al matar recuperas un %s %% del maná máximo; el maná no se regenera solo",
 	SAFE_MODE: "Un golpe mortal te deja a 1 de vida y no bajas de ahí durante 2 s (una vez cada 30 s)",

@@ -31,7 +31,7 @@
       {"name": "Doble factor", "mods": ["block_chance flat 8", "energy_shield increased 25"]},
       {"name": "Contraataque", "mods": ["thorns flat 25", "damage increased 20"]},
       {"name": "Firewall de hielo", "mods": ["retaliation_nova flat 30", "armour increased 20"]},
-      {"name": "Escaneo de puertos", "mods": ["static_pulse flat 5", "life more 5"]}
+      {"name": "Muro de fuego", "mods": ["fire_wall flat 1", "life more 5"]}
     ]
   },
   "gladiador_review": {
@@ -64,7 +64,7 @@
       {"name": "Planning poker", "mods": ["cast_speed increased 15", "attack_speed increased 10"]},
       {"name": "Sprint final", "mods": ["damage increased 30 recent_kill", "movement_speed increased 10 recent_kill"]},
       {"name": "Impedimento resuelto", "mods": ["status_resist flat 30", "life more 8"]},
-      {"name": "Kick-off", "mods": ["static_pulse flat 6", "movement_speed increased 6"]},
+      {"name": "Sprint de dos semanas", "mods": ["sprint_demo flat 1", "movement_speed increased 6"]},
       {"name": "Entrega continua", "mods": ["cooldown_recovery increased 30", "damage more 12"]}
     ]
   },
@@ -82,7 +82,7 @@
       {"name": "Hot path", "mods": ["attack_speed increased 12", "cast_speed increased 12"]},
       {"name": "Latencia cero", "mods": ["movement_speed increased 12", "evasion increased 25", "dodge_recovery flat 25"]},
       {"name": "Perfilado total", "mods": ["extra_projectiles flat 1", "extra_pierce flat 1", "damage more 8 full_life"]},
-      {"name": "Cuello de botella", "mods": ["retaliation_nova flat 25", "evasion increased 20"]}
+      {"name": "Disparo perfilado", "mods": ["profiled_shot flat 1", "evasion increased 20"]}
     ]
   },
   "rastreadora_leaks": {
@@ -116,7 +116,7 @@
       {"name": "Escalada de privilegios", "mods": ["damage more 15 full_life"]},
       {"name": "Persistencia", "mods": ["life_on_kill flat 6", "attack_speed increased 10"]},
       {"name": "Día cero", "mods": ["crit_multiplier flat 40", "crit_chance increased 30"]},
-      {"name": "Botnet", "mods": ["static_pulse flat 6", "evasion increased 15"]}
+      {"name": "Botnet", "mods": ["botnet flat 1", "evasion increased 15"]}
     ]
   },
   "saboteadora": {
@@ -166,7 +166,7 @@
       {"name": "Un millón de reputación", "mods": ["fire_res flat 12", "cold_res flat 12", "lightning_res flat 12"]},
       {"name": "Data lake", "mods": ["ailing_damage more 15"]},
       {"name": "MapReduce", "mods": ["area_of_effect increased 20", "elemental_damage increased 20"]},
-      {"name": "Tormenta de datos", "mods": ["static_pulse flat 8", "shock_chance flat 5"]},
+      {"name": "Pantallazo azul", "mods": ["blue_screen flat 1", "shock_chance flat 5"]},
       {"name": "Cero absoluto", "mods": ["retaliation_nova flat 30", "chill_chance flat 10"]}
     ]
   },
@@ -200,7 +200,7 @@
       {"name": "Presupuesto de errores", "mods": ["burn_chance flat 8", "shock_chance flat 8"]},
       {"name": "Runbook", "mods": ["life more 8", "life_regen flat 15"]},
       {"name": "Escalado horizontal", "mods": ["reservation_efficiency increased 15", "aura_effect increased 10"]},
-      {"name": "Pager de guardia", "mods": ["static_pulse flat 7", "lightning_damage increased 20"]},
+      {"name": "Pager de guardia", "mods": ["pager_strike flat 1", "lightning_damage increased 20"]},
       {"name": "Chaos engineering", "mods": ["retaliation_nova flat 25", "status_resist flat 25"]}
     ]
   },
@@ -217,7 +217,7 @@
       {"name": "Microservicios", "mods": ["area_of_effect increased 20", "damage increased 20"]},
       {"name": "Monolito modular", "mods": ["armour increased 25", "evasion increased 25"]},
       {"name": "Documentación viva", "mods": ["ailment_damage increased 25", "interaction_effect increased 30"]},
-      {"name": "Orientado a eventos", "mods": ["kill_explosion flat 20", "static_pulse flat 4"]},
+      {"name": "Despliegue azul-verde", "mods": ["blue_green flat 1", "kill_explosion flat 20"]},
       {"name": "Teorema CAP", "mods": ["damage more 15", "life more 5", "retaliation_nova flat 15"]}
     ]
   },
