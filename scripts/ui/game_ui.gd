@@ -499,6 +499,9 @@ func _build_pause_menu() -> Control:
 	var loot_filter := UiStyle.button("Filtro de botín...", toggle_loot_filter, 300)
 	loot_filter.tooltip_text = "Qué se ve en el suelo, por tipo y rareza, y desde qué rareza sale el haz de luz.\nMantén Shift para ver lo oculto."
 	right.add_child(loot_filter)
+	var lore := UiStyle.button("Archivos encontrados...", open_lore_log, 300)
+	lore.tooltip_text = "Commits perdidos, logs y correos de la UAdeO que has encontrado por las zonas."
+	right.add_child(lore)
 	# --- Combate (en la columna del sonido, que es más corta) ---
 	sound.add_child(UiStyle.section_header("Combate"))
 	var shake := _cycle_button("Sacudida de cámara", [0.0, 0.5, 1.0], ["no", "suave", "normal"],
@@ -725,6 +728,13 @@ func _on_menu_requested(menu: String) -> void:
 
 
 ## Catálogo de hardware (B): pausa el juego mientras está abierto, como el árbol.
+## Registro del lore coleccionable (desde la pausa).
+func open_lore_log() -> void:
+	var lore_log := LoreLog.new(GameData.current_character)
+	_root.add_child(lore_log)
+	lore_log.popup_centered()
+
+
 func toggle_catalog() -> void:
 	if catalog.visible:
 		catalog.visible = false

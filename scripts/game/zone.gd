@@ -16,6 +16,7 @@ signal waypoint_clicked
 signal stash_clicked
 signal waypoint_touched
 signal quest_item_picked(item: Dictionary)
+signal lore_picked(note: Dictionary)
 signal key_item_picked(item: Dictionary)
 signal challenge_touched(challenge: Dictionary)
 signal exit_blocked(exit: Dictionary)
@@ -106,6 +107,7 @@ var has_stash := false
 var stash_pos := Vector2.ZERO
 var npcs: Array = []                    # como en npcs.json + "position"
 var quest_items: Array = []             # {id, name, pos, quest}
+var lore_notes: Array = []              # LoreNotes de esta zona, con "pos" ya colocada
 var key_items: Array = []               # {id, pos} (objetos clave que van a la bolsa)
 var challenges: Array = []              # pruebas de estrés: {id, pos, name, waves, ...}
 var props: Array = []                   # decorado especial (gigantes de hierro...)
@@ -215,6 +217,10 @@ func setup(p_def: Dictionary, p_player: Player, p_character: CharacterData, p_qu
 		quest_items.append(entry)
 	for k in def.get("key_items", []):
 		key_items.append({"id": k["id"], "pos": _v(k["pos"])})
+	for n in LoreNotes.for_zone(String(def.get("id", ""))):
+		var note: Dictionary = n.duplicate()
+		note["pos"] = rect.position + rect.size * _v(n["at"])   # fracción del tamaño: no le afecta la escala
+		lore_notes.append(note)
 	for c in def.get("challenges", []):
 		var entry: Dictionary = c.duplicate()
 		entry["pos"] = _v(c["pos"])
@@ -723,6 +729,12 @@ func _process(delta: float) -> void:
 	for k in key_items:
 		if key_item_visible(k) and player.global_position.distance_to(k["pos"]) < QUEST_ITEM_RADIUS:
 			key_item_picked.emit(k)
+	for n in lore_notes:
+		if not n.has("placed"):
+			n["pos"] = free_spot_near(n["pos"], 30.0)   # que no quede debajo de un obstáculo
+			n["placed"] = true
+		if lore_visible(n) and player.global_position.distance_to(n["pos"]) < QUEST_ITEM_RADIUS:
+			lore_picked.emit(n)
 	var near_challenge := false
 	for c in challenges:
 		if challenge_available(c) and player.global_position.distance_to(c["pos"]) < CHALLENGE_RADIUS:
@@ -741,6 +753,10 @@ func key_item_visible(k: Dictionary) -> bool:
 ## Disponible si no se ha superado ya y no hay otra en marcha.
 func challenge_available(c: Dictionary) -> bool:
 	return character != null and not character.flags.has("challenge_done_" + String(c["id"])) and active_challenge.is_empty()
+
+
+func lore_visible(n: Dictionary) -> bool:
+	return character != null and not LoreNotes.is_found(character, String(n["id"]))
 
 
 func quest_item_visible(q: Dictionary) -> bool:
@@ -1186,6 +1202,9 @@ func _draw() -> void:
 	for q in quest_items:
 		if quest_item_visible(q):
 			_draw_quest_item(q)
+	for n in lore_notes:
+		if lore_visible(n):
+			_draw_lore_note(n)
 	_draw_ambient()
 	_npc_layer.queue_redraw()
 	_label_layer.queue_redraw()
@@ -1792,6 +1811,32 @@ func _draw_quest_item(q: Dictionary) -> void:
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	var font := ThemeDB.fallback_font
 	_label(p + Vector2(-110, -42 + bob), q["name"], 220, 13, UiStyle.ACCENT)
+
+
+## Archivo de lore en el suelo: un commit (nodo de git), un log (hoja de terminal) o un correo (sobre).
+func _draw_lore_note(n: Dictionary) -> void:
+	var p: Vector2 = n["pos"]
+	var kind := String(n.get("kind", "log"))
+	var c: Color = LoreNotes.KIND_COLORS.get(kind, UiStyle.ACCENT)
+	var bob := sin(_time * 2.5 + p.x) * 3.0
+	draw_circle(p, 26.0, Color(c, 0.08 + 0.06 * sin(_time * 3.0)))
+	draw_colored_polygon(QuestItemArt.ellipse(p + Vector2(0, 20), 14.0, 4.0), Color(0, 0, 0, 0.35))
+	var q := p + Vector2(0, bob)
+	match kind:
+		"commit":
+			draw_line(q + Vector2(-14, 0), q + Vector2(14, 0), c.darkened(0.3), 3.0)
+			for x in [-10.0, 0.0, 10.0]:
+				draw_circle(q + Vector2(x, 0), 4.5, c)
+			draw_line(q, q + Vector2(8, -10), c.darkened(0.3), 3.0)
+			draw_circle(q + Vector2(8, -10), 4.0, c.lightened(0.3))
+		"email":
+			draw_rect(Rect2(q - Vector2(13, 9), Vector2(26, 18)), Color("f2ead8"))
+			draw_polyline(PackedVector2Array([q + Vector2(-13, -9), q + Vector2(0, 2), q + Vector2(13, -9)]), c.darkened(0.3), 2.0)
+		_:
+			draw_rect(Rect2(q - Vector2(10, 13), Vector2(20, 26)), Color("101418"))
+			for k in 4:
+				draw_line(q + Vector2(-7, -8 + k * 5), q + Vector2(-7 + 6 + (k * 5) % 9, -8 + k * 5), c, 1.5)
+	_label(p + Vector2(-110, -34 + bob), LoreNotes.KIND_NAMES.get(kind, "Archivo"), 220, 12, c)
 
 
 ## Un NPC que solo está "conectado": su cara en un monitor de fósforo verde.

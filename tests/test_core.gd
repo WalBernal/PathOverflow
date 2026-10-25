@@ -109,6 +109,7 @@ func _initialize() -> void:
 	_test_new_zone_events()
 	_test_roles_and_commander()
 	_test_state_reactions()
+	_test_lore_notes()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -2491,6 +2492,36 @@ func _test_state_reactions() -> void:
 	em.traits[boss]["panic"] = 1.0
 	_check(em._react(boss, em.traits[boss], 0.1, to_player, 200.0) == null, "los jefes no entran en pánico")
 	em.free()
+
+
+## Lore coleccionable (T34): archivos por zonas de los cuatro actos y su registro.
+func _test_lore_notes() -> void:
+	var notes := LoreNotes.all()
+	_check(notes.size() >= 16, "hay lore coleccionable (%d archivos)" % notes.size())
+	var zone_ids := {}
+	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json", "res://data/act4.json"]:
+		for z in DataLoader.load_json(path)["zones"]:
+			zone_ids[z["id"]] = path
+	var acts := {}
+	var ids := {}
+	for n in notes:
+		_check(zone_ids.has(n["zone"]), "%s: su zona %s existe" % [n["id"], n["zone"]])
+		_check(LoreNotes.KIND_NAMES.has(n["kind"]) and String(n["title"]) != "" and String(n["text"]) != "", "%s: tipo, título y texto" % n["id"])
+		_check(float(n["at"][0]) > 0.05 and float(n["at"][0]) < 0.95 and float(n["at"][1]) > 0.05 and float(n["at"][1]) < 0.95, "%s: dentro de la zona" % n["id"])
+		_check(not ids.has(n["id"]), "%s: id repetido" % n["id"])
+		ids[n["id"]] = true
+		acts[zone_ids.get(n["zone"], "")] = true
+	_check(acts.size() == 4, "hay archivos en los cuatro actos")
+	var c := CharacterData.new(_classes[0], _tree)
+	c.character_name = "Ana"
+	_check(LoreNotes.found(c).is_empty(), "al principio no has encontrado nada")
+	_check(LoreNotes.mark_found(c, "log_constancia") and not LoreNotes.mark_found(c, "log_constancia"), "se apunta una sola vez")
+	_check(LoreNotes.text_of(LoreNotes.found(c)[0], c).contains("Ana"), "{jugador} se cambia por tu nombre")
+	var saved := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())), _classes[0], _tree, _db)
+	_check(LoreNotes.is_found(saved, "log_constancia"), "lo encontrado se guarda con el personaje")
+	var log := LoreLog.new(c)
+	_check(log._list.item_count == 1 and log.title.contains("1/"), "el registro lista lo encontrado")
+	log.free()
 
 
 func _db_enemies() -> Array:

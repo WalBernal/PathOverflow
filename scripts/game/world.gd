@@ -270,6 +270,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 	zone.exit_reached.connect(_on_exit_reached)
 	zone.quest_item_picked.connect(_on_quest_item_picked)
 	zone.key_item_picked.connect(_on_key_item_picked)
+	zone.lore_picked.connect(_on_lore_picked)
 	zone.challenge_touched.connect(_on_challenge_touched)
 	zone.exit_blocked.connect(func(e: Dictionary) -> void: ui.hud.flash(zone.exit_blocked_reason(e), Color("e06c6c")))
 	zone.waypoint_clicked.connect(func() -> void: ui.open_waypoints(zone.id))
@@ -361,6 +362,15 @@ func _on_quest_item_picked(q: Dictionary) -> void:
 	_mark_dirty()
 	if q.has("cutscene"):
 		play_cutscene(q["cutscene"])
+
+
+func _on_lore_picked(n: Dictionary) -> void:
+	if not LoreNotes.mark_found(character, String(n["id"])):
+		return
+	ui.hud.flash("%s encontrado: «%s» (%d/%d). Léelo en Pausa → Archivos encontrados." % [LoreNotes.KIND_NAMES.get(n["kind"], "Archivo"),
+		n["title"], LoreNotes.found_ids(character).size(), LoreNotes.all().size()], LoreNotes.KIND_COLORS.get(n["kind"], UiStyle.ACCENT))
+	Sfx.play("pickup")
+	_mark_dirty()
 
 
 func _on_key_item_picked(k: Dictionary) -> void:

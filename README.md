@@ -393,6 +393,10 @@ El personaje es un recién egresado que se enfrenta al mundo laboral: cada clase
 
 **Ascendencia al nivel 20**: junto al inicio de tu clase en el árbol hay un **medallón**. Al pulsarlo se abre un panel circular: hasta el nivel 20 solo se pueden ver las dos opciones; a partir de ahí se elige una (permanente). Después, el panel muestra el inicio de la ascendencia y sus pasivas alrededor: cada una cuesta un **punto de ascendencia** (1 al nivel 20, +1 a los 25 y 30). En la pantalla de pruebas del árbol se puede cambiar libremente.
 
+## Lore coleccionable
+
+Por las zonas de los cuatro actos hay **commits perdidos, logs y correos de la UAdeO** (`data/lore_notes.json`, 18 por ahora) que brillan en el suelo y se recogen al pasar cerca. Cuentan pedacitos de la historia: el `monolito.log` con la contraseña por defecto, el cron de las 3:33, el único commit sin descripción, el club de lectura de los jueves, el commit con hash de pez... Se leen en **Pausa → Archivos encontrados** (lista a la izquierda, texto a la derecha) y se guardan con el personaje (`flags.lore_found`). Su posición va como fracción del tamaño de la zona, así que no le afecta la escala.
+
 ## Eventos de zona
 
 En cada visita a una zona de combate aparecen al azar algunos eventos (`scripts/game/zone_events.gd`): **Datos huérfanos** (dos oleadas y botín), **Santuarios** (bono temporal o cargas llenas), **Emboscadas** (invisibles) y **Deploy fallido** (dos raros con escolta). Nuevos:
