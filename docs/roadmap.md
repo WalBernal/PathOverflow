@@ -330,7 +330,7 @@ Origen: R2 §8 ★★/★
 Origen: R1 §4
 - Árboles de cables, rocas, lápidas... con sombra y luz como el suelo.
 
-### [ ] T60 · Obstáculos en pixel art: actos II y III · M
+### [x] T60 · Obstáculos en pixel art: actos II y III · M
 Origen: R1 §4
 
 ### [ ] T61 · Prólogo en pixel art: pasillo y oficina · M
@@ -446,3 +446,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T57 · Material de cada tipo de enemigo en enemies.json (los 29 con el suyo, documentado en _doc); fuera la tabla EnemyManager.MATERIALS. Las pruebas exigen un material válido por tipo.
 - 2026-10-25 · T58 · Luz de auras, invocaciones, drones y botín único; sombras de proyectiles; lluvia de datos (terminal, kernel, servidores) y niebla (pantano, alcantarillas, fosa); opción «Luces y clima: reducidos». No hay enemigos voladores en los datos: las sombras de vuelo quedan en proyectiles y drones (ya la tenían).
 - 2026-10-25 · T59 · Los diez obstáculos del Acto I en pixel art (ObstacleArt): pintados una vez en la rejilla de 2 px, con contorno, luz arriba a la izquierda y sombra abajo, tres variantes; revisado en capturas de las zonas del acto I.
+- 2026-10-25 · T60 · Pistones (vástago animado en la rejilla), disipadores, barriles, condensadores, chips y bloques de hielo en pixel art: ya todos los obstáculos de los actos salvo los charcos; la prueba lo exige para cada zona. Revisado en capturas de los actos II y III.

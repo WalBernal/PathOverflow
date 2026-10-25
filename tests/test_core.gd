@@ -3324,6 +3324,15 @@ func _test_obstacle_art() -> void:
 	ObstacleArt.sprite("rock", 33.0, 7)   # mismo tamaño redondeado y variante: de la caché
 	_check(ObstacleArt.cached_count() == before, "se pinta una vez por tipo, tamaño y variante")
 	_check(ObstacleArt.sprite("rock", 32.0, 0)["texture"] != ObstacleArt.sprite("rock", 32.0, 1)["texture"], "con variantes")
+	# T60: todos los obstáculos de los actos (salvo los charcos, animados) van en pixel art.
+	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json", "res://data/act4.json"]:
+		var act: Dictionary = DataLoader.load_json(path)
+		for z in act["zones"]:
+			var obs = z.get("obstacles")
+			if not obs is Dictionary:
+				continue
+			for kind in obs.get("kinds", []):
+				_check(ObstacleArt.KINDS.has(kind) or kind == "puddle", "%s (%s): obstáculo en pixel art" % [kind, z["id"]])
 
 
 func _db_enemies() -> Array:

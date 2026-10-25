@@ -1354,6 +1354,16 @@ func _draw_obstacle(o: Dictionary) -> void:
 				var y := box.position.y + 6.0 + k * (box.size.y - 12.0) / 6.0
 				var on := sin(_time * (2.0 + k) + seed_value) > 0.0
 				draw_rect(Rect2(Vector2(box.end.x - 9, y + 3).snapped(Vector2(2, 2)), Vector2(4, 4)), Color("3cff6a") if on else Color("1a4a2a"))
+		elif o["kind"] == "piston":
+			# Vástago rítmico (en la rejilla) y vapor.
+			var g := Vector2(ObstacleArt.PIX, ObstacleArt.PIX)
+			var stroke := snappedf((0.5 + 0.5 * sin(_time * 3.0 + seed_value)) * r * 0.9, ObstacleArt.PIX)
+			var rod := Rect2((p + Vector2(-r * 0.25, -r * 1.2 - stroke)).snapped(g), Vector2(r * 0.5, r + stroke).snapped(g))
+			draw_rect(rod, Color("9a9ea8"))
+			draw_rect(Rect2(rod.position, Vector2(2, rod.size.y)), Color("c8ccd4"))   # brillo a la izquierda
+			draw_rect(Rect2((p + Vector2(-r * 0.55, -r * 1.35 - stroke)).snapped(g), Vector2(r * 1.1, r * 0.3).snapped(g)), Color("6a6e78"))
+			var steam := fmod(_time * 0.8 + seed_value % 5 * 0.2, 1.0)
+			draw_circle(p + Vector2(r * 0.6, -r * 0.4 - steam * 40.0), 6.0 + steam * 10.0, Color(0.9, 0.9, 0.95, 0.25 * (1.0 - steam)))
 		return
 	match o["kind"]:
 		"puddle":
@@ -1363,49 +1373,6 @@ func _draw_obstacle(o: Dictionary) -> void:
 			draw_set_transform(Vector2.ZERO)
 			var bubble := fmod(_time * 0.7 + seed_value % 10, 1.0)
 			draw_circle(p + Vector2(r * 0.3, -bubble * 10.0), 3.0, Color(0.8, 0.6, 1.0, 1.0 - bubble))
-		"piston":
-			# Pistón rítmico con vapor.
-			var stroke := (0.5 + 0.5 * sin(_time * 3.0 + seed_value)) * r * 0.9
-			draw_rect(Rect2(p + Vector2(-r * 0.7, -r * 0.2), Vector2(r * 1.4, r * 0.9)), Color("5a4a3a"))
-			draw_rect(Rect2(p + Vector2(-r * 0.25, -r * 1.2 - stroke), Vector2(r * 0.5, r + stroke)), Color("9a9ea8"))
-			draw_rect(Rect2(p + Vector2(-r * 0.55, -r * 1.35 - stroke), Vector2(r * 1.1, r * 0.3)), Color("6a6e78"))
-			var steam := fmod(_time * 0.8 + seed_value % 5 * 0.2, 1.0)
-			draw_circle(p + Vector2(r * 0.6, -r * 0.4 - steam * 40.0), 6.0 + steam * 10.0, Color(0.9, 0.9, 0.95, 0.25 * (1.0 - steam)))
-		"heat_sink":
-			# Disipador: bloque de aletas (sirve de cobertura).
-			draw_rect(Rect2(p - Vector2(r, r * 0.7), Vector2(r * 2.0, r * 1.4)), Color("8a9098"))
-			for k in 7:
-				var x := p.x - r + 4.0 + k * (r * 2.0 - 8.0) / 6.0
-				draw_line(Vector2(x, p.y - r * 0.7), Vector2(x, p.y + r * 0.7), Color("5a6068"), 3.0)
-			draw_rect(Rect2(p - Vector2(r, r * 0.7), Vector2(r * 2.0, r * 1.4)), Color("3a4048"), false, 2.0)
-		"barrel":
-			draw_rect(Rect2(p - Vector2(r * 0.8, r), Vector2(r * 1.6, r * 1.8)), Color("3a5a3a"))
-			draw_line(p + Vector2(-r * 0.8, -r * 0.4), p + Vector2(r * 0.8, -r * 0.4), Color("2a3a2a"), 2.0)
-			draw_line(p + Vector2(-r * 0.8, r * 0.3), p + Vector2(r * 0.8, r * 0.3), Color("2a3a2a"), 2.0)
-			draw_string(ThemeDB.fallback_font, p + Vector2(-r * 0.7, 4), "0xFF", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("9ad06a"))
-		"capacitor":
-			# Condensador electrolítico (cobertura contra los orbes).
-			draw_rect(Rect2(p - Vector2(r * 0.7, r), Vector2(r * 1.4, r * 1.8)), Color("2a4a8a"))
-			draw_rect(Rect2(p - Vector2(r * 0.7, r), Vector2(r * 0.35, r * 1.8)), Color("c8c8d0"))
-			draw_set_transform(p + Vector2(0, -r), 0.0, Vector2(1.0, 0.35))
-			draw_circle(Vector2.ZERO, r * 0.7, Color("9a9aa4"))
-			draw_set_transform(Vector2.ZERO)
-			draw_line(p + Vector2(-r * 0.3, -r), p + Vector2(r * 0.3, -r), Color("5a5a62"), 2.0)
-		"chip_die":
-			# Encapsulado de un chip con sus patas.
-			var box := Rect2(p - Vector2(r, r * 0.8), Vector2(r * 2.0, r * 1.6))
-			for k in 6:
-				var x := box.position.x + 6.0 + k * (box.size.x - 12.0) / 5.0
-				draw_line(Vector2(x, box.position.y - 6), Vector2(x, box.end.y + 6), Color("c0a060"), 3.0)
-			draw_rect(box, Color("1c1c22"))
-			draw_rect(box.grow(-4), Color("26262e"))
-			draw_circle(box.position + Vector2(10, 10), 3.0, Color("3a3a44"))
-		"ice_block":
-			var pts := PackedVector2Array()
-			for k in 6:
-				pts.append(p + Vector2.from_angle(TAU * k / 6.0 + seed_value) * r * (0.85 + 0.15 * sin(k + seed_value)))
-			draw_colored_polygon(pts, Color(0.7, 0.85, 1.0, 0.85))
-			draw_line(p + Vector2(-r * 0.4, -r * 0.3), p + Vector2(r * 0.2, r * 0.2), Color(1, 1, 1, 0.8), 2.0)
 		_:
 			draw_circle(p, r, Color("4a4352"))
 

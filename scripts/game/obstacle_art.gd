@@ -1,5 +1,5 @@
 class_name ObstacleArt
-## Obstáculos del Acto I en pixel art: cada tipo se pinta una vez en una imagen
+## Obstáculos en pixel art (Acto I y, desde T60, los de los actos II-IV): cada tipo se pinta una vez en una imagen
 ## con píxeles de PIX unidades del mundo (la rejilla del filtro), con contorno
 ## oscuro, luz arriba a la izquierda y sombra abajo a la derecha (la misma luz
 ## que el suelo), y se guarda por tipo, tamaño y variante. Zone la dibuja encima
@@ -7,7 +7,8 @@ class_name ObstacleArt
 
 const PIX := 2.0
 ## Tipos que se dibujan así.
-const KINDS := ["rock", "crate", "monitor", "cable_tree", "pillar", "rubble", "dead_tree", "tomb", "rack", "cable_coil"]
+const KINDS := ["rock", "crate", "monitor", "cable_tree", "pillar", "rubble", "dead_tree", "tomb", "rack", "cable_coil",
+	"piston", "heat_sink", "barrel", "capacitor", "chip_die", "ice_block"]
 const VARIANTS := 3
 const OUTLINE := Color("120f16")
 const LIGHT := 0.18
@@ -101,6 +102,45 @@ static func _paint(kind: String, r: float, variant: int) -> Dictionary:
 		"cable_coil":
 			for k in 3:
 				cv.ring(Vector2.ZERO, r * (1.0 - k * 0.25), maxf(2.0, r * 0.14), Color("2a2a30").lightened(k * 0.1))
+		# Actos II-IV.
+		"piston":   # la carcasa; el vástago y el vapor se animan en Zone
+			cv.rect(Rect2(Vector2(-r * 0.7, -r * 0.2), Vector2(r * 1.4, r * 0.9)), Color("5a4a3a"))
+			cv.rect(Rect2(Vector2(-r * 0.7, -r * 0.2), Vector2(r * 1.4, r * 0.15)), Color("6e5c48"))
+			for k in 2:
+				cv.rect(Rect2(Vector2(-r * 0.55 + k * r * 0.9, r * 0.1), Vector2(PIX * 2, PIX * 2)), Color("9a9ea8"))   # remaches
+		"heat_sink":
+			var body := Rect2(-Vector2(r, r * 0.7), Vector2(r * 2.0, r * 1.4))
+			cv.rect(body, Color("8a9098"))
+			for k in 7:
+				var x := -r + 4.0 + k * (r * 2.0 - 8.0) / 6.0
+				cv.line(Vector2(x, -r * 0.7), Vector2(x, r * 0.7), maxf(2.0, r * 0.08), Color("5a6068"))
+			cv.frame(body, PIX, Color("3a4048"))
+		"barrel":
+			cv.rect(Rect2(-Vector2(r * 0.8, r), Vector2(r * 1.6, r * 1.8)), Color("3a5a3a"))
+			cv.ellipse(Vector2(0, -r), Vector2(r * 0.8, r * 0.25), Color("4a6a4a"))   # tapa
+			cv.line(Vector2(-r * 0.8, -r * 0.4), Vector2(r * 0.8, -r * 0.4), PIX, Color("2a3a2a"))
+			cv.line(Vector2(-r * 0.8, r * 0.3), Vector2(r * 0.8, r * 0.3), PIX, Color("2a3a2a"))
+			cv.rect(Rect2(Vector2(-r * 0.4, -r * 0.2), Vector2(r * 0.8, r * 0.3)), Color("9ad06a"))   # etiqueta 0xFF
+		"capacitor":
+			cv.rect(Rect2(-Vector2(r * 0.7, r), Vector2(r * 1.4, r * 1.8)), Color("2a4a8a"))
+			cv.rect(Rect2(-Vector2(r * 0.7, r), Vector2(r * 0.35, r * 1.8)), Color("c8c8d0"))   # franja del negativo
+			cv.ellipse(Vector2(0, -r), Vector2(r * 0.7, r * 0.25), Color("9a9aa4"))
+			cv.line(Vector2(-r * 0.3, -r), Vector2(r * 0.3, -r), PIX, Color("5a5a62"))   # la cruz de la tapa
+		"chip_die":
+			var box := Rect2(-Vector2(r, r * 0.8), Vector2(r * 2.0, r * 1.6))
+			for k in 6:
+				var x := box.position.x + 6.0 + k * (box.size.x - 12.0) / 5.0
+				cv.line(Vector2(x, box.position.y - 6), Vector2(x, box.end.y + 6), maxf(2.0, r * 0.08), Color("c0a060"))
+			cv.rect(box, Color("1c1c22"))
+			cv.rect(box.grow(-4), Color("26262e"))
+			cv.circle(box.position + Vector2(10, 10), maxf(2.0, r * 0.1), Color("3a3a44"))
+		"ice_block":
+			var pts := PackedVector2Array()
+			for k in 6:
+				pts.append(Vector2.from_angle(TAU * k / 6.0 + variant) * r * (0.85 + 0.15 * sin(k + variant)))
+			cv.poly(pts, Color(0.7, 0.85, 1.0, 0.9))
+			cv.line(Vector2(-r * 0.4, -r * 0.3), Vector2(r * 0.2, r * 0.2), PIX, Color(1, 1, 1, 0.95))   # brillo
+			cv.line(Vector2(-r * 0.1, -r * 0.5), Vector2(r * 0.1, -r * 0.35), PIX, Color(1, 1, 1, 0.95))
 	_shade(img)
 	var tex := ImageTexture.create_from_image(img)
 	return {"texture": tex, "offset": -c * PIX, "size": Vector2(w, h) * PIX}
