@@ -1097,6 +1097,19 @@ func _knock(i: int, damage: float) -> void:
 	knocks[i] = (knocks[i] + away.normalized() * push).limit_length(KNOCK_SPEED)
 
 
+## Empuje en área (Force Push): aleja de `center` a los enemigos del radio con
+## `strength` veces el retroceso máximo. Las élites un tercio; los únicos y los estáticos, nada.
+func push_in_radius(center: Vector2, radius: float, strength: float) -> void:
+	for i in positions.size():
+		if speeds[i] <= 0.0 or rarities[i] == Rarity.Enemy.UNIQUE or positions[i].distance_to(center) > radius + radii[i]:
+			continue
+		var away := positions[i] - center
+		if away == Vector2.ZERO:
+			away = Vector2.RIGHT
+		var push := KNOCK_SPEED * strength * (0.35 if rarities[i] == Rarity.Enemy.ELITE else 1.0)
+		knocks[i] = (knocks[i] + away.normalized() * push).limit_length(KNOCK_SPEED * maxf(1.0, strength))
+
+
 ## Tira los dados de cada estado alterado del golpe en curso (hit_ailments).
 func _roll_ailments(i: int, damage: float) -> void:
 	var chances: Dictionary = hit_ailments.get("chances", {})

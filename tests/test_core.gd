@@ -61,6 +61,7 @@ func _initialize() -> void:
 	_test_controls_map_catalog()
 	_test_enemy_roles()
 	_test_golems()
+	_test_movement_skills()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -466,7 +467,7 @@ func _test_appearance() -> void:
 func _test_skill_data() -> void:
 	var skills := _db.skills
 	_check(skills.skills.size() >= 6 and skills.rams.size() >= 8, "carga de habilidades y RAM")
-	var kinds := ["melee_area", "nova", "projectile", "ground_aoe", "blink", "dash", "cone", "beam", "boomerang", "spin", "trap", "chain", "minion", "degen_area", "barrier", "buff", "curse_area", "dot_projectile", "homing", "drones", "leap_slam", "rain", "unit", "aura"]
+	var kinds := ["melee_area", "nova", "projectile", "ground_aoe", "blink", "dash", "cone", "beam", "boomerang", "spin", "trap", "chain", "minion", "degen_area", "barrier", "buff", "curse_area", "dot_projectile", "homing", "drones", "leap_slam", "rain", "unit", "aura", "ssh", "charge", "backflip"]
 	for def in skills.skills.values():
 		_check(kinds.has(def["kind"]), "tipo de habilidad desconocido en %s" % def["id"])
 		_check(def.has("attack") or def.has("spell"), "%s necesita 'attack' o 'spell'" % def["id"])
@@ -1862,6 +1863,33 @@ func _test_board_milestones() -> void:
 	_check(SkillCalc.compute(Motherboard.new(_db.skills.skills["proceso_hijo"], 20, ["DDR5"]), c)["count"] == 4, "esbirros extra por nivel")
 
 
+## Habilidades de movimiento: Túnel SSH, Force Push y Git Revert.
+func _test_movement_skills() -> void:
+	var skills := _db.skills.skills
+	var c := CharacterData.new(_classes[0], _tree)
+	for sid in ["tunel_ssh", "force_push", "git_revert"]:
+		_check(skills.has(sid) and skills[sid]["tags"].has("movement"), "%s existe con la etiqueta de movimiento" % sid)
+		var p := SkillCalc.compute(Motherboard.new(skills[sid], 1, []), c)
+		_check(p["max_damage"] > 0.0 and p["range"] > 0.0 and p["radius"] > 0.0, "%s: daño, alcance y radio" % sid)
+		_check(Sfx.skill_sound(String(p["kind"])) != "", "%s: sonido al lanzarla" % sid)
+	var revert := SkillCalc.compute(Motherboard.new(skills["git_revert"], 1, []), c)
+	_check(revert["duration"] > 0.0 and revert["tick"] > 0.0 and revert["ailments"].get("chill", 0.0) >= 100.0, "Git Revert: zona helada con duración que ralentiza")
+	var push := SkillCalc.compute(Motherboard.new(skills["force_push"], 1, []), c)
+	_check(push["stun"] > 0.0 and float(push["def"].get("push", 0.0)) > 1.0, "Force Push: aturde y empuja")
+	# Empuje en área: aleja del centro a los normales, menos a las élites y nada a los únicos.
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	var bug := em.type_index_of("bug")
+	var normal := em.index_of(em.spawn(Vector2(40, 0), Rarity.Enemy.NORMAL, bug))
+	var elite := em.index_of(em.spawn(Vector2(0, 40), Rarity.Enemy.ELITE, bug))
+	var boss := em.index_of(em.spawn(Vector2(-40, 0), Rarity.Enemy.UNIQUE, bug))
+	var far_e := em.index_of(em.spawn(Vector2(600, 0), Rarity.Enemy.NORMAL, bug))
+	em.push_in_radius(Vector2.ZERO, 100.0, 2.5)
+	_check(em.knocks[normal].x > 0.0 and em.knocks[normal].length() > em.knocks[elite].length(), "Force Push: empuja hacia fuera, menos a las élites")
+	_check(em.knocks[elite].y > 0.0 and em.knocks[boss] == Vector2.ZERO and em.knocks[far_e] == Vector2.ZERO, "los únicos y los lejanos no se mueven")
+	em.free()
+
+
 func _test_shaped_clusters() -> void:
 	var shaped := 0
 	var themes := {}
@@ -3182,24 +3210,27 @@ func _test_rams_everywhere() -> void:
 	em.hit_index(far_e, 100.0, 100.0, 0.0, 150.0)
 	_check(is_equal_approx(1.0e6 - em.lives[near], 112.0) and is_equal_approx(1.0e6 - em.lives[far_e], 100.0), "aura que debilita: solo dentro de su radio")
 	em.free()
-	# Desbloqueos por nivel: cada clase tiene 4, con habilidades que existen, y al menos una invocación y una aura.
+	# Desbloqueos por nivel: cada clase tiene 5, con habilidades que existen, al menos una invocación,
+	# una aura y una habilidad de movimiento (nivel 8).
 	for cls in _classes:
 		var unlocks: Array = cls.get("unlocks", [])
 		var kinds := {}
 		var choices := 0
+		var movement := false
 		for u in unlocks:
 			var ids: Array = u.get("choice", [u.get("skill", "")])
 			choices += 1 if u.has("choice") else 0
 			for sid in ids:
 				_check(skills.has(sid), "%s desbloquea %s, que existe" % [cls["id"], sid])
 				kinds[skills.get(sid, {}).get("kind", "")] = true
-		_check(unlocks.size() == 4 and choices == 1 and kinds.has("aura") and (kinds.has("unit") or kinds.has("minion")),
-			"%s: 4 desbloqueos (uno a elegir entre dos) con invocación y aura" % cls["id"])
+				movement = movement or skills.get(sid, {}).get("tags", []).has("movement")
+		_check(unlocks.size() == 5 and choices == 1 and kinds.has("aura") and (kinds.has("unit") or kinds.has("minion")) and movement,
+			"%s: 5 desbloqueos (uno a elegir entre dos) con invocación, aura y movimiento" % cls["id"])
 	var lvl := CharacterData.new(_classes[0], _tree)
 	lvl.set_level(12)
-	_check(lvl.due_unlocks().size() == 2, "al nivel 12 el guerrero tiene 2 habilidades por recibir")
+	_check(lvl.due_unlocks().size() == 3, "al nivel 12 el guerrero tiene 3 habilidades por recibir")
 	lvl.flags["unlock_aura_blindaje"] = true
-	_check(lvl.due_unlocks().size() == 1, "las ya recibidas no se repiten")
+	_check(lvl.due_unlocks().size() == 2, "las ya recibidas no se repiten")
 	lvl.set_level(16)
 	_check(lvl.due_unlocks().any(func(u: Dictionary) -> bool: return u.has("choice")), "al nivel 16 toca elegir entre dos")
 	lvl.flags["unlock_golem_hardware"] = true   # personaje de antes de la elección

@@ -203,6 +203,30 @@ static func draw(ci: CanvasItem, rect: Rect2, skill_def: Dictionary, dimmed := f
 			ci.draw_line(c + Vector2(-r, r * 0.6), c + Vector2(r * 0.8, -r * 0.6), color, 4.0, true)
 			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(r, -r * 0.8), c + Vector2(r * 0.15, -r * 0.65),
 				c + Vector2(r * 0.75, -r * 0.05)]), color)
+		"ssh":
+			# Dos terminales unidos por un túnel con un rayo.
+			for s in [-1.0, 1.0]:
+				var box := Rect2(c + Vector2(s * r * 0.62 - r * 0.32, -r * 0.3), Vector2(r * 0.64, r * 0.5))
+				ci.draw_rect(box, Color("1a2230"))
+				ci.draw_rect(box, color, false, 2.0)
+				ci.draw_line(box.position + Vector2(r * 0.1, r * 0.2), box.position + Vector2(r * 0.3, r * 0.2), color, 2.0)
+			ci.draw_polyline(PackedVector2Array([c + Vector2(-r * 0.3, r * 0.45), c + Vector2(-r * 0.05, r * 0.25),
+				c + Vector2(r * 0.05, r * 0.6), c + Vector2(r * 0.3, r * 0.4)]), Color("fff0a0"), 2.5, true)
+			ci.draw_arc(c + Vector2(0, -r * 0.05), r * 0.95, PI * 1.15, PI * 1.85, 12, Color(color, 0.6), 2.0, true)
+		"force_push":
+			# Puño (bloque) empujando con ondas de choque.
+			ci.draw_rect(Rect2(c + Vector2(-r * 0.9, -r * 0.35), Vector2(r * 0.8, r * 0.7)), color)
+			ci.draw_rect(Rect2(c + Vector2(-r * 0.9, -r * 0.35), Vector2(r * 0.8, r * 0.7)), color.darkened(0.45), false, 2.0)
+			for k in 3:
+				ci.draw_arc(c + Vector2(-r * 0.2, 0), r * (0.45 + 0.28 * k), -0.7, 0.7, 10, Color(color, 0.9 - 0.25 * k), 2.5, true)
+		"revert":
+			# Flecha curva hacia atrás sobre un copo.
+			ci.draw_arc(c + Vector2(0, -r * 0.1), r * 0.7, PI * 1.1, PI * 2.0, 14, color, 3.0, true)
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-r * 0.95, -r * 0.45), c + Vector2(-r * 0.45, -r * 0.5),
+				c + Vector2(-r * 0.75, 0.05 * r)]), color)
+			for k in 3:
+				var d := Vector2.from_angle(PI / 3.0 * k) * r * 0.32
+				ci.draw_line(c + Vector2(0, r * 0.5) - d, c + Vector2(0, r * 0.5) + d, Color("e8f6ff"), 2.0, true)
 		"dash":
 			for k in 3:
 				var y := (k - 1) * r * 0.45

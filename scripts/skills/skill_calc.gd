@@ -337,8 +337,10 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 		"minion":
 			# Cada esbirro golpea ~1 vez por segundo mientras dura.
 			hits_per_use *= float(int(skill.get("count", 1)) + extra_minions + milestones) * maxf(1.0, duration / minion_interval)
-		"degen_area", "curse_area", "dot_projectile":
-			hits_per_use *= maxf(1.0, duration)   # base_damage es por segundo
+		"degen_area", "curse_area", "dot_projectile", "backflip":
+			hits_per_use *= maxf(1.0, duration)   # base_damage es por segundo (Git Revert: su zona helada)
+		"ssh":
+			hits_per_use *= 2.0   # descarga al salir y al llegar
 		"drones":
 			hits_per_use *= float(int(skill.get("count", 1)) + milestones + extra_minions) * maxf(1.0, duration / maxf(0.1, tick))
 		"rain":

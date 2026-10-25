@@ -68,9 +68,9 @@ static func set_loop(wav: AudioStreamWAV, begin := 0) -> void:
 ## Efecto al lanzar una habilidad, según su tipo y su daño principal.
 static func skill_sound(kind: String, damage_type := "") -> String:
 	match kind:
-		"melee_area", "spin", "dash":
+		"melee_area", "spin", "dash", "charge":
 			return "swing"
-		"blink":
+		"blink", "ssh", "backflip":
 			return "blink"
 		"buff":
 			return "buff"

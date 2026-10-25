@@ -34,6 +34,8 @@ const DAMAGE_COLORS := {
 var player: Player
 var enemies: EnemyManager
 var character: CharacterData
+## Punto libre más cercano (sin paredes ni obstáculos) para los teletransportes; lo pone World.
+var spot_fixer: Callable
 var cooldowns: Array[float] = []
 
 var _profiles: Array = []         # perfil de SkillCalc por ranura ({} si vacía)
@@ -839,9 +841,70 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 				return
 			var offset := (target - origin).limit_length(p["range"])
 			_effects.append({"type": "ring", "pos": origin, "radius": 30.0, "time": 0.0, "duration": 0.3, "color": color})
-			player.global_position = origin + offset
+			player.global_position = _landing(origin + offset)
 			player.stop_auto_move()
 			_effects.append({"type": "ring", "pos": player.global_position, "radius": 40.0, "time": 0.0, "duration": 0.3, "color": color})
+		"ssh":
+			# Túnel SSH: teletransporte corto con una descarga al salir y otra al llegar.
+			if device:
+				return
+			var dest := _landing(origin + (target - origin).limit_length(p["range"]))
+			_ssh_burst(origin, p, color)
+			player.global_position = dest
+			player.stop_auto_move()
+			_ssh_burst(dest, p, color)
+			_effects.append({"type": "zap", "pos": origin, "end": dest, "time": 0.0, "duration": 0.25, "color": color})
+		"charge":
+			# Force Push: carga hasta el primer enemigo en el cono hacia el cursor, lo
+			# arrolla con los de alrededor, los empuja lejos y los aturde un momento.
+			if device:
+				return
+			var hit_at := origin + dir * float(p["range"])
+			var first := _first_enemy_in_cone(origin, dir, float(p["range"]), deg_to_rad(float(p["angle"])) / 2.0)
+			if first != -1:
+				var to := enemies.positions[first] - origin
+				hit_at = origin + to - to.normalized() * minf(to.length(), enemies.radii[first] + 18.0)
+			player.move_and_collide(hit_at - origin)
+			player.stop_auto_move()
+			var end := player.global_position
+			_effects.append({"type": "trail", "pos": origin, "end": end, "radius": 40.0, "time": 0.0, "duration": 0.3, "color": color})
+			if first != -1:
+				_damage_area(end, p["radius"], p)
+				enemies.push_in_radius(end, p["radius"] + 20.0, float(p["def"].get("push", 2.0)))
+				if p["stun"] > 0.0:
+					enemies.stun_in_radius(end, p["radius"], p["stun"])
+				_effects.append({"type": "quake", "pos": end, "radius": p["radius"], "time": 0.0, "duration": 0.35, "color": color})
+		"backflip":
+			# Git Revert: salto hacia atrás (lejos del cursor) que deja una zona helada.
+			if device:
+				return
+			_clouds.append({"pos": origin, "life": p["duration"], "next": 0.0, "profile": p, "color": color, "seed": randi()})
+			player.move_and_collide(-dir * float(p["range"]))
+			player.stop_auto_move()
+			_effects.append({"type": "leap", "pos": origin, "end": player.global_position, "time": 0.0, "duration": 0.25, "color": color})
+
+
+## Dónde cae un teletransporte: el punto libre más cercano (sin paredes ni obstáculos).
+func _landing(pos: Vector2) -> Vector2:
+	return spot_fixer.call(pos) if spot_fixer.is_valid() else pos
+
+
+func _ssh_burst(pos: Vector2, p: Dictionary, color: Color) -> void:
+	_damage_area(pos, p["radius"], p)
+	_effects.append({"type": "ring", "pos": pos, "radius": p["radius"], "time": 0.0, "duration": 0.3, "color": color})
+
+
+## Primer enemigo (el más cercano) dentro de un cono de semiángulo `half` hacia `dir`; -1 si no hay.
+func _first_enemy_in_cone(origin: Vector2, dir: Vector2, reach: float, half: float) -> int:
+	var best := -1
+	var best_d := reach
+	for i in enemies.positions.size():
+		var to := enemies.positions[i] - origin
+		var d := to.length()
+		if d < best_d and d > 0.0 and absf(dir.angle_to(to)) <= half:
+			best = i
+			best_d = d
+	return best
 
 
 ## Dispara los proyectiles de una habilidad en abanico hacia `dir`: uno sale recto

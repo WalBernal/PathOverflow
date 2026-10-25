@@ -912,6 +912,114 @@
       }
     },
     {
+      "id": "tunel_ssh",
+      "name": "Túnel SSH",
+      "kind": "ssh",
+      "damage_type": "lightning",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "movement",
+        "area",
+        "lightning",
+        "elemental"
+      ],
+      "lol": "Ezreal E / Kassadin R",
+      "description": "Abres un túnel hasta el cursor y apareces al otro lado. El handshake suelta una descarga donde estabas y donde llegas. Sin contraseña: la clave pública ya la tenías.",
+      "spell": {
+        "base_damage": [
+          7,
+          12
+        ],
+        "damage_growth": 0.15,
+        "cast_time": 0.25,
+        "crit": 5.0
+      },
+      "radius": 75,
+      "range": 280,
+      "mana_cost": 9,
+      "mana_per_level": 0.3,
+      "cooldown": 2.5,
+      "icon": {
+        "shape": "ssh",
+        "color": "5cd0ff"
+      },
+      "ailments": {
+        "shock": 20
+      }
+    },
+    {
+      "id": "force_push",
+      "name": "Force Push",
+      "kind": "charge",
+      "damage_type": "physical",
+      "attribute": "str",
+      "tags": [
+        "attack",
+        "melee",
+        "area",
+        "movement",
+        "physical"
+      ],
+      "lol": "Vi Q / Jarvan IV E+Q",
+      "description": "Cargas contra el primer enemigo hacia el cursor y lo arrollas con todo lo de alrededor: los empujas lejos y quedan aturdidos un momento. Sobrescribe la historia de quien estuviera delante.",
+      "attack": {
+        "damage_effectiveness": 1.5
+      },
+      "radius": 85,
+      "range": 360,
+      "angle": 50,
+      "stun": 0.4,
+      "push": 2.5,
+      "mana_cost": 8,
+      "mana_per_level": 0.4,
+      "cooldown": 3.0,
+      "icon": {
+        "shape": "force_push",
+        "color": "e06c3a"
+      }
+    },
+    {
+      "id": "git_revert",
+      "name": "Git Revert",
+      "kind": "backflip",
+      "damage_type": "cold",
+      "attribute": "dex",
+      "tags": [
+        "spell",
+        "movement",
+        "area",
+        "cold",
+        "elemental",
+        "duration"
+      ],
+      "lol": "Vayne Q (al revés) / Lucian E",
+      "description": "Saltas hacia atrás, lejos del cursor, y dejas donde estabas una zona helada que ralentiza y daña a quien la pisa. Deshacer siempre fue la mejor jugada.",
+      "spell": {
+        "base_damage": [
+          4,
+          6
+        ],
+        "damage_growth": 0.15,
+        "cast_time": 0.2,
+        "crit": 0.0
+      },
+      "radius": 95,
+      "range": 240,
+      "duration": 2.5,
+      "tick": 0.5,
+      "mana_cost": 7,
+      "mana_per_level": 0.3,
+      "cooldown": 2.0,
+      "icon": {
+        "shape": "revert",
+        "color": "9fd8ff"
+      },
+      "ailments": {
+        "chill": 100
+      }
+    },
+    {
       "id": "fuzzing",
       "name": "Fuzzing",
       "kind": "cone",

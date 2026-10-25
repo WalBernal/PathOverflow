@@ -191,6 +191,10 @@
           "skill": "aura_blindaje"
         },
         {
+          "level": 8,
+          "skill": "force_push"
+        },
+        {
           "level": 10,
           "skill": "watchdog"
         },
@@ -360,6 +364,10 @@
         {
           "level": 5,
           "skill": "aura_mando"
+        },
+        {
+          "level": 8,
+          "skill": "git_revert"
         },
         {
           "level": 10,
@@ -532,6 +540,10 @@
           "skill": "aura_throttling"
         },
         {
+          "level": 8,
+          "skill": "git_revert"
+        },
+        {
           "level": 10,
           "skill": "bot_rastreador"
         },
@@ -702,6 +714,10 @@
         {
           "level": 5,
           "skill": "aura_exposicion"
+        },
+        {
+          "level": 8,
+          "skill": "tunel_ssh"
         },
         {
           "level": 10,
@@ -919,6 +935,10 @@
           "skill": "aura_overclock"
         },
         {
+          "level": 8,
+          "skill": "tunel_ssh"
+        },
+        {
           "level": 10,
           "skill": "dron_escolta"
         },
@@ -1113,6 +1133,10 @@
         {
           "level": 5,
           "skill": "aura_mantenimiento"
+        },
+        {
+          "level": 8,
+          "skill": "force_push"
         },
         {
           "level": 10,
@@ -1320,6 +1344,10 @@
         {
           "level": 5,
           "skill": "dron_escudo"
+        },
+        {
+          "level": 8,
+          "skill": "force_push"
         },
         {
           "level": 10,

@@ -98,6 +98,7 @@ func _ready() -> void:
 	skills = SkillController.new()
 	add_child(skills)
 	skills.setup(player, enemies, character)
+	skills.spot_fixer = func(p: Vector2) -> Vector2: return p if zone == null else zone.free_spot_near(p, 18.0)
 	# Después del jugador: reciben los clicks antes que él (recoger, hablar).
 	loot = LootManager.new()
 	loot.player = player
