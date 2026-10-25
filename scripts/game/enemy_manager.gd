@@ -422,8 +422,8 @@ func role_of(i: int) -> String:
 func _roll_affixes(rarity: int) -> Array:
 	var count := 0
 	if rarity == Rarity.Enemy.ELITE:
-		count = 2 if area_level >= 8 else 1
-	elif rarity == Rarity.Enemy.SPECIAL and area_level >= 3 and randf() < 0.25:
+		count = (2 if area_level >= 8 else 1) + int(Difficulty.EXTRA_AFFIXES[clampi(difficulty, 0, 2)])
+	elif rarity == Rarity.Enemy.SPECIAL and area_level >= 3 and randf() < 0.25 * (1 + difficulty):
 		count = 1
 	if count == 0:
 		return []
@@ -486,6 +486,9 @@ func _make_traits(t: Dictionary, _rarity: int, affix_ids: Array, _normal_spawn: 
 	var immune_set: Dictionary = {}
 	for k in t.get("resist", {}):
 		res[k] = float(t["resist"][k])
+	if difficulty > 0:
+		for k in ["physical", "fire", "cold", "lightning", "chaos"]:
+			res[k] = float(res.get(k, 0.0)) + float(Difficulty.RESIST[difficulty])
 	for k in t.get("immune", []):
 		immune_set[k] = true
 	var applied: Array = []
@@ -793,6 +796,8 @@ func command_bonus(i: int) -> Dictionary:
 
 ## Afijos que llevan todos los enemigos de la zona (incidentes, Incidents).
 var forced_affixes: Array = []
+## Dificultad (Difficulty): resistencias y afijos extra.
+var difficulty := 0
 
 
 ## Último enemigo que golpeó al jugador (para el némesis):

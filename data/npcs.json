@@ -680,6 +680,7 @@
         "¿Sí.....?"
       ],
       "nodes": {
+        "dificultad": {"text": "¿Más difícil...? Puedo poner el servidor en modo de prueba de carga.... Pesadilla: los procesos resisten más, salen con más afijos y las zonas suben de nivel.... pero sueltan mejor botín.... Infierno es lo mismo.... pero peor.... y solo si ya sobreviviste a Pesadilla....", "options": [{"text": "Normal, por favor.", "next": "", "action": {"type": "set_difficulty", "value": 0}}, {"text": "Pesadilla.", "next": "", "requires_flag": "act4_complete", "action": {"type": "set_difficulty", "value": 1}}, {"text": "Infierno.", "next": "", "requires_flag": "act4_complete_d1", "action": {"type": "set_difficulty", "value": 2}}, {"text": "Mejor no toco nada.", "next": "hola"}]},
         "antena": {"text": "La armé con latas de refresco y el router de La Red Lince.... Ya no se cae.... porque no está conectada a La Red Lince.... Si te paras junto a ella, te relleno las pociones y te paso señal.... dicen que con buena señal se pega más fuerte....", "options": [{"text": "Conéctame.", "next": "", "action": {"type": "antenna"}}, {"text": "Luego.", "next": "hola"}]},
         "hola": {
           "text": "Aaah..... ¿«genio»?..... ¿Tú también caíste.....? Bienvenido a producción..... Aquí el tiempo corre raro..... llevo reiniciando el servidor..... desde 2019..... o desde el martes..... ¿Qué. Quieres....?",
@@ -724,6 +725,7 @@
               "next": "lore3"
             },
             {"text": "¿Y esa antena?", "next": "antena", "requires_flag": "act3_complete"},
+            {"text": "Quiero que el sistema se ponga más difícil.", "next": "dificultad", "requires_flag": "act4_complete"},
             {
               "text": "Qué horror.",
               "next": "hola"

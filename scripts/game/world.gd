@@ -288,7 +288,9 @@ func travel_to(zone_id: String, entry := "") -> void:
 	cam.limit_bottom = int(zone.rect.end.y + 200)
 	cam.reset_smoothing()
 
-	enemies.area_level = zone.level
+	var difficulty := Difficulty.current(character)
+	enemies.difficulty = difficulty
+	enemies.area_level = zone.level + (Difficulty.LEVEL_BONUS[difficulty] if not zone.safe else 0)
 	enemies.forced_affixes = Incidents.forced_affixes(zone.def)
 	var incident_mods := Incidents.player_mods(zone.def)
 	if incident_mods.is_empty():
@@ -488,7 +490,7 @@ func _spawn_zone_enemies() -> void:
 	_spawn_zone_specials()
 	_boss_alive = false
 	var boss: Dictionary = zone.def.get("boss", {}) if zone.def.get("boss") is Dictionary else {}
-	if not boss.is_empty() and not character.flags.has(boss.get("complete_flag", "act1_complete")):
+	if not boss.is_empty() and not character.flags.has(Difficulty.boss_flag(boss.get("complete_flag", "act1_complete"), Difficulty.current(character))):
 		enemies.spawn(Zone._v(boss["pos"]), Rarity.Enemy.UNIQUE, enemies.type_index_of(boss.get("type", "daemon")),
 			boss.get("name", ""), float(boss.get("life_mult", 1.0)), boss.get("abilities", []))
 		enemies.set_phases(enemies.ids[enemies.ids.size() - 1], boss.get("phases", []))
@@ -970,7 +972,7 @@ func _on_enemy_killed(rarity: int, experience: int, pos: Vector2, type_id: Strin
 	if coins > 0:
 		loot.drop_tokens(coins, zone.free_spot_near(pos + Vector2(randf_range(-24.0, 24.0), randf_range(-16.0, 16.0))))
 	var info: Dictionary = Rarity.ENEMY_INFO[rarity]
-	var drop_mult := float(zone.def.get("drop_multiplier", 1.0))
+	var drop_mult := float(zone.def.get("drop_multiplier", 1.0)) * (1.0 + float(Difficulty.LOOT[Difficulty.current(character)]))
 	for k in int(info["drop_count"]):
 		if randf() < float(info["drop_chance"]) * drop_mult:
 			var item := item_generator.roll_drop(enemies.area_level, info["item_rarity_bonus"])
@@ -996,7 +998,13 @@ func _on_boss_defeated(pos: Vector2) -> void:
 	MusicPlayer.set_intensity(0)
 	MusicPlayer.play_track(String(GameData.music.get("zones", {}).get(GameData.town_for_zone(zone.id), "camp1")), 3.0)
 	var boss: Dictionary = zone.def.get("boss", {})
-	character.flags[boss.get("complete_flag", "act1_complete")] = true
+	var done_flag: String = boss.get("complete_flag", "act1_complete")
+	var newly_unlocked := Difficulty.unlocked(character)
+	character.flags[done_flag] = true
+	character.flags[Difficulty.boss_flag(done_flag, Difficulty.current(character))] = true   # se puede repetir en cada dificultad
+	if Difficulty.unlocked(character) > newly_unlocked:
+		var d := Difficulty.unlocked(character)
+		ui.hud.flash("Nueva dificultad: %s. Habla con Rafa en el campamento para cambiarla." % Difficulty.NAMES[d], Difficulty.COLORS[d])
 	# El servidor se congela: lo que quedaba vivo se detiene y desaparece. Diferido:
 	# el jefe puede morir dentro de un bucle del EnemyManager (degenerativos, área)
 	# y vaciar sus listas en mitad del recorrido lo haría leer fuera de rango.
@@ -1144,6 +1152,10 @@ func _on_dialogue_action(action: Dictionary) -> void:
 			ui.open_shop(_gear_stock)
 		"reforge_weapon":
 			_reforge_weapon()
+		"set_difficulty":
+			var d := int(action.get("value", 0))
+			if Difficulty.choose(character, d):
+				ui.hud.flash(Difficulty.describe(d), Difficulty.COLORS[d])
 		"open_incident":
 			open_incident()
 		"open_atlas":

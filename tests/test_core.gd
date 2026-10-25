@@ -116,6 +116,7 @@ func _initialize() -> void:
 	_test_crafting_patches()
 	_test_incidents()
 	_test_atlas()
+	_test_difficulties()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -2743,6 +2744,35 @@ func _test_atlas() -> void:
 	_check(int(def["level"]) >= 20 + Atlas.LEVEL_PER_TIER, "con el nivel del atlas sube la dificultad")
 	var saved := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())), _classes[0], _tree, _db)
 	_check(Atlas.tier(saved) == 2 and Atlas.maps(saved).size() == Atlas.MAX_MAPS - 1, "el atlas se guarda con el personaje")
+
+
+## Dificultades (T41): Normal, Pesadilla e Infierno, con desbloqueo y efectos.
+func _test_difficulties() -> void:
+	var c := CharacterData.new(_classes[0], _tree)
+	_check(Difficulty.current(c) == 0 and Difficulty.unlocked(c) == 0 and not Difficulty.choose(c, 1), "al principio solo hay Normal")
+	c.flags["act4_complete"] = true
+	_check(Difficulty.unlocked(c) == 1 and Difficulty.choose(c, 1) and Difficulty.current(c) == 1 and not Difficulty.choose(c, 2), "tras el Acto IV se abre Pesadilla, no Infierno")
+	_check(Difficulty.boss_flag("act4_complete", 1) == "act4_complete_d1" and Difficulty.boss_flag("act1_complete", 0) == "act1_complete", "cada dificultad tiene su bandera de jefe")
+	c.flags[Difficulty.boss_flag("act4_complete", 1)] = true
+	_check(Difficulty.unlocked(c) == 2 and Difficulty.choose(c, 2), "terminar el Acto IV en Pesadilla abre Infierno")
+	_check(Difficulty.LEVEL_BONUS[2] > Difficulty.LEVEL_BONUS[1] and Difficulty.LOOT[2] > Difficulty.LOOT[1] and Difficulty.describe(2).contains("Infierno"), "cada dificultad sube nivel y botín")
+	# Enemigos: más resistencias y más afijos.
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	var base := em.index_of(em.spawn(Vector2.ZERO, Rarity.Enemy.NORMAL, em.type_index_of("bug")))
+	var r0 := em.resist_of(base, "fire")
+	em.difficulty = 2
+	var hard := em.index_of(em.spawn(Vector2(300, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug")))
+	_check(em.resist_of(hard, "fire") >= r0 + 39.0, "en Infierno los enemigos resisten más (%d → %d)" % [r0, em.resist_of(hard, "fire")])
+	em.roll_affixes = true
+	em.area_level = 60
+	var counts := {}
+	for k in 30:
+		counts[em._roll_affixes(Rarity.Enemy.ELITE).size()] = true
+	_check(counts.keys().max() >= 4, "los élites de Infierno salen con más afijos (%s)" % str(counts.keys()))
+	em.free()
+	var saved := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())), _classes[0], _tree, _db)
+	_check(Difficulty.current(saved) == 2, "la dificultad se guarda")
 
 
 func _db_enemies() -> Array:
