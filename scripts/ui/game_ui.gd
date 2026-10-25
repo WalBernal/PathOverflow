@@ -14,6 +14,8 @@ signal shop_refresh_requested
 const TREE_SCREEN := preload("res://scenes/ui/passive_tree_screen.tscn")
 ## Tamaños de interfaz del menú de pausa.
 const UI_SCALES := [0.85, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6]
+## Separación entre el alijo o la tienda y el inventario cuando se encogen para caber.
+const TRADE_GAP := 8.0
 ## Tope de la escala (por si el archivo de ajustes trae un valor a mano).
 const UI_SCALE_MAX := 1.6
 ## Alto mínimo (en px de interfaz) para que quepan el inventario y los menús: en
@@ -370,6 +372,8 @@ func open_dialogue(npc: Dictionary, dialogue: Dictionary) -> void:
 
 
 func _process(_delta: float) -> void:
+	_update_minimap()
+	_fit_trade_panels()
 	# Alejarse del NPC cierra la conversación.
 	if dialogue_box.visible and not dialogue_box.npc.is_empty():
 		var p: Array = dialogue_box.npc["position"]
@@ -724,20 +728,61 @@ func toggle_loot_filter() -> void:
 
 
 ## El minimapa comparte esquina con el inventario: se oculta mientras está abierto.
+## Con la interfaz grande, otras ventanas (hoja de personaje, habilidades, alijo,
+## tienda, waypoints) también llegan bajo el minimapa o el registro de misiones:
+## si se enciman, se ocultan mientras la ventana siga abierta (se comprueba en
+## cada fotograma, porque el tamaño de las ventanas cambia con su contenido).
 ## (Y el tutorial comparte esquina con la hoja de personaje.)
 func _update_minimap() -> void:
 	tutorial.suppressed = character_sheet.visible or tree_screen.visible
-	minimap.visible = _minimap_enabled and not inventory_panel.visible and not tree_screen.visible
+	var windows: Array[Rect2] = []
+	for w: Control in [character_sheet, skills_panel, stash_panel, shop_panel, _waypoint_panel]:
+		if w.visible:
+			windows.append(_rect_in_root(w))
+	minimap.visible = _minimap_enabled and not inventory_panel.visible and not tree_screen.visible \
+		and not _overlaps_any(_rect_in_root(minimap), windows)
 	# Sin minimapa, el registro sube a su sitio.
-	quest_tracker.visible = quest_tracker.quests != null and not inventory_panel.visible and not tree_screen.visible
-	quest_tracker.offset_top = (minimap.offset_bottom + 6.0) if minimap.visible else 14.0
+	var tracker_top := (minimap.offset_bottom + 6.0) if minimap.visible else 14.0
+	var tracker_rect := _rect_in_root(quest_tracker)
+	tracker_rect.position.y += tracker_top - quest_tracker.offset_top   # donde va a quedar
+	quest_tracker.offset_top = tracker_top
+	quest_tracker.visible = quest_tracker.quests != null and not inventory_panel.visible and not tree_screen.visible \
+		and not _overlaps_any(tracker_rect, windows)
+
+
+## Alijo o tienda (a la izquierda) junto al inventario (a la derecha): con la
+## interfaz grande no caben los dos; se encogen lo justo para quedar lado a lado.
+func _fit_trade_panels() -> void:
+	var trade: Control = stash_panel if stash_panel.visible else (shop_panel if shop_panel.visible else null)
+	var f := 1.0
+	if trade and inventory_panel.visible:
+		var inv_right_margin := _root.size.x - (inventory_panel.position.x + inventory_panel.size.x)
+		var room := _root.size.x - trade.position.x - inv_right_margin - TRADE_GAP
+		f = clampf(room / (trade.size.x + inventory_panel.size.x), 0.5, 1.0)
+	for c: Control in [stash_panel, shop_panel]:
+		c.scale = Vector2(f, f) if c == trade else Vector2.ONE
+	inventory_panel.pivot_offset = Vector2(inventory_panel.size.x, 0.0)   # encoge hacia su esquina derecha
+	inventory_panel.scale = Vector2(f, f)
+
+
+## Rectángulo de un control en las coordenadas de _root (todas las ventanas
+## comparten su escala; get_global_rect() mezcla posición escalada y tamaño sin escalar).
+func _rect_in_root(c: Control) -> Rect2:
+	return (_root.get_global_transform().affine_inverse() * c.get_global_transform()) * Rect2(Vector2.ZERO, c.size)
+
+
+static func _overlaps_any(r: Rect2, windows: Array[Rect2]) -> bool:
+	for w in windows:
+		if w.intersects(r):
+			return true
+	return false
 
 
 ## Soltar un objeto fuera de los paneles: al suelo, junto al jugador.
 func _on_drop_to_ground(location: Dictionary) -> void:
 	var mouse := get_viewport().get_mouse_position()
 	for panel: Control in [inventory_panel, skills_panel, character_sheet, shop_panel, stash_panel, hud]:
-		if panel != hud and panel.visible and panel.get_global_rect().has_point(mouse):
+		if panel != hud and panel.visible and (panel.get_global_transform() * Rect2(Vector2.ZERO, panel.size)).has_point(mouse):   # con su escala
 			return  # soltado sobre un panel, en un sitio que no admite objetos
 	if hud.is_over_hud(hud.get_global_transform().affine_inverse() * mouse):
 		return

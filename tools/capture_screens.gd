@@ -50,6 +50,10 @@ func _run() -> void:
 		await _capture_golems_in_world()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("ventanas160"):
+		await _capture_windows_160()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("ventanas"):
 		await _capture_windows()
 		get_tree().quit()
@@ -519,6 +523,47 @@ func _capture_windows() -> void:
 	_save("99_roles_de_enemigo")
 	for k in saved_rules:
 		LootFilter.set_rule(k, saved_rules[k])
+	GameSettings.set_value("interface", "scale", saved_scale)
+	world.set("_since_save", -9999.0)
+
+
+## Interfaz al 160 % en 900 px de alto: hoja de personaje, habilidades, alijo,
+## tienda y waypoints, para ver que ninguna queda bajo el minimapa o las misiones.
+func _capture_windows_160() -> void:
+	var saved_scale: Variant = GameSettings.get_value("interface", "scale", 1.0)
+	GameSettings.set_value("interface", "scale", 1.6)
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Ventanas", &"templario", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.flags["waypoints"] = ["campamento", "zona1", "zona3", "zona5"]
+	c.level = 12
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(2.0)
+	var ui: GameUI = world.get("ui")
+	ui.call("_on_menu_requested", "character")
+	await _wait(0.5)
+	_save("120_160_hoja")
+	ui.call("_on_menu_requested", "character")
+	ui.call("_on_menu_requested", "skills")
+	await _wait(0.5)
+	_save("121_160_habilidades")
+	ui.call("_on_menu_requested", "skills")
+	ui.open_stash(world.get("stash"))
+	await _wait(0.5)
+	_save("122_160_alijo")
+	ui.open_shop(Economy.generate_stock(ItemGenerator.new(gd.get("items")), c.level))
+	await _wait(0.5)
+	_save("123_160_tienda")
+	ui.close_trade_panels()
+	ui.inventory_panel.visible = false
+	ui.open_waypoints("campamento")
+	await _wait(0.5)
+	_save("124_160_waypoints")
 	GameSettings.set_value("interface", "scale", saved_scale)
 	world.set("_since_save", -9999.0)
 

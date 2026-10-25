@@ -245,7 +245,7 @@ Se llega por la **controladora de bus** del Anillo 0 (tras derrotar a init). Dat
 ## Misiones
 
 Definidas en `data/quests.json` y gestionadas por `QuestLog` (lógica pura, guardada en el personaje).
-El **registro de misiones** está debajo del minimapa (L para plegarlo): la principal arriba, en dorado, y las secundarias debajo, con su paso actual y el progreso.
+El **registro de misiones** está debajo del minimapa (L para plegarlo): la principal arriba, en dorado, y las secundarias debajo, con su paso actual y el progreso. Con la interfaz grande, el minimapa y el registro se ocultan mientras una ventana abierta (inventario, hoja de personaje, habilidades, alijo, tienda o waypoints) llegue debajo de ellos; y si el alijo o la tienda no caben junto al inventario, los dos se encogen lo justo para quedar lado a lado (capturas: `capture_screens.tscn -- ventanas160`).
 
 | Misión | Quién | Qué |
 |---|---|---|
