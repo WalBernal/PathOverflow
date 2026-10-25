@@ -356,10 +356,11 @@ Origen: R2 §12 ★★
 ### [x] T65 · Exportación a Linux y macOS e instalador de Windows · S
 Origen: R1 §7
 
-### [ ] T66 · `EnemyManager` en C# o GDExtension · L — solo si hace falta
+### [!] T66 · `EnemyManager` en C# o GDExtension · L — solo si hace falta
 Origen: R1 §7, R2 §12
 - Hacerla solo si tras T03 la simulación pasa de 4 ms con estados y aliados; si no, marcar `[x]` con la medición como motivo.
 - Tras T03 y T03b: 150 enemigos a 60 FPS y 300 a 32-34 FPS en el benchmark; con 300 la simulación ya da ~4.5 ms y el `_draw` de enemigos ~7 ms (los dos en GDScript), y la interfaz ~8 ms. Si se quiere 300 ≥ 50 FPS, empezar por aquí y por cachear en texturas los iconos del HUD.
+- **Bloqueada (25-10-2026, medida en T66):** con 300 enemigos la simulación da 4,7-4,8 ms (pasa de 4 ms) en un fotograma de ~34 ms (29-30 FPS; 150 enemigos: 2,4 ms, 52-57 FPS; sin enemigos 12-16 ms). Portarla necesita decidir y descargar: C# pide la edición .NET de Godot y un SDK de .NET (aquí solo está el runtime); GDExtension, un compilador de C++ y scons (no hay). Y la ganancia máxima son esos ~4 ms: de 30 a ~34 FPS, lejos de 50; pesan más el `_draw` de enemigos (~7 ms), la interfaz (~8 ms) y la zona. Recomendación: antes, cachear en texturas los iconos del HUD y pasar el `_draw` de enemigos a MultiMesh; volver a esta tarea solo si después la simulación es lo que más pesa.
 
 ---
 
@@ -452,3 +453,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T63 · Música, ambientes y tema del título en OGG (91,8 → 13,4 MB) con tools/convert_audio.ps1; Sfx.load_looped carga OGG o WAV y pasa el inicio de bucle de music_loops.json a segundos (16 000 Hz en la música). Los sprites ya estaban en atlas (enemigos, objetos, pasivas): nada que hacer ahí.
 - 2026-10-25 · T64 · Telemetría local: una línea por visita a zona en user://telemetria.jsonl (tiempo, combate, daño, DPS, enemigos, muertes; solo personajes guardados, opción en la pausa) y tools/telemetry_summary.gd que lo resume por zona y clase.
 - 2026-10-25 · T65 · Presets de Linux y macOS (export_presets.example.cfg, porque export_presets.cfg está en .gitignore), tools/build_release.ps1 que exporta lo que tenga plantilla y arma el instalador de Windows (installer/Setup.cs con csc: instala por usuario, accesos directos y desinstalador). Probado: Windows exporta (121 MB) y arranca, el instalador extrae el juego idéntico. Linux y macOS sin probar: sus plantillas no están instaladas (bajarlas necesita tu permiso). IExpress se descartó: fallaba al azar.
+- 2026-10-25 · T66 · Bloqueada [!]: simulación de 300 enemigos 4,7-4,8 ms (sobre el umbral), pero portar a C# o GDExtension necesita descargas y herramientas que no hay y ganaría ~4 ms de 34; motivo y recomendación bajo la tarea.
