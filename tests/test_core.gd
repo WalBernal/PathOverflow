@@ -142,6 +142,7 @@ func _initialize() -> void:
 	_test_skill_balance()
 	_test_shop_stock()
 	_test_shop_coat()
+	_test_player_poses()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3546,6 +3547,41 @@ func _test_shop_coat() -> void:
 	_check(not panel._filter_row.visible and not panel._pockets_box.visible and not panel._refresh_button.visible, "el puesto de Aida: sin filtros, bolsillos ni bodega")
 	_check(panel._grid.get_child_count() == panel.stock.size() and panel._grid.get_child(0).get_child(0) is ItemCell, "Aida enseña todo en la mesa, sin ganchos")
 	panel.free()
+
+
+## Personaje animado por estados, parte 1 (T72): poses, arma en la mano y estado del jugador.
+func _test_player_poses() -> void:
+	_check(Player.action_for({"tags": ["attack", "melee"]}) == "attack" and Player.action_for({"tags": ["attack", "projectile"]}) == "shoot"
+		and Player.action_for({"tags": ["spell", "fire"]}) == "cast", "golpe, disparo o hechizo según las etiquetas de la habilidad")
+	_check(CharacterAppearance.pose_transform("idle", 0.0, Vector2.DOWN, 1.0).is_empty(), "de pie no se gira la figura")
+	_check(is_equal_approx(absf(float(CharacterAppearance.pose_transform("dead", 1.0, Vector2.RIGHT, 1.0)[1])), PI * 0.5), "muerto: cae de lado")
+	_check(CharacterAppearance.arm_angle("attack", "sword", 0.35) > 2.5 and CharacterAppearance.arm_angle("attack", "sword", 0.55) < 0.5,
+		"la espada sube y luego baja de golpe")
+	_check(CharacterAppearance.arm_reach("attack", "dagger", 0.4) > 1.1 and CharacterAppearance.arm_reach("attack", "sword", 0.4) == 1.0, "la daga es una estocada")
+	var gen := ItemGenerator.new(_db, 72)
+	for base_id in _db.bases:
+		var tags: Array = _db.bases[base_id].get("tags", [])
+		if "weapon" in tags:
+			_check(CharacterAppearance.weapon_kind(gen.generate(5, Rarity.Item.NORMAL, base_id)) != "", "se dibuja el arma %s" % base_id)
+	_check(CharacterAppearance.weapon_kind(null) == "", "sin arma, nada en la mano")
+	var c := CharacterData.new(_classes[0], _tree)
+	var p := Player.new()
+	p.character = c
+	p.life = 10.0
+	_check(p.anim_state() == "idle", "quieto: respira")
+	p.play_action("attack", 0.5)
+	p._tick_anim(0.25)
+	var pose := p.anim_pose()
+	_check(pose["state"] == "attack" and is_equal_approx(float(pose["t"]), 0.5), "a media acción, el golpe va por la mitad")
+	p._tick_anim(0.3)
+	_check(p.anim_state() == "idle", "acabada la acción, vuelve a reposo")
+	p.keep_channeling()
+	_check(p.anim_state() == "channel", "canalizando")
+	p._tick_anim(0.2)
+	p.life = 0.0
+	p._tick_anim(1.0)
+	_check(p.anim_state() == "dead" and float(p.anim_pose()["t"]) == 1.0, "muerto: la caída termina")
+	p.free()
 
 
 func _db_enemies() -> Array:

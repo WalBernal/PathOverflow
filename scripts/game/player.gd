@@ -102,6 +102,21 @@ var _recoveries: Array[Dictionary] = []
 ## Destino de un movimiento automático (por ejemplo, ir a recoger un objeto).
 var _auto_target := Vector2.ZERO
 var _has_auto_target := false
+## Animación por estados (T72): la acción en curso ("attack", "shoot" o "cast"), cuánto
+## lleva y cuánto dura; el brillo de las manos; si canaliza (lo renueva SkillController),
+## el retroceso al recibir un golpe y el tiempo desde que murió.
+const FLINCH_TIME := 0.25
+const DEATH_FALL_TIME := 0.5
+## Por encima de esta fracción de la velocidad base, corre en vez de caminar.
+const RUN_SPEED_FACTOR := 1.15
+var _action := ""
+var _action_time := 0.0
+var _action_length := 0.0
+var _glow := Color.WHITE
+var _channel_time := 0.0
+var _flinch := 0.0
+var _death_time := 0.0
+var _anim_time := 0.0
 
 
 func setup(p_character: CharacterData, p_enemies: EnemyManager) -> void:
@@ -262,6 +277,70 @@ func camera_shake(amount: float, seconds: float) -> void:
 func face(direction: Vector2) -> void:
 	if direction != Vector2.ZERO:
 		_facing = direction.normalized()
+
+
+## Empieza la animación de una habilidad: `kind` es "attack", "shoot" o "cast".
+func play_action(kind: String, length: float, glow := Color.WHITE) -> void:
+	_action = kind
+	_action_time = 0.0
+	_action_length = maxf(0.15, length)
+	_glow = glow
+
+
+## Sigue canalizando este cuadro (manos delante, brillando).
+func keep_channeling(glow := Color.WHITE) -> void:
+	_channel_time = 0.15
+	_glow = glow
+
+
+## Animación de una habilidad por sus etiquetas: cuerpo a cuerpo, ataque a distancia o hechizo.
+static func action_for(p: Dictionary) -> String:
+	var tags: Array = p.get("tags", [])
+	if "attack" in tags:
+		return "attack" if "melee" in tags else "shoot"
+	return "cast"
+
+
+## Estado de la animación ahora (ver CharacterAppearance.draw).
+func anim_state() -> String:
+	if not is_alive():
+		return "dead"
+	if is_dodging():
+		return "dodge"
+	if _channel_time > 0.0:
+		return "channel"
+	if _action != "" and _action_time < _action_length:
+		return _action
+	if _flinch > 0.0:
+		return "hurt"
+	if _walk_phase >= 0.0:
+		return "run" if get_real_velocity().length() > BASE_MOVE_SPEED * RUN_SPEED_FACTOR else "walk"
+	return "idle"
+
+
+## La pose para dibujar: estado, avance (0..1), tiempo, arma equipada y brillo.
+func anim_pose() -> Dictionary:
+	var state := anim_state()
+	var t := 0.0
+	match state:
+		"dead":
+			t = _death_time / DEATH_FALL_TIME
+		"dodge":
+			t = 1.0 - _dodge_time / DODGE_TIME
+		"hurt":
+			t = 1.0 - _flinch / FLINCH_TIME
+		"attack", "shoot", "cast":
+			t = _action_time / _action_length
+	var weapon := CharacterAppearance.weapon_kind(character.inventory.equipped("weapon")) if character else ""
+	return {"state": state, "t": clampf(t, 0.0, 1.0), "time": _anim_time, "weapon": weapon, "glow": _glow}
+
+
+func _tick_anim(delta: float) -> void:
+	_anim_time += delta
+	_action_time += delta
+	_channel_time = maxf(0.0, _channel_time - delta)
+	_flinch = maxf(0.0, _flinch - delta)
+	_death_time = 0.0 if is_alive() else _death_time + delta
 
 
 func _on_stats_changed() -> void:
@@ -475,6 +554,7 @@ func _physics_process(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	_hurt_time = maxf(0.0, _hurt_time - delta)
+	_tick_anim(delta)
 	_stash_label = maxf(0.0, _stash_label - delta)
 	for g in _ghosts:
 		g["t"] -= delta
@@ -570,6 +650,7 @@ func take_damage(amount: float) -> void:
 	amount *= 1.0 - minf(0.9, armour / (armour + 5.0 * amount))
 	_since_damage = 0.0
 	_hurt_time = 0.12
+	_flinch = FLINCH_TIME
 	if amount > max_life() * 0.08:
 		camera_shake(clampf(amount / max_life() * 30.0, 2.0, 9.0), 0.18)   # cuanto más duele, más tiembla
 	Sfx.play("player_hurt", -4.0)
@@ -639,8 +720,8 @@ func _draw() -> void:
 	var feet := Vector2(0.0, RADIUS * 0.6)
 	Achievements.draw_aura(self, feet, character, tt)
 	CharacterAppearance.draw(self, feet, PLAYER_SPRITE_SCALE, character.appearance, _facing, tint,
-		_walk_phase if is_alive() else -1.0)
-	if Achievements.equipped(character, "hat") != "":
+		_walk_phase if is_alive() else -1.0, anim_pose())
+	if Achievements.equipped(character, "hat") != "" and not (anim_state() in ["dead", "dodge"]):   # tumbado o rodando, el sombrero no seguiría la cabeza
 		var hs := float(character.appearance.get("height", 1.0))
 		Achievements.draw_hat(self, feet + Vector2(0, -31.0 * hs) * PLAYER_SPRITE_SCALE, 7.0 * PLAYER_SPRITE_SCALE, character)
 	if statuses.has("freeze") or statuses.has("chill"):

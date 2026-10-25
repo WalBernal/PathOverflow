@@ -70,6 +70,10 @@ func _run() -> void:
 		await _capture_windows_160()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("poses"):
+		await _capture_poses()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("ventanas"):
 		await _capture_windows()
 		get_tree().quit()
@@ -1091,6 +1095,30 @@ func _capture_player_states() -> void:
 	await _wait(0.4)
 	_save("24_congelado")
 	world.set("_since_save", -9999.0)
+
+
+## Poses del jugador (T72): cada estado en cuatro direcciones, con cada arma, a escala 3.
+func _capture_poses() -> void:
+	var look := CharacterAppearance.default()
+	var states := [["idle", 0.0], ["walk", 0.0], ["run", 0.0], ["attack", 0.3], ["attack", 0.5], ["shoot", 0.4],
+		["cast", 0.8], ["channel", 0.0], ["hurt", 0.2], ["dodge", 0.5], ["dead", 1.0]]
+	var dirs := [Vector2.DOWN, Vector2.RIGHT, Vector2.UP, Vector2.LEFT]
+	var weapons := ["sword", "axe", "mace", "dagger"]
+	var sheet := Control.new()
+	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sheet.draw.connect(func() -> void:
+		UiStyle.draw_background(sheet, sheet.size)
+		var font := ThemeDB.fallback_font
+		for i in states.size():
+			var st: String = states[i][0]
+			sheet.draw_string(font, Vector2(30 + i * 140, 40), "%s %.1f" % [st, states[i][1]], HORIZONTAL_ALIGNMENT_LEFT, -1, 16)
+			for d in dirs.size():
+				var walk := 1.2 if st in ["walk", "run"] else -1.0
+				var pose := {"state": st, "t": states[i][1], "time": 0.6, "weapon": weapons[d % weapons.size()] if st != "cast" else "", "glow": Color("e0652f")}
+				CharacterAppearance.draw(sheet, Vector2(80 + i * 140, 200 + d * 180), 2.6, look, dirs[d], Color(0, 0, 0, 0), walk, pose))
+	_swap(sheet)
+	await _wait(0.5)
+	_save("72_poses")
 
 
 ## M. Páez: retrato grande, sprite del juego y su aspecto lado a lado con otros NPC.

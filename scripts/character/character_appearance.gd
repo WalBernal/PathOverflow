@@ -117,8 +117,29 @@ static func _ellipse(ci: CanvasItem, c: Vector2, rx: float, ry: float, color: Co
 ## `walk_phase`: fase del ciclo de paso en radianes (< 0 = quieto). Un ciclo
 ## completo (TAU) son dos pasos: piernas alternas, brazos opuestos y el cuerpo
 ## sube y baja con cada pisada, así que los pies no "patinan".
+## `pose` (T72; solo el jugador lo pasa): {state, t (0..1 de la acción), time (s),
+## weapon (tipo: "sword", "axe", "mace", "dagger" o ""), glow (Color de las manos al
+## lanzar)}. Estados: "idle" (respira), "walk", "run" (zancada y balanceo mayores),
+## "attack" (golpe según el arma), "shoot" (lanza hacia delante), "cast" (sube las
+## manos), "channel" (manos delante, brillando), "hurt" (retrocede), "dodge" (se
+## agacha y rueda) y "dead" (cae de lado). Sin pose, la figura de siempre.
 static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
-		facing := Vector2.DOWN, tint := Color(0, 0, 0, 0), walk_phase := -1.0) -> void:
+		facing := Vector2.DOWN, tint := Color(0, 0, 0, 0), walk_phase := -1.0, pose := {}) -> void:
+	var state := String(pose.get("state", ""))
+	var t := clampf(float(pose.get("t", 0.0)), 0.0, 1.0)
+	var xf := pose_transform(state, t, facing, scale)
+	if not xf.is_empty():
+		# Estados que mueven la figura entera: se dibuja girada / aplastada sobre los pies.
+		if state == "dead":
+			var k := absf(float(xf[1])) / (PI * 0.5)
+			_ellipse(ci, feet + Vector2(-signf(facing.x if facing.x != 0.0 else 1.0) * 15.0 * scale * k, 0.0),
+				lerpf(11.0, 20.0, k) * scale, 4.4 * scale, Color(0, 0, 0, 0.4))
+		ci.draw_set_transform(feet + xf[0], xf[1], xf[2])
+		var inner := pose.duplicate()
+		inner["state"] = "limp" if state == "dead" else ""
+		draw(ci, Vector2.ZERO, scale, a, facing, tint, -1.0, inner)
+		ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		return
 	var skin := _tinted(Color(a["skin_tone"]), tint)
 	var outfit := _tinted(Color(a["outfit_color"]), tint)
 	var accent := _tinted(Color(a.get("accent_color", outfit.darkened(0.55).to_html(false))), tint)
@@ -128,8 +149,16 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 	var profile := absf(look) > 0.6 and absf(facing.y) < 0.75   # de perfil
 
 	var walking := walk_phase >= 0.0
-	var swing := sin(walk_phase) if walking else 0.0          # -1..1, pierna izquierda delante
-	var bob := absf(cos(walk_phase)) * 1.3 if walking else 0.0  # el cuerpo sube entre pisadas
+	var run_k := 1.45 if state == "run" else 1.0
+	var swing := sin(walk_phase) * run_k if walking else 0.0          # -1..1, pierna izquierda delante
+	var bob := absf(cos(walk_phase)) * 1.3 * run_k if walking else 0.0  # el cuerpo sube entre pisadas
+	if state == "idle":
+		bob = (sin(float(pose.get("time", 0.0)) * 2.4) * 0.5 + 0.5) * 0.7   # respira
+	# Brazo que golpea (el del lado al que mira) y si los dos brazos posan (hechizos).
+	var side := 1.0 if look >= 0.0 else -1.0
+	var weapon := String(pose.get("weapon", ""))
+	var posing := state in ["attack", "shoot", "cast", "channel"]
+	var both_arms := state in ["cast", "channel"]
 	# Estatura: escala las alturas (la cabeza mantiene su tamaño).
 	var hs := float(a.get("height", 1.0))
 	var p := func(x: float, y: float) -> Vector2: return feet + Vector2(x, y * hs) * scale
@@ -138,7 +167,8 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 
 	# Sombra (se encoge un poco cuando el cuerpo sube).
 	var shadow_r := (11.0 - bob * 0.6) * scale * width
-	_ellipse(ci, feet, shadow_r, shadow_r * 0.4, Color(0, 0, 0, 0.4))
+	if state != "limp":   # tumbado, la sombra la pone quien lo gira
+		_ellipse(ci, feet, shadow_r, shadow_r * 0.4, Color(0, 0, 0, 0.4))
 
 	# Piernas: cada una se levanta en su fase; de perfil, además, avanzan y retroceden.
 	var legs := outfit.darkened(0.35)
@@ -155,19 +185,31 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 
 	# Brazos (detrás del torso), en oposición a las piernas.
 	var arm_color := outfit.darkened(0.2)
+	var carry_hand := Vector2.INF   # dónde lleva el arma si no está golpeando
 	for arm: float in [-1.0, 1.0]:
+		if posing and (both_arms or arm == side):
+			continue   # este brazo se dibuja en su pose, delante del torso
 		var arm_swing := -swing * arm * (2.2 if not profile else 0.0)
 		var ax := (-10.5 if arm < 0.0 else 7.0) * width
 		var hand_x := (-8.75 if arm < 0.0 else 8.75) * width
 		if profile:
 			ax = -1.75 * width + swing * arm * 3.0 * signf(look)
 			hand_x = ax + 1.75 * width
+		if state == "limp":
+			arm_swing = 0.0
 		ci.draw_rect(Rect2(u.call(ax, -23.0 + arm_swing * 0.4), Vector2(3.5 * width, 12.0 * hs) * scale), arm_color)
-		ci.draw_circle(u.call(hand_x, -10.5 + arm_swing), 1.9 * scale * width, skin)
+		var hand: Vector2 = u.call(hand_x, -10.5 + arm_swing)
+		ci.draw_circle(hand, 1.9 * scale * width, skin)
+		if arm == side:
+			carry_hand = hand
+	# Arma en reposo: en la mano, apuntando hacia arriba y hacia fuera (de espaldas, detrás del torso).
+	var carry := weapon != "" and carry_hand != Vector2.INF and state != "limp"
+	if carry and back:
+		draw_weapon(ci, carry_hand, Vector2(side * 0.45, -0.9).normalized(), weapon, scale, tint)
 
 	# Torso: trapecio de hombros a cintura (más estrecho de perfil), con cuello y cinturón.
 	var tw := width * (0.75 if profile else 1.0)
-	var lean := 0.8 * signf(look) if profile and walking else 0.0
+	var lean := 0.8 * signf(look) * run_k * run_k if profile and walking else 0.0
 	ci.draw_colored_polygon(PackedVector2Array([
 		u.call(-8.0 * tw + lean, -24.0), u.call(8.0 * tw + lean, -24.0),
 		u.call(6.0 * tw, -8.0), u.call(-6.0 * tw, -8.0)]), outfit)
@@ -176,9 +218,114 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 		ci.draw_colored_polygon(PackedVector2Array([u.call(-3.0 + lean, -24.0), u.call(3.0 + lean, -24.0), u.call(lean, -19.0)]), shirt)
 	ci.draw_rect(Rect2(u.call(-6.0 * tw, -11.0), Vector2(12.0 * tw, 2.0 * hs) * scale), accent)
 
+	if carry and not back:
+		draw_weapon(ci, carry_hand, Vector2(side * 0.45, -0.9).normalized(), weapon, scale, tint)
+		ci.draw_circle(carry_hand, 1.9 * scale * width, skin)   # la mano, encima del mango
+	# Brazos en pose (golpe, lanzamiento, hechizo): del hombro a la mano, con el arma o el brillo.
+	if posing:
+		var time := float(pose.get("time", 0.0))
+		for arm: float in ([-1.0, 1.0] if both_arms else [side]):
+			var out := signf(look) if profile else arm
+			var shoulder: Vector2 = u.call((lean if profile else 7.5 * arm * tw), -22.0)
+			var ang := arm_angle(state, weapon, t, time) * (0.85 if both_arms and arm != side else 1.0)
+			var d := Vector2(sin(ang) * out, cos(ang))
+			var hand := shoulder + d * 12.0 * hs * scale * arm_reach(state, weapon, t)
+			ci.draw_line(shoulder, hand, arm_color, 3.5 * width * scale)
+			if state in ["attack", "shoot"] and weapon != "":
+				draw_weapon(ci, hand, d, weapon, scale, tint)
+			ci.draw_circle(hand, 1.9 * scale * width, skin)
+			if pose.has("glow") and state in ["cast", "channel"]:
+				var g: Color = pose["glow"]
+				var pulse := 0.75 + 0.25 * sin(time * 9.0) if state == "channel" else minf(1.0, t * 2.5)
+				ci.draw_circle(hand, 4.5 * scale * pulse, Color(g, 0.35))
+				ci.draw_circle(hand, 2.4 * scale * pulse, Color(g.lightened(0.4), 0.8))
+
 	# Cabeza.
 	var head: Vector2 = u.call(lean, -31.0)
 	draw_head(ci, head, 7.0 * scale, a, {"back": back, "look": Vector2(look, 0.0), "tint": tint, "profile": profile})
+
+
+## Transformación de la figura entera para los estados que la mueven toda:
+## [desplazamiento, giro, escala], o [] si no hace falta.
+static func pose_transform(state: String, t: float, facing: Vector2, scale: float) -> Array:
+	var side := 1.0 if facing.x >= 0.0 else -1.0
+	match state:
+		"dead":
+			var k := 1.0 - pow(1.0 - t, 3.0)   # cae rápido y se asienta
+			return [Vector2(-side * 3.0 * scale * k, 0.0), -side * PI * 0.5 * k, Vector2.ONE]
+		"dodge":
+			return [Vector2.ZERO, side * 0.45 * sin(PI * t), Vector2(1.1, 0.62 + 0.38 * absf(2.0 * t - 1.0) * 0.5)]
+		"hurt":
+			var back := -facing.normalized() if facing != Vector2.ZERO else Vector2.UP
+			return [back * 3.0 * scale * (1.0 - t), -side * 0.18 * (1.0 - t), Vector2.ONE]
+	return []
+
+
+## Ángulo del brazo en pose (0 = colgando, PI/2 = estirado hacia fuera, PI = arriba).
+static func arm_angle(state: String, weapon: String, t: float, time := 0.0) -> float:
+	match state:
+		"attack":
+			if weapon in ["sword", "axe", "mace"]:
+				# Arriba y atrás, golpe hacia abajo y delante, vuelve un poco.
+				if t < 0.35:
+					return lerpf(0.5, 2.7, t / 0.35)
+				if t < 0.55:
+					return lerpf(2.7, 0.35, (t - 0.35) / 0.2)
+				return lerpf(0.35, 0.6, (t - 0.55) / 0.45)
+			# Daga o puño: estocada recta.
+			return lerpf(1.1, 1.55, t / 0.3) if t < 0.3 else 1.55
+		"shoot":
+			return lerpf(0.6, 2.4, t / 0.35) if t < 0.35 else lerpf(2.4, 1.4, minf(1.0, (t - 0.35) / 0.25))
+		"cast":
+			return lerpf(0.3, 1.9, 1.0 - pow(1.0 - minf(1.0, t / 0.4), 2.0))
+		"channel":
+			return 1.5 + sin(time * 8.0) * 0.08
+	return 0.0
+
+
+## Cuánto se estira el brazo (1 = normal): la estocada lo alarga.
+static func arm_reach(state: String, weapon: String, t: float) -> float:
+	if state == "attack" and not (weapon in ["sword", "axe", "mace"]):
+		return lerpf(0.6, 1.25, minf(1.0, t / 0.3)) if t < 0.6 else lerpf(1.25, 0.9, (t - 0.6) / 0.4)
+	return 1.0
+
+
+## Arma en la mano `hand`, apuntando hacia `dir`, según su tipo.
+static func draw_weapon(ci: CanvasItem, hand: Vector2, dir: Vector2, kind: String, scale: float, tint := Color(0, 0, 0, 0)) -> void:
+	var metal := _tinted(Color("c8ccd6"), tint)
+	var wood := _tinted(Color("6b4a2b"), tint)
+	var perp := Vector2(-dir.y, dir.x)
+	match kind:
+		"sword":
+			ci.draw_line(hand - dir * 3.0 * scale, hand + dir * 1.5 * scale, wood, 1.8 * scale)
+			ci.draw_line(hand + dir * 1.5 * scale - perp * 3.0 * scale, hand + dir * 1.5 * scale + perp * 3.0 * scale, _tinted(Color("8a6d3b"), tint), 1.6 * scale)
+			ci.draw_line(hand + dir * 2.0 * scale, hand + dir * 15.0 * scale, metal, 2.2 * scale)
+			ci.draw_line(hand + dir * 2.0 * scale, hand + dir * 14.0 * scale, metal.lightened(0.35), 0.7 * scale)
+		"axe":
+			ci.draw_line(hand - dir * 3.0 * scale, hand + dir * 12.0 * scale, wood, 1.7 * scale)
+			var tip := hand + dir * 11.0 * scale
+			ci.draw_colored_polygon(PackedVector2Array([tip - dir * 3.0 * scale, tip + dir * 1.5 * scale,
+				tip + dir * 3.0 * scale + perp * 5.0 * scale, tip - dir * 4.5 * scale + perp * 5.0 * scale]), metal)
+		"mace":
+			ci.draw_line(hand - dir * 3.0 * scale, hand + dir * 10.0 * scale, wood, 1.7 * scale)
+			var head := hand + dir * 11.5 * scale
+			for k in 6:
+				var sp := Vector2.from_angle(TAU * k / 6.0)
+				ci.draw_line(head, head + sp * 4.2 * scale, metal.darkened(0.3), 1.2 * scale)
+			ci.draw_circle(head, 3.0 * scale, metal.darkened(0.15))
+		"dagger":
+			ci.draw_line(hand - dir * 2.0 * scale, hand + dir * 1.0 * scale, wood, 1.6 * scale)
+			ci.draw_line(hand + dir * 1.0 * scale, hand + dir * 8.0 * scale, metal, 1.6 * scale)
+
+
+## Tipo de arma para dibujarla, por las etiquetas de su base ("" si no se dibuja).
+static func weapon_kind(item: Item) -> String:
+	if item == null:
+		return ""
+	for k in ["sword", "axe", "mace", "dagger"]:
+		if item.base.get("tags", []).has(k):
+			return k
+	return ""
 
 
 ## Dibuja la cabeza de radio `r` centrada en `head`. Opciones:

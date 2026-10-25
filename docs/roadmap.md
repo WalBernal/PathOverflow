@@ -412,9 +412,13 @@ Origen: R3 (idea del usuario)
 
 ## Fase 10 — Diseño visual, sprites y animación
 
-### [ ] T72 · Personaje animado por estados · L (partir en dos)
+### [x] T72 · Personaje animado por estados, parte 1: poses y arma en la mano · M
 Origen: R3 (Diablo II/PoE: lectura del personaje)
 - Ciclos en pixel art en 4 direcciones: reposo con respiración, caminar, correr, ataque cuerpo a cuerpo por tipo de arma, lanzar hechizo, canalizar, recibir golpe, esquivar y morir; el arma y el escudo equipados se ven en la mano.
+- Hecho: `CharacterAppearance.draw` acepta una pose (estado, avance, arma, brillo): reposo con respiración, caminar, correr (por encima de 1,15× la velocidad base), golpe por tipo de arma (espada, hacha y maza en arco; daga en estocada), disparo, hechizo con brillo del elemento, canalizar, retroceso al recibir un golpe, esquiva agachada y caída al morir, en las cuatro direcciones. `Player` lleva el estado (`play_action`, `keep_channeling`, `anim_state`, `anim_pose`) y `SkillController` lo activa al lanzar. Diferencias con lo pedido: sigue siendo el dibujo con formas (los ciclos en pixel art por cuadros necesitarían hojas de sprites dibujadas a mano, que el proyecto no tiene) y no hay escudos en el juego, así que solo se ve el arma.
+
+### [ ] T72b · Personaje animado por estados, parte 2: el golpe en el cuadro de impacto · M
+Origen: R3 (partida de T72, que era L)
 - Que la animación de ataque marque el momento del golpe (el daño sale en el cuadro de impacto, no al pulsar).
 
 ### [ ] T73 · Enemigos: anticipación, impacto y muertes · M
@@ -579,3 +583,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T69 · Balance de habilidades iniciales con tools/skill_balance.gd: nada por encima de ~2× la mediana a placa 1 y la mejor inicial de cada clase tumba al primer jefe en 43-92 s (antes 24-120 s); prueba que exige la banda.
 - 2026-10-25 · T70 · Tienda de Nacho con más surtido: placas de los tres atributos, RAM distintas, pociones, oferta del día y contrabando; renovar con precio creciente, filtros, venta por lote y recompra. De paso, las placas respetan ya el min_level de su habilidad.
 - 2026-10-25 · T71 · La gabardina de Nacho: tienda como escena (pixel art en tres cuadros, forro con ganchos, bolsillo de la oferta y bolsillo secreto del contrabando), frases sarcásticas con voz y sonido de tela; el puesto de Aida con su propio estilo. Parada para revisión.
+- 2026-10-25 · T72 · Partida en dos (T72b: daño en el cuadro de impacto). Parte 1: poses del jugador por estado (respira, camina, corre, golpe por arma, disparo, hechizo, canalizar, golpe recibido, esquiva y muerte) con el arma equipada en la mano.

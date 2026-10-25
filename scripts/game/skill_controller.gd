@@ -1016,6 +1016,7 @@ func try_use(index: int) -> bool:
 	player.action_lock = minf(MAX_MOVE_LOCK, p["use_time"] * MOVE_LOCK_FRACTION)
 	var target := _aim_target()
 	player.face(target - player.global_position)
+	player.play_action(Player.action_for(p), float(p["use_time"]), Player.DOT_COLORS.get(String(p["damage_type"]), Color("c8d8ff")))
 	Sfx.play(Sfx.skill_sound("trap" if p["deploy"] != "" else String(p["kind"]), String(p["damage_type"])))
 	if p["deploy"] != "":
 		_deploy(p, target)
@@ -1485,6 +1486,7 @@ func _update_channel(delta: float, held: bool, target: Vector2) -> void:
 	player.action_lock = maxf(player.action_lock, 0.05)
 	var origin := player.global_position
 	player.face(target - origin)
+	player.keep_channeling(Player.DOT_COLORS.get(String(p["damage_type"]), Color("c8d8ff")))
 	if p["kind"] == "channel_storm":
 		var want := origin + (target - origin).limit_length(p["range"])
 		_channel["center"] = (_channel["center"] as Vector2).move_toward(want, STORM_FOLLOW * delta)

@@ -41,6 +41,8 @@ Todas las teclas están en *Proyecto → Configuración del proyecto → Mapa de
 
 **Animación al caminar**: piernas alternas que se levantan, brazos en oposición y el cuerpo sube y baja con cada paso. El ciclo avanza con la distancia recorrida de verdad, así que los pies no "patinan" y, si choca contra algo, deja de andar en el sitio. De perfil, las piernas avanzan y retroceden y el cuerpo se inclina.
 
+**Poses por estado**: en reposo respira; con más velocidad de movimiento corre (zancada y balanceo mayores); el arma equipada (espada, hacha, maza o daga) se ve en la mano. Las habilidades cuerpo a cuerpo hacen el golpe según el arma (la espada, el hacha y la maza suben y bajan de golpe; la daga es una estocada), los ataques a distancia lanzan hacia delante, los hechizos suben las manos con el brillo de su elemento y al canalizar las mantiene delante. Al recibir un golpe retrocede, al esquivar se agacha y rueda, y al morir cae de lado. Hoja de poses: `capture_screens.tscn -- poses`.
+
 `scenes/ui/passive_tree_screen.tscn` funciona sola (F6) para probar builds, y `scenes/game/world.tscn` (F6) arranca con un personaje temporal que no se guarda.
 
 ## Progresión
