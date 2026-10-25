@@ -307,6 +307,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 	skills.on_zone_changed()
 
 	character.flags["zone"] = zone.id
+	_check_achievements()
 	ui.on_zone_changed(zone)
 	quests.notify_zone(zone.id)
 	_mark_dirty()
@@ -372,6 +373,13 @@ func _on_quest_item_picked(q: Dictionary) -> void:
 	_mark_dirty()
 	if q.has("cutscene"):
 		play_cutscene(q["cutscene"])
+
+
+## Logros (Achievements): al conseguir uno, aviso con su cosmético.
+func _check_achievements() -> void:
+	for def in Achievements.check(character):
+		ui.hud.flash("¡Logro: %s! Premio: %s (Pausa → Logros y cosméticos)." % [def["name"], Achievements.COSMETICS[def["reward"][0]][def["reward"][1]]], Color("ffd24a"))
+		Sfx.play("level_up", -6.0, 1.4)
 
 
 ## Incidente (Incidents): al azar, o el de un mapa (`map`: {zone, mods}). Usa el
@@ -953,6 +961,7 @@ func _on_enemy_killed(rarity: int, experience: int, pos: Vector2, type_id: Strin
 		MusicPlayer.set_intensity(0)
 	character.add_experience(experience)
 	character.flags["stat_kills"] = int(character.flags.get("stat_kills", 0)) + 1
+	_check_achievements()
 	var patch := Crafting.roll_drop(rarity, _rng)
 	if patch != "":
 		Crafting.add(character, patch)

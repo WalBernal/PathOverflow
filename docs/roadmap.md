@@ -262,7 +262,7 @@ Origen: R1 §4
 Origen: R1 §4, §8
 - Con efectos de estados, auras, espinas, autómatas, cargas y terrenos.
 
-### [ ] T45 · Desafíos y logros con cosméticos · M
+### [x] T45 · Desafíos y logros con cosméticos · M
 Origen: R2 §9 ★★
 - Sombreros, colores de aura, efectos de pasos.
 
@@ -431,3 +431,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T42 · Escalado opcional del nivel de zona: opción en Pausa (por personaje, `flags.zone_scaling`) para que las zonas de combate de los actos terminados suban a tu nivel; `Difficulty.zone_level` reúne escalado y dificultad.
 - 2026-10-25 · T43 · Recompensas propias en 12 misiones secundarias: placas de invocación y auras en los actos I y II, RAM de grado mayor y el Mainframe Titán en los III y IV; el aviso al aceptar una misión dice qué da (`QuestLog.reward_text`).
 - 2026-10-25 · T44 · Ocho únicos nuevos (estados, auras, espinas, autómatas, cargas y terrenos) y dos conjuntos (Kit del SRE de Guardia, Equipo de Redes); las pruebas validan bases y stats de todos los únicos y conjuntos.
+- 2026-10-25 · T45 · Diez logros (primer enemigo, jefes de cada acto, 1000 enemigos, némesis, lore, atlas y Pesadilla) que dan cosméticos sin stats: sombreros, auras y pisadas; se equipan en Pausa → Logros y cosméticos. Pruebas cubren defs, desbloqueo y equipar.

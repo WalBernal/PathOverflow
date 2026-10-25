@@ -94,6 +94,9 @@ var _since_damage := 99.0
 var _hurt_time := 0.0
 var _facing := Vector2.RIGHT
 var _walk_phase := -1.0
+## Pisadas del cosmético de pasos (Achievements): {pos (global), t}.
+var _step_marks: Array[Dictionary] = []
+const STEP_MARK_TIME := 0.8
 ## Recuperaciones activas de pociones: {resource, per_second, remaining}.
 var _recoveries: Array[Dictionary] = []
 ## Destino de un movimiento automático (por ejemplo, ir a recoger un objeto).
@@ -430,9 +433,15 @@ func _physics_process(delta: float) -> void:
 	# algo, deja de "caminar en el sitio").
 	var moved := get_real_velocity().length()
 	if moved > 10.0:
-		_walk_phase = fmod(maxf(_walk_phase, 0.0) + moved * delta / STRIDE * PI, TAU)
+		var before := maxf(_walk_phase, 0.0)
+		_walk_phase = fmod(before + moved * delta / STRIDE * PI, TAU)
+		if character and Achievements.equipped(character, "steps") != "" and int(before / PI) != int(_walk_phase / PI):
+			_step_marks.append({"pos": global_position + Vector2(randf_range(-5.0, 5.0), RADIUS * 0.6), "t": STEP_MARK_TIME})   # una pisada
 	else:
 		_walk_phase = -1.0
+	for m in _step_marks:
+		m["t"] = float(m["t"]) - delta
+	_step_marks = _step_marks.filter(func(m: Dictionary) -> bool: return float(m["t"]) > 0.0)
 
 
 func _process(delta: float) -> void:
@@ -594,9 +603,17 @@ func _draw() -> void:
 		tint = Color("444444")
 	elif _hurt_time > 0.0:
 		tint = Color.RED
-	CharacterAppearance.draw(self, Vector2(0.0, RADIUS * 0.6), PLAYER_SPRITE_SCALE, character.appearance, _facing, tint,
-		_walk_phase if is_alive() else -1.0)
 	var tt := Time.get_ticks_msec() / 1000.0
+	# Cosméticos de los logros: pisadas y aura debajo, sombrero encima.
+	for m in _step_marks:
+		Achievements.draw_step(self, to_local(m["pos"]), character, float(m["t"]) / STEP_MARK_TIME)
+	var feet := Vector2(0.0, RADIUS * 0.6)
+	Achievements.draw_aura(self, feet, character, tt)
+	CharacterAppearance.draw(self, feet, PLAYER_SPRITE_SCALE, character.appearance, _facing, tint,
+		_walk_phase if is_alive() else -1.0)
+	if Achievements.equipped(character, "hat") != "":
+		var hs := float(character.appearance.get("height", 1.0))
+		Achievements.draw_hat(self, feet + Vector2(0, -31.0 * hs) * PLAYER_SPRITE_SCALE, 7.0 * PLAYER_SPRITE_SCALE, character)
 	if statuses.has("freeze") or statuses.has("chill"):
 		var frozen := statuses.has("freeze")
 		# Escarcha sobre el cuerpo, cristales en los pies y copos que caen.

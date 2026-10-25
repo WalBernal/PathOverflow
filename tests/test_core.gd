@@ -120,6 +120,7 @@ func _initialize() -> void:
 	_test_zone_scaling()
 	_test_side_quest_rewards()
 	_test_more_uniques_and_sets()
+	_test_achievements()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -2849,6 +2850,34 @@ func _test_more_uniques_and_sets() -> void:
 	c.inventory.set_equipped("body", gen.make_unique(_db.get_unique("chaleco_cactus_ssl"), 20))
 	c.recalculate()
 	_check(c.stats.get_value(Stat.THORNS) >= thorns0 + 35.0, "el Chaleco Certificado SSL da espinas")
+
+
+## Logros con cosméticos (T45): se cumplen con banderas y contadores, y dan sombreros, auras y pisadas.
+func _test_achievements() -> void:
+	var slots_seen := {}
+	var ids := {}
+	for def in Achievements.DEFS:
+		_check(not ids.has(def["id"]), "logro repetido: %s" % def["id"])
+		ids[def["id"]] = true
+		_check(Achievements.COSMETICS.get(def["reward"][0], {}).has(def["reward"][1]), "%s: su premio existe" % def["id"])
+		slots_seen[def["reward"][0]] = true
+	_check(slots_seen.size() == 3 and Achievements.DEFS.size() >= 10, "logros con sombreros, auras y pisadas")
+	var c := CharacterData.new(_classes[0], _tree)
+	_check(Achievements.check(c).is_empty(), "un personaje nuevo no tiene logros")
+	c.flags["stat_kills"] = 1
+	c.flags["act1_complete"] = true
+	var fresh := Achievements.check(c)
+	_check(fresh.size() == 2 and Achievements.check(c).is_empty(), "se consiguen una sola vez (%d)" % fresh.size())
+	_check(Achievements.available(c, "hat").size() == 2 and Achievements.available(c, "aura").is_empty(), "dan sus cosméticos")
+	_check(not Achievements.equip(c, "aura", "dorada") and Achievements.equip(c, "hat", "casco_obra") and Achievements.equipped(c, "hat") == "casco_obra",
+		"solo te pones lo que tienes")
+	for k in 9:
+		LoreNotes.mark_found(c, LoreNotes.all()[k]["id"])
+	_check(Achievements.check(c).any(func(d: Dictionary) -> bool: return d["id"] == "archivista"), "el de lore se cumple con 9 archivos")
+	var saved := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())), _classes[0], _tree, _db)
+	_check(Achievements.equipped(saved, "hat") == "casco_obra" and Achievements.unlocked_ids(saved).size() == 3, "logros y cosméticos se guardan")
+	var panel := AchievementsPanel.new(c)
+	panel.free()
 
 
 func _db_enemies() -> Array:

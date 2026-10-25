@@ -416,6 +416,10 @@ En el puesto de Aida (campamento, tras el Acto I) se pide un **incidente**: una 
 
 Por las zonas de los cuatro actos hay **commits perdidos, logs y correos de la UAdeO** (`data/lore_notes.json`, 18 por ahora) que brillan en el suelo y se recogen al pasar cerca. Cuentan pedacitos de la historia: el `monolito.log` con la contraseña por defecto, el cron de las 3:33, el único commit sin descripción, el club de lectura de los jueves, el commit con hash de pez... Se leen en **Pausa → Archivos encontrados** (lista a la izquierda, texto a la derecha) y se guardan con el personaje (`flags.lore_found`). Su posición va como fracción del tamaño de la zona, así que no le afecta la escala.
 
+## Logros y cosméticos
+
+Hay **10 logros** (`scripts/game/achievements.gd`): tu primer enemigo, cada jefe de acto, 1000 enemigos, vengarte de tu némesis, 9 archivos de lore, el atlas a nivel 3 y terminar el Acto IV en Pesadilla. Cada uno regala un **cosmético** que no da stats: sombreros (gorra del hackatón, casco de obra, sombrero de pescador, corona de admin), auras (dorada, silicio, morada) y pisadas que se quedan un momento en el suelo (bits, llamas, glitch). Se revisan al eliminar enemigos y al cambiar de zona; se ven y se equipan en **Pausa → Logros y cosméticos** y se guardan con el personaje.
+
 ## Eventos de zona
 
 En cada visita a una zona de combate aparecen al azar algunos eventos (`scripts/game/zone_events.gd`): **Datos huérfanos** (dos oleadas y botín), **Santuarios** (bono temporal o cargas llenas), **Emboscadas** (invisibles) y **Deploy fallido** (dos raros con escolta). Nuevos:

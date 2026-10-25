@@ -510,6 +510,9 @@ func _build_pause_menu() -> Control:
 			c.flags[Difficulty.SCALING_FLAG] = not Difficulty.scaling_enabled(c)
 		scaling.text = scaling_text.call())
 	right.add_child(scaling)
+	var achievements := UiStyle.button("Logros y cosméticos...", open_achievements, 300)
+	achievements.tooltip_text = "Tus logros y los sombreros, auras y pisadas que te dan."
+	right.add_child(achievements)
 	var lore := UiStyle.button("Archivos encontrados...", open_lore_log, 300)
 	lore.tooltip_text = "Commits perdidos, logs y correos de la UAdeO que has encontrado por las zonas."
 	right.add_child(lore)
@@ -739,6 +742,13 @@ func _on_menu_requested(menu: String) -> void:
 
 
 ## Catálogo de hardware (B): pausa el juego mientras está abierto, como el árbol.
+## Logros y cosméticos (desde la pausa).
+func open_achievements() -> void:
+	var panel := AchievementsPanel.new(GameData.current_character)
+	_root.add_child(panel)
+	panel.popup_centered()
+
+
 ## Registro del lore coleccionable (desde la pausa).
 func open_lore_log() -> void:
 	var lore_log := LoreLog.new(GameData.current_character)
