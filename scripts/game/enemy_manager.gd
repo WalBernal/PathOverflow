@@ -212,6 +212,19 @@ var interaction_power := 1.0
 var aura_fields: Array[Dictionary] = []
 ## Embestidas de ataque en curso: id -> {t, dir}.
 var _lunges := {}
+## Sacudida al recibir un crítico (T73): id -> {t, dir}; se echa hacia atrás y se aplasta.
+var _recoils := {}
+const RECOIL_TIME := 0.22
+## Anticipación (T73): al cargar el golpe se echa hacia atrás; justo antes, un destello blanco.
+const WINDUP_LEAN := 0.07
+const WINDUP_TELL := 0.12
+## Cadáveres (T73): se quedan tumbados y se desvanecen. {pos, row, left, size, t}.
+## Los quemados (ceniza) y los congelados (se rompen) no dejan cuerpo.
+const CORPSE_TIME := 4.0
+const CORPSE_FADE := 1.5
+const MAX_CORPSES := 60
+var corpses: Array[Dictionary] = []
+var _corpse_mm: MultiMesh
 
 
 ## Efecto ("slow" o "damage_taken") de las auras que alcanzan al enemigo i.
@@ -273,13 +286,26 @@ func _ready() -> void:
 	var quad := QuadMesh.new()
 	quad.size = Vector2.ONE
 	_multimesh.mesh = quad
+	var sprite_material := ShaderMaterial.new()
+	sprite_material.shader = SPRITE_SHADER
+	sprite_material.set_shader_parameter("grid", Vector2(ATLAS_FRAMES, enemy_types().size()))
+	# Los cadáveres, en su propia MultiMesh por debajo de los vivos (mismo atlas y shader).
+	_corpse_mm = MultiMesh.new()
+	_corpse_mm.transform_format = MultiMesh.TRANSFORM_2D
+	_corpse_mm.use_colors = true
+	_corpse_mm.use_custom_data = true
+	_corpse_mm.mesh = quad
+	var corpse_instance := MultiMeshInstance2D.new()
+	corpse_instance.multimesh = _corpse_mm
+	corpse_instance.texture = ATLAS
+	corpse_instance.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	corpse_instance.material = sprite_material
+	corpse_instance.show_behind_parent = true
+	add_child(corpse_instance)
 	var mm_instance := MultiMeshInstance2D.new()
 	mm_instance.multimesh = _multimesh
 	mm_instance.texture = ATLAS
 	mm_instance.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	var sprite_material := ShaderMaterial.new()
-	sprite_material.shader = SPRITE_SHADER
-	sprite_material.set_shader_parameter("grid", Vector2(ATLAS_FRAMES, enemy_types().size()))
 	mm_instance.material = sprite_material
 	mm_instance.show_behind_parent = true  # barras de vida y nombres encima
 	add_child(mm_instance)
@@ -925,6 +951,8 @@ func clear_all() -> void:
 	_channels.clear()
 	_affix_timers.clear()
 	_booms.clear()
+	corpses.clear()
+	_recoils.clear()
 	if impact:
 		impact.clear()
 
@@ -1218,20 +1246,26 @@ func _damage(i: int, min_damage: float, max_damage: float, crit_chance: float, c
 		_kill(i)
 		return
 	_hit_feedback(i, damage, crit)
-	_knock(i, damage)
+	_knock(i, damage, crit)
 	if not hit_ailments.is_empty() and damage > 0.0:
 		_roll_ailments(i, damage)
 
 
 ## Retroceso: el golpe empuja al enemigo lejos del jugador, más cuanto más vida
 ## le quita. Las élites lo notan un tercio; los únicos y los estáticos, nada.
-func _knock(i: int, damage: float) -> void:
-	if speeds[i] <= 0.0 or rarities[i] == Rarity.Enemy.UNIQUE or player == null:
+func _knock(i: int, damage: float, crit := false) -> void:
+	if player == null:
 		return
 	var away := positions[i] - player.global_position
 	if away == Vector2.ZERO:
 		return
+	if crit:
+		_recoils[ids[i]] = {"t": RECOIL_TIME, "dir": away.normalized()}   # el respingo se ve hasta en los jefes
+	if speeds[i] <= 0.0 or rarities[i] == Rarity.Enemy.UNIQUE:
+		return
 	var push := clampf(damage / maxf(1.0, max_lives[i]) * 3.0, 0.15, 1.0) * KNOCK_SPEED
+	if crit:
+		push = maxf(push * 1.6, KNOCK_SPEED * 0.6)   # un crítico empuja más
 	if rarities[i] == Rarity.Enemy.ELITE:
 		push *= 0.35
 	knocks[i] = (knocks[i] + away.normalized() * push).limit_length(KNOCK_SPEED)
@@ -2147,19 +2181,65 @@ func _process(delta: float) -> void:
 			# Embistiendo: se estira en la dirección de la carga.
 			sprite_scale *= Vector2(1.0 + 0.18 * absf(attack_dirs[i].x), 1.0 - 0.1 * absf(attack_dirs[i].x) + 0.12 * absf(attack_dirs[i].y))
 		elif windups[i] > 0.0:
-			# Cargando el golpe: se encoge y se ensancha, temblando un poco.
+			# Cargando el golpe: se encoge y se ensancha, temblando un poco, y se echa hacia atrás.
 			var squash := 0.08 + 0.03 * sin(Time.get_ticks_msec() / 40.0 + ids[i])
 			sprite_scale *= Vector2(1.0 + squash, 1.0 - squash)
+			offset = -attack_dirs[i] * size * WINDUP_LEAN
 		if not _lunges.is_empty() and _lunges.has(ids[i]):
 			var l: Dictionary = _lunges[ids[i]]
 			offset = l["dir"] * sin(PI * (1.0 - float(l["t"]) / LUNGE_TIME)) * LUNGE_DISTANCE * (size / 40.0)
+		var rotation := 0.0
+		if not _recoils.is_empty() and _recoils.has(ids[i]):
+			# Crítico: da un respingo hacia atrás, se aplasta y se ladea.
+			var r: Dictionary = _recoils[ids[i]]
+			var k := sin(PI * float(r["t"]) / RECOIL_TIME)
+			offset += r["dir"] * k * size * 0.12
+			sprite_scale *= Vector2(1.0 - 0.12 * k, 1.0 + 0.1 * k)
+			rotation = (r["dir"] as Vector2).x * 0.22 * k
 		_multimesh.set_instance_transform_2d(i,
-			Transform2D(0.0, sprite_scale, 0.0, positions[i] + offset - Vector2(0.0, size * 0.22)))
+			Transform2D(rotation, sprite_scale, 0.0, positions[i] + offset - Vector2(0.0, size * 0.22)))
 		var outline := Rarity.enemy_color(rarities[i])
 		outline.a = 0.0 if rarities[i] == Rarity.Enemy.NORMAL else 1.0
 		_multimesh.set_instance_color(i, outline)
-		_multimesh.set_instance_custom_data(i, Color(t.get("sprite_row", 0), phases[i], facings[i], Accessibility.flash(flashes[i] / FLASH_TIME)))
+		var flash := flashes[i] / FLASH_TIME
+		if windups[i] > 0.0 and windups[i] < WINDUP_TELL:
+			flash = maxf(flash, 0.55)   # el aviso: ¡ahora viene!
+		_multimesh.set_instance_custom_data(i, Color(t.get("sprite_row", 0), phases[i], facings[i], Accessibility.flash(flash)))
+	for id in _recoils.keys():
+		_recoils[id]["t"] -= delta
+		if _recoils[id]["t"] <= 0.0:
+			_recoils.erase(id)
+	_update_corpses(delta)
 	queue_redraw()
+
+
+## Envejece los cadáveres y los pasa a su MultiMesh (tumbados, oscuros, desvaneciéndose).
+func _update_corpses(delta: float) -> void:
+	for c in corpses:
+		c["t"] = float(c["t"]) - delta
+	corpses = corpses.filter(func(c: Dictionary) -> bool: return float(c["t"]) > 0.0)
+	if _corpse_mm == null:
+		return
+	if corpses.size() > _corpse_mm.instance_count:
+		_corpse_mm.instance_count = maxi(corpses.size(), maxi(8, _corpse_mm.instance_count * 2))
+	_corpse_mm.visible_instance_count = corpses.size()
+	for k in corpses.size():
+		var c: Dictionary = corpses[k]
+		var size: float = c["size"]
+		var side := -1.0 if bool(c["left"]) else 1.0
+		_corpse_mm.set_instance_transform_2d(k, Transform2D(side * PI * 0.5, Vector2(size, size * 0.9), 0.0, c["pos"] - Vector2(0.0, size * 0.12)))
+		_corpse_mm.set_instance_color(k, Color(0, 0, 0, 0))
+		_corpse_mm.set_instance_custom_data(k, Color(c["row"], 0.0, 1.0 if bool(c["left"]) else 0.0, -corpse_alpha(float(c["t"]))))
+
+
+## Opacidad de un cadáver al que le quedan `t` segundos: entero y, al final, se desvanece.
+static func corpse_alpha(t: float) -> float:
+	return clampf(t / CORPSE_FADE, 0.0, 1.0) * 0.9 + 0.001
+
+
+## ¿Deja cuerpo? No si se quemó (ceniza) o se congeló y rompió, ni los de cristal (se hacen añicos).
+static func leaves_corpse(kill_type: String, material: String) -> bool:
+	return not (kill_type in ["fire", "cold"]) and material != "crystal"
 
 
 ## Telegrafiados, proyectiles enemigos, barras de vida (solo heridos o no
@@ -2985,9 +3065,17 @@ func _kill(i: int) -> void:
 func _death_feedback(i: int) -> void:
 	var kind := _kill_type if _kill_type != "" else "physical"
 	_kill_type = ""
+	var material := material_of(i)
 	if impact:
 		var tint := Rarity.enemy_color(rarities[i]) if rarities[i] != Rarity.Enemy.NORMAL else Color("c8b8a0")
-		impact.death(positions[i] - Vector2(0.0, radii[i] * 0.6), kind, radii[i] * SPRITE_SCALE * 0.5, tint)
+		impact.death(positions[i] - Vector2(0.0, radii[i] * 0.6), kind, radii[i] * SPRITE_SCALE * 0.5, tint, material)
+	if leaves_corpse(kind, material):
+		var all_types := enemy_types()
+		var t: Dictionary = all_types[types[i]] if types[i] < all_types.size() else {}
+		corpses.append({"pos": positions[i], "row": float(t.get("sprite_row", 0)), "left": facings[i] > 0.5,
+			"size": radii[i] * 2.0 * SPRITE_SCALE * float(t.get("scale", 1.0)), "t": CORPSE_TIME})
+		if corpses.size() > MAX_CORPSES:
+			corpses.pop_front()
 	match kind:
 		"fire":
 			Sfx.play("death_ash", -10.0)
@@ -2998,7 +3086,16 @@ func _death_feedback(i: int) -> void:
 		"chaos":
 			Sfx.play("poison", -14.0)
 		_:
-			Sfx.play("death_decompile", -14.0)
+			# Físico: según de qué está hecho (chatarra, añicos, carne o bits).
+			match material:
+				"metal":
+					Sfx.play("hit_metal", -10.0, 0.8)
+				"crystal":
+					Sfx.play("shatter", -12.0, 1.2)
+				"flesh":
+					Sfx.play("hit_flesh", -10.0, 0.85)
+				_:
+					Sfx.play("death_decompile", -14.0)
 
 
 ## Borrado O(1): el último enemigo ocupa el hueco.

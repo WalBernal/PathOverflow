@@ -827,6 +827,22 @@ func _capture_feel() -> void:
 	em.hit_ailments = {}
 	await _wait(0.15)
 	_save("92_muertes_con_estilo")
+	# T73: muertes físicas por material (chatarra, añicos, carne, bits) y los cuerpos que quedan.
+	var by_material := {}
+	for k in EnemyManager.enemy_types().size():
+		by_material[String(EnemyManager.enemy_types()[k].get("material", "digital"))] = k
+	var mats: Array = by_material.keys()
+	for k in mats.size():
+		em.spawn(p + Vector2(160 + k * 70, 160), Rarity.Enemy.NORMAL, int(by_material[mats[k]]))
+	em.hit_ailments = {"type": "physical"}
+	for k in range(em.count() - 1, -1, -1):
+		em.hit_index(k, 1e9, 1e9, 0.0, 150.0)
+	em.hit_ailments = {}
+	await _wait(0.12)
+	_save("93_muertes_por_material")
+	await _wait(1.2)
+	print("cadáveres: %d" % em.corpses.size())
+	_save("94_cadaveres")
 	world.set("_since_save", -9999.0)
 
 

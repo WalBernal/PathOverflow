@@ -493,6 +493,8 @@ Nueve tipos con sprites animados (`data/enemies.json`, `assets/sprites/enemies/e
 | Troll de foro | Teclado en llamas | Cono delante |
 | Daemon | Solo jefes | — |
 
+**Peso de los golpes**: antes de atacar, el enemigo se encoge, se echa hacia atrás y destella en blanco justo antes del golpe; con un crítico da un respingo y sale despedido más lejos. Al morir, según el daño: se rompe en hielo, se quema a ceniza, salta en chispas, se disuelve o, si es físico, según de qué está hecho (chatarra con chispas, añicos de cristal, gotas o bits). Los que no se quemaron, congelaron ni hicieron añicos dejan el **cuerpo** tumbado unos segundos antes de desvanecerse.
+
 **Jefe del acto (El Arquitecto del Monolito)**: menos vida que antes (×2,6 en vez de ×4) y dos habilidades, con el nombre en grande y una barra de lanzamiento:
 - *git push --force*: onda de 14 proyectiles en todas direcciones (hay huecos entre ellos).
 - *Merge Conflict*: cinco círculos en el suelo, uno donde estás, que explotan al segundo.

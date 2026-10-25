@@ -144,6 +144,7 @@ func _initialize() -> void:
 	_test_shop_coat()
 	_test_player_poses()
 	_test_impact_frame()
+	_test_enemy_weight()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3583,6 +3584,40 @@ func _test_player_poses() -> void:
 	p._tick_anim(1.0)
 	_check(p.anim_state() == "dead" and float(p.anim_pose()["t"]) == 1.0, "muerto: la caída termina")
 	p.free()
+
+
+## Enemigos (T73): respingo al recibir un crítico, muertes por material y cadáveres.
+func _test_enemy_weight() -> void:
+	_check(EnemyManager.leaves_corpse("physical", "flesh") and EnemyManager.leaves_corpse("chaos", "metal"), "los muertos a golpes o disueltos dejan cuerpo")
+	_check(not EnemyManager.leaves_corpse("fire", "flesh") and not EnemyManager.leaves_corpse("cold", "metal") and not EnemyManager.leaves_corpse("physical", "crystal"),
+		"ni la ceniza, ni el hielo roto, ni los añicos de cristal")
+	_check(EnemyManager.corpse_alpha(EnemyManager.CORPSE_TIME) > 0.85 and EnemyManager.corpse_alpha(0.1) < 0.1, "el cuerpo se ve entero y al final se desvanece")
+	var em := EnemyManager.new()
+	var by_material := {}
+	for k in EnemyManager.enemy_types().size():
+		by_material[String(EnemyManager.enemy_types()[k].get("material", "digital"))] = k
+	em.spawn(Vector2(0, 0), Rarity.Enemy.NORMAL, int(by_material.get("flesh", 0)))
+	em.hit_ailments = {"type": "physical"}
+	em.hit_index(0, 1e9, 1e9, 0.0, 150.0)
+	_check(em.count() == 0 and em.corpses.size() == 1, "muerto a golpes: queda su cuerpo")
+	em.spawn(Vector2(50, 0), Rarity.Enemy.NORMAL, int(by_material.get("flesh", 0)))
+	em.hit_ailments = {"type": "fire"}
+	em.hit_index(0, 1e9, 1e9, 0.0, 150.0)
+	_check(em.corpses.size() == 1, "quemado: no deja cuerpo, solo ceniza")
+	em._update_corpses(EnemyManager.CORPSE_TIME + 0.1)
+	_check(em.corpses.is_empty(), "a los pocos segundos el cuerpo desaparece")
+	# Un crítico da un respingo y empuja más que un golpe normal.
+	var pl := Player.new()
+	em.player = pl
+	em.spawn(Vector2(80, 0), Rarity.Enemy.NORMAL, int(by_material.get("flesh", 0)))
+	em.spawn(Vector2(80, 40), Rarity.Enemy.NORMAL, int(by_material.get("flesh", 0)))
+	em.hit_ailments = {"type": "physical"}
+	em.hit_index(0, 0.01, 0.01, 100.0, 150.0)
+	em.hit_index(1, 0.01, 0.01, 0.0, 150.0)
+	_check(em._recoils.has(em.ids[0]) and not em._recoils.has(em.ids[1]), "solo el crítico da un respingo")
+	_check(em.knocks[0].length() > em.knocks[1].length(), "y empuja más")
+	em.free()
+	pl.free()
 
 
 ## Parte 2 (T72b): el ataque golpea en el cuadro de impacto de la animación.

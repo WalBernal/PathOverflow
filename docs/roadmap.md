@@ -422,10 +422,11 @@ Origen: R3 (partida de T72, que era L)
 - Que la animación de ataque marque el momento del golpe (el daño sale en el cuadro de impacto, no al pulsar).
 - Hecho: `SkillController.impact_delay`: los ataques cuerpo a cuerpo golpean cuando el arma pasa por delante (47 % de la acción con espada, hacha o maza; 30 % con daga o puño, al final de la estocada) y los de distancia al soltar (38 %), con un tope de 0,3 s; las repeticiones cuentan desde el golpe. Siguen saliendo al instante los hechizos, las habilidades de movimiento, las invocaciones, las trampas y las RAM de activación. Una prueba comprueba que el cuadro de impacto coincide con la pose (el brazo por delante).
 
-### [ ] T73 · Enemigos: anticipación, impacto y muertes · M
+### [x] T73 · Enemigos: anticipación, impacto y muertes · M
 Origen: R3 (Grim Dawn: peso de los golpes)
 - Pose de anticipación antes de cada ataque (además del aviso rojo), retroceso al recibir un crítico y muertes por material y por tipo de daño (se congela y estalla, se desintegra en bits, se quema).
 - Cadáveres que se quedan unos segundos y se desvanecen.
+- Hecho: al cargar el golpe se echa hacia atrás (además de aplastarse y temblar) y en los últimos 0,12 s destella en blanco; un crítico da un respingo (atrás, aplastado y ladeado, también los jefes) y empuja más. Las muertes por tipo de daño ya existían (hielo, ceniza, chispas, disolverse, descompilarse); ahora las físicas dependen del material: chatarra con chispas (metal), añicos (cristal), gotas (carne) o bits (digital), con su sonido. Cadáveres: tumbados, oscuros y quietos 4 s, desvaneciéndose en el último segundo y medio (máx. 60), en una MultiMesh aparte por debajo de los vivos; los quemados, los congelados y los de cristal no dejan cuerpo.
 
 ### [ ] T74 · Efectos de habilidades con más cuerpo · M
 Origen: R3 (PoE: cada habilidad se reconoce de lejos)
@@ -586,3 +587,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T71 · La gabardina de Nacho: tienda como escena (pixel art en tres cuadros, forro con ganchos, bolsillo de la oferta y bolsillo secreto del contrabando), frases sarcásticas con voz y sonido de tela; el puesto de Aida con su propio estilo. Parada para revisión.
 - 2026-10-25 · T72 · Partida en dos (T72b: daño en el cuadro de impacto). Parte 1: poses del jugador por estado (respira, camina, corre, golpe por arma, disparo, hechizo, canalizar, golpe recibido, esquiva y muerte) con el arma equipada en la mano.
 - 2026-10-25 · T72b · Los ataques golpean en el cuadro de impacto de la animación (cuando el arma pasa por delante o al soltar lo lanzado), con tope de 0,3 s.
+- 2026-10-25 · T73 · Enemigos con más peso: se echan atrás y destellan antes de golpear, respingo con los críticos, muertes físicas por material y cadáveres que se desvanecen.

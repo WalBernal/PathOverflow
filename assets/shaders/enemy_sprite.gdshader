@@ -1,7 +1,8 @@
 // Enemigos dibujados con MultiMesh: un único atlas (columnas = fotogramas,
 // filas = tipos). Datos por instancia:
 //   INSTANCE_CUSTOM.x = fila del tipo, .y = desfase de animación,
-//   .z = 1 si mira a la izquierda, .w = destello al recibir daño (0..1)
+//   .z = 1 si mira a la izquierda, .w = destello al recibir daño (0..1);
+//   .w < 0 = cadáver (T73): quieto en el primer fotograma, oscuro, con alfa = -w.
 //   COLOR (color de instancia) = color de la rareza; alfa 0 = sin contorno.
 shader_type canvas_item;
 
@@ -21,7 +22,8 @@ void fragment() {
 	if (v_custom.z > 0.5) {
 		uv.x = 1.0 - uv.x;
 	}
-	float frame = mod(floor(TIME * fps + v_custom.y), grid.x);
+	bool corpse = v_custom.w < 0.0;
+	float frame = corpse ? 0.0 : mod(floor(TIME * fps + v_custom.y), grid.x);
 	vec2 cell_uv = (vec2(frame, v_custom.x) + uv) / grid;
 	vec4 c = texture(TEXTURE, cell_uv);
 
@@ -36,6 +38,11 @@ void fragment() {
 			c = vec4(v_rarity.rgb, v_rarity.a);
 		}
 	}
-	c.rgb = mix(c.rgb, vec3(1.0), v_custom.w * step(0.5, c.a));
+	if (corpse) {
+		c.rgb *= vec3(0.42, 0.38, 0.40);
+		c.a *= -v_custom.w;
+	} else {
+		c.rgb = mix(c.rgb, vec3(1.0), v_custom.w * step(0.5, c.a));
+	}
 	COLOR = c;
 }

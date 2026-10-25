@@ -71,9 +71,19 @@ func hit(pos: Vector2, damage_type: String, crit := false, strength := 0.1) -> v
 		_flash(pos, LIGHT_COLORS[t], 90.0 + (60.0 if crit else 0.0), 0.15)
 
 
+## Restos de las muertes físicas según el material (T73): chatarra con chispas,
+## añicos de cristal, gotas que caen o (digital) píxeles y bits.
+const MATERIAL_DEBRIS := {
+	"metal": [Color("8d9099"), Color("5e6068"), Color("ffd060")],
+	"crystal": [Color("d8c8ff"), Color("9a7ae0"), Color("8af0ff")],
+	"flesh": [Color("8a2a2a"), Color("5a1a1a"), Color("c8b8a0")],
+}
+
+
 ## Muerte con estilo según el daño que lo mató. `radius`: tamaño del enemigo;
-## `tint`: color del enemigo (los píxeles en que se descompila).
-func death(pos: Vector2, damage_type: String, radius: float, tint: Color) -> void:
+## `tint`: color del enemigo (los píxeles en que se descompila); `material`:
+## de qué está hecho, para las muertes físicas.
+func death(pos: Vector2, damage_type: String, radius: float, tint: Color, material := "digital") -> void:
 	var t := damage_type if COLORS.has(damage_type) else "physical"
 	var n := clampi(int(radius * 1.4), 14, 40)
 	if _parts.size() + n > MAX_PARTICLES:
@@ -105,6 +115,30 @@ func death(pos: Vector2, damage_type: String, radius: float, tint: Color) -> voi
 				# Se disuelve: gotas que escurren hacia abajo.
 				p["vel"] = Vector2(randf_range(-15.0, 15.0), randf_range(10.0, 50.0))
 				p["grav"] = 160.0
+			_ when MATERIAL_DEBRIS.has(material):
+				var debris: Array = MATERIAL_DEBRIS[material]
+				p["color"] = debris[k % 2]
+				match material:
+					"metal":
+						# Chatarra que salta y cae pesada; alguna chispa.
+						p["vel"] = dir * randf_range(80.0, 200.0) + Vector2(0, -80.0)
+						p["grav"] = 520.0
+						p["kind"] = "shard" if k % 2 == 0 else "sq"
+						if k % 6 == 0:
+							p["kind"] = "spark"
+							p["color"] = debris[2]
+							p["life"] = randf_range(0.15, 0.3)
+					"crystal":
+						p["vel"] = dir * randf_range(120.0, 260.0)
+						p["kind"] = "shard"
+						p["grav"] = 300.0
+						p["size"] = randf_range(2.0, 5.0)
+						if k % 4 == 0:
+							p["color"] = debris[2]
+					_:
+						# Carne: gotas que salpican y caen al suelo.
+						p["vel"] = Vector2(dir.x * randf_range(40.0, 120.0), -randf_range(30.0, 110.0))
+						p["grav"] = 380.0
 			_:
 				# Se "descompila": píxeles de su color y bits que se dispersan.
 				p["color"] = tint.lerp(Color.WHITE, randf() * 0.3) if k % 4 != 0 else palette[2]
