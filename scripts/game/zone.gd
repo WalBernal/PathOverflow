@@ -152,6 +152,12 @@ static func scale_def(z: Dictionary) -> void:
 				e["pos"] = mul.call(e["pos"])
 	if z.has("boss") and z["boss"].has("pos"):
 		z["boss"]["pos"] = mul.call(z["boss"]["pos"])
+	# Puntos fijos de las habilidades del jefe (centro de las zonas seguras, núcleos del OOM Killer).
+	for a in z.get("boss", {}).get("abilities", []):
+		if a.has("center"):
+			a["center"] = mul.call(a["center"])
+		if a.has("cores"):
+			a["cores"] = a["cores"].map(mul)
 	if z.has("extra_points"):
 		z["extra_points"] = z["extra_points"].map(mul)
 	if z.get("mutex") is Dictionary and z["mutex"].has("positions"):

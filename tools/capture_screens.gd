@@ -576,6 +576,26 @@ func _capture_arena() -> void:
 	await _wait(0.2)
 	_save("128_mecanicas_arena_daltonico")
 	Ailments.colorblind = was_cb
+	# En la arena de verdad: el Arquitecto, con poca vida, lanza su Hotfix en Producción.
+	world.call("travel_to", "jefe", "")
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var cut: Node = ui.get("cutscene")
+	if cut.visible:
+		cut.call("_finish")
+	await _wait(2.5)
+	var zone: Zone = world.get("zone")
+	var boss_i := -1
+	for k in em.count():
+		if em.rarities[k] == Rarity.Enemy.UNIQUE:
+			boss_i = k
+	if boss_i != -1:
+		em.lives[boss_i] = em.max_lives[boss_i] * 0.2
+		for a in zone.def["boss"]["abilities"]:
+			if a["kind"] == "safe_zones":
+				em._resolve_ability(boss_i, a, player.global_position)
+	await _wait(1.2)
+	_save("129_jefe_hotfix_en_produccion")
 	world.set("_since_save", -9999.0)
 
 

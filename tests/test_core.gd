@@ -86,6 +86,7 @@ func _initialize() -> void:
 	_test_dodge_upgrades()
 	_test_terrains()
 	_test_arena_mechanics()
+	_test_boss_arena_phases()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -955,7 +956,8 @@ func _test_enemy_attacks() -> void:
 			_check(float(z["boss"]["life_mult"]) < 4.0, "el jefe tiene menos vida")
 			_check(z["boss"].get("abilities", []).size() >= 2, "el jefe tiene habilidades especiales")
 			for a in z["boss"]["abilities"]:
-				_check(a["kind"] in ["projectile_nova", "ground_marks", "summon", "oom_beam"], "habilidad de jefe desconocida")
+				_check(a["kind"] in ["projectile_nova", "ground_marks", "summon", "oom_beam", "floor_break", "safe_zones", "channel_adds"],
+					"habilidad de jefe desconocida: %s" % a["kind"])
 
 
 func _test_skill_tags() -> void:
@@ -1888,6 +1890,54 @@ func _test_board_milestones() -> void:
 	_check(d20["radius"] > d1["radius"] and d20["cooldown"] < d1["cooldown"] and d20["stun"] > d1["stun"], "cada nivel mejora área, enfriamiento y duración")
 	_check(SkillCalc.milestone_text(_db.skills.skills["proceso_hijo"]) == "+1 esbirro", "hito de esbirros")
 	_check(SkillCalc.compute(Motherboard.new(_db.skills.skills["proceso_hijo"], 20, ["DDR5"]), c)["count"] == 4, "esbirros extra por nivel")
+
+
+## Los jefes de los actos I, II y III usan una mecánica de arena distinta en cada
+## fase (por encima del 66 %, entre 33 y 66 % y por debajo del 33 % de vida).
+func _test_boss_arena_phases() -> void:
+	const ARENA := ["floor_break", "safe_zones", "channel_adds"]
+	var bosses := 0
+	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json"]:
+		for z in DataLoader.load_json(path).get("zones", []):
+			var boss: Dictionary = z.get("boss", {})
+			if boss.is_empty() or not boss.has("phases"):
+				continue
+			bosses += 1
+			var kinds_used := {}
+			for life in [0.9, 0.5, 0.2]:
+				var found := ""
+				for a in boss.get("abilities", []):
+					var usable: bool = life <= float(a.get("max_life", 1.01)) and life > float(a.get("min_life", -1.0))
+					if usable and ARENA.has(String(a.get("kind", ""))):
+						found = String(a["kind"])
+				_check(found != "", "%s: mecánica de arena con el %d %% de vida" % [boss.get("name", z["id"]), int(life * 100)])
+				kinds_used[found] = true
+			_check(kinds_used.size() == 3, "%s: una mecánica distinta en cada fase" % boss.get("name", z["id"]))
+			# Las zonas seguras cubren toda la arena: pegarse a una esquina no las esquiva.
+			Zone.scale_def(z)
+			var half := Vector2(z["size"][0], z["size"][1]) / 2.0
+			for a in boss.get("abilities", []):
+				if a.get("kind", "") == "safe_zones":
+					var c := Vector2(a["center"][0], a["center"][1])
+					var far := 0.0
+					for corner in [Vector2.ZERO, Vector2(half.x * 2.0, 0), Vector2(0, half.y * 2.0), half * 2.0]:
+						far = maxf(far, c.distance_to(corner))
+					_check(float(a["radius"]) >= far, "%s: %s cubre la arena entera (%.0f < %.0f)" % [boss.get("name", ""), a.get("name", ""), float(a["radius"]), far])
+			# Y funcionan: cada una crea su aviso (o sus adds) sin errores.
+			var em := EnemyManager.new()
+			em.roll_affixes = false
+			var bi := em.index_of(em.spawn(Vector2.ZERO, Rarity.Enemy.UNIQUE, em.type_index_of(String(boss["type"]))))
+			for a in boss.get("abilities", []):
+				if ARENA.has(String(a.get("kind", ""))):
+					var before: int = em.hazards.size() + em._channels.size()
+					em._resolve_ability(bi, a, Vector2(100, 0))
+					_check(em.hazards.size() + em._channels.size() > before, "%s: %s se activa" % [boss.get("name", ""), a.get("name", "")])
+			em.free()
+	_check(bosses == 3, "los tres jefes con fases (%d)" % bosses)
+	# En zonas agrandadas, el centro de las zonas seguras se escala con la zona (como el jefe).
+	var scaled := {"scale": 1.25, "size": [2200, 1500], "boss": {"pos": [1650, 750], "abilities": [{"kind": "safe_zones", "center": [1100, 750]}]}}
+	Zone.scale_def(scaled)
+	_check(is_equal_approx(float(scaled["boss"]["abilities"][0]["center"][0]), 1375.0), "el centro de las zonas seguras se escala con la zona")
 
 
 ## Mecánicas de arena de los jefes: suelo que se rompe, zonas seguras que rotan
