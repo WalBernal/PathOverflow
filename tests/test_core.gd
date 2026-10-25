@@ -106,6 +106,7 @@ func _initialize() -> void:
 	_test_act4_world()
 	_test_act4_story()
 	_test_act4_boss()
+	_test_new_zone_events()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -2373,6 +2374,59 @@ func _test_act4_boss() -> void:
 	_check(c.flags.get("admin_password", "") == CutscenePlayer.DEFAULT_PASSWORD and c.flags.has("admin_password_saltada"), "si se salta la escena, queda la contraseña por defecto")
 	cp.free()
 	pl.free()
+
+
+## Eventos de zona nuevos (T31): bombas lógicas, escolta y comerciante ambulante.
+func _test_new_zone_events() -> void:
+	_check(ZoneEvents.KINDS.size() == ZoneEvents.WEIGHTS.size() and ZoneEvents.KINDS.has("bombs") and ZoneEvents.KINDS.has("escort") and ZoneEvents.KINDS.has("merchant"),
+		"tres eventos de zona nuevos, cada uno con su peso")
+	var ev := ZoneEvents.new()
+	var results: Array = []
+	var booms: Array = []
+	var waves := [0]
+	ev.resolved.connect(func(_e: Dictionary, ok: bool) -> void: results.append(ok))
+	ev.exploded.connect(func(pos: Vector2) -> void: booms.append(pos))
+	ev.escort_wave.connect(func(_e: Dictionary) -> void: waves[0] += 1)
+	# Bombas: junto a una se desactiva; las que queden estallan al acabar el tiempo.
+	var e := {"kind": "bombs", "pos": Vector2.ZERO, "state": "active", "time_left": 3.0,
+		"bombs": [{"pos": Vector2.ZERO, "progress": 0.0, "done": false}, {"pos": Vector2(600, 0), "progress": 0.0, "done": false}]}
+	for k in 16:
+		ev._update_bombs(e, Vector2(10, 0), 0.1)
+	_check(e["bombs"][0]["done"] and not e["bombs"][1]["done"] and results.is_empty(), "una bomba se desactiva quedándose a su lado")
+	for k in 20:
+		if e["state"] == "active":
+			ev._update_bombs(e, Vector2(10, 0), 0.1)
+	_check(booms == [Vector2(600, 0)] and results == [false], "la que no se desactivó estalla y el evento sale mal")
+	results.clear()
+	var e2 := {"kind": "bombs", "pos": Vector2.ZERO, "state": "active", "time_left": 10.0, "bombs": [{"pos": Vector2.ZERO, "progress": 0.0, "done": false}]}
+	for k in 20:
+		if e2["state"] == "active":
+			ev._update_bombs(e2, Vector2.ZERO, 0.1)
+	_check(results == [true], "desactivarlas todas a tiempo es un éxito")
+	# Escolta: avanza solo contigo cerca y sin enemigos a su lado; dos emboscadas por el camino.
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	ev.enemies = em
+	results.clear()
+	var es := {"kind": "escort", "pos": Vector2.ZERO, "state": "active", "start": Vector2.ZERO, "walker": Vector2.ZERO, "goal": Vector2(1000, 0), "waves_done": 0}
+	ev._update_escort(es, Vector2(2000, 0), 1.0)
+	_check(es["walker"] == Vector2.ZERO, "lejos de ti, el proceso no avanza")
+	em.spawn(Vector2(50, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+	ev._update_escort(es, Vector2.ZERO, 1.0)
+	_check(es["walker"] == Vector2.ZERO and es.get("blocked", false), "con un enemigo al lado, se para")
+	em.clear_all()
+	for k in 40:
+		if es["state"] == "active":
+			ev._update_escort(es, es["walker"], 0.5)
+	_check(results == [true] and waves[0] == 2, "llega a su salida tras dos emboscadas (%s, %d)" % [results, waves[0]])
+	# Comerciante: el precio sube con el nivel de la zona.
+	var z := Zone.new()
+	z.def = {"level": 40}
+	ev.zone = z
+	_check(ev.merchant_price({}) > 100, "el comerciante cobra según el nivel de la zona")
+	z.free()
+	em.free()
+	ev.free()
 
 
 func _db_enemies() -> Array:

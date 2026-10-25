@@ -393,6 +393,14 @@ El personaje es un recién egresado que se enfrenta al mundo laboral: cada clase
 
 **Ascendencia al nivel 20**: junto al inicio de tu clase en el árbol hay un **medallón**. Al pulsarlo se abre un panel circular: hasta el nivel 20 solo se pueden ver las dos opciones; a partir de ahí se elige una (permanente). Después, el panel muestra el inicio de la ascendencia y sus pasivas alrededor: cada una cuesta un **punto de ascendencia** (1 al nivel 20, +1 a los 25 y 30). En la pantalla de pruebas del árbol se puede cambiar libremente.
 
+## Eventos de zona
+
+En cada visita a una zona de combate aparecen al azar algunos eventos (`scripts/game/zone_events.gd`): **Datos huérfanos** (dos oleadas y botín), **Santuarios** (bono temporal o cargas llenas), **Emboscadas** (invisibles) y **Deploy fallido** (dos raros con escolta). Nuevos:
+
+- **Bombas lógicas**: al tocar la consola aparecen tres bombas con una cuenta atrás de 25 s y una oleada. Quédate 1,5 s junto a cada una para desactivarla; las que queden estallan y hacen mucho daño cerca. Bien: tres objetos y fichas; mal: uno.
+- **Proceso perdido** (escolta): un fantasmita con su PID camina hasta su salida, pero solo si estás cerca y no hay enemigos a su lado. A un tercio y a dos tercios del camino, emboscada. Al llegar: tres objetos y fichas.
+- **Comerciante ambulante**: un objeto misterioso de buena rareza por fichas (el precio sube con el nivel de la zona). «Sin devoluciones».
+
 ## Enemigos
 
 Nueve tipos con sprites animados (`data/enemies.json`, `assets/sprites/enemies/enemies.png`). Los nuevos tienen ataques **telegrafiados en rojo** (se ve la forma del golpe antes de que llegue) y cuerpos de distinto tamaño:

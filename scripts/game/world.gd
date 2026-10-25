@@ -260,6 +260,12 @@ func travel_to(zone_id: String, entry := "") -> void:
 	post.set_style(zone.style)
 	zone.npc_interacted.connect(_on_npc_interacted)
 	zone.events.triggered.connect(_on_zone_event)
+	zone.events.resolved.connect(_on_zone_event_resolved)
+	zone.events.exploded.connect(_on_logic_bomb_exploded)
+	zone.events.escort_wave.connect(func(e: Dictionary) -> void:
+		ui.hud.flash("¡Emboscada en el camino! Despeja al proceso para que siga.", Color("ff6a5a"))
+		_spawn_event_wave(e["walker"], 7, 0.3, 0.08, 240.0))
+	zone.events.enemies = enemies
 	_event_fights.clear()
 	zone.exit_reached.connect(_on_exit_reached)
 	zone.quest_item_picked.connect(_on_quest_item_picked)
@@ -696,6 +702,45 @@ func _on_zone_event(e: Dictionary) -> void:
 				var t := enemies.type_index_of(types[randi() % types.size()]) if not types.is_empty() else -1
 				ids.append(enemies.spawn(zone.free_spot_near(p + Vector2.from_angle(PI * k) * 90.0), Rarity.Enemy.ELITE, t))
 			_event_fights.append({"event": e, "ids": ids, "waves_left": 0, "reward": 3})
+		"bombs":
+			ui.hud.flash("¡Bombas lógicas! Quédate junto a cada una para desactivarla antes de %d s." % int(ZoneEvents.BOMB_TIME), Color("ff9a3a"))
+			Sfx.play("wave")
+			_spawn_event_wave(p, 8, 0.25, 0.05, 260.0)
+		"escort":
+			ui.hud.flash("Un proceso perdido quiere llegar a su salida. Solo avanza si estás cerca y no hay enemigos a su lado.", Color("8ad8ff"))
+			Sfx.play("aura_on", -4.0, 1.1)
+		"merchant":
+			var price := zone.events.merchant_price(e)
+			if character.spend_tokens(price):
+				e["state"] = "done"
+				loot.drop_item(item_generator.roll_drop(enemies.area_level, 2.5), zone.free_spot_near(p + Vector2(0, 60)))
+				ui.hud.flash("«Sin devoluciones.» Pagaste %d fichas: el objeto misterioso está en el suelo." % price, Color("f2c14e"))
+				Sfx.play("coin")
+			else:
+				e["state"] = "ready"
+				ui.hud.flash("«Vuelve cuando tengas %d fichas.» Te faltan %d." % [price, price - character.tokens], Color("e0a060"))
+
+
+## Bombas o escolta terminadas: buen botín si salió bien, un consuelo si no.
+func _on_zone_event_resolved(e: Dictionary, success: bool) -> void:
+	var at: Vector2 = e.get("walker", e["pos"]) if e["kind"] == "escort" else e["pos"]
+	var count := 3 if success else 1
+	for k in count:
+		loot.drop_item(item_generator.roll_drop(enemies.area_level, 1.5 if success and k == 0 else 0.5), zone.free_spot_near(at + Vector2.from_angle(TAU * k / count) * 70.0))
+	if success:
+		loot.drop_tokens(Economy.drop_amount(enemies.area_level, Rarity.Enemy.ELITE, _rng) * 2, zone.free_spot_near(at))
+		ui.hud.flash("¡Bombas desactivadas!" if e["kind"] == "bombs" else "El proceso llegó a su salida: exit code 0.", Color("6fd36b"))
+		Sfx.play("level_up", -6.0, 1.3)
+	else:
+		ui.hud.flash("Las bombas lógicas estallaron. Algo se salvó entre los escombros.", Color("ff6a5a"))
+
+
+## Una bomba lógica sin desactivar: explota y hace mucho daño si estás cerca.
+func _on_logic_bomb_exploded(pos: Vector2) -> void:
+	Sfx.play("explosion", -2.0)
+	if player.is_alive() and player.global_position.distance_to(pos) <= ZoneEvents.BOMB_BLAST:
+		player.take_damage(player.max_life() * 0.35)
+	skills._effects.append({"type": "burst", "pos": pos, "radius": ZoneEvents.BOMB_BLAST, "time": 0.0, "duration": 0.5, "color": Color("ff9a3a")})
 
 
 ## Una oleada alrededor de `center`: `count` enemigos de los tipos de la zona.
