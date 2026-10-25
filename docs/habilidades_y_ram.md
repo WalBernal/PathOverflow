@@ -748,6 +748,16 @@ Sube el volumen de tu aura: sus bonificaciones son mucho más potentes. Reserva 
 - **Etiquetas:** con alguna de: aura
 - **Funciona con (6):** Aura de Blindaje Redundante, Aura de Exposición de Vulnerabilidades, Aura de Mando, Aura de Mantenimiento Continuo, Aura de Overclock, Aura de Throttling
 
+### Breakpoint Condicional
+
+*DDR5* · grado mayor · cae desde el nivel 14
+
+if (critico) lanzar_habilidad(): cada crítico de tus otras habilidades lanza esta sola hacia el enemigo más cercano (como mucho cada 0,5 s y pagando su maná; sus propios críticos no cuentan). Ya no se puede lanzar a mano. 10 % menos de daño.
+
+- **Efectos:** 10% menos de Daño; Consumo de maná ×1.40
+- **Etiquetas:** nunca con: aura, persistente, movimiento
+- **Funciona con (29):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Firewall Personal, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Hiperthreading, Modo Seguro, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua
+
 ### Bypass de Firewall
 
 *DDR4* · grado normal · cae desde el nivel 10
@@ -1037,6 +1047,16 @@ Instala un regalito: envenena. Versión de servidor de producción: mucha probab
 - **Efectos:** +45% de Probabilidad de envenenar; 22% de aumento de Daño y efecto de estados alterados; Consumo de maná ×1.40
 - **Etiquetas:** nunca con: movimiento, potenciador
 - **Funciona con (41):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+
+### Manejador de Excepciones
+
+*DDR3* · grado normal · cae desde el nivel 8
+
+try { recibir_golpe() } catch { lanzar_habilidad() }: al recibir un golpe, la habilidad se lanza sola hacia el enemigo más cercano (como mucho cada 0,8 s y pagando su maná). Ya no se puede lanzar a mano. 15 % menos de daño.
+
+- **Efectos:** 15% menos de Daño; Consumo de maná ×1.30
+- **Etiquetas:** nunca con: aura, persistente, movimiento
+- **Funciona con (29):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Firewall Personal, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Hiperthreading, Modo Seguro, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua
 
 ### Memoria sin ECC
 

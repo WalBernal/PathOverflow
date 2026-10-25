@@ -115,7 +115,7 @@ Origen: R2 §4 ★★★
 - Un nodo por sector del árbol donde se elige 1 de 3 bonos; cambiable con reembolso.
 - El generador y las pruebas del árbol siguen sin nodos encimados.
 
-### [ ] T13 · RAM de activación (parte 1: sistema) · M
+### [x] T13 · RAM de activación (parte 1: sistema) · M
 Origen: R2 §3 ★★★
 - Soporte que lanza la habilidad enlazada: "al recibir un golpe", "al hacer crítico".
 - Con enfriamiento interno y coste de maná claro; sin bucles infinitos.
@@ -388,3 +388,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-24 · T10 · Consejos de primera vez (`TipPanel`, `data/tips.json`) para esquiva, cargas, golpes pesados, terrenos y las tres mecánicas de arena; vistos por personaje y opción en Pausa. Las RAM de activación (T13-T14) tendrán que añadir el suyo.
 - 2026-10-24 · T11 · Cuatro nodos clave que cambian reglas (Tipado Estático, Recolector de Basura, Modo Seguro, Código Espagueti) en el lugar de cuatro de los que solo daban stats, sin cambiar la estructura del árbol (no hay reembolso); el generador también los usa y los tooltips los describen como frase.
 - 2026-10-24 · T12 · Siete maestrías (una por sector) donde se elige 1 de 3 bonos, gratis y cambiable; guardadas con el personaje, con rombos en el árbol, tooltip y búsqueda; sin cambiar la estructura del árbol. De paso, una prueba de T08 que dependía de la evasión al azar ya no falla de vez en cuando, y la integración encontró un fallo antiguo: si el jefe moría por un degenerativo, World vaciaba las listas de enemigos en mitad del bucle (ahora se vacían al final del fotograma).
+- 2026-10-24 · T13 · RAM de activación Manejador de Excepciones (al recibir un golpe) y Breakpoint Condicional (al hacer crítico): la habilidad se lanza sola, paga su maná, tiene enfriamiento interno, se resuelve al fotograma siguiente y sus propios críticos no activan nada.

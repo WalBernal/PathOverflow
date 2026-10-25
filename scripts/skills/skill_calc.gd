@@ -147,7 +147,14 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 	# Algunas habilidades se despliegan solas (p. ej. la Torreta de Integración Continua).
 	var deploy: String = skill.get("deploy", "")
 	var totem_duration: float = float(skill.get("totem_duration", 8.0)) if deploy != "" else 0.0
+	# RAM de activación: la habilidad se lanza sola con un evento (on_hit, on_crit...).
+	# Solo cuenta la primera.
+	var trigger := ""
+	var trigger_cooldown := 0.0
 	for ram: RamModule in board.active_supports():
+		if trigger == "" and ram.special_string("trigger") != "":
+			trigger = ram.special_string("trigger")
+			trigger_cooldown = ram.special("trigger_cooldown", 0.5)
 		extra_chains += int(ram.special("extra_chains"))
 		if ram.special("chain_penalty") > 0.0:
 			chain_penalty = ram.special("chain_penalty") if chain_penalty < 0.0 else minf(chain_penalty, ram.special("chain_penalty"))
@@ -421,6 +428,8 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 		"chains": int(skill.get("chains", 0)) + (extra_chains if skill.get("kind", "") == "chain" else 0),
 		"projectile_chains": extra_chains if (skill.has("projectiles") or kind in ["unit", "drones"]) else 0,
 		"deploy": deploy,
+		"trigger": trigger,
+		"trigger_cooldown": trigger_cooldown,
 		"totem_duration": totem_duration * duration_mult,
 		"count": int(skill.get("count", 0)) + (int(stats.get_value(Stat.EXTRA_MINIONS, tags)) + milestones if skill.get("kind", "") == "minion" else 0),
 		"extra_devices": int(stats.get_value(Stat.EXTRA_DEVICES, tags)),

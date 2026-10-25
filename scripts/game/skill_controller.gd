@@ -11,6 +11,10 @@ signal not_enough_mana
 signal not_enough_life
 ## No queda maná sin reservar para otra invocación persistente.
 signal reservation_full(skill_name: String)
+## Se intentó lanzar a mano una habilidad con RAM de activación (se lanza sola).
+signal trigger_only(skill_name: String)
+## Una RAM de activación lanzó la habilidad de esa ranura.
+signal skill_triggered(hotbar_index: int)
 ## Una invocación persistente ha caído.
 signal unit_lost(skill_name: String)
 
@@ -435,6 +439,74 @@ func on_crit() -> void:
 	if _crit_charge_cd <= 0.0:
 		_crit_charge_cd = 0.25   # un área con 20 críticos no da 20 tiradas
 		_roll_charge("overclock")
+	if not _triggering:   # los críticos de una habilidad activada no activan nada (sin bucles)
+		queue_trigger("on_crit")
+
+
+# --- RAM de activación (profile.trigger: on_hit, on_crit) ---
+# Los eventos se apuntan y se resuelven en el siguiente fotograma: lanzar una
+# habilidad en mitad de un golpe tocaría las listas de enemigos mientras se recorren.
+
+var _trigger_cd: Array[float] = []
+var _pending_triggers: Array[String] = []
+var _triggering := false
+
+
+func queue_trigger(event: String) -> void:
+	if not _pending_triggers.has(event):
+		_pending_triggers.append(event)
+
+
+func _update_triggers(delta: float) -> void:
+	if _trigger_cd.size() != ACTIONS.size():
+		_trigger_cd.resize(ACTIONS.size())
+	for i in _trigger_cd.size():
+		_trigger_cd[i] = maxf(0.0, _trigger_cd[i] - delta)
+	if _pending_triggers.is_empty():
+		return
+	var events := _pending_triggers.duplicate()
+	_pending_triggers.clear()
+	if not player.is_alive():
+		return
+	for event in events:
+		for i in ACTIONS.size():
+			var p := profile(i)
+			if p.is_empty() or String(p.get("trigger", "")) != event or _trigger_cd[i] > 0.0:
+				continue
+			fire_triggered(i, p)
+
+
+## Lanza la habilidad de la ranura `i` por su RAM de activación: paga su maná (y su
+## vida, si la cuesta), hacia el enemigo más cercano o hacia donde mira el personaje.
+func fire_triggered(i: int, p: Dictionary) -> bool:
+	var life_cost := float(p.get("life_cost", 0.0))
+	if player.mana < float(p["mana_cost"]) or (life_cost > 0.0 and player.life <= life_cost + 1.0):
+		return false
+	player.mana -= float(p["mana_cost"])
+	player.life -= life_cost
+	_trigger_cd[i] = float(p["trigger_cooldown"])
+	var near := enemies.nearest_index(player.global_position, TRIGGER_RANGE)
+	var target: Vector2 = enemies.positions[near] if near != -1 else player.global_position + player.facing_direction() * 200.0
+	var pending_before := _pending.size()
+	var shots_before := _projectiles.size()
+	_triggering = true
+	if String(p["deploy"]) != "":
+		_deploy(p, target)
+	else:
+		_execute(p, target)
+	_triggering = false
+	# Lo que golpea más tarde (explosiones retardadas, proyectiles) también va marcado.
+	for k in range(pending_before, _pending.size()):
+		_pending[k]["triggered"] = true
+	for k in range(shots_before, _projectiles.size()):
+		_projectiles[k]["triggered"] = true
+	_effects.append({"type": "ring", "pos": player.global_position, "radius": 28.0, "time": 0.0, "duration": 0.25, "color": TRIGGER_COLOR})
+	skill_triggered.emit(i)
+	return true
+
+
+const TRIGGER_RANGE := 600.0
+const TRIGGER_COLOR := Color("ffd84a")
 
 
 ## Gasto de cargas (RAM "spend_<tipo>"): devuelve una copia del perfil con el
@@ -514,6 +586,7 @@ func on_enemy_killed(pos: Vector2) -> void:
 ## Lo llama el jugador al recibir un golpe (Player.hit_taken).
 func on_player_hit() -> void:
 	_roll_charge("buffer")
+	queue_trigger("on_hit")
 	var chance := character.stats.get_value(Stat.RETALIATION_NOVA)
 	if chance <= 0.0 or _nova_cooldown > 0.0 or randf() * 100.0 >= chance:
 		return
@@ -606,6 +679,7 @@ func _physics_process(delta: float) -> void:
 			if Input.is_action_pressed(ACTIONS[i]) and try_use(i):
 				break
 	_update_aura_fields()
+	_update_triggers(delta)
 	_update_pending(delta)
 	_update_projectiles(delta)
 	_update_spin(delta)
@@ -645,6 +719,11 @@ func try_use(index: int) -> bool:
 	var p := profile(index)
 	if p.is_empty() or cooldowns[index] > 0.0:
 		return false
+	if String(p.get("trigger", "")) != "":
+		if _mana_warning_cooldown <= 0.0:
+			_mana_warning_cooldown = 1.5
+			trigger_only.emit(String(p["name"]))
+		return false   # RAM de activación: se lanza sola
 	if player.mana < p["mana_cost"]:
 		if _mana_warning_cooldown <= 0.0:
 			_mana_warning_cooldown = 1.5
@@ -1679,6 +1758,7 @@ func _update_pending(delta: float) -> void:
 			continue
 		var p: Dictionary = e["profile"]
 		_ctx(p)
+		_triggering = bool(e.get("triggered", false))
 		if e["type"] == "blast":
 			var radius: float = e.get("radius", p["radius"])
 			_damage_area(e["pos"], radius, p)
@@ -1694,6 +1774,7 @@ func _update_pending(delta: float) -> void:
 		elif player.is_alive():
 			_execute(p, e["target"])
 	_pending = still
+	_triggering = false
 
 
 func _update_projectiles(delta: float) -> void:
@@ -1725,6 +1806,7 @@ func _update_projectiles(delta: float) -> void:
 			pr["distance_left"] -= step.length()
 		var hit := -1
 		_ctx(p)
+		_triggering = bool(pr.get("triggered", false))
 		if pr.get("dot", false):
 			hit = enemies.dot_one(pr["pos"], PROJECTILE_RADIUS, pr["hit_ids"], (p["min_damage"] + p["max_damage"]) / 2.0, p["duration"])
 		else:
@@ -1751,6 +1833,7 @@ func _update_projectiles(delta: float) -> void:
 		if pr.get("boomerang", false) or (pr["distance_left"] > 0.0 and pr["pierce_left"] >= 0):
 			still.append(pr)
 	_projectiles = still
+	_triggering = false
 
 
 func _update_effects(delta: float) -> void:

@@ -263,6 +263,8 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	skills.skill_used.connect(func(_i: int) -> void: tutorial.notify("skill_used"))
 	skills.skill_used.connect(hud.notify_skill_used)
 	skills.not_enough_mana.connect(func() -> void: hud.flash("Sin maná. Bebe un refresco (teclas 1-5) o espera, como con el compilador."))
+	skills.trigger_only.connect(func(skill_name: String) -> void:
+		hud.flash("%s lleva una RAM de activación: se lanza sola (no a mano)." % skill_name, Color("ffd84a")))
 	skills.not_enough_life.connect(func() -> void: hud.flash("Esa habilidad se paga con vida y no te sobra. Cúrate antes de hacer otro hotfix."))
 	skills.reservation_full.connect(func(skill_name: String) -> void:
 		hud.flash("No queda maná sin reservar para otra invocación de %s. Tus procesos en segundo plano ya se lo comen todo." % skill_name))

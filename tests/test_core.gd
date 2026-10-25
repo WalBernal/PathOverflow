@@ -90,6 +90,7 @@ func _initialize() -> void:
 	_test_mechanic_tips()
 	_test_rule_keystones()
 	_test_masteries()
+	_test_trigger_rams()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -1895,6 +1896,51 @@ func _test_board_milestones() -> void:
 	_check(SkillCalc.compute(Motherboard.new(_db.skills.skills["proceso_hijo"], 20, ["DDR5"]), c)["count"] == 4, "esbirros extra por nivel")
 
 
+## RAM de activación: la habilidad se lanza sola al recibir un golpe o al hacer un
+## crítico, con enfriamiento interno, pagando su maná y sin bucles.
+func _test_trigger_rams() -> void:
+	var skills := _db.skills.skills
+	var rams := _db.skills.rams
+	_check(not RamModule.new(rams["manejador_excepciones"]).supports(skills["aura_mando"]), "no se activan auras")
+	_check(not RamModule.new(rams["manejador_excepciones"]).supports(skills["teleport_tcp"]), "ni habilidades de movimiento")
+	var c := CharacterData.new(_classes[4], _tree)
+	var board := Motherboard.new(skills["fork_bomb"], 5, ["DDR3", "DDR5"])
+	var plain := SkillCalc.compute(board, c)
+	board.install(RamModule.new(rams["manejador_excepciones"]), 0)
+	var p := SkillCalc.compute(board, c)
+	_check(p["trigger"] == "on_hit" and p["trigger_cooldown"] > 0.0 and p["mana_cost"] > plain["mana_cost"], "Manejador de Excepciones: al recibir un golpe, con enfriamiento y más coste")
+	var crit_board := Motherboard.new(skills["fork_bomb"], 5, ["DDR5"])
+	crit_board.install(RamModule.new(rams["breakpoint_condicional"]), 0)
+	_check(SkillCalc.compute(crit_board, c)["trigger"] == "on_crit", "Breakpoint Condicional: al hacer un crítico")
+	c.inventory.set_board(0, board)
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	var pl := Player.new()
+	pl.character = c
+	em.player = pl
+	var sc := SkillController.new()
+	sc.setup(pl, em, c)
+	pl.mana = pl.max_mana()
+	var full := pl.mana
+	em.spawn(Vector2(200, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+	_check(not sc.try_use(0), "no se puede lanzar a mano")
+	sc.on_player_hit()
+	_check(sc._pending.is_empty(), "no se lanza en mitad del golpe: espera al siguiente fotograma")
+	sc._update_triggers(0.016)
+	_check(sc._pending.size() == 1 and sc._pending[0].get("triggered", false) and pl.mana < full, "al recibir un golpe se lanza sola y paga su maná")
+	var mana_after := pl.mana
+	sc.on_player_hit()
+	sc._update_triggers(0.016)
+	_check(sc._pending.size() == 1 and pl.mana <= mana_after + 0.01 and sc._trigger_cd[0] > 0.0, "enfriamiento interno: no se repite enseguida")
+	sc._triggering = true
+	sc.on_crit()
+	sc._triggering = false
+	_check(sc._pending_triggers.is_empty(), "los críticos de una habilidad activada no activan nada")
+	sc.free()
+	pl.free()
+	em.free()
+
+
 ## Maestrías: un notable por sector donde se elige 1 de 3 bonos; la elección se
 ## guarda, cambia las stats y se puede cambiar gratis.
 func _test_masteries() -> void:
@@ -3486,7 +3532,7 @@ func _test_rams_everywhere() -> void:
 		"width", "impact_radius", "rain_hits", "crit_chance", "life_leech", "ailments", "ailment_effect", "ailment_duration",
 		"ailing_bonus", "deploy", "max_units", "unit_interval", "unit_life", "unit_reduction", "reserve", "aura_mods",
 		"aura_regen", "aura_reduction", "aura_enemy", "aura_radius", "aura_anchor", "ability_power", "tick", "minion_interval", "drone_count", "count", "extra_devices",
-		"uses_per_second", "repeats", "spend_charges", "life_cost"]
+		"uses_per_second", "repeats", "spend_charges", "life_cost", "trigger"]
 	var dead := PackedStringArray()
 	for sid in skills:
 		var base := SkillCalc.compute(Motherboard.new(skills[sid], 10, []), c)
