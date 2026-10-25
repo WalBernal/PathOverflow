@@ -143,6 +143,7 @@ func _initialize() -> void:
 	_test_shop_stock()
 	_test_shop_coat()
 	_test_player_poses()
+	_test_impact_frame()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3582,6 +3583,23 @@ func _test_player_poses() -> void:
 	p._tick_anim(1.0)
 	_check(p.anim_state() == "dead" and float(p.anim_pose()["t"]) == 1.0, "muerto: la caída termina")
 	p.free()
+
+
+## Parte 2 (T72b): el ataque golpea en el cuadro de impacto de la animación.
+func _test_impact_frame() -> void:
+	var melee := {"tags": ["attack", "melee", "area"], "use_time": 0.6}
+	var sword := SkillController.impact_delay(melee, "sword")
+	_check(sword > 0.2 and sword <= SkillController.IMPACT_MAX, "con espada, el golpe llega a mitad del arco (%.2f s)" % sword)
+	_check(SkillController.impact_delay(melee, "dagger") < sword, "la estocada de la daga llega antes")
+	_check(SkillController.impact_delay({"tags": ["attack", "projectile"], "use_time": 0.5}, "") > 0.0, "un ataque a distancia sale al soltar")
+	_check(SkillController.impact_delay({"tags": ["attack", "melee"], "use_time": 5.0}, "mace") == SkillController.IMPACT_MAX, "con tope: nunca parece que no responde")
+	for instant in [{"tags": ["spell", "fire"], "use_time": 0.6}, {"tags": ["attack", "melee", "movement"], "use_time": 0.6},
+			{"tags": ["attack", "minion", "automaton", "melee"], "use_time": 0.6}, {"tags": ["attack", "melee"], "use_time": 0.6, "trigger": "on_hit"}]:
+		_check(SkillController.impact_delay(instant, "sword") == 0.0, "sale al instante: %s" % ", ".join(instant["tags"]))
+	# El cuadro de impacto coincide con la pose: el arma pasa por delante (brazo hacia fuera).
+	for w in ["sword", "axe", "mace", "dagger", ""]:
+		var ang := CharacterAppearance.arm_angle("attack", w, CharacterAppearance.impact_fraction("attack", w))
+		_check(absf(ang - PI * 0.5) < 0.6, "con %s, el golpe sale con el brazo por delante (%.2f rad)" % [w if w != "" else "el puño", ang])
 
 
 func _db_enemies() -> Array:

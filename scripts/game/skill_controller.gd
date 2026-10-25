@@ -1022,14 +1022,34 @@ func try_use(index: int) -> bool:
 		_deploy(p, target)
 		skill_used.emit(index)
 		return true
-	_execute(p, target)
+	# Los ataques golpean en el cuadro de impacto de la animación, no al pulsar (T72b).
+	var impact := impact_delay(p, CharacterAppearance.weapon_kind(player.character.inventory.equipped("weapon")) if player.character else "")
+	if impact > 0.0:
+		_pending.append({"type": "impact", "time": impact, "profile": p, "target": target})
+	else:
+		_execute(p, target)
 	if p["kind"] in SkillCalc.AUTOMATON_KINDS or p["kind"] == "aura":
 		skill_used.emit(index)
 		return true   # en invocaciones la repetición ya va en su ritmo de ataque
 	for r in int(p["repeats"]):
-		_pending.append({"type": "repeat", "time": REPEAT_DELAY * (r + 1), "profile": p, "target": target})
+		_pending.append({"type": "repeat", "time": impact + REPEAT_DELAY * (r + 1), "profile": p, "target": target})
 	skill_used.emit(index)
 	return true
+
+
+## Tope del retraso hasta el golpe: con ataques muy lentos, que no parezca que no responde.
+const IMPACT_MAX := 0.3
+
+
+## Segundos desde que se pulsa hasta que el ataque golpea (el cuadro de impacto de la
+## animación del jugador); 0 = sale al instante (hechizos, movimiento, invocaciones,
+## trampas y RAM de activación).
+static func impact_delay(p: Dictionary, weapon: String) -> float:
+	var tags: Array = p.get("tags", [])
+	if not ("attack" in tags) or "movement" in tags or "minion" in tags or "automaton" in tags \
+			or String(p.get("deploy", "")) != "" or String(p.get("trigger", "")) != "":
+		return 0.0
+	return minf(IMPACT_MAX, float(p.get("use_time", 0.0)) * CharacterAppearance.impact_fraction(Player.action_for(p), weapon))
 
 
 ## Auto-ataque (Pausa → Combate): sin pulsar nada ni moverte, la habilidad 1 sale

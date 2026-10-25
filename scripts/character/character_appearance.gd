@@ -283,6 +283,17 @@ static func arm_angle(state: String, weapon: String, t: float, time := 0.0) -> f
 	return 0.0
 
 
+## En qué punto de la acción (0..1) llega el golpe (T72b): cuando el arma pasa por
+## delante en el arco, cuando la estocada llega al final o cuando se suelta lo lanzado.
+static func impact_fraction(state: String, weapon: String) -> float:
+	match state:
+		"attack":
+			return 0.47 if weapon in ["sword", "axe", "mace"] else 0.3
+		"shoot":
+			return 0.38
+	return 0.0
+
+
 ## Cuánto se estira el brazo (1 = normal): la estocada lo alarga.
 static func arm_reach(state: String, weapon: String, t: float) -> float:
 	if state == "attack" and not (weapon in ["sword", "axe", "mace"]):
