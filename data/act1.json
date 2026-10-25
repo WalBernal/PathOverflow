@@ -136,6 +136,11 @@
           "cutscene": "red_lince"
         }
       ],
+      "props": [
+        {"kind": "camp_stall", "pos": [420, 520], "requires_flag": "act1_complete"},
+        {"kind": "camp_workbench", "pos": [1360, 560], "requires_flag": "act2_complete"},
+        {"kind": "camp_antenna", "pos": [1260, 1180], "requires_flag": "act3_complete"}
+      ],
       "stash": [
         720,
         900

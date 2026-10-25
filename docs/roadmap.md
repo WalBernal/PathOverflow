@@ -222,7 +222,7 @@ Origen: R2 §10 ★★
 Origen: R2 §10 ★★
 - Decisiones que cambian recompensas o qué NPC te acompaña.
 
-### [ ] T36 · Campamentos que evolucionan · M
+### [x] T36 · Campamentos que evolucionan · M
 Origen: R2 §10 ★★
 - Aida, Mario y Rafa mejoran el campamento al avanzar (tienda nueva, mesa de crafteo).
 
@@ -422,3 +422,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T33 · Enemigos que reaccionan a su estado (`EnemyManager._react`, salvo jefes y únicos): pánico al quemarse (50 %, huyen 1,6 s), buscan al sanador con poca vida y se reagrupan con el comandante si no están peleando; marca sobre la cabeza («!», «+», «»»).
 - 2026-10-25 · T34 · Lore coleccionable: 18 commits, logs y correos en los cuatro actos (`data/lore_notes.json`, `LoreNotes`), con dibujo propio en el suelo, aviso al recogerlos y registro en Pausa → Archivos encontrados (`LoreLog`); se guardan en `flags.lore_found`. T67: la integración larga volvió a cortarse con la otra instancia de Godot en marcha; las tandas cortas pasaron 3 de 3.
 - 2026-10-25 · T35 · Diálogos con decisiones: elegir acompañante en el hub del Acto IV (Mario, Páez o Eugenio; te sigue por las zonas de combate con un bono pequeño; `Companions`, `CompanionFollower`, acción `companion`) y elegir recompensa al entregar *Orden de Arranque* y *Ajustes de Fábrica* (dos opciones que comparten bandera). Nota: el editor de historia del usuario (`tools/story_editor.gd`) no conoce aún la acción `companion`.
+- 2026-10-25 · T36 · El campamento del Acto I evoluciona: puesto de Aida tras el Acto I (equipo raro y mágico y pociones, `Economy.generate_gear_stock`), mesa de crafteo de Mario tras el Acto II (reforjar el arma equipada por fichas) y antena de Rafa tras el Acto III (rellena pociones y da un bono de 3 minutos); decorado propio que aparece con cada mejora (`props` con `requires_flag`) y acciones de diálogo `open_gear_shop`, `reforge_weapon` y `antenna`.

@@ -41,6 +41,35 @@ static func sell_price(item: Item) -> int:
 	return maxi(1, int(price(item) * SELL_FRACTION))
 
 
+## Puesto de Aida (campamento tras el Acto I): equipo raro del nivel del jugador,
+## alguno mágico y dos pociones.
+const GEAR_STOCK_RARE := 4
+const GEAR_STOCK_MAGIC := 3
+
+
+static func generate_gear_stock(gen: ItemGenerator, level: int) -> Array[Item]:
+	var stock: Array[Item] = []
+	for k in GEAR_STOCK_RARE:
+		stock.append(gen.generate(level, Rarity.Item.RARE))
+	for k in GEAR_STOCK_MAGIC:
+		stock.append(gen.generate(level, Rarity.Item.MAGIC))
+	for k in 2:
+		var f := gen.generate_flask(level)
+		if f:
+			stock.append(f)
+	return stock
+
+
+## Reforjar en la mesa de Mario: mismos base, nivel y rareza, afijos nuevos.
+## Precio: más de la mitad de lo que vale (los únicos y de conjunto no se reforjan).
+static func reforge_price(item: Item) -> int:
+	return maxi(10, int(price(item) * 0.6))
+
+
+static func can_reforge(item: Item) -> bool:
+	return item != null and item.rarity in [Rarity.Item.MAGIC, Rarity.Item.RARE] and not (item is Motherboard or item is RamModule or item is Flask)
+
+
 ## Mercancía del comerciante para un nivel: placas base (habilidades al azar
 ## que no sean exclusivas) y módulos RAM, todo del nivel del jugador.
 static func generate_stock(gen: ItemGenerator, level: int) -> Array[Item]:

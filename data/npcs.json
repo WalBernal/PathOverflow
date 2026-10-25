@@ -379,6 +379,7 @@
         "¿Qué más necesitas saber?"
       ],
       "nodes": {
+        "puesto": {"text": "Desde que cayó el Arquitecto puse un puesto con lo que sobró de las migraciones: equipo de verdad, no placas como las de Nacho, y café en botella. Precios de senior, eso sí.", "options": [{"text": "A ver qué tienes.", "next": "", "action": {"type": "open_gear_shop"}}, {"text": "Luego paso.", "next": "hola"}]},
         "hola": {
           "text": "Vaya, un recién egresado. Te tiraron a producción sin pasar por staging, ¿eh? Soy Aida. Llevo aquí desde que El Pepe programaba todo en COBOL.",
           "options": [
@@ -412,6 +413,7 @@
               "next": "regalo",
               "hides_if_flag": "ada_regalo"
             },
+            {"text": "¿Qué vendes en tu puesto?", "next": "puesto", "requires_flag": "act1_complete"},
             {
               "text": "Adiós.",
               "next": ""
@@ -545,6 +547,7 @@
         "¡Dime!"
       ],
       "nodes": {
+        "mesa": {"text": "Aida me dejó armar una mesa de crafteo. Bueno, es una mesa con un soldador. Si me das tu arma, le saco afijos nuevos: misma base, misma rareza, todo lo demás al azar. Cobro, eh. Las horas de servicio no dan para comer.", "options": [{"text": "Reforja mi arma.", "next": "", "action": {"type": "reforge_weapon"}}, {"text": "Mejor no.", "next": "hola"}]},
         "hola": {
           "text": "¡Hola! Soy Mario, el practicante. Llevo tres meses aquí y todavía no tengo acceso a nada. Pero preparo un café increíble.",
           "options": [
@@ -565,6 +568,7 @@
                 "type": "refill"
               }
             },
+            {"text": "¿Me ayudas en la mesa de crafteo?", "next": "mesa", "requires_flag": "act2_complete"},
             {
               "text": "¿Algún consejo?",
               "next": "consejo"
@@ -675,6 +679,7 @@
         "¿Sí.....?"
       ],
       "nodes": {
+        "antena": {"text": "La armé con latas de refresco y el router de La Red Lince.... Ya no se cae.... porque no está conectada a La Red Lince.... Si te paras junto a ella, te relleno las pociones y te paso señal.... dicen que con buena señal se pega más fuerte....", "options": [{"text": "Conéctame.", "next": "", "action": {"type": "antenna"}}, {"text": "Luego.", "next": "hola"}]},
         "hola": {
           "text": "Aaah..... ¿«genio»?..... ¿Tú también caíste.....? Bienvenido a producción..... Aquí el tiempo corre raro..... llevo reiniciando el servidor..... desde 2019..... o desde el martes..... ¿Qué. Quieres....?",
           "options": [
@@ -717,6 +722,7 @@
               "text": "¿Nadie revisó los logs a fondo?",
               "next": "lore3"
             },
+            {"text": "¿Y esa antena?", "next": "antena", "requires_flag": "act3_complete"},
             {
               "text": "Qué horror.",
               "next": "hola"

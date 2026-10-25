@@ -365,6 +365,31 @@ func _on_quest_item_picked(q: Dictionary) -> void:
 		play_cutscene(q["cutscene"])
 
 
+## Mejoras del campamento (se abren al terminar cada acto): puesto de Aida,
+## mesa de crafteo de Mario y antena de Rafa.
+const CAMP_ANTENNA_SECONDS := 180.0
+var _gear_stock: Array[Item] = []
+var _gear_level := -1
+
+
+## Mesa de Mario: el arma equipada sale con afijos nuevos (misma base, nivel y rareza).
+func _reforge_weapon() -> void:
+	var weapon: Item = character.inventory.equipped("weapon")
+	if not Economy.can_reforge(weapon):
+		ui.hud.flash("Mario: «Eso no se puede reforjar». Hace falta un arma mágica o rara equipada.", Color("e0a060"))
+		return
+	var cost := Economy.reforge_price(weapon)
+	if not character.spend_tokens(cost):
+		ui.hud.flash("Mario: «Son %d fichas. Yo también tengo que comer». Te faltan %d." % [cost, cost - character.tokens], Color("e0a060"))
+		return
+	var fresh := item_generator.generate(weapon.item_level, weapon.rarity, String(weapon.base.get("id", "")))
+	character.inventory.set_equipped("weapon", fresh)
+	character.recalculate()
+	ui.hud.flash("Mario reforjó tu arma (%d fichas): %s." % [cost, fresh.display_name()], Color("8fe08a"))
+	Sfx.play("coin")
+	_mark_dirty()
+
+
 ## El acompañante (Companions): su bono y, en las zonas de combate, el que te sigue.
 ## En los campamentos se queda en su sitio como NPC.
 var _companion_node: CompanionFollower
@@ -1033,6 +1058,19 @@ func _on_dialogue_action(action: Dictionary) -> void:
 			quests.advance(action.get("quest", ""))
 		"set_flag":
 			pass
+		"open_gear_shop":
+			if _gear_stock.is_empty() or _gear_level != character.level:
+				_gear_stock = Economy.generate_gear_stock(item_generator, character.level)
+				_gear_level = character.level
+			ui.open_shop(_gear_stock)
+		"reforge_weapon":
+			_reforge_weapon()
+		"antenna":
+			player.refill()
+			var mods: Array[Modifier] = [Modifier.new(Stat.DAMAGE, Modifier.Type.INCREASED, 15.0, [], "camp:antena"),
+				Modifier.new(Stat.MOVEMENT_SPEED, Modifier.Type.INCREASED, 5.0, [], "camp:antena")]
+			character.add_timed_effect("camp:antena", mods, CAMP_ANTENNA_SECONDS)
+			ui.hud.flash("Señal fuerte: pociones llenas y +15 %% de daño durante %d minutos." % int(CAMP_ANTENNA_SECONDS / 60.0), Color("3cff6a"))
 		"companion":
 			var who := String(action.get("npc", ""))
 			Companions.choose(character, who)

@@ -1184,7 +1184,7 @@ func _draw() -> void:
 	elif style == "kernel":
 		_draw_kernel_flicker()
 	for p in props:
-		if view.grow(400.0).has_point(p["pos"]):
+		if view.grow(400.0).has_point(p["pos"]) and (not p.has("requires_flag") or (character != null and character.flags.has(p["requires_flag"]))):
 			_draw_prop(p)
 	for e in exits:
 		if exit_visible(e) and view.has_point(e["pos"]):
@@ -1765,6 +1765,41 @@ func _draw_challenge(c: Dictionary) -> void:
 ## Gigantes de hierro de la Grieta del Deadlock: encadenados mientras no se abra.
 func _draw_prop(p: Dictionary) -> void:
 	match String(p.get("kind", "")):
+		"camp_stall":
+			# Puesto de Aida: mesa con toldo morado, cajas y un letrero.
+			var pos: Vector2 = p["pos"]
+			draw_rect(Rect2(pos + Vector2(-50, -6), Vector2(100, 22)), Color("5a3b2a"))
+			for k in 5:
+				draw_rect(Rect2(pos + Vector2(-54 + k * 22, -58), Vector2(22, 12)), Color("5a3b6b") if k % 2 == 0 else Color("e8e0d0"))
+			for s in [-1.0, 1.0]:
+				draw_line(pos + Vector2(s * 50, -46), pos + Vector2(s * 50, -6), Color("3a2a1e"), 3.0)
+			draw_rect(Rect2(pos + Vector2(-40, -22), Vector2(22, 16)), Color("8a6a40"))
+			draw_rect(Rect2(pos + Vector2(14, -20), Vector2(24, 14)), Color("6a8a9a"))
+			_label(pos + Vector2(-90, -76), "Puesto de Aida", 180, 13, Color("c8a8e8"))
+		"camp_workbench":
+			# Mesa de crafteo de Mario: banco con un soldador humeante y un yunque improvisado (una fuente de poder).
+			var pos: Vector2 = p["pos"]
+			draw_rect(Rect2(pos + Vector2(-46, -10), Vector2(92, 14)), Color("6a4a30"))
+			for s in [-1.0, 1.0]:
+				draw_line(pos + Vector2(s * 40, 4), pos + Vector2(s * 40, 22), Color("4a3220"), 4.0)
+			draw_rect(Rect2(pos + Vector2(-34, -28), Vector2(30, 18)), Color("3a3f4a"))   # fuente de poder
+			draw_line(pos + Vector2(12, -10), pos + Vector2(26, -30), Color("c8c8d0"), 3.0)  # soldador
+			var smoke := sin(_time * 2.0) * 3.0
+			draw_circle(pos + Vector2(28 + smoke, -40), 4.0, Color(0.8, 0.8, 0.8, 0.35))
+			draw_circle(pos + Vector2(30 - smoke, -50), 3.0, Color(0.8, 0.8, 0.8, 0.25))
+			_label(pos + Vector2(-90, -64), "Mesa de crafteo", 180, 13, Color("8fe08a"))
+		"camp_antenna":
+			# Antena de Rafa: un poste con una antena WiFi hecha con latas, que parpadea.
+			var pos: Vector2 = p["pos"]
+			draw_line(pos, pos + Vector2(0, -110), Color("8a8a96"), 4.0)
+			for k in 3:
+				draw_line(pos + Vector2(-16 + k * 4, -90 + k * 18), pos + Vector2(16 - k * 4, -90 + k * 18), Color("8a8a96"), 2.0)
+			draw_rect(Rect2(pos + Vector2(-8, -122), Vector2(16, 12)), Color("c8c8d0"))
+			var on := fmod(_time * 1.5, 1.0) < 0.5
+			draw_circle(pos + Vector2(0, -126), 4.0, Color("3cff6a") if on else Color("1a4a2a"))
+			for k in 2:
+				draw_arc(pos + Vector2(0, -126), 14.0 + k * 10.0, -PI * 0.8, -PI * 0.2, 10, Color(0.24, 1.0, 0.42, 0.4 if on else 0.15), 2.0)
+			_label(pos + Vector2(-90, -150), "Antena de Rafa", 180, 13, Color("3cff6a"))
 		"iron_giant":
 			var pos: Vector2 = p["pos"]
 			var s := -1.0 if p.get("flip", false) else 1.0

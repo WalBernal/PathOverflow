@@ -677,6 +677,10 @@ func _draw_status_boxes(font: Font) -> void:
 		var eid: String = effect["id"]
 		if eid.begins_with("aura:") or eid.begins_with("golem:"):
 			continue   # las auras y los golems salen en active_summaries()
+		if eid == "camp:antena":
+			entries.append({"name": "Señal fuerte", "skill": GameData.items.skills.skills.get("hiperthreading", {}), "count": 1,
+				"remaining": effect["time_left"], "total": effect.get("total", effect["time_left"]), "kind": "buff"})
+			continue
 		if eid.begins_with("shrine:") or eid.begins_with("companion:"):
 			continue   # santuarios: en la barra de estados; acompañante: lo ves caminar a tu lado
 		if eid.begins_with("skill:"):

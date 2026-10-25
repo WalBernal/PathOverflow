@@ -111,6 +111,7 @@ func _initialize() -> void:
 	_test_state_reactions()
 	_test_lore_notes()
 	_test_dialogue_decisions()
+	_test_camp_upgrades()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -2552,6 +2553,30 @@ func _test_dialogue_decisions() -> void:
 	_check(Companions.current(saved) == "paez_bios", "el acompañante se guarda")
 	Companions.choose(c, "")
 	_check(Companions.current(c) == "" and not c.timed_effects.any(func(e: Dictionary) -> bool: return String(e["id"]).begins_with("companion:")), "al despedirlo se va su bono")
+
+
+## Campamento que evoluciona (T36): puesto de Aida, mesa de Mario y antena de Rafa,
+## cada uno al terminar un acto.
+func _test_camp_upgrades() -> void:
+	var camp: Dictionary = DataLoader.load_json("res://data/act1.json")["zones"].filter(func(z: Dictionary) -> bool: return z["id"] == "campamento")[0]
+	var props := {}
+	for p in camp.get("props", []):
+		props[p["kind"]] = p.get("requires_flag", "")
+	_check(props.get("camp_stall", "") == "act1_complete" and props.get("camp_workbench", "") == "act2_complete" and props.get("camp_antenna", "") == "act3_complete",
+		"el campamento crece al acabar cada acto: %s" % str(props))
+	var dlg: Dictionary = DataLoader.load_json("res://data/npcs.json")["dialogues"]
+	for entry in [["ada", "puesto", "act1_complete", "open_gear_shop"], ["kevin", "mesa", "act2_complete", "reforge_weapon"], ["root", "antena", "act3_complete", "antenna"]]:
+		var opener: Array = dlg[entry[0]]["nodes"]["hola"]["options"].filter(func(o: Dictionary) -> bool: return o["next"] == entry[1])
+		_check(not opener.is_empty() and opener[0].get("requires_flag", "") == entry[2], "%s: la mejora se abre con %s" % [entry[0], entry[2]])
+		var acts: Array = dlg[entry[0]]["nodes"][entry[1]]["options"].map(func(o: Dictionary) -> String: return String(o.get("action", {}).get("type", "")))
+		_check(acts.has(entry[3]), "%s: su mejora hace %s" % [entry[0], entry[3]])
+	var gen := ItemGenerator.new(_db)
+	var stock := Economy.generate_gear_stock(gen, 20)
+	_check(stock.size() >= Economy.GEAR_STOCK_RARE + Economy.GEAR_STOCK_MAGIC and stock.any(func(it: Item) -> bool: return it.rarity == Rarity.Item.RARE),
+		"el puesto de Aida vende equipo raro y mágico")
+	var weapon := gen.generate(20, Rarity.Item.RARE, "espada_oxidada")
+	_check(Economy.can_reforge(weapon) and Economy.reforge_price(weapon) > 0, "un arma rara se puede reforjar y tiene precio")
+	_check(not Economy.can_reforge(gen.generate(20, Rarity.Item.UNIQUE)), "los únicos no se reforjan")
 
 
 func _db_enemies() -> Array:
