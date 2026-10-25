@@ -396,18 +396,19 @@ func _draw() -> void:
 
 ## Barras de colores desplazadas, ruido y binario: el sistema rompiéndose.
 func _draw_glitch(view: Vector2) -> void:
+	var glitch := Accessibility.flash(_glitch)   # con «menos destellos», mucho más suave
 	var seed_value := int(_time * 24.0)
 	_rng.seed = seed_value
-	var bars := int(6 + 18 * _glitch)
+	var bars := int(6 + 18 * glitch)
 	for k in bars:
 		var y := _rng.randf() * view.y
-		var h := _rng.randf_range(2.0, 18.0) * _glitch
+		var h := _rng.randf_range(2.0, 18.0) * glitch
 		var colors := [Color(1, 0, 0.3), Color(0, 1, 0.8), Color(0.3, 0.4, 1.0), Color(1, 1, 1)]
-		draw_rect(Rect2(_rng.randf_range(-80, 80), y, view.x, h), Color(colors[k % 4], 0.12 * _glitch))
+		draw_rect(Rect2(_rng.randf_range(-80, 80), y, view.x, h), Color(colors[k % 4], 0.12 * glitch))
 	var font := get_theme_default_font()
-	for k in int(30 * _glitch):
+	for k in int(30 * glitch):
 		draw_string(font, Vector2(_rng.randf() * view.x, _rng.randf() * view.y), "1" if _rng.randf() < 0.5 else "0",
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.3, 1.0, 0.5, 0.5 * _glitch))
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.3, 1.0, 0.5, 0.5 * glitch))
 	_rng.randomize()
 
 

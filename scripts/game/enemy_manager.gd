@@ -2137,7 +2137,7 @@ func _process(delta: float) -> void:
 		var outline := Rarity.enemy_color(rarities[i])
 		outline.a = 0.0 if rarities[i] == Rarity.Enemy.NORMAL else 1.0
 		_multimesh.set_instance_color(i, outline)
-		_multimesh.set_instance_custom_data(i, Color(t.get("sprite_row", 0), phases[i], facings[i], flashes[i] / FLASH_TIME))
+		_multimesh.set_instance_custom_data(i, Color(t.get("sprite_row", 0), phases[i], facings[i], Accessibility.flash(flashes[i] / FLASH_TIME)))
 	queue_redraw()
 
 
@@ -2227,9 +2227,10 @@ func _draw_all() -> void:
 		var w := maxf(r * 2.0, 30.0)
 		var top := positions[i] + Vector2(-w / 2.0, -r * SPRITE_SCALE * 1.1 - 8.0)
 		var name_y := -6.0 - (14.0 if not _state_ids(i).is_empty() else 0.0)
-		draw_string_outline(font, top + Vector2(-80.0, name_y), names[i], HORIZONTAL_ALIGNMENT_CENTER, w + 160.0, 14, 4, Color(0, 0, 0, 0.8))
+		var name_size := Accessibility.world_size(14)
+		draw_string_outline(font, top + Vector2(-80.0, name_y), names[i], HORIZONTAL_ALIGNMENT_CENTER, w + 160.0, name_size, 4, Color(0, 0, 0, 0.8))
 		draw_string(font, top + Vector2(-80.0, name_y), names[i], HORIZONTAL_ALIGNMENT_CENTER,
-			w + 160.0, 14, Rarity.enemy_color(rarities[i]))
+			w + 160.0, name_size, Rarity.enemy_color(rarities[i]))
 		var quote_t := float((traits[i] as Dictionary).get("quote_t", 0.0))
 		if quote_t > 0.0:
 			_draw_quote(font, positions[i].x, top.y + name_y - 18.0, String(traits[i]["quote"]), clampf(quote_t / 0.4, 0.0, 1.0))

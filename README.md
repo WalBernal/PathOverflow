@@ -376,6 +376,13 @@ En el mundo (`scripts/core/gamepad.gd`): stick izquierdo para moverse, derecho p
 
 **En las ventanas** (inventario, habilidades K, hoja de personaje, tienda, alijo y la elección de habilidad) aparece un **cursor libre** (`scripts/ui/gamepad_cursor.gd`): el stick izquierdo lo mueve, **A** es clic izquierdo (mantener y mover = arrastrar), **X** clic derecho, la **cruceta** salta a la casilla o botón más cercano en esa dirección, **LB/RB** cambian de ventana y **B** cierra como Esc. Mientras está activo, el personaje no se mueve ni lanza nada; al abrir otra ventana el cursor salta a ella. También funciona en el **árbol pasivo** (la cruceta salta entre los nodos que se ven, el stick derecho hace zoom como la rueda y A mantenida arrastra para mover el árbol) y en los **diálogos**. **Y** (o **F** en el teclado) **fija la comparación** del objeto: deja una copia quieta en pantalla para mover el cursor y compararlo con calma; otra vez la suelta, y se quita sola al cerrar las ventanas. Un anillo con los dos anillos puestos se compara **contra cada uno** (dos secciones y los dos equipados al lado).
 
+## Accesibilidad
+
+En **Pausa → Interfaz** (`scripts/core/accessibility.gd`):
+- **Menos destellos**: atenúa los fogonazos de los enemigos (golpes a jefes, cambios de fase), la luz de los impactos y los glitches de las escenas y de la absorción del prólogo, y deja fijo lo que parpadea (estados por acabarse, trampas armadas).
+- **Texto del mundo** (80-150 %): nombres de enemigos, PNJ y compañero, etiquetas del botín y avisos como *git stash*, aparte del tamaño de la interfaz.
+- **Modo daltónico**: además de los estados alterados y la chapita de rareza del botín, cambia las **auras** (un color Okabe-Ito por tipo de daño) y las **cargas** (bermellón, amarillo y celeste, distintos también en brillo).
+
 ## Pociones
 
 Las pociones son **objetos**: caen como botín (las de nivel cercano al de la zona son más probables) y se llevan en el **cinturón de pociones** (5 ranuras, teclas 1-5; en el inventario, I). Cada una tiene **cargas**: cada uso gasta unas (por ejemplo, 6 de 30) y matar enemigos las recarga (más con élites y jefes). Mario las rellena todas.

@@ -126,6 +126,7 @@ func _initialize() -> void:
 	_test_gamepad_cursor()
 	_test_ring_comparison()
 	_test_controls()
+	_test_accessibility()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3054,6 +3055,39 @@ func _test_controls() -> void:
 	_check(Controls.key_of(&"skill_1") == KEY_Q and Controls.key_of(&"skill_2") == KEY_W and Controls.pad_of(&"skill_1") == pad_default,
 		"restaurar deja todo como de fábrica")
 	Controls.persist = true
+
+
+## Accesibilidad (T51): menos destellos, texto del mundo y paletas daltónicas.
+## Cambia las variables a mano (sin set_*: no se toca el settings.cfg del jugador).
+func _test_accessibility() -> void:
+	var was := [Accessibility.reduce_flashes, Accessibility.world_text, Ailments.colorblind]
+	Accessibility.reduce_flashes = false
+	_check(Accessibility.flash(1.0) == 1.0 and Accessibility.can_blink(), "por defecto, los destellos como siempre")
+	Accessibility.reduce_flashes = true
+	_check(Accessibility.flash(1.0) < 0.5 and Accessibility.flash(4.0) < 2.0 and not Accessibility.can_blink(), "con la opción, más suaves y sin parpadeo")
+	Accessibility.world_text = 1.5
+	_check(Accessibility.world_size(14) == 21, "texto del mundo al 150 %%")
+	Accessibility.world_text = 0.8
+	_check(Accessibility.world_size(14) == 11 and Accessibility.world_size(4) >= 6, "más chico, con un mínimo")
+	Ailments.colorblind = false
+	var fire := SkillController.DAMAGE_COLORS["fire"]
+	_check(Accessibility.aura_color("fire", fire) == fire and Charges.color("buffer") == Charges.COLORS["buffer"], "sin modo daltónico, los colores de siempre")
+	Ailments.colorblind = true
+	var auras := {}
+	for t in Accessibility.AURA_COLORBLIND:
+		auras[Accessibility.aura_color(t, Color.BLACK).to_html()] = true
+	_check(auras.size() == Accessibility.AURA_COLORBLIND.size() and Accessibility.aura_color("fire", fire) != fire, "auras: un color distinto por tipo")
+	var charges := {}
+	for t in Charges.TYPES:
+		charges[Charges.color(t).to_html()] = true
+		_check(Charges.color(t) != Charges.COLORS[t], "carga %s con su color daltónico" % t)
+	_check(charges.size() == Charges.TYPES.size(), "cargas: tres colores distintos")
+	var lum := Charges.TYPES.map(func(t: String) -> float: return Charges.color(t).get_luminance())
+	lum.sort()
+	_check(lum[1] - lum[0] > 0.08 and lum[2] - lum[1] > 0.08, "y distintos también en brillo")
+	Accessibility.reduce_flashes = was[0]
+	Accessibility.world_text = was[1]
+	Ailments.colorblind = was[2]
 
 
 func _db_enemies() -> Array:

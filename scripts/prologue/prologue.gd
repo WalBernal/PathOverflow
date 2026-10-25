@@ -210,10 +210,10 @@ func _update_screen() -> void:
 	_material.set_shader_parameter("desat", desat)
 	_material.set_shader_parameter("tint", Vector3(1.08, 1.0, 0.86) if _stage.room == "calle" else Vector3(1.0, 1.0, 0.95))
 	_material.set_shader_parameter("heat", 1.0 if _stage.room == "calle" else 0.0)
-	_material.set_shader_parameter("glitch", _glitch)
+	_material.set_shader_parameter("glitch", Accessibility.flash(_glitch))   # «menos destellos» (Pausa → Interfaz)
 	_material.set_shader_parameter("digital", digital)
 	_material.set_shader_parameter("pixelate", pixel)
-	_material.set_shader_parameter("flash", _flash)
+	_material.set_shader_parameter("flash", Accessibility.flash(_flash))
 
 
 func _update_walk(delta: float) -> void:

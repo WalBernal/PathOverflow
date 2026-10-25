@@ -513,7 +513,7 @@ func _draw_player_states(life_center: Vector2, font: Font) -> void:
 	# Cargas: rombo de su color con cuántas hay (y el máximo) y el tiempo que les queda.
 	for t in charge_types:
 		var r := Rect2(x, y, side, side)
-		var col: Color = Charges.COLORS[t]
+		var col: Color = Charges.color(t)
 		var c := r.get_center()
 		draw_rect(r, Color(0, 0, 0, 0.7))
 		draw_colored_polygon(PackedVector2Array([c + Vector2(0, -11), c + Vector2(11, 0), c + Vector2(0, 11), c + Vector2(-11, 0)]), col.darkened(0.2))
@@ -723,7 +723,7 @@ func _draw_status_boxes(font: Font) -> void:
 		var bar_color := Color("6fd36b").lerp(Color("e06c6c"), 1.0 - frac) if persistent else color
 		draw_rect(Rect2(r.position.x, r.end.y + 2.0, r.size.x, 4.0), Color(0, 0, 0, 0.8))
 		draw_rect(Rect2(r.position.x, r.end.y + 2.0, r.size.x * frac, 4.0), bar_color)
-		var blink := frac < 0.2 and fmod(Time.get_ticks_msec() / 1000.0, 0.5) < 0.25
+		var blink := frac < 0.2 and fmod(Time.get_ticks_msec() / 1000.0, 0.5) < 0.25 and Accessibility.can_blink()
 		draw_rect(r, color if not blink else Color.WHITE, false, 2.0)
 		if int(e["count"]) > 1:
 			draw_string_outline(font, r.position + Vector2(r.size.x - 18.0, 14.0), "x%d" % e["count"], HORIZONTAL_ALIGNMENT_LEFT, -1, 12, 4, Color.BLACK)
@@ -843,9 +843,9 @@ func _draw_skill_slot(i: int, font: Font) -> void:
 			var n := int(character.charges.get(t, 0))
 			var chip := Rect2(cx, r.position.y + 2.0, 16.0, 13.0)
 			draw_rect(chip, Color(0, 0, 0, 0.8))
-			draw_rect(chip, Charges.COLORS[t] if n > 0 else Color(Charges.COLORS[t], 0.35), false, 1.0)
+			draw_rect(chip, Charges.color(t) if n > 0 else Color(Charges.color(t), 0.35), false, 1.0)
 			draw_string(font, chip.position + Vector2(0, 10.0), str(n), HORIZONTAL_ALIGNMENT_CENTER, chip.size.x, 10,
-				Charges.COLORS[t] if n > 0 else MUTED)
+				Charges.color(t) if n > 0 else MUTED)
 			cx += 18.0
 		var flash := _slot_flash[i] / 0.25
 		draw_rect(r, Motherboard.COLOR.darkened(0.2).lerp(Color("ffe8a0"), flash), false, 1.5 + 1.5 * flash)

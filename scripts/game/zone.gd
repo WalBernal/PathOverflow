@@ -1226,9 +1226,10 @@ func _label(pos: Vector2, text: String, width: float, font_size: int, color: Col
 func _draw_labels() -> void:
 	var font := ThemeDB.fallback_font
 	for l in _labels:
+		var font_size := Accessibility.world_size(l[3])
 		if l[5]:
-			_label_layer.draw_string_outline(font, l[0], l[1], HORIZONTAL_ALIGNMENT_CENTER, l[2], l[3], 5, Color(0, 0, 0, 0.85))
-		_label_layer.draw_string(font, l[0], l[1], HORIZONTAL_ALIGNMENT_CENTER, l[2], l[3], l[4])
+			_label_layer.draw_string_outline(font, l[0], l[1], HORIZONTAL_ALIGNMENT_CENTER, l[2], font_size, 5, Color(0, 0, 0, 0.85))
+		_label_layer.draw_string(font, l[0], l[1], HORIZONTAL_ALIGNMENT_CENTER, l[2], font_size, l[4])
 	_labels.clear()
 
 

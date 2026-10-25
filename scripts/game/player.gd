@@ -596,8 +596,8 @@ func _draw() -> void:
 	if _stash_label > 0.0:
 		var font := ThemeDB.fallback_font
 		var fy := -64.0 - (0.6 - _stash_label) * 30.0
-		draw_string_outline(font, Vector2(-60.0, fy), "git stash", HORIZONTAL_ALIGNMENT_CENTER, 120.0, 14, 4, Color(0, 0, 0, _stash_label / 0.6))
-		draw_string(font, Vector2(-60.0, fy), "git stash", HORIZONTAL_ALIGNMENT_CENTER, 120.0, 14, Color(0.6, 0.9, 1.0, _stash_label / 0.6))
+		draw_string_outline(font, Vector2(-60.0, fy), "git stash", HORIZONTAL_ALIGNMENT_CENTER, 120.0, Accessibility.world_size(14), 4, Color(0, 0, 0, _stash_label / 0.6))
+		draw_string(font, Vector2(-60.0, fy), "git stash", HORIZONTAL_ALIGNMENT_CENTER, 120.0, Accessibility.world_size(14), Color(0.6, 0.9, 1.0, _stash_label / 0.6))
 	var tint := Color(0, 0, 0, 0)
 	if not is_alive():
 		tint = Color("444444")

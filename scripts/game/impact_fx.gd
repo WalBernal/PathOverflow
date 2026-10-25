@@ -122,6 +122,9 @@ func death(pos: Vector2, damage_type: String, radius: float, tint: Color) -> voi
 
 func _flash(pos: Vector2, color: Color, radius: float, life: float) -> void:
 	if flashes.size() < 12:
+		if Accessibility.reduce_flashes:   # menos destellos: un fogonazo más chico y tenue
+			radius *= 0.6
+			color = Color(color, color.a * Accessibility.REDUCED)
 		flashes.append({"pos": pos, "color": color, "radius": radius, "life": life, "max": life})
 
 

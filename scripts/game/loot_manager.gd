@@ -56,7 +56,7 @@ func _visible(d: Dictionary) -> bool:
 func drop_item(item: Item, pos: Vector2) -> void:
 	var font := ThemeDB.fallback_font
 	var text := item.display_name()
-	var label_size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE) + PADDING * 2.0
+	var label_size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, Accessibility.world_size(FONT_SIZE)) + PADDING * 2.0
 	drops.append({"item": item, "rect": find_spot(pos, label_size), "text": text, "age": 0.0})
 	# Botín bueno: haz de luz del color de la rareza y su propio sonido.
 	if item.is_equipment() and (item.rarity == Rarity.Item.UNIQUE or item.rarity == Rarity.Item.SET):
@@ -107,7 +107,7 @@ func clear_all() -> void:
 
 func _draw() -> void:
 	var font := ThemeDB.fallback_font
-	var ascent := font.get_ascent(FONT_SIZE)
+	var ascent := font.get_ascent(Accessibility.world_size(FONT_SIZE))
 	for c in coins:
 		_draw_coin(c, font)
 	for i in drops.size():
@@ -131,7 +131,7 @@ func _draw() -> void:
 		if item.rarity >= Rarity.Item.UNIQUE or not item.is_equipment() or i == _hovered:
 			draw_rect(rect, color, false, 1.5)
 		draw_string(font, rect.position + Vector2(PADDING.x, PADDING.y + ascent), d["text"],
-			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)
+			HORIZONTAL_ALIGNMENT_LEFT, -1, Accessibility.world_size(FONT_SIZE), color)
 		var tag := rarity_tag(item)
 		if Ailments.colorblind and tag != "":
 			# Modo daltónico: la rareza también en letra, en una chapita a la izquierda.

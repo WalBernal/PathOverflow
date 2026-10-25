@@ -602,7 +602,7 @@ func _draw_fire_walls() -> void:
 func _roll_charge(t: String) -> void:
 	if randf() * 100.0 < Charges.BASE_CHANCE[t] + character.stats.get_value(Charges.chance_stat(t)):
 		if character.gain_charge(t):
-			_effects.append({"type": "ring", "pos": player.global_position, "radius": 34.0, "time": 0.0, "duration": 0.3, "color": Charges.COLORS[t]})
+			_effects.append({"type": "ring", "pos": player.global_position, "radius": 34.0, "time": 0.0, "duration": 0.3, "color": Charges.color(t)})
 
 
 var _crit_charge_cd := 0.0
@@ -713,7 +713,7 @@ func _spend_charges(p: Dictionary) -> Dictionary:
 				if float(q["crit_chance"]) > 0.0:   # Memoria sin ECC: nunca hace críticos
 					q["crit_chance"] = 100.0
 				q["crit_multiplier"] = float(q["crit_multiplier"]) + 20.0 * n
-		_effects.append({"type": "burst", "pos": player.global_position, "radius": 40.0 + 12.0 * n, "time": 0.0, "duration": 0.35, "color": Charges.COLORS[t]})
+		_effects.append({"type": "burst", "pos": player.global_position, "radius": 40.0 + 12.0 * n, "time": 0.0, "duration": 0.35, "color": Charges.color(t)})
 	q["min_damage"] = float(q["min_damage"]) * mult
 	q["max_damage"] = float(q["max_damage"]) * mult
 	return q
@@ -826,7 +826,7 @@ func on_player_dodged() -> void:
 	queue_trigger("on_dodge")
 	for k in int(character.stats.get_value(Stat.DODGE_MULTIHILO)):
 		if character.gain_charge("multihilo"):
-			_effects.append({"type": "ring", "pos": player.global_position, "radius": 34.0, "time": 0.0, "duration": 0.3, "color": Charges.COLORS["multihilo"]})
+			_effects.append({"type": "ring", "pos": player.global_position, "radius": 34.0, "time": 0.0, "duration": 0.3, "color": Charges.color("multihilo")})
 	if character.stats.get_value(Stat.DODGE_BLAST) > 0.0:
 		_stash_pops.append({"pos": player.global_position, "time": STASH_POP_DELAY})
 		_effects.append({"type": "marker", "pos": player.global_position, "radius": STASH_POP_RADIUS, "time": 0.0, "duration": STASH_POP_DELAY, "color": Color("ff9a3a")})
@@ -2271,7 +2271,7 @@ func _update_effects(delta: float) -> void:
 func _draw() -> void:
 	for trap in _traps:
 		var armed: bool = trap["armed_in"] <= 0.0
-		var blink := armed and fmod(Time.get_ticks_msec() / 1000.0, 1.0) < 0.5
+		var blink := armed and (fmod(Time.get_ticks_msec() / 1000.0, 1.0) < 0.5 or not Accessibility.can_blink())
 		draw_circle(trap["pos"], 9.0, Color("2a2a30"))
 		draw_circle(trap["pos"], 3.0, trap["color"] if blink else Color(trap["color"], 0.3))
 		draw_arc(trap["pos"], trap["profile"]["trigger_radius"], 0.0, TAU, 24, Color(trap["color"], 0.18), 1.0, true)
@@ -2494,7 +2494,7 @@ func _draw_auras() -> void:
 		var ar := float(a["profile"].get("aura_radius", 0.0))
 		if ar > 0.0:
 			var hostile: bool = not a["profile"].get("aura_enemy", {}).is_empty()
-			var rc: Color = Color("e06c6c") if hostile else a["color"]
+			var rc: Color = Color("e06c6c") if hostile else Accessibility.aura_color(String(a["profile"].get("damage_type", "")), a["color"])
 			var ac := aura_center(a)
 			if bool(a["profile"].get("aura_anchor", false)):
 				# Torre de Señal: una antena en el centro del aura anclada.
@@ -2506,7 +2506,7 @@ func _draw_auras() -> void:
 			draw_set_transform(Vector2.ZERO)
 	var k := 0
 	for a in _auras:
-		var c: Color = a["color"]
+		var c: Color = Accessibility.aura_color(String(a["profile"].get("damage_type", "")), a["color"])
 		var radius := 54.0 + k * 9.0
 		draw_set_transform(player.global_position + Vector2(0, 14), 0.0, Vector2(1.0, 0.5))
 		for q in 4:

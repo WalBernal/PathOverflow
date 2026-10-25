@@ -12,6 +12,8 @@ extends RefCounted
 const TYPES := ["buffer", "multihilo", "overclock"]
 const NAMES := {"buffer": "Buffer", "multihilo": "Multihilos", "overclock": "Overclock"}
 const COLORS := {"buffer": Color("e0a050"), "multihilo": Color("6ad07a"), "overclock": Color("6aa8ff")}
+## Con el modo daltónico: bermellón, amarillo y celeste (también distintos en brillo).
+const COLORBLIND_COLORS := {"buffer": Color("d55e00"), "multihilo": Color("f0e442"), "overclock": Color("56b4e9")}
 const DURATION := 10.0
 const BASE_MAX := 3
 const ATTR_STEP := 50.0
@@ -33,6 +35,10 @@ const SPEND_TEXT := {
 	"multihilo": "Gasta tus cargas de Multihilos: 15 % más de daño por carga",
 	"overclock": "Gasta tus cargas de Overclock: crítico seguro y +20 % de multiplicador de crítico por carga",
 }
+
+
+static func color(t: String) -> Color:
+	return COLORBLIND_COLORS[t] if Ailments.colorblind else COLORS[t]
 
 
 static func chance_stat(t: String) -> StringName:

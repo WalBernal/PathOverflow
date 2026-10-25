@@ -486,11 +486,23 @@ func _build_pause_menu() -> Control:
 	right.add_child(scale_button)
 	var colorblind := UiStyle.button("", func() -> void: pass, 300)
 	colorblind.text = "Modo daltónico: " + ("sí" if Ailments.colorblind else "no")
-	colorblind.tooltip_text = "Colores de estados alterados que se distinguen con cualquier tipo de daltonismo\n(quemado, sangrando, envenenado, helado, corrompido...)."
+	colorblind.tooltip_text = "Colores que se distinguen con cualquier tipo de daltonismo: estados alterados\n(quemado, sangrando, envenenado, helado, corrompido...), auras y cargas."
 	colorblind.pressed.connect(func() -> void:
 		Ailments.set_colorblind(not Ailments.colorblind)
 		colorblind.text = "Modo daltónico: " + ("sí" if Ailments.colorblind else "no"))
 	right.add_child(colorblind)
+	var flashes := UiStyle.button("", func() -> void: pass, 300)
+	flashes.text = "Menos destellos: " + ("sí" if Accessibility.reduce_flashes else "no")
+	flashes.tooltip_text = "Atenúa los fogonazos (golpes a jefes, cambios de fase, luz de impactos) y los glitches\nde las escenas y del prólogo, y deja fijo lo que parpadea."
+	flashes.pressed.connect(func() -> void:
+		Accessibility.set_reduce_flashes(not Accessibility.reduce_flashes)
+		flashes.text = "Menos destellos: " + ("sí" if Accessibility.reduce_flashes else "no"))
+	right.add_child(flashes)
+	var world_text := _cycle_button("Texto del mundo", Accessibility.WORLD_TEXT_SIZES, Accessibility.WORLD_TEXT_SIZES.map(func(v: float) -> String: return "%d %%" % roundi(v * 100.0)),
+		func() -> float: return Accessibility.world_text,
+		func(v: float) -> void: Accessibility.set_world_text(v))
+	world_text.tooltip_text = "Tamaño de los nombres de enemigos y PNJ, las etiquetas del botín y los avisos del mundo,\naparte del tamaño de la interfaz."
+	right.add_child(world_text)
 	var pixel := UiStyle.button("", func() -> void: pass, 300)
 	pixel.text = "Filtro pixel art: " + ("sí" if WorldPost.enabled() else "no")
 	pixel.tooltip_text = "Rejilla de píxeles, paleta con tramado, luz y sombra de cada zona.\nApágalo si prefieres el mundo nítido."

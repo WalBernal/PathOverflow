@@ -39,5 +39,5 @@ func _draw() -> void:
 	draw_circle(Vector2.ZERO, 12.0, Color(0, 0, 0, 0.35))
 	draw_set_transform(Vector2.ZERO)
 	CharacterAppearance.draw(self, Vector2(0, 14), 1.0, _appearance, Vector2(signf(_facing.x) * 0.5, 1.0))
-	draw_string_outline(ThemeDB.fallback_font, Vector2(-80, -40), _name, HORIZONTAL_ALIGNMENT_CENTER, 160, 12, 4, Color(0, 0, 0, 0.8))
-	draw_string(ThemeDB.fallback_font, Vector2(-80, -40), _name, HORIZONTAL_ALIGNMENT_CENTER, 160, 12, Color("8ad8ff"))
+	draw_string_outline(ThemeDB.fallback_font, Vector2(-80, -40), _name, HORIZONTAL_ALIGNMENT_CENTER, 160, Accessibility.world_size(12), 4, Color(0, 0, 0, 0.8))
+	draw_string(ThemeDB.fallback_font, Vector2(-80, -40), _name, HORIZONTAL_ALIGNMENT_CENTER, 160, Accessibility.world_size(12), Color("8ad8ff"))

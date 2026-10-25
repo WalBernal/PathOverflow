@@ -289,7 +289,7 @@ Origen: R1 §5, R2 §5 ★★
 ### [x] T50 · Rebindear teclas y botones desde la pausa · M
 Origen: R1 §5
 
-### [ ] T51 · Accesibilidad: destellos, texto del mundo y daltonismo · S
+### [x] T51 · Accesibilidad: destellos, texto del mundo y daltonismo · S
 Origen: R2 §11 ★★
 - Reducir parpadeos y destellos (fases de jefe, absorción del prólogo).
 - Texto del mundo con tamaño propio, independiente de la interfaz.
@@ -437,3 +437,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T48 · Cursor libre de mando en inventario, K, hoja, tienda, alijo y elección de habilidad: stick para moverlo, A/X como clics (eventos de ratón simulados), cruceta para saltar entre casillas, LB/RB entre ventanas y B para cerrar; el personaje queda quieto mientras tanto. La integración lo prueba (elige con A, mueve con la cruceta y cierra con B).
 - 2026-10-25 · T49 · Cursor de mando en el árbol pasivo (cruceta entre nodos, stick derecho como rueda) y en los diálogos; comparación de anillos contra los dos puestos (dos secciones y dos tooltips al lado) y comparación fijable con F o Y. La integración fija y suelta con Y y recorre el árbol con la cruceta.
 - 2026-10-25 · T50 · Pausa → Controles: tecla y botón de mando por acción (26), con intercambio si ya estaba en uso, guardado en settings.cfg y botón de restaurar; la barra de habilidades y el menú K muestran la tecla asignada.
+- 2026-10-25 · T51 · Accesibilidad en Pausa → Interfaz: «menos destellos» (fogonazos de enemigos y de impactos, glitches de escenas y del prólogo, sin parpadeos), tamaño propio del texto del mundo y paletas daltónicas para auras y cargas con el modo daltónico.
