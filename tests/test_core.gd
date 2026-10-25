@@ -130,6 +130,7 @@ func _initialize() -> void:
 	_test_auto_attack()
 	_test_map_marks()
 	_test_loot_filter_rules()
+	_test_ambient_emitters()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3209,6 +3210,27 @@ func _test_loot_filter_rules() -> void:
 	LootFilter.persist = true
 	LootFilter.reload()
 	_check(FileAccess.get_file_as_string(GameSettings.PATH) == settings_before, "las pruebas no tocan el settings.cfg del jugador")
+
+
+## Ambiente posicional (T55): racks, goteo y viento cerca de su fuente.
+func _test_ambient_emitters() -> void:
+	for s in ["emit_rack", "emit_drip", "emit_wind"]:
+		_check(ResourceLoader.exists(Sfx.AMB_DIR + s + ".wav"), "existe el sonido %s" % s)
+	var obstacles := [
+		{"kind": "rack", "pos": Vector2(100, 100)}, {"kind": "rack", "pos": Vector2(200, 100)},   # demasiado juntos: uno
+		{"kind": "rack", "pos": Vector2(900, 100)}, {"kind": "chasm", "pos": Vector2(150, 120)},
+		{"kind": "tomb", "pos": Vector2(500, 500)},
+	]
+	var plan := AmbientEmitters.plan(obstacles, "ruins", [])
+	var sounds := plan.map(func(e: Dictionary) -> String: return e["sound"])
+	_check(sounds.count("emit_rack") == 2 and sounds.count("emit_wind") == 1 and plan.size() == 3, "cada fuente suena junto a su obstáculo, sin amontonarse (%s)" % str(sounds))
+	var many: Array = []
+	for k in 20:
+		many.append(Vector2(k * 1000.0, 0))
+	var sewer := AmbientEmitters.plan([], "alcantarillas", many)
+	_check(sewer.size() == AmbientEmitters.MAX_PER_SOUND and sewer.all(func(e: Dictionary) -> bool: return e["sound"] == "emit_drip"),
+		"en las alcantarillas gotea aunque no haya charcos, con un tope")
+	_check(AmbientEmitters.plan([], "forest", many).is_empty(), "un bosque sin fuentes queda en silencio posicional")
 
 
 func _db_enemies() -> Array:

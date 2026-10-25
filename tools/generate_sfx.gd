@@ -35,7 +35,21 @@ func _act4_ambients() -> Dictionary:
 	return {"setup": _amb_setup, "vga16": _amb_vga16}
 
 
+## Ambiente posicional (suena cerca de su fuente, AmbientEmitters): zumbido de
+## racks, goteo y viento. Con `-- posicional` solo se generan estos.
+func _positional_ambients() -> Dictionary:
+	return {"emit_rack": _emit_rack, "emit_drip": _emit_drip, "emit_wind": _emit_wind}
+
+
 func _initialize() -> void:
+	if OS.get_cmdline_user_args().has("posicional"):
+		rng.seed = 5555
+		var pos := _positional_ambients()
+		for name in pos:
+			_save(AMB_DIR + name + ".wav", _loopable(pos[name].call()), 0.8)
+		print("Ambientes posicionales generados: %d" % pos.size())
+		quit()
+		return
 	if OS.get_cmdline_user_args().has("acto4"):
 		rng.seed = 4444
 		var act4 := _act4_ambients()
@@ -93,6 +107,11 @@ func _initialize() -> void:
 	for name in act4:
 		_save(AMB_DIR + name + ".wav", _loopable(act4[name].call()), float(AMBIENT_PEAK.get(name, 0.9)))
 		ambients[name] = act4[name]
+	rng.seed = 5555
+	var positional := _positional_ambients()
+	for name in positional:
+		_save(AMB_DIR + name + ".wav", _loopable(positional[name].call()), 0.8)
+		ambients[name] = positional[name]
 	print("Sonidos generados: %d efectos y %d ambientes" % [sfx.size() + late_sfx.size(), ambients.size()])
 	quit()
 
@@ -786,6 +805,32 @@ func _amb_sewer() -> PackedFloat32Array:
 	var b := _amb_base()
 	_add_wind(b, 0.45, 500.0, 0.3)    # agua corriendo
 	_add_pings(b, 10, 1600.0, 2400.0, 0.2, 0.06)   # goteo
+	return b
+
+
+## Rack de servidores: zumbido eléctrico y ventilador, con algún pitido de disco.
+func _emit_rack() -> PackedFloat32Array:
+	var b := _amb_base()
+	_add_drone(b, 120.0, 0.25, 0.0)
+	_add_drone(b, 240.0, 0.08, 0.0)
+	_add_wind(b, 0.3, 2200.0, 0.03)
+	_add_pings(b, 5, 3000.0, 3400.0, 0.05, 0.03)
+	return b
+
+
+## Goteo de alcantarilla: gotas sueltas con eco sobre un rumor de agua muy bajo.
+func _emit_drip() -> PackedFloat32Array:
+	var b := _amb_base()
+	_add_wind(b, 0.06, 400.0, 0.2)
+	_add_pings(b, 16, 1500.0, 2600.0, 0.5, 0.12)
+	return b
+
+
+## Viento de grieta: ráfagas que suben y bajan.
+func _emit_wind() -> PackedFloat32Array:
+	var b := _amb_base()
+	_add_wind(b, 0.9, 650.0, 0.18)
+	_add_drone(b, 70.0, 0.04, 0.1)
 	return b
 
 

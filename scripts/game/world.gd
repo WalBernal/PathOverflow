@@ -264,6 +264,9 @@ func travel_to(zone_id: String, entry := "") -> void:
 	zone.setup(def, player, character, quests)
 	add_child(zone)
 	move_child(zone, 0)  # debajo de todo lo demás
+	var emitters := AmbientEmitters.new()   # racks, goteo y viento que suenan cerca
+	zone.add_child(emitters)
+	emitters.setup(zone)
 	post.attach(self, zone)   # el pixelado justo después de la zona; la luz, encima
 	post.set_style(zone.style)
 	zone.npc_interacted.connect(_on_npc_interacted)
