@@ -6,6 +6,7 @@ extends SceneTree
 ## Uso:  Godot_v4.7.2-stable_win64_console.exe --headless --path . -s res://tools/generate_sfx.gd
 ##
 ## Para usar sonidos propios basta con sustituir el .wav con el mismo nombre.
+## Los ambientes, después, se pasan a OGG con tools/convert_audio.ps1 (los efectos se quedan en WAV).
 
 const RATE := 22050
 const SFX_DIR := "res://assets/audio/sfx/"

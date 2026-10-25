@@ -72,10 +72,8 @@ func play_ambient(style: String) -> void:
 	if amb == _ambient_name and _ambient.playing:
 		return
 	_ambient_name = amb
-	var stream: AudioStream = null if amb == "" else _load(Sfx.AMB_DIR + amb + ".wav")
-	if stream is AudioStreamWAV:
-		# Bucle real del propio stream: volver a lanzarlo al terminar deja un hueco.
-		Sfx.set_loop(stream as AudioStreamWAV)
+	# Bucle real del propio stream (OGG o WAV): volver a lanzarlo al terminar deja un hueco.
+	var stream: AudioStream = null if amb == "" else Sfx.load_looped(Sfx.AMB_DIR + amb)
 	if _tween:
 		_tween.kill()
 	_tween = create_tween()

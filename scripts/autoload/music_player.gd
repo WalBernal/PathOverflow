@@ -3,7 +3,8 @@ extends Node
 ## pantalla (título → personajes → creador) y se apaga con un fundido al entrar
 ## en el juego. El silencio se recuerda en user://settings.cfg.
 
-const TITLE_THEME := "res://assets/audio/title_theme.wav"
+## Sin extensión: OGG (o WAV si aún no se ha convertido, ver Sfx.audio_path).
+const TITLE_THEME := "res://assets/audio/title_theme"
 const SETTINGS_PATH := "user://settings.cfg"
 const VOLUME_DB := -8.0
 const SILENT_DB := -60.0
@@ -56,15 +57,13 @@ func _ready() -> void:
 func play_title() -> void:
 	_wanted = true
 	_track = ""
-	if _player.playing and _player.stream and _player.stream.resource_path == TITLE_THEME:
+	if _player.playing and _player.stream and _player.stream.resource_path.get_basename() == TITLE_THEME:
 		_fade_to(_target_db(), 0.5)
 		return
-	if not ResourceLoader.exists(TITLE_THEME):
+	var stream := Sfx.load_looped(TITLE_THEME)
+	if stream == null:
 		push_warning("Falta %s: genera la música con tools/generate_music.gd" % TITLE_THEME)
 		return
-	var stream := load(TITLE_THEME) as AudioStreamWAV
-	if stream:
-		Sfx.set_loop(stream)
 	_crossfade_to(stream, 1.5)
 
 
@@ -78,19 +77,16 @@ func play_zone(zone_id: String) -> void:
 
 
 func play_track(id: String, fade := 2.0) -> void:
-	var path := "%s%s.wav" % [TRACK_DIR, id]
 	if id == _track and _wanted:
 		return
 	set_combat(false)   # la capa es de la pista anterior
 	_wanted = true
-	if not ResourceLoader.exists(path):
-		push_warning("Falta %s: genera la música con tools/generate_zone_music.gd" % path)
+	# La intro suena una vez; el bucle empieza donde acaba (music_loops.json, lo
+	# escribe tools/generate_zone_music.gd) y enlaza sin costura.
+	var stream := Sfx.load_looped(TRACK_DIR + id, int(_loop_starts().get(id, 0)), Sfx.MUSIC_RATE)
+	if stream == null:
+		push_warning("Falta %s%s: genera la música con tools/generate_zone_music.gd" % [TRACK_DIR, id])
 		return
-	var stream := load(path) as AudioStreamWAV
-	if stream:
-		# La intro suena una vez; el bucle empieza donde acaba (music_loops.json, lo
-		# escribe tools/generate_zone_music.gd) y enlaza sin costura.
-		Sfx.set_loop(stream, int(_loop_starts().get(id, 0)))
 	_track = id
 	_crossfade_to(stream, fade)
 
@@ -114,9 +110,9 @@ func set_intensity(level: int) -> void:
 	if base != "":
 		var want := base
 		if level >= 1:
-			if ResourceLoader.exists("%s%s%s.wav" % [TRACK_DIR, base, PHASE_SUFFIX]):
+			if Sfx.audio_path(TRACK_DIR + base + PHASE_SUFFIX) != "":
 				want = base + PHASE_SUFFIX
-			elif ResourceLoader.exists("%s%s.wav" % [TRACK_DIR, SUBBOSS_TRACK]):
+			elif Sfx.audio_path(TRACK_DIR + SUBBOSS_TRACK) != "":
 				want = SUBBOSS_TRACK
 		if want != _track:
 			play_track(want, 1.2)
@@ -147,13 +143,11 @@ func set_combat(on: bool) -> void:
 		_layer_tween.tween_callback(_layer.stop)
 		return
 	var id := _track + COMBAT_SUFFIX
-	var path := "%s%s.wav" % [TRACK_DIR, id]
-	if _track == "" or not ResourceLoader.exists(path):
+	if _track == "":
 		return
-	var stream := load(path) as AudioStreamWAV
+	var stream := Sfx.load_looped(TRACK_DIR + id, int(_loop_starts().get(id, 0)), Sfx.MUSIC_RATE)
 	if stream == null:
 		return
-	Sfx.set_loop(stream, int(_loop_starts().get(id, 0)))
 	_layer.stream = stream
 	_layer.pitch_scale = _player.pitch_scale
 	_layer.volume_db = SILENT_DB

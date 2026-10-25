@@ -11,6 +11,7 @@ extends SceneTree
 ## para que la vuelta no tenga costura.
 ##
 ## Uso:  Godot_v4.7.2-stable_win64_console.exe --headless --path . -s res://tools/generate_zone_music.gd [-- id1 id2]
+## Después: tools/convert_audio.ps1 pasa los .wav a OGG (el juego carga el OGG).
 
 const RATE := 16000
 const OUT_DIR := "res://assets/audio/music/"

@@ -51,6 +51,36 @@ static func set_volume(channel: String, value: float) -> void:
 	refresh_settings()
 
 
+## Frecuencia de la música de zona (tools/generate_zone_music.gd): music_loops.json
+## guarda el inicio de cada bucle en muestras a esta frecuencia.
+const MUSIC_RATE := 16000
+## Frecuencia de los ambientes y del tema del título (generate_sfx.gd, generate_music.gd).
+const AMBIENT_RATE := 22050
+
+
+## Ruta del audio `base` (sin extensión): la música, los ambientes y el tema del
+## título van en OGG (tools/convert_audio.ps1); los efectos cortos, en WAV. "" si no hay.
+static func audio_path(base: String) -> String:
+	for ext in [".ogg", ".wav"]:
+		if ResourceLoader.exists(base + ext):
+			return base + ext
+	return ""
+
+
+## Carga `base` (OGG o WAV) en bucle desde `begin` muestras a `rate` Hz hasta el final.
+static func load_looped(base: String, begin := 0, rate := AMBIENT_RATE) -> AudioStream:
+	var path := audio_path(base)
+	if path == "":
+		return null
+	var stream = load(path)
+	if stream is AudioStreamOggVorbis:
+		(stream as AudioStreamOggVorbis).loop = true
+		(stream as AudioStreamOggVorbis).loop_offset = begin / float(rate)
+	elif stream is AudioStreamWAV:
+		set_loop(stream as AudioStreamWAV, int(round(begin * (stream as AudioStreamWAV).mix_rate / float(rate))))
+	return stream
+
+
 ## Muestras de un .wav importado. No vale data.size() / 2: Godot los importa
 ## comprimidos (QOA) y `data` no es PCM de 16 bits.
 static func frame_count(wav: AudioStreamWAV) -> int:
@@ -100,7 +130,7 @@ static func ambient_for(style: String) -> String:
 	if style == "":
 		return ""
 	var s: String = AMBIENT_ALIASES.get(style, style)
-	return s if ResourceLoader.exists(AMB_DIR + s + ".wav") else "ruins"
+	return s if audio_path(AMB_DIR + s) != "" else "ruins"
 
 
 static func _manager() -> Node:

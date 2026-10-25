@@ -346,6 +346,7 @@ El **registro de misiones** está debajo del minimapa (L para plegarlo): la prin
 
 ## Efectos y ambiente
 
+- **Formato**: la música, los ambientes y el tema del título van en **OGG Vorbis** (13 MB en vez de 92 MB en WAV); los efectos cortos siguen en WAV. Los generadores escriben `.wav` y `tools/convert_audio.ps1` los convierte (con `ffmpeg`) y borra los WAV. Los bucles siguen en `data/music_loops.json`, en muestras; `Sfx.load_looped` los pasa a segundos. Los sprites ya iban en atlas (`enemies.png`, `items.png`, `passives.png`).
 - `tools/generate_sfx.gd` sintetiza todos los sonidos (sin archivos externos): efectos en `assets/audio/sfx/` y un ambiente en bucle por estilo de zona en `assets/audio/ambient/` (fogata en el campamento, ventiladores en los servidores, goteo en las alcantarillas, pistones en la fábrica, latido en las salas de jefe...).
 - El autoload `AudioManager` reproduce los efectos (limitados para no saturar cuando mueren muchos enemigos a la vez) y cambia el ambiente con un fundido al viajar. El juego lo usa a través de `Sfx` (`scripts/core/sfx.gd`), que no hace nada si el autoload no está (pruebas).
 - Cada habilidad suena según su tipo y su daño (`Sfx.skill_sound`): golpe, proyectil, fuego, frío, rayo, caos, explosión, teletransporte, buff, barrera, invocación o trampa. También suenan las muertes de enemigos, el daño recibido, el botín, las pociones, subir de nivel, los portales y las oleadas.

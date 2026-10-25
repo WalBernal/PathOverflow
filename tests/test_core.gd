@@ -136,6 +136,7 @@ func _initialize() -> void:
 	_test_lights_weather()
 	_test_obstacle_art()
 	_test_stress_music()
+	_test_audio_ogg()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -1697,7 +1698,7 @@ func _test_events_music_colorblind() -> void:
 	# Capas de combate: existen y empiezan el bucle en la misma muestra que su pista.
 	var loops: Dictionary = DataLoader.load_json("res://data/music_loops.json")
 	for t in ["field1", "field2", "field3", "dark1", "cold2", "deep3"]:
-		_check(ResourceLoader.exists("res://assets/audio/music/%s_combate.wav" % t) and int(loops.get(t + "_combate", -1)) == int(loops.get(t, -2)),
+		_check(Sfx.audio_path("res://assets/audio/music/%s_combate" % t) != "" and int(loops.get(t + "_combate", -1)) == int(loops.get(t, -2)),
 			"capa de combate de %s sincronizada con la pista" % t)
 	# Modo daltónico: la rareza también en letra.
 	_check(LootManager.rarity_tag(Item.new(_db.bases["espada_oxidada"], Rarity.Item.RARE, 5)) == "R"
@@ -2380,7 +2381,7 @@ func _test_act4_boss() -> void:
 	var m3: Array = mech.call(0.2)
 	_check(m1 == ["safe_zones"] and m2 == ["floor_break"] and m3 == ["channel_adds"], "una mecánica de arena por fase: %s / %s / %s" % [m1, m2, m3])
 	var music: Dictionary = DataLoader.load_json("res://data/music.json")
-	_check(music["zones"].get("modo_smm", "") == "boss4" and music["tracks"].has("boss4_fase") and ResourceLoader.exists("res://assets/audio/music/boss4_fase.wav"), "música del jefe con versión de fase")
+	_check(music["zones"].get("modo_smm", "") == "boss4" and music["tracks"].has("boss4_fase") and Sfx.audio_path("res://assets/audio/music/boss4_fase") != "", "música del jefe con versión de fase")
 	# Escena final: el jugador escribe la contraseña y se guarda.
 	var cs: Dictionary = DataLoader.load_json("res://data/cutscenes.json")["cutscenes"]
 	_check(boss.get("death_cutscene", "") == "admin_cambia_password" and cs.has("admin_cambia_password") and cs.has("admin_entrada") and cs.has("bios_post"), "escenas del jefe y de llegada")
@@ -3220,7 +3221,7 @@ func _test_loot_filter_rules() -> void:
 ## Ambiente posicional (T55): racks, goteo y viento cerca de su fuente.
 func _test_ambient_emitters() -> void:
 	for s in ["emit_rack", "emit_drip", "emit_wind"]:
-		_check(ResourceLoader.exists(Sfx.AMB_DIR + s + ".wav"), "existe el sonido %s" % s)
+		_check(Sfx.audio_path(Sfx.AMB_DIR + s) != "", "existe el sonido %s" % s)
 	var obstacles := [
 		{"kind": "rack", "pos": Vector2(100, 100)}, {"kind": "rack", "pos": Vector2(200, 100)},   # demasiado juntos: uno
 		{"kind": "rack", "pos": Vector2(900, 100)}, {"kind": "chasm", "pos": Vector2(150, 120)},
@@ -3341,10 +3342,26 @@ func _test_stress_music() -> void:
 	var music: Dictionary = DataLoader.load_json("res://data/music.json")
 	var id := String((load("res://scripts/game/world.gd") as GDScript).get_script_constant_map().get("STRESS_TRACK", ""))
 	_check(id != "" and music["tracks"].has(id), "la pista de las pruebas de estrés está en music.json (%s)" % id)
-	_check(ResourceLoader.exists("res://assets/audio/music/%s.wav" % id) and ResourceLoader.exists("res://assets/audio/music/%s_combate.wav" % id), "y está compuesta, con su capa de combate")
+	_check(Sfx.audio_path("res://assets/audio/music/%s" % id) != "" and Sfx.audio_path("res://assets/audio/music/%s_combate" % id) != "", "y está compuesta, con su capa de combate")
 	var loops: Dictionary = DataLoader.load_json("res://data/music_loops.json")
 	_check(loops.has(id) and float(loops[id]) > 0.0, "con su bucle tras la intro")
 	_check(int(music["tracks"][id]["bpm"]) > int(music["tracks"]["field1"]["bpm"]), "más rápida que la música de las zonas")
+
+
+## Audio en OGG (T63): música, ambientes y título comprimidos; los efectos, en WAV.
+func _test_audio_ogg() -> void:
+	var total := 0
+	for dir in ["res://assets/audio/music/", "res://assets/audio/ambient/"]:
+		for f in DirAccess.get_files_at(dir):
+			_check(not f.ends_with(".wav"), "%s%s: ya en OGG" % [dir, f])
+			if f.ends_with(".ogg"):
+				total += FileAccess.open(dir + f, FileAccess.READ).get_length()
+	_check(total > 0 and total < 30 * 1024 * 1024, "la música y los ambientes ocupan menos de 30 MB (%.1f MB)" % (total / 1048576.0))
+	_check(Sfx.audio_path("res://assets/audio/title_theme").ends_with(".ogg"), "el tema del título también")
+	_check(Sfx.audio_path(Sfx.SFX_DIR + "coin").ends_with(".wav"), "los efectos cortos siguen en WAV")
+	_check(Sfx.audio_path("res://assets/audio/no_existe") == "" and Sfx.load_looped("res://assets/audio/no_existe") == null, "lo que no existe no se carga")
+	var camp := Sfx.load_looped("res://assets/audio/music/camp1", 16000, Sfx.MUSIC_RATE) as AudioStreamOggVorbis
+	_check(camp != null and camp.loop and is_equal_approx(camp.loop_offset, 1.0), "el bucle pasa de muestras a segundos (16000 muestras = 1 s)")
 
 
 func _db_enemies() -> Array:
@@ -5289,7 +5306,7 @@ func _test_music_and_voices() -> void:
 			if z.has("boss"):
 				_check(String(zones.get(z["id"], "")).begins_with("boss"), "música: la zona del jefe %s suena a jefe" % z["id"])
 	for id in music["tracks"]:
-		_check(FileAccess.file_exists("res://assets/audio/music/%s.wav" % id), "música: existe %s.wav (tools/generate_zone_music.gd)" % id)
+		_check(Sfx.audio_path("res://assets/audio/music/%s" % id) != "", "música: existe %s (tools/generate_zone_music.gd y convert_audio.ps1)" % id)
 	for z in zones:
 		_check(music["tracks"].has(zones[z]), "música: la pista %s de %s está definida" % [zones[z], z])
 	var camp3_bars: Array = load("res://tools/generate_zone_music.gd").load_melody_file(String(music["tracks"]["camp3"]["melody_file"]))
@@ -5304,16 +5321,16 @@ func _test_music_and_voices() -> void:
 	# Bucles: cada pista dice dónde empieza su bucle, después de la intro y antes del final.
 	var loops: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/music_loops.json"))
 	for id in music["tracks"]:
-		var wav := load("res://assets/audio/music/%s.wav" % id) as AudioStreamWAV
-		var start := int(loops.get(id, -1))
-		_check(wav != null and start >= 0 and start < Sfx.frame_count(wav), "música: %s tiene inicio de bucle válido" % id)
-		if wav:
-			_check(wav.get_length() - start / float(wav.mix_rate) >= 30.0, "música: el bucle de %s dura al menos 30 s" % id)
-			# El bucle tiene que llegar hasta el final real de la pista (no a data.size() / 2).
-			Sfx.set_loop(wav, start)
-			_check(absf(wav.loop_end / float(wav.mix_rate) - wav.get_length()) < 0.05, "música: el bucle de %s acaba al final de la pista" % id)
+		# OGG (T63): el inicio del bucle, de muestras a segundos con la frecuencia de la música.
+		var stream := Sfx.load_looped("res://assets/audio/music/%s" % id, int(loops.get(id, -1)), Sfx.MUSIC_RATE)
+		var start := float(loops.get(id, -1)) / Sfx.MUSIC_RATE
+		_check(stream != null and start >= 0.0 and start < stream.get_length(), "música: %s tiene inicio de bucle válido" % id)
+		if stream:
+			_check(stream.get_length() - start >= 30.0, "música: el bucle de %s dura al menos 30 s" % id)
+			var ogg := stream as AudioStreamOggVorbis
+			_check(ogg == null or (ogg.loop and is_equal_approx(ogg.loop_offset, start)), "música: el bucle de %s empieza tras la intro" % id)
 	for amb in ["camp", "rom", "flash"]:
-		var a := load("res://assets/audio/ambient/%s.wav" % amb) as AudioStreamWAV
+		var a := Sfx.load_looped("res://assets/audio/ambient/%s" % amb)
 		_check(a != null and a.get_length() >= 20.0, "ambiente: %s dura al menos 20 s" % amb)
 	var npcs: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/npcs.json"))
 	for id in npcs["npcs"]:

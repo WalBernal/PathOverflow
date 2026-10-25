@@ -1,4 +1,5 @@
 extends SceneTree
+## (Después, tools/convert_audio.ps1 lo pasa a OGG.)
 ## Compone y guarda assets/audio/title_theme.wav: un tema synthwave oscuro en
 ## La menor (Am - F - C - G) con bajo, arpegio con eco, pad y batería.
 ## Música de programador: suena bien, pero si tienes un compositor, sustitúyela.

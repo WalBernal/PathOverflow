@@ -4,7 +4,7 @@ extends Node2D
 ## se oyen cerca. Racks que zumban, charcos y lagos que gotean, grietas y
 ## acantilados con viento. Salen de los obstáculos de la zona y, en los estilos
 ## que lo piden (servidores, alcantarillas, la Grieta), de puntos sueltos si no
-## hay obstáculos de ese tipo. Los sonidos son assets/audio/ambient/emit_*.wav
+## hay obstáculos de ese tipo. Los sonidos son assets/audio/ambient/emit_*.ogg
 ## (tools/generate_sfx.gd -- posicional); el volumen sigue al del ambiente.
 
 ## Tipo de obstáculo → sonido.
@@ -53,11 +53,10 @@ func setup(zone: Zone) -> void:
 
 
 func _add_source(e: Dictionary, volume: float, rng: RandomNumberGenerator) -> void:
-	var path := Sfx.AMB_DIR + String(e["sound"]) + ".wav"
-	if not ResourceLoader.exists(path):
+	var looped := Sfx.load_looped(Sfx.AMB_DIR + String(e["sound"]))
+	if looped == null:
 		return
-	var wav := (load(path) as AudioStreamWAV).duplicate() as AudioStreamWAV
-	Sfx.set_loop(wav)
+	var wav := looped.duplicate() as AudioStream
 	var p := AudioStreamPlayer2D.new()
 	p.stream = wav
 	p.position = e["pos"]

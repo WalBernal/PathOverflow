@@ -345,7 +345,7 @@ Origen: R1 §6
 
 ## Fase 8 — Técnica
 
-### [ ] T63 · Audio en OGG y sprites en atlas · S
+### [x] T63 · Audio en OGG y sprites en atlas · S
 Origen: R1 §6, R2 §12 ★★
 - Los .wav suman ~60 MB; los bucles de `data/music_loops.json` deben seguir cuadrando.
 
@@ -449,3 +449,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T60 · Pistones (vástago animado en la rejilla), disipadores, barriles, condensadores, chips y bloques de hielo en pixel art: ya todos los obstáculos de los actos salvo los charcos; la prueba lo exige para cada zona. Revisado en capturas de los actos II y III.
 - 2026-10-25 · T61 · Pasillo y oficina del prólogo con el detalle de la calle: tramado en paredes, baldosas alternas en perspectiva (recortadas al suelo), charcos y conos de luz, aristas con luz y sombra, humedad, zócalo, juntas y sombras al pie de los muebles. Solo dibujo (sin lógica nueva que probar): revisado en las capturas del prólogo.
 - 2026-10-25 · T62 · Pista «Prueba de carga» (estres, 138 BPM, con capa de combate) compuesta con generate_zone_music.gd -- estres; suena en las pruebas de estrés y el banco de oleadas y al acabar vuelve la de la zona.
+- 2026-10-25 · T63 · Música, ambientes y tema del título en OGG (91,8 → 13,4 MB) con tools/convert_audio.ps1; Sfx.load_looped carga OGG o WAV y pasa el inicio de bucle de music_loops.json a segundos (16 000 Hz en la música). Los sprites ya estaban en atlas (enemigos, objetos, pasivas): nada que hacer ahí.
