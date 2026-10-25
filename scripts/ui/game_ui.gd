@@ -259,6 +259,7 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	# Cursor de mando para las ventanas: encima de todo y sin la escala de _root.
 	gamepad_cursor = GamepadCursor.new()
 	gamepad_cursor.windows = cursor_windows
+	gamepad_cursor.pin = func() -> void: item_tooltip.toggle_pin()
 	gamepad_cursor.cancel = func() -> void:
 		var esc := InputEventAction.new()
 		esc.action = &"ui_cancel"
@@ -705,6 +706,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			item_tooltip.hide()
 		else:
 			toggle_pause_menu()
+		if cursor_windows().is_empty():
+			item_tooltip.unpin()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(&"pin_tooltip"):
+		item_tooltip.toggle_pin()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed(&"toggle_passives"):
 		_on_menu_requested("passives")
@@ -733,12 +739,17 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
-## Ventanas que se manejan con el cursor de mando (las del árbol y los diálogos, aparte).
+## Ventanas que se manejan con el cursor de mando: el árbol pasivo, los
+## diálogos y la elección de habilidad van solos; si no, las de objetos.
 func cursor_windows() -> Array:
-	if _pause_panel.visible or tree_screen.visible or cutscene.is_playing():
+	if _pause_panel.visible or cutscene.is_playing():
 		return []
+	if tree_screen.visible:
+		return [tree_screen]
 	if is_choosing():
 		return [_choice_panel]
+	if dialogue_box.visible:
+		return [dialogue_box]
 	return [shop_panel, stash_panel, skills_panel, character_sheet, inventory_panel].filter(func(w: Control) -> bool: return w.visible)
 
 
@@ -747,6 +758,7 @@ func _on_menu_requested(menu: String) -> void:
 		return
 	hud.attention.erase(menu)   # ya se vio la novedad
 	item_tooltip.hide()
+	item_tooltip.unpin()
 	if menu != "inventory" or inventory_panel.visible:
 		close_trade_panels()   # cerrar el inventario (u abrir otra ventana) cierra la tienda
 	match menu:

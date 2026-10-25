@@ -52,6 +52,12 @@ static func setup() -> void:
 	_button(&"toggle_skills", JOY_BUTTON_LEFT_STICK)
 	_button(&"ui_cancel", JOY_BUTTON_START)
 	_button(&"respawn", JOY_BUTTON_A)
+	# Fijar la comparación de un objeto: F en el teclado (Y con el cursor de mando, GamepadCursor).
+	if not InputMap.has_action(&"pin_tooltip"):
+		InputMap.add_action(&"pin_tooltip")
+		var key := InputEventKey.new()
+		key.physical_keycode = KEY_F
+		InputMap.action_add_event(&"pin_tooltip", key)
 
 
 ## Hacia dónde se apunta con el mando (en el mundo), desde `from`; `facing` si

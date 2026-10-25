@@ -587,8 +587,9 @@ static func from_dict(d: Dictionary, p_class_def: Dictionary, tree: PassiveTree,
 
 
 ## summary() como si el objeto estuviera equipado. No cambia nada ni emite señales.
-func preview_equip(item: Item) -> Dictionary:
-	var slot := inventory.target_slot_for(item)
+func preview_equip(item: Item, slot := "") -> Dictionary:
+	if slot == "":
+		slot = inventory.target_slot_for(item)
 	var previous: Item = inventory.equipment.get(slot)
 	inventory.equipment[slot] = item
 	recalculate(false)

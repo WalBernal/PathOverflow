@@ -172,7 +172,7 @@ func _play_incident(class_def: Dictionary) -> int:
 	_collect("%s · oleadas · al abrir" % class_def["id"])
 	await _play_zone(world, class_def["id"], "oleadas", false)
 	var waves: Dictionary = world.get("_waves")
-	if not waves.is_empty() and int(waves["wave"]) == 0:   # vacío: caíste o saliste, y ya se anotó
+	if not waves.is_empty() and int(waves["wave"]) == 0 and _seconds >= 4.0:   # vacío: caíste o saliste; la primera sale a los 3 s
 		_failures.append("%s · oleadas: no salió ninguna oleada" % class_def["id"])
 	world.set("_since_save", -9999.0)
 	remove_child(world)
@@ -234,8 +234,42 @@ func _check_gamepad_cursor(world: Node, class_id: String) -> void:
 	await _frames(2)
 	if ui.inventory_panel.visible or Gamepad.menu_cursor:
 		_failures.append("%s · mando: B no cerró el inventario" % class_id)
+	# Parte 2: fijar la comparación con Y, y el árbol pasivo con la cruceta.
+	ui._on_menu_requested("inventory")
+	await _frames(2)
+	var item := ItemGenerator.new(get_node("/root/GameData").get("items")).generate(1, Rarity.Item.RARE)
+	ui.item_tooltip.show_item(item, world.get("character"), true)
+	await _press(JOY_BUTTON_Y)
+	if not ui.item_tooltip.is_pinned():
+		_failures.append("%s · mando: Y no fijó la comparación" % class_id)
+	await _press(JOY_BUTTON_Y)
+	if ui.item_tooltip.is_pinned():
+		_failures.append("%s · mando: Y otra vez no la soltó" % class_id)
+	ui._on_menu_requested("inventory")
+	ui._on_menu_requested("passives")
+	await _frames(3)
+	if ui.cursor_windows() != [ui.tree_screen] or not cursor.engaged:
+		_failures.append("%s · mando: el cursor no maneja el árbol pasivo" % class_id)
+	var at_tree := cursor.cursor_pos
+	for button in [JOY_BUTTON_DPAD_RIGHT, JOY_BUTTON_DPAD_DOWN, JOY_BUTTON_DPAD_LEFT]:
+		await _press(button)
+	if cursor.cursor_pos == at_tree:
+		_failures.append("%s · mando: la cruceta no salta entre nodos del árbol" % class_id)
+	await _press(JOY_BUTTON_B)
+	if ui.tree_screen.visible:
+		_failures.append("%s · mando: B no cerró el árbol" % class_id)
+	get_tree().paused = false
 	_collect("%s · mando en menús" % class_id)
 	Gamepad.active = was
+
+
+func _press(button: JoyButton) -> void:
+	for pressed in [true, false]:
+		var ev := InputEventJoypadButton.new()
+		ev.button_index = button
+		ev.pressed = pressed
+		Input.parse_input_event(ev)
+		await _frames(2)
 
 
 func _play_zone(world: Node, class_id: String, zone_id: String, travel := true) -> void:

@@ -5,7 +5,10 @@ extends Control
 ## izquierdo mueve una flecha y los botones hacen de ratón.
 ##   A: clic izquierdo (mantener y mover = arrastrar) · X: clic derecho ·
 ##   cruceta: salta a la casilla o botón más cercano en esa dirección ·
-##   LB/RB: a la ventana anterior/siguiente · B: cerrar (como Esc).
+##   LB/RB: a la ventana anterior/siguiente · B: cerrar (como Esc) ·
+##   Y: fijar la comparación del objeto (como F) · stick derecho: rueda (zoom del árbol).
+## También en el árbol pasivo (la cruceta salta entre nodos), los diálogos y la
+## elección de habilidad.
 ## Los clics se simulan como eventos de ratón con el dispositivo
 ## Gamepad.CURSOR_DEVICE, así que los paneles no necesitan saber nada del mando.
 ## Va directamente en la CanvasLayer de GameUI (sin la escala de _root): sus
@@ -18,12 +21,16 @@ const SIZE := 18.0
 var windows: Callable = func() -> Array: return []
 ## Lo que hace B (cerrar, como Esc).
 var cancel: Callable = func() -> void: pass
+## Lo que hace Y (fijar la comparación del objeto, como F).
+var pin: Callable = func() -> void: pass
 
 var engaged := false
 var cursor_pos := Vector2(-1, -1)
 var _left_held := false
 var _window_index := 0
 var _last_windows: Array = []
+var _wheel_wait := 0.0
+const WHEEL_REPEAT := 0.12
 
 
 func _ready() -> void:
@@ -56,6 +63,13 @@ func _process(delta: float) -> void:
 	var stick := Vector2(Input.get_joy_axis(0, JOY_AXIS_LEFT_X), Input.get_joy_axis(0, JOY_AXIS_LEFT_Y))
 	if stick.length() > Gamepad.DEADZONE:
 		move_cursor(cursor_pos + stick * stick.length() * SPEED * delta)
+	# Stick derecho arriba/abajo: la rueda (zoom del árbol, listas largas).
+	_wheel_wait = maxf(0.0, _wheel_wait - delta)
+	var wheel := Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y)
+	if absf(wheel) > 0.5 and _wheel_wait <= 0.0:
+		_wheel_wait = WHEEL_REPEAT
+		_send_button(MOUSE_BUTTON_WHEEL_UP if wheel < 0.0 else MOUSE_BUTTON_WHEEL_DOWN, true)
+		_send_button(MOUSE_BUTTON_WHEEL_UP if wheel < 0.0 else MOUSE_BUTTON_WHEEL_DOWN, false)
 
 
 func _input(event: InputEvent) -> void:
@@ -72,6 +86,9 @@ func _input(event: InputEvent) -> void:
 		JOY_BUTTON_B:
 			if jb.pressed:
 				cancel.call()
+		JOY_BUTTON_Y:
+			if jb.pressed:
+				pin.call()
 		JOY_BUTTON_DPAD_UP, JOY_BUTTON_DPAD_DOWN, JOY_BUTTON_DPAD_LEFT, JOY_BUTTON_DPAD_RIGHT:
 			if jb.pressed:
 				snap({JOY_BUTTON_DPAD_UP: Vector2.UP, JOY_BUTTON_DPAD_DOWN: Vector2.DOWN,
@@ -133,6 +150,9 @@ func _collect_targets(node: Node, out: Array[Rect2]) -> void:
 			continue
 		if c is ItemCell or (c is BaseButton and not (c as BaseButton).disabled):
 			out.append(c.get_global_rect())
+		elif c.has_method(&"cursor_targets"):   # dibujos con sitios propios (nodos del árbol)
+			out.append_array(c.call(&"cursor_targets"))
+			_collect_targets(c, out)
 		else:
 			_collect_targets(c, out)
 

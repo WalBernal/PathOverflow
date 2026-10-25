@@ -124,6 +124,7 @@ func _initialize() -> void:
 	_test_ladder()
 	_test_tech_debt()
 	_test_gamepad_cursor()
+	_test_ring_comparison()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -2999,6 +3000,30 @@ func _test_gamepad_cursor() -> void:
 	_check(not cursor.engaged and cursor.windows.call().is_empty(), "sin ventanas, el cursor no se activa")
 	cursor.free()
 	_check(not Gamepad.menu_cursor, "y el personaje se maneja como siempre")
+
+
+## Mando en menús, parte 2 (T49): comparar contra los dos anillos.
+func _test_ring_comparison() -> void:
+	var gen := ItemGenerator.new(_db, 49)
+	var c := CharacterData.new(_classes[0], _tree)
+	var ring_a := gen.generate(1, Rarity.Item.NORMAL, "anillo_de_rubi")
+	var ring_b := gen.generate(1, Rarity.Item.NORMAL, "anillo_de_zafiro")
+	var ring_c := gen.generate(1, Rarity.Item.NORMAL, "anillo_de_zafiro")
+	c.inventory.add_item(ring_a)
+	c.inventory.equip_from_bag(c.inventory.bag.find(ring_a))
+	_check(ItemTooltip.compare_slots(ring_c, c) == ["ring_right"] and ItemTooltip.build_text(ring_c, c, true).contains("Al equiparlo"),
+		"con un anillo, se compara contra la mano libre")
+	c.inventory.add_item(ring_b)
+	c.inventory.equip_from_bag(c.inventory.bag.find(ring_b))
+	var text := ItemTooltip.build_text(ring_c, c, true)
+	_check(ItemTooltip.compare_slots(ring_c, c) == ["ring_left", "ring_right"] and text.contains("En lugar del anillo izquierdo") and text.contains("En lugar del anillo derecho"),
+		"con dos anillos, contra cada uno")
+	_check(ItemTooltip.compare_slots(ring_a, c) == ["ring_right"], "un anillo puesto solo se compara con el otro")
+	c.preview_equip(ring_c, "ring_right")
+	c.preview_equip(ring_c, "ring_left")
+	_check(c.inventory.equipped("ring_left") == ring_a and c.inventory.equipped("ring_right") == ring_b and c.stats.get_value(Stat.FIRE_RES) == 15.0,
+		"la vista previa por ranura no cambia lo equipado")
+	_check(not ItemTooltip.build_text(ring_c, c, false).contains("En lugar del"), "sin comparar, no hay comparación")
 
 
 func _db_enemies() -> Array:

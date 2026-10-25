@@ -13,17 +13,28 @@ const UP := "6fb36b"
 const DOWN := "e06c6c"
 
 var _label: RichTextLabel
-## Tooltip del objeto equipado (comparación lado a lado); lo coloca este.
-var _side: ItemTooltip
+## Tooltips de lo equipado (comparación lado a lado; dos si es un anillo y
+## llevas dos); los coloca este.
+var _sides: Array[ItemTooltip] = []
 var _is_side := false
+## Copia fijada (F o Y del mando): se queda quieta en pantalla hasta soltarla.
+var _frozen := false
+var _pinned: ItemTooltip
+var _item: Item
+var _character: CharacterData
+var _compare := false
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	visible = false
 	visibility_changed.connect(func() -> void:
-		if not visible and _side:
-			_side.hide())
+		if not visible:
+			for s in _sides:
+				s.hide())
+	tree_exiting.connect(func() -> void:
+		for s in _sides:
+			s.queue_free())
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color("0d0b10f5")
 	style.set_border_width_all(1)
@@ -44,53 +55,98 @@ func _process(_delta: float) -> void:
 	# En coordenadas de pantalla: la interfaz puede estar escalada (GameUI).
 	var view := get_viewport_rect().size
 	var shown := size * get_global_transform().get_scale()
-	var mouse := get_viewport().get_mouse_position()
-	var pos := mouse + Vector2(20, 20)
-	if pos.x + shown.x > view.x:
-		pos.x = mouse.x - shown.x - 20.0
-	pos.y = clampf(pos.y, 4.0, maxf(4.0, view.y - shown.y - 4.0))
-	pos.x = clampf(pos.x, 4.0, maxf(4.0, view.x - shown.x - 4.0))
-	global_position = pos
-	if _side and _side.visible:
-		# El equipado, al lado: a la izquierda si cabe; si no, a la derecha.
-		var side_shown := _side.size * _side.get_global_transform().get_scale()
-		var side_pos := Vector2(pos.x - side_shown.x - 8.0, pos.y)
+	var pos := global_position
+	if not _frozen:
+		var mouse := get_viewport().get_mouse_position()
+		pos = mouse + Vector2(20, 20)
+		if pos.x + shown.x > view.x:
+			pos.x = mouse.x - shown.x - 20.0
+		pos.y = clampf(pos.y, 4.0, maxf(4.0, view.y - shown.y - 4.0))
+		pos.x = clampf(pos.x, 4.0, maxf(4.0, view.x - shown.x - 4.0))
+		global_position = pos
+	# Lo equipado, al lado: a la izquierda si cabe; si no, a la derecha. Dos
+	# anillos van uno debajo del otro.
+	var y := pos.y
+	for side in _sides:
+		if not side.visible:
+			continue
+		var side_shown := side.size * side.get_global_transform().get_scale()
+		var side_pos := Vector2(pos.x - side_shown.x - 8.0, y)
 		if side_pos.x < 4.0:
 			side_pos.x = pos.x + shown.x + 8.0
 		side_pos.y = clampf(side_pos.y, 4.0, maxf(4.0, view.y - side_shown.y - 4.0))
-		_side.global_position = side_pos
+		side.global_position = side_pos
+		y = side_pos.y + side_shown.y + 8.0
 
 
 func show_item(item: Item, character: CharacterData, compare: bool) -> void:
 	if item == null:
 		hide()
 		return
+	_item = item
+	_character = character
+	_compare = compare
 	var border: StyleBoxFlat = get_theme_stylebox("panel")
 	border.border_color = Rarity.item_color(item.rarity).darkened(0.3)
 	_label.text = build_text(item, character, compare)
 	if _is_side:
 		_label.text = "[center][color=#%s]· Equipado ahora ·[/color][/center]\n%s" % [GREY, _label.text]
+	elif _frozen:
+		_label.text = "[center][color=#%s]· Fijado (F o Y para soltarlo) ·[/color][/center]\n%s" % [GREY, _label.text]
 	reset_size()
 	show()
-	_update_side(item, character, compare)
+	_update_sides(item, character, compare)
 
 
-## Muestra (o esconde) al lado el objeto que llevas en la ranura donde iría `item`.
-func _update_side(item: Item, character: CharacterData, compare: bool) -> void:
+## Muestra (o esconde) al lado lo que llevas en las ranuras contra las que se compara.
+func _update_sides(item: Item, character: CharacterData, compare: bool) -> void:
 	if _is_side:
 		return
-	var equipped: Item = null
+	var equipped: Array[Item] = []
 	if compare and character and item.is_equipment():
-		equipped = character.inventory.equipped(character.inventory.target_slot_for(item))
-	if equipped == null or equipped == item:
-		if _side:
-			_side.hide()
-		return
-	if _side == null:
-		_side = ItemTooltip.new()
-		_side._is_side = true
-		get_parent().add_child(_side)
-	_side.show_item(equipped, character, false)
+		for s in compare_slots(item, character):
+			var e: Item = character.inventory.equipped(s)
+			if e != null and e != item:
+				equipped.append(e)
+	while _sides.size() < equipped.size():
+		var side := ItemTooltip.new()
+		side._is_side = true
+		get_parent().add_child(side)
+		_sides.append(side)
+	for i in _sides.size():
+		if i < equipped.size():
+			_sides[i].show_item(equipped[i], character, false)
+		else:
+			_sides[i].hide()
+
+
+## F (o Y con el cursor de mando): deja una copia quieta de lo que se ve, con su
+## comparación, para poder mover el cursor; otra vez la quita. True si quedó fijada.
+func toggle_pin() -> bool:
+	if unpin():
+		return false
+	if not visible or _item == null or _is_side or _frozen:
+		return false
+	_pinned = ItemTooltip.new()
+	_pinned._frozen = true
+	get_parent().add_child(_pinned)
+	_pinned.global_position = global_position
+	_pinned.show_item(_item, _character, _compare)
+	return true
+
+
+## Quita la copia fijada, si la hay. True si había una.
+func unpin() -> bool:
+	if _pinned == null or not is_instance_valid(_pinned):
+		_pinned = null
+		return false
+	_pinned.queue_free()
+	_pinned = null
+	return true
+
+
+func is_pinned() -> bool:
+	return _pinned != null and is_instance_valid(_pinned)
 
 
 static func build_text(item: Item, character: CharacterData, compare: bool) -> String:
@@ -147,8 +203,26 @@ static func build_text(item: Item, character: CharacterData, compare: bool) -> S
 	if item.unique_def.has("flavor"):
 		t += _section("[i][color=#%s]%s[/color][/i]" % [FLAVOR_COLOR, item.unique_def["flavor"]])
 	if compare and character:
-		t += _section(_comparison(item, character))
+		var slots := compare_slots(item, character)
+		if slots.size() == 2:   # un anillo con los dos puestos: contra cada uno
+			for s in slots:
+				t += _section(_comparison(item, character, s))
+		else:
+			t += _section(_comparison(item, character))
 	return t.strip_edges()
+
+
+## Ranuras contra las que se compara: las dos de anillo si llevas dos anillos;
+## si no, la ranura donde iría.
+static func compare_slots(item: Item, character: CharacterData) -> Array[String]:
+	var inv := character.inventory
+	if item.slot() == "ring" and inv.equipment.has("ring_left") and inv.equipment.has("ring_right"):
+		var out: Array[String] = []
+		for s in ["ring_left", "ring_right"]:
+			if inv.equipped(s) != item:
+				out.append(s)
+		return out
+	return [inv.target_slot_for(item)]
 
 
 static func _tag_list(tags: Array) -> String:
@@ -297,9 +371,10 @@ static func _set_lines(item: Item, character: CharacterData) -> String:
 	return "\n".join(lines)
 
 
-static func _comparison(item: Item, character: CharacterData) -> String:
+static func _comparison(item: Item, character: CharacterData, slot := "") -> String:
 	var before := character.summary()
-	var after := character.preview_equip(item)
+	var after := character.preview_equip(item, slot)
+	var title := "Al equiparlo" if slot == "" else "En lugar del %s" % {"ring_left": "anillo izquierdo", "ring_right": "anillo derecho"}.get(slot, Inventory.SLOT_NAMES.get(slot, slot).to_lower())
 	var lines := PackedStringArray()
 	for key in before:
 		var delta: float = after[key] - before[key]
@@ -308,5 +383,5 @@ static func _comparison(item: Item, character: CharacterData) -> String:
 		var amount := "%.1f" % absf(delta) if absf(delta) < 10.0 and not is_equal_approx(delta, roundf(delta)) else "%d" % roundi(absf(delta))
 		lines.append("[color=#%s]%s%s %s[/color]" % [UP if delta > 0.0 else DOWN, "+" if delta > 0.0 else "-", amount, key])
 	if lines.is_empty():
-		return "[color=#%s]Al equiparlo: sin cambios en las cifras principales[/color]" % GREY
-	return "[color=#%s]Al equiparlo:[/color]\n%s" % [GREY, "\n".join(lines)]
+		return "[color=#%s]%s: sin cambios en las cifras principales[/color]" % [GREY, title]
+	return "[color=#%s]%s:[/color]\n%s" % [GREY, title, "\n".join(lines)]

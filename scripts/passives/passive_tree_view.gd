@@ -334,6 +334,22 @@ func _notification(what: int) -> void:
 		_set_hovered(-1)
 
 
+## Sitios a los que salta la cruceta del cursor de mando (GamepadCursor): los
+## nodos que se ven, en coordenadas globales.
+func cursor_targets() -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	if allocation == null:
+		return out
+	var visible_rect := Rect2(_to_tree(Vector2.ZERO), size / zoom)
+	var xf := get_global_transform()
+	for id in allocation.tree.nodes:
+		var n: PassiveNode = allocation.tree.nodes[id]
+		if visible_rect.has_point(n.position):
+			var r := node_radius(n) * zoom
+			out.append(Rect2(xf * (offset + n.position * zoom) - Vector2(r, r), Vector2(r, r) * 2.0))
+	return out
+
+
 func _to_tree(screen_pos: Vector2) -> Vector2:
 	return (screen_pos - offset) / zoom
 

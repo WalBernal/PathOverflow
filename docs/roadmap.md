@@ -282,7 +282,7 @@ Origen: R2 §4 ★
 Origen: R1 §5, R2 §5 ★★
 - Navegar sin ratón con cursor libre y atajos.
 
-### [ ] T49 · Mando en menús (parte 2: árbol, diálogos y comparación) · M
+### [x] T49 · Mando en menús (parte 2: árbol, diálogos y comparación) · M
 Origen: R1 §5, R2 §5 ★★
 - Incluye comparación contra los dos anillos y atajo para fijarla.
 
@@ -435,3 +435,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T46 · Banco de oleadas sin fin desde el puesto de Aida (arena vacía, oleadas que crecen, jefe cada 5 con botín) y récords: personales (oleadas y tiempo contra cada jefe) y tabla local top 10 en user://ladder.json, en Pausa → Récords. La integración juega una partida de oleadas tras el incidente.
 - 2026-10-25 · T47 · Árbol de deuda técnica tras el Acto IV (Pausa → Deuda técnica): raíz y tres ramas (Hotfix, Legacy, Deadline) de nodos con bono fuerte y penalización; puntos por atlas y récord de oleadas, se paga de las hojas a la raíz. Hecho en una sola tarea en vez de partirla: cabía.
 - 2026-10-25 · T48 · Cursor libre de mando en inventario, K, hoja, tienda, alijo y elección de habilidad: stick para moverlo, A/X como clics (eventos de ratón simulados), cruceta para saltar entre casillas, LB/RB entre ventanas y B para cerrar; el personaje queda quieto mientras tanto. La integración lo prueba (elige con A, mueve con la cruceta y cierra con B).
+- 2026-10-25 · T49 · Cursor de mando en el árbol pasivo (cruceta entre nodos, stick derecho como rueda) y en los diálogos; comparación de anillos contra los dos puestos (dos secciones y dos tooltips al lado) y comparación fijable con F o Y. La integración fija y suelta con Y y recorre el árbol con la cruceta.
