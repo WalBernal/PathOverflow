@@ -626,7 +626,14 @@ Benchmark del 24-10-2026 con el juego completo (sprites, filtro de pixel art, HU
 
 Las barras de vida, los cuadritos de estado, los halos del modo simple, los candados de aturdido, las insignias de rol y los círculos de aviso de todos los enemigos se dibujan en **un solo arreglo de triángulos** por fotograma (`EnemyManager._batch_*`), y los avisos de enemigos fuera de cámara no se dibujan: lo que cuestan los enemigos con 300 en pantalla baja de ~28 a ~19 ms. Lo que queda está repartido: `_draw` de enemigos ~8 ms, simulación ~4.5 ms y el resto en GPU. La zona redibujaba cada fotograma **todos** sus obstáculos, antorchas, props y salidas (cientos en las zonas grandes); ahora solo los que caen en cámara (con margen), y sin enemigos el fotograma baja de ~20 a ~13 ms. Lo que queda con 300 enemigos: `_draw` de enemigos ~7 ms, simulación ~4.5 ms, interfaz ~8 ms (el `_draw` del HUD solo ~2.4 ms; el resto, textos, iconos y GPU) y la zona ~5 ms. (Antes el benchmark medía con el juego en pausa por la elección de habilidad del nivel 16: ahora la resuelve.)
 
-Medición del 25-10-2026 (tras las tareas de presentación: luces de aliados, clima, obstáculos en pixel art): 150 enemigos 17,5-19,3 ms (52-57 FPS, simulación 2,4-2,5 ms), 300 enemigos ~34 ms (29-30 FPS, simulación 4,7-4,8 ms), sin enemigos 12,6-16,3 ms. Portar EnemyManager a C# o GDExtension ahorraría como mucho esos ~4,8 ms; está pendiente de decidir (ver T66 en `docs/roadmap.md`).
+Medición del 25-10-2026 (tras las tareas de presentación: luces de aliados, clima, obstáculos en pixel art): 150 enemigos 17,5-19,3 ms (52-57 FPS, simulación 2,4-2,5 ms), 300 enemigos ~34 ms (29-30 FPS, simulación 4,7-4,8 ms), sin enemigos 12,6-16,3 ms. Portar `EnemyManager` a C# o GDExtension ahorraría como mucho esos ~4,8 ms; quedó bloqueado (T66 en `docs/roadmap.md`) y se hizo T68 en su lugar.
+
+**T68**: las barras de vida, los cuadritos de estado y los halos de estados de los enemigos van en dos **MultiMesh** (un rectángulo y un disco; una instancia por elemento, escrita en un solo búfer por fotograma); los avisos de cono y de carga entran en el lote de triángulos sin triangular cada fotograma, y los círculos y aros usan direcciones precalculadas. Los iconos del HUD (habilidades, pociones y estados) se pintan **una vez en una textura** (`scripts/ui/icon_cache.gd`: un `SubViewport` por icono que se renderiza una sola vez) y luego solo se dibuja la textura.
+
+| | 150 enemigos | 300 enemigos | `_draw` de enemigos (300) |
+|---|---|---|---|
+| Antes de T68 | 18,2 ms (55 FPS) | 33,4 ms (30 FPS) | 7,2 ms |
+| Después | 14-16,6 ms (60-71 FPS) | 29,7-30 ms (33-34 FPS) | 6,2 ms |
 
 ## Árbol pasivo
 
