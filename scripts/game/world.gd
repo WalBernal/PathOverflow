@@ -160,6 +160,28 @@ func _ready() -> void:
 		ui.hud.flash.call_deferred("El árbol pasivo ha cambiado: te hemos devuelto todos los puntos (P).", UiStyle.ACCENT)
 
 
+## Voz del personaje (Barks): un quejido al bajar de LOW_LIFE_BARK de vida, como
+## mucho cada LOW_LIFE_BARK_COOLDOWN segundos.
+const LOW_LIFE_BARK := 0.3
+const LOW_LIFE_BARK_COOLDOWN := 25.0
+var _low_life_wait := 0.0
+var _was_low := false
+
+
+func _update_low_life_bark(delta: float) -> void:
+	_low_life_wait = maxf(0.0, _low_life_wait - delta)
+	var low := player.is_alive() and player.life < player.max_life() * LOW_LIFE_BARK
+	if low and not _was_low and _low_life_wait <= 0.0:
+		_low_life_wait = LOW_LIFE_BARK_COOLDOWN
+		Barks.play("hurt", player_voice_pitch())
+	_was_low = low
+
+
+## Tono de la voz del personaje según su complexión (más grave cuanto más ancho).
+func player_voice_pitch() -> float:
+	return [1.15, 1.0, 0.85][clampi(int(character.appearance.get("body", 1)), 0, 2)]
+
+
 ## Capa de batería de combate: entra con COMBAT_ON enemigos cerca (o un raro y
 ## media manada) y sale tras COMBAT_CALM segundos con menos de COMBAT_OFF.
 const COMBAT_RANGE := 700.0
@@ -200,6 +222,7 @@ func _process(delta: float) -> void:
 	_update_twins(delta)
 	_update_challenge(delta)
 	_update_waves(delta)
+	_update_low_life_bark(delta)
 	if not _event_fights.is_empty():
 		_update_event_fights()
 	_immune_warning = maxf(0.0, _immune_warning - delta)
@@ -1147,6 +1170,7 @@ func _on_mutex_broken() -> void:
 ## Los monstruos tienen el nivel de su zona; subir de nivel solo avisa.
 func _on_leveled_up(new_level: int) -> void:
 	Sfx.play("level_up")
+	Barks.play("level", player_voice_pitch())
 	ui.hud.attention["passives"] = true   # punto nuevo: «!» en el botón P
 	if new_level == CharacterData.ASCENDANCY_LEVEL:
 		ui.hud.flash("¡Nivel %d! Ya puedes elegir tu ascendencia: abre el árbol (P) y pulsa el medallón junto a tu clase." % new_level, Color("ffd84a"))

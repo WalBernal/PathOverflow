@@ -131,6 +131,7 @@ func _initialize() -> void:
 	_test_map_marks()
 	_test_loot_filter_rules()
 	_test_ambient_emitters()
+	_test_barks()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3231,6 +3232,25 @@ func _test_ambient_emitters() -> void:
 	_check(sewer.size() == AmbientEmitters.MAX_PER_SOUND and sewer.all(func(e: Dictionary) -> bool: return e["sound"] == "emit_drip"),
 		"en las alcantarillas gotea aunque no haya charcos, con un tope")
 	_check(AmbientEmitters.plan([], "forest", many).is_empty(), "un bosque sin fuentes queda en silencio posicional")
+
+
+## Voces cortas (T56): murmullos de PNJ y la voz del personaje.
+func _test_barks() -> void:
+	_check(Barks.kind_for("Hola", true) == "greet" and Barks.kind_for("¿Y tú quién eres?", false) == "question", "saludo al empezar; pregunta si acaba en ?")
+	_check(Barks.kind_for("¡Cuidado!", false) == "exclaim" and Barks.kind_for("No sé...", false) == "hmm" and Barks.kind_for("Bien.", false) == "talk", "exclamación, duda y charla")
+	for kind in Barks.KINDS:
+		var wav := Barks.stream(kind)
+		var seconds := wav.get_length()
+		var loud := false
+		for i in range(0, wav.data.size() - 1, 64):
+			if absi(wav.data.decode_s16(i)) > 4000:
+				loud = true
+				break
+		_check(seconds > 0.1 and seconds < 0.8 and loud, "%s: un murmullo corto que suena (%.2f s)" % [kind, seconds])
+	_check(Barks.stream("talk") == Barks.stream("talk"), "se sintetiza una vez y se guarda")
+	var her := DialogueBox.bark_pitch({"id": "aida", "voice": {"pitch": 1.0, "gender": "female"}})
+	var him := DialogueBox.bark_pitch({"id": "mario", "voice": {"pitch": 1.0, "gender": "male"}})
+	_check(her > him and DialogueBox.bark_pitch({"id": "x"}) > 0.5, "cada PNJ con su tono (y su género)")
 
 
 func _db_enemies() -> Array:

@@ -473,6 +473,13 @@ func _build_pause_menu() -> Control:
 		GameSettings.set_value("dialogue", "blips", not DialogueBox.blips_enabled())
 		blips.text = "Pitidos del texto: " + ("sí" if DialogueBox.blips_enabled() else "no"))
 	right.add_child(blips)
+	var barks := UiStyle.button("", func() -> void: pass, 300)
+	barks.text = "Voces cortas: " + ("sí" if Barks.enabled() else "no")
+	barks.tooltip_text = "Un murmullo corto de los PNJ al hablar (si no habla el narrador) y la voz de tu personaje\nal subir de nivel o al quedarse con poca vida."
+	barks.pressed.connect(func() -> void:
+		GameSettings.set_value("dialogue", "barks", not Barks.enabled())
+		barks.text = "Voces cortas: " + ("sí" if Barks.enabled() else "no"))
+	right.add_child(barks)
 	# Voz: velocidad (cada NPC además tiene su tono, velocidad, género y volumen en npcs.json).
 	right.add_child(_cycle_button("Velocidad de la voz", [0.8, 1.0, 1.25], ["lenta", "normal", "rápida"],
 		func() -> float: return DialogueBox.voice_speed(),

@@ -185,6 +185,13 @@ func open(p_npc: Dictionary, dialogue: Dictionary) -> void:
 	_show_node(dialogue.get("start", ""))
 
 
+## Tono del murmullo de un NPC: su tono de voz y su género (npcs.json → voice).
+static func bark_pitch(p_npc: Dictionary) -> float:
+	var voice: Dictionary = p_npc.get("voice", {})
+	var base := float(voice.get("pitch", 0.8 + float(hash(p_npc.get("id", "")) % 60) / 100.0))
+	return base * float({"female": 1.45, "male": 0.95}.get(String(voice.get("gender", "neutral")), 1.2))
+
+
 func close() -> void:
 	if not visible:
 		return
@@ -250,6 +257,8 @@ func _show_node(node_id: String) -> void:
 	_text.visible_characters = 0
 	_stop_voice()
 	_narrating = narrator_enabled() and speak(_text.get_parsed_text(), _pitch, _rate, npc.get("voice", {}))
+	if not _narrating:   # sin narrador: un murmullo corto con la voz del NPC (Barks)
+		Barks.play(Barks.kind_for(_text.get_parsed_text(), _visited_now.size() == 1), bark_pitch(npc))
 	if _narrating:
 		_voice_age = 0.0
 		_cps = NARRATED_CPS * _rate
