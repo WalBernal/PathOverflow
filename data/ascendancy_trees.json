@@ -11,7 +11,7 @@
       {"name": "Sin fin de semana", "mods": ["life_on_kill flat 8", "movement_speed increased 10"]},
       {"name": "Logs en rojo", "mods": ["damage more 25 low_life"]},
       {"name": "Rollback en caliente", "mods": ["attack_speed more 10", "life_leech flat 1"]},
-      {"name": "Pager a las 3 AM", "mods": ["attack_speed increased 15 recent_kill", "damage increased 20 recent_kill"]},
+      {"name": "Pager a las 3 AM", "mods": ["attack_speed increased 15 recent_kill", "damage increased 20 recent_kill", "multihilo_charge_chance flat 15"]},
       {"name": "Post-mortem", "mods": ["bleed_chance flat 10", "ailment_damage increased 30"]},
       {"name": "Incendio en producción", "mods": ["kill_explosion flat 25", "fire_res flat 15"]},
       {"name": "Guardia infinita", "mods": ["damage more 15 low_life", "life more 8", "life_regen flat 20"]}
@@ -26,7 +26,7 @@
     "notables": [
       {"name": "Reglas de denegación", "mods": ["armour more 30", "block_chance flat 8"]},
       {"name": "Honeypot", "mods": ["thorns flat 30", "chaos_res flat 10"]},
-      {"name": "Lista blanca", "mods": ["life more 10", "life_regen flat 15"]},
+      {"name": "Lista blanca", "mods": ["life more 10", "life_regen flat 15", "max_buffer_charges flat 1", "buffer_charge_chance flat 15"]},
       {"name": "Parche de seguridad", "mods": ["status_resist flat 25", "fire_res flat 10", "cold_res flat 10", "lightning_res flat 10"]},
       {"name": "Doble factor", "mods": ["block_chance flat 8", "energy_shield increased 25"]},
       {"name": "Contraataque", "mods": ["thorns flat 25", "damage increased 20"]},
@@ -109,7 +109,7 @@
       {"name": "Sigilo", "mods": ["evasion increased 10"]}
     ],
     "notables": [
-      {"name": "Token robado", "mods": ["crit_chance increased 40", "crit_multiplier flat 20"]},
+      {"name": "Token robado", "mods": ["crit_chance increased 40", "crit_multiplier flat 20", "max_overclock_charges flat 1", "charge_spend_mana flat 3"]},
       {"name": "Sesión persistente", "mods": ["extra_chains flat 1"]},
       {"name": "Movimiento lateral", "mods": ["extra_chains flat 1", "damage increased 15 chain"]},
       {"name": "Sin rastro en los logs", "mods": ["evasion more 20", "movement_speed increased 10"]},

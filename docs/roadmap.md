@@ -126,7 +126,7 @@ Origen: R2 §3 ★★★
 - Menú K y barra muestran qué dispara qué; `tools/audit_rams.gd` cubre las nuevas.
 - Consejo de primera vez en `data/tips.json` (T10) al equipar la primera RAM de activación.
 
-### [ ] T15 · Cargas en el árbol, ascendencias y habilidades · M
+### [x] T15 · Cargas en el árbol, ascendencias y habilidades · M
 Origen: R2 §2 ★★
 - Nodos de "+1 de Buffer máximo", "al gastar Overclock, recupera maná", etc.
 - Al menos una habilidad propia que consuma cargas.
@@ -390,3 +390,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-24 · T12 · Siete maestrías (una por sector) donde se elige 1 de 3 bonos, gratis y cambiable; guardadas con el personaje, con rombos en el árbol, tooltip y búsqueda; sin cambiar la estructura del árbol. De paso, una prueba de T08 que dependía de la evasión al azar ya no falla de vez en cuando, y la integración encontró un fallo antiguo: si el jefe moría por un degenerativo, World vaciaba las listas de enemigos en mitad del bucle (ahora se vacían al final del fotograma).
 - 2026-10-24 · T13 · RAM de activación Manejador de Excepciones (al recibir un golpe) y Breakpoint Condicional (al hacer crítico): la habilidad se lanza sola, paga su maná, tiene enfriamiento interno, se resuelve al fotograma siguiente y sus propios críticos no activan nada.
 - 2026-10-24 · T14 · RAM Cron Job (cada 2 s), Hook pre-stash (al esquivar) y Callback onKill() (al matar); «AUTO» y enfriamiento en la barra, la activación en la ayuda, en K y en la descripción de la RAM, y su consejo de primera vez. `tools/audit_rams.gd` ya mira las mismas claves que la prueba (antes daba 96 falsos «sin efecto»).
+- 2026-10-25 · T15 · Cargas en el árbol (cuatro notables: +1 de cada carga máxima y maná al gastarlas), en tres ascendencias y en la habilidad Core Dump, que gasta las tres; stat nuevo `charge_spend_mana`.

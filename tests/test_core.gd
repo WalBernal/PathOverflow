@@ -91,6 +91,7 @@ func _initialize() -> void:
 	_test_rule_keystones()
 	_test_masteries()
 	_test_trigger_rams()
+	_test_charges_build()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -1894,6 +1895,44 @@ func _test_board_milestones() -> void:
 	_check(d20["radius"] > d1["radius"] and d20["cooldown"] < d1["cooldown"] and d20["stun"] > d1["stun"], "cada nivel mejora área, enfriamiento y duración")
 	_check(SkillCalc.milestone_text(_db.skills.skills["proceso_hijo"]) == "+1 esbirro", "hito de esbirros")
 	_check(SkillCalc.compute(Motherboard.new(_db.skills.skills["proceso_hijo"], 20, ["DDR5"]), c)["count"] == 4, "esbirros extra por nivel")
+
+
+## Cargas en las builds: nodos del árbol y de ascendencia que las dan o las usan,
+## maná al gastarlas y Core Dump, una habilidad que gasta todas.
+func _test_charges_build() -> void:
+	var tree_stats := {}
+	for n in _tree.nodes.values():
+		for m in n.mods:
+			tree_stats[String(m.stat)] = true
+	for s in ["max_buffer_charges", "max_multihilo_charges", "max_overclock_charges", "charge_spend_mana"]:
+		_check(tree_stats.has(s), "el árbol tiene %s" % s)
+	var asc_stats := {}
+	for cls in _classes:
+		for a in cls.get("ascendancies", []):
+			for n in a.get("passives", []):
+				for md in n.get("mods", []):
+					asc_stats[String(md.get("stat", ""))] = true
+	_check(asc_stats.has("max_buffer_charges") and asc_stats.has("charge_spend_mana"), "ascendencias que dan cargas o las usan")
+	# Core Dump: gasta los tres tipos; las RAM de gasto ya no encajan en ella.
+	var skills := _db.skills.skills
+	var c := CharacterData.new(_classes[4], _tree)
+	var p := SkillCalc.compute(Motherboard.new(skills["core_dump"], 5, []), c)
+	_check(p["spend_charges"].size() == 3, "Core Dump gasta las tres cargas")
+	_check(not RamModule.new(_db.skills.rams["volcado_de_buffer"]).supports(skills["core_dump"]), "Volcado de Buffer no encaja en Core Dump (ya gasta Buffer)")
+	# Maná al gastar cargas.
+	c.add_timed_effect("prueba_cargas", [Modifier.from_dict({"stat": "charge_spend_mana", "type": "flat", "value": 10}, "prueba")] as Array[Modifier], 99.0)
+	var pl := Player.new()
+	pl.character = c
+	var sc := SkillController.new()
+	sc.player = pl
+	sc.character = c
+	pl.mana = 0.0
+	c.charges["multihilo"] = 2
+	var q: Dictionary = sc._spend_charges(p)
+	_check(c.charges["multihilo"] == 0 and q["max_damage"] > p["max_damage"], "gastar Multihilos: más daño")
+	_check(is_equal_approx(pl.mana, minf(pl.max_mana(), pl.unreserved_mana_max() * 0.2)), "Compilación JIT y compañía: maná por carga gastada (%.1f)" % pl.mana)
+	sc.free()
+	pl.free()
 
 
 ## RAM de activación: la habilidad se lanza sola al recibir un golpe o al hacer un

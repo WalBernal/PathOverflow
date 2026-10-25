@@ -1020,6 +1020,38 @@
       }
     },
     {
+      "id": "core_dump",
+      "name": "Core Dump",
+      "kind": "nova",
+      "damage_type": "physical",
+      "attribute": "int",
+      "spend": ["buffer", "multihilo", "overclock"],
+      "tags": [
+        "spell",
+        "area",
+        "physical"
+      ],
+      "lol": "Viktor R / Ryze R",
+      "description": "Vuelcas toda la memoria de golpe a tu alrededor: gasta todas tus cargas. Cada Buffer te cura un 6 % y suma un 10 % de daño; cada Multihilos, un 15 %; con Overclock, crítico seguro y más multiplicador. Sin cargas, un volcado discreto.",
+      "spell": {
+        "base_damage": [
+          12,
+          20
+        ],
+        "damage_growth": 0.16,
+        "cast_time": 0.7,
+        "crit": 5.0
+      },
+      "radius": 150,
+      "mana_cost": 12,
+      "mana_per_level": 0.5,
+      "cooldown": 4.0,
+      "icon": {
+        "shape": "core_dump",
+        "color": "c0a0ff"
+      }
+    },
+    {
       "id": "derrame_aceite",
       "name": "Derrame de Aceite",
       "kind": "terrain",

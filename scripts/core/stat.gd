@@ -87,6 +87,8 @@ const OVERCLOCK_CHARGE_CHANCE := &"overclock_charge_chance"
 const MAX_BUFFER_CHARGES := &"max_buffer_charges"
 const MAX_MULTIHILO_CHARGES := &"max_multihilo_charges"
 const MAX_OVERCLOCK_CHARGES := &"max_overclock_charges"
+## % del maná máximo que recuperas por cada carga que gastas (de cualquier tipo).
+const CHARGE_SPEND_MANA := &"charge_spend_mana"
 const THORNS := &"thorns"
 ## Enemigos extra que atraviesan los proyectiles (suma a la RAM de perforación).
 const EXTRA_PIERCE := &"extra_pierce"
@@ -192,6 +194,7 @@ const NAMES := {
 	MAX_BUFFER_CHARGES: "Cargas de Buffer máximas",
 	MAX_MULTIHILO_CHARGES: "Cargas de Multihilos máximas",
 	MAX_OVERCLOCK_CHARGES: "Cargas de Overclock máximas",
+	CHARGE_SPEND_MANA: "Maná que recuperas por cada carga que gastas (del máximo)",
 	THORNS: "Daño de espinas al recibir un golpe",
 	EXTRA_PIERCE: "Enemigos extra que atraviesan los proyectiles",
 	STATUS_RESIST: "Resistencia a estados (electrocutado, helado, congelado)",
@@ -230,7 +233,7 @@ const PERCENT_STATS := [
 	BLOCK_CHANCE, FIRE_RES, COLD_RES, LIGHTNING_RES, CHAOS_RES, CRIT_MULTIPLIER, LIFE_LEECH,
 	BURN_CHANCE, SHOCK_CHANCE, CHILL_CHANCE, FREEZE_CHANCE, POISON_CHANCE, BLEED_CHANCE, STATUS_RESIST,
 	KILL_EXPLOSION, RETALIATION_NOVA, BUFFER_CHARGE_CHANCE, MULTIHILO_CHARGE_CHANCE, OVERCLOCK_CHARGE_CHANCE,
-	MANA_COST_REDUCTION, DODGE_RECOVERY, DODGE_BLAST, GARBAGE_COLLECTOR,
+	MANA_COST_REDUCTION, DODGE_RECOVERY, DODGE_BLAST, GARBAGE_COLLECTOR, CHARGE_SPEND_MANA,
 ]
 
 const TAG_NAMES := {

@@ -83,6 +83,10 @@ func supports(skill_def: Dictionary) -> bool:
 	if (sp.has("life_cost") or sp.has("spend_buffer") or sp.has("spend_multihilo") or sp.has("spend_overclock")
 			or sp.has("downside") or sp.has("convert_to")) and String(skill_def.get("damage_type", "none")) == "none":
 		return false
+	# Gastar cargas que la habilidad ya gasta por sí misma (Core Dump) no haría nada.
+	for t in skill_def.get("spend", []):
+		if sp.has("spend_" + String(t)):
+			return false
 	# Conversión: solo si la habilidad hace daño de uno de los tipos que convierte.
 	var from: Array = sp.get("convert_from", [])
 	if sp.has("convert_to") and not from.is_empty() and not from.has(String(skill_def.get("damage_type", "none"))):

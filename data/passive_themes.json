@@ -244,6 +244,11 @@
        "stat": "movement_speed",
        "type": "increased",
        "value": -3
+      },
+      {
+       "stat": "max_buffer_charges",
+       "type": "flat",
+       "value": 1
       }
      ]
     ],
@@ -506,6 +511,11 @@
        "stat": "movement_speed",
        "type": "increased",
        "value": 4
+      },
+      {
+       "stat": "max_multihilo_charges",
+       "type": "flat",
+       "value": 1
       }
      ]
     ],
@@ -867,6 +877,11 @@
        "stat": "crit_multiplier",
        "type": "flat",
        "value": 15
+      },
+      {
+       "stat": "max_overclock_charges",
+       "type": "flat",
+       "value": 1
       }
      ]
     ],
@@ -1620,6 +1635,11 @@
        "stat": "cast_speed",
        "type": "increased",
        "value": 12
+      },
+      {
+       "stat": "charge_spend_mana",
+       "type": "flat",
+       "value": 3
       }
      ]
     ],

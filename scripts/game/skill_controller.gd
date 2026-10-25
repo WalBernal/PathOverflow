@@ -523,10 +523,13 @@ func _spend_charges(p: Dictionary) -> Dictionary:
 		return p
 	var q := p.duplicate()
 	var mult := 1.0
+	var mana_per_charge := character.stats.get_value(Stat.CHARGE_SPEND_MANA)
 	for t in spend:
 		var n := character.spend_charges(t)
 		if n <= 0:
 			continue
+		if mana_per_charge > 0.0:
+			player.mana = minf(player.max_mana(), player.mana + player.unreserved_mana_max() * mana_per_charge / 100.0 * n)
 		match t:
 			"buffer":
 				player.heal(player.max_life() * 0.06 * n)

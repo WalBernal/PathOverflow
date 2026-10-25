@@ -305,8 +305,11 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 	var aura_radius_mult := 1.0
 	# Costo en vida (RAM de "alimentación por vida"): parte del maná se paga con vida.
 	var life_cost_frac := 0.0
-	# Gasto de cargas al usar la habilidad (Buffer, Multihilos, Overclock).
+	# Gasto de cargas al usar la habilidad (Buffer, Multihilos, Overclock): por la
+	# propia habilidad ("spend" en skills.json, p. ej. Core Dump) o por una RAM.
 	var spend := {}
+	for t in skill.get("spend", []):
+		spend[String(t)] = true
 	for ram: RamModule in board.active_supports():
 		life_cost_frac += ram.special("life_cost")
 		for t in Charges.TYPES:

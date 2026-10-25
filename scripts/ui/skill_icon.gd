@@ -203,6 +203,15 @@ static func draw(ci: CanvasItem, rect: Rect2, skill_def: Dictionary, dimmed := f
 			ci.draw_line(c + Vector2(-r, r * 0.6), c + Vector2(r * 0.8, -r * 0.6), color, 4.0, true)
 			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(r, -r * 0.8), c + Vector2(r * 0.15, -r * 0.65),
 				c + Vector2(r * 0.75, -r * 0.05)]), color)
+		"core_dump":
+			# Bloque de memoria que revienta en hexadecimal, con tres pastillas de carga.
+			ci.draw_rect(Rect2(c - Vector2(r * 0.45, r * 0.45), Vector2(r * 0.9, r * 0.9)), Color("2a2238"))
+			ci.draw_rect(Rect2(c - Vector2(r * 0.45, r * 0.45), Vector2(r * 0.9, r * 0.9)), color, false, 2.0)
+			for k in 8:
+				var d := Vector2.from_angle(TAU * k / 8.0)
+				ci.draw_line(c + d * r * 0.6, c + d * r * 0.95, Color(color, 0.8), 2.0, true)
+			for k in 3:
+				ci.draw_circle(c + Vector2((k - 1) * r * 0.28, 0), r * 0.1, [Color("e0a050"), Color("6ad07a"), Color("6aa8ff")][k])
 		"oil":
 			# Gota de aceite sobre un charco con brillo, y una chispa.
 			ci.draw_set_transform(c + Vector2(0, r * 0.55), 0.0, Vector2(1.0, 0.4))

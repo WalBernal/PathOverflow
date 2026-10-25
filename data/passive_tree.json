@@ -6640,6 +6640,11 @@
      "stat": "movement_speed",
      "type": "increased",
      "value": -3
+    },
+    {
+     "stat": "max_buffer_charges",
+     "type": "flat",
+     "value": 1
     }
    ],
    "flavor": "Tan rígido como el código de 2005.",
@@ -7607,6 +7612,11 @@
      "stat": "crit_multiplier",
      "type": "flat",
      "value": 15
+    },
+    {
+     "stat": "max_overclock_charges",
+     "type": "flat",
+     "value": 1
     }
    ],
    "flavor": "Acceso inválido. Al hígado.",
@@ -8074,6 +8084,11 @@
      "stat": "movement_speed",
      "type": "increased",
      "value": 4
+    },
+    {
+     "stat": "max_multihilo_charges",
+     "type": "flat",
+     "value": 1
     }
    ],
    "flavor": "No te dan si tu try/catch es lo bastante amplio.",
@@ -10740,6 +10755,11 @@
      "stat": "cast_speed",
      "type": "increased",
      "value": 12
+    },
+    {
+     "stat": "charge_spend_mana",
+     "type": "flat",
+     "value": 3
     }
    ],
    "flavor": "Lanza antes de pensar. Optimiza después.",
