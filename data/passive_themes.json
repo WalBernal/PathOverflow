@@ -2714,6 +2714,11 @@
        "stat": "movement_speed",
        "type": "increased",
        "value": 10
+      },
+      {
+       "stat": "dodge_charges",
+       "type": "flat",
+       "value": 1
       }
      ]
     ],
@@ -2730,6 +2735,11 @@
        "stat": "evasion",
        "type": "increased",
        "value": 25
+      },
+      {
+       "stat": "dodge_recovery",
+       "type": "flat",
+       "value": 20
       }
      ]
     ],

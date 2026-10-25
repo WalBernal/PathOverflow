@@ -164,6 +164,11 @@ func max_dodge_charges() -> int:
 	return DODGE_CHARGES + maxi(0, int(_stat(Stat.DODGE_CHARGES)))
 
 
+## Segundos que tarda en volver una carga de esquiva (Stat.DODGE_RECOVERY la acorta).
+func dodge_recharge_time() -> float:
+	return DODGE_RECHARGE / (1.0 + maxf(0.0, _stat(Stat.DODGE_RECOVERY)) / 100.0)
+
+
 ## ¿Está en los fotogramas invulnerables de la esquiva?
 func is_dodging() -> bool:
 	return _iframes > 0.0
@@ -376,7 +381,7 @@ func _physics_process(delta: float) -> void:
 	if InputMap.has_action(&"dodge") and Input.is_action_just_pressed(&"dodge"):
 		dodge()
 	if dodge_charges < max_dodge_charges():
-		dodge_charges = minf(float(max_dodge_charges()), dodge_charges + delta / DODGE_RECHARGE)
+		dodge_charges = minf(float(max_dodge_charges()), dodge_charges + delta / dodge_recharge_time())
 	if _dodge_time > 0.0:
 		# Esquivando: en línea recta, rápido, sin control (choca con las paredes).
 		_dodge_time -= delta

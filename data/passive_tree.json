@@ -8714,6 +8714,11 @@
      "stat": "movement_speed",
      "type": "increased",
      "value": 10
+    },
+    {
+     "stat": "dodge_charges",
+     "type": "flat",
+     "value": 1
     }
    ],
    "flavor": "Corres mucho. Hacia dónde, ya se verá.",
@@ -10313,6 +10318,11 @@
      "stat": "evasion",
      "type": "increased",
      "value": 25
+    },
+    {
+     "stat": "dodge_recovery",
+     "type": "flat",
+     "value": 20
     }
    ],
    "flavor": "La mejor defensa es no estar ahí.",

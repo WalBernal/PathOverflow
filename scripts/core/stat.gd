@@ -94,6 +94,12 @@ const EXTRA_PIERCE := &"extra_pierce"
 const STATUS_RESIST := &"status_resist"
 ## Cargas de esquiva (git stash) extra.
 const DODGE_CHARGES := &"dodge_charges"
+## % más rápido que se recargan las esquivas.
+const DODGE_RECOVERY := &"dodge_recovery"
+## Cargas de Multihilos que ganas al esquivar.
+const DODGE_MULTIHILO := &"dodge_multihilo"
+## "git stash pop": al esquivar, donde estabas explota algo que hace este % de tu vida máxima como fuego.
+const DODGE_BLAST := &"dodge_blast"
 ## Escudo de energía que se regenera por segundo siempre (aparte de la recarga tras no recibir daño).
 const ENERGY_SHIELD_REGEN := &"energy_shield_regen"
 ## % menos de coste de maná de las habilidades (máximo 50 %).
@@ -181,6 +187,9 @@ const NAMES := {
 	EXTRA_PIERCE: "Enemigos extra que atraviesan los proyectiles",
 	STATUS_RESIST: "Resistencia a estados (electrocutado, helado, congelado)",
 	DODGE_CHARGES: "Cargas de esquiva",
+	DODGE_RECOVERY: "Recarga de esquiva más rápida",
+	DODGE_MULTIHILO: "Cargas de Multihilos al esquivar",
+	DODGE_BLAST: "Al esquivar, git stash pop: explosión de fuego (de tu vida máxima)",
 	ENERGY_SHIELD_REGEN: "Regeneración de escudo de energía por segundo",
 	MANA_COST_REDUCTION: "Reducción del coste de maná",
 }
@@ -200,7 +209,7 @@ const PERCENT_STATS := [
 	BLOCK_CHANCE, FIRE_RES, COLD_RES, LIGHTNING_RES, CHAOS_RES, CRIT_MULTIPLIER, LIFE_LEECH,
 	BURN_CHANCE, SHOCK_CHANCE, CHILL_CHANCE, FREEZE_CHANCE, POISON_CHANCE, BLEED_CHANCE, STATUS_RESIST,
 	KILL_EXPLOSION, RETALIATION_NOVA, BUFFER_CHARGE_CHANCE, MULTIHILO_CHARGE_CHANCE, OVERCLOCK_CHARGE_CHANCE,
-	MANA_COST_REDUCTION,
+	MANA_COST_REDUCTION, DODGE_RECOVERY, DODGE_BLAST,
 ]
 
 const TAG_NAMES := {

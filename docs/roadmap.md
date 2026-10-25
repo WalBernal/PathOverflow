@@ -75,7 +75,7 @@ Origen: R2 §3 ★★★
 - Repartidas por clase según su identidad; compatibles con las RAM que tengan sentido (área, velocidad, estados).
 - Iconos propios y entrada en el catálogo (B).
 
-### [ ] T06 · Esquiva, siguiente paso · S
+### [x] T06 · Esquiva, siguiente paso · S
 Origen: R2 §1 ★★
 - Nodos y afijos de +cargas de esquiva y recarga más rápida.
 - RAM o ascendencias que actúen al esquivar (dejar una trampa, ganar una carga de Multihilos).
@@ -380,3 +380,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-24 · T03b · La zona solo dibuja obstáculos, antorchas, props, salidas y objetos en cámara: sin enemigos de ~20 a ~13 ms, 150 enemigos a 60 FPS y 300 a 32-34 FPS. El objetivo de 300 ≥ 50 FPS no se alcanzó: lo que queda (simulación y `_draw` de enemigos en GDScript, interfaz) se anota en T66.
 - 2026-10-24 · T04 · El minimapa y el registro de misiones se ocultan si cualquier ventana abierta se les encima (comprobado por rectángulos cada fotograma); el alijo y la tienda se encogen junto al inventario cuando no caben a 160 %; captura `ventanas160`.
 - 2026-10-24 · T05 · Habilidades de movimiento Túnel SSH (teletransporte con descarga), Force Push (carga con empuje y aturdimiento) y Git Revert (salto atrás con zona helada), desbloqueadas al nivel 8 según la clase, con icono, sonido y entrada en el catálogo; los teletransportes ya no caen en paredes ni obstáculos.
+- 2026-10-24 · T06 · Esquiva: stats de recarga más rápida, Multihilos al esquivar y explosión *git stash pop* (% de la vida como fuego); afijos de objetos (recarga, +1 carga, Multihilos, explosión), chip de recarga, dos notables de Movilidad (+1 carga, +20 % de recarga) y tres de ascendencia (Campeón del Sprint, Saboteadora, Francotiradora).

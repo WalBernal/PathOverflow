@@ -231,7 +231,7 @@ func _update_tooltips() -> void:
 	for i in SkillController.ACTIONS.size():
 		_hotspots["skill_%d" % i].tooltip_text = _skill_tooltip(i)
 	_hotspots["dodge"].tooltip_text = "Esquiva · git stash (Espacio · gatillo derecho)\nUn salto corto en la dirección en que te mueves (o hacia el ratón) con un instante de invulnerabilidad: evita golpes, charcos y estados.\nCargas: %d / %d. Se recarga una cada %.1f s." % [
-		floori(player.dodge_charges), player.max_dodge_charges(), Player.DODGE_RECHARGE]
+		floori(player.dodge_charges), player.max_dodge_charges(), player.dodge_recharge_time()]
 
 
 func _skill_tooltip(i: int) -> String:

@@ -62,6 +62,7 @@ func _initialize() -> void:
 	_test_enemy_roles()
 	_test_golems()
 	_test_movement_skills()
+	_test_dodge_upgrades()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -1861,6 +1862,38 @@ func _test_board_milestones() -> void:
 	_check(d20["radius"] > d1["radius"] and d20["cooldown"] < d1["cooldown"] and d20["stun"] > d1["stun"], "cada nivel mejora área, enfriamiento y duración")
 	_check(SkillCalc.milestone_text(_db.skills.skills["proceso_hijo"]) == "+1 esbirro", "hito de esbirros")
 	_check(SkillCalc.compute(Motherboard.new(_db.skills.skills["proceso_hijo"], 20, ["DDR5"]), c)["count"] == 4, "esbirros extra por nivel")
+
+
+## Esquiva, siguiente paso: recarga más rápida, Multihilos y explosión al esquivar,
+## en afijos, chips, el árbol y las ascendencias.
+func _test_dodge_upgrades() -> void:
+	for s in [Stat.DODGE_RECOVERY, Stat.DODGE_MULTIHILO, Stat.DODGE_BLAST]:
+		_check(Stat.exists(s), "stat de esquiva %s" % s)
+	var c := CharacterData.new(_classes[1], _tree)
+	var p := Player.new()
+	p.character = c
+	var base_time := p.dodge_recharge_time()
+	c.add_timed_effect("prueba_esquiva", [Modifier.from_dict({"stat": "dodge_recovery", "type": "flat", "value": 25}, "prueba")] as Array[Modifier], 99.0)
+	_check(is_equal_approx(base_time, Player.DODGE_RECHARGE) and is_equal_approx(p.dodge_recharge_time(), Player.DODGE_RECHARGE / 1.25),
+		"+25 % de recarga de esquiva: %.2f s → %.2f s" % [base_time, p.dodge_recharge_time()])
+	p.free()
+	var affix_stats := {}
+	for a in _db.affixes:
+		affix_stats[String(a.get("stat", ""))] = true
+	for s in ["dodge_recovery", "dodge_charges", "dodge_multihilo", "dodge_blast"]:
+		_check(affix_stats.has(s), "afijo de objeto con %s" % s)
+	var tree_stats := {}
+	for n in _tree.nodes.values():
+		for m in n.mods:
+			tree_stats[String(m.stat)] = true
+	_check(tree_stats.has("dodge_recovery") and tree_stats.has("dodge_charges"), "el árbol tiene recarga y cargas de esquiva")
+	var asc_stats := {}
+	for cls in _classes:
+		for a in cls.get("ascendancies", []):
+			for n in a.get("passives", []):
+				for md in n.get("mods", []):
+					asc_stats[String(md.get("stat", ""))] = true
+	_check(asc_stats.has("dodge_multihilo") and asc_stats.has("dodge_blast"), "ascendencias que actúan al esquivar")
 
 
 ## Habilidades de movimiento: Túnel SSH, Force Push y Git Revert.

@@ -17,6 +17,7 @@ const POOL := [
 	["movement_speed", "increased", 3, 5, []], ["strength", "flat", 8, 16, []], ["dexterity", "flat", 8, 16, []],
 	["intelligence", "flat", 8, 16, []], ["buffer_charge_chance", "flat", 5, 10, []], ["multihilo_charge_chance", "flat", 5, 10, []],
 	["overclock_charge_chance", "flat", 5, 10, []], ["life_regen", "flat", 3, 8, []], ["aura_effect", "increased", 4, 8, []],
+	["dodge_recovery", "flat", 6, 12, []],
 ]
 const PREFIXES := ["Silicio", "Microcódigo", "Firmware", "Núcleo", "Bus", "Registro", "Caché", "Puerto", "Transistor", "Litografía"]
 const SUFFIXES := ["de 7 nm", "sin disipador", "de laboratorio", "reciclado", "con overclock", "de servidor", "de contrabando", "ECC", "dorado"]

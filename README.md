@@ -16,7 +16,7 @@ Por ahora es solo para un jugador en local, pero la lógica está escrita para p
 |---|---|
 | Flechas / mantener click izq. | Mover |
 | Q · W · E · R · T · Y | Las 6 habilidades de la barra |
-| Espacio | Esquiva (*git stash*): salto corto con un instante de invulnerabilidad; 2 cargas que se recargan solas |
+| Espacio | Esquiva (*git stash*): salto corto con un instante de invulnerabilidad; 2 cargas que se recargan solas (más cargas, recarga más rápida, Multihilos al esquivar y explosión *git stash pop* con afijos, chips, el árbol y algunas ascendencias) |
 | Tab | Mapa grande de la zona (con niebla de guerra) |
 | Shift (mantener) | Ver el botín que oculta el filtro (atenuado) |
 | B | Catálogo de hardware: todas las placas base y RAM |

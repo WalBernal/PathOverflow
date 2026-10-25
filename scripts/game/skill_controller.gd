@@ -90,6 +90,7 @@ func setup(p_player: Player, p_enemies: EnemyManager, p_character: CharacterData
 	character.inventory.changed.connect(refresh_profiles)
 	character.conditions_changed.connect(refresh_profiles)
 	player.hit_taken.connect(on_player_hit)
+	player.dodged.connect(on_player_dodged)
 	player.heal_minions_requested.connect(heal_units)
 	enemies.crit_dealt.connect(on_crit)
 	var saved_auras: Array = character.flags.get("active_auras", []).duplicate()
@@ -516,9 +517,46 @@ func on_player_hit() -> void:
 	_effects.append({"type": "burst", "pos": pos, "radius": NOVA_RADIUS * 0.8, "time": 0.0, "duration": 0.35, "color": Color("d8f4ff")})
 
 
+## "git stash pop": explosiones que dejan las esquivas, {pos, time} (estallan al llegar a 0).
+const STASH_POP_DELAY := 0.45
+const STASH_POP_RADIUS := 100.0
+var _stash_pops: Array[Dictionary] = []
+
+
+## Lo llama el jugador al esquivar (Player.dodged), aún en el punto de partida:
+## cargas de Multihilos seguras (Stat.DODGE_MULTIHILO) y la explosión que se
+## queda atrás (Stat.DODGE_BLAST).
+func on_player_dodged() -> void:
+	for k in int(character.stats.get_value(Stat.DODGE_MULTIHILO)):
+		if character.gain_charge("multihilo"):
+			_effects.append({"type": "ring", "pos": player.global_position, "radius": 34.0, "time": 0.0, "duration": 0.3, "color": Charges.COLORS["multihilo"]})
+	if character.stats.get_value(Stat.DODGE_BLAST) > 0.0:
+		_stash_pops.append({"pos": player.global_position, "time": STASH_POP_DELAY})
+		_effects.append({"type": "marker", "pos": player.global_position, "radius": STASH_POP_RADIUS, "time": 0.0, "duration": STASH_POP_DELAY, "color": Color("ff9a3a")})
+
+
+func _update_stash_pops(delta: float) -> void:
+	if _stash_pops.is_empty():
+		return
+	var still: Array[Dictionary] = []
+	for s in _stash_pops:
+		s["time"] -= delta
+		if s["time"] > 0.0:
+			still.append(s)
+			continue
+		var dmg := player.max_life() * character.stats.get_value(Stat.DODGE_BLAST) / 100.0
+		enemies.hit_ailments = {}
+		enemies.hit_in_radius(s["pos"], STASH_POP_RADIUS, dmg * 0.9, dmg * 1.1, 5.0, 150.0)
+		Sfx.play("mine", -6.0, randf_range(0.95, 1.05))
+		_effects.append({"type": "burst", "pos": s["pos"], "radius": STASH_POP_RADIUS, "time": 0.0, "duration": 0.35, "color": Color("ff9a3a")})
+		_effects.append({"type": "ring", "pos": s["pos"], "radius": STASH_POP_RADIUS, "time": 0.0, "duration": 0.4, "color": Color("ffd060")})
+	_stash_pops = still
+
+
 func _update_ascendancy_procs(delta: float) -> void:
 	_nova_cooldown = maxf(0.0, _nova_cooldown - delta)
 	_crit_charge_cd = maxf(0.0, _crit_charge_cd - delta)
+	_update_stash_pops(delta)
 	var explosions := _pending_explosions.duplicate()
 	_pending_explosions.clear()
 	for pos in explosions:

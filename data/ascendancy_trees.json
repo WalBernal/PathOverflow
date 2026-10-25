@@ -58,7 +58,7 @@
       {"name": "Retro", "mods": ["damage increased 8"]}
     ],
     "notables": [
-      {"name": "Velocidad del equipo", "mods": ["movement_speed increased 12", "attack_speed increased 10"]},
+      {"name": "Velocidad del equipo", "mods": ["movement_speed increased 12", "attack_speed increased 10", "dodge_multihilo flat 1"]},
       {"name": "Daily de 45 minutos", "mods": ["damage more 15", "life_on_kill flat 5"]},
       {"name": "Burndown", "mods": ["damage increased 30", "cooldown_recovery increased 15"]},
       {"name": "Planning poker", "mods": ["cast_speed increased 15", "attack_speed increased 10"]},
@@ -80,7 +80,7 @@
       {"name": "Reproducible", "mods": ["damage more 12"]},
       {"name": "Paralelismo", "mods": ["extra_projectiles flat 1"]},
       {"name": "Hot path", "mods": ["attack_speed increased 12", "cast_speed increased 12"]},
-      {"name": "Latencia cero", "mods": ["movement_speed increased 12", "evasion increased 25"]},
+      {"name": "Latencia cero", "mods": ["movement_speed increased 12", "evasion increased 25", "dodge_recovery flat 25"]},
       {"name": "Perfilado total", "mods": ["extra_projectiles flat 1", "extra_pierce flat 1", "damage more 8 full_life"]},
       {"name": "Cuello de botella", "mods": ["retaliation_nova flat 25", "evasion increased 20"]}
     ]
@@ -130,7 +130,7 @@
       {"name": "Dependencia transitiva", "mods": ["extra_devices flat 2"]},
       {"name": "Versión fijada", "mods": ["skill_duration increased 30", "ailment_duration increased 20"]},
       {"name": "Gusano", "mods": ["ailment_damage more 15"]},
-      {"name": "Rootkit", "mods": ["chaos_res flat 20", "energy_shield increased 20"]},
+      {"name": "Rootkit", "mods": ["chaos_res flat 20", "energy_shield increased 20", "dodge_blast flat 10"]},
       {"name": "Ransomware", "mods": ["interaction_effect increased 40", "ailing_damage more 15"]},
       {"name": "Bomba lógica", "mods": ["kill_explosion flat 30"]},
       {"name": "Puerta trasera", "mods": ["extra_devices flat 1", "damage more 15 trap"]}
