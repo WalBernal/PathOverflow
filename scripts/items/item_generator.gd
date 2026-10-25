@@ -54,7 +54,7 @@ func roll_drop(item_level: int, rarity_bonus := 0.0) -> Item:
 ## nivel del objeto; el número de ranuras y su generación son aleatorios.
 func generate_motherboard(item_level: int, skill_id := "", slot_count := 0) -> Motherboard:
 	var defs: Dictionary = db.skills.skills
-	var def: Dictionary = defs[skill_id] if skill_id != "" else defs[_pick(defs.keys())]
+	var def: Dictionary = defs[skill_id] if skill_id != "" else defs[_pick(skill_options(item_level))]
 	if slot_count <= 0:
 		var counts: Array = SLOT_COUNT_WEIGHTS.keys()
 		slot_count = counts[_weighted_index(SLOT_COUNT_WEIGHTS.values())]
@@ -65,6 +65,17 @@ func generate_motherboard(item_level: int, skill_id := "", slot_count := 0) -> M
 	var board := Motherboard.new(def, clampi(item_level - 3, 1, Motherboard.MAX_LEVEL), slots)
 	board.item_level = item_level
 	return board
+
+
+## Habilidades que pueden salir en una placa de este nivel (las que tienen
+## `min_level` no caen antes; T69). `attribute` ("str", "dex", "int" o "") filtra.
+func skill_options(item_level: int, attribute := "") -> Array:
+	var defs: Dictionary = db.skills.skills
+	var out: Array = []
+	for id in defs:
+		if int(defs[id].get("min_level", 1)) <= item_level and (attribute == "" or String(defs[id].get("attribute", "")) == attribute):
+			out.append(id)
+	return out if not out.is_empty() else defs.keys()
 
 
 func generate_ram(item_level: int, ram_id := "") -> RamModule:

@@ -51,6 +51,8 @@ var _immune_warning := 0.0
 var stash: Stash
 ## Mercancía de Nacho y el nivel para el que se generó.
 var _shop_stock: Array[Item] = []
+## Cajas que Nacho ha sacado desde que entraste a la zona (cada una cuesta más).
+var _shop_refreshes := 0
 var _shop_level := 0
 var _rng := RandomNumberGenerator.new()
 ## Hitstop: hasta cuándo no puede repetirse (ms) y la pausa mínima entre dos.
@@ -290,6 +292,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 	if not _waves.is_empty():
 		_end_waves("Sales del banco de oleadas.")
 	_close_visit()
+	_shop_refreshes = 0
 	_twins = {}
 	if zone:
 		remove_child(zone)
@@ -1268,12 +1271,14 @@ func _on_npc_interacted(npc: Dictionary) -> void:
 
 ## Nacho saca otra caja: mercancía nueva, pagando.
 func _refresh_shop() -> void:
-	var cost := ShopPanel.refresh_cost(character.level)
+	var cost := ShopPanel.refresh_cost(character.level, _shop_refreshes)
 	if not character.spend_tokens(cost):
 		ui.hud.flash("Renovar cuesta %d tokens. Nacho tampoco trabaja gratis." % cost, UiStyle.DANGER)
 		return
+	_shop_refreshes += 1   # la siguiente caja, más cara (hasta cambiar de zona)
 	_shop_stock = Economy.generate_stock(item_generator, character.level)
 	_shop_level = character.level
+	ui.shop_panel.refreshes = _shop_refreshes
 	ui.open_shop(_shop_stock)
 	_mark_dirty()
 
@@ -1353,6 +1358,7 @@ func _on_dialogue_action(action: Dictionary) -> void:
 			if _shop_stock.is_empty() or _shop_level != character.level:
 				_shop_stock = Economy.generate_stock(item_generator, character.level)
 				_shop_level = character.level
+			ui.shop_panel.refreshes = _shop_refreshes
 			ui.open_shop(_shop_stock)
 		"passive_point":
 			var amount := int(action.get("amount", 1))

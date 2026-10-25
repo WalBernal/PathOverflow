@@ -396,11 +396,12 @@ Origen: R3 (pedido del usuario)
 - `tools/skill_balance.gd` gana columnas: arma inicial de la clase y tiempo contra el jefe del Acto I. Prueba en `test_core` que exija la banda, para que una habilidad nueva no se cuele por arriba.
 - Hecho: daño base bajado en proporción a ~21 DPS (placa 1) en Proceso Hijo, Bomba Lógica, Derrame de Aceite, Mina Rodante, Fuga de Memoria, Drones de Vigilancia, Pipe de Datos, Campo de Estática, Flamewar, Watchdog, Tormenta de Tickets y Fork Bomb; Drones con crecimiento 0,11 (ganan un dron por hito); Ráfaga de Paquetes 0,9 → 1,2 de efectividad; `min_level` 4-6 en las que solo caen como botín. Mejor inicial contra el Arquitecto: Guerrero 92 s, Duelista 68, Exploradora 90, Hacker 55, Hechicero 59, Templario 43, Full Stack 53.
 
-### [ ] T70 · Tienda de Nacho, parte 1: más surtido · M
+### [x] T70 · Tienda de Nacho, parte 1: más surtido · M
 Origen: R3
 - Más placas (8-10) y RAM (10-12), repartidas por atributo y familia (que siempre haya algo para la clase que juegas), con una **oferta del día** (una placa o RAM poco común con descuento) y un artículo «de contrabando» caro de rareza alta.
 - Renovar el surtido pagando tokens (precio que sube con cada renovación hasta que vuelves a entrar en la zona), filtros por tipo (placas, RAM, pociones) y por atributo, y comparar con lo equipado al pasar el ratón.
 - Precios revisados con la economía de tokens (cuánto se gana por zona de cada acto), vender por lote (todo lo normal / mágico de la bolsa) y recomprar lo último vendido.
+- Hecho: 9 placas (3 por atributo, sin repetir), hasta 10 RAM distintas, 2 pociones, oferta del día (4 ranuras, 60 %) y contrabando (+2 niveles, 5 ranuras, ×2,5); renovar cada vez más caro (se reinicia al cambiar de zona); filtros; aviso de «ya la tienes»; venta por lote y recompra; la tienda se desplaza si no cabe. Arreglo de T69: `ItemGenerator.generate_motherboard` ignoraba `min_level` de las habilidades (solo lo miraban las RAM). Pendiente para T71: la comparación al pasar el ratón sigue siendo la del tooltip (solo equipo).
 
 ### [ ] T71 · Tienda de Nacho, parte 2: la gabardina · M 🛑
 Origen: R3 (idea del usuario)
@@ -575,3 +576,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T68 · Barras, cuadritos de estado y halos de enemigos en MultiMesh, avisos de cono y carga en el lote, círculos con direcciones precalculadas e iconos del HUD cacheados en texturas (IconCache): 300 enemigos 33,4 → ~29,9 ms y 150 enemigos 18,2 → 14-16,6 ms. T66 sigue bloqueada.
 - 2026-10-25 · Pausa en tres columnas con desplazamiento (no se veían todas las opciones) y Roadmap 3.0 (T69-T87): balance de habilidades iniciales, tienda de Nacho con gabardina, sprites, animación, sonido, ventanas de gestión, árbol pasivo y botín; herramienta tools/skill_balance.gd.
 - 2026-10-25 · T69 · Balance de habilidades iniciales con tools/skill_balance.gd: nada por encima de ~2× la mediana a placa 1 y la mejor inicial de cada clase tumba al primer jefe en 43-92 s (antes 24-120 s); prueba que exige la banda.
+- 2026-10-25 · T70 · Tienda de Nacho con más surtido: placas de los tres atributos, RAM distintas, pociones, oferta del día y contrabando; renovar con precio creciente, filtros, venta por lote y recompra. De paso, las placas respetan ya el min_level de su habilidad.

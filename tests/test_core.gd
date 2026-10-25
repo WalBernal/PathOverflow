@@ -140,6 +140,7 @@ func _initialize() -> void:
 	_test_telemetry()
 	_test_render_batching()
 	_test_skill_balance()
+	_test_shop_stock()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3461,6 +3462,55 @@ func _test_skill_balance() -> void:
 		_check(best >= 35.0 and best <= 130.0, "%s: su mejor habilidad inicial tumba al primer jefe en %.0f s (entre 35 y 130)" % [c["id"], best])
 
 
+## Tienda de Nacho, parte 1 (T70): más surtido, oferta, contrabando, renovar, lote y recompra.
+func _test_shop_stock() -> void:
+	var gen := ItemGenerator.new(_db, 70)
+	var stock := Economy.generate_stock(gen, 15)
+	var boards := stock.filter(func(it: Item) -> bool: return it is Motherboard and Economy.shop_tag(it) == "")
+	for attr in ["str", "dex", "int"]:
+		_check(boards.filter(func(b: Motherboard) -> bool: return String(b.skill_def.get("attribute", "")) == attr).size() == Economy.STOCK_BOARDS_PER_ATTRIBUTE,
+			"%d placas de %s: siempre hay algo para tu clase" % [Economy.STOCK_BOARDS_PER_ATTRIBUTE, attr])
+	var skill_ids := boards.map(func(b: Motherboard) -> String: return String(b.skill_def["id"]))
+	var unique_ids := {}
+	for id in skill_ids:
+		unique_ids[id] = true
+	_check(unique_ids.size() == skill_ids.size(), "sin placas repetidas")
+	var rams := stock.filter(func(it: Item) -> bool: return it is RamModule)
+	var ram_ids := {}
+	for r in rams:
+		ram_ids[String((r as RamModule).def.get("id", ""))] = true
+	_check(rams.size() >= 8 and ram_ids.size() == rams.size(), "RAM de módulos distintos (%d)" % rams.size())
+	var deal: Item = stock.filter(func(it: Item) -> bool: return Economy.shop_tag(it) == Economy.TAG_DEAL)[0]
+	var contra: Item = stock.filter(func(it: Item) -> bool: return Economy.shop_tag(it) == Economy.TAG_CONTRABAND)[0]
+	_check(Economy.shop_price(deal) < Economy.price(deal) and (deal as Motherboard).slots.size() == 4, "la oferta del día: placa de 4 ranuras, rebajada")
+	_check(Economy.shop_price(contra) > Economy.price(contra) * 2 and (contra as Motherboard).slots.size() == 5 and (contra as Motherboard).level > 14,
+		"el contrabando: más nivel, 5 ranuras y caro")
+	# Las placas con min_level no salen antes (arreglo de T69 en el generador).
+	var low := ItemGenerator.new(_db, 7)
+	for k in 200:
+		_check(int(low.generate_motherboard(2).skill_def.get("min_level", 1)) <= 2, "una placa de nivel 2 no es de una habilidad de nivel mayor")
+	_check(Economy.refresh_cost(10, 0) < Economy.refresh_cost(10, 1) and Economy.refresh_cost(10, 1) < Economy.refresh_cost(10, 2), "cada renovación cuesta más")
+	# Venta por lote y recompra.
+	var c := CharacterData.new(_classes[0], _tree)
+	c.inventory.add_item(gen.generate(10, Rarity.Item.NORMAL))
+	c.inventory.add_item(gen.generate(10, Rarity.Item.MAGIC))
+	c.inventory.add_item(gen.generate(10, Rarity.Item.RARE))
+	c.inventory.add_item(gen.generate_motherboard(10))
+	_check(Economy.bulk_sell(c.inventory, Rarity.Item.NORMAL)[0].size() == 1 and Economy.bulk_sell(c.inventory, Rarity.Item.MAGIC)[0].size() == 2,
+		"el lote vende solo equipo normal (o normal y mágico), nunca raros ni placas")
+	var panel := ShopPanel.new()
+	panel.character = c
+	panel._ready()
+	var before := c.tokens
+	var got := panel.sell_bulk(Rarity.Item.MAGIC)
+	_check(got > 0 and c.tokens == before + got and panel.buyback.size() == 2, "vender el lote paga y lo deja para recomprar")
+	_check(ShopPanel.passes_filter(boards[0], String(boards[0].skill_def["attribute"])) and not ShopPanel.passes_filter(rams[0], "str") and ShopPanel.passes_filter(rams[0], "ram"),
+		"filtros por tipo y atributo")
+	c.inventory.add_item(boards[0].duplicate_item() if boards[0].has_method("duplicate_item") else boards[0])
+	_check(ShopPanel.owned_board_level(c, boards[0]) > 0, "avisa si ya tienes esa habilidad")
+	panel.free()
+
+
 func _db_enemies() -> Array:
 	var data: Dictionary = DataLoader.load_json("res://data/enemies.json")
 	return data.get("types", [])
@@ -4188,9 +4238,9 @@ func _test_economy_and_stash() -> void:
 	_check(Economy.drop_amount(5, Rarity.Enemy.UNIQUE, rng) > Economy.drop_amount(5, Rarity.Enemy.NORMAL, rng), "un único suelta más que un normal")
 	var gen := ItemGenerator.new(_db, 3)
 	var stock := Economy.generate_stock(gen, 12)
-	_check(stock.size() == Economy.STOCK_BOARDS + Economy.STOCK_RAMS, "la tienda tiene placas y RAM")
+	_check(stock.filter(func(it: Item) -> bool: return it is Motherboard).size() >= 9 and stock.any(func(it: Item) -> bool: return it is RamModule), "la tienda tiene placas y RAM")
 	for item in stock:
-		_check(item.item_level == 12, "mercancía del nivel del jugador")
+		_check(item.item_level == 12 or Economy.shop_tag(item) == Economy.TAG_CONTRABAND, "mercancía del nivel del jugador (salvo el contrabando)")
 		_check(Economy.price(item) > Economy.sell_price(item), "se vende más barato de lo que se compra")
 	var c := _new_character()
 	c.add_tokens(50)

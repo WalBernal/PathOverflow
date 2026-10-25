@@ -8,8 +8,6 @@ const COLOR := Color("f2c14e")
 ## Probabilidad de soltar tokens según la rareza del enemigo (normal ≈ 2 de cada 5).
 const DROP_CHANCE := {Rarity.Enemy.NORMAL: 0.4, Rarity.Enemy.SPECIAL: 0.7, Rarity.Enemy.ELITE: 1.0, Rarity.Enemy.UNIQUE: 1.0}
 const DROP_MULT := {Rarity.Enemy.NORMAL: 1.0, Rarity.Enemy.SPECIAL: 2.0, Rarity.Enemy.ELITE: 4.0, Rarity.Enemy.UNIQUE: 15.0}
-const STOCK_BOARDS := 4
-const STOCK_RAMS := 6
 ## Lo que paga el comerciante al venderle algo (fracción del precio de compra).
 const SELL_FRACTION := 0.2
 
@@ -70,15 +68,86 @@ static func can_reforge(item: Item) -> bool:
 	return item != null and item.rarity in [Rarity.Item.MAGIC, Rarity.Item.RARE] and not (item is Motherboard or item is RamModule or item is Flask)
 
 
-## Mercancía del comerciante para un nivel: placas base (habilidades al azar
-## que no sean exclusivas) y módulos RAM, todo del nivel del jugador.
+## Mercancía de Nacho (T70): placas de los tres atributos (siempre hay algo para
+## cualquier clase), RAM de módulos distintos, un par de pociones, la **oferta del
+## día** (una placa con más ranuras, rebajada) y el **contrabando** (una placa de
+## nivel más alto y cinco ranuras, carísima). Las placas, algo mejores que las que
+## caen (nivel - 1 en vez de - 3): para eso se pagan.
+const STOCK_BOARDS_PER_ATTRIBUTE := 3
+const STOCK_RAMS_DISTINCT := 10
+const STOCK_FLASKS := 2
+const DEAL_DISCOUNT := 0.6
+const CONTRABAND_MARKUP := 2.5
+## Etiqueta de la tienda en el objeto (meta "shop_tag"): "deal" u "contraband".
+const TAG_DEAL := "deal"
+const TAG_CONTRABAND := "contraband"
+
+
 static func generate_stock(gen: ItemGenerator, level: int) -> Array[Item]:
 	var stock: Array[Item] = []
-	for k in STOCK_BOARDS:
-		var board := gen.generate_motherboard(level, "", 0)
-		# Algo mejor que las que caen (nivel - 3): para eso se pagan.
-		board.level = clampi(level - 1, 1, Motherboard.MAX_LEVEL)
-		stock.append(board)
-	for k in STOCK_RAMS:
-		stock.append(gen.generate_ram(level, ""))
+	var seen_skills := {}
+	for attr in ["str", "dex", "int"]:
+		var options := gen.skill_options(level, attr)
+		for k in STOCK_BOARDS_PER_ATTRIBUTE:
+			var free := options.filter(func(id) -> bool: return not seen_skills.has(id))
+			var id: String = (free if not free.is_empty() else options)[gen.rng.randi_range(0, (free if not free.is_empty() else options).size() - 1)]
+			seen_skills[id] = true
+			var board := gen.generate_motherboard(level, id, 0)
+			board.level = clampi(level - 1, 1, Motherboard.MAX_LEVEL)
+			stock.append(board)
+	var rams: Array = []
+	for id in gen.db.skills.rams:
+		if int(gen.db.skills.rams[id].get("min_level", 1)) <= level:
+			rams.append(id)
+	for k in range(rams.size() - 1, 0, -1):   # barajar con el rng del generador
+		var j := gen.rng.randi_range(0, k)
+		var tmp = rams[k]
+		rams[k] = rams[j]
+		rams[j] = tmp
+	for k in mini(STOCK_RAMS_DISTINCT, rams.size()):
+		stock.append(gen.generate_ram(level, rams[k]))
+	for k in STOCK_FLASKS:
+		var f := gen.generate_flask(level)
+		if f:
+			stock.append(f)
+	var deal := gen.generate_motherboard(level, "", 4)
+	deal.level = clampi(level - 1, 1, Motherboard.MAX_LEVEL)
+	deal.set_meta("shop_tag", TAG_DEAL)
+	stock.append(deal)
+	var contraband := gen.generate_motherboard(level + 2, "", 5)
+	contraband.level = clampi(level + 2, 1, Motherboard.MAX_LEVEL)
+	contraband.set_meta("shop_tag", TAG_CONTRABAND)
+	stock.append(contraband)
 	return stock
+
+
+static func shop_tag(item: Item) -> String:
+	return String(item.get_meta("shop_tag", "")) if item else ""
+
+
+## Precio en la tienda: el normal, rebajado si es la oferta y por las nubes si es contrabando.
+static func shop_price(item: Item) -> int:
+	match shop_tag(item):
+		TAG_DEAL:
+			return maxi(1, int(price(item) * DEAL_DISCOUNT))
+		TAG_CONTRABAND:
+			return int(price(item) * CONTRABAND_MARKUP)
+	return price(item)
+
+
+## Renovar la mercancía: sube con cada renovación (se reinicia al cambiar de zona).
+static func refresh_cost(level: int, refreshes_done: int) -> int:
+	return int((10 + level * 2) * (1.0 + 0.5 * refreshes_done))
+
+
+## Lo que vale vender de golpe los objetos de equipo de la bolsa hasta `max_rarity`
+## (normal o mágico): [índices de la bolsa, tokens].
+static func bulk_sell(inv: Inventory, max_rarity: int) -> Array:
+	var idx: Array[int] = []
+	var total := 0
+	for i in inv.bag.size():
+		var it: Item = inv.bag[i]
+		if it and it.is_equipment() and not (it is Motherboard or it is RamModule or it is KeyItem) and it.rarity <= max_rarity:
+			idx.append(i)
+			total += sell_price(it)
+	return [idx, total]
