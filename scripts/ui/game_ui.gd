@@ -562,6 +562,24 @@ func _build_pause_menu() -> Control:
 		World.set_hitstop(not World.hitstop_enabled())
 		hitstop.text = "Pausa al golpear (hitstop): " + ("sí" if World.hitstop_enabled() else "no"))
 	sound.add_child(hitstop)
+	var auto := UiStyle.button("", func() -> void: pass, 300)
+	auto.text = "Auto-ataque: " + ("sí" if SkillController.auto_attack else "no")
+	auto.tooltip_text = "Sin pulsar nada ni moverte, la habilidad 1 se lanza sola contra el enemigo más cercano.\nNo vale para auras, invocaciones ni canalizadas."
+	auto.pressed.connect(func() -> void:
+		SkillController.auto_attack = not SkillController.auto_attack
+		GameSettings.set_value("combat", "auto_attack", SkillController.auto_attack)
+		auto.text = "Auto-ataque: " + ("sí" if SkillController.auto_attack else "no"))
+	sound.add_child(auto)
+	var move_names := {"hold": "mantener", "toggle": "alternar", "click": "clic para ir"}
+	var move := UiStyle.button("", func() -> void: pass, 300)
+	move.text = "Moverse con el ratón: " + move_names.get(Player.mouse_move, "mantener")
+	move.tooltip_text = "Mantener: sigues al cursor mientras mantienes el clic.\nAlternar: un clic empieza a seguirlo y otro para (sin mantener el botón).\nClic para ir: como mantener, y al soltar caminas hasta ese punto."
+	move.pressed.connect(func() -> void:
+		var modes := Player.MOUSE_MOVE_MODES
+		Player.mouse_move = modes[(modes.find(Player.mouse_move) + 1) % modes.size()]
+		GameSettings.set_value("combat", "mouse_move", Player.mouse_move)
+		move.text = "Moverse con el ratón: " + move_names.get(Player.mouse_move, "mantener"))
+	sound.add_child(move)
 
 	box.add_child(UiStyle.ornament())
 	var exits := HBoxContainer.new()

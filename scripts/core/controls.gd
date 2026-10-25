@@ -42,8 +42,8 @@ static func setup() -> void:
 		if InputMap.has_action(a[0]):
 			_defaults[a[0]] = InputMap.action_get_events(a[0]).map(func(e: InputEvent) -> InputEvent: return e.duplicate())
 	for a in ACTIONS:
-		var saved = GameSettings.get_value(SECTION, String(a[0]), null) if persist else null
-		if not saved is Dictionary or not InputMap.has_action(a[0]):
+		var saved = GameSettings.get_value(SECTION, String(a[0]), {}) if persist else {}
+		if not saved is Dictionary or saved.is_empty() or not InputMap.has_action(a[0]):
 			continue
 		if saved.has("key"):
 			_set_key(a[0], int(saved["key"]))

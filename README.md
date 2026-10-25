@@ -381,6 +381,8 @@ En el mundo (`scripts/core/gamepad.gd`): stick izquierdo para moverse, derecho p
 En **Pausa → Interfaz** (`scripts/core/accessibility.gd`):
 - **Menos destellos**: atenúa los fogonazos de los enemigos (golpes a jefes, cambios de fase), la luz de los impactos y los glitches de las escenas y de la absorción del prólogo, y deja fijo lo que parpadea (estados por acabarse, trampas armadas).
 - **Texto del mundo** (80-150 %): nombres de enemigos, PNJ y compañero, etiquetas del botín y avisos como *git stash*, aparte del tamaño de la interfaz.
+- **Auto-ataque** (Pausa → Combate): sin pulsar nada ni moverte, la habilidad 1 sale sola contra el enemigo más cercano (a 320 px). No vale para auras, invocaciones, canalizadas ni habilidades de activación.
+- **Moverse con el ratón** (Pausa → Combate): *mantener* (seguir al cursor con el clic pulsado, como siempre), *alternar* (un clic empieza a seguirlo y otro para, sin mantener el botón) o *clic para ir* (como mantener, y al soltar caminas hasta ese punto). El teclado o el stick cancelan el modo alternar.
 - **Modo daltónico**: además de los estados alterados y la chapita de rareza del botín, cambia las **auras** (un color Okabe-Ito por tipo de daño) y las **cargas** (bermellón, amarillo y celeste, distintos también en brillo).
 
 ## Pociones

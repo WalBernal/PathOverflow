@@ -891,11 +891,15 @@ func _physics_process(delta: float) -> void:
 	if not _channel.is_empty():
 		_update_channel(delta, Input.is_action_pressed(ACTIONS[int(_channel["index"])]), _aim_target())
 	if player.is_alive() and _busy <= 0.0 and not player.controls_locked and not player.is_frozen() and not Gamepad.menu_cursor:
+		var used := false
 		for i in ACTIONS.size():
 			if i == 0 and Gamepad.skill_1_blocked():
 				continue   # A se usó para recoger o hablar (mando)
 			if Input.is_action_pressed(ACTIONS[i]) and try_use(i):
+				used = true
 				break
+		if not used and auto_attack and not player.manual_moving():
+			_try_auto_attack()
 	_update_aura_fields()
 	character.set_condition(Stat.COND_ALLIES, _units.size() + _minions.size() + _drones.size() >= 3)
 	_update_triggers(delta)
@@ -1005,9 +1009,38 @@ func try_use(index: int) -> bool:
 	return true
 
 
+## Auto-ataque (Pausa → Combate): sin pulsar nada ni moverte, la habilidad 1 sale
+## sola contra el enemigo más cercano a AUTO_ATTACK_RANGE.
+const AUTO_ATTACK_RANGE := 320.0
+static var auto_attack := bool(GameSettings.get_value("combat", "auto_attack", false))
+## Mientras se lanza el auto-ataque, se apunta aquí (no al ratón).
+var _auto_aim := Vector2.INF
+
+
+## Habilidades que el auto-ataque puede lanzar: las de golpe directo (no auras,
+## invocaciones, canalizadas, contenedores ni las de activación).
+static func auto_attack_ok(p: Dictionary) -> bool:
+	if p.is_empty() or String(p.get("trigger", "")) != "" or String(p.get("deploy", "")) == "container":
+		return false
+	return not (String(p.get("kind", "")) in ["aura", "unit"] or String(p.get("kind", "")) in CHANNEL_KINDS)
+
+
+func _try_auto_attack() -> void:
+	if not auto_attack_ok(profile(0)):
+		return
+	var i := enemies.nearest_index(player.global_position, AUTO_ATTACK_RANGE)
+	if i == -1:
+		return
+	_auto_aim = enemies.positions[i]
+	try_use(0)
+	_auto_aim = Vector2.INF
+
+
 ## Dónde se lanza la habilidad: el ratón; con mando, el stick derecho o, si está
 ## suelto, el enemigo más cercano (o hacia donde mira el personaje).
 func _aim_target() -> Vector2:
+	if _auto_aim != Vector2.INF:
+		return _auto_aim
 	if not Gamepad.active:
 		return get_global_mouse_position()
 	var stick := Vector2(Input.get_joy_axis(0, JOY_AXIS_RIGHT_X), Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y))

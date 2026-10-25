@@ -127,6 +127,7 @@ func _initialize() -> void:
 	_test_ring_comparison()
 	_test_controls()
 	_test_accessibility()
+	_test_auto_attack()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3088,6 +3089,57 @@ func _test_accessibility() -> void:
 	Accessibility.reduce_flashes = was[0]
 	Accessibility.world_text = was[1]
 	Ailments.colorblind = was[2]
+
+
+## Auto-ataque y mantener para mover (T52).
+func _test_auto_attack() -> void:
+	# Movimiento con el clic izquierdo: los tres modos.
+	var hold := Player.mouse_press("hold", true, false, false)
+	_check(hold["held"] and not hold["toggled"] and not Player.mouse_press("hold", false, true, false)["held"], "mantener: sigue mientras está pulsado")
+	var on := Player.mouse_press("toggle", true, false, false)
+	var off := Player.mouse_press("toggle", true, false, true)
+	_check(on["toggled"] and not off["toggled"] and Player.mouse_press("toggle", false, false, true)["toggled"], "alternar: un clic empieza, otro para, soltar no cambia nada")
+	_check(not Player.mouse_press("click", true, false, false)["go_to"] and Player.mouse_press("click", false, true, false)["go_to"], "clic para ir: al soltar camina hasta ahí")
+	# Qué puede lanzar el auto-ataque.
+	_check(SkillController.auto_attack_ok({"kind": "projectile"}) and not SkillController.auto_attack_ok({"kind": "aura"}) and not SkillController.auto_attack_ok({"kind": "unit"}),
+		"golpes sí; auras e invocaciones no")
+	_check(not SkillController.auto_attack_ok({"kind": "channel_beam"}) and not SkillController.auto_attack_ok({"kind": "projectile", "trigger": "on_kill"}) and not SkillController.auto_attack_ok({}),
+		"ni canalizadas ni de activación")
+	# En marcha: con un enemigo cerca y sin moverte, la habilidad 1 sale sola.
+	var skills: Dictionary = _db.skills.skills
+	var c := CharacterData.new(_classes[0], _tree)
+	var em := EnemyManager.new()
+	root.add_child(em)
+	var player: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(player)
+	player.setup(c, em)
+	player.global_position = Vector2(-40000, 40000)
+	var sc := SkillController.new()
+	root.add_child(sc)
+	c.inventory.set_board(0, Motherboard.new(skills["ping_letal"], 5, []))
+	sc.setup(player, em, c)
+	var uses := [0]
+	sc.skill_used.connect(func(_i: int) -> void: uses[0] += 1)
+	var was: bool = SkillController.auto_attack
+	SkillController.auto_attack = true
+	em.spawn(player.global_position + Vector2(SkillController.AUTO_ATTACK_RANGE + 200.0, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+	sc._physics_process(0.016)
+	_check(uses[0] == 0, "sin enemigos a su alcance no ataca")
+	em.spawn(player.global_position + Vector2(150, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+	player._move_toggled = true
+	sc._physics_process(0.016)
+	_check(uses[0] == 0, "mientras te mueves no ataca")
+	player._move_toggled = false
+	sc._physics_process(0.016)
+	_check(uses[0] == 1, "quieto y con un enemigo cerca, la habilidad 1 sale sola")
+	SkillController.auto_attack = false
+	sc.cooldowns[0] = 0.0
+	sc._busy = 0.0
+	sc._physics_process(0.016)
+	_check(uses[0] == 1, "con la opción apagada, no")
+	SkillController.auto_attack = was
+	for n in [sc, player, em]:
+		n.queue_free()
 
 
 func _db_enemies() -> Array:

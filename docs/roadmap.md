@@ -295,7 +295,7 @@ Origen: R2 §11 ★★
 - Texto del mundo con tamaño propio, independiente de la interfaz.
 - Paletas alternativas para auras y cargas.
 
-### [ ] T52 · Auto-ataque y mantener para mover · S
+### [x] T52 · Auto-ataque y mantener para mover · S
 Origen: R2 §11 ★
 
 ### [ ] T53 · Mapa grande: marcas propias y zoom · S
@@ -438,3 +438,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T49 · Cursor de mando en el árbol pasivo (cruceta entre nodos, stick derecho como rueda) y en los diálogos; comparación de anillos contra los dos puestos (dos secciones y dos tooltips al lado) y comparación fijable con F o Y. La integración fija y suelta con Y y recorre el árbol con la cruceta.
 - 2026-10-25 · T50 · Pausa → Controles: tecla y botón de mando por acción (26), con intercambio si ya estaba en uso, guardado en settings.cfg y botón de restaurar; la barra de habilidades y el menú K muestran la tecla asignada.
 - 2026-10-25 · T51 · Accesibilidad en Pausa → Interfaz: «menos destellos» (fogonazos de enemigos y de impactos, glitches de escenas y del prólogo, sin parpadeos), tamaño propio del texto del mundo y paletas daltónicas para auras y cargas con el modo daltónico.
+- 2026-10-25 · T52 · Auto-ataque opcional (habilidad 1 contra el enemigo más cercano si no pulsas nada ni te mueves) y tres modos de moverse con el ratón (mantener, alternar, clic para ir) en Pausa → Combate. De paso: Controls ya no llena el log de errores al leer controles sin guardar.

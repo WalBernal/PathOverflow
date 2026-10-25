@@ -225,6 +225,23 @@ func is_frozen() -> bool:
 
 ## Intensidad de la sacudida de cámara elegida en Pausa (0 = nada, 0.5 = suave, 1 = normal).
 static var shake_scale := clampf(float(GameSettings.get_value("interface", "camera_shake", 1.0)), 0.0, 1.0)
+## Movimiento con el clic izquierdo (Pausa → Combate): "hold" mantener para
+## seguir al cursor (como siempre) · "toggle" un clic empieza a seguirlo y otro
+## para (sin mantener el botón) · "click" además camina hasta donde hiciste clic.
+const MOUSE_MOVE_MODES := ["hold", "toggle", "click"]
+static var mouse_move := String(GameSettings.get_value("combat", "mouse_move", "hold"))
+## Siguiendo al cursor sin mantener el botón (modo "toggle").
+var _move_toggled := false
+
+
+## Qué hace un clic izquierdo según el modo: {held, toggled, go_to} (go_to = ir al punto).
+static func mouse_press(mode: String, pressed: bool, held: bool, toggled: bool) -> Dictionary:
+	match mode:
+		"toggle":
+			return {"held": false, "toggled": not toggled if pressed else toggled, "go_to": false}
+		"click":   # al soltar (mantener sigue al cursor mientras tanto)
+			return {"held": pressed, "toggled": false, "go_to": not pressed and held}
+	return {"held": pressed, "toggled": false, "go_to": false}
 
 
 static func set_shake_scale(value: float) -> void:
@@ -259,8 +276,14 @@ func move_to(target: Vector2) -> void:
 	_has_auto_target = true
 
 
+## ¿Lo está moviendo el jugador ahora (teclado, stick o ratón)? El auto-ataque espera.
+func manual_moving() -> bool:
+	return _move_held or _move_toggled or _has_auto_target or Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down") != Vector2.ZERO
+
+
 func stop_auto_move() -> void:
 	_has_auto_target = false
+	_move_toggled = false
 
 
 func has_auto_target() -> bool:
@@ -363,7 +386,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	var mb := event as InputEventMouseButton
 	if mb and mb.button_index == MOUSE_BUTTON_LEFT:
-		_move_held = mb.pressed
+		var s := mouse_press(mouse_move, mb.pressed, _move_held, _move_toggled)
+		_move_held = s["held"]
+		_move_toggled = s["toggled"]
+		if s["go_to"]:
+			move_to(get_global_mouse_position())
 	else:
 		for i in FLASK_ACTIONS.size():
 			if event.is_action_pressed(FLASK_ACTIONS[i]):
@@ -411,9 +438,11 @@ func _physics_process(delta: float) -> void:
 	var dir := Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down") if not Gamepad.menu_cursor else Vector2.ZERO
 	if _move_held and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		_move_held = false  # se soltó el botón mientras otra cosa tenía el foco
-	if dir != Vector2.ZERO or _move_held:
+	if dir != Vector2.ZERO:
+		_move_toggled = false   # el teclado o el stick mandan
+	if dir != Vector2.ZERO or _move_held or _move_toggled:
 		_has_auto_target = false  # una orden manual cancela el movimiento automático
-	if dir == Vector2.ZERO and _move_held:
+	if dir == Vector2.ZERO and (_move_held or _move_toggled):
 		var to_mouse := get_global_mouse_position() - global_position
 		if to_mouse.length() > 8.0:
 			dir = to_mouse.normalized()
