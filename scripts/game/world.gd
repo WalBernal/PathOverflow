@@ -914,6 +914,10 @@ func _on_enemy_killed(rarity: int, experience: int, pos: Vector2, type_id: Strin
 		MusicPlayer.set_intensity(0)
 	character.add_experience(experience)
 	character.flags["stat_kills"] = int(character.flags.get("stat_kills", 0)) + 1
+	var patch := Crafting.roll_drop(rarity, _rng)
+	if patch != "":
+		Crafting.add(character, patch)
+		ui.hud.flash("+1 %s (mesa de crafteo de Mario)." % Crafting.NAMES[patch].to_lower(), Crafting.COLORS[patch])
 	player.add_flask_charges(rarity)
 	player.notify_kill()
 	skills.on_enemy_killed(pos)
@@ -1097,6 +1101,10 @@ func _on_dialogue_action(action: Dictionary) -> void:
 			ui.open_shop(_gear_stock)
 		"reforge_weapon":
 			_reforge_weapon()
+		"open_crafting":
+			var panel := CraftingPanel.new(character, item_generator)
+			ui.add_child(panel)
+			panel.popup_centered()
 		"antenna":
 			player.refill()
 			var mods: Array[Modifier] = [Modifier.new(Stat.DAMAGE, Modifier.Type.INCREASED, 15.0, [], "camp:antena"),

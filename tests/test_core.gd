@@ -113,6 +113,7 @@ func _initialize() -> void:
 	_test_dialogue_decisions()
 	_test_camp_upgrades()
 	_test_nemesis()
+	_test_crafting_patches()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -2617,6 +2618,60 @@ func _test_nemesis() -> void:
 	Nemesis.defeated(c)
 	_check(Nemesis.current(c).is_empty() and int(c.flags.get("stat_nemesis", 0)) == 1, "vencido, se olvida")
 	em.free()
+
+
+## Crafteo con parches (T38): rehacer, añadir, subir rareza y fijar un afijo.
+func _test_crafting_patches() -> void:
+	var gen := ItemGenerator.new(_db, 7)
+	var c := CharacterData.new(_classes[0], _tree)
+	c.set_level(30)
+	var item := gen.generate(30, Rarity.Item.NORMAL, "espada_oxidada")
+	_check(Crafting.apply(c, item, "major", gen) != "", "sin parches no se puede")
+	for k in Crafting.KINDS:
+		Crafting.add(c, k, 5)
+	_check(Crafting.apply(c, item, "refactor", gen) != "", "un objeto normal no tiene afijos que rehacer")
+	_check(Crafting.apply(c, item, "major", gen) == "" and item.rarity == Rarity.Item.MAGIC and item.affixes.size() >= 1 and Crafting.count(c, "major") == 4,
+		"versión mayor: de normal a mágico (y gasta el parche)")
+	_check(Crafting.apply(c, item, "major", gen) == "" and item.rarity == Rarity.Item.RARE and item.affixes.size() >= 3 and item.rare_name != "",
+		"y de mágico a raro, conservando lo que tenía")
+	var before := item.affixes.size()
+	if before < 6:
+		_check(Crafting.apply(c, item, "feature", gen) == "" and item.affixes.size() == before + 1, "feature: un afijo más")
+	Crafting.add(c, "feature", 10)
+	while item.affixes.size() < 6 and Crafting.apply(c, item, "feature", gen) == "":
+		pass
+	var left := Crafting.count(c, "feature")
+	_check(Crafting.apply(c, item, "feature", gen) != "" and Crafting.count(c, "feature") == left, "lleno, no se añaden más afijos y el parche no se gasta")
+	# Hotfix: el afijo fijado sobrevive al refactor y luego se suelta.
+	var fixed: Dictionary = item.affixes[1].duplicate()
+	_check(Crafting.apply(c, item, "hotfix", gen, 1) == "" and item.affixes[1].get("locked", false), "hotfix: fija el afijo elegido")
+	_check(Crafting.apply(c, item, "refactor", gen) == "", "refactor con un afijo fijado")
+	var survived := item.affixes.filter(func(a: Dictionary) -> bool: return a["affix_id"] == fixed["affix_id"] and is_equal_approx(float(a["value"]), float(fixed["value"])))
+	_check(survived.size() == 1 and not survived[0].get("locked", false), "el fijado sobrevive al refactor y deja de estar fijado")
+	var groups := {}
+	var dup := false
+	for a in item.affixes:
+		dup = dup or groups.has(a["affix_id"])
+		groups[a["affix_id"]] = true
+	_check(not dup and item.affixes.size() >= 3 and item.affixes.size() <= 6, "el refactor no repite afijos y respeta la rareza")
+	_check(not Crafting.craftable(gen.generate(30, Rarity.Item.UNIQUE)), "los únicos no se craftean")
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 3
+	var drops := 0
+	for k in 200:
+		if Crafting.roll_drop(Rarity.Enemy.UNIQUE, rng) != "":
+			drops += 1
+	_check(drops > 80 and Crafting.roll_drop(Rarity.Enemy.NORMAL, rng) == "", "los únicos sueltan parches a menudo; los normales, nunca")
+	c.tokens = 0
+	_check(not Crafting.buy(c, "refactor"), "sin fichas no se compran")
+	c.add_tokens(1000)
+	var had := Crafting.count(c, "refactor")
+	_check(Crafting.buy(c, "refactor") and Crafting.count(c, "refactor") == had + 1, "Mario los vende por fichas")
+	var saved := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())), _classes[0], _tree, _db)
+	_check(Crafting.count(saved, "refactor") == had + 1, "los parches se guardan")
+	var panel := CraftingPanel.new(c, gen)
+	_check(panel._rows.get_child_count() == Crafting.KINDS.size(), "la mesa muestra los cuatro parches")
+	panel.free()
 
 
 func _db_enemies() -> Array:

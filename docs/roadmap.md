@@ -234,7 +234,7 @@ Origen: R2 §6 ★
 
 ## Fase 5 — Fin de juego y progresión
 
-### [ ] T38 · Crafteo con parches · M
+### [x] T38 · Crafteo con parches · M
 Origen: R2 §9 ★★★
 - Monedas que rehacen afijos, añaden uno, mejoran rareza y fijan un afijo. Encaja con la mesa de crafteo (T36).
 

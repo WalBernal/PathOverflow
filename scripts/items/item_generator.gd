@@ -162,12 +162,22 @@ func _roll_fixed(mods: Array) -> Array[Dictionary]:
 	return rolled
 
 
-func _roll_affixes(item: Item) -> void:
+## Completa los afijos del objeto hasta `target` (por defecto, un número al azar
+## de su rareza). Respeta los que ya tenga: cuentan para los límites de prefijos
+## y sufijos y no se repite su grupo (así sirve para los parches de crafteo).
+func _roll_affixes(item: Item, target := -1) -> void:
 	var info: Dictionary = Rarity.ITEM_INFO[item.rarity]
-	var target := rng.randi_range(info["min_affixes"], info["max_affixes"])
+	if target < 0:
+		target = rng.randi_range(info["min_affixes"], info["max_affixes"])
+	target = mini(target, int(info["max_affixes"]))
 	var counts := {"prefix": 0, "suffix": 0}
 	var limits := {"prefix": int(info["max_prefixes"]), "suffix": int(info["max_suffixes"])}
 	var used_groups := {}
+	for existing in item.affixes:
+		counts[existing["kind"]] = int(counts.get(existing["kind"], 0)) + 1
+		for a in db.affixes:
+			if a["id"] == existing["affix_id"]:
+				used_groups[a["group"]] = true
 	while item.affixes.size() < target:
 		var candidates: Array = []
 		var weights: Array = []

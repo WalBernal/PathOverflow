@@ -134,8 +134,8 @@ static func build_text(item: Item, character: CharacterData, compare: bool) -> S
 
 	var mods := PackedStringArray()
 	for a in item.affixes:
-		mods.append("%s  [color=#%s](%s T%d)[/color]" % [Item.describe_mod(a), GREY,
-			"P" if a["kind"] == "prefix" else "S", a["tier_rank"]])
+		mods.append("%s  [color=#%s](%s T%d)[/color]%s" % [Item.describe_mod(a), GREY,
+			"P" if a["kind"] == "prefix" else "S", a["tier_rank"], "  [color=#ff8a5a][fijado][/color]" if a.get("locked", false) else ""])
 	for m in item.fixed_mods:
 		mods.append(Item.describe_mod(m))
 	if item is ExpansionChip and not (item as ExpansionChip).transform_map().is_empty():

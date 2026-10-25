@@ -547,7 +547,7 @@
         "¡Dime!"
       ],
       "nodes": {
-        "mesa": {"text": "Aida me dejó armar una mesa de crafteo. Bueno, es una mesa con un soldador. Si me das tu arma, le saco afijos nuevos: misma base, misma rareza, todo lo demás al azar. Cobro, eh. Las horas de servicio no dan para comer.", "options": [{"text": "Reforja mi arma.", "next": "", "action": {"type": "reforge_weapon"}}, {"text": "Mejor no.", "next": "hola"}]},
+        "mesa": {"text": "Aida me dejó armar una mesa de crafteo. Bueno, es una mesa con un soldador. Con parches arreglo lo que sea: rehacer afijos, añadir uno, subirle la rareza o fijar el que te guste. Y si quieres, le saco afijos nuevos a tu arma entera. Cobro, eh. Las horas de servicio no dan para comer.", "options": [{"text": "Abre la mesa: quiero usar parches.", "next": "", "action": {"type": "open_crafting"}}, {"text": "Reforja mi arma entera.", "next": "", "action": {"type": "reforge_weapon"}}, {"text": "Mejor no.", "next": "hola"}]},
         "hola": {
           "text": "¡Hola! Soy Mario, el practicante. Llevo tres meses aquí y todavía no tengo acceso a nada. Pero preparo un café increíble.",
           "options": [
