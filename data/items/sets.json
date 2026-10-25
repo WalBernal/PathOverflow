@@ -30,6 +30,41 @@
         { "id": "medallon_del_arquitecto", "name": "Medallón del Arquitecto", "base": "amuleto_de_ambar",
           "mods": [ { "stat": "life", "type": "flat", "min": 25, "max": 35 },
                     { "stat": "physical_damage", "type": "increased", "min": 10, "max": 15, "tags": ["melee"] } ] }
+      ] },
+    { "id": "kit_del_sre", "name": "Kit del SRE de Guardia",
+      "bonuses": {
+        "2": [ { "stat": "thorns", "type": "flat", "value": 25 },
+               { "stat": "status_resist", "type": "flat", "value": 15 } ],
+        "3": [ { "stat": "aura_effect", "type": "increased", "value": 15 },
+               { "stat": "life_on_kill", "type": "flat", "value": 8 } ]
+      },
+      "pieces": [
+        { "id": "casco_sre", "name": "Casco del Pager", "base": "casco_de_hierro",
+          "mods": [ { "stat": "life", "type": "flat", "min": 25, "max": 35 },
+                    { "stat": "lightning_res", "type": "flat", "min": 15, "max": 20 } ] },
+        { "id": "botas_sre", "name": "Botas de la Guardia Nocturna", "base": "botas_de_hierro",
+          "mods": [ { "stat": "movement_speed", "type": "increased", "min": 10, "max": 15 },
+                    { "stat": "armour", "type": "flat", "min": 20, "max": 35 } ] },
+        { "id": "cinturon_sre", "name": "Cinturón de Herramientas del SRE", "base": "cinturon_de_cuero",
+          "mods": [ { "stat": "life", "type": "flat", "min": 30, "max": 40 },
+                    { "stat": "thorns", "type": "flat", "min": 10, "max": 20 } ] }
+      ] },
+    { "id": "equipo_de_redes", "name": "Equipo de Redes",
+      "bonuses": {
+        "2": [ { "stat": "shock_chance", "type": "flat", "value": 10 },
+               { "stat": "lightning_damage", "type": "increased", "value": 20 } ],
+        "3": [ { "stat": "extra_chains", "type": "flat", "value": 1 } ]
+      },
+      "pieces": [
+        { "id": "anillo_router", "name": "Anillo del Router", "base": "anillo_de_zafiro",
+          "mods": [ { "stat": "lightning_res", "type": "flat", "min": 15, "max": 25 },
+                    { "stat": "cast_speed", "type": "increased", "min": 5, "max": 8 } ] },
+        { "id": "anillo_switch", "name": "Anillo del Switch", "base": "anillo_de_topacio",
+          "mods": [ { "stat": "mana", "type": "flat", "min": 20, "max": 30 },
+                    { "stat": "lightning_damage", "type": "increased", "min": 10, "max": 15 } ] },
+        { "id": "amuleto_patch_panel", "name": "Amuleto del Patch Panel", "base": "amuleto_de_lapislazuli",
+          "mods": [ { "stat": "intelligence", "type": "flat", "min": 15, "max": 25 },
+                    { "stat": "shock_chance", "type": "flat", "min": 5, "max": 8 } ] }
       ] }
   ]
 }

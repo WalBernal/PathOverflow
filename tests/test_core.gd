@@ -119,6 +119,7 @@ func _initialize() -> void:
 	_test_difficulties()
 	_test_zone_scaling()
 	_test_side_quest_rewards()
+	_test_more_uniques_and_sets()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -2816,6 +2817,38 @@ func _test_side_quest_rewards() -> void:
 	var text := QuestLog.reward_text(quests["paez_kindle"], _db.skills)
 	_check(text.contains("RAM «") and text.contains("punto de pasiva") and text.contains("experiencia"), "las recompensas se explican: %s" % text)
 	_check(QuestLog.reward_text(quests["iris_cables"], _db.skills).contains("placa «Proceso Hijo»"), "con el nombre de la placa")
+
+
+## Más únicos y conjuntos (T44): con estados, auras, espinas, autómatas, cargas y terrenos.
+func _test_more_uniques_and_sets() -> void:
+	_check(_db.uniques.size() >= 14 and _db.sets.size() >= 4, "hay más únicos (%d) y conjuntos (%d)" % [_db.uniques.size(), _db.sets.size()])
+	var valid_stat := func(s: String) -> bool: return Stat.exists(StringName(s)) or ItemDatabase.is_local(s)
+	var themes := {"estados": ["burn_chance", "shock_chance", "poison_chance"], "auras": ["aura_effect"], "espinas": ["thorns"],
+		"autómatas": ["automaton_speed", "extra_devices"], "cargas": ["max_buffer_charges", "max_multihilo_charges"], "terrenos": ["skill_duration"]}
+	var seen := {}
+	for u in _db.uniques:
+		_check(_db.bases.has(u["base"]), "%s: su base %s existe" % [u["id"], u["base"]])
+		for m in u["mods"]:
+			_check(valid_stat.call(String(m["stat"])), "%s: stat %s" % [u["id"], m["stat"]])
+			for t in themes:
+				if themes[t].has(String(m["stat"])):
+					seen[t] = true
+	for s in _db.sets.values():
+		for p in s["pieces"]:
+			_check(_db.bases.has(p["base"]), "%s: base %s" % [p["id"], p["base"]])
+			for m in p["mods"]:
+				_check(valid_stat.call(String(m["stat"])), "%s: stat %s" % [p["id"], m["stat"]])
+		for n in s["bonuses"]:
+			for m in s["bonuses"][n]:
+				_check(valid_stat.call(String(m["stat"])), "%s (%s piezas): stat %s" % [s["id"], n, m["stat"]])
+	_check(seen.size() == themes.size(), "hay únicos de estados, auras, espinas, autómatas, cargas y terrenos: %s" % str(seen.keys()))
+	# Equipar uno se nota en las stats.
+	var gen := ItemGenerator.new(_db)
+	var c := CharacterData.new(_classes[0], _tree)
+	var thorns0 := c.stats.get_value(Stat.THORNS)
+	c.inventory.set_equipped("body", gen.make_unique(_db.get_unique("chaleco_cactus_ssl"), 20))
+	c.recalculate()
+	_check(c.stats.get_value(Stat.THORNS) >= thorns0 + 35.0, "el Chaleco Certificado SSL da espinas")
 
 
 func _db_enemies() -> Array:

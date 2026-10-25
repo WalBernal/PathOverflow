@@ -513,6 +513,8 @@ tests/                Pruebas de la lógica pura
 
 Además, el botín incluye placas base (8 %) y módulos RAM (10 %). Los tooltips de equipo muestran la comparación con lo que llevas puesto.
 
+**Únicos** (14): además de los primeros, *Fusible Quemado* (quemar y fuego), *Guantes del Electricista Sin Certificado* (electrocutar y efecto de las interacciones), *Diadema del Cron Lento* (veneno y caos), *Credencial de Sysadmin* (efecto y eficiencia de auras), *Chaleco Certificado SSL* (espinas), *Teclado del Orquestador* (autómatas: velocidad, daño de esbirros y +1 dispositivo), *Faja de Batería de Litio* (+1 Buffer y +1 Multihilos máximos) y *Zapatillas de Suelo Recién Trapeado* (duración y área: terrenos más largos). **Conjuntos** (4): *Atuendo del Senior*, *Legado del Arquitecto*, *Kit del SRE de Guardia* (espinas, resistencia a estados, auras y vida al matar) y *Equipo de Redes* (electrocutar, rayo y +1 encadenamiento con las tres piezas).
+
 ## Pruebas y comprobaciones
 
 ```bash

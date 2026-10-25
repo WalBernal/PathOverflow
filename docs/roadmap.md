@@ -258,7 +258,7 @@ Origen: R2 §1 ★
 Origen: R1 §4
 - Recompensas de RAM de grado alto, placas de invocación y auras.
 
-### [ ] T44 · Más únicos y conjuntos · M
+### [x] T44 · Más únicos y conjuntos · M
 Origen: R1 §4, §8
 - Con efectos de estados, auras, espinas, autómatas, cargas y terrenos.
 
@@ -430,3 +430,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T41 · Dificultades Normal, Pesadilla e Infierno (`Difficulty`): se abren al terminar el Acto IV (y al terminarlo en Pesadilla) y se eligen con Rafa en el campamento; +12/+24 niveles de zona, +20/+40 % de resistencias enemigas, más afijos en élites y especiales, +30/+60 % de botín; los jefes se repiten en cada dificultad (`boss_flag`). T67: un cierre sin traza tumbó también la prueba de lógica una vez; al repetir, todo en verde.
 - 2026-10-25 · T42 · Escalado opcional del nivel de zona: opción en Pausa (por personaje, `flags.zone_scaling`) para que las zonas de combate de los actos terminados suban a tu nivel; `Difficulty.zone_level` reúne escalado y dificultad.
 - 2026-10-25 · T43 · Recompensas propias en 12 misiones secundarias: placas de invocación y auras en los actos I y II, RAM de grado mayor y el Mainframe Titán en los III y IV; el aviso al aceptar una misión dice qué da (`QuestLog.reward_text`).
+- 2026-10-25 · T44 · Ocho únicos nuevos (estados, auras, espinas, autómatas, cargas y terrenos) y dos conjuntos (Kit del SRE de Guardia, Equipo de Redes); las pruebas validan bases y stats de todos los únicos y conjuntos.
