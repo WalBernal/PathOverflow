@@ -125,6 +125,7 @@ func _initialize() -> void:
 	_test_tech_debt()
 	_test_gamepad_cursor()
 	_test_ring_comparison()
+	_test_controls()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3024,6 +3025,35 @@ func _test_ring_comparison() -> void:
 	_check(c.inventory.equipped("ring_left") == ring_a and c.inventory.equipped("ring_right") == ring_b and c.stats.get_value(Stat.FIRE_RES) == 15.0,
 		"la vista previa por ranura no cambia lo equipado")
 	_check(not ItemTooltip.build_text(ring_c, c, false).contains("En lugar del"), "sin comparar, no hay comparación")
+
+
+## Rebindear teclas y botones (T50). Sin tocar el settings.cfg del jugador.
+func _test_controls() -> void:
+	Controls.persist = false
+	Controls.setup()
+	var pad_default := Controls.pad_of(&"skill_1")
+	_check(Controls.key_of(&"skill_1") == KEY_Q and Controls.key_label(&"skill_1") == "Q", "de fábrica: Q para la habilidad 1")
+	var msg := ControlsPanel.apply_key(&"skill_1", KEY_W)
+	_check(Controls.key_of(&"skill_1") == KEY_W and Controls.key_of(&"skill_2") == KEY_Q and msg.contains("Habilidad 2"), "una tecla ocupada se intercambia (%s)" % msg)
+	var w := InputEventKey.new()
+	w.physical_keycode = KEY_W
+	_check(InputMap.event_is_action(w, &"skill_1") and not InputMap.event_is_action(w, &"skill_2"), "el juego obedece a la tecla nueva")
+	_check(Controls.rebind_pad(&"skill_1", JOY_BUTTON_Y) == "" and Controls.pad_of(&"skill_1") == JOY_BUTTON_Y, "botón del mando")
+	_check(Controls.rebind_pad(&"skill_3", JOY_BUTTON_Y) != "" and Controls.pad_of(&"skill_3") == JOY_BUTTON_Y, "y también se intercambia")
+	var before := Controls.pad_of(&"move_up")
+	_check(Controls.rebind_pad(&"move_up", JOY_BUTTON_X) == "" and Controls.pad_of(&"move_up") == before, "el movimiento va con el stick")
+	_check(Controls.pad_name(-1, &"dodge") == "Gatillo der." and Controls.pad_name(JOY_BUTTON_LEFT_SHOULDER) == "LB", "nombres de botones")
+	var actions := {}
+	for a in Controls.ACTIONS:
+		_check(InputMap.has_action(a[0]) or a[0] == &"pin_tooltip", "%s existe" % a[0])
+		actions[a[0]] = true
+	_check(actions.size() == Controls.ACTIONS.size(), "sin acciones repetidas")
+	var panel := ControlsPanel.new()
+	panel.free()
+	Controls.reset_all()
+	_check(Controls.key_of(&"skill_1") == KEY_Q and Controls.key_of(&"skill_2") == KEY_W and Controls.pad_of(&"skill_1") == pad_default,
+		"restaurar deja todo como de fábrica")
+	Controls.persist = true
 
 
 func _db_enemies() -> Array:

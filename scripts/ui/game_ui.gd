@@ -507,6 +507,9 @@ func _build_pause_menu() -> Control:
 		TipPanel.set_enabled(not TipPanel.enabled())
 		tips_button.text = "Consejos de mecánicas: " + ("sí" if TipPanel.enabled() else "no"))
 	right.add_child(tips_button)
+	var controls := UiStyle.button("Controles...", open_controls, 300)
+	controls.tooltip_text = "Cambia la tecla o el botón del mando de cada acción."
+	right.add_child(controls)
 	var loot_filter := UiStyle.button("Filtro de botín...", toggle_loot_filter, 300)
 	loot_filter.tooltip_text = "Qué se ve en el suelo, por tipo y rareza, y desde qué rareza sale el haz de luz.\nMantén Shift para ver lo oculto."
 	right.add_child(loot_filter)
@@ -788,6 +791,13 @@ func open_achievements() -> void:
 ## Récords del banco de oleadas y de los jefes (pausa o Aida).
 func open_ladder() -> void:
 	var panel := LadderPanel.new(GameData.current_character)
+	_root.add_child(panel)
+	panel.popup_centered()
+
+
+## Reasignar teclas y botones (desde la pausa).
+func open_controls() -> void:
+	var panel := ControlsPanel.new()
 	_root.add_child(panel)
 	panel.popup_centered()
 

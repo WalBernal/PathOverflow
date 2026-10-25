@@ -33,6 +33,7 @@ var pending_creation: Dictionary = {}
 
 func _ready() -> void:
 	Gamepad.setup()
+	Controls.setup()   # lo que el jugador reasignó en Pausa → Controles
 	var data = DataLoader.load_json(CLASSES_PATH)
 	if data is Dictionary:
 		classes = data.get("classes", [])

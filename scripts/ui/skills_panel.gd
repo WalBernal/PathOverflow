@@ -216,7 +216,7 @@ func _make_row(index: int) -> Control:
 	row.add_theme_constant_override("separation", 8)
 	card.add_child(row)
 
-	var key := UiStyle.label(SkillController.KEY_LABELS[index], 15, UiStyle.ACCENT)
+	var key := UiStyle.label(Controls.key_label(SkillController.ACTIONS[index]), 15, UiStyle.ACCENT)
 	key.custom_minimum_size.x = 34
 	key.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	row.add_child(key)

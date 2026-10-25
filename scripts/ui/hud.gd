@@ -235,7 +235,7 @@ func _update_tooltips() -> void:
 
 
 func _skill_tooltip(i: int) -> String:
-	var key: String = SkillController.KEY_LABELS[i]
+	var key: String = Controls.key_label(SkillController.ACTIONS[i])
 	var board: Motherboard = character.inventory.boards[i]
 	if board == null:
 		return "Ranura vacía (%s).\nInstala una placa base desde el menú de habilidades (K)." % key
@@ -869,7 +869,7 @@ func _draw_skill_slot(i: int, font: Font) -> void:
 	else:
 		draw_rect(r, Color("3a3442"), false, 1.0)
 	# Tecla en una chapita abajo a la izquierda.
-	var key: String = SkillController.KEY_LABELS[i]
+	var key: String = Controls.key_label(SkillController.ACTIONS[i])
 	var key_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x + 8.0
 	var key_rect := Rect2(r.position.x - 2.0, r.end.y - 12.0, key_w, 14.0)
 	draw_rect(key_rect, Color(PLATE, 0.95))
