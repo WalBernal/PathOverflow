@@ -113,6 +113,10 @@ const GARBAGE_COLLECTOR := &"garbage_collector"
 const SAFE_MODE := &"safe_mode"
 ## Código Espagueti: tus proyectiles rebotan al azar esta cantidad de veces tras golpear.
 const SPAGHETTI_CODE := &"spaghetti_code"
+## Monolito: una sola invocación persistente de cada tipo, con ×3 de vida y daño.
+const MONOLITH := &"monolith"
+## Microservicios: +2 invocaciones persistentes a la vez; cada una, −30 % de vida, daño y reserva.
+const MICROSERVICES := &"microservices"
 # Conversión de daño desde el árbol (valor > 0 = activa), para toda la build. Como
 # las RAM de conversión, pero sin ocupar ranura; si una RAM ya convierte, manda la RAM.
 const CONVERT_PHYSICAL_TO_LIGHTNING := &"convert_physical_to_lightning"
@@ -224,6 +228,8 @@ const NAMES := {
 	GARBAGE_COLLECTOR: "Recolector de Basura: maná al matar (del máximo); el maná no se regenera solo",
 	SAFE_MODE: "Modo Seguro: un golpe mortal te deja a 1 de vida 2 s (una vez cada 30 s)",
 	SPAGHETTI_CODE: "Código Espagueti: rebotes al azar de tus proyectiles tras golpear",
+	MONOLITH: "Monolito: una sola invocación de cada tipo, ×3 de vida y daño",
+	MICROSERVICES: "Microservicios: +2 invocaciones, −30 % cada una",
 	CONVERT_PHYSICAL_TO_LIGHTNING: "Conversión de físico a rayo",
 	CONVERT_PHYSICAL_TO_FIRE: "Conversión de físico a fuego",
 	CONVERT_ELEMENTAL_TO_CHAOS: "Conversión de elemental a caos",
@@ -237,6 +243,8 @@ const RULE_TEXT := {
 	GARBAGE_COLLECTOR: "Al matar recuperas un %s %% del maná máximo; el maná no se regenera solo",
 	SAFE_MODE: "Un golpe mortal te deja a 1 de vida y no bajas de ahí durante 2 s (una vez cada 30 s)",
 	SPAGHETTI_CODE: "Tus proyectiles rebotan %s veces al azar tras golpear",
+	MONOLITH: "Solo una invocación persistente de cada tipo, pero con el triple de vida y daño",
+	MICROSERVICES: "+2 invocaciones persistentes a la vez; cada una con un 30 % menos de vida, daño y reserva",
 	CONVERT_PHYSICAL_TO_LIGHTNING: "Tus habilidades de daño físico hacen daño de rayo (las escalan los dos)",
 	CONVERT_PHYSICAL_TO_FIRE: "Tus habilidades de daño físico hacen daño de fuego (las escalan los dos)",
 	CONVERT_ELEMENTAL_TO_CHAOS: "Tus habilidades de daño elemental hacen daño de caos (las escalan los dos)",

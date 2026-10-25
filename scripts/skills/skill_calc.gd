@@ -5,6 +5,10 @@ class_name SkillCalc
 
 ## Segundos entre golpes de cada esbirro.
 const MINION_ATTACK_INTERVAL := 0.9
+## Nodos clave de invocador (Stat.MONOLITH / Stat.MICROSERVICES).
+const MONOLITH_MULT := 3.0
+const MICROSERVICES_EXTRA := 2
+const MICROSERVICES_MULT := 0.7
 const TAG_AUTOMATON := &"automaton"
 
 ## Daño por nivel de la placa base (sube con la experiencia, como las gemas de PoE):
@@ -335,6 +339,22 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 	var unit_life := float(unit.get("life", 0.0)) * (1.0 + 0.12 * (board.level - 1)) * stats.total_multiplier(Stat.MINION_LIFE, tags) \
 		* (1.0 + 0.25 * milestones if unit_ms == "toughness" else 1.0)
 	var reserve := float(unit.get("reserve", aura.get("reserve", 0.0))) * reserve_mult / maxf(0.1, stats.total_multiplier(Stat.RESERVATION_EFFICIENCY, tags))
+	# Nodos clave de invocador: Monolito (una sola, ×3 de vida y daño) o
+	# Microservicios (+2 a la vez, cada una −30 % de vida, daño y reserva).
+	if kind == "unit":
+		if stats.get_value(Stat.MONOLITH) > 0.0:
+			max_units = 1
+			unit_life *= MONOLITH_MULT
+			min_damage *= MONOLITH_MULT
+			max_damage *= MONOLITH_MULT
+			average *= MONOLITH_MULT
+		elif stats.get_value(Stat.MICROSERVICES) > 0.0:
+			max_units += MICROSERVICES_EXTRA
+			unit_life *= MICROSERVICES_MULT
+			min_damage *= MICROSERVICES_MULT
+			max_damage *= MICROSERVICES_MULT
+			average *= MICROSERVICES_MULT
+			reserve *= MICROSERVICES_MULT
 	# Auras: bonificaciones para tus aliados, escaladas por el nivel, los hitos y "efecto de aura".
 	var aura_scale := stats.total_multiplier(Stat.AURA_EFFECT, tags) * (1.0 + 0.02 * (board.level - 1)) \
 		* (1.0 + 0.15 * milestones if kind == "aura" else 1.0)

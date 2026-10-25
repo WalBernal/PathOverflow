@@ -94,6 +94,7 @@ func _initialize() -> void:
 	_test_charges_build()
 	_test_tree_conversion()
 	_test_sacrifice_and_conditions()
+	_test_summoner_keystones()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -1897,6 +1898,31 @@ func _test_board_milestones() -> void:
 	_check(d20["radius"] > d1["radius"] and d20["cooldown"] < d1["cooldown"] and d20["stun"] > d1["stun"], "cada nivel mejora área, enfriamiento y duración")
 	_check(SkillCalc.milestone_text(_db.skills.skills["proceso_hijo"]) == "+1 esbirro", "hito de esbirros")
 	_check(SkillCalc.compute(Motherboard.new(_db.skills.skills["proceso_hijo"], 20, ["DDR5"]), c)["count"] == 4, "esbirros extra por nivel")
+
+
+## Nodos clave de invocador: Monolito (una sola, ×3 de vida y daño) frente a
+## Microservicios (+2 a la vez, −30 % cada una).
+func _test_summoner_keystones() -> void:
+	var titles := {}
+	for n in _tree.nodes.values():
+		if n.kind == PassiveNode.Kind.KEYSTONE:
+			titles[n.title] = true
+	_check(titles.has("Monolito") and titles.has("Microservicios"), "nodos clave Monolito y Microservicios en el árbol")
+	var golem: Dictionary = _db.skills.skills["golem_hardware"]
+	var c := CharacterData.new(_classes[5], _tree)
+	var base := SkillCalc.compute(Motherboard.new(golem, 10, []), c)
+	var mono_c := CharacterData.new(_classes[5], _tree)
+	mono_c.add_timed_effect("prueba_mono", [Modifier.from_dict({"stat": "monolith", "type": "flat", "value": 1}, "prueba")] as Array[Modifier], 99.0)
+	var mono := SkillCalc.compute(Motherboard.new(golem, 10, []), mono_c)
+	_check(mono["max_units"] == 1 and is_equal_approx(mono["unit_life"], base["unit_life"] * 3.0) and mono["max_damage"] > base["max_damage"] * 2.9,
+		"Monolito: una sola invocación con el triple de vida y daño")
+	var micro_c := CharacterData.new(_classes[5], _tree)
+	micro_c.add_timed_effect("prueba_micro", [Modifier.from_dict({"stat": "microservices", "type": "flat", "value": 1}, "prueba")] as Array[Modifier], 99.0)
+	var micro := SkillCalc.compute(Motherboard.new(golem, 10, []), micro_c)
+	_check(micro["max_units"] == base["max_units"] + 2 and is_equal_approx(micro["unit_life"], base["unit_life"] * 0.7) and micro["reserve"] < base["reserve"],
+		"Microservicios: +2 a la vez, cada una con menos vida, daño y reserva")
+	_check(is_equal_approx(SkillCalc.compute(Motherboard.new(_db.skills.skills["barrido"], 1, []), mono_c)["max_damage"],
+		SkillCalc.compute(Motherboard.new(_db.skills.skills["barrido"], 1, []), c)["max_damage"]), "solo afecta a las invocaciones persistentes")
 
 
 ## Nodos de sacrificio (vida baja) y condicionales: 3 aliados, quieto 1 s, contra

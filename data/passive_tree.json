@@ -5588,27 +5588,22 @@
   {
    "id": 46,
    "kind": "keystone",
-   "name": "Hola Mundo en 40 Lenguajes",
+   "name": "Monolito",
    "x": -216.5,
    "y": -125.0,
    "mods": [
     {
-     "stat": "damage",
-     "type": "more",
-     "value": 12
+     "stat": "monolith",
+     "type": "flat",
+     "value": 1
     },
     {
      "stat": "life",
      "type": "more",
      "value": 8
-    },
-    {
-     "stat": "crit_multiplier",
-     "type": "flat",
-     "value": -30
     }
    ],
-   "flavor": "Sabes decir hola en todos. Y nada más.",
+   "flavor": "Un solo binario de 2 GB. Hace de todo. Nadie lo entiende. Funciona.",
    "icon": "ks_full_stack"
   },
   {
@@ -14505,20 +14500,12 @@
   {
    "id": 538,
    "kind": "keystone",
-   "name": "Orquestación con Kubernetes",
+   "name": "Microservicios",
    "x": -1545.6,
    "y": -1255.8,
    "mods": [
     {
-     "stat": "damage",
-     "type": "more",
-     "value": 40,
-     "tags": [
-      "automaton"
-     ]
-    },
-    {
-     "stat": "extra_minions",
+     "stat": "microservices",
      "type": "flat",
      "value": 1
     },
@@ -14528,12 +14515,15 @@
      "value": 1
     },
     {
-     "stat": "life",
+     "stat": "damage",
      "type": "more",
-     "value": -20
+     "value": 15,
+     "tags": [
+      "automaton"
+     ]
     }
    ],
-   "flavor": "Ya no programas: orquestas. Las máquinas hacen el resto.",
+   "flavor": "Divide y vencerás. O divide y depura doce logs a la vez.",
    "icon": "ks_templario"
   },
   {

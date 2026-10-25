@@ -81,11 +81,10 @@ KEYSTONES = {
                [("static_typing", "flat", 1), ("damage", "more", 20)]),
     "hechicero": ("Recolector de Basura", "La memoria se libera sola. Cuando le apetece. Y solo si matas algo.",
                   [("garbage_collector", "flat", 3), ("cast_speed", "more", 15)]),
-    "templario": ("Orquestación con Kubernetes", "Ya no programas: orquestas. Las máquinas hacen el resto.",
-                  [("damage", "more", 40, ["automaton"]), ("extra_minions", "flat", 1), ("extra_devices", "flat", 1),
-                   ("life", "more", -20)]),
-    "full_stack": ("Hola Mundo en 40 Lenguajes", "Sabes decir hola en todos. Y nada más.",
-                   [("damage", "more", 12), ("life", "more", 8), ("crit_multiplier", "flat", -30)]),
+    "templario": ("Microservicios", "Divide y vencerás. O divide y depura doce logs a la vez.",
+                  [("microservices", "flat", 1), ("extra_devices", "flat", 1), ("damage", "more", 15, ["automaton"])]),
+    "full_stack": ("Monolito", "Un solo binario de 2 GB. Hace de todo. Nadie lo entiende. Funciona.",
+                   [("monolith", "flat", 1), ("life", "more", 8)]),
 }
 
 ATTR_STAT = {"str": ("strength", "Fuerza"), "dex": ("dexterity", "Destreza"), "int": ("intelligence", "Inteligencia")}
