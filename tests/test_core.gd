@@ -87,6 +87,7 @@ func _initialize() -> void:
 	_test_terrains()
 	_test_arena_mechanics()
 	_test_boss_arena_phases()
+	_test_mechanic_tips()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -1890,6 +1891,34 @@ func _test_board_milestones() -> void:
 	_check(d20["radius"] > d1["radius"] and d20["cooldown"] < d1["cooldown"] and d20["stun"] > d1["stun"], "cada nivel mejora área, enfriamiento y duración")
 	_check(SkillCalc.milestone_text(_db.skills.skills["proceso_hijo"]) == "+1 esbirro", "hito de esbirros")
 	_check(SkillCalc.compute(Motherboard.new(_db.skills.skills["proceso_hijo"], 20, ["DDR5"]), c)["count"] == 4, "esbirros extra por nivel")
+
+
+## Consejos de primera vez: uno por mecánica, una sola vez, guardado en el personaje.
+func _test_mechanic_tips() -> void:
+	var data: Dictionary = DataLoader.load_json(TipPanel.DATA_PATH)
+	for id in ["dodge", "charges", "heavy", "terrain", "arena_break", "arena_safe", "arena_channel"]:
+		_check(data.get("tips", {}).has(id), "consejo de primera vez para %s" % id)
+	if not TipPanel.enabled():
+		return   # el jugador los apagó en Pausa: no se toca su ajuste
+	var c := CharacterData.new(_classes[0], _tree)
+	var pl := Player.new()
+	pl.character = c
+	var em := EnemyManager.new()
+	var tp := TipPanel.new()
+	root.add_child(tp)
+	tp.setup(c, pl, em, null)
+	pl.hit_taken.emit()
+	_check(tp.has_seen("dodge") and tp._queue.size() == 1, "al recibir el primer golpe, consejo de esquiva")
+	pl.hit_taken.emit()
+	_check(tp._queue.size() == 1, "cada consejo sale una sola vez")
+	em.hazards.append({"kind": "break", "pos": Vector2.ZERO, "radius": 50.0, "time": 0.0, "delay": 1.0})
+	tp._watch()
+	_check(tp.has_seen("arena_break"), "una losa a punto de romperse dispara su consejo")
+	tp._process(0.5)
+	_check(tp.visible and tp._showing == "dodge", "se muestran por orden")
+	tp.queue_free()
+	pl.free()
+	em.free()
 
 
 ## Los jefes de los actos I, II y III usan una mecánica de arena distinta en cada

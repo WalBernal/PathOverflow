@@ -199,6 +199,7 @@ El acto está definido en `data/act1.json` y lo construye `Zone` (`scripts/game/
 - **Escenas**: `data/cutscenes.json` (líneas con retrato, consola, efectos de glitch, temblor, fundidos y la página sin conexión). Click o Espacio avanzan; Esc salta. Los enemigos se congelan mientras duran.
 - **NPCs y lore** en `data/npcs.json` (en el campamento: Aida la Senior, Mario el Becario y Rafa el SysAdmin, que escribe con muchos puntos suspensivos...; sus ids internos siguen siendo `ada`, `kevin` y `root` para no romper los guardados): diálogos con opciones, condiciones (`requires_flag`) y acciones (regalos que se dan una sola vez). Cuentan la historia del administrador que hizo `push --force` "por el Monolito".
 - **Tutorial** (`data/tutorial.json`, versión 2): 12 pasos. Empieza en el Sandbox (moverse, atacar, matar, recoger, equipar, pociones, pasivas) y sigue en el campamento (Aida, RAM, Mario, salir al Bosque). Los personajes con el tutorial antiguo continúan donde corresponde.
+- **Consejos de primera vez** (`data/tips.json`, `TipPanel`): un aviso corto, arriba en el centro, la primera vez que aparece cada mecánica: la esquiva (al recibir el primer golpe), las cargas, un golpe pesado a la vista, los terrenos y cada mecánica de arena de jefe (losas, zonas seguras, adds que canalizan). Se guardan por personaje (`tip_seen_<id>`) y se apagan en Pausa → Interfaz → «Consejos de mecánicas».
 
 ## Acto II: Kernel Panic
 

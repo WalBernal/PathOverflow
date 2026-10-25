@@ -96,7 +96,7 @@ Origen: R2 §6 ★★★
 - Aplicar al menos una mecánica de arena distinta por fase a los jefes de los actos I, II y III.
 - Pruebas: cada fase activa su mecánica.
 
-### [ ] T10 · Tutorial contextual de mecánicas · S
+### [x] T10 · Tutorial contextual de mecánicas · S
 Origen: R2 §5 ★★
 - Aviso breve la primera vez que aparecen: cargas, esquiva, golpes pesados, terrenos, mecánicas de arena (y RAM de activación cuando existan).
 - Se guarda qué se ha visto; opción en Pausa para desactivarlo.
@@ -124,6 +124,7 @@ Origen: R2 §3 ★★★
 Origen: R2 §3 ★★★
 - "Cada 2 s", "al esquivar", "al matar".
 - Menú K y barra muestran qué dispara qué; `tools/audit_rams.gd` cubre las nuevas.
+- Consejo de primera vez en `data/tips.json` (T10) al equipar la primera RAM de activación.
 
 ### [ ] T15 · Cargas en el árbol, ascendencias y habilidades · M
 Origen: R2 §2 ★★
@@ -384,3 +385,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-24 · T07 · Terrenos Derrame de Aceite, Campo de Estática y Charco de Refrigerante con combos (aceite + fuego = explosión y suelo en llamas; estática + refrigerante = superconductor), color y textura propios y patrón daltónico; captura `terrenos`. De paso, los ticks con escala ya respetan el tipo de daño (resistencias).
 - 2026-10-24 · T08 · Motor de mecánicas de arena para jefes: `floor_break` (losas que se rompen y dejan agujero), `safe_zones` (zonas seguras que giran) y `channel_adds` (adds que curan, escudan o hacen nova si no se interrumpen), con avisos legibles y modo daltónico; captura `arena`. Además, `test_core` falla si hay un SCRIPT ERROR (antes podía pasar en silencio).
 - 2026-10-24 · T09 · Una mecánica de arena distinta por fase en los tres jefes (Arquitecto, init, fw_update.exe), con pruebas de que cada fase la tiene y de que se activa; las zonas seguras cubren toda la arena y su centro se escala con la zona.
+- 2026-10-24 · T10 · Consejos de primera vez (`TipPanel`, `data/tips.json`) para esquiva, cargas, golpes pesados, terrenos y las tres mecánicas de arena; vistos por personaje y opción en Pausa. Las RAM de activación (T13-T14) tendrán que añadir el suyo.

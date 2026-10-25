@@ -28,6 +28,8 @@ var skills_panel: SkillsPanel
 var tree_screen: PassiveTreeScreen
 var dialogue_box: DialogueBox
 var tutorial: TutorialPanel
+## Consejos de primera vez (esquiva, cargas, golpes pesados, terrenos, arena).
+var tips: TipPanel
 var item_tooltip: ItemTooltip
 var minimap: Minimap
 var world_map: WorldMap
@@ -84,6 +86,13 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	tutorial.position = Vector2(10, 34)
 	tutorial.setup(character, player)
 	tutorial.step_completed.connect(func(text: String) -> void: hud.flash(text, Color("6fb36b")))
+
+	tips = TipPanel.new()
+	_root.add_child(tips)
+	tips.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	tips.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	tips.offset_top = 96.0   # debajo de la barra del jefe
+	tips.setup(character, player, enemies, skills)
 
 	inventory_panel = InventoryPanel.new()
 	inventory_panel.visible = false
@@ -478,6 +487,13 @@ func _build_pause_menu() -> Control:
 		for p in get_tree().get_nodes_in_group(&"world_post"):
 			p.call("refresh"))
 	right.add_child(pixel)
+	var tips_button := UiStyle.button("", func() -> void: pass, 300)
+	tips_button.text = "Consejos de mecánicas: " + ("sí" if TipPanel.enabled() else "no")
+	tips_button.tooltip_text = "Un aviso corto la primera vez que aparece la esquiva, las cargas, los golpes pesados,\nlos terrenos o una mecánica de arena de jefe."
+	tips_button.pressed.connect(func() -> void:
+		TipPanel.set_enabled(not TipPanel.enabled())
+		tips_button.text = "Consejos de mecánicas: " + ("sí" if TipPanel.enabled() else "no"))
+	right.add_child(tips_button)
 	var loot_filter := UiStyle.button("Filtro de botín...", toggle_loot_filter, 300)
 	loot_filter.tooltip_text = "Qué se ve en el suelo, por tipo y rareza, y desde qué rareza sale el haz de luz.\nMantén Shift para ver lo oculto."
 	right.add_child(loot_filter)

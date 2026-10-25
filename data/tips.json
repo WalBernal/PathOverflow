@@ -1,0 +1,33 @@
+{
+  "_doc": "Consejos de primera vez (TipPanel): se muestran una sola vez por personaje (bandera tip_seen_<id>) cuando la mecánica aparece en juego. Se desactivan en Pausa → Interfaz → Consejos.",
+  "tips": {
+    "dodge": {
+      "title": "Esquiva: git stash",
+      "text": "Te han dado. La próxima vez, [b]Espacio[/b] (o el gatillo derecho): un salto corto con un instante de invulnerabilidad que evita golpes, charcos y estados. Las cargas se ven junto a la barra y vuelven solas."
+    },
+    "charges": {
+      "title": "Cargas",
+      "text": "Acabas de ganar una carga. [color=#e0a050]Buffer[/color] (al recibir golpes) da defensa, [color=#6ad07a]Multihilos[/color] (al matar) da velocidad y [color=#6aa8ff]Overclock[/color] (con críticos) da crítico. Duran 10 s, se ven sobre el orbe de vida y algunas RAM las gastan para pegar más fuerte."
+    },
+    "heavy": {
+      "title": "Golpe pesado",
+      "text": "Ese enemigo se ha parado y marca un [color=#ff4033]círculo rojo con «!»[/color]: cuando se llene, pega muy fuerte. Sal del círculo o esquiva justo antes."
+    },
+    "terrain": {
+      "title": "Terrenos y combos",
+      "text": "Los terrenos se quedan en el suelo. [b]Aceite + fuego[/b] = explosión y suelo en llamas (basta un enemigo quemándose o un proyectil de fuego). [b]Estática + refrigerante[/b] encimados = superconductor: el doble de rayo y congela."
+    },
+    "arena_break": {
+      "title": "El suelo se rompe",
+      "text": "Las losas agrietadas se van a romper: quien esté encima recibe el golpe y queda un agujero que hace daño al pisarlo. Sal antes de que se llene el rojo."
+    },
+    "arena_safe": {
+      "title": "Zonas seguras",
+      "text": "Toda la arena va a recibir daño salvo los [color=#60ff90]círculos verdes[/color], que giran. Métete en uno y síguelo hasta que acabe el aviso."
+    },
+    "arena_channel": {
+      "title": "Interrumpe la canalización",
+      "text": "Esos enemigos canalizan hacia el jefe (el hilo y el aro): si no los matas antes de que se complete, el jefe se cura, se protege o suelta una onda. Aturdirlos o congelarlos también los frena."
+    }
+  }
+}
