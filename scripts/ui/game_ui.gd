@@ -516,6 +516,9 @@ func _build_pause_menu() -> Control:
 	var ladder := UiStyle.button("Récords...", open_ladder, 300)
 	ladder.tooltip_text = "Tus récords y la tabla local: oleadas sin fin y tiempo contra cada jefe."
 	right.add_child(ladder)
+	var debt := UiStyle.button("Deuda técnica...", open_tech_debt, 300)
+	debt.tooltip_text = "Árbol de fin de juego (tras el Acto IV): cada nodo, un bono fuerte y una penalización."
+	right.add_child(debt)
 	var lore := UiStyle.button("Archivos encontrados...", open_lore_log, 300)
 	lore.tooltip_text = "Commits perdidos, logs y correos de la UAdeO que has encontrado por las zonas."
 	right.add_child(lore)
@@ -754,6 +757,13 @@ func open_achievements() -> void:
 ## Récords del banco de oleadas y de los jefes (pausa o Aida).
 func open_ladder() -> void:
 	var panel := LadderPanel.new(GameData.current_character)
+	_root.add_child(panel)
+	panel.popup_centered()
+
+
+## Árbol de deuda técnica (desde la pausa).
+func open_tech_debt() -> void:
+	var panel := TechDebtPanel.new(GameData.current_character)
 	_root.add_child(panel)
 	panel.popup_centered()
 

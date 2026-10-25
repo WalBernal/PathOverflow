@@ -122,6 +122,7 @@ func _initialize() -> void:
 	_test_more_uniques_and_sets()
 	_test_achievements()
 	_test_ladder()
+	_test_tech_debt()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -2931,6 +2932,44 @@ func _test_ladder() -> void:
 	var npcs: Dictionary = DataLoader.load_json("res://data/npcs.json")
 	var text := JSON.stringify(npcs)
 	_check(text.contains("\"open_waves\"") and text.contains("\"open_ladder\""), "Aida abre el banco de oleadas y los récords")
+
+
+## Árbol de deuda técnica (T47): cada nodo, bono y penalización.
+func _test_tech_debt() -> void:
+	var ids := {}
+	for n in TechDebt.NODES:
+		_check(not ids.has(n["id"]) and not n["bonus"].is_empty() and not n["penalty"].is_empty(), "%s: único, con bono y penalización" % n["id"])
+		_check(n["requires"] == "" or ids.has(n["requires"]), "%s: pide un nodo anterior" % n["id"])
+		_check(n["branch"] == "" or TechDebt.BRANCHES.has(n["branch"]), "%s: rama conocida" % n["id"])
+		for md in n["bonus"] + n["penalty"]:
+			_check(Stat.display_name(StringName(md["stat"])) != "", "%s: stat %s" % [n["id"], md["stat"]])
+		ids[n["id"]] = true
+		_check(TechDebt.describe(n["id"]).contains("Precio:"), "%s: se describe" % n["id"])
+	var c := CharacterData.new(_classes[0], _tree)
+	_check(TechDebt.total_points(c) == 0 and not TechDebt.can_allocate(c, "commit_directo"), "cerrado antes del Acto IV")
+	c.flags["act4_complete"] = true
+	_check(TechDebt.total_points(c) == 2, "al abrirse: 1 + nivel 1 del atlas (%d)" % TechDebt.total_points(c))
+	c.flags["ladder"] = {"best_wave": 12, "bosses": {}}
+	_check(TechDebt.total_points(c) == 4, "+1 por cada 5 oleadas")
+	c.flags["ladder"]["best_wave"] = 500
+	_check(TechDebt.total_points(c) == 2 + TechDebt.MAX_WAVE_POINTS, "las oleadas dan como mucho %d" % TechDebt.MAX_WAVE_POINTS)
+	_check(not TechDebt.allocate(c, "hotfix"), "una rama pide la raíz")
+	var dmg_before := c.stats.get_value(Stat.DAMAGE)
+	var life_before := c.stats.get_value(Stat.LIFE)
+	_check(TechDebt.allocate(c, "commit_directo") and TechDebt.allocate(c, "hotfix"), "raíz y primer nodo")
+	c.recalculate()
+	_check(c.stats.get_value(Stat.LIFE) < life_before, "la penalización se nota (vida %.0f → %.0f)" % [life_before, c.stats.get_value(Stat.LIFE)])
+	_check(TechDebt.modifiers(c).size() == 4 and TechDebt.modifiers(c).any(func(m: Modifier) -> bool: return m.stat == Stat.DAMAGE and m.value > 0.0),
+		"y el bono también (daño %.0f)" % dmg_before)
+	_check(not TechDebt.refund(c, "commit_directo") and TechDebt.refund(c, "hotfix") and TechDebt.refund(c, "commit_directo"), "se paga de las hojas a la raíz")
+	_check(is_equal_approx(c.stats.get_value(Stat.LIFE), life_before), "pagar la deuda devuelve la vida")
+	for id in ["commit_directo", "viernes", "stack_overflow", "parche_sobre_parche", "crunch", "legacy", "no_lo_toques"]:
+		TechDebt.allocate(c, id)
+	_check(TechDebt.free_points(c) == 0 and not TechDebt.allocate(c, "try_catch_vacio"), "no pasa de los puntos que tienes")
+	var saved := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())), _classes[0], _tree, _db)
+	_check(TechDebt.allocated(saved).size() == 7 and is_equal_approx(saved.stats.get_value(Stat.LIFE), c.stats.get_value(Stat.LIFE)), "el árbol se guarda y se aplica al cargar")
+	var panel := TechDebtPanel.new(c)
+	panel.free()
 
 
 func _db_enemies() -> Array:

@@ -249,6 +249,7 @@ func recalculate(emit := true) -> void:
 		if i < asc_passives.size():
 			for md in asc_passives[i].get("mods", []):
 				stats.add_modifier(Modifier.from_dict(md, "ascendancy"))
+	stats.add_modifiers(TechDebt.modifiers(self))   # árbol de deuda técnica (fin de juego)
 	_apply_equipment()
 	for effect in timed_effects:
 		stats.add_modifiers(effect["mods"])
