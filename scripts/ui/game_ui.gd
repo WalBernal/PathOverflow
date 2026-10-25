@@ -404,9 +404,16 @@ func _process(_delta: float) -> void:
 			dialogue_box.close()
 
 
+## Ancho de los botones de la pausa (tres columnas que caben a 160 % de interfaz).
+const PAUSE_BUTTON_W := 270
+var _pause_scroll: ScrollContainer
+var _pause_scaling: Button
+
+
 func _build_pause_menu() -> Control:
 	# Capa oscura a pantalla completa con un panel centrado: arriba el título,
-	# en medio dos columnas (sonido | diálogos e interfaz) y abajo las salidas.
+	# en medio tres columnas (sonido y combate | diálogos e interfaz | gráficos,
+	# datos y ventanas) dentro de un desplazamiento que cabe en la pantalla, y abajo las salidas.
 	var overlay := ColorRect.new()
 	overlay.color = Color(0, 0, 0, 0.6)
 	overlay.visible = false
@@ -427,9 +434,12 @@ func _build_pause_menu() -> Control:
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(hint)
 	box.add_child(UiStyle.ornament())
+	_pause_scroll = ScrollContainer.new()
+	_pause_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	box.add_child(_pause_scroll)
 	var columns := HBoxContainer.new()
-	columns.add_theme_constant_override("separation", 36)
-	box.add_child(columns)
+	columns.add_theme_constant_override("separation", 28)
+	_pause_scroll.add_child(columns)
 
 	# --- Sonido: un deslizador por canal ---
 	var sound := VBoxContainer.new()
@@ -453,7 +463,7 @@ func _build_pause_menu() -> Control:
 	right.add_theme_constant_override("separation", 8)
 	columns.add_child(right)
 	right.add_child(UiStyle.section_header("Diálogos"))
-	var narrator := UiStyle.button("", func() -> void: pass, 300)
+	var narrator := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
 	var refresh_narrator := func() -> void:
 		if not DialogueBox.narrator_available():
 			narrator.text = "Narrador: sin voz en español"
@@ -466,14 +476,14 @@ func _build_pause_menu() -> Control:
 		GameSettings.set_value("dialogue", "narrator", not DialogueBox.narrator_enabled())
 		refresh_narrator.call())
 	right.add_child(narrator)
-	var blips := UiStyle.button("", func() -> void: pass, 300)
+	var blips := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
 	blips.text = "Pitidos del texto: " + ("sí" if DialogueBox.blips_enabled() else "no")
 	blips.tooltip_text = "Sonido retro mientras se escribe el texto (cuando no habla el narrador)."
 	blips.pressed.connect(func() -> void:
 		GameSettings.set_value("dialogue", "blips", not DialogueBox.blips_enabled())
 		blips.text = "Pitidos del texto: " + ("sí" if DialogueBox.blips_enabled() else "no"))
 	right.add_child(blips)
-	var barks := UiStyle.button("", func() -> void: pass, 300)
+	var barks := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
 	barks.text = "Voces cortas: " + ("sí" if Barks.enabled() else "no")
 	barks.tooltip_text = "Un murmullo corto de los PNJ al hablar (si no habla el narrador) y la voz de tu personaje\nal subir de nivel o al quedarse con poca vida."
 	barks.pressed.connect(func() -> void:
@@ -492,14 +502,14 @@ func _build_pause_menu() -> Control:
 			apply_ui_scale())
 	scale_button.tooltip_text = "Agranda o achica los menús, el HUD y los textos. El mundo se ve igual."
 	right.add_child(scale_button)
-	var colorblind := UiStyle.button("", func() -> void: pass, 300)
+	var colorblind := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
 	colorblind.text = "Modo daltónico: " + ("sí" if Ailments.colorblind else "no")
 	colorblind.tooltip_text = "Colores que se distinguen con cualquier tipo de daltonismo: estados alterados\n(quemado, sangrando, envenenado, helado, corrompido...), auras y cargas."
 	colorblind.pressed.connect(func() -> void:
 		Ailments.set_colorblind(not Ailments.colorblind)
 		colorblind.text = "Modo daltónico: " + ("sí" if Ailments.colorblind else "no"))
 	right.add_child(colorblind)
-	var flashes := UiStyle.button("", func() -> void: pass, 300)
+	var flashes := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
 	flashes.text = "Menos destellos: " + ("sí" if Accessibility.reduce_flashes else "no")
 	flashes.tooltip_text = "Atenúa los fogonazos (golpes a jefes, cambios de fase, luz de impactos) y los glitches\nde las escenas y del prólogo, y deja fijo lo que parpadea."
 	flashes.pressed.connect(func() -> void:
@@ -511,7 +521,12 @@ func _build_pause_menu() -> Control:
 		func(v: float) -> void: Accessibility.set_world_text(v))
 	world_text.tooltip_text = "Tamaño de los nombres de enemigos y PNJ, las etiquetas del botín y los avisos del mundo,\naparte del tamaño de la interfaz."
 	right.add_child(world_text)
-	var pixel := UiStyle.button("", func() -> void: pass, 300)
+	# --- Gráficos, datos y ventanas (tercera columna) ---
+	var extra := VBoxContainer.new()
+	extra.add_theme_constant_override("separation", 8)
+	columns.add_child(extra)
+	extra.add_child(UiStyle.section_header("Gráficos y datos"))
+	var pixel := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
 	pixel.text = "Filtro pixel art: " + ("sí" if WorldPost.enabled() else "no")
 	pixel.tooltip_text = "Rejilla de píxeles, paleta con tramado, luz y sombra de cada zona.\nApágalo si prefieres el mundo nítido."
 	pixel.pressed.connect(func() -> void:
@@ -519,36 +534,37 @@ func _build_pause_menu() -> Control:
 		pixel.text = "Filtro pixel art: " + ("sí" if WorldPost.enabled() else "no")
 		for p in get_tree().get_nodes_in_group(&"world_post"):
 			p.call("refresh"))
-	right.add_child(pixel)
-	var lights := UiStyle.button("", func() -> void: pass, 300)
+	extra.add_child(pixel)
+	var lights := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
 	lights.text = "Luces y clima: " + ("reducidos" if WorldPost.reduced else "completos")
 	lights.tooltip_text = "Reducidos: sin luz de golpes ni de proyectiles, como mucho %d luces a la vez\ny sin lluvia de datos ni niebla. Se nota al cambiar de zona (el clima)." % WorldPost.LOW_LIGHTS
 	lights.pressed.connect(func() -> void:
 		WorldPost.reduced = not WorldPost.reduced
 		GameSettings.set_value("interface", "reduced_lights", WorldPost.reduced)
 		lights.text = "Luces y clima: " + ("reducidos" if WorldPost.reduced else "completos"))
-	right.add_child(lights)
-	var tips_button := UiStyle.button("", func() -> void: pass, 300)
+	extra.add_child(lights)
+	var tips_button := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
 	tips_button.text = "Consejos de mecánicas: " + ("sí" if TipPanel.enabled() else "no")
 	tips_button.tooltip_text = "Un aviso corto la primera vez que aparece la esquiva, las cargas, los golpes pesados,\nlos terrenos o una mecánica de arena de jefe."
 	tips_button.pressed.connect(func() -> void:
 		TipPanel.set_enabled(not TipPanel.enabled())
 		tips_button.text = "Consejos de mecánicas: " + ("sí" if TipPanel.enabled() else "no"))
-	right.add_child(tips_button)
-	var telemetry := UiStyle.button("", func() -> void: pass, 300)
+	extra.add_child(tips_button)
+	var telemetry := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
 	telemetry.text = "Registro local de partidas: " + ("sí" if Telemetry.enabled() else "no")
 	telemetry.tooltip_text = "Apunta en user://telemetria.jsonl el tiempo, el DPS, las muertes y los enemigos de cada zona\n(para equilibrar; nada sale de tu equipo). tools/telemetry_summary.gd lo resume."
 	telemetry.pressed.connect(func() -> void:
 		GameSettings.set_value("interface", "telemetry", not Telemetry.enabled())
 		telemetry.text = "Registro local de partidas: " + ("sí" if Telemetry.enabled() else "no"))
-	right.add_child(telemetry)
-	var controls := UiStyle.button("Controles...", open_controls, 300)
+	extra.add_child(telemetry)
+	extra.add_child(UiStyle.section_header("Ventanas"))
+	var controls := UiStyle.button("Controles...", open_controls, PAUSE_BUTTON_W)
 	controls.tooltip_text = "Cambia la tecla o el botón del mando de cada acción."
-	right.add_child(controls)
-	var loot_filter := UiStyle.button("Filtro de botín...", toggle_loot_filter, 300)
+	extra.add_child(controls)
+	var loot_filter := UiStyle.button("Filtro de botín...", toggle_loot_filter, PAUSE_BUTTON_W)
 	loot_filter.tooltip_text = "Qué se ve en el suelo, por tipo y rareza, y desde qué rareza sale el haz de luz.\nMantén Shift para ver lo oculto."
-	right.add_child(loot_filter)
-	var scaling := UiStyle.button("", func() -> void: pass, 300)
+	extra.add_child(loot_filter)
+	var scaling := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
 	var scaling_text := func() -> String:
 		return "Zonas completadas a tu nivel: " + ("sí" if Difficulty.scaling_enabled(GameData.current_character) else "no")
 	scaling.text = scaling_text.call()
@@ -558,19 +574,19 @@ func _build_pause_menu() -> Control:
 		if c:
 			c.flags[Difficulty.SCALING_FLAG] = not Difficulty.scaling_enabled(c)
 		scaling.text = scaling_text.call())
-	right.add_child(scaling)
-	var achievements := UiStyle.button("Logros y cosméticos...", open_achievements, 300)
+	_pause_scaling = scaling   # va en la columna de combate (se añade abajo)
+	var achievements := UiStyle.button("Logros y cosméticos...", open_achievements, PAUSE_BUTTON_W)
 	achievements.tooltip_text = "Tus logros y los sombreros, auras y pisadas que te dan."
-	right.add_child(achievements)
-	var ladder := UiStyle.button("Récords...", open_ladder, 300)
+	extra.add_child(achievements)
+	var ladder := UiStyle.button("Récords...", open_ladder, PAUSE_BUTTON_W)
 	ladder.tooltip_text = "Tus récords y la tabla local: oleadas sin fin y tiempo contra cada jefe."
-	right.add_child(ladder)
-	var debt := UiStyle.button("Deuda técnica...", open_tech_debt, 300)
+	extra.add_child(ladder)
+	var debt := UiStyle.button("Deuda técnica...", open_tech_debt, PAUSE_BUTTON_W)
 	debt.tooltip_text = "Árbol de fin de juego (tras el Acto IV): cada nodo, un bono fuerte y una penalización."
-	right.add_child(debt)
-	var lore := UiStyle.button("Archivos encontrados...", open_lore_log, 300)
+	extra.add_child(debt)
+	var lore := UiStyle.button("Archivos encontrados...", open_lore_log, PAUSE_BUTTON_W)
 	lore.tooltip_text = "Commits perdidos, logs y correos de la UAdeO que has encontrado por las zonas."
-	right.add_child(lore)
+	extra.add_child(lore)
 	# --- Combate (en la columna del sonido, que es más corta) ---
 	sound.add_child(UiStyle.section_header("Combate"))
 	var shake := _cycle_button("Sacudida de cámara", [0.0, 0.5, 1.0], ["no", "suave", "normal"],
@@ -578,14 +594,14 @@ func _build_pause_menu() -> Control:
 		func(v: float) -> void: Player.set_shake_scale(v))
 	shake.tooltip_text = "Cuánto tiembla la pantalla con golpes fuertes, críticos, jefes y explosiones."
 	sound.add_child(shake)
-	var hitstop := UiStyle.button("", func() -> void: pass, 300)
+	var hitstop := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
 	hitstop.text = "Pausa al golpear (hitstop): " + ("sí" if World.hitstop_enabled() else "no")
 	hitstop.tooltip_text = "Una pausa de milésimas al hacer un crítico o matar a un raro: da peso al golpe."
 	hitstop.pressed.connect(func() -> void:
 		World.set_hitstop(not World.hitstop_enabled())
 		hitstop.text = "Pausa al golpear (hitstop): " + ("sí" if World.hitstop_enabled() else "no"))
 	sound.add_child(hitstop)
-	var auto := UiStyle.button("", func() -> void: pass, 300)
+	var auto := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
 	auto.text = "Auto-ataque: " + ("sí" if SkillController.auto_attack else "no")
 	auto.tooltip_text = "Sin pulsar nada ni moverte, la habilidad 1 se lanza sola contra el enemigo más cercano.\nNo vale para auras, invocaciones ni canalizadas."
 	auto.pressed.connect(func() -> void:
@@ -594,7 +610,7 @@ func _build_pause_menu() -> Control:
 		auto.text = "Auto-ataque: " + ("sí" if SkillController.auto_attack else "no"))
 	sound.add_child(auto)
 	var move_names := {"hold": "mantener", "toggle": "alternar", "click": "clic para ir"}
-	var move := UiStyle.button("", func() -> void: pass, 300)
+	var move := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
 	move.text = "Moverse con el ratón: " + move_names.get(Player.mouse_move, "mantener")
 	move.tooltip_text = "Mantener: sigues al cursor mientras mantienes el clic.\nAlternar: un clic empieza a seguirlo y otro para (sin mantener el botón).\nClic para ir: como mantener, y al soltar caminas hasta ese punto."
 	move.pressed.connect(func() -> void:
@@ -603,6 +619,7 @@ func _build_pause_menu() -> Control:
 		GameSettings.set_value("combat", "mouse_move", Player.mouse_move)
 		move.text = "Moverse con el ratón: " + move_names.get(Player.mouse_move, "mantener"))
 	sound.add_child(move)
+	sound.add_child(_pause_scaling)
 
 	box.add_child(UiStyle.ornament())
 	var exits := HBoxContainer.new()
@@ -618,7 +635,7 @@ func _build_pause_menu() -> Control:
 ## Botón que recorre una lista de valores ("Velocidad de la voz: normal").
 ## `current` devuelve el valor guardado; `on_pick` guarda el nuevo.
 func _cycle_button(text: String, values: Array, names: Array, current: Callable, on_pick: Callable) -> Button:
-	var b := UiStyle.button("", func() -> void: pass, 300)
+	var b := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
 	var index := func() -> int:
 		var best := 0
 		for k in values.size():
@@ -712,6 +729,13 @@ func show_skill_choice(title: String, defs: Array, on_pick: Callable) -> void:
 	get_tree().paused = true
 
 
+## Que las columnas de la pausa quepan en la pantalla: si no, se desplazan (rueda o barra).
+func _fit_pause_menu() -> void:
+	var content := (_pause_scroll.get_child(0) as Control).get_combined_minimum_size()
+	var room := get_viewport().get_visible_rect().size.y / ui_scale() - 260.0   # título, adorno y salidas
+	_pause_scroll.custom_minimum_size = Vector2(content.x + 16.0, clampf(content.y, 120.0, maxf(120.0, room)))
+
+
 func _on_choice_picked(skill_id: String, on_pick: Callable) -> void:
 	if is_choosing():
 		_choice_panel.queue_free()
@@ -722,6 +746,8 @@ func _on_choice_picked(skill_id: String, on_pick: Callable) -> void:
 
 func toggle_pause_menu() -> void:
 	_pause_panel.visible = not _pause_panel.visible
+	if _pause_panel.visible:
+		_fit_pause_menu()
 	item_tooltip.hide()
 	get_tree().paused = _pause_panel.visible
 
