@@ -516,6 +516,7 @@ func to_dict() -> Dictionary:
 		"experience": experience,
 		"appearance": appearance,
 		"passives": passive_ids,
+		"passive_masteries": passives.mastery_choices_dict(),
 		"passive_tree_version": passives.tree.version,
 		"inventory": inventory.to_dict(),
 		"created_at": created_at,
@@ -570,6 +571,8 @@ static func from_dict(d: Dictionary, p_class_def: Dictionary, tree: PassiveTree,
 				pending = pending.filter(func(x: int) -> bool: return not c.ascendancy_nodes.has(x))
 	c.inventory.load_dict(d.get("inventory", {}), db)
 	if int(d.get("passive_tree_version", 1)) == tree.version:
+		var masteries = d.get("passive_masteries", {})
+		c.passives.load_mastery_choices(masteries if masteries is Dictionary else {})
 		c.passives.load_ids(d.get("passives", []))  # también recalcula las stats
 		if c.passives.spent_points() > c.passive_points_total():
 			# Cambió el reparto de puntos (antes había 22 de regalo): se devuelven todos.

@@ -50,6 +50,10 @@ func _run() -> void:
 		await _capture_golems_in_world()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("maestria"):
+		await _capture_mastery()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("arena"):
 		await _capture_arena()
 		get_tree().quit()
@@ -532,6 +536,44 @@ func _capture_windows() -> void:
 	for k in saved_rules:
 		LootFilter.set_rule(k, saved_rules[k])
 	GameSettings.set_value("interface", "scale", saved_scale)
+	world.set("_since_save", -9999.0)
+
+
+## Maestría del árbol: la del Ingeniero DevOps asignada, con la segunda opción
+## elegida y su tooltip (las tres opciones, la elegida encendida).
+func _capture_mastery() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Maestria", &"templario", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 30
+	gd.current_character = c
+	var mastery := -1
+	for n: PassiveNode in c.passives.tree.nodes.values():
+		if n.is_mastery() and n.title == "Maestría DevOps":
+			mastery = n.id
+	c.passives.allocate_path(mastery, 99)
+	c.passives.set_mastery_choice(mastery, 1)
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var ui: Node = world.get("ui")
+	if ui.call("is_choosing"):
+		ui.call("_on_choice_picked", "golem_hardware", func(_s: String) -> void: pass)
+	get_tree().paused = false
+	await _wait(2.5)   # que pase el título de la zona
+	ui.call("_on_menu_requested", "passives")
+	await _wait(0.6)
+	var screen: Node = ui.get("tree_screen")
+	var view: Node = screen.get("_view")
+	view.set("zoom", 0.9)
+	view.call("center_on", c.passives.tree.get_node_data(mastery).position + Vector2(260, 0))   # que no lo tape el panel lateral
+	screen.call("_on_node_hovered", mastery)
+	await _wait(0.5)
+	_save("130_arbol_maestria")
+	ui.call("_on_menu_requested", "passives")
 	world.set("_since_save", -9999.0)
 
 

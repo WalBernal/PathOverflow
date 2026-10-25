@@ -146,5 +146,45 @@ func load_ids(ids: Array) -> int:
 func collect_modifiers() -> Array[Modifier]:
 	var mods: Array[Modifier] = []
 	for id in _allocated:
-		mods.append_array(tree.get_node_data(id).mods)
+		var n := tree.get_node_data(id)
+		mods.append_array(n.choices[mastery_choice(id)]["mods"] if n.is_mastery() else n.mods)
 	return mods
+
+
+# --- Maestrías: qué opción tiene elegida cada una (por defecto la primera) ---
+
+var _mastery_choices: Dictionary = {}  # id -> índice
+
+
+func mastery_choice(id: int) -> int:
+	var n := tree.get_node_data(id)
+	if n == null or not n.is_mastery():
+		return 0
+	return clampi(int(_mastery_choices.get(id, 0)), 0, n.choices.size() - 1)
+
+
+## Cambia la opción de una maestría (gratis, como respec); solo con el nodo asignado.
+func set_mastery_choice(id: int, index: int) -> bool:
+	var n := tree.get_node_data(id)
+	if n == null or not n.is_mastery() or not _allocated.has(id) or index < 0 or index >= n.choices.size():
+		return false
+	if mastery_choice(id) == index:
+		return true
+	_mastery_choices[id] = index
+	changed.emit()
+	return true
+
+
+## Para el guardado: {"id": índice} solo de las que no están en la primera opción.
+func mastery_choices_dict() -> Dictionary:
+	var out := {}
+	for id in _mastery_choices:
+		if int(_mastery_choices[id]) != 0:
+			out[str(id)] = int(_mastery_choices[id])
+	return out
+
+
+func load_mastery_choices(d: Dictionary) -> void:
+	_mastery_choices.clear()
+	for key in d:
+		_mastery_choices[int(key)] = int(d[key])

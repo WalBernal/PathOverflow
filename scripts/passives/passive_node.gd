@@ -24,6 +24,13 @@ var class_id := &""
 var theme := ""
 var cluster := ""
 var icon := ""
+## Maestría (data/passive_masteries.json): opciones {name, mods: Array[Modifier]};
+## con el nodo asignado se elige una (PassiveAllocation.mastery_choice). Vacío = nodo normal.
+var choices: Array[Dictionary] = []
+
+
+func is_mastery() -> bool:
+	return not choices.is_empty()
 
 
 static func from_dict(d: Dictionary) -> PassiveNode:
@@ -40,6 +47,10 @@ static func from_dict(d: Dictionary) -> PassiveNode:
 	for md in d.get("mods", []):
 		n.mods.append(Modifier.from_dict(md, "tree"))
 	return n
+
+
+func label() -> String:
+	return "Maestría (elige 1 de %d)" % choices.size() if is_mastery() else kind_label(kind)
 
 
 static func kind_label(k: Kind) -> String:

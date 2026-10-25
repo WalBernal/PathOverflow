@@ -42,7 +42,34 @@ static func load_from_json(path: String) -> PassiveTree:
 		tree.adjacency[a].append(b)
 		tree.adjacency[b].append(a)
 		tree.edges.append(Vector2i(a, b))
+	tree.apply_masteries(DataLoader.load_json(MASTERIES_PATH))
 	return tree
+
+
+const MASTERIES_PATH := "res://data/passive_masteries.json"
+## Maestrías que no se pudieron aplicar (el id ya no es ese notable): para las pruebas.
+var mastery_mismatches: PackedStringArray = []
+
+
+## Convierte en maestría los notables de data/passive_masteries.json (por id,
+## comprobando el nombre: si el árbol cambió, se ignora y se apunta en mastery_mismatches).
+func apply_masteries(data: Variant) -> void:
+	if not data is Dictionary:
+		return
+	var defs: Dictionary = data.get("masteries", {})
+	for key in defs:
+		var def: Dictionary = defs[key]
+		var n: PassiveNode = nodes.get(int(key))
+		if n == null or n.title != String(def.get("node", "")):
+			mastery_mismatches.append("%s (%s)" % [key, def.get("node", "")])
+			continue
+		n.title = String(def.get("name", n.title))
+		n.mods.clear()
+		for c in def.get("choices", []):
+			var mods: Array[Modifier] = []
+			for md in c.get("mods", []):
+				mods.append(Modifier.from_dict(md, "tree"))
+			n.choices.append({"name": String(c.get("name", "")), "mods": mods})
 
 
 func get_node_data(id: int) -> PassiveNode:

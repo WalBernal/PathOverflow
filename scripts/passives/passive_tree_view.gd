@@ -176,6 +176,14 @@ func _draw() -> void:
 				draw_arc(n.position, r, 0.0, TAU, 40, frame, 4.0, true)
 				if keystone:
 					draw_arc(n.position, r + 6.0, 0.0, TAU, 40, frame.darkened(0.2), 2.0, true)
+				if n.is_mastery():
+					# Maestría: un rombo por opción encima del nodo; el elegido, encendido.
+					var chosen := allocation.mastery_choice(n.id)
+					for k in n.choices.size():
+						var pp := n.position + Vector2.from_angle(-PI / 2.0 + (k - (n.choices.size() - 1) / 2.0) * 0.45) * (r + 10.0)
+						var lit := on and k == chosen
+						draw_colored_polygon(PackedVector2Array([pp + Vector2(0, -5), pp + Vector2(4, 0), pp + Vector2(0, 5), pp + Vector2(-4, 0)]),
+							Color("8ae0c0") if lit else Color(0.35, 0.45, 0.42))
 				if in_preview:
 					draw_arc(n.position, r + 3.0, 0.0, TAU, 40, COLOR_PREVIEW_BAD if too_expensive else COLOR_PREVIEW, 2.5, true)
 			PassiveNode.Kind.CLASS_START:

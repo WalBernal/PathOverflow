@@ -89,6 +89,7 @@ func _initialize() -> void:
 	_test_boss_arena_phases()
 	_test_mechanic_tips()
 	_test_rule_keystones()
+	_test_masteries()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -1894,6 +1895,33 @@ func _test_board_milestones() -> void:
 	_check(SkillCalc.compute(Motherboard.new(_db.skills.skills["proceso_hijo"], 20, ["DDR5"]), c)["count"] == 4, "esbirros extra por nivel")
 
 
+## Maestrías: un notable por sector donde se elige 1 de 3 bonos; la elección se
+## guarda, cambia las stats y se puede cambiar gratis.
+func _test_masteries() -> void:
+	_check(_tree.mastery_mismatches.is_empty(), "las maestrías apuntan a sus notables: %s" % ", ".join(_tree.mastery_mismatches))
+	var masteries: Array = _tree.nodes.values().filter(func(n: PassiveNode) -> bool: return n.is_mastery())
+	_check(masteries.size() == 7, "una maestría por sector (%d)" % masteries.size())
+	for n: PassiveNode in masteries:
+		_check(n.choices.size() == 3 and n.kind == PassiveNode.Kind.NOTABLE, "%s: 3 opciones" % n.title)
+	# Guerrero: su maestría (Soporte Técnico) está junto a su inicio.
+	var c := CharacterData.new(_classes[0], _tree)
+	c.level = 30
+	var mid := -1
+	for n: PassiveNode in masteries:
+		if n.title == "Maestría de Soporte Técnico":
+			mid = n.id
+	_check(mid != -1 and c.passives.allocate_path(mid, 99) > 0, "la maestría del guerrero se puede asignar")
+	var res_first := c.stats.get_value(Stat.FIRE_RES)
+	var block_first := c.stats.get_value(Stat.BLOCK_CHANCE)
+	_check(c.passives.mastery_choice(mid) == 0, "por defecto, la primera opción (el efecto de antes)")
+	_check(c.passives.set_mastery_choice(mid, 1), "se elige otra opción")
+	_check(c.stats.get_value(Stat.FIRE_RES) < res_first and c.stats.get_value(Stat.BLOCK_CHANCE) > block_first, "cambiar de opción cambia las stats")
+	var saved := c.to_dict()
+	var back := CharacterData.from_dict(saved, _classes[0], _tree, _db)
+	_check(back.passives.mastery_choice(mid) == 1 and is_equal_approx(back.stats.get_value(Stat.BLOCK_CHANCE), c.stats.get_value(Stat.BLOCK_CHANCE)), "la elección se guarda y se carga")
+	_check(not CharacterData.new(_classes[0], _tree).passives.set_mastery_choice(mid, 2), "sin asignar no se elige")
+
+
 ## Nodos clave que cambian una regla: Tipado Estático, Recolector de Basura,
 ## Modo Seguro y Código Espagueti.
 func _test_rule_keystones() -> void:
@@ -2027,6 +2055,9 @@ func _test_boss_arena_phases() -> void:
 ## y adds que hay que interrumpir.
 func _test_arena_mechanics() -> void:
 	var c := CharacterData.new(_classes[0], _tree)
+	# Sin evasión ni bloqueo: que los golpes de la prueba no se esquiven al azar.
+	c.add_timed_effect("prueba_sin_evasion", [Modifier.from_dict({"stat": "evasion", "type": "more", "value": -100}, "prueba"),
+		Modifier.from_dict({"stat": "block_chance", "type": "more", "value": -100}, "prueba")] as Array[Modifier], 99.0)
 	var em := EnemyManager.new()
 	em.roll_affixes = false
 	var pl := Player.new()

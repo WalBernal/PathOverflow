@@ -196,6 +196,9 @@ func show_character(character: CharacterData) -> void:
 
 func _on_node_clicked(id: int, button: MouseButton) -> void:
 	var alloc := _character.passives
+	if button == MOUSE_BUTTON_LEFT and alloc.is_allocated(id) and alloc.tree.get_node_data(id).is_mastery():
+		_open_mastery_menu(id)
+		return
 	if button == MOUSE_BUTTON_LEFT and alloc.is_allocated(id) and alloc.tree.is_socket(id):
 		_open_chip_menu(id)
 		return
@@ -207,6 +210,35 @@ func _on_node_clicked(id: int, button: MouseButton) -> void:
 		if not alloc.refund(id):
 			_flash("No se puede quitar: desconectaría otros nodos")
 	_on_node_hovered(id)
+
+
+## Menú de una maestría asignada: elegir uno de sus bonos (gratis, se puede
+## cambiar cuando quieras); si además es ranura de chip, también el chip.
+func _open_mastery_menu(node_id: int) -> void:
+	var alloc := _character.passives
+	var node := alloc.tree.get_node_data(node_id)
+	var menu := PopupMenu.new()
+	menu.theme = UiStyle.make_theme()
+	for k in node.choices.size():
+		var mods := PackedStringArray()
+		for m in node.choices[k]["mods"]:
+			mods.append(m.describe())
+		menu.add_radio_check_item("%s: %s" % [node.choices[k]["name"], ", ".join(mods)])
+		menu.set_item_checked(k, alloc.mastery_choice(node_id) == k)
+	if alloc.tree.is_socket(node_id):
+		menu.add_separator()
+		menu.add_item("Chip de expansión...")
+	add_child(menu)
+	menu.index_pressed.connect(func(k: int) -> void:
+		if k < node.choices.size():
+			alloc.set_mastery_choice(node_id, k)
+			Sfx.play("coin", -8.0, 1.2)
+			_refresh()
+		else:
+			_open_chip_menu.call_deferred(node_id))
+	menu.popup_hide.connect(menu.queue_free)
+	menu.position = Vector2i(get_global_mouse_position()) + Vector2i(get_window().position)
+	menu.popup()
 
 
 ## Menú de la ranura de chip: engastar uno de la bolsa o sacar el que hay.
@@ -286,7 +318,7 @@ func _build_tooltip(node: PassiveNode) -> String:
 	var title_color := PassiveTreeView.border_color(node)
 	if node.theme != "" and node.kind != PassiveNode.Kind.CLASS_START:
 		title_color = tree.theme_color(node.theme).lightened(0.2)
-	var subtitle := PassiveNode.kind_label(node.kind)
+	var subtitle := node.label()
 	if node.cluster != "":
 		subtitle += " · " + tree.cluster_name(node.cluster)
 	elif node.kind == PassiveNode.Kind.MINOR:
@@ -295,6 +327,14 @@ func _build_tooltip(node: PassiveNode) -> String:
 		title_color.to_html(false), node.title, subtitle]
 	for m in node.mods:
 		t += "• %s\n" % m.describe()
+	if node.is_mastery():
+		var chosen := alloc.mastery_choice(node.id)
+		for k in node.choices.size():
+			var on := k == chosen and alloc.is_allocated(node.id)
+			t += "[color=#%s]%s %s[/color]\n" % ["8ae0c0" if on else "8a8293", "◆" if on else "◇", node.choices[k]["name"]]
+			for m in node.choices[k]["mods"]:
+				t += "[color=#%s]    • %s[/color]\n" % ["e8d9b0" if on else "8a8293", m.describe()]
+		t += "[color=#8a8293]%s[/color]\n" % ("Click izquierdo: elegir el bono (gratis, cuando quieras)" if alloc.is_allocated(node.id) else "Asígnala y elige uno de los tres bonos")
 	if node.flavor != "":
 		t += "\n[i][color=#a08f6a]%s[/color][/i]\n" % node.flavor
 	if tree.is_socket(node.id):
@@ -441,6 +481,10 @@ func _on_search_changed(text: String) -> void:
 			var haystack := "%s %s %s %s" % [n.title, tree.theme_name(n.theme), tree.cluster_name(n.cluster), THEME_KEYWORDS.get(n.theme, "")]
 			for m in n.mods:
 				haystack += " " + m.describe()
+			for c in n.choices:   # maestrías: también sus opciones
+				haystack += " maestria " + String(c["name"])
+				for m in c["mods"]:
+					haystack += " " + m.describe()
 			if _normalize(haystack).contains(query):
 				_search_matches.append(id)
 	_view.set_search(_search_matches)

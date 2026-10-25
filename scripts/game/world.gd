@@ -811,8 +811,10 @@ func _on_boss_defeated(pos: Vector2) -> void:
 	MusicPlayer.play_track(String(GameData.music.get("zones", {}).get(GameData.town_for_zone(zone.id), "camp1")), 3.0)
 	var boss: Dictionary = zone.def.get("boss", {})
 	character.flags[boss.get("complete_flag", "act1_complete")] = true
-	# El servidor se congela: lo que quedaba vivo se detiene y desaparece.
-	enemies.clear_all()
+	# El servidor se congela: lo que quedaba vivo se detiene y desaparece. Diferido:
+	# el jefe puede morir dentro de un bucle del EnemyManager (degenerativos, área)
+	# y vaciar sus listas en mitad del recorrido lo haría leer fuera de rango.
+	enemies.clear_all.call_deferred()
 	# Botín de jefe: algo bueno seguro.
 	for r in [Rarity.Item.UNIQUE, Rarity.Item.RARE, Rarity.Item.RARE, Rarity.Item.ULTRA_RARE]:
 		loot.drop_item(item_generator.generate(enemies.area_level, r), zone.free_spot_near(pos + Vector2(randf_range(-80, 80), randf_range(-60, 60))))
