@@ -600,6 +600,10 @@ Con **Pausa → Interfaz → Registro local de partidas** (activado por defecto)
 Godot_v4.7.2-stable_win64_console.exe --headless --path . -s res://tools/telemetry_summary.gd -- clase=hacker zona=zona3
 ```
 
+Al terminar, la integración imprime **lo que queda vivo tras cerrar cada mundo** (objetos, nodos, huérfanos y memoria): si algo se acumulara entre partidas, se vería crecer ahí. Medido el 25-10-2026 (T67): tras 28 mundos se mantienen 19 nodos, 0 huérfanos y ~84 MB; los objetos se estabilizan en ~+120 (las cachés de sprites y voces).
+
+Ojo al lanzar Godot desde PowerShell: es una aplicación de ventana y, si no se lee su salida (`| Out-Null` o `| Out-String`), PowerShell no espera a que termine (con `*> $null` sigue de largo).
+
 ## Rendimiento
 
 Benchmark del 18-10-2026 (antes de los sprites), RTX 4050 Laptop, vsync desactivado, todos los enemigos amontonados alrededor del jugador:

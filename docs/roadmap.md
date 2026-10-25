@@ -364,11 +364,12 @@ Origen: R1 §7, R2 §12
 
 ---
 
-### [ ] T67 · Investigar un cierre sin traza en la integración · S
+### [x] T67 · Investigar un cierre sin traza en la integración · S
 Origen: comprobaciones de T16
 - El 25-10-2026, entre las 00:56 y las 00:58, Godot se cerró 4 veces sin ningún mensaje (código de salida -1, sin evento de Windows) jugando el Tester QA en el acto III (Oblea / Memoria ROM). Después, 0 de 19 pasadas fallaron, y 0 de 6 en el commit 1a91bf1.
 - Probar varias decenas de pasadas de esa clase y zonas (con y sin `--verbose`), revisar hilos (FreezeWatch, el `Logger` de la prueba) y, si vuelve a pasar, sacar la traza con el ejecutable de consola o un volcado.
 - El 25-10-2026 entre las 08:00 y las 08:40 (durante T28) volvió: 6 de 8 pasadas de la integración rápida completa se cerraron igual (código -1, sin salida ni evento), en zonas distintas de los actos I a III y también **sin cargar el Acto IV**. Nunca en tandas cortas (una clase o pocas zonas: 0 de 8). Memoria, handles e hilos del proceso estables durante la pasada; el sistema tenía 1,6 GB de RAM libre y otra instancia de Godot grabando vídeo. Sospecha: depende de la carga de la máquina o de algo que se acumula entre mundos (la prueba crea y libera un `World` por clase y acto).
+- **Investigado el 25-10-2026 (T67), sin reproducirlo:** 10 pasadas cortas del Tester QA en Oblea y Memoria ROM y 5 de 28 mundos (las 7 clases × 4 actos, 1 s por zona): unos 150 mundos creados y cerrados, 0 cierres. Descartado que algo se acumule entre mundos: la integración ahora imprime lo que queda vivo tras cerrar cada uno, y se mantienen 19 nodos, 0 huérfanos y ~84 MB (los objetos se estabilizan en ~+120: cachés de sprites y voces). Hilos revisados: el de FreezeWatch se arranca y se espera bien en cada mundo, y el del narrador no corre sin pantalla. Lo más probable es la carga de la máquina de aquel momento (1,6 GB libres y otra instancia de Godot grabando vídeo). Si vuelve: mirar en la tabla de lo que queda vivo si algo crece, lanzar con `--verbose` y sacar un volcado con el ejecutable de consola. De paso: PowerShell no espera a Godot si no se lee su salida (`*> $null`), lo que explicaba importaciones a medias.
 
 ---
 
@@ -454,3 +455,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T64 · Telemetría local: una línea por visita a zona en user://telemetria.jsonl (tiempo, combate, daño, DPS, enemigos, muertes; solo personajes guardados, opción en la pausa) y tools/telemetry_summary.gd que lo resume por zona y clase.
 - 2026-10-25 · T65 · Presets de Linux y macOS (export_presets.example.cfg, porque export_presets.cfg está en .gitignore), tools/build_release.ps1 que exporta lo que tenga plantilla y arma el instalador de Windows (installer/Setup.cs con csc: instala por usuario, accesos directos y desinstalador). Probado: Windows exporta (121 MB) y arranca, el instalador extrae el juego idéntico. Linux y macOS sin probar: sus plantillas no están instaladas (bajarlas necesita tu permiso). IExpress se descartó: fallaba al azar.
 - 2026-10-25 · T66 · Bloqueada [!]: simulación de 300 enemigos 4,7-4,8 ms (sobre el umbral), pero portar a C# o GDExtension necesita descargas y herramientas que no hay y ganaría ~4 ms de 34; motivo y recomendación bajo la tarea.
+- 2026-10-25 · T67 · Cierre sin traza investigado: ~150 mundos en tandas cortas sin un cierre; descartada la acumulación entre mundos (tabla nueva de lo que queda vivo al final de la integración) y revisados los hilos; queda como sospecha la carga de la máquina. Pasos para la próxima vez bajo la tarea.

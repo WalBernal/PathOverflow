@@ -86,6 +86,10 @@ func _run() -> void:
 	_counter.take()   # lo que salga al cerrar no cuenta
 	print("")
 	print("Integración: %d zonas × clase de %.0f s en %.1f s reales" % [runs, _seconds, (Time.get_ticks_msec() - started) / 1000.0])
+	if _leftovers.size() > 1:
+		print("Lo que queda vivo tras cerrar cada mundo:")
+		for line in _leftovers:
+			print("  " + line)
 	if _failures.is_empty():
 		print("OK: sin errores.")
 	else:
@@ -132,7 +136,25 @@ func _play_act(class_def: Dictionary, act: Dictionary, act_index: int, zone_ids:
 	await _frames(2)
 	gd.set("current_character", null)
 	_collect("%s · acto %d · al cerrar" % [class_def["id"], act_index + 1])
+	_note_leftovers("%s · acto %d" % [class_def["id"], act_index + 1])
 	return count
+
+
+## T67: lo que queda vivo tras cerrar cada mundo (objetos, nodos, memoria). Si
+## crece de mundo en mundo, algo se acumula entre partidas (la sospecha de los
+## cierres sin traza). Se imprime al final.
+var _leftovers: Array[String] = []
+var _first_objects := -1
+
+
+func _note_leftovers(label: String) -> void:
+	var objects := int(Performance.get_monitor(Performance.OBJECT_COUNT))
+	var nodes := int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))
+	var orphans := int(Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT))
+	var mem := Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0
+	if _first_objects < 0:
+		_first_objects = objects
+	_leftovers.append("%-28s objetos %6d (%+d)  nodos %4d  huérfanos %3d  memoria %6.1f MB" % [label, objects, objects - _first_objects, nodes, orphans, mem])
 
 
 var _incident_played := false
