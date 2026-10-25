@@ -101,6 +101,7 @@ func _initialize() -> void:
 	_test_channelled_spells()
 	_test_more_variants()
 	_test_class_signatures()
+	_test_transforming_chips()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -2139,6 +2140,56 @@ func _test_class_signatures() -> void:
 	sc.free()
 	pl.free()
 	em.free()
+
+
+## Chips únicos que transforman los nodos asignados de su radio (fuego → frío...).
+func _test_transforming_chips() -> void:
+	var own := func(c: CharacterData, stat: String) -> float:
+		var b: Dictionary = c.stats.get_breakdown(StringName(stat))
+		return float(b["flat"]) + float(b["increased"])
+	var transforming := ExpansionChip.UNIQUES.filter(func(u: Dictionary) -> bool: return u.has("transform"))
+	_check(transforming.size() >= 4, "hay chips únicos que transforman nodos (%d)" % transforming.size())
+	for u in transforming:
+		for from in u["transform"]:
+			_check(Stat.exists(StringName(from)) and Stat.exists(StringName(u["transform"][from])), "%s: %s → %s son stats" % [u["id"], from, u["transform"][from]])
+		# En alguna ranura hay un nodo que transformar (si no, el chip no sirve).
+		var found := []
+		for socket in _tree.socket_ids():
+			var center: Vector2 = _tree.get_node_data(socket).position
+			for id in _tree.nodes:
+				var n: PassiveNode = _tree.nodes[id]
+				if id != socket and n.position.distance_to(center) <= ExpansionChip.TRANSFORM_RADIUS and not n.is_mastery() \
+						and n.mods.any(func(m: Modifier) -> bool: return u["transform"].has(String(m.stat))):
+					found = [socket, id, n]
+					break
+			if not found.is_empty():
+				break
+		_check(not found.is_empty(), "%s: alguna ranura tiene nodos que transformar en su radio" % u["id"])
+		if found.is_empty():
+			continue
+		var c := CharacterData.new(_classes[0], _tree)
+		c.passives._allocated[found[0]] = true
+		c.passives._allocated[found[1]] = true
+		var m: Modifier = (found[2] as PassiveNode).mods.filter(func(x: Modifier) -> bool: return u["transform"].has(String(x.stat)))[0]
+		var from_stat := String(m.stat)
+		var to_stat: String = u["transform"][from_stat]
+		c.recalculate(false)
+		var from0: float = own.call(c, from_stat)
+		var to0: float = own.call(c, to_stat)
+		var chip := ExpansionChip.new(Rarity.Item.UNIQUE, 30)
+		chip.unique_id = u["id"]
+		chip.unique_def = u
+		c.inventory.chips[found[0]] = chip
+		c.recalculate(false)
+		_check(is_equal_approx(own.call(c, from_stat), from0 - m.value) and is_equal_approx(own.call(c, to_stat), to0 + m.value),
+			"%s: el nodo %d da %s en vez de %s" % [u["id"], found[1], to_stat, from_stat])
+		_check(chip.transform_text().contains(u["transform_text"]), "%s explica lo que transforma" % u["id"])
+		c.passives._allocated.erase(found[0])
+		c.recalculate(false)
+		var with_chip: float = own.call(c, from_stat)
+		c.inventory.chips.erase(found[0])
+		c.recalculate(false)
+		_check(is_equal_approx(with_chip, own.call(c, from_stat)), "%s: sin la ranura asignada no transforma" % u["id"])
 
 
 const CHAIN_STEP := 0.1   # menor que SkillController.CHAIN_DELAY: hacen falta dos pasos por eslabón

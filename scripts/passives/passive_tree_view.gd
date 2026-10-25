@@ -201,6 +201,9 @@ func _draw() -> void:
 			var chip: Item = chips.get(n.id, null)
 			if chip:
 				ItemIcons.draw_item(self, Rect2(n.position + Vector2(r * 0.4, -r * 1.3), Vector2(r, r)), chip, Color.WHITE if on else Color(1, 1, 1, 0.4))
+				if chip is ExpansionChip and not (chip as ExpansionChip).transform_map().is_empty():
+					# Radio en el que transforma los nodos.
+					draw_arc(n.position, ExpansionChip.TRANSFORM_RADIUS, 0.0, TAU, 96, Color(Rarity.item_color(chip.rarity), 0.55 if on else 0.2), 2.0, true)
 		if _search.has(n.id):
 			draw_arc(n.position, r + 8.0 + pulse * 4.0, 0.0, TAU, 32, Color(1.0, 0.85, 0.2, 0.5 + 0.5 * pulse), 3.0, true)
 		if n.id == _hovered_id:

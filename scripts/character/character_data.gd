@@ -236,7 +236,7 @@ func recalculate(emit := true) -> void:
 	stats.set_base(Stat.ACCURACY, 2.0 * level)
 	stats.set_base(Stat.CRIT_MULTIPLIER, 150.0)
 	stats.set_base(Stat.MOVEMENT_SPEED, 100.0)
-	stats.add_modifiers(passives.collect_modifiers())
+	stats.add_modifiers(passives.collect_modifiers(ExpansionChip.node_remap(passives.tree, inventory.chips, passives.is_allocated)))
 	# Chips de expansión: solo cuentan si su ranura del árbol está asignada.
 	for node_id in inventory.chips:
 		if passives.is_allocated(int(node_id)):

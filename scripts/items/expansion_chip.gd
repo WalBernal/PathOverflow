@@ -33,7 +33,22 @@ const UNIQUES := [
 			{"stat": "cast_speed", "type": "increased", "value": 8}]},
 	{"id": "chip_detonador", "name": "Chip Detonador", "flavor": "Diseñado por alguien que odiaba los procesos zombi.",
 		"mods": [{"stat": "kill_explosion", "type": "flat", "value": 12}, {"stat": "damage", "type": "increased", "value": 10}]},
+	# Chips que transforman los nodos asignados de su radio ("transform": stat -> stat).
+	{"id": "chip_criogenico", "name": "Chip Criogénico", "flavor": "Refrigerado con nitrógeno líquido. El árbol de al lado también.",
+		"mods": [{"stat": "cold_res", "type": "flat", "value": 10}],
+		"transform": {"fire_damage": "cold_damage", "burn_chance": "chill_chance", "fire_res": "cold_res"}, "transform_text": "fuego da frío"},
+	{"id": "chip_sobretension", "name": "Chip de Sobretensión", "flavor": "La fuente era de 300 W. Ahora es de 300 voltios.",
+		"mods": [{"stat": "lightning_res", "type": "flat", "value": 10}],
+		"transform": {"cold_damage": "lightning_damage", "chill_chance": "shock_chance", "cold_res": "lightning_res"}, "transform_text": "frío da rayo"},
+	{"id": "chip_monohilo", "name": "Chip Monohilo", "flavor": "Un solo hilo, y es para ti.",
+		"mods": [{"stat": "damage", "type": "increased", "value": 6}],
+		"transform": {"minion_damage": "damage", "minion_life": "life"}, "transform_text": "lo de esbirros (daño y vida) es para ti"},
+	{"id": "chip_blindado", "name": "Chip Blindado", "flavor": "Carcasa de acero. Esquivar ya no es una opción.",
+		"mods": [{"stat": "armour", "type": "increased", "value": 10}],
+		"transform": {"evasion": "armour", "dexterity": "strength"}, "transform_text": "evasión da armadura y destreza da fuerza"},
 ]
+## Radio (en unidades del árbol, ~3 nodos) de los chips que transforman nodos.
+const TRANSFORM_RADIUS := 230.0
 
 ## Para únicos: su id (y así se guarda).
 var unique_id := ""
@@ -78,6 +93,32 @@ func is_equipment() -> bool:
 
 func required_level() -> int:
 	return 1
+
+
+## Únicos que transforman: stat de origen -> stat nuevo para los nodos de su radio.
+func transform_map() -> Dictionary:
+	return unique_def.get("transform", {})
+
+
+func transform_text() -> String:
+	return "En los nodos asignados de su radio, %s" % unique_def.get("transform_text", "")
+
+
+## Ranuras con chips que transforman → {id de nodo: {stat: stat}} para los nodos de
+## su radio (sin la propia ranura). Si dos alcanzan al mismo nodo, se suman sus cambios.
+static func node_remap(tree: PassiveTree, chips: Dictionary, is_allocated: Callable) -> Dictionary:
+	var remap := {}
+	for socket in chips:
+		var map: Dictionary = (chips[socket] as ExpansionChip).transform_map()
+		if map.is_empty() or not is_allocated.call(int(socket)):
+			continue
+		var center := tree.get_node_data(int(socket)).position
+		for id in tree.nodes:
+			if int(id) != int(socket) and (tree.nodes[id] as PassiveNode).position.distance_to(center) <= TRANSFORM_RADIUS:
+				var m: Dictionary = remap.get(int(id), {}).duplicate()
+				m.merge(map)
+				remap[int(id)] = m
+	return remap
 
 
 func chip_modifiers(source: String) -> Array[Modifier]:

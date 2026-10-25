@@ -138,6 +138,8 @@ static func build_text(item: Item, character: CharacterData, compare: bool) -> S
 			"P" if a["kind"] == "prefix" else "S", a["tier_rank"]])
 	for m in item.fixed_mods:
 		mods.append(Item.describe_mod(m))
+	if item is ExpansionChip and not (item as ExpansionChip).transform_map().is_empty():
+		mods.append((item as ExpansionChip).transform_text())
 	t += _section("[color=#%s]%s[/color]" % [MOD_COLOR, "\n".join(mods)] if not mods.is_empty() else "")
 
 	if not item.set_def.is_empty():

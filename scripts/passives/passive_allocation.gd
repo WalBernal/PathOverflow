@@ -143,11 +143,18 @@ func load_ids(ids: Array) -> int:
 	return requested - spent_points()
 
 
-func collect_modifiers() -> Array[Modifier]:
+## `remap`: {id de nodo: {stat: stat}} de los chips que transforman (ExpansionChip.node_remap).
+func collect_modifiers(remap: Dictionary = {}) -> Array[Modifier]:
 	var mods: Array[Modifier] = []
 	for id in _allocated:
 		var n := tree.get_node_data(id)
-		mods.append_array(n.choices[mastery_choice(id)]["mods"] if n.is_mastery() else n.mods)
+		var own: Array = n.choices[mastery_choice(id)]["mods"] if n.is_mastery() else n.mods
+		var map: Dictionary = remap.get(int(id), {})
+		if map.is_empty():
+			mods.append_array(own)
+			continue
+		for m: Modifier in own:
+			mods.append(Modifier.new(StringName(map[String(m.stat)]), m.type, m.value, m.tags, m.source) if map.has(String(m.stat)) else m)
 	return mods
 
 
