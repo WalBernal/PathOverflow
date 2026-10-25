@@ -72,6 +72,14 @@ func _ready() -> void:
 	sort.custom_minimum_size = Vector2(90, 28)
 	sort.tooltip_text = "Ordena las placas y las RAM de la bolsa: placas por nombre y nivel; RAM por generación, tipo y grado."
 	bag_title.add_child(sort)
+	_compare_button = UiStyle.button("Comparar", _toggle_compare)
+	_compare_button.custom_minimum_size = Vector2(100, 28)
+	_compare_button.tooltip_text = "Click aquí y luego en dos placas (de la barra o de la bolsa): las ves lado a lado con su DPS, coste y área."
+	bag_title.add_child(_compare_button)
+	var builds := UiStyle.button("Construcciones", _open_builds)
+	builds.custom_minimum_size = Vector2(130, 28)
+	builds.tooltip_text = "Guarda tu árbol pasivo y tu barra de habilidades, y cámbiate entre construcciones guardadas."
+	bag_title.add_child(builds)
 	var bag_drop := _BagDropZone.new()
 	bag_drop.panel = self
 	bag_drop.custom_minimum_size = Vector2(640, 52)
@@ -379,6 +387,9 @@ func drop_into_bag(from: Dictionary) -> void:
 
 func _on_cell_clicked(cell: ItemCell, button: MouseButton) -> void:
 	var loc := cell.location
+	if _comparing and button == MOUSE_BUTTON_LEFT and cell.item is Motherboard:
+		_pick_compare(cell.item)
+		return
 	match loc["kind"]:
 		"bag":
 			if button == MOUSE_BUTTON_LEFT and cell.item:
@@ -414,6 +425,129 @@ func _on_bag_clicked(bag_index: int) -> void:
 		else:
 			_selected_ram = bag_index
 			_rebuild()
+
+
+# --- Comparador de placas ---
+
+var _compare_button: Button
+var _comparing := false
+var _compare_pick: Array[Motherboard] = []
+
+
+func _toggle_compare() -> void:
+	_comparing = not _comparing
+	_compare_pick.clear()
+	_compare_button.text = "Cancelar" if _comparing else "Comparar"
+	if _comparing:
+		message.emit("Elige dos placas para compararlas.")
+
+
+func _pick_compare(board: Motherboard) -> void:
+	if _compare_pick.has(board):
+		return
+	_compare_pick.append(board)
+	if _compare_pick.size() < 2:
+		message.emit("%s elegida: ahora la otra." % board.skill_def["name"])
+		return
+	var a := _compare_pick[0]
+	var b := _compare_pick[1]
+	_toggle_compare()
+	_show_comparison(a, b)
+
+
+func _show_comparison(a: Motherboard, b: Motherboard) -> void:
+	var rows := Builds.compare_boards(SkillCalc.compute(a, character), SkillCalc.compute(b, character))
+	var grid := GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 18)
+	grid.add_theme_constant_override("v_separation", 4)
+	grid.add_child(UiStyle.label("", 13))
+	for board in [a, b]:
+		grid.add_child(UiStyle.label("%s (nv %d)" % [board.skill_def["name"], board.level], 14, UiStyle.GOLD))
+	for r in rows:
+		grid.add_child(UiStyle.label(r["label"], 13, UiStyle.MUTED))
+		for k in 2:
+			var color := Color("8fe08a") if r["better"] == k else (Color("e0a060") if r["better"] == 1 - k else UiStyle.TEXT)
+			grid.add_child(UiStyle.label(r[["a", "b"][k]], 13, color))
+	_popup("Comparar placas", grid)
+
+
+func _popup(title: String, content: Control) -> void:
+	var win := AcceptDialog.new()
+	win.title = title
+	win.ok_button_text = "Cerrar"
+	win.theme = theme
+	win.add_child(content)
+	win.close_requested.connect(win.queue_free)
+	win.confirmed.connect(win.queue_free)
+	add_child(win)
+	win.popup_centered()
+
+
+# --- Construcciones guardadas ---
+
+var _builds_box: VBoxContainer
+var _builds_win: AcceptDialog
+
+
+func _open_builds() -> void:
+	_builds_box = VBoxContainer.new()
+	_builds_box.add_theme_constant_override("separation", 6)
+	_builds_box.custom_minimum_size.x = 420
+	_builds_win = AcceptDialog.new()
+	_builds_win.title = "Construcciones"
+	_builds_win.ok_button_text = "Cerrar"
+	_builds_win.theme = theme
+	_builds_win.add_child(_builds_box)
+	_builds_win.close_requested.connect(_builds_win.queue_free)
+	_builds_win.confirmed.connect(_builds_win.queue_free)
+	add_child(_builds_win)
+	_fill_builds()
+	_builds_win.popup_centered()
+
+
+func _fill_builds() -> void:
+	for ch in _builds_box.get_children():
+		_builds_box.remove_child(ch)
+		ch.queue_free()
+	_builds_box.add_child(UiStyle.label("Árbol pasivo (nodos y maestrías) y barra de habilidades. Cambiar es gratis.", 12, UiStyle.MUTED))
+	for build in Builds.list(character):
+		var row := HBoxContainer.new()
+		var name_label := UiStyle.label("%s  ·  %d puntos" % [build["name"], build["passives"].size()], 13)
+		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(name_label)
+		row.add_child(UiStyle.button("Cargar", _load_build.bind(build)))
+		row.add_child(UiStyle.button("Borrar", func() -> void:
+			Builds.delete(character, build["name"])
+			_fill_builds()))
+		_builds_box.add_child(row)
+	var save_row := HBoxContainer.new()
+	var edit := LineEdit.new()
+	edit.placeholder_text = "Nombre (p. ej. «Jefes» o «Farmeo»)"
+	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	save_row.add_child(edit)
+	save_row.add_child(UiStyle.button("Guardar actual", func() -> void:
+		var problem := Builds.save(character, edit.text)
+		if problem != "":
+			message.emit(problem)
+		_fill_builds()))
+	_builds_box.add_child(save_row)
+
+
+func _load_build(build: Dictionary) -> void:
+	var r := Builds.apply(character, build)
+	if r["error"] != "":
+		message.emit(r["error"])
+		return
+	if not r["missing_skills"].is_empty():
+		message.emit("Cargada «%s». No tienes placa de: %s." % [build["name"], ", ".join(PackedStringArray(r["missing_skills"].map(_skill_name)))])
+	else:
+		message.emit("Cargada «%s»." % build["name"])
+	_builds_win.queue_free()
+
+
+static func _skill_name(id: String) -> String:
+	return String(GameData.items.skills.skills.get(id, {}).get("name", id))
 
 
 ## Zona de la bolsa que acepta lo que se suelte encima (para desinstalar).

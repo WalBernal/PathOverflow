@@ -102,6 +102,7 @@ func _initialize() -> void:
 	_test_more_variants()
 	_test_class_signatures()
 	_test_transforming_chips()
+	_test_builds_and_compare()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -2190,6 +2191,57 @@ func _test_transforming_chips() -> void:
 		c.inventory.chips.erase(found[0])
 		c.recalculate(false)
 		_check(is_equal_approx(with_chip, own.call(c, from_stat)), "%s: sin la ranura asignada no transforma" % u["id"])
+
+
+## Construcciones guardadas (árbol + barra) y comparador de placas.
+func _test_builds_and_compare() -> void:
+	var c := CharacterData.new(_classes[0], _tree)
+	c.set_level(20)
+	var inv := c.inventory
+	for i in Inventory.HOTBAR_SIZE:
+		inv.boards[i] = null
+	inv.boards[0] = Motherboard.new(_db.skills.skills["barrido"], 3, [])
+	inv.boards[1] = Motherboard.new(_db.skills.skills["stack_overflow"], 2, [])
+	var spare := Motherboard.new(_db.skills.skills["ping_letal"], 4, [])
+	inv.bag[inv.free_bag_index()] = spare
+	# Árbol A: dos nodos desde el inicio.
+	var first: int = _tree.neighbors(c.passives.start_node_id)[0]
+	c.passives.allocate_path(first, 5)
+	_check(Builds.save(c, "A") == "", "se guarda una construcción")
+	_check(Builds.save(c, "  ") != "", "sin nombre no se guarda")
+	var saved_ids: Array = c.passives.get_allocated_ids()
+	# Árbol y barra B.
+	c.passives.reset()
+	inv.boards[0] = spare
+	inv.bag[inv.bag.find(spare)] = null
+	inv.bag[inv.free_bag_index()] = Motherboard.new(_db.skills.skills["barrido"], 3, [])   # placeholder para que la A siga existiendo
+	_check(Builds.save(c, "B") == "" and Builds.list(c).size() == 2, "dos construcciones guardadas")
+	# Volver a la A: árbol y barra como estaban.
+	var r := Builds.apply(c, Builds.list(c)[0])
+	_check(r["error"] == "" and r["missing_skills"].is_empty(), "la A se carga sin problemas: %s" % str(r))
+	_check(c.passives.get_allocated_ids().size() == saved_ids.size(), "el árbol vuelve a ser el de la A")
+	_check(inv.boards[0].skill_def["id"] == "barrido" and inv.boards[1].skill_def["id"] == "stack_overflow", "la barra vuelve a ser la de la A")
+	_check(inv.bag.any(func(b) -> bool: return b is Motherboard and b.skill_def["id"] == "ping_letal"), "la placa que sobra vuelve a la bolsa")
+	# Placa que ya no tienes: se avisa y el resto se carga igual.
+	var ghost := Builds.capture(c, "fantasma")
+	ghost["hotbar"][2] = "fork_bomb"
+	r = Builds.apply(c, ghost)
+	_check(r["error"] == "" and r["missing_skills"] == ["fork_bomb"], "avisa de las placas que faltan")
+	# Más puntos de los que tienes: no cambia nada.
+	var big := Builds.capture(c, "grande")
+	big["passives"] = range(100)
+	_check(Builds.apply(c, big)["error"] != "" and c.passives.get_allocated_ids().size() == saved_ids.size(), "sin puntos suficientes no se carga")
+	Builds.delete(c, "B")
+	_check(Builds.list(c).size() == 1, "se borra")
+	var loaded := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())), _classes[0], _tree, _db)
+	_check(Builds.list(loaded).size() == 1 and Builds.list(loaded)[0]["name"] == "A", "las construcciones se guardan con el personaje")
+	# Comparador: filas con el mejor marcado.
+	var a := SkillCalc.compute(Motherboard.new(_db.skills.skills["barrido"], 10, []), c)
+	var b := SkillCalc.compute(Motherboard.new(_db.skills.skills["barrido"], 1, []), c)
+	var rows := Builds.compare_boards(a, b)
+	var dps_row: Array = rows.filter(func(x: Dictionary) -> bool: return x["label"] == "DPS aproximado")
+	_check(not dps_row.is_empty() and dps_row[0]["better"] == 0, "el comparador marca la placa de más nivel como mejor en DPS")
+	_check(rows.any(func(x: Dictionary) -> bool: return x["label"] == "Área (radio)"), "y enseña el área")
 
 
 const CHAIN_STEP := 0.1   # menor que SkillController.CHAIN_DELAY: hacen falta dos pasos por eslabón
