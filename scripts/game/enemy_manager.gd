@@ -283,6 +283,13 @@ func _ready() -> void:
 	mm_instance.material = sprite_material
 	mm_instance.show_behind_parent = true  # barras de vida y nombres encima
 	add_child(mm_instance)
+	# Halos de estados (discos) y barras de vida y cuadritos de estado (rectángulos):
+	# una instancia por elemento en dos MultiMesh, rellenas de un solo búfer cada fotograma.
+	_disc_mm = _make_shape_mm(_disc_mesh())
+	var quad_mesh := QuadMesh.new()
+	quad_mesh.size = Vector2.ONE
+	quad_mesh.center_offset = Vector3(0.5, 0.5, 0.0)   # de (0, 0) a (1, 1): escala = tamaño, origen = esquina
+	_quad_mm = _make_shape_mm(quad_mesh)
 
 
 func _init() -> void:
@@ -2216,25 +2223,27 @@ func _draw_all() -> void:
 			for k in states.size():
 				var sr := Rect2(x0 + k * (side + 2.0), top.y - side - 3.0, side, side)
 				if simple:
-					_batch_rect(sr.grow(1.0), Color(0, 0, 0, 0.8))   # con muchos enemigos: un cuadrito del color del estado
-					_batch_rect(sr, Ailments.color(states[k]))
+					_shape_rect(sr.grow(1.0), Color(0, 0, 0, 0.8))   # con muchos enemigos: un cuadrito del color del estado
+					_shape_rect(sr, Ailments.color(states[k]))
 				else:
 					StatusIcon.draw(self, sr, states[k], true)
 		if not has_bar:
 			continue
-		_batch_rect(Rect2(top - Vector2(1, 1), Vector2(w + 2.0, 6.0)), Color(0, 0, 0, 0.75))
+		_shape_rect(Rect2(top - Vector2(1, 1), Vector2(w + 2.0, 6.0)), Color(0, 0, 0, 0.75))
 		var frac := lives[i] / max_lives[i]
 		var bar_color := BAR_LIFE
 		if poison_time[i] > 0.0:
 			bar_color = BAR_POISON
 		elif freeze_time[i] > 0.0 or chill_time[i] > 0.0:
 			bar_color = BAR_COLD
-		_batch_rect(Rect2(top, Vector2(w * frac, 4.0)), bar_color)
-		_batch_rect(Rect2(top, Vector2(w * frac, 1.0)), Color(1, 1, 1, 0.25))
+		_shape_rect(Rect2(top, Vector2(w * frac, 4.0)), bar_color)
+		_shape_rect(Rect2(top, Vector2(w * frac, 1.0)), Color(1, 1, 1, 0.25))
 		if rarity >= Rarity.Enemy.ELITE:
 			labels.append(i)
-	# Barras, cuadritos y halos de todos los enemigos: una sola llamada de dibujo.
+	# Barras, cuadritos y halos de todos los enemigos: una sola llamada de dibujo
+	# (y las barras, los cuadritos y los halos simples, en sus MultiMesh).
 	_flush_batch()
+	_flush_shapes()
 	_draw_role_marks()
 	for i in labels:
 		var r := radii[i]
@@ -2294,18 +2303,54 @@ func _batch_rect(r: Rect2, c: Color) -> void:
 	_batch_indices.append_array([b, b + 1, b + 2, b, b + 2, b + 3])
 
 
+## Direcciones de un círculo de `segments` lados (calculadas una vez: sin senos ni
+## cosenos por vértice en cada fotograma).
+static var _unit_circles := {}
+
+
+static func _unit_circle(segments: int) -> PackedVector2Array:
+	if not _unit_circles.has(segments):
+		var dirs := PackedVector2Array()
+		for k in segments + 1:
+			dirs.append(Vector2.from_angle(TAU * k / segments))
+		_unit_circles[segments] = dirs
+	return _unit_circles[segments]
+
+
 func _batch_circle(p: Vector2, radius: float, c: Color, segments := 12) -> void:
 	var b := _batch_points.size()
+	var dirs := _unit_circle(segments)
 	_batch_points.append(p)
 	_batch_colors.append(c)
 	for k in segments:
-		_batch_points.append(p + Vector2.from_angle(TAU * k / segments) * radius)
+		_batch_points.append(p + dirs[k] * radius)
 		_batch_colors.append(c)
 		_batch_indices.append_array([b, b + 1 + k, b + 1 + (k + 1) % segments])
 
 
 func _batch_ring(p: Vector2, radius: float, width: float, c: Color, segments := 12) -> void:
-	_batch_arc(p, radius, 0.0, TAU, width, c, segments)
+	var b := _batch_points.size()
+	var dirs := _unit_circle(segments)
+	var inner := radius - width * 0.5
+	var outer := radius + width * 0.5
+	for k in segments + 1:
+		_batch_points.append_array([p + dirs[k] * inner, p + dirs[k] * outer])
+		_batch_colors.append_array([c, c])
+		if k < segments:
+			_batch_indices.append_array([b + k * 2, b + k * 2 + 1, b + k * 2 + 3, b + k * 2, b + k * 2 + 3, b + k * 2 + 2])
+
+
+## Polígono convexo como abanico de triángulos en el lote (avisos de cono y de carga:
+## sin triangular en cada fotograma como draw_colored_polygon).
+func _batch_convex(points: PackedVector2Array, c: Color) -> void:
+	if points.size() < 3:
+		return
+	var b := _batch_points.size()
+	_batch_points.append_array(points)
+	for k in points.size():
+		_batch_colors.append(c)
+	for k in range(1, points.size() - 1):
+		_batch_indices.append_array([b, b + k, b + k + 1])
 
 
 ## Arco de `from` a `to` (radianes) con grosor `width`.
@@ -2325,6 +2370,104 @@ func _flush_batch() -> void:
 	_batch_points.clear()
 	_batch_colors.clear()
 	_batch_indices.clear()
+
+
+# --- MultiMesh de formas (T68): discos y rectángulos, una instancia cada uno ---
+# Cada instancia ocupa SHAPE_STRIDE floats del búfer: la Transform2D (8, con dos de
+# relleno) y el color (4). Se escriben por índice y se pasan de una vez.
+
+const SHAPE_STRIDE := 12
+const DISC_SEGMENTS := 16
+var _disc_mm: MultiMesh
+var _quad_mm: MultiMesh
+var _disc_buf := PackedFloat32Array()
+var _quad_buf := PackedFloat32Array()
+var _disc_n := 0
+var _quad_n := 0
+
+
+func _make_shape_mm(mesh: Mesh) -> MultiMesh:
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_2D
+	mm.use_colors = true
+	mm.mesh = mesh
+	var inst := MultiMeshInstance2D.new()
+	inst.multimesh = mm
+	add_child(inst)
+	return mm
+
+
+## Disco de radio 1 (abanico de DISC_SEGMENTS triángulos).
+func _disc_mesh() -> ArrayMesh:
+	var verts := PackedVector2Array([Vector2.ZERO])
+	var idx := PackedInt32Array()
+	for k in DISC_SEGMENTS:
+		verts.append(Vector2.from_angle(TAU * k / DISC_SEGMENTS))
+		idx.append_array([0, 1 + k, 1 + (k + 1) % DISC_SEGMENTS])
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_INDEX] = idx
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
+
+
+## Un disco de radio `radius` en `p`. (Se escribe en el miembro directamente: pasar
+## el búfer a otra función y escribir allí lo copiaría entero en cada llamada.)
+func _shape_disc(p: Vector2, radius: float, c: Color) -> void:
+	var i := _disc_n * SHAPE_STRIDE
+	if i + SHAPE_STRIDE > _disc_buf.size():
+		_disc_buf.resize(maxi(SHAPE_STRIDE * 64, _disc_buf.size() * 2))
+	_disc_buf[i] = radius
+	_disc_buf[i + 1] = 0.0
+	_disc_buf[i + 2] = 0.0
+	_disc_buf[i + 3] = p.x
+	_disc_buf[i + 4] = 0.0
+	_disc_buf[i + 5] = radius
+	_disc_buf[i + 6] = 0.0
+	_disc_buf[i + 7] = p.y
+	_disc_buf[i + 8] = c.r
+	_disc_buf[i + 9] = c.g
+	_disc_buf[i + 10] = c.b
+	_disc_buf[i + 11] = c.a
+	_disc_n += 1
+
+
+func _shape_rect(r: Rect2, c: Color) -> void:
+	var i := _quad_n * SHAPE_STRIDE
+	if i + SHAPE_STRIDE > _quad_buf.size():
+		_quad_buf.resize(maxi(SHAPE_STRIDE * 64, _quad_buf.size() * 2))
+	_quad_buf[i] = r.size.x
+	_quad_buf[i + 1] = 0.0
+	_quad_buf[i + 2] = 0.0
+	_quad_buf[i + 3] = r.position.x
+	_quad_buf[i + 4] = 0.0
+	_quad_buf[i + 5] = r.size.y
+	_quad_buf[i + 6] = 0.0
+	_quad_buf[i + 7] = r.position.y
+	_quad_buf[i + 8] = c.r
+	_quad_buf[i + 9] = c.g
+	_quad_buf[i + 10] = c.b
+	_quad_buf[i + 11] = c.a
+	_quad_n += 1
+
+
+## Pasa lo escrito en el fotograma a las dos MultiMesh.
+func _flush_shapes() -> void:
+	for pair in [[_disc_mm, _disc_buf, _disc_n], [_quad_mm, _quad_buf, _quad_n]]:
+		var mm: MultiMesh = pair[0]
+		if mm == null:
+			continue
+		var buf: PackedFloat32Array = pair[1]
+		var cap := buf.size() / SHAPE_STRIDE
+		if mm.instance_count != cap:
+			mm.instance_count = cap
+		if cap > 0:
+			mm.buffer = buf
+		mm.visible_instance_count = pair[2]
+	_disc_n = 0
+	_quad_n = 0
 
 
 const TELEGRAPH := Color(1.0, 0.25, 0.2)
@@ -2472,9 +2615,9 @@ func _draw_attacks(font: Font, view: Rect2) -> void:
 				"cone":
 					var radius := float(atk.get("range", 160.0)) + 20.0
 					var half := deg_to_rad(float(atk.get("angle", 60.0))) / 2.0
-					draw_colored_polygon(_cone_points(pos, dir, radius, half), Color(TELEGRAPH, 0.10))
+					_batch_convex(_cone_points(pos, dir, radius, half), Color(TELEGRAPH, 0.10))
 					if t > 0.03:
-						draw_colored_polygon(_cone_points(pos, dir, radius * t, half), Color(TELEGRAPH, 0.22))
+						_batch_convex(_cone_points(pos, dir, radius * t, half), Color(TELEGRAPH, 0.22))
 					var outline := _cone_points(pos, dir, radius, half)
 					outline.append(outline[0])
 					draw_polyline(outline, Color(TELEGRAPH, 0.7), 2.0, true)
@@ -2482,9 +2625,9 @@ func _draw_attacks(font: Font, view: Rect2) -> void:
 					var length := float(atk.get("dash_speed", 600.0)) * float(atk.get("dash_time", 0.5))
 					var w := float(atk.get("width", 30.0)) + radii[i]
 					var side := dir.orthogonal() * w * 0.5
-					draw_colored_polygon(PackedVector2Array([pos + side, pos + side + dir * length, pos - side + dir * length, pos - side]), Color(TELEGRAPH, 0.10))
+					_batch_convex(PackedVector2Array([pos + side, pos + side + dir * length, pos - side + dir * length, pos - side]), Color(TELEGRAPH, 0.10))
 					if t > 0.03:   # con t = 0 el polígono no tiene área y no se puede triangular
-						draw_colored_polygon(PackedVector2Array([pos + side, pos + side + dir * length * t, pos - side + dir * length * t, pos - side]), Color(TELEGRAPH, 0.22))
+						_batch_convex(PackedVector2Array([pos + side, pos + side + dir * length * t, pos - side + dir * length * t, pos - side]), Color(TELEGRAPH, 0.22))
 				"blink":
 					var dest := attack_dirs[i]
 					draw_arc(dest, radii[i] + 6.0, 0.0, TAU, 24, Color(Color(atk.get("color", "c08aff")), 0.4 + 0.5 * t), 2.0, true)
@@ -2679,21 +2822,21 @@ func _draw_ailment_fx_simple(i: int) -> void:
 	var r := radii[i] * 1.2
 	var k := 0
 	if burn_time[i] > 0.0:
-		_batch_circle(p, r, Color(Ailments.color(Ailments.BURN), 0.22))
+		_shape_disc(p, r, Color(Ailments.color(Ailments.BURN), 0.22))
 		k += 1
 	if shock_time[i] > 0.0:
-		_batch_circle(p, r + k * 2.0, Color(Ailments.color(Ailments.SHOCK), 0.22))
+		_shape_disc(p, r + k * 2.0, Color(Ailments.color(Ailments.SHOCK), 0.22))
 		k += 1
 	if chill_time[i] > 0.0:
-		_batch_circle(p, r + k * 2.0, Color(Ailments.color(Ailments.CHILL), 0.22))
+		_shape_disc(p, r + k * 2.0, Color(Ailments.color(Ailments.CHILL), 0.22))
 		k += 1
 	if poison_time[i] > 0.0:
-		_batch_circle(p, r + k * 2.0, Color(Ailments.color(Ailments.POISON), 0.22))
+		_shape_disc(p, r + k * 2.0, Color(Ailments.color(Ailments.POISON), 0.22))
 		k += 1
 	if bleed_time[i] > 0.0:
-		_batch_circle(p, r + k * 2.0, Color(Ailments.color(Ailments.BLEED), 0.22))
+		_shape_disc(p, r + k * 2.0, Color(Ailments.color(Ailments.BLEED), 0.22))
 	if freeze_time[i] > 0.0:
-		_batch_circle(p, r, Color(0.8, 0.95, 1.0, 0.45))
+		_shape_disc(p, r, Color(0.8, 0.95, 1.0, 0.45))
 	var aff: Array = traits[i].get("affixes", [])
 	if not aff.is_empty():
 		_batch_ring(positions[i], radii[i] * 1.55, 2.0, Color(affix_defs().get(aff[0], {}).get("color", "ffffff")))

@@ -138,6 +138,7 @@ func _initialize() -> void:
 	_test_stress_music()
 	_test_audio_ogg()
 	_test_telemetry()
+	_test_render_batching()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3400,6 +3401,37 @@ func _test_telemetry() -> void:
 		_check(Telemetry.summarize(all, "class").size() == 1 and by_zone["zona4"]["deaths"] == 0, "y por clase")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	em.free()
+
+
+## Rendimiento (T68): formas de enemigos en MultiMesh y caché de iconos del HUD.
+func _test_render_batching() -> void:
+	var em := EnemyManager.new()
+	root.add_child(em)
+	if em._quad_mm == null:
+		em._ready()   # en las pruebas el árbol aún no corre: crea las MultiMesh a mano
+	em._shape_rect(Rect2(10, 20, 30, 4), Color.RED)
+	em._shape_rect(Rect2(0, 0, 5, 5), Color.BLACK)
+	em._shape_disc(Vector2(100, 50), 12.0, Color(0, 1, 0, 0.5))
+	var buf := em._quad_buf
+	_check(is_equal_approx(buf[0], 30.0) and is_equal_approx(buf[3], 10.0) and is_equal_approx(buf[5], 4.0) and is_equal_approx(buf[7], 20.0) and is_equal_approx(buf[8], 1.0),
+		"una barra: escala = tamaño, origen = esquina y su color")
+	em._flush_shapes()
+	_check(em._quad_mm.visible_instance_count == 2 and em._disc_mm.visible_instance_count == 1 and em._quad_n == 0, "las barras y halos del fotograma, en sus MultiMesh")
+	em._flush_shapes()
+	_check(em._quad_mm.visible_instance_count == 0, "un fotograma sin nada no deja barras viejas")
+	for k in 200:
+		em._shape_rect(Rect2(k, 0, 1, 1), Color.WHITE)
+	em._flush_shapes()
+	_check(em._quad_mm.visible_instance_count == 200 and em._quad_mm.instance_count >= 200, "el búfer crece con muchos enemigos")
+	var dirs := EnemyManager._unit_circle(12)
+	_check(dirs.size() == 13 and dirs[0].is_equal_approx(Vector2.RIGHT) and dirs[12].is_equal_approx(Vector2.RIGHT) and EnemyManager._unit_circle(12) == dirs, "círculos con direcciones precalculadas")
+	var before := em._batch_indices.size()
+	em._batch_convex(EnemyManager._cone_points(Vector2.ZERO, Vector2.RIGHT, 100.0, 0.5), Color.RED)
+	_check(em._batch_indices.size() - before == 12 * 3, "el aviso de cono va al lote como abanico (12 triángulos)")
+	em.free()
+	# Sin pantalla la caché no crea texturas: se dibuja con formas como siempre.
+	var calls := [0]
+	_check(IconCache.texture("prueba", func(_ci, _r, _m) -> void: calls[0] += 1) == null and IconCache.cached_count() == 0, "sin pantalla, IconCache no crea nada")
 
 
 func _db_enemies() -> Array:

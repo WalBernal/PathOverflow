@@ -488,7 +488,7 @@ func _draw_player_states(life_center: Vector2, font: Font) -> void:
 	var x := x0
 	for s in debuffs:
 		var r := Rect2(x, y, side, side)
-		StatusIcon.draw(self, r, s["id"])
+		_status_icon(r, s["id"])
 		draw_rect(r.grow(1.0), Color("e06c6c", 0.9), false, 1.5)
 		var label := "%.0fs" % ceilf(s["time"])
 		draw_string_outline(font, r.position + Vector2(0, side + 11.0), label, HORIZONTAL_ALIGNMENT_CENTER, side, 10, 3, Color.BLACK)
@@ -502,9 +502,9 @@ func _draw_player_states(life_center: Vector2, font: Font) -> void:
 			draw_rect(Rect2(r.get_center() - Vector2(5, 8), Vector2(10, 16)), sc.darkened(0.3))
 			draw_rect(Rect2(r.get_center() - Vector2(3, 3), Vector2(6, 6)), sc.lightened(0.3))
 		elif b.has("flask"):
-			ItemIcons.draw(self, r.grow(-2.0), b["flask"], Color.WHITE, false)
+			_item_icon(r.grow(-2.0), b["flask"])
 		elif not b["skill"].is_empty():
-			SkillIcon.draw(self, r, b["skill"])
+			_skill_icon(r, b["skill"])
 		draw_rect(r.grow(1.0), Color("6fd36b", 0.9), false, 1.5)
 		var blabel := "%.0fs" % ceilf(b["time"])
 		draw_string_outline(font, r.position + Vector2(0, side + 11.0), blabel, HORIZONTAL_ALIGNMENT_CENTER, side, 10, 3, Color.BLACK)
@@ -715,9 +715,9 @@ func _draw_status_boxes(font: Font) -> void:
 		var persistent: bool = e.get("persistent", false)
 		draw_rect(r.grow(2.0), Color(0, 0, 0, 0.7))
 		if e.has("flask"):
-			ItemIcons.draw(self, r.grow(-4.0), GameData.items.flasks.get(e["flask"], {}).get("icon", e["flask"]), Color.WHITE, false)
+			_item_icon(r.grow(-4.0), GameData.items.flasks.get(e["flask"], {}).get("icon", e["flask"]))
 		elif not e["skill"].is_empty():
-			SkillIcon.draw(self, r.grow(-3.0), e["skill"])
+			_skill_icon(r.grow(-3.0), e["skill"])
 		var frac: float = clampf(e["remaining"] / maxf(0.1, e["total"]), 0.0, 1.0)
 		# Barra: tiempo restante o, en las persistentes, la vida (verde).
 		var bar_color := Color("6fd36b").lerp(Color("e06c6c"), 1.0 - frac) if persistent else color
@@ -771,7 +771,7 @@ func _draw_flask(i: int, font: Font) -> void:
 		draw_rect(r, Color(color, 0.25 + 0.1 * sin(t * 8.0)))  # efecto activo
 	# El sprite (taza, lata, botella), apagado si no hay cargas suficientes.
 	var icon_rect := Rect2(r.position + Vector2(1, 3), Vector2(r.size.x - 10.0, r.size.y - 8.0))
-	ItemIcons.draw(self, icon_rect, f.icon(), Color.WHITE if usable else Color(0.45, 0.45, 0.5), false)
+	_item_icon(icon_rect, f.icon(), Color.WHITE if usable else Color(0.45, 0.45, 0.5))
 	# Barra de cargas a la derecha, con una marca por cada uso.
 	var bar := Rect2(r.end.x - 7.0, r.position.y + 4.0, 4.0, r.size.y - 8.0)
 	draw_rect(bar, Color(0, 0, 0, 0.8))
@@ -797,6 +797,20 @@ func _draw_flask(i: int, font: Font) -> void:
 	draw_string(font, r.position + Vector2(0.0, r.size.y + 12.0), "%d/%d" % [f.charges, f.max_charges()],
 		HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 10, MUTED)
 
+## Iconos con la caché de texturas (IconCache): se pintan una vez, no cada fotograma.
+func _skill_icon(r: Rect2, def: Dictionary, dimmed := false) -> void:
+	IconCache.draw(self, r, "skill:%s:%s:%s:%s" % [def.get("id", ""), def.get("icon", ""), def.get("name", ""), dimmed],
+		func(ci: CanvasItem, rr: Rect2, _m: Color) -> void: SkillIcon.draw(ci, rr, def, dimmed))
+
+
+func _item_icon(r: Rect2, id: String, modulate := Color.WHITE) -> void:
+	IconCache.draw(self, r, "item:" + id, func(ci: CanvasItem, rr: Rect2, m: Color) -> void: ItemIcons.draw(ci, rr, id, m, false), modulate)
+
+
+func _status_icon(r: Rect2, id: String) -> void:
+	IconCache.draw(self, r, "status:" + id, func(ci: CanvasItem, rr: Rect2, _m: Color) -> void: StatusIcon.draw(ci, rr, id))
+
+
 func _draw_skill_slot(i: int, font: Font) -> void:
 	var r := _slot_rect(i)
 	# Marco: hueco hundido con borde dorado (como las ranuras de PoE).
@@ -808,7 +822,7 @@ func _draw_skill_slot(i: int, font: Font) -> void:
 	if board:
 		var p := skills.profile(i)
 		var no_mana: bool = player.mana < p.get("mana_cost", 0.0)
-		SkillIcon.draw(self, r.grow(-2.0), board.skill_def, no_mana)
+		_skill_icon(r.grow(-2.0), board.skill_def, no_mana)
 		var cd := skills.cooldown_fraction(i)
 		if cd > 0.0:
 			_draw_pie(r.get_center(), r.size.x * 0.48, cd, Color(0, 0, 0, 0.62))
