@@ -61,6 +61,12 @@ var _read_total := 1.0
 var _narrating := false
 var _cps := CHARS_PER_SECOND
 var _rng := RandomNumberGenerator.new()
+## Paso {input: "password", flag, text}: el jugador escribe y se guarda en sus
+## banderas (con validación sarcástica). Si salta la escena, queda DEFAULT_PASSWORD.
+var _input_edit: LineEdit
+var _input_step: Dictionary = {}
+const DEFAULT_PASSWORD := "admin2"
+const HINT_TEXT := "Avanza sola  ·  Click / Espacio: siguiente  ·  Esc: saltar"
 
 
 func _ready() -> void:
@@ -91,7 +97,13 @@ func _ready() -> void:
 	_text.add_theme_font_size_override("normal_font_size", 16)
 	_text.add_theme_font_size_override("mono_font_size", 15)
 	col.add_child(_text)
-	_hint = UiStyle.label("Avanza sola  ·  Click / Espacio: siguiente  ·  Esc: saltar", 11, UiStyle.MUTED)
+	_input_edit = LineEdit.new()
+	_input_edit.visible = false
+	_input_edit.max_length = 32
+	_input_edit.add_theme_font_size_override("font_size", 16)
+	_input_edit.text_submitted.connect(_on_input_submitted)
+	col.add_child(_input_edit)
+	_hint = UiStyle.label(HINT_TEXT, 11, UiStyle.MUTED)
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	col.add_child(_hint)
 	_blip = AudioStreamPlayer.new()
@@ -128,6 +140,14 @@ func _next() -> void:
 		_finish()
 		return
 	var step: Dictionary = _steps[_index]
+	if step.has("input"):
+		_show_line(step)
+		_input_step = step
+		_input_edit.text = ""
+		_input_edit.visible = true
+		_input_edit.grab_focus.call_deferred()
+		_hint.text = "Escribe y pulsa Enter"
+		return
 	if step.has("effect"):
 		_box.visible = false
 		var strength := float(step.get("strength", 1.0))
@@ -210,7 +230,63 @@ func _reposition() -> void:
 	_box.position = Vector2((size.x - _box.size.x) / 2.0, size.y - _box.size.y - 140.0)
 
 
+## Por qué no vale una contraseña ("" = vale).
+static func password_problem(text: String, player_name := "") -> String:
+	var t := text.strip_edges()
+	var low := t.to_lower()
+	if t == "":
+		return "No puede quedar vacía. Así la tenía Berta para el supervisor, y mira."
+	if low == "admin":
+		return "Esa es la de siempre. Por eso estamos aquí."
+	if low.contains("1234") or low.contains("password") or low.contains("contraseña") or low.contains("qwerty"):
+		return "No. Simplemente no."
+	if player_name != "" and low.contains(player_name.strip_edges().to_lower()):
+		return "No uses tu nombre: es lo primero que prueba un Beep Code."
+	if t.length() >= 6 and t.is_valid_int() and t.length() <= 8:
+		return "¿Es tu fecha de nacimiento? Parece tu fecha de nacimiento. No uses tu fecha de nacimiento."
+	if t.length() < 6:
+		return "Demasiado corta: admin la adivinaría en un pitido."
+	return ""
+
+
+func _on_input_submitted(text: String) -> void:
+	if _input_step.is_empty():
+		return
+	var problem := password_problem(text, String(speakers.get("player", {}).get("name", "")))
+	if problem != "":
+		_text.text = "%s\n[color=#e0a060]%s[/color]" % [_input_step.get("text", ""), problem]
+		_text.visible_characters = -1
+		return
+	_save_input(_input_step, text.strip_edges())
+	_end_input()
+	_next()
+
+
+func _save_input(step: Dictionary, value: String) -> void:
+	if player and player.character:
+		player.character.flags[String(step.get("flag", "input"))] = value
+
+
+func _end_input() -> void:
+	_input_step = {}
+	if _input_edit:
+		_input_edit.visible = false
+		_input_edit.release_focus()
+		_hint.text = HINT_TEXT
+
+
+## Al saltar la escena: los pasos de escribir que falten se quedan con su valor por defecto.
+func _default_inputs(from: int) -> void:
+	for k in range(maxi(from, 0), _steps.size()):
+		var s: Dictionary = _steps[k]
+		if s.has("input") and player and player.character and not player.character.flags.has(String(s.get("flag", "input"))):
+			_save_input(s, DEFAULT_PASSWORD)
+			player.character.flags[String(s.get("flag", "input")) + "_saltada"] = true
+	_end_input()
+
+
 func _finish() -> void:
+	_default_inputs(_index)
 	_stop_voice()
 	visible = false
 	_box.visible = false
@@ -242,7 +318,7 @@ func _process(delta: float) -> void:
 		_wait -= delta
 		if _wait <= 0.0:
 			_next()
-	elif _dino or (_box.visible and _shown >= _total):
+	elif _input_step.is_empty() and (_dino or (_box.visible and _shown >= _total)):
 		# Lectura automática: espera a la voz (si habla) y luego el tiempo de lectura.
 		_voice_age += delta
 		if _narrating and (_voice_age < DialogueBox.VOICE_GRACE or DialogueBox.voice_busy()):
@@ -271,11 +347,14 @@ func _input(event: InputEvent) -> void:
 	if not visible:
 		return
 	if event.is_action_pressed(&"ui_cancel"):
+		_default_inputs(_index)
 		_index = _steps.size()
 		_black_target = 0.0
 		_black = 0.0
 		_next()
 		get_viewport().set_input_as_handled()
+	elif not _input_step.is_empty():
+		return   # escribiendo: Enter y Espacio son del campo de texto
 	elif event.is_action_pressed(&"ui_accept") or (event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE):
 		_advance()
 		get_viewport().set_input_as_handled()
@@ -285,7 +364,7 @@ func _input(event: InputEvent) -> void:
 ## una pausa mínima entre las dos cosas, para que un doble click (o machacar el
 ## botón) no se salte líneas sin leerlas.
 func _advance() -> void:
-	if not _waiting_input or _time - _last_advance < ADVANCE_COOLDOWN:
+	if not _waiting_input or not _input_step.is_empty() or _time - _last_advance < ADVANCE_COOLDOWN:
 		return
 	_last_advance = _time
 	if _box.visible and _shown < _total:

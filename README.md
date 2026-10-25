@@ -278,9 +278,9 @@ Se llega por la **controladora de bus** del Anillo 0 (tras derrotar a init). Dat
 - Suelos propios (silicio, BIOS, ROM, flash), obstáculos nuevos (condensadores y chips) y ambientes.
 - `tests/test_core.gd` simula el combate contra cada enemigo nuevo y contra el jefe (`_test_act3_mechanics`).
 
-## Acto IV: El Setup de la BIOS (en construcción)
+## Acto IV: El Setup de la BIOS
 
-Diseño en `docs/acto4.md`. Se llega por el **Bus de la BIOS** de la Cámara de Reflasheo (tras detener el reflasheo). Datos en `data/act4.json`. Ya están las zonas, los enemigos, los NPC y las misiones; falta el jefe (T30).
+Diseño en `docs/acto4.md`. Se llega por el **Bus de la BIOS** de la Cámara de Reflasheo (tras detener el reflasheo). Datos en `data/act4.json`.
 
 | Zona | Nivel | Qué hay |
 |---|---|---|
@@ -290,7 +290,10 @@ Diseño en `docs/acto4.md`. Se llega por el **Bus de la BIOS** de la Cámara de 
 | ↳ La Secuencia de Arranque | 41 | camino A |
 | ↳ La ROM de Video Legada | 43 | camino B, en 16 colores |
 | El Sector Oculto | 45 | Los dos caminos se juntan; waypoint. |
-| El Modo de Gestión del Sistema | 48 | La arena del jefe (admin/admin, pendiente). |
+| El Modo de Gestión del Sistema | 48 | Jefe: **admin/admin, el Usuario por Defecto**. |
+
+- **Jefe admin/admin** (una ventana de login con brazos de cable plano): fase 1 *Contraseña por defecto* (resiste físico y fuego; abanicos de asteriscos y **zonas seguras que giran**: solo los sectores con checksum válido pasan el escaneo), fase 2 *Escalada de privilegios* (resiste frío y rayo; **el suelo se rompe** y procesos de Ring −2 te persiguen) y fase 3 *Persistencia* (resiste caos; tres **Option ROMs canalizan su reinstalación** y hay que matarlas, más Beep Codes y una ráfaga final). Música propia con versión de fase (`boss4`, `boss4_fase`).
+- **Escenas**: llegada al POST (`bios_post`), entrada de admin (`admin_entrada`) y el final (`admin_cambia_password`): no se le mata, **se le cambia la contraseña**. El jugador la escribe (paso `input` de las escenas, con validación sarcástica: ni «admin», ni cortas, ni fechas, ni tu nombre) y se guarda en el personaje (`flags.admin_password`) para el Acto V; si salta la escena, queda «admin2». El servidor arranca y en la cola de impresión aparece un archivo del Pepe de 2004.
 
 - **Misiones**: *El Setup de la BIOS* (principal), *La Libreta de Gatitos* (Rafa: la libreta del Pepe, en la ROM de Video), *Orden de Arranque* (M. Páez: los tres andenes), *Ajustes de Fábrica* (Berta) y *Café de Máquina* (Eugenio: por fin un 10/10... de malo).
 - **Decisión sobre los huérfanos del Sindicato**: al entregar la libreta, Rafa pregunta si reiniciar **con** ellos o **sin** ellos. Se guarda (`act4_huerfanos_salvados` o `act4_huerfanos_purgados`) para el Acto V y la misión principal no avanza sin decidir.

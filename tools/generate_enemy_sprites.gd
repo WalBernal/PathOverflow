@@ -22,7 +22,7 @@ var oy := 0
 func _initialize() -> void:
 	var rows: Array[Callable] = [_bug, _zombie_process, _memory_leak, _worm, _daemon, _spam_bot, _thread, _node_modules, _troll, _irq, _mutex, _wild_pointer, _twin_thread, _init_fork, _init_core,
 		_rootkit, _ghost_process, _bios_sentinel, _firmware_worm, _electromigration, _capacitor, _fw_update,
-		_beep_code, _jumper, _swollen_battery, _bad_sector, _option_rom, _watchdog]
+		_beep_code, _jumper, _swollen_battery, _bad_sector, _option_rom, _watchdog, _admin]
 	img = Image.create_empty(S * FRAMES, S * rows.size(), false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
 	for row in rows.size():
@@ -508,3 +508,23 @@ func _watchdog(f: int) -> void:
 		_line(x, 23, x + step, 27, Color("4a3220"))
 	_rect(11, 16, 17, 20, Color("0a0a0e"))
 	_line(12, 18, 12 + f, 18, Color("ff6a40"))   # la cuenta atrás
+
+
+## admin/admin: una ventana de login gris con brazos de cable plano y el cursor parpadeando.
+func _admin(f: int) -> void:
+	var sway: int = [0, 1, 0, -1][f]
+	for s in [-1, 1]:   # brazos de cable plano
+		_line(16 + s * 11, 14, 16 + s * 14, 20 + sway * s, Color("8a8a96"))
+		_line(16 + s * 12, 14, 16 + s * 15, 20 + sway * s, Color("6a6a76"))
+	_rect(4, 4, 27, 24, Color("c0c0c8"))
+	_rect(4, 4, 27, 7, Color("0000aa"))           # barra de título
+	_px(25, 5, Color("ffffff"))
+	_rect(7, 10, 24, 13, Color("ffffff"))         # campo «usuario»
+	_rect(7, 16, 24, 19, Color("ffffff"))         # campo «contraseña»
+	for k in 5:
+		_px(9 + k * 3, 17, Color("1a1a1e"))      # *****
+	if f % 2 == 0:
+		_line(24 - 2, 16, 24 - 2, 19, Color("1a1a1e"))   # cursor
+	_rect(12, 21, 19, 23, Color("8a8a96"))        # botón «Aceptar»
+	_line(11, 25, 11, 29, Color("6a6a76"))
+	_line(20, 25, 20, 29, Color("6a6a76"))

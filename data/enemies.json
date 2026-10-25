@@ -641,6 +641,20 @@
       "hunts_allies": true,
       "resist": {"fire": 40, "physical": 15},
       "on_hit_status": {"id": "shock", "chance": 25, "duration": 3.0}
+    },
+    {
+      "id": "admin",
+      "name": "admin/admin",
+      "sprite_row": 28,
+      "life_mult": 1.4,
+      "speed_mult": 0.65,
+      "damage_mult": 1.5,
+      "xp_mult": 2.4,
+      "scale": 1.45,
+      "boss_only": true,
+      "resist": {"physical": 55, "fire": 55},
+      "immune": ["burn", "freeze"],
+      "on_hit_status": {"id": "chill", "chance": 20, "duration": 2.0}
     }
   ]
 }

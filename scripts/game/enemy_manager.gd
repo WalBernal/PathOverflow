@@ -187,7 +187,7 @@ const MATERIALS := {
 	"init": "metal", "init_fork": "metal", "fw_update": "metal",
 	"electromigracion": "crystal",
 	"beep_code": "digital", "jumper_suelto": "metal", "pila_hinchada": "metal", "sector_defectuoso": "digital",
-	"option_rom": "crystal", "watchdog_timer": "metal",
+	"option_rom": "crystal", "watchdog_timer": "metal", "admin": "digital",
 }
 const MATERIAL_SFX := {"flesh": "hit_flesh", "metal": "hit_metal", "crystal": "hit_crystal", "digital": "hit_digital"}
 

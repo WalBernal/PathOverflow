@@ -128,6 +128,15 @@ Debajo del sistema operativo y de los drivers está el hardware puro. Alguien es
 - **fw_update.exe (El Gran Reflasheo)**: un chip de memoria flash con una barra de progreso por boca. Al morir, la actualización queda **detenida en el 99 %** y la consola muestra: `[cron] limpieza_final.sh: ejecución 2 de 2 completada`. Rafa recuerda la frase de El Pepe: «el último uno por ciento no es tuyo, es mío». Páez: «Los datos dicen que alguien lo dejó todo preparado. Los datos no dicen quién».
 - **Gancho del Acto IV**: más abajo, en la BIOS, algo acaba de despertar.
 
+## Acto IV: El Setup de la BIOS (implementado)
+
+Diseño completo en `docs/acto4.md`. Debajo del firmware, en la BIOS, despertó la cuenta de fábrica **admin** (contraseña: admin), que nadie cambió desde 2004 y que firmó el Último Commit. El Pepe la había encerrado (el Monolito como tapa, el Arquitecto como cortafuegos y `limpieza_final.sh`); el pez era su firma porque **se fue a cazar phishing**.
+
+- **Hub: La Pila del CMOS**: Berta (la pila CR2032, el reloj parado en el 01/01/2000), Rafa en persona (bajó la VPN a mano), Mario (obligado por su servicio social), M. Páez y Eugenio. El Pepe solo se menciona: aparecerá en el Acto V.
+- **Camino bifurcado**: del Menú Advanced se va por la Secuencia de Arranque o por la ROM de Video Legada hasta el Sector Oculto.
+- **La libreta de gatitos**: el registro de accesos a admin, con el jugador anotado como prestador de servicio social. Al entregarla, el jugador **decide si reiniciar con los huérfanos del Sindicato o sin ellos** (`act4_huerfanos_salvados` / `act4_huerfanos_purgados`).
+- **Final**: al vencer a admin, el jugador **le cambia la contraseña** (se guarda en `admin_password`). El servidor arranca por primera vez desde 2019; la constancia se atasca en la impresora detrás de un trabajo de 2004 del usuario «pepe»: `lee_esto_cuando_arranque.txt`.
+
 ## Hilos abiertos
 
 - **¿Quién hizo el push?** No fue el Inge Pepe. ¿Qué pasará cuando `limpieza_final.sh` se ejecute por segunda vez («cuando init termine»)?

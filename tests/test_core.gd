@@ -105,6 +105,7 @@ func _initialize() -> void:
 	_test_builds_and_compare()
 	_test_act4_world()
 	_test_act4_story()
+	_test_act4_boss()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -709,7 +710,7 @@ func _test_act(npc_data: Dictionary) -> void:
 				for k in zone.key_points():
 					_check(p.distance_to(k) >= 450.0, "%s: grupo demasiado cerca de una entrada/NPC" % z["id"])
 		zone.free()
-	_check(bosses == 3, "un jefe por acto (el Arquitecto, init y fw_update.exe)")
+	_check(bosses == 4, "un jefe por acto (el Arquitecto, init, fw_update.exe y admin)")
 	_test_quest_data(zones, npc_data)
 	_test_cutscenes(zones, npc_data)
 	_check(act["zones"].size() >= 10, "acto I completo + inicio del acto II")
@@ -2329,6 +2330,51 @@ func _test_act4_story() -> void:
 					_check(items.get(it, "") == qid, "%s: el objeto %s está en el Acto IV" % [qid, it])
 
 
+## Acto IV (T30): admin/admin con tres fases, mecánica de arena por fase, música
+## de fase, escenas y la contraseña que escribe el jugador (se guarda).
+func _test_act4_boss() -> void:
+	var act4: Dictionary = DataLoader.load_json("res://data/act4.json")
+	var arena: Dictionary = act4["zones"].filter(func(z: Dictionary) -> bool: return z["id"] == "modo_smm")[0]
+	var boss: Dictionary = arena.get("boss", {})
+	_check(boss.get("type", "") == "admin" and boss.get("complete_flag", "") == "act4_complete", "el Modo de Gestión del Sistema tiene a admin/admin")
+	_check(arena.get("cutscene_on_enter", {}).get("id", "") == "admin_entrada", "escena de entrada del jefe")
+	var phases: Array = boss.get("phases", [])
+	_check(phases.size() == 2 and phases[0]["resist"].keys() != phases[1]["resist"].keys(), "tres fases con resistencias distintas")
+	# Una mecánica de arena distinta en cada tramo de vida.
+	var mech := func(life: float) -> Array:
+		return boss["abilities"].filter(func(a: Dictionary) -> bool:
+			return a["kind"] in ["safe_zones", "floor_break", "channel_adds"] and life >= float(a.get("min_life", 0.0)) and life <= float(a.get("max_life", 1.0))
+		).map(func(a: Dictionary) -> String: return a["kind"])
+	var m1: Array = mech.call(0.9)
+	var m2: Array = mech.call(0.5)
+	var m3: Array = mech.call(0.2)
+	_check(m1 == ["safe_zones"] and m2 == ["floor_break"] and m3 == ["channel_adds"], "una mecánica de arena por fase: %s / %s / %s" % [m1, m2, m3])
+	var music: Dictionary = DataLoader.load_json("res://data/music.json")
+	_check(music["zones"].get("modo_smm", "") == "boss4" and music["tracks"].has("boss4_fase") and ResourceLoader.exists("res://assets/audio/music/boss4_fase.wav"), "música del jefe con versión de fase")
+	# Escena final: el jugador escribe la contraseña y se guarda.
+	var cs: Dictionary = DataLoader.load_json("res://data/cutscenes.json")["cutscenes"]
+	_check(boss.get("death_cutscene", "") == "admin_cambia_password" and cs.has("admin_cambia_password") and cs.has("admin_entrada") and cs.has("bios_post"), "escenas del jefe y de llegada")
+	var input_steps: Array = cs.get("admin_cambia_password", {}).get("steps", []).filter(func(s: Dictionary) -> bool: return s.has("input"))
+	_check(input_steps.size() == 1 and input_steps[0].get("flag", "") == "admin_password", "la escena final pide la contraseña")
+	_check(CutscenePlayer.password_problem("admin") != "" and CutscenePlayer.password_problem("abc") != "" and CutscenePlayer.password_problem("12345678") != "", "rechaza admin, las cortas y las fechas")
+	_check(CutscenePlayer.password_problem("Lince-LinceCode") == "" and CutscenePlayer.password_problem("Ana2026xyz", "Ana") != "", "acepta una buena y no deja usar tu nombre")
+	var c := CharacterData.new(_classes[0], _tree)
+	var pl := Player.new()
+	pl.character = c
+	var cp := CutscenePlayer.new()
+	cp.player = pl
+	cp._steps = cs["admin_cambia_password"]["steps"]
+	cp._save_input(input_steps[0], "Lince-LinceCode")
+	_check(c.flags.get("admin_password", "") == "Lince-LinceCode", "la contraseña se guarda en el personaje")
+	var saved := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())), _classes[0], _tree, _db)
+	_check(saved.flags.get("admin_password", "") == "Lince-LinceCode", "y sobrevive al guardado")
+	c.flags.erase("admin_password")
+	cp._default_inputs(0)
+	_check(c.flags.get("admin_password", "") == CutscenePlayer.DEFAULT_PASSWORD and c.flags.has("admin_password_saltada"), "si se salta la escena, queda la contraseña por defecto")
+	cp.free()
+	pl.free()
+
+
 func _db_enemies() -> Array:
 	var data: Dictionary = DataLoader.load_json("res://data/enemies.json")
 	return data.get("types", [])
@@ -2688,7 +2734,7 @@ func _test_boss_arena_phases() -> void:
 					em._resolve_ability(bi, a, Vector2(100, 0))
 					_check(em.hazards.size() + em._channels.size() > before, "%s: %s se activa" % [boss.get("name", ""), a.get("name", "")])
 			em.free()
-	_check(bosses == 3, "los tres jefes con fases (%d)" % bosses)
+	_check(bosses == 4, "los cuatro jefes con fases (%d)" % bosses)
 	# En zonas agrandadas, el centro de las zonas seguras se escala con la zona (como el jefe).
 	var scaled := {"scale": 1.25, "size": [2200, 1500], "boss": {"pos": [1650, 750], "abilities": [{"kind": "safe_zones", "center": [1100, 750]}]}}
 	Zone.scale_def(scaled)

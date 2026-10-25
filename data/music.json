@@ -89,6 +89,17 @@
       "prog": [[0, "m"], [8, "M"], [5, "m"], [7, "M"]], "prog_b": [[1, "M"], [0, "m"], [10, "M"], [7, "M"]],
       "pad": 0.04, "bass": "pulse", "arp": "up", "arp_wave": "saw", "lead": "saw", "drums": "frenzy"
     },
+    "boss4": {
+      "name": "Modo de Gestión del Sistema", "bpm": 144, "bars": 32, "chord_bars": 1, "seed": 44, "root": 43, "scale": "dorian",
+      "prog": [[0, "m"], [10, "M"], [8, "M"], [7, "M"]],
+      "pad": 0.04, "bass": "pulse", "arp": "up", "arp_wave": "square", "lead": "square", "drums": "boss",
+      "from": {"arp": 0, "lead": 2, "drums": 0}
+    },
+    "boss4_fase": {
+      "name": "Modo de Gestión del Sistema (fase)", "bpm": 160, "bars": 24, "intro": 0, "chord_bars": 1, "seed": 144, "root": 43, "scale": "dorian",
+      "prog": [[0, "m"], [10, "M"], [8, "M"], [7, "M"]], "prog_b": [[3, "M"], [10, "M"], [0, "m"], [7, "M"]],
+      "pad": 0.04, "bass": "pulse", "arp": "up", "arp_wave": "square", "lead": "saw", "drums": "frenzy"
+    },
     "boss3_fase": {
       "name": "Cámara de reflasheo (fase)", "bpm": 162, "bars": 24, "intro": 0, "chord_bars": 1, "seed": 143, "root": 45, "scale": "phrygian",
       "prog": [[0, "m"], [1, "M"], [0, "m"], [10, "M"]], "prog_b": [[1, "M"], [3, "M"], [1, "M"], [0, "m"]],
@@ -103,6 +114,6 @@
     "controladora_bus": "field3", "puerto_jtag": "camp3", "oblea": "field3", "memoria_rom": "deep3",
     "cache_l3": "deep3", "sector_arranque": "field3", "camara_flash": "boss3",
     "post": "field3", "pila_cmos": "camp3", "menu_advanced": "field3", "secuencia_arranque": "field3",
-    "rom_video": "deep3", "sector_oculto": "deep3", "modo_smm": "boss3"
+    "rom_video": "deep3", "sector_oculto": "deep3", "modo_smm": "boss4"
   }
 }

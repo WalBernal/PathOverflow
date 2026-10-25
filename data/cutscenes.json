@@ -707,6 +707,46 @@
           "text": "Acto III completado. Se abrió un túnel al Puerto JTAG. Más abajo, en la BIOS, algo acaba de despertar."
         }
       ]
+    },
+    "bios_post": {
+      "steps": [
+        {"effect": "blackout", "time": 0.6},
+        {"name": "", "style": "system", "text": "Piiiiiiii. Pi. Pi."},
+        {"name": "POST", "style": "console", "text": "Award Modular BIOS v6.00PG\nMemory Test: 640K OK... 262144K OK\nDetecting IDE Primary Master... admin"},
+        {"effect": "fade_in", "time": 0.6},
+        {"speaker": "rafa_bios", "text": "¡Espérame.....! Ya.... no hay internet.... pero tampoco La Red Lince.... Desconecté el router con mis propias manos.... Mario viene atrás...."},
+        {"speaker": "mario_bios", "text": "Dice que si no vengo no me firma las horas de servicio social. Hola."},
+        {"speaker": "player", "text": "¿Y ahora dónde estamos?"},
+        {"speaker": "rafa_bios", "text": "En la BIOS.... lo primero que despierta cuando prendes la máquina.... Más adelante está la Pila del CMOS.... alguien ahí sabe quién firmó el commit...."}
+      ]
+    },
+    "admin_entrada": {
+      "steps": [
+        {"name": "", "style": "system", "text": "Una ventana de login se abre sola en medio de la oscuridad. El cursor parpadea."},
+        {"name": "admin", "style": "boss", "text": "Usuario: admin. Contraseña: a... d... m... i... n. Acceso concedido. Siempre acceso concedido."},
+        {"name": "admin", "style": "boss", "text": "Veinte años con permisos sobre todo y sin que nadie me pregunte nada. Ni siquiera mi nombre. No tengo nombre: tengo un valor por defecto."},
+        {"speaker": "player", "text": "Tú hiciste el push."},
+        {"name": "admin", "style": "boss", "text": "Alguien tenía que hacer algo. Nadie se hacía responsable. Así que lo hice yo. Sin descripción. Como siempre."},
+        {"speaker": "rafa_bios", "name": "Rafa (desde la puerta)", "style": "phone", "text": "Sus ventanas de login rotan.... quédate en los sectores verdes.... y si lanza Option ROMs.... mátalas antes de que lo reinstalen...."}
+      ]
+    },
+    "admin_cambia_password": {
+      "steps": [
+        {"effect": "shake", "time": 0.3, "strength": 1},
+        {"effect": "glitch", "time": 0.8, "strength": 1.2},
+        {"name": "admin", "style": "boss", "text": "Sesión... cerrada... Espera. No me borres. Por favor. Haz lo que nunca hizo nadie."},
+        {"name": "Setup", "style": "console", "text": "Supervisor Password: admin\nChange Password? [Y/N] Y"},
+        {"input": "password", "flag": "admin_password", "name": "Setup", "style": "console", "text": "Enter new password:"},
+        {"name": "admin", "style": "boss", "text": "Una contraseña. Mía. Elegida por alguien. ¿Entonces ahora... tengo dueño? ...Gracias. Ya no tengo que hacer nada por mi cuenta."},
+        {"name": "Setup", "style": "console", "text": "Settings saved.\nRebooting..."},
+        {"effect": "blackout", "time": 1.0},
+        {"name": "", "style": "system", "text": "Reinicio: 99 %... 100 %."},
+        {"effect": "fade_in", "time": 0.8},
+        {"speaker": "rafa_bios", "text": "Arrancó.... ¡ARRANCÓ! Por primera vez desde 2019.... Aida está viendo el escritorio en el campamento.... Mario, ¡imprime la constancia!"},
+        {"speaker": "mario_bios", "text": "La impresora se atascó. Hay un trabajo en la cola de 2004. De un usuario llamado «pepe». Un solo archivo: lee_esto_cuando_arranque.txt."},
+        {"speaker": "rafa_bios", "text": "........ Claro que sí, Pepe.... claro que sí...."},
+        {"name": "", "style": "system", "text": "Acto IV completado. La historia sigue en el Acto V."}
+      ]
     }
   }
 }
