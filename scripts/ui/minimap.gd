@@ -30,6 +30,8 @@ var player: Player
 var enemies: EnemyManager
 var loot: LootManager
 var zone: Zone
+## Para dibujar también las marcas propias del mapa grande.
+var world_map: WorldMap
 
 
 func _ready() -> void:
@@ -104,6 +106,12 @@ func _draw_map() -> void:
 					draw_colored_polygon(poly, FEATURE_COLORS.get(o["kind"], Color("4a4352")))
 		elif _inside(p):
 			draw_circle(p, maxf(1.5, o["radius"] * SCALE), Color("4a4352"))
+	if world_map:
+		for m in world_map.marks():
+			var mp := _to_map(Vector2(m[0], m[1]))
+			if _inside(mp):
+				draw_line(mp, mp + Vector2(0, -9), WorldMap.MARK_COLOR, 1.5)
+				draw_colored_polygon(PackedVector2Array([mp + Vector2(0, -9), mp + Vector2(6, -7), mp + Vector2(0, -5)]), WorldMap.MARK_COLOR)
 	var time := Time.get_ticks_msec() / 1000.0
 
 	# Salidas: dentro, un rombo; fuera, una flecha en el borde hacia ellas.

@@ -152,6 +152,7 @@ func _play_incident(class_def: Dictionary) -> int:
 	world.set("_since_save", -9999.0)
 	await _frames(2)
 	await _check_gamepad_cursor(world, class_def["id"])
+	await _check_world_map(world, class_def["id"])
 	world.call("_on_dialogue_action", {"type": "open_atlas"})
 	await _frames(2)
 	for child in world.get("ui").get_children():
@@ -261,6 +262,26 @@ func _check_gamepad_cursor(world: Node, class_id: String) -> void:
 	get_tree().paused = false
 	_collect("%s · mando en menús" % class_id)
 	Gamepad.active = was
+
+
+## Mapa grande (Tab): zoom y marcas propias, dibujado unos fotogramas.
+func _check_world_map(world: Node, class_id: String) -> void:
+	var map: WorldMap = (world.get("ui") as GameUI).world_map
+	var player: Player = world.get("player")
+	map.toggle()
+	map.zoom_by(2)
+	await _frames(3)
+	if map.zoom_index != 2:
+		_failures.append("%s · mapa: no hace zoom" % class_id)
+	var near_player := map.map_to_world(map.size / 2.0)
+	if not map.toggle_mark(player.global_position) or map.marks().size() != 1 or not map.zone.rect.has_point(near_player):
+		_failures.append("%s · mapa: no pone la marca (o el zoom no se centra en la zona)" % class_id)
+	await _frames(3)
+	if map.toggle_mark(player.global_position + Vector2(30, 0)) or not map.marks().is_empty():
+		_failures.append("%s · mapa: clic derecho sobre la marca no la quita" % class_id)
+	map.zoom_by(-9)
+	map.toggle()
+	_collect("%s · mapa grande" % class_id)
 
 
 func _press(button: JoyButton) -> void:

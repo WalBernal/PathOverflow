@@ -128,6 +128,7 @@ func _initialize() -> void:
 	_test_controls()
 	_test_accessibility()
 	_test_auto_attack()
+	_test_map_marks()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3140,6 +3141,24 @@ func _test_auto_attack() -> void:
 	SkillController.auto_attack = was
 	for n in [sc, player, em]:
 		n.queue_free()
+
+
+## Mapa grande: marcas propias (T53).
+func _test_map_marks() -> void:
+	var list: Array = []
+	list = WorldMap.toggle_in(list, Vector2(500, 300), WorldMap.MARK_PICK, 3)
+	_check(list.size() == 1 and list[0] == [500.0, 300.0], "clic derecho: una marca")
+	list = WorldMap.toggle_in(list, Vector2(900, 300), WorldMap.MARK_PICK, 3)
+	list = WorldMap.toggle_in(list, Vector2(1400, 300), WorldMap.MARK_PICK, 3)
+	_check(WorldMap.toggle_in(list, Vector2(2000, 300), WorldMap.MARK_PICK, 3).size() == 3, "con el tope lleno no se añaden más")
+	var after := WorldMap.toggle_in(list, Vector2(930, 320), WorldMap.MARK_PICK, 3)
+	_check(after.size() == 2 and not after.has([900.0, 300.0]) and list.size() == 3, "clic cerca de una marca la quita (sin tocar la lista original)")
+	var c := CharacterData.new(_classes[0], _tree)
+	c.flags["marks_zona1"] = after
+	var saved := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())), _classes[0], _tree, _db)
+	var back: Array = saved.flags.get("marks_zona1", [])
+	_check(back.size() == 2 and Vector2(back[1][0], back[1][1]) == Vector2(1400, 300), "las marcas se guardan con el personaje")
+	_check(WorldMap.ZOOMS[0] == 1.0 and WorldMap.ZOOMS.size() >= 4, "niveles de zoom, empezando por la zona entera")
 
 
 func _db_enemies() -> Array:

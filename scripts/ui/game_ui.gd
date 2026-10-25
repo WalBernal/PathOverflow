@@ -162,6 +162,7 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	world_map.character = character
 	_root.add_child(world_map)
 	world_map.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	minimap.world_map = world_map
 
 	# Registro de misiones, debajo del minimapa.
 	quest_tracker = QuestTracker.new()

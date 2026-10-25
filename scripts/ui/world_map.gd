@@ -5,6 +5,8 @@ extends Control
 ## guarda en el personaje (flags "map_<zona>") y se ve al volver.
 ## Muestra salidas con su destino, waypoint, NPCs, objetos de misión, el jefe,
 ## los enemigos cercanos, el botín bueno y al jugador. El juego no se pausa.
+## Rueda o +/−: zoom (centrado en el jugador). Clic derecho: pone una marca
+## propia (o quita la que haya ahí); se guardan por zona en flags "marks_<zona>".
 
 const CELL := 160.0
 const REVEAL_RADIUS := 560.0
@@ -12,6 +14,11 @@ const MARGIN := 80.0
 const BOTTOM_FREE := 170.0
 const FOG := Color(0.02, 0.015, 0.03, 0.92)
 const GROUND := Color("2a2530")
+const ZOOMS := [1.0, 1.5, 2.0, 3.0, 4.0]
+const MAX_MARKS := 12
+## Un clic derecho a menos de esto (en el mundo) de una marca la quita.
+const MARK_PICK := 120.0
+const MARK_COLOR := Color("ff6ad5")
 
 var player: Player
 var enemies: EnemyManager
@@ -23,6 +30,7 @@ var explored := PackedByteArray()
 var _cols := 0
 var _rows := 0
 var _reveal_left := 0.0
+var zoom_index := 0
 
 
 func _ready() -> void:
@@ -105,13 +113,100 @@ func _process(delta: float) -> void:
 		queue_redraw()
 
 
-## Escala y origen para que la zona quepa en la pantalla.
+## Escala y origen para que la zona quepa en la pantalla; con zoom, centrado en
+## el jugador sin dejar ver fuera de la zona.
 func _fit() -> Array:
 	# Deja libre la franja de abajo (orbes y barra de habilidades).
 	var area := size - Vector2(MARGIN * 2.0, MARGIN + BOTTOM_FREE)
 	var s := minf(area.x / zone.rect.size.x, area.y / zone.rect.size.y)
 	var origin := Vector2((size.x - zone.rect.size.x * s) / 2.0, MARGIN + (area.y - zone.rect.size.y * s) / 2.0)
+	var z: float = ZOOMS[zoom_index]
+	if z > 1.0:
+		s *= z
+		var area_pos := Vector2(MARGIN, MARGIN)
+		origin = area_pos + area / 2.0 - (player.global_position - zone.rect.position) * s
+		var span := zone.rect.size * s
+		for k in 2:   # que la zona no se despegue del borde si es más grande que el área
+			if span[k] > area[k]:
+				origin[k] = clampf(origin[k], area_pos[k] + area[k] - span[k], area_pos[k])
+			else:
+				origin[k] = area_pos[k] + (area[k] - span[k]) / 2.0
 	return [s, origin]
+
+
+func zoom_by(step: int) -> void:
+	zoom_index = clampi(zoom_index + step, 0, ZOOMS.size() - 1)
+	queue_redraw()
+
+
+# --- Marcas propias ---
+
+func marks() -> Array:
+	if zone == null or character == null:
+		return []
+	return character.flags.get("marks_" + zone.id, [])
+
+
+## Pone o quita (si hay una cerca) una marca en `world`. True si quedó puesta.
+func toggle_mark(world: Vector2) -> bool:
+	var list := toggle_in(marks(), world, MARK_PICK, MAX_MARKS)
+	var placed: bool = list.size() > marks().size()
+	character.flags["marks_" + zone.id] = list
+	queue_redraw()
+	return placed
+
+
+## La lista de marcas ([x, y]) tras un clic en `p`: quita la más cercana a menos
+## de `pick`; si no hay, añade una (si no se pasa de `max_marks`).
+static func toggle_in(list: Array, p: Vector2, pick: float, max_marks: int) -> Array:
+	var out := list.duplicate()
+	var best := -1
+	var best_d := pick
+	for i in out.size():
+		var d := Vector2(out[i][0], out[i][1]).distance_to(p)
+		if d <= best_d:
+			best = i
+			best_d = d
+	if best != -1:
+		out.remove_at(best)
+	elif out.size() < max_marks:
+		out.append([roundf(p.x), roundf(p.y)])
+	return out
+
+
+## Del punto del mapa (local) al mundo.
+func map_to_world(local: Vector2) -> Vector2:
+	var fit := _fit()
+	return zone.rect.position + (local - (fit[1] as Vector2)) / float(fit[0])
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not visible or zone == null:
+		return
+	var mb := event as InputEventMouseButton
+	if mb and mb.pressed:
+		match mb.button_index:
+			MOUSE_BUTTON_WHEEL_UP:
+				zoom_by(1)
+			MOUSE_BUTTON_WHEEL_DOWN:
+				zoom_by(-1)
+			MOUSE_BUTTON_RIGHT:
+				var w := map_to_world((make_input_local(mb) as InputEventMouseButton).position)
+				if zone.rect.has_point(w):
+					toggle_mark(w)
+			_:
+				return
+		get_viewport().set_input_as_handled()
+		return
+	var key := event as InputEventKey
+	if key and key.pressed and not key.echo:
+		if key.keycode in [KEY_EQUAL, KEY_PLUS, KEY_KP_ADD]:
+			zoom_by(1)
+		elif key.keycode in [KEY_MINUS, KEY_KP_SUBTRACT]:
+			zoom_by(-1)
+		else:
+			return
+		get_viewport().set_input_as_handled()
 
 
 func _draw() -> void:
@@ -195,6 +290,14 @@ func _draw() -> void:
 			var r := 1.5 + enemies.rarities[i] * 0.8
 			var p: Vector2 = to_map.call(ep)
 			draw_rect(Rect2(p - Vector2(r, r), Vector2(r, r) * 2.0), Minimap.ENEMY_COLORS[enemies.rarities[i]])
+	# Marcas propias: un banderín numerado (se ven aunque haya niebla).
+	var list := marks()
+	for i in list.size():
+		var mp: Vector2 = to_map.call(Vector2(list[i][0], list[i][1]))
+		draw_line(mp, mp + Vector2(0, -16), MARK_COLOR, 2.0)
+		draw_colored_polygon(PackedVector2Array([mp + Vector2(0, -16), mp + Vector2(11, -12), mp + Vector2(0, -8)]), MARK_COLOR)
+		draw_circle(mp, 2.5, MARK_COLOR)
+		_text(font, mp + Vector2(-20, -20), str(i + 1), 40.0, 11, MARK_COLOR)
 	# Jugador.
 	var pp: Vector2 = to_map.call(player.global_position)
 	var f := player.facing_direction()
@@ -202,8 +305,10 @@ func _draw() -> void:
 	draw_colored_polygon(PackedVector2Array([pp + f * 9.0, pp - f * 5.0 + f.orthogonal() * 6.0, pp - f * 2.5, pp - f * 5.0 - f.orthogonal() * 6.0]), Color.WHITE)
 	# Título y leyenda.
 	_text(font, Vector2(0, 40), zone.zone_name, size.x, 26, UiStyle.ACCENT)
-	_text(font, Vector2(0, 62), ("Zona segura" if zone.safe else "Nivel de zona %d" % zone.level) + "  ·  Explorado %d %%" % roundi(explored_fraction() * 100.0), size.x, 13, UiStyle.MUTED)
+	_text(font, Vector2(0, 62), ("Zona segura" if zone.safe else "Nivel de zona %d" % zone.level) + "  ·  Explorado %d %%" % roundi(explored_fraction() * 100.0)
+		+ ("  ·  Zoom ×%s" % str(ZOOMS[zoom_index]) if zoom_index > 0 else ""), size.x, 13, UiStyle.MUTED)
 	_text(font, Vector2(0, size.y - BOTTOM_FREE + 22.0), "Tab: cerrar  ·  ◆ salida  ·  ● waypoint  ·  NPC en dorado  ·  misión en verde  ·  enemigos por rareza", size.x, 12, UiStyle.MUTED)
+	_text(font, Vector2(0, size.y - BOTTOM_FREE + 40.0), "Rueda o +/−: zoom  ·  clic derecho: poner o quitar una marca (%d/%d)" % [list.size(), MAX_MARKS], size.x, 12, UiStyle.MUTED)
 
 
 func _text(font: Font, pos: Vector2, text: String, width: float, font_size: int, color: Color) -> void:
