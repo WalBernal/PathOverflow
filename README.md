@@ -640,6 +640,12 @@ Las barras de vida, los cuadritos de estado, los halos del modo simple, los cand
 
 Añade `*.json` en *Exportar → Recursos → Filtros para exportar archivos no-recurso*. Si no, los datos no se incluyen en el ejecutable.
 
+**Publicar** (`tools/build_release.ps1`): exporta Windows (`build/PathOverflow.exe`), Linux (`build/linux/PathOverflow.x86_64`) y macOS (`build/mac/PathOverflow.zip`, app universal firmada ad hoc) según las plantillas de exportación que haya instaladas (las de Linux y macOS se bajan desde *Editor → Administrar plantillas de exportación*; sin ellas se saltan), y arma el **instalador de Windows** `build/PathOverflow-Setup.exe`: un ejecutable (`installer/Setup.cs`, compilado con el `csc` de .NET Framework que trae Windows) que instala el juego en `%LOCALAPPDATA%\Programs\PathOverflow` sin pedir administrador, con accesos directos en el escritorio y el menú Inicio y «Desinstalar Path Overflow». Las partidas guardadas no se tocan al instalar ni al desinstalar. `export_presets.cfg` no va en el repositorio: si falta, se crea desde `export_presets.example.cfg` (con los tres presets).
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/build_release.ps1
+```
+
 ## Próximos pasos sugeridos
 
 1. Sprites del jugador y de los NPCs (el formato de apariencia ya está preparado).

@@ -353,7 +353,7 @@ Origen: R1 §6, R2 §12 ★★
 Origen: R2 §12 ★★
 - Registrar DPS, muertes y tiempo por zona en cada partida (archivo local) y una herramienta que lo resuma.
 
-### [ ] T65 · Exportación a Linux y macOS e instalador de Windows · S
+### [x] T65 · Exportación a Linux y macOS e instalador de Windows · S
 Origen: R1 §7
 
 ### [ ] T66 · `EnemyManager` en C# o GDExtension · L — solo si hace falta
@@ -451,3 +451,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T62 · Pista «Prueba de carga» (estres, 138 BPM, con capa de combate) compuesta con generate_zone_music.gd -- estres; suena en las pruebas de estrés y el banco de oleadas y al acabar vuelve la de la zona.
 - 2026-10-25 · T63 · Música, ambientes y tema del título en OGG (91,8 → 13,4 MB) con tools/convert_audio.ps1; Sfx.load_looped carga OGG o WAV y pasa el inicio de bucle de music_loops.json a segundos (16 000 Hz en la música). Los sprites ya estaban en atlas (enemigos, objetos, pasivas): nada que hacer ahí.
 - 2026-10-25 · T64 · Telemetría local: una línea por visita a zona en user://telemetria.jsonl (tiempo, combate, daño, DPS, enemigos, muertes; solo personajes guardados, opción en la pausa) y tools/telemetry_summary.gd que lo resume por zona y clase.
+- 2026-10-25 · T65 · Presets de Linux y macOS (export_presets.example.cfg, porque export_presets.cfg está en .gitignore), tools/build_release.ps1 que exporta lo que tenga plantilla y arma el instalador de Windows (installer/Setup.cs con csc: instala por usuario, accesos directos y desinstalador). Probado: Windows exporta (121 MB) y arranca, el instalador extrae el juego idéntico. Linux y macOS sin probar: sus plantillas no están instaladas (bajarlas necesita tu permiso). IExpress se descartó: fallaba al azar.
