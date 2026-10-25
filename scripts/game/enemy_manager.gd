@@ -489,8 +489,12 @@ func _make_traits(t: Dictionary, _rarity: int, affix_ids: Array, _normal_spawn: 
 	for k in t.get("immune", []):
 		immune_set[k] = true
 	var applied: Array = []
-	# Afijos innatos del tipo (los del Acto IV): siempre, sea cual sea su rareza.
+	# Afijos innatos del tipo (los del Acto IV) y los que impone la zona (incidentes):
+	# siempre, sea cual sea su rareza.
 	var all_affixes: Array = t.get("innate_affixes", []).duplicate()
+	for aid in forced_affixes:
+		if not all_affixes.has(aid):
+			all_affixes.append(aid)
 	for aid in affix_ids:
 		if not all_affixes.has(aid):
 			all_affixes.append(aid)
@@ -785,6 +789,10 @@ func command_bonus(i: int) -> Dictionary:
 			best["damage"] = maxf(best["damage"], c["damage"])
 			best["speed"] = maxf(best["speed"], c["speed"])
 	return best
+
+
+## Afijos que llevan todos los enemigos de la zona (incidentes, Incidents).
+var forced_affixes: Array = []
 
 
 ## Último enemigo que golpeó al jugador (para el némesis):

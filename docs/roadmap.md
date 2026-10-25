@@ -238,7 +238,7 @@ Origen: R2 §6 ★
 Origen: R2 §9 ★★★
 - Monedas que rehacen afijos, añaden uno, mejoran rareza y fijan un afijo. Encaja con la mesa de crafteo (T36).
 
-### [ ] T39 · Atlas de incidentes (parte 1: mapas con modificadores) · M
+### [x] T39 · Atlas de incidentes (parte 1: mapas con modificadores) · M
 Origen: R2 §9 ★★★
 - Zona aleatoria con modificadores (más enemigos, explotan, sin regeneración) a cambio de más botín.
 
@@ -425,3 +425,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T36 · El campamento del Acto I evoluciona: puesto de Aida tras el Acto I (equipo raro y mágico y pociones, `Economy.generate_gear_stock`), mesa de crafteo de Mario tras el Acto II (reforjar el arma equipada por fichas) y antena de Rafa tras el Acto III (rellena pociones y da un bono de 3 minutos); decorado propio que aparece con cada mejora (`props` con `requires_flag`) y acciones de diálogo `open_gear_shop`, `reforge_weapon` y `antenna`.
 - 2026-10-25 · T37 · Némesis (`Nemesis`): el élite que te mató (golpe propio o proyectil en los últimos 4 s; `EnemyManager.last_hitter`) vuelve con tu nombre, sus afijos, ×2,5 de vida y más daño; seguro en la zona donde te mató y a veces en el resto del acto; más fuerte si te vuelve a matar; al vencerlo, cuatro objetos buenos y fichas. T67: otra pasada larga cortada sin traza, ahora sin otra instancia de Godot pero con solo 1,2 GB de RAM libre en el sistema; las cortas pasaron 3 de 3.
 - 2026-10-25 · T38 · Crafteo con parches (`Crafting`, `CraftingPanel` en la mesa de Mario): refactor (rehace los afijos no fijados), feature (añade uno), versión mayor (normal → mágico → raro) y hotfix (fija un afijo para el siguiente refactor); caen de élites y únicos y se compran por fichas; el tooltip marca el afijo fijado. `ItemGenerator._roll_affixes` ahora respeta los afijos que ya tenga el objeto.
+- 2026-10-25 · T39 · Atlas de incidentes, parte 1 (`Incidents`): desde el puesto de Aida, una zona de combate al azar ya jugable, a tu nivel, con 2-3 de siete modificadores (más grupos, explotan, veloces, blindados, más élites, sin regeneración, −20 a resistencias) que suman botín (`drop_multiplier`); afijos forzados en `EnemyManager.forced_affixes` y mods del jugador mientras dura; salida por portal al campamento.

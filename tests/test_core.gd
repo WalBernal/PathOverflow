@@ -114,6 +114,7 @@ func _initialize() -> void:
 	_test_camp_upgrades()
 	_test_nemesis()
 	_test_crafting_patches()
+	_test_incidents()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -2672,6 +2673,44 @@ func _test_crafting_patches() -> void:
 	var panel := CraftingPanel.new(c, gen)
 	_check(panel._rows.get_child_count() == Crafting.KINDS.size(), "la mesa muestra los cuatro parches")
 	panel.free()
+
+
+## Atlas de incidentes, parte 1 (T39): zona al azar con modificadores y más botín.
+func _test_incidents() -> void:
+	var zones := {}
+	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json", "res://data/act4.json"]:
+		var act: Dictionary = DataLoader.load_json(path)
+		for z in act["zones"]:
+			z["act"] = act["id"]
+			Zone.scale_def(z)
+			zones[z["id"]] = z
+	var low := Incidents.candidates(zones, 5)
+	_check(not low.is_empty() and low.all(func(z: Dictionary) -> bool: return int(z["level"]) <= 8 and not z.get("safe", false) and not z.has("boss")),
+		"a nivel 5 solo salen zonas de combate que ya puedes jugar")
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	var def := Incidents.build(zones, 30, "campamento", rng, 3)
+	_check(def["id"] == Incidents.ZONE_ID and int(def["level"]) >= 30 and def["incident"]["mods"].size() == 3, "incidente de tu nivel con tres modificadores")
+	_check(float(def["drop_multiplier"]) > 1.5, "a cambio de más botín (×%.2f)" % float(def["drop_multiplier"]))
+	_check(def["exits"].size() == 1 and def["exits"][0]["target"] == "campamento" and not def.has("boss") and not def.has("quest_items"), "solo tiene la salida al campamento y nada de misiones")
+	var src: Dictionary = zones[def["incident"]["from"]]
+	_check(src["id"] != Incidents.ZONE_ID and zones[src["id"]].get("name", "") == src.get("name", ""), "no cambia la zona original")
+	# Cada modificador hace algo.
+	var dense := Incidents.build(zones, 30, "campamento", rng, 7)   # todos
+	_check(int(dense["enemies"]["packs"]) > int(zones[dense["incident"]["from"]]["enemies"]["packs"]), "Pico de tráfico: más grupos")
+	_check(Incidents.forced_affixes(dense).has("explosivo") and Incidents.forced_affixes(dense).has("veloz"), "afijos que llevan todos los enemigos")
+	_check(Incidents.player_mods(dense).size() >= 5, "mods para el jugador (sin regeneración, resistencias)")
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	em.forced_affixes = ["explosivo"]
+	em.spawn(Vector2.ZERO, Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+	_check(em.affixes_of(0).has("explosivo"), "en un incidente con zombis, hasta los normales explotan")
+	em.free()
+	var zone := Zone.new()
+	zone.setup(def, null, null)
+	_check(zone.rect.size.x > 0 and zone.entry_point("") != Vector2.ZERO, "la zona del incidente se arma")
+	zone.free()
+	_check(Incidents.describe(def).count("\n") == 2, "se explican sus modificadores")
 
 
 func _db_enemies() -> Array:

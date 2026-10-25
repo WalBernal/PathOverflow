@@ -681,7 +681,7 @@ func _draw_status_boxes(font: Font) -> void:
 			entries.append({"name": "Señal fuerte", "skill": GameData.items.skills.skills.get("hiperthreading", {}), "count": 1,
 				"remaining": effect["time_left"], "total": effect.get("total", effect["time_left"]), "kind": "buff"})
 			continue
-		if eid.begins_with("shrine:") or eid.begins_with("companion:"):
+		if eid.begins_with("shrine:") or eid.begins_with("companion:") or eid == "incident":
 			continue   # santuarios: en la barra de estados; acompañante: lo ves caminar a tu lado
 		if eid.begins_with("skill:"):
 			# Potenciadores de habilidades (Modo Seguro, Hiperthreading...).

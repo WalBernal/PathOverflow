@@ -289,6 +289,12 @@ func travel_to(zone_id: String, entry := "") -> void:
 	cam.reset_smoothing()
 
 	enemies.area_level = zone.level
+	enemies.forced_affixes = Incidents.forced_affixes(zone.def)
+	var incident_mods := Incidents.player_mods(zone.def)
+	if incident_mods.is_empty():
+		character.remove_timed_effect("incident")
+	else:
+		character.set_timed_effect("incident", incident_mods)
 	enemies.aggro_range = float(zone.def.get("aggro_range", EnemyManager.AGGRO_RANGE))
 	enemies.bounds = zone.rect
 	enemies.walk_clamp = zone.clamp_to_walkable
@@ -306,7 +312,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 	Sfx.play("portal", -8.0)
 	_boss_phase = 0
 	MusicPlayer.set_intensity(0)
-	MusicPlayer.play_zone(zone.id)
+	MusicPlayer.play_zone(String(zone.def.get("incident", {}).get("from", zone.id)))   # el incidente suena como su zona
 	_check_zone_cutscene.call_deferred()
 
 
@@ -1101,6 +1107,14 @@ func _on_dialogue_action(action: Dictionary) -> void:
 			ui.open_shop(_gear_stock)
 		"reforge_weapon":
 			_reforge_weapon()
+		"open_incident":
+			var def := Incidents.build(GameData.zones, character.level, GameData.town_for_zone(zone.id), _rng)
+			if def.is_empty():
+				ui.hud.flash("No hay incidentes para tu nivel todavía.", Color("e0a060"))
+			else:
+				GameData.zones[Incidents.ZONE_ID] = def
+				travel_to(Incidents.ZONE_ID, "")
+				ui.hud.flash("%s (+%d %% de botín)\n%s" % [def["name"], roundi((float(def["drop_multiplier"]) - 1.0) * 100.0), Incidents.describe(def)], Color("ff8a5a"))
 		"open_crafting":
 			var panel := CraftingPanel.new(character, item_generator)
 			ui.add_child(panel)
