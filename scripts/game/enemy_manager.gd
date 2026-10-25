@@ -787,8 +787,22 @@ func command_bonus(i: int) -> Dictionary:
 	return best
 
 
+## Último enemigo que golpeó al jugador (para el némesis):
+## {id, time (ms), type, rarity, name, affixes, nemesis}.
+var last_hitter: Dictionary = {}
+signal nemesis_killed(pos: Vector2)
+
+
+func _note_hitter(i: int) -> void:
+	var all_types := enemy_types()
+	last_hitter = {"id": ids[i], "time": Time.get_ticks_msec(), "rarity": rarities[i], "name": names[i],
+		"type": String(all_types[types[i]].get("id", "")) if types[i] < all_types.size() else "",
+		"affixes": (traits[i] as Dictionary).get("affixes", []).duplicate(), "nemesis": (traits[i] as Dictionary).get("nemesis", false)}
+
+
 ## Golpe al jugador con los efectos de los afijos (veneno, quemadura).
 func _hit_player(i: int, amount: float) -> void:
+	_note_hitter(i)
 	if not _commanders.is_empty():
 		amount *= 1.0 + float(command_bonus(i)["damage"])
 	player.take_damage(amount)
@@ -1647,7 +1661,7 @@ func _heal_around(i: int) -> void:
 func _resolve_snipe(i: int) -> void:
 	projectiles.append({"pos": positions[i] + attack_dirs[i] * (radii[i] + 6.0), "vel": attack_dirs[i] * 1100.0,
 		"damage": damages[i] * ROLE_SNIPE_DAMAGE, "radius": 6.0, "life": ROLE_SNIPE_RANGE / 1100.0 + 0.2,
-		"color": ROLE_COLORS["sniper"]})
+		"color": ROLE_COLORS["sniper"], "src": ids[i]})
 	Sfx.play("projectile", -8.0, 0.7)
 
 
@@ -1706,7 +1720,7 @@ func _resolve_attack(i: int, atk: Dictionary, player_pos: Vector2) -> void:
 				var angle := 0.0 if count == 1 else lerpf(-spread / 2.0, spread / 2.0, float(k) / (count - 1))
 				var shot := {"pos": pos, "vel": aim.rotated(angle) * float(atk.get("projectile_speed", 360.0)),
 					"damage": damage, "radius": float(atk.get("projectile_radius", 7.0)), "life": 2.5,
-					"color": Color(atk.get("color", "e0c040"))}
+					"color": Color(atk.get("color", "e0c040")), "src": ids[i]}
 				for aid in traits[i].get("affixes", []):
 					var adot: Dictionary = affix_defs().get(aid, {}).get("on_hit", {}).get("dot", {})
 					if not adot.is_empty() and not atk.has("dot"):
@@ -1736,6 +1750,7 @@ func _resolve_attack(i: int, atk: Dictionary, player_pos: Vector2) -> void:
 			for k in n:
 				var a := 0.0 if n == 1 else lerpf(-0.6, 0.6, float(k) / (n - 1))
 				projectiles.append(_seeker_orb(pos, aim_s.rotated(a), damage, atk))
+				projectiles[projectiles.size() - 1]["src"] = ids[i]
 				var orb_status := _status_of(i)
 				if not orb_status.is_empty():
 					projectiles[projectiles.size() - 1]["status"] = orb_status
@@ -1909,6 +1924,9 @@ func _update_projectiles(delta: float) -> void:
 		var p: Vector2 = pr["pos"]
 		var gone: bool = pr["life"] <= 0.0
 		if not gone and player and player.is_alive() and p.distance_to(player.global_position) <= pr["radius"] + Player.RADIUS:
+			var src := index_of(int(pr.get("src", -1)))
+			if src != -1:
+				_note_hitter(src)
 			player.take_damage(pr["damage"])
 			if pr.has("status"):
 				apply_status_to_player(pr["status"])
@@ -2780,9 +2798,12 @@ func _kill(i: int) -> void:
 			"damage": damages[i] * float(best_boom.get("damage_mult", 2.0)), "color": boom_color})
 	boss_phases.erase(ids[i])
 	phase_shield.erase(ids[i])
+	var was_nemesis: bool = (traits[i] as Dictionary).get("nemesis", false)
 	_death_feedback(i)
 	_remove(i)
 	enemy_killed.emit(rarity, xp, pos, type_id)
+	if was_nemesis:
+		nemesis_killed.emit(pos)
 
 
 ## Muerte con estilo según lo que lo mató (ver ImpactFx.death) y su sonido.

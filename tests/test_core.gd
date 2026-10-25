@@ -112,6 +112,7 @@ func _initialize() -> void:
 	_test_lore_notes()
 	_test_dialogue_decisions()
 	_test_camp_upgrades()
+	_test_nemesis()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -2577,6 +2578,45 @@ func _test_camp_upgrades() -> void:
 	var weapon := gen.generate(20, Rarity.Item.RARE, "espada_oxidada")
 	_check(Economy.can_reforge(weapon) and Economy.reforge_price(weapon) > 0, "un arma rara se puede reforjar y tiene precio")
 	_check(not Economy.can_reforge(gen.generate(20, Rarity.Item.UNIQUE)), "los únicos no se reforjan")
+
+
+## Némesis (T37): el élite que te mató vuelve con tu nombre, más fuerte, y al
+## vencerlo se olvida.
+func _test_nemesis() -> void:
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	var elite := em.index_of(em.spawn(Vector2.ZERO, Rarity.Enemy.ELITE, em.type_index_of("bug"), "Bug corrupto", 1.0, [], ["veloz"]))
+	em._note_hitter(elite)
+	var hit := em.last_hitter
+	_check(hit["rarity"] == Rarity.Enemy.ELITE and hit["type"] == "bug" and hit["affixes"].has("veloz"), "se recuerda quién te golpeó")
+	var c := CharacterData.new(_classes[0], _tree)
+	c.character_name = "Ana"
+	var now := int(hit["time"])
+	_check(not Nemesis.record(c, hit, "zona2", "act1", now + 10000), "un golpe viejo no cuenta")
+	var normal := em.index_of(em.spawn(Vector2(300, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug")))
+	em._note_hitter(normal)
+	_check(not Nemesis.record(c, em.last_hitter, "zona2", "act1", now), "un normal no se vuelve némesis")
+	_check(Nemesis.record(c, hit, "zona2", "act1", now), "el élite que te mató se vuelve tu némesis")
+	_check(Nemesis.title(c).contains("Ana") and Nemesis.title(c).contains("Bug corrupto"), "lleva tu nombre: %s" % Nemesis.title(c))
+	var life1 := Nemesis.life_mult(c)
+	_check(Nemesis.should_spawn(c, "zona2", "act1", 0.99) and not Nemesis.should_spawn(c, "zona3", "act1", 0.99) and Nemesis.should_spawn(c, "zona3", "act1", 0.1),
+		"vuelve seguro donde te mató y a veces en el resto del acto")
+	_check(not Nemesis.should_spawn(c, "fabrica", "act2", 0.0), "no sale en otros actos")
+	var again := hit.duplicate()
+	again["nemesis"] = true
+	Nemesis.record(c, again, "zona2", "act1", now)
+	_check(int(Nemesis.current(c)["kills"]) == 2 and Nemesis.life_mult(c) > life1 and Nemesis.title(c).contains("×2"), "si te vuelve a matar, es más fuerte")
+	var saved := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())), _classes[0], _tree, _db)
+	_check(not Nemesis.current(saved).is_empty(), "el némesis se guarda")
+	# Al matarlo se avisa (para el botín) y se olvida.
+	var fired := [false]
+	em.nemesis_killed.connect(func(_p: Vector2) -> void: fired[0] = true)
+	em.traits[elite]["nemesis"] = true
+	em._kill(elite)
+	_check(fired[0], "al caer el némesis se avisa para soltar su botín")
+	Nemesis.defeated(c)
+	_check(Nemesis.current(c).is_empty() and int(c.flags.get("stat_nemesis", 0)) == 1, "vencido, se olvida")
+	em.free()
 
 
 func _db_enemies() -> Array:

@@ -83,6 +83,7 @@ func _ready() -> void:
 	player.setup(character, enemies)
 	enemies.player = player
 	enemies.enemy_killed.connect(_on_enemy_killed)
+	enemies.nemesis_killed.connect(_on_nemesis_killed)
 	enemies.immune_hit.connect(_on_immune_hit)
 	enemies.crit_dealt.connect(func() -> void:
 		player.camera_shake(1.5, 0.06)
@@ -492,8 +493,37 @@ func _assign_role(pack_ids: Array[int], center: Vector2, type: int, cfg: Diction
 			return
 
 
+## Némesis (Nemesis): el élite que te mató vuelve, con tu nombre y más fuerte.
+func _spawn_nemesis() -> void:
+	if zone.safe or zone.def.has("boss") or not zone.def.get("enemies") is Dictionary:
+		return
+	if not Nemesis.should_spawn(character, zone.id, String(GameData.act_of_zone(zone.id).get("id", "")), _rng.randf()):
+		return
+	var n := Nemesis.current(character)
+	var r := zone.rect
+	var p := zone.free_spot_near(Vector2(_rng.randf_range(r.position.x + r.size.x * 0.4, r.end.x - 200.0), _rng.randf_range(r.position.y + 200.0, r.end.y - 200.0)))
+	var id := enemies.spawn(p, Rarity.Enemy.ELITE, enemies.type_index_of(String(n.get("type", "bug"))), Nemesis.title(character), Nemesis.life_mult(character),
+		[], n.get("affixes", []))
+	var i := enemies.index_of(id)
+	if i != -1:
+		enemies.traits[i]["nemesis"] = true
+		enemies.damages[i] *= 1.0 + 0.15 * int(n.get("kills", 1))
+	ui.hud.flash("Tu némesis está en esta zona: %s." % Nemesis.title(character), Color("e0503a"))
+
+
+func _on_nemesis_killed(pos: Vector2) -> void:
+	Nemesis.defeated(character)
+	for k in 4:
+		loot.drop_item(item_generator.roll_drop(enemies.area_level, 3.0 if k < 2 else 1.5), zone.free_spot_near(pos + Vector2.from_angle(TAU * k / 4.0) * 70.0))
+	loot.drop_tokens(maxi(10, Economy.drop_amount(enemies.area_level, Rarity.Enemy.UNIQUE, _rng)), zone.free_spot_near(pos))
+	ui.hud.flash("¡Venganza! Tu némesis cayó: botín de sobra.", Color("ffd24a"))
+	Sfx.play("level_up", -4.0, 0.9)
+	_mark_dirty()
+
+
 ## Subjefes, candados y enemigos raros definidos en la zona.
 func _spawn_zone_specials() -> void:
+	_spawn_nemesis()
 	var rc: Dictionary = zone.def.get("race_condition", {}) if zone.def.get("race_condition") is Dictionary else {}
 	if not rc.is_empty() and not character.flags.has(rc.get("flag", "")):
 		var p := Zone._v(rc["pos"])
@@ -673,6 +703,8 @@ func _discover_waypoint() -> void:
 func _on_player_died() -> void:
 	skills.clear_auras()
 	character.flags["stat_deaths"] = int(character.flags.get("stat_deaths", 0)) + 1
+	if zone and Nemesis.record(character, enemies.last_hitter, zone.id, String(GameData.act_of_zone(zone.id).get("id", "")), Time.get_ticks_msec()):
+		ui.hud.flash("%s te recordará. Y tú a él: ahora es tu némesis." % Nemesis.current(character).get("name", "Ese élite"), Color("e0503a"))
 	ui.show_death()
 	_mark_dirty()
 
