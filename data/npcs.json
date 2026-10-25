@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_doc": "NPCs y sus diálogos. Nodos con texto y opciones. Opción: text, next ('' = cerrar), requires_flag / hides_if_flag, action {type: give_item | give_matching_ram | give_random | refill | set_flag | start_quest | quest_advance, flag, quest}. voice: tono de la voz (pitch, 1 = normal) y velocidad (rate) para el narrador y los pitidos. Las banderas se guardan en el personaje. Dónde aparece cada NPC lo dice data/act1.json. Conversación: 'menu' (frases cortas al volver al inicio), 'greeting_again' (saludo en visitas siguientes), nodo 'again' (texto si ya se leyó) y nodo con 'next' sin opciones (botón Continuar).",
+  "_doc": "NPCs y sus diálogos. Nodos con texto y opciones. Opción: text, next ('' = cerrar), requires_flag / hides_if_flag, action {type: give_item | give_matching_ram | give_random | refill | set_flag | start_quest | quest_advance | companion (npc: quién te acompaña; vacío = nadie), flag, quest}. voice: tono de la voz (pitch, 1 = normal) y velocidad (rate) para el narrador y los pitidos. Las banderas se guardan en el personaje. Dónde aparece cada NPC lo dice data/act1.json. Conversación: 'menu' (frases cortas al volver al inicio), 'greeting_again' (saludo en visitas siguientes), nodo 'again' (texto si ya se leyó) y nodo con 'next' sin opciones (botón Continuar).",
   "npcs": {
     "ada": {
       "name": "Aida, la Senior",
@@ -2249,7 +2249,14 @@
           ]
         },
         "ajustes_entrega": {
-          "text": "¡Ay, mis ajustes! Quick Boot activado, el orden de arranque como Dios manda y la contraseña de supervisor... vacía, como siempre. Muchas gracias, mijo. Toma esto, lo tenía guardado desde 2004 para alguien que se lo mereciera.",
+          "text": "¡Ay, mis ajustes! Quick Boot activado, el orden de arranque como Dios manda y la contraseña de supervisor... vacía, como siempre. Muchas gracias, mijo. Tengo guardadas dos cosas desde 2004. ¿Cuál quieres?",
+          "options": [
+            {"text": "El termo de café de Pepe (una poción).", "next": "ajustes_fin", "action": {"type": "give_random", "rarity": "flask", "flag": "berta_ajustes_premio"}},
+            {"text": "La caja que dice «NO ABRIR» (un objeto muy raro).", "next": "ajustes_fin", "action": {"type": "give_random", "rarity": "ultra_rare", "flag": "berta_ajustes_premio"}}
+          ]
+        },
+        "ajustes_fin": {
+          "text": "Buena elección, mijo. Las dos eran del Pepe, así que cualquiera sirve para algo. Él siempre decía: «lo que funciona no se documenta, se protege».",
           "options": [{"text": "De nada, Berta.", "next": "", "action": {"type": "quest_advance", "quest": "berta_ajustes"}}]
         }
       }
@@ -2331,10 +2338,19 @@
         "hola": {
           "text": "¡Hola! Me vine con Rafa. No quería, pero él dijo que si no venía no me firmaba las horas de servicio social. Así que aquí estoy. En la BIOS. Sin accesos. Como siempre.",
           "options": [
+            {"text": "¿Te vienes conmigo? Cuenta como horas de servicio.", "next": "acompanar", "hides_if_flag": "companion_mario_bios"},
+            {"text": "Quédate aquí con Rafa, Mario.", "next": "", "requires_flag": "companion_mario_bios", "action": {"type": "companion", "npc": ""}},
             {"text": "¿Qué te parece la BIOS?", "next": "bios"},
             {"text": "¿Y Aida?", "next": "aida"},
             {"text": "¿Sabes algo del Inge Pepe?", "next": "pepe"},
             {"text": "Ánimo, Mario.", "next": ""}
+          ]
+        },
+        "acompanar": {
+          "text": "¿En serio? ¿Cuenta como horas? ...Bueno, aunque no cuente. Aquí Rafa solo me pone a contar pitidos. Voy contigo, pero si sale un Watchdog corro primero. Ya sabes: el practicante es el que más rápido corre.",
+          "options": [
+            {"text": "Vámonos.", "next": "", "action": {"type": "companion", "npc": "mario_bios"}},
+            {"text": "Mejor otro día.", "next": "hola"}
           ]
         },
         "bios": {
@@ -2364,6 +2380,8 @@
           "options": [
             {"text": "Ya activé los tres andenes.", "next": "arranque_entrega", "requires_flag": "quest_paez_arranque_ready"},
             {"text": "¿Puedo ayudar en algo?", "next": "arranque_oferta", "hides_if_flag": "quest_paez_arranque_started"},
+            {"text": "Inge, ¿me acompaña? Me vendrían bien sus cálculos.", "next": "acompanar", "hides_if_flag": "companion_paez_bios"},
+            {"text": "Quédese aquí, Inge. Gracias por los cálculos.", "next": "", "requires_flag": "companion_paez_bios", "action": {"type": "companion", "npc": ""}},
             {"text": "¿Qué opina de admin?", "next": "admin"},
             {"text": "Hasta luego, Inge.", "next": ""}
           ]
@@ -2379,8 +2397,22 @@
             {"text": "Más tarde.", "next": "hola"}
           ]
         },
+        "acompanar": {
+          "text": "Con gusto. Estadísticamente, dos personas sobreviven más que una. Le voy calculando los ángulos de los críticos. Y si ve un cargador USB-C, avíseme.",
+          "options": [
+            {"text": "Vamos, Inge.", "next": "", "action": {"type": "companion", "npc": "paez_bios"}},
+            {"text": "Mejor después.", "next": "hola"}
+          ]
+        },
         "arranque_entrega": {
-          "text": "Perfecto. Primero el disquete del Pepe (curiosamente sigue funcionando), luego el disco duro, luego la red. La probabilidad de arranque correcto subió del 0 al 99 %. El último uno por ciento, dicen, no es nuestro. Ten, te lo ganaste.",
+          "text": "Perfecto. Primero el disquete del Pepe (curiosamente sigue funcionando), luego el disco duro, luego la red. La probabilidad de arranque correcto subió del 0 al 99 %. El último uno por ciento, dicen, no es nuestro. Tengo dos cosas para ti; elige. Una es más probable que te sirva; la otra, más valiosa si te sirve.",
+          "options": [
+            {"text": "La segura: una RAM que encaje con mis placas.", "next": "arranque_fin", "action": {"type": "give_matching_ram", "flag": "paez_arranque_premio"}},
+            {"text": "La arriesgada: un objeto único al azar.", "next": "arranque_fin", "action": {"type": "give_random", "rarity": "unique", "flag": "paez_arranque_premio"}}
+          ]
+        },
+        "arranque_fin": {
+          "text": "Buena elección. Bueno, no sé si buena: la muestra es de uno. Gracias por poner el cuerpo.",
           "options": [{"text": "Gracias, Inge.", "next": "", "action": {"type": "quest_advance", "quest": "paez_arranque"}}]
         }
       }
@@ -2398,6 +2430,8 @@
           "options": [
             {"text": "Te traje los tres vasos de café.", "next": "cafe_entrega", "requires_flag": "quest_eugenio_cafe_ready"},
             {"text": "¿Quieres que te traiga esos cafés?", "next": "cafe_oferta", "hides_if_flag": "quest_eugenio_cafe_started"},
+            {"text": "¿Te vienes conmigo? Igual encontramos algo de 10/10.", "next": "acompanar", "hides_if_flag": "companion_eugenio_bios"},
+            {"text": "Quédate aquí, Eugenio. Cuida el café.", "next": "", "requires_flag": "companion_eugenio_bios", "action": {"type": "companion", "npc": ""}},
             {"text": "¿Cómo va el amor?", "next": "amor"},
             {"text": "Nos vemos, Eugenio.", "next": ""}
           ]
@@ -2405,6 +2439,13 @@
         "amor": {
           "text": "Mal, pero con estilo. Conocí a una Beep Code. Bueno, me pitó. Dos cortos y uno largo. Según Berta, eso significa «error de memoria». Siempre me pasa lo mismo.",
           "options": [{"text": "Lo siento.", "next": "hola"}]
+        },
+        "acompanar": {
+          "text": "¡Claro! Llevo el termo. El café está a 6/10, pero en una pelea sabe a 9. Y si me pita otra Beep Code, tú le explicas que no es buen momento.",
+          "options": [
+            {"text": "Vamos.", "next": "", "action": {"type": "companion", "npc": "eugenio_bios"}},
+            {"text": "Mejor luego.", "next": "hola"}
+          ]
         },
         "cafe_oferta": {
           "text": "Hay tres vasos repartidos: uno en el POST, otro en el Menú Advanced y otro en el Sector Oculto. Sé que va a estar horrible. Pero necesito calificar algo o voy a empezar a calificar a la gente.",

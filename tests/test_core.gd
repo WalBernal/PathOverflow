@@ -110,6 +110,7 @@ func _initialize() -> void:
 	_test_roles_and_commander()
 	_test_state_reactions()
 	_test_lore_notes()
+	_test_dialogue_decisions()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -2522,6 +2523,35 @@ func _test_lore_notes() -> void:
 	var log := LoreLog.new(c)
 	_check(log._list.item_count == 1 and log.title.contains("1/"), "el registro lista lo encontrado")
 	log.free()
+
+
+## Diálogos con decisiones (T35): quién te acompaña y qué recompensa eliges.
+func _test_dialogue_decisions() -> void:
+	var dlg: Dictionary = DataLoader.load_json("res://data/npcs.json")["dialogues"]
+	for id in Companions.DEFS:
+		var nodes: Dictionary = dlg[id]["nodes"]
+		var acts := []
+		for node in nodes.values():
+			for o in node.get("options", []):
+				if o.get("action", {}).get("type", "") == "companion":
+					acts.append(String(o["action"].get("npc", "")))
+		_check(acts.has(id) and acts.has(""), "%s puede venir contigo y quedarse" % id)
+	# Recompensas a elegir: dos opciones que comparten bandera (solo se da una).
+	for pair in [["paez_bios", "arranque_entrega"], ["berta", "ajustes_entrega"]]:
+		var opts: Array = dlg[pair[0]]["nodes"][pair[1]]["options"]
+		var flags := opts.map(func(o: Dictionary) -> String: return String(o.get("action", {}).get("flag", "")))
+		_check(opts.size() == 2 and flags[0] != "" and flags[0] == flags[1] and opts[0]["action"] != opts[1]["action"], "%s: se elige una de dos recompensas" % pair[0])
+	# Acompañante: bono mientras está, uno a la vez, y se va al despedirlo.
+	var c := CharacterData.new(_classes[0], _tree)
+	var speed0 := c.stats.get_value(Stat.MOVEMENT_SPEED)
+	Companions.choose(c, "mario_bios")
+	_check(Companions.current(c) == "mario_bios" and c.flags.has("companion_mario_bios") and c.stats.get_value(Stat.MOVEMENT_SPEED) > speed0, "Mario te acompaña y corres más")
+	Companions.choose(c, "paez_bios")
+	_check(not c.flags.has("companion_mario_bios") and is_equal_approx(c.stats.get_value(Stat.MOVEMENT_SPEED), speed0), "uno a la vez: Mario se queda al venir Páez")
+	var saved := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())), _classes[0], _tree, _db)
+	_check(Companions.current(saved) == "paez_bios", "el acompañante se guarda")
+	Companions.choose(c, "")
+	_check(Companions.current(c) == "" and not c.timed_effects.any(func(e: Dictionary) -> bool: return String(e["id"]).begins_with("companion:")), "al despedirlo se va su bono")
 
 
 func _db_enemies() -> Array:

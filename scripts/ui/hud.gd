@@ -677,8 +677,8 @@ func _draw_status_boxes(font: Font) -> void:
 		var eid: String = effect["id"]
 		if eid.begins_with("aura:") or eid.begins_with("golem:"):
 			continue   # las auras y los golems salen en active_summaries()
-		if eid.begins_with("shrine:"):
-			continue   # los santuarios salen en la barra de estados, sobre el orbe de vida
+		if eid.begins_with("shrine:") or eid.begins_with("companion:"):
+			continue   # santuarios: en la barra de estados; acompañante: lo ves caminar a tu lado
 		if eid.begins_with("skill:"):
 			# Potenciadores de habilidades (Modo Seguro, Hiperthreading...).
 			var skill: Dictionary = GameData.items.skills.skills.get(eid.trim_prefix("skill:"), {})

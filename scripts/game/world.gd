@@ -279,6 +279,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 
 	player.global_position = zone.entry_point(entry)
 	player.stop_auto_move()
+	_refresh_companion()
 	var cam := player.get_node("Camera2D") as Camera2D
 	cam.limit_left = int(zone.rect.position.x - 200)
 	cam.limit_top = int(zone.rect.position.y - 200)
@@ -362,6 +363,24 @@ func _on_quest_item_picked(q: Dictionary) -> void:
 	_mark_dirty()
 	if q.has("cutscene"):
 		play_cutscene(q["cutscene"])
+
+
+## El acompañante (Companions): su bono y, en las zonas de combate, el que te sigue.
+## En los campamentos se queda en su sitio como NPC.
+var _companion_node: CompanionFollower
+
+
+func _refresh_companion() -> void:
+	Companions.apply(character)
+	var id := Companions.current(character)
+	var want := id != "" and zone != null and not zone.safe
+	if _companion_node and (not want or _companion_node.npc_id != id):
+		_companion_node.queue_free()
+		_companion_node = null
+	if want and _companion_node == null:
+		_companion_node = CompanionFollower.new()
+		add_child(_companion_node)
+		_companion_node.setup(player, id)
 
 
 func _on_lore_picked(n: Dictionary) -> void:
@@ -1014,6 +1033,11 @@ func _on_dialogue_action(action: Dictionary) -> void:
 			quests.advance(action.get("quest", ""))
 		"set_flag":
 			pass
+		"companion":
+			var who := String(action.get("npc", ""))
+			Companions.choose(character, who)
+			_refresh_companion()
+			ui.hud.flash(Companions.DEFS[who]["text"] if Companions.DEFS.has(who) else "Ahora vas solo.", Color("8ad8ff"))
 		"recycle_normals":
 			_recycle_normals()
 		"open_shop":

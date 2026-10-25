@@ -218,7 +218,7 @@ Origen: R2 §6 ★★
 Origen: R2 §10 ★★
 - Commits perdidos, logs y correos de la UAdeO por las zonas; registro para leerlos.
 
-### [ ] T35 · Diálogos con decisiones · M
+### [x] T35 · Diálogos con decisiones · M
 Origen: R2 §10 ★★
 - Decisiones que cambian recompensas o qué NPC te acompaña.
 
@@ -421,3 +421,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T32 · Sanador y francotirador con aspecto propio dibujado sobre el sprite (halo y brazalete con cruz; visor y rifle que apunta, con láser al cargar), roles en las élites (35 % de las manadas con rol; el rol sale en el nombre) y afijo de élite Comandante (aro dorado: +25 % de daño y +15 % de velocidad a los de alrededor).
 - 2026-10-25 · T33 · Enemigos que reaccionan a su estado (`EnemyManager._react`, salvo jefes y únicos): pánico al quemarse (50 %, huyen 1,6 s), buscan al sanador con poca vida y se reagrupan con el comandante si no están peleando; marca sobre la cabeza («!», «+», «»»).
 - 2026-10-25 · T34 · Lore coleccionable: 18 commits, logs y correos en los cuatro actos (`data/lore_notes.json`, `LoreNotes`), con dibujo propio en el suelo, aviso al recogerlos y registro en Pausa → Archivos encontrados (`LoreLog`); se guardan en `flags.lore_found`. T67: la integración larga volvió a cortarse con la otra instancia de Godot en marcha; las tandas cortas pasaron 3 de 3.
+- 2026-10-25 · T35 · Diálogos con decisiones: elegir acompañante en el hub del Acto IV (Mario, Páez o Eugenio; te sigue por las zonas de combate con un bono pequeño; `Companions`, `CompanionFollower`, acción `companion`) y elegir recompensa al entregar *Orden de Arranque* y *Ajustes de Fábrica* (dos opciones que comparten bandera). Nota: el editor de historia del usuario (`tools/story_editor.gd`) no conoce aún la acción `companion`.
