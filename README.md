@@ -400,6 +400,8 @@ El personaje es un recién egresado que se enfrenta al mundo laboral: cada clase
 
 **Normal**, **Pesadilla** e **Infierno** (`Difficulty`, `flags.difficulty`). Pesadilla se abre al terminar el Acto IV e Infierno al terminarlo en Pesadilla; se cambian hablando con Rafa en el campamento. En Pesadilla las zonas de combate suben 12 niveles, los enemigos tienen +20 % a todas las resistencias, los élites un afijo más y los especiales el doble de probabilidad de tener uno, y cae un 30 % más de botín; en Infierno, +24 niveles, +40 %, dos afijos más y +60 %. Los jefes se pueden volver a pelear en cada dificultad (su bandera de completado lleva `_d1` o `_d2`).
 
+**Zonas completadas a tu nivel** (opción en Pausa, por personaje: `flags.zone_scaling`): las zonas de combate de los actos ya terminados suben a tu nivel si estás por encima, para volver a ellas sin que se queden cortas. Se suma con la dificultad (`Difficulty.zone_level`); los campamentos no cambian.
+
 ## Atlas de incidentes
 
 En el puesto de Aida (campamento, tras el Acto I) se pide un **incidente**: una zona de combate al azar que ya puedes jugar, a tu nivel, con 2 o 3 modificadores que la ponen difícil a cambio de **más botín** (cada uno suma): *Pico de tráfico* (+50 % de grupos), *Procesos zombi* (todos explotan al morir), *Hilos desbocados* (todos veloces), *Firewall mal configurado* (todos blindados), *Escalada de privilegios* (el doble de élites), *Fuga de memoria* (no regeneras vida) y *Configuración por defecto* (−20 a tus resistencias). Se vuelve por un portal al campamento. La zona se arma al vuelo (`Incidents`) y no se guarda: si sales del juego dentro, vuelves al campamento.

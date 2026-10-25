@@ -290,7 +290,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 
 	var difficulty := Difficulty.current(character)
 	enemies.difficulty = difficulty
-	enemies.area_level = zone.level + (Difficulty.LEVEL_BONUS[difficulty] if not zone.safe else 0)
+	enemies.area_level = Difficulty.zone_level(character, zone.level, String(GameData.act_of_zone(zone.id).get("id", zone.def.get("act", ""))), zone.safe)
 	enemies.forced_affixes = Incidents.forced_affixes(zone.def)
 	var incident_mods := Incidents.player_mods(zone.def)
 	if incident_mods.is_empty():

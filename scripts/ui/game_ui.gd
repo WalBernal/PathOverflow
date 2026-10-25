@@ -499,6 +499,17 @@ func _build_pause_menu() -> Control:
 	var loot_filter := UiStyle.button("Filtro de botín...", toggle_loot_filter, 300)
 	loot_filter.tooltip_text = "Qué se ve en el suelo, por tipo y rareza, y desde qué rareza sale el haz de luz.\nMantén Shift para ver lo oculto."
 	right.add_child(loot_filter)
+	var scaling := UiStyle.button("", func() -> void: pass, 300)
+	var scaling_text := func() -> String:
+		return "Zonas completadas a tu nivel: " + ("sí" if Difficulty.scaling_enabled(GameData.current_character) else "no")
+	scaling.text = scaling_text.call()
+	scaling.tooltip_text = "Las zonas de combate de los actos ya terminados suben a tu nivel (si estás por encima) para que sigan dando pelea y botín de tu nivel.\nSe nota al volver a entrar en la zona."
+	scaling.pressed.connect(func() -> void:
+		var c: CharacterData = GameData.current_character
+		if c:
+			c.flags[Difficulty.SCALING_FLAG] = not Difficulty.scaling_enabled(c)
+		scaling.text = scaling_text.call())
+	right.add_child(scaling)
 	var lore := UiStyle.button("Archivos encontrados...", open_lore_log, 300)
 	lore.tooltip_text = "Commits perdidos, logs y correos de la UAdeO que has encontrado por las zonas."
 	right.add_child(lore)

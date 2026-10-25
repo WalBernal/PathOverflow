@@ -42,6 +42,26 @@ static func boss_flag(flag: String, d: int) -> String:
 	return flag if d <= 0 else "%s_d%d" % [flag, d]
 
 
+## Opción del personaje (Pausa): las zonas de combate de los actos ya terminados
+## suben a tu nivel si estás por encima (para volver a ellas sin que se queden cortas).
+const SCALING_FLAG := "zone_scaling"
+
+
+static func scaling_enabled(c: CharacterData) -> bool:
+	return c != null and c.flags.get(SCALING_FLAG, false)
+
+
+## Nivel con el que se juega una zona: el suyo (o el tuyo, si está escalada y su
+## acto ya está terminado) más el de la dificultad. Los campamentos no cambian.
+static func zone_level(c: CharacterData, base_level: int, act_id: String, safe: bool) -> int:
+	if safe:
+		return base_level
+	var level := base_level
+	if scaling_enabled(c) and act_id != "" and c.flags.has("%s_complete" % act_id):
+		level = maxi(level, c.level)
+	return level + LEVEL_BONUS[current(c)]
+
+
 static func describe(d: int) -> String:
 	if d <= 0:
 		return "Normal: el juego tal como es."

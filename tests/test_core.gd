@@ -117,6 +117,7 @@ func _initialize() -> void:
 	_test_incidents()
 	_test_atlas()
 	_test_difficulties()
+	_test_zone_scaling()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -2773,6 +2774,22 @@ func _test_difficulties() -> void:
 	em.free()
 	var saved := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())), _classes[0], _tree, _db)
 	_check(Difficulty.current(saved) == 2, "la dificultad se guarda")
+
+
+## Escalado opcional del nivel de zona (T42): las zonas de actos terminados suben a tu nivel.
+func _test_zone_scaling() -> void:
+	var c := CharacterData.new(_classes[0], _tree)
+	c.set_level(40)
+	_check(Difficulty.zone_level(c, 5, "act1", false) == 5, "sin la opción, la zona tiene su nivel")
+	c.flags[Difficulty.SCALING_FLAG] = true
+	_check(Difficulty.zone_level(c, 5, "act1", false) == 5, "con la opción, pero sin terminar el acto, tampoco cambia")
+	c.flags["act1_complete"] = true
+	_check(Difficulty.zone_level(c, 5, "act1", false) == 40, "acto terminado y opción activa: la zona sube a tu nivel")
+	_check(Difficulty.zone_level(c, 50, "act1", false) == 50, "nunca baja una zona de más nivel que tú")
+	_check(Difficulty.zone_level(c, 1, "act1", true) == 1, "los campamentos no cambian")
+	c.flags["act4_complete"] = true
+	Difficulty.choose(c, 1)
+	_check(Difficulty.zone_level(c, 5, "act1", false) == 40 + Difficulty.LEVEL_BONUS[1], "se suma con la dificultad")
 
 
 func _db_enemies() -> Array:
