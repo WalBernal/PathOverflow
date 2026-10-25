@@ -297,6 +297,7 @@ func on_zone_changed() -> void:
 	_traps.clear()
 	_devices.clear()
 	_update_reservation()   # los contenedores se quedan en la zona anterior
+	_channel = {}
 	_clouds.clear()
 	_terrains.clear()
 	_rains.clear()
@@ -719,9 +720,12 @@ func _physics_process(delta: float) -> void:
 	# En escenas (enemigos congelados, jugador bloqueado) nada ataca: ni aliados,
 	# ni torretas, ni proyectiles en vuelo. Solo se apagan los efectos visuales.
 	if enemies.frozen or player.controls_locked:
+		_channel = {}
 		_update_effects(delta)
 		queue_redraw()
 		return
+	if not _channel.is_empty():
+		_update_channel(delta, Input.is_action_pressed(ACTIONS[int(_channel["index"])]), _aim_target())
 	if player.is_alive() and _busy <= 0.0 and not player.controls_locked and not player.is_frozen():
 		for i in ACTIONS.size():
 			if i == 0 and Gamepad.skill_1_blocked():
@@ -775,6 +779,17 @@ func try_use(index: int) -> bool:
 			_mana_warning_cooldown = 1.5
 			trigger_only.emit(String(p["name"]))
 		return false   # RAM de activación: se lanza sola
+	if p["kind"] in CHANNEL_KINDS:
+		# Canalizada: empieza aquí y cobra su maná por segundo mientras se mantenga.
+		if player.mana < float(p["mana_cost"]) * 0.25:
+			if _mana_warning_cooldown <= 0.0:
+				_mana_warning_cooldown = 1.5
+				not_enough_mana.emit()
+			return false
+		_start_channel(index, p, _aim_target())
+		Sfx.play(Sfx.skill_sound(String(p["kind"]), String(p["damage_type"])))
+		skill_used.emit(index)
+		return true
 	if player.mana < p["mana_cost"]:
 		if _mana_warning_cooldown <= 0.0:
 			_mana_warning_cooldown = 1.5
@@ -1196,6 +1211,105 @@ func _update_spin(delta: float) -> void:
 
 func _spin_center(spin: Dictionary) -> Vector2:
 	return player.global_position if spin["center"] == Vector2.INF else spin["center"]
+
+
+# --- Hechizos canalizados (mantener pulsado) ---
+
+const CHANNEL_KINDS := ["channel_beam", "channel_storm"]
+## Segundos de canalización hasta que la tormenta llega a su tamaño y daño máximos.
+const CHANNEL_RAMP := 3.0
+## Velocidad (px/s) a la que la tormenta sigue al cursor.
+const STORM_FOLLOW := 170.0
+## Canalización en curso: {index, profile, time, next_tick, aim, center, color}; vacío si no hay.
+var _channel: Dictionary = {}
+
+
+func is_channeling() -> bool:
+	return not _channel.is_empty()
+
+
+func _start_channel(index: int, p: Dictionary, target: Vector2) -> void:
+	var origin := player.global_position
+	_channel = {"index": index, "profile": p, "time": 0.0, "next_tick": 0.0, "aim": target,
+		"center": origin + (target - origin).limit_length(p["range"]),
+		"color": DAMAGE_COLORS.get(p["damage_type"], Color.WHITE)}
+
+
+## De 0 a 1 en CHANNEL_RAMP segundos: la tormenta pasa de ×0,5 a ×1,5 de radio y de ×1 a ×2 de daño.
+static func channel_ramp(time: float) -> float:
+	return clampf(time / CHANNEL_RAMP, 0.0, 1.0)
+
+
+## Un golpe por cada uso de la habilidad: su daño por segundo es el de lanzarla a ese ritmo.
+static func channel_tick(p: Dictionary) -> float:
+	return maxf(0.1, float(p["use_time"]))
+
+
+static func storm_radius(p: Dictionary, time: float) -> float:
+	return float(p["radius"]) * (0.5 + channel_ramp(time))
+
+
+## Mientras se mantenga la tecla (o el botón del mando) y quede maná: cobra su
+## costo por segundo, no deja moverse ni lanzar otra cosa y golpea en cada tick.
+func _update_channel(delta: float, held: bool, target: Vector2) -> void:
+	if _channel.is_empty():
+		return
+	var p: Dictionary = _channel["profile"]
+	var cost := float(p["mana_cost"]) * delta
+	if not held or not player.is_alive() or player.is_frozen() or player.controls_locked or player.mana < cost:
+		_channel = {}
+		return
+	player.mana -= cost
+	_channel["time"] += delta
+	_channel["aim"] = target
+	_busy = maxf(_busy, 0.05)
+	player.action_lock = maxf(player.action_lock, 0.05)
+	var origin := player.global_position
+	player.face(target - origin)
+	if p["kind"] == "channel_storm":
+		var want := origin + (target - origin).limit_length(p["range"])
+		_channel["center"] = (_channel["center"] as Vector2).move_toward(want, STORM_FOLLOW * delta)
+	_channel["next_tick"] -= delta
+	if _channel["next_tick"] > 0.0:
+		return
+	_channel["next_tick"] = channel_tick(p)
+	_ctx(p)
+	if p["kind"] == "channel_beam":
+		var end := origin + (target - origin).normalized() * float(p["range"])
+		enemies.hit_in_segment(origin, end, p["width"] * 0.5, p["min_damage"], p["max_damage"], p["crit_chance"], p["crit_multiplier"])
+	else:
+		var mult := 1.0 + channel_ramp(_channel["time"])
+		enemies.hit_in_radius(_channel["center"], storm_radius(p, _channel["time"]), p["min_damage"] * mult, p["max_damage"] * mult,
+			p["crit_chance"], p["crit_multiplier"])
+	_leech(p)
+
+
+func _draw_channel() -> void:
+	if _channel.is_empty():
+		return
+	var p: Dictionary = _channel["profile"]
+	var c: Color = _channel["color"]
+	var t := Time.get_ticks_msec() / 1000.0
+	var origin := player.global_position
+	if p["kind"] == "channel_beam":
+		# Rayo continuo: halo que vibra, núcleo y un hilo blanco.
+		var end := origin + ((_channel["aim"] as Vector2) - origin).normalized() * float(p["range"])
+		var w := float(p["width"])
+		draw_line(origin, end, Color(c, 0.22), w * (1.0 + 0.15 * sin(t * 22.0)), true)
+		draw_line(origin, end, Color(c, 0.8), w * 0.4, true)
+		draw_line(origin, end, Color(1, 1, 1, 0.9), maxf(2.0, w * 0.12), true)
+		draw_circle(origin, w * 0.35, Color(c, 0.6))
+	else:
+		# Tormenta: crece y se oscurece mientras se canaliza, con remolinos dentro.
+		var center: Vector2 = _channel["center"]
+		var ramp := channel_ramp(_channel["time"])
+		var r := storm_radius(p, _channel["time"])
+		draw_circle(center, r, Color(c, 0.10 + 0.12 * ramp))
+		draw_arc(center, r, 0.0, TAU, 48, Color(c, 0.6 + 0.3 * ramp), 2.0 + 2.0 * ramp, true)
+		for k in 5:
+			var a := t * (2.5 + k * 0.4) + TAU * k / 5.0
+			draw_arc(center, r * (0.25 + 0.15 * k), a, a + 1.3, 10, Color(c.lightened(0.3), 0.55), 2.0, true)
+		draw_line(origin + Vector2(0, -30), center, Color(c, 0.25), 2.0, true)
 
 
 # --- Trampas, minas y torretas (RAM de despliegue) ---
@@ -2001,6 +2115,7 @@ func _draw() -> void:
 	_draw_terrains()
 	_draw_clouds()
 	_draw_devices()
+	_draw_channel()
 	_draw_minions()
 	_draw_units()
 	_draw_companion()

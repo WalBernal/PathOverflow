@@ -295,7 +295,10 @@ func _stats_label(board: Motherboard) -> Label:
 	var parts := PackedStringArray()
 	if p["dps"] > 0.0:
 		parts.append("DPS ~%s" % _short(p["dps"]))
-	parts.append("maná %d" % int(p["mana_cost"]) if p["kind"] not in ["unit", "aura"] else "reserva %d %%" % roundi(p["reserve"]))
+	if p["kind"] in SkillController.CHANNEL_KINDS:
+		parts.append("maná %d/s" % int(p["mana_cost"]))
+	else:
+		parts.append("maná %d" % int(p["mana_cost"]) if p["kind"] not in ["unit", "aura"] else "reserva %d %%" % roundi(p["reserve"]))
 	if p["projectiles"] > 1:
 		parts.append("%d proyectiles%s" % [p["projectiles"], " teledirigidos" if p["homing"] else ""])
 	var installed := 0

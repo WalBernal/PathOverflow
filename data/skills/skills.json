@@ -299,6 +299,79 @@
       }
     },
     {
+      "id": "pipe_de_datos",
+      "name": "Pipe de Datos",
+      "kind": "channel_beam",
+      "damage_type": "lightning",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "channel",
+        "lightning",
+        "elemental"
+      ],
+      "lol": "Vel'Koz R",
+      "description": "Canalizado: mantén pulsada la tecla para abrir un flujo continuo de datos que electrocuta todo lo que cruza. Gasta maná por segundo y no te deja moverte; apunta con el cursor o el stick.",
+      "spell": {
+        "base_damage": [
+          5,
+          9
+        ],
+        "damage_growth": 0.15,
+        "cast_time": 0.25,
+        "crit": 5.0
+      },
+      "range": 520,
+      "width": 26,
+      "mana_cost": 9,
+      "mana_per_level": 0.45,
+      "cooldown": 0,
+      "icon": {
+        "shape": "pipe_beam",
+        "color": "e8d070"
+      },
+      "ailments": {
+        "shock": 6
+      }
+    },
+    {
+      "id": "tormenta_tickets",
+      "name": "Tormenta de Tickets",
+      "kind": "channel_storm",
+      "damage_type": "cold",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "channel",
+        "area",
+        "cold",
+        "elemental"
+      ],
+      "lol": "Janna R / Fiddlesticks R",
+      "description": "Canalizado: mientras la mantienes, una tormenta de tickets sin resolver crece donde apuntas (hasta el triple de tamaño y el doble de daño en 3 s) y sigue al cursor. Gasta maná por segundo.",
+      "spell": {
+        "base_damage": [
+          6,
+          10
+        ],
+        "damage_growth": 0.15,
+        "cast_time": 0.35,
+        "crit": 5.0
+      },
+      "range": 420,
+      "radius": 90,
+      "mana_cost": 10,
+      "mana_per_level": 0.5,
+      "cooldown": 0,
+      "icon": {
+        "shape": "ticket_storm",
+        "color": "7fb8e0"
+      },
+      "ailments": {
+        "chill": 10
+      }
+    },
+    {
       "id": "rollback",
       "name": "Rollback",
       "kind": "boomerang",

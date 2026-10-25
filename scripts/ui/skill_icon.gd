@@ -329,6 +329,19 @@ static func draw(ci: CanvasItem, rect: Rect2, skill_def: Dictionary, dimmed := f
 				for j in 9:
 					pts.append(c + Vector2(-r + j * r * 0.25, off + sin(j * 1.2 + k * PI) * r * 0.25))
 				ci.draw_polyline(pts, color if k == 0 else color.lightened(0.3), 3.0, true)
+		"pipe_beam":
+			# Tubería con un flujo de bits que sale por la boca.
+			ci.draw_rect(Rect2(c + Vector2(-r, -r * 0.3), Vector2(r * 0.8, r * 0.6)), Color("8a8a96"))
+			ci.draw_rect(Rect2(c + Vector2(-r * 0.3, -r * 0.42), Vector2(r * 0.2, r * 0.84)), Color("b0b0bc"))
+			ci.draw_line(c + Vector2(-r * 0.1, 0), c + Vector2(r, 0), color, r * 0.35, true)
+			ci.draw_line(c + Vector2(-r * 0.1, 0), c + Vector2(r, 0), Color.WHITE, r * 0.1, true)
+		"ticket_storm":
+			# Remolino con tickets volando.
+			for k in 3:
+				ci.draw_arc(c, r * (0.3 + 0.25 * k), k * 1.2, k * 1.2 + PI * 1.3, 14, color.lightened(0.15 * k), 2.5, true)
+			for k in 3:
+				var tp := c + Vector2.from_angle(TAU * k / 3.0 + 0.4) * r * 0.75
+				ci.draw_rect(Rect2(tp - Vector2(r * 0.14, r * 0.1), Vector2(r * 0.28, r * 0.2)), Color("f0e6c8"))
 		"shout", "shout_standup", "shout_rollback":
 			# Megáfono con ondas; los otros gritos llevan un reloj o una flecha de vuelta.
 			if icon.get("shape", "") == "shout_standup":

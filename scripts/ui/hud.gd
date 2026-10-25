@@ -250,7 +250,10 @@ func _skill_tooltip(i: int) -> String:
 		text += "\n%s (tienes %d)" % [Charges.SPEND_TEXT[t], int(character.charges.get(t, 0))]
 	if p["max_damage"] > 0.0:
 		text += "\nDaño: %d-%d  ·  Crítico: %.1f%%" % [p["min_damage"], p["max_damage"], p["crit_chance"]]
-	text += "\nCoste: %d de maná  ·  %.2f usos/s" % [p["mana_cost"], p["uses_per_second"]]
+	if p["kind"] in SkillController.CHANNEL_KINDS:
+		text += "\nCanalizado: %d de maná por segundo  ·  %.2f golpes/s" % [p["mana_cost"], p["uses_per_second"]]
+	else:
+		text += "\nCoste: %d de maná  ·  %.2f usos/s" % [p["mana_cost"], p["uses_per_second"]]
 	if p["cooldown"] > 0.0:
 		text += "  ·  Enfriamiento: %.1f s" % p["cooldown"]
 	if p["kind"] == "unit":

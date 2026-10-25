@@ -32,6 +32,7 @@ const INFO := {
 	"defense": ["defensa", "8ab0e0"],
 	"buff": ["potenciador", "e8d070"],
 	"warcry": ["grito", "e08a50"],
+	"channel": ["canalizado", "b0a0ff"],
 	"golem": ["golem", "c8a878"],
 }
 ## Tipo de daño → etiquetas que implica (se comprueban en las pruebas).

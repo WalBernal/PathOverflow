@@ -175,7 +175,10 @@ static func _motherboard_text(board: Motherboard, character: CharacterData) -> S
 		if String(p.get("converted_from", "")) != "":
 			lines.append("Daño convertido: [color=#e8d9b0]%s → %s[/color]" % [RamModule.DAMAGE_TYPE_NAMES.get(p["converted_from"], ""),
 				RamModule.DAMAGE_TYPE_NAMES.get(p["damage_type"], "")])
-		lines.append("Coste: [color=#7fa8e0]%d de maná[/color]  ·  [color=#e8d9b0]%.2f[/color] usos/s" % [p["mana_cost"], p["uses_per_second"]])
+		if p["kind"] in SkillController.CHANNEL_KINDS:
+			lines.append("Canalizado: [color=#7fa8e0]%d de maná por segundo[/color]  ·  [color=#e8d9b0]%.2f[/color] golpes/s mientras la mantienes" % [p["mana_cost"], p["uses_per_second"]])
+		else:
+			lines.append("Coste: [color=#7fa8e0]%d de maná[/color]  ·  [color=#e8d9b0]%.2f[/color] usos/s" % [p["mana_cost"], p["uses_per_second"]])
 		if p["radius"] > 0.0:
 			lines.append("Radio: [color=#e8d9b0]%d[/color]" % p["radius"])
 		if p["projectiles"] > 0:

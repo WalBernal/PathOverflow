@@ -98,6 +98,7 @@ func _initialize() -> void:
 	_test_chain_detonation()
 	_test_warcries()
 	_test_docker_container()
+	_test_channelled_spells()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -506,7 +507,7 @@ func _test_appearance() -> void:
 func _test_skill_data() -> void:
 	var skills := _db.skills
 	_check(skills.skills.size() >= 6 and skills.rams.size() >= 8, "carga de habilidades y RAM")
-	var kinds := ["melee_area", "nova", "projectile", "ground_aoe", "blink", "dash", "cone", "beam", "boomerang", "spin", "trap", "chain", "minion", "degen_area", "barrier", "buff", "curse_area", "dot_projectile", "homing", "drones", "leap_slam", "rain", "unit", "aura", "ssh", "charge", "backflip", "terrain"]
+	var kinds := ["melee_area", "nova", "projectile", "ground_aoe", "blink", "dash", "cone", "beam", "boomerang", "spin", "trap", "chain", "minion", "degen_area", "barrier", "buff", "curse_area", "dot_projectile", "homing", "drones", "leap_slam", "rain", "unit", "aura", "ssh", "charge", "backflip", "terrain", "channel_beam", "channel_storm"]
 	for def in skills.skills.values():
 		_check(kinds.has(def["kind"]), "tipo de habilidad desconocido en %s" % def["id"])
 		_check(def.has("attack") or def.has("spell"), "%s necesita 'attack' o 'spell'" % def["id"])
@@ -2008,6 +2009,50 @@ func _test_docker_container() -> void:
 	sc._devices[0]["ally"]["life"] = 0.0
 	sc._update_devices(0.05)
 	_check(sc._devices.is_empty() and is_zero_approx(pl.mana_reserved), "si lo destruyen, libera el maná")
+	sc.free()
+	pl.free()
+	em.free()
+
+
+## Hechizos canalizados: mientras se mantiene la tecla, maná por segundo y golpes por tick.
+func _test_channelled_spells() -> void:
+	var c := CharacterData.new(_classes[5], _tree)
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	var pl := Player.new()
+	pl.character = c
+	var sc := SkillController.new()
+	sc.player = pl
+	sc.enemies = em
+	sc.character = c
+	for id in ["pipe_de_datos", "tormenta_tickets"]:
+		_check(_db.skills.skills.has(id) and "channel" in _db.skills.skills[id]["tags"], "%s es canalizado" % id)
+		_check(not RamModule.new(_db.skills.rams["servidor_torreta"]).supports(_db.skills.skills[id]) and not RamModule.new(_db.skills.rams["cron_job"]).supports(_db.skills.skills[id]),
+			"%s no va en torreta ni con activación" % id)
+	# Rayo: golpea en línea y cobra maná por segundo.
+	var beam := SkillCalc.compute(Motherboard.new(_db.skills.skills["pipe_de_datos"], 5, []), c)
+	em.spawn(Vector2(200, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+	var life0: float = em.lives[0]
+	pl.mana = 100.0
+	sc._start_channel(0, beam, Vector2(400, 0))
+	sc._update_channel(0.05, true, Vector2(400, 0))
+	_check(em.lives.size() == 0 or em.lives[0] < life0, "el rayo canalizado golpea lo que cruza")
+	_check(is_equal_approx(pl.mana, 100.0 - float(beam["mana_cost"]) * 0.05), "cobra maná por segundo")
+	_check(sc.is_channeling() and pl.action_lock > 0.0, "mientras canaliza no se mueve")
+	sc._update_channel(0.05, false, Vector2(400, 0))
+	_check(not sc.is_channeling(), "al soltar la tecla se corta")
+	pl.mana = 0.0
+	sc._start_channel(0, beam, Vector2(400, 0))
+	sc._update_channel(0.05, true, Vector2(400, 0))
+	_check(not sc.is_channeling(), "sin maná se corta")
+	# Tormenta: crece con el tiempo y sigue al cursor.
+	var storm := SkillCalc.compute(Motherboard.new(_db.skills.skills["tormenta_tickets"], 5, []), c)
+	_check(is_equal_approx(SkillController.storm_radius(storm, SkillController.CHANNEL_RAMP), SkillController.storm_radius(storm, 0.0) * 3.0), "la tormenta llega al triple de tamaño")
+	pl.mana = 1000.0
+	sc._start_channel(1, storm, Vector2(100, 0))
+	var start: Vector2 = sc._channel["center"]
+	sc._update_channel(1.0, true, Vector2(100, 300))
+	_check((sc._channel["center"] as Vector2).y > start.y and is_equal_approx(float(sc._channel["time"]), 1.0), "la tormenta sigue al cursor mientras crece")
 	sc.free()
 	pl.free()
 	em.free()
