@@ -50,6 +50,10 @@ func _run() -> void:
 		await _capture_golems_in_world()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("terrenos"):
+		await _capture_terrains()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("ventanas160"):
 		await _capture_windows_160()
 		get_tree().quit()
@@ -524,6 +528,53 @@ func _capture_windows() -> void:
 	for k in saved_rules:
 		LootFilter.set_rule(k, saved_rules[k])
 	GameSettings.set_value("interface", "scale", saved_scale)
+	world.set("_since_save", -9999.0)
+
+
+## Terrenos: aceite, estática, refrigerante, aceite ardiendo y superconductor,
+## con y sin el modo daltónico (patrón propio por tipo).
+func _capture_terrains() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var items: ItemDatabase = gd.get("items")
+	var c: CharacterData = gd.create_character("Terrenos", &"hechicero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "zona2"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 12
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.5)
+	var ui: GameUI = world.get("ui")
+	if ui.is_choosing():
+		ui.call("_on_choice_picked", "golem_hardware", func(_s: String) -> void: pass)
+	get_tree().paused = false
+	var player: Player = world.get("player")
+	var skills: SkillController = world.get("skills")
+	var em: EnemyManager = world.get("enemies")
+	player.invulnerable = true
+	em.clear_all()
+	var p := player.global_position
+	var spots := {"derrame_aceite": Vector2(-420, -120), "campo_estatica": Vector2(-130, -160), "charco_refrigerante": Vector2(160, -160)}
+	for sid in spots:
+		skills.call("_execute", SkillCalc.compute(Motherboard.new(items.skills.skills[sid], 5, []), c), p + spots[sid])
+	# Un segundo aceite, prendido; y estática + refrigerante encimados (superconductor).
+	skills.call("_execute", SkillCalc.compute(Motherboard.new(items.skills.skills["derrame_aceite"], 5, []), c), p + Vector2(420, -100))
+	skills.call("_ignite_oil_near", p + Vector2(420, -100), 10.0)
+	skills.call("_execute", SkillCalc.compute(Motherboard.new(items.skills.skills["campo_estatica"], 5, []), c), p + Vector2(0, 170))
+	skills.call("_execute", SkillCalc.compute(Motherboard.new(items.skills.skills["charco_refrigerante"], 5, []), c), p + Vector2(40, 180))
+	for k in 6:
+		var id := em.spawn(p + Vector2(-480 + k * 190, -40), Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+		em.lives[em.index_of(id)] *= 50.0
+		em.max_lives[em.index_of(id)] *= 50.0
+	await _wait(0.6)
+	_save("125_terrenos")
+	var was_cb := Ailments.colorblind
+	Ailments.colorblind = true
+	await _wait(0.2)
+	_save("126_terrenos_daltonico")
+	Ailments.colorblind = was_cb
 	world.set("_since_save", -9999.0)
 
 

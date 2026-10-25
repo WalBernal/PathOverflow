@@ -327,4 +327,4 @@ static func _kind_name(kind: String) -> String:
 		"barrier": "barrera", "blink": "movimiento", "dash": "carga", "leap_slam": "salto", "spin": "giro", "rain": "lluvia",
 		"beam": "rayo", "boomerang": "bumerán", "homing": "teledirigido", "cone": "cono", "degen_area": "charco",
 		"curse_area": "maldición", "dot_projectile": "proyectil degenerativo",
-		"ssh": "teletransporte con descarga", "charge": "carga con empuje", "backflip": "salto atrás"}.get(kind, kind)
+		"ssh": "teletransporte con descarga", "charge": "carga con empuje", "backflip": "salto atrás", "terrain": "terreno"}.get(kind, kind)

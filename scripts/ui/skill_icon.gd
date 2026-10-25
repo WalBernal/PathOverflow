@@ -203,6 +203,34 @@ static func draw(ci: CanvasItem, rect: Rect2, skill_def: Dictionary, dimmed := f
 			ci.draw_line(c + Vector2(-r, r * 0.6), c + Vector2(r * 0.8, -r * 0.6), color, 4.0, true)
 			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(r, -r * 0.8), c + Vector2(r * 0.15, -r * 0.65),
 				c + Vector2(r * 0.75, -r * 0.05)]), color)
+		"oil":
+			# Gota de aceite sobre un charco con brillo, y una chispa.
+			ci.draw_set_transform(c + Vector2(0, r * 0.55), 0.0, Vector2(1.0, 0.4))
+			ci.draw_circle(Vector2.ZERO, r * 0.95, Color("2a2018"))
+			ci.draw_arc(Vector2.ZERO, r * 0.6, PI * 1.1, PI * 1.6, 8, Color(0.7, 0.5, 1.0, 0.7), 2.0, true)
+			ci.draw_set_transform(Vector2.ZERO)
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(0, -r * 0.9), c + Vector2(r * 0.4, -r * 0.05),
+				c + Vector2(0, r * 0.3), c + Vector2(-r * 0.4, -r * 0.05)]), color)
+			ci.draw_circle(c + Vector2(r * 0.65, -r * 0.6), r * 0.13, Color("ffb040"))
+		"static_field":
+			# Suelo cargado: elipse con chispas en zigzag.
+			ci.draw_set_transform(c + Vector2(0, r * 0.35), 0.0, Vector2(1.0, 0.45))
+			ci.draw_arc(Vector2.ZERO, r * 0.95, 0.0, TAU, 24, color, 2.5, true)
+			ci.draw_set_transform(Vector2.ZERO)
+			for s: float in [-1.0, 0.0, 1.0]:
+				var x := c.x + s * r * 0.5
+				ci.draw_polyline(PackedVector2Array([Vector2(x, c.y - r * 0.85), Vector2(x - r * 0.15, c.y - r * 0.35),
+					Vector2(x + r * 0.12, c.y - r * 0.3), Vector2(x - r * 0.05, c.y + r * 0.25)]), color, 2.0, true)
+		"coolant":
+			# Charco helado con cristales y un tubo que gotea.
+			ci.draw_set_transform(c + Vector2(0, r * 0.5), 0.0, Vector2(1.0, 0.4))
+			ci.draw_circle(Vector2.ZERO, r * 0.95, Color(color, 0.55))
+			ci.draw_set_transform(Vector2.ZERO)
+			for k in 3:
+				var q := c + Vector2((k - 1) * r * 0.5, r * 0.45)
+				ci.draw_colored_polygon(PackedVector2Array([q + Vector2(-r * 0.12, 0), q + Vector2(0, -r * 0.45), q + Vector2(r * 0.12, 0)]), Color("e8f6ff"))
+			ci.draw_line(c + Vector2(-r * 0.9, -r * 0.7), c + Vector2(r * 0.1, -r * 0.7), Color("8a8a96"), r * 0.22)
+			ci.draw_circle(c + Vector2(r * 0.15, -r * 0.4), r * 0.12, color)
 		"ssh":
 			# Dos terminales unidos por un túnel con un rayo.
 			for s in [-1.0, 1.0]:

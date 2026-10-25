@@ -254,6 +254,11 @@ func _update_aura_fields() -> void:
 			if not en.is_empty():
 				fields.append({"pos": aura_center(a), "radius": float(a["profile"]["aura_radius"]),
 					"slow": float(en.get("slow", 0.0)), "damage_taken": float(en.get("damage_taken", 0.0))})
+	# Terrenos que ralentizan (aceite, superconductor).
+	for t in _terrains:
+		var slow: float = TERRAIN_SLOW.get(t["terrain"], 0.0)
+		if slow > 0.0:
+			fields.append({"pos": t["pos"], "radius": t["radius"], "slow": slow, "damage_taken": 0.0})
 	enemies.aura_fields = fields
 
 
@@ -280,6 +285,7 @@ func on_zone_changed() -> void:
 	_traps.clear()
 	_devices.clear()
 	_clouds.clear()
+	_terrains.clear()
 	_rains.clear()
 	_spins.assign(_spins.filter(func(s: Dictionary) -> bool: return s["center"] == Vector2.INF))
 	var k := 0
@@ -606,6 +612,7 @@ func _physics_process(delta: float) -> void:
 	_sync_golem_buffs()
 	_update_rains(delta)
 	_update_clouds(delta)
+	_update_terrains(delta)
 	_update_drones(delta)
 	_update_companion(delta)
 	_update_ascendancy_procs(delta)
@@ -624,7 +631,10 @@ func _ctx(p: Dictionary, scale := 1.0) -> void:
 	var scaled := {}
 	for id in ctx["chances"]:
 		scaled[id] = float(ctx["chances"][id]) * scale
-	enemies.hit_ailments = {"chances": scaled, "effect": ctx["effect"], "duration": ctx["duration"]}
+	# Se conservan el tipo de daño (resistencias) y el bono contra enemigos con estados.
+	var out := ctx.duplicate()
+	out["chances"] = scaled
+	enemies.hit_ailments = out
 
 
 func try_use(index: int) -> bool:
@@ -882,6 +892,14 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 			player.global_position = _landing(origin + offset)
 			player.stop_auto_move()
 			_effects.append({"type": "ring", "pos": player.global_position, "radius": 40.0, "time": 0.0, "duration": 0.3, "color": color})
+		"terrain":
+			# Terreno: aceite, estática o refrigerante en el suelo (ver _update_terrains).
+			var offset := (target - origin).limit_length(p["range"])
+			_terrains.append({"pos": origin + offset, "radius": float(p["radius"]), "terrain": String(p["def"].get("terrain", "oil")),
+				"life": float(p["duration"]), "next": 0.0, "profile": p, "color": color, "seed": randi()})
+			while _terrains.size() > MAX_TERRAINS:
+				_terrains.pop_front()
+			_effects.append({"type": "ring", "pos": origin + offset, "radius": p["radius"], "time": 0.0, "duration": 0.3, "color": color})
 		"ssh":
 			# Túnel SSH: teletransporte corto con una descarga al salir y otra al llegar.
 			if device:
@@ -1508,6 +1526,118 @@ func _update_clouds(delta: float) -> void:
 			still.append(c)
 	_clouds = still
 
+# --- Terrenos y combos ---
+# oil: ralentiza; arde (explosión + suelo en llamas) si dentro hay un enemigo
+#   quemándose, lo cruza un proyectil de fuego o cae una explosión de fuego.
+# static: daño de rayo por segundo; frost: daño de frío y hiela.
+# static + frost encimados = superconductor: el doble de rayo, hiela y puede congelar.
+# fire: el aceite ardiendo (quema). base_damage de la habilidad es por segundo.
+
+const MAX_TERRAINS := 6
+const TERRAIN_SLOW := {"oil": 0.35, "superconductor": 0.2}
+const TERRAIN_COLORS := {"oil": Color("3a2f24"), "static": Color("fff07a"), "frost": Color("9fd8ff"),
+	"fire": Color("ff7a2a"), "superconductor": Color("8ae8ff")}
+## Explosión del aceite: segundos de daño de su habilidad, y radio respecto al charco.
+const OIL_BLAST_SECONDS := 3.0
+const OIL_BLAST_SCALE := 1.25
+const OIL_FIRE_TIME := 3.0
+var _terrains: Array[Dictionary] = []
+
+
+func _update_terrains(delta: float) -> void:
+	if _terrains.is_empty():
+		return
+	_fuse_superconductors()
+	var still: Array[Dictionary] = []
+	for t in _terrains:
+		t["life"] -= delta
+		t["next"] -= delta
+		if t["terrain"] == "oil":
+			if _oil_should_ignite(t):
+				_ignite(t)
+		elif t["next"] <= 0.0:
+			var p: Dictionary = t["profile"]
+			var k: float = maxf(0.05, float(p["tick"]))
+			t["next"] = k
+			var mult := 1.0
+			var ctx: Dictionary = p.get("ailment_ctx", {}).duplicate()
+			match t["terrain"]:
+				"fire":
+					ctx = {"type": "fire", "chances": {Ailments.BURN: 50.0}, "effect": ctx.get("effect", 1.0), "duration": ctx.get("duration", 1.0)}
+				"superconductor":
+					mult = 2.0
+					ctx["type"] = "lightning"
+					ctx["chances"] = {Ailments.SHOCK: 50.0, Ailments.CHILL: 100.0, Ailments.FREEZE: 20.0}
+			enemies.hit_ailments = ctx
+			enemies.hit_in_radius(t["pos"], t["radius"], p["min_damage"] * k * mult, p["max_damage"] * k * mult, 0.0, 100.0)
+			_leech(p)
+		if t["life"] > 0.0:
+			still.append(t)
+	_terrains = still
+
+
+## ¿Arde este charco de aceite? Enemigo quemándose dentro, proyectil de fuego
+## encima o un terreno en llamas tocándolo.
+func _oil_should_ignite(t: Dictionary) -> bool:
+	for i in enemies.positions.size():
+		if enemies.burn_time[i] > 0.0 and enemies.positions[i].distance_to(t["pos"]) <= t["radius"] + enemies.radii[i]:
+			return true
+	for pr in _projectiles:
+		if String(pr["profile"].get("damage_type", "")) == "fire" and (pr["pos"] as Vector2).distance_to(t["pos"]) <= t["radius"]:
+			return true
+	for o in _terrains:
+		if o["terrain"] == "fire" and (o["pos"] as Vector2).distance_to(t["pos"]) <= o["radius"] + t["radius"]:
+			return true
+	return false
+
+
+## Explosión de fuego en un punto: prende los charcos de aceite que toque.
+func _ignite_oil_near(pos: Vector2, radius: float) -> void:
+	for t in _terrains:
+		if t["terrain"] == "oil" and (t["pos"] as Vector2).distance_to(pos) <= t["radius"] + radius:
+			_ignite(t)
+
+
+## Combo aceite + fuego: explosión que quema a todos y el charco queda ardiendo.
+func _ignite(t: Dictionary) -> void:
+	if t["terrain"] != "oil":
+		return
+	var p: Dictionary = t["profile"]
+	var ctx: Dictionary = p.get("ailment_ctx", {})
+	enemies.hit_ailments = {"type": "fire", "chances": {Ailments.BURN: 100.0}, "effect": ctx.get("effect", 1.0), "duration": ctx.get("duration", 1.0)}
+	var r: float = t["radius"] * OIL_BLAST_SCALE
+	enemies.hit_in_radius(t["pos"], r, p["min_damage"] * OIL_BLAST_SECONDS, p["max_damage"] * OIL_BLAST_SECONDS, p["crit_chance"], p["crit_multiplier"])
+	_leech(p)
+	t["terrain"] = "fire"
+	t["life"] = OIL_FIRE_TIME
+	t["next"] = 0.3
+	Sfx.play("mine", -4.0, 0.8)
+	_effects.append({"type": "burst", "pos": t["pos"], "radius": r, "time": 0.0, "duration": 0.4, "color": TERRAIN_COLORS["fire"]})
+	_effects.append({"type": "ring", "pos": t["pos"], "radius": r, "time": 0.0, "duration": 0.45, "color": Color("ffd060")})
+
+
+## Combo estática + refrigerante: si se enciman, se funden en un campo superconductor.
+func _fuse_superconductors() -> void:
+	for a in _terrains:
+		if a["terrain"] != "static" or a["life"] <= 0.0:
+			continue
+		for b in _terrains:
+			if b["terrain"] != "frost" or b["life"] <= 0.0:
+				continue
+			var pa: Vector2 = a["pos"]
+			var pb: Vector2 = b["pos"]
+			if pa.distance_to(pb) > (a["radius"] + b["radius"]) * 0.6:
+				continue
+			a["pos"] = pa.lerp(pb, 0.5)
+			a["radius"] = maxf(a["radius"], b["radius"]) * 1.1
+			a["terrain"] = "superconductor"
+			a["life"] = maxf(a["life"], b["life"])
+			b["life"] = 0.0
+			Sfx.play("arc", -4.0)
+			_effects.append({"type": "ring", "pos": a["pos"], "radius": a["radius"], "time": 0.0, "duration": 0.5, "color": TERRAIN_COLORS["superconductor"]})
+			break
+
+
 func _update_traps(delta: float) -> void:
 	var still: Array[Dictionary] = []
 	for trap in _traps:
@@ -1546,6 +1676,8 @@ func _update_pending(delta: float) -> void:
 		if e["type"] == "blast":
 			var radius: float = e.get("radius", p["radius"])
 			_damage_area(e["pos"], radius, p)
+			if p["damage_type"] == "fire":
+				_ignite_oil_near(e["pos"], radius)
 			_effects.append({"type": "burst", "pos": e["pos"], "radius": radius, "time": 0.0, "duration": 0.3, "color": e["color"]})
 		elif e["type"] == "beam":
 			var end: Vector2 = e["pos"] + e["dir"] * p["range"]
@@ -1627,6 +1759,7 @@ func _draw() -> void:
 		draw_circle(trap["pos"], 3.0, trap["color"] if blink else Color(trap["color"], 0.3))
 		draw_arc(trap["pos"], trap["profile"]["trigger_radius"], 0.0, TAU, 24, Color(trap["color"], 0.18), 1.0, true)
 	_draw_auras()
+	_draw_terrains()
 	_draw_clouds()
 	_draw_devices()
 	_draw_minions()
@@ -1883,6 +2016,102 @@ func _draw_units() -> void:
 				var cr: float = u["corrode_radius"]
 				draw_circle(p, cr, Color(c, 0.05 + 0.03 * sin(ph * 0.8)))
 				draw_arc(p, cr, ph * 0.2, ph * 0.2 + TAU * 0.85, 40, Color(c, 0.35), 1.5, true)
+
+
+## Terrenos en el suelo, cada uno con su color y su textura (aceite con brillo,
+## estática con chispas, escarcha con cristales, fuego con lenguas, superconductor
+## con arcos). En modo daltónico, además, un patrón propio por tipo: rayas
+## horizontales (aceite), zigzag (estática), cruces (escarcha), diagonales (fuego)
+## y puntos (superconductor).
+func _draw_terrains() -> void:
+	var t := Time.get_ticks_msec() / 1000.0
+	for tr in _terrains:
+		var p: Vector2 = tr["pos"]
+		var r: float = tr["radius"]
+		var kind: String = tr["terrain"]
+		var col: Color = TERRAIN_COLORS[kind]
+		var fade := clampf(float(tr["life"]) / 0.5, 0.0, 1.0)
+		var sd := int(tr["seed"]) % 97
+		draw_set_transform(p, 0.0, Vector2(1.0, 0.65))
+		match kind:
+			"oil":
+				draw_circle(Vector2.ZERO, r, Color(0.08, 0.06, 0.05, 0.72 * fade))
+				draw_circle(Vector2.ZERO, r * 0.82, Color(col, 0.85 * fade))
+				for k in 3:   # reflejos irisados
+					var a := TAU * k / 3.0 + sd + t * 0.2
+					draw_arc(Vector2.from_angle(a) * r * 0.35, r * 0.25, a, a + 1.6, 10, Color(0.6, 0.45 + 0.15 * k, 0.9, 0.35 * fade), 2.0, true)
+			"fire":
+				draw_circle(Vector2.ZERO, r, Color(col, 0.28 * fade))
+				draw_circle(Vector2.ZERO, r * 0.6, Color(1.0, 0.85, 0.3, 0.22 * fade))
+			"static":
+				draw_circle(Vector2.ZERO, r, Color(col, 0.12 * fade))
+				draw_arc(Vector2.ZERO, r, 0.0, TAU, 32, Color(col, 0.55 * fade), 2.0, true)
+			"frost":
+				draw_circle(Vector2.ZERO, r, Color(col, 0.25 * fade))
+				draw_arc(Vector2.ZERO, r, 0.0, TAU, 32, Color(0.9, 0.97, 1.0, 0.6 * fade), 2.0, true)
+			"superconductor":
+				draw_circle(Vector2.ZERO, r, Color(col, 0.22 * fade))
+				draw_arc(Vector2.ZERO, r, 0.0, TAU, 32, Color(0.75, 0.6, 1.0, 0.8 * fade), 3.0, true)
+		if Ailments.colorblind:
+			_draw_terrain_pattern(kind, r, Color(1, 1, 1, 0.45 * fade))
+		draw_set_transform(Vector2.ZERO)
+		# Detalle animado (sin aplastar).
+		match kind:
+			"fire":
+				for k in 6:
+					var ph := fmod(t * 1.6 + k / 6.0 + sd * 0.1, 1.0)
+					var q := p + Vector2.from_angle(TAU * k / 6.0 + sd) * r * 0.5 * Vector2(1.0, 0.65) + Vector2(0, -ph * 22.0)
+					draw_circle(q, (1.0 - ph) * 6.0, Color(1.0, 0.5 + 0.4 * ph, 0.1, 0.8 * (1.0 - ph) * fade))
+			"static", "superconductor":
+				for k in 3:
+					var seed_t := floorf(t * 9.0 + k * 3.0 + sd)
+					var a := fposmod(seed_t * 2.399 + k * 2.1, TAU)
+					var from := p + Vector2.from_angle(a) * r * 0.2 * Vector2(1.0, 0.65)
+					var to := p + Vector2.from_angle(a + 0.8) * r * 0.85 * Vector2(1.0, 0.65)
+					var mid := from.lerp(to, 0.5) + (to - from).orthogonal().normalized() * (fposmod(seed_t * 3.1, 1.0) - 0.5) * 18.0
+					draw_polyline(PackedVector2Array([from, mid, to]), Color(col, 0.85 * fade), 1.6, true)
+			"frost":
+				for k in 6:
+					var q := p + Vector2.from_angle(TAU * k / 6.0 + sd) * r * 0.6 * Vector2(1.0, 0.65)
+					draw_colored_polygon(PackedVector2Array([q + Vector2(-3, 0), q + Vector2(0, -12), q + Vector2(3, 0)]), Color(0.85, 0.96, 1.0, 0.75 * fade))
+
+
+## Patrón de modo daltónico de cada terreno (en las coordenadas ya aplastadas del charco).
+func _draw_terrain_pattern(kind: String, r: float, c: Color) -> void:
+	var step := 16.0
+	var y := -r + step * 0.5
+	while y < r:
+		var half := sqrt(maxf(0.0, r * r - y * y)) * 0.85
+		match kind:
+			"oil":
+				draw_line(Vector2(-half, y), Vector2(half, y), c, 2.0)
+			"static":
+				var pts := PackedVector2Array()
+				var x := -half
+				var up := true
+				while x <= half:
+					pts.append(Vector2(x, y + (-4.0 if up else 4.0)))
+					up = not up
+					x += 8.0
+				if pts.size() >= 2:
+					draw_polyline(pts, c, 1.5)
+			"frost":
+				var x := -half + 8.0
+				while x < half:
+					draw_line(Vector2(x - 4, y), Vector2(x + 4, y), c, 1.5)
+					draw_line(Vector2(x, y - 4), Vector2(x, y + 4), c, 1.5)
+					x += step
+			"fire":
+				var x := -half
+				while x < half:
+					draw_line(Vector2(x, y + 5), Vector2(x + 8, y - 5), c, 1.5)
+					x += 12.0
+			"superconductor":
+				var x := -half + 6.0
+				while x < half:
+					draw_circle(Vector2(x, y), 2.0, c)
+					x += 12.0
+		y += step
 
 
 func _draw_clouds() -> void:

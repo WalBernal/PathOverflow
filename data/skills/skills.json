@@ -1020,6 +1020,125 @@
       }
     },
     {
+      "id": "derrame_aceite",
+      "name": "Derrame de Aceite",
+      "kind": "terrain",
+      "terrain": "oil",
+      "damage_type": "fire",
+      "attribute": "dex",
+      "tags": [
+        "spell",
+        "area",
+        "fire",
+        "elemental",
+        "duration"
+      ],
+      "lol": "Singed Q / Gragas Q",
+      "description": "Tiras el aceite del ventilador en el suelo: los enemigos resbalan y van más lentos. Si algo en llamas lo toca (un enemigo quemándose, un proyectil o una explosión de fuego), estalla y el suelo queda ardiendo.",
+      "spell": {
+        "base_damage": [
+          9,
+          14
+        ],
+        "damage_growth": 0.16,
+        "cast_time": 0.6,
+        "crit": 6.0
+      },
+      "radius": 110,
+      "range": 450,
+      "duration": 7.0,
+      "tick": 0.3,
+      "mana_cost": 9,
+      "mana_per_level": 0.4,
+      "cooldown": 1.0,
+      "icon": {
+        "shape": "oil",
+        "color": "c08a3a"
+      }
+    },
+    {
+      "id": "campo_estatica",
+      "name": "Campo de Estática",
+      "kind": "terrain",
+      "terrain": "static",
+      "damage_type": "lightning",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "area",
+        "lightning",
+        "elemental",
+        "degen",
+        "duration"
+      ],
+      "lol": "Zeri W / Kennen W",
+      "description": "Cargas el suelo de electricidad estática: daño de rayo por segundo a quien lo pise y alguna electrocución. Encima de un charco de refrigerante se vuelve superconductor.",
+      "spell": {
+        "base_damage": [
+          6,
+          10
+        ],
+        "damage_growth": 0.16,
+        "cast_time": 0.6,
+        "crit": 0.0
+      },
+      "radius": 120,
+      "range": 420,
+      "duration": 5.0,
+      "tick": 0.3,
+      "mana_cost": 10,
+      "mana_per_level": 0.5,
+      "cooldown": 0,
+      "icon": {
+        "shape": "static_field",
+        "color": "fff07a"
+      },
+      "ailments": {
+        "shock": 25
+      }
+    },
+    {
+      "id": "charco_refrigerante",
+      "name": "Charco de Refrigerante",
+      "kind": "terrain",
+      "terrain": "frost",
+      "damage_type": "cold",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "area",
+        "cold",
+        "elemental",
+        "degen",
+        "duration"
+      ],
+      "lol": "Lissandra W / Anivia R",
+      "description": "Vacías el circuito de refrigeración líquida: el suelo se hiela, hace daño de frío y ralentiza a quien lo pisa. Con un Campo de Estática encima, superconductor: el doble de rayo y congela.",
+      "spell": {
+        "base_damage": [
+          3,
+          5
+        ],
+        "damage_growth": 0.15,
+        "cast_time": 0.6,
+        "crit": 0.0
+      },
+      "radius": 115,
+      "range": 420,
+      "duration": 5.0,
+      "tick": 0.4,
+      "mana_cost": 8,
+      "mana_per_level": 0.4,
+      "cooldown": 0,
+      "icon": {
+        "shape": "coolant",
+        "color": "6ac0ff"
+      },
+      "ailments": {
+        "chill": 100
+      }
+    },
+    {
       "id": "fuzzing",
       "name": "Fuzzing",
       "kind": "cone",

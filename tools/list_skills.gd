@@ -16,6 +16,7 @@ const KIND_NAMES := {
 	"homing": "proyectiles teledirigidos", "drones": "drones temporales", "leap_slam": "salto y golpe", "rain": "lluvia de impactos",
 	"unit": "invocación persistente", "aura": "aura persistente",
 	"ssh": "teletransporte con descarga", "charge": "carga con empuje", "backflip": "salto atrás con zona helada",
+	"terrain": "terreno en el suelo (con combos)",
 }
 const BEHAVIOR_NAMES := {
 	"melee": "cuerpo a cuerpo: persigue al enemigo más cercano",
@@ -88,7 +89,7 @@ func _skill(md: PackedStringArray, s: Dictionary, p: Dictionary, unlocks: Dictio
 	if p["cooldown"] > 0.0:
 		facts.append("enfriamiento %.1f s" % p["cooldown"])
 	if p["max_damage"] > 0.0:
-		facts.append("daño %.0f-%.0f%s" % [p["min_damage"], p["max_damage"], " por segundo" if s["kind"] in ["degen_area", "curse_area", "dot_projectile", "backflip"] else ""])
+		facts.append("daño %.0f-%.0f%s" % [p["min_damage"], p["max_damage"], " por segundo" if s["kind"] in ["degen_area", "curse_area", "dot_projectile", "backflip", "terrain"] else ""])
 	if p["projectiles"] > 0:
 		facts.append("%d proyectil%s%s" % [p["projectiles"], "es" if p["projectiles"] > 1 else "", " teledirigidos" if p["homing"] else ""])
 	if p["radius"] > 0.0:

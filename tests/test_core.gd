@@ -63,6 +63,7 @@ func _initialize() -> void:
 	_test_golems()
 	_test_movement_skills()
 	_test_dodge_upgrades()
+	_test_terrains()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -468,7 +469,7 @@ func _test_appearance() -> void:
 func _test_skill_data() -> void:
 	var skills := _db.skills
 	_check(skills.skills.size() >= 6 and skills.rams.size() >= 8, "carga de habilidades y RAM")
-	var kinds := ["melee_area", "nova", "projectile", "ground_aoe", "blink", "dash", "cone", "beam", "boomerang", "spin", "trap", "chain", "minion", "degen_area", "barrier", "buff", "curse_area", "dot_projectile", "homing", "drones", "leap_slam", "rain", "unit", "aura", "ssh", "charge", "backflip"]
+	var kinds := ["melee_area", "nova", "projectile", "ground_aoe", "blink", "dash", "cone", "beam", "boomerang", "spin", "trap", "chain", "minion", "degen_area", "barrier", "buff", "curse_area", "dot_projectile", "homing", "drones", "leap_slam", "rain", "unit", "aura", "ssh", "charge", "backflip", "terrain"]
 	for def in skills.skills.values():
 		_check(kinds.has(def["kind"]), "tipo de habilidad desconocido en %s" % def["id"])
 		_check(def.has("attack") or def.has("spell"), "%s necesita 'attack' o 'spell'" % def["id"])
@@ -1864,6 +1865,50 @@ func _test_board_milestones() -> void:
 	_check(SkillCalc.compute(Motherboard.new(_db.skills.skills["proceso_hijo"], 20, ["DDR5"]), c)["count"] == 4, "esbirros extra por nivel")
 
 
+## Terrenos (aceite, estática, refrigerante) y sus combos: aceite + fuego =
+## explosión y suelo en llamas; estática + refrigerante = superconductor.
+func _test_terrains() -> void:
+	var skills := _db.skills.skills
+	var c := CharacterData.new(_classes[4], _tree)
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	var sc := SkillController.new()
+	sc.enemies = em
+	sc.character = c
+	var bug := em.type_index_of("bug")
+	var prof := {}
+	for sid in ["derrame_aceite", "campo_estatica", "charco_refrigerante"]:
+		_check(skills.has(sid) and skills[sid]["kind"] == "terrain", "%s es un terreno" % sid)
+		prof[sid] = SkillCalc.compute(Motherboard.new(skills[sid], 1, []), c)
+		_check(prof[sid]["dps"] > 0.0 and prof[sid]["duration"] > 0.0, "%s: daño por segundo y duración" % sid)
+	var add := func(sid: String, pos: Vector2) -> Dictionary:
+		var t := {"pos": pos, "radius": float(prof[sid]["radius"]), "terrain": String(skills[sid]["terrain"]), "life": 5.0, "next": 0.0,
+			"profile": prof[sid], "color": Color.WHITE, "seed": 1}
+		sc._terrains.append(t)
+		return t
+	# Aceite: ralentiza y, con un enemigo quemándose dentro, estalla y arde.
+	var oil: Dictionary = add.call("derrame_aceite", Vector2.ZERO)
+	var burning := em.index_of(em.spawn(Vector2(20, 0), Rarity.Enemy.NORMAL, bug))
+	em.lives[burning] = 1.0e6
+	em.max_lives[burning] = 1.0e6
+	sc._update_aura_fields()
+	_check(em.aura_fields.any(func(f: Dictionary) -> bool: return f["slow"] > 0.0), "el aceite ralentiza")
+	sc._update_terrains(0.05)
+	_check(oil["terrain"] == "oil", "el aceite no arde solo")
+	em.apply_ailment(burning, Ailments.BURN, 10.0)
+	sc._update_terrains(0.05)
+	_check(oil["terrain"] == "fire" and em.lives[burning] < 1.0e6, "aceite + enemigo quemándose: explosión y suelo en llamas")
+	# Estática + refrigerante encimados: superconductor.
+	sc._terrains.clear()
+	var st: Dictionary = add.call("campo_estatica", Vector2(1000, 0))
+	var fr: Dictionary = add.call("charco_refrigerante", Vector2(1040, 0))
+	sc._update_terrains(0.05)
+	_check(st["terrain"] == "superconductor" and sc._terrains.size() == 1, "estática + refrigerante = superconductor")
+	_check(not fr in sc._terrains, "el refrigerante se funde en el superconductor")
+	sc.free()
+	em.free()
+
+
 ## Esquiva, siguiente paso: recarga más rápida, Multihilos y explosión al esquivar,
 ## en afijos, chips, el árbol y las ascendencias.
 func _test_dodge_upgrades() -> void:
@@ -1875,7 +1920,7 @@ func _test_dodge_upgrades() -> void:
 	var base_time := p.dodge_recharge_time()
 	c.add_timed_effect("prueba_esquiva", [Modifier.from_dict({"stat": "dodge_recovery", "type": "flat", "value": 25}, "prueba")] as Array[Modifier], 99.0)
 	_check(is_equal_approx(base_time, Player.DODGE_RECHARGE) and is_equal_approx(p.dodge_recharge_time(), Player.DODGE_RECHARGE / 1.25),
-		"+25 % de recarga de esquiva: %.2f s → %.2f s" % [base_time, p.dodge_recharge_time()])
+		"+25 %% de recarga de esquiva: %.2f s → %.2f s" % [base_time, p.dodge_recharge_time()])
 	p.free()
 	var affix_stats := {}
 	for a in _db.affixes:

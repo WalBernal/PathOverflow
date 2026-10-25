@@ -337,7 +337,7 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 		"minion":
 			# Cada esbirro golpea ~1 vez por segundo mientras dura.
 			hits_per_use *= float(int(skill.get("count", 1)) + extra_minions + milestones) * maxf(1.0, duration / minion_interval)
-		"degen_area", "curse_area", "dot_projectile", "backflip":
+		"degen_area", "curse_area", "dot_projectile", "backflip", "terrain":
 			hits_per_use *= maxf(1.0, duration)   # base_damage es por segundo (Git Revert: su zona helada)
 		"ssh":
 			hits_per_use *= 2.0   # descarga al salir y al llegar
@@ -362,7 +362,7 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 			dps = average * alive * projectiles_or_one(projectiles) / maxf(0.1, tick)
 		"curse_area", "dot_projectile":
 			dps = average   # el degenerativo no se acumula sobre el mismo enemigo: solo cuenta uno
-		"degen_area":
+		"degen_area", "terrain":
 			dps = average * clampf(casts * duration, 1.0, 3.0)   # charcos que se solapan (hasta 3)
 	# Estados alterados: probabilidad por tipo, potencia y duración.
 	var ailment_chances := Ailments.chances(stats, tags, skill if converted_from == "" else skill.merged({"damage_type": damage_type}, true))
