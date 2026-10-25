@@ -12033,6 +12033,11 @@
      "stat": "shock_chance",
      "type": "flat",
      "value": 10
+    },
+    {
+     "stat": "convert_physical_to_lightning",
+     "type": "flat",
+     "value": 1
     }
    ],
    "flavor": "Fríe todo lo conectado. Incluido el router.",
@@ -12581,6 +12586,11 @@
      "tags": [
       "low_life"
      ]
+    },
+    {
+     "stat": "convert_physical_to_fire",
+     "type": "flat",
+     "value": 1
     }
    ],
    "flavor": "Cuando se calienta, se pone serio.",
@@ -15958,6 +15968,11 @@
      "stat": "chaos_damage",
      "type": "increased",
      "value": 10
+    },
+    {
+     "stat": "convert_elemental_to_chaos",
+     "type": "flat",
+     "value": 1
     }
    ],
    "flavor": "No se va ni formateando.",

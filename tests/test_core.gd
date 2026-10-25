@@ -92,6 +92,7 @@ func _initialize() -> void:
 	_test_masteries()
 	_test_trigger_rams()
 	_test_charges_build()
+	_test_tree_conversion()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -1895,6 +1896,32 @@ func _test_board_milestones() -> void:
 	_check(d20["radius"] > d1["radius"] and d20["cooldown"] < d1["cooldown"] and d20["stun"] > d1["stun"], "cada nivel mejora área, enfriamiento y duración")
 	_check(SkillCalc.milestone_text(_db.skills.skills["proceso_hijo"]) == "+1 esbirro", "hito de esbirros")
 	_check(SkillCalc.compute(Motherboard.new(_db.skills.skills["proceso_hijo"], 20, ["DDR5"]), c)["count"] == 4, "esbirros extra por nivel")
+
+
+## Conversión de daño desde el árbol: para toda la build, sin ocupar ranura; si una
+## RAM ya convierte, manda la RAM.
+func _test_tree_conversion() -> void:
+	var tree_stats := {}
+	for n in _tree.nodes.values():
+		for m in n.mods:
+			tree_stats[String(m.stat)] = n.title
+	for conv in Stat.TREE_CONVERSIONS:
+		_check(tree_stats.has(String(conv[0])), "nodo del árbol con %s" % conv[0])
+	var skills := _db.skills.skills
+	var c := CharacterData.new(_classes[0], _tree)
+	var before := SkillCalc.compute(Motherboard.new(skills["barrido"], 5, []), c)
+	c.add_timed_effect("prueba_conv", [Modifier.from_dict({"stat": "convert_physical_to_lightning", "type": "flat", "value": 1}, "prueba")] as Array[Modifier], 99.0)
+	var after := SkillCalc.compute(Motherboard.new(skills["barrido"], 5, []), c)
+	_check(before["damage_type"] == "physical" and after["damage_type"] == "lightning" and after["converted_from"] == "physical", "el árbol convierte el Barrido de físico a rayo")
+	_check(after["tags"].has(&"lightning") and after["tags"].has(&"elemental"), "y gana las etiquetas de rayo y elemental")
+	# Con una RAM de conversión, manda la RAM.
+	var board := Motherboard.new(skills["barrido"], 5, [RamModule.new(_db.skills.rams["nitrogeno_liquido"]).generation()])
+	board.install(RamModule.new(_db.skills.rams["nitrogeno_liquido"]), 0)
+	_check(SkillCalc.compute(board, c)["damage_type"] == "cold", "si una RAM ya convierte, manda la RAM")
+	# Elemental a caos.
+	var c2 := CharacterData.new(_classes[4], _tree)
+	c2.add_timed_effect("prueba_caos", [Modifier.from_dict({"stat": "convert_elemental_to_chaos", "type": "flat", "value": 1}, "prueba")] as Array[Modifier], 99.0)
+	_check(SkillCalc.compute(Motherboard.new(skills["ping_letal"], 5, []), c2)["damage_type"] == "chaos", "el árbol convierte el Ping Letal de rayo a caos")
 
 
 ## Cargas en las builds: nodos del árbol y de ascendencia que las dan o las usan,

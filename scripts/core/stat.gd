@@ -111,6 +111,17 @@ const GARBAGE_COLLECTOR := &"garbage_collector"
 const SAFE_MODE := &"safe_mode"
 ## Código Espagueti: tus proyectiles rebotan al azar esta cantidad de veces tras golpear.
 const SPAGHETTI_CODE := &"spaghetti_code"
+# Conversión de daño desde el árbol (valor > 0 = activa), para toda la build. Como
+# las RAM de conversión, pero sin ocupar ranura; si una RAM ya convierte, manda la RAM.
+const CONVERT_PHYSICAL_TO_LIGHTNING := &"convert_physical_to_lightning"
+const CONVERT_PHYSICAL_TO_FIRE := &"convert_physical_to_fire"
+const CONVERT_ELEMENTAL_TO_CHAOS := &"convert_elemental_to_chaos"
+## [stat, a qué tipo, desde qué tipos], en orden de prioridad.
+const TREE_CONVERSIONS := [
+	[CONVERT_PHYSICAL_TO_LIGHTNING, "lightning", ["physical"]],
+	[CONVERT_PHYSICAL_TO_FIRE, "fire", ["physical"]],
+	[CONVERT_ELEMENTAL_TO_CHAOS, "chaos", ["fire", "cold", "lightning"]],
+]
 ## Escudo de energía que se regenera por segundo siempre (aparte de la recarga tras no recibir daño).
 const ENERGY_SHIELD_REGEN := &"energy_shield_regen"
 ## % menos de coste de maná de las habilidades (máximo 50 %).
@@ -206,6 +217,9 @@ const NAMES := {
 	GARBAGE_COLLECTOR: "Recolector de Basura: maná al matar (del máximo); el maná no se regenera solo",
 	SAFE_MODE: "Modo Seguro: un golpe mortal te deja a 1 de vida 2 s (una vez cada 30 s)",
 	SPAGHETTI_CODE: "Código Espagueti: rebotes al azar de tus proyectiles tras golpear",
+	CONVERT_PHYSICAL_TO_LIGHTNING: "Conversión de físico a rayo",
+	CONVERT_PHYSICAL_TO_FIRE: "Conversión de físico a fuego",
+	CONVERT_ELEMENTAL_TO_CHAOS: "Conversión de elemental a caos",
 	ENERGY_SHIELD_REGEN: "Regeneración de escudo de energía por segundo",
 	MANA_COST_REDUCTION: "Reducción del coste de maná",
 }
@@ -216,6 +230,9 @@ const RULE_TEXT := {
 	GARBAGE_COLLECTOR: "Al matar recuperas un %s %% del maná máximo; el maná no se regenera solo",
 	SAFE_MODE: "Un golpe mortal te deja a 1 de vida y no bajas de ahí durante 2 s (una vez cada 30 s)",
 	SPAGHETTI_CODE: "Tus proyectiles rebotan %s veces al azar tras golpear",
+	CONVERT_PHYSICAL_TO_LIGHTNING: "Tus habilidades de daño físico hacen daño de rayo (las escalan los dos)",
+	CONVERT_PHYSICAL_TO_FIRE: "Tus habilidades de daño físico hacen daño de fuego (las escalan los dos)",
+	CONVERT_ELEMENTAL_TO_CHAOS: "Tus habilidades de daño elemental hacen daño de caos (las escalan los dos)",
 }
 
 ## Los aumentos/más de los padres también aplican al hijo:

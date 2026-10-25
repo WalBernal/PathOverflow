@@ -191,6 +191,17 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 			if to in ["fire", "cold", "lightning"] and not tags.has(&"elemental"):
 				tags.append(&"elemental")
 			break
+	# Conversión del árbol (Stat.TREE_CONVERSIONS): para toda la build, si ninguna RAM convierte ya.
+	if converted_from == "" and damage_type != "none":
+		for conv in Stat.TREE_CONVERSIONS:
+			if character.stats.get_value(conv[0]) > 0.0 and damage_type != conv[1] and (conv[2] as Array).has(damage_type):
+				converted_from = damage_type
+				damage_type = conv[1]
+				if not tags.has(StringName(conv[1])):
+					tags.append(StringName(conv[1]))
+				if conv[1] in ["fire", "cold", "lightning"] and not tags.has(&"elemental"):
+					tags.append(&"elemental")
+				break
 	# Al convertirse en trampa, mina o torreta, la habilidad gana esa etiqueta
 	# (los modificadores "de trampas" le afectan).
 	if deploy != "" and not tags.has(StringName(deploy)):
