@@ -252,6 +252,7 @@ func setup(p_def: Dictionary, p_player: Player, p_character: CharacterData, p_qu
 	_ground_layer.show_behind_parent = true
 	_ground_layer.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 	_ground_layer.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST   # los obstáculos en pixel art (ObstacleArt)
 	# Por encima del filtro de pixel art: NPC (z 1, con la luz de la zona) y textos (z 3).
 	_npc_layer = Node2D.new()
 	_npc_layer.z_index = 1
@@ -259,6 +260,7 @@ func setup(p_def: Dictionary, p_player: Player, p_character: CharacterData, p_qu
 	add_child(_npc_layer)
 	_label_layer = Node2D.new()
 	_label_layer.z_index = 3
+	_label_layer.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR   # los textos, suaves
 	_label_layer.draw.connect(_draw_labels)
 	add_child(_label_layer)
 	# Eventos (datos huérfanos, santuarios, emboscadas, deploys fallidos): cambian en cada visita.
@@ -1342,40 +1344,18 @@ func _draw_obstacle(o: Dictionary) -> void:
 	draw_set_transform(p + Vector2(0, r * 0.55), 0.0, Vector2(1.0, 0.35))
 	draw_circle(Vector2.ZERO, r * 1.05, Color(0, 0, 0, 0.35))
 	draw_set_transform(Vector2.ZERO)
+	if ObstacleArt.KINDS.has(o["kind"]):
+		# Pixel art (Acto I): el sprite en la rejilla del filtro y lo que se anima encima.
+		var s := ObstacleArt.sprite(o["kind"], r, seed_value)
+		draw_texture_rect(s["texture"], Rect2((p + s["offset"]).snapped(Vector2(ObstacleArt.PIX, ObstacleArt.PIX)), s["size"]), false)
+		if o["kind"] == "rack":
+			var box := Rect2(p - Vector2(r * 0.75, r), Vector2(r * 1.5, r * 2.0))
+			for k in 6:
+				var y := box.position.y + 6.0 + k * (box.size.y - 12.0) / 6.0
+				var on := sin(_time * (2.0 + k) + seed_value) > 0.0
+				draw_rect(Rect2(Vector2(box.end.x - 9, y + 3).snapped(Vector2(2, 2)), Vector2(4, 4)), Color("3cff6a") if on else Color("1a4a2a"))
+		return
 	match o["kind"]:
-		"rock":
-			var pts := PackedVector2Array()
-			for k in 9:
-				var rr := r * (0.8 + 0.2 * sin(seed_value + k * 1.7))
-				pts.append(p + Vector2.from_angle(TAU * k / 9.0) * Vector2(rr, rr * 0.8))
-			draw_colored_polygon(pts, Color("5a5660"))
-			draw_circle(p + Vector2(-r * 0.3, -r * 0.3), r * 0.25, Color("75707c"))
-		"crate":
-			var box := Rect2(p - Vector2(r, r) * 0.8, Vector2(r, r) * 1.6)
-			draw_rect(box, WOOD.lightened(0.15))
-			draw_rect(box, WOOD.darkened(0.4), false, 3.0)
-			draw_line(box.position, box.end, WOOD.darkened(0.3), 3.0)
-			draw_line(Vector2(box.end.x, box.position.y), Vector2(box.position.x, box.end.y), WOOD.darkened(0.3), 3.0)
-		"monitor":
-			draw_rect(Rect2(p - Vector2(r, r * 0.8), Vector2(r * 2.0, r * 1.5)), Color("b8b8b0"))
-			draw_rect(Rect2(p - Vector2(r * 0.8, r * 0.6), Vector2(r * 1.6, r * 1.1)), Color("1a2a4a"))
-			draw_string(ThemeDB.fallback_font, p + Vector2(-r * 0.7, 2), ":(", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("7fb8e0"))
-		"cable_tree":
-			draw_line(p + Vector2(0, r * 0.4), p - Vector2(0, r * 0.8), Color("2a2a30"), 7.0)
-			for k in 5:
-				var a := -PI / 2.0 + (k - 2) * 0.5
-				var tip := p - Vector2(0, r * 0.6) + Vector2.from_angle(a) * r
-				var color: Color = [Color("c84b4b"), Color("4b8bd6"), Color("5cb85c"), Color("d9a441"), Color("8a8a8a")][k]
-				draw_line(p - Vector2(0, r * 0.5), tip, color, 3.0, true)
-				draw_circle(tip, 3.0, color)
-		"pillar":
-			draw_circle(p, r, Color("6a6458"))
-			draw_circle(p, r * 0.8, Color("807868"))
-			draw_arc(p, r * 0.55, 0.0, TAU, 20, Color("5a5448"), 2.0)
-		"rubble":
-			for k in 5:
-				var q := p + Vector2.from_angle(seed_value + k * 2.1) * r * 0.5
-				draw_circle(q, r * (0.25 + 0.08 * (k % 3)), Color("6a6458").darkened(0.1 * k))
 		"puddle":
 			draw_set_transform(p, 0.0, Vector2(1.0, 0.6))
 			draw_circle(Vector2.ZERO, r, Color("4a2a6a"))
@@ -1383,28 +1363,6 @@ func _draw_obstacle(o: Dictionary) -> void:
 			draw_set_transform(Vector2.ZERO)
 			var bubble := fmod(_time * 0.7 + seed_value % 10, 1.0)
 			draw_circle(p + Vector2(r * 0.3, -bubble * 10.0), 3.0, Color(0.8, 0.6, 1.0, 1.0 - bubble))
-		"dead_tree":
-			draw_line(p + Vector2(0, r * 0.4), p - Vector2(0, r), Color("3a2e26"), 6.0)
-			draw_line(p - Vector2(0, r * 0.4), p + Vector2(r * 0.8, -r * 1.1), Color("3a2e26"), 4.0)
-			draw_line(p - Vector2(0, r * 0.6), p + Vector2(-r * 0.7, -r * 1.2), Color("3a2e26"), 4.0)
-		"tomb":
-			var stone := Rect2(p - Vector2(r * 0.7, r), Vector2(r * 1.4, r * 1.6))
-			draw_rect(stone, Color("6a6872"))
-			draw_circle(stone.position + Vector2(stone.size.x / 2.0, 0), r * 0.7, Color("6a6872"))
-			draw_string(ThemeDB.fallback_font, stone.position + Vector2(0, r * 0.7), "RIP", HORIZONTAL_ALIGNMENT_CENTER, stone.size.x, 11, Color("2a2830"))
-			draw_string(ThemeDB.fallback_font, stone.position + Vector2(0, r * 1.2), "v1.0", HORIZONTAL_ALIGNMENT_CENTER, stone.size.x, 9, Color("2a2830"))
-		"rack":
-			var box := Rect2(p - Vector2(r * 0.75, r), Vector2(r * 1.5, r * 2.0))
-			draw_rect(box, Color("23262e"))
-			draw_rect(box, Color("4a4f5c"), false, 2.0)
-			for k in 6:
-				var y := box.position.y + 6.0 + k * (box.size.y - 12.0) / 6.0
-				draw_line(Vector2(box.position.x + 4, y), Vector2(box.end.x - 4, y), Color("3a3f4a"), 1.0)
-				var on := sin(_time * (2.0 + k) + seed_value) > 0.0
-				draw_circle(Vector2(box.end.x - 8, y + 4), 2.0, Color("3cff6a") if on else Color("1a4a2a"))
-		"cable_coil":
-			for k in 3:
-				draw_arc(p, r * (1.0 - k * 0.25), 0.0, TAU, 20, Color("2a2a30").lightened(k * 0.1), 4.0, true)
 		"piston":
 			# Pistón rítmico con vapor.
 			var stroke := (0.5 + 0.5 * sin(_time * 3.0 + seed_value)) * r * 0.9

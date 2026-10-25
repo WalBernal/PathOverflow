@@ -134,6 +134,7 @@ func _initialize() -> void:
 	_test_barks()
 	_test_enemy_materials()
 	_test_lights_weather()
+	_test_obstacle_art()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3300,6 +3301,29 @@ func _test_lights_weather() -> void:
 	_check(allies.size() == 1 and allies[0]["pos"] == Vector2(50, 60) and allies[0]["color"] == Color.RED and float(allies[0]["power"]) > 0.0, "las invocaciones dan luz de su color")
 	sc.free()
 	_check(SkillController.PROJECTILE_SHADOW_DROP > 0.0, "los proyectiles proyectan sombra un poco más abajo")
+
+
+## Obstáculos del Acto I en pixel art (T59).
+func _test_obstacle_art() -> void:
+	for kind in ObstacleArt.KINDS:
+		var s := ObstacleArt.sprite(kind, 32.0, 7)
+		var img: Image = (s["texture"] as ImageTexture).get_image()
+		var counts := {"solid": 0, "outline": 0}
+		var tones := {}
+		for y in img.get_height():
+			for x in img.get_width():
+				var px := img.get_pixel(x, y)
+				if px.a > 0.5:
+					counts["solid"] += 1
+					tones[px.to_html(false)] = true
+					if px.is_equal_approx(ObstacleArt.OUTLINE):
+						counts["outline"] += 1
+		_check(counts["solid"] > 40 and counts["outline"] > 10 and tones.size() >= 3, "%s: pintado, con contorno y al menos tres tonos (%d px, %d tonos)" % [kind, counts["solid"], tones.size()])
+		_check(Vector2(s["size"]) == Vector2(img.get_width(), img.get_height()) * ObstacleArt.PIX, "%s: cada píxel ocupa %d del mundo" % [kind, ObstacleArt.PIX])
+	var before := ObstacleArt.cached_count()
+	ObstacleArt.sprite("rock", 33.0, 7)   # mismo tamaño redondeado y variante: de la caché
+	_check(ObstacleArt.cached_count() == before, "se pinta una vez por tipo, tamaño y variante")
+	_check(ObstacleArt.sprite("rock", 32.0, 0)["texture"] != ObstacleArt.sprite("rock", 32.0, 1)["texture"], "con variantes")
 
 
 func _db_enemies() -> Array:
