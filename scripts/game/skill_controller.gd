@@ -462,6 +462,12 @@ func _update_triggers(delta: float) -> void:
 		_trigger_cd.resize(ACTIONS.size())
 	for i in _trigger_cd.size():
 		_trigger_cd[i] = maxf(0.0, _trigger_cd[i] - delta)
+	# Cron Job: cada trigger_cooldown segundos, si hay un enemigo a tiro.
+	if player.is_alive() and enemies.nearest_index(player.global_position, TRIGGER_RANGE) != -1:
+		for i in ACTIONS.size():
+			var tp := profile(i)
+			if not tp.is_empty() and String(tp.get("trigger", "")) == "timer" and _trigger_cd[i] <= 0.0:
+				fire_triggered(i, tp)
 	if _pending_triggers.is_empty():
 		return
 	var events := _pending_triggers.duplicate()
@@ -574,6 +580,8 @@ func heal_units(fraction: float) -> void:
 ## Lo llama World al morir un enemigo.
 func on_enemy_killed(pos: Vector2) -> void:
 	_roll_charge("multihilo")
+	if not _triggering:   # lo que mata una habilidad activada no activa nada (sin bucles)
+		queue_trigger("on_kill")
 	var gc := character.stats.get_value(Stat.GARBAGE_COLLECTOR)
 	if gc > 0.0 and player.is_alive():
 		# Recolector de Basura: el maná vuelve al matar (no se regenera solo).
@@ -606,10 +614,23 @@ const STASH_POP_RADIUS := 100.0
 var _stash_pops: Array[Dictionary] = []
 
 
+## Qué dispara una RAM de activación, en texto ("" si la habilidad no tiene ninguna).
+static func trigger_text(p: Dictionary) -> String:
+	var cd := float(p.get("trigger_cooldown", 0.0))
+	match String(p.get("trigger", "")):
+		"on_hit": return "al recibir un golpe (cada %.1f s como mucho)" % cd
+		"on_crit": return "con los críticos de tus otras habilidades (cada %.1f s como mucho)" % cd
+		"timer": return "cada %.1f s si hay un enemigo cerca" % cd
+		"on_dodge": return "al esquivar (cada %.1f s como mucho)" % cd
+		"on_kill": return "al matar con otra habilidad (cada %.1f s como mucho)" % cd
+	return ""
+
+
 ## Lo llama el jugador al esquivar (Player.dodged), aún en el punto de partida:
 ## cargas de Multihilos seguras (Stat.DODGE_MULTIHILO) y la explosión que se
 ## queda atrás (Stat.DODGE_BLAST).
 func on_player_dodged() -> void:
+	queue_trigger("on_dodge")
 	for k in int(character.stats.get_value(Stat.DODGE_MULTIHILO)):
 		if character.gain_charge("multihilo"):
 			_effects.append({"type": "ring", "pos": player.global_position, "radius": 34.0, "time": 0.0, "duration": 0.3, "color": Charges.COLORS["multihilo"]})

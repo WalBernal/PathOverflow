@@ -25,6 +25,10 @@
       "title": "Zonas seguras",
       "text": "Toda la arena va a recibir daño salvo los [color=#60ff90]círculos verdes[/color], que giran. Métete en uno y síguelo hasta que acabe el aviso."
     },
+    "trigger": {
+      "title": "RAM de activación",
+      "text": "Una de tus placas lleva una RAM de activación: esa habilidad ya no se lanza con su tecla, sino [b]sola[/b] (al recibir un golpe, con un crítico, al esquivar, al matar o cada pocos segundos, según la RAM), hacia el enemigo más cercano y pagando su maná. En la barra lleva el rótulo [color=#ffd84a]AUTO[/color]."
+    },
     "arena_channel": {
       "title": "Interrumpe la canalización",
       "text": "Esos enemigos canalizan hacia el jefe (el hilo y el aro): si no los matas antes de que se complete, el jefe se cura, se protege o suelta una onda. Aturdirlos o congelarlos también los frena."

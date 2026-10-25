@@ -11,7 +11,10 @@ const KEYS := ["dps", "min_damage", "projectiles", "spread_degrees", "pierce", "
 	"projectile_speed", "homing", "radius", "width", "impact_radius", "rain_hits", "crit_chance", "crit_multiplier",
 	"life_leech", "ailments", "ailment_effect", "ailment_duration", "ailing_bonus", "deploy", "totem_duration",
 	"max_units", "unit_interval", "unit_life", "unit_reduction", "reserve", "aura_mods", "aura_regen", "aura_reduction",
-	"tick", "minion_interval", "drone_count", "count", "extra_devices", "uses_per_second", "repeats", "automaton_speed"]
+	"tick", "minion_interval", "drone_count", "count", "extra_devices", "uses_per_second", "repeats", "automaton_speed",
+	"trigger", "trigger_cooldown",
+	# Las mismas que mira la auditoría de tests/test_core.gd (cargas, costo de vida, auras que debilitan y ancladas).
+	"spend_charges", "life_cost", "aura_enemy", "aura_radius", "aura_anchor", "ability_power"]
 
 
 func _initialize() -> void:
@@ -52,6 +55,10 @@ func _initialize() -> void:
 			var ram := RamModule.new(db.skills.rams[u[0]])
 			if ram.special_string("deploy") != "" and picked.size() > 0:
 				continue
+			# Activación: como el despliegue, solo cuenta la primera.
+			if ram.special_string("trigger") != "" and Array(picked).any(func(id: String) -> bool:
+					return RamModule.new(db.skills.rams[id]).special_string("trigger") != ""):
+				continue
 			board5.slots.append(ram.generation())
 			board5.rams.append(null)
 			board5.install(ram, board5.slots.size() - 1)
@@ -66,8 +73,9 @@ func _initialize() -> void:
 func _diff(a: Dictionary, b: Dictionary) -> PackedStringArray:
 	var out := PackedStringArray()
 	var keys: Array = KEYS.duplicate()
-	if a["kind"] == "unit" and a["unit_ability"].has("radius"):
-		keys.append("area_scale")   # radio de la habilidad de la invocación
+	if a["kind"] == "unit" and (a["unit_ability"].has("radius")
+			or (a.get("unit_abilities", []) as Array).any(func(ab: Dictionary) -> bool: return ab.has("radius"))):
+		keys.append("area_scale")   # radio de la habilidad (o habilidades, el Titán) de la invocación
 	for k in keys:
 		if not a.has(k):
 			continue

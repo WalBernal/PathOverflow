@@ -1936,6 +1936,29 @@ func _test_trigger_rams() -> void:
 	sc.on_crit()
 	sc._triggering = false
 	_check(sc._pending_triggers.is_empty(), "los críticos de una habilidad activada no activan nada")
+	# Cron Job, al esquivar y al matar (parte 2), y su texto en la barra y en K.
+	for rid in ["cron_job", "hook_esquiva", "callback_matar"]:
+		var b := Motherboard.new(skills["fork_bomb"], 5, [RamModule.new(rams[rid]).generation()])
+		b.install(RamModule.new(rams[rid]), 0)
+		var tp := SkillCalc.compute(b, c)
+		_check(SkillController.trigger_text(tp) != "", "%s: dice qué la activa (%s)" % [rid, tp["trigger"]])
+	var cron := Motherboard.new(skills["fork_bomb"], 5, ["DDR4"])
+	cron.install(RamModule.new(rams["cron_job"]), 0)
+	c.inventory.set_board(1, cron)
+	sc.refresh_profiles()
+	sc._pending.clear()
+	pl.mana = pl.max_mana()
+	sc._update_triggers(0.016)
+	_check(sc._pending.size() == 1 and sc._trigger_cd[1] > 1.5, "Cron Job: con un enemigo cerca se lanza sola sin ningún evento")
+	sc.on_player_dodged()
+	_check(sc._pending_triggers.has("on_dodge"), "esquivar apunta su activación")
+	sc._pending_triggers.clear()
+	sc._triggering = true
+	sc.on_enemy_killed(Vector2.ZERO)
+	sc._triggering = false
+	_check(not sc._pending_triggers.has("on_kill"), "lo que mata una habilidad activada no activa nada")
+	sc.on_enemy_killed(Vector2.ZERO)
+	_check(sc._pending_triggers.has("on_kill"), "matar con otra habilidad apunta su activación")
 	sc.free()
 	pl.free()
 	em.free()
@@ -2024,7 +2047,7 @@ func _test_rule_keystones() -> void:
 ## Consejos de primera vez: uno por mecánica, una sola vez, guardado en el personaje.
 func _test_mechanic_tips() -> void:
 	var data: Dictionary = DataLoader.load_json(TipPanel.DATA_PATH)
-	for id in ["dodge", "charges", "heavy", "terrain", "arena_break", "arena_safe", "arena_channel"]:
+	for id in ["dodge", "charges", "heavy", "terrain", "arena_break", "arena_safe", "arena_channel", "trigger"]:
 		_check(data.get("tips", {}).has(id), "consejo de primera vez para %s" % id)
 	if not TipPanel.enabled():
 		return   # el jugador los apagó en Pausa: no se toca su ajuste

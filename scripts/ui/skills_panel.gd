@@ -305,6 +305,8 @@ func _stats_label(board: Motherboard) -> Label:
 	if installed > 0:
 		parts.append("RAM activas %d/%d" % [board.active_supports().size(), installed])
 	var text := "  ·  ".join(parts)
+	if SkillController.trigger_text(p) != "":
+		text += "\nAUTO: se lanza sola " + SkillController.trigger_text(p)
 	var color := Color("b8ab90")
 	# Comparación: con una RAM seleccionada, cuánto cambiaría el DPS al instalarla.
 	var ram: RamModule = character.inventory.bag[_selected_ram] if _selected_ram != -1 else null

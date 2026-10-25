@@ -181,6 +181,8 @@ func effect_lines() -> PackedStringArray:
 			lines.append("La usa una torreta durante %d s contra el enemigo más cercano" % int(sp.get("totem_duration", 8)))
 	if sp.has("area_multiplier"):
 		lines.append("%d%% menos de área" % roundi((1.0 - float(sp["area_multiplier"])) * 100.0))
+	if sp.has("trigger"):
+		lines.append("Se lanza sola %s (no con su tecla)" % SkillController.trigger_text(sp))
 	lines.append("Consumo de maná ×%.2f" % cost_multiplier())
 	return lines
 

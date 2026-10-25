@@ -50,6 +50,10 @@ func _run() -> void:
 		await _capture_golems_in_world()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("activacion"):
+		await _capture_triggers()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("maestria"):
 		await _capture_mastery()
 		get_tree().quit()
@@ -536,6 +540,38 @@ func _capture_windows() -> void:
 	for k in saved_rules:
 		LootFilter.set_rule(k, saved_rules[k])
 	GameSettings.set_value("interface", "scale", saved_scale)
+	world.set("_since_save", -9999.0)
+
+
+## RAM de activación: Fork Bomb con Cron Job en la barra («AUTO» y su enfriamiento)
+## lanzándose sola entre enemigos, y el menú K con la línea de qué la activa.
+func _capture_triggers() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var items: ItemDatabase = gd.get("items")
+	var c: CharacterData = gd.create_character("Cron", &"hechicero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "zona2"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 12
+	var board := Motherboard.new(items.skills.skills["fork_bomb"], 8, ["DDR4", "DDR5"])
+	board.install(RamModule.new(items.skills.rams["cron_job"]), 0)
+	c.inventory.set_board(2, board)
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(3.5)   # que pase el título de la zona
+	var player: Player = world.get("player")
+	player.invulnerable = true
+	var em: EnemyManager = world.get("enemies")
+	em.clear_all()
+	for k in 5:
+		em.spawn(player.global_position + Vector2(260 + k * 30, -80 + k * 40), Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+	await _wait(2.3)
+	_save("131_activacion_barra")
+	world.get("ui").call("_on_menu_requested", "skills")
+	await _wait(0.5)
+	_save("132_activacion_menu_k")
 	world.set("_since_save", -9999.0)
 
 

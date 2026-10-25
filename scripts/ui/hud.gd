@@ -241,6 +241,8 @@ func _skill_tooltip(i: int) -> String:
 		return "Ranura vacía (%s).\nInstala una placa base desde el menú de habilidades (K)." % key
 	var p := skills.profile(i)
 	var text := "%s · nivel %d (%s)\n%s\n" % [p["name"], board.level, key, board.skill_def.get("description", "")]
+	if SkillController.trigger_text(p) != "":
+		text += "\n[AUTO] Se lanza sola %s, hacia el enemigo más cercano. No se lanza con la tecla." % SkillController.trigger_text(p)
 	if String(p.get("converted_from", "")) != "":
 		text += "\nDaño convertido: %s → %s" % [RamModule.DAMAGE_TYPE_NAMES.get(p["converted_from"], p["converted_from"]),
 			RamModule.DAMAGE_TYPE_NAMES.get(p["damage_type"], p["damage_type"])]
@@ -835,6 +837,16 @@ func _draw_skill_slot(i: int, font: Font) -> void:
 			cx += 18.0
 		var flash := _slot_flash[i] / 0.25
 		draw_rect(r, Motherboard.COLOR.darkened(0.2).lerp(Color("ffe8a0"), flash), false, 1.5 + 1.5 * flash)
+		if not p.is_empty() and String(p.get("trigger", "")) != "":
+			# RAM de activación: «AUTO» y, mientras dure, su enfriamiento interno en el borde.
+			var tcd: float = skills._trigger_cd[i] if i < skills._trigger_cd.size() else 0.0
+			var tfrac := clampf(tcd / maxf(0.01, float(p["trigger_cooldown"])), 0.0, 1.0)
+			draw_rect(r.grow(1.0), Color(SkillController.TRIGGER_COLOR, 0.35 + 0.5 * (1.0 - tfrac)), false, 2.0)
+			# Arriba a la izquierda (a la derecha va el coste de maná).
+			draw_string_outline(font, r.position + Vector2(3, 12), "AUTO", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, 3, Color.BLACK)
+			draw_string(font, r.position + Vector2(3, 12), "AUTO", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, SkillController.TRIGGER_COLOR)
+			if tfrac > 0.0:
+				draw_rect(Rect2(r.position.x, r.end.y - 3.0, r.size.x * tfrac, 3.0), SkillController.TRIGGER_COLOR)
 		if not p.is_empty() and p["kind"] == "aura" and skills.is_aura_active(p["id"]):
 			var glow := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 220.0)
 			draw_rect(r.grow(1.0), Color("e0c0ff", 0.55 + 0.45 * glow), false, 2.5)

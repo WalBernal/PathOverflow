@@ -754,7 +754,7 @@ Sube el volumen de tu aura: sus bonificaciones son mucho más potentes. Reserva 
 
 if (critico) lanzar_habilidad(): cada crítico de tus otras habilidades lanza esta sola hacia el enemigo más cercano (como mucho cada 0,5 s y pagando su maná; sus propios críticos no cuentan). Ya no se puede lanzar a mano. 10 % menos de daño.
 
-- **Efectos:** 10% menos de Daño; Consumo de maná ×1.40
+- **Efectos:** 10% menos de Daño; Se lanza sola con los críticos de tus otras habilidades (cada 0.5 s como mucho) (no con su tecla); Consumo de maná ×1.40
 - **Etiquetas:** nunca con: aura, persistente, movimiento
 - **Funciona con (29):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Firewall Personal, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Hiperthreading, Modo Seguro, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua
 
@@ -798,6 +798,16 @@ Caché de servidor: +65 % de área.
 - **Etiquetas:** con alguna de: área
 - **Funciona con (26):** Agente IA, Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Deadlock, Derrame de Aceite, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem del Silicio, Mainframe Titán, Mina Rodante, Ransomware, Rayo de Producción, Reinicio Forzado, Stack Overflow, Túnel SSH
 
+### Callback onKill()
+
+*DDR3* · grado mayor · cae desde el nivel 16
+
+onKill(() => lanzar_habilidad()): cada vez que matas a un enemigo con otra habilidad, esta se lanza sola hacia el más cercano (como mucho cada 0,4 s y pagando su maná; lo que mata ella no cuenta). Ya no se puede lanzar a mano. 10 % menos de daño.
+
+- **Efectos:** 10% menos de Daño; Se lanza sola al matar con otra habilidad (cada 0.4 s como mucho) (no con su tecla); Consumo de maná ×1.40
+- **Etiquetas:** nunca con: aura, persistente, movimiento
+- **Funciona con (29):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Firewall Personal, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Hiperthreading, Modo Seguro, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua
+
 ### Carcasa Reforzada
 
 *DDR3* · grado normal · cae desde el nivel 1
@@ -827,6 +837,16 @@ Convierte el daño elemental (fuego, frío o rayo) de la habilidad en daño de c
 - **Efectos:** Convierte el daño de fuego o de frío o de rayo en daño de caos (le afectan los aumentos de ambos); Consumo de maná ×1.20
 - **Etiquetas:** cualquier habilidad
 - **Funciona con (20):** Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Deadlock, Derrame de Aceite, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Git Revert, Golem GPU, Golem de Overclock, Mina Rodante, Ping Letal, Rayo de Producción, Robot Centinela, Stack Overflow, Torreta de Integración Continua, Túnel SSH
+
+### Cron Job
+
+*DDR4* · grado normal · cae desde el nivel 10
+
+*/2 * * * * lanzar_habilidad: cada 2 s, si hay un enemigo cerca, la habilidad se lanza sola hacia el más cercano (pagando su maná). Ya no se puede lanzar a mano. 20 % menos de daño.
+
+- **Efectos:** 20% menos de Daño; Se lanza sola cada 2.0 s si hay un enemigo cerca (no con su tecla); Consumo de maná ×1.30
+- **Etiquetas:** nunca con: aura, persistente, movimiento
+- **Funciona con (29):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Firewall Personal, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Hiperthreading, Modo Seguro, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua
 
 ### Detonador de Mina
 
@@ -1008,6 +1028,16 @@ Teledirigido y además más rápido: +15 % de velocidad de proyectiles.
 - **Etiquetas:** con alguna de: proyectil; nunca con: teledirigido; no en: lluvia de impactos
 - **Funciona con (8):** Bot Rastreador de Bugs, Corrupción de Datos, Drones de Vigilancia, Golem GPU, Ping Letal, Robot Centinela, Rollback, Ráfaga de Paquetes
 
+### Hook pre-stash
+
+*DDR4* · grado normal · cae desde el nivel 12
+
+Un hook que corre antes de cada git stash: al esquivar, la habilidad se lanza sola hacia el enemigo más cercano (como mucho cada 0,6 s y pagando su maná). Ya no se puede lanzar a mano.
+
+- **Efectos:** Se lanza sola al esquivar (cada 0.6 s como mucho) (no con su tecla); Consumo de maná ×1.30
+- **Etiquetas:** nunca con: aura, persistente, movimiento
+- **Funciona con (29):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Firewall Personal, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Hiperthreading, Modo Seguro, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua
+
 ### Hotfix en Caliente
 
 *DDR5* · grado mayor · cae desde el nivel 18
@@ -1054,7 +1084,7 @@ Instala un regalito: envenena. Versión de servidor de producción: mucha probab
 
 try { recibir_golpe() } catch { lanzar_habilidad() }: al recibir un golpe, la habilidad se lanza sola hacia el enemigo más cercano (como mucho cada 0,8 s y pagando su maná). Ya no se puede lanzar a mano. 15 % menos de daño.
 
-- **Efectos:** 15% menos de Daño; Consumo de maná ×1.30
+- **Efectos:** 15% menos de Daño; Se lanza sola al recibir un golpe (cada 0.8 s como mucho) (no con su tecla); Consumo de maná ×1.30
 - **Etiquetas:** nunca con: aura, persistente, movimiento
 - **Funciona con (29):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Firewall Personal, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Hiperthreading, Modo Seguro, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua
 

@@ -120,6 +120,11 @@ func _watch() -> void:
 		show_tip("arena_channel")
 	if skills and not skills._terrains.is_empty():
 		show_tip("terrain")
+	if skills and not has_seen("trigger"):
+		for i in SkillController.ACTIONS.size():
+			if String(skills.profile(i).get("trigger", "")) != "":
+				show_tip("trigger")
+				break
 
 
 func _show(id: String) -> void:
