@@ -504,6 +504,7 @@ func _draw_hallway() -> void:
 	draw_colored_polygon(PackedVector2Array([Vector2(400, 0), Vector2(back.end.x, 40), Vector2(back.end.x, HALL_FAR_Y), Vector2(410, 225), Vector2(410, 0)]), Color("c3baa1"))
 	draw_rect(back, Color("dad2bb"))
 	draw_colored_polygon(PackedVector2Array([Vector2(back.position.x, HALL_FAR_Y), Vector2(back.end.x, HALL_FAR_Y), Vector2(410, 225), Vector2(-10, 225)]), Color("b4ac9c"))
+	_hall_texture(back)
 	# Baldosas en perspectiva: líneas hacia el punto de fuga y filas cada vez más juntas.
 	var vp := Vector2(200, 93.75)
 	for k in range(-6, 7):
@@ -525,6 +526,13 @@ func _draw_hallway() -> void:
 		var half := lerpf(30.0, 14.0, d)
 		var on := flicker <= 0.0 or k % 2 == 0
 		draw_rect(Rect2(200 - half, y, half * 2.0, lerpf(4.0, 2.0, d)), Color("f4f0dc") if on else Color("807a6a"))
+		if on:   # charco de luz en el suelo, debajo de cada lámpara
+			var floor_y := lerpf(222.0, HALL_FAR_Y + 4.0, d)
+			for ring in 3:
+				var rw := lerpf(70.0, 30.0, d) * (1.0 - ring * 0.28)
+				draw_set_transform(Vector2(200 - roundf(cam_x), floor_y), 0.0, Vector2(1.0, 0.22))
+				draw_circle(Vector2.ZERO, rw, Color(1.0, 0.97, 0.85, 0.05))
+				draw_set_transform(Vector2(-roundf(cam_x), 0))
 	# Pared derecha: un ventilador industrial al límite y carteles.
 	var fan := Vector2(352, 70)
 	draw_set_transform(fan, 0.0, Vector2(0.55, 1.0))
@@ -558,6 +566,94 @@ func _draw_hallway() -> void:
 	draw_string(_font, caja.position + Vector2(11, 59), "Regreso en 15 min", HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color("3a3a3a"))
 	# A la derecha de la caja: la TV plana con la promoción.
 	_draw_tv(Rect2(back.position.x + 84, 64, 92, 56))
+
+
+## Pasillo con el detalle de la calle: aplanado con tramado en las paredes (más
+## oscuro hacia el fondo), baldosas alternas en perspectiva, luz en las aristas
+## del fondo y sombra al pie de las paredes.
+func _hall_texture(back: Rect2) -> void:
+	# Paredes laterales: tramado columna a columna entre el techo y el suelo en perspectiva.
+	for side in [-1, 1]:
+		var x0 := 0.0 if side < 0 else back.end.x
+		var x1 := back.position.x if side < 0 else 400.0
+		var base := Color("cfc6ae") if side < 0 else Color("c3baa1")
+		for xx in range(int(x0), int(x1), 2):
+			var t := (xx - x0) / (x1 - x0)   # 0 en el borde izquierdo de la franja
+			var near := (1.0 - t) if side < 0 else t   # 1 = junto a la cámara
+			var top := lerpf(40.0, 0.0, near)
+			var bottom := lerpf(HALL_FAR_Y, 225.0, near)
+			var shade := Color(base.darkened(0.12 + 0.18 * (1.0 - near)), 0.5)
+			for yy in range(int(top) + ((xx / 2) % 2) * 2, int(bottom) - 8, 4):
+				draw_rect(Rect2(xx, yy, 1, 1), shade)
+	# Pared del fondo: tramado y una franja de luz arriba.
+	for yy in range(int(back.position.y) + 2, int(back.end.y) - 8, 4):
+		for xx in range(int(back.position.x) + (yy / 4) % 2 * 2, int(back.end.x), 4):
+			draw_rect(Rect2(xx, yy, 1, 1), Color("c4bca4", 0.6))
+	draw_rect(Rect2(back.position, Vector2(back.size.x, 2)), Color("ece6d2"))
+	# Aristas del fondo: luz en la izquierda (de donde vienen las lámparas), sombra en la derecha.
+	draw_line(Vector2(back.position.x, back.position.y), Vector2(back.position.x, back.end.y), Color("eae2ca"), 1.0)
+	draw_line(Vector2(back.end.x, back.position.y), Vector2(back.end.x, back.end.y), Color("9a9078"), 1.0)
+	# Baldosas: una de cada dos un poco más oscura (en perspectiva, hacia el punto de fuga).
+	var vp := Vector2(200, 93.75)
+	var rows: Array[float] = [HALL_FAR_Y]
+	for i in range(1, 9):
+		rows.append(HALL_FAR_Y + 75.0 * pow(i / 8.0, 1.6))
+	var x_at := func(k: int, y: float) -> float:   # x de la línea k del suelo a la altura y
+		var bottom := Vector2(200 + k * 34.0, 225)
+		return vp.x + (bottom.x - vp.x) * (y - vp.y) / (bottom.y - vp.y)
+	var floor_poly := PackedVector2Array([Vector2(back.position.x, HALL_FAR_Y), Vector2(back.end.x, HALL_FAR_Y), Vector2(410, 225), Vector2(-10, 225)])
+	for i in rows.size() - 1:
+		for k in range(-7, 7):
+			if (i + k) % 2 == 0:
+				continue
+			var y0: float = rows[i]
+			var y1: float = rows[i + 1]
+			var tile := PackedVector2Array([Vector2(x_at.call(k, y0), y0), Vector2(x_at.call(k + 1, y0), y0),
+				Vector2(x_at.call(k + 1, y1), y1), Vector2(x_at.call(k, y1), y1)])
+			for piece in Geometry2D.intersect_polygons(tile, floor_poly):   # que no se salga a las paredes
+				if piece.size() >= 3:
+					draw_colored_polygon(piece, Color(0.38, 0.34, 0.28, 0.12))
+	# Sombra al pie de las paredes del fondo.
+	draw_rect(Rect2(back.position.x, HALL_FAR_Y, back.size.x, 3), Color(0.2, 0.17, 0.12, 0.25))
+
+
+## Oficina con el detalle de la calle: aplanado con tramado y manchas de humedad,
+## luz de los fluorescentes en conos, zócalo, baldosas con junta y brillo, y
+## sombras al pie de los muebles.
+func _office_texture(w: float) -> void:
+	for yy in range(14, int(FLOOR_Y) - 10, 4):
+		for xx in range(((yy / 4) % 2) * 2, int(w), 4):
+			draw_rect(Rect2(xx, yy, 1, 1), Color("b4ac94", 0.55))
+	draw_rect(Rect2(0, 0, w, 12), Color("b8b09a"))   # techo en sombra
+	draw_rect(Rect2(0, 12, w, 1), Color("9e9682"))
+	# Mancha de humedad bajo el minisplit (escurre por la pared).
+	for k in 5:
+		draw_rect(Rect2(62 + k * 2, 50, 18 - k * 4, 60 + k * 14), Color(0.45, 0.42, 0.32, 0.06))
+	# Zócalo y su sombra.
+	draw_rect(Rect2(0, FLOOR_Y - 6, w, 6), Color("8e8672"))
+	draw_rect(Rect2(0, FLOOR_Y - 6, w, 1), Color("a8a08a"))
+	# Junta y brillo de cada baldosa.
+	for k in int(w / 20.0) + 1:
+		draw_rect(Rect2(k * 20.0, FLOOR_Y, 1, 30), Color("6e685e"))
+		draw_rect(Rect2(k * 20.0 + 1, FLOOR_Y + 1, 18, 1), Color(1, 1, 1, 0.08))
+	draw_rect(Rect2(0, FLOOR_Y + 13, w, 1), Color("6e685e"))
+
+
+## Cono de luz de un fluorescente hasta el suelo.
+func _office_light(x: float, on: bool) -> void:
+	if not on:
+		return
+	for k in 3:
+		var spread := 18.0 + k * 14.0
+		draw_colored_polygon(PackedVector2Array([Vector2(x + 4, 10), Vector2(x + 46, 10), Vector2(x + 25 + spread, FLOOR_Y + 10),
+			Vector2(x + 25 - spread, FLOOR_Y + 10)]), Color(1.0, 1.0, 0.9, 0.025))
+
+
+## Sombra en el suelo al pie de algo (elipse aplastada).
+func _floor_shadow(center_x: float, half_width: float) -> void:
+	draw_set_transform(Vector2(center_x - roundf(cam_x), FLOOR_Y + 2.0), 0.0, Vector2(1.0, 0.25))
+	draw_circle(Vector2.ZERO, half_width, Color(0.1, 0.08, 0.06, 0.3))
+	draw_set_transform(Vector2(-roundf(cam_x), 0))
 
 
 ## TV plana: alterna «Ingeniería de Software» y el Hackatón LinceCode 2026.
@@ -612,10 +708,16 @@ func _draw_office() -> void:
 	draw_rect(Rect2(0, 0, w, FLOOR_Y), Color("c9c2ac"))
 	for k in int(w / 20.0) + 1:
 		draw_rect(Rect2(k * 20.0, FLOOR_Y, 20, 30), Color("9c968a") if k % 2 == 0 else Color("8e887c"))
-	# Lámparas fluorescentes que parpadean.
+	_office_texture(w)
+	# Lámparas fluorescentes que parpadean (con su cono de luz).
 	for x in [60.0, 200.0, 330.0]:
 		var on := flicker <= 0.0 or fmod(time * 17.0 + x, 1.0) < 0.4
+		_office_light(x, on)
 		draw_rect(Rect2(x, 6, 50, 4), Color("f4f8e8") if on else Color("6a6a60"))
+		draw_rect(Rect2(x, 10, 50, 1), Color("8a8a80"))   # carcasa
+	# Sombras al pie de lo que hay en el suelo.
+	for s: Vector2 in [Vector2(71, 18), Vector2(124, 16), Vector2(160, 22), Vector2(20, 18), Vector2(371 + rack_shake, 26)]:
+		_floor_shadow(s.x, s.y)
 	# Minisplit goteando sobre una torre quemada.
 	draw_rect(Rect2(40, 30, 60, 18), Color("e8e8e0"))
 	draw_line(Vector2(44, 44), Vector2(96, 44), Color("a0a098"), 1.0)
@@ -634,10 +736,15 @@ func _draw_office() -> void:
 	for k in 3:
 		var m := Rect2(4 + (k % 2) * 6, 160 - k * 22, 28, 22)
 		draw_rect(m, Color("d8cca0"))
+		draw_rect(Rect2(m.position, Vector2(m.size.x, 1)), Color("eee4c0"))   # luz arriba
+		draw_rect(Rect2(m.end.x - 1, m.position.y, 1, m.size.y), Color("a89c74"))   # sombra a la derecha
 		draw_rect(m.grow(-4), Color("3a4a3a"))
+		draw_rect(Rect2(m.position + Vector2(5, 5), Vector2(6, 2)), Color(1, 1, 1, 0.18))   # reflejo del cristal
 	# El rack negro del rincón (y su temblor).
 	var rack := Rect2(Vector2(350, 70) + shake, Vector2(42, 128))
 	draw_rect(rack, Color("151518"))
+	draw_rect(Rect2(rack.position, Vector2(1, rack.size.y)), Color("3a3a42"))   # arista con luz
+	draw_rect(Rect2(rack.position, Vector2(rack.size.x, 1)), Color("2e2e36"))
 	for k in 9:
 		var y := rack.position.y + 8 + k * 13
 		draw_rect(Rect2(rack.position.x + 4, y, 34, 9), Color("23232a"))

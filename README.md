@@ -199,6 +199,8 @@ Al crear un personaje (apariencia y nombre; ya no se elige clase en el creador, 
 5. **La Elección Forzada**: ventana al estilo Windows 98, «Confirmar Contratación de Emergencia», con un desplegable para el **primer puesto (la clase)**. El botón **No** esquiva el ratón sin salir de la ventana (el primer salto, 150 px a la derecha; luego a cualquier hueco) y encoge cada vez; ya diminuto deja de huir, y si se le atina sale `Error 0x80004005` y se convierte en «Pues ya que...», que acepta igual.
 6. **Clímax**: Mario llega jalando un carrito con una bolsa de frituras, Aida con él («Profe Rafa, ¿va a querer churr...?»), y la caída se los lleva a todos. Antes: la carpeta lila «NO TOCAR - CONFIG_PROD» detrás del rack, la descarga, la consola roja (`POST /api/v1/deploy/force --user admin`), la oficina pixelándose (papeles en logs, cables en cobre, la ropa en binario) y el título **EL ÚLTIMO COMMIT**. Despiertas en el Sandbox (escena `llegada_sandbox`).
 
+El **pasillo y la oficina** tienen el detalle de la calle (`scripts/prologue/prologue_stage.gd`): aplanado con tramado (más oscuro hacia el fondo del pasillo), baldosas alternas en perspectiva, charcos de luz bajo las lámparas y conos de los fluorescentes, aristas con luz y sombra, la mancha de humedad bajo el minisplit, zócalo y juntas, y sombras al pie de los muebles.
+
 Se camina con las flechas o con click, que fija un destino en el mundo; E, Espacio o click para interactuar. Esc (dos veces) salta a la elección de puesto; en el creador, «Saltar prólogo» va directo a ella.
 
 ## Acto I: El Último Commit
