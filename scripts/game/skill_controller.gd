@@ -1162,6 +1162,7 @@ func _deploy(p: Dictionary, target: Vector2) -> void:
 
 
 func _update_devices(delta: float) -> void:
+	_chain_frame += 1   # también vale para _update_traps, que corre en el mismo fotograma
 	var still: Array[Dictionary] = []
 	var proxies: Array = []
 	for d in _devices:
@@ -1175,6 +1176,21 @@ func _update_devices(delta: float) -> void:
 				continue   # la destruyeron
 			proxies.append(d["ally"])
 		var rules: Dictionary = DEVICE_RULES[d["kind"]]
+		if d.has("chain_in"):
+			# Detonación en cadena: la hizo saltar una vecina (su cuenta atrás empieza
+			# al fotograma siguiente, aunque la marcaran en este mismo recorrido).
+			if int(d.get("chain_frame", -1)) == _chain_frame:
+				still.append(d)
+				continue
+			d["chain_in"] -= delta
+			if d["chain_in"] > 0.0:
+				still.append(d)
+				continue
+			var near := enemies.nearest_index(d["pos"], CHAIN_SEEK)
+			_execute(d["profile"], enemies.positions[near] if near != -1 else d["pos"] + Vector2.RIGHT * 10.0, d["pos"])
+			_effects.append({"type": "burst", "pos": d["pos"], "radius": 30.0, "time": 0.0, "duration": 0.3, "color": CHAIN_COLOR})
+			_chain_from(d["pos"])
+			continue
 		if d["armed_in"] > 0.0:
 			still.append(d)
 			continue
@@ -1186,9 +1202,11 @@ func _update_devices(delta: float) -> void:
 				_execute(d["profile"], enemies.positions[i], d["pos"])
 			still.append(d)
 		elif i != -1:
-			# Trampa o mina: se activa contra el enemigo que la pisa y desaparece.
+			# Trampa o mina: se activa contra el enemigo que la pisa y desaparece
+			# (y hace saltar a las vecinas).
 			_execute(d["profile"], enemies.positions[i], d["pos"])
 			_effects.append({"type": "burst", "pos": d["pos"], "radius": 26.0, "time": 0.0, "duration": 0.25, "color": d["color"]})
+			_chain_from(d["pos"])
 		else:
 			still.append(d)
 	_devices = still
@@ -1748,16 +1766,46 @@ func _fuse_superconductors() -> void:
 			break
 
 
+## Detonación en cadena: al estallar una trampa, mina o bomba en `pos`, las
+## armadas a menos de CHAIN_RADIUS estallan CHAIN_DELAY s después (y así sigue).
+const CHAIN_RADIUS := 170.0
+const CHAIN_DELAY := 0.12
+const CHAIN_SEEK := 260.0
+const CHAIN_COLOR := Color("ffb040")
+## Contador de actualizaciones: una cuenta atrás no avanza en el mismo fotograma en que se marcó.
+var _chain_frame := 0
+
+
+func _chain_from(pos: Vector2) -> void:
+	for d in _devices:
+		if d["kind"] != "totem" and not d.has("chain_in") and d["armed_in"] <= 0.0 and (d["pos"] as Vector2).distance_to(pos) <= CHAIN_RADIUS:
+			d["chain_in"] = CHAIN_DELAY
+			d["chain_frame"] = _chain_frame
+			_effects.append({"type": "zap", "pos": pos, "end": d["pos"], "time": 0.0, "duration": 0.2, "color": CHAIN_COLOR})
+	for trap in _traps:
+		if not trap.has("chain_in") and trap["armed_in"] <= 0.0 and (trap["pos"] as Vector2).distance_to(pos) <= CHAIN_RADIUS:
+			trap["chain_in"] = CHAIN_DELAY
+			trap["chain_frame"] = _chain_frame
+			_effects.append({"type": "zap", "pos": pos, "end": trap["pos"], "time": 0.0, "duration": 0.2, "color": CHAIN_COLOR})
+
+
 func _update_traps(delta: float) -> void:
 	var still: Array[Dictionary] = []
 	for trap in _traps:
 		trap["armed_in"] -= delta
 		trap["life"] -= delta
 		var p: Dictionary = trap["profile"]
-		if trap["armed_in"] <= 0.0 and enemies.nearest_index(trap["pos"], p["trigger_radius"]) != -1:
+		var chained := false
+		if trap.has("chain_in"):
+			if int(trap.get("chain_frame", -1)) != _chain_frame:
+				trap["chain_in"] -= delta
+				chained = trap["chain_in"] <= 0.0
+		if chained or (trap["armed_in"] <= 0.0 and not trap.has("chain_in") and enemies.nearest_index(trap["pos"], p["trigger_radius"]) != -1):
 			_ctx(p)
 			_damage_area(trap["pos"], p["radius"], p)
-			_effects.append({"type": "burst", "pos": trap["pos"], "radius": p["radius"], "time": 0.0, "duration": 0.35, "color": trap["color"]})
+			_effects.append({"type": "burst", "pos": trap["pos"], "radius": p["radius"], "time": 0.0, "duration": 0.35, "color": CHAIN_COLOR if chained else trap["color"]})
+			trap["armed_in"] = 99.0   # ya estalló: que la cadena no la vuelva a contar
+			_chain_from(trap["pos"])
 			continue
 		if trap["life"] > 0.0:
 			still.append(trap)

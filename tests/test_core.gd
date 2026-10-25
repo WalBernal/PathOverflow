@@ -95,6 +95,7 @@ func _initialize() -> void:
 	_test_tree_conversion()
 	_test_sacrifice_and_conditions()
 	_test_summoner_keystones()
+	_test_chain_detonation()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -1898,6 +1899,44 @@ func _test_board_milestones() -> void:
 	_check(d20["radius"] > d1["radius"] and d20["cooldown"] < d1["cooldown"] and d20["stun"] > d1["stun"], "cada nivel mejora área, enfriamiento y duración")
 	_check(SkillCalc.milestone_text(_db.skills.skills["proceso_hijo"]) == "+1 esbirro", "hito de esbirros")
 	_check(SkillCalc.compute(Motherboard.new(_db.skills.skills["proceso_hijo"], 20, ["DDR5"]), c)["count"] == 4, "esbirros extra por nivel")
+
+
+## Minas y trampas con detonación en cadena: al estallar una, las vecinas armadas
+## estallan poco después (y así sigue), aunque ningún enemigo las pise.
+func _test_chain_detonation() -> void:
+	var c := CharacterData.new(_classes[4], _tree)
+	var board := Motherboard.new(_db.skills.skills["fork_bomb"], 5, ["DDR5"])
+	board.install(RamModule.new(_db.skills.rams["detonador_mina"]), 0)
+	var p := SkillCalc.compute(board, c)
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	var pl := Player.new()
+	pl.character = c
+	var sc := SkillController.new()
+	sc.player = pl
+	sc.enemies = em
+	sc.character = c
+	for x in [100.0, 250.0, 400.0]:   # tres minas en fila, a 150 px una de otra
+		sc._deploy(p, Vector2(x, 0))
+	for d in sc._devices:
+		d["armed_in"] = 0.0
+	em.spawn(Vector2(105, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug"))   # solo pisa la primera
+	sc._update_devices(0.0)
+	_check(sc._devices.size() == 2 and sc._devices[0].has("chain_in"), "al estallar la primera, la vecina queda en cuenta atrás")
+	_check(not sc._devices[1].has("chain_in"), "la que está lejos aún no")
+	sc._update_devices(CHAIN_STEP)   # la cuenta atrás empieza al fotograma siguiente de marcarla
+	_check(sc._devices.size() == 2, "no estalla en el mismo instante: la cadena se ve")
+	sc._update_devices(CHAIN_STEP)
+	_check(sc._devices.size() == 1 and sc._devices[0].has("chain_in"), "la cadena sigue: estalla la segunda y prende la tercera")
+	sc._update_devices(CHAIN_STEP)
+	sc._update_devices(CHAIN_STEP)
+	_check(sc._devices.is_empty(), "y estalla la tercera, sin que ningún enemigo la pise")
+	sc.free()
+	pl.free()
+	em.free()
+
+
+const CHAIN_STEP := 0.1   # menor que SkillController.CHAIN_DELAY: hacen falta dos pasos por eslabón
 
 
 ## Nodos clave de invocador: Monolito (una sola, ×3 de vida y daño) frente a
