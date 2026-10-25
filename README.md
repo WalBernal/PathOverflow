@@ -312,6 +312,8 @@ Diseño en `docs/acto4.md`. Se llega por el **Bus de la BIOS** de la Cámara de 
 ## Misiones
 
 Definidas en `data/quests.json` y gestionadas por `QuestLog` (lógica pura, guardada en el personaje).
+
+**Recompensas propias de las secundarias**: además de puntos de pasiva y objetos al azar, cada una da algo concreto. En los actos I y II, **placas de invocación y auras** (Proceso Hijo, Daemon en Segundo Plano, Aura de Mantenimiento, Robot Centinela, Aura de Mando, Aura de Blindaje, Golem de Hardware); en los III y IV, **RAM de grado mayor** (Guiado Láser, Sobrealimentación, ECC, Multicanal) y el Mainframe Titán. Al aceptar una misión, el aviso dice qué da (`QuestLog.reward_text`).
 El **registro de misiones** está debajo del minimapa (L para plegarlo): la principal arriba, en dorado, y las secundarias debajo, con su paso actual y el progreso. Con la interfaz grande, el minimapa y el registro se ocultan mientras una ventana abierta (inventario, hoja de personaje, habilidades, alijo, tienda o waypoints) llegue debajo de ellos; y si el alijo o la tienda no caben junto al inventario, los dos se encogen lo justo para quedar lado a lado (capturas: `capture_screens.tscn -- ventanas160`).
 
 | Misión | Quién | Qué |

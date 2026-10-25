@@ -26,6 +26,33 @@ static func database() -> Dictionary:
 	return _db
 
 
+## Texto de las recompensas de una misión (para avisar al aceptarla):
+## «placa Proceso Hijo, RAM Multicanal Mayor, 1 punto de pasiva, objeto único...».
+## `skills`: la base de datos de habilidades (skills y rams).
+static func reward_text(def: Dictionary, skills: Variant) -> String:
+	var parts := PackedStringArray()
+	for r in def.get("rewards", []):
+		match String(r.get("type", "")):
+			"give_item":
+				if r.get("kind", "") == "motherboard":
+					parts.append("placa «%s»" % skills.skills.get(r.get("id", ""), {}).get("name", r.get("id", "")))
+				else:
+					parts.append("RAM «%s»" % skills.rams.get(r.get("id", ""), {}).get("name", r.get("id", "")))
+			"give_matching_ram":
+				parts.append("una RAM que encaje")
+			"give_random":
+				parts.append({"flask": "una poción", "ram": "una RAM", "magic": "un objeto mágico", "rare": "un objeto raro", "unique": "un único",
+					"ultra_rare": "un objeto muy raro", "set": "una pieza de conjunto"}.get(String(r.get("rarity", "rare")), "un objeto"))
+			"passive_point":
+				var n := int(r.get("amount", 1))
+				parts.append("%d punto%s de pasiva" % [n, "" if n == 1 else "s"])
+			"refill":
+				parts.append("pociones llenas")
+	if def.has("experience"):
+		parts.append("%d de experiencia" % int(def["experience"]))
+	return ", ".join(parts)
+
+
 func _init(p_character: CharacterData, p_defs: Dictionary = {}) -> void:
 	character = p_character
 	defs = p_defs if not p_defs.is_empty() else database()

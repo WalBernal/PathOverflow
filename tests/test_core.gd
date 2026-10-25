@@ -118,6 +118,7 @@ func _initialize() -> void:
 	_test_atlas()
 	_test_difficulties()
 	_test_zone_scaling()
+	_test_side_quest_rewards()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -2790,6 +2791,31 @@ func _test_zone_scaling() -> void:
 	c.flags["act4_complete"] = true
 	Difficulty.choose(c, 1)
 	_check(Difficulty.zone_level(c, 5, "act1", false) == 40 + Difficulty.LEVEL_BONUS[1], "se suma con la dificultad")
+
+
+## Misiones secundarias con recompensas (T43): placas de invocación y auras, RAM de grado mayor.
+func _test_side_quest_rewards() -> void:
+	var quests: Dictionary = DataLoader.load_json("res://data/quests.json")["quests"]
+	var boards := 0
+	var majors := 0
+	for id in quests:
+		var q: Dictionary = quests[id]
+		for r in q.get("rewards", []):
+			if r.get("type", "") != "give_item":
+				continue
+			if r.get("kind", "") == "motherboard":
+				_check(_db.skills.skills.has(r["id"]), "%s: la placa %s existe" % [id, r["id"]])
+				var def: Dictionary = _db.skills.skills.get(r["id"], {})
+				if def.get("kind", "") in ["unit", "minion", "aura", "drones"]:
+					boards += 1
+			else:
+				_check(_db.skills.rams.has(r["id"]), "%s: la RAM %s existe" % [id, r["id"]])
+				if String(r["id"]).ends_with("_mayor"):
+					majors += 1
+	_check(boards >= 6 and majors >= 4, "recompensas de invocación/aura (%d) y RAM de grado mayor (%d)" % [boards, majors])
+	var text := QuestLog.reward_text(quests["paez_kindle"], _db.skills)
+	_check(text.contains("RAM «") and text.contains("punto de pasiva") and text.contains("experiencia"), "las recompensas se explican: %s" % text)
+	_check(QuestLog.reward_text(quests["iris_cables"], _db.skills).contains("placa «Proceso Hijo»"), "con el nombre de la placa")
 
 
 func _db_enemies() -> Array:

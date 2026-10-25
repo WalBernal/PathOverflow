@@ -1198,7 +1198,8 @@ func _on_dialogue_action(action: Dictionary) -> void:
 # --- Misiones ---
 
 func _on_quest_started(id: String) -> void:
-	ui.hud.flash("Nueva misión: %s" % quests.defs[id].get("name", id), Color("ffd84a"))
+	var rewards := QuestLog.reward_text(quests.defs[id], GameData.items.skills)
+	ui.hud.flash("Nueva misión: %s%s" % [quests.defs[id].get("name", id), ("\nRecompensa: " + rewards) if rewards != "" else ""], Color("ffd84a"))
 	_mark_dirty()
 
 

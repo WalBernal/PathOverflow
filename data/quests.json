@@ -193,6 +193,7 @@
       ],
       "experience": 300,
       "rewards": [
+        {"type": "give_item", "kind": "motherboard", "id": "proceso_hijo"},
         {
           "type": "passive_point",
           "amount": 1
@@ -223,6 +224,7 @@
       ],
       "experience": 600,
       "rewards": [
+        {"type": "give_item", "kind": "motherboard", "id": "daemon_segundo_plano"},
         {
           "type": "give_matching_ram"
         },
@@ -250,6 +252,7 @@
       ],
       "experience": 900,
       "rewards": [
+        {"type": "give_item", "kind": "motherboard", "id": "aura_mantenimiento"},
         {
           "type": "passive_point",
           "amount": 1
@@ -307,6 +310,7 @@
       ],
       "experience": 1500,
       "rewards": [
+        {"type": "give_item", "kind": "motherboard", "id": "robot_centinela"},
         {
           "type": "give_random",
           "rarity": "unique"
@@ -331,6 +335,7 @@
       ],
       "experience": 1200,
       "rewards": [
+        {"type": "give_item", "kind": "motherboard", "id": "aura_mando"},
         {
           "type": "passive_point",
           "amount": 1
@@ -366,6 +371,7 @@
       ],
       "experience": 2000,
       "rewards": [
+        {"type": "give_item", "kind": "motherboard", "id": "aura_blindaje"},
         {
           "type": "passive_point",
           "amount": 1
@@ -398,6 +404,7 @@
       ],
       "experience": 1000,
       "rewards": [
+        {"type": "give_item", "kind": "motherboard", "id": "golem_hardware"},
         {
           "type": "give_random",
           "rarity": "ultra_rare"
@@ -490,6 +497,7 @@
       ],
       "experience": 3000,
       "rewards": [
+        {"type": "give_item", "kind": "ram", "id": "guiado_laser_mayor"},
         {
           "type": "passive_point",
           "amount": 1
@@ -521,6 +529,7 @@
       ],
       "experience": 2500,
       "rewards": [
+        {"type": "give_item", "kind": "ram", "id": "sobrealimentacion_mayor"},
         {
           "type": "give_random",
           "rarity": "ultra_rare"
@@ -552,6 +561,7 @@
       ],
       "experience": 3000,
       "rewards": [
+        {"type": "give_item", "kind": "ram", "id": "ecc_mayor"},
         {
           "type": "passive_point",
           "amount": 1
@@ -598,6 +608,7 @@
       ],
       "experience": 4000,
       "rewards": [
+        {"type": "give_item", "kind": "ram", "id": "multicanal_mayor"},
         {"type": "passive_point", "amount": 1},
         {"type": "give_random", "rarity": "ultra_rare"}
       ]
@@ -640,6 +651,7 @@
       ],
       "experience": 3000,
       "rewards": [
+        {"type": "give_item", "kind": "motherboard", "id": "mainframe_titan"},
         {"type": "passive_point", "amount": 1},
         {"type": "give_random", "rarity": "flask"}
       ]
