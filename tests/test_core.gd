@@ -104,6 +104,7 @@ func _initialize() -> void:
 	_test_transforming_chips()
 	_test_builds_and_compare()
 	_test_act4_world()
+	_test_act4_story()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -2290,6 +2291,42 @@ func _test_act4_world() -> void:
 			leaked = leaked or defs.get(aid, {}).get("innate_only", false)
 	_check(not leaked, "los afijos innatos no salen al azar en las élites")
 	em.free()
+
+
+## Acto IV (T29): NPC del hub, misiones y la decisión sobre los huérfanos.
+func _test_act4_story() -> void:
+	var npcs: Dictionary = DataLoader.load_json("res://data/npcs.json")
+	var quests: Dictionary = DataLoader.load_json("res://data/quests.json")["quests"]
+	var act4: Dictionary = DataLoader.load_json("res://data/act4.json")
+	var hub: Dictionary = act4["zones"].filter(func(z: Dictionary) -> bool: return z["id"] == "pila_cmos")[0]
+	var placed: Array = hub["npcs"].map(func(n: Dictionary) -> String: return n["id"])
+	for id in ["berta", "rafa_bios", "mario_bios"]:
+		_check(placed.has(id) and npcs["npcs"].has(id) and npcs["dialogues"].has(npcs["npcs"][id]["dialogue"]), "%s está en la Pila del CMOS con su diálogo" % id)
+	_check(quests.has("main_act4") and quests["main_act4"].get("starts_after", "") == "main_act3" and quests["main_act4"].get("main", false),
+		"la misión principal del Acto IV empieza al acabar la del III")
+	var main_flags: Array = quests["main_act4"]["steps"].filter(func(s: Dictionary) -> bool: return s["type"] == "flag").map(func(s: Dictionary) -> String: return s["flag"])
+	_check(main_flags.has("act4_huerfanos_decidido") and main_flags.has("act4_complete"), "la principal pide decidir sobre los huérfanos y cambiar la contraseña")
+	# La decisión: dos caminos, cada uno con su bandera para el Acto V, y los dos la cierran.
+	var rafa: Dictionary = npcs["dialogues"]["rafa_bios"]["nodes"]
+	var choices: Array = rafa["huerfanos"]["options"].filter(func(o: Dictionary) -> bool: return o.has("action"))
+	var flags: Array = choices.map(func(o: Dictionary) -> String: return o["action"]["flag"])
+	_check(flags.has("act4_huerfanos_salvados") and flags.has("act4_huerfanos_purgados"), "Rafa ofrece salvar o purgar a los huérfanos")
+	for o in choices:
+		var closes: Array = rafa[o["next"]]["options"].filter(func(x: Dictionary) -> bool: return x.get("action", {}).get("flag", "") == "act4_huerfanos_decidido")
+		_check(not closes.is_empty(), "elegir «%s» marca la decisión como tomada" % o["text"])
+	var opener: Array = rafa["hola"]["options"].filter(func(o: Dictionary) -> bool: return o["next"] == "huerfanos")
+	_check(not opener.is_empty() and opener[0].get("requires_flag", "") == "quest_rafa_libreta_done" and opener[0].get("hides_if_flag", "") == "act4_huerfanos_decidido",
+		"la decisión se abre al entregar la libreta y no se repite")
+	# Cada objeto de las misiones del acto está en alguna zona del Acto IV.
+	var items := {}
+	for z in act4["zones"]:
+		for it in z.get("quest_items", []):
+			items[it["id"]] = it["quest"]
+	for qid in ["rafa_libreta", "paez_arranque", "berta_ajustes", "eugenio_cafe"]:
+		for s in quests[qid]["steps"]:
+			if s["type"] == "collect":
+				for it in s.get("items", [s.get("item", "")]):
+					_check(items.get(it, "") == qid, "%s: el objeto %s está en el Acto IV" % [qid, it])
 
 
 func _db_enemies() -> Array:

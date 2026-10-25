@@ -280,18 +280,20 @@ Se llega por la **controladora de bus** del Anillo 0 (tras derrotar a init). Dat
 
 ## Acto IV: El Setup de la BIOS (en construcción)
 
-Diseño en `docs/acto4.md`. Se llega por el **Bus de la BIOS** de la Cámara de Reflasheo (tras detener el reflasheo). Datos en `data/act4.json`. Ya están las zonas y los enemigos; faltan los NPC, las misiones (T29) y el jefe (T30).
+Diseño en `docs/acto4.md`. Se llega por el **Bus de la BIOS** de la Cámara de Reflasheo (tras detener el reflasheo). Datos en `data/act4.json`. Ya están las zonas, los enemigos, los NPC y las misiones; falta el jefe (T30).
 
 | Zona | Nivel | Qué hay |
 |---|---|---|
 | El POST | 38 | Llegada: los pitidos del Power-On Self-Test. |
-| **La Pila del CMOS** (campamento) | 39 | Hub con alijo, waypoint y túnel al Puerto JTAG. |
+| **La Pila del CMOS** (campamento) | 39 | **Berta, la Pila CR2032** (recuerda cada ajuste desde 2004 y cuenta lo de admin/admin), **Rafa en persona** (bajó la VPN a mano), **Mario** (vino obligado por su servicio social), M. Páez y Eugenio; alijo, waypoint y túnel al Puerto JTAG. |
 | El Menú Advanced | 39 | Aquí el camino **se bifurca**: |
 | ↳ La Secuencia de Arranque | 41 | camino A |
 | ↳ La ROM de Video Legada | 43 | camino B, en 16 colores |
 | El Sector Oculto | 45 | Los dos caminos se juntan; waypoint. |
 | El Modo de Gestión del Sistema | 48 | La arena del jefe (admin/admin, pendiente). |
 
+- **Misiones**: *El Setup de la BIOS* (principal), *La Libreta de Gatitos* (Rafa: la libreta del Pepe, en la ROM de Video), *Orden de Arranque* (M. Páez: los tres andenes), *Ajustes de Fábrica* (Berta) y *Café de Máquina* (Eugenio: por fin un 10/10... de malo).
+- **Decisión sobre los huérfanos del Sindicato**: al entregar la libreta, Rafa pregunta si reiniciar **con** ellos o **sin** ellos. Se guarda (`act4_huerfanos_salvados` o `act4_huerfanos_purgados`) para el Acto V y la misión principal no avanza sin decidir.
 - **Estilos nuevos**: `setup` (azul del Setup con opciones y la seleccionada en amarillo) y `vga16` (píxeles gordos de la paleta EGA), con suelo en pixel art, luces y ambientes propios (`tools/generate_sfx.gd -- acto4`).
 - **Enemigos nuevos**, cada uno con un **afijo innato** (`innate_affixes` en `enemies.json`; los afijos con `innate_only` no salen al azar en otras élites):
   - **Beep Code** (embestida): *Código de error*, sus pitidos te hielan.

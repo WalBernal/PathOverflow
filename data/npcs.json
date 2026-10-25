@@ -258,6 +258,41 @@
         "rate": 1.05,
         "gender": "male"
       }
+    },
+    "berta": {
+      "name": "Berta, la Pila CR2032",
+      "dialogue": "berta",
+      "color": "c8c8d8",
+      "appearance": {"body": 1, "hair": 2, "height": 0.8, "skin_tone": "d8b89a", "hair_color": "e8e8f0", "outfit_color": "8a8a9a", "accent_color": "c8c8d8"},
+      "voice": {"pitch": 1.1, "rate": 0.85, "gender": "female"}
+    },
+    "rafa_bios": {
+      "name": "Rafa, el SysAdmin (en persona)",
+      "dialogue": "rafa_bios",
+      "color": "3cff6a",
+      "appearance": {"body": 1, "hair": 5, "skin_tone": "f1d2b6", "hair_color": "17130f", "hair_streaks": "b9b9b9", "outfit_color": "1f1f2e", "height": 0.86},
+      "voice": {"pitch": 0.65, "rate": 0.9, "gender": "male"}
+    },
+    "mario_bios": {
+      "name": "Mario, el Practicante (prestador de servicio)",
+      "dialogue": "mario_bios",
+      "color": "6fb36b",
+      "appearance": {"body": 0, "hair": 3, "skin_tone": "f1d2b6", "hair_color": "b5651d", "outfit_color": "2b6b45"},
+      "voice": {"pitch": 1.25, "rate": 1.15, "gender": "male"}
+    },
+    "paez_bios": {
+      "name": "M. Páez, el Inge",
+      "dialogue": "paez_bios",
+      "color": "4b8bd6",
+      "appearance": {"body": 2, "hair": 10, "beard": 2, "accessory": 1, "height": 1, "smile": 1, "skin_tone": "c8967a", "hair_color": "241c16", "beard_color": "4e4842", "beard_streaks": true, "eye_color": "3a2414", "outfit_color": "233a5c", "accent_color": "1a2a44", "shirt_color": "f2f2f0"},
+      "voice": {"pitch": 0.8, "rate": 0.95, "gender": "male"}
+    },
+    "eugenio_bios": {
+      "name": "Eugenio, soltero codiciado",
+      "dialogue": "eugenio_bios",
+      "color": "d9a441",
+      "appearance": {"body": 0, "hair": 1, "beard": 0, "accessory": 1, "height": 1, "skin_tone": "e0ac8a", "hair_color": "0f0d0c", "eye_color": "6b4423", "outfit_color": "8a6d3b", "accent_color": "c8c8c8"},
+      "voice": {"pitch": 1.08, "rate": 1.05, "gender": "male"}
     }
   },
   "dialogues": {
@@ -2159,6 +2194,228 @@
               }
             }
           ]
+        }
+      }
+    },
+    "berta": {
+      "start": "hola",
+      "greeting_again": [
+        "Ah, eres tú. Sigo aquí, mijo. Con 2,9 voltios, pero aquí.",
+        "Pásale. No hagas mucho ruido: cada vez que alguien grita, pierdo una décima de voltio.",
+        "¿Ya comiste? Aquí son siempre las 00:00 del primero de enero del 2000, así que técnicamente es hora de cenar."
+      ],
+      "menu": [
+        "¿Qué más quieres saber? Pregunta rápido, que me estoy descargando.",
+        "Dime, dime. Me acuerdo de todo desde 2004... menos de dónde dejé los lentes."
+      ],
+      "nodes": {
+        "hola": {
+          "text": "Bienvenido a la Pila del CMOS. Soy Berta, la CR2032 de esta placa. Tres voltios de pura memoria: guardo la hora, el orden de arranque y cada ajuste que alguien cambió desde 2004. El reloj se me quedó en el primero de enero del 2000 y ya no lo muevo. A mi edad, uno escoge sus batallas.",
+          "options": [
+            {"text": "¿Qué es este lugar?", "next": "lugar"},
+            {"text": "¿Quién firmó el Último Commit?", "next": "admin"},
+            {"text": "Encontré tus ajustes perdidos.", "next": "ajustes_entrega", "requires_flag": "quest_berta_ajustes_ready"},
+            {"text": "¿Necesitas ayuda?", "next": "ajustes_oferta", "hides_if_flag": "quest_berta_ajustes_started"},
+            {"text": "¿Conociste al Inge Pepe?", "next": "pepe"},
+            {"text": "Cuídese, Berta.", "next": ""}
+          ]
+        },
+        "lugar": {
+          "text": "La BIOS, mijo. Lo primero que despierta cuando alguien prende la máquina, antes que el sistema operativo, antes que todo. Aquí abajo nadie ve lo que pasa. Por eso aquí se esconden las cosas que no quieren que las vean.",
+          "options": [{"text": "Entiendo.", "next": "hola"}]
+        },
+        "admin": {
+          "text": "admin. Así se llama. Contraseña: admin. Venía en el manual del servidor que trajeron en 2004, en la página 3. Alguien tiró el manual a la basura y nadie la cambió nunca. Una cuenta que puede con todo y que no es de nadie. Imagínate: veinte años sin dueño, sin que nadie le pregunte cómo está.",
+          "next": "admin2",
+          "options": []
+        },
+        "admin2": {
+          "text": "Con tanto tiempo solo, se volvió algo. Vive más abajo, en el Modo de Gestión del Sistema, donde ni el sistema operativo lo ve. Él hizo el push, mijo. Firmado «admin», sin descripción. ¿Cuándo has visto que admin escriba una descripción?",
+          "options": [{"text": "¿Y por qué lo hizo?", "next": "admin3"}]
+        },
+        "admin3": {
+          "text": "Eso pregúntaselo a él. Yo solo sé que quiere algo que nunca tuvo. Y que el Pepe lo sabía: venía a verme cada jueves y me preguntaba si la contraseña seguía siendo la misma. Siempre lo era.",
+          "options": [{"text": "Gracias, Berta.", "next": "hola"}]
+        },
+        "pepe": {
+          "text": "¿El Pepe? Claro. Muy educado, siempre con su gorra de pescador. Me cambiaba el reloj cada horario de verano aunque yo no se lo pidiera. Un día me dijo: «Berta, si algún día no vuelvo, no le digas a nadie la contraseña». Y yo le dije: «Pepe, la contraseña es admin, la sabe todo el mundo». Se rió. No volvió.",
+          "options": [{"text": "Ya veo.", "next": "hola"}]
+        },
+        "ajustes_oferta": {
+          "text": "Con el reflasheo se me salieron tres ajustes de la memoria. Se me escaparon como canicas: uno anda en el Menú Advanced, otro en la Secuencia de Arranque y otro en la ROM de Video. Si me los traes, igual hasta me acuerdo de qué día es hoy.",
+          "options": [
+            {"text": "Se los traigo.", "next": "", "action": {"type": "start_quest", "quest": "berta_ajustes"}},
+            {"text": "Ahora no puedo.", "next": "hola"}
+          ]
+        },
+        "ajustes_entrega": {
+          "text": "¡Ay, mis ajustes! Quick Boot activado, el orden de arranque como Dios manda y la contraseña de supervisor... vacía, como siempre. Muchas gracias, mijo. Toma esto, lo tenía guardado desde 2004 para alguien que se lo mereciera.",
+          "options": [{"text": "De nada, Berta.", "next": "", "action": {"type": "quest_advance", "quest": "berta_ajustes"}}]
+        }
+      }
+    },
+    "rafa_bios": {
+      "start": "hola",
+      "greeting_again": [
+        "Ah.... eres tú.... Pensé que era otro Beep Code....",
+        "Sigo sin internet.... pero tampoco tengo a La Red Lince.... es raro.... me siento libre....",
+        "¿Ya viste la hora? Siempre es medianoche del 2000.... aquí no hay deadlines...."
+      ],
+      "menu": [
+        "¿Qué más....?",
+        "Dime.... pero rápido, que Mario me está viendo raro...."
+      ],
+      "nodes": {
+        "hola": {
+          "text": "¡Llegaste! Bueno.... llegué yo.... en persona.... Bajé la VPN.... a mano.... desconecté el router de La Red Lince y me aventé por el puerto 2222.... Ya no tengo ni datos del celular.... y Mario se vino conmigo.... dice que es por su servicio social....",
+          "options": [
+            {"text": "¿Qué sabes de admin?", "next": "admin"},
+            {"text": "Traigo la libreta de gatitos.", "next": "libreta_entrega", "requires_flag": "quest_rafa_libreta_ready"},
+            {"text": "¿Necesitas algo?", "next": "libreta_oferta", "hides_if_flag": "quest_rafa_libreta_started"},
+            {"text": "Sobre los huérfanos del Sindicato....", "next": "huerfanos", "requires_flag": "quest_rafa_libreta_done", "hides_if_flag": "act4_huerfanos_decidido"},
+            {"text": "¿Y mi constancia?", "next": "constancia"},
+            {"text": "Nos vemos, Rafa.", "next": ""}
+          ]
+        },
+        "admin": {
+          "text": "admin.... con contraseña admin.... Yo heredé ese servidor.... y nunca la cambié.... porque el pósit del Pepe decía «no tocar».... Así que.... técnicamente.... el Último Commit también es un poco culpa mía.... ¿verdad? No contestes....",
+          "options": [{"text": "No te preocupes.", "next": "hola"}]
+        },
+        "libreta_oferta": {
+          "text": "El Pepe anotaba todo en una libreta Scribe.... con pasta de gatitos.... Se la llevó al jubilarse creyendo que era su recetario.... Pero Berta dice que la vio pasar.... hacia la ROM de Video.... Si la encuentras.... ahí debe estar quién tenía acceso a admin....",
+          "options": [
+            {"text": "La busco.", "next": "", "action": {"type": "start_quest", "quest": "rafa_libreta"}},
+            {"text": "Luego.", "next": "hola"}
+          ]
+        },
+        "libreta_entrega": {
+          "text": "La libreta.... Página uno: recetas.... de verdad eran recetas.... Página veinte: «accesos a admin».... y luego una lista con TODOS los que trabajaron en informática.... y hasta abajo.... tu nombre.... como prestador de servicio social.... Él sí te registró.... La última página dice: «admin no es una persona. Es lo que pasa cuando nadie es responsable».",
+          "next": "libreta_entrega2",
+          "options": []
+        },
+        "libreta_entrega2": {
+          "text": "Hay algo más.... El Pepe dejó una nota sobre los huérfanos del Sindicato.... cuando reiniciemos.... podemos traerlos con nosotros.... o dejar que el reinicio los limpie.... Es tu decisión.... yo no puedo.... yo heredé este servidor.... no lo diseñé....",
+          "options": [{"text": "Déjame pensarlo.", "next": "", "action": {"type": "quest_advance", "quest": "rafa_libreta"}}]
+        },
+        "huerfanos": {
+          "text": "Los huérfanos del Sindicato.... el PID 404.... Si los traemos, el sistema arranca con miles de procesos sin padre.... más lento.... pero vivos.... Si no, el reinicio los limpia.... rápido y limpio.... y nunca más.... ¿Qué hacemos?",
+          "options": [
+            {"text": "Que vengan con nosotros. Nadie se queda atrás.", "next": "huerfanos_con", "action": {"type": "set_flag", "flag": "act4_huerfanos_salvados"}},
+            {"text": "Que el reinicio los limpie. Es lo más seguro.", "next": "huerfanos_sin", "action": {"type": "set_flag", "flag": "act4_huerfanos_purgados"}},
+            {"text": "Todavía no lo sé.", "next": "hola"}
+          ]
+        },
+        "huerfanos_con": {
+          "text": "Está bien.... les reservo un lugar en la tabla de procesos.... Van a ser lentos.... pero van a estar.... El Pepe hubiera hecho lo mismo.... creo....",
+          "options": [{"text": "Hecho.", "next": "", "action": {"type": "set_flag", "flag": "act4_huerfanos_decidido"}}]
+        },
+        "huerfanos_sin": {
+          "text": "Está bien.... preparo el reinicio en limpio.... No les voy a decir nada.... no podría.... Ojalá no se enteren antes....",
+          "options": [{"text": "Hecho.", "next": "", "action": {"type": "set_flag", "flag": "act4_huerfanos_decidido"}}]
+        },
+        "constancia": {
+          "text": "La firmo.... te lo juro.... en cuanto el servidor arranque.... Ya tengo el formato abierto.... bueno.... lo tengo en la cabeza.... la impresora está en el campamento.... y no hay internet....",
+          "options": [{"text": "Te tomo la palabra.", "next": "hola"}]
+        }
+      }
+    },
+    "mario_bios": {
+      "start": "hola",
+      "greeting_again": [
+        "¿Esto cuenta como horas de servicio? Dime que sí.",
+        "Llevo tres meses sin accesos y ahora estoy en la BIOS. Mi currículum va a quedar rarísimo.",
+        "¿Quieres café? No hay. Eugenio ya me dijo que no hay. Tres veces."
+      ],
+      "menu": ["¿Algo más? No tengo nada que hacer. Bueno, sí: las horas de servicio.", "Dime. Rafa me dijo que te ayudara, pero no me dijo cómo."],
+      "nodes": {
+        "hola": {
+          "text": "¡Hola! Me vine con Rafa. No quería, pero él dijo que si no venía no me firmaba las horas de servicio social. Así que aquí estoy. En la BIOS. Sin accesos. Como siempre.",
+          "options": [
+            {"text": "¿Qué te parece la BIOS?", "next": "bios"},
+            {"text": "¿Y Aida?", "next": "aida"},
+            {"text": "¿Sabes algo del Inge Pepe?", "next": "pepe"},
+            {"text": "Ánimo, Mario.", "next": ""}
+          ]
+        },
+        "bios": {
+          "text": "Es como el campamento, pero azul y con más pitidos. Ayer un Beep Code me persiguió diez minutos. Lo bueno es que aquí nadie me pide que reinicie la impresora.",
+          "options": [{"text": "Algo es algo.", "next": "hola"}]
+        },
+        "aida": {
+          "text": "Se quedó en el campamento cuidando el servidor. Dijo que alguien tenía que quedarse por si se prende solo. Lleva veinte años diciendo eso. Creo que le gusta estar sola con el COBOL.",
+          "options": [{"text": "Tiene sentido.", "next": "hola"}]
+        },
+        "pepe": {
+          "text": "Lo vi una vez, cuando entré. Me dijo: «chamaco, tú vas a llegar lejos, porque no te dan accesos para nada». Pensé que era un insulto. Ahora no sé. Igual era un consejo.",
+          "options": [{"text": "Quién sabe.", "next": "hola"}]
+        }
+      }
+    },
+    "paez_bios": {
+      "start": "hola",
+      "greeting_again": [
+        "Hola. Sigo sin cargador para el Kindle. Pero la BIOS es un sistema de ecuaciones precioso.",
+        "¿Sabías que el orden de arranque es una permutación? Cuatro dispositivos, veinticuatro órdenes posibles. Solo uno funciona."
+      ],
+      "menu": ["¿Algo más? Estoy resolviendo un sistema de tres incógnitas: Beep Codes, pitidos y paciencia.", "Dime."],
+      "nodes": {
+        "hola": {
+          "text": "Bienvenido. La BIOS es lo más ordenado que he visto en este viaje: cada opción tiene un valor, cada valor una consecuencia. Si todo fuera así, no existiría la estadística. Y yo estaría sin trabajo.",
+          "options": [
+            {"text": "Ya activé los tres andenes.", "next": "arranque_entrega", "requires_flag": "quest_paez_arranque_ready"},
+            {"text": "¿Puedo ayudar en algo?", "next": "arranque_oferta", "hides_if_flag": "quest_paez_arranque_started"},
+            {"text": "¿Qué opina de admin?", "next": "admin"},
+            {"text": "Hasta luego, Inge.", "next": ""}
+          ]
+        },
+        "admin": {
+          "text": "Desde el punto de vista de los datos, admin es una variable global que nadie inicializó y todos modificaron. Es el peor tipo de variable. El Inge Pepe y yo lo discutíamos en el club de lectura de los jueves. Él decía que algún día alguien tendría que hacerse cargo. Yo propuse leer un ensayo sobre eso. Él propuso una novela de pesca.",
+          "options": [{"text": "Interesante.", "next": "hola"}]
+        },
+        "arranque_oferta": {
+          "text": "Para que el servidor arranque cuando todo esto acabe, el orden de arranque tiene que ser correcto. En la Secuencia de Arranque hay tres andenes: disquete, disco duro y red. Actívalos. El orden ya lo calculé yo; tú solo pon el cuerpo.",
+          "options": [
+            {"text": "Voy para allá.", "next": "", "action": {"type": "start_quest", "quest": "paez_arranque"}},
+            {"text": "Más tarde.", "next": "hola"}
+          ]
+        },
+        "arranque_entrega": {
+          "text": "Perfecto. Primero el disquete del Pepe (curiosamente sigue funcionando), luego el disco duro, luego la red. La probabilidad de arranque correcto subió del 0 al 99 %. El último uno por ciento, dicen, no es nuestro. Ten, te lo ganaste.",
+          "options": [{"text": "Gracias, Inge.", "next": "", "action": {"type": "quest_advance", "quest": "paez_arranque"}}]
+        }
+      }
+    },
+    "eugenio_bios": {
+      "start": "hola",
+      "greeting_again": [
+        "¡Volviste! ¿Traes café? Aunque sea de máquina. Ya estoy en ese punto.",
+        "Hola. Esta BIOS huele a polvo de 2004. Le doy un 5/10. El polvo de 2004 tenía su encanto."
+      ],
+      "menu": ["¿Algo más? Si no traes café, por lo menos cuéntame algo triste. Así me siento acompañado.", "Dime."],
+      "nodes": {
+        "hola": {
+          "text": "¡Eh! Por aquí también cayó la máquina expendedora de la sala de maestros. La de los vasos que dicen «capuchino» y saben a «tal vez». Los vasos salieron volando por todo el Setup. Y yo, que ya no tengo granos de Veracruz...",
+          "options": [
+            {"text": "Te traje los tres vasos de café.", "next": "cafe_entrega", "requires_flag": "quest_eugenio_cafe_ready"},
+            {"text": "¿Quieres que te traiga esos cafés?", "next": "cafe_oferta", "hides_if_flag": "quest_eugenio_cafe_started"},
+            {"text": "¿Cómo va el amor?", "next": "amor"},
+            {"text": "Nos vemos, Eugenio.", "next": ""}
+          ]
+        },
+        "amor": {
+          "text": "Mal, pero con estilo. Conocí a una Beep Code. Bueno, me pitó. Dos cortos y uno largo. Según Berta, eso significa «error de memoria». Siempre me pasa lo mismo.",
+          "options": [{"text": "Lo siento.", "next": "hola"}]
+        },
+        "cafe_oferta": {
+          "text": "Hay tres vasos repartidos: uno en el POST, otro en el Menú Advanced y otro en el Sector Oculto. Sé que va a estar horrible. Pero necesito calificar algo o voy a empezar a calificar a la gente.",
+          "options": [
+            {"text": "Te los traigo.", "next": "", "action": {"type": "start_quest", "quest": "eugenio_cafe"}},
+            {"text": "Ahora no.", "next": "hola"}
+          ]
+        },
+        "cafe_entrega": {
+          "text": "A ver... El del POST: agua tibia con nostalgia. 2/10. El del Menú Advanced: sabe a «Disabled». 1/10. El del Sector Oculto... espera... es horrible. Es el peor café que he probado en mi vida. ¡10/10 de malo! Por fin un 10. Gracias, de verdad. Toma, y no le digas a nadie que lloré.",
+          "options": [{"text": "Provecho.", "next": "", "action": {"type": "quest_advance", "quest": "eugenio_cafe"}}]
         }
       }
     }

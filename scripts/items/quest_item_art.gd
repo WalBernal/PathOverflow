@@ -8,6 +8,7 @@ const ART_BY_ID := {
 	"cinta_backup": "tape", "registro_auditoria": "log", "descriptor_falso": "descriptor",
 	"funda_kindle": "kindle_case", "kindle_paez": "kindle",
 	"pan_concha": "concha", "pan_bolillo": "bolillo", "pan_cuernito": "cuernito",
+	"libreta_gatitos": "notebook",
 }
 const OUTLINE := Color(0.04, 0.03, 0.05, 0.9)
 
@@ -18,6 +19,10 @@ static func kind_for(q: Dictionary) -> String:
 	var id := String(q.get("id", ""))
 	if id.begins_with("cache_"):
 		return "ice_cache"
+	# Acto IV: vasos de la expendedora, andenes de arranque y ajustes del CMOS.
+	for prefix in ["cafe_", "anden_", "ajuste_"]:
+		if id.begins_with(prefix):
+			return {"cafe_": "vending_cup", "anden_": "boot_device", "ajuste_": "cmos_setting"}[prefix]
 	return ART_BY_ID.get(id, "tape")
 
 
@@ -41,6 +46,14 @@ static func draw(ci: CanvasItem, p: Vector2, kind: String, time := 0.0) -> void:
 			_bolillo(ci, p, time)
 		"cuernito":
 			_cuernito(ci, p, time)
+		"notebook":
+			_notebook(ci, p)
+		"vending_cup":
+			_vending_cup(ci, p, time)
+		"boot_device":
+			_boot_device(ci, p, time)
+		"cmos_setting":
+			_cmos_setting(ci, p, time)
 		_:
 			_tape(ci, p)
 
@@ -300,3 +313,51 @@ static func _cuernito(ci: CanvasItem, p: Vector2, time: float) -> void:
 		var r := 2.0 + tw * 1.5
 		ci.draw_line(c - Vector2(r, 0), c + Vector2(r, 0), Color(0.8, 0.95, 1.0, 0.9), 1.0)
 		ci.draw_line(c - Vector2(0, r), c + Vector2(0, r), Color(0.8, 0.95, 1.0, 0.9), 1.0)
+
+
+# --- Acto IV: el Setup de la BIOS ---
+
+## Libreta Scribe del Inge Pepe, con pasta de gatitos.
+static func _notebook(ci: CanvasItem, p: Vector2) -> void:
+	var body := Rect2(p + Vector2(-14, -19), Vector2(28, 38))
+	_box(ci, body, Color("f2a8c8"))
+	for k in 6:   # espiral
+		ci.draw_circle(body.position + Vector2(0, 4 + k * 6), 2.0, Color("8a8a90"))
+	for c: Vector2 in [Vector2(-3, -8), Vector2(6, 6)]:   # dos gatitos
+		ci.draw_circle(p + c, 4.5, Color("fff2f6"))
+		ci.draw_colored_polygon(PackedVector2Array([p + c + Vector2(-4, -2), p + c + Vector2(-3, -7), p + c + Vector2(-1, -3)]), Color("fff2f6"))
+		ci.draw_colored_polygon(PackedVector2Array([p + c + Vector2(4, -2), p + c + Vector2(3, -7), p + c + Vector2(1, -3)]), Color("fff2f6"))
+		ci.draw_circle(p + c + Vector2(-1.5, 0), 0.8, Color("2a2030"))
+		ci.draw_circle(p + c + Vector2(1.5, 0), 0.8, Color("2a2030"))
+	_tiny_text(ci, body.position + Vector2(0, 36), "Scribe", 28, 6, Color("8a3a5a"))
+
+
+## Vaso de la máquina expendedora, con vapor tibio.
+static func _vending_cup(ci: CanvasItem, p: Vector2, time: float) -> void:
+	_outlined(ci, PackedVector2Array([p + Vector2(-10, -14), p + Vector2(10, -14), p + Vector2(7, 16), p + Vector2(-7, 16)]), Color("f2ead8"), 1.5)
+	ci.draw_rect(Rect2(p + Vector2(-9, -6), Vector2(18, 7)), Color("8a5a2e"))
+	_tiny_text(ci, p + Vector2(-9, 0), "café", 18, 6, Color("f2ead8"))
+	for k in 2:
+		var x := -4.0 + k * 7.0
+		var wave := sin(time * 2.5 + k) * 2.0
+		ci.draw_line(p + Vector2(x, -18), p + Vector2(x + wave, -26), Color(1, 1, 1, 0.35), 1.5, true)
+
+
+## Andén de arranque: el dispositivo (disquete, disco o red) sobre su placa, con un LED.
+static func _boot_device(ci: CanvasItem, p: Vector2, time: float) -> void:
+	_box(ci, Rect2(p + Vector2(-18, 6), Vector2(36, 10)), Color("4a4f5c"))
+	_box(ci, Rect2(p + Vector2(-12, -18), Vector2(24, 24)), Color("1d3a8a"))
+	ci.draw_rect(Rect2(p + Vector2(-7, -18), Vector2(14, 8)), Color("c8c8d0"))   # la ventanita metálica del disquete
+	ci.draw_rect(Rect2(p + Vector2(-8, -4), Vector2(16, 8)), Color("f2f2f0"))
+	var on := fmod(time * 1.5, 1.0) < 0.5
+	ci.draw_circle(p + Vector2(13, 11), 2.5, Color("3cff6a") if on else Color("1a4a2a"))
+
+
+## Ajuste del CMOS: una fila del Setup en un marco gris, con su valor en amarillo.
+static func _cmos_setting(ci: CanvasItem, p: Vector2, time: float) -> void:
+	var r := Rect2(p + Vector2(-20, -12), Vector2(40, 24))
+	_box(ci, r, Color("0a1a6a"))
+	ci.draw_rect(r.grow(-3), Color("8a96c8"), false, 1.0)
+	var glow := 0.6 + 0.4 * sin(time * 3.0)
+	ci.draw_rect(Rect2(p + Vector2(-15, -3), Vector2(30, 7)), Color(0.9, 0.85, 0.2, 0.35 * glow))
+	_tiny_text(ci, p + Vector2(-20, 3), "[Enabled]", 40, 6, Color("ffe050"))

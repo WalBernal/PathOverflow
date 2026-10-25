@@ -565,6 +565,84 @@
           "rarity": "ultra_rare"
         }
       ]
+    },
+    "main_act4": {
+      "name": "El Setup de la BIOS",
+      "main": true,
+      "starts_after": "main_act3",
+      "description": "Debajo del firmware despertó la cuenta que firmó el Último Commit: admin, con contraseña admin, que nadie cambió desde 2004.",
+      "steps": [
+        {"type": "reach_zone", "zone": "post", "text": "Baja por el Bus de la BIOS hasta el POST"},
+        {"type": "reach_zone", "zone": "pila_cmos", "text": "Llega a la Pila del CMOS"},
+        {"type": "talk", "npc": "berta", "text": "Habla con Berta, la Pila CR2032"},
+        {"type": "talk", "npc": "rafa_bios", "text": "Habla con Rafa, que llegó en persona"},
+        {"type": "reach_zone", "zone": "sector_oculto", "text": "Cruza el Menú Advanced hasta el Sector Oculto (por la Secuencia de Arranque o por la ROM de Video)"},
+        {"type": "flag", "flag": "act4_huerfanos_decidido", "text": "Encuentra la libreta del Pepe y decide con Rafa qué pasa con los huérfanos"},
+        {"type": "reach_zone", "zone": "modo_smm", "text": "Entra en el Modo de Gestión del Sistema"},
+        {"type": "flag", "flag": "act4_complete", "text": "Cámbiale la contraseña a admin"}
+      ],
+      "experience": 12000,
+      "rewards": [
+        {"type": "passive_point", "amount": 2},
+        {"type": "give_random", "rarity": "unique"},
+        {"type": "give_random", "rarity": "ultra_rare"}
+      ]
+    },
+    "rafa_libreta": {
+      "name": "La Libreta de Gatitos",
+      "giver": "rafa_bios",
+      "description": "El Inge Pepe anotaba todo en una libreta Scribe con pasta de gatitos. Berta la vio pasar hacia la ROM de Video.",
+      "steps": [
+        {"type": "collect", "item": "libreta_gatitos", "text": "Encuentra la libreta de gatitos en la ROM de Video Legada"},
+        {"type": "turn_in", "npc": "rafa_bios", "text": "Llévale la libreta a Rafa"}
+      ],
+      "experience": 4000,
+      "rewards": [
+        {"type": "passive_point", "amount": 1},
+        {"type": "give_random", "rarity": "ultra_rare"}
+      ]
+    },
+    "paez_arranque": {
+      "name": "Orden de Arranque",
+      "giver": "paez_bios",
+      "description": "Para que el servidor arranque cuando todo acabe, M. Páez necesita los tres andenes de la Secuencia de Arranque activados.",
+      "steps": [
+        {"type": "collect", "items": ["anden_disquete", "anden_disco", "anden_red"], "text": "Activa los andenes del disquete, del disco duro y de la red en la Secuencia de Arranque"},
+        {"type": "turn_in", "npc": "paez_bios", "text": "Avísale a M. Páez"}
+      ],
+      "experience": 4000,
+      "rewards": [
+        {"type": "passive_point", "amount": 1},
+        {"type": "give_random", "rarity": "unique"}
+      ]
+    },
+    "berta_ajustes": {
+      "name": "Ajustes de Fábrica",
+      "giver": "berta",
+      "description": "Con el reflasheo, a Berta se le escaparon tres ajustes del CMOS.",
+      "steps": [
+        {"type": "collect", "items": ["ajuste_quick_boot", "ajuste_boot_seq", "ajuste_supervisor"], "text": "Recupera los tres ajustes (Menú Advanced, Secuencia de Arranque y ROM de Video)"},
+        {"type": "turn_in", "npc": "berta", "text": "Devuélvele los ajustes a Berta"}
+      ],
+      "experience": 3500,
+      "rewards": [
+        {"type": "passive_point", "amount": 1},
+        {"type": "give_random", "rarity": "ultra_rare"}
+      ]
+    },
+    "eugenio_cafe": {
+      "name": "Café de Máquina",
+      "giver": "eugenio_bios",
+      "description": "La máquina expendedora de la sala de maestros también cayó. Eugenio necesita calificar algo, aunque sea horrible.",
+      "steps": [
+        {"type": "collect", "items": ["cafe_post", "cafe_advanced", "cafe_oculto"], "text": "Recoge los vasos de café del POST, del Menú Advanced y del Sector Oculto"},
+        {"type": "turn_in", "npc": "eugenio_bios", "text": "Llévale los cafés a Eugenio"}
+      ],
+      "experience": 3000,
+      "rewards": [
+        {"type": "passive_point", "amount": 1},
+        {"type": "give_random", "rarity": "flask"}
+      ]
     }
   }
 }

@@ -8,6 +8,7 @@
   "zones": [
     {
       "id": "post",
+      "quest_items": [{"id": "cafe_post", "name": "Vaso de «capuchino» del POST", "pos": [2200, 1500], "quest": "eugenio_cafe"}],
       "name": "El POST",
       "level": 38,
       "scale": 1.4,
@@ -38,11 +39,12 @@
       ],
       "stash": [790, 960],
       "waypoint": [950, 1000],
-      "npcs": [],
+      "npcs": [{"id": "berta", "pos": [700, 520]}, {"id": "rafa_bios", "pos": [520, 1060]}, {"id": "mario_bios", "pos": [640, 1140]}, {"id": "paez_bios", "pos": [1220, 540]}, {"id": "eugenio_bios", "pos": [1380, 980]}],
       "obstacles": {"count": 0, "kinds": []}
     },
     {
       "id": "menu_advanced",
+      "quest_items": [{"id": "ajuste_quick_boot", "name": "Ajuste: Quick Boot [Enabled]", "pos": [2000, 1700], "quest": "berta_ajustes"}, {"id": "cafe_advanced", "name": "Vaso de café con sabor a «Disabled»", "pos": [1200, 400], "quest": "eugenio_cafe"}],
       "name": "El Menú Advanced",
       "level": 39,
       "scale": 1.4,
@@ -61,6 +63,7 @@
     },
     {
       "id": "secuencia_arranque",
+      "quest_items": [{"id": "anden_disquete", "name": "Andén del disquete", "pos": [1200, 500], "quest": "paez_arranque"}, {"id": "anden_disco", "name": "Andén del disco duro", "pos": [2200, 1300], "quest": "paez_arranque"}, {"id": "anden_red", "name": "Andén de la red", "pos": [3300, 600], "quest": "paez_arranque"}, {"id": "ajuste_boot_seq", "name": "Ajuste: Boot Seq [A,C,SCSI]", "pos": [2800, 1500], "quest": "berta_ajustes"}],
       "name": "La Secuencia de Arranque",
       "level": 41,
       "scale": 1.4,
@@ -78,6 +81,7 @@
     },
     {
       "id": "rom_video",
+      "quest_items": [{"id": "libreta_gatitos", "name": "Libreta Scribe con pasta de gatitos", "pos": [3000, 1700], "quest": "rafa_libreta"}, {"id": "ajuste_supervisor", "name": "Ajuste: Supervisor Password [vacía]", "pos": [1500, 400], "quest": "berta_ajustes"}],
       "name": "La ROM de Video Legada",
       "level": 43,
       "scale": 1.4,
@@ -95,6 +99,7 @@
     },
     {
       "id": "sector_oculto",
+      "quest_items": [{"id": "cafe_oculto", "name": "Vaso de café del Sector Oculto (el peor)", "pos": [2600, 1700], "quest": "eugenio_cafe"}],
       "name": "El Sector Oculto",
       "level": 45,
       "scale": 1.4,
