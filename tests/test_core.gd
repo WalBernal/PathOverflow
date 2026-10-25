@@ -147,6 +147,7 @@ func _initialize() -> void:
 	_test_enemy_weight()
 	_test_skill_fx()
 	_test_pixel_icons()
+	_test_ui_identity()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3683,6 +3684,36 @@ func _test_pixel_icons() -> void:
 	PixelIcons.enabled = false
 	_check(not PixelIcons.has_icon("skill:ping_letal"), "se puede volver a los glifos de formas")
 	PixelIcons.enabled = true
+
+
+## Interfaz con identidad (T76): fuente de píxeles, botón hundido, remaches y orbes con líquido.
+func _test_ui_identity() -> void:
+	for ch in "ABCDEFGHIJKLMNOPQRSTUVWXYZÁÉÍÓÚÜÑ0123456789.,:;!¡?¿-+/%()·«»":
+		var r := PixelFont.rows(ch)
+		_check(r.size() == PixelFont.CELL_H, "la fuente de píxeles tiene «%s»" % ch)
+		for row in r:
+			_check(String(row).length() == String(r[0]).length(), "«%s»: todas las filas del mismo ancho" % ch)
+	_check(PixelFont.rows("Á")[0] != PixelFont.rows("A")[0] and PixelFont.rows("Ñ")[1] != PixelFont.rows("N")[1], "con tilde y con virgulilla")
+	_check(PixelFont.supports("Nacho · La gabardina") and PixelFont.supports("Bolsa (3 / 60)") and not PixelFont.supports("✕"), "cubre los títulos (en mayúsculas)")
+	var f := PixelFont.font()
+	_check(f.has_char("A".unicode_at(0)) and f.has_char("Ñ".unicode_at(0)) and f.has_char("7".unicode_at(0)), "la fuente montada tiene los glifos")
+	_check(f.get_string_size("AB", HORIZONTAL_ALIGNMENT_LEFT, -1, PixelFont.CELL_H * 2).x > f.get_string_size("A", HORIZONTAL_ALIGNMENT_LEFT, -1, PixelFont.CELL_H * 2).x,
+		"avanza al escribir")
+	var l := UiStyle.pixel_label("Inventario", 3)
+	_check(l.text == "INVENTARIO" and l.get_theme_font_size("font_size") == 30, "rótulo en mayúsculas y a tamaño entero")
+	l.free()
+	var tiny := UiStyle.label("x", 9)
+	_check(tiny.get_theme_font_size("font_size") >= UiStyle.MIN_FONT_SIZE, "ningún texto por debajo del mínimo legible")
+	tiny.free()
+	var theme := UiStyle.make_theme()
+	var normal := theme.get_stylebox("normal", "Button") as StyleBoxFlat
+	var pressed := theme.get_stylebox("pressed", "Button") as StyleBoxFlat
+	_check(pressed.content_margin_top > normal.content_margin_top and pressed.border_width_top > pressed.border_width_bottom, "el botón pulsado se hunde")
+	# Orbes: las burbujas están siempre dentro del líquido.
+	for t in [0.0, 1.3, 7.7]:
+		for b in UiStyle.orb_bubbles(t, 100.0, 178.0, 120.0, 78.0):
+			_check((b[0] as Vector2).y > 120.0 and (b[0] as Vector2).y < 178.0 and (b[0] as Vector2).distance_to(Vector2(100, 100)) < 78.0, "burbuja dentro del orbe")
+	_check(UiStyle.orb_bubbles(0.5, 100.0, 178.0, 177.0, 78.0).is_empty(), "orbe vacío: sin burbujas")
 
 
 ## Parte 2 (T72b): el ataque golpea en el cuadro de impacto de la animación.

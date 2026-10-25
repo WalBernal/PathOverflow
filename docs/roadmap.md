@@ -438,10 +438,11 @@ Origen: R3
 - Atlas de iconos de habilidades, RAM, pociones y estados dibujados a mano en píxeles (16×16 y 32×32), en vez de formas vectoriales; mismo marco por rareza que los objetos.
 - Hecho: `tools/generate_pixel_icons.gd` rasteriza los glifos de las 62 habilidades, 10 estados y 52 familias de RAM a 32×32 y 16×16 sin suavizado (alfa todo o nada, paleta de 16 niveles por canal, contorno de 1 px) en `assets/sprites/icons/icons32.png` e `icons16.png` con su mapa `data/pixel_icons.json`; `PixelIcons` los dibuja con escala entera (el de 16 por debajo de 26 px) y SkillIcon, StatusIcon y RamIcon los usan sobre su mismo fondo y marco, con los glifos de formas de respaldo. Como los objetos, es «arte de programador»: los iconos dibujados a mano de verdad se ponen sustituyendo los PNG con la misma cuadrícula. Las familias de RAM sin símbolo propio siguen siendo un círculo.
 
-### [ ] T76 · Interfaz con identidad · M 🛑
+### [x] T76 · Interfaz con identidad · M 🛑
 Origen: R3 (Grim Dawn/PoE: ventanas como objetos del mundo)
 - Fuente de píxeles para títulos y números, marcos de ventana con remaches y esquinas, botones con estado pulsado, orbes de vida y maná con líquido animado, y un tema común para todas las ventanas.
 - Revisar contraste y tamaños con la interfaz al 80-160 %.
+- Hecho: `PixelFont`, fuente de píxeles de 5×7 hecha en código (mayúsculas con tildes, Ñ y Ü, cifras y signos; lo que no tiene, con la fuente normal) para los títulos de ventana (×3), los encabezados de sección (×2) y las cifras de los orbes; `UiStyle.pixel_label` la pone en mayúsculas con sombra dura. Marcos con remaches cada 90 px y cantoneras de metal bajo los ángulos dorados; botones que se hunden al pulsar (borde grueso arriba y texto 2 px más abajo); orbes con el fondo más oscuro, burbujas que suben y la cresta de la ola rellena. Todas las ventanas ya compartían `UiStyle.make_theme` y `decorate_window`. Revisado al 80 % y al 160 % (`capture_screens -- ventanas80` / `ventanas160`): ningún texto por debajo de 12 px (`MIN_FONT_SIZE`). Fuera de los múltiplos enteros (80 %, 160 %) los píxeles de la fuente salen algo desiguales.
 
 ## Fase 11 — Sonido
 
@@ -592,3 +593,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T73 · Enemigos con más peso: se echan atrás y destellan antes de golpear, respingo con los críticos, muertes físicas por material y cadáveres que se desvanecen.
 - 2026-10-25 · T74 · Firma visual por habilidad: forma de proyectil, estela, destello al lanzar y estallido al golpear, con versión ligera y respetando Menos destellos.
 - 2026-10-25 · T75 · Atlas de iconos en pixel art (32 y 16 px) de habilidades, estados y RAM, generados desde los glifos y listos para sustituir por arte a mano.
+- 2026-10-25 · T76 · Interfaz con identidad: fuente de píxeles para títulos y cifras, marcos con remaches, botones que se hunden, orbes con burbujas y texto mínimo de 12 px. Parada para revisión.

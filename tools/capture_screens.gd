@@ -70,6 +70,10 @@ func _run() -> void:
 		await _capture_windows_160()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("ventanas80"):
+		await _capture_windows_160(0.8)
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("poses"):
 		await _capture_poses()
 		get_tree().quit()
@@ -730,9 +734,10 @@ func _capture_terrains() -> void:
 
 ## Interfaz al 160 % en 900 px de alto: hoja de personaje, habilidades, alijo,
 ## tienda y waypoints, para ver que ninguna queda bajo el minimapa o las misiones.
-func _capture_windows_160() -> void:
+func _capture_windows_160(scale := 1.6) -> void:
 	var saved_scale: Variant = GameSettings.get_value("interface", "scale", 1.0)
-	GameSettings.set_value("interface", "scale", 1.6)
+	GameSettings.set_value("interface", "scale", scale)
+	var tag := "%d" % roundi(scale * 100.0)   # 160, 80...
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("Ventanas", &"templario", CharacterAppearance.default(), false)
 	c.flags["zone"] = "campamento"
@@ -748,29 +753,29 @@ func _capture_windows_160() -> void:
 	var ui: GameUI = world.get("ui")
 	ui.call("_on_menu_requested", "character")
 	await _wait(0.5)
-	_save("120_160_hoja")
+	_save("120_%s_hoja" % tag)
 	ui.call("_on_menu_requested", "character")
 	ui.call("_on_menu_requested", "skills")
 	await _wait(0.5)
-	_save("121_160_habilidades")
+	_save("121_%s_habilidades" % tag)
 	ui.call("_on_menu_requested", "skills")
 	ui.open_stash(world.get("stash"))
 	await _wait(0.5)
-	_save("122_160_alijo")
+	_save("122_%s_alijo" % tag)
 	ui.open_shop(Economy.generate_stock(ItemGenerator.new(gd.get("items")), c.level))
 	await _wait(0.5)
-	_save("123_160_tienda")
+	_save("123_%s_tienda" % tag)
 	ui.shop_panel.open_contraband()
 	await _wait(0.5)
-	_save("123b_160_contrabando")
+	_save("123b_%s_contrabando" % tag)
 	ui.open_shop(Economy.generate_gear_stock(ItemGenerator.new(gd.get("items")), c.level), "aida")
 	await _wait(0.5)
-	_save("123c_160_aida")
+	_save("123c_%s_aida" % tag)
 	ui.close_trade_panels()
 	ui.inventory_panel.visible = false
 	ui.open_waypoints("campamento")
 	await _wait(0.5)
-	_save("124_160_waypoints")
+	_save("124_%s_waypoints" % tag)
 	GameSettings.set_value("interface", "scale", saved_scale)
 	world.set("_since_save", -9999.0)
 

@@ -338,14 +338,15 @@ func _draw() -> void:
 		draw_string(font, life_center + Vector2(-80.0, -ORB_RADIUS - 20.0), "Barrera %d" % player.barrier, HORIZONTAL_ALIGNMENT_CENTER, 160.0, 12, Color("cfe8ff"))
 	_draw_orb(mana_center, player.mana / maxf(1.0, player.unreserved_mana_max()), MANA_COLOR, player.mana_reserved)
 	_draw_player_states(life_center, font)
+	# Cifras de los orbes con la fuente de píxeles (T76), con sombra dura.
+	var digits := PixelFont.font()
 	var life_text := "%d / %d" % [player.life, player.max_life()]
+	_pixel_string(digits, life_center + Vector2(-80.0, 8.0), life_text, TEXT_COLOR)
 	if max_es > 0.0:
-		life_text += "\n+%d ES" % player.energy_shield
-	draw_multiline_string(font, life_center + Vector2(-80.0, 4.0), life_text, HORIZONTAL_ALIGNMENT_CENTER, 160.0, 16, -1, TEXT_COLOR)
+		_pixel_string(digits, life_center + Vector2(-80.0, 30.0), "+%d ES" % player.energy_shield, ES_COLOR.lightened(0.3))
 	# Maná disponible / utilizable. Con invocaciones persistentes, debajo: reservado y total.
 	var reserved_amount := player.unreserved_mana_max() * player.mana_reserved
-	draw_string(font, mana_center + Vector2(-80.0, 6.0 if reserved_amount <= 0.0 else -2.0), "%d / %d" % [player.mana, player.max_mana()],
-		HORIZONTAL_ALIGNMENT_CENTER, 160.0, 16, TEXT_COLOR)
+	_pixel_string(digits, mana_center + Vector2(-80.0, 8.0 if reserved_amount <= 0.0 else 0.0), "%d / %d" % [player.mana, player.max_mana()], TEXT_COLOR)
 	if reserved_amount > 0.0:
 		draw_string(font, mana_center + Vector2(-80.0, 16.0), "reservado %d de %d" % [reserved_amount, player.unreserved_mana_max()],
 			HORIZONTAL_ALIGNMENT_CENTER, 160.0, 11, Color("9ad0ff"))
@@ -935,15 +936,24 @@ func _draw_orb(center: Vector2, fill: float, color: Color, reserved := 0.0) -> v
 	draw_circle(center, ORB_RADIUS, Color(0.05, 0.04, 0.06, 0.95))
 	if fill > 0.01:
 		draw_colored_polygon(_orb_segment(center, 0.0, fill), color)
-		# Ondas en la superficie del líquido.
+		var t := Time.get_ticks_msec() / 1000.0
+		# Líquido (T76): más oscuro al fondo y burbujas que suben hasta la superficie.
+		draw_colored_polygon(_orb_segment(center, 0.0, fill * 0.35), Color(0, 0, 0, 0.22))
 		var surface_y := center.y + ORB_RADIUS * (1.0 - 2.0 * fill)
+		var bottom_y := center.y + ORB_RADIUS
+		for b in UiStyle.orb_bubbles(t, center.x, bottom_y, surface_y, ORB_RADIUS):
+			draw_circle(b[0], b[1], Color(color.lightened(0.5), 0.35))
+		# Ondas en la superficie del líquido: la cresta se rellena (chapotea) y una línea clara encima.
 		var half := sqrt(maxf(0.0, ORB_RADIUS * ORB_RADIUS - pow(surface_y - center.y, 2.0)))
 		if half > 4.0:
 			var wave := PackedVector2Array()
-			var t := Time.get_ticks_msec() / 1000.0
 			for k in 13:
 				var x := center.x - half + 2.0 * half * k / 12.0
-				wave.append(Vector2(x, surface_y + sin(t * 3.0 + k * 0.9) * 1.5))
+				wave.append(Vector2(x, surface_y + sin(t * 3.0 + k * 0.9) * 1.5 + sin(t * 1.3 + k * 0.4) * 1.2))
+			var crest := wave.duplicate()
+			crest.append(Vector2(center.x + half, surface_y + 3.0))
+			crest.append(Vector2(center.x - half, surface_y + 3.0))
+			draw_colored_polygon(crest, color)
 			draw_polyline(wave, color.lightened(0.35), 1.5, true)
 		# Brillo.
 		draw_circle(center + Vector2(-ORB_RADIUS * 0.35, -ORB_RADIUS * 0.4), ORB_RADIUS * 0.18, Color(1, 1, 1, 0.08))
@@ -961,6 +971,13 @@ func _draw_orb(center: Vector2, fill: float, color: Color, reserved := 0.0) -> v
 			var pts := _clip_to_circle(a, b, center, ORB_RADIUS - 1.0)
 			if pts.size() == 2:
 				draw_line(pts[0], pts[1], Color(0.6, 0.8, 1.0, 0.12), 2.0)
+
+
+## Texto centrado en 160 px con la fuente de píxeles a doble tamaño y sombra.
+func _pixel_string(font: Font, pos: Vector2, text: String, color: Color) -> void:
+	var size := PixelFont.CELL_H * 2
+	draw_string(font, pos + Vector2(2, 2), text, HORIZONTAL_ALIGNMENT_CENTER, 160.0, size, Color(0, 0, 0, 0.85))
+	draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_CENTER, 160.0, size, color)
 
 
 ## Polígono de la franja del orbe entre las alturas `from` y `to` (0 = abajo, 1 = arriba).
