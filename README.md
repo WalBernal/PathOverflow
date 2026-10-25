@@ -592,6 +592,14 @@ powershell -File tools/run_checks.ps1
 
 Corre las tres comprobaciones seguidas y sale con código 1 si alguna falla (con `-Rapida`, la integración va a 5 s por zona). Busca Godot en el Escritorio o en Descargas, o en la variable `GODOT`. El `_console.exe` necesita el ejecutable normal en la misma carpeta.
 
+## Telemetría local
+
+Con **Pausa → Interfaz → Registro local de partidas** (activado por defecto), cada visita a una zona de un personaje guardado deja una línea en `user://telemetria.jsonl` (`scripts/game/telemetry.gd`): zona, nivel de área, clase, dificultad, segundos, segundos en combate, daño, **DPS**, enemigos y **muertes**. Nada sale del equipo, y los personajes de las pruebas no dejan registro. Para verlo resumido por zona y por clase (visitas, minutos, DPS medio, muertes por hora, enemigos por minuto, de la zona que más mata a la que menos):
+
+```powershell
+Godot_v4.7.2-stable_win64_console.exe --headless --path . -s res://tools/telemetry_summary.gd -- clase=hacker zona=zona3
+```
+
 ## Rendimiento
 
 Benchmark del 18-10-2026 (antes de los sprites), RTX 4050 Laptop, vsync desactivado, todos los enemigos amontonados alrededor del jugador:

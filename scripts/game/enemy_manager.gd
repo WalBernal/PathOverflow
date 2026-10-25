@@ -130,6 +130,11 @@ var safe_center := Vector2.ZERO
 var safe_radius := 0.0
 ## Daño total del último golpe (para el robo de vida).
 var last_damage_dealt := 0.0
+## Daño total hecho a los enemigos (golpes y degenerativos) y segundos con daño
+## reciente: la telemetría local los usa para el DPS de cada zona (Telemetry).
+var damage_total := 0.0
+var combat_time := 0.0
+var _hurt_recently := 0.0
 ## Obstáculos de la zona (x, y, radio) y límites del mapa: los enemigos no los atraviesan.
 var obstacles: Array[Vector3] = []
 var bounds := Rect2(-1e6, -1e6, 2e6, 2e6)
@@ -1055,6 +1060,7 @@ func _update_dots(delta: float) -> void:
 			continue
 		var dmg := dps * delta
 		last_damage_dealt += minf(dmg, lives[i])
+		_count_damage(minf(dmg, lives[i]))
 		lives[i] -= dmg
 		if lives[i] <= 0.0:
 			# Muere del degenerativo más fuerte: quemado (ceniza), envenenado o corrompido (se disuelve).
@@ -1113,6 +1119,19 @@ func hit_index(i: int, min_damage: float, max_damage: float, crit_chance: float,
 	var id := ids[i]
 	_damage(i, min_damage, max_damage, crit_chance, crit_multiplier)
 	return id
+
+
+## Para la telemetría: el daño suma al total y mantiene «en combate» 2 s más.
+func _count_damage(amount: float) -> void:
+	damage_total += amount
+	_hurt_recently = 2.0
+
+
+## Segundos en combate (con daño en los últimos 2 s): los cuenta _physics_process.
+func tick_combat_time(delta: float) -> void:
+	if _hurt_recently > 0.0:
+		_hurt_recently -= delta
+		combat_time += delta
 
 
 func _damage(i: int, min_damage: float, max_damage: float, crit_chance: float, crit_multiplier: float) -> void:
@@ -1182,6 +1201,7 @@ func _damage(i: int, min_damage: float, max_damage: float, crit_chance: float, c
 			if reflect > 0.0 and player.is_alive():
 				player.take_damage(minf(damage * reflect, player.max_life() * 0.1))
 	last_damage_dealt += minf(damage, lives[i])
+	_count_damage(minf(damage, lives[i]))
 	lives[i] -= damage
 	flashes[i] = FLASH_TIME
 	if lives[i] <= 0.0:
@@ -1314,6 +1334,7 @@ func is_in_safe_zone(pos: Vector2) -> bool:
 func _physics_process(delta: float) -> void:
 	if frozen:
 		return
+	tick_combat_time(delta)
 	var n := positions.size()
 	_update_projectiles(delta)
 	_update_hazards(delta)

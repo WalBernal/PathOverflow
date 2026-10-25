@@ -535,6 +535,13 @@ func _build_pause_menu() -> Control:
 		TipPanel.set_enabled(not TipPanel.enabled())
 		tips_button.text = "Consejos de mecánicas: " + ("sí" if TipPanel.enabled() else "no"))
 	right.add_child(tips_button)
+	var telemetry := UiStyle.button("", func() -> void: pass, 300)
+	telemetry.text = "Registro local de partidas: " + ("sí" if Telemetry.enabled() else "no")
+	telemetry.tooltip_text = "Apunta en user://telemetria.jsonl el tiempo, el DPS, las muertes y los enemigos de cada zona\n(para equilibrar; nada sale de tu equipo). tools/telemetry_summary.gd lo resume."
+	telemetry.pressed.connect(func() -> void:
+		GameSettings.set_value("interface", "telemetry", not Telemetry.enabled())
+		telemetry.text = "Registro local de partidas: " + ("sí" if Telemetry.enabled() else "no"))
+	right.add_child(telemetry)
 	var controls := UiStyle.button("Controles...", open_controls, 300)
 	controls.tooltip_text = "Cambia la tecla o el botón del mando de cada acción."
 	right.add_child(controls)

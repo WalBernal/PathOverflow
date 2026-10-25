@@ -137,6 +137,7 @@ func _initialize() -> void:
 	_test_obstacle_art()
 	_test_stress_music()
 	_test_audio_ogg()
+	_test_telemetry()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3362,6 +3363,43 @@ func _test_audio_ogg() -> void:
 	_check(Sfx.audio_path("res://assets/audio/no_existe") == "" and Sfx.load_looped("res://assets/audio/no_existe") == null, "lo que no existe no se carga")
 	var camp := Sfx.load_looped("res://assets/audio/music/camp1", 16000, Sfx.MUSIC_RATE) as AudioStreamOggVorbis
 	_check(camp != null and camp.loop and is_equal_approx(camp.loop_offset, 1.0), "el bucle pasa de muestras a segundos (16000 muestras = 1 s)")
+
+
+## Telemetría local de equilibrio (T64).
+func _test_telemetry() -> void:
+	var c := CharacterData.new(_classes[0], _tree)
+	var em := EnemyManager.new()
+	c.play_time = 100.0
+	var visit := Telemetry.begin(c, em, "zona3", 7)
+	c.play_time = 160.0
+	c.flags["stat_kills"] = 25
+	c.flags["stat_deaths"] = 1
+	em._count_damage(3000.0)
+	em.tick_combat_time(1.0)
+	em.tick_combat_time(1.0)   # 2 s en combate
+	var rec := Telemetry.finish(visit, c, em)
+	_check(rec["zone"] == "zona3" and is_equal_approx(float(rec["seconds"]), 60.0) and int(rec["kills"]) == 25 and int(rec["deaths"]) == 1,
+		"una visita: zona, tiempo, enemigos y muertes")
+	_check(int(rec["damage"]) == 3000 and int(rec["dps"]) == 1500, "DPS = daño entre segundos en combate (%s)" % rec["dps"])
+	c.play_time = 162.0
+	_check(Telemetry.finish(Telemetry.begin(c, em, "campamento", 1), c, em).is_empty(), "pasar un momento por una zona no cuenta")
+	var path := "user://test_telemetria.jsonl"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	_check(not Telemetry.write(rec, c, path), "un personaje de prueba (sin id) no deja registro")
+	c.id = "prueba"
+	if Telemetry.enabled():
+		var other := rec.duplicate()
+		other["zone"] = "zona4"
+		other["deaths"] = 0
+		other["dps"] = 500
+		_check(Telemetry.write(rec, c, path) and Telemetry.write(other, c, path) and Telemetry.write(rec, c, path), "se apunta en el archivo")
+		var all := Telemetry.read(path)
+		var by_zone := Telemetry.summarize(all)
+		_check(all.size() == 3 and by_zone["zona3"]["visits"] == 2 and int(by_zone["zona3"]["dps"]) == 1500 and float(by_zone["zona3"]["deaths_per_hour"]) == 60.0,
+			"el resumen por zona: visitas, DPS medio y muertes por hora")
+		_check(Telemetry.summarize(all, "class").size() == 1 and by_zone["zona4"]["deaths"] == 0, "y por clase")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	em.free()
 
 
 func _db_enemies() -> Array:

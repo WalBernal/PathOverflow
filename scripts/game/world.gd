@@ -34,6 +34,8 @@ var _since_save := 0.0
 var _boss_alive := false
 ## Fases de jefe ya iniciadas en esta zona (la música acelera con cada una).
 var _boss_phase := 0
+## Visita en curso a la zona, para la telemetría local (Telemetry).
+var _visit: Dictionary = {}
 ## Cuándo apareció el jefe de la zona (play_time), para su récord de tiempo.
 var _boss_started := 0.0
 ## Banco de oleadas en curso (Ladder): {wave, ids, next_in, time, base_level}.
@@ -253,6 +255,7 @@ func _mark_dirty() -> void:
 
 
 func _return_to_menu() -> void:
+	_close_visit()
 	save_now()
 	Sfx.ambient("")
 	get_tree().paused = false
@@ -261,8 +264,16 @@ func _return_to_menu() -> void:
 
 
 func _quit_game() -> void:
+	_close_visit()
 	save_now()
 	get_tree().quit()
+
+
+## Apunta la visita a la zona que termina (telemetría local).
+func _close_visit() -> void:
+	if zone and not _visit.is_empty():
+		Telemetry.write(Telemetry.finish(_visit, character, enemies), character)
+	_visit = {}
 
 
 # --- Zonas ---
@@ -278,6 +289,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 		_fail_challenge("Has salido de la zona: la prueba de estrés se cancela.")
 	if not _waves.is_empty():
 		_end_waves("Sales del banco de oleadas.")
+	_close_visit()
 	_twins = {}
 	if zone:
 		remove_child(zone)
@@ -341,6 +353,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 	for o in zone.obstacles:
 		enemies.obstacles.append(Vector3(o["pos"].x, o["pos"].y, o["radius"]))
 	_spawn_zone_enemies()
+	_visit = Telemetry.begin(character, enemies, zone.id, enemies.area_level)
 	skills.on_zone_changed()
 
 	character.flags["zone"] = zone.id
