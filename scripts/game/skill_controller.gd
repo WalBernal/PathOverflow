@@ -568,6 +568,23 @@ func light_projectiles() -> Array[Dictionary]:
 
 ## Cura a las invocaciones persistentes y a las torretas una fracción de su vida
 ## máxima (poción "Termo de café para el equipo").
+const SHOUT_COLOR := Color("e08a50")
+
+
+## Grito (potenciador con etiqueta warcry): sus mods ya llegan a las invocaciones
+## por las stats (daño y vida de esbirros, velocidad de autómatas); aquí se ve la
+## onda, destella cada aliado y, si la habilidad cura (heal_allies), los cura.
+func _shout(p: Dictionary, origin: Vector2) -> void:
+	_effects.append({"type": "ring", "pos": origin, "radius": 170.0, "time": 0.0, "duration": 0.5, "color": SHOUT_COLOR})
+	_effects.append({"type": "ring", "pos": origin, "radius": 90.0, "time": 0.0, "duration": 0.35, "color": SHOUT_COLOR})
+	for group in [_units, _minions, _devices]:
+		for a in group:
+			if a.has("pos"):
+				_effects.append({"type": "ring", "pos": a["pos"], "radius": 24.0, "time": 0.0, "duration": 0.45, "color": SHOUT_COLOR})
+	if float(p.get("heal_allies", 0.0)) > 0.0:
+		heal_units(float(p["heal_allies"]))
+
+
 func heal_units(fraction: float) -> void:
 	for u in _units:
 		u["life"] = minf(u["max_life"], u["life"] + u["max_life"] * fraction)
@@ -960,7 +977,10 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 				for md in p["buff_mods"]:
 					mods.append(Modifier.from_dict(md, "skill:" + String(p["id"])))
 				character.add_timed_effect("skill:" + String(p["id"]), mods, p["duration"])
-			_effects.append({"type": "ring", "pos": origin, "radius": 45.0, "time": 0.0, "duration": 0.6, "color": Color("e8d070")})
+			if p["tags"].has(&"warcry"):
+				_shout(p, origin)
+			else:
+				_effects.append({"type": "ring", "pos": origin, "radius": 45.0, "time": 0.0, "duration": 0.6, "color": Color("e8d070")})
 		"curse_area":
 			var offset := (target - origin).limit_length(p["range"])
 			var center := origin + offset

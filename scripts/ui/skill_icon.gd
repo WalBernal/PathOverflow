@@ -329,6 +329,19 @@ static func draw(ci: CanvasItem, rect: Rect2, skill_def: Dictionary, dimmed := f
 				for j in 9:
 					pts.append(c + Vector2(-r + j * r * 0.25, off + sin(j * 1.2 + k * PI) * r * 0.25))
 				ci.draw_polyline(pts, color if k == 0 else color.lightened(0.3), 3.0, true)
+		"shout", "shout_standup", "shout_rollback":
+			# Megáfono con ondas; los otros gritos llevan un reloj o una flecha de vuelta.
+			if icon.get("shape", "") == "shout_standup":
+				ci.draw_arc(c + Vector2(-r * 0.55, -r * 0.6), r * 0.3, 0.0, TAU, 12, color.lightened(0.4), 2.0, true)
+				ci.draw_line(c + Vector2(-r * 0.55, -r * 0.6), c + Vector2(-r * 0.55, -r * 0.8), color.lightened(0.4), 2.0, true)
+			elif icon.get("shape", "") == "shout_rollback":
+				ci.draw_arc(c + Vector2(-r * 0.55, -r * 0.6), r * 0.3, PI * 0.2, PI * 1.7, 12, color.lightened(0.4), 2.0, true)
+				ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-r * 0.3, -r * 0.45), c + Vector2(-r * 0.15, -r * 0.7), c + Vector2(-r * 0.05, -r * 0.4)]), color.lightened(0.4))
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-r * 0.8, -r * 0.2), c + Vector2(-r * 0.2, -r * 0.2), c + Vector2(r * 0.3, -r * 0.65),
+				c + Vector2(r * 0.3, r * 0.65), c + Vector2(-r * 0.2, r * 0.2), c + Vector2(-r * 0.8, r * 0.2)]), color)
+			ci.draw_line(c + Vector2(-r * 0.55, r * 0.2), c + Vector2(-r * 0.45, r * 0.6), color.darkened(0.3), 3.0, true)
+			for k in 2:
+				ci.draw_arc(c + Vector2(r * 0.3, 0), r * (0.35 + 0.3 * k), -0.7, 0.7, 10, color.lightened(0.3), 2.0, true)
 		"ransom":
 			ci.draw_rect(Rect2(c + Vector2(-r * 0.6, -r * 0.1), Vector2(r * 1.2, r * 0.95)), color)
 			ci.draw_arc(c + Vector2(0, -r * 0.1), r * 0.42, PI, TAU, 12, color, r * 0.2, true)

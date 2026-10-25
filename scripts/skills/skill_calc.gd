@@ -473,6 +473,7 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 		"seek_range": maxf(float(skill.get("seek_range", 0.0)), 450.0 if tags.has(&"homing") else 0.0),
 		"turn_rate": float(skill.get("turn_rate", 6.0)),
 		"buff_mods": skill.get("buff_mods", []),
+		"heal_allies": float(skill.get("heal_allies", 0.0)),
 		"barrier": (float(skill.get("barrier", 0.0)) * (1.0 + 0.1 * (board.level - 1)) + float(skill.get("barrier_life", 0.0)) * stats.get_value(Stat.LIFE)) \
 			* (1.0 + 0.2 * milestones if bonus_text == "+20 % de barrera" else 1.0),
 		"chain_range": float(skill.get("chain_range", 0.0)),

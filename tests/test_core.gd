@@ -96,6 +96,7 @@ func _initialize() -> void:
 	_test_sacrifice_and_conditions()
 	_test_summoner_keystones()
 	_test_chain_detonation()
+	_test_warcries()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -1931,6 +1932,41 @@ func _test_chain_detonation() -> void:
 	sc._update_devices(CHAIN_STEP)
 	sc._update_devices(CHAIN_STEP)
 	_check(sc._devices.is_empty(), "y estalla la tercera, sin que ningún enemigo la pise")
+	sc.free()
+	pl.free()
+	em.free()
+
+
+## Gritos: potenciadores con etiqueta warcry que también mejoran a las invocaciones.
+func _test_warcries() -> void:
+	var shouts := ["esta_en_produccion", "daily_standup", "rollback_grito"]
+	for id in shouts:
+		var s: Dictionary = _db.skills.skills.get(id, {})
+		_check(s.get("kind", "") == "buff" and "warcry" in s["tags"] and float(s["duration"]) > 0.0, "el grito %s es un potenciador con etiqueta grito" % id)
+	var c := CharacterData.new(_classes[5], _tree)
+	var daemon := Motherboard.new(_db.skills.skills["daemon_segundo_plano"], 5, [])
+	var before := SkillCalc.compute(daemon, c)
+	var pl := Player.new()
+	pl.character = c
+	var em := EnemyManager.new()
+	var sc := SkillController.new()
+	sc.player = pl
+	sc.enemies = em
+	sc.character = c
+	var prod := SkillCalc.compute(Motherboard.new(_db.skills.skills["esta_en_produccion"], 1, []), c)
+	sc._execute(prod, Vector2(50, 0))
+	var after := SkillCalc.compute(daemon, c)
+	_check(float(after["max_damage"]) > float(before["max_damage"]) * 1.25, "¡Está en producción! sube el daño de las invocaciones")
+	_check(float(after["automaton_speed"]) > float(before["automaton_speed"]), "y su velocidad")
+	_check(c.timed_effects.any(func(e: Dictionary) -> bool: return e["id"] == "skill:esta_en_produccion" and is_equal_approx(float(e["time_left"]), 6.0)), "dura 6 s")
+	# ¡Rollback! cura a las invocaciones.
+	sc._summon_unit(before, Vector2.ZERO, Color.WHITE)
+	_check(sc._units.size() == 1, "hay una invocación para curar")
+	if sc._units.size() == 1:
+		sc._units[0]["life"] = float(sc._units[0]["max_life"]) * 0.5
+		sc._execute(SkillCalc.compute(Motherboard.new(_db.skills.skills["rollback_grito"], 1, []), c), Vector2(50, 0))
+		_check(is_equal_approx(float(sc._units[0]["life"]), float(sc._units[0]["max_life"]) * 0.8), "¡Rollback! cura un 30 %% a las invocaciones")
+	_check(sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "ring" and float(e["radius"]) >= 170.0), "el grito se ve como una onda grande")
 	sc.free()
 	pl.free()
 	em.free()

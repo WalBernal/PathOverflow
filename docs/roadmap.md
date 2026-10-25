@@ -148,7 +148,7 @@ Origen: R2 §2 ★★
 Origen: R2 §2 ★★
 - Detonar una mina detona las vecinas, con retardo corto y efecto en cadena legible.
 
-### [ ] T20 · Gritos y buffs temporales · S
+### [x] T20 · Gritos y buffs temporales · S
 Origen: R2 §3 ★★
 - "¡Está en producción!" (+daño a aliados 6 s) y uno o dos más; afectan a invocaciones.
 
@@ -402,3 +402,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T17 · Condiciones nuevas «con 3 o más aliados» y «si no te has movido en 1 s», daño contra aturdidos o congelados, y seis notables de sacrificio y condicionales (vida baja, vida llena, 3 aliados, quieto, aturdidos).
 - 2026-10-25 · T18 · Nodos clave Monolito (una sola invocación persistente, ×3 de vida y daño) y Microservicios (+2 a la vez, −30 % cada una), en el lugar de Hola Mundo en 40 Lenguajes y Orquestación con Kubernetes (sin reembolso del árbol); el generador también los usa.
 - 2026-10-25 · T19 · Detonación en cadena de trampas y minas: al estallar una, las armadas a 170 px o menos estallan 0,12 s después (rayo naranja entre ellas, apuntan al enemigo más cercano) y siguen la cadena; la cuenta atrás no avanza en el mismo fotograma en que se marcó.
+- 2026-10-25 · T20 · Tres gritos (etiqueta `warcry`): ¡Está en producción! (daño propio y de esbirros, velocidad de autómatas), ¡Daily en cinco minutos! (velocidades) y ¡Rollback! (cura a las invocaciones, armadura y vida de esbirros), 6 s; onda grande y destello en cada aliado, iconos de megáfono propios.

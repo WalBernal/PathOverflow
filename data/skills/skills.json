@@ -688,6 +688,155 @@
       }
     },
     {
+      "id": "esta_en_produccion",
+      "name": "¡Está en producción!",
+      "kind": "buff",
+      "damage_type": "none",
+      "attribute": "str",
+      "tags": [
+        "spell",
+        "buff",
+        "warcry",
+        "duration"
+      ],
+      "lol": "Sion E (grito) / Darius",
+      "description": "Grito: alguien rompió producción y todo el equipo se pone las pilas. Más daño para ti y mucho más para tus invocaciones, que además van más rápido.",
+      "spell": {
+        "base_damage": [
+          0,
+          0
+        ],
+        "damage_growth": 0.0,
+        "cast_time": 0.25,
+        "crit": 0.0
+      },
+      "buff_mods": [
+        {
+          "stat": "damage",
+          "type": "more",
+          "value": 15
+        },
+        {
+          "stat": "minion_damage",
+          "type": "more",
+          "value": 30
+        },
+        {
+          "stat": "automaton_speed",
+          "type": "increased",
+          "value": 20
+        }
+      ],
+      "duration": 6.0,
+      "mana_cost": 12,
+      "mana_per_level": 0.4,
+      "cooldown": 15.0,
+      "icon": {
+        "shape": "shout",
+        "color": "e08a50"
+      }
+    },
+    {
+      "id": "daily_standup",
+      "name": "¡Daily en cinco minutos!",
+      "kind": "buff",
+      "damage_type": "none",
+      "attribute": "dex",
+      "tags": [
+        "spell",
+        "buff",
+        "warcry",
+        "duration"
+      ],
+      "lol": "Rammus Q / Singed",
+      "description": "Grito: la reunión diaria empieza ya y nadie quiere llegar tarde. Tú y tus invocaciones se mueven y actúan mucho más rápido.",
+      "spell": {
+        "base_damage": [
+          0,
+          0
+        ],
+        "damage_growth": 0.0,
+        "cast_time": 0.25,
+        "crit": 0.0
+      },
+      "buff_mods": [
+        {
+          "stat": "movement_speed",
+          "type": "increased",
+          "value": 20
+        },
+        {
+          "stat": "attack_speed",
+          "type": "increased",
+          "value": 12
+        },
+        {
+          "stat": "cast_speed",
+          "type": "increased",
+          "value": 12
+        },
+        {
+          "stat": "automaton_speed",
+          "type": "increased",
+          "value": 40
+        }
+      ],
+      "duration": 6.0,
+      "mana_cost": 10,
+      "mana_per_level": 0.4,
+      "cooldown": 16.0,
+      "icon": {
+        "shape": "shout_standup",
+        "color": "6fd3c8"
+      }
+    },
+    {
+      "id": "rollback_grito",
+      "name": "¡Rollback!",
+      "kind": "buff",
+      "damage_type": "none",
+      "attribute": "int",
+      "tags": [
+        "spell",
+        "buff",
+        "warcry",
+        "defense",
+        "duration"
+      ],
+      "lol": "Soraka R / Taric",
+      "description": "Grito: vuelta a la última versión que funcionaba. Cura a tus invocaciones y les da a todos más armadura; ellas, además, más vida.",
+      "spell": {
+        "base_damage": [
+          0,
+          0
+        ],
+        "damage_growth": 0.0,
+        "cast_time": 0.25,
+        "crit": 0.0
+      },
+      "heal_allies": 0.3,
+      "buff_mods": [
+        {
+          "stat": "armour",
+          "type": "more",
+          "value": 30
+        },
+        {
+          "stat": "minion_life",
+          "type": "increased",
+          "value": 30
+        }
+      ],
+      "duration": 6.0,
+      "mana_cost": 14,
+      "mana_per_level": 0.5,
+      "cooldown": 18.0,
+      "icon": {
+        "shape": "shout_rollback",
+        "color": "6fd36b"
+      }
+    },
+    {
       "id": "ransomware",
       "name": "Ransomware",
       "kind": "curse_area",
