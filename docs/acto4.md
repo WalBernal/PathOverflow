@@ -67,6 +67,7 @@ Una ventana de Setup en «Standard CMOS Features», con un reloj que marca siemp
 - **Café de máquina** (Eugenio): tres vasos de café de la expendedora repartidos por el acto (por fin un 10/10... de lo malo que está).
 - **Ajustes de fábrica** (Berta): encontrar tres opciones perdidas del CMOS; al entregarlas, la fecha deja de ser 01/01/2000 (cambio visual en el hub).
 - **Copia de seguridad de Rafa**: escoltar la laptop de Rafa (una unidad aliada con vida) por el Sector Oculto mientras sube un respaldo.
+- **Anti-spam**: protege a M. Páez mientras captura calificaciones en el sistema, de las oleadas de menensajes de spam (solicitando "Un puntito extra", "Redondéelo de 3.4 a 7", y cosas de este estilo con humor) de sus alumnos que reprobaron el primer parcial
 
 ## Jefe: admin/admin, el Usuario por Defecto
 
@@ -95,9 +96,9 @@ Una ventana de login con brazos de cable plano; el campo de contraseña muestra 
 
 ## Preguntas abiertas (para decidir antes de construir)
 
-1. **¿El Inge Pepe aparece en persona?** Esta propuesta lo deja fuera de escena (notas, libreta, cola de impresión) para guardarlo para el Acto V. Alternativa: aparece en el Sector Oculto, pescando.
-2. **¿La contraseña que escribe el jugador se guarda?** Podría salir más adelante (Rafa la usa en el Acto V, o la pide un NPC). Si no se guarda, la escena es solo un chiste.
-3. **Los huérfanos del Sindicato (PID 404)**: ¿el jugador decide aquí si se reinicia con ellos o sin ellos (afectaría al Acto V), o se deja para después?
-4. **Aida y Mario**: en esta propuesta solo aparecen en la escena final. ¿Prefieres que alguno viaje con Rafa al hub?
-5. **Nivel**: 38–48 sigue la curva del Acto III (26–36). ¿Está bien, o el acto IV debería ser más corto (cinco zonas) y dejar más hueco para el V?
-6. **Nombre del acto**: «El Setup de la BIOS». Otras opciones: «Credenciales de Fábrica», «Pulsa Supr para entrar al Setup».
+1. **¿El Inge Pepe aparece en persona?** Respuesta: Aún no aparece, será hasta el acto 5. Aunque se pudiera mencionar en los dialogos
+2. **¿La contraseña que escribe el jugador se guarda?** Podría salir más adelante (Rafa la usa en el Acto V, o la pide un NPC). Si no se guarda, la escena es solo un chiste. Respuesta: Si se guarda.
+3. **Los huérfanos del Sindicato (PID 404)**: ¿el jugador decide aquí si se reinicia con ellos o sin ellos (afectaría al Acto V), o se deja para después? Respuesta: Buena idea, hagámoslo.
+4. **Aida y Mario**: en esta propuesta solo aparecen en la escena final. ¿Prefieres que alguno viaje con Rafa al hub? Respuesta: lo acompaña Mario, obligado por ser prestador de servicio
+5. **Nivel**: 38–48 sigue la curva del Acto III (26–36). ¿Está bien, o el acto IV debería ser más corto (cinco zonas) y dejar más hueco para el V? Respuesta: puede ser un acto con historia y zonas bifurcadas. Pero continuará en el acto 5
+6. **Nombre del acto**: «El Setup de la BIOS». Otras opciones: «Credenciales de Fábrica», «Pulsa Supr para entrar al Setup». Respuesta: Se queda ese nombre.

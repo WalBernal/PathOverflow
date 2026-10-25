@@ -1,8 +1,10 @@
 # Corre las comprobaciones del proyecto: scripts, pruebas de lógica y prueba de integración.
-# Uso:  powershell -File tools/run_checks.ps1 [-Rapida]
-#   -Rapida: integración de 5 s por zona en vez de 30 (para iterar; la de 30 s antes del commit).
+# Uso:  powershell -File tools/run_checks.ps1 [-Rapida] [-Zonas id1,id2] [-Clases id1,id2]
+#   -Rapida: integración de 5 s por zona en vez de 30 (~5 min en total; la estándar de cada tarea).
+#   -Zonas / -Clases: la integración solo en esas zonas o clases (30 s, o 5 con -Rapida), para
+#   probar a fondo lo que cambió sin esperar las 7 clases × todas las zonas (~30 min).
 # Sale con código 1 si algo falla. La salida completa queda en %TEMP%\path_overflow_checks\.
-param([switch]$Rapida)
+param([switch]$Rapida, [string]$Zonas = "", [string]$Clases = "")
 
 $godot = $env:GODOT
 if (-not $godot) {
@@ -16,10 +18,13 @@ $root = Split-Path $PSScriptRoot -Parent
 $out = Join-Path $env:TEMP "path_overflow_checks"
 New-Item -ItemType Directory -Force $out | Out-Null
 $seconds = if ($Rapida) { "5" } else { "30" }
+$integration = @("--headless", "--fixed-fps", "60", "--path", $root, "res://tests/test_integration.tscn", "--", "segundos=$seconds")
+if ($Zonas -ne "") { $integration += "zonas=$Zonas" }
+if ($Clases -ne "") { $integration += "clases=$Clases" }
 $checks = @(
 	@{ Name = "scripts"; Args = @("--headless", "--path", $root, "-s", "res://tools/check_scripts.gd") },
 	@{ Name = "logica"; Args = @("--headless", "--path", $root, "-s", "res://tests/test_core.gd") },
-	@{ Name = "integracion"; Args = @("--headless", "--fixed-fps", "60", "--path", $root, "res://tests/test_integration.tscn", "--", "segundos=$seconds") }
+	@{ Name = "integracion"; Args = $integration }
 )
 $failed = $false
 foreach ($c in $checks) {

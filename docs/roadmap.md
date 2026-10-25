@@ -22,7 +22,7 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha · `[!]` bloqueada (co
 2. **Marcar** `[~]` antes de empezar.
 3. **Entender**: leer los archivos que cita la tarea, `README.md` y los docs relacionados (`docs/estilo.md`, `docs/lore.md`, `docs/habilidades_y_ram.md`). Seguir el estilo del código existente.
 4. **Hacer** lo que dice la tarea, sin ampliar el alcance. Si aparece trabajo extra, añadirlo como tarea nueva en la fase que toque, no hacerlo ahora.
-5. **Comprobar**: `powershell -File tools/run_checks.ps1` debe terminar con las tres en `[OK]` (scripts, lógica e integración). Mientras se itera, `-Rapida` acorta la integración; antes del commit, la completa (en segundo plano: tarda ~30 min). Añadir pruebas en `tests/test_core.gd` para la lógica nueva.
+5. **Comprobar**: `powershell -File tools/run_checks.ps1 -Rapida` debe terminar con las tres en `[OK]` (scripts, lógica e integración de 5 s por zona, ~5 min). Si la tarea cambia zonas, enemigos o jefes concretos, además la integración a fondo solo en ellos: `-Zonas id1,id2` (30 s por zona). La completa de 30 s en todo (~30 min) ya no se corre en cada tarea: el usuario prefiere pruebas cortas. Añadir pruebas en `tests/test_core.gd` para la lógica nueva.
 6. **Cerrar**: cambiar `[~]` por `[x]`, añadir una línea al **Registro** del final (fecha, ID, qué se hizo en una frase) y actualizar `README.md` si cambia algo visible para el jugador.
 7. **Commit** con mensaje en español al estilo del repositorio (qué se añadió, en una línea). Sin push.
 8. **Bloqueo**: si algo impide terminarla (falta una decisión, arte o una prueba que no se puede arreglar en la tarea), marcarla `[!]`, escribir el motivo debajo, revertir lo que quede roto y pasar a la siguiente.
@@ -184,16 +184,19 @@ Origen: R2 §3, §5 ★★
 ### [x] T27 · Diseño del acto IV · S 🛑
 Origen: R1 §4, §8
 - Documento en `docs/acto4.md` siguiendo `docs/lore.md` y `docs/estilo.md`: zonas, NPC, misiones, enemigos nuevos, jefe con fases y escenas.
-- **Revisión del usuario antes de construirlo.**
+- **Revisión del usuario antes de construirlo.** Aprobado el 2026-10-25, con las respuestas a las preguntas abiertas al final de `docs/acto4.md`: El Pepe no aparece hasta el Acto V (solo se le menciona), la contraseña se guarda, la decisión sobre los huérfanos va en este acto, Mario acompaña a Rafa al hub, las zonas se bifurcan y la historia sigue en el Acto V; el nombre se queda.
 
 ### [ ] T28 · Acto IV: zonas, campamento y enemigos · M
 - Zonas jugables con suelo en pixel art, ambiente, densidad y salidas; enemigos con afijos propios.
+- Según `docs/acto4.md`: estilos `setup` y `vga16`, hub La Pila del CMOS, **zonas bifurcadas** (dos caminos que se separan y se vuelven a unir antes del jefe).
 
 ### [ ] T29 · Acto IV: NPC, misiones y diálogos · M
 - Misiones principales del acto; diálogos validados por las pruebas de JSON.
+- Berta, Rafa en persona y **Mario** (obligado por ser prestador de servicio) en el hub; El Pepe solo mencionado. **Decisión sobre los huérfanos del Sindicato** (reiniciar con ellos o sin ellos) guardada en un flag para el Acto V.
 
 ### [ ] T30 · Acto IV: jefe con fases y escenas · M
 - Jefe con fases, resistencias cambiantes, mecánica de arena (T08) y música de fase; escenas de entrada y cierre.
+- La contraseña que escribe el jugador al final **se guarda** con el personaje (para el Acto V).
 
 ---
 
