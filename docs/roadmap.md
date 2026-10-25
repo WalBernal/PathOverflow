@@ -380,6 +380,114 @@ Origen: T66 (alternativa elegida por el usuario el 25-10-2026: T66 sigue bloquea
 
 ---
 
+# Roadmap 3.0 — pulido de género (25-10-2026)
+
+Pedido del usuario tras probar el Acto IV: equilibrar las habilidades iniciales, una tienda de Nacho más rica y con humor, y un repaso de diseño, sprites, animación, sonido, ventanas de gestión y árbol pasivo pensando en Diablo, Path of Exile y Grim Dawn. **Origen: R3.** Mismo protocolo que arriba; 🛑 = parar y esperar el visto bueno.
+
+Medición de partida (`tools/skill_balance.gd`, personaje de nivel 1 sin pasivas ni objetos, placa de nivel 1): mediana 10,9 DPS; muy por encima y sin pedir nivel: Proceso Hijo 58, Bomba Lógica 38, Derrame de Aceite 37, Mina Rodante 35, Fuga de Memoria 34, Drones de Vigilancia 33, Pipe de Datos 30. Los ataques básicos están entre 2 y 19 (escalan con el arma).
+
+## Fase 9 — Balance y tienda
+
+### [ ] T69 · Balance de las habilidades iniciales · M
+Origen: R3 (pedido del usuario)
+- Banda objetivo a placa de nivel 1 y personaje de nivel 1 sin nada: ninguna habilidad por encima de ~2× la mediana; las invocaciones, trampas, terrenos y degenerativos bajan (daño base, intervalo, tope de unidades o duración) y las más fuertes piden nivel (`min_level`: p. ej. Proceso Hijo 6, Drones de Vigilancia 8, Bomba Lógica 4).
+- Que la curva por nivel de placa siga premiando subirla (p10 ≈ 3× p1) y que los ataques con arma no queden atrás con el arma inicial de su clase (medir con el arma inicial, no a puño).
+- Comprobar contra el primer jefe: con la habilidad inicial de cada clase y sin pasivas, ni en segundos ni en una eternidad (rango a fijar con la herramienta: tiempo para vaciar su vida).
+- `tools/skill_balance.gd` gana columnas: arma inicial de la clase y tiempo contra el jefe del Acto I. Prueba en `test_core` que exija la banda, para que una habilidad nueva no se cuele por arriba.
+
+### [ ] T70 · Tienda de Nacho, parte 1: más surtido · M
+Origen: R3
+- Más placas (8-10) y RAM (10-12), repartidas por atributo y familia (que siempre haya algo para la clase que juegas), con una **oferta del día** (una placa o RAM poco común con descuento) y un artículo «de contrabando» caro de rareza alta.
+- Renovar el surtido pagando tokens (precio que sube con cada renovación hasta que vuelves a entrar en la zona), filtros por tipo (placas, RAM, pociones) y por atributo, y comparar con lo equipado al pasar el ratón.
+- Precios revisados con la economía de tokens (cuánto se gana por zona de cada acto), vender por lote (todo lo normal / mágico de la bolsa) y recomprar lo último vendido.
+
+### [ ] T71 · Tienda de Nacho, parte 2: la gabardina · M 🛑
+Origen: R3 (idea del usuario)
+- La tienda como escena: Nacho abre la gabardina (animación de dos o tres cuadros en pixel art) y los artículos cuelgan del forro en ganchos y bolsillos; la oferta del día en el bolsillo de dentro, el contrabando en un bolsillo que se abre aparte.
+- Frases sarcásticas al entrar, al pasar el ratón por un artículo, al comprar, al vender, al regatear sin tokens o al renovar («Original, original. Bueno, original de algún lado», «Esta RAM se cayó de un camión. De un camión de Amazon.»), con su voz corta (Barks) y un sonido de tela al abrir y cerrar.
+- Mismo funcionamiento que la tienda actual (arrastrar para vender, clic para comprar, mando), y la de Aida (equipo) con el mismo marco pero su propio estilo (puesto ordenado, sin gabardina).
+
+## Fase 10 — Diseño visual, sprites y animación
+
+### [ ] T72 · Personaje animado por estados · L (partir en dos)
+Origen: R3 (Diablo II/PoE: lectura del personaje)
+- Ciclos en pixel art en 4 direcciones: reposo con respiración, caminar, correr, ataque cuerpo a cuerpo por tipo de arma, lanzar hechizo, canalizar, recibir golpe, esquivar y morir; el arma y el escudo equipados se ven en la mano.
+- Que la animación de ataque marque el momento del golpe (el daño sale en el cuadro de impacto, no al pulsar).
+
+### [ ] T73 · Enemigos: anticipación, impacto y muertes · M
+Origen: R3 (Grim Dawn: peso de los golpes)
+- Pose de anticipación antes de cada ataque (además del aviso rojo), retroceso al recibir un crítico y muertes por material y por tipo de daño (se congela y estalla, se desintegra en bits, se quema).
+- Cadáveres que se quedan unos segundos y se desvanecen.
+
+### [ ] T74 · Efectos de habilidades con más cuerpo · M
+Origen: R3 (PoE: cada habilidad se reconoce de lejos)
+- Cada habilidad con lanzamiento, trayecto e impacto propios en la rejilla de píxeles (no solo color por tipo de daño), partículas que respetan «Menos destellos», y una versión más ligera con muchos enemigos en pantalla.
+
+### [ ] T75 · Iconos en pixel art dibujado · M
+Origen: R3
+- Atlas de iconos de habilidades, RAM, pociones y estados dibujados a mano en píxeles (16×16 y 32×32), en vez de formas vectoriales; mismo marco por rareza que los objetos.
+
+### [ ] T76 · Interfaz con identidad · M 🛑
+Origen: R3 (Grim Dawn/PoE: ventanas como objetos del mundo)
+- Fuente de píxeles para títulos y números, marcos de ventana con remaches y esquinas, botones con estado pulsado, orbes de vida y maná con líquido animado, y un tema común para todas las ventanas.
+- Revisar contraste y tamaños con la interfaz al 80-160 %.
+
+## Fase 11 — Sonido
+
+### [ ] T77 · Sonido por habilidad y por objeto · M
+Origen: R3 (Diablo: el sonido del botín)
+- Cada habilidad con su sonido de lanzamiento e impacto (capas y variaciones de tono, no uno por tipo de daño); sonidos de recoger y equipar por tipo de objeto (metal, tela, cristal, placa), de la caída de un único o de un conjunto, y pasos según el suelo.
+- Sonidos de interfaz: abrir y cerrar ventanas, pasar el ratón, comprar, error.
+
+### [ ] T78 · Música y avisos sonoros por intensidad · S
+Origen: R3
+- Avisos cortos (stingers) al aparecer un élite, al caer botín bueno, al subir de nivel y al entrar a un jefe; transición de la capa de combate a la del jefe sin cortes.
+
+## Fase 12 — Ventanas de gestión
+
+### [ ] T79 · Inventario a la altura del género · M
+Origen: R3 (PoE/Grim Dawn)
+- Ordenar y compactar, bloquear objetos (no se venden ni se tiran), marcar como basura, vender lo marcado a Nacho de una vez, y comparación rápida con Alt.
+- Objetos que ocupan su tamaño en la rejilla (1×1, 1×2, 2×2, 2×3) si se decide que suma; si no, dejarlo anotado.
+
+### [ ] T80 · Alijo con pestañas y búsqueda · M
+Origen: R3 (PoE: búsqueda del alijo)
+- Pestañas con nombre y color, una de materiales (parches de crafteo, mapas, chips) y búsqueda por texto que resalta lo que coincide (nombre, base o afijo).
+
+### [ ] T81 · Hoja de personaje con desglose · M
+Origen: R3 (PoE: de dónde sale cada número)
+- Cada estadística con un tooltip de dónde viene (clase, árbol, objetos, auras, cargas), DPS por habilidad de la barra y resistencias con su tope.
+
+### [ ] T82 · Ventanas coherentes entre sí · S
+Origen: R3
+- Mismas teclas para abrir y cerrar, apilar ventanas sin taparse (izquierda/derecha), recordar la última pestaña, y que todas funcionen con el cursor de mando.
+
+## Fase 13 — Árbol pasivo
+
+### [ ] T83 · Planificador del árbol · M
+Origen: R3 (PoE: planear la build)
+- Modo plan: marcar nodos sin gastar puntos y ver el camino; deshacer y rehacer; reasignar con coste (tokens) en vez de solo gratis o nada; exportar e importar la build como código de texto.
+
+### [ ] T84 · Más identidad en el árbol · M
+Origen: R3 (Grim Dawn: constelaciones)
+- Grupos temáticos por clase con un notable que cambia cómo se juega (no solo números), más keystones con su contra, y «constelaciones» opcionales que piden puntos de dos atributos.
+
+### [ ] T85 · Arte del árbol · S 🛑
+Origen: R3
+- Fondo por región de clase, iconos de nodo en pixel art, línea que se ilumina al asignar y un pequeño destello al completar un grupo.
+
+## Fase 14 — Botín y fin de juego
+
+### [ ] T86 · Bases con identidad y únicos con mecánica · M
+Origen: R3 (Diablo/PoE: el botín que cambia la build)
+- Más bases con implícito propio por tipo de arma y armadura, y únicos cuya gracia sea una mecánica (no solo más números), con su texto de humor.
+
+### [ ] T87 · Crafteo con más decisiones · M
+Origen: R3 (PoE/Grim Dawn)
+- Parches que fijan o quitan un afijo concreto, mejorar el tier de uno a cambio de riesgo, y la mesa de Mario con historial de lo que hizo.
+
+---
+
 ## Fuera de la cola (necesitan una persona)
 
 No las ejecuta Claude solo; quedan aquí para no perderlas.
@@ -464,3 +572,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T66 · Bloqueada [!]: simulación de 300 enemigos 4,7-4,8 ms (sobre el umbral), pero portar a C# o GDExtension necesita descargas y herramientas que no hay y ganaría ~4 ms de 34; motivo y recomendación bajo la tarea.
 - 2026-10-25 · T67 · Cierre sin traza investigado: ~150 mundos en tandas cortas sin un cierre; descartada la acumulación entre mundos (tabla nueva de lo que queda vivo al final de la integración) y revisados los hilos; queda como sospecha la carga de la máquina. Pasos para la próxima vez bajo la tarea.
 - 2026-10-25 · T68 · Barras, cuadritos de estado y halos de enemigos en MultiMesh, avisos de cono y carga en el lote, círculos con direcciones precalculadas e iconos del HUD cacheados en texturas (IconCache): 300 enemigos 33,4 → ~29,9 ms y 150 enemigos 18,2 → 14-16,6 ms. T66 sigue bloqueada.
+- 2026-10-25 · Pausa en tres columnas con desplazamiento (no se veían todas las opciones) y Roadmap 3.0 (T69-T87): balance de habilidades iniciales, tienda de Nacho con gabardina, sprites, animación, sonido, ventanas de gestión, árbol pasivo y botín; herramienta tools/skill_balance.gd.
