@@ -135,6 +135,7 @@ func _initialize() -> void:
 	_test_enemy_materials()
 	_test_lights_weather()
 	_test_obstacle_art()
+	_test_stress_music()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3333,6 +3334,17 @@ func _test_obstacle_art() -> void:
 				continue
 			for kind in obs.get("kinds", []):
 				_check(ObstacleArt.KINDS.has(kind) or kind == "puddle", "%s (%s): obstáculo en pixel art" % [kind, z["id"]])
+
+
+## Música de las pruebas de estrés (T62).
+func _test_stress_music() -> void:
+	var music: Dictionary = DataLoader.load_json("res://data/music.json")
+	var id := String((load("res://scripts/game/world.gd") as GDScript).get_script_constant_map().get("STRESS_TRACK", ""))
+	_check(id != "" and music["tracks"].has(id), "la pista de las pruebas de estrés está en music.json (%s)" % id)
+	_check(ResourceLoader.exists("res://assets/audio/music/%s.wav" % id) and ResourceLoader.exists("res://assets/audio/music/%s_combate.wav" % id), "y está compuesta, con su capa de combate")
+	var loops: Dictionary = DataLoader.load_json("res://data/music_loops.json")
+	_check(loops.has(id) and float(loops[id]) > 0.0, "con su bucle tras la intro")
+	_check(int(music["tracks"][id]["bpm"]) > int(music["tracks"]["field1"]["bpm"]), "más rápida que la música de las zonas")
 
 
 func _db_enemies() -> Array:

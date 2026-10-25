@@ -457,6 +457,8 @@ Hay **10 logros** (`scripts/game/achievements.gd`): tu primer enemigo, cada jefe
 
 Desde el **puesto de Aida** (tras el Acto I) se abre el **banco de oleadas sin fin** (`scripts/game/ladder.gd`): una zona que ya conoces, vacía, donde llegan oleadas cada vez más grandes y fuertes (más especiales y élites, +1 nivel de área cada 5) con un **jefe de oleada** cada 5, que deja botín. Dura hasta que caes o sales por el portal. Se anotan tus récords (más oleadas, luego menos tiempo) y tu **mejor tiempo contra cada jefe de acto** (desde que entras a su zona). Además hay una **tabla local** con el top 10 de todos los personajes de este equipo (`user://ladder.json`). Se ve en **Pausa → Récords** o con Aida.
 
+Las **pruebas de estrés** y el banco de oleadas tienen su música, **Prueba de carga** (`estres` en `data/music.json`, 138 BPM, con capa de combate): entra al empezar y, al acabar, perder o salir, vuelve la de la zona.
+
 ## Deuda técnica (fin de juego)
 
 Al terminar el Acto IV se abre el **árbol de deuda técnica** (`scripts/character/tech_debt.gd`, **Pausa → Deuda técnica**): una raíz (*Commit directo a main*) y tres ramas de cuatro nodos — **Hotfix** (daño), **Legacy** (aguante) y **Deadline** (velocidad). Cada nodo da un **bono fuerte y una penalización** (p. ej. *Reescribirlo desde cero*: 25 % más de daño y 20 % menos de vida). Puntos: 1 al abrirlo + el nivel del atlas + 1 por cada 5 oleadas de tu récord del banco (hasta 5). Quitar un nodo es gratis (pagar la deuda), pero de las hojas a la raíz. Se guarda con el personaje.

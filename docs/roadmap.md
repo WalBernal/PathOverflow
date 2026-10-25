@@ -337,7 +337,7 @@ Origen: R1 §4
 Origen: R1 §5
 - Mismo nivel de detalle que la calle (luz, tramado, sombras).
 
-### [ ] T62 · Música para las pruebas de estrés · S
+### [x] T62 · Música para las pruebas de estrés · S
 Origen: R1 §6
 - Con `tools/generate_zone_music.gd`.
 
@@ -448,3 +448,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T59 · Los diez obstáculos del Acto I en pixel art (ObstacleArt): pintados una vez en la rejilla de 2 px, con contorno, luz arriba a la izquierda y sombra abajo, tres variantes; revisado en capturas de las zonas del acto I.
 - 2026-10-25 · T60 · Pistones (vástago animado en la rejilla), disipadores, barriles, condensadores, chips y bloques de hielo en pixel art: ya todos los obstáculos de los actos salvo los charcos; la prueba lo exige para cada zona. Revisado en capturas de los actos II y III.
 - 2026-10-25 · T61 · Pasillo y oficina del prólogo con el detalle de la calle: tramado en paredes, baldosas alternas en perspectiva (recortadas al suelo), charcos y conos de luz, aristas con luz y sombra, humedad, zócalo, juntas y sombras al pie de los muebles. Solo dibujo (sin lógica nueva que probar): revisado en las capturas del prólogo.
+- 2026-10-25 · T62 · Pista «Prueba de carga» (estres, 138 BPM, con capa de combate) compuesta con generate_zone_music.gd -- estres; suena en las pruebas de estrés y el banco de oleadas y al acabar vuelve la de la zona.

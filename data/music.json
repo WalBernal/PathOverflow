@@ -104,6 +104,12 @@
       "name": "Cámara de reflasheo (fase)", "bpm": 162, "bars": 24, "intro": 0, "chord_bars": 1, "seed": 143, "root": 45, "scale": "phrygian",
       "prog": [[0, "m"], [1, "M"], [0, "m"], [10, "M"]], "prog_b": [[1, "M"], [3, "M"], [1, "M"], [0, "m"]],
       "pad": 0.04, "bass": "pulse", "arp": "up", "arp_wave": "saw", "lead": "saw", "drums": "frenzy"
+    },
+    "estres": {
+      "name": "Prueba de carga (pruebas de estrés y banco de oleadas)", "bpm": 138, "bars": 32, "chord_bars": 1, "seed": 62, "root": 42, "scale": "minor",
+      "prog": [[0, "m"], [0, "m"], [10, "M"], [8, "M"]], "prog_b": [[5, "m"], [3, "M"], [10, "M"], [7, "M"]], "arp_lift": true,
+      "pad": 0.04, "bass": "eighth", "arp": "up", "arp_wave": "square", "lead": "pluck", "drums": "drive",
+      "from": {"arp": 0, "lead": 2, "drums": 0}
     }
   },
   "zones": {

@@ -708,6 +708,7 @@ func _start_challenge(c: Dictionary, rewards: Array) -> void:
 	_challenge = {"def": c, "wave": 0, "total": int(c.get("waves", 4)), "ids": [], "next_in": 1.5, "rewards": rewards}
 	zone.active_challenge = c
 	ui.hud.flash("¡Prueba de estrés iniciada! Resiste %d oleadas." % _challenge["total"], Color("ff9a4a"))
+	MusicPlayer.play_track(STRESS_TRACK, 1.0)
 
 
 func _update_challenge(delta: float) -> void:
@@ -764,6 +765,7 @@ func _complete_challenge() -> void:
 	_challenge_previews.erase(c["id"])
 	zone.active_challenge = {}
 	ui.set_wave_text("")
+	_restore_zone_music()
 	quests.refresh()
 	save_now()
 
@@ -772,8 +774,19 @@ func _fail_challenge(message: String) -> void:
 	_challenge = {}
 	if zone:
 		zone.active_challenge = {}
+		_restore_zone_music()
 	ui.set_wave_text("")
 	ui.hud.flash(message, Color("e06c6c"))
+
+
+## Música de las pruebas de estrés y del banco de oleadas (data/music.json → estres).
+const STRESS_TRACK := "estres"
+
+
+## Al acabar una prueba u oleadas: vuelve la música de la zona (la del incidente, la de su zona de origen).
+func _restore_zone_music() -> void:
+	if zone and MusicPlayer.current_track() == STRESS_TRACK:
+		MusicPlayer.play_zone(String(zone.def.get("incident", zone.def.get("waves_mode", {})).get("from", zone.id)))
 
 
 # --- Banco de oleadas sin fin y récords (Ladder) ---
@@ -786,6 +799,7 @@ func open_waves() -> void:
 	GameData.zones[Ladder.ZONE_ID] = def
 	travel_to(Ladder.ZONE_ID, "")
 	_waves = {"wave": 0, "ids": [], "next_in": 3.0, "time": 0.0, "base_level": enemies.area_level}
+	MusicPlayer.play_track(STRESS_TRACK, 1.5)
 	var best := int(Ladder.personal(character).get("best_wave", 0))
 	ui.hud.flash("%s\nOleadas sin fin: aguanta todo lo que puedas.%s" % [def["name"], " Tu récord: %d." % best if best > 0 else ""], Color("ff9a4a"))
 
@@ -843,6 +857,7 @@ func _end_waves(reason: String) -> void:
 	var seconds := float(_waves["time"])
 	_waves = {}
 	ui.set_wave_text("")
+	_restore_zone_music()
 	if done <= 0:
 		return
 	var best := Ladder.record_waves(character, done, seconds)
