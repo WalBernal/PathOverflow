@@ -151,6 +151,7 @@ func _play_incident(class_def: Dictionary) -> int:
 	add_child(world)
 	world.set("_since_save", -9999.0)
 	await _frames(2)
+	await _check_gamepad_cursor(world, class_def["id"])
 	world.call("_on_dialogue_action", {"type": "open_atlas"})
 	await _frames(2)
 	for child in world.get("ui").get_children():
@@ -181,6 +182,60 @@ func _play_incident(class_def: Dictionary) -> int:
 	gd.set("current_character", null)
 	_collect("%s · incidente · al cerrar" % class_def["id"])
 	return 1
+
+
+## Cursor de mando (GamepadCursor): con el inventario abierto se activa, la
+## cruceta lo lleva a una casilla, A la toma y B cierra la ventana.
+func _check_gamepad_cursor(world: Node, class_id: String) -> void:
+	var ui: GameUI = world.get("ui")
+	var was := Gamepad.active
+	Gamepad.active = true
+	for k in 30:   # la escena de entrada al campamento, si la hay
+		if ui.cutscene.visible:
+			ui.cutscene.call("_finish")
+		await get_tree().process_frame
+	if ui.is_choosing():   # la elección de la primera habilidad: con A sobre «Elegir»
+		await _frames(2)
+		for pressed in [true, false]:
+			var ev := InputEventJoypadButton.new()
+			ev.button_index = JOY_BUTTON_A
+			ev.pressed = pressed
+			Input.parse_input_event(ev)
+			await _frames(2)
+		if ui.is_choosing():
+			_failures.append("%s · mando: A no eligió la habilidad (cursor en %s)" % [class_id, ui.gamepad_cursor.cursor_pos])
+	ui._on_menu_requested("inventory")
+	await _frames(2)
+	var cursor := ui.gamepad_cursor
+	if not cursor.engaged or not Gamepad.menu_cursor:
+		_failures.append("%s · mando: el cursor no se activó con el inventario abierto (ventanas: %d, mando: %s, inventario: %s, pausa %s, árbol %s, escena %s, elección %s)" % [class_id,
+			ui.cursor_windows().size(), Gamepad.active, ui.inventory_panel.visible, ui._pause_panel.visible, ui.tree_screen.visible, ui.cutscene.is_playing(), ui.is_choosing()])
+	var start := cursor.cursor_pos
+	for button in [JOY_BUTTON_DPAD_LEFT, JOY_BUTTON_DPAD_DOWN, JOY_BUTTON_A]:
+		for pressed in [true, false]:
+			var ev := InputEventJoypadButton.new()
+			ev.button_index = button
+			ev.pressed = pressed
+			Input.parse_input_event(ev)
+			await _frames(2)
+	if cursor.cursor_pos == start:
+		var rects: Array[Rect2] = []
+		cursor._collect_targets(ui.inventory_panel, rects)
+		_failures.append("%s · mando: la cruceta no movió el cursor (en %s, %d destinos, primero %s, pantalla %s)" % [class_id, start, rects.size(),
+			rects[0] if not rects.is_empty() else Rect2(), cursor.get_viewport_rect()])
+	var b := InputEventJoypadButton.new()
+	b.button_index = JOY_BUTTON_B
+	b.pressed = true
+	Input.parse_input_event(b)
+	await _frames(2)
+	b = b.duplicate()
+	b.pressed = false
+	Input.parse_input_event(b)
+	await _frames(2)
+	if ui.inventory_panel.visible or Gamepad.menu_cursor:
+		_failures.append("%s · mando: B no cerró el inventario" % class_id)
+	_collect("%s · mando en menús" % class_id)
+	Gamepad.active = was
 
 
 func _play_zone(world: Node, class_id: String, zone_id: String, travel := true) -> void:

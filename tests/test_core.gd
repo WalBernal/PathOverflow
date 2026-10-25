@@ -123,6 +123,7 @@ func _initialize() -> void:
 	_test_achievements()
 	_test_ladder()
 	_test_tech_debt()
+	_test_gamepad_cursor()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -2970,6 +2971,34 @@ func _test_tech_debt() -> void:
 	_check(TechDebt.allocated(saved).size() == 7 and is_equal_approx(saved.stats.get_value(Stat.LIFE), c.stats.get_value(Stat.LIFE)), "el árbol se guarda y se aplica al cargar")
 	var panel := TechDebtPanel.new(c)
 	panel.free()
+
+
+## Mando en menús, parte 1 (T48): cursor libre y salto con la cruceta.
+func _test_gamepad_cursor() -> void:
+	# Rejilla de casillas de 40 px; el cursor en la del centro (100, 100).
+	var rects: Array[Rect2] = []
+	for y in 3:
+		for x in 3:
+			rects.append(Rect2(Vector2(60 + x * 40, 60 + y * 40) - Vector2(16, 16), Vector2(32, 32)))
+	var at := Vector2(100, 100)
+	_check(GamepadCursor.pick_target(at, Vector2.RIGHT, rects) == 5 and GamepadCursor.pick_target(at, Vector2.UP, rects) == 1, "la cruceta va a la vecina")
+	_check(GamepadCursor.pick_target(at, Vector2.LEFT, rects) == 3 and GamepadCursor.pick_target(at, Vector2.DOWN, rects) == 7, "en las cuatro direcciones")
+	_check(GamepadCursor.pick_target(Vector2(140, 100), Vector2.RIGHT, rects) == -1, "en el borde no salta")
+	_check(GamepadCursor.pick_target(Vector2(140, 60), Vector2.LEFT, rects) == 1, "prefiere la de su fila a la diagonal")
+	# Los clics simulados no cuentan como «se usó el ratón».
+	var was := Gamepad.active
+	Gamepad.active = true
+	var fake := InputEventMouseMotion.new()
+	fake.device = Gamepad.CURSOR_DEVICE
+	Gamepad.note_event(fake)
+	_check(Gamepad.active, "el cursor de mando no apaga el modo mando")
+	Gamepad.note_event(InputEventMouseMotion.new())
+	_check(not Gamepad.active, "el ratón de verdad sí")
+	Gamepad.active = was
+	var cursor := GamepadCursor.new()
+	_check(not cursor.engaged and cursor.windows.call().is_empty(), "sin ventanas, el cursor no se activa")
+	cursor.free()
+	_check(not Gamepad.menu_cursor, "y el personaje se maneja como siempre")
 
 
 func _db_enemies() -> Array:

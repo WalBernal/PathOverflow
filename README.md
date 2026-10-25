@@ -368,6 +368,12 @@ El **registro de misiones** está debajo del minimapa (L para plegarlo): la prin
 - **Retratos**: los diálogos y las escenas usan el mismo medallón, con la boca moviéndose mientras el NPC habla; Rafa y Clara por radio salen con interferencia verde.
 - **Iconos de objetos**: atlas `assets/sprites/items/items.png` generado con `tools/generate_item_icons.gd` (un icono por base, placas base, RAM por generación y pociones). Para usar arte propio, sustituye el PNG respetando la cuadrícula (mapa en `data/item_icons.json`).
 
+## Mando
+
+En el mundo (`scripts/core/gamepad.gd`): stick izquierdo para moverse, derecho para apuntar, A/B/X/Y y LB/RB para las 6 habilidades, cruceta y gatillo izquierdo para las pociones, gatillo derecho para esquivar, Back para el inventario, clic del stick izquierdo para K, Start para la pausa.
+
+**En las ventanas** (inventario, habilidades K, hoja de personaje, tienda, alijo y la elección de habilidad) aparece un **cursor libre** (`scripts/ui/gamepad_cursor.gd`): el stick izquierdo lo mueve, **A** es clic izquierdo (mantener y mover = arrastrar), **X** clic derecho, la **cruceta** salta a la casilla o botón más cercano en esa dirección, **LB/RB** cambian de ventana y **B** cierra como Esc. Mientras está activo, el personaje no se mueve ni lanza nada; al abrir otra ventana el cursor salta a ella. El árbol pasivo y los diálogos van en la parte 2.
+
 ## Pociones
 
 Las pociones son **objetos**: caen como botín (las de nivel cercano al de la zona son más probables) y se llevan en el **cinturón de pociones** (5 ranuras, teclas 1-5; en el inventario, I). Cada una tiene **cargas**: cada uso gasta unas (por ejemplo, 6 de 30) y matar enemigos las recarga (más con élites y jefes). Mario las rellena todas.

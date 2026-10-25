@@ -52,6 +52,7 @@ var _zone_banner: Label
 var _act_banner: PanelContainer
 var _pause_panel: Control
 var _root: Control
+var gamepad_cursor: GamepadCursor
 
 
 func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot: LootManager,
@@ -255,6 +256,15 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	_pause_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	_root.add_child(item_tooltip)
+	# Cursor de mando para las ventanas: encima de todo y sin la escala de _root.
+	gamepad_cursor = GamepadCursor.new()
+	gamepad_cursor.windows = cursor_windows
+	gamepad_cursor.cancel = func() -> void:
+		var esc := InputEventAction.new()
+		esc.action = &"ui_cancel"
+		esc.pressed = true
+		_unhandled_input(esc)
+	add_child(gamepad_cursor)
 	loot.hovered_item_changed.connect(_on_ground_item_hovered)
 	loot.pickup_failed.connect(hud.flash)
 	loot.picked_up.connect(func(item: Item) -> void:
@@ -721,6 +731,15 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed(&"toggle_catalog"):
 		toggle_catalog()
 		get_viewport().set_input_as_handled()
+
+
+## Ventanas que se manejan con el cursor de mando (las del árbol y los diálogos, aparte).
+func cursor_windows() -> Array:
+	if _pause_panel.visible or tree_screen.visible or cutscene.is_playing():
+		return []
+	if is_choosing():
+		return [_choice_panel]
+	return [shop_panel, stash_panel, skills_panel, character_sheet, inventory_panel].filter(func(w: Control) -> bool: return w.visible)
 
 
 func _on_menu_requested(menu: String) -> void:

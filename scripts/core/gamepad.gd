@@ -15,6 +15,12 @@ const INTERACT_RANGE := 110.0
 
 ## true desde que se toca el mando; false al mover el ratón (lo pone GameData).
 static var active := false
+## true con el cursor de menús en marcha (GamepadCursor): el stick y los botones
+## manejan la ventana, no al personaje.
+static var menu_cursor := false
+## Los clics y movimientos que simula GamepadCursor llevan este dispositivo, para
+## que no cuenten como «se usó el ratón».
+const CURSOR_DEVICE := 7357
 ## Si A acaba de usarse para interactuar, la habilidad 1 no sale hasta este instante (ms).
 static var _skill_1_blocked_until := 0
 
@@ -61,6 +67,8 @@ static func aim_point(from: Vector2, facing: Vector2) -> Vector2:
 
 ## Marca si el último dispositivo usado fue el mando o el ratón.
 static func note_event(event: InputEvent) -> void:
+	if event is InputEventMouse and event.device == CURSOR_DEVICE:
+		return
 	if event is InputEventJoypadButton or (event is InputEventJoypadMotion and absf((event as InputEventJoypadMotion).axis_value) > DEADZONE):
 		active = true
 	elif event is InputEventMouseMotion or event is InputEventMouseButton:
