@@ -76,7 +76,11 @@ const DEVICE_RULES := {
 	"trap": {"range": 450.0, "armed": 0.4, "life": 16.0, "trigger": 50.0, "max": 3},
 	"mine": {"range": 350.0, "armed": 1.1, "life": 25.0, "trigger": 75.0, "max": 5},
 	"totem": {"range": 300.0, "armed": 0.3, "life": 8.0, "trigger": 650.0, "max": 1},
+	# Contenedor Docker: no caduca (reserva maná); uno por habilidad, relanzarla lo mueve.
+	"container": {"range": 300.0, "armed": 0.5, "life": 1.0e9, "trigger": 650.0, "max": 1},
 }
+## Dispositivos que disparan solos (los demás se activan al pisarlos).
+const TURRET_DEVICES := ["totem", "container"]
 const MINION_SPEED := 240.0
 const MINION_SEARCH := 450.0
 var _mana_warning_cooldown := 0.0
@@ -166,6 +170,7 @@ func _refresh_units() -> void:
 	for a in _auras:
 		_aura_regen += float(a["profile"]["aura_regen"])
 		_aura_reduction += float(a["profile"]["aura_reduction"])
+	_refresh_containers()
 	_compute_bare_profiles()
 	var kept: Array[Dictionary] = []
 	var per_skill := {}
@@ -272,6 +277,9 @@ func _update_reservation() -> void:
 		total += float(u["profile"]["reserve"]) / 100.0
 	for a in _auras:
 		total += float(a["profile"]["reserve"]) / 100.0
+	for d in _devices:
+		if d["kind"] == "container":
+			total += float(d["profile"]["reserve"]) / 100.0
 	if player:
 		player.set_mana_reserved(total)
 	if enemies:
@@ -288,6 +296,7 @@ func on_zone_changed() -> void:
 	_pending.clear()
 	_traps.clear()
 	_devices.clear()
+	_update_reservation()   # los contenedores se quedan en la zona anterior
 	_clouds.clear()
 	_terrains.clear()
 	_rains.clear()
@@ -776,6 +785,11 @@ func try_use(index: int) -> bool:
 			_mana_warning_cooldown = 1.5
 			reservation_full.emit(String(p["name"]))
 		return false
+	if p["deploy"] == "container" and not _has_container(p["id"]) and player.mana_reserved + float(p["reserve"]) / 100.0 > 0.95 + 0.0001:
+		if _mana_warning_cooldown <= 0.0:
+			_mana_warning_cooldown = 1.5
+			reservation_full.emit(String(p["name"]))
+		return false
 	if p["kind"] == "unit" and not _can_summon(p):
 		if _mana_warning_cooldown <= 0.0:
 			_mana_warning_cooldown = 1.5
@@ -832,6 +846,34 @@ func _can_summon(p: Dictionary) -> bool:
 	return player.mana_reserved + float(p["reserve"]) / 100.0 <= 0.95 + 0.0001
 
 
+## Los contenedores siguen a su placa, como las invocaciones: se van si deja de
+## ser contenedor (o sale de la barra) y toman sus cifras nuevas si cambian.
+func _refresh_containers() -> void:
+	if not _devices.any(func(d: Dictionary) -> bool: return d["kind"] == "container"):
+		return
+	var by_id := {}
+	for p in _profiles:
+		if not p.is_empty() and p["deploy"] == "container":
+			by_id[p["id"]] = p
+	var keep: Array[Dictionary] = []
+	for d in _devices:
+		if d["kind"] == "container":
+			var p: Dictionary = by_id.get(d["profile"]["id"], {})
+			if p.is_empty():
+				continue
+			var inner := p.duplicate()
+			inner["deploy"] = ""
+			d["profile"] = inner
+			d["interval"] = _device_interval(p)
+		keep.append(d)
+	_devices = keep
+	_update_reservation()
+
+
+func _has_container(skill_id: String) -> bool:
+	return _devices.any(func(d: Dictionary) -> bool: return d["kind"] == "container" and d["profile"]["id"] == skill_id)
+
+
 func _units_of(skill_id: String) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for u in _units:
@@ -880,7 +922,7 @@ func active_summaries() -> Array[Dictionary]:
 	for d in _drones:
 		var id: String = d["profile"]["id"]
 		add.call("drones:" + id, "Drones", skills_db.get(id, {}), d["life"], d["total"], "drones")
-	var device_names := {"trap": "Trampas", "mine": "Minas", "totem": "Torreta"}
+	var device_names := {"trap": "Trampas", "mine": "Minas", "totem": "Torreta", "container": "Contenedor"}
 	for d in _devices:
 		var id: String = d["profile"]["id"]
 		add.call(d["kind"] + ":" + id, device_names[d["kind"]], skills_db.get(id, {}), d["life"], d["total"], d["kind"])
@@ -1158,6 +1200,11 @@ func _spin_center(spin: Dictionary) -> Vector2:
 
 # --- Trampas, minas y torretas (RAM de despliegue) ---
 
+## Cada cuánto dispara una torreta o un contenedor.
+func _device_interval(p: Dictionary) -> float:
+	return maxf(0.35, float(p["use_time"]) * 1.25) / maxf(0.1, float(p["automaton_speed"]))
+
+
 func _deploy(p: Dictionary, target: Vector2) -> void:
 	var kind: String = p["deploy"]
 	var rules: Dictionary = DEVICE_RULES[kind]
@@ -1168,17 +1215,19 @@ func _deploy(p: Dictionary, target: Vector2) -> void:
 	var dpos := origin + (target - origin).limit_length(rules["range"])
 	var device := {"kind": kind, "pos": dpos, "armed_in": rules["armed"],
 		"life": life, "total": life, "profile": inner, "next_use": 0.0,
-		"interval": maxf(0.35, float(p["use_time"]) * 1.25) / maxf(0.1, float(p["automaton_speed"])),
+		"interval": _device_interval(p),
 		"color": DAMAGE_COLORS.get(p["damage_type"], Color.WHITE)}
-	if kind == "totem":
+	if kind in TURRET_DEVICES:
 		# Las torretas tienen vida propia: los cazadores de invocaciones van a por ellas.
 		var hp := player.max_life() * TOTEM_LIFE_FRACTION
 		device["ally"] = {"pos": dpos, "life": hp, "max_life": hp, "radius": 14.0, "device": true, "hurt": 0.0}
 	_devices.append(device)
-	# Límite por tipo: se retira el más antiguo.
-	var same: Array = _devices.filter(func(d: Dictionary) -> bool: return d["kind"] == kind)
-	if same.size() > int(rules["max"]) + int(p.get("extra_devices", 0)):
+	# Límite por tipo (los contenedores, por habilidad): se retira el más antiguo.
+	var same: Array = _devices.filter(func(d: Dictionary) -> bool: return d["kind"] == kind and (kind != "container" or d["profile"]["id"] == p["id"]))
+	if same.size() > int(rules["max"]) + (0 if kind == "container" else int(p.get("extra_devices", 0))):
 		_devices.erase(same[0])
+	if kind == "container":
+		_update_reservation()
 
 
 func _update_devices(delta: float) -> void:
@@ -1215,7 +1264,7 @@ func _update_devices(delta: float) -> void:
 			still.append(d)
 			continue
 		var i := enemies.nearest_index(d["pos"], rules["trigger"])
-		if d["kind"] == "totem":
+		if d["kind"] in TURRET_DEVICES:
 			d["next_use"] -= delta
 			if i != -1 and d["next_use"] <= 0.0:
 				d["next_use"] = d["interval"]
@@ -1229,7 +1278,10 @@ func _update_devices(delta: float) -> void:
 			_chain_from(d["pos"])
 		else:
 			still.append(d)
+	var containers_lost := _devices.any(func(d: Dictionary) -> bool: return d["kind"] == "container" and not still.has(d))
 	_devices = still
+	if containers_lost:
+		_update_reservation()   # un contenedor destruido libera su maná
 	# Aliados que ve el EnemyManager: invocaciones persistentes y torretas.
 	var allies: Array = _units.filter(func(u: Dictionary) -> bool: return u["behavior"] != "orbit")
 	allies.append_array(proxies)
@@ -1798,7 +1850,7 @@ var _chain_frame := 0
 
 func _chain_from(pos: Vector2) -> void:
 	for d in _devices:
-		if d["kind"] != "totem" and not d.has("chain_in") and d["armed_in"] <= 0.0 and (d["pos"] as Vector2).distance_to(pos) <= CHAIN_RADIUS:
+		if not (d["kind"] in TURRET_DEVICES) and not d.has("chain_in") and d["armed_in"] <= 0.0 and (d["pos"] as Vector2).distance_to(pos) <= CHAIN_RADIUS:
 			d["chain_in"] = CHAIN_DELAY
 			d["chain_frame"] = _chain_frame
 			_effects.append({"type": "zap", "pos": pos, "end": d["pos"], "time": 0.0, "duration": 0.2, "color": CHAIN_COLOR})
@@ -2118,11 +2170,23 @@ func _draw_devices() -> void:
 					draw_circle(p + Vector2(6, -22 + k * 8), 2.0, c if on else Color("1a2a1a"))
 				draw_line(p + Vector2(0, -30), p + Vector2(0, -42), Color("8a8a8a"), 2.0)
 				draw_circle(p + Vector2(0, -43), 3.0, c)
-				var hp: Dictionary = d.get("ally", {})
-				if not hp.is_empty() and float(hp["life"]) < float(hp["max_life"]):
-					# Herida por un cazador: barra de vida.
-					draw_rect(Rect2(p + Vector2(-14, -52), Vector2(28, 4)), Color(0, 0, 0, 0.75))
-					draw_rect(Rect2(p + Vector2(-14, -52), Vector2(28.0 * clampf(hp["life"] / hp["max_life"], 0.0, 1.0), 4)), Color("6fd36b"))
+			"container":
+				# Contenedor: una caja azul con el logo de la ballena y su carga apilada.
+				draw_arc(p, 30.0, 0.0, TAU, 32, Color(c, 0.35), 1.5, true)
+				draw_rect(Rect2(p + Vector2(-16, -22), Vector2(32, 24)), Color("1d63a8"))
+				draw_rect(Rect2(p + Vector2(-16, -22), Vector2(32, 24)), Color("8ac4f0"), false, 2.0)
+				for k in 3:
+					draw_line(p + Vector2(-10 + k * 10, -20), p + Vector2(-10 + k * 10, 0), Color("174f86"), 2.0)
+				for k in 3:
+					var on := fmod(t * 2.0 + k * 0.4, 1.2) < 0.6
+					draw_rect(Rect2(p + Vector2(-9 + k * 6, -32), Vector2(5, 5)), c if on else Color("8ac4f0"))
+				draw_circle(p + Vector2(0, -10), 3.0, Color.WHITE)
+		if String(d["kind"]) in TURRET_DEVICES:
+			var hp: Dictionary = d.get("ally", {})
+			if not hp.is_empty() and float(hp["life"]) < float(hp["max_life"]):
+				# Herida por un cazador: barra de vida.
+				draw_rect(Rect2(p + Vector2(-14, -52), Vector2(28, 4)), Color(0, 0, 0, 0.75))
+				draw_rect(Rect2(p + Vector2(-14, -52), Vector2(28.0 * clampf(hp["life"] / hp["max_life"], 0.0, 1.0), 4)), Color("6fd36b"))
 
 
 func _draw_minions() -> void:

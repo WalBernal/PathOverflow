@@ -97,6 +97,7 @@ func _initialize() -> void:
 	_test_summoner_keystones()
 	_test_chain_detonation()
 	_test_warcries()
+	_test_docker_container()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -1967,6 +1968,46 @@ func _test_warcries() -> void:
 		sc._execute(SkillCalc.compute(Motherboard.new(_db.skills.skills["rollback_grito"], 1, []), c), Vector2(50, 0))
 		_check(is_equal_approx(float(sc._units[0]["life"]), float(sc._units[0]["max_life"]) * 0.8), "¡Rollback! cura un 30 %% a las invocaciones")
 	_check(sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "ring" and float(e["radius"]) >= 170.0), "el grito se ve como una onda grande")
+	sc.free()
+	pl.free()
+	em.free()
+
+
+## Contenedor Docker: torreta que no caduca, reserva maná y lanza la habilidad sola.
+func _test_docker_container() -> void:
+	var c := CharacterData.new(_classes[4], _tree)
+	var ram := RamModule.new(_db.skills.rams["contenedor_docker"])
+	var board := Motherboard.new(_db.skills.skills["flamewar"], 5, ["DDR4"])
+	var plain := SkillCalc.compute(board, c)
+	_check(ram.supports(board.skill_def), "el contenedor funciona con Flamewar")
+	_check(not ram.supports(_db.skills.skills["teleport_tcp"]) and not ram.supports(_db.skills.skills["bomba_logica"]) and not ram.supports(_db.skills.skills["daemon_segundo_plano"]),
+		"ni con movimiento, ni con trampas, ni con invocaciones")
+	board.install(ram, 0)
+	var p := SkillCalc.compute(board, c)
+	_check(p["deploy"] == "container" and p["tags"].has(&"totem") and p["tags"].has(&"persistent") and p["tags"].has(&"automaton"), "se despliega como contenedor: torreta persistente y autómata")
+	_check(float(p["reserve"]) > 0.0 and float(p["max_damage"]) < float(plain["max_damage"]), "reserva maná y pega menos que la habilidad a mano")
+	_check(" ".join(ram.effect_lines()).contains("contenedor"), "la RAM explica el contenedor")
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	var pl := Player.new()
+	pl.character = c
+	var sc := SkillController.new()
+	sc.player = pl
+	sc.enemies = em
+	sc.character = c
+	sc._deploy(p, Vector2(100, 0))
+	_check(sc._devices.size() == 1 and sc._devices[0]["kind"] == "container" and sc._devices[0]["life"] > 1.0e6, "el contenedor no caduca")
+	_check(is_equal_approx(pl.mana_reserved, float(p["reserve"]) / 100.0), "reserva su maná mientras está en pie")
+	sc._deploy(p, Vector2(200, 0))
+	_check(sc._devices.size() == 1 and (sc._devices[0]["pos"] as Vector2).x > 150.0 and is_equal_approx(pl.mana_reserved, float(p["reserve"]) / 100.0),
+		"relanzarla lo mueve (uno por habilidad, sin reservar dos veces)")
+	sc._devices[0]["armed_in"] = 0.0
+	em.spawn(Vector2(260, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+	sc._update_devices(0.05)
+	_check(float(sc._devices[0]["next_use"]) > 0.0, "dispara solo al enemigo cercano")
+	sc._devices[0]["ally"]["life"] = 0.0
+	sc._update_devices(0.05)
+	_check(sc._devices.is_empty() and is_zero_approx(pl.mana_reserved), "si lo destruyen, libera el maná")
 	sc.free()
 	pl.free()
 	em.free()

@@ -516,6 +516,36 @@
       }
     },
     {
+      "id": "contenedor_docker",
+      "name": "Contenedor Docker",
+      "generation": "DDR4",
+      "description": "Empaquetas la habilidad en un contenedor que se queda corriendo donde lo pongas y la lanza sola contra el enemigo más cercano. No caduca: reserva maná mientras siga en pie; relanzarla lo mueve.",
+      "requires_tags": [],
+      "excludes_tags": [
+        "movement",
+        "trap",
+        "mine",
+        "totem",
+        "minion",
+        "buff",
+        "aura",
+        "persistent",
+        "automaton"
+      ],
+      "cost_multiplier": 1.0,
+      "mods": [
+        {
+          "stat": "damage",
+          "type": "more",
+          "value": -35
+        }
+      ],
+      "special": {
+        "deploy": "container",
+        "reserve": 20.0
+      }
+    },
+    {
       "id": "pasta_termica",
       "name": "Pasta Térmica Caducada",
       "generation": "DDR3",

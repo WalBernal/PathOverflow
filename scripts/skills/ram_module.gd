@@ -120,7 +120,7 @@ func special(key: String, default_value: float = 0.0) -> float:
 	return float(value) if (value is float or value is int) else default_value
 
 
-## Para valores de texto (deploy: "trap", "mine", "totem").
+## Para valores de texto (deploy: "trap", "mine", "totem", "container").
 func special_string(key: String) -> String:
 	return String(def.get("special", {}).get(key, ""))
 
@@ -183,6 +183,9 @@ func effect_lines() -> PackedStringArray:
 			lines.append("Se entierra como mina: tarda en armarse, se activa al pasar un enemigo (máx. 5)")
 		"totem":
 			lines.append("La usa una torreta durante %d s contra el enemigo más cercano" % int(sp.get("totem_duration", 8)))
+		"container":
+			lines.append("La usa un contenedor que no caduca contra el enemigo más cercano (1 por habilidad)")
+			lines.append("Reserva un %d %% del maná mientras siga en pie" % int(sp.get("reserve", 0)))
 	if sp.has("area_multiplier"):
 		lines.append("%d%% menos de área" % roundi((1.0 - float(sp["area_multiplier"])) * 100.0))
 	if sp.has("trigger"):

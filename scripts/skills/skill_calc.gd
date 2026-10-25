@@ -151,6 +151,7 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 	# Algunas habilidades se despliegan solas (p. ej. la Torreta de Integración Continua).
 	var deploy: String = skill.get("deploy", "")
 	var totem_duration: float = float(skill.get("totem_duration", 8.0)) if deploy != "" else 0.0
+	var container_reserve := 0.0   # Contenedor Docker: % de maná que reserva mientras sigue en pie
 	# RAM de activación: la habilidad se lanza sola con un evento (on_hit, on_crit...).
 	# Solo cuenta la primera.
 	var trigger := ""
@@ -167,6 +168,7 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 		if deploy == "" and ram.special_string("deploy") != "":
 			deploy = ram.special_string("deploy")
 			totem_duration = ram.special("totem_duration", 8.0)
+			container_reserve = ram.special("reserve")
 		extra.append_array(ram.skill_modifiers())
 		cost_mult *= ram.cost_multiplier()
 		extra_projectiles += int(ram.special("extra_projectiles"))
@@ -208,8 +210,11 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 				break
 	# Al convertirse en trampa, mina o torreta, la habilidad gana esa etiqueta
 	# (los modificadores "de trampas" le afectan).
-	if deploy != "" and not tags.has(StringName(deploy)):
-		tags.append(StringName(deploy))
+	# El contenedor cuenta como torreta persistente.
+	var deploy_tags: Array = [&"totem", &"persistent"] if deploy == "container" else ([StringName(deploy)] if deploy != "" else [])
+	for t: StringName in deploy_tags:
+		if not tags.has(t):
+			tags.append(t)
 	# Autómatas: todo lo que ataca solo (torretas, drones, esbirros, robots).
 	var kind := String(skill.get("kind", ""))
 	if not tags.has(TAG_AUTOMATON) and (tags.has(&"totem") or tags.has(&"minion") or kind in ["drones", "unit"]):
@@ -338,7 +343,7 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 	var unit_interval := float(unit.get("interval", 1.0)) / (maxf(0.1, automaton_speed) * attack_rate)
 	var unit_life := float(unit.get("life", 0.0)) * (1.0 + 0.12 * (board.level - 1)) * stats.total_multiplier(Stat.MINION_LIFE, tags) \
 		* (1.0 + 0.25 * milestones if unit_ms == "toughness" else 1.0)
-	var reserve := float(unit.get("reserve", aura.get("reserve", 0.0))) * reserve_mult / maxf(0.1, stats.total_multiplier(Stat.RESERVATION_EFFICIENCY, tags))
+	var reserve := float(unit.get("reserve", aura.get("reserve", container_reserve))) * reserve_mult / maxf(0.1, stats.total_multiplier(Stat.RESERVATION_EFFICIENCY, tags))
 	# Nodos clave de invocador: Monolito (una sola, ×3 de vida y daño) o
 	# Microservicios (+2 a la vez, cada una −30 % de vida, daño y reserva).
 	if kind == "unit":

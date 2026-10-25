@@ -164,6 +164,7 @@ Cada jefe usa una distinta en cada fase: **El Arquitecto** — Código Legado Fr
 | Disparador de Trampa | DDR4 | La habilidad se lanza como trampa y se ejecuta cuando un enemigo se acerca (máx. 3) |
 | Detonador de Mina | DDR5 | Se entierra como mina casi invisible: tarda en armarse, más daño (máx. 5) |
 | Servidor Torreta | DDR3 | Una torreta usa la habilidad sola contra el enemigo más cercano durante 8 s |
+| Contenedor Docker | DDR4 | Un contenedor que no caduca lanza la habilidad solo (−35 % de daño); reserva un 20 % del maná mientras siga en pie, uno por habilidad, relanzarla lo mueve. Cuenta como torreta persistente; se queda en la zona al salir y, si lo destruyen, libera el maná |
 
 Trampa, mina y torreta añaden su etiqueta a la habilidad y no funcionan con movimiento, esbirros ni con otra trampa/mina/torreta (solo cuenta un módulo de despliegue). Al estallar, una trampa o mina **detona en cadena** las armadas que tenga cerca (170 px): cada eslabón espera 0,12 s, se ve un rayo naranja de una a otra y la detonada apunta al enemigo más cercano.
 

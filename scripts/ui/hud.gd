@@ -695,7 +695,7 @@ func _draw_status_boxes(font: Font) -> void:
 	var first := _slot_rect(0)
 	var x := first.position.x
 	var y := first.position.y - box - 34.0
-	var kind_colors := {"minion": Color("7fd07f"), "totem": Color("d9a441"), "trap": Color("b07a3a"), "mine": Color("a0a040"),
+	var kind_colors := {"minion": Color("7fd07f"), "totem": Color("d9a441"), "container": Color("4a9ae0"), "trap": Color("b07a3a"), "mine": Color("a0a040"),
 		"spin": Color("b8b8c8"), "flask": Color("6fd36b"), "buff": Color("8ab0e0"), "drones": Color("e8d070"), "unit": Color("9ad0ff"), "aura": Color("d9b0ff")}
 	for e in entries:
 		var r := Rect2(x, y, box, box)
