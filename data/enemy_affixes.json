@@ -233,6 +233,14 @@
       "description": "Se teletransporta junto a ti cada pocos segundos."
     },
     {
+      "id": "comandante",
+      "name": "Comandante",
+      "color": "ffd24a",
+      "commander": {"radius": 320, "damage": 0.25, "speed": 0.15},
+      "min_level": 9,
+      "description": "Da órdenes a gritos: los enemigos a su alrededor pegan un 25 % más y se mueven un 15 % más rápido. Mátalo primero."
+    },
+    {
       "id": "codigo_error",
       "name": "Código de error",
       "color": "ffe050",

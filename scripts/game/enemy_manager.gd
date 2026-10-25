@@ -409,6 +409,8 @@ func set_role(id: int, role: String) -> void:
 	radii[i] *= mult[2]
 	traits[i]["role"] = role
 	traits[i]["role_t"] = randf() * 2.0   # que no actúen todos a la vez
+	if rarities[i] >= Rarity.Enemy.ELITE and not names[i].ends_with(")"):
+		names[i] = "%s (%s)" % [names[i], ROLE_NAMES[role]]
 
 
 func role_of(i: int) -> String:
@@ -709,8 +711,35 @@ func _update_affixes(delta: float) -> void:
 						_flashes_fx.append({"type": "circle", "pos": positions[i], "radius": radii[i] + 28.0, "time": 0.0, "color": Color(def.get("color", "c08aff"))})
 
 
+## Afijo Comandante (enemy_affixes.json → commander {radius, damage, speed}): los
+## enemigos cercanos (no él) pegan y se mueven más. [{id, pos, radius, damage, speed}]
+var _commanders: Array[Dictionary] = []
+
+
+func _update_commanders() -> void:
+	_commanders.clear()
+	for i in positions.size():
+		for aid in traits[i].get("affixes", []):
+			var cmd: Dictionary = affix_defs().get(aid, {}).get("commander", {})
+			if not cmd.is_empty():
+				_commanders.append({"id": ids[i], "pos": positions[i], "radius": float(cmd.get("radius", 300.0)),
+					"damage": float(cmd.get("damage", 0.2)), "speed": float(cmd.get("speed", 0.1))})
+
+
+## Bono de comandante que recibe el enemigo i: {damage, speed} (el mayor, no se suman).
+func command_bonus(i: int) -> Dictionary:
+	var best := {"damage": 0.0, "speed": 0.0}
+	for c in _commanders:
+		if c["id"] != ids[i] and positions[i].distance_to(c["pos"]) <= c["radius"]:
+			best["damage"] = maxf(best["damage"], c["damage"])
+			best["speed"] = maxf(best["speed"], c["speed"])
+	return best
+
+
 ## Golpe al jugador con los efectos de los afijos (veneno, quemadura).
 func _hit_player(i: int, amount: float) -> void:
+	if not _commanders.is_empty():
+		amount *= 1.0 + float(command_bonus(i)["damage"])
 	player.take_damage(amount)
 	for aid in traits[i].get("affixes", []):
 		var dot: Dictionary = affix_defs().get(aid, {}).get("on_hit", {}).get("dot", {})
@@ -1222,6 +1251,7 @@ func _physics_process(delta: float) -> void:
 	_update_phases(delta)
 	_update_channels(delta)
 	_update_affixes(delta)
+	_update_commanders()
 	_update_booms()
 	n = positions.size()
 	if n == 0 or player == null:
@@ -1448,6 +1478,8 @@ func _damage_allies_near(center: Vector2, radius: float, amount: float, only_one
 func _decide(i: int, atk: Dictionary, kind: String, to_player: Vector2, dist: float, reach: float, target_pos: Vector2) -> Vector2:
 	var dir := to_player / maxf(dist, 0.001)
 	var speed := speeds[i]
+	if not _commanders.is_empty():
+		speed *= 1.0 + float(command_bonus(i)["speed"])
 	match kind:
 		"ranged":
 			var keep := float(atk.get("keep_distance", 280.0))
@@ -2043,6 +2075,9 @@ func _draw_all() -> void:
 			on_screen.append(i)
 	var simple := on_screen.size() > FX_DETAIL_LIMIT
 	last_drawn_count = on_screen.size()
+	for c in _commanders:   # el radio de sus órdenes, en dorado
+		if view.has_point(c["pos"]):
+			_batch_ring(c["pos"], c["radius"], 2.0, Color(1.0, 0.82, 0.29, 0.16 + 0.08 * sin(tt * 4.0)), 48)
 	for i in on_screen:
 		var role := role_of(i)
 		if role != "":
@@ -2217,19 +2252,48 @@ func _draw_role(i: int, role: String, tt: float) -> void:
 	# Fondo y aro de la insignia por lotes; el símbolo encima (se dibuja después del lote).
 	_batch_circle(p, 7.5, Color(0.04, 0.03, 0.06, 0.9), 12)
 	_batch_ring(p, 7.5, 1.5, c, 16)
-	_role_marks.append([p, role, c])
+	_role_marks.append([p, role, c, i, tt])
 
 
 var _role_marks: Array = []
 
 
-## Símbolo de cada insignia de rol (escudo, cruz, mira, chevrones), sobre su fondo.
+## Símbolo de cada insignia de rol (escudo, cruz, mira, chevrones), sobre su fondo,
+## y el accesorio que distingue a sanadores y francotiradores sobre su sprite.
 func _draw_role_marks() -> void:
 	for m in _role_marks:
 		var p: Vector2 = m[0]
 		var c: Color = m[2]
+		var i: int = m[3]
+		if i < positions.size():
+			_draw_role_gear(i, String(m[1]), c, float(m[4]))
 		_draw_role_symbol(p, String(m[1]), c)
 	_role_marks.clear()
+
+
+## Sanador: halo verde y brazalete con la cruz. Francotirador: visor rojo y un rifle
+## largo que apunta hacia donde mira (con el láser encendido mientras carga el tiro).
+func _draw_role_gear(i: int, role: String, c: Color, tt: float) -> void:
+	var body := positions[i]
+	var r := radii[i] * SPRITE_SCALE
+	var head := body + Vector2(0, -r * 0.85)
+	match role:
+		"healer":
+			draw_set_transform(head + Vector2(0, -r * 0.45 + sin(tt * 3.0 + ids[i]) * 1.5), 0.0, Vector2(1.0, 0.35))
+			draw_arc(Vector2.ZERO, r * 0.45, 0.0, TAU, 20, Color(c, 0.9), 3.0, true)
+			draw_set_transform(Vector2.ZERO)
+			var band := body + Vector2(r * 0.5, -r * 0.35)
+			draw_rect(Rect2(band - Vector2(5, 4), Vector2(10, 8)), Color("f2f2f0"))
+			draw_rect(Rect2(band - Vector2(1, 3), Vector2(2, 6)), c.darkened(0.2))
+			draw_rect(Rect2(band - Vector2(3, 1), Vector2(6, 2)), c.darkened(0.2))
+		"sniper":
+			var dir := attack_dirs[i] if attack_dirs[i] != Vector2.ZERO else Vector2.RIGHT
+			var grip := body + Vector2(0, -r * 0.3)
+			draw_line(grip, grip + dir * r * 1.6, Color("3a3a42"), 3.0, true)
+			draw_rect(Rect2(grip + dir * r * 0.5 - Vector2(3, 5), Vector2(6, 3)), Color("1a1a1e"))   # la mira
+			draw_line(head + Vector2(-r * 0.3, 0), head + Vector2(r * 0.3, 0), Color(c, 0.95), 3.0)   # visor
+			if windups[i] > 0.0:
+				draw_line(grip + dir * r * 1.6, grip + dir * r * 6.0, Color(1.0, 0.2, 0.15, 0.5), 1.0)
 
 
 func _draw_role_symbol(p: Vector2, role: String, c: Color) -> void:

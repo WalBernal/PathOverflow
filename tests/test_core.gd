@@ -107,6 +107,7 @@ func _initialize() -> void:
 	_test_act4_story()
 	_test_act4_boss()
 	_test_new_zone_events()
+	_test_roles_and_commander()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -2427,6 +2428,29 @@ func _test_new_zone_events() -> void:
 	z.free()
 	em.free()
 	ev.free()
+
+
+## Roles (T32): élites con rol en el nombre y el afijo Comandante.
+func _test_roles_and_commander() -> void:
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	var elite := em.spawn(Vector2.ZERO, Rarity.Enemy.ELITE, em.type_index_of("bug"))
+	em.set_role(elite, "healer")
+	var ei := em.index_of(elite)
+	_check(em.role_of(ei) == "healer" and em.names[ei].ends_with("(Sanador)"), "una élite puede tener rol y lo dice su nombre (%s)" % em.names[ei])
+	var normal := em.spawn(Vector2(500, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+	em.set_role(normal, "sniper")
+	_check(not em.names[em.index_of(normal)].contains("("), "los normales con rol no cambian de nombre")
+	# Comandante: los de alrededor pegan y corren más; él no se da el bono a sí mismo.
+	var defs := EnemyManager.affix_defs()
+	_check(defs.has("comandante") and defs["comandante"].has("commander") and not defs["comandante"].get("innate_only", false), "existe el afijo Comandante y sale en élites")
+	var boss := em.spawn(Vector2(1000, 0), Rarity.Enemy.ELITE, em.type_index_of("bug"), "", 1.0, [], ["comandante"])
+	var near := em.spawn(Vector2(1100, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+	var far := em.spawn(Vector2(2000, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+	em._update_commanders()
+	_check(float(em.command_bonus(em.index_of(near))["damage"]) > 0.2 and float(em.command_bonus(em.index_of(near))["speed"]) > 0.1, "el de al lado recibe sus órdenes")
+	_check(is_zero_approx(float(em.command_bonus(em.index_of(far))["damage"])) and is_zero_approx(float(em.command_bonus(em.index_of(boss))["damage"])), "ni el lejano ni él mismo")
+	em.free()
 
 
 func _db_enemies() -> Array:

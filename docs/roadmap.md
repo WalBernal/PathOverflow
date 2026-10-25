@@ -206,7 +206,7 @@ Origen: R1 §4, §8
 Origen: R2 §1 ★★
 - Escoltar un proceso, desactivar bombas lógicas a tiempo, comerciante ambulante.
 
-### [ ] T32 · Roles de enemigo, siguiente paso · S
+### [x] T32 · Roles de enemigo, siguiente paso · S
 Origen: R2 §6 ★★
 - Sprites distintos para sanador y francotirador, roles en élites y afijo «Comandante».
 
@@ -418,3 +418,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T29 · NPC del hub del Acto IV (Berta, Rafa en persona, Mario, M. Páez y Eugenio) con diálogos; el Pepe solo mencionado. Misión principal *El Setup de la BIOS* y cuatro secundarias (libreta de gatitos, orden de arranque, ajustes de fábrica, café de máquina) con sus objetos y dibujos propios. Decisión sobre los huérfanos con Rafa tras entregar la libreta (`act4_huerfanos_salvados`/`_purgados` + `act4_huerfanos_decidido`). Queda para más adelante: la escolta de la laptop de Rafa y la mejora del Recolector que proponía el diseño. T67: el cierre sin traza también sale en el commit anterior a T28 (1 de 2 pasadas), así que no lo causa el Acto IV; desapareció al terminar otra instancia de Godot que corría en paralelo.
 - 2026-10-25 · T30 · Jefe admin/admin en el Modo de Gestión del Sistema: tres fases con resistencias distintas y una mecánica de arena por fase (zonas seguras, suelo que se rompe, adds que canalizan su reinstalación), sprite propio y música `boss4`/`boss4_fase`. Escenas `bios_post`, `admin_entrada` y `admin_cambia_password`, con un paso nuevo de escena `input` donde el jugador escribe la contraseña (validación sarcástica; se guarda en `flags.admin_password`, «admin2» si se salta). Lore actualizado.
 - 2026-10-25 · T31 · Tres eventos de zona nuevos: Bombas lógicas (tres bombas con cuenta atrás de 25 s; se desactivan quedándose al lado; las que quedan estallan), Proceso perdido (escolta que solo avanza contigo cerca y sin enemigos a su lado, con dos emboscadas) y Comerciante ambulante (objeto misterioso por fichas). World da el botín según salga bien o mal.
+- 2026-10-25 · T32 · Sanador y francotirador con aspecto propio dibujado sobre el sprite (halo y brazalete con cruz; visor y rifle que apunta, con láser al cargar), roles en las élites (35 % de las manadas con rol; el rol sale en el nombre) y afijo de élite Comandante (aro dorado: +25 % de daño y +15 % de velocidad a los de alrededor).

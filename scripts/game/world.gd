@@ -408,6 +408,7 @@ func _spawn_zone_enemies() -> void:
 ## La zona puede limitarlos con enemies.roles (lista) y role_chance.
 const ROLE_CHANCE := 0.4
 const SWARM_SIZE := 4
+const ELITE_ROLE_CHANCE := 0.35
 
 
 func _assign_role(pack_ids: Array[int], center: Vector2, type: int, cfg: Dictionary, rng: RandomNumberGenerator) -> void:
@@ -422,7 +423,14 @@ func _assign_role(pack_ids: Array[int], center: Vector2, type: int, cfg: Diction
 			var p := zone.free_spot_near(center + Vector2.from_angle(TAU * k / SWARM_SIZE) * 90.0)
 			enemies.set_role(enemies.spawn(p, Rarity.Enemy.NORMAL, type), "swarm")
 		return
-	# El rol va a un normal (no al élite que encabeza la manada).
+	# A veces el rol va al élite que encabeza la manada (con su rol en el nombre);
+	# si no, a un normal.
+	if rng.randf() < ELITE_ROLE_CHANCE:
+		for id in pack_ids:
+			var i := enemies.index_of(id)
+			if i != -1 and enemies.rarities[i] == Rarity.Enemy.ELITE:
+				enemies.set_role(id, role)
+				return
 	for id in pack_ids:
 		var i := enemies.index_of(id)
 		if i != -1 and enemies.rarities[i] != Rarity.Enemy.ELITE:
