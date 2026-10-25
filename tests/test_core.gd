@@ -132,6 +132,7 @@ func _initialize() -> void:
 	_test_loot_filter_rules()
 	_test_ambient_emitters()
 	_test_barks()
+	_test_enemy_materials()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3251,6 +3252,17 @@ func _test_barks() -> void:
 	var her := DialogueBox.bark_pitch({"id": "aida", "voice": {"pitch": 1.0, "gender": "female"}})
 	var him := DialogueBox.bark_pitch({"id": "mario", "voice": {"pitch": 1.0, "gender": "male"}})
 	_check(her > him and DialogueBox.bark_pitch({"id": "x"}) > 0.5, "cada PNJ con su tono (y su género)")
+
+
+## Materiales de enemigos en los datos (T57): cada tipo dice de qué está hecho.
+func _test_enemy_materials() -> void:
+	var counts := {}
+	for t in _db_enemies():
+		var m := String(t.get("material", ""))
+		_check(EnemyManager.MATERIAL_SFX.has(m), "%s tiene material válido en enemies.json (%s)" % [t["id"], m])
+		counts[m] = int(counts.get(m, 0)) + 1
+	_check(counts.size() == EnemyManager.MATERIAL_SFX.size(), "se usan los cuatro materiales: %s" % str(counts))
+	_check(not (load("res://scripts/game/enemy_manager.gd") as GDScript).get_script_constant_map().has("MATERIALS"), "la tabla fija ya no está en el código")
 
 
 func _db_enemies() -> Array:

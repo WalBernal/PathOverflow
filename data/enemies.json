@@ -1,10 +1,11 @@
 {
   "version": 1,
-  "_doc": "Tipos de enemigo. sprite_row: fila en assets/sprites/enemies/enemies.png. Los multiplicadores se aplican sobre los de su rareza; radius_mult cambia el tamaño del cuerpo (hitbox). boss_only: solo aparece como único. attack (opcional; sin él, cuerpo a cuerpo por contacto): kind ranged (dispara proyectiles y mantiene la distancia: range, keep_distance, projectiles, spread, projectile_speed), charge (embestida en línea: range, dash_speed, dash_time, width), slam (golpe en círculo alrededor: range, radius), cone (cono delante: range, angle), blink (se teletransporta cerca: range, jump), none (no se mueve ni ataca: candados). Todos con windup (tiempo telegrafiado en rojo), cooldown y damage_mult. Acto III: summon (invoca type, count, con tope max_alive; se queda a distancia), seeker (orbes lentos y persistentes que persiguen: projectile_speed, turn_rate, projectile_life; los bloquean los obstáculos), lob_pool (lanza un charco al sitio del jugador: radius, pool_time, dps_mult, dot_kind), ranged.dot y slam.pool (daño degenerativo). summon_only: solo aparece invocado. resist: % de daño que reducen por tipo (physical, fire, cold, lightning, chaos; negativo = más daño). immune: estados a los que son inmunes (burn, shock, chill, freeze, poison, bleed). Los afijos de élite están en data/enemy_affixes.json. on_hit_status: estado que aplican a TI al golpearte (id shock|chill|freeze, chance %, duration s): shock = recibes +25 % de daño; chill = 30 % más lento; freeze = no puedes actuar (su duración baja con la resistencia al rayo o al frío). hunts_allies: va a por tus invocaciones aunque tú estés más cerca (los enemigos con el afijo Explosivo o Termonuclear también).",
+  "_doc": "Tipos de enemigo. sprite_row: fila en assets/sprites/enemies/enemies.png. Los multiplicadores se aplican sobre los de su rareza; radius_mult cambia el tamaño del cuerpo (hitbox). boss_only: solo aparece como único. attack (opcional; sin él, cuerpo a cuerpo por contacto): kind ranged (dispara proyectiles y mantiene la distancia: range, keep_distance, projectiles, spread, projectile_speed), charge (embestida en línea: range, dash_speed, dash_time, width), slam (golpe en círculo alrededor: range, radius), cone (cono delante: range, angle), blink (se teletransporta cerca: range, jump), none (no se mueve ni ataca: candados). Todos con windup (tiempo telegrafiado en rojo), cooldown y damage_mult. Acto III: summon (invoca type, count, con tope max_alive; se queda a distancia), seeker (orbes lentos y persistentes que persiguen: projectile_speed, turn_rate, projectile_life; los bloquean los obstáculos), lob_pool (lanza un charco al sitio del jugador: radius, pool_time, dps_mult, dot_kind), ranged.dot y slam.pool (daño degenerativo). summon_only: solo aparece invocado. resist: % de daño que reducen por tipo (physical, fire, cold, lightning, chaos; negativo = más daño). immune: estados a los que son inmunes (burn, shock, chill, freeze, poison, bleed). Los afijos de élite están en data/enemy_affixes.json. on_hit_status: estado que aplican a TI al golpearte (id shock|chill|freeze, chance %, duration s): shock = recibes +25 % de daño; chill = 30 % más lento; freeze = no puedes actuar (su duración baja con la resistencia al rayo o al frío). hunts_allies: va a por tus invocaciones aunque tú estés más cerca (los enemigos con el afijo Explosivo o Termonuclear también). material: de qué está hecho (flesh, metal, crystal o digital): el sonido al golpearlo.",
   "types": [
     {
       "id": "bug",
       "name": "Bug",
+      "material": "flesh",
       "sprite_row": 0,
       "life_mult": 0.8,
       "speed_mult": 1.15,
@@ -15,6 +16,7 @@
     {
       "id": "proceso_zombi",
       "name": "Proceso zombi",
+      "material": "flesh",
       "sprite_row": 1,
       "life_mult": 1.3,
       "speed_mult": 0.75,
@@ -32,6 +34,7 @@
     {
       "id": "memory_leak",
       "name": "Memory leak",
+      "material": "flesh",
       "sprite_row": 2,
       "life_mult": 1.6,
       "speed_mult": 0.6,
@@ -49,6 +52,7 @@
     {
       "id": "gusano",
       "name": "Gusano de red",
+      "material": "flesh",
       "sprite_row": 3,
       "life_mult": 0.9,
       "speed_mult": 1.0,
@@ -63,6 +67,7 @@
     {
       "id": "daemon",
       "name": "Daemon",
+      "material": "metal",
       "sprite_row": 4,
       "life_mult": 1.2,
       "speed_mult": 0.9,
@@ -81,6 +86,7 @@
     {
       "id": "bot_spam",
       "name": "Bot de spam",
+      "material": "metal",
       "sprite_row": 5,
       "life_mult": 0.7,
       "speed_mult": 0.9,
@@ -108,6 +114,7 @@
     {
       "id": "hilo_desbocado",
       "name": "Hilo desbocado",
+      "material": "digital",
       "sprite_row": 6,
       "life_mult": 0.8,
       "speed_mult": 1.1,
@@ -132,6 +139,7 @@
     {
       "id": "node_modules",
       "name": "node_modules",
+      "material": "digital",
       "sprite_row": 7,
       "life_mult": 2.6,
       "speed_mult": 0.55,
@@ -159,6 +167,7 @@
     {
       "id": "troll_foro",
       "name": "Troll de foro",
+      "material": "flesh",
       "sprite_row": 8,
       "life_mult": 1.2,
       "speed_mult": 0.85,
@@ -188,6 +197,7 @@
     {
       "id": "interrupcion",
       "name": "Interrupción (IRQ)",
+      "material": "digital",
       "sprite_row": 9,
       "life_mult": 0.7,
       "speed_mult": 1.2,
@@ -222,6 +232,7 @@
     {
       "id": "mutex_lock",
       "name": "Candado Mutex",
+      "material": "metal",
       "sprite_row": 10,
       "life_mult": 0.6,
       "speed_mult": 0.0,
@@ -251,6 +262,7 @@
     {
       "id": "puntero_salvaje",
       "name": "Puntero Salvaje",
+      "material": "digital",
       "sprite_row": 11,
       "life_mult": 1.0,
       "speed_mult": 1.1,
@@ -275,6 +287,7 @@
     {
       "id": "hilo_gemelo",
       "name": "Hilo gemelo",
+      "material": "digital",
       "sprite_row": 12,
       "life_mult": 1.6,
       "speed_mult": 0.9,
@@ -301,6 +314,7 @@
     {
       "id": "init_fork",
       "name": "Copia de init",
+      "material": "metal",
       "sprite_row": 13,
       "life_mult": 0.25,
       "speed_mult": 1.35,
@@ -317,6 +331,7 @@
     {
       "id": "init",
       "name": "init",
+      "material": "metal",
       "sprite_row": 14,
       "life_mult": 1.3,
       "speed_mult": 0.7,
@@ -341,6 +356,7 @@
     {
       "id": "rootkit",
       "name": "Rootkit",
+      "material": "digital",
       "sprite_row": 15,
       "life_mult": 1.3,
       "speed_mult": 0.8,
@@ -369,6 +385,7 @@
     {
       "id": "proceso_fantasma",
       "name": "Proceso fantasma",
+      "material": "digital",
       "sprite_row": 16,
       "life_mult": 0.45,
       "speed_mult": 1.35,
@@ -389,6 +406,7 @@
     {
       "id": "centinela_bios",
       "name": "Centinela del BIOS",
+      "material": "metal",
       "sprite_row": 17,
       "life_mult": 1.1,
       "speed_mult": 0.8,
@@ -425,6 +443,7 @@
     {
       "id": "gusano_firmware",
       "name": "Gusano de firmware",
+      "material": "flesh",
       "sprite_row": 18,
       "life_mult": 1.5,
       "speed_mult": 0.7,
@@ -460,6 +479,7 @@
     {
       "id": "electromigracion",
       "name": "Arco de electromigración",
+      "material": "crystal",
       "sprite_row": 19,
       "life_mult": 0.9,
       "speed_mult": 1.0,
@@ -501,6 +521,7 @@
     {
       "id": "condensador",
       "name": "Condensador hinchado",
+      "material": "metal",
       "sprite_row": 20,
       "life_mult": 2.2,
       "speed_mult": 0.6,
@@ -537,6 +558,7 @@
     {
       "id": "fw_update",
       "name": "fw_update.exe",
+      "material": "metal",
       "sprite_row": 21,
       "life_mult": 1.4,
       "speed_mult": 0.6,
@@ -562,6 +584,7 @@
     {
       "id": "beep_code",
       "name": "Beep Code",
+      "material": "digital",
       "sprite_row": 22,
       "life_mult": 0.8,
       "speed_mult": 1.25,
@@ -575,6 +598,7 @@
     {
       "id": "jumper_suelto",
       "name": "Jumper suelto",
+      "material": "metal",
       "sprite_row": 23,
       "life_mult": 1.0,
       "speed_mult": 1.1,
@@ -588,6 +612,7 @@
     {
       "id": "pila_hinchada",
       "name": "Pila hinchada",
+      "material": "metal",
       "sprite_row": 24,
       "life_mult": 2.0,
       "speed_mult": 0.55,
@@ -603,6 +628,7 @@
     {
       "id": "sector_defectuoso",
       "name": "Sector defectuoso",
+      "material": "digital",
       "sprite_row": 25,
       "life_mult": 1.6,
       "speed_mult": 0.0,
@@ -617,6 +643,7 @@
     {
       "id": "option_rom",
       "name": "Option ROM",
+      "material": "crystal",
       "sprite_row": 26,
       "life_mult": 1.4,
       "speed_mult": 0.6,
@@ -631,6 +658,7 @@
     {
       "id": "watchdog_timer",
       "name": "Watchdog Timer",
+      "material": "metal",
       "sprite_row": 27,
       "life_mult": 1.2,
       "speed_mult": 1.15,
@@ -645,6 +673,7 @@
     {
       "id": "admin",
       "name": "admin/admin",
+      "material": "digital",
       "sprite_row": 28,
       "life_mult": 1.4,
       "speed_mult": 0.65,

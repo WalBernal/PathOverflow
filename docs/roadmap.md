@@ -317,7 +317,7 @@ Origen: R2 §7 ★★
 Origen: R2 §7 ★★
 - Gruñidos o palabras sueltas de los NPC al hablar; voz del personaje al subir de nivel o con poca vida.
 
-### [ ] T57 · Materiales de enemigos en los datos · S
+### [x] T57 · Materiales de enemigos en los datos · S
 Origen: R2 §7 ★
 - Mover `EnemyManager.MATERIALS` a `enemies.json` y dar material propio a cada tipo.
 
@@ -443,3 +443,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T54 · Filtro de botín con nivel de objeto mínimo, bases buenas y afijos buscados (se ven siempre, con estrella y haz) y filtros con nombre. Arreglo: las pruebas de Controls y del filtro escribían en el settings.cfg del jugador (la inicialización estática de la clase volvía a poner persist = true); ahora no, y lo comprueban.
 - 2026-10-25 · T55 · Ambiente posicional: zumbido de racks, goteo y viento como fuentes 2D que se oyen de cerca, sacadas de los obstáculos (y del estilo en servidores, alcantarillas y la Grieta); tres sonidos nuevos con generate_sfx.gd -- posicional.
 - 2026-10-25 · T56 · Voces cortas sintetizadas: murmullo de cada NPC al hablar (saludo, pregunta, exclamación, duda) con su tono y género, y la voz del personaje al subir de nivel y con poca vida; opción en Pausa → Diálogos.
+- 2026-10-25 · T57 · Material de cada tipo de enemigo en enemies.json (los 29 con el suyo, documentado en _doc); fuera la tabla EnemyManager.MATERIALS. Las pruebas exigen un material válido por tipo.

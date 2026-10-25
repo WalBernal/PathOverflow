@@ -180,15 +180,7 @@ var knocks := PackedVector2Array()
 var impact: ImpactFx
 ## Tipo de daño del golpe (o degenerativo) que está matando al enemigo: decide su muerte.
 var _kill_type := ""
-## Material de cada tipo de enemigo (sonido al golpearlo). enemies.json → "material" manda.
-const MATERIALS := {
-	"bug": "flesh", "gusano": "flesh", "troll_foro": "flesh", "gusano_firmware": "flesh", "memory_leak": "flesh",
-	"daemon": "metal", "bot_spam": "metal", "mutex_lock": "metal", "centinela_bios": "metal", "condensador": "metal",
-	"init": "metal", "init_fork": "metal", "fw_update": "metal",
-	"electromigracion": "crystal",
-	"beep_code": "digital", "jumper_suelto": "metal", "pila_hinchada": "metal", "sector_defectuoso": "digital",
-	"option_rom": "crystal", "watchdog_timer": "metal", "admin": "digital",
-}
+## Sonido al golpear según el material del tipo (enemies.json → "material").
 const MATERIAL_SFX := {"flesh": "hit_flesh", "metal": "hit_metal", "crystal": "hit_crystal", "digital": "hit_digital"}
 
 ## Estados que puede aplicar el golpe en curso (lo prepara SkillController antes
@@ -299,7 +291,8 @@ func material_of(i: int) -> String:
 	if types[i] >= all_types.size():
 		return "digital"
 	var t: Dictionary = all_types[types[i]]
-	return String(t.get("material", MATERIALS.get(String(t.get("id", "")), "digital")))
+	var m := String(t.get("material", "digital"))
+	return m if MATERIAL_SFX.has(m) else "digital"
 
 
 ## Partículas y sonido de un golpe que no mata (el de muerte lo pone _kill).
