@@ -41,8 +41,11 @@ static func draw_badge(ci: CanvasItem, r: Rect2, ram: RamModule, active := true)
 		ci.draw_line(r.position, r.end, Color("e06c6c"), 1.5)
 
 
-## Símbolo de cada familia, dibujado dentro de `r` (cuadrado pequeño).
-static func draw_glyph(ci: CanvasItem, r: Rect2, fam: String, col: Color) -> void:
+## Símbolo de cada familia, dibujado dentro de `r` (cuadrado pequeño): en pixel art
+## del atlas (PixelIcons, en blanco y teñido con `col`) o, sin atlas o con `vector`, con formas.
+static func draw_glyph(ci: CanvasItem, r: Rect2, fam: String, col: Color, vector := false) -> void:
+	if not vector and PixelIcons.draw(ci, r, "ram:" + fam, col):
+		return
 	var c := r.get_center()
 	var h := r.size.x * 0.5
 	var w := maxf(1.0, r.size.x * 0.14)

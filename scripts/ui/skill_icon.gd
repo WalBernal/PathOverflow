@@ -1,16 +1,21 @@
 class_name SkillIcon
-## Iconos provisionales de habilidades dibujados con formas (hasta tener arte).
-## La forma y el color salen de skills.json → icon.
+## Iconos de habilidades: fondo con el color de la habilidad y el glifo en pixel
+## art del atlas (PixelIcons, T75); sin atlas, el glifo con formas. La forma y el
+## color salen de skills.json → icon. `backdrop` = false: solo el glifo (lo usa el
+## generador del atlas).
 
 
-static func draw(ci: CanvasItem, rect: Rect2, skill_def: Dictionary, dimmed := false) -> void:
+static func draw(ci: CanvasItem, rect: Rect2, skill_def: Dictionary, dimmed := false, backdrop := true) -> void:
 	var icon: Dictionary = skill_def.get("icon", {})
 	var color := Color(icon.get("color", "c8c8c8"))
 	if dimmed:
 		color = color.darkened(0.55)
 	var c := rect.get_center()
 	var r := minf(rect.size.x, rect.size.y) * 0.34
-	_draw_backdrop(ci, rect, color, dimmed)
+	if backdrop:
+		_draw_backdrop(ci, rect, color, dimmed)
+		if PixelIcons.draw(ci, rect, "skill:" + String(skill_def.get("id", "")), Color(0.45, 0.45, 0.45) if dimmed else Color.WHITE):
+			return
 	match icon.get("shape", ""):
 		"medic":
 			# Dron con cruz de reparación.
@@ -382,6 +387,8 @@ static func draw(ci: CanvasItem, rect: Rect2, skill_def: Dictionary, dimmed := f
 			ci.draw_arc(c + Vector2(-r * 0.15, -r * 0.1), r * 0.6, -0.6, 0.6, 8, Color("7fd0e8", 0.5), 1.5, true)
 		_:
 			ci.draw_circle(c, r * 0.5, color)
+	if not backdrop:
+		return
 	# Brillo diagonal de cristal por encima del glifo.
 	ci.draw_colored_polygon(PackedVector2Array([rect.position, rect.position + Vector2(rect.size.x * 0.55, 0),
 		rect.position + Vector2(0, rect.size.y * 0.55)]), Color(1, 1, 1, 0.05))

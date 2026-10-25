@@ -146,6 +146,7 @@ func _initialize() -> void:
 	_test_impact_frame()
 	_test_enemy_weight()
 	_test_skill_fx()
+	_test_pixel_icons()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3650,6 +3651,38 @@ func _test_skill_fx() -> void:
 		fx.trail(Vector2.ZERO, "embers", Color.ORANGE)
 	_check(fx.count() <= int(ImpactFx.MAX_PARTICLES * 0.5) + 1, "las estelas no pasan del tope de partículas")
 	fx.free()
+
+
+## Iconos en pixel art (T75): atlas de 32 y 16 con todas las habilidades, estados y familias de RAM.
+func _test_pixel_icons() -> void:
+	var data: Dictionary = DataLoader.load_json(PixelIcons.MAP_PATH)
+	var icons: Dictionary = data.get("icons", {})
+	for id in _db.skills.skills:
+		_check(PixelIcons.has_icon("skill:" + id), "icono en pixel art de %s" % id)
+	for id in Ailments.ALL + ["stun", "corrupt", "taunt", "reserve"]:
+		_check(PixelIcons.has_icon("status:" + id), "icono del estado %s" % id)
+	for id in _db.skills.rams:
+		_check(PixelIcons.has_icon("ram:" + RamModule.family_of(id)), "icono de la familia de %s" % id)
+	var a32: Texture2D = load(PixelIcons.ATLAS_32)
+	var a16: Texture2D = load(PixelIcons.ATLAS_16)
+	var cols := int(data.get("columns", 16))
+	var rows := int(ceil(icons.size() / float(cols)))
+	_check(a32.get_width() == cols * 32 and a32.get_height() == rows * 32 and a16.get_width() == cols * 16 and a16.get_height() == rows * 16,
+		"los dos atlas tienen la cuadrícula del mapa")
+	var last: int = icons.values().max()
+	_check(PixelIcons.region(icons.keys()[icons.values().find(last)], 16).end.y <= a16.get_height(), "la última celda cabe en el atlas")
+	# Pixel art de verdad: alfa todo o nada (sin degradados de suavizado).
+	var img := a32.get_image()
+	var soft := 0
+	for y in range(0, img.get_height(), 3):
+		for x in range(0, img.get_width(), 3):
+			var al := img.get_pixel(x, y).a
+			if al > 0.01 and al < 0.99:
+				soft += 1
+	_check(soft == 0, "sin bordes suavizados (%d píxeles a medias)" % soft)
+	PixelIcons.enabled = false
+	_check(not PixelIcons.has_icon("skill:ping_letal"), "se puede volver a los glifos de formas")
+	PixelIcons.enabled = true
 
 
 ## Parte 2 (T72b): el ataque golpea en el cuadro de impacto de la animación.

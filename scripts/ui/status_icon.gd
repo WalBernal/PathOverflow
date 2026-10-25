@@ -6,15 +6,19 @@ class_name StatusIcon
 
 
 ## `compact`: para tamaños pequeños (sobre los enemigos): menos detalle.
-static func draw(ci: CanvasItem, rect: Rect2, id: String, compact := false, alpha := 1.0) -> void:
+## `plate` = false: solo el glifo (lo usa el generador del atlas de PixelIcons).
+static func draw(ci: CanvasItem, rect: Rect2, id: String, compact := false, alpha := 1.0, plate := true) -> void:
 	var color := Ailments.color(id)
 	color.a = alpha
 	var c := rect.get_center()
 	var r := minf(rect.size.x, rect.size.y) * 0.5
-	# Placa: fondo oscuro, borde del color del estado y un brillo arriba.
-	ci.draw_rect(rect, Color(0.05, 0.04, 0.07, 0.85 * alpha))
-	ci.draw_rect(Rect2(rect.position, Vector2(rect.size.x, rect.size.y * 0.45)), Color(color, 0.18 * alpha))
-	ci.draw_rect(rect, color, false, 1.0 if compact else 1.5)
+	if plate:
+		# Placa: fondo oscuro, borde del color del estado y un brillo arriba.
+		ci.draw_rect(rect, Color(0.05, 0.04, 0.07, 0.85 * alpha))
+		ci.draw_rect(Rect2(rect.position, Vector2(rect.size.x, rect.size.y * 0.45)), Color(color, 0.18 * alpha))
+		ci.draw_rect(rect, color, false, 1.0 if compact else 1.5)
+		if PixelIcons.draw(ci, rect.grow(-1.0), "status:" + id, Color(1, 1, 1, alpha)):
+			return
 	var g := r * 0.78   # radio del glifo
 	var w := maxf(1.0, r * (0.22 if compact else 0.16))
 	match id:

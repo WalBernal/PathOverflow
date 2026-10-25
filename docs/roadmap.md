@@ -433,9 +433,10 @@ Origen: R3 (PoE: cada habilidad se reconoce de lejos)
 - Cada habilidad con lanzamiento, trayecto e impacto propios en la rejilla de píxeles (no solo color por tipo de daño), partículas que respetan «Menos destellos», y una versión más ligera con muchos enemigos en pantalla.
 - Hecho: `SkillFx` da a cada habilidad su firma (proyectil, estela, lanzamiento e impacto), con forma propia para la ráfaga de paquetes (paquete con cabecera), el paquete rastreador (con antena que parpadea), la corrupción de datos (glitch), el ping y la torreta (rayo en zigzag) y la cascada CSS (esquirla); el resto, la de su tipo de daño (bola de fuego con llamitas, esquirla de hielo, rayo, gota de caos, orbe). `ImpactFx` suma destello al lanzar, estela y estallido de firma en la rejilla de 2 px; con Menos destellos, menos partículas y sin núcleos blancos; con más enemigos en pantalla que `FX_DETAIL_LIMIT`, sin estelas ni estallidos y con proyectiles simples. Las novas, conos y demás formas de área siguen con su dibujo por tipo (ya eran distintas entre sí).
 
-### [ ] T75 · Iconos en pixel art dibujado · M
+### [x] T75 · Iconos en pixel art dibujado · M
 Origen: R3
 - Atlas de iconos de habilidades, RAM, pociones y estados dibujados a mano en píxeles (16×16 y 32×32), en vez de formas vectoriales; mismo marco por rareza que los objetos.
+- Hecho: `tools/generate_pixel_icons.gd` rasteriza los glifos de las 62 habilidades, 10 estados y 52 familias de RAM a 32×32 y 16×16 sin suavizado (alfa todo o nada, paleta de 16 niveles por canal, contorno de 1 px) en `assets/sprites/icons/icons32.png` e `icons16.png` con su mapa `data/pixel_icons.json`; `PixelIcons` los dibuja con escala entera (el de 16 por debajo de 26 px) y SkillIcon, StatusIcon y RamIcon los usan sobre su mismo fondo y marco, con los glifos de formas de respaldo. Como los objetos, es «arte de programador»: los iconos dibujados a mano de verdad se ponen sustituyendo los PNG con la misma cuadrícula. Las familias de RAM sin símbolo propio siguen siendo un círculo.
 
 ### [ ] T76 · Interfaz con identidad · M 🛑
 Origen: R3 (Grim Dawn/PoE: ventanas como objetos del mundo)
@@ -590,3 +591,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T72b · Los ataques golpean en el cuadro de impacto de la animación (cuando el arma pasa por delante o al soltar lo lanzado), con tope de 0,3 s.
 - 2026-10-25 · T73 · Enemigos con más peso: se echan atrás y destellan antes de golpear, respingo con los críticos, muertes físicas por material y cadáveres que se desvanecen.
 - 2026-10-25 · T74 · Firma visual por habilidad: forma de proyectil, estela, destello al lanzar y estallido al golpear, con versión ligera y respetando Menos destellos.
+- 2026-10-25 · T75 · Atlas de iconos en pixel art (32 y 16 px) de habilidades, estados y RAM, generados desde los glifos y listos para sustituir por arte a mano.
