@@ -50,6 +50,9 @@ func applies_to(query_tags: Array) -> bool:
 
 ## Texto para tooltips, ej. "+10 de Fuerza", "8% de aumento de Vida máxima".
 func describe() -> String:
+	if Stat.RULE_TEXT.has(stat):
+		var rule: String = Stat.RULE_TEXT[stat]
+		return rule % _fmt(value) if rule.contains("%s") else rule   # nodos clave: la regla, sin «+1 de»
 	var stat_name := Stat.display_name(stat)
 	var amount := _fmt(absf(value))
 	var text := ""

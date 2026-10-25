@@ -502,6 +502,10 @@ func heal_units(fraction: float) -> void:
 ## Lo llama World al morir un enemigo.
 func on_enemy_killed(pos: Vector2) -> void:
 	_roll_charge("multihilo")
+	var gc := character.stats.get_value(Stat.GARBAGE_COLLECTOR)
+	if gc > 0.0 and player.is_alive():
+		# Recolector de Basura: el maná vuelve al matar (no se regenera solo).
+		player.mana = minf(player.max_mana(), player.mana + player.unreserved_mana_max() * gc / 100.0)
 	var chance := character.stats.get_value(Stat.KILL_EXPLOSION)
 	if chance > 0.0 and randf() * 100.0 < chance and _pending_explosions.size() < 8:
 		_pending_explosions.append(pos)
@@ -976,6 +980,8 @@ func _fire_volley(p: Dictionary, origin: Vector2, dir: Vector2, color: Color, ex
 			"distance_left": reach if reach > 0.0 else float(p["range"]), "pierce_left": int(p["pierce"]),
 			"hit_ids": {}, "profile": p, "color": color, "chains_left": int(p["projectile_chains"]),
 			"homing": bool(p.get("homing", false)),
+			# Código Espagueti: rebotes al azar tras golpear (sin gastar perforación).
+			"ricochets_left": int(character.stats.get_value(Stat.SPAGHETTI_CODE)) if character else 0,
 		}
 		pr.merge(extra, true)
 		_projectiles.append(pr)
@@ -1734,6 +1740,11 @@ func _update_projectiles(delta: float) -> void:
 				pr["dmg_mult"] = float(pr.get("dmg_mult", 1.0)) * float(p["chain_damage"])
 				pr["vel"] = (enemies.positions[next] - pr["pos"]).normalized() * pr["vel"].length()
 				pr["distance_left"] = maxf(pr["distance_left"], 300.0)
+			elif int(pr.get("ricochets_left", 0)) > 0 and not pr.get("boomerang", false):
+				# Código Espagueti: sale disparado en una dirección cualquiera.
+				pr["ricochets_left"] -= 1
+				pr["vel"] = (pr["vel"] as Vector2).rotated(randf_range(PI * 0.35, PI * 1.65))
+				pr["distance_left"] = maxf(pr["distance_left"], 260.0)
 			else:
 				pr["pierce_left"] -= 1
 			_effects.append({"type": "burst", "pos": pr["pos"], "radius": 14.0, "time": 0.0, "duration": 0.15, "color": pr["color"]})

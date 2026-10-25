@@ -6680,22 +6680,27 @@
   {
    "id": 107,
    "kind": "keystone",
-   "name": "Monolito Legacy",
+   "name": "Modo Seguro",
    "x": 337.5,
    "y": -1954.7,
    "mods": [
     {
+     "stat": "safe_mode",
+     "type": "flat",
+     "value": 1
+    },
+    {
      "stat": "armour",
      "type": "more",
-     "value": 100
+     "value": 40
     },
     {
      "stat": "movement_speed",
      "type": "more",
-     "value": -15
+     "value": -10
     }
    ],
-   "flavor": "Nadie sabe cómo funciona. Nadie se atreve a tocarlo.",
+   "flavor": "Arranca con lo mínimo. Lento, feo, pero no se cae.",
    "icon": "ks_guerrero"
   },
   {
@@ -8274,27 +8279,27 @@
   {
    "id": 195,
    "kind": "keystone",
-   "name": "git push --force",
+   "name": "Código Espagueti",
    "x": 1839.0,
    "y": -774.3,
    "mods": [
     {
+     "stat": "spaghetti_code",
+     "type": "flat",
+     "value": 2
+    },
+    {
      "stat": "attack_speed",
      "type": "more",
-     "value": 20
+     "value": 10
     },
     {
-     "stat": "armour",
+     "stat": "damage",
      "type": "more",
-     "value": -40
-    },
-    {
-     "stat": "evasion",
-     "type": "more",
-     "value": -40
+     "value": -10
     }
    ],
-   "flavor": "La historia la escriben quienes la sobrescriben.",
+   "flavor": "Nadie sabe hacia dónde va. Ni siquiera tus proyectiles.",
    "icon": "ks_duelista"
   },
   {
@@ -11374,27 +11379,22 @@
   {
    "id": 367,
    "kind": "keystone",
-   "name": "Root Sin Contraseña",
+   "name": "Tipado Estático",
    "x": -251.9,
    "y": 1962.1,
    "mods": [
     {
-     "stat": "crit_chance",
-     "type": "more",
-     "value": 50
+     "stat": "static_typing",
+     "type": "flat",
+     "value": 1
     },
     {
-     "stat": "energy_shield",
+     "stat": "damage",
      "type": "more",
-     "value": -50
-    },
-    {
-     "stat": "life",
-     "type": "more",
-     "value": -10
+     "value": 20
     }
    ],
-   "flavor": "Acceso total. Para ti y para cualquiera que pase.",
+   "flavor": "Si compila, funciona. Y nunca te sorprende: ni para bien ni para mal.",
    "icon": "ks_hacker"
   },
   {
@@ -12955,22 +12955,22 @@
   {
    "id": 454,
    "kind": "keystone",
-   "name": "Programación Orientada a Deadlines",
+   "name": "Recolector de Basura",
    "x": -1836.0,
    "y": 756.7,
    "mods": [
     {
-     "stat": "cast_speed",
-     "type": "more",
-     "value": 25
+     "stat": "garbage_collector",
+     "type": "flat",
+     "value": 3
     },
     {
-     "stat": "mana",
+     "stat": "cast_speed",
      "type": "more",
-     "value": -30
+     "value": 15
     }
    ],
-   "flavor": "El código más rápido es el que nadie revisa.",
+   "flavor": "La memoria se libera sola. Cuando le apetece. Y solo si matas algo.",
    "icon": "ks_hechicero"
   },
   {

@@ -100,6 +100,15 @@ const DODGE_RECOVERY := &"dodge_recovery"
 const DODGE_MULTIHILO := &"dodge_multihilo"
 ## "git stash pop": al esquivar, donde estabas explota algo que hace este % de tu vida máxima como fuego.
 const DODGE_BLAST := &"dodge_blast"
+# Nodos clave que cambian una regla del juego (valor > 0 = activo).
+## Tipado Estático: sin críticos, pero el daño de tus habilidades nunca varía (siempre el medio).
+const STATIC_TYPING := &"static_typing"
+## Recolector de Basura: al matar recuperas este % del maná máximo; el maná no se regenera solo.
+const GARBAGE_COLLECTOR := &"garbage_collector"
+## Modo Seguro: un golpe mortal te deja a 1 de vida y no puedes bajar de ahí en 2 s (una vez cada 30 s).
+const SAFE_MODE := &"safe_mode"
+## Código Espagueti: tus proyectiles rebotan al azar esta cantidad de veces tras golpear.
+const SPAGHETTI_CODE := &"spaghetti_code"
 ## Escudo de energía que se regenera por segundo siempre (aparte de la recarga tras no recibir daño).
 const ENERGY_SHIELD_REGEN := &"energy_shield_regen"
 ## % menos de coste de maná de las habilidades (máximo 50 %).
@@ -190,8 +199,20 @@ const NAMES := {
 	DODGE_RECOVERY: "Recarga de esquiva más rápida",
 	DODGE_MULTIHILO: "Cargas de Multihilos al esquivar",
 	DODGE_BLAST: "Al esquivar, git stash pop: explosión de fuego (de tu vida máxima)",
+	STATIC_TYPING: "Tipado Estático: no puedes hacer críticos, pero tu daño nunca varía",
+	GARBAGE_COLLECTOR: "Recolector de Basura: maná al matar (del máximo); el maná no se regenera solo",
+	SAFE_MODE: "Modo Seguro: un golpe mortal te deja a 1 de vida 2 s (una vez cada 30 s)",
+	SPAGHETTI_CODE: "Código Espagueti: rebotes al azar de tus proyectiles tras golpear",
 	ENERGY_SHIELD_REGEN: "Regeneración de escudo de energía por segundo",
 	MANA_COST_REDUCTION: "Reducción del coste de maná",
+}
+
+## Texto de los modificadores que cambian una regla (en lugar de "+1 de ..."); %s = el valor.
+const RULE_TEXT := {
+	STATIC_TYPING: "No puedes hacer críticos, pero el daño de tus habilidades nunca varía",
+	GARBAGE_COLLECTOR: "Al matar recuperas un %s %% del maná máximo; el maná no se regenera solo",
+	SAFE_MODE: "Un golpe mortal te deja a 1 de vida y no bajas de ahí durante 2 s (una vez cada 30 s)",
+	SPAGHETTI_CODE: "Tus proyectiles rebotan %s veces al azar tras golpear",
 }
 
 ## Los aumentos/más de los padres también aplican al hijo:
@@ -209,7 +230,7 @@ const PERCENT_STATS := [
 	BLOCK_CHANCE, FIRE_RES, COLD_RES, LIGHTNING_RES, CHAOS_RES, CRIT_MULTIPLIER, LIFE_LEECH,
 	BURN_CHANCE, SHOCK_CHANCE, CHILL_CHANCE, FREEZE_CHANCE, POISON_CHANCE, BLEED_CHANCE, STATUS_RESIST,
 	KILL_EXPLOSION, RETALIATION_NOVA, BUFFER_CHARGE_CHANCE, MULTIHILO_CHARGE_CHANCE, OVERCLOCK_CHARGE_CHANCE,
-	MANA_COST_REDUCTION, DODGE_RECOVERY, DODGE_BLAST,
+	MANA_COST_REDUCTION, DODGE_RECOVERY, DODGE_BLAST, GARBAGE_COLLECTOR,
 ]
 
 const TAG_NAMES := {

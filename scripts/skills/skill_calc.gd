@@ -250,6 +250,12 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 	var min_damage := (min_base + flat_added) * mult
 	var max_damage := (max_base + flat_added) * mult
 	var crit_chance := minf(100.0, crit_base * stats.total_multiplier(Stat.CRIT_CHANCE, tags))
+	if stats.get_value(Stat.STATIC_TYPING) > 0.0:
+		# Tipado Estático: sin críticos y el daño siempre en el medio del rango.
+		var mid := (min_damage + max_damage) / 2.0
+		min_damage = mid
+		max_damage = mid
+		crit_chance = 0.0
 	var crit_multiplier := stats.get_value(Stat.CRIT_MULTIPLIER, tags)
 	var average := (min_damage + max_damage) / 2.0 * (1.0 + crit_chance / 100.0 * (crit_multiplier / 100.0 - 1.0))
 	# Stats especiales (ascendencias): más proyectiles, cadenas, esbirros o dispositivos.

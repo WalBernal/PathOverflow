@@ -88,6 +88,7 @@ func _initialize() -> void:
 	_test_arena_mechanics()
 	_test_boss_arena_phases()
 	_test_mechanic_tips()
+	_test_rule_keystones()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -1891,6 +1892,59 @@ func _test_board_milestones() -> void:
 	_check(d20["radius"] > d1["radius"] and d20["cooldown"] < d1["cooldown"] and d20["stun"] > d1["stun"], "cada nivel mejora área, enfriamiento y duración")
 	_check(SkillCalc.milestone_text(_db.skills.skills["proceso_hijo"]) == "+1 esbirro", "hito de esbirros")
 	_check(SkillCalc.compute(Motherboard.new(_db.skills.skills["proceso_hijo"], 20, ["DDR5"]), c)["count"] == 4, "esbirros extra por nivel")
+
+
+## Nodos clave que cambian una regla: Tipado Estático, Recolector de Basura,
+## Modo Seguro y Código Espagueti.
+func _test_rule_keystones() -> void:
+	var rule_stats := {}
+	for n in _tree.nodes.values():
+		if n.kind == PassiveNode.Kind.KEYSTONE:
+			for m in n.mods:
+				rule_stats[String(m.stat)] = n.title
+	for s in [Stat.STATIC_TYPING, Stat.GARBAGE_COLLECTOR, Stat.SAFE_MODE, Stat.SPAGHETTI_CODE]:
+		_check(rule_stats.has(String(s)), "nodo clave en el árbol con la regla %s" % s)
+	var gc_text := Modifier.from_dict({"stat": "garbage_collector", "type": "flat", "value": 3}, "x").describe()
+	_check(gc_text.begins_with("Al matar recuperas un 3 %"), "la regla se describe como frase, no como «+3 de»: %s" % gc_text)
+	var rule := func(c: CharacterData, stat: StringName, value: float) -> void:
+		c.add_timed_effect("prueba_" + String(stat), [Modifier.from_dict({"stat": String(stat), "type": "flat", "value": value}, "prueba")] as Array[Modifier], 99.0)
+	# Tipado Estático: sin críticos y daño fijo.
+	var c := CharacterData.new(_classes[3], _tree)
+	rule.call(c, Stat.STATIC_TYPING, 1.0)
+	var p := SkillCalc.compute(Motherboard.new(_db.skills.skills["ping_letal"], 5, []), c)
+	_check(p["crit_chance"] == 0.0 and is_equal_approx(p["min_damage"], p["max_damage"]) and p["max_damage"] > 0.0, "Tipado Estático: sin críticos y el daño nunca varía")
+	# Recolector de Basura: el maná no se regenera solo.
+	var c2 := CharacterData.new(_classes[4], _tree)
+	rule.call(c2, Stat.GARBAGE_COLLECTOR, 3.0)
+	var pl := Player.new()
+	pl.character = c2
+	pl.mana = 1.0
+	pl._regenerate(1.0)
+	_check(is_equal_approx(pl.mana, 1.0), "Recolector de Basura: el maná no se regenera solo")
+	pl.free()
+	# Modo Seguro: un degenerativo mortal te deja a 1 de vida; tras la ventana y sin recarga, mueres.
+	var c3 := CharacterData.new(_classes[0], _tree)
+	rule.call(c3, Stat.SAFE_MODE, 1.0)
+	var safe := Player.new()
+	safe.character = c3
+	safe.life = 10.0
+	safe.apply_dot("prueba", 1.0e6, 5.0)
+	safe._tick_dots(0.1)
+	_check(is_equal_approx(safe.life, 1.0) and safe.is_alive() and safe.safe_mode_window > 0.0, "Modo Seguro: el golpe mortal te deja a 1 de vida")
+	safe._tick_dots(0.1)
+	_check(safe.is_alive(), "Modo Seguro: durante 2 s no bajas de 1")
+	safe.safe_mode_window = 0.0
+	safe._tick_dots(0.1)
+	_check(not safe.is_alive(), "Modo Seguro: sin ventana y en recarga, mueres")
+	safe.free()
+	# Código Espagueti: los proyectiles salen con rebotes.
+	var c4 := CharacterData.new(_classes[2], _tree)
+	rule.call(c4, Stat.SPAGHETTI_CODE, 2.0)
+	var sc := SkillController.new()
+	sc.character = c4
+	sc._fire_volley(SkillCalc.compute(Motherboard.new(_db.skills.skills["rafaga_de_paquetes"], 1, []), c4), Vector2.ZERO, Vector2.RIGHT, Color.WHITE)
+	_check(not sc._projectiles.is_empty() and int(sc._projectiles[0]["ricochets_left"]) == 2, "Código Espagueti: proyectiles con 2 rebotes al azar")
+	sc.free()
 
 
 ## Consejos de primera vez: uno por mecánica, una sola vez, guardado en el personaje.

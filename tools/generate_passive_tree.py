@@ -68,17 +68,19 @@ CENTER_CLASS = ("full_stack", "Desarrollador Full Stack")
 GATE_THEMES = ["hemorragia", "criogenia", "toxinas", "resistencias", "legion", "automatizacion"]
 BRIDGE_THEMES = ["resistencias", "atributos", "atributos", "sobrecarga", "ignicion", "legion"]
 
+# Varios cambian una regla del juego (static_typing, garbage_collector, safe_mode,
+# spaghetti_code: ver Stat en scripts/core/stat.gd).
 KEYSTONES = {
-    "guerrero": ("Monolito Legacy", "Nadie sabe cómo funciona. Nadie se atreve a tocarlo.",
-                 [("armour", "more", 100), ("movement_speed", "more", -15)]),
-    "duelista": ("git push --force", "La historia la escriben quienes la sobrescriben.",
-                 [("attack_speed", "more", 20), ("armour", "more", -40), ("evasion", "more", -40)]),
+    "guerrero": ("Modo Seguro", "Arranca con lo mínimo. Lento, feo, pero no se cae.",
+                 [("safe_mode", "flat", 1), ("armour", "more", 40), ("movement_speed", "more", -10)]),
+    "duelista": ("Código Espagueti", "Nadie sabe hacia dónde va. Ni siquiera tus proyectiles.",
+                 [("spaghetti_code", "flat", 2), ("attack_speed", "more", 10), ("damage", "more", -10)]),
     "exploradora": ("Deuda Técnica", "Ya la pagarás. Con intereses.",
                     [("damage", "more", 30), ("life", "more", -20)]),
-    "hacker": ("Root Sin Contraseña", "Acceso total. Para ti y para cualquiera que pase.",
-               [("crit_chance", "more", 50), ("energy_shield", "more", -50), ("life", "more", -10)]),
-    "hechicero": ("Programación Orientada a Deadlines", "El código más rápido es el que nadie revisa.",
-                  [("cast_speed", "more", 25), ("mana", "more", -30)]),
+    "hacker": ("Tipado Estático", "Si compila, funciona. Y nunca te sorprende: ni para bien ni para mal.",
+               [("static_typing", "flat", 1), ("damage", "more", 20)]),
+    "hechicero": ("Recolector de Basura", "La memoria se libera sola. Cuando le apetece. Y solo si matas algo.",
+                  [("garbage_collector", "flat", 3), ("cast_speed", "more", 15)]),
     "templario": ("Orquestación con Kubernetes", "Ya no programas: orquestas. Las máquinas hacen el resto.",
                   [("damage", "more", 40, ["automaton"]), ("extra_minions", "flat", 1), ("extra_devices", "flat", 1),
                    ("life", "more", -20)]),

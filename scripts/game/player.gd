@@ -377,6 +377,8 @@ func _physics_process(delta: float) -> void:
 			barrier = 0.0
 	action_lock = maxf(0.0, action_lock - delta)
 	_iframes = maxf(0.0, _iframes - delta)
+	safe_mode_window = maxf(0.0, safe_mode_window - delta)
+	safe_mode_cooldown = maxf(0.0, safe_mode_cooldown - delta)
 	# Por sondeo (no por evento): el gatillo del mando manda muchos eventos al apretarlo.
 	if InputMap.has_action(&"dodge") and Input.is_action_just_pressed(&"dodge"):
 		dodge()
@@ -443,6 +445,8 @@ func _process(delta: float) -> void:
 func _regenerate(delta: float) -> void:
 	var life_gain := _stat(Stat.LIFE_REGEN)
 	var mana_gain := unreserved_mana_max() * MANA_REGEN_PERCENT / 100.0 * character.stats.total_multiplier(Stat.MANA_REGEN, character.condition_tags())
+	if _stat(Stat.GARBAGE_COLLECTOR) > 0.0:
+		mana_gain = 0.0   # Recolector de Basura: el maná solo vuelve al matar (y con pociones)
 	for r in _recoveries:
 		var dt := minf(delta, r["remaining"])
 		if r["resource"] == "life":
@@ -494,7 +498,7 @@ func _tick_dots(delta: float) -> void:
 	var absorbed := minf(energy_shield, amount)
 	energy_shield -= absorbed
 	life -= amount - absorbed
-	if life <= 0.0:
+	if life <= 0.0 and not _safe_mode_saves():
 		life = 0.0
 		dots.clear()
 		_recoveries.clear()
@@ -531,10 +535,33 @@ func take_damage(amount: float) -> void:
 	var absorbed := minf(energy_shield, amount)
 	energy_shield -= absorbed
 	life -= amount - absorbed
-	if life <= 0.0:
+	if life <= 0.0 and not _safe_mode_saves():
 		life = 0.0
 		_recoveries.clear()
 		died.emit()
+
+
+# --- Modo Seguro (nodo clave Stat.SAFE_MODE) ---
+const SAFE_MODE_WINDOW := 2.0
+const SAFE_MODE_COOLDOWN := 30.0
+## Segundos que quedan de "no puedes bajar de 1 de vida" y hasta que vuelva a estar listo.
+var safe_mode_window := 0.0
+var safe_mode_cooldown := 0.0
+
+
+## Un golpe (o degenerativo) mortal: con Modo Seguro listo (o ya activo) te quedas a 1 de vida.
+func _safe_mode_saves() -> bool:
+	if _stat(Stat.SAFE_MODE) <= 0.0:
+		return false
+	if safe_mode_window <= 0.0:
+		if safe_mode_cooldown > 0.0:
+			return false
+		safe_mode_window = SAFE_MODE_WINDOW
+		safe_mode_cooldown = SAFE_MODE_COOLDOWN
+		Sfx.play("barrier", -2.0)
+		camera_shake(4.0, 0.3)
+	life = 1.0
+	return true
 
 
 func _draw() -> void:
