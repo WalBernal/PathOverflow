@@ -4,6 +4,11 @@ extends Control
 ## y el espacio de guardado activo.
 
 const CARD_HEIGHT := 84.0
+## Pose de lucimiento de cada clase sobre su pedestal (T96): [acción, arma].
+const CLASS_POSES := {
+	"guerrero": ["attack", "mace"], "duelista": ["attack", "sword"], "exploradora": ["shoot", "dagger"],
+	"hacker": ["cast", ""], "hechicero": ["cast", ""], "templario": ["cast", ""], "full_stack": ["attack", "axe"],
+}
 
 var _saves: Array[Dictionary] = []
 var _selected := -1
@@ -244,6 +249,9 @@ func _select(index: int) -> void:
 	_preview.appearance = CharacterAppearance.sanitize(data.get("appearance", {}))
 	var class_def := GameData.get_class_def(StringName(data.get("class_id", "")))
 	_preview.glow_color = Color(class_def.get("color", "d9a441"))
+	var look: Array = CLASS_POSES.get(String(data.get("class_id", "")), ["attack", "sword"])
+	_preview.action = look[0]
+	_preview.weapon = look[1]
 	_detail.text = "[center][font_size=26][color=#d9a441]%s[/color][/font_size]\n%s\n\n[color=#8a8293]%s[/color]\n\n[color=#8a8293]Tiempo jugado:[/color] %s\n[color=#8a8293]Última partida:[/color] %s[/center]" % [
 		data.get("name", "?"), _class_line(data), class_def.get("description", ""),
 		UiStyle.play_time(float(data.get("play_time", 0.0))), UiStyle.relative_time(int(data.get("last_played", 0)))]
@@ -257,11 +265,11 @@ func _play() -> void:
 		_status.text = "No se pudo cargar el personaje. Revisa la consola."
 		return
 	GameData.current_character = c
-	get_tree().change_scene_to_file(GameData.WORLD_SCENE)
+	ScreenTransition.change_scene(get_tree(), GameData.WORLD_SCENE)
 
 
 func _new_character() -> void:
-	get_tree().change_scene_to_file(GameData.CREATION_SCENE)
+	ScreenTransition.change_scene(get_tree(), GameData.CREATION_SCENE)
 
 
 func _ask_delete() -> void:

@@ -296,6 +296,13 @@ func travel_to(zone_id: String, entry := "") -> void:
 	if def.is_empty():
 		push_error("Zona desconocida: %s" % zone_id)
 		return
+	if LoadingCard.enabled:
+		# Pantalla de carga (T96): ilustración de la zona, su nombre y un consejo.
+		var card := LoadingCard.new()
+		card.zone_name = String(def.get("name", zone_id))
+		card.subtitle = ("Acto %s  ·  " % def["act"] if def.has("act") else "") + ("Nivel de zona %d" % int(def.get("level", 1)))
+		card.style = String(def.get("style", ""))
+		add_child(card)
 	if not _challenge.is_empty():
 		_fail_challenge("Has salido de la zona: la prueba de estrés se cancela.")
 	if not _waves.is_empty():

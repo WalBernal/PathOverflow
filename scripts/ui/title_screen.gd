@@ -19,6 +19,10 @@ var _rng := RandomNumberGenerator.new()
 var _columns: Array[Dictionary] = []     # lluvia de binario
 var _snippets: Array[Dictionary] = []    # textos flotando
 var _bugs: Array[Dictionary] = []        # bichos cruzando
+## Ciudad de servidores (T96): dos capas de edificios-rack con ventanas que parpadean,
+## que se desplazan despacio (la lejana, más despacio).
+var _city: Array = [[], []]
+const CITY_SPEED := [6.0, 14.0]
 var _logo: GameLogo
 var _leaving := false
 
@@ -49,6 +53,13 @@ func _init_effects() -> void:
 		_snippets.append(_new_snippet(view, true))
 	for k in 3:
 		_bugs.append(_new_bug(view))
+	for layer in 2:
+		var x := -40.0
+		while x < view.x + 200.0:
+			var w := _rng.randf_range(50, 110) if layer == 0 else _rng.randf_range(70, 150)
+			var h := _rng.randf_range(0.18, 0.34) * view.y if layer == 0 else _rng.randf_range(0.12, 0.26) * view.y
+			_city[layer].append({"x": x, "w": w, "h": h, "seed": _rng.randi(), "antenna": _rng.randf() < 0.35})
+			x += w + _rng.randf_range(6, 26)
 
 
 func _new_snippet(view: Vector2, anywhere := false) -> Dictionary:
@@ -78,6 +89,16 @@ func _process(delta: float) -> void:
 		_bugs[i]["x"] += _bugs[i]["dir"] * _bugs[i]["speed"] * delta
 		if _bugs[i]["x"] < -80.0 or _bugs[i]["x"] > view.x + 80.0:
 			_bugs[i] = _new_bug(view)
+	for layer in 2:
+		var row: Array = _city[layer]
+		if row.is_empty():
+			continue
+		var right: float = row.reduce(func(m: float, b: Dictionary) -> float: return maxf(m, b["x"] + b["w"]), -INF)
+		for b in row:
+			b["x"] -= CITY_SPEED[layer] * delta
+			if b["x"] + b["w"] < -20.0:
+				b["x"] = right + _rng.randf_range(6, 26)   # vuelve a entrar por la derecha
+				right = b["x"] + b["w"]
 	queue_redraw()
 
 
@@ -86,14 +107,18 @@ func _unhandled_input(event: InputEvent) -> void:
 		or (event is InputEventMouseButton and event.pressed)
 	if pressed and not _leaving:
 		_leaving = true
-		var tween := create_tween()
-		tween.tween_property(self, "modulate", Color(0, 0, 0, 1), 0.4)
-		tween.tween_callback(func() -> void: get_tree().change_scene_to_file(GameData.MAIN_MENU_SCENE))
+		ScreenTransition.change_scene(get_tree(), GameData.MAIN_MENU_SCENE)   # barrido de píxeles (T96)
 
 
 func _draw() -> void:
 	var view := size
 	draw_rect(Rect2(Vector2.ZERO, view), Color("07060a"))
+	# Cielo: un resplandor verdoso de pantallas sobre el horizonte.
+	for k in 10:
+		var hy := view.y * (0.45 + k * 0.05)
+		draw_rect(Rect2(0, hy, view.x, view.y * 0.05 + 1.0), Color(0.1, 0.35, 0.25, 0.012 * k))
+	_draw_city()
+	_draw_logo_glow(view)
 	var font := get_theme_default_font()
 	# Lluvia de binario.
 	for c in _columns:
@@ -123,6 +148,50 @@ func _draw() -> void:
 	var pw := font.get_string_size(prompt, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x
 	draw_string(font, Vector2((view.x - pw) / 2.0, view.y - 120.0), prompt, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("3cff6a"))
 	draw_string(font, Vector2(16, view.y - 16), "v0.1.0-alpha · compilado con café · inestable, como el código", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiStyle.MUTED)
+
+
+## Ciudad de servidores (T96): siluetas de racks-rascacielos con ventanas (LEDs) que
+## parpadean y alguna antena con luz roja. La capa lejana, más oscura y azulada.
+func _draw_city() -> void:
+	var view := size
+	for layer in 2:
+		var body := Color("0d1016") if layer == 0 else Color("10131b")
+		var tint := Color(0.35, 0.55, 0.8, 0.35) if layer == 0 else Color(0.3, 1.0, 0.5, 0.55)
+		var ground := view.y - (90.0 if layer == 0 else 40.0)
+		for b in _city[layer]:
+			var rect := Rect2(b["x"], ground - b["h"], b["w"], b["h"] + 120.0)
+			if rect.end.x < 0.0 or rect.position.x > view.x:
+				continue
+			draw_rect(rect, body)
+			draw_rect(Rect2(rect.position, Vector2(rect.size.x, 2.0)), Color(tint, 0.25))
+			var rng := RandomNumberGenerator.new()
+			rng.seed = int(b["seed"])
+			var cols := int(b["w"] / 14.0)
+			var rows := int(b["h"] / 18.0)
+			for r in rows:
+				for c in cols:
+					var phase := rng.randf()
+					if rng.randf() < 0.45:
+						continue
+					var on := sin(_time * (0.6 + phase * 1.5) + phase * 40.0) > -0.3
+					var p := rect.position + Vector2(6 + c * 14.0, 10 + r * 18.0)
+					draw_rect(Rect2(p, Vector2(6, 3)), Color(tint, tint.a * (1.0 if on else 0.15)))
+			if b["antenna"]:
+				var top := Vector2(rect.position.x + rect.size.x * 0.5, rect.position.y)
+				draw_line(top, top + Vector2(0, -26), body.lightened(0.15), 2.0)
+				var blink := 0.5 + 0.5 * sin(_time * 2.4 + float(b["seed"] % 7))
+				draw_circle(top + Vector2(0, -27), 2.5, Color(1.0, 0.3, 0.25, 0.4 + 0.6 * blink))
+
+
+## Resplandor que late detrás del logo (T96).
+func _draw_logo_glow(view: Vector2) -> void:
+	var center := Vector2(view.x / 2.0, (view.y - 120.0) / 2.0)
+	var pulse := 0.5 + 0.5 * sin(_time * 1.3)
+	draw_set_transform(center, 0.0, Vector2(1.0, 0.42))
+	for k in 8:
+		var r := 520.0 * (1.0 - k * 0.11)
+		draw_circle(Vector2.ZERO, r, Color(0.85, 0.6, 0.2, (0.012 + 0.008 * pulse) * (k + 1) / 8.0))
+	draw_set_transform(Vector2.ZERO)
 
 
 ## Grafo de git: main, una rama de feature y el commit que lo rompió todo.

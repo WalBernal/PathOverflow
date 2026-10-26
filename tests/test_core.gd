@@ -167,6 +167,7 @@ func _initialize() -> void:
 	_test_tree_extras()
 	_test_tree_art_v2()
 	_test_ui_atlas()
+	_test_screens_t96()
 	_test_events_music_colorblind()
 	_test_story_editor()
 	_test_board_milestones()
@@ -4233,6 +4234,35 @@ func _test_mana_family() -> void:
 		_check(int(found.get(s, 0)) >= 1, "el árbol tiene nodos de %s" % Stat.display_name(s))
 	var mana_clusters := _tree.clusters.values().filter(func(c: Dictionary) -> bool: return c["theme"] == "mana").size()
 	_check(mana_clusters >= 10, "la familia de maná tiene 10 clusters o más (%d)" % mana_clusters)
+
+
+## Pantallas de título, personajes y carga (T96): barrido, poses y pantalla de carga.
+func _test_screens_t96() -> void:
+	# Barrido: cada celda tiene su momento entre 0 y 1, en diagonal desde arriba a la izquierda.
+	var cols := 40
+	var rows := 23
+	var first := ScreenTransition.cell_threshold(0, 0, cols, rows)
+	var last := ScreenTransition.cell_threshold(cols - 1, rows - 1, cols, rows)
+	_check(first < 0.25 and last > 0.75, "el barrido empieza arriba a la izquierda y acaba abajo a la derecha (%.2f → %.2f)" % [first, last])
+	var all_in_range := true
+	for r in rows:
+		for c in cols:
+			var th := ScreenTransition.cell_threshold(c, r, cols, rows)
+			all_in_range = all_in_range and th >= 0.0 and th <= 1.0
+	_check(all_in_range, "todas las celdas se encienden dentro del barrido")
+	# Pose de lucimiento: quieta casi todo el ciclo y la acción al final, de principio a fin.
+	_check(AppearancePreview.pose_at(0.5, "attack", "sword")["state"] == "idle", "al principio del ciclo, quieta")
+	var act := AppearancePreview.pose_at(AppearancePreview.POSE_CYCLE - AppearancePreview.POSE_ACTION_TIME * 0.5, "attack", "sword")
+	_check(act["state"] == "attack" and is_equal_approx(act["t"], 0.5) and act["weapon"] == "sword", "a mitad de la acción, atacando con su arma")
+	_check(AppearancePreview.pose_at(AppearancePreview.POSE_CYCLE - 0.1, "cast", "sword")["weapon"] == "", "al lanzar no lleva arma")
+	_check(AppearancePreview.pose_at(3.0, "", "")["state"] == "idle", "sin acción, siempre quieta")
+	# Pantalla de carga: consejos, silueta según el borde de la zona y el desvanecido.
+	_check(LoadingCard.tips().size() >= 15, "15 consejos de carga o más (%d)" % LoadingCard.tips().size())
+	_check(LoadingCard.tip_for(3) == LoadingCard.tip_for(3) and LoadingCard.tip_for(3) != "", "el consejo depende de la semilla")
+	_check(LoadingCard.silhouette_for("servers") == "racks" and LoadingCard.silhouette_for("forest") == "trees" and LoadingCard.silhouette_for("anillo") == "lava",
+		"cada estilo de zona tiene su silueta")
+	_check(LoadingCard.silhouette_for("no_existe") == "tents", "un estilo desconocido no rompe nada")
+	_check(LoadingCard.alpha_at(0.2) == 1.0 and is_zero_approx(LoadingCard.alpha_at(LoadingCard.HOLD + LoadingCard.FADE + 0.01)), "la pantalla de carga se queda y luego se desvanece")
 
 
 ## Tema de interfaz dibujado (T95): atlas de piezas de 9 partes cargado en UiStyle.

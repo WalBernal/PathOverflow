@@ -1,0 +1,25 @@
+{
+  "_doc": "Consejos de la pantalla de carga entre zonas (LoadingCard, T96). Cortos, con humor y útiles.",
+  "tips": [
+    "Esquivar (Espacio) te hace invulnerable un instante. Úsalo antes de que el golpe llegue, no después.",
+    "Las RAM de un color solo van en las ranuras de ese color. Como los cables USB, pero con lógica.",
+    "Los waypoints te llevan a cualquier zona ya visitada. Caminar es opcional; el café no.",
+    "El alijo (NAS compartido) lo ven todos tus personajes del mismo espacio de guardado.",
+    "Las piedras angulares cambian una regla del juego. Lee la contra antes de asignarla.",
+    "Completar una constelación da un bono extra en su estrella.",
+    "El maná antes que vida se lleva parte del daño que pasa el escudo de energía.",
+    "En el árbol, Ctrl+Z deshace y Ctrl+Y rehace. Ojalá funcionara en producción.",
+    "Los objetos únicos tienen nombre propio y efectos que ningún objeto mágico puede tener.",
+    "Las maestrías se cambian gratis cuando quieras: click izquierdo sobre una ya asignada.",
+    "Con la vida baja, algunos notables pegan más. Con la vida a cero, ninguno.",
+    "Las pociones se recargan matando. Cuanto más matas, más café.",
+    "Los jefes cambian de fase al perder vida. La barra marca dónde.",
+    "Comparar objetos: mantén Alt con el ratón encima.",
+    "El código de build (PO2) se comparte y se importa desde el árbol pasivo.",
+    "Si una RAM no funciona en una placa, la ranura no se marca en verde al seleccionarla.",
+    "Los esbirros persistentes reservan maná. Menos maná libre, más amigos.",
+    "Las ranuras de chip del árbol aceptan chips de expansión cuando el nodo está asignado.",
+    "Los enemigos con estados alterados reciben más daño de ciertos notables. Quémalos primero, pregunta después.",
+    "Pausa → Interfaz cambia el tamaño de los menús y del HUD sin tocar el mundo."
+  ]
+}

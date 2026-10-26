@@ -17,6 +17,7 @@ var _current: Node
 
 func _ready() -> void:
 	get_window().size = Vector2i(1600, 900)
+	LoadingCard.enabled = false   # la pantalla de carga taparía las capturas
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT))
 	_run.call_deferred()
 
@@ -89,6 +90,10 @@ func _run() -> void:
 		return
 	if OS.get_cmdline_user_args().has("arbol2"):
 		await _capture_tree_v2()
+		get_tree().quit()
+		return
+	if OS.get_cmdline_user_args().has("pantallas"):
+		await _capture_screens_t96()
 		get_tree().quit()
 		return
 	if OS.get_cmdline_user_args().has("arbol3"):
@@ -1178,6 +1183,42 @@ func _capture_tree_v2() -> void:
 		await _wait(0.4)
 		print("dibujo del árbol (%s, zoom %.2f): %.2f ms" % [shot[0], shot[2], view.last_draw_ms])
 		_save(shot[0])
+
+
+## Pantallas de T96: título con la ciudad de servidores, selección de personaje con
+## pedestal y pose, pantallas de carga de varias zonas y el barrido a medias.
+func _capture_screens_t96() -> void:
+	_swap(load("res://scenes/menu/title_screen.tscn").instantiate())
+	await _wait(1.5)
+	_save("96_titulo")
+	_swap(load("res://scenes/menu/main_menu.tscn").instantiate())
+	await _wait(1.0)
+	_save("96_personajes_quieto")
+	await _wait(1.9)   # la pose de lucimiento, a mitad
+	_save("96_personajes_pose")
+	for shot in [["96_carga_servidores", "servers", "Granja de Servidores"], ["96_carga_bosque", "forest", "Bosque de Dependencias"], ["96_carga_lava", "anillo", "Anillo de Fuego"]]:
+		var holder := Control.new()
+		holder.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_swap(holder)
+		var card := LoadingCard.new()
+		card.zone_name = shot[2]
+		card.subtitle = "Nivel de zona 12"
+		card.style = shot[1]
+		holder.add_child(card)
+		await _wait(0.4)
+		_save(shot[0])
+	var tr := ScreenTransition.new()
+	tr._target = ""
+	var holder2: Control = load("res://scenes/menu/title_screen.tscn").instantiate()
+	_swap(holder2)
+	await _wait(0.5)
+	holder2.add_child(tr)
+	tr.set_process(false)   # quieto a mitad del barrido (sin cambiar de escena)
+	tr._t = ScreenTransition.COVER_TIME * 0.55
+	await _wait(0.1)
+	tr._rect.queue_redraw()
+	await _wait(0.1)
+	_save("96_barrido")
 
 
 ## Arte del árbol 2.0 (T94): fondo con parallax, marcos, medallones, minimapa y el pulso.
