@@ -157,6 +157,7 @@ func _initialize() -> void:
 	_test_passive_plan()
 	_test_tree_identity()
 	_test_tree_art()
+	_test_bases_and_unique_mechanics()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -4004,6 +4005,46 @@ func _test_tree_art() -> void:
 			themes[n.theme] = true
 	var with_icon := themes.keys().filter(func(t: String) -> bool: return PassiveIcons.has_icon(t))
 	_check(with_icon.size() >= themes.size() * 0.8, "los nodos menores tienen icono de su temática (%d de %d)" % [with_icon.size(), themes.size()])
+
+
+## Bases con identidad y únicos con mecánica (T86).
+func _test_bases_and_unique_mechanics() -> void:
+	var new_bases := ["sable_de_fibra_optica", "hacha_de_despido_masivo", "martillo_de_compilacion", "cuchilla_de_carton", "casco_de_obra",
+		"auriculares_con_cancelacion", "armadura_de_rack", "chaqueta_de_conferencias", "guantes_antiestaticos", "botas_de_seguridad"]
+	var gen := ItemGenerator.new(_db, 86)
+	for id in new_bases:
+		_check(_db.bases.has(id), "existe la base %s" % id)
+		if not _db.bases.has(id):
+			continue
+		_check(not (_db.bases[id].get("implicits", []) as Array).is_empty(), "%s tiene implícito propio" % id)
+		_check(ItemIcons.has_icon(id), "%s tiene icono" % id)
+		var it := gen.generate(40, Rarity.Item.RARE, id)
+		_check(it.implicit_mods().size() > 0 and it.display_name() != "", "%s se genera con su implícito" % id)
+	# Cada tipo de arma con su implícito propio en la base de nivel alto.
+	var weapon_implicit := {"sword": "life_leech", "axe": "bleed_chance", "mace": "area_of_effect", "dagger": "poison_chance"}
+	for kind in weapon_implicit:
+		var found := false
+		for id in new_bases:
+			var b: Dictionary = _db.bases.get(id, {})
+			if kind in b.get("tags", []) and String(b["implicits"][0]["stat"]) == weapon_implicit[kind]:
+				found = true
+		_check(found, "las %s nuevas tienen su implícito (%s)" % [kind, weapon_implicit[kind]])
+	var mechanic := [Stat.PAGER_STRIKE, Stat.FIRE_WALL, Stat.RETALIATION_NOVA, Stat.CONVERT_PHYSICAL_TO_FIRE, Stat.SPAGHETTI_CODE, Stat.SAFE_MODE,
+		Stat.EXTRA_PROJECTILES, Stat.DODGE_BLAST]
+	var with_mechanic := 0
+	for u in _db.uniques:
+		var item := gen.make_unique(u, 40)
+		_check(item != null and String(u.get("flavor", "")) != "", "%s se puede generar y tiene su texto" % u["name"])
+		for m in u.get("mods", []):
+			_check(StringName(m["stat"]) in Stat.NAMES or StringName(m["stat"]) in Stat.RULE_TEXT or String(m["stat"]).begins_with("local_"), "%s: stat conocido %s" % [u["name"], m["stat"]])
+		if u.get("mods", []).any(func(m: Dictionary) -> bool: return StringName(m["stat"]) in mechanic):
+			with_mechanic += 1
+	_check(with_mechanic >= 8, "únicos cuya gracia es una mecánica (%d)" % with_mechanic)
+	# Llevar el Pager de Guardia activa su golpe propio.
+	var c := CharacterData.new(_classes[0], _tree)
+	var pager: Dictionary = _db.uniques.filter(func(u: Dictionary) -> bool: return u["id"] == "pager_de_guardia")[0]
+	c.inventory.set_equipped("belt", gen.make_unique(pager, 40))
+	_check(c.stats.get_value(Stat.PAGER_STRIKE) > 0.0, "equipar el Pager activa los rayos de guardia")
 
 
 ## Parte 2 (T72b): el ataque golpea en el cuadro de impacto de la animación.

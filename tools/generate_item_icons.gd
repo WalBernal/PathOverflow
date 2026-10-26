@@ -92,6 +92,17 @@ func _initialize() -> void:
 		["kombucha", _jar.bind(Color("c89a40"), false)],
 		["key_card", _key_card],
 		["unknown", _unknown],
+		# Bases de nivel alto con implícito propio (T86): al final, para no mover los índices de las de antes.
+		["sable_de_fibra_optica", _sword.bind(Color("6fd0ff"), 26, Color("2a2a30"))],
+		["hacha_de_despido_masivo", _axe.bind(true)],
+		["martillo_de_compilacion", _mace],
+		["cuchilla_de_carton", _dagger.bind(Color("f0d040"))],
+		["casco_de_obra", _helmet],
+		["auriculares_con_cancelacion", _circlet],
+		["armadura_de_rack", _body.bind(Color("4a4d55"), "plate")],
+		["chaqueta_de_conferencias", _body.bind(Color("2b4a6b"), "vest")],
+		["guantes_antiestaticos", _glove.bind(Color("e0c040"), false)],
+		["botas_de_seguridad", _boot.bind(Color("c87a2a"), Color("2a2a30"))],
 	]
 	var rows := ceili(float(icons.size()) / COLUMNS)
 	img = Image.create_empty(S * COLUMNS, S * rows, false, Image.FORMAT_RGBA8)

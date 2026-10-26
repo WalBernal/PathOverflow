@@ -499,9 +499,10 @@ Origen: R3
 
 ## Fase 14 — Botín y fin de juego
 
-### [ ] T86 · Bases con identidad y únicos con mecánica · M
+### [x] T86 · Bases con identidad y únicos con mecánica · M
 Origen: R3 (Diablo/PoE: el botín que cambia la build)
 - Más bases con implícito propio por tipo de arma y armadura, y únicos cuya gracia sea una mecánica (no solo más números), con su texto de humor.
+- Hecho: 10 bases nuevas de nivel 24-36, cada una con implícito propio de su tipo (espadas roban vida, hachas desangran, mazas abarcan más área, dagas envenenan; armadura pesada con bloqueo, chaqueta mixta con recuperación de enfriamientos, auriculares con resistencia a estados, guantes antiestáticos con resistencia al rayo, botas de seguridad con recarga de esquiva) y su icono. 8 únicos con mecánica y su texto: El Pager de Guardia (rayos de guardia), Encendedor del Practicante (muros de fuego), Ctrl+Z de Bolsillo (nova al recibir golpes), Puñal Incendiario de Producción (físico a fuego y explosiones al matar), Rebase Interactivo (rebotes), Túnica del Modo Seguro, Guantes del Doble Click (un proyectil más) y Casco del Rollback (bomba al esquivar).
 
 ### [ ] T87 · Crafteo con más decisiones · M
 Origen: R3 (PoE/Grim Dawn)
@@ -612,3 +613,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T83 · Planificador del árbol: modo plan, aplicar, deshacer y rehacer, quitar nodos con coste en tokens y build como código de texto.
 - 2026-10-25 · T84 · Identidad del árbol: notable de estilo por clase con su mecánica, cuatro piedras angulares con contra y tres constelaciones que piden dos atributos.
 - 2026-10-25 · T85 · Arte del árbol: fondo por región de clase, iconos de temática en los nodos menores, líneas que se iluminan al asignar y destello al completar un grupo. Parada para revisión.
+- 2026-10-25 · T86 · Diez bases de nivel alto con implícito propio por tipo y ocho únicos cuya gracia es una mecánica, con su texto de humor.
