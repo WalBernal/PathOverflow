@@ -68,6 +68,8 @@ var ascendancy_info: Dictionary = {}
 var chips: Dictionary = {}
 var _medallion_hover := false
 const MEDALLION_RADIUS := 30.0
+## Rectángulo de todo el árbol (minimapa, T94).
+var _bounds := Rect2()
 
 
 func _ready() -> void:
@@ -82,6 +84,7 @@ func setup(p_allocation: PassiveAllocation) -> void:
 	allocation.changed.connect(_on_allocation_changed)
 	if _grid_tree != allocation.tree:
 		_build_grid(allocation.tree)
+		_bounds = Rect2()
 	_hovered_id = -1
 	_prev_alloc = _alloc_set()   # al abrir no se ilumina nada
 	_edge_glow.clear()
@@ -152,8 +155,8 @@ func _process(_delta: float) -> void:
 		if now - float(_edge_glow[k]) > GLOW_TIME:
 			_edge_glow.erase(k)
 	_cluster_flashes = _cluster_flashes.filter(func(f: Dictionary) -> bool: return now - float(f["t0"]) <= CLUSTER_FLASH_TIME)
-	if not _search.is_empty() or ascendancy_info.get("pending", false) or not _edge_glow.is_empty() or not _cluster_flashes.is_empty():
-		queue_redraw()  # el anillo de búsqueda, el medallón y los destellos están animados
+	if is_visible_in_tree() and allocation != null:
+		queue_redraw()  # el flujo de luz de las líneas asignadas (T94), la búsqueda y los destellos están animados
 
 
 ## Detrás del inicio de la clase (hacia el centro, donde no hay pasivas); para
@@ -195,9 +198,10 @@ func _draw_tree() -> void:
 	# Nivel de detalle (T89b): de lejos, nodos como cuadros y círculos lisos, sin iconos,
 	# aros ni adornos; con ~1400 nodos en pantalla, el dibujo completo se hace pesado.
 	var far := zoom < LOD_FAR_ZOOM
+	_draw_regions(tree)   # fondo con parallax (T94), en coordenadas de pantalla
 	draw_set_transform(offset, 0.0, Vector2(zoom, zoom))
-	_draw_regions(tree, visible_rect)
 	_draw_clusters(tree, visible_rect)
+	var now := _now()
 
 	for e in tree.edges:
 		var a := tree.get_node_data(e.x)
@@ -219,9 +223,14 @@ func _draw_tree() -> void:
 			color = Color(COLOR_PLANNED, 0.8)   # el camino del plan
 			width = 4.0
 		draw_line(a.position, b.position, color, width, not far)   # de lejos, sin suavizado (T89b)
-		if not _edge_glow.is_empty() and _edge_glow.has(e):
-			# Recién asignada (T85): un brillo que se apaga y una chispa que la recorre.
-			var gt := clampf((_now() - float(_edge_glow[e])) / GLOW_TIME, 0.0, 1.0)
+		if a_on and b_on and not far:
+			# Flujo de luz por las líneas asignadas (T94): un destello que las recorre.
+			var phase := fmod(now * 0.55 + float((e.x * 7 + e.y * 13) % 17) / 17.0, 1.0)
+			draw_circle(a.position.lerp(b.position, phase), 3.2, Color(1.0, 0.93, 0.7, 0.75 * sin(phase * PI)))
+		if not _edge_glow.is_empty() and _edge_glow.has(e) and now >= float(_edge_glow[e]):
+			# Recién asignada (T85): un brillo que se apaga y una chispa que la recorre;
+			# con T94 cada tramo empieza un poco después que el anterior (pulso por el camino).
+			var gt := clampf((now - float(_edge_glow[e])) / GLOW_TIME, 0.0, 1.0)
 			draw_line(a.position, b.position, Color(1.0, 0.95, 0.7, 0.7 * (1.0 - gt)), 6.0 + 10.0 * (1.0 - gt), true)
 			draw_circle(a.position.lerp(b.position, minf(1.0, gt * 2.0)), 7.0 * (1.0 - gt) + 2.0, Color(1, 1, 0.85, 1.0 - gt))
 
@@ -255,7 +264,7 @@ func _draw_tree() -> void:
 					fill = COLOR_PREVIEW_BAD if too_expensive else COLOR_PREVIEW
 				draw_circle(n.position, r, fill)
 				var ring := COLOR_ALLOCATED if on else theme_color.darkened(0.55 if not available else 0.1)
-				draw_arc(n.position, r, 0.0, TAU, 24, ring, 2.5, true)
+				draw_polyline(TreeArt.frame(TreeArt.frame_kind(n), n.position, r), ring, 2.5)   # marco de píxel (T94)
 				# Icono en pixel art de su temática (T85), solo si se ve lo bastante grande.
 				if r * zoom >= 7.0 and n.theme != "" and PassiveIcons.has_icon(n.theme):
 					PassiveIcons.draw(self, n.position, r * 1.25, n.theme, Color(1, 1, 1, 0.95) if on else Color(1, 1, 1, 0.3))
@@ -270,9 +279,18 @@ func _draw_tree() -> void:
 				var frame := COLOR_ALLOCATED if on else (theme_color if not keystone else Color("b04ad9"))
 				if not on and not available:
 					frame = frame.darkened(0.45)
-				draw_arc(n.position, r, 0.0, TAU, 40, frame, 4.0, true)
+				# Marco de pixel art según el tipo (T94): octógono con remaches, hexágono doble
+				# para las piedras angulares, rombo para las maestrías, estrella en constelaciones.
+				var fk := TreeArt.frame_kind(n)
+				var outline := TreeArt.frame(fk, n.position, r)
+				draw_polyline(outline, Color("0a080c"), 7.0)
+				draw_polyline(outline, frame, 4.0)
+				if fk == "notable":
+					for k in 4:
+						var stud := n.position + Vector2.from_angle(PI / 4.0 + TAU * k / 4.0) * (r + 1.0)
+						draw_rect(Rect2(stud - Vector2(3, 3), Vector2(6, 6)), frame.lightened(0.25))
 				if keystone:
-					draw_arc(n.position, r + 6.0, 0.0, TAU, 40, frame.darkened(0.2), 2.0, true)
+					draw_polyline(TreeArt.frame("keystone", n.position, r + 7.0), frame.darkened(0.2), 2.0)
 				if n.is_mastery():
 					# Maestría: un rombo por opción encima del nodo; el elegido, encendido.
 					var chosen := allocation.mastery_choice(n.id)
@@ -318,11 +336,50 @@ func _draw_tree() -> void:
 		if n.id == _hovered_id:
 			draw_arc(n.position, r + 5.0, 0.0, TAU, 32, Color.WHITE, 2.0, true)
 
+	if zoom < LOD_ICON_ZOOM:
+		_draw_plaques(tree, visible_rect)
 	if not ascendancy_info.is_empty():
 		_draw_medallion(font, pulse)
 	_draw_cluster_flashes()
 	draw_set_transform(Vector2.ZERO)
 	_draw_labels(tree, visible_rect, font)
+	_draw_minimap(tree)
+
+
+## De lejos (T94): un medallón en el centro de cada cluster con el icono de su familia.
+func _draw_plaques(tree: PassiveTree, visible_rect: Rect2) -> void:
+	for c in tree.clusters.values():
+		var center := Vector2(c["x"], c["y"])
+		if c["theme"] == "" or not visible_rect.has_point(center):
+			continue
+		var color := tree.theme_color(c["theme"])
+		var pr := clampf(11.0 / zoom, 46.0, 90.0)   # unos 11 px en pantalla como mínimo
+		draw_circle(center, pr, Color("120f16"))
+		draw_polyline(TreeArt.frame("notable", center, pr), color.lightened(0.15), 6.0)
+		if PassiveIcons.has_icon(c["theme"]):
+			PassiveIcons.draw(self, center, pr * 1.4, c["theme"], Color(1, 1, 1, 0.9))
+
+
+## Minimapa (T94): el árbol entero en una esquina, con lo asignado y el encuadre actual.
+func _draw_minimap(tree: PassiveTree) -> void:
+	if _bounds.size == Vector2.ZERO:
+		_bounds = TreeArt.bounds(tree)
+	var map := TreeArt.minimap_rect(size)
+	draw_rect(map.grow(3.0), Color(0, 0, 0, 0.75))
+	draw_rect(map, Color("15111a"))
+	for start_id in region_colors:
+		var s := tree.get_node_data(int(start_id))
+		if s != null:
+			draw_circle(TreeArt.to_minimap(s.position, _bounds, map), 16.0, Color(region_colors[start_id], 0.18))
+	for c in tree.clusters.values():
+		draw_rect(Rect2(TreeArt.to_minimap(Vector2(c["x"], c["y"]), _bounds, map) - Vector2(1.5, 1.5), Vector2(3, 3)), Color(tree.theme_color(c["theme"]), 0.7))
+	for id in allocation.get_allocated_ids():
+		draw_rect(Rect2(TreeArt.to_minimap(tree.get_node_data(id).position, _bounds, map) - Vector2(1, 1), Vector2(2, 2)), COLOR_ALLOCATED)
+	var view_a := TreeArt.to_minimap(_to_tree(Vector2.ZERO), _bounds, map)
+	var view_b := TreeArt.to_minimap(_to_tree(size), _bounds, map)
+	var frame_rect := Rect2(view_a, view_b - view_a).intersection(map)
+	draw_rect(frame_rect, Color(1, 1, 1, 0.85), false, 1.5)
+	draw_rect(map.grow(3.0), Color("5a4a3a"), false, 2.0)
 
 
 func _draw_medallion(font: Font, pulse: float) -> void:
@@ -349,27 +406,48 @@ func _draw_medallion(font: Font, pulse: float) -> void:
 	draw_string(font, p + Vector2(-160, MEDALLION_RADIUS + 26), label, HORIZONTAL_ALIGNMENT_CENTER, 320, 18, gold.lightened(0.2))
 
 
-## Fondos de los clusters: la silueta de su símbolo (corazón, llama, rayo...)
-## brillando con el color de su temática; los que no tienen forma, un halo.
-## Fondo de cada región (T85): un resplandor del color de la clase alrededor de su inicio.
-func _draw_regions(tree: PassiveTree, visible_rect: Rect2) -> void:
+## Fondo (T94): dos capas de estrellas y una nebulosa por región con el color de su
+## clase, cada capa con su parallax (se mueven menos que el árbol al arrastrar).
+func _draw_regions(tree: PassiveTree) -> void:
+	var view := size
+	var screen := Rect2(Vector2.ZERO, view)
 	for start_id in region_colors:
 		var n := tree.get_node_data(int(start_id))
-		if n == null or not visible_rect.grow(REGION_RADIUS).has_point(n.position):
+		if n == null:
 			continue
 		var c: Color = region_colors[start_id]
-		for k in 7:
-			var rr := REGION_RADIUS * (1.0 - k * 0.13)
-			draw_circle(n.position, rr, Color(c, 0.018 + 0.004 * k))
+		for blob in TreeArt.nebula_blobs(n.position, int(start_id) * 31 + 7):
+			var p := TreeArt.parallax(Vector2(blob.x, blob.y), zoom, offset, view, TreeArt.NEBULA_DEPTH)
+			var rr: float = blob.z * zoom * TreeArt.NEBULA_DEPTH
+			if not screen.grow(rr).has_point(p):
+				continue
+			for k in 4:
+				draw_circle(p, rr * (1.0 - k * 0.22), Color(c, 0.02 + 0.006 * k))
+	for layer in TreeArt.STAR_DEPTHS.size():
+		var depth: float = TreeArt.STAR_DEPTHS[layer]
+		for s: Vector3 in TreeArt.stars(layer):
+			var p := TreeArt.parallax(Vector2(s.x, s.y), zoom, offset, view, depth)
+			if screen.has_point(p):
+				var px := 1.0 + layer
+				draw_rect(Rect2(p, Vector2(px, px)), Color(0.85, 0.85, 1.0, s.z * (0.35 + 0.25 * layer)))
+
+
+## Fondos de los clusters: la silueta de su símbolo (corazón, llama, rayo...)
+## brillando con el color de su temática; los que no tienen forma, un halo.
 
 
 ## Destello al completar un grupo (T85): un anillo que se abre y chispas de píxel.
 func _draw_cluster_flashes() -> void:
 	var now := _now()
 	for f in _cluster_flashes:
+		if now < float(f["t0"]):
+			continue   # espera a que llegue el pulso
 		var t := clampf((now - float(f["t0"])) / CLUSTER_FLASH_TIME, 0.0, 1.0)
 		var c: Color = f["color"]
 		var pos: Vector2 = f["pos"]
+		if f.get("big", false):
+			# Constelación: una estrella de ocho puntas que se abre.
+			draw_polyline(TreeArt.frame("constellation", pos, 60.0 + 260.0 * t), Color(c.lightened(0.3), 0.9 * (1.0 - t)), 6.0 * (1.0 - t) + 1.5)
 		draw_arc(pos, 40.0 + 160.0 * t, 0.0, TAU, 48, Color(c.lightened(0.4), 0.9 * (1.0 - t)), 5.0 * (1.0 - t) + 1.0, true)
 		draw_circle(pos, 70.0 * (1.0 - t), Color(c, 0.25 * (1.0 - t)))
 		for k in 10:
@@ -407,7 +485,13 @@ func _draw_clusters(tree: PassiveTree, visible_rect: Rect2) -> void:
 ## nombres de clusters de lejos, nombres de notables de cerca.
 func _draw_labels(tree: PassiveTree, visible_rect: Rect2, font: Font) -> void:
 	var used: Array[Rect2] = []  # para no pintar etiquetas encima de otras
-	if zoom >= 0.35 and zoom < 0.8:
+	if zoom < 0.35:
+		# De lejos (T94): el nombre de cada región, del color de su clase.
+		for start_id in region_colors:
+			var s := tree.get_node_data(int(start_id))
+			if s != null and visible_rect.has_point(s.position):
+				_label(font, s.position * zoom + offset + Vector2(0, -30), s.title, 22, (region_colors[start_id] as Color).lightened(0.35), used)
+	if zoom >= 0.25 and zoom < 0.8:
 		for c in tree.clusters.values():
 			var center := Vector2(c["x"], c["y"])
 			if visible_rect.has_point(center):
@@ -443,7 +527,10 @@ func _gui_input(event: InputEvent) -> void:
 		elif mb.button_index == MOUSE_BUTTON_WHEEL_DOWN and mb.pressed:
 			_zoom_at(mb.position, 1.0 / 1.15)
 		elif mb.button_index == MOUSE_BUTTON_LEFT:
-			if mb.pressed:
+			if mb.pressed and TreeArt.minimap_rect(size).has_point(mb.position) and _bounds.size != Vector2.ZERO:
+				center_on(TreeArt.from_minimap(mb.position, _bounds, TreeArt.minimap_rect(size)))   # click en el minimapa: saltar ahí
+				_pressed = false
+			elif mb.pressed:
 				_pressed = true
 				_drag_distance = 0.0
 			else:
@@ -541,13 +628,18 @@ func _on_allocation_changed() -> void:
 	var now_set := _alloc_set()
 	var tree := allocation.tree
 	var t := _now()
+	# Pulso (T94): cada tramo se ilumina un poco después que el anterior, desde lo que ya
+	# estaba asignado hasta el nodo pulsado.
+	var depths := TreeArt.path_depths(tree, _prev_alloc, now_set)
 	for id in now_set:
 		if _prev_alloc.has(id):
 			continue
+		var t_id := t + (int(depths.get(id, 1)) - 1) * TreeArt.PULSE_STEP
 		for nb in tree.neighbors(int(id)):
 			if now_set.has(nb):
-				_edge_glow[Vector2i(id, nb)] = t   # en tree.edges puede ir en cualquier orden
-				_edge_glow[Vector2i(nb, id)] = t
+				var t_edge := maxf(t_id, float(_edge_glow.get(Vector2i(id, nb), 0.0)))
+				_edge_glow[Vector2i(id, nb)] = t_edge   # en tree.edges puede ir en cualquier orden
+				_edge_glow[Vector2i(nb, id)] = t_edge
 	var done := completed_clusters(tree, _prev_alloc, now_set)
 	if done.size() > 3:
 		done = done.slice(0, 3)   # al cargar una build entera, sin fuegos artificiales por todo el árbol
@@ -555,13 +647,17 @@ func _on_allocation_changed() -> void:
 		var pos := Vector2.ZERO
 		var count := 0
 		var theme := ""
+		var constellation := false
 		for n: PassiveNode in tree.nodes.values():
 			if n.cluster == c:
 				pos += n.position
 				count += 1
 				theme = n.theme
-		_cluster_flashes.append({"pos": pos / maxf(1.0, count), "t0": t, "color": tree.theme_color(theme)})
-		Sfx.play("level_up", -12.0, 1.5)
+				constellation = constellation or n.constellation != ""
+		# Constelación completa (T94): destello violeta y más grande.
+		_cluster_flashes.append({"pos": pos / maxf(1.0, count), "t0": t + float(depths.size()) * TreeArt.PULSE_STEP * 0.5,
+			"color": COLOR_CONSTELLATION if constellation else tree.theme_color(theme), "big": constellation})
+		Sfx.play("level_up", -12.0 if not constellation else -6.0, 1.5 if not constellation else 1.1)
 	_prev_alloc = now_set
 	_refresh_preview()
 	queue_redraw()

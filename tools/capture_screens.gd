@@ -91,6 +91,10 @@ func _run() -> void:
 		await _capture_tree_v2()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("arbol3"):
+		await _capture_tree_art()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("poses"):
 		await _capture_poses()
 		get_tree().quit()
@@ -1174,6 +1178,47 @@ func _capture_tree_v2() -> void:
 		await _wait(0.4)
 		print("dibujo del árbol (%s, zoom %.2f): %.2f ms" % [shot[0], shot[2], view.last_draw_ms])
 		_save(shot[0])
+
+
+## Arte del árbol 2.0 (T94): fondo con parallax, marcos, medallones, minimapa y el pulso.
+func _capture_tree_art() -> void:
+	var tree := PassiveTree.load_from_json("res://data/passive_tree.json")
+	var alloc := PassiveAllocation.new(tree, tree.get_start_node_for_class(&"guerrero"))
+	var view := PassiveTreeView.new()
+	view.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_swap(view)
+	await _wait(0.2)
+	view.setup(alloc)
+	var colors := {"guerrero": "c84b4b", "duelista": "d9a441", "exploradora": "5cb85c", "hacker": "b04ad9", "hechicero": "4fa3e0", "templario": "e8e0d0"}
+	var regions := {}
+	for cid in colors:
+		regions[tree.get_start_node_for_class(StringName(cid))] = Color(colors[cid])
+	view.region_colors = regions
+	# Una build pequeña: hasta la maestría más cercana y un notable más allá.
+	var targets: Array = tree.nodes.values().filter(func(n: PassiveNode) -> bool: return n.is_mastery())
+	targets.sort_custom(func(a: PassiveNode, b: PassiveNode) -> bool: return alloc.find_path(a.id).size() < alloc.find_path(b.id).size() if alloc.find_path(a.id).size() > 0 and alloc.find_path(b.id).size() > 0 else alloc.find_path(a.id).size() > 0)
+	var mastery: PassiveNode = targets[0]
+	alloc.allocate_path(mastery.id, 99)
+	await _wait(1.6)
+	for shot in [["94_arbol_lejos", Vector2.ZERO, 0.135], ["94_arbol_region", mastery.position, 0.4], ["94_arbol_cerca", mastery.position, 0.95]]:
+		view.zoom = shot[2]
+		view.center_on(shot[1])
+		await _wait(0.4)
+		print("dibujo del árbol (%s, zoom %.2f): %.2f ms" % [shot[0], shot[2], view.last_draw_ms])
+		_save(shot[0])
+	# El pulso a mitad de camino: asignar un notable a varios pasos y capturar enseguida.
+	var far_notable: PassiveNode = null
+	for n: PassiveNode in tree.nodes.values():
+		var steps := alloc.find_path(n.id).size()
+		if n.kind == PassiveNode.Kind.NOTABLE and steps >= 5 and steps <= 8:
+			far_notable = n
+			break
+	if far_notable:
+		view.zoom = 0.6
+		view.center_on(far_notable.position)
+		alloc.allocate_path(far_notable.id, 99)
+		await _wait(0.25)
+		_save("94_arbol_pulso")
 
 
 ## Poses del jugador (T72): cada estado en cuatro direcciones, con cada arma, a escala 3.

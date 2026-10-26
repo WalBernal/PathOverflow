@@ -165,6 +165,7 @@ func _initialize() -> void:
 	_test_mana_family()
 	_test_new_keystones()
 	_test_tree_extras()
+	_test_tree_art_v2()
 	_test_events_music_colorblind()
 	_test_story_editor()
 	_test_board_milestones()
@@ -4231,6 +4232,52 @@ func _test_mana_family() -> void:
 		_check(int(found.get(s, 0)) >= 1, "el árbol tiene nodos de %s" % Stat.display_name(s))
 	var mana_clusters := _tree.clusters.values().filter(func(c: Dictionary) -> bool: return c["theme"] == "mana").size()
 	_check(mana_clusters >= 10, "la familia de maná tiene 10 clusters o más (%d)" % mana_clusters)
+
+
+## Arte del árbol 2.0 (T94): parallax, marcos, minimapa y el pulso por el camino.
+func _test_tree_art_v2() -> void:
+	var view := Vector2(1600, 900)
+	var off := Vector2(300, -200)
+	_check(TreeArt.parallax(Vector2(100, 50), 0.5, off, view, 1.0).is_equal_approx(Vector2(100, 50) * 0.5 + off), "con profundidad 1 el fondo va con el árbol")
+	var still := TreeArt.parallax(Vector2(100, 50), 0.5, Vector2.ZERO, view, 0.3)
+	var moved := TreeArt.parallax(Vector2(100, 50), 0.5, Vector2(100, 0), view, 0.3)
+	_check(is_equal_approx(moved.x - still.x, 30.0), "una capa de profundidad 0,3 se mueve un 30 %% de lo que se arrastra")
+	_check(TreeArt.stars(0).size() == TreeArt.STAR_COUNT and TreeArt.stars(0)[0] == TreeArt.stars(0)[0], "estrellas fijas por capa")
+	_check(TreeArt.nebula_blobs(Vector2(0, -900), 5) == TreeArt.nebula_blobs(Vector2(0, -900), 5), "la nebulosa de una región es siempre la misma")
+	var kinds := {}
+	for n: PassiveNode in _tree.nodes.values():
+		kinds[TreeArt.frame_kind(n)] = true
+	for k in ["minor", "notable", "keystone", "mastery", "constellation"]:
+		_check(kinds.has(k), "hay nodos con marco de %s" % k)
+		var poly := TreeArt.frame(k, Vector2(10, 10), 20.0)
+		_check(poly.size() >= 5 and poly[0].is_equal_approx(poly[poly.size() - 1]), "el marco de %s es un polígono cerrado" % k)
+	var b := TreeArt.bounds(_tree)
+	var map := TreeArt.minimap_rect(view)
+	_check(map.end.x <= view.x and map.end.y <= view.y and map.size.x == TreeArt.MINIMAP_SIZE, "el minimapa cabe en la esquina")
+	for n: PassiveNode in _tree.nodes.values():
+		if not map.grow(0.5).has_point(TreeArt.to_minimap(n.position, b, map)):
+			_check(false, "%s cae fuera del minimapa" % n.title)
+			break
+	var p := Vector2(420, -1300)
+	_check(TreeArt.from_minimap(TreeArt.to_minimap(p, b, map), b, map).is_equal_approx(p), "del minimapa al árbol y vuelta")
+	# Pulso: un camino de 3 nodos nuevos sale de lo asignado y va paso a paso.
+	var alloc := PassiveAllocation.new(_tree, _tree.get_start_node_for_class(&"guerrero"))
+	var before := {}
+	for id in alloc.get_allocated_ids():
+		before[id] = true
+	var target := -1
+	for n: PassiveNode in _tree.nodes.values():
+		if alloc.find_path(n.id).size() == 3:
+			target = n.id
+			break
+	var path := alloc.find_path(target)
+	var after := before.duplicate()
+	for id in path:
+		after[id] = true
+	var depths := TreeArt.path_depths(_tree, before, after)
+	var ordered := path.map(func(id: int) -> int: return int(depths[id]))
+	ordered.sort()
+	_check(ordered == [1, 2, 3], "el pulso recorre el camino nodo a nodo (%s)" % [ordered])
 
 
 ## Maestrías, constelaciones y ranuras del árbol nuevo (T93).

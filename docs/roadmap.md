@@ -565,11 +565,12 @@ Origen: R4
 - Ranuras de chip de expansión repartidas por el árbol nuevo (las de ahora caen donde toque).
 - Hecho: 18 maestrías (una por cluster grande, 3 por región), y las de una misma familia ya no repiten opciones: cada una toma otro trío de notables de la familia. Los 7 notables de estilo siguen en el corazón de cada región (T89). Las 6 constelaciones dan además un **bono por completarlas** (`complete` en `passive_identity.json` → `complete_mods` en la estrella; `PassiveAllocation.constellation_complete`, `PassiveTree.constellations`), que el tooltip enseña en gris hasta tenerlas enteras (11 nodos). **18 ranuras de chip** marcadas por el generador (`socket`): el notable de las 12 puertas entre clases y el del cluster B1 de cada región. Al cambiar el árbol, los chips engastados vuelven a la bolsa. Árbol versión 10. Prueba `_test_tree_extras`.
 
-### [ ] T94 · Arte del árbol 2.0 · M 🛑
+### [x] T94 · Arte del árbol 2.0 · M 🛑
 Origen: R4
 - Fondo pintado por región (nebulosa procedural con el color de la clase, capas con parallax al mover la vista), marcos de nodo en pixel art por tipo (menor, notable, piedra angular, maestría, constelación), líneas asignadas con flujo animado de luz, placas o medallones en el centro de cada cluster con su icono de familia.
 - Nivel de detalle por zoom: de lejos, regiones y clusters (con su nombre); de cerca, iconos y textos. Minimapa del árbol en una esquina con el encuadre actual.
 - Animaciones: asignar un nodo hace un pulso que viaja por el camino; completar un cluster o una constelación, destello propio (T85 ampliado).
+- Hecho: nueva clase `TreeArt` (cuentas sin nodos). Fondo: dos capas de estrellas fijas y una nebulosa por región con el color de su clase, cada capa con su parallax (0,18, 0,35 y 0,7). Marcos de pixel art por tipo (`TreeArt.frame`): octógono para menores, octógono con remaches para notables, hexágono doble para piedras angulares, rombo para maestrías y estrella de ocho puntas para constelaciones. Las líneas asignadas llevan un destello de luz que las recorre (el árbol se redibuja cada cuadro mientras se ve; 6-16 ms). De lejos (zoom < 0,3), un medallón con el icono de la familia en el centro de cada cluster y el nombre de cada región; nombres de clusters desde zoom 0,25. **Minimapa** en la esquina inferior derecha con las regiones, los clusters, lo asignado y el encuadre; un click en él salta ahí. Al asignar, el brillo recorre el camino tramo a tramo desde lo que ya tenías (`TreeArt.path_depths`), y completar una constelación hace un destello violeta con estrella y su propio sonido. Capturas con `capture_screens -- arbol3`. Prueba `_test_tree_art_v2`.
 
 ## Fase 16 — Interfaz
 
@@ -740,3 +741,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T91 · Familia de maná: maná antes que vida, regeneración plana, maná al golpear y al matar, y 12 clusters de maná con 4 notables nuevos.
 - 2026-10-25 · T92 · 12 piedras angulares nuevas (23 en el árbol), siete con regla propia (Mente sobre Materia, Pago por Uso, Zero Trust, Caché Fría, Rate Limiting, Consistencia Eventual, Pato de Goma), condición de maná alto y aviso de choques en el tooltip; árbol versión 9.
 - 2026-10-25 · T93 · Maestrías sin opciones repetidas, bono por completar cada constelación y 18 ranuras de chip fijas (puertas y anillo B); los chips vuelven a la bolsa si cambia el árbol; árbol versión 10.
+- 2026-10-25 · T94 · Arte del árbol 2.0: fondo de estrellas y nebulosas con parallax, marcos de pixel art por tipo, flujo de luz en lo asignado, medallones de familia de lejos, minimapa y pulso por el camino al asignar (🛑 pendiente de revisión).
