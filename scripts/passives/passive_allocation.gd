@@ -43,6 +43,19 @@ func is_blocked(id: int) -> bool:
 var requirement_check: Callable
 
 
+## Piedras angulares asignadas que chocan con la del nodo `id` (T92), por nombre.
+func conflicts_with(id: int) -> PackedStringArray:
+	var out := PackedStringArray()
+	var n := tree.get_node_data(id)
+	if n == null or n.conflicts.is_empty():
+		return out
+	for other_id in _allocated:
+		var o := tree.get_node_data(other_id)
+		if o != null and other_id != id and o.title in n.conflicts:
+			out.append(o.title)
+	return out
+
+
 func meets_requirements(id: int) -> bool:
 	var n := tree.get_node_data(id)
 	if n == null or n.requires.is_empty() or not requirement_check.is_valid():

@@ -1,5 +1,5 @@
 {
-"version": 8,
+"version": 9,
 "themes": {
 "vida": {
 "name": "Vida",
@@ -1767,7 +1767,10 @@
 }
 ],
 "flavor": "Un solo binario de 2 GB. Hace de todo. Nadie lo entiende. Funciona.",
-"icon": "ks_full_stack"
+"icon": "ks_full_stack",
+"conflicts": [
+"Contenedor Efímero"
+]
 },
 {
 "id": 28,
@@ -4348,31 +4351,26 @@
 {
 "id": 148,
 "key": "guerrero.C0:11",
-"kind": "notable",
-"name": "Rompe-Builds",
+"kind": "keystone",
+"name": "Rate Limiting",
 "x": -855.2,
 "y": -1844.0,
 "mods": [
 {
-"stat": "physical_damage",
-"type": "increased",
-"value": 25
+"stat": "rate_limit",
+"type": "flat",
+"value": 1
 },
 {
-"stat": "crit_multiplier",
-"type": "flat",
-"value": 15
-},
-{
-"stat": "bleed_chance",
-"type": "flat",
-"value": 10
+"stat": "life",
+"type": "more",
+"value": -15
 }
 ],
 "cluster": "guerrero.C0",
 "theme": "fisico",
-"flavor": "Rompe todo lo que toca. Por eso no le dejan tocar main.",
-"icon": "fisico"
+"flavor": "429 Too Many Requests. Vuelve a pegarme en un rato.",
+"icon": "versatil"
 },
 {
 "id": 149,
@@ -4979,26 +4977,26 @@
 {
 "id": 176,
 "key": "guerrero.C3:11",
-"kind": "notable",
-"name": "Fuga de Paquetes",
+"kind": "keystone",
+"name": "Consistencia Eventual",
 "x": 665.8,
 "y": -1920.6,
 "mods": [
 {
-"stat": "bleed_chance",
+"stat": "eventual_consistency",
 "type": "flat",
-"value": 20
+"value": 1
 },
 {
-"stat": "life_leech",
-"type": "flat",
-"value": 0.5
+"stat": "life_regen",
+"type": "more",
+"value": -50
 }
 ],
 "cluster": "guerrero.C3",
 "theme": "hemorragia",
-"flavor": "Drip, drip, drip.",
-"icon": "hemorragia"
+"flavor": "El daño llegará. Eventualmente.",
+"icon": "versatil"
 },
 {
 "id": 177,
@@ -5066,30 +5064,45 @@
 {
 "id": 180,
 "key": "guerrero.D0:1",
-"kind": "minor",
-"name": "Resistencia al frío",
+"kind": "keystone",
+"name": "Fail Fast",
 "x": -1133.2,
 "y": -2323.4,
 "mods": [
 {
-"stat": "cold_res",
-"type": "flat",
-"value": 12
+"stat": "damage",
+"type": "more",
+"value": 40,
+"tags": [
+"full_life"
+]
+},
+{
+"stat": "armour",
+"type": "more",
+"value": -30
+},
+{
+"stat": "evasion",
+"type": "more",
+"value": -30
 }
 ],
 "cluster": "guerrero.D0",
-"theme": "resistencias"
+"theme": "resistencias",
+"flavor": "Si va a fallar, que falle pronto. Y con la vida llena.",
+"icon": "versatil"
 },
 {
 "id": 181,
 "key": "guerrero.D0:2",
 "kind": "minor",
-"name": "Resistencia al rayo",
+"name": "Resistencia al frío",
 "x": -1028.4,
 "y": -2316.1,
 "mods": [
 {
-"stat": "lightning_res",
+"stat": "cold_res",
 "type": "flat",
 "value": 12
 }
@@ -5101,9 +5114,26 @@
 "id": 182,
 "key": "guerrero.D0:3",
 "kind": "minor",
-"name": "Resistencias elementales",
+"name": "Resistencia al rayo",
 "x": -982.4,
 "y": -2221.7,
+"mods": [
+{
+"stat": "lightning_res",
+"type": "flat",
+"value": 12
+}
+],
+"cluster": "guerrero.D0",
+"theme": "resistencias"
+},
+{
+"id": 183,
+"key": "guerrero.D0:4",
+"kind": "minor",
+"name": "Resistencias elementales",
+"x": -1041.1,
+"y": -2134.6,
 "mods": [
 {
 "stat": "fire_res",
@@ -5125,12 +5155,12 @@
 "theme": "resistencias"
 },
 {
-"id": 183,
-"key": "guerrero.D0:4",
+"id": 184,
+"key": "guerrero.D0:5",
 "kind": "minor",
 "name": "Resistencia a estados",
-"x": -1041.1,
-"y": -2134.6,
+"x": -1145.9,
+"y": -2142.0,
 "mods": [
 {
 "stat": "status_resist",
@@ -5142,12 +5172,12 @@
 "theme": "resistencias"
 },
 {
-"id": 184,
-"key": "guerrero.D0:5",
+"id": 185,
+"key": "guerrero.D0:6",
 "kind": "minor",
 "name": "Estados y resistencia",
-"x": -1145.9,
-"y": -2142.0,
+"x": -1191.9,
+"y": -2236.3,
 "mods": [
 {
 "stat": "status_resist",
@@ -5168,23 +5198,6 @@
 "stat": "lightning_res",
 "type": "flat",
 "value": 3
-}
-],
-"cluster": "guerrero.D0",
-"theme": "resistencias"
-},
-{
-"id": 185,
-"key": "guerrero.D0:6",
-"kind": "minor",
-"name": "Resistencia al fuego",
-"x": -1191.9,
-"y": -2236.3,
-"mods": [
-{
-"stat": "fire_res",
-"type": "flat",
-"value": 12
 }
 ],
 "cluster": "guerrero.D0",
@@ -6367,27 +6380,29 @@
 "id": 239,
 "key": "duelista.A1:14",
 "kind": "notable",
-"name": "Brute Force",
+"name": "Rompe-Builds",
 "x": 1169.6,
 "y": -888.9,
 "mods": [
 {
 "stat": "physical_damage",
 "type": "increased",
-"value": 25,
-"tags": [
-"melee"
-]
+"value": 25
 },
 {
-"stat": "attack_speed",
-"type": "increased",
-"value": 5
+"stat": "crit_multiplier",
+"type": "flat",
+"value": 15
+},
+{
+"stat": "bleed_chance",
+"type": "flat",
+"value": 10
 }
 ],
 "cluster": "duelista.A1",
 "theme": "fisico",
-"flavor": "O(n!) de complejidad. O(1) de sutileza.",
+"flavor": "Rompe todo lo que toca. Por eso no le dejan tocar main.",
 "icon": "fisico"
 },
 {
@@ -6638,24 +6653,24 @@
 "id": 252,
 "key": "duelista.B0:3",
 "kind": "notable",
-"name": "Navaja de Ockham",
+"name": "Fuga de Paquetes",
 "x": 1142.2,
 "y": -1480.8,
 "mods": [
 {
 "stat": "bleed_chance",
 "type": "flat",
-"value": 12
+"value": 20
 },
 {
-"stat": "attack_speed",
-"type": "increased",
-"value": 6
+"stat": "life_leech",
+"type": "flat",
+"value": 0.5
 }
 ],
 "cluster": "duelista.B0",
 "theme": "hemorragia",
-"flavor": "La explicación más simple: le has cortado.",
+"flavor": "Drip, drip, drip.",
 "icon": "hemorragia"
 },
 {
@@ -7321,26 +7336,37 @@
 {
 "id": 282,
 "key": "duelista.C0:11",
-"kind": "notable",
-"name": "Spam de Clicks",
+"kind": "keystone",
+"name": "Kill -9",
 "x": 1169.4,
 "y": -1662.6,
 "mods": [
 {
 "stat": "attack_speed",
-"type": "increased",
-"value": 10
+"type": "more",
+"value": 25,
+"tags": [
+"recent_kill"
+]
 },
 {
-"stat": "accuracy",
-"type": "flat",
-"value": 60
+"stat": "cast_speed",
+"type": "more",
+"value": 25,
+"tags": [
+"recent_kill"
+]
+},
+{
+"stat": "life",
+"type": "more",
+"value": -10
 }
 ],
 "cluster": "duelista.C0",
 "theme": "velocidad_ataque",
-"flavor": "Tu mouse no sobrevivirá a esto.",
-"icon": "velocidad_ataque"
+"flavor": "Sin preguntar. Sin cerrar ficheros. Siguiente.",
+"icon": "versatil"
 },
 {
 "id": 283,
@@ -7874,27 +7900,27 @@
 "id": 307,
 "key": "duelista.C3:8",
 "kind": "notable",
-"name": "Commit Forzado",
+"name": "Brute Force",
 "x": 2192.8,
 "y": -167.1,
 "mods": [
 {
 "stat": "physical_damage",
 "type": "increased",
-"value": 20
-},
-{
-"stat": "physical_damage",
-"type": "increased",
 "value": 25,
 "tags": [
-"recent_kill"
+"melee"
 ]
+},
+{
+"stat": "attack_speed",
+"type": "increased",
+"value": 5
 }
 ],
 "cluster": "duelista.C3",
 "theme": "fisico",
-"flavor": "git push --force. Que se aparten.",
+"flavor": "O(n!) de complejidad. O(1) de sutileza.",
 "icon": "fisico"
 },
 {
@@ -7944,26 +7970,21 @@
 {
 "id": 310,
 "key": "duelista.C3:11",
-"kind": "notable",
-"name": "Reescritura Total",
+"kind": "keystone",
+"name": "Caché Fría",
 "x": 1996.2,
 "y": -383.7,
 "mods": [
 {
-"stat": "physical_damage",
-"type": "increased",
-"value": 18
-},
-{
-"stat": "attack_speed",
-"type": "increased",
-"value": 6
+"stat": "cold_cache",
+"type": "flat",
+"value": 1
 }
 ],
 "cluster": "duelista.C3",
 "theme": "fisico",
-"flavor": "Borrón y cuenta nueva. A golpes.",
-"icon": "fisico"
+"flavor": "La primera petición duele. Las demás, ya no tanto.",
+"icon": "versatil"
 },
 {
 "id": 311,
@@ -8006,24 +8027,24 @@
 "id": 313,
 "key": "duelista.D0:0",
 "kind": "notable",
-"name": "Corte de Suministro",
+"name": "Navaja de Ockham",
 "x": 1386.8,
 "y": -2056.0,
 "mods": [
 {
 "stat": "bleed_chance",
 "type": "flat",
-"value": 14
+"value": 12
 },
 {
-"stat": "physical_damage",
+"stat": "attack_speed",
 "type": "increased",
-"value": 20
+"value": 6
 }
 ],
 "cluster": "duelista.D0",
 "theme": "hemorragia",
-"flavor": "Se cae el proveedor. Se cae todo lo demás.",
+"flavor": "La explicación más simple: le has cortado.",
 "icon": "hemorragia"
 },
 {
@@ -8046,10 +8067,34 @@
 {
 "id": 315,
 "key": "duelista.D0:2",
-"kind": "minor",
-"name": "Duración de estados",
+"kind": "keystone",
+"name": "Pair Programming",
 "x": 1480.1,
 "y": -2104.3,
+"mods": [
+{
+"stat": "companion_robot",
+"type": "flat",
+"value": 1
+},
+{
+"stat": "damage",
+"type": "more",
+"value": -20
+}
+],
+"cluster": "duelista.D0",
+"theme": "hemorragia",
+"flavor": "Uno escribe, otro opina. Tú pegas menos.",
+"icon": "versatil"
+},
+{
+"id": 316,
+"key": "duelista.D0:3",
+"kind": "minor",
+"name": "Duración de estados",
+"x": 1384.1,
+"y": -1998.3,
 "mods": [
 {
 "stat": "ailment_duration",
@@ -8061,12 +8106,12 @@
 "theme": "hemorragia"
 },
 {
-"id": 316,
-"key": "duelista.D0:3",
+"id": 317,
+"key": "duelista.D0:4",
 "kind": "minor",
 "name": "Sangrar y vida",
-"x": 1384.1,
-"y": -1998.3,
+"x": 1381.9,
+"y": -1951.1,
 "mods": [
 {
 "stat": "bleed_chance",
@@ -8083,12 +8128,12 @@
 "theme": "hemorragia"
 },
 {
-"id": 317,
-"key": "duelista.D0:4",
+"id": 318,
+"key": "duelista.D0:5",
 "kind": "minor",
 "name": "Probabilidad de hacer sangrar",
-"x": 1381.9,
-"y": -1951.1,
+"x": 1338.2,
+"y": -2087.2,
 "mods": [
 {
 "stat": "bleed_chance",
@@ -8100,12 +8145,12 @@
 "theme": "hemorragia"
 },
 {
-"id": 318,
-"key": "duelista.D0:5",
+"id": 319,
+"key": "duelista.D0:6",
 "kind": "minor",
 "name": "Sangrar y físico",
-"x": 1338.2,
-"y": -2087.2,
+"x": 1298.4,
+"y": -2112.7,
 "mods": [
 {
 "stat": "bleed_chance",
@@ -8116,23 +8161,6 @@
 "stat": "physical_damage",
 "type": "increased",
 "value": 9
-}
-],
-"cluster": "duelista.D0",
-"theme": "hemorragia"
-},
-{
-"id": 319,
-"key": "duelista.D0:6",
-"kind": "minor",
-"name": "Estados más dañinos",
-"x": 1298.4,
-"y": -2112.7,
-"mods": [
-{
-"stat": "ailment_damage",
-"type": "increased",
-"value": 8
 }
 ],
 "cluster": "duelista.D0",
@@ -8658,27 +8686,24 @@
 "id": 344,
 "key": "duelista.E1:0",
 "kind": "notable",
-"name": "Sprint Final",
+"name": "Spam de Clicks",
 "x": 2632.7,
 "y": -1010.6,
 "mods": [
 {
 "stat": "attack_speed",
 "type": "increased",
-"value": 15,
-"tags": [
-"recent_kill"
-]
+"value": 10
 },
 {
-"stat": "movement_speed",
-"type": "increased",
-"value": 3
+"stat": "accuracy",
+"type": "flat",
+"value": 60
 }
 ],
 "cluster": "duelista.E1",
 "theme": "velocidad_ataque",
-"flavor": "Rápido cuando ya es tarde.",
+"flavor": "Tu mouse no sobrevivirá a esto.",
 "icon": "velocidad_ataque"
 },
 {
@@ -9700,27 +9725,27 @@
 "id": 394,
 "key": "exploradora.B2:0",
 "kind": "notable",
-"name": "Doble Click Furioso",
+"name": "Sprint Final",
 "x": 1418.4,
 "y": 1108.2,
 "mods": [
 {
 "stat": "attack_speed",
 "type": "increased",
-"value": 10
+"value": 15,
+"tags": [
+"recent_kill"
+]
 },
 {
-"stat": "attack_speed",
+"stat": "movement_speed",
 "type": "increased",
-"value": 10,
-"tags": [
-"full_life"
-]
+"value": 3
 }
 ],
 "cluster": "exploradora.B2",
 "theme": "velocidad_ataque",
-"flavor": "Más rápido que el usuario impaciente.",
+"flavor": "Rápido cuando ya es tarde.",
 "icon": "velocidad_ataque"
 },
 {
@@ -10213,7 +10238,10 @@
 "cluster": "exploradora.C0",
 "theme": "evasion",
 "flavor": "Críticos a lo loco. La vida, ya la arreglarás el lunes.",
-"icon": "versatil"
+"icon": "versatil",
+"conflicts": [
+"Zero Trust"
+]
 },
 {
 "id": 417,
@@ -10785,29 +10813,25 @@
 {
 "id": 444,
 "key": "exploradora.C3:11",
-"kind": "notable",
-"name": "Bug Intermitente",
+"kind": "keystone",
+"name": "Zero Trust",
 "x": 1330.3,
 "y": 1536.9,
 "mods": [
 {
-"stat": "crit_chance",
-"type": "increased",
-"value": 30
-},
-{
-"stat": "crit_multiplier",
+"stat": "zero_trust",
 "type": "flat",
-"value": 15,
-"tags": [
-"recent_kill"
-]
+"value": 40
 }
 ],
 "cluster": "exploradora.C3",
 "theme": "critico",
-"flavor": "Solo pasa a veces. Y duele.",
-"icon": "critico"
+"flavor": "No confíes en la suerte. Ni en el crítico.",
+"icon": "versatil",
+"conflicts": [
+"Tipado Estático",
+"Hotfix en Producción"
+]
 },
 {
 "id": 445,
@@ -12178,27 +12202,27 @@
 "id": 510,
 "key": "hacker.A2:0",
 "kind": "notable",
-"name": "Fallo en Cascada",
+"name": "Bug Intermitente",
 "x": -475.3,
 "y": 1380.5,
 "mods": [
 {
 "stat": "crit_chance",
 "type": "increased",
-"value": 25
+"value": 30
 },
 {
 "stat": "crit_multiplier",
 "type": "flat",
-"value": 20,
+"value": 15,
 "tags": [
-"low_life"
+"recent_kill"
 ]
 }
 ],
 "cluster": "hacker.A2",
 "theme": "critico",
-"flavor": "Uno cae y arrastra a todos.",
+"flavor": "Solo pasa a veces. Y duele.",
 "icon": "critico"
 },
 {
@@ -13737,10 +13761,37 @@
 {
 "id": 583,
 "key": "hacker.D0:2",
-"kind": "minor",
-"name": "Daño de hechizos",
+"kind": "keystone",
+"name": "Pago por Uso",
 "x": 1082.3,
 "y": 2333.9,
+"mods": [
+{
+"stat": "blood_magic",
+"type": "flat",
+"value": 1
+},
+{
+"stat": "life",
+"type": "increased",
+"value": 15
+}
+],
+"cluster": "hacker.D0",
+"theme": "lanzamiento",
+"flavor": "Serverless: no pagas servidor, pagas con sangre.",
+"icon": "versatil",
+"conflicts": [
+"Mente sobre Materia"
+]
+},
+{
+"id": 584,
+"key": "hacker.D0:3",
+"kind": "minor",
+"name": "Daño de hechizos",
+"x": 1038.5,
+"y": 2197.9,
 "mods": [
 {
 "stat": "damage",
@@ -13755,12 +13806,12 @@
 "theme": "lanzamiento"
 },
 {
-"id": 584,
-"key": "hacker.D0:3",
+"id": 585,
+"key": "hacker.D0:4",
 "kind": "minor",
 "name": "Hechizos",
-"x": 1038.5,
-"y": 2197.9,
+"x": 998.8,
+"y": 2172.4,
 "mods": [
 {
 "stat": "damage",
@@ -13780,12 +13831,12 @@
 "theme": "lanzamiento"
 },
 {
-"id": 585,
-"key": "hacker.D0:4",
+"id": 586,
+"key": "hacker.D0:5",
 "kind": "minor",
 "name": "Velocidad de lanzamiento",
-"x": 998.8,
-"y": 2172.4,
+"x": 1138.5,
+"y": 2202.5,
 "mods": [
 {
 "stat": "cast_speed",
@@ -13797,12 +13848,12 @@
 "theme": "lanzamiento"
 },
 {
-"id": 586,
-"key": "hacker.D0:5",
+"id": 587,
+"key": "hacker.D0:6",
 "kind": "minor",
 "name": "Daño de hechizos",
-"x": 1138.5,
-"y": 2202.5,
+"x": 1180.4,
+"y": 2180.8,
 "mods": [
 {
 "stat": "damage",
@@ -13811,31 +13862,6 @@
 "tags": [
 "spell"
 ]
-}
-],
-"cluster": "hacker.D0",
-"theme": "lanzamiento"
-},
-{
-"id": 587,
-"key": "hacker.D0:6",
-"kind": "minor",
-"name": "Hechizos",
-"x": 1180.4,
-"y": 2180.8,
-"mods": [
-{
-"stat": "damage",
-"type": "increased",
-"value": 9,
-"tags": [
-"spell"
-]
-},
-{
-"stat": "cast_speed",
-"type": "increased",
-"value": 3
 }
 ],
 "cluster": "hacker.D0",
@@ -13970,7 +13996,10 @@
 }
 ],
 "flavor": "Si compila, funciona. Y nunca te sorprende: ni para bien ni para mal.",
-"icon": "ks_hacker"
+"icon": "ks_hacker",
+"conflicts": [
+"Zero Trust"
+]
 },
 {
 "id": 594,
@@ -14521,14 +14550,22 @@
 "id": 621,
 "key": "hechicero.A0:1",
 "kind": "minor",
-"name": "Velocidad de lanzamiento",
+"name": "Hechizos",
 "x": -1026.7,
 "y": 1181.1,
 "mods": [
 {
+"stat": "damage",
+"type": "increased",
+"value": 9,
+"tags": [
+"spell"
+]
+},
+{
 "stat": "cast_speed",
 "type": "increased",
-"value": 6
+"value": 3
 }
 ],
 "cluster": "hechicero.A0",
@@ -14538,54 +14575,9 @@
 "id": 622,
 "key": "hechicero.A0:2",
 "kind": "minor",
-"name": "Daño de hechizos",
+"name": "Velocidad de lanzamiento",
 "x": -1060.9,
 "y": 1081.8,
-"mods": [
-{
-"stat": "damage",
-"type": "increased",
-"value": 15,
-"tags": [
-"spell"
-]
-}
-],
-"cluster": "hechicero.A0",
-"theme": "lanzamiento"
-},
-{
-"id": 623,
-"key": "hechicero.A0:3",
-"kind": "minor",
-"name": "Hechizos",
-"x": -992.0,
-"y": 1002.6,
-"mods": [
-{
-"stat": "damage",
-"type": "increased",
-"value": 9,
-"tags": [
-"spell"
-]
-},
-{
-"stat": "cast_speed",
-"type": "increased",
-"value": 3
-}
-],
-"cluster": "hechicero.A0",
-"theme": "lanzamiento"
-},
-{
-"id": 624,
-"key": "hechicero.A0:4",
-"kind": "minor",
-"name": "Velocidad de lanzamiento",
-"x": -889.0,
-"y": 1022.6,
 "mods": [
 {
 "stat": "cast_speed",
@@ -14597,12 +14589,12 @@
 "theme": "lanzamiento"
 },
 {
-"id": 625,
-"key": "hechicero.A0:5",
+"id": 623,
+"key": "hechicero.A0:3",
 "kind": "minor",
 "name": "Daño de hechizos",
-"x": -854.8,
-"y": 1121.9,
+"x": -992.0,
+"y": 1002.6,
 "mods": [
 {
 "stat": "damage",
@@ -14617,12 +14609,12 @@
 "theme": "lanzamiento"
 },
 {
-"id": 626,
-"key": "hechicero.A0:6",
+"id": 624,
+"key": "hechicero.A0:4",
 "kind": "minor",
 "name": "Hechizos",
-"x": -923.7,
-"y": 1201.2,
+"x": -889.0,
+"y": 1022.6,
 "mods": [
 {
 "stat": "damage",
@@ -14636,6 +14628,43 @@
 "stat": "cast_speed",
 "type": "increased",
 "value": 3
+}
+],
+"cluster": "hechicero.A0",
+"theme": "lanzamiento"
+},
+{
+"id": 625,
+"key": "hechicero.A0:5",
+"kind": "minor",
+"name": "Velocidad de lanzamiento",
+"x": -854.8,
+"y": 1121.9,
+"mods": [
+{
+"stat": "cast_speed",
+"type": "increased",
+"value": 6
+}
+],
+"cluster": "hechicero.A0",
+"theme": "lanzamiento"
+},
+{
+"id": 626,
+"key": "hechicero.A0:6",
+"kind": "minor",
+"name": "Daño de hechizos",
+"x": -923.7,
+"y": 1201.2,
+"mods": [
+{
+"stat": "damage",
+"type": "increased",
+"value": 15,
+"tags": [
+"spell"
+]
 }
 ],
 "cluster": "hechicero.A0",
@@ -16554,26 +16583,36 @@
 {
 "id": 712,
 "key": "hechicero.C3:11",
-"kind": "notable",
-"name": "Llama Eterna",
+"kind": "keystone",
+"name": "Mente sobre Materia",
 "x": -1996.2,
 "y": 383.7,
 "mods": [
 {
-"stat": "fire_damage",
-"type": "increased",
-"value": 20
+"stat": "damage_taken_from_mana",
+"type": "flat",
+"value": 40
 },
 {
-"stat": "fire_res",
+"stat": "no_life_regen",
 "type": "flat",
-"value": 15
+"value": 1
+},
+{
+"stat": "mana",
+"type": "increased",
+"value": 20
 }
 ],
 "cluster": "hechicero.C3",
 "theme": "fuego",
-"flavor": "while (true) { arder(); }",
-"icon": "fuego"
+"flavor": "El golpe lo paga la RAM. La vida no se arregla sola.",
+"icon": "versatil",
+"conflicts": [
+"Pago por Uso",
+"Recolector de Basura",
+"Buffer Overflow"
+]
 },
 {
 "id": 713,
@@ -16649,10 +16688,40 @@
 {
 "id": 716,
 "key": "hechicero.D0:1",
-"kind": "minor",
-"name": "Frío y lanzamiento",
+"kind": "keystone",
+"name": "Buffer Overflow",
 "x": -1445.5,
 "y": 2143.1,
+"mods": [
+{
+"stat": "damage",
+"type": "more",
+"value": 35,
+"tags": [
+"high_mana"
+]
+},
+{
+"stat": "mana_regen",
+"type": "more",
+"value": -25
+}
+],
+"cluster": "hechicero.D0",
+"theme": "frio",
+"flavor": "Con el maná rebosando, lo que sobra se escribe encima del enemigo.",
+"icon": "versatil",
+"conflicts": [
+"Mente sobre Materia"
+]
+},
+{
+"id": 717,
+"key": "hechicero.D0:2",
+"kind": "minor",
+"name": "Frío y lanzamiento",
+"x": -1491.5,
+"y": 2048.7,
 "mods": [
 {
 "stat": "cold_damage",
@@ -16669,12 +16738,12 @@
 "theme": "frio"
 },
 {
-"id": 717,
-"key": "hechicero.D0:2",
+"id": 718,
+"key": "hechicero.D0:3",
 "kind": "minor",
 "name": "Frío y escarcha",
-"x": -1491.5,
-"y": 2048.7,
+"x": -1432.8,
+"y": 1961.6,
 "mods": [
 {
 "stat": "cold_damage",
@@ -16691,12 +16760,12 @@
 "theme": "frio"
 },
 {
-"id": 718,
-"key": "hechicero.D0:3",
+"id": 719,
+"key": "hechicero.D0:4",
 "kind": "minor",
 "name": "Daño de frío",
-"x": -1432.8,
-"y": 1961.6,
+"x": -1328.1,
+"y": 1969.0,
 "mods": [
 {
 "stat": "cold_damage",
@@ -16708,12 +16777,12 @@
 "theme": "frio"
 },
 {
-"id": 719,
-"key": "hechicero.D0:4",
+"id": 720,
+"key": "hechicero.D0:5",
 "kind": "minor",
 "name": "Frío y resistencia",
-"x": -1328.1,
-"y": 1969.0,
+"x": -1282.1,
+"y": 2063.3,
 "mods": [
 {
 "stat": "cold_damage",
@@ -16730,12 +16799,12 @@
 "theme": "frio"
 },
 {
-"id": 720,
-"key": "hechicero.D0:5",
+"id": 721,
+"key": "hechicero.D0:6",
 "kind": "minor",
 "name": "Frío y lanzamiento",
-"x": -1282.1,
-"y": 2063.3,
+"x": -1340.8,
+"y": 2150.4,
 "mods": [
 {
 "stat": "cold_damage",
@@ -16746,28 +16815,6 @@
 "stat": "cast_speed",
 "type": "increased",
 "value": 3
-}
-],
-"cluster": "hechicero.D0",
-"theme": "frio"
-},
-{
-"id": 721,
-"key": "hechicero.D0:6",
-"kind": "minor",
-"name": "Frío y escarcha",
-"x": -1340.8,
-"y": 2150.4,
-"mods": [
-{
-"stat": "cold_damage",
-"type": "increased",
-"value": 9
-},
-{
-"stat": "chill_chance",
-"type": "flat",
-"value": 5
 }
 ],
 "cluster": "hechicero.D0",
@@ -16894,7 +16941,10 @@
 }
 ],
 "flavor": "La memoria se libera sola. Cuando le apetece. Y solo si matas algo.",
-"icon": "ks_hechicero"
+"icon": "ks_hechicero",
+"conflicts": [
+"Mente sobre Materia"
+]
 },
 {
 "id": 728,
@@ -17151,14 +17201,22 @@
 "id": 740,
 "key": "hechicero.E0:1",
 "kind": "minor",
-"name": "Velocidad de lanzamiento",
+"name": "Hechizos",
 "x": -2273.2,
 "y": 1840.8,
 "mods": [
 {
+"stat": "damage",
+"type": "increased",
+"value": 9,
+"tags": [
+"spell"
+]
+},
+{
 "stat": "cast_speed",
 "type": "increased",
-"value": 6
+"value": 3
 }
 ],
 "cluster": "hechicero.E0",
@@ -17168,54 +17226,9 @@
 "id": 741,
 "key": "hechicero.E0:2",
 "kind": "minor",
-"name": "Daño de hechizos",
+"name": "Velocidad de lanzamiento",
 "x": -2289.6,
 "y": 1737.1,
-"mods": [
-{
-"stat": "damage",
-"type": "increased",
-"value": 15,
-"tags": [
-"spell"
-]
-}
-],
-"cluster": "hechicero.E0",
-"theme": "lanzamiento"
-},
-{
-"id": 742,
-"key": "hechicero.E0:3",
-"kind": "minor",
-"name": "Hechizos",
-"x": -2208.0,
-"y": 1671.0,
-"mods": [
-{
-"stat": "damage",
-"type": "increased",
-"value": 9,
-"tags": [
-"spell"
-]
-},
-{
-"stat": "cast_speed",
-"type": "increased",
-"value": 3
-}
-],
-"cluster": "hechicero.E0",
-"theme": "lanzamiento"
-},
-{
-"id": 743,
-"key": "hechicero.E0:4",
-"kind": "minor",
-"name": "Velocidad de lanzamiento",
-"x": -2110.0,
-"y": 1708.6,
 "mods": [
 {
 "stat": "cast_speed",
@@ -17227,12 +17240,12 @@
 "theme": "lanzamiento"
 },
 {
-"id": 744,
-"key": "hechicero.E0:5",
+"id": 742,
+"key": "hechicero.E0:3",
 "kind": "minor",
 "name": "Daño de hechizos",
-"x": -2093.5,
-"y": 1812.3,
+"x": -2208.0,
+"y": 1671.0,
 "mods": [
 {
 "stat": "damage",
@@ -17247,12 +17260,12 @@
 "theme": "lanzamiento"
 },
 {
-"id": 745,
-"key": "hechicero.E0:6",
+"id": 743,
+"key": "hechicero.E0:4",
 "kind": "minor",
 "name": "Hechizos",
-"x": -2175.1,
-"y": 1878.4,
+"x": -2110.0,
+"y": 1708.6,
 "mods": [
 {
 "stat": "damage",
@@ -17266,6 +17279,43 @@
 "stat": "cast_speed",
 "type": "increased",
 "value": 3
+}
+],
+"cluster": "hechicero.E0",
+"theme": "lanzamiento"
+},
+{
+"id": 744,
+"key": "hechicero.E0:5",
+"kind": "minor",
+"name": "Velocidad de lanzamiento",
+"x": -2093.5,
+"y": 1812.3,
+"mods": [
+{
+"stat": "cast_speed",
+"type": "increased",
+"value": 6
+}
+],
+"cluster": "hechicero.E0",
+"theme": "lanzamiento"
+},
+{
+"id": 745,
+"key": "hechicero.E0:6",
+"kind": "minor",
+"name": "Daño de hechizos",
+"x": -2175.1,
+"y": 1878.4,
+"mods": [
+{
+"stat": "damage",
+"type": "increased",
+"value": 15,
+"tags": [
+"spell"
+]
 }
 ],
 "cluster": "hechicero.E0",
@@ -18812,27 +18862,24 @@
 "id": 821,
 "key": "templario.C1:0",
 "kind": "notable",
-"name": "Incendio Controlado",
+"name": "Llama Eterna",
 "x": -1969.9,
 "y": -836.2,
 "mods": [
 {
 "stat": "fire_damage",
 "type": "increased",
-"value": 22
+"value": 20
 },
 {
-"stat": "burn_chance",
+"stat": "fire_res",
 "type": "flat",
-"value": 8,
-"tags": [
-"stationary"
-]
+"value": 15
 }
 ],
 "cluster": "templario.C1",
 "theme": "fuego",
-"flavor": "Arde, pero en su sitio.",
+"flavor": "while (true) { arder(); }",
 "icon": "fuego"
 },
 {
@@ -19342,29 +19389,26 @@
 {
 "id": 846,
 "key": "templario.C3:11",
-"kind": "notable",
-"name": "Ventana de Mantenimiento",
+"kind": "keystone",
+"name": "Pato de Goma",
 "x": -1330.3,
 "y": -1536.9,
 "mods": [
 {
-"stat": "cooldown_recovery",
-"type": "increased",
-"value": 12
+"stat": "rubber_duck",
+"type": "flat",
+"value": 2
 },
 {
-"stat": "skill_duration",
-"type": "increased",
-"value": 10,
-"tags": [
-"stationary"
-]
+"stat": "damage",
+"type": "more",
+"value": -10
 }
 ],
 "cluster": "templario.C3",
 "theme": "tiempos",
-"flavor": "Todo vuelve antes cuando no mira nadie.",
-"icon": "tiempos"
+"flavor": "Explícaselo a alguien y se arregla solo.",
+"icon": "versatil"
 },
 {
 "id": 847,
@@ -19439,10 +19483,45 @@
 {
 "id": 851,
 "key": "templario.D0:2",
-"kind": "minor",
-"name": "Escudo de energía",
+"kind": "keystone",
+"name": "Contenedor Efímero",
 "x": -2562.4,
 "y": -229.6,
+"mods": [
+{
+"stat": "extra_minions",
+"type": "flat",
+"value": 2
+},
+{
+"stat": "minion_life",
+"type": "more",
+"value": -40
+},
+{
+"stat": "skill_duration",
+"type": "more",
+"value": -40,
+"tags": [
+"minion"
+]
+}
+],
+"cluster": "templario.D0",
+"theme": "escudo",
+"flavor": "Arrancan de dos en dos. Mueren en lo que tarda un deploy.",
+"icon": "versatil",
+"conflicts": [
+"Monolito"
+]
+},
+{
+"id": 852,
+"key": "templario.D0:3",
+"kind": "minor",
+"name": "Escudo de energía",
+"x": -2422.7,
+"y": -199.5,
 "mods": [
 {
 "stat": "energy_shield",
@@ -19454,12 +19533,12 @@
 "theme": "escudo"
 },
 {
-"id": 852,
-"key": "templario.D0:3",
+"id": 853,
+"key": "templario.D0:4",
 "kind": "minor",
 "name": "Escudo e inteligencia",
-"x": -2422.7,
-"y": -199.5,
+"x": -2380.7,
+"y": -221.2,
 "mods": [
 {
 "stat": "energy_shield",
@@ -19470,23 +19549,6 @@
 "stat": "intelligence",
 "type": "flat",
 "value": 5
-}
-],
-"cluster": "templario.D0",
-"theme": "escudo"
-},
-{
-"id": 853,
-"key": "templario.D0:4",
-"kind": "minor",
-"name": "Escudo de energía",
-"x": -2380.7,
-"y": -221.2,
-"mods": [
-{
-"stat": "energy_shield",
-"type": "increased",
-"value": 10
 }
 ],
 "cluster": "templario.D0",
@@ -19502,8 +19564,8 @@
 "mods": [
 {
 "stat": "energy_shield",
-"type": "flat",
-"value": 15
+"type": "increased",
+"value": 10
 }
 ],
 "cluster": "templario.D0",
@@ -19513,19 +19575,14 @@
 "id": 855,
 "key": "templario.D0:6",
 "kind": "minor",
-"name": "Escudo e inteligencia",
+"name": "Escudo de energía",
 "x": -2478.8,
 "y": -68.1,
 "mods": [
 {
 "stat": "energy_shield",
-"type": "increased",
-"value": 6
-},
-{
-"stat": "intelligence",
 "type": "flat",
-"value": 5
+"value": 15
 }
 ],
 "cluster": "templario.D0",
@@ -20176,36 +20233,36 @@
 "id": 887,
 "key": "puerta.guerrero0:0",
 "kind": "notable",
-"name": "Pérdida de Paquetes",
+"name": "Corte de Suministro",
 "x": 611.0,
 "y": -1058.3,
 "mods": [
 {
 "stat": "bleed_chance",
 "type": "flat",
-"value": 10
+"value": 14
 },
 {
-"stat": "ailment_damage",
+"stat": "physical_damage",
 "type": "increased",
-"value": 25
+"value": 20
 }
 ],
 "cluster": "puerta.guerrero0",
 "theme": "hemorragia",
-"flavor": "El 30 % ya no vuelve. El resto, tampoco.",
+"flavor": "Se cae el proveedor. Se cae todo lo demás.",
 "icon": "hemorragia"
 },
 {
 "id": 888,
 "key": "puerta.guerrero0:1",
 "kind": "minor",
-"name": "Duración de estados",
+"name": "Estados más dañinos",
 "x": 663.5,
 "y": -1149.2,
 "mods": [
 {
-"stat": "ailment_duration",
+"stat": "ailment_damage",
 "type": "increased",
 "value": 8
 }
@@ -20217,9 +20274,26 @@
 "id": 889,
 "key": "puerta.guerrero0:2",
 "kind": "minor",
-"name": "Sangrar y vida",
+"name": "Duración de estados",
 "x": 716.0,
 "y": -1058.3,
+"mods": [
+{
+"stat": "ailment_duration",
+"type": "increased",
+"value": 8
+}
+],
+"cluster": "puerta.guerrero0",
+"theme": "hemorragia"
+},
+{
+"id": 890,
+"key": "puerta.guerrero0:3",
+"kind": "minor",
+"name": "Sangrar y vida",
+"x": 663.5,
+"y": -967.4,
 "mods": [
 {
 "stat": "bleed_chance",
@@ -20236,11 +20310,11 @@
 "theme": "hemorragia"
 },
 {
-"id": 890,
-"key": "puerta.guerrero0:3",
+"id": 891,
+"key": "puerta.guerrero0:4",
 "kind": "minor",
 "name": "Probabilidad de hacer sangrar",
-"x": 663.5,
+"x": 558.5,
 "y": -967.4,
 "mods": [
 {
@@ -20253,12 +20327,12 @@
 "theme": "hemorragia"
 },
 {
-"id": 891,
-"key": "puerta.guerrero0:4",
+"id": 892,
+"key": "puerta.guerrero0:5",
 "kind": "minor",
 "name": "Sangrar y físico",
-"x": 558.5,
-"y": -967.4,
+"x": 506.0,
+"y": -1058.3,
 "mods": [
 {
 "stat": "bleed_chance",
@@ -20275,32 +20349,15 @@
 "theme": "hemorragia"
 },
 {
-"id": 892,
-"key": "puerta.guerrero0:5",
-"kind": "minor",
-"name": "Estados más dañinos",
-"x": 506.0,
-"y": -1058.3,
-"mods": [
-{
-"stat": "ailment_damage",
-"type": "increased",
-"value": 8
-}
-],
-"cluster": "puerta.guerrero0",
-"theme": "hemorragia"
-},
-{
 "id": 893,
 "key": "puerta.guerrero0:6",
 "kind": "minor",
-"name": "Duración de estados",
+"name": "Estados más dañinos",
 "x": 558.5,
 "y": -1149.2,
 "mods": [
 {
-"stat": "ailment_duration",
+"stat": "ailment_damage",
 "type": "increased",
 "value": 8
 }
@@ -20346,12 +20403,12 @@
 "id": 895,
 "key": "puerta.guerrero1:1",
 "kind": "minor",
-"name": "Resistencia al frío",
+"name": "Resistencia al fuego",
 "x": 1012.8,
 "y": -1698.9,
 "mods": [
 {
-"stat": "cold_res",
+"stat": "fire_res",
 "type": "flat",
 "value": 12
 }
@@ -20363,12 +20420,12 @@
 "id": 896,
 "key": "puerta.guerrero1:2",
 "kind": "minor",
-"name": "Resistencia al rayo",
+"name": "Resistencia al frío",
 "x": 1053.2,
 "y": -1723.5,
 "mods": [
 {
-"stat": "lightning_res",
+"stat": "cold_res",
 "type": "flat",
 "value": 12
 }
@@ -20380,9 +20437,26 @@
 "id": 897,
 "key": "puerta.guerrero1:3",
 "kind": "minor",
-"name": "Resistencias elementales",
+"name": "Resistencia al rayo",
 "x": 964.9,
 "y": -1611.1,
+"mods": [
+{
+"stat": "lightning_res",
+"type": "flat",
+"value": 12
+}
+],
+"cluster": "puerta.guerrero1",
+"theme": "resistencias"
+},
+{
+"id": 898,
+"key": "puerta.guerrero1:4",
+"kind": "minor",
+"name": "Resistencias elementales",
+"x": 966.0,
+"y": -1563.9,
 "mods": [
 {
 "stat": "fire_res",
@@ -20404,12 +20478,12 @@
 "theme": "resistencias"
 },
 {
-"id": 898,
-"key": "puerta.guerrero1:4",
+"id": 899,
+"key": "puerta.guerrero1:5",
 "kind": "minor",
 "name": "Resistencia a estados",
-"x": 966.0,
-"y": -1563.9,
+"x": 912.8,
+"y": -1696.5,
 "mods": [
 {
 "stat": "status_resist",
@@ -20421,12 +20495,12 @@
 "theme": "resistencias"
 },
 {
-"id": 899,
-"key": "puerta.guerrero1:5",
+"id": 900,
+"key": "puerta.guerrero1:6",
 "kind": "minor",
 "name": "Estados y resistencia",
-"x": 912.8,
-"y": -1696.5,
+"x": 871.4,
+"y": -1719.2,
 "mods": [
 {
 "stat": "status_resist",
@@ -20447,23 +20521,6 @@
 "stat": "lightning_res",
 "type": "flat",
 "value": 3
-}
-],
-"cluster": "puerta.guerrero1",
-"theme": "resistencias"
-},
-{
-"id": 900,
-"key": "puerta.guerrero1:6",
-"kind": "minor",
-"name": "Resistencia al fuego",
-"x": 871.4,
-"y": -1719.2,
-"mods": [
-{
-"stat": "fire_res",
-"type": "flat",
-"value": 12
 }
 ],
 "cluster": "puerta.guerrero1",

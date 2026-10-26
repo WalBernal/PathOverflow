@@ -148,6 +148,21 @@ const MANA_REGEN_FLAT := &"mana_regen_flat"
 const DAMAGE_TAKEN_FROM_MANA := &"damage_taken_from_mana"
 const MANA_ON_HIT := &"mana_on_hit"
 const MANA_ON_KILL := &"mana_on_kill"
+# Piedras angulares de T92 (valor > 0 = activa).
+## Mente sobre Materia: la vida no se regenera sola (las pociones y el robo sí curan).
+const NO_LIFE_REGEN := &"no_life_regen"
+## Pago por Uso: las habilidades cuestan vida en lugar de maná.
+const BLOOD_MAGIC := &"blood_magic"
+## Zero Trust: no puedes hacer críticos; el daño de tus habilidades, este % más.
+const ZERO_TRUST := &"zero_trust"
+## Caché Fría: el primer golpe a cada enemigo hace el doble; los siguientes, un 20 % menos.
+const COLD_CACHE := &"cold_cache"
+## Rate Limiting: tras recibir un golpe, los de los 0,4 s siguientes no te dañan.
+const RATE_LIMIT := &"rate_limit"
+## Consistencia Eventual: la mitad del daño a la vida llega repartida en unos segundos.
+const EVENTUAL_CONSISTENCY := &"eventual_consistency"
+## Pato de Goma: con 3 o más aliados regeneras este % de la vida máxima por segundo.
+const RUBBER_DUCK := &"rubber_duck"
 
 # --- Tags (condiciones de los modificadores) ---
 const TAG_ATTACK := &"attack"
@@ -164,6 +179,8 @@ const COND_RECENT_KILL := &"recent_kill"
 const COND_ALLIES := &"three_allies"
 ## Si no te has movido en 1 s (lo pone Player).
 const COND_STILL := &"stationary"
+## Con el maná al 90 % o más (lo pone Player).
+const COND_HIGH_MANA := &"high_mana"
 
 const RESISTANCE_CAP := 75.0
 
@@ -262,6 +279,13 @@ const NAMES := {
 	DAMAGE_TAKEN_FROM_MANA: "Daño recibido que se lleva el maná antes que la vida",
 	MANA_ON_HIT: "Maná al golpear",
 	MANA_ON_KILL: "Maná al matar",
+	NO_LIFE_REGEN: "Mente sobre Materia: la vida no se regenera sola",
+	BLOOD_MAGIC: "Pago por Uso: las habilidades cuestan vida",
+	ZERO_TRUST: "Zero Trust: sin críticos, más daño",
+	COLD_CACHE: "Caché Fría: el primer golpe a cada enemigo hace el doble",
+	RATE_LIMIT: "Rate Limiting: ignoras los golpes de los 0,4 s siguientes a otro",
+	EVENTUAL_CONSISTENCY: "Consistencia Eventual: la mitad del daño llega poco a poco",
+	RUBBER_DUCK: "Pato de Goma: regeneras vida con 3 o más aliados",
 }
 
 ## Texto de los modificadores que cambian una regla (en lugar de "+1 de ..."); %s = el valor.
@@ -282,6 +306,13 @@ const RULE_TEXT := {
 	CONVERT_PHYSICAL_TO_LIGHTNING: "Tus habilidades de daño físico hacen daño de rayo (las escalan los dos)",
 	CONVERT_PHYSICAL_TO_FIRE: "Tus habilidades de daño físico hacen daño de fuego (las escalan los dos)",
 	CONVERT_ELEMENTAL_TO_CHAOS: "Tus habilidades de daño elemental hacen daño de caos (las escalan los dos)",
+	NO_LIFE_REGEN: "Tu vida no se regenera sola (las pociones, el robo y la vida al matar sí curan)",
+	BLOOD_MAGIC: "Tus habilidades cuestan vida en lugar de maná (nunca te matan)",
+	ZERO_TRUST: "No puedes hacer críticos, pero tus habilidades hacen un %s %% más de daño",
+	COLD_CACHE: "El primer golpe a cada enemigo hace el doble de daño; los siguientes, un 20 % menos",
+	RATE_LIMIT: "Tras recibir un golpe, los de los 0,4 s siguientes no te hacen daño",
+	EVENTUAL_CONSISTENCY: "La mitad del daño que te llega a la vida se cobra poco a poco en unos 3 s",
+	RUBBER_DUCK: "Con 3 o más aliados regeneras un %s %% de tu vida máxima por segundo",
 }
 
 ## Los aumentos/más de los padres también aplican al hijo:
@@ -300,7 +331,7 @@ const PERCENT_STATS := [
 	BURN_CHANCE, SHOCK_CHANCE, CHILL_CHANCE, FREEZE_CHANCE, POISON_CHANCE, BLEED_CHANCE, STATUS_RESIST,
 	KILL_EXPLOSION, RETALIATION_NOVA, BUFFER_CHARGE_CHANCE, MULTIHILO_CHARGE_CHANCE, OVERCLOCK_CHARGE_CHANCE,
 	MANA_COST_REDUCTION, DODGE_RECOVERY, DODGE_BLAST, GARBAGE_COLLECTOR, CHARGE_SPEND_MANA,
-	DAMAGE_TAKEN_FROM_MANA,
+	DAMAGE_TAKEN_FROM_MANA, ZERO_TRUST, RUBBER_DUCK,
 ]
 
 const TAG_NAMES := {
@@ -331,6 +362,7 @@ const TAG_NAMES := {
 	COND_RECENT_KILL: "si has matado recientemente",
 	COND_ALLIES: "con 3 o más aliados",
 	COND_STILL: "si no te has movido en 1 s",
+	COND_HIGH_MANA: "con el maná al 90 % o más",
 }
 
 ## Stat de daño de cada tipo de daño de las habilidades.

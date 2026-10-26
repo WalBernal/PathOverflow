@@ -567,6 +567,13 @@ func _build_tooltip(node: PassiveNode) -> String:
 		t += "[color=#8a8293]%s[/color]\n" % ("Click izquierdo: elegir el bono (gratis, cuando quieras)" if alloc.is_allocated(node.id) else "Asígnala y elige uno de los tres bonos")
 	if node.flavor != "":
 		t += "\n[i][color=#a08f6a]%s[/color][/i]\n" % node.flavor
+	# Piedras que chocan (T92): avisa si ya tienes la otra.
+	if not node.conflicts.is_empty():
+		var clash := alloc.conflicts_with(node.id)
+		if clash.is_empty():
+			t += "[color=#8a8293]Choca con: %s[/color]\n" % ", ".join(node.conflicts)
+		else:
+			t += "[color=#e06c6c]⚠ Choca con %s, que ya tienes asignada[/color]\n" % ", ".join(clash)
 	# Constelación (T84): qué atributos pide y si los tienes.
 	if not node.requires.is_empty():
 		var names := {"strength": "Fuerza", "dexterity": "Destreza", "intelligence": "Inteligencia"}

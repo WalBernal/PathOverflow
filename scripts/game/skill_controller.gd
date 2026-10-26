@@ -901,6 +901,7 @@ func _update_ascendancy_procs(delta: float) -> void:
 func _physics_process(delta: float) -> void:
 	for i in cooldowns.size():
 		cooldowns[i] = maxf(0.0, cooldowns[i] - delta)
+	enemies.cold_cache = character.stats.get_value(Stat.COLD_CACHE) > 0.0
 	_mana_warning_cooldown = maxf(0.0, _mana_warning_cooldown - delta)
 	_busy = maxf(0.0, _busy - delta)
 	# En escenas (enemigos congelados, jugador bloqueado) nada ataca: ni aliados,
@@ -1499,10 +1500,13 @@ func _update_channel(delta: float, held: bool, target: Vector2) -> void:
 		return
 	var p: Dictionary = _channel["profile"]
 	var cost := float(p["mana_cost"]) * delta
-	if not held or not player.is_alive() or player.is_frozen() or player.controls_locked or player.mana < cost:
+	var life_cost := float(p.get("life_cost", 0.0)) * delta
+	if not held or not player.is_alive() or player.is_frozen() or player.controls_locked or player.mana < cost \
+			or (life_cost > 0.0 and player.life <= life_cost + 1.0):
 		_channel = {}
 		return
 	player.mana -= cost
+	player.life -= life_cost
 	_channel["time"] += delta
 	_channel["aim"] = target
 	_busy = maxf(_busy, 0.05)

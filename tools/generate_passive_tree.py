@@ -32,7 +32,7 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "data" / "passive_tree.json"
 THEMES = json.loads((ROOT / "data" / "passive_themes.json").read_text(encoding="utf-8"))["themes"]
 IDENTITY = json.loads((ROOT / "data" / "passive_identity.json").read_text(encoding="utf-8"))
-TREE_VERSION = 8
+TREE_VERSION = 9   # 9: piedras angulares de T92
 # Multiplicador de los aumentos de daño de las pasivas menores (que no se queden en un +4 %).
 DAMAGE_MINOR_SCALE = 1.5
 DAMAGE_STATS = {"damage", "physical_damage", "elemental_damage", "fire_damage", "cold_damage", "lightning_damage",
@@ -58,8 +58,7 @@ KEYSTONES = {
     "full_stack": ("Monolito", "Un solo binario de 2 GB. Hace de todo. Nadie lo entiende. Funciona.",
                    [("monolith", "flat", 1), ("life", "more", 8)]),
 }
-# Regiones con una de las piedras angulares extra (identity.keystones), en su anillo C.
-EXTRA_KEYSTONE_REGIONS = ["exploradora", "hacker", "hechicero", "templario"]
+# Las piedras angulares extra (identity.keystones) van en el cluster de su "slot".
 
 # Clases: (id, nombre, ángulo, atributos) en el mismo orden que el árbol actual.
 CLASSES = [
@@ -427,11 +426,25 @@ for c in clusters:
         else:
             stat, label = ATTR_STAT[attr_at(n["x"], n["y"])]
             n.update({"name": label, "mods": [{"stat": stat, "type": "flat", "value": ATTRIBUTE_TRAVEL}], "theme": "atributos"})
-for cid, kdef in zip(EXTRA_KEYSTONE_REGIONS, IDENTITY.get("keystones", [])):
-    target = next(c for c in clusters if c["key"] == "%s.C0" % cid)
+for kdef in IDENTITY.get("keystones", []):
+    # Ocupa el último notable si el cluster tiene dos; si solo tiene uno, la pasiva menor
+    # más exterior (el cluster no se queda sin notable).
+    target = next(c for c in clusters if c["key"] == kdef["slot"])
     notables = [n for n in target["nodes"] if nodes[n]["kind"] == "notable" and not nodes[n].get("choices")]
-    n = nodes[notables[-1]]
+    minors = [n for n in target["nodes"] if nodes[n]["kind"] == "minor"]
+    if len(notables) >= 2:
+        n = nodes[notables[-1]]
+    else:
+        assert minors, "sin sitio para la piedra %s en %s" % (kdef["name"], kdef["slot"])
+        n = nodes[max(minors, key=lambda i: math.hypot(nodes[i]["x"], nodes[i]["y"]))]
     n.update({"kind": "keystone", "name": kdef["name"], "flavor": kdef["flavor"], "mods": kdef["mods"], "icon": "versatil"})
+# Piedras que chocan entre sí (el tooltip avisa si ya tienes la otra).
+for a, b in IDENTITY.get("keystone_conflicts", []):
+    for name, other in ((a, b), (b, a)):
+        ks = [n for n in nodes if n["kind"] == "keystone" and n["name"] == name]
+        assert ks, "piedra en conflicto inexistente: %s" % name
+        for n in ks:
+            n.setdefault("conflicts", []).append(other)
 
 minor_counter = {}
 notable_counter = {}

@@ -163,6 +163,7 @@ func _initialize() -> void:
 	_test_tree_migration()
 	_test_tree_families()
 	_test_mana_family()
+	_test_new_keystones()
 	_test_events_music_colorblind()
 	_test_story_editor()
 	_test_board_milestones()
@@ -4168,7 +4169,7 @@ func _test_tree_migration() -> void:
 	var back := CharacterData.from_dict(d, _classes[0], _tree, _db)
 	_check(back.passives.spent_points() == 0 and back.passive_points_available() == back.passive_points_total(), "con el árbol viejo, todos los puntos de vuelta")
 	_check(back.flags.has("passives_refunded") and back.flags.has("free_respec"), "y la primera reasignación es gratis")
-	_check(_tree.version == 8, "el árbol del juego es la versión 8")
+	_check(_tree.version >= 8, "el árbol del juego es la versión 8 o posterior (árbol 2.0)")
 	var keyed := _tree.nodes.values().filter(func(n: PassiveNode) -> bool: return n.key != "")
 	_check(keyed.size() == _tree.nodes.size() and _tree.id_for_key(keyed[0].key) == keyed[0].id, "todos los nodos con clave, y la clave lleva a su id")
 	_check(PassiveTreeView.LOD_FAR_ZOOM > PassiveTreeView.LOD_ICON_ZOOM, "de lejos, el árbol se dibuja simplificado")
@@ -4229,6 +4230,100 @@ func _test_mana_family() -> void:
 		_check(int(found.get(s, 0)) >= 1, "el árbol tiene nodos de %s" % Stat.display_name(s))
 	var mana_clusters := _tree.clusters.values().filter(func(c: Dictionary) -> bool: return c["theme"] == "mana").size()
 	_check(mana_clusters >= 10, "la familia de maná tiene 10 clusters o más (%d)" % mana_clusters)
+
+
+## Piedras angulares nuevas (T92): cada regla con su ventaja y su contra, y los choques.
+func _test_new_keystones() -> void:
+	var by_name := {}
+	for n: PassiveNode in _tree.nodes.values():
+		if n.kind == PassiveNode.Kind.KEYSTONE:
+			by_name[n.title] = n
+	var new_ones := ["Rate Limiting", "Consistencia Eventual", "Fail Fast", "Kill -9", "Caché Fría", "Pair Programming",
+		"Zero Trust", "Pago por Uso", "Mente sobre Materia", "Buffer Overflow", "Pato de Goma", "Contenedor Efímero"]
+	for k in new_ones + ["Hotfix en Producción", "Root Access", "Arquitectura Hexagonal", "Kanban", "Monolito", "Tipado Estático"]:
+		_check(by_name.has(k), "piedra angular en el árbol: %s" % k)
+	_check(by_name.size() >= 22, "el árbol tiene 22 piedras angulares o más (%d)" % by_name.size())
+	for k in by_name:
+		var n: PassiveNode = by_name[k]
+		_check(n.flavor != "", "%s tiene su texto" % k)
+		for other in n.conflicts:
+			_check(by_name.has(other) and k in by_name[other].conflicts, "el choque %s ↔ %s va en los dos sentidos" % [k, other])
+	# Aviso de choque: con Pago por Uso asignada, Mente sobre Materia lo dice.
+	var alloc := PassiveAllocation.new(_tree, _tree.get_start_node_for_class(&"guerrero"))
+	alloc._allocated[by_name["Pago por Uso"].id] = true
+	_check(alloc.conflicts_with(by_name["Mente sobre Materia"].id) == PackedStringArray(["Pago por Uso"]), "Mente sobre Materia avisa de que choca con Pago por Uso")
+	_check(alloc.conflicts_with(by_name["Zero Trust"].id).is_empty(), "sin la otra asignada no hay aviso")
+	var rule := func(c: CharacterData, stat: StringName, value: float) -> void:
+		c.add_timed_effect("prueba_" + String(stat), [Modifier.from_dict({"stat": String(stat), "type": "flat", "value": value}, "prueba")] as Array[Modifier], 99.0)
+	var board := Motherboard.new(_db.skills.skills["ping_letal"], 5, [])
+	# Zero Trust: sin críticos, 40 % más de daño.
+	var c := CharacterData.new(_classes[3], _tree)
+	var before := SkillCalc.compute(board, c)
+	rule.call(c, Stat.ZERO_TRUST, 40.0)
+	var after := SkillCalc.compute(board, c)
+	_check(after["crit_chance"] == 0.0 and is_equal_approx(after["max_damage"], before["max_damage"] * 1.4), "Zero Trust: sin críticos y un 40 %% más de daño")
+	# Pago por Uso: el coste pasa del maná a la vida.
+	var c2 := CharacterData.new(_classes[3], _tree)
+	rule.call(c2, Stat.BLOOD_MAGIC, 1.0)
+	var blood := SkillCalc.compute(board, c2)
+	_check(blood["mana_cost"] == 0.0 and blood["life_cost"] == before["mana_cost"] and before["mana_cost"] > 0.0, "Pago por Uso: las habilidades cuestan vida en vez de maná")
+	# Mente sobre Materia: el 40 % del daño al maná y sin regeneración de vida.
+	var c3 := CharacterData.new(_classes[4], _tree)
+	rule.call(c3, Stat.DAMAGE_TAKEN_FROM_MANA, 40.0)
+	rule.call(c3, Stat.NO_LIFE_REGEN, 1.0)
+	rule.call(c3, Stat.LIFE_REGEN, 10.0)
+	var pl := Player.new()
+	pl.character = c3
+	var life0 := pl.max_life() * 0.9
+	pl.life = life0
+	pl.mana = 100.0
+	pl.apply_dot("prueba", 20.0, 5.0)
+	pl._tick_dots(1.0)
+	var taken := (100.0 - pl.mana) + (life0 - pl.life)
+	_check(taken > 0.0 and is_equal_approx(100.0 - pl.mana, taken * 0.4), "Mente sobre Materia: el maná se lleva el 40 %% (maná %.0f, vida %.0f)" % [pl.mana, pl.life])
+	var life_now := pl.life
+	pl._regenerate(1.0)
+	_check(is_equal_approx(pl.life, life_now), "Mente sobre Materia: la vida no se regenera sola")
+	pl.free()
+	# Consistencia Eventual: la mitad llega ahora y el resto después.
+	var c4 := CharacterData.new(_classes[0], _tree)
+	rule.call(c4, Stat.EVENTUAL_CONSISTENCY, 1.0)
+	var ev := Player.new()
+	ev.character = c4
+	ev.life = 100.0
+	ev.apply_dot("prueba", 40.0, 5.0)
+	ev._tick_dots(1.0)
+	_check(is_equal_approx(ev.deferred_damage, 20.0), "Consistencia Eventual: la mitad del daño se aplaza (%.1f)" % ev.deferred_damage)
+	ev.dots.clear()
+	for i in 40:
+		ev._regenerate(0.1)
+	_check(ev.deferred_damage < 0.01 and ev.life < 80.0 + 0.5, "Consistencia Eventual: lo aplazado se acaba cobrando")
+	ev.free()
+	_check(KeystoneRules.deferred_drain(30.0, 1.0) >= 20.0 and KeystoneRules.deferred_drain(1.0, 1.0) == 1.0, "lo aplazado se cobra en unos 3 s")
+	# Rate Limiting, Caché Fría y Pato de Goma.
+	_check(KeystoneRules.rate_limited(0.2) and not KeystoneRules.rate_limited(0.5), "Rate Limiting: solo un golpe cada 0,4 s")
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	em.spawn(Vector2.ZERO, Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+	em.lives[0] = 1.0e6
+	em.cold_cache = true
+	em.hit_index(0, 100.0, 100.0, 0.0, 100.0)
+	var first := em.last_damage_dealt
+	em.hit_index(0, 100.0, 100.0, 0.0, 100.0)
+	_check(is_equal_approx(first / em.last_damage_dealt, 2.0 / 0.8), "Caché Fría: el primer golpe hace el doble y los siguientes un 20 %% menos (%.0f / %.0f)" % [first, em.last_damage_dealt])
+	em.free()
+	var c5 := CharacterData.new(_classes[5], _tree)
+	rule.call(c5, Stat.RUBBER_DUCK, 2.0)
+	var duck := Player.new()
+	duck.character = c5
+	duck.life = 1.0
+	duck._regenerate(1.0)
+	var alone := duck.life
+	c5.set_condition(Stat.COND_ALLIES, true)
+	duck._regenerate(1.0)
+	_check(duck.life - alone > duck.max_life() * 0.019, "Pato de Goma: con 3 aliados regeneras un 2 %% de la vida por segundo")
+	duck.free()
+	_check(Stat.tag_name(Stat.COND_HIGH_MANA) != String(Stat.COND_HIGH_MANA), "Buffer Overflow: la condición de maná alto tiene texto")
 
 
 ## Parte 2 (T72b): el ataque golpea en el cuadro de impacto de la animación.

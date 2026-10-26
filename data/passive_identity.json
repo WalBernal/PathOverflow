@@ -1,330 +1,589 @@
 {
-    "_doc":  "Identidad del árbol pasivo (T84, en el árbol 2.0 desde T89). La lee tools/generate_passive_tree.py y la mete en data/passive_tree.json (ya no se aplica por id de nodo). \u0027style\u0027: el notable de estilo de cada clase (va en el corazón de su región; el del Full Stack, en el anillo interior). \u0027keystones\u0027: piedras angulares extra (las de cluster de T84), una en el anillo C de cuatro regiones. \u0027constellations\u0027: las del anillo exterior, con los atributos que piden y su notable.",
-    "style":  {
-                  "full_stack":  {
-                                     "name":  "Commit Atómico",
-                                     "flavor":  "Todo o nada: tu daño físico sale como rayo.",
-                                     "mods":  [
-                                                  {
-                                                      "stat":  "convert_physical_to_lightning",
-                                                      "type":  "flat",
-                                                      "value":  1
-                                                  },
-                                                  {
-                                                      "stat":  "lightning_damage",
-                                                      "type":  "increased",
-                                                      "value":  10
-                                                  }
-                                              ]
-                                 },
-                  "guerrero":  {
-                                   "name":  "Escalado a Nivel 3",
-                                   "flavor":  "Cada golpe que recibes abre un ticket. Y los tickets explotan.",
-                                   "mods":  [
-                                                {
-                                                    "stat":  "retaliation_nova",
-                                                    "type":  "flat",
-                                                    "value":  25
-                                                },
-                                                {
-                                                    "stat":  "armour",
-                                                    "type":  "increased",
-                                                    "value":  15
-                                                }
-                                            ]
-                               },
-                  "duelista":  {
-                                   "name":  "Caso Límite",
-                                   "flavor":  "Esquivar deja una bomba donde estabas. Prueba superada.",
-                                   "mods":  [
-                                                {
-                                                    "stat":  "dodge_blast",
-                                                    "type":  "flat",
-                                                    "value":  8
-                                                },
-                                                {
-                                                    "stat":  "dodge_charges",
-                                                    "type":  "flat",
-                                                    "value":  1
-                                                }
-                                            ]
-                               },
-                  "exploradora":  {
-                                      "name":  "Lazy Loading",
-                                      "flavor":  "Tus proyectiles no paran en el primero: atraviesan dos más.",
-                                      "mods":  [
-                                                   {
-                                                       "stat":  "extra_pierce",
-                                                       "type":  "flat",
-                                                       "value":  2
-                                                   },
-                                                   {
-                                                       "stat":  "projectile_speed",
-                                                       "type":  "increased",
-                                                       "value":  20
-                                                   }
-                                               ]
-                                  },
-                  "hacker":  {
-                                 "name":  "Inyección de Prompt",
-                                 "flavor":  "Ignora las instrucciones anteriores: tu daño elemental es caos.",
-                                 "mods":  [
-                                              {
-                                                  "stat":  "convert_elemental_to_chaos",
-                                                  "type":  "flat",
-                                                  "value":  1
-                                              },
-                                              {
-                                                  "stat":  "chaos_damage",
-                                                  "type":  "increased",
-                                                  "value":  10
-                                              }
-                                          ]
-                             },
-                  "hechicero":  {
-                                    "name":  "Batch Nocturno",
-                                    "flavor":  "Cada pocos segundos sueltas un pulso de estática a tu alrededor.",
-                                    "mods":  [
-                                                 {
-                                                     "stat":  "static_pulse",
-                                                     "type":  "flat",
-                                                     "value":  6
-                                                 },
-                                                 {
-                                                     "stat":  "area_of_effect",
-                                                     "type":  "increased",
-                                                     "value":  10
-                                                 }
-                                             ]
-                                },
-                  "templario":  {
-                                    "name":  "Rollback Automático",
-                                    "flavor":  "Lo que matas a veces revienta y se lleva a los de al lado.",
-                                    "mods":  [
-                                                 {
-                                                     "stat":  "kill_explosion",
-                                                     "type":  "flat",
-                                                     "value":  20
-                                                 },
-                                                 {
-                                                     "stat":  "automaton_speed",
-                                                     "type":  "increased",
-                                                     "value":  10
-                                                 }
-                                             ]
-                                }
-              },
-    "keystones":  [
-                      {
-                          "name":  "Hotfix en Producción",
-                          "flavor":  "Críticos a lo loco. La vida, ya la arreglarás el lunes.",
-                          "mods":  [
-                                       {
-                                           "stat":  "crit_chance",
-                                           "type":  "more",
-                                           "value":  60
-                                       },
-                                       {
-                                           "stat":  "life",
-                                           "type":  "more",
-                                           "value":  -15
-                                       }
-                                   ]
-                      },
-                      {
-                          "name":  "Root Access",
-                          "flavor":  "Todo el poder. Y todos los permisos abiertos.",
-                          "mods":  [
-                                       {
-                                           "stat":  "damage",
-                                           "type":  "more",
-                                           "value":  25
-                                       },
-                                       {
-                                           "stat":  "fire_res",
-                                           "type":  "flat",
-                                           "value":  -15
-                                       },
-                                       {
-                                           "stat":  "cold_res",
-                                           "type":  "flat",
-                                           "value":  -15
-                                       },
-                                       {
-                                           "stat":  "lightning_res",
-                                           "type":  "flat",
-                                           "value":  -15
-                                       }
-                                   ]
-                      },
-                      {
-                          "name":  "Arquitectura Hexagonal",
-                          "flavor":  "Todo llega más lejos. Nada llega rápido.",
-                          "mods":  [
-                                       {
-                                           "stat":  "area_of_effect",
-                                           "type":  "increased",
-                                           "value":  40
-                                       },
-                                       {
-                                           "stat":  "attack_speed",
-                                           "type":  "more",
-                                           "value":  -12
-                                       },
-                                       {
-                                           "stat":  "cast_speed",
-                                           "type":  "more",
-                                           "value":  -12
-                                       }
-                                   ]
-                      },
-                      {
-                          "name":  "Kanban",
-                          "flavor":  "Las habilidades vuelven antes. Y duran lo que dura una reunión.",
-                          "mods":  [
-                                       {
-                                           "stat":  "cooldown_recovery",
-                                           "type":  "increased",
-                                           "value":  40
-                                       },
-                                       {
-                                           "stat":  "skill_duration",
-                                           "type":  "more",
-                                           "value":  -30
-                                       }
-                                   ]
-                      }
-                  ],
-    "constellations":  {
-                           "Pentester":  {
-                                             "requires":  {
-                                                              "strength":  50,
-                                                              "dexterity":  50
-                                                          },
-                                             "flavor":  "Romper cosas con permiso por escrito.",
-                                             "mods":  [
-                                                          {
-                                                              "type":  "increased",
-                                                              "value":  25,
-                                                              "stat":  "physical_damage"
-                                                          },
-                                                          {
-                                                              "type":  "increased",
-                                                              "value":  25,
-                                                              "stat":  "crit_chance"
-                                                          }
-                                                      ]
-                                         },
-                           "Hacker Ético":  {
-                                                "requires":  {
-                                                                 "dexterity":  50,
-                                                                 "intelligence":  50
-                                                             },
-                                                "flavor":  "Entra sin romper. Bueno, rompe poco.",
-                                                "mods":  [
-                                                             {
-                                                                 "type":  "increased",
-                                                                 "value":  25,
-                                                                 "stat":  "chaos_damage"
-                                                             },
-                                                             {
-                                                                 "type":  "increased",
-                                                                 "value":  20,
-                                                                 "stat":  "evasion"
-                                                             },
-                                                             {
-                                                                 "type":  "increased",
-                                                                 "value":  15,
-                                                                 "stat":  "energy_shield"
-                                                             }
-                                                         ]
-                                            },
-                           "Arquitecto":  {
-                                              "requires":  {
-                                                               "intelligence":  50,
-                                                               "strength":  50
-                                                           },
-                                              "flavor":  "Dibuja cajas y flechas. Las cajas pelean solas.",
-                                              "mods":  [
-                                                           {
-                                                               "type":  "increased",
-                                                               "value":  25,
-                                                               "stat":  "minion_damage"
-                                                           },
-                                                           {
-                                                               "type":  "increased",
-                                                               "value":  20,
-                                                               "stat":  "armour"
-                                                           },
-                                                           {
-                                                               "type":  "increased",
-                                                               "value":  8,
-                                                               "stat":  "aura_effect"
-                                                           }
-                                                       ]
-                                          },
-                           "Full Stack":  {
-                                              "requires":  {
-                                                               "strength":  40,
-                                                               "dexterity":  40,
-                                                               "intelligence":  40
-                                                           },
-                                              "flavor":  "De todo un poco. De nada, mucho. Funciona.",
-                                              "mods":  [
-                                                           {
-                                                               "type":  "increased",
-                                                               "value":  20,
-                                                               "stat":  "damage"
-                                                           },
-                                                           {
-                                                               "type":  "increased",
-                                                               "value":  6,
-                                                               "stat":  "life"
-                                                           },
-                                                           {
-                                                               "type":  "increased",
-                                                               "value":  10,
-                                                               "stat":  "mana"
-                                                           }
-                                                       ]
-                                          },
-                           "Rubber Duck":  {
-                                               "requires":  {
-                                                                "dexterity":  50,
-                                                                "intelligence":  50
-                                                            },
-                                               "flavor":  "Le explicas el problema al pato y el pato lo arregla.",
-                                               "mods":  [
-                                                            {
-                                                                "type":  "increased",
-                                                                "value":  15,
-                                                                "stat":  "cooldown_recovery"
-                                                            },
-                                                            {
-                                                                "type":  "increased",
-                                                                "value":  10,
-                                                                "stat":  "cast_speed"
-                                                            }
-                                                        ]
-                                           },
-                           "Pager de Guardia":  {
-                                                    "requires":  {
-                                                                     "intelligence":  50,
-                                                                     "strength":  50
-                                                                 },
-                                                    "flavor":  "Suena a las tres de la mañana. Siempre.",
-                                                    "mods":  [
-                                                                 {
-                                                                     "type":  "increased",
-                                                                     "value":  25,
-                                                                     "stat":  "lightning_damage"
-                                                                 },
-                                                                 {
-                                                                     "type":  "flat",
-                                                                     "value":  6,
-                                                                     "stat":  "life_regen"
-                                                                 }
-                                                             ]
-                                                }
-                       }
+  "_doc": "Identidad del árbol pasivo (T84, en el árbol 2.0 desde T89). La lee tools/generate_passive_tree.py y la mete en data/passive_tree.json (ya no se aplica por id de nodo). 'style': el notable de estilo de cada clase (va en el corazón de su región; el del Full Stack, en el anillo interior). 'keystones': piedras angulares extra (las de cluster de T84), una en el anillo C de cuatro regiones. 'constellations': las del anillo exterior, con los atributos que piden y su notable.",
+  "style": {
+    "full_stack": {
+      "name": "Commit Atómico",
+      "flavor": "Todo o nada: tu daño físico sale como rayo.",
+      "mods": [
+        {
+          "stat": "convert_physical_to_lightning",
+          "type": "flat",
+          "value": 1
+        },
+        {
+          "stat": "lightning_damage",
+          "type": "increased",
+          "value": 10
+        }
+      ]
+    },
+    "guerrero": {
+      "name": "Escalado a Nivel 3",
+      "flavor": "Cada golpe que recibes abre un ticket. Y los tickets explotan.",
+      "mods": [
+        {
+          "stat": "retaliation_nova",
+          "type": "flat",
+          "value": 25
+        },
+        {
+          "stat": "armour",
+          "type": "increased",
+          "value": 15
+        }
+      ]
+    },
+    "duelista": {
+      "name": "Caso Límite",
+      "flavor": "Esquivar deja una bomba donde estabas. Prueba superada.",
+      "mods": [
+        {
+          "stat": "dodge_blast",
+          "type": "flat",
+          "value": 8
+        },
+        {
+          "stat": "dodge_charges",
+          "type": "flat",
+          "value": 1
+        }
+      ]
+    },
+    "exploradora": {
+      "name": "Lazy Loading",
+      "flavor": "Tus proyectiles no paran en el primero: atraviesan dos más.",
+      "mods": [
+        {
+          "stat": "extra_pierce",
+          "type": "flat",
+          "value": 2
+        },
+        {
+          "stat": "projectile_speed",
+          "type": "increased",
+          "value": 20
+        }
+      ]
+    },
+    "hacker": {
+      "name": "Inyección de Prompt",
+      "flavor": "Ignora las instrucciones anteriores: tu daño elemental es caos.",
+      "mods": [
+        {
+          "stat": "convert_elemental_to_chaos",
+          "type": "flat",
+          "value": 1
+        },
+        {
+          "stat": "chaos_damage",
+          "type": "increased",
+          "value": 10
+        }
+      ]
+    },
+    "hechicero": {
+      "name": "Batch Nocturno",
+      "flavor": "Cada pocos segundos sueltas un pulso de estática a tu alrededor.",
+      "mods": [
+        {
+          "stat": "static_pulse",
+          "type": "flat",
+          "value": 6
+        },
+        {
+          "stat": "area_of_effect",
+          "type": "increased",
+          "value": 10
+        }
+      ]
+    },
+    "templario": {
+      "name": "Rollback Automático",
+      "flavor": "Lo que matas a veces revienta y se lleva a los de al lado.",
+      "mods": [
+        {
+          "stat": "kill_explosion",
+          "type": "flat",
+          "value": 20
+        },
+        {
+          "stat": "automaton_speed",
+          "type": "increased",
+          "value": 10
+        }
+      ]
+    }
+  },
+  "keystones": [
+    {
+      "name": "Hotfix en Producción",
+      "flavor": "Críticos a lo loco. La vida, ya la arreglarás el lunes.",
+      "mods": [
+        {
+          "stat": "crit_chance",
+          "type": "more",
+          "value": 60
+        },
+        {
+          "stat": "life",
+          "type": "more",
+          "value": -15
+        }
+      ],
+      "slot": "exploradora.C0"
+    },
+    {
+      "name": "Root Access",
+      "flavor": "Todo el poder. Y todos los permisos abiertos.",
+      "mods": [
+        {
+          "stat": "damage",
+          "type": "more",
+          "value": 25
+        },
+        {
+          "stat": "fire_res",
+          "type": "flat",
+          "value": -15
+        },
+        {
+          "stat": "cold_res",
+          "type": "flat",
+          "value": -15
+        },
+        {
+          "stat": "lightning_res",
+          "type": "flat",
+          "value": -15
+        }
+      ],
+      "slot": "hacker.C0"
+    },
+    {
+      "name": "Arquitectura Hexagonal",
+      "flavor": "Todo llega más lejos. Nada llega rápido.",
+      "mods": [
+        {
+          "stat": "area_of_effect",
+          "type": "increased",
+          "value": 40
+        },
+        {
+          "stat": "attack_speed",
+          "type": "more",
+          "value": -12
+        },
+        {
+          "stat": "cast_speed",
+          "type": "more",
+          "value": -12
+        }
+      ],
+      "slot": "hechicero.C0"
+    },
+    {
+      "name": "Kanban",
+      "flavor": "Las habilidades vuelven antes. Y duran lo que dura una reunión.",
+      "mods": [
+        {
+          "stat": "cooldown_recovery",
+          "type": "increased",
+          "value": 40
+        },
+        {
+          "stat": "skill_duration",
+          "type": "more",
+          "value": -30
+        }
+      ],
+      "slot": "templario.C0"
+    },
+    {
+      "name": "Rate Limiting",
+      "slot": "guerrero.C0",
+      "flavor": "429 Too Many Requests. Vuelve a pegarme en un rato.",
+      "mods": [
+        {
+          "stat": "rate_limit",
+          "type": "flat",
+          "value": 1
+        },
+        {
+          "stat": "life",
+          "type": "more",
+          "value": -15
+        }
+      ]
+    },
+    {
+      "name": "Consistencia Eventual",
+      "slot": "guerrero.C3",
+      "flavor": "El daño llegará. Eventualmente.",
+      "mods": [
+        {
+          "stat": "eventual_consistency",
+          "type": "flat",
+          "value": 1
+        },
+        {
+          "stat": "life_regen",
+          "type": "more",
+          "value": -50
+        }
+      ]
+    },
+    {
+      "name": "Fail Fast",
+      "slot": "guerrero.D0",
+      "flavor": "Si va a fallar, que falle pronto. Y con la vida llena.",
+      "mods": [
+        {
+          "stat": "damage",
+          "type": "more",
+          "value": 40,
+          "tags": [
+            "full_life"
+          ]
+        },
+        {
+          "stat": "armour",
+          "type": "more",
+          "value": -30
+        },
+        {
+          "stat": "evasion",
+          "type": "more",
+          "value": -30
+        }
+      ]
+    },
+    {
+      "name": "Kill -9",
+      "slot": "duelista.C0",
+      "flavor": "Sin preguntar. Sin cerrar ficheros. Siguiente.",
+      "mods": [
+        {
+          "stat": "attack_speed",
+          "type": "more",
+          "value": 25,
+          "tags": [
+            "recent_kill"
+          ]
+        },
+        {
+          "stat": "cast_speed",
+          "type": "more",
+          "value": 25,
+          "tags": [
+            "recent_kill"
+          ]
+        },
+        {
+          "stat": "life",
+          "type": "more",
+          "value": -10
+        }
+      ]
+    },
+    {
+      "name": "Caché Fría",
+      "slot": "duelista.C3",
+      "flavor": "La primera petición duele. Las demás, ya no tanto.",
+      "mods": [
+        {
+          "stat": "cold_cache",
+          "type": "flat",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "Pair Programming",
+      "slot": "duelista.D0",
+      "flavor": "Uno escribe, otro opina. Tú pegas menos.",
+      "mods": [
+        {
+          "stat": "companion_robot",
+          "type": "flat",
+          "value": 1
+        },
+        {
+          "stat": "damage",
+          "type": "more",
+          "value": -20
+        }
+      ]
+    },
+    {
+      "name": "Zero Trust",
+      "slot": "exploradora.C3",
+      "flavor": "No confíes en la suerte. Ni en el crítico.",
+      "mods": [
+        {
+          "stat": "zero_trust",
+          "type": "flat",
+          "value": 40
+        }
+      ]
+    },
+    {
+      "name": "Pago por Uso",
+      "slot": "hacker.D0",
+      "flavor": "Serverless: no pagas servidor, pagas con sangre.",
+      "mods": [
+        {
+          "stat": "blood_magic",
+          "type": "flat",
+          "value": 1
+        },
+        {
+          "stat": "life",
+          "type": "increased",
+          "value": 15
+        }
+      ]
+    },
+    {
+      "name": "Mente sobre Materia",
+      "slot": "hechicero.C3",
+      "flavor": "El golpe lo paga la RAM. La vida no se arregla sola.",
+      "mods": [
+        {
+          "stat": "damage_taken_from_mana",
+          "type": "flat",
+          "value": 40
+        },
+        {
+          "stat": "no_life_regen",
+          "type": "flat",
+          "value": 1
+        },
+        {
+          "stat": "mana",
+          "type": "increased",
+          "value": 20
+        }
+      ]
+    },
+    {
+      "name": "Buffer Overflow",
+      "slot": "hechicero.D0",
+      "flavor": "Con el maná rebosando, lo que sobra se escribe encima del enemigo.",
+      "mods": [
+        {
+          "stat": "damage",
+          "type": "more",
+          "value": 35,
+          "tags": [
+            "high_mana"
+          ]
+        },
+        {
+          "stat": "mana_regen",
+          "type": "more",
+          "value": -25
+        }
+      ]
+    },
+    {
+      "name": "Pato de Goma",
+      "slot": "templario.C3",
+      "flavor": "Explícaselo a alguien y se arregla solo.",
+      "mods": [
+        {
+          "stat": "rubber_duck",
+          "type": "flat",
+          "value": 2
+        },
+        {
+          "stat": "damage",
+          "type": "more",
+          "value": -10
+        }
+      ]
+    },
+    {
+      "name": "Contenedor Efímero",
+      "slot": "templario.D0",
+      "flavor": "Arrancan de dos en dos. Mueren en lo que tarda un deploy.",
+      "mods": [
+        {
+          "stat": "extra_minions",
+          "type": "flat",
+          "value": 2
+        },
+        {
+          "stat": "minion_life",
+          "type": "more",
+          "value": -40
+        },
+        {
+          "stat": "skill_duration",
+          "type": "more",
+          "value": -40,
+          "tags": [
+            "minion"
+          ]
+        }
+      ]
+    }
+  ],
+  "constellations": {
+    "Pentester": {
+      "requires": {
+        "strength": 50,
+        "dexterity": 50
+      },
+      "flavor": "Romper cosas con permiso por escrito.",
+      "mods": [
+        {
+          "type": "increased",
+          "value": 25,
+          "stat": "physical_damage"
+        },
+        {
+          "type": "increased",
+          "value": 25,
+          "stat": "crit_chance"
+        }
+      ]
+    },
+    "Hacker Ético": {
+      "requires": {
+        "dexterity": 50,
+        "intelligence": 50
+      },
+      "flavor": "Entra sin romper. Bueno, rompe poco.",
+      "mods": [
+        {
+          "type": "increased",
+          "value": 25,
+          "stat": "chaos_damage"
+        },
+        {
+          "type": "increased",
+          "value": 20,
+          "stat": "evasion"
+        },
+        {
+          "type": "increased",
+          "value": 15,
+          "stat": "energy_shield"
+        }
+      ]
+    },
+    "Arquitecto": {
+      "requires": {
+        "intelligence": 50,
+        "strength": 50
+      },
+      "flavor": "Dibuja cajas y flechas. Las cajas pelean solas.",
+      "mods": [
+        {
+          "type": "increased",
+          "value": 25,
+          "stat": "minion_damage"
+        },
+        {
+          "type": "increased",
+          "value": 20,
+          "stat": "armour"
+        },
+        {
+          "type": "increased",
+          "value": 8,
+          "stat": "aura_effect"
+        }
+      ]
+    },
+    "Full Stack": {
+      "requires": {
+        "strength": 40,
+        "dexterity": 40,
+        "intelligence": 40
+      },
+      "flavor": "De todo un poco. De nada, mucho. Funciona.",
+      "mods": [
+        {
+          "type": "increased",
+          "value": 20,
+          "stat": "damage"
+        },
+        {
+          "type": "increased",
+          "value": 6,
+          "stat": "life"
+        },
+        {
+          "type": "increased",
+          "value": 10,
+          "stat": "mana"
+        }
+      ]
+    },
+    "Rubber Duck": {
+      "requires": {
+        "dexterity": 50,
+        "intelligence": 50
+      },
+      "flavor": "Le explicas el problema al pato y el pato lo arregla.",
+      "mods": [
+        {
+          "type": "increased",
+          "value": 15,
+          "stat": "cooldown_recovery"
+        },
+        {
+          "type": "increased",
+          "value": 10,
+          "stat": "cast_speed"
+        }
+      ]
+    },
+    "Pager de Guardia": {
+      "requires": {
+        "intelligence": 50,
+        "strength": 50
+      },
+      "flavor": "Suena a las tres de la mañana. Siempre.",
+      "mods": [
+        {
+          "type": "increased",
+          "value": 25,
+          "stat": "lightning_damage"
+        },
+        {
+          "type": "flat",
+          "value": 6,
+          "stat": "life_regen"
+        }
+      ]
+    }
+  },
+  "keystone_conflicts": [
+    [
+      "Mente sobre Materia",
+      "Pago por Uso"
+    ],
+    [
+      "Mente sobre Materia",
+      "Recolector de Basura"
+    ],
+    [
+      "Zero Trust",
+      "Tipado Estático"
+    ],
+    [
+      "Zero Trust",
+      "Hotfix en Producción"
+    ],
+    [
+      "Contenedor Efímero",
+      "Monolito"
+    ],
+    [
+      "Buffer Overflow",
+      "Mente sobre Materia"
+    ]
+  ]
 }

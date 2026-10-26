@@ -144,6 +144,10 @@ var walk_clamp: Callable
 var frozen := false
 ## Distancia a la que despiertan (cada zona puede cambiarla: el tutorial la acorta).
 var aggro_range := AGGRO_RANGE
+## Caché Fría (piedra angular; la pone SkillController): el primer golpe a cada enemigo
+## hace el doble y los siguientes menos. `_cache_hit` = ids ya golpeados.
+var cold_cache := false
+var _cache_hit := {}
 
 var ids := PackedInt32Array()
 var positions := PackedVector2Array()
@@ -944,6 +948,7 @@ func clear_all() -> void:
 	hazards.clear()
 	pools.clear()
 	abilities.clear()
+	_cache_hit.clear()
 	casting.clear()
 	_flashes_fx.clear()
 	boss_phases.clear()
@@ -1195,6 +1200,9 @@ func _damage(i: int, min_damage: float, max_damage: float, crit_chance: float, c
 			damage *= stunned
 	if shock_time[i] > 0.0:
 		damage *= 1.0 + shock_amp[i]
+	if cold_cache:
+		damage *= KeystoneRules.cold_cache_mult(not _cache_hit.has(ids[i]))
+		_cache_hit[ids[i]] = true
 	if not aura_fields.is_empty():
 		damage *= 1.0 + _aura_effect(i, "damage_taken")
 	if _tank_protected(i):
@@ -3103,6 +3111,7 @@ func _remove(i: int) -> void:
 	var last := positions.size() - 1
 	abilities.erase(ids[i])
 	casting.erase(ids[i])
+	_cache_hit.erase(ids[i])
 	if i != last:
 		ids[i] = ids[last]
 		positions[i] = positions[last]

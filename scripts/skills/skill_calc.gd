@@ -300,6 +300,12 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 		min_damage = mid
 		max_damage = mid
 		crit_chance = 0.0
+	var zero_trust := stats.get_value(Stat.ZERO_TRUST)
+	if zero_trust > 0.0:
+		# Zero Trust: sin críticos, pero todo el daño un % más.
+		min_damage *= 1.0 + zero_trust / 100.0
+		max_damage *= 1.0 + zero_trust / 100.0
+		crit_chance = 0.0
 	var crit_multiplier := stats.get_value(Stat.CRIT_MULTIPLIER, tags)
 	var average := (min_damage + max_damage) / 2.0 * (1.0 + crit_chance / 100.0 * (crit_multiplier / 100.0 - 1.0))
 	# Stats especiales (ascendencias): más proyectiles, cadenas, esbirros o dispositivos.
@@ -356,6 +362,8 @@ static func _compute_base(board: Motherboard, character: CharacterData) -> Dicti
 		aura_anchor = aura_anchor or ram.special("aura_anchor") > 0.0
 		aura_on_unit = aura_on_unit or ram.special("aura_on_unit") > 0.0
 		aura_radius_mult *= ram.special("aura_radius_mult", 1.0)
+	if stats.get_value(Stat.BLOOD_MAGIC) > 0.0:
+		life_cost_frac = 1.0   # Pago por Uso: todo el coste, en vida
 	var ability_power := 1.0 + (0.25 * milestones if unit_ms == "ability" else 0.0)
 	var unit_interval := float(unit.get("interval", 1.0)) / (maxf(0.1, automaton_speed) * attack_rate)
 	var unit_life := float(unit.get("life", 0.0)) * (1.0 + 0.12 * (board.level - 1)) * stats.total_multiplier(Stat.MINION_LIFE, tags) \

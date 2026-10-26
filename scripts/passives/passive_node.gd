@@ -37,6 +37,8 @@ var style := false
 var capstone := false
 var constellation := ""
 var requires: Dictionary = {}   # {"strength": 50, ...}
+## Piedras angulares que chocan con esta (T92), por nombre.
+var conflicts := PackedStringArray()
 
 
 func is_mastery() -> bool:
@@ -70,6 +72,7 @@ static func from_dict(d: Dictionary) -> PassiveNode:
 	n.style = bool(d.get("style", false))
 	n.requires = d.get("requires", {})
 	n.constellation = String(d.get("constellation", ""))
+	n.conflicts = PackedStringArray(d.get("conflicts", []))
 	return n
 
 

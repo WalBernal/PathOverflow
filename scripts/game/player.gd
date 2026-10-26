@@ -161,6 +161,7 @@ func refill() -> void:
 	mana = max_mana()
 	energy_shield = max_energy_shield()
 	_recoveries.clear()
+	deferred_damage = 0.0
 	for f in character.inventory.flasks:
 		if f:
 			(f as Flask).refill()
@@ -444,6 +445,7 @@ func _update_conditions(delta: float) -> void:
 	character.set_condition(Stat.COND_LOW_LIFE, is_alive() and life <= max_life() * LOW_LIFE_FRACTION)
 	character.set_condition(Stat.COND_FULL_LIFE, life >= max_life() - 0.5)
 	character.set_condition(Stat.COND_RECENT_KILL, _since_kill <= RECENT_KILL_TIME)
+	character.set_condition(Stat.COND_HIGH_MANA, max_mana() > 0.0 and mana >= max_mana() * 0.9)
 	# Quieto: sin moverse (más de 2 px) durante STILL_TIME.
 	if global_position.distance_to(_still_pos) > 2.0:
 		_still_pos = global_position
@@ -575,8 +577,22 @@ func _process(delta: float) -> void:
 
 
 func _regenerate(delta: float) -> void:
-	var life_gain := _stat(Stat.LIFE_REGEN)
+	var life_gain := 0.0 if _stat(Stat.NO_LIFE_REGEN) > 0.0 else _stat(Stat.LIFE_REGEN)
+	var duck := _stat(Stat.RUBBER_DUCK)
+	if duck > 0.0 and character.conditions.has(Stat.COND_ALLIES):
+		life_gain += max_life() * duck / 100.0   # Pato de Goma: explicárselo a alguien cura
 	var mana_gain := mana_regen_per_second()
+	if deferred_damage > 0.0 and is_alive():
+		# Consistencia Eventual: el daño aplazado se cobra poco a poco.
+		var due := KeystoneRules.deferred_drain(deferred_damage, delta)
+		deferred_damage -= due
+		life -= due
+		if life <= 0.0 and not _safe_mode_saves():
+			life = 0.0
+			deferred_damage = 0.0
+			_recoveries.clear()
+			died.emit()
+			return
 	for r in _recoveries:
 		var dt := minf(delta, r["remaining"])
 		if r["resource"] == "life":
@@ -588,6 +604,7 @@ func _regenerate(delta: float) -> void:
 	life = minf(max_life(), life + life_gain * delta)
 	mana = minf(max_mana(), mana + mana_gain * delta)
 	_since_damage += delta
+	_since_hit += delta
 	var es_regen := _stat(Stat.ENERGY_SHIELD_REGEN)
 	if es_regen > 0.0:
 		energy_shield = minf(max_energy_shield(), energy_shield + es_regen * delta)
@@ -643,6 +660,9 @@ func take_damage(amount: float) -> void:
 		return
 	if randf() * 100.0 < minf(MAX_BLOCK_CHANCE, _stat(Stat.BLOCK_CHANCE)):
 		return
+	if _stat(Stat.RATE_LIMIT) > 0.0 and KeystoneRules.rate_limited(_since_hit):
+		return   # Rate Limiting: un golpe por ventana
+	_since_hit = 0.0
 	if statuses.has("shock"):
 		amount *= 1.0 + SHOCK_TAKEN
 	# Fórmula de armadura de PoE: protege mucho contra golpes pequeños, poco contra grandes.
@@ -669,13 +689,19 @@ func take_damage(amount: float) -> void:
 	if life <= 0.0 and not _safe_mode_saves():
 		life = 0.0
 		_recoveries.clear()
+		deferred_damage = 0.0
 		died.emit()
 
 
 ## Maná antes que vida: descuenta del maná su parte del daño y devuelve lo que va a la vida.
+## Con Consistencia Eventual, la mitad de lo que va a la vida se aplaza (deferred_damage).
 func _mana_takes(amount: float) -> float:
 	var split := ManaMath.split_damage(amount, mana, _stat(Stat.DAMAGE_TAKEN_FROM_MANA))
 	mana -= split.x
+	if _stat(Stat.EVENTUAL_CONSISTENCY) > 0.0:
+		var later := KeystoneRules.defer_split(split.y)
+		deferred_damage += later.y
+		return later.x
 	return split.y
 
 
@@ -685,6 +711,12 @@ func mana_regen_per_second() -> float:
 	return ManaMath.regen_per_second(unreserved_mana_max(),
 		character.stats.total_multiplier(Stat.MANA_REGEN, character.condition_tags()),
 		_stat(Stat.MANA_REGEN_FLAT), _stat(Stat.GARBAGE_COLLECTOR) > 0.0)
+
+
+## Daño aplazado por Consistencia Eventual que aún falta por cobrar.
+var deferred_damage := 0.0
+## Segundos desde el último golpe que llegó a dañar (Rate Limiting).
+var _since_hit := 10.0
 
 
 ## Recupera maná (al golpear, al matar...), sin pasar del máximo.
