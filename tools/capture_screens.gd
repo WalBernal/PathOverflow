@@ -18,6 +18,7 @@ var _current: Node
 func _ready() -> void:
 	get_window().size = Vector2i(1600, 900)
 	LoadingCard.enabled = false   # la pantalla de carga taparía las capturas
+	BossIntro.enabled = OS.get_cmdline_user_args().has("jefes")   # la entrada de jefe, solo donde se quiere ver
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT))
 	_run.call_deferred()
 
@@ -90,6 +91,10 @@ func _run() -> void:
 		return
 	if OS.get_cmdline_user_args().has("arbol2"):
 		await _capture_tree_v2()
+		get_tree().quit()
+		return
+	if OS.get_cmdline_user_args().has("jefes"):
+		await _capture_npcs_and_boss()
 		get_tree().quit()
 		return
 	if OS.get_cmdline_user_args().has("capas"):
@@ -1187,6 +1192,44 @@ func _capture_tree_v2() -> void:
 		await _wait(0.4)
 		print("dibujo del árbol (%s, zoom %.2f): %.2f ms" % [shot[0], shot[2], view.last_draw_ms])
 		_save(shot[0])
+
+
+## NPC por capas en el campamento y la entrada de un jefe (T103).
+func _capture_npcs_and_boss() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Cámara", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.5)
+	_save("103_npc_campamento")
+	var zone: Zone = world.get("zone")
+	if zone and not zone.npcs.is_empty():
+		zone.talking_npc = String(zone.npcs[0]["id"])
+		world.set("_talking_npc", "")   # que World no lo apague
+		world.set_process(false)
+		await _wait(0.5)
+		_save("103_npc_hablando")
+		world.set_process(true)
+	var intro := BossIntro.new()
+	intro.boss_name = "La Reunión Que Pudo Ser Un Email"
+	var em: EnemyManager = world.get("enemies")
+	var row := 0
+	var types := EnemyManager.enemy_types()
+	for k in types.size():
+		if String(types[k].get("id", "")).contains("admin") or k == types.size() - 1:
+			row = int(types[k].get("sprite_row", k))
+			break
+	intro.region = EnemySheet.region(row, EnemySheet.Dir.DOWN, 0)
+	intro.color = Rarity.enemy_color(Rarity.Enemy.UNIQUE)
+	world.add_child(intro)
+	await _wait(0.8)
+	_save("103_entrada_jefe")
+	world.set("_since_save", -9999.0)
 
 
 ## Personaje por capas (T102a): arriba, el dibujo de siempre; debajo, el mismo con las

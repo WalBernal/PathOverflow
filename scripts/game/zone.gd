@@ -1827,6 +1827,40 @@ func _draw_terminal_npc(ci: CanvasItem, pos: Vector2, appearance: Dictionary) ->
 		ci.draw_line(Vector2(screen.position.x, y), Vector2(screen.end.x, y), Color(0, 0, 0, 0.3), 1.0)
 
 
+## NPC con el que hablas ahora (lo pone World mientras el diálogo está abierto): gesticula.
+var talking_npc := ""
+## Sprites por capas de los NPC (T103), uno por NPC, detrás de sus nombres y avisos.
+var _npc_sprites: Dictionary = {}
+
+
+## Pose de un NPC (T103): respira en reposo (cada uno a su ritmo) y, si habla contigo,
+## gesticula con los brazos (el gesto de lanzar, en bucle).
+static func npc_pose(index: int, time: float, talking: bool) -> Dictionary:
+	if talking:
+		return {"state": "cast", "t": 0.25 + 0.5 * absf(sin(time * 2.6)), "time": time}
+	return {"state": "idle", "time": time + index * 0.37}
+
+
+func _update_npc_sprite(i: int, pos: Vector2, appearance: Dictionary, facing: Vector2, talking: bool) -> void:
+	var sprite: PlayerSprite = _npc_sprites.get(i, null)
+	if sprite == null:
+		_add_npc_sprite.call_deferred(i, appearance)
+		return
+	sprite.position = pos
+	sprite.set_pose(facing, npc_pose(i, _time, talking))
+
+
+func _add_npc_sprite(i: int, appearance: Dictionary) -> void:
+	if _npc_sprites.has(i) or _npc_layer == null:
+		return
+	var sprite := PlayerSprite.new()
+	sprite.show_behind_parent = true   # nombres y "!" de la capa, encima
+	sprite.sprite_scale = 1.12 / PlayerSheet.BAKE_SCALE
+	_npc_layer.add_child(sprite)
+	sprite.appearance = appearance
+	_npc_sprites[i] = sprite
+
+
 ## Los NPC van en su propia capa (z 1): sin pixelar, con la luz de la zona.
 func _draw_npcs(ci: CanvasItem) -> void:
 	var font := ThemeDB.fallback_font
@@ -1837,6 +1871,8 @@ func _draw_npcs(ci: CanvasItem) -> void:
 		var to_player := player.global_position - pos if player else Vector2.DOWN
 		if npc.get("terminal", false):
 			_draw_terminal_npc(ci, pos, appearance)
+		elif PlayerSprite.available():
+			_update_npc_sprite(i, pos, appearance, Vector2(signf(to_player.x) * 0.5, 1.0), String(npc["id"]) == talking_npc)
 		else:
 			CharacterAppearance.draw(ci, pos, 1.12, appearance, Vector2(signf(to_player.x) * 0.5, 1.0))
 		var label_color := UiStyle.ACCENT if i == _hovered_npc else UiStyle.TEXT

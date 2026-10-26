@@ -229,6 +229,13 @@ func _update_combat_music(delta: float) -> void:
 			if sting != "" and not _sighted.has(enemies.ids[i]):
 				_sighted[enemies.ids[i]] = true
 				SoundMap.stinger(sting)
+				if enemies.rarities[i] == Rarity.Enemy.UNIQUE and BossIntro.enabled:
+					# Entrada de jefe (T103): su nombre y su pose, una vez por jefe.
+					var intro := BossIntro.new()
+					intro.boss_name = String(enemies.names[i])
+					intro.region = enemies.sprite_region(i)
+					intro.color = Rarity.enemy_color(enemies.rarities[i])
+					add_child(intro)
 	if near >= COMBAT_ON or (strong and near >= COMBAT_ON / 2):
 		_combat_calm = COMBAT_CALM
 		MusicPlayer.set_combat(true)
@@ -240,6 +247,8 @@ func _update_combat_music(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	character.play_time += delta
+	if zone:   # el NPC con el que hablas gesticula (T103)
+		zone.talking_npc = _talking_npc if ui.dialogue_box.visible else ""
 	_update_combat_music(delta)
 	_update_twins(delta)
 	_update_challenge(delta)
@@ -1293,7 +1302,11 @@ func _on_npc_interacted(npc: Dictionary) -> void:
 	FreezeWatch.mark("npc: " + String(npc["id"]))
 	character.flags["talked_" + String(npc["id"])] = true
 	quests.refresh()
+	_talking_npc = String(npc["id"])
 	ui.open_dialogue(npc, zone.dialogues.get(npc.get("dialogue", ""), {}))
+
+
+var _talking_npc := ""
 
 
 ## Nacho saca otra caja: mercancía nueva, pagando.

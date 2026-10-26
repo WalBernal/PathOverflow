@@ -625,9 +625,10 @@ Origen: R4
 - Sustituir el dibujo con formas por sprites por capas (cuerpo, pelo, cara, ropa, arma) en 4 direcciones con los estados de T72 (reposo, andar, correr, golpe por arma, hechizo, canalizar, golpe recibido, esquiva, muerte), coloreados con los colores del creador de personaje.
 - El creador, la hoja de personaje y los retratos usan los mismos sprites; con la herramienta para generarlos y la cuadrícula documentada para arte a mano.
 
-### [ ] T103 · NPC, jefes y retratos · M
+### [x] T103 · NPC, jefes y retratos · M
 Origen: R4
 - Sprites propios para los NPC del campamento y los jefes (reposo animado y gesto al hablar), retratos de diálogo en pixel art y una entrada de jefe con su pose.
+- Hecho: los **NPC** del mundo se dibujan con el personaje por capas de T102 (`PlayerSprite`, uno por NPC detrás de su nombre y su «!»), cada uno **respirando** a su ritmo y **gesticulando** con los brazos mientras hablas con él (`Zone.npc_pose`, `Zone.talking_npc`, que pone World con el diálogo abierto); los de monitor siguen en su pantalla de fósforo. **Entrada de jefe** (`BossIntro`): la primera vez que ves a un jefe, una franja cruza la pantalla con su figura grande en su cuadro de embestida (la hoja de T101) y su nombre; entra, se queda 1,6 s y se va, sin pausar. Los jefes ya tienen sus cuadros propios con T101. Los **retratos de diálogo** siguen dibujados con detalle (expresiones, parpadeo y boca al hablar), como se decidió en T102, en vez de pasarlos a pixel art. Capturas con `capture_screens -- jefes`. Prueba `_test_npcs_and_boss_intro`.
 
 ### [ ] T104 · Objetos en el suelo y cofres · S
 Origen: R4
@@ -761,4 +762,5 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T100 · Ambiente por zona: salpicaduras de la lluvia de datos, polvo en suspensión, cables que chisporrotean, LEDs que parpadean en los racks y luces de zona que se avivan con los golpes.
 - 2026-10-25 · T101 · Enemigos con 18 cuadros (andar, atacar, golpe, morir) en tres direcciones, elegidos por estado en la MultiMesh; cadáveres con su animación de morir.
 - 2026-10-26 · T102a · Personaje horneado por capas (cuerpo, pelo, barba, accesorio, arma) desde el dibujo de siempre, con cuadrícula documentada y composición teñida con los colores del creador (PlayerSprite).
-- 2026-10-26 · T102b · El jugador, el creador y la lista de personajes usan el personaje por capas; los retratos siguen dibujados (expresiones) (🛑 pendiente de revisión).
+- 2026-10-26 · T102b · El jugador, el creador y la lista de personajes usan el personaje por capas; los retratos siguen dibujados (expresiones) (aprobado).
+- 2026-10-26 · T103 · NPC con el personaje por capas (respiran y gesticulan al hablar) y entrada de jefe con su figura y su nombre; retratos dibujados como se decidió en T102.

@@ -174,6 +174,7 @@ func _initialize() -> void:
 	_test_ambience()
 	_test_enemy_sheet()
 	_test_player_sheet()
+	_test_npcs_and_boss_intro()
 	_test_events_music_colorblind()
 	_test_story_editor()
 	_test_board_milestones()
@@ -4241,6 +4242,19 @@ func _test_mana_family() -> void:
 		_check(int(found.get(s, 0)) >= 1, "el árbol tiene nodos de %s" % Stat.display_name(s))
 	var mana_clusters := _tree.clusters.values().filter(func(c: Dictionary) -> bool: return c["theme"] == "mana").size()
 	_check(mana_clusters >= 10, "la familia de maná tiene 10 clusters o más (%d)" % mana_clusters)
+
+
+## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.
+func _test_npcs_and_boss_intro() -> void:
+	var idle := Zone.npc_pose(0, 1.0, false)
+	_check(idle["state"] == "idle", "un NPC en reposo respira")
+	_check(Zone.npc_pose(1, 1.0, false)["time"] != idle["time"], "cada NPC respira a su ritmo")
+	var talk := Zone.npc_pose(0, 1.0, true)
+	_check(talk["state"] == "cast" and float(talk["t"]) >= 0.25 and float(talk["t"]) <= 0.75, "al hablar gesticula con los brazos")
+	_check(PlayerSheet.group_for(String(talk["state"]), "") == "cast", "el gesto usa los cuadros de lanzar de la hoja")
+	_check(BossIntro.slide_at(0.0) == 0.0 and BossIntro.slide_at(BossIntro.ENTER + 0.5) == 1.0 and is_zero_approx(BossIntro.slide_at(BossIntro.total_time() + 0.01)),
+		"la entrada de jefe entra, se queda y se va")
+	_check(BossIntro.total_time() < 3.0, "y dura poco (no para el juego)")
 
 
 ## Personaje por capas (T102a): cuadrícula, poses, clasificación de capas y hojas horneadas.
