@@ -66,7 +66,10 @@ func _ready() -> void:
 	_filter.focus_mode = Control.FOCUS_NONE
 	_filter.custom_minimum_size = Vector2(170, 28)
 	_filter.tooltip_text = "Qué se ve en la bolsa: por tipo de habilidad, o solo las RAM que funcionan con alguna placa instalada."
-	_filter.item_selected.connect(func(_i: int) -> void: _rebuild())
+	_filter.select(clampi(int(UiStyle.remembered("skills_filter", 0)), 0, FILTERS.size() - 1))   # el último filtro (T82)
+	_filter.item_selected.connect(func(i: int) -> void:
+		UiStyle.remember("skills_filter", i)
+		_rebuild())
 	bag_title.add_child(_filter)
 	var sort := UiStyle.button("Ordenar", _sort_bag)
 	sort.custom_minimum_size = Vector2(90, 28)

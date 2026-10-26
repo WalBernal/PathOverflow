@@ -22,8 +22,8 @@ const FILTER_NAMES := {"todo": "Todo", "str": "Placas FUE", "dex": "Placas DES",
 ## Tono de la voz de cada comerciante (el de npcs.json).
 const VOICE_PITCH := {"nacho": 0.95, "aida": 0.9}
 const VENDOR_TITLES := {
-	"nacho": ["Nacho · La gabardina", "Hardware «original» del nivel de tu personaje  ·  Esc para cerrar"],
-	"aida": ["Aida · Puesto de equipo", "Equipo revisado del nivel de tu personaje  ·  Esc para cerrar"],
+	"nacho": ["Nacho · La gabardina", "Hardware «original» del nivel de tu personaje  ·  I o Esc para cerrar"],
+	"aida": ["Aida · Puesto de equipo", "Equipo revisado del nivel de tu personaje  ·  I o Esc para cerrar"],
 }
 ## Entre dos frases al pasar el ratón, al menos esto (ms): que no hable sin parar.
 const HOVER_LINE_GAP_MS := 4000
@@ -76,6 +76,8 @@ func _ready() -> void:
 	theme = UiStyle.make_theme()
 	UiStyle.decorate_window(self)
 	visible = false
+	var last: String = String(UiStyle.remembered("shop_filter", "todo"))
+	filter = last if last in FILTERS else "todo"   # el último filtro (T82)
 	visibility_changed.connect(func() -> void:
 		if not visible:
 			_check_closed.call_deferred())
@@ -276,6 +278,7 @@ static func passes_filter(item: Item, f: String) -> bool:
 
 func _set_filter(f: String) -> void:
 	filter = f
+	UiStyle.remember("shop_filter", f)   # se abre con el último filtro (T82)
 	_rebuild()
 
 

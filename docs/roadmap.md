@@ -475,9 +475,10 @@ Origen: R3 (PoE: de dónde sale cada número)
 - Cada estadística con un tooltip de dónde viene (clase, árbol, objetos, auras, cargas), DPS por habilidad de la barra y resistencias con su tope.
 - Hecho: `StatBlock.source_breakdown` agrupa los modificadores de un stat por su origen (clase, ascendencia, atributos, árbol, chips, deuda técnica, objetos, conjuntos, pociones, cargas, auras, habilidades, santuarios…) y `StatExplain.explain` lo convierte en el tooltip de cada barra de la hoja: base, cada origen con su plano, aumento y multiplicador, y la fórmula. Atributos (más lo que dan), resistencias (con su tope y lo que falta o sobra), vida, escudo, maná, armadura, evasión y bloqueo. En Ofensiva, «DPS de la barra» con la tecla y el DPS de cada habilidad (las de apoyo lo dicen). Tooltips sin ver en pantalla: comprobado el texto en pruebas.
 
-### [ ] T82 · Ventanas coherentes entre sí · S
+### [x] T82 · Ventanas coherentes entre sí · S
 Origen: R3
 - Mismas teclas para abrir y cerrar, apilar ventanas sin taparse (izquierda/derecha), recordar la última pestaña, y que todas funcionen con el cursor de mando.
+- Hecho: la columna izquierda (tienda, alijo, habilidades, hoja de personaje y waypoints) muestra una sola ventana a la vez: al abrir una se cierran las demás (los waypoints, que van al centro, cierran también el inventario); la de la izquierda, sea cual sea, se encoge para caber junto al inventario (antes solo la tienda y el alijo). La tienda y el alijo dicen «I o Esc para cerrar» (I ya los cerraba con el inventario). Se recuerdan la última pestaña del alijo, el último filtro de la tienda y el de la bolsa de habilidades (`UiStyle.remember`, en settings.cfg solo al cambiarlos). El cursor de mando incluye ahora los waypoints y el banco de oleadas. Arreglado de paso: los encabezados largos con la fuente de píxeles (T76) ensanchaban la ventana de habilidades al 160 %; ahora los de más de 24 letras van con la fuente normal.
 
 ## Fase 13 — Árbol pasivo
 
@@ -604,3 +605,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T79 · Inventario: ordenar y compactar, bloquear y marcar como basura (guardado), vender la basura de una vez y comparar con Alt; tamaños en la rejilla descartados con su motivo.
 - 2026-10-25 · T80 · Alijo con pestañas de nombre y color editables, pestaña de materiales y búsqueda que resalta lo que coincide.
 - 2026-10-25 · T81 · Hoja de personaje con desglose por origen en el tooltip de cada estadística, resistencias con su tope y DPS de cada habilidad de la barra.
+- 2026-10-25 · T82 · Ventanas coherentes: una sola a la izquierda, todas encogen junto al inventario, se recuerdan pestaña y filtros, waypoints y oleadas con el cursor de mando; arreglo del ancho de habilidades al 160 %.

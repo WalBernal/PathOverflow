@@ -153,6 +153,7 @@ func _initialize() -> void:
 	_test_inventory_marks()
 	_test_stash_tabs()
 	_test_stat_breakdown()
+	_test_window_memory()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3890,6 +3891,15 @@ func _test_stat_breakdown() -> void:
 	var groups := c.stats.source_breakdown(Stat.LIFE).map(func(r: Dictionary) -> String: return r["group"])
 	_check("Atributos" in groups, "la vida de un personaje cuenta lo que da su fuerza (%s)" % ", ".join(groups))
 	_check(StatExplain.hotbar_dps_lines(null).is_empty(), "sin barra, sin líneas")
+
+
+## Ventanas coherentes (T82): la memoria de pestañas solo lee si no se toca.
+func _test_window_memory() -> void:
+	_check(UiStyle.remembered("clave_que_no_existe_t82", 7) == 7, "sin recuerdo, el valor por defecto")
+	var panel := ShopPanel.new()
+	panel._ready()
+	_check(panel.filter in ShopPanel.FILTERS, "la tienda abre con un filtro válido (el último usado o «todo»)")
+	panel.free()
 
 
 ## Parte 2 (T72b): el ataque golpea en el cuadro de impacto de la animación.

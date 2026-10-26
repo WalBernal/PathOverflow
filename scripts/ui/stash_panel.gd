@@ -30,6 +30,7 @@ func setup(p_character: CharacterData, p_stash: Stash, tooltip: ItemTooltip) -> 
 	character = p_character
 	stash = p_stash
 	_tooltip = tooltip
+	tab = clampi(int(UiStyle.remembered("stash_tab", 0)), 0, Stash.TABS - 1)
 	stash.changed.connect(_refresh)
 	_refresh()
 
@@ -41,7 +42,7 @@ func _ready() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 8)
 	add_child(box)
-	box.add_child(UiStyle.window_header("Alijo (NAS compartido)", "Lo ven todos tus personajes  ·  Esc para cerrar",
+	box.add_child(UiStyle.window_header("Alijo (NAS compartido)", "Lo ven todos tus personajes  ·  I o Esc para cerrar",
 		func() -> void: close_requested.emit()))
 	# Búsqueda por texto (nombre, base o afijo) y botón para editar la pestaña.
 	var search_row := HBoxContainer.new()
@@ -67,6 +68,7 @@ func _ready() -> void:
 		b.focus_mode = Control.FOCUS_NONE
 		b.pressed.connect(func() -> void:
 			tab = t
+			UiStyle.remember("stash_tab", t)   # se abre por la última pestaña (T82)
 			if _edit_row.visible:
 				_name_edit.text = stash.tab_name(tab)
 			_refresh())

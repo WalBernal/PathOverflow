@@ -234,8 +234,13 @@ static func section_header(text: String) -> Control:
 	gem.draw.connect(func() -> void:
 		gem.draw_colored_polygon(PackedVector2Array([Vector2(5, 4), Vector2(10, 9), Vector2(5, 14), Vector2(0, 9)]), GOLD))
 	row.add_child(gem)
-	row.add_child(pixel_label(text, 2, ACCENT))
+	# La fuente de píxeles es ancha: los encabezados largos van con la normal para no ensanchar la ventana.
+	row.add_child(pixel_label(text, 2, ACCENT) if text.length() <= PIXEL_HEADER_MAX else label(text, 15, ACCENT))
 	return row
+
+
+## Encabezados de sección con más letras que esto, con la fuente normal (T82).
+const PIXEL_HEADER_MAX := 24
 
 
 ## Caja interior (para resúmenes, filas...): más clara que la ventana.
@@ -278,6 +283,17 @@ static func apply_ui_scale(root: Control) -> void:
 		root.size = root.get_viewport().get_visible_rect().size / s
 	root.get_viewport().size_changed.connect(fit)
 	fit.call()
+
+
+## Última pestaña o filtro de cada ventana (T82), en settings.cfg → [ui_memory].
+## Se escribe solo cuando el jugador la cambia.
+static func remembered(key: String, default: Variant) -> Variant:
+	return GameSettings.get_value("ui_memory", key, default)
+
+
+static func remember(key: String, value: Variant) -> void:
+	if remembered(key, null) != value:
+		GameSettings.set_value("ui_memory", key, value)
 
 
 ## ¿Se está escribiendo en un campo de texto (búsqueda del alijo, nombres)? Mientras

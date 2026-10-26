@@ -224,6 +224,9 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	challenge_panel = ChallengePanel.new()
 	_root.add_child(challenge_panel)
 	challenge_panel.setup(item_tooltip, character)
+	# Columna izquierda: una ventana a la vez (T82).
+	for w: Control in left_windows():
+		w.visibility_changed.connect(_on_left_shown.bind(w))
 
 	_wave_label = UiStyle.label("", 20, Color("ff9a4a"))
 	_wave_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -832,7 +835,7 @@ func cursor_windows() -> Array:
 		return [_choice_panel]
 	if dialogue_box.visible:
 		return [dialogue_box]
-	return [shop_panel, stash_panel, skills_panel, character_sheet, inventory_panel].filter(func(w: Control) -> bool: return w.visible)
+	return [shop_panel, stash_panel, skills_panel, character_sheet, _waypoint_panel, challenge_panel, inventory_panel].filter(func(w: Control) -> bool: return w.visible)
 
 
 func _on_menu_requested(menu: String) -> void:
@@ -939,16 +942,40 @@ func _update_minimap() -> void:
 		and not _overlaps_any(tracker_rect, windows)
 
 
-## Alijo o tienda (a la izquierda) junto al inventario (a la derecha): con la
-## interfaz grande no caben los dos; se encogen lo justo para quedar lado a lado.
+## Ventanas de la columna izquierda (T82): solo una a la vez; la de la derecha es el inventario.
+func left_windows() -> Array:
+	return [shop_panel, stash_panel, skills_panel, character_sheet, _waypoint_panel]
+
+
+## Al mostrarse una ventana de la izquierda, se cierran las demás de esa columna
+## (nunca se tapan entre sí). La tienda y el alijo se cierran con su propia función.
+func _on_left_shown(w: Control) -> void:
+	if not w.visible:
+		return
+	if w == _waypoint_panel:
+		inventory_panel.visible = false   # los waypoints van en el centro: no comparten pantalla
+	for other: Control in left_windows():
+		if other != w and other.visible:
+			other.visible = false
+			if other == stash_panel:
+				inventory_panel.bag_click_override = Callable()   # el click en la bolsa vuelve a equipar
+	item_tooltip.hide()
+
+
+## Cualquier ventana de la izquierda junto al inventario (a la derecha): con la
+## interfaz grande no caben las dos; se encogen lo justo para quedar lado a lado.
 func _fit_trade_panels() -> void:
-	var trade: Control = stash_panel if stash_panel.visible else (shop_panel if shop_panel.visible else null)
+	var trade: Control = null
+	for w: Control in left_windows():
+		if w.visible:
+			trade = w
+			break
 	var f := 1.0
 	if trade and inventory_panel.visible:
 		var inv_right_margin := _root.size.x - (inventory_panel.position.x + inventory_panel.size.x)
 		var room := _root.size.x - trade.position.x - inv_right_margin - TRADE_GAP
 		f = clampf(room / (trade.size.x + inventory_panel.size.x), 0.5, 1.0)
-	for c: Control in [stash_panel, shop_panel]:
+	for c: Control in left_windows():
 		c.scale = Vector2(f, f) if c == trade else Vector2.ONE
 	inventory_panel.pivot_offset = Vector2(inventory_panel.size.x, 0.0)   # encoge hacia su esquina derecha
 	inventory_panel.scale = Vector2(f, f)
