@@ -470,9 +470,10 @@ Origen: R3 (PoE: búsqueda del alijo)
 - Pestañas con nombre y color, una de materiales (parches de crafteo, mapas, chips) y búsqueda por texto que resalta lo que coincide (nombre, base o afijo).
 - Hecho: cinco pestañas; «Editar pestaña» cambia el nombre (hasta 20 letras; vacío = el de fábrica) y el color (7 colores), que se guardan en el alijo (versión 2; los de antes cargan con los nombres de fábrica). Pestaña «Materiales»: solo chips de expansión (lo de crafteo que es objeto; los chips van ahí solos al guardarlos) y muestra los parches del personaje, que son contadores. No hay mapas en el juego. Búsqueda (`Stash.matches`: nombre, base, habilidad de la placa y texto de los afijos, sin mayúsculas ni tildes): resalta en dorado lo que coincide, apaga el resto y cuenta las coincidencias de cada pestaña en su botón. Mientras se escribe en un campo de texto, las teclas de habilidades, esquiva y movimiento no actúan (`UiStyle.typing`).
 
-### [ ] T81 · Hoja de personaje con desglose · M
+### [x] T81 · Hoja de personaje con desglose · M
 Origen: R3 (PoE: de dónde sale cada número)
 - Cada estadística con un tooltip de dónde viene (clase, árbol, objetos, auras, cargas), DPS por habilidad de la barra y resistencias con su tope.
+- Hecho: `StatBlock.source_breakdown` agrupa los modificadores de un stat por su origen (clase, ascendencia, atributos, árbol, chips, deuda técnica, objetos, conjuntos, pociones, cargas, auras, habilidades, santuarios…) y `StatExplain.explain` lo convierte en el tooltip de cada barra de la hoja: base, cada origen con su plano, aumento y multiplicador, y la fórmula. Atributos (más lo que dan), resistencias (con su tope y lo que falta o sobra), vida, escudo, maná, armadura, evasión y bloqueo. En Ofensiva, «DPS de la barra» con la tecla y el DPS de cada habilidad (las de apoyo lo dicen). Tooltips sin ver en pantalla: comprobado el texto en pruebas.
 
 ### [ ] T82 · Ventanas coherentes entre sí · S
 Origen: R3
@@ -602,3 +603,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T78 · Avisos de música (élite, botín, nivel y jefe) que bajan la música un momento, y paso a la fase del jefe a compás y sin intro.
 - 2026-10-25 · T79 · Inventario: ordenar y compactar, bloquear y marcar como basura (guardado), vender la basura de una vez y comparar con Alt; tamaños en la rejilla descartados con su motivo.
 - 2026-10-25 · T80 · Alijo con pestañas de nombre y color editables, pestaña de materiales y búsqueda que resalta lo que coincide.
+- 2026-10-25 · T81 · Hoja de personaje con desglose por origen en el tooltip de cada estadística, resistencias con su tope y DPS de cada habilidad de la barra.

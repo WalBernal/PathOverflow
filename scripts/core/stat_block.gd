@@ -94,6 +94,50 @@ func get_breakdown(stat: StringName, tags: Array = []) -> Dictionary:
 	}
 
 
+## Nombre de cada origen de modificadores (lo que va antes de «:» en su source).
+const SOURCE_GROUPS := {
+	"class_trait": "Clase", "ascendancy": "Ascendencia", "asc": "Ascendencia", "attributes": "Atributos",
+	"tree": "Árbol de pasivas", "chip": "Chips del árbol", "tech_debt": "Deuda técnica",
+	"item": "Objetos", "set": "Conjuntos", "flask": "Pociones", "charge": "Cargas", "aura": "Auras",
+	"skill": "Habilidades", "golem": "Gólem", "companion": "Compañero", "shrine": "Santuarios",
+	"camp": "Campamento", "incident": "Incidentes", "ram": "RAM", "board_level": "Nivel de placa",
+}
+
+
+static func source_label(source: String) -> String:
+	var key := source.get_slice(":", 0)
+	return String(SOURCE_GROUPS.get(key, "Otros" if key == "" else key.capitalize()))
+
+
+## De dónde sale un stat (T81): [{group, flat, increased, more}] por origen, en el
+## orden en que aparecen. Mismas reglas que get_breakdown (plano solo del stat;
+## aumentos y multiplicadores también de sus padres).
+func source_breakdown(stat: StringName, tags: Array = []) -> Array:
+	var related: Array = [stat]
+	related.append_array(Stat.PARENTS.get(stat, []))
+	var rows := {}
+	var order: Array = []
+	for mod in _modifiers:
+		if not mod.applies_to(tags):
+			continue
+		var counts := (mod.type == Modifier.Type.FLAT and mod.stat == stat) or (mod.type != Modifier.Type.FLAT and related.has(mod.stat))
+		if not counts or mod.value == 0.0:
+			continue
+		var group := source_label(mod.source)
+		if not rows.has(group):
+			rows[group] = {"group": group, "flat": 0.0, "increased": 0.0, "more": 1.0}
+			order.append(group)
+		var r: Dictionary = rows[group]
+		match mod.type:
+			Modifier.Type.FLAT:
+				r["flat"] += mod.value
+			Modifier.Type.INCREASED:
+				r["increased"] += mod.value
+			_:
+				r["more"] *= 1.0 + mod.value / 100.0
+	return order.map(func(g: String) -> Dictionary: return rows[g])
+
+
 ## Desglose de varios stats a la vez (daño convertido, como en PoE: le afectan los
 ## aumentos de su tipo original y los del nuevo; los padres compartidos, como
 ## «Daño», cuentan una sola vez). El plano suma el de todos los stats de la lista.

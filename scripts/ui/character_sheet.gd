@@ -220,9 +220,10 @@ func _refresh() -> void:
 		"dex": "+2 de precisión por punto · +1 %% de evasión cada 5 · +1 %% de velocidad de ataque cada 10\n+1 %% de daño de proyectiles cada 4 · +1 carga de Multihilos máxima cada 50 (tienes %d)",
 		"int": "+5 de maná cada 10 · +1 %% de escudo de energía cada 5 · +1 %% de daño de hechizos cada 4\n+1 carga de Overclock máxima cada 50 (tienes %d)",
 	}
+	var attr_stats := {"str": [Stat.STRENGTH, "Fuerza"], "dex": [Stat.DEXTERITY, "Destreza"], "int": [Stat.INTELLIGENCE, "Inteligencia"]}
 	for k in bonus:
 		var t: String = {"str": "buffer", "dex": "multihilo", "int": "overclock"}[k]
-		_bars[k].tooltip_text = (bonus[k] % character.max_charges(t)) + "\nTambién son requisito de armas y armaduras."
+		_bars[k].tooltip_text = StatExplain.explain(s, attr_stats[k][0], attr_stats[k][1]) + "\n\n" + (bonus[k] % character.max_charges(t)) + "\nTambién son requisito de armas y armaduras."
 
 	for i in RESISTANCES.size():
 		var entry: Array = RESISTANCES[i]
@@ -237,6 +238,9 @@ func _refresh() -> void:
 			note = "  papel de fumar"
 		_bars["res%d" % i].setup(entry[1], "%d%%%s" % [minf(value, cap), note], clampf(value, 0.0, cap) / cap,
 			Color(entry[2]) if value >= 0.0 else UiStyle.DANGER, value < 0.0)
+		_bars["res%d" % i].tooltip_text = StatExplain.explain(s, entry[0], "Resistencia al %s" % String(entry[1]).to_lower(), "%d %%" % value) \
+			+ "\n\nTope: %d %%. %s" % [cap, ("Te sobran %d puntos: margen para las penalizaciones." % (value - cap)) if value > cap
+				else ("Te faltan %d para el tope." % (cap - value) if value < cap else "Justo al tope.")]
 
 	_bars["life"].setup("Vida", "%d / %d" % [player.life, player.max_life()], player.life / player.max_life(), Color("c23b3b"))
 	var es := player.max_energy_shield()
@@ -250,6 +254,13 @@ func _refresh() -> void:
 	_bars["evasion"].setup("Evasión", "%d  (%d%% esquivar)" % [evasion, roundi(100.0 * evade)], evade / Player.MAX_EVADE_CHANCE, Color("8ad08a"))
 	var block := minf(Player.MAX_BLOCK_CHANCE, s.get_value(Stat.BLOCK_CHANCE))
 	_bars["block"].setup("Bloqueo", "%d%%" % block, block / Player.MAX_BLOCK_CHANCE, Color("c8c8c8"))
+	# De dónde sale cada número (T81).
+	_bars["life"].tooltip_text = StatExplain.explain(s, Stat.LIFE, "Vida máxima", "%d" % player.max_life())
+	_bars["es"].tooltip_text = StatExplain.explain(s, Stat.ENERGY_SHIELD, "Escudo de energía", "%d" % es)
+	_bars["mana"].tooltip_text = StatExplain.explain(s, Stat.MANA, "Maná máximo", "%d" % player.max_mana())
+	_bars["armour"].tooltip_text = StatExplain.explain(s, Stat.ARMOUR, "Armadura") + "\n\nReduce más los golpes pequeños que los grandes (como en PoE)."
+	_bars["evasion"].tooltip_text = StatExplain.explain(s, Stat.EVASION, "Evasión") + "\n\nProbabilidad de esquivar: evasión / (evasión + 600), hasta %d %%." % roundi(Player.MAX_EVADE_CHANCE * 100.0)
+	_bars["block"].tooltip_text = StatExplain.explain(s, Stat.BLOCK_CHANCE, "Bloqueo", "%d %%" % block) + "\n\nTope: %d %%." % roundi(Player.MAX_BLOCK_CHANCE)
 
 	if main.is_empty():
 		_skill_def = {}
@@ -288,6 +299,12 @@ func _refresh() -> void:
 			aliados.append("maná reservado %d %%" % roundi(player.mana_reserved * 100.0))
 		if not aliados.is_empty():
 			lines.append("Aliados:  " + "  ·  ".join(aliados))
+		# DPS de cada habilidad de la barra (T81).
+		var bar := StatExplain.hotbar_dps_lines(skills)
+		if bar.size() > 1:
+			lines.append("")
+			lines.append("DPS de la barra:")
+			lines.append_array(bar)
 		_offense_rows.text = "\n".join(lines)
 	_skill_icon.queue_redraw()
 

@@ -152,6 +152,7 @@ func _initialize() -> void:
 	_test_stingers()
 	_test_inventory_marks()
 	_test_stash_tabs()
+	_test_stat_breakdown()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3855,6 +3856,40 @@ func _test_stash_tabs() -> void:
 	_check(not Stash.matches(ring, "") and not Stash.matches(null, "anillo") and not Stash.matches(ring, "zzzz"), "vacío o sin coincidencia: no marca")
 	_check(s.match_count(0, "anillo") == 1 and s.match_count(1, "anillo") == 0, "cuenta las coincidencias por pestaña")
 	_check(not UiStyle.typing(), "sin escribir en un campo, las teclas del juego funcionan")
+
+
+## Hoja de personaje con desglose (T81): de dónde sale cada número.
+func _test_stat_breakdown() -> void:
+	var sb := StatBlock.new()
+	sb.set_base(Stat.LIFE, 100.0)
+	sb.add_modifier(Modifier.new(Stat.LIFE, Modifier.Type.FLAT, 20.0, [], "item:helmet"))
+	sb.add_modifier(Modifier.new(Stat.LIFE, Modifier.Type.FLAT, 10.0, [], "item:body"))
+	sb.add_modifier(Modifier.new(Stat.LIFE, Modifier.Type.INCREASED, 15.0, [], "tree"))
+	sb.add_modifier(Modifier.new(Stat.LIFE, Modifier.Type.MORE, 10.0, [], "aura:blindaje"))
+	sb.add_modifier(Modifier.new(Stat.MANA, Modifier.Type.FLAT, 50.0, [], "item:ring"))
+	var rows := sb.source_breakdown(Stat.LIFE)
+	var by := {}
+	for r in rows:
+		by[r["group"]] = r
+	_check(by.size() == 3 and by.has("Objetos") and by.has("Árbol de pasivas") and by.has("Auras"), "se agrupa por origen (objetos, árbol, auras)")
+	_check(float(by["Objetos"]["flat"]) == 30.0 and float(by["Árbol de pasivas"]["increased"]) == 15.0 and is_equal_approx(float(by["Auras"]["more"]), 1.1),
+		"suma lo de cada origen: planos, aumentos y multiplicadores")
+	var b := sb.get_breakdown(Stat.LIFE)
+	var total := 0.0
+	for r in rows:
+		total += float(r["flat"])
+	_check(is_equal_approx(total, float(b["flat"])), "el desglose suma lo mismo que el total")
+	_check(StatBlock.source_label("item:weapon") == "Objetos" and StatBlock.source_label("charge") == "Cargas" and StatBlock.source_label("class_trait") == "Clase"
+		and StatBlock.source_label("") == "Otros", "nombres de los orígenes")
+	var text := StatExplain.explain(sb, Stat.LIFE, "Vida máxima")
+	_check(text.contains("Base (clase y nivel): 100") and text.contains("Objetos: +30") and text.contains("Árbol de pasivas: +15 %") and text.contains("Auras: ×1.10"),
+		"el tooltip cuenta de dónde sale: %s" % text.replace("\n", " | "))
+	_check(StatExplain.explain(sb, Stat.ARMOUR, "Armadura").contains("nada lo modifica"), "sin modificadores, lo dice")
+	# Con un personaje de verdad: la clase y los atributos aparecen.
+	var c := CharacterData.new(_classes[0], _tree)
+	var groups := c.stats.source_breakdown(Stat.LIFE).map(func(r: Dictionary) -> String: return r["group"])
+	_check("Atributos" in groups, "la vida de un personaje cuenta lo que da su fuerza (%s)" % ", ".join(groups))
+	_check(StatExplain.hotbar_dps_lines(null).is_empty(), "sin barra, sin líneas")
 
 
 ## Parte 2 (T72b): el ataque golpea en el cuadro de impacto de la animación.
