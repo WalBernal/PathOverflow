@@ -158,6 +158,7 @@ func _initialize() -> void:
 	_test_tree_identity()
 	_test_tree_art()
 	_test_bases_and_unique_mechanics()
+	_test_crafting_decisions()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -4045,6 +4046,52 @@ func _test_bases_and_unique_mechanics() -> void:
 	var pager: Dictionary = _db.uniques.filter(func(u: Dictionary) -> bool: return u["id"] == "pager_de_guardia")[0]
 	c.inventory.set_equipped("belt", gen.make_unique(pager, 40))
 	_check(c.stats.get_value(Stat.PAGER_STRIKE) > 0.0, "equipar el Pager activa los rayos de guardia")
+
+
+## Crafteo con más decisiones (T87): quitar un afijo, optimizar con riesgo e historial de la mesa.
+func _test_crafting_decisions() -> void:
+	var gen := ItemGenerator.new(_db, 87)
+	var c := CharacterData.new(_classes[0], _tree)
+	for k in Crafting.KINDS:
+		Crafting.add(c, k, 50)
+	var item := gen.generate(60, Rarity.Item.RARE, "espada_bastarda")
+	var gone: Dictionary = item.affixes[0]
+	var n := item.affixes.size()
+	_check(Crafting.apply(c, item, "rollback", gen, 0) == "" and item.affixes.size() == n - 1 and not item.affixes.has(gone), "rollback: quita el afijo elegido")
+	_check(Crafting.apply(c, item, "rollback", gen, 99) != "", "sin elegir afijo, no hace nada")
+	# Optimizar: o sube un tier (mejor rango) o se rompe y se pierde; nunca empeora.
+	var upgraded := 0
+	var broke := 0
+	for k in 40:
+		var it := gen.generate(60, Rarity.Item.RARE, "espada_bastarda")
+		var idx := -1
+		for i in it.affixes.size():
+			if not Crafting.next_tier(it, it.affixes[i], _db).is_empty():
+				idx = i
+				break
+		if idx == -1:
+			continue
+		var before: Dictionary = it.affixes[idx].duplicate()
+		var count_before := it.affixes.size()
+		_check(Crafting.apply(c, it, "optimize", gen, idx) == "", "optimizar se puede")
+		if it.affixes.size() == count_before:
+			upgraded += 1
+			_check(int(it.affixes[idx]["tier_rank"]) == int(before["tier_rank"]) - 1, "sube justo un tier")
+		else:
+			broke += 1
+	_check(upgraded > 0 and broke > 0, "a veces sube y a veces se rompe (%d / %d)" % [upgraded, broke])
+	# El nivel del objeto pone el techo.
+	var low := gen.generate(1, Rarity.Item.MAGIC, "espada_oxidada")
+	var capped := true
+	for a in low.affixes:
+		var t := Crafting.next_tier(low, a, _db)
+		capped = capped and (t.is_empty() or int(t["level"]) <= low.item_level)
+	_check(capped, "no se pasa del tier que permite el nivel del objeto")
+	# Historial.
+	var log_entries := Crafting.history(c)
+	_check(log_entries.size() > 0 and log_entries.size() <= Crafting.LOG_MAX and String(log_entries[0]).contains("optimización"), "la mesa apunta lo que hizo (lo último primero)")
+	var saved := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())), _classes[0], _tree, _db)
+	_check(Crafting.history(saved).size() == log_entries.size(), "el historial se guarda con el personaje")
 
 
 ## Parte 2 (T72b): el ataque golpea en el cuadro de impacto de la animación.

@@ -504,9 +504,10 @@ Origen: R3 (Diablo/PoE: el botín que cambia la build)
 - Más bases con implícito propio por tipo de arma y armadura, y únicos cuya gracia sea una mecánica (no solo más números), con su texto de humor.
 - Hecho: 10 bases nuevas de nivel 24-36, cada una con implícito propio de su tipo (espadas roban vida, hachas desangran, mazas abarcan más área, dagas envenenan; armadura pesada con bloqueo, chaqueta mixta con recuperación de enfriamientos, auriculares con resistencia a estados, guantes antiestáticos con resistencia al rayo, botas de seguridad con recarga de esquiva) y su icono. 8 únicos con mecánica y su texto: El Pager de Guardia (rayos de guardia), Encendedor del Practicante (muros de fuego), Ctrl+Z de Bolsillo (nova al recibir golpes), Puñal Incendiario de Producción (físico a fuego y explosiones al matar), Rebase Interactivo (rebotes), Túnica del Modo Seguro, Guantes del Doble Click (un proyectil más) y Casco del Rollback (bomba al esquivar).
 
-### [ ] T87 · Crafteo con más decisiones · M
+### [x] T87 · Crafteo con más decisiones · M
 Origen: R3 (PoE/Grim Dawn)
 - Parches que fijan o quitan un afijo concreto, mejorar el tier de uno a cambio de riesgo, y la mesa de Mario con historial de lo que hizo.
+- Hecho: dos parches nuevos (también caen y Mario los vende): **rollback** quita el afijo elegido, y **optimización** sube un tier el afijo elegido hasta lo que permite el nivel del objeto, con un 30 % de que se rompa y se pierda (si ya está arriba, no se gasta). Fijar un afijo ya existía (hotfix). La mesa cuenta lo que pasó («Optimizado: … → … (T2)», «Se rompió…») y guarda con el personaje un historial de las últimas 12 cosas que hizo, visible en la propia mesa.
 
 ---
 
@@ -614,3 +615,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T84 · Identidad del árbol: notable de estilo por clase con su mecánica, cuatro piedras angulares con contra y tres constelaciones que piden dos atributos.
 - 2026-10-25 · T85 · Arte del árbol: fondo por región de clase, iconos de temática en los nodos menores, líneas que se iluminan al asignar y destello al completar un grupo. Parada para revisión.
 - 2026-10-25 · T86 · Diez bases de nivel alto con implícito propio por tipo y ocho únicos cuya gracia es una mecánica, con su texto de humor.
+- 2026-10-25 · T87 · Crafteo con más decisiones: parche de rollback (quita un afijo), de optimización (sube un tier con riesgo de romperse) e historial de la mesa de Mario. Fin de la cola del Roadmap 3.0.

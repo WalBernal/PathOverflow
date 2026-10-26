@@ -7,19 +7,33 @@ class_name Crafting
 ##   feature: añade un afijo (si cabe en su rareza).
 ##   major: sube la rareza (normal → mágico → raro).
 ##   hotfix: fija un afijo: sobrevive al siguiente refactor (y luego se suelta).
+##   rollback: quita el afijo que elijas (T87).
+##   optimize: sube un tier el afijo que elijas, si el nivel del objeto lo permite;
+##     con riesgo: a veces se rompe y el afijo se pierde (T87).
+## Lo que se hace en la mesa queda en un historial (flags["craft_log"]).
 
 const FLAG := "patches"
-const KINDS := ["refactor", "feature", "major", "hotfix"]
-const NAMES := {"refactor": "Parche de refactor", "feature": "Parche de feature", "major": "Parche de versión mayor", "hotfix": "Parche de hotfix"}
+const KINDS := ["refactor", "feature", "major", "hotfix", "rollback", "optimize"]
+const NAMES := {"refactor": "Parche de refactor", "feature": "Parche de feature", "major": "Parche de versión mayor", "hotfix": "Parche de hotfix",
+	"rollback": "Parche de rollback", "optimize": "Parche de optimización"}
 const DESCRIPTIONS := {
 	"refactor": "Rehace los afijos que no estén fijados.",
 	"feature": "Añade un afijo, si cabe en su rareza.",
 	"major": "Sube la rareza: normal → mágico → raro (conserva lo que tenga).",
 	"hotfix": "Fija un afijo: sobrevive al siguiente refactor.",
+	"rollback": "Quita el afijo elegido.",
+	"optimize": "Sube un tier el afijo elegido (si el nivel del objeto da para más). 30 % de que se rompa y lo pierdas.",
 }
-const COLORS := {"refactor": Color("8ad8ff"), "feature": Color("6fd36b"), "major": Color("f2c14e"), "hotfix": Color("ff8a5a")}
+const COLORS := {"refactor": Color("8ad8ff"), "feature": Color("6fd36b"), "major": Color("f2c14e"), "hotfix": Color("ff8a5a"),
+	"rollback": Color("c8a0e0"), "optimize": Color("ff6ab0")}
 ## Precio en fichas en la mesa de Mario (más caro cuanto más nivel tiene el personaje).
-const BASE_PRICE := {"refactor": 30, "feature": 45, "major": 80, "hotfix": 60}
+const BASE_PRICE := {"refactor": 30, "feature": 45, "major": 80, "hotfix": 60, "rollback": 50, "optimize": 70}
+## Probabilidad de que la optimización se rompa (el afijo se pierde).
+const OPTIMIZE_RISK := 0.3
+const LOG_FLAG := "craft_log"
+const LOG_MAX := 12
+## Lo que pasó con el último parche usado (para el mensaje de Mario).
+static var last_result := ""
 
 
 static func count(c: CharacterData, kind: String) -> int:
@@ -68,7 +82,26 @@ static func problem(item: Item, kind: String, affix_index := -1) -> String:
 				return "Elige el afijo que quieres fijar."
 			if item.affixes[affix_index].get("locked", false):
 				return "Ese afijo ya está fijado."
+		"rollback":
+			if affix_index < 0 or affix_index >= item.affixes.size():
+				return "Elige el afijo que quieres quitar."
+		"optimize":
+			if affix_index < 0 or affix_index >= item.affixes.size():
+				return "Elige el afijo que quieres optimizar."
 	return ""
+
+
+## El siguiente tier (mejor) de un afijo tirado, si el nivel del objeto lo permite: {} si ya está arriba.
+static func next_tier(item: Item, rolled: Dictionary, db: ItemDatabase) -> Dictionary:
+	for def in db.affixes:
+		if def["id"] != rolled.get("affix_id", ""):
+			continue
+		var tiers: Array = def["tiers"]   # del peor al mejor
+		var current := tiers.size() - int(rolled.get("tier_rank", tiers.size()))
+		var next := current + 1
+		if next < tiers.size() and int(tiers[next]["level"]) <= item.item_level:
+			return tiers[next]
+	return {}
 
 
 ## Usa un parche (si lo tienes y se puede). Devuelve "" o el motivo.
@@ -104,10 +137,47 @@ static func apply(c: CharacterData, item: Item, kind: String, gen: ItemGenerator
 			for a in item.affixes:
 				a.erase("locked")   # uno fijado a la vez
 			item.affixes[affix_index]["locked"] = true
+		"rollback":
+			var gone: Dictionary = item.affixes[affix_index]
+			item.affixes.remove_at(affix_index)
+			last_result = "Fuera «%s». Como si nunca hubiera existido." % Item.describe_mod(gone)
+		"optimize":
+			var rolled: Dictionary = item.affixes[affix_index]
+			var tier := next_tier(item, rolled, gen.db)
+			if tier.is_empty():
+				return "Ese afijo ya está en el mejor tier que permite el nivel del objeto (el parche no se gasta)."
+			var before := Item.describe_mod(rolled)
+			if gen.rng.randf() < OPTIMIZE_RISK:
+				item.affixes.remove_at(affix_index)
+				last_result = "Se rompió al optimizarlo: adiós a «%s». Pasa en las mejores familias." % before
+			else:
+				rolled["name"] = tier["name"]
+				rolled["tier_rank"] = int(rolled.get("tier_rank", 1)) - 1
+				rolled["tier_level"] = int(tier["level"])
+				rolled["value"] = float(gen.rng.randi_range(int(tier["min"]), int(tier["max"])))
+				if tier.has("min2"):
+					rolled["value2"] = float(gen.rng.randi_range(int(tier["min2"]), int(tier["max2"])))
+				last_result = "Optimizado: «%s» → «%s» (T%d)." % [before, Item.describe_mod(rolled), rolled["tier_rank"]]
+	if kind not in ["rollback", "optimize"]:
+		last_result = "Listo. %s" % DESCRIPTIONS[kind]
 	add(c, kind, -1)
 	item.compute_properties()
+	log_action(c, "%s · %s: %s" % [item.display_name(), NAMES[kind], last_result])
 	c.recalculate()
 	return ""
+
+
+## Historial de la mesa de Mario (lo más reciente primero, hasta LOG_MAX).
+static func log_action(c: CharacterData, text: String) -> void:
+	var entries: Array = c.flags.get(LOG_FLAG, []).duplicate()
+	entries.push_front(text)
+	if entries.size() > LOG_MAX:
+		entries.resize(LOG_MAX)
+	c.flags[LOG_FLAG] = entries
+
+
+static func history(c: CharacterData) -> Array:
+	return c.flags.get(LOG_FLAG, [])
 
 
 ## Botín: los élites y únicos sueltan parches de vez en cuando (directo a tu contador).
@@ -116,7 +186,7 @@ static func roll_drop(enemy_rarity: int, rng: RandomNumberGenerator) -> String:
 	var chance: float = {Rarity.Enemy.ELITE: 0.12, Rarity.Enemy.UNIQUE: 0.6}.get(enemy_rarity, 0.0)
 	if rng.randf() >= chance:
 		return ""
-	var weights := [40, 30, 12, 18]   # refactor, feature, major, hotfix
+	var weights := [34, 26, 10, 14, 9, 7]   # refactor, feature, major, hotfix, rollback, optimize
 	var r := rng.randi_range(0, 99)
 	for k in KINDS.size():
 		r -= weights[k]

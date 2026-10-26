@@ -11,6 +11,7 @@ var _text: RichTextLabel
 var _msg: Label
 var _rows: VBoxContainer
 var _slots: Array[String] = []
+var _history: Label
 
 
 func _init(p_character: CharacterData = null, p_generator: ItemGenerator = null) -> void:
@@ -33,7 +34,7 @@ func _init(p_character: CharacterData = null, p_generator: ItemGenerator = null)
 	_text.custom_minimum_size = Vector2(600, 120)
 	box.add_child(_text)
 	var lock_row := HBoxContainer.new()
-	lock_row.add_child(UiStyle.label("Afijo para el hotfix:", 13))
+	lock_row.add_child(UiStyle.label("Afijo (hotfix, rollback u optimización):", 13))
 	_affix_pick = OptionButton.new()
 	_affix_pick.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lock_row.add_child(_affix_pick)
@@ -44,6 +45,12 @@ func _init(p_character: CharacterData = null, p_generator: ItemGenerator = null)
 	_msg = UiStyle.label("", 13, UiStyle.ACCENT)
 	_msg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_msg)
+	# Historial de la mesa (T87): lo último que hizo Mario, guardado con el personaje.
+	box.add_child(UiStyle.section_header("Historial de la mesa"))
+	_history = UiStyle.label("", 12, UiStyle.MUTED)
+	_history.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_history.custom_minimum_size.x = 600
+	box.add_child(_history)
 	close_requested.connect(queue_free)
 	confirmed.connect(queue_free)
 	if character:
@@ -96,12 +103,14 @@ func _refresh() -> void:
 		row.add_child(UiStyle.button("Usar", _use.bind(kind), 80))
 		row.add_child(UiStyle.button("Comprar (%d fichas)" % Crafting.price(kind, character.level), _buy.bind(kind), 170))
 		_rows.add_child(row)
+	var log_entries := Crafting.history(character)
+	_history.text = "Todavía nada. Mario está esperando a que rompas algo." if log_entries.is_empty() else "\n".join(log_entries.slice(0, 6).map(func(e) -> String: return "• " + String(e)))
 
 
 func _use(kind: String) -> void:
 	var item := selected_item()
 	var why := Crafting.apply(character, item, kind, generator, _affix_pick.selected)
-	_msg.text = why if why != "" else "Mario: «Listo. %s»" % Crafting.DESCRIPTIONS[kind]
+	_msg.text = why if why != "" else "Mario: «%s»" % Crafting.last_result
 	if why == "":
 		Sfx.play("coin")
 		character.inventory.changed.emit()
