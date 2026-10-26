@@ -47,7 +47,9 @@ func _ready() -> void:
 	visibility_changed.connect(func() -> void:
 		if not visible and _plan:
 			_plan.clear_history()
-			_session_nodes.clear())
+			_session_nodes.clear()
+			if _character.flags.has("free_respec") and _character.passives.spent_points() > 0:
+				_character.flags.erase("free_respec"))   # se acabó la reasignación gratis
 	for control in _standalone_controls:
 		control.visible = standalone
 	_close_button.visible = not standalone
@@ -322,8 +324,8 @@ func refund_node(id: int) -> bool:
 
 ## Lo que cuesta quitar estos nodos (0 en el planificador suelto o si se asignaron en esta visita).
 func refund_cost(ids: Array) -> int:
-	if standalone:
-		return 0
+	if standalone or _character.flags.has("free_respec"):
+		return 0   # tras cambiar el árbol, la primera reasignación es gratis
 	var n := 0
 	for id in ids:
 		if not _session_nodes.has(int(id)):
@@ -385,7 +387,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 func export_build() -> String:
 	var ids: Array = _character.passives.get_allocated_ids()
 	ids.append_array(_plan.planned_ids())
-	var code := PassivePlan.export_code(String(_character.class_def["id"]), ids, _character.passives.mastery_choices_dict())
+	var code := PassivePlan.export_code(_character.passives.tree, String(_character.class_def["id"]), ids, _character.passives.mastery_choices_dict())
 	DisplayServer.clipboard_set(code)
 	_flash("Build copiada al portapapeles (%d nodos)" % (ids.size() - 1))
 	return code
@@ -394,10 +396,15 @@ func export_build() -> String:
 ## Carga una build de un código: en el planificador suelto, tal cual (cambia de
 ## clase si hace falta); en partida, queda como plan (no regala puntos).
 func import_build(code: String) -> bool:
-	var data := PassivePlan.import_code(code)
+	var data := PassivePlan.import_code(_character.passives.tree, code)
+	if data.get("error", "") == "old":
+		_flash("Ese código es del árbol viejo (%s): con el árbol 2.0 hay que hacer la build de nuevo" % PassivePlan.OLD_CODE_PREFIX)
+		return false
 	if data.is_empty():
 		_flash("Ese texto no es un código de build (empieza por %s)" % PassivePlan.CODE_PREFIX)
 		return false
+	if int(data.get("dropped", 0)) > 0:
+		_flash.call_deferred("Aviso: %d nodos de esa build ya no existen y se han quitado" % int(data["dropped"]))
 	if String(data["class"]) != String(_character.class_def["id"]):
 		if not standalone:
 			_flash("Esa build es de otra clase")

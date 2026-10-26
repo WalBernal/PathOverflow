@@ -1172,6 +1172,7 @@ func _capture_tree_v2() -> void:
 		view.zoom = shot[2]
 		view.center_on(shot[1])
 		await _wait(0.4)
+		print("dibujo del árbol (%s, zoom %.2f): %.2f ms" % [shot[0], shot[2], view.last_draw_ms])
 		_save(shot[0])
 
 

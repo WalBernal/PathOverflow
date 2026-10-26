@@ -40,6 +40,10 @@ const COLOR_CONSTELLATION := Color("c9a7f0")
 ## completar un grupo.
 var region_colors: Dictionary = {}
 const REGION_RADIUS := 760.0
+## Por debajo de este zoom, el árbol se dibuja simplificado (T89b).
+const LOD_FAR_ZOOM := 0.5
+## Desde este zoom, el modo simplificado conserva los iconos de notables y piedras angulares.
+const LOD_ICON_ZOOM := 0.3
 const GLOW_TIME := 0.9
 const CLUSTER_FLASH_TIME := 1.3
 var _prev_alloc: Dictionary = {}
@@ -171,13 +175,26 @@ static func border_color(n: PassiveNode) -> Color:
 	return Color("8a8293")
 
 
+## Lo que tardó el último dibujo (ms), para medir el árbol 2.0 (T89b).
+var last_draw_ms := 0.0
+
+
 func _draw() -> void:
+	var t0 := Time.get_ticks_usec()
+	_draw_tree()
+	last_draw_ms = (Time.get_ticks_usec() - t0) / 1000.0
+
+
+func _draw_tree() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), COLOR_BG)
 	if allocation == null:
 		return
 	var tree := allocation.tree
 	var visible_rect := Rect2(_to_tree(Vector2.ZERO), size / zoom).grow(40.0)
 	var too_expensive := _preview.size() > available_points
+	# Nivel de detalle (T89b): de lejos, nodos como cuadros y círculos lisos, sin iconos,
+	# aros ni adornos; con ~1400 nodos en pantalla, el dibujo completo se hace pesado.
+	var far := zoom < LOD_FAR_ZOOM
 	draw_set_transform(offset, 0.0, Vector2(zoom, zoom))
 	_draw_regions(tree, visible_rect)
 	_draw_clusters(tree, visible_rect)
@@ -201,7 +218,7 @@ func _draw() -> void:
 		elif not planned.is_empty() and (a_on or planned.has(a.id)) and (b_on or planned.has(b.id)):
 			color = Color(COLOR_PLANNED, 0.8)   # el camino del plan
 			width = 4.0
-		draw_line(a.position, b.position, color, width, true)
+		draw_line(a.position, b.position, color, width, not far)   # de lejos, sin suavizado (T89b)
 		if not _edge_glow.is_empty() and _edge_glow.has(e):
 			# Recién asignada (T85): un brillo que se apaga y una chispa que la recorre.
 			var gt := clampf((_now() - float(_edge_glow[e])) / GLOW_TIME, 0.0, 1.0)
@@ -219,6 +236,18 @@ func _draw() -> void:
 		var in_preview := _preview.has(n.id)
 		var available := not on and allocation.can_allocate(n.id)
 		var theme_color := tree.theme_color(n.theme)
+		if far:
+			var col := COLOR_ALLOCATED if on else (COLOR_PLANNED if planned.has(n.id) else (COLOR_PREVIEW if in_preview else theme_color.darkened(0.25 if available else 0.55)))
+			if n.kind == PassiveNode.Kind.MINOR:
+				draw_rect(Rect2(n.position - Vector2(r, r), Vector2(r, r) * 2.0), col)
+			elif zoom >= LOD_ICON_ZOOM and (n.kind == PassiveNode.Kind.NOTABLE or n.kind == PassiveNode.Kind.KEYSTONE):
+				# A media distancia, los notables conservan su icono y un aro simple.
+				draw_circle(n.position, r, Color("120f16"))
+				PassiveIcons.draw(self, n.position, r * 1.45, n.icon, Color.WHITE if on else Color(0.5, 0.5, 0.55))
+				draw_arc(n.position, r, 0.0, TAU, 16, col if not on else COLOR_ALLOCATED, 4.0, false)
+			else:
+				draw_circle(n.position, r, col if n.kind != PassiveNode.Kind.CLASS_START else Color("e0e0e0"))
+			continue
 		match n.kind:
 			PassiveNode.Kind.MINOR:
 				var fill := theme_color.darkened(0.15) if on else COLOR_NODE

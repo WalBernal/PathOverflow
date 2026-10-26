@@ -531,10 +531,11 @@ Origen: R4
 - Pasar las maestrías (`passive_masteries.json`) y la identidad (`passive_identity.json`) al formato de ids estables (o dentro del generador), con prueba de que nada quedó colgando.
 - Hecho: `tools/generate_passive_tree.py` es el generador 2.0 (el de la versión 7 queda en git) y escribe `data/passive_tree.json` versión 8: 1373 nodos (354 de viaje, el 26 %), 138 clusters (29 S, 78 M, 12 L, 6 XL, 6 constelaciones y 7 huecos de piedra), 149 notables, 18 maestrías (los tres primeros notables de su familia) y 11 piedras angulares (las 7 de siempre más las 4 de T84 de verdad), con anillo E y dos medianos más en el D de cada región; cada familia con 3-8 clusters. Las maestrías, los notables de estilo, las piedras extra y las constelaciones van dentro del árbol (`choices`, `style`, `requires`, `constellation`, `key`): `passive_masteries.json` desaparece y `passive_identity.json` pasa a estar por clase, no por id. `PassiveTree.id_for_key` traduce claves. Los inicios solo conectan con su región. Los personajes de la versión 7 recuperan todos los puntos (lo hacía ya `passives_refunded`). Pruebas del árbol puestas al día (maestrías, identidad, formas, vida baja).
 
-### [ ] T89b · Generador del árbol 2.0, parte 2: migración y rendimiento · M
+### [x] T89b · Generador del árbol 2.0, parte 2: migración y rendimiento · M
 Origen: R4 (partida de T89, que era L)
 - Migración de personajes: al cargar uno de la versión 7, devolver todos los puntos con un aviso claro («El árbol cambió: tienes N puntos para repartir») y la primera reasignación gratis; el código de build pasa a `PO2:` y avisa si es de un árbol viejo.
 - Rendimiento con ~1500 nodos: la vista tiene que seguir dibujando y respondiendo al ratón sin tirones (rejilla espacial, recorte por pantalla y nivel de detalle por zoom); prueba con tiempo de dibujo medido.
+- Hecho: un personaje del árbol 7 recupera todos los puntos con un aviso que dice cuántos tiene, y hasta que cierra el árbol con puntos gastados quitar nodos es gratis (`free_respec`). Código de build `PO2:` con las **claves** de los nodos y de las maestrías (sobrevive a regenerar el árbol; avisa si algún nodo ya no existe); un `PO1:` dice que es del árbol viejo. Nivel de detalle en la vista: por debajo de zoom 0,5 los nodos se dibujan lisos (cuadros y círculos, líneas sin suavizado), y desde 0,3 los notables y piedras conservan su icono. Dibujo medido con `capture_screens -- arbol2` (`PassiveTreeView.last_draw_ms`): árbol entero 74 → 14 ms, región 24 → 20 ms, centro 17 ms.
 
 ### [ ] T90 · Más clusters de las familias que ya hay · M
 Origen: R4 (pedido del usuario)
@@ -730,3 +731,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · Roadmap 4.0 (T88-T105): gráficos (interfaz, efectos, sprites y animación) y árbol pasivo 2.0 (~1500 nodos, más clusters por familia, familia de maná, piedras angulares nuevas, ids estables y migración).
 - 2026-10-25 · T88 · Diseño del árbol 2.0: documento docs/arbol_2.md y prototipo de disposición (1540 nodos, 114 clusters, claves estables). Parada para revisión.
 - 2026-10-25 · T89 · Árbol pasivo 2.0 en el juego: 1373 nodos, 138 clusters, 149 notables, 18 maestrías y 11 piedras angulares, con claves estables y la identidad dentro del árbol.
+- 2026-10-25 · T89b · Migración al árbol 2.0 con la primera reasignación gratis, código de build PO2 por claves y nivel de detalle en la vista (árbol entero de 74 a 14 ms).

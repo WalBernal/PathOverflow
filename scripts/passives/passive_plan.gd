@@ -8,7 +8,7 @@ extends RefCounted
 ## asignado, las maestrías y el plan) y exporta la build como código de texto.
 
 const HISTORY_MAX := 60
-const CODE_PREFIX := "PO1:"
+const CODE_PREFIX := "PO2:"
 
 var real: PassiveAllocation
 var shadow: PassiveAllocation
@@ -167,17 +167,35 @@ func _sync() -> void:
 
 # --- Código de build ---
 
-## «PO1:» + base64 de un JSON comprimido con la clase, los nodos y las maestrías.
-static func export_code(class_id: String, ids: Array, masteries: Dictionary) -> String:
-	var data := JSON.stringify({"c": class_id, "n": ids, "m": masteries})
+## «PO2:» + tamaño + base64 de un JSON comprimido con la clase, las CLAVES de los
+## nodos y las maestrías por clave (T89b): sirve aunque se regenere el árbol mientras
+## esos nodos sigan ahí. Los «PO1:» (árbol 1.0, por id) ya no se pueden cargar.
+const OLD_CODE_PREFIX := "PO1:"
+
+
+static func export_code(tree: PassiveTree, class_id: String, ids: Array, masteries: Dictionary) -> String:
+	var keys: Array = []
+	for id in ids:
+		var n := tree.get_node_data(int(id))
+		if n and n.key != "":
+			keys.append(n.key)
+	var mkeys := {}
+	for id in masteries:
+		var n := tree.get_node_data(int(id))
+		if n and n.key != "":
+			mkeys[n.key] = int(masteries[id])
+	var data := JSON.stringify({"v": tree.version, "c": class_id, "n": keys, "m": mkeys})
 	var raw := data.to_utf8_buffer()
 	var packed := raw.compress(FileAccess.COMPRESSION_DEFLATE)
 	return CODE_PREFIX + str(raw.size()) + ":" + Marshalls.raw_to_base64(packed)
 
 
-## {class, ids, masteries} del código, o {} si no es válido.
-static func import_code(code: String) -> Dictionary:
+## {class, ids, masteries ({"id": opción}), dropped (claves que ya no existen)};
+## {"error": "old"} si es un código del árbol viejo; {} si no es un código.
+static func import_code(tree: PassiveTree, code: String) -> Dictionary:
 	var c := code.strip_edges()
+	if c.begins_with(OLD_CODE_PREFIX):
+		return {"error": "old"}
 	if not c.begins_with(CODE_PREFIX):
 		return {}
 	var parts := c.substr(CODE_PREFIX.length()).split(":", false, 1)
@@ -194,6 +212,18 @@ static func import_code(code: String) -> Dictionary:
 	if not (parsed is Dictionary) or not (parsed.get("n") is Array):
 		return {}
 	var ids: Array[int] = []
-	for v in parsed["n"]:
-		ids.append(int(v))
-	return {"class": String(parsed.get("c", "")), "ids": ids, "masteries": parsed.get("m", {}) if parsed.get("m") is Dictionary else {}}
+	var dropped := 0
+	for k in parsed["n"]:
+		var id := tree.id_for_key(String(k))
+		if id == -1:
+			dropped += 1
+		else:
+			ids.append(id)
+	var masteries := {}
+	var m: Variant = parsed.get("m", {})
+	if m is Dictionary:
+		for k in m:
+			var id := tree.id_for_key(String(k))
+			if id != -1:
+				masteries[str(id)] = int(m[k])
+	return {"class": String(parsed.get("c", "")), "ids": ids, "masteries": masteries, "dropped": dropped}

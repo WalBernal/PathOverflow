@@ -162,7 +162,7 @@ func _ready() -> void:
 		ui.hud.flash.call_deferred("Tu ascendencia tiene un árbol nuevo de 20 nodos: te devolvimos los puntos (P → medallón).", UiStyle.ACCENT)
 	if character.flags.has("passives_refunded"):
 		character.flags.erase("passives_refunded")
-		ui.hud.flash.call_deferred("El árbol pasivo ha cambiado: te hemos devuelto todos los puntos (P).", UiStyle.ACCENT)
+		ui.hud.flash.call_deferred("El árbol pasivo es nuevo: tienes %d puntos para repartir (P). Hasta que cierres el árbol, quitar nodos es gratis." % character.passive_points_available(), UiStyle.ACCENT)
 
 
 ## Voz del personaje (Barks): un quejido al bajar de LOW_LIFE_BARK de vida, como

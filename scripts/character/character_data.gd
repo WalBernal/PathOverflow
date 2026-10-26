@@ -589,8 +589,10 @@ static func from_dict(d: Dictionary, p_class_def: Dictionary, tree: PassiveTree,
 			c.passives.load_ids([])
 			c.flags["passives_refunded"] = true
 	elif not d.get("passives", []).is_empty():
-		# El árbol cambió: los ids antiguos apuntarían a otros nodos. Se devuelven los puntos.
+		# El árbol cambió: los ids antiguos apuntarían a otros nodos. Se devuelven los puntos
+		# y la primera reasignación es gratis (T89b: hasta cerrar el árbol con puntos gastados).
 		c.flags["passives_refunded"] = true
+		c.flags["free_respec"] = true
 		c.recalculate()
 	return c
 

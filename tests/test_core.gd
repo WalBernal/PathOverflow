@@ -160,6 +160,7 @@ func _initialize() -> void:
 	_test_bases_and_unique_mechanics()
 	_test_crafting_decisions()
 	_test_tree_v2_layout()
+	_test_tree_migration()
 	_test_events_music_colorblind()
 	_test_story_editor()
 	_test_board_milestones()
@@ -3970,12 +3971,13 @@ func _test_passive_plan() -> void:
 	# Código de build.
 	var ids: Array = alloc.get_allocated_ids()
 	ids.append_array(plan.planned_ids())
-	var code := PassivePlan.export_code(String(c.class_def["id"]), ids, {"12": 1})
+	var code := PassivePlan.export_code(_tree, String(c.class_def["id"]), ids, {"12": 1})
 	_check(code.begins_with(PassivePlan.CODE_PREFIX), "el código empieza por %s" % PassivePlan.CODE_PREFIX)
-	var back := PassivePlan.import_code(code)
+	var back := PassivePlan.import_code(_tree, code)
 	_check(back.get("class", "") == String(c.class_def["id"]) and (back["ids"] as Array).size() == ids.size() and int(back["masteries"].get("12", 0)) == 1,
 		"exportar e importar la build da lo mismo")
-	_check(PassivePlan.import_code("hola").is_empty() and PassivePlan.import_code("PO1:12:@@@").is_empty(), "un texto que no es código no rompe nada")
+	_check(PassivePlan.import_code(_tree, "hola").is_empty() and PassivePlan.import_code(_tree, "PO2:12:@@@").is_empty(), "un texto que no es código no rompe nada")
+	_check(PassivePlan.import_code(_tree, "PO1:30:abc").get("error", "") == "old" and int(back.get("dropped", -1)) == 0, "un código del árbol viejo avisa; uno nuevo no pierde nodos")
 	# Importar en partida: queda como plan, sin regalar puntos.
 	var fresh := CharacterData.new(_classes[0], _tree)
 	var fplan := PassivePlan.new(fresh.passives)
@@ -4152,6 +4154,22 @@ func _test_tree_v2_layout() -> void:
 				stack.append(nb)
 	_check(seen.size() == tree.nodes.size(), "todo el árbol 2.0 se alcanza desde el centro (%d de %d)" % [seen.size(), tree.nodes.size()])
 	_check((data["clusters"] as Array).size() >= 100, "más del doble de clusters (%d)" % (data["clusters"] as Array).size())
+
+
+## Árbol 2.0, migración (T89b): un personaje del árbol viejo recupera los puntos con la primera reasignación gratis.
+func _test_tree_migration() -> void:
+	var c := CharacterData.new(_classes[0], _tree)
+	c.level = 20
+	var d := c.to_dict()
+	d["passive_tree_version"] = 7
+	d["passives"] = [1, 2, 3, 4, 5]
+	var back := CharacterData.from_dict(d, _classes[0], _tree, _db)
+	_check(back.passives.spent_points() == 0 and back.passive_points_available() == back.passive_points_total(), "con el árbol viejo, todos los puntos de vuelta")
+	_check(back.flags.has("passives_refunded") and back.flags.has("free_respec"), "y la primera reasignación es gratis")
+	_check(_tree.version == 8, "el árbol del juego es la versión 8")
+	var keyed := _tree.nodes.values().filter(func(n: PassiveNode) -> bool: return n.key != "")
+	_check(keyed.size() == _tree.nodes.size() and _tree.id_for_key(keyed[0].key) == keyed[0].id, "todos los nodos con clave, y la clave lleva a su id")
+	_check(PassiveTreeView.LOD_FAR_ZOOM > PassiveTreeView.LOD_ICON_ZOOM, "de lejos, el árbol se dibuja simplificado")
 
 
 ## Parte 2 (T72b): el ataque golpea en el cuadro de impacto de la animación.
