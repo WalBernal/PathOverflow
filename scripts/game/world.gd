@@ -332,7 +332,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 	emitters.setup(zone)
 	var weather := Weather.new()   # lluvia de datos o niebla, según el estilo
 	zone.add_child(weather)
-	weather.setup(zone.style)
+	weather.setup(zone.style, zone)
 	SoundMap.floor_style = zone.style   # pasos según el suelo (T77)
 	_sighted.clear()
 	post.attach(self, zone)   # el pixelado justo después de la zona; la luz, encima

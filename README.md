@@ -378,6 +378,7 @@ El **registro de misiones** está debajo del minimapa (L para plegarlo): la prin
 
 ## Interfaz
 
+- **Ambiente de las zonas**: la lluvia de datos salpica en el suelo, hay polvo en suspensión en ruinas, catacumbas y fábricas, cables sueltos que chisporrotean en las zonas de servidores, LEDs que parpadean en los racks del borde y luces de la zona que se avivan con los golpes cercanos («Luces y clima reducidos» lo apaga).
 - **Estados y avisos**: llamas que suben, burbujas de veneno que revientan y gotas de sangrado sobre enemigos y jugador, escarcha que crece al helarte; los avisos de ataque en el suelo tienen un borde de trazos que gira, ondas que se cierran hacia donde cae el golpe y flechas que marcan la dirección de conos y cargas.
 - **Calidad gráfica** (Pausa → baja, media, alta): cuántas luces hay a la vez, ráfagas de partículas de GPU en explosiones y novas, bloom alrededor de las luces, distorsión de calor sobre el fuego (alta) y ondas de choque en los golpes grandes (media y alta).
 - **Animación**: números de daño sobre los enemigos (los críticos, grandes y amarillos; los golpes seguidos se suman en una sola cifra), ventanas que entran con un zoom corto, botones que rebotan, tooltips de objeto con fundido y la barra de experiencia que brilla al subir de nivel. En Pausa → Interfaz: «Números de daño» y «Reducir movimiento» (sin rebotes ni zoom; las cifras solo suben).

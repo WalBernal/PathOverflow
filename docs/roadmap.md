@@ -605,9 +605,10 @@ Origen: R4
 - Estados animados sobre enemigos y jugador (llamas que suben, escarcha que crece, burbujas de veneno, chispas de electrocución, gotas de sangrado) y avisos de ataque en el suelo con textura y borde animado en vez de formas planas.
 - Hecho: clase `FxArt` compartida. Estados: llamas con forma de lengua que suben (quemado), burbujas que suben y revientan con un anillo (veneno y corrupción), gotas con forma de lágrima que caen (sangrado), en enemigos y ahora también en el **jugador** (antes, burbujas genéricas para cualquier degenerativo); la **escarcha del jugador crece** del 35 % al 100 % en el primer medio segundo (`Player._status_since`); chispas y escarcha de los enemigos, como estaban. Avisos: **borde de trazos que gira** en golpes pesados, golpes de área y losas que se rompen, **ondas que se cierran hacia el centro** donde va a caer el golpe, y **flechas que avanzan** a lo largo de conos y cargas (las cargas, además, con sus bordes); se dibujan encima de los rellenos por lotes. Prueba `_test_fx_art`.
 
-### [ ] T100 · Ambiente y clima por zona · S
+### [x] T100 · Ambiente y clima por zona · S
 Origen: R4
 - Más capas de ambiente: lluvia con salpicaduras en el suelo, polvo en suspensión, niebla que se desplaza, chispas de cables sueltos, LEDs que parpadean en los racks; luces de zona que reaccionan a los golpes.
+- Hecho: `Weather` por capas. La lluvia de datos **salpica** (cada gota cae hasta un punto del suelo y deja un anillo aplastado y dos gotitas); capas nuevas por estilo (`EXTRA_BY_STYLE`): **polvo en suspensión** que flota y brilla (ruinas, catacumbas, fábrica, fosa, ROM, grieta, jefes) y **cables que chisporrotean** de vez en cuando (servidores, terminal, fábrica, bus, BIOS, setup); los **LEDs de los racks** del borde parpadean (`Zone.rack_led_points`, verde, ámbar o azul, cada uno a su ritmo). La niebla sigue derivando. Las **luces de la zona reaccionan a los golpes** cercanos (`WorldPost.note_hit`/`hit_kick`: más radio y potencia 0,35 s). Todo se apaga con «Luces y clima reducidos». Prueba `_test_ambience`.
 
 ## Fase 18 — Sprites y animación
 
@@ -753,3 +754,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T97 · Números de daño (con críticos y apilado), ventanas que entran con zoom, botones que rebotan, tooltips con fundido, brillo de la experiencia al subir de nivel y la opción «Reducir movimiento».
 - 2026-10-25 · T98 · Calidad gráfica baja/media/alta, ráfagas de partículas de GPU en explosiones y novas, bloom, distorsión de calor y ondas de choque en el shader de luz; medido en cada nivel.
 - 2026-10-25 · T99 · Estados con forma (llamas, burbujas que revientan, gotas) también en el jugador, escarcha que crece y avisos de ataque con borde de trazos que gira, ondas que se cierran y flechas.
+- 2026-10-25 · T100 · Ambiente por zona: salpicaduras de la lluvia de datos, polvo en suspensión, cables que chisporrotean, LEDs que parpadean en los racks y luces de zona que se avivan con los golpes.

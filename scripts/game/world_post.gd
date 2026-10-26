@@ -123,10 +123,16 @@ func _send_lights(ratio: Vector2) -> void:
 			found.append({"pos": pos, "radius": radius, "color": color, "power": clampf(power, 0.0, 1.0)})
 	var t := Time.get_ticks_msec() / 1000.0
 	# Primero las que dan forma al sitio (si hay que recortar, se van los destellos).
+	if enemies and enemies.impact:   # golpes recién dados: las luces de la zona cercanas reaccionan (T100)
+		for f in enemies.impact.flashes:
+			if float(f["life"]) >= float(f["max"]) - 0.02:
+				note_hit(f["pos"], t)
+	_hits = _hits.filter(func(h: Dictionary) -> bool: return t - float(h["t"]) < HIT_KICK_TIME)
 	if _zone:
 		for l in _zone.light_points():
 			var flick := 0.85 + 0.15 * sin(t * 9.0 + l["pos"].x) * sin(t * 5.3 + l["pos"].y)
-			add.call(l["pos"], float(l["radius"]) * flick, l["color"], float(l.get("power", 0.9)) * flick)
+			var kick := hit_kick(l["pos"], t)
+			add.call(l["pos"], float(l["radius"]) * flick * (1.0 + 0.25 * kick), l["color"], float(l.get("power", 0.9)) * flick * (1.0 + 0.6 * kick))
 	if loot:   # el botín único y de conjunto brilla en el suelo
 		for d in loot.drops:
 			var item: Item = d["item"]
@@ -165,6 +171,29 @@ func _send_lights(ratio: Vector2) -> void:
 	_light.mat.set_shader_parameter("light_colors", colors)
 	_light.mat.set_shader_parameter("light_count", found.size())
 	_send_effects(found, canvas, ratio)
+
+
+# --- T100: las luces de la zona reaccionan a los golpes cercanos ---
+
+const HIT_KICK_TIME := 0.35
+const HIT_KICK_RANGE := 320.0
+var _hits: Array[Dictionary] = []   # {pos, t}
+
+
+func note_hit(pos: Vector2, now: float) -> void:
+	_hits.append({"pos": pos, "t": now})
+	if _hits.size() > 24:
+		_hits.remove_at(0)
+
+
+## Cuánto se aviva una luz en `pos` por los golpes recientes cercanos (0..1).
+func hit_kick(pos: Vector2, now: float) -> float:
+	var k := 0.0
+	for h in _hits:
+		var near := 1.0 - clampf((h["pos"] as Vector2).distance_to(pos) / HIT_KICK_RANGE, 0.0, 1.0)
+		var fresh := 1.0 - clampf((now - float(h["t"])) / HIT_KICK_TIME, 0.0, 1.0)
+		k = maxf(k, near * fresh)
+	return k
 
 
 # --- T98: bloom, distorsión de calor y ondas de choque (según la calidad gráfica) ---

@@ -171,6 +171,7 @@ func _initialize() -> void:
 	_test_ui_motion()
 	_test_graphics_quality()
 	_test_fx_art()
+	_test_ambience()
 	_test_events_music_colorblind()
 	_test_story_editor()
 	_test_board_milestones()
@@ -4237,6 +4238,50 @@ func _test_mana_family() -> void:
 		_check(int(found.get(s, 0)) >= 1, "el árbol tiene nodos de %s" % Stat.display_name(s))
 	var mana_clusters := _tree.clusters.values().filter(func(c: Dictionary) -> bool: return c["theme"] == "mana").size()
 	_check(mana_clusters >= 10, "la familia de maná tiene 10 clusters o más (%d)" % mana_clusters)
+
+
+## Ambiente y clima por zona (T100): salpicaduras, polvo, chispas, LEDs y luces que reaccionan.
+func _test_ambience() -> void:
+	var was := WorldPost.reduced
+	WorldPost.reduced = false
+	_check("dust" in Weather.extras_for("catacombs") and "sparks" in Weather.extras_for("fabrica") and Weather.extras_for("forest").is_empty(),
+		"polvo en las catacumbas, chispas en la fábrica, nada extra en el bosque")
+	var rain := Weather.new()
+	rain.kind = "data_rain"
+	var view := Rect2(0, 0, 1600, 900)
+	for k in Weather.RAIN_DROPS:
+		rain._parts.append(rain._spawn(view, true))
+	_check(rain._parts.all(func(p: Dictionary) -> bool: return p.has("land")), "cada gota sabe dónde va a caer")
+	var splashed := false
+	for k in 40:
+		rain.step(0.05, view)
+		splashed = splashed or not rain._splashes.is_empty()
+	_check(splashed, "las gotas salpican al llegar al suelo")
+	for k in 20:
+		rain.step(0.05, view)
+	_check(rain._splashes.all(func(s: Dictionary) -> bool: return float(s["t"]) < Weather.SPLASH_TIME), "las salpicaduras duran poco")
+	rain.free()
+	var dust := Weather.new()
+	dust.extras = ["dust", "sparks"] as Array[String]
+	for k in Weather.DUST_MOTES:
+		dust._dust.append(dust._spawn_dust(view))
+	dust._sparks.append({"pos": Vector2(800, 450), "next": 0.0, "burst": []})
+	dust._step_ambient(0.05, view)
+	_check(not (dust._sparks[0]["burst"] as Array).is_empty(), "un cable suelto chisporrotea")
+	for k in 20:
+		dust._step_ambient(0.05, view)
+	_check(dust._dust.all(func(d: Dictionary) -> bool: return view.grow(100.0).has_point(d["pos"])), "el polvo sigue flotando en pantalla")
+	dust.free()
+	WorldPost.reduced = true
+	_check(Weather.extras_for("catacombs").is_empty(), "con luces y clima reducidos, sin ambiente extra")
+	WorldPost.reduced = was
+	# Luces que reaccionan a los golpes.
+	var post := WorldPost.new()
+	post.note_hit(Vector2(100, 100), 10.0)
+	_check(post.hit_kick(Vector2(100, 100), 10.0) == 1.0, "un golpe aviva la luz que tiene al lado")
+	_check(post.hit_kick(Vector2(1000, 100), 10.0) == 0.0, "las luces lejanas no se enteran")
+	_check(is_zero_approx(post.hit_kick(Vector2(100, 100), 10.0 + WorldPost.HIT_KICK_TIME + 0.01)), "y se calma enseguida")
+	post.free()
 
 
 ## Estados y avisos con textura (T99): borde de trazos, flechas y escarcha que crece.

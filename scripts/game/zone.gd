@@ -1027,6 +1027,20 @@ func _draw_decals(ci: CanvasItem, c: Color) -> void:
 				ci.draw_set_transform(Vector2.ZERO)
 
 
+## LEDs de los racks del borde (para Weather, T100): unos pocos por rack, en su frontal.
+func rack_led_points() -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	if String(STYLES.get(style, {}).get("edge", "")) != "racks":
+		return out
+	for e in _edge_props:
+		var q: Vector2 = e["pos"] + (e["out"] as Vector2) * 30.0
+		var sd: int = e["seed"]
+		for j in 4:
+			if (sd >> j) % 3 != 0:
+				out.append(q + Vector2(11, -18 + j * 11))
+	return out
+
+
 ## Banda del borde: lo que hay fuera del camino según el estilo de la zona.
 func _draw_edge_band(ci: CanvasItem, s: Dictionary) -> void:
 	var kind: String = s["edge"]
