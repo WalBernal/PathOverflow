@@ -170,6 +170,7 @@ func _initialize() -> void:
 	_test_screens_t96()
 	_test_ui_motion()
 	_test_graphics_quality()
+	_test_fx_art()
 	_test_events_music_colorblind()
 	_test_story_editor()
 	_test_board_milestones()
@@ -4236,6 +4237,28 @@ func _test_mana_family() -> void:
 		_check(int(found.get(s, 0)) >= 1, "el árbol tiene nodos de %s" % Stat.display_name(s))
 	var mana_clusters := _tree.clusters.values().filter(func(c: Dictionary) -> bool: return c["theme"] == "mana").size()
 	_check(mana_clusters >= 10, "la familia de maná tiene 10 clusters o más (%d)" % mana_clusters)
+
+
+## Estados y avisos con textura (T99): borde de trazos, flechas y escarcha que crece.
+func _test_fx_art() -> void:
+	var spans := FxArt.dash_spans(0.0)
+	_check(spans.size() == FxArt.DASHES and is_equal_approx(spans[0][1] - spans[0][0], TAU / FxArt.DASHES * FxArt.DASH_FILL), "borde de trazos con huecos")
+	var moved := FxArt.dash_spans(0.25)
+	_check(is_equal_approx(moved[0][0] - spans[0][0], TAU * 0.25), "el borde gira con la fase")
+	_check(is_equal_approx(FxArt.dash_spans(1.25)[0][0], moved[0][0]), "una vuelta entera vuelve al principio")
+	var marks := FxArt.chevron_offsets(200.0, 46.0, 0.0)
+	_check(marks.size() >= 3 and marks[0] == 0.0 and marks.all(func(d: float) -> bool: return d < 200.0), "flechas repartidas a lo largo del aviso")
+	_check(FxArt.chevron_offsets(200.0, 46.0, 0.5)[0] == 23.0, "las flechas avanzan con la fase")
+	_check(FxArt.frost_growth(0.0) == 0.35 and FxArt.frost_growth(0.5) == 1.0 and FxArt.frost_growth(0.25) > 0.35, "la escarcha crece en medio segundo")
+	# El jugador apunta cuándo empezó cada estado.
+	var c := CharacterData.new(_classes[0], _tree)
+	var pl := Player.new()
+	pl.character = c
+	_check(pl.apply_status("chill", 3.0) and pl._status_since.has("chill"), "el jugador recuerda cuándo se heló")
+	var first: float = pl._status_since["chill"]
+	pl.apply_status("chill", 3.0)
+	_check(pl._status_since["chill"] == first, "renovar el estado no reinicia la escarcha")
+	pl.free()
 
 
 ## Partículas, luz y posproceso (T98): calidad gráfica, presupuesto y efectos.

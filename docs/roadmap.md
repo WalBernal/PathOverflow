@@ -600,9 +600,10 @@ Origen: R4
 - Opción de calidad gráfica (baja, media, alta) en Pausa → Gráficos, que ajuste partículas, luces y posproceso; medir con `tools/capture_screens -- rendimiento` en cada nivel.
 - Hecho: **calidad gráfica** (`GraphicsQuality`, Pausa → «Calidad gráfica: baja / media / alta»): luces dinámicas 10 / 20 / 32, partículas vivas como mucho 0 / 320 / 900, bloom 0 / 0,5 / 1, distorsión de calor solo en alta, ondas de choque desde media. **Ráfagas de partículas de GPU** (`BigFx`, `GPUParticles2D` de un solo disparo, del color del efecto y hacia fuera) en cada explosión o nova de las habilidades (`SkillController.burst_effects`), con el presupuesto de la calidad. En el shader de luz: **bloom** (halo suave alrededor de las luces, aparte de los escalones), **distorsión de calor** sobre las luces de fuego y **ondas de choque** (anillo que desplaza la imagen, 0,45 s) en los destellos grandes y las explosiones; «Reducir movimiento» apaga calor y ondas. Medido con `capture_screens -- rendimiento` (300 enemigos con explosiones): baja 25,0 ms, media 27,0, alta 27,0 por fotograma (`98_calidad_*`). Las auras y la lluvia siguen con su dibujo de siempre. Prueba `_test_graphics_quality`.
 
-### [ ] T99 · Estados y telegrafiados con textura · S
+### [x] T99 · Estados y telegrafiados con textura · S
 Origen: R4
 - Estados animados sobre enemigos y jugador (llamas que suben, escarcha que crece, burbujas de veneno, chispas de electrocución, gotas de sangrado) y avisos de ataque en el suelo con textura y borde animado en vez de formas planas.
+- Hecho: clase `FxArt` compartida. Estados: llamas con forma de lengua que suben (quemado), burbujas que suben y revientan con un anillo (veneno y corrupción), gotas con forma de lágrima que caen (sangrado), en enemigos y ahora también en el **jugador** (antes, burbujas genéricas para cualquier degenerativo); la **escarcha del jugador crece** del 35 % al 100 % en el primer medio segundo (`Player._status_since`); chispas y escarcha de los enemigos, como estaban. Avisos: **borde de trazos que gira** en golpes pesados, golpes de área y losas que se rompen, **ondas que se cierran hacia el centro** donde va a caer el golpe, y **flechas que avanzan** a lo largo de conos y cargas (las cargas, además, con sus bordes); se dibujan encima de los rellenos por lotes. Prueba `_test_fx_art`.
 
 ### [ ] T100 · Ambiente y clima por zona · S
 Origen: R4
@@ -751,3 +752,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T96 · Título con ciudad de servidores y brillo del logo, personaje en pedestal con pose de lucimiento, pantalla de carga entre zonas con ilustración y consejo, y barrido de píxeles entre pantallas.
 - 2026-10-25 · T97 · Números de daño (con críticos y apilado), ventanas que entran con zoom, botones que rebotan, tooltips con fundido, brillo de la experiencia al subir de nivel y la opción «Reducir movimiento».
 - 2026-10-25 · T98 · Calidad gráfica baja/media/alta, ráfagas de partículas de GPU en explosiones y novas, bloom, distorsión de calor y ondas de choque en el shader de luz; medido en cada nivel.
+- 2026-10-25 · T99 · Estados con forma (llamas, burbujas que revientan, gotas) también en el jugador, escarcha que crece y avisos de ataque con borde de trazos que gira, ondas que se cierran y flechas.

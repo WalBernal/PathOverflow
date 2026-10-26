@@ -2673,6 +2673,8 @@ func _draw_attacks(font: Font, view: Rect2) -> void:
 	var all_types := enemy_types()
 	var far_view := view.grow(ROLE_SNIPE_RANGE)   # los avisos grandes (cargas, francotiradores) se ven desde lejos
 	var marks: Array = []   # "!" de los golpes pesados: encima de los círculos (que van por lotes)
+	var tele_t := Time.get_ticks_msec() / 1000.0   # animación de los avisos (T99)
+	var post_fx: Array[Callable] = []
 	for i in positions.size():
 		if not far_view.has_point(positions[i]) or (windups[i] <= 0.0 and not casting.has(ids[i])):
 			continue
@@ -2685,7 +2687,8 @@ func _draw_attacks(font: Font, view: Rect2) -> void:
 			var hr := _heavy_radius(i)
 			_batch_circle(pos, hr, Color(TELEGRAPH, 0.12), 32)
 			_batch_circle(pos, hr * ht, Color(TELEGRAPH, 0.26), 32)
-			_batch_ring(pos, hr, 3.0, Color(TELEGRAPH, 0.6 + 0.4 * ht), 40)
+			post_fx.append(FxArt.marching_ring.bind(self, pos, hr, tele_t, Color(TELEGRAPH, 0.6 + 0.4 * ht)))   # borde de trazos que gira (T99)
+			post_fx.append(FxArt.closing_ripples.bind(self, pos, hr, tele_t, Color(TELEGRAPH.lightened(0.3), 0.7)))
 			_hatch_circle(pos, hr, Color.WHITE)
 			marks.append([pos + Vector2(-20.0, -radii[i] * SPRITE_SCALE * 1.1 - 30.0), TELEGRAPH.lerp(Color.WHITE, ht * 0.5)])
 		elif windups[i] > 0.0 and (traits[i] as Dictionary).get("snipe_on", false):
@@ -2703,7 +2706,8 @@ func _draw_attacks(font: Font, view: Rect2) -> void:
 					var radius := float(atk.get("radius", 100.0))
 					_batch_circle(pos, radius, Color(TELEGRAPH, 0.10), 32)
 					_batch_circle(pos, radius * t, Color(TELEGRAPH, 0.22), 32)
-					_batch_ring(pos, radius, 2.0, Color(TELEGRAPH, 0.7), 40)
+					post_fx.append(FxArt.marching_ring.bind(self, pos, radius, tele_t, Color(TELEGRAPH, 0.7), 2.5))
+					post_fx.append(FxArt.closing_ripples.bind(self, pos, radius, tele_t, Color(TELEGRAPH.lightened(0.3), 0.6)))
 					_hatch_circle(pos, radius, Color.WHITE)
 				"cone":
 					var radius := float(atk.get("range", 160.0)) + 20.0
@@ -2714,6 +2718,7 @@ func _draw_attacks(font: Font, view: Rect2) -> void:
 					var outline := _cone_points(pos, dir, radius, half)
 					outline.append(outline[0])
 					draw_polyline(outline, Color(TELEGRAPH, 0.7), 2.0, true)
+					post_fx.append(FxArt.chevrons.bind(self, pos, dir, radius, radius * sin(half) * 0.35, tele_t, Color(TELEGRAPH.lightened(0.3), 0.75)))   # flechas hacia fuera (T99)
 				"charge":
 					var length := float(atk.get("dash_speed", 600.0)) * float(atk.get("dash_time", 0.5))
 					var w := float(atk.get("width", 30.0)) + radii[i]
@@ -2721,6 +2726,9 @@ func _draw_attacks(font: Font, view: Rect2) -> void:
 					_batch_convex(PackedVector2Array([pos + side, pos + side + dir * length, pos - side + dir * length, pos - side]), Color(TELEGRAPH, 0.10))
 					if t > 0.03:   # con t = 0 el polígono no tiene área y no se puede triangular
 						_batch_convex(PackedVector2Array([pos + side, pos + side + dir * length * t, pos - side + dir * length * t, pos - side]), Color(TELEGRAPH, 0.22))
+					draw_polyline(PackedVector2Array([pos + side, pos + side + dir * length]), Color(TELEGRAPH, 0.6), 2.0, true)
+					draw_polyline(PackedVector2Array([pos - side, pos - side + dir * length]), Color(TELEGRAPH, 0.6), 2.0, true)
+					post_fx.append(FxArt.chevrons.bind(self, pos, dir, length, w * 0.35, tele_t, Color(TELEGRAPH.lightened(0.3), 0.8)))   # hacia dónde embiste (T99)
 				"blink":
 					var dest := attack_dirs[i]
 					draw_arc(dest, radii[i] + 6.0, 0.0, TAU, 24, Color(Color(atk.get("color", "c08aff")), 0.4 + 0.5 * t), 2.0, true)
@@ -2766,6 +2774,8 @@ func _draw_attacks(font: Font, view: Rect2) -> void:
 					var ray := Vector2.from_angle(float(cast.get("offset", 0.0)) + TAU * k / count)
 					draw_line(pos + ray * (radii[i] + 14.0), pos + ray * (radii[i] + 60.0 + 260.0 * t), Color(nc, 0.15 + 0.35 * t), 3.0, true)
 	_flush_batch()   # círculos de aviso de todos los enemigos: una llamada
+	for f in post_fx:   # bordes y flechas de los avisos, encima de los rellenos (T99)
+		f.call()
 	for m in marks:
 		draw_string_outline(font, m[0], "!", HORIZONTAL_ALIGNMENT_CENTER, 40.0, 26, 6, Color.BLACK)
 		draw_string(font, m[0], "!", HORIZONTAL_ALIGNMENT_CENTER, 40.0, 26, m[1])
@@ -2845,7 +2855,7 @@ func _draw_breaking_floor(h: Dictionary, t: float) -> void:
 	var sd: int = h["seed"]
 	draw_circle(p, r, Color(TELEGRAPH, 0.10))
 	draw_circle(p, r * t, Color(TELEGRAPH, 0.24))
-	draw_arc(p, r, 0.0, TAU, 40, Color(TELEGRAPH, 0.55 + 0.45 * t), 3.0, true)
+	FxArt.marching_ring(self, p, r, Time.get_ticks_msec() / 1000.0, Color(TELEGRAPH, 0.55 + 0.45 * t))   # borde de trazos (T99)
 	for k in 6:
 		var a := TAU * k / 6.0 + sd
 		var mid := p + Vector2.from_angle(a + 0.3) * r * 0.45 * t
@@ -2944,21 +2954,13 @@ func _draw_ailment_fx(i: int, tt: float) -> void:
 		for k in 3:
 			var ph := fmod(tt * 1.2 + k / 3.0 + jitter, 1.0)
 			draw_circle(p + Vector2((k - 1) * r * 0.5, -r - ph * 16.0), 2.5, Color(0.7, 0.3, 0.9, 0.8 * (1.0 - ph)))
+	# Veneno, quemado y sangrado (T99: formas de llama, burbujas que revientan y gotas).
 	if poison_time[i] > 0.0:
-		for k in 3:
-			var ph := fmod(tt * 1.0 + k / 3.0 + jitter + 0.5, 1.0)
-			draw_circle(p + Vector2((k - 1) * r * 0.6 + sin(tt * 3.0 + k) * 2.0, -r * 0.4 - ph * 18.0), 2.0 + ph * 1.5, Color(0.45, 0.9, 0.4, 0.75 * (1.0 - ph)))
+		FxArt.bubbles(self, p + Vector2(0, -r * 0.4), r, tt, jitter + 0.5, Color(0.45, 0.9, 0.4))
 	if burn_time[i] > 0.0:
-		# Lenguas de fuego que suben.
-		for k in 4:
-			var ph := fmod(tt * 1.8 + k / 4.0 + jitter, 1.0)
-			var q := p + Vector2((k - 1.5) * r * 0.45, -r * 0.2 - ph * r * 1.6)
-			draw_circle(q, (1.0 - ph) * 4.5, Color(1.0, 0.45 + 0.4 * ph, 0.1, 0.8 * (1.0 - ph)))
+		FxArt.flames(self, p + Vector2(0, -r * 0.2), r, tt, jitter)
 	if bleed_time[i] > 0.0:
-		for k in 2:
-			var ph := fmod(tt * 1.4 + k * 0.5 + jitter, 1.0)
-			var q := p + Vector2((k - 0.5) * r * 0.8, -r * 0.3 + ph * r * 1.1)
-			draw_circle(q, 2.2 * (1.0 - ph * 0.5), Color(0.8, 0.08, 0.1, 0.9 * (1.0 - ph)))
+		FxArt.drops(self, p + Vector2(0, -r * 0.3), r, tt, jitter)
 	if shock_time[i] > 0.0:
 		_draw_shock_fx(p, r, tt, jitter)
 	if freeze_time[i] > 0.0 or chill_time[i] > 0.0:

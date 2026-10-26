@@ -378,6 +378,7 @@ El **registro de misiones** está debajo del minimapa (L para plegarlo): la prin
 
 ## Interfaz
 
+- **Estados y avisos**: llamas que suben, burbujas de veneno que revientan y gotas de sangrado sobre enemigos y jugador, escarcha que crece al helarte; los avisos de ataque en el suelo tienen un borde de trazos que gira, ondas que se cierran hacia donde cae el golpe y flechas que marcan la dirección de conos y cargas.
 - **Calidad gráfica** (Pausa → baja, media, alta): cuántas luces hay a la vez, ráfagas de partículas de GPU en explosiones y novas, bloom alrededor de las luces, distorsión de calor sobre el fuego (alta) y ondas de choque en los golpes grandes (media y alta).
 - **Animación**: números de daño sobre los enemigos (los críticos, grandes y amarillos; los golpes seguidos se suman en una sola cifra), ventanas que entran con un zoom corto, botones que rebotan, tooltips de objeto con fundido y la barra de experiencia que brilla al subir de nivel. En Pausa → Interfaz: «Números de daño» y «Reducir movimiento» (sin rebotes ni zoom; las cifras solo suben).
 - **Pantallas**: el título tiene una ciudad de servidores que se desplaza y un brillo detrás del logo; en la lista de personajes, el elegido posa sobre un pedestal del color de su clase; al viajar entre zonas sale una **pantalla de carga** con una postal de la zona, su nombre y un consejo (`data/loading_tips.json`); y del título al menú y del menú al juego hay un **barrido de píxeles**.

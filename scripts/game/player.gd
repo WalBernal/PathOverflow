@@ -230,8 +230,14 @@ func apply_status(id: String, duration: float) -> bool:
 	var t := duration * (1.0 - res / 100.0) * (1.0 - minf(80.0, _stat(Stat.STATUS_RESIST)) / 100.0)
 	if t < 0.15:
 		return false
+	if not statuses.has(id):
+		_status_since[id] = Time.get_ticks_msec() / 1000.0   # para que la escarcha crezca (T99)
 	statuses[id] = maxf(float(statuses.get(id, 0.0)), t)
 	return true
+
+
+## Cuándo empezó cada estado activo (segundos del reloj), para animar su entrada.
+var _status_since: Dictionary = {}
 
 
 func is_frozen() -> bool:
@@ -779,11 +785,12 @@ func _draw() -> void:
 		Achievements.draw_hat(self, feet + Vector2(0, -31.0 * hs) * PLAYER_SPRITE_SCALE, 7.0 * PLAYER_SPRITE_SCALE, character)
 	if statuses.has("freeze") or statuses.has("chill"):
 		var frozen := statuses.has("freeze")
-		# Escarcha sobre el cuerpo, cristales en los pies y copos que caen.
+		# Escarcha sobre el cuerpo (crece al helarse, T99), cristales en los pies y copos que caen.
+		var grow := 1.0 if frozen else FxArt.frost_growth(tt - float(_status_since.get("chill", tt)))
 		var cover := PackedVector2Array()
 		for q in 18:
 			var a := TAU * q / 18.0
-			cover.append(Vector2(cos(a) * 20.0, sin(a) * 30.0 + (-22.0)) * (1.0 + 0.07 * sin(a * 5.0)))
+			cover.append(Vector2(cos(a) * 20.0 * grow, sin(a) * 30.0 * grow + (-22.0) + (1.0 - grow) * 18.0) * (1.0 + 0.07 * sin(a * 5.0)))
 		draw_colored_polygon(cover, Color(0.72, 0.92, 1.0, 0.42 if frozen else 0.18))
 		for q in (7 if frozen else 4):
 			var bx := (float(q) / (7 if frozen else 4) - 0.5) * 40.0
@@ -815,10 +822,15 @@ func _draw() -> void:
 			var ph := fposmod(tt * 2.3 + q * 0.2, 1.0)
 			var dir := Vector2.from_angle(q * 1.7 + floorf(tt * 2.3 + q * 0.2) * 0.9)
 			draw_circle(c0 + dir * (22.0 + ph * 22.0), 1.8 * (1.0 - ph), Color(1.0, 0.95, 0.4, 1.0 - ph))
-	# Burbujas del daño degenerativo sobre la cabeza (del color de su tipo).
-	var k := 0
+	# Daño degenerativo (T99): llamas si quema, gotas si sangra, burbujas del color de su tipo si no.
+	var kinds := {}
 	for d in dots.values():
-		var ph := fmod(Time.get_ticks_msec() / 700.0 + k * 0.33, 1.0)
-		var c: Color = DOT_COLORS.get(d["kind"], Color("6fd36b"))
-		draw_circle(Vector2(-8.0 + k * 8.0, -52.0 - ph * 14.0), 2.5 + ph * 1.5, Color(c, 0.85 * (1.0 - ph)))
-		k += 1
+		kinds[String(d["kind"])] = true
+	for kind in kinds:
+		match kind:
+			"fire":
+				FxArt.flames(self, Vector2(0, -6), 26.0, tt, 0.1)
+			"physical":
+				FxArt.drops(self, Vector2(0, -34), 22.0, tt, 0.3)
+			_:
+				FxArt.bubbles(self, Vector2(0, -44), 22.0, tt, 0.6, DOT_COLORS.get(kind, Color("6fd36b")))
