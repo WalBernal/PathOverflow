@@ -110,7 +110,10 @@ func show_item(item: Item, character: CharacterData, compare: bool) -> void:
 	elif _frozen:
 		_label.text = "[center][color=#%s]· Fijado (F o Y para soltarlo) ·[/color][/center]\n%s" % [GREY, _label.text]
 	reset_size()
+	var was_visible := visible
 	show()
+	if not was_visible:
+		UiMotion.fade_in(self)   # aparece con un fundido (T97)
 	_update_sides(item, character, compare)
 
 

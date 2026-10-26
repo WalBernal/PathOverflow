@@ -88,6 +88,10 @@ func _ready() -> void:
 	add_child(enemies)
 	player = PLAYER_SCENE.instantiate() as Player
 	add_child(player)
+	var numbers := DamageNumbers.new()   # números de daño (T97), encima de los enemigos
+	numbers.enemies = enemies
+	numbers.z_index = 50
+	add_child(numbers)
 	player.setup(character, enemies)
 	enemies.player = player
 	enemies.enemy_killed.connect(_on_enemy_killed)

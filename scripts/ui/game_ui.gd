@@ -519,6 +519,20 @@ func _build_pause_menu() -> Control:
 		Accessibility.set_reduce_flashes(not Accessibility.reduce_flashes)
 		flashes.text = "Menos destellos: " + ("sí" if Accessibility.reduce_flashes else "no"))
 	right.add_child(flashes)
+	var motion := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
+	motion.text = "Reducir movimiento: " + ("sí" if Accessibility.reduce_motion else "no")
+	motion.tooltip_text = "Sin rebotes ni transiciones en ventanas y botones, y números de daño que solo suben despacio."
+	motion.pressed.connect(func() -> void:
+		Accessibility.set_reduce_motion(not Accessibility.reduce_motion)
+		motion.text = "Reducir movimiento: " + ("sí" if Accessibility.reduce_motion else "no"))
+	right.add_child(motion)
+	var numbers := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
+	numbers.text = "Números de daño: " + ("sí" if DamageNumbers.enabled else "no")
+	numbers.tooltip_text = "Cifras del daño de cada golpe sobre los enemigos (los críticos, en amarillo)."
+	numbers.pressed.connect(func() -> void:
+		DamageNumbers.set_enabled(not DamageNumbers.enabled)
+		numbers.text = "Números de daño: " + ("sí" if DamageNumbers.enabled else "no"))
+	right.add_child(numbers)
 	var world_text := _cycle_button("Texto del mundo", Accessibility.WORLD_TEXT_SIZES, Accessibility.WORLD_TEXT_SIZES.map(func(v: float) -> String: return "%d %%" % roundi(v * 100.0)),
 		func() -> float: return Accessibility.world_text,
 		func(v: float) -> void: Accessibility.set_world_text(v))

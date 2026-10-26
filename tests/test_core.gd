@@ -168,6 +168,7 @@ func _initialize() -> void:
 	_test_tree_art_v2()
 	_test_ui_atlas()
 	_test_screens_t96()
+	_test_ui_motion()
 	_test_events_music_colorblind()
 	_test_story_editor()
 	_test_board_milestones()
@@ -4234,6 +4235,43 @@ func _test_mana_family() -> void:
 		_check(int(found.get(s, 0)) >= 1, "el árbol tiene nodos de %s" % Stat.display_name(s))
 	var mana_clusters := _tree.clusters.values().filter(func(c: Dictionary) -> bool: return c["theme"] == "mana").size()
 	_check(mana_clusters >= 10, "la familia de maná tiene 10 clusters o más (%d)" % mana_clusters)
+
+
+## Animación de la interfaz (T97): números de daño, rebotes y brillo de la experiencia.
+func _test_ui_motion() -> void:
+	var numbers: Array = []
+	DamageNumbers.merge(numbers, 7, Vector2.ZERO, 40.0, false, 0.0)
+	DamageNumbers.merge(numbers, 7, Vector2.ZERO, 25.0, true, 0.2)
+	_check(numbers.size() == 1 and is_equal_approx(numbers[0]["amount"], 65.0) and numbers[0]["stack"] == 2 and numbers[0]["crit"],
+		"dos golpes seguidos al mismo enemigo se apilan en una cifra (y cuenta como crítico)")
+	DamageNumbers.merge(numbers, 7, Vector2.ZERO, 10.0, false, 0.2 + DamageNumbers.STACK_WINDOW + 0.05)
+	DamageNumbers.merge(numbers, 8, Vector2.ZERO, 10.0, false, 0.7)
+	_check(numbers.size() == 3, "pasado el margen, o a otro enemigo, cifra nueva")
+	for k in DamageNumbers.MAX_NUMBERS + 5:
+		DamageNumbers.merge(numbers, 1000 + k, Vector2.ZERO, 1.0, false, 1.0)
+	_check(numbers.size() == DamageNumbers.MAX_NUMBERS, "como mucho %d cifras a la vez" % DamageNumbers.MAX_NUMBERS)
+	_check(DamageNumbers.scale_at(0.0, false, 1) > DamageNumbers.scale_at(0.3, false, 1), "la cifra salta grande y se asienta")
+	_check(DamageNumbers.scale_at(0.3, true, 1) > DamageNumbers.scale_at(0.3, false, 1), "los críticos, más grandes")
+	_check(DamageNumbers.scale_at(0.3, false, 5) > DamageNumbers.scale_at(0.3, false, 1), "un montón de golpes, más grande")
+	_check(DamageNumbers.scale_at(0.0, false, 1, true) == DamageNumbers.scale_at(0.3, false, 1, true), "sin movimiento, tamaño fijo")
+	_check(DamageNumbers.offset_at(0.3, 1.0, true).x == 0.0 and DamageNumbers.offset_at(0.3, 1.0, true).y < 0.0, "sin movimiento, solo sube")
+	_check(DamageNumbers.alpha_at(0.1) == 1.0 and DamageNumbers.alpha_at(DamageNumbers.LIFETIME) == 0.0, "la cifra se desvanece al final")
+	_check(DamageNumbers.label(12345.0) == "12.3k" and DamageNumbers.label(0.3) == "1", "cifras cortas")
+	# EnemyManager deja los golpes para los números.
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	em.spawn(Vector2.ZERO, Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+	em.lives[0] = 1.0e6
+	em.hit_index(0, 50.0, 50.0, 0.0, 100.0)
+	_check(em.number_events.size() == 1 and is_equal_approx(em.number_events[0][1], 50.0), "cada golpe deja su número")
+	em.free()
+	# Rebotes y brillo.
+	_check(is_equal_approx(UiMotion.overshoot(0.0), 0.92) and is_equal_approx(UiMotion.overshoot(1.0), 1.0), "el rebote va del 92 % al 100 %")
+	var peak := 0.0
+	for k in 20:
+		peak = maxf(peak, UiMotion.overshoot(k / 20.0))
+	_check(peak > 1.0, "el rebote se pasa un poco antes de asentarse")
+	_check(UiMotion.level_glow(0.1) > 0.5 and UiMotion.level_glow(UiMotion.LEVEL_GLOW_TIME + 0.1) == 0.0 and UiMotion.level_glow(-1.0) == 0.0, "la barra de experiencia brilla al subir de nivel y se apaga")
 
 
 ## Pantallas de título, personajes y carga (T96): barrido, poses y pantalla de carga.

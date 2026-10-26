@@ -157,6 +157,8 @@ static func decorate_window(panel: PanelContainer) -> void:
 			if panel.visible != was:
 				panel.set_meta("ui_shown", panel.visible)
 				Sfx.play("ui_open" if panel.visible else "ui_close", -10.0)
+				if panel.visible:
+					UiMotion.window_in(panel)   # entrada corta (T97)
 		check.call_deferred())
 	panel.draw.connect(func() -> void:
 		var r := Rect2(Vector2.ZERO, panel.size)
@@ -421,6 +423,7 @@ static func button(text: String, callback: Callable, min_width := 0.0) -> Button
 	b.text = text
 	b.custom_minimum_size = Vector2(min_width, 40)
 	b.pressed.connect(callback)
+	b.pressed.connect(func() -> void: UiMotion.bounce(b))   # rebote al pulsar (T97)
 	b.mouse_entered.connect(func() -> void:
 		if not b.disabled:
 			Sfx.play("ui_hover", -18.0))   # T77

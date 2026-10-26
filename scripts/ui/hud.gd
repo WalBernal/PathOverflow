@@ -361,6 +361,15 @@ func _draw() -> void:
 	var xp := _xp_rect()
 	var progress := float(character.experience) / float(character.experience_to_next())
 	UiAtlas.draw(self, "bar_frame", xp.grow(4.0))   # marco del atlas (T95)
+	# Al subir de nivel (T97), la barra brilla un par de segundos.
+	if character.level != _seen_level:
+		if _seen_level > 0 and character.level > _seen_level:
+			_level_glow_at = Time.get_ticks_msec() / 1000.0
+		_seen_level = character.level
+	var glow := UiMotion.level_glow(Time.get_ticks_msec() / 1000.0 - _level_glow_at)
+	if glow > 0.0:
+		for k in 4:
+			draw_rect(xp.grow(3.0 + k * 3.0), Color(1.0, 0.85, 0.35, Accessibility.flash(glow) * 0.22 * (1.0 - k / 4.0)), false, 3.0)
 	draw_rect(xp, Color(0, 0, 0, 0.75))
 	draw_rect(Rect2(xp.position, Vector2(xp.size.x * progress, xp.size.y)), XP_COLOR)
 	for k in range(1, 10):
@@ -988,6 +997,11 @@ func _draw_orb(center: Vector2, fill: float, color: Color, reserved := 0.0) -> v
 				draw_line(pts[0], pts[1], Color(0.6, 0.8, 1.0, 0.12), 2.0)
 	# Aro dorado del atlas (T95) alrededor del orbe.
 	UiAtlas.draw_orb_frame(self, center, ORB_RADIUS)
+
+
+## Brillo de la barra de experiencia al subir de nivel (T97, UiMotion.level_glow).
+var _seen_level := 0
+var _level_glow_at := -100.0
 
 
 ## Cifra de los orbes centrada en 160 px: fuente normal con contorno y sombra suave

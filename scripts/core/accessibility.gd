@@ -17,6 +17,13 @@ const AURA_COLORBLIND := {
 
 static var reduce_flashes := bool(GameSettings.get_value("interface", "reduce_flashes", false))
 static var world_text := float(GameSettings.get_value("interface", "world_text", 1.0))
+## Reducir movimiento (T97): sin rebotes ni saltos en la interfaz ni en los números de daño.
+static var reduce_motion := bool(GameSettings.get_value("interface", "reduce_motion", false))
+
+
+static func set_reduce_motion(on: bool) -> void:
+	reduce_motion = on
+	GameSettings.set_value("interface", "reduce_motion", on)
 
 
 static func set_reduce_flashes(on: bool) -> void:

@@ -148,6 +148,9 @@ var aggro_range := AGGRO_RANGE
 ## hace el doble y los siguientes menos. `_cache_hit` = ids ya golpeados.
 var cold_cache := false
 var _cache_hit := {}
+## Golpes de este fotograma para los números de daño (T97): [pos, daño, crítico, id].
+## Los consume DamageNumbers; sin él, se quedan en 200 y no crecen más.
+var number_events: Array = []
 
 var ids := PackedInt32Array()
 var positions := PackedVector2Array()
@@ -1245,6 +1248,8 @@ func _damage(i: int, min_damage: float, max_damage: float, crit_chance: float, c
 				player.take_damage(minf(damage * reflect, player.max_life() * 0.1))
 	last_damage_dealt += minf(damage, lives[i])
 	_count_damage(minf(damage, lives[i]))
+	if number_events.size() < 200:
+		number_events.append([positions[i], damage, crit, ids[i]])   # números de daño (T97)
 	lives[i] -= damage
 	flashes[i] = FLASH_TIME
 	if lives[i] <= 0.0:
