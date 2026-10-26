@@ -912,7 +912,7 @@ func _physics_process(delta: float) -> void:
 		return
 	if not _channel.is_empty():
 		_update_channel(delta, Input.is_action_pressed(ACTIONS[int(_channel["index"])]), _aim_target())
-	if player.is_alive() and _busy <= 0.0 and not player.controls_locked and not player.is_frozen() and not Gamepad.menu_cursor:
+	if player.is_alive() and _busy <= 0.0 and not player.controls_locked and not player.is_frozen() and not Gamepad.menu_cursor and not UiStyle.typing():
 		var used := false
 		for i in ACTIONS.size():
 			if i == 0 and Gamepad.skill_1_blocked():

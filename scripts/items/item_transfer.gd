@@ -61,9 +61,7 @@ static func fits(character: CharacterData, loc: Dictionary, item: Item) -> Strin
 		"stash":
 			if stash == null:
 				return "El alijo no está disponible aquí."
-			if item is KeyItem:
-				return "Los objetos clave se quedan contigo: son de tu historia, no de la cuenta."
-			return ""
+			return Stash.refusal(int(loc.get("tab", 0)), item)
 		"equip":
 			var slot: String = loc["slot"]
 			if item is Flask:

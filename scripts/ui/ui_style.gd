@@ -280,6 +280,16 @@ static func apply_ui_scale(root: Control) -> void:
 	fit.call()
 
 
+## ¿Se está escribiendo en un campo de texto (búsqueda del alijo, nombres)? Mientras
+## tanto, las teclas de habilidades, esquiva y movimiento no actúan (T80).
+static func typing() -> bool:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null or tree.root == null:
+		return false
+	var focus := tree.root.gui_get_focus_owner()
+	return focus is LineEdit or focus is TextEdit
+
+
 ## Por debajo de esto no se lee con la interfaz al 80 % (T76).
 const MIN_FONT_SIZE := 12
 

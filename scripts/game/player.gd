@@ -501,7 +501,7 @@ func _physics_process(delta: float) -> void:
 	safe_mode_window = maxf(0.0, safe_mode_window - delta)
 	safe_mode_cooldown = maxf(0.0, safe_mode_cooldown - delta)
 	# Por sondeo (no por evento): el gatillo del mando manda muchos eventos al apretarlo.
-	if InputMap.has_action(&"dodge") and Input.is_action_just_pressed(&"dodge") and not Gamepad.menu_cursor:
+	if InputMap.has_action(&"dodge") and Input.is_action_just_pressed(&"dodge") and not Gamepad.menu_cursor and not UiStyle.typing():
 		dodge()
 	if dodge_charges < max_dodge_charges():
 		dodge_charges = minf(float(max_dodge_charges()), dodge_charges + delta / dodge_recharge_time())
@@ -514,7 +514,7 @@ func _physics_process(delta: float) -> void:
 		_walk_phase = -1.0
 		return
 
-	var dir := Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down") if not Gamepad.menu_cursor else Vector2.ZERO
+	var dir := Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down") if not Gamepad.menu_cursor and not UiStyle.typing() else Vector2.ZERO
 	if _move_held and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		_move_held = false  # se soltó el botón mientras otra cosa tenía el foco
 	if dir != Vector2.ZERO:

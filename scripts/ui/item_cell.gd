@@ -30,6 +30,8 @@ var warning := false
 var placeholder_icon := ""
 ## Ranura DIMM: se dibuja como un zócalo de memoria.
 var dimm_socket := false
+## Búsqueda del alijo (T80): 1 = coincide (borde dorado), -1 = no coincide (apagado), 0 = sin búsqueda.
+var highlight := 0
 
 var _dragging := false
 
@@ -134,6 +136,10 @@ func _draw() -> void:
 		draw_line(Vector2(3, 3), size - Vector2(3, 3), Color("e06c6c"), 2.0)
 		draw_rect(rect, Color("e06c6c"), false, 2.0)
 	_draw_marks()
+	if highlight < 0:
+		draw_rect(rect, Color(0.03, 0.02, 0.05, 0.7))
+	elif highlight > 0:
+		draw_rect(rect.grow(-1.0), Color("ffd84a"), false, 3.0)
 	if selected:
 		draw_rect(rect, UiStyle.ACCENT, false, 3.0)
 

@@ -151,6 +151,7 @@ func _initialize() -> void:
 	_test_sound_map()
 	_test_stingers()
 	_test_inventory_marks()
+	_test_stash_tabs()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3817,6 +3818,43 @@ func _test_inventory_marks() -> void:
 		"vender lo marcado paga, se puede recomprar y vuelve sin la marca")
 	_check(inv.bag.find(sword) != -1 and inv.bag.find(robe) != -1, "lo demás sigue en la bolsa")
 	panel.free()
+
+
+## Alijo con pestañas y búsqueda (T80).
+func _test_stash_tabs() -> void:
+	var s := Stash.new("user://prueba_alijo_t80.json")
+	_check(Stash.TABS == 5 and s.tab_name(Stash.MATERIALS_TAB) == "Materiales", "cinco pestañas, una de materiales")
+	s.rename(0, "   Lo bueno de verdad para el jefe final   ")
+	_check(s.tab_name(0) == "Lo bueno de verdad p" and s.tab_name(0).length() == Stash.NAME_MAX, "renombrar recorta espacios y largo")
+	s.rename(1, "  ")
+	_check(s.tab_name(1) == Stash.TAB_NAMES[1], "un nombre vacío vuelve al de fábrica")
+	s.set_color(2, 5)
+	var gen := ItemGenerator.new(_db, 80)
+	var ring := gen.generate(20, Rarity.Item.RARE, "anillo_de_rubi")
+	s.set_item(0, 3, ring)
+	var copy := Stash.new("user://prueba_alijo_t80.json")
+	copy.load_dict(s.to_dict(), _db)
+	_check(copy.tab_name(0) == s.tab_name(0) and copy.tab_color(2) == Stash.TAB_COLORS[5] and copy.get_item(0, 3) != null, "nombres, colores y objetos se guardan")
+	var old := Stash.new("user://prueba_alijo_t80.json")
+	old.load_dict({"version": 1, "tabs": [[null], [null], [null], [null]]}, _db)
+	_check(old.tab_name(3) == Stash.TAB_NAMES[3] and old.tabs.size() == 5, "un alijo de antes carga con los nombres de fábrica y la pestaña nueva")
+	# Materiales: solo chips.
+	_check(Stash.refusal(Stash.MATERIALS_TAB, ring) != "" and Stash.refusal(0, ring) == "", "el equipo no va a la pestaña de materiales")
+	# Búsqueda: nombre, base y afijos, sin tildes ni mayúsculas.
+	_check(Stash.matches(ring, "ANILLO") and Stash.matches(ring, ring.display_name().substr(0, 4)), "busca por nombre y base")
+	if not ring.affixes.is_empty():
+		var affix_text := Item.describe_mod(ring.affixes[0]).split(" ")
+		var word := ""
+		for w in affix_text:
+			if w.length() > 4 and not w.is_valid_float():
+				word = w
+				break
+		if word != "":
+			_check(Stash.matches(ring, word.to_upper()), "busca por el texto de un afijo («%s»)" % word)
+	_check(Stash.matches(ring, "rubí") == Stash.matches(ring, "rubi"), "sin distinguir tildes")
+	_check(not Stash.matches(ring, "") and not Stash.matches(null, "anillo") and not Stash.matches(ring, "zzzz"), "vacío o sin coincidencia: no marca")
+	_check(s.match_count(0, "anillo") == 1 and s.match_count(1, "anillo") == 0, "cuenta las coincidencias por pestaña")
+	_check(not UiStyle.typing(), "sin escribir en un campo, las teclas del juego funcionan")
 
 
 ## Parte 2 (T72b): el ataque golpea en el cuadro de impacto de la animación.

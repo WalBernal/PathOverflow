@@ -465,9 +465,10 @@ Origen: R3 (PoE/Grim Dawn)
 - Objetos que ocupan su tamaño en la rejilla (1×1, 1×2, 2×2, 2×3) si se decide que suma; si no, dejarlo anotado.
 - Hecho: botón «Ordenar» (`Inventory.sort_bag`: compacta sin huecos; equipo por ranura, rareza y nivel, luego pociones, placas, RAM, chips y objetos clave, la basura al final). Click derecho en la bolsa: basura → bloqueado → sin marca (candado o papelera sobre la casilla; se guardan con el objeto en bolsa, equipo y alijo). Lo bloqueado no se vende (ni arrastrándolo ni en lote) ni se tira; en la tienda, «Vender lo marcado como basura» (`Economy.junk_sell`, cualquier tipo salvo objetos clave) y lo vendido vuelve sin marca si se recompra. Alt en cualquier tooltip de equipo lo compara con lo equipado (alijo, tienda, suelo). Tamaños en la rejilla: **no se hace** — con 60 casillas, alijo, filtro de botín y venta por lote/basura, el «tetris» añadiría gestión sin decisiones interesantes; queda anotado por si se replantea con una bolsa más pequeña.
 
-### [ ] T80 · Alijo con pestañas y búsqueda · M
+### [x] T80 · Alijo con pestañas y búsqueda · M
 Origen: R3 (PoE: búsqueda del alijo)
 - Pestañas con nombre y color, una de materiales (parches de crafteo, mapas, chips) y búsqueda por texto que resalta lo que coincide (nombre, base o afijo).
+- Hecho: cinco pestañas; «Editar pestaña» cambia el nombre (hasta 20 letras; vacío = el de fábrica) y el color (7 colores), que se guardan en el alijo (versión 2; los de antes cargan con los nombres de fábrica). Pestaña «Materiales»: solo chips de expansión (lo de crafteo que es objeto; los chips van ahí solos al guardarlos) y muestra los parches del personaje, que son contadores. No hay mapas en el juego. Búsqueda (`Stash.matches`: nombre, base, habilidad de la placa y texto de los afijos, sin mayúsculas ni tildes): resalta en dorado lo que coincide, apaga el resto y cuenta las coincidencias de cada pestaña en su botón. Mientras se escribe en un campo de texto, las teclas de habilidades, esquiva y movimiento no actúan (`UiStyle.typing`).
 
 ### [ ] T81 · Hoja de personaje con desglose · M
 Origen: R3 (PoE: de dónde sale cada número)
@@ -600,3 +601,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T77 · Sonido por habilidad (capa de firma y tono propio), impactos por daño, recoger y equipar por material, caída de conjuntos, pasos por suelo y sonidos de interfaz.
 - 2026-10-25 · T78 · Avisos de música (élite, botín, nivel y jefe) que bajan la música un momento, y paso a la fase del jefe a compás y sin intro.
 - 2026-10-25 · T79 · Inventario: ordenar y compactar, bloquear y marcar como basura (guardado), vender la basura de una vez y comparar con Alt; tamaños en la rejilla descartados con su motivo.
+- 2026-10-25 · T80 · Alijo con pestañas de nombre y color editables, pestaña de materiales y búsqueda que resalta lo que coincide.
