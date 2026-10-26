@@ -192,6 +192,37 @@ static func describe_mod(m: Dictionary) -> String:
 
 
 ## Para el futuro sistema de guardado.
+## Marcas del jugador (T79): bloqueado (no se vende ni se tira) y basura (se vende
+## de una vez a Nacho). Son excluyentes; se guardan con el objeto (Item.serialize).
+var locked := false
+var junk := false
+
+
+## Click derecho en la bolsa: normal → basura → bloqueado → normal. Devuelve el texto de la marca nueva.
+static func cycle_mark(item: Item) -> String:
+	if item.locked:
+		item.locked = false
+		return "sin marca"
+	if item.junk:
+		item.junk = false
+		item.locked = true
+		return "bloqueado"
+	item.junk = true
+	return "basura"
+
+
+## to_dict() con las marcas (null si no hay objeto). Para guardar bolsa, equipo y alijo.
+static func serialize(item: Item) -> Variant:
+	if item == null:
+		return null
+	var d: Dictionary = item.to_dict()
+	if item.locked:
+		d["locked"] = true
+	if item.junk:
+		d["junk"] = true
+	return d
+
+
 func to_dict() -> Dictionary:
 	return {
 		"kind": "equipment",
@@ -208,6 +239,14 @@ func to_dict() -> Dictionary:
 
 ## Devuelve null si la base ya no existe (datos cambiados entre versiones).
 static func from_dict(d: Dictionary, db: ItemDatabase) -> Item:
+	var item := _decode(d, db)
+	if item:
+		item.locked = bool(d.get("locked", false))
+		item.junk = bool(d.get("junk", false)) and not item.locked
+	return item
+
+
+static func _decode(d: Dictionary, db: ItemDatabase) -> Item:
 	match d.get("kind", "equipment"):
 		"motherboard":
 			return Motherboard.from_save(d, db)

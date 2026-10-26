@@ -23,6 +23,9 @@ var _pinned: ItemTooltip
 var _item: Item
 var _character: CharacterData
 var _compare := false
+## Lo que pidió quien lo abrió (sin contar Alt) y si Alt estaba pulsada.
+var _requested_compare := false
+var _alt_held := false
 
 
 func _ready() -> void:
@@ -52,6 +55,14 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if not visible or _is_side:
 		return
+	# Alt (T79): comparación rápida con lo equipado en cualquier tooltip (alijo,
+	# tienda, suelo, lo ya equipado); al soltarla vuelve a como estaba.
+	var alt := Input.is_key_pressed(KEY_ALT)
+	if _item and _item.is_equipment() and alt != _alt_held:
+		_alt_held = alt
+		var keep := _requested_compare
+		show_item(_item, _character, keep or alt)
+		_requested_compare = keep
 	# En coordenadas de pantalla: la interfaz puede estar escalada (GameUI).
 	var view := get_viewport_rect().size
 	var shown := size * get_global_transform().get_scale()
@@ -86,6 +97,11 @@ func show_item(item: Item, character: CharacterData, compare: bool) -> void:
 	_item = item
 	_character = character
 	_compare = compare
+	_requested_compare = compare
+	if not _is_side and Input.is_key_pressed(KEY_ALT) and item.is_equipment():
+		_compare = true   # con Alt pulsada, ya sale comparando
+		compare = true
+	_alt_held = Input.is_key_pressed(KEY_ALT)
 	var border: StyleBoxFlat = get_theme_stylebox("panel")
 	border.border_color = Rarity.item_color(item.rarity).darkened(0.3)
 	_label.text = build_text(item, character, compare)

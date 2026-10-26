@@ -126,8 +126,14 @@ func _ready() -> void:
 	_summary.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	summary_box.add_child(_summary)
 
+	var bag_row := HBoxContainer.new()
+	box.add_child(bag_row)
 	_bag_header = UiStyle.section_header("Bolsa")
-	box.add_child(_bag_header)
+	_bag_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bag_row.add_child(_bag_header)
+	var sort_button := UiStyle.button("Ordenar", sort_bag, 0)
+	sort_button.tooltip_text = "Ordena y compacta la bolsa: equipo por ranura y rareza, luego pociones, placas y RAM; la basura, al final."
+	bag_row.add_child(sort_button)
 	var grid := GridContainer.new()
 	grid.columns = BAG_COLUMNS
 	grid.add_theme_constant_override("h_separation", 2)
@@ -139,7 +145,7 @@ func _ready() -> void:
 		grid.add_child(cell)
 		_bag_cells.append(cell)
 
-	box.add_child(UiStyle.label("Arrastra para mover o equipar  ·  Click: equipar / quitar (también pociones)  ·  Arrastra fuera para tirar", 11, UiStyle.MUTED))
+	box.add_child(UiStyle.label("Arrastra para mover o equipar  ·  Click: equipar / quitar (también pociones)  ·  Arrastra fuera para tirar\nClick derecho: basura / bloqueado / sin marca  ·  Alt: comparar con lo equipado", 11, UiStyle.MUTED))
 	fit_height.call_deferred()
 
 
@@ -200,7 +206,26 @@ func _on_cell_dropped(target: ItemCell, payload: Dictionary) -> void:
 	_on_cell_hovered(target, true)
 
 
+## Ordena y compacta la bolsa (T79).
+func sort_bag() -> void:
+	if character == null:
+		return
+	var n := character.inventory.sort_bag()
+	Sfx.play("pickup", -10.0, 1.2)
+	message.emit("Bolsa ordenada: %d objetos, sin huecos." % n)
+
+
 func _on_cell_clicked(cell: ItemCell, button: MouseButton) -> void:
+	if cell.item != null and button == MOUSE_BUTTON_RIGHT and cell.location["kind"] == "bag":
+		# Marcas (T79): basura → bloqueado → sin marca.
+		if cell.item is KeyItem:
+			message.emit("Los objetos clave ya no se pueden vender ni tirar.")
+			return
+		var mark := Item.cycle_mark(cell.item)
+		cell.queue_redraw()
+		character.inventory.changed.emit()   # se guarda y se recalcula la venta de basura
+		message.emit("%s: %s." % [cell.item.display_name(), mark])
+		return
 	if cell.item == null or button != MOUSE_BUTTON_LEFT:
 		return
 	var inv := character.inventory

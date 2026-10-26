@@ -65,7 +65,7 @@ func to_dict() -> Dictionary:
 	for tab in tabs:
 		var row: Array = []
 		for item in tab:
-			row.append(item.to_dict() if item else null)
+			row.append(Item.serialize(item))
 		data.append(row)
 	return {"version": 1, "tabs": data}
 

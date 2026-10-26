@@ -978,6 +978,10 @@ func _on_drop_to_ground(location: Dictionary) -> void:
 	if ItemTransfer.get_at(_character.inventory, location) is KeyItem:
 		hud.flash("Es un objeto clave. Mejor no tirarlo: abre caminos que necesitarás.", UiStyle.ACCENT)
 		return
+	var held := ItemTransfer.get_at(_character.inventory, location)
+	if held and held.locked:
+		hud.flash("Está bloqueado: no se tira. Click derecho en la bolsa para quitarle el candado.", UiStyle.ACCENT)
+		return
 	var item := ItemTransfer.take(_character, location)
 	if item:
 		_loot.drop_item(item, _player.global_position + Vector2(randf_range(-40.0, 40.0), randf_range(20.0, 50.0)))

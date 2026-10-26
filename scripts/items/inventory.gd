@@ -183,6 +183,44 @@ func install_board(bag_index: int, hotbar_index := -1) -> bool:
 	return true
 
 
+## Ordena y compacta la bolsa (T79): sin huecos, primero el equipo (por ranura,
+## rareza y nivel), luego pociones, placas, RAM, chips y objetos clave; lo marcado
+## como basura, al final. Devuelve cuántos objetos hay.
+func sort_bag() -> int:
+	var items: Array = bag.filter(func(it) -> bool: return it != null)
+	items.sort_custom(func(a: Item, b: Item) -> bool:
+		var ka := bag_sort_key(a)
+		var kb := bag_sort_key(b)
+		for k in ka.size():
+			if ka[k] != kb[k]:
+				return ka[k] < kb[k]
+		return false)
+	for i in bag.size():
+		bag[i] = items[i] if i < items.size() else null
+	changed.emit()
+	return items.size()
+
+
+## Clave de orden de un objeto de la bolsa (menor = antes).
+static func bag_sort_key(it: Item) -> Array:
+	var group := 0
+	if it is Flask:
+		group = 1
+	elif it is Motherboard:
+		group = 2
+	elif it is RamModule:
+		group = 3
+	elif it is ExpansionChip:
+		group = 4
+	elif it is KeyItem:
+		group = 5
+	var slot_order := EQUIP_SLOTS.find(it.slot()) if group == 0 else 0
+	var name_key := 0
+	if it is Motherboard:
+		name_key = String((it as Motherboard).skill_def.get("name", "")).hash() % 100000
+	return [1 if it.junk else 0, group, slot_order, -it.rarity, name_key, -it.item_level]
+
+
 ## Ordena las placas y los módulos RAM de la bolsa sin mover lo demás: ocupan
 ## los mismos huecos, pero primero las placas (por nombre y nivel) y luego las RAM
 ## (por generación, familia y grado).
@@ -260,13 +298,13 @@ func remove_ram(hotbar_index: int, dimm_index: int) -> bool:
 func to_dict() -> Dictionary:
 	var equip := {}
 	for slot in equipment:
-		equip[slot] = equipment[slot].to_dict()
+		equip[slot] = Item.serialize(equipment[slot])
 	var bag_data: Array = []
 	for item in bag:
-		bag_data.append(item.to_dict() if item else null)
+		bag_data.append(Item.serialize(item))
 	var board_data: Array = []
 	for board in boards:
-		board_data.append(board.to_dict() if board else null)
+		board_data.append(Item.serialize(board))
 	var flask_data: Array = []
 	for f in flasks:
 		flask_data.append(f.to_dict() if f else null)

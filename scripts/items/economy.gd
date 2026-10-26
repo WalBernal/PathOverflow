@@ -147,7 +147,20 @@ static func bulk_sell(inv: Inventory, max_rarity: int) -> Array:
 	var total := 0
 	for i in inv.bag.size():
 		var it: Item = inv.bag[i]
-		if it and it.is_equipment() and not (it is Motherboard or it is RamModule or it is KeyItem) and it.rarity <= max_rarity:
+		if it and not it.locked and it.is_equipment() and not (it is Motherboard or it is RamModule or it is KeyItem) and it.rarity <= max_rarity:
+			idx.append(i)
+			total += sell_price(it)
+	return [idx, total]
+
+
+## Lo marcado como basura en la bolsa (T79), de cualquier tipo salvo objetos clave:
+## [índices de la bolsa, tokens]. Lo bloqueado nunca se vende.
+static func junk_sell(inv: Inventory) -> Array:
+	var idx: Array[int] = []
+	var total := 0
+	for i in inv.bag.size():
+		var it: Item = inv.bag[i]
+		if it and it.junk and not it.locked and not it is KeyItem:
 			idx.append(i)
 			total += sell_price(it)
 	return [idx, total]

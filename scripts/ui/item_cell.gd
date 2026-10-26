@@ -133,8 +133,26 @@ func _draw() -> void:
 	if warning:
 		draw_line(Vector2(3, 3), size - Vector2(3, 3), Color("e06c6c"), 2.0)
 		draw_rect(rect, Color("e06c6c"), false, 2.0)
+	_draw_marks()
 	if selected:
 		draw_rect(rect, UiStyle.ACCENT, false, 3.0)
+
+
+## Marcas del jugador (T79): candado arriba a la izquierda (bloqueado) o el objeto
+## apagado con una papelera (basura).
+func _draw_marks() -> void:
+	if item.junk:
+		draw_rect(Rect2(Vector2.ZERO, size), Color(0.05, 0.03, 0.03, 0.55))
+		var p := Vector2(3, 3)
+		draw_rect(Rect2(p + Vector2(1, 3), Vector2(8, 9)), Color("c06060"))
+		draw_rect(Rect2(p + Vector2(0, 1), Vector2(10, 2)), Color("e08080"))
+		for k in 3:
+			draw_line(p + Vector2(2.5 + k * 2.5, 5), p + Vector2(2.5 + k * 2.5, 10), Color("5a2020"), 1.0)
+	elif item.locked:
+		var p := Vector2(3, 4)
+		draw_arc(p + Vector2(5, 4), 3.0, PI, TAU, 8, Color("f2c14e"), 1.5)
+		draw_rect(Rect2(p + Vector2(1, 4), Vector2(8, 7)), Color("f2c14e"))
+		draw_rect(Rect2(p + Vector2(4, 6), Vector2(2, 3)), Color("2a2010"))
 
 
 ## Zócalo DIMM vacío: ranura con contactos dorados y una muesca, del color de su generación.

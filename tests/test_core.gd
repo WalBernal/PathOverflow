@@ -150,6 +150,7 @@ func _initialize() -> void:
 	_test_ui_identity()
 	_test_sound_map()
 	_test_stingers()
+	_test_inventory_marks()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3767,6 +3768,55 @@ func _test_stingers() -> void:
 			var w := SoundMap.beat_wait(pos, bpm)
 			var off := fposmod(pos + w, beat)
 			_check(w > 0.0 and w <= beat + 0.0001 and minf(off, beat - off) < 0.001, "cae justo en un tiempo (%d bpm, %.1f s)" % [bpm, pos])
+
+
+## Inventario a la altura del género (T79): ordenar y compactar, bloquear, basura y venderla.
+func _test_inventory_marks() -> void:
+	var gen := ItemGenerator.new(_db, 79)
+	var sword := gen.generate(10, Rarity.Item.RARE, "espada_oxidada")
+	_check(Item.cycle_mark(sword) == "basura" and sword.junk and not sword.locked, "click derecho: basura")
+	_check(Item.cycle_mark(sword) == "bloqueado" and sword.locked and not sword.junk, "otra vez: bloqueado")
+	_check(Item.cycle_mark(sword) == "sin marca" and not sword.locked and not sword.junk, "y otra: sin marca")
+	var board := gen.generate_motherboard(10)
+	board.locked = true
+	var again := Item.from_dict(Item.serialize(board), _db)
+	_check(again.locked and again is Motherboard, "las marcas se guardan (también en placas)")
+	var c := CharacterData.new(_classes[0], _tree)
+	var inv := c.inventory
+	for k in inv.bag.size():
+		inv.bag[k] = null
+	var robe := gen.generate(10, Rarity.Item.NORMAL, "tunica_de_seda")
+	var junk_ring := gen.generate(10, Rarity.Item.MAGIC)
+	junk_ring.junk = true
+	var flask := gen.generate_flask(10)
+	inv.bag[7] = board
+	inv.bag[3] = flask
+	inv.bag[12] = robe
+	inv.bag[20] = junk_ring
+	inv.bag[30] = sword
+	_check(inv.sort_bag() == 5, "ordenar no pierde nada")
+	_check(inv.bag[5] == null and inv.bag[4] != null, "compacta: sin huecos")
+	_check(inv.bag[0].is_equipment() and inv.bag[1].is_equipment() and inv.bag[2] == flask and inv.bag[3] == board and inv.bag[4] == junk_ring,
+		"equipo, luego pociones y placas; la basura al final")
+	var loaded := Inventory.new()
+	loaded.load_dict(inv.to_dict(), _db)
+	_check(loaded.bag[4].junk and loaded.bag[3].locked, "la bolsa guardada conserva las marcas")
+	# Venta: lo bloqueado nunca, la basura de golpe.
+	sword.locked = true
+	_check(not (inv.bag.find(sword) in Economy.bulk_sell(inv, Rarity.Item.RARE)[0]), "vender por lote se salta lo bloqueado")
+	board.locked = false
+	board.junk = true
+	var plan := Economy.junk_sell(inv)
+	_check(plan[0].size() == 2 and plan[1] > 0, "basura: el anillo y la placa marcados")
+	var panel := ShopPanel.new()
+	panel.character = c
+	panel._ready()
+	var before := c.tokens
+	var got := panel.sell_junk()
+	_check(got == plan[1] and c.tokens == before + got and panel.buyback.size() == 2 and not (panel.buyback[0]["item"] as Item).junk,
+		"vender lo marcado paga, se puede recomprar y vuelve sin la marca")
+	_check(inv.bag.find(sword) != -1 and inv.bag.find(robe) != -1, "lo demás sigue en la bolsa")
+	panel.free()
 
 
 ## Parte 2 (T72b): el ataque golpea en el cuadro de impacto de la animación.

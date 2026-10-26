@@ -58,6 +58,7 @@ var _sell_cell: ItemCell
 var _refresh_button: Button
 var _bulk_normal: Button
 var _bulk_magic: Button
+var _bulk_junk: Button
 var _scroll: ScrollContainer
 var _seen_refreshes := 0
 var _shown := false
@@ -151,8 +152,11 @@ func _ready() -> void:
 	sell_row.add_child(bulk)
 	_bulk_normal = UiStyle.button("", sell_bulk.bind(Rarity.Item.NORMAL), 240)
 	_bulk_magic = UiStyle.button("", sell_bulk.bind(Rarity.Item.MAGIC), 240)
+	_bulk_junk = UiStyle.button("", sell_junk, 240)
+	_bulk_junk.tooltip_text = "Click derecho en la bolsa: basura → bloqueado → sin marca.\nLo bloqueado no se vende ni se tira."
 	bulk.add_child(_bulk_normal)
 	bulk.add_child(_bulk_magic)
+	bulk.add_child(_bulk_junk)
 	box.add_child(UiStyle.label("Arrastra aquí un objeto de la bolsa. Se paga el %d%% de lo que vale a la venta." % int(Economy.SELL_FRACTION * 100), 12, UiStyle.MUTED))
 	box.add_child(UiStyle.section_header("Recomprar"))
 	_buyback_row = HBoxContainer.new()
@@ -386,6 +390,9 @@ func _refresh_header() -> void:
 	_bulk_magic.text = "Vender normal y mágico (%d · %d)" % [magic[0].size(), magic[1]]
 	_bulk_normal.disabled = normal[0].is_empty()
 	_bulk_magic.disabled = magic[0].is_empty()
+	var junk := Economy.junk_sell(character.inventory)
+	_bulk_junk.text = "Vender lo marcado como basura (%d · %d)" % [junk[0].size(), junk[1]]
+	_bulk_junk.disabled = junk[0].is_empty()
 
 
 ## Compra el artículo `i` del puesto. Devuelve si se compró.
@@ -490,6 +497,9 @@ func _on_sell_dropped(_target: ItemCell, payload: Dictionary) -> void:
 	if item is KeyItem:
 		message.emit("Eso no se vende: lo vas a necesitar.")
 		return
+	if item.locked:
+		message.emit("Está bloqueado. Quítale el candado (click derecho en la bolsa) si de verdad lo quieres vender.")
+		return
 	var value := Economy.sell_price(item)
 	ItemTransfer.take(character, from)
 	character.add_tokens(value)
@@ -516,6 +526,27 @@ func sell_bulk(max_rarity: int) -> int:
 	character.add_tokens(int(plan[1]))
 	Sfx.play("coin")
 	message.emit("Vendiste %d objetos por %d tokens." % [indices.size(), int(plan[1])])
+	say("bulk")
+	_rebuild()
+	return int(plan[1])
+
+
+## Vende de golpe lo marcado como basura (T79). Devuelve los tokens.
+func sell_junk() -> int:
+	var plan := Economy.junk_sell(character.inventory)
+	var indices: Array = plan[0]
+	if indices.is_empty():
+		return 0
+	indices.sort()
+	indices.reverse()
+	for i in indices:
+		var item: Item = character.inventory.bag[i]
+		ItemTransfer.take(character, {"kind": "bag", "index": i})
+		item.junk = false   # si lo recompras, vuelve sin la marca
+		_remember_sold(item, Economy.sell_price(item))
+	character.add_tokens(int(plan[1]))
+	Sfx.play("coin")
+	message.emit("Vendiste %d objetos marcados por %d tokens." % [indices.size(), int(plan[1])])
 	say("bulk")
 	_rebuild()
 	return int(plan[1])
