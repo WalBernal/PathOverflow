@@ -12,6 +12,8 @@ const KIND_BY_NAME := {
 }
 
 var id := -1
+## Clave estable del árbol 2.0 (p. ej. "guerrero.C1:5"): no cambia aunque cambie el id.
+var key := ""
 var title := ""
 var kind: Kind = Kind.MINOR
 var position := Vector2.ZERO
@@ -56,8 +58,18 @@ static func from_dict(d: Dictionary) -> PassiveNode:
 	n.theme = d.get("theme", "")
 	n.cluster = d.get("cluster", "")
 	n.icon = d.get("icon", "")
+	n.key = d.get("key", "")
 	for md in d.get("mods", []):
 		n.mods.append(Modifier.from_dict(md, "tree"))
+	# Árbol 2.0 (T89): maestrías, estilo y constelaciones vienen dentro del árbol.
+	for c in d.get("choices", []):
+		var mods: Array[Modifier] = []
+		for md in c.get("mods", []):
+			mods.append(Modifier.from_dict(md, "tree"))
+		n.choices.append({"name": String(c.get("name", "")), "mods": mods})
+	n.style = bool(d.get("style", false))
+	n.requires = d.get("requires", {})
+	n.constellation = String(d.get("constellation", ""))
 	return n
 
 

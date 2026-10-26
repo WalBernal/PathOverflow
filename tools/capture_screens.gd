@@ -611,8 +611,10 @@ func _capture_mastery() -> void:
 	c.level = 30
 	gd.current_character = c
 	var mastery := -1
+	var best := 999
 	for n: PassiveNode in c.passives.tree.nodes.values():
-		if n.is_mastery() and n.title == "Maestría DevOps":
+		if n.is_mastery() and c.passives.find_path(n.id).size() > 0 and c.passives.find_path(n.id).size() < best:
+			best = c.passives.find_path(n.id).size()   # la maestría más cercana a su inicio (árbol 2.0)
 			mastery = n.id
 	c.passives.allocate_path(mastery, 99)
 	c.passives.set_mastery_choice(mastery, 1)
@@ -1154,7 +1156,7 @@ func _capture_player_states() -> void:
 ## Árbol 2.0 (T88): la disposición de data/passive_tree_v2_layout.json en la vista del
 ## árbol: entero, una región de cerca y el centro.
 func _capture_tree_v2() -> void:
-	var tree := PassiveTree.load_from_json("res://data/passive_tree_v2_layout.json")
+	var tree := PassiveTree.load_from_json("res://data/passive_tree.json")
 	var alloc := PassiveAllocation.new(tree, tree.get_start_node_for_class(&"guerrero"))
 	var view := PassiveTreeView.new()
 	view.set_anchors_preset(Control.PRESET_FULL_RECT)

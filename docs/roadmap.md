@@ -525,10 +525,14 @@ Origen: R4 (pedido del usuario)
 - Captura del boceto (el generador nuevo en modo «solo disposición») para revisarlo antes de llenarlo.
 - Hecho: `docs/arbol_2.md` (cifras, estructura, formas, familias, maná, piedras angulares, ids estables, migración y cinco preguntas para decidir) y el prototipo `tools/generate_passive_tree_v2.py` → `data/passive_tree_v2_layout.json` (sin efectos; el juego no lo usa): 1540 nodos, 114 clusters (30 S, 54 M, 12 L, 6 XL, 6 piedras, 6 constelaciones), 126 notables y 18 huecos de maestría, todo conectado y sin nodos encimados; claves estables por nodo. Capturas con `capture_screens -- arbol2`. Pendiente para T89: bajar los nodos de viaje (687, demasiados) acercando anillos y sumando clusters pequeños.
 
-### [ ] T89 · Generador del árbol 2.0 y migración · L (partir en dos)
+### [x] T89 · Generador del árbol 2.0, parte 1: el árbol con efectos · M
 Origen: R4
 - Reescribir `tools/generate_passive_tree.py` con la disposición aprobada en T88: formas de cluster, tamaños, caminos de viaje y conexiones entre regiones; ids estables y `TREE_VERSION` 8.
 - Pasar las maestrías (`passive_masteries.json`) y la identidad (`passive_identity.json`) al formato de ids estables (o dentro del generador), con prueba de que nada quedó colgando.
+- Hecho: `tools/generate_passive_tree.py` es el generador 2.0 (el de la versión 7 queda en git) y escribe `data/passive_tree.json` versión 8: 1373 nodos (354 de viaje, el 26 %), 138 clusters (29 S, 78 M, 12 L, 6 XL, 6 constelaciones y 7 huecos de piedra), 149 notables, 18 maestrías (los tres primeros notables de su familia) y 11 piedras angulares (las 7 de siempre más las 4 de T84 de verdad), con anillo E y dos medianos más en el D de cada región; cada familia con 3-8 clusters. Las maestrías, los notables de estilo, las piedras extra y las constelaciones van dentro del árbol (`choices`, `style`, `requires`, `constellation`, `key`): `passive_masteries.json` desaparece y `passive_identity.json` pasa a estar por clase, no por id. `PassiveTree.id_for_key` traduce claves. Los inicios solo conectan con su región. Los personajes de la versión 7 recuperan todos los puntos (lo hacía ya `passives_refunded`). Pruebas del árbol puestas al día (maestrías, identidad, formas, vida baja).
+
+### [ ] T89b · Generador del árbol 2.0, parte 2: migración y rendimiento · M
+Origen: R4 (partida de T89, que era L)
 - Migración de personajes: al cargar uno de la versión 7, devolver todos los puntos con un aviso claro («El árbol cambió: tienes N puntos para repartir») y la primera reasignación gratis; el código de build pasa a `PO2:` y avisa si es de un árbol viejo.
 - Rendimiento con ~1500 nodos: la vista tiene que seguir dibujando y respondiendo al ratón sin tirones (rejilla espacial, recorte por pantalla y nivel de detalle por zoom); prueba con tiempo de dibujo medido.
 
@@ -725,3 +729,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T87 · Crafteo con más decisiones: parche de rollback (quita un afijo), de optimización (sube un tier con riesgo de romperse) e historial de la mesa de Mario. Fin de la cola del Roadmap 3.0.
 - 2026-10-25 · Roadmap 4.0 (T88-T105): gráficos (interfaz, efectos, sprites y animación) y árbol pasivo 2.0 (~1500 nodos, más clusters por familia, familia de maná, piedras angulares nuevas, ids estables y migración).
 - 2026-10-25 · T88 · Diseño del árbol 2.0: documento docs/arbol_2.md y prototipo de disposición (1540 nodos, 114 clusters, claves estables). Parada para revisión.
+- 2026-10-25 · T89 · Árbol pasivo 2.0 en el juego: 1373 nodos, 138 clusters, 149 notables, 18 maestrías y 11 piedras angulares, con claves estables y la identidad dentro del árbol.

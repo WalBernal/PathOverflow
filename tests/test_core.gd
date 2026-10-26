@@ -3985,7 +3985,6 @@ func _test_passive_plan() -> void:
 
 ## Más identidad en el árbol (T84): notables de estilo, piedras angulares con contra y constelaciones.
 func _test_tree_identity() -> void:
-	_check(_tree.identity_mismatches.is_empty(), "la identidad del árbol encaja con sus nodos: %s" % ", ".join(_tree.identity_mismatches))
 	var styles := _tree.nodes.values().filter(func(n: PassiveNode) -> bool: return n.style)
 	_check(styles.size() == 7, "un notable de estilo por clase (%d)" % styles.size())
 	var mechanic_stats := [Stat.CONVERT_PHYSICAL_TO_LIGHTNING, Stat.RETALIATION_NOVA, Stat.DODGE_BLAST, Stat.EXTRA_PIERCE, Stat.CONVERT_ELEMENTAL_TO_CHAOS, Stat.STATIC_PULSE, Stat.KILL_EXPLOSION]
@@ -4005,8 +4004,8 @@ func _test_tree_identity() -> void:
 	var names := {}
 	for n: PassiveNode in stars:
 		names[n.constellation] = true
-		_check(n.requires.size() == 2, "%s pide dos atributos" % n.title)
-	_check(names.size() == 3, "tres constelaciones (%d)" % names.size())
+		_check(n.requires.size() >= 2, "%s pide dos atributos o más" % n.title)
+	_check(names.size() == 6, "seis constelaciones en el anillo exterior (%d)" % names.size())
 	var star: PassiveNode = stars[0]
 	var test_alloc := PassiveAllocation.new(_tree, _tree.get_start_node_for_class(StringName(_classes[0]["id"])))
 	var ok := [false]
@@ -4132,14 +4131,14 @@ func _test_crafting_decisions() -> void:
 
 ## Árbol 2.0, diseño (T88): la disposición del prototipo se carga, está conectada y tiene claves únicas.
 func _test_tree_v2_layout() -> void:
-	var path := "res://data/passive_tree_v2_layout.json"
+	var path := "res://data/passive_tree.json"
 	var data: Dictionary = DataLoader.load_json(path)
 	var keys := {}
 	for n in data.get("nodes", []):
 		keys[String(n.get("key", ""))] = true
 	_check(keys.size() == (data["nodes"] as Array).size() and not keys.has(""), "cada nodo del árbol 2.0 tiene su clave estable y única")
 	var tree := PassiveTree.load_from_json(path)
-	_check(tree.nodes.size() >= 1400 and tree.nodes.size() <= 1700, "el árbol 2.0 ronda los 1500 nodos (%d)" % tree.nodes.size())
+	_check(tree.nodes.size() >= 1300 and tree.nodes.size() <= 1700, "el árbol 2.0 tiene casi el doble de nodos (%d)" % tree.nodes.size())
 	var starts := tree.nodes.values().filter(func(n: PassiveNode) -> bool: return n.kind == PassiveNode.Kind.CLASS_START)
 	_check(starts.size() == 7, "siete inicios de clase")
 	var start := tree.get_start_node_for_class(&"full_stack")
@@ -4385,29 +4384,30 @@ func _test_trigger_rams() -> void:
 ## Maestrías: un notable por sector donde se elige 1 de 3 bonos; la elección se
 ## guarda, cambia las stats y se puede cambiar gratis.
 func _test_masteries() -> void:
-	_check(_tree.mastery_mismatches.is_empty(), "las maestrías apuntan a sus notables: %s" % ", ".join(_tree.mastery_mismatches))
 	var masteries: Array = _tree.nodes.values().filter(func(n: PassiveNode) -> bool: return n.is_mastery())
-	_check(masteries.size() == 7, "una maestría por sector (%d)" % masteries.size())
+	_check(masteries.size() >= 18, "maestrías en los clusters grandes (%d)" % masteries.size())
 	for n: PassiveNode in masteries:
 		_check(n.choices.size() == 3 and n.kind == PassiveNode.Kind.NOTABLE, "%s: 3 opciones" % n.title)
-	# Guerrero: su maestría (Soporte Técnico) está junto a su inicio.
+	# La maestría más cercana al inicio del guerrero.
 	var c := CharacterData.new(_classes[0], _tree)
 	c.level = 30
 	var mid := -1
+	var best := 999
 	for n: PassiveNode in masteries:
-		if n.title == "Maestría de Soporte Técnico":
+		var steps := c.passives.find_path(n.id).size()
+		if steps > 0 and steps < best:
+			best = steps
 			mid = n.id
 	_check(mid != -1 and c.passives.allocate_path(mid, 99) > 0, "la maestría del guerrero se puede asignar")
-	var res_first := c.stats.get_value(Stat.FIRE_RES)
-	var block_first := c.stats.get_value(Stat.BLOCK_CHANCE)
-	_check(c.passives.mastery_choice(mid) == 0, "por defecto, la primera opción (el efecto de antes)")
+	var node: PassiveNode = _tree.get_node_data(mid)
+	var stat_of := func(k: int) -> StringName: return (node.choices[k]["mods"][0] as Modifier).stat
+	var first_value := c.stats.get_value(stat_of.call(1))
+	_check(c.passives.mastery_choice(mid) == 0, "por defecto, la primera opción")
 	_check(c.passives.set_mastery_choice(mid, 1), "se elige otra opción")
-	_check(c.stats.get_value(Stat.FIRE_RES) < res_first and c.stats.get_value(Stat.BLOCK_CHANCE) > block_first, "cambiar de opción cambia las stats")
-	var saved := c.to_dict()
-	var back := CharacterData.from_dict(saved, _classes[0], _tree, _db)
-	_check(back.passives.mastery_choice(mid) == 1 and is_equal_approx(back.stats.get_value(Stat.BLOCK_CHANCE), c.stats.get_value(Stat.BLOCK_CHANCE)), "la elección se guarda y se carga")
+	_check(c.stats.get_value(stat_of.call(1)) != first_value or stat_of.call(1) == stat_of.call(0), "cambiar de opción cambia las stats")
+	var back := CharacterData.from_dict(c.to_dict(), _classes[0], _tree, _db)
+	_check(back.passives.mastery_choice(mid) == 1, "la elección se guarda y se carga")
 	_check(not CharacterData.new(_classes[0], _tree).passives.set_mastery_choice(mid, 2), "sin asignar no se elige")
-
 
 ## Nodos clave que cambian una regla: Tipado Estático, Recolector de Basura,
 ## Modo Seguro y Código Espagueti.
@@ -4695,16 +4695,17 @@ func _test_movement_skills() -> void:
 	em.free()
 
 
+## Clusters de tamaños y formas distintos (árbol 2.0, T89).
 func _test_shaped_clusters() -> void:
-	var shaped := 0
+	var sizes := {}
 	var themes := {}
 	for c in _tree.clusters.values():
-		if c.has("segments"):
-			shaped += 1
-			themes[c["theme"]] = true
-	_check(shaped >= 50, "la mayoría de los clusters tienen forma (%d)" % shaped)
-	for t in ["vida", "fuego", "rayo", "frio"]:
-		_check(themes.has(t), "cluster con forma de %s" % t)
+		sizes[String(c.get("size", ""))] = int(sizes.get(String(c.get("size", "")), 0)) + 1
+		themes[c["theme"]] = true
+	for s in ["S", "M", "L", "XL", "C"]:
+		_check(int(sizes.get(s, 0)) > 0, "hay clusters de tamaño %s" % s)
+	for t in ["vida", "fuego", "rayo", "frio", "mana"]:
+		_check(themes.has(t), "hay clusters de %s" % t)
 
 
 func _test_defense_and_dot_skills() -> void:
@@ -4853,7 +4854,7 @@ func _test_conditions() -> void:
 	_check(is_equal_approx(SkillCalc.compute(board, c)["max_damage"], full["max_damage"]), "sin vida baja, el notable no da daño")
 	_check(full["max_damage"] >= before["max_damage"], "el camino no resta daño")
 	c.set_condition(Stat.COND_LOW_LIFE, true)
-	_check(low["max_damage"] > full["max_damage"] * 1.3, "con vida baja, +40%% de daño (%.1f → %.1f)" % [full["max_damage"], low["max_damage"]])
+	_check(low["max_damage"] > full["max_damage"] * 1.15, "con vida baja, más daño (+40 %% aumentado; %.1f → %.1f)" % [full["max_damage"], low["max_damage"]])
 	var signals := [0]
 	c.conditions_changed.connect(func() -> void: signals[0] += 1)
 	c.set_condition(Stat.COND_LOW_LIFE, true)

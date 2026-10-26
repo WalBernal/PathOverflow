@@ -42,79 +42,19 @@ static func load_from_json(path: String) -> PassiveTree:
 		tree.adjacency[a].append(b)
 		tree.adjacency[b].append(a)
 		tree.edges.append(Vector2i(a, b))
-	tree.apply_masteries(DataLoader.load_json(MASTERIES_PATH))
-	tree.apply_identity(DataLoader.load_json(IDENTITY_PATH))
+	for n: PassiveNode in tree.nodes.values():
+		if n.key != "":
+			tree.keys[n.key] = n.id
 	return tree
 
 
-const IDENTITY_PATH := "res://data/passive_identity.json"
-## Entradas de identidad que no se pudieron aplicar (el nodo cambió): para las pruebas.
-var identity_mismatches: PackedStringArray = []
+## Clave estable (árbol 2.0, T89) -> id del nodo. Las maestrías, el estilo y las
+## constelaciones vienen dentro del árbol (los parches por id ya no existen).
+var keys: Dictionary = {}
 
 
-## Identidad del árbol (T84): notables de estilo por clase, piedras angulares nuevas
-## y constelaciones que piden dos atributos (ver data/passive_identity.json).
-func apply_identity(data: Variant) -> void:
-	if not data is Dictionary:
-		return
-	for section in ["style", "keystones"]:
-		var defs: Dictionary = data.get(section, {})
-		for key in defs:
-			var def: Dictionary = defs[key]
-			var n: PassiveNode = nodes.get(int(key))
-			if n == null or n.title != String(def.get("node", "")) or n.is_mastery():
-				identity_mismatches.append("%s %s (%s)" % [section, key, def.get("node", "")])
-				continue
-			n.title = String(def.get("name", n.title))
-			n.flavor = String(def.get("flavor", n.flavor))
-			n.mods.clear()
-			for md in def.get("mods", []):
-				n.mods.append(Modifier.from_dict(md, "tree"))
-			if section == "style":
-				n.style = true
-			else:
-				n.capstone = true   # sigue siendo el notable de su cluster
-	var constellations: Dictionary = data.get("constellations", {})
-	for cluster_id in constellations:
-		var def: Dictionary = constellations[cluster_id]
-		var mult := float(def.get("mult", 1.0))
-		var found := false
-		for n: PassiveNode in nodes.values():
-			if n.cluster != String(cluster_id) or n.kind == PassiveNode.Kind.CLASS_START:
-				continue
-			found = true
-			n.constellation = String(def.get("name", ""))
-			n.requires = def.get("requires", {})
-			for m in n.mods:
-				m.value *= mult   # piden más, dan más
-		if not found:
-			identity_mismatches.append("constelación %s" % cluster_id)
-
-
-const MASTERIES_PATH := "res://data/passive_masteries.json"
-## Maestrías que no se pudieron aplicar (el id ya no es ese notable): para las pruebas.
-var mastery_mismatches: PackedStringArray = []
-
-
-## Convierte en maestría los notables de data/passive_masteries.json (por id,
-## comprobando el nombre: si el árbol cambió, se ignora y se apunta en mastery_mismatches).
-func apply_masteries(data: Variant) -> void:
-	if not data is Dictionary:
-		return
-	var defs: Dictionary = data.get("masteries", {})
-	for key in defs:
-		var def: Dictionary = defs[key]
-		var n: PassiveNode = nodes.get(int(key))
-		if n == null or n.title != String(def.get("node", "")):
-			mastery_mismatches.append("%s (%s)" % [key, def.get("node", "")])
-			continue
-		n.title = String(def.get("name", n.title))
-		n.mods.clear()
-		for c in def.get("choices", []):
-			var mods: Array[Modifier] = []
-			for md in c.get("mods", []):
-				mods.append(Modifier.from_dict(md, "tree"))
-			n.choices.append({"name": String(c.get("name", "")), "mods": mods})
+func id_for_key(node_key: String) -> int:
+	return int(keys.get(node_key, -1))
 
 
 func get_node_data(id: int) -> PassiveNode:

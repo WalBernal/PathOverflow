@@ -7,15 +7,15 @@ juego no lo usa todavía) y se ve con `capture_screens.tscn -- arbol2`
 
 ## Cifras
 
-| | Árbol actual (v7) | Prototipo 2.0 | Objetivo final (T89-T93) |
+| | Árbol anterior (v7) | Prototipo (T88) | Árbol 2.0 (T89, v8) |
 |---|---|---|---|
-| Nodos | 716 | 1540 | ~1500 |
-| Menores en clusters | ~450 | 853 (con notables y maestrías) | ~950 |
-| Nodos de viaje | ~180 | 687 | ~450 |
-| Notables | 72 | 126 | ~150 |
-| Maestrías | 8 | 18 (huecos) | ~25 |
-| Piedras angulares | 7 (+4 de cluster) | 6 (huecos) | 20-24 |
-| Clusters | 67 | 114 | ~130 |
+| Nodos | 716 | 1540 | 1373 |
+| Nodos en clusters | ~450 | 853 | ~1020 |
+| Nodos de viaje | ~180 | 687 | 354 |
+| Notables | 72 | 126 | 149 |
+| Maestrías | 8 | 18 (huecos) | 18 |
+| Piedras angulares | 7 (+4 de cluster) | 6 (huecos) | 11 (20-24 con T92) |
+| Clusters | 67 | 114 | 138 (131 sin contar los de piedra angular) |
 | Constelaciones | 3 | 6 | 6-8 |
 
 Los nodos de viaje del prototipo son demasiados (45 %): en T89 los anillos se acercan
