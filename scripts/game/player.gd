@@ -20,7 +20,6 @@ const PLAYER_SPRITE_SCALE := 1.06
 ## Píxeles que avanza el personaje en cada paso (medio ciclo de la animación).
 const STRIDE := 30.0
 const BASE_MOVE_SPEED := 260.0
-const MANA_REGEN_PERCENT := 1.75
 const ES_RECHARGE_DELAY := 2.0
 const ES_RECHARGE_PERCENT := 20.0
 const MAX_EVADE_CHANCE := 0.75
@@ -432,6 +431,7 @@ func notify_kill() -> void:
 	var on_kill := _stat(Stat.LIFE_ON_KILL)
 	if on_kill > 0.0:
 		heal(on_kill)
+	restore_mana(_stat(Stat.MANA_ON_KILL))
 
 
 ## Stat con las condiciones activas aplicadas (vida baja, etc.).
@@ -576,9 +576,7 @@ func _process(delta: float) -> void:
 
 func _regenerate(delta: float) -> void:
 	var life_gain := _stat(Stat.LIFE_REGEN)
-	var mana_gain := unreserved_mana_max() * MANA_REGEN_PERCENT / 100.0 * character.stats.total_multiplier(Stat.MANA_REGEN, character.condition_tags())
-	if _stat(Stat.GARBAGE_COLLECTOR) > 0.0:
-		mana_gain = 0.0   # Recolector de Basura: el maná solo vuelve al matar (y con pociones)
+	var mana_gain := mana_regen_per_second()
 	for r in _recoveries:
 		var dt := minf(delta, r["remaining"])
 		if r["resource"] == "life":
@@ -629,7 +627,7 @@ func _tick_dots(delta: float) -> void:
 		amount -= blocked
 	var absorbed := minf(energy_shield, amount)
 	energy_shield -= absorbed
-	life -= amount - absorbed
+	life -= _mana_takes(amount - absorbed)
 	if life <= 0.0 and not _safe_mode_saves():
 		life = 0.0
 		dots.clear()
@@ -667,11 +665,32 @@ func take_damage(amount: float) -> void:
 		amount -= blocked
 	var absorbed := minf(energy_shield, amount)
 	energy_shield -= absorbed
-	life -= amount - absorbed
+	life -= _mana_takes(amount - absorbed)
 	if life <= 0.0 and not _safe_mode_saves():
 		life = 0.0
 		_recoveries.clear()
 		died.emit()
+
+
+## Maná antes que vida: descuenta del maná su parte del daño y devuelve lo que va a la vida.
+func _mana_takes(amount: float) -> float:
+	var split := ManaMath.split_damage(amount, mana, _stat(Stat.DAMAGE_TAKEN_FROM_MANA))
+	mana -= split.x
+	return split.y
+
+
+## Regeneración de maná por segundo (base con sus aumentos + plana). Con Recolector
+## de Basura el maná solo vuelve al matar (y con pociones).
+func mana_regen_per_second() -> float:
+	return ManaMath.regen_per_second(unreserved_mana_max(),
+		character.stats.total_multiplier(Stat.MANA_REGEN, character.condition_tags()),
+		_stat(Stat.MANA_REGEN_FLAT), _stat(Stat.GARBAGE_COLLECTOR) > 0.0)
+
+
+## Recupera maná (al golpear, al matar...), sin pasar del máximo.
+func restore_mana(amount: float) -> void:
+	if amount > 0.0 and is_alive():
+		mana = minf(max_mana(), mana + amount)
 
 
 # --- Modo Seguro (nodo clave Stat.SAFE_MODE) ---

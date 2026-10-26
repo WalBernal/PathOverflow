@@ -206,6 +206,10 @@ func _update_tooltips() -> void:
 	if player.mana_reserved > 0.0:
 		_hotspots["mana"].tooltip_text += "\nReservado: %d %% (%d) por tus invocaciones persistentes." % [
 			roundi(player.mana_reserved * 100.0), player.unreserved_mana_max() * player.mana_reserved]
+	_hotspots["mana"].tooltip_text += "\nRegeneración: %.1f /s" % player.mana_regen_per_second()
+	var from_mana := minf(ManaMath.MAX_TAKEN_FROM_MANA, player.character.stats.get_value(Stat.DAMAGE_TAKEN_FROM_MANA))
+	if from_mana > 0.0:
+		_hotspots["mana"].tooltip_text += "\nEl maná se lleva el %d %% del daño antes que la vida." % roundi(from_mana)
 	var states := _player_states()
 	var buffs := _player_buffs()
 	_place("states", _states_rect)

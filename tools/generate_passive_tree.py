@@ -77,9 +77,9 @@ REGION_THEMES = {
     "guerrero": ["vida", "armadura", "fisico", "hemorragia", "resistencias", "vida", "armadura", "fisico", "robo_vida", "legion", "hemorragia", "resistencias", "vida", "versatil", "ignicion", "vida", "versatil", "caos"],
     "duelista": ["velocidad_ataque", "fisico", "critico", "hemorragia", "evasion", "robo_vida", "armadura", "velocidad_ataque", "critico", "movilidad", "fisico", "hemorragia", "evasion", "robo_vida", "atributos", "proyectiles", "velocidad_ataque", "criogenia"],
     "exploradora": ["proyectiles", "evasion", "critico", "toxinas", "movilidad", "velocidad_ataque", "proyectiles", "evasion", "frio", "toxinas", "critico", "criogenia", "proyectiles", "tiempos", "criogenia", "caos", "versatil", "velocidad_ataque"],
-    "hacker": ["caos", "toxinas", "critico", "lanzamiento", "evasion", "escudo", "caos", "rayo", "toxinas", "tiempos", "mana", "lanzamiento", "fuego", "caos", "sobrecarga", "automatizacion", "frio", "fuego"],
-    "hechicero": ["lanzamiento", "fuego", "frio", "rayo", "mana", "escudo", "ignicion", "criogenia", "sobrecarga", "area", "fuego", "frio", "rayo", "mana", "ignicion", "lanzamiento", "caos", "tiempos"],
-    "templario": ["automatizacion", "legion", "escudo", "area", "mana", "armadura", "automatizacion", "legion", "fuego", "resistencias", "tiempos", "escudo", "area", "mana", "rayo", "vida", "sobrecarga", "atributos"],
+    "hacker": ["caos", "toxinas", "critico", "lanzamiento", "evasion", "escudo", "caos", "rayo", "mana", "tiempos", "mana", "lanzamiento", "fuego", "mana", "sobrecarga", "automatizacion", "frio", "fuego"],
+    "hechicero": ["lanzamiento", "fuego", "frio", "rayo", "mana", "mana", "ignicion", "criogenia", "sobrecarga", "area", "fuego", "frio", "rayo", "mana", "ignicion", "lanzamiento", "caos", "tiempos"],
+    "templario": ["automatizacion", "legion", "escudo", "area", "mana", "armadura", "automatizacion", "legion", "fuego", "mana", "tiempos", "escudo", "area", "mana", "rayo", "vida", "sobrecarga", "atributos"],
 }
 GATE_THEMES = ["hemorragia", "resistencias", "toxinas", "movilidad", "criogenia", "sobrecarga", "mana", "ignicion", "legion", "automatizacion", "armadura", "atributos"]
 INNER_THEMES = ["mana", "vida", "atributos", "resistencias", "escudo", "versatil", "tiempos", "area", "atributos", "mana", "robo_vida", "movilidad"]

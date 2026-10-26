@@ -162,6 +162,7 @@ func _initialize() -> void:
 	_test_tree_v2_layout()
 	_test_tree_migration()
 	_test_tree_families()
+	_test_mana_family()
 	_test_events_music_colorblind()
 	_test_story_editor()
 	_test_board_milestones()
@@ -4199,6 +4200,35 @@ func _test_tree_families() -> void:
 	_check(repeated.is_empty(), "ningún notable repetido: %s" % ", ".join(repeated))
 	_check(unknown.is_empty(), "todos los stats del árbol son conocidos: %s" % ", ".join(unknown))
 	_check(conditional >= 15, "notables con condición (vida baja o llena, tras matar, quieto, con aliados): %d" % conditional)
+
+
+## Familia de maná (T91): maná antes que vida, regeneración plana y los nodos del árbol.
+func _test_mana_family() -> void:
+	var split := ManaMath.split_damage(100.0, 500.0, 30.0)
+	_check(is_equal_approx(split.x, 30.0) and is_equal_approx(split.y, 70.0), "con 30 %% al maná, un golpe de 100 quita 30 de maná y 70 de vida (%s)" % split)
+	split = ManaMath.split_damage(100.0, 0.0, 30.0)
+	_check(split.x == 0.0 and is_equal_approx(split.y, 100.0), "sin maná, todo el golpe va a la vida")
+	split = ManaMath.split_damage(100.0, 12.0, 30.0)
+	_check(is_equal_approx(split.x, 12.0) and is_equal_approx(split.y, 88.0), "si el maná no alcanza, lo que falta va a la vida")
+	split = ManaMath.split_damage(100.0, 500.0, 90.0)
+	_check(is_equal_approx(split.x, ManaMath.MAX_TAKEN_FROM_MANA), "el maná se lleva como mucho un 50 %% del golpe")
+	var base := ManaMath.regen_per_second(200.0, 1.0, 0.0)
+	_check(is_equal_approx(base, 3.5), "regeneración base: 1,75 %% del maná máximo por segundo (%.2f)" % base)
+	_check(is_equal_approx(ManaMath.regen_per_second(200.0, 1.0, 5.0), base + 5.0), "la regeneración plana se suma a la base")
+	_check(is_equal_approx(ManaMath.regen_per_second(0.0, 1.0, 5.0), 5.0), "la regeneración plana se suma aunque todo el maná esté reservado")
+	_check(ManaMath.regen_per_second(200.0, 2.0, 5.0, true) == 0.0, "con Recolector de Basura no hay regeneración")
+	var stats := StatBlock.new()
+	stats.add_modifier(Modifier.new(Stat.DAMAGE_TAKEN_FROM_MANA, Modifier.Type.FLAT, 15.0))
+	_check(stats.get_value(Stat.DAMAGE_TAKEN_FROM_MANA) == 15.0 and Stat.is_percent(Stat.DAMAGE_TAKEN_FROM_MANA), "maná antes que vida es un stat en %")
+	var found := {}
+	for n: PassiveNode in _tree.nodes.values():
+		for m in n.mods:
+			if m.stat in [Stat.MANA_REGEN_FLAT, Stat.DAMAGE_TAKEN_FROM_MANA, Stat.MANA_ON_HIT, Stat.MANA_ON_KILL]:
+				found[m.stat] = int(found.get(m.stat, 0)) + 1
+	for s in [Stat.MANA_REGEN_FLAT, Stat.DAMAGE_TAKEN_FROM_MANA, Stat.MANA_ON_HIT, Stat.MANA_ON_KILL]:
+		_check(int(found.get(s, 0)) >= 1, "el árbol tiene nodos de %s" % Stat.display_name(s))
+	var mana_clusters := _tree.clusters.values().filter(func(c: Dictionary) -> bool: return c["theme"] == "mana").size()
+	_check(mana_clusters >= 10, "la familia de maná tiene 10 clusters o más (%d)" % mana_clusters)
 
 
 ## Parte 2 (T72b): el ataque golpea en el cuadro de impacto de la animación.

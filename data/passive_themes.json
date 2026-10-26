@@ -1284,6 +1284,31 @@
               "value": 8
             }
           ]
+        ],
+        [
+          "Maná por segundo",
+          [
+            {
+              "stat": "mana_regen_flat",
+              "type": "flat",
+              "value": 1.5
+            }
+          ]
+        ],
+        [
+          "Maná al golpear",
+          [
+            {
+              "stat": "mana_on_hit",
+              "type": "flat",
+              "value": 1
+            },
+            {
+              "stat": "mana",
+              "type": "increased",
+              "value": 3
+            }
+          ]
         ]
       ],
       "notables": [
@@ -1419,6 +1444,70 @@
               "tags": [
                 "full_life"
               ]
+            }
+          ]
+        ],
+        [
+          "Mente sobre Memoria",
+          "El golpe va a la RAM. La vida, para después.",
+          [
+            {
+              "stat": "damage_taken_from_mana",
+              "type": "flat",
+              "value": 15
+            },
+            {
+              "stat": "mana",
+              "type": "increased",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Swap a Disco",
+          "Cuando no cabe en la vida, se paga en maná.",
+          [
+            {
+              "stat": "damage_taken_from_mana",
+              "type": "flat",
+              "value": 8
+            },
+            {
+              "stat": "mana_regen_flat",
+              "type": "flat",
+              "value": 4
+            }
+          ]
+        ],
+        [
+          "Interrupción por Hardware",
+          "Cada golpe, un ciclo de reloj de vuelta.",
+          [
+            {
+              "stat": "mana_on_hit",
+              "type": "flat",
+              "value": 3
+            },
+            {
+              "stat": "mana_regen",
+              "type": "increased",
+              "value": 15
+            }
+          ]
+        ],
+        [
+          "Liberación de Recursos",
+          "Proceso muerto, memoria libre.",
+          [
+            {
+              "stat": "mana_on_kill",
+              "type": "flat",
+              "value": 12
+            },
+            {
+              "stat": "mana",
+              "type": "flat",
+              "value": 20
             }
           ]
         ]

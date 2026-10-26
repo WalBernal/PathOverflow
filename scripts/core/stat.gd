@@ -142,6 +142,12 @@ const TREE_CONVERSIONS := [
 const ENERGY_SHIELD_REGEN := &"energy_shield_regen"
 ## % menos de coste de maná de las habilidades (máximo 50 %).
 const MANA_COST_REDUCTION := &"mana_cost_reduction"
+## Familia de maná (ver ManaMath): maná por segundo que se suma a la regeneración base,
+## % del daño recibido que se lleva el maná antes que la vida, y maná al golpear y al matar.
+const MANA_REGEN_FLAT := &"mana_regen_flat"
+const DAMAGE_TAKEN_FROM_MANA := &"damage_taken_from_mana"
+const MANA_ON_HIT := &"mana_on_hit"
+const MANA_ON_KILL := &"mana_on_kill"
 
 # --- Tags (condiciones de los modificadores) ---
 const TAG_ATTACK := &"attack"
@@ -169,7 +175,7 @@ const NAMES := {
 	MANA: "Maná máximo",
 	ENERGY_SHIELD: "Escudo de energía",
 	LIFE_REGEN: "Regeneración de vida por segundo",
-	MANA_REGEN: "Regeneración de maná",
+	MANA_REGEN: "Regeneración base de maná",
 	ARMOUR: "Armadura",
 	EVASION: "Evasión",
 	BLOCK_CHANCE: "Probabilidad de bloqueo",
@@ -252,6 +258,10 @@ const NAMES := {
 	CONVERT_ELEMENTAL_TO_CHAOS: "Conversión de elemental a caos",
 	ENERGY_SHIELD_REGEN: "Regeneración de escudo de energía por segundo",
 	MANA_COST_REDUCTION: "Reducción del coste de maná",
+	MANA_REGEN_FLAT: "Maná por segundo",
+	DAMAGE_TAKEN_FROM_MANA: "Daño recibido que se lleva el maná antes que la vida",
+	MANA_ON_HIT: "Maná al golpear",
+	MANA_ON_KILL: "Maná al matar",
 }
 
 ## Texto de los modificadores que cambian una regla (en lugar de "+1 de ..."); %s = el valor.
@@ -290,6 +300,7 @@ const PERCENT_STATS := [
 	BURN_CHANCE, SHOCK_CHANCE, CHILL_CHANCE, FREEZE_CHANCE, POISON_CHANCE, BLEED_CHANCE, STATUS_RESIST,
 	KILL_EXPLOSION, RETALIATION_NOVA, BUFFER_CHARGE_CHANCE, MULTIHILO_CHARGE_CHANCE, OVERCLOCK_CHARGE_CHANCE,
 	MANA_COST_REDUCTION, DODGE_RECOVERY, DODGE_BLAST, GARBAGE_COLLECTOR, CHARGE_SPEND_MANA,
+	DAMAGE_TAKEN_FROM_MANA,
 ]
 
 const TAG_NAMES := {

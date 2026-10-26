@@ -2250,6 +2250,8 @@ func _damage_area(center: Vector2, radius: float, p: Dictionary) -> void:
 func _leech(p: Dictionary) -> void:
 	if p["life_leech"] > 0.0 and enemies.last_damage_dealt > 0.0:
 		player.heal(enemies.last_damage_dealt * p["life_leech"] / 100.0)
+	if player != null and enemies.last_damage_dealt > 0.0:
+		player.restore_mana(character.stats.get_value(Stat.MANA_ON_HIT))
 
 
 func _update_pending(delta: float) -> void:

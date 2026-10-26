@@ -544,12 +544,13 @@ Origen: R4 (pedido del usuario)
 - Prueba: ninguna familia con menos de 4 clusters, ningún notable repetido, todos los stats conocidos.
 - Hecho: `REGION_THEMES` repartidos para que las 28 familias tengan 4 clusters o más (maná 8, nueve familias con 5). 19 notables nuevos en `passive_themes.json`, la mayoría con condición (quieto, vida llena, vida baja, tras matar, con 3 aliados) y cuatro de maná. El generador asigna primero los notables de estilo y las piedras extra y luego nombra, sin repetir: comprueba que ningún notable ni piedra repita nombre (174 únicos), las maestrías se llaman «Maestría: <cluster>» y las constelaciones «Estrella: <nombre>». Prueba `_test_tree_families`.
 
-### [ ] T91 · Familia de maná · M
+### [x] T91 · Familia de maná · M
 Origen: R4 (pedido del usuario)
 - Stats nuevos: **regeneración de maná plana** (maná por segundo que se suma a la base), **% de aumento de la regeneración base** (el que ya existe, bien nombrado), **maná máximo** plano y en %, **daño recibido que se lleva el maná antes que la vida** (en %, como Mente sobre Materia de PoE), maná al golpear y al matar, coste de maná reducido y eficiencia de reserva.
 - Lógica en `Player`: el daño que toca al maná se descuenta de él (si no alcanza, lo que falta va a la vida); el orbe de maná y la hoja de personaje (T81) lo muestran; regeneración plana en `_regenerate`.
 - Clusters de maná en las regiones de INT y en el anillo central (pequeños de regeneración, medianos de máximo, grandes con notable de «maná antes que vida»), y notables como «Caché caliente» (más regeneración si no lanzaste nada en 2 s) o «Sobrecarga de buffer» (el maná sobrante por encima del 90 % da daño).
 - Pruebas: con 30 % al maná, un golpe de 100 quita 30 de maná y 70 de vida; sin maná, todo a la vida; la regeneración plana se suma aunque el maná esté reservado.
+- Hecho: stats nuevos `mana_regen_flat` (maná por segundo), `damage_taken_from_mana` (en %, tope 50 %), `mana_on_hit` y `mana_on_kill`; `mana_regen` pasa a llamarse «Regeneración base de maná». Las cuentas van en `ManaMath` (sin nodos): `regen_per_second` (base del 1,75 % del maná sin reserva con sus aumentos, más la plana; nada con Recolector de Basura) y `split_damage`. `Player` descuenta del maná su parte del daño tras el escudo de energía (golpes y degenerativos), recupera maná al matar y, desde `SkillController._leech`, al golpear (`restore_mana`). El orbe de maná muestra la regeneración por segundo y el % que se lleva el maná, y la hoja de personaje una línea de maná. La familia de maná pasa a 12 clusters (4 más en las regiones de INT, quitados a caos, toxinas, escudo y resistencias, que se quedan en 4), con 2 menores nuevos (maná por segundo, maná al golpear) y 4 notables: *Mente sobre Memoria* y *Swap a Disco* (maná antes que vida), *Interrupción por Hardware* (maná al golpear) y *Liberación de Recursos* (maná al matar). «Sobrecarga de buffer» queda para T92 (necesita una condición de maná alto). Prueba `_test_mana_family`.
 
 ### [ ] T92 · Piedras angulares nuevas · M
 Origen: R4 (pedido del usuario)
@@ -734,3 +735,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T89 · Árbol pasivo 2.0 en el juego: 1373 nodos, 138 clusters, 149 notables, 18 maestrías y 11 piedras angulares, con claves estables y la identidad dentro del árbol.
 - 2026-10-25 · T89b · Migración al árbol 2.0 con la primera reasignación gratis, código de build PO2 por claves y nivel de detalle en la vista (árbol entero de 74 a 14 ms).
 - 2026-10-25 · T90 · Todas las familias con 4 clusters o más y 19 notables nuevos con condición; nombres de notables únicos en todo el árbol.
+- 2026-10-25 · T91 · Familia de maná: maná antes que vida, regeneración plana, maná al golpear y al matar, y 12 clusters de maná con 4 notables nuevos.

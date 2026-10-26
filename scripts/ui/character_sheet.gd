@@ -293,6 +293,13 @@ func _refresh() -> void:
 			lines.append("Espinas:  %d de daño al recibir un golpe" % thorns)
 		if s.get_value(Stat.LIFE_ON_KILL) > 0.0:
 			lines.append("Vida al matar:  %d" % s.get_value(Stat.LIFE_ON_KILL))
+		var mana_line := "Regeneración de maná:  %.1f /s" % player.mana_regen_per_second()
+		var from_mana := minf(ManaMath.MAX_TAKEN_FROM_MANA, s.get_value(Stat.DAMAGE_TAKEN_FROM_MANA))
+		if from_mana > 0.0:
+			mana_line += "     Maná antes que vida:  %d%%" % from_mana
+		if s.get_value(Stat.MANA_ON_HIT) > 0.0 or s.get_value(Stat.MANA_ON_KILL) > 0.0:
+			mana_line += "     Al golpear / matar:  %d / %d" % [s.get_value(Stat.MANA_ON_HIT), s.get_value(Stat.MANA_ON_KILL)]
+		lines.append(mana_line)
 		if skills != null and not skills.active_auras().is_empty():
 			aliados.append("auras: " + ", ".join(skills.active_auras()))
 		if player.mana_reserved > 0.0:

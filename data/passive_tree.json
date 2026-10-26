@@ -747,12 +747,12 @@
 },
 {
 "id": "hacker.C1",
-"theme": "toxinas",
+"theme": "mana",
 "x": 260.8,
 "y": 2124.0,
 "radius": 135,
 "size": "M",
-"name": "Toxinas: Backdoor"
+"name": "Maná: Caché de Maná"
 },
 {
 "id": "hacker.C2",
@@ -770,7 +770,7 @@
 "y": 1984.2,
 "radius": 180,
 "size": "L",
-"name": "Maná: Caché de Maná"
+"name": "Maná: Memoria Compartida"
 },
 {
 "id": "hacker.D0",
@@ -792,12 +792,12 @@
 },
 {
 "id": "hacker.D3",
-"theme": "caos",
+"theme": "mana",
 "x": -600.0,
 "y": 2406.3,
 "radius": 100,
 "size": "S",
-"name": "Caos: Memoria Corrupta"
+"name": "Maná: Pila de Memoria"
 },
 {
 "id": "hacker.D4",
@@ -869,16 +869,16 @@
 "y": 1108.2,
 "radius": 135,
 "size": "M",
-"name": "Maná: Memoria Compartida"
+"name": "Maná: Heap de Maná"
 },
 {
 "id": "hechicero.B2",
-"theme": "escudo",
+"theme": "mana",
 "x": -1668.9,
 "y": 674.3,
 "radius": 135,
 "size": "M",
-"name": "Escudo de energía: Contenedor Docker"
+"name": "Maná: Caché de Maná"
 },
 {
 "id": "hechicero.B3",
@@ -950,7 +950,7 @@
 "y": 683.6,
 "radius": 100,
 "size": "S",
-"name": "Maná: Pila de Memoria"
+"name": "Maná: Memoria Compartida"
 },
 {
 "id": "hechicero.D4",
@@ -977,7 +977,7 @@
 "y": 1010.6,
 "radius": 135,
 "size": "M",
-"name": "Caos: Comportamiento Indefinido"
+"name": "Caos: Memoria Corrupta"
 },
 {
 "id": "templario.A0",
@@ -1004,7 +1004,7 @@
 "y": -1101.9,
 "radius": 135,
 "size": "M",
-"name": "Escudo de energía: Máquina Virtual"
+"name": "Escudo de energía: Contenedor Docker"
 },
 {
 "id": "templario.B0",
@@ -1022,7 +1022,7 @@
 "y": -674.3,
 "radius": 135,
 "size": "M",
-"name": "Maná: Heap de Maná"
+"name": "Maná: Pila de Memoria"
 },
 {
 "id": "templario.B2",
@@ -1062,12 +1062,12 @@
 },
 {
 "id": "templario.C2",
-"theme": "resistencias",
+"theme": "mana",
 "x": -1709.1,
 "y": -1287.9,
 "radius": 135,
 "size": "M",
-"name": "Resistencias: Hotfix Defensivo"
+"name": "Maná: Heap de Maná"
 },
 {
 "id": "templario.C3",
@@ -1085,7 +1085,7 @@
 "y": -173.0,
 "radius": 135,
 "size": "M",
-"name": "Escudo de energía: Sandbox"
+"name": "Escudo de energía: Máquina Virtual"
 },
 {
 "id": "templario.D1",
@@ -1148,7 +1148,7 @@
 "y": -1668.8,
 "radius": 135,
 "size": "M",
-"name": "Resistencias: Parche de Seguridad"
+"name": "Resistencias: Hotfix Defensivo"
 },
 {
 "id": "constelacion.0",
@@ -1166,7 +1166,7 @@
 "y": 0.0,
 "radius": 135,
 "size": "M",
-"name": "Toxinas: Repositorio Infectado"
+"name": "Toxinas: Backdoor"
 },
 {
 "id": "puerta.duelista1",
@@ -1696,14 +1696,14 @@
 "id": 24,
 "key": "centro.I0:5",
 "kind": "minor",
-"name": "Maná",
+"name": "Maná por segundo",
 "x": -90.9,
 "y": -667.5,
 "mods": [
 {
-"stat": "mana",
-"type": "increased",
-"value": 8
+"stat": "mana_regen_flat",
+"type": "flat",
+"value": 1.5
 }
 ],
 "cluster": "centro.I0",
@@ -1713,14 +1713,19 @@
 "id": 25,
 "key": "centro.I0:6",
 "kind": "minor",
-"name": "Maná",
+"name": "Maná al golpear",
 "x": -90.9,
 "y": -772.5,
 "mods": [
 {
-"stat": "mana",
+"stat": "mana_on_hit",
 "type": "flat",
-"value": 15
+"value": 1
+},
+{
+"stat": "mana",
+"type": "increased",
+"value": 3
 }
 ],
 "cluster": "centro.I0",
@@ -2613,14 +2618,14 @@
 "id": 68,
 "key": "centro.I9:0",
 "kind": "minor",
-"name": "Regeneración de maná",
+"name": "Maná",
 "x": -650.0,
 "y": -21.0,
 "mods": [
 {
-"stat": "mana_regen",
+"stat": "mana",
 "type": "increased",
-"value": 15
+"value": 8
 }
 ],
 "cluster": "centro.I9",
@@ -2630,19 +2635,14 @@
 "id": 69,
 "key": "centro.I9:1",
 "kind": "minor",
-"name": "Maná y regeneración",
+"name": "Maná",
 "x": -695.5,
 "y": 14.0,
 "mods": [
 {
 "stat": "mana",
-"type": "increased",
-"value": 4
-},
-{
-"stat": "mana_regen",
-"type": "increased",
-"value": 8
+"type": "flat",
+"value": 15
 }
 ],
 "cluster": "centro.I9",
@@ -2652,14 +2652,14 @@
 "id": 70,
 "key": "centro.I9:2",
 "kind": "minor",
-"name": "Maná",
+"name": "Regeneración de maná",
 "x": -744.5,
 "y": 14.0,
 "mods": [
 {
-"stat": "mana",
+"stat": "mana_regen",
 "type": "increased",
-"value": 8
+"value": 15
 }
 ],
 "cluster": "centro.I9",
@@ -13115,147 +13115,137 @@
 "id": 553,
 "key": "hacker.C1:0",
 "kind": "notable",
-"name": "Rootkit Residente",
+"name": "Memoria Dinámica",
 "x": 260.8,
 "y": 2124.0,
 "mods": [
 {
-"stat": "poison_chance",
-"type": "flat",
-"value": 12
+"stat": "mana",
+"type": "increased",
+"value": 20
 },
 {
-"stat": "ailment_damage",
+"stat": "mana_regen",
 "type": "increased",
 "value": 15
-},
-{
-"stat": "chaos_damage",
-"type": "increased",
-"value": 10
-},
-{
-"stat": "convert_elemental_to_chaos",
-"type": "flat",
-"value": 1
 }
 ],
 "cluster": "hacker.C1",
-"theme": "toxinas",
-"flavor": "No se va ni formateando.",
-"icon": "toxinas"
+"theme": "mana",
+"flavor": "Crece cuando hace falta. Nunca se libera.",
+"icon": "mana"
 },
 {
 "id": 554,
 "key": "hacker.C1:1",
 "kind": "minor",
-"name": "Estados más dañinos",
+"name": "Maná y regeneración",
 "x": 273.6,
 "y": 2228.3,
 "mods": [
 {
-"stat": "ailment_damage",
+"stat": "mana",
+"type": "increased",
+"value": 4
+},
+{
+"stat": "mana_regen",
 "type": "increased",
 "value": 8
 }
 ],
 "cluster": "hacker.C1",
-"theme": "toxinas"
+"theme": "mana"
 },
 {
 "id": 555,
 "key": "hacker.C1:2",
 "kind": "minor",
-"name": "Envenenar y velocidad",
+"name": "Maná por segundo",
 "x": 176.9,
 "y": 2187.2,
 "mods": [
 {
-"stat": "poison_chance",
+"stat": "mana_regen_flat",
 "type": "flat",
-"value": 4
-},
-{
-"stat": "attack_speed",
-"type": "increased",
-"value": 3
+"value": 1.5
 }
 ],
 "cluster": "hacker.C1",
-"theme": "toxinas"
+"theme": "mana"
 },
 {
 "id": 556,
 "key": "hacker.C1:3",
 "kind": "minor",
-"name": "Probabilidad de envenenar",
+"name": "Maná al golpear",
 "x": 164.1,
 "y": 2083.0,
 "mods": [
 {
-"stat": "poison_chance",
+"stat": "mana_on_hit",
 "type": "flat",
-"value": 6
+"value": 1
+},
+{
+"stat": "mana",
+"type": "increased",
+"value": 3
 }
 ],
 "cluster": "hacker.C1",
-"theme": "toxinas"
+"theme": "mana"
 },
 {
 "id": 557,
 "key": "hacker.C1:4",
 "kind": "minor",
-"name": "Veneno y caos",
+"name": "Maná",
 "x": 248.0,
 "y": 2019.8,
 "mods": [
 {
-"stat": "poison_chance",
-"type": "flat",
-"value": 4
-},
-{
-"stat": "chaos_damage",
+"stat": "mana",
 "type": "increased",
-"value": 9
+"value": 8
 }
 ],
 "cluster": "hacker.C1",
-"theme": "toxinas"
+"theme": "mana"
 },
 {
 "id": 558,
 "key": "hacker.C1:5",
 "kind": "minor",
-"name": "Estados duraderos",
+"name": "Maná",
 "x": 344.7,
 "y": 2060.9,
 "mods": [
 {
-"stat": "ailment_duration",
-"type": "increased",
-"value": 8
+"stat": "mana",
+"type": "flat",
+"value": 15
 }
 ],
 "cluster": "hacker.C1",
-"theme": "toxinas"
+"theme": "mana"
 },
 {
 "id": 559,
 "key": "hacker.C1:6",
 "kind": "minor",
-"name": "Estados más dañinos",
+"name": "Regeneración de maná",
 "x": 357.5,
 "y": 2165.1,
 "mods": [
 {
-"stat": "ailment_damage",
+"stat": "mana_regen",
 "type": "increased",
-"value": 8
+"value": 15
 }
 ],
 "cluster": "hacker.C1",
-"theme": "toxinas"
+"theme": "mana"
 },
 {
 "id": 560,
@@ -13397,7 +13387,7 @@
 "id": 567,
 "key": "hacker.C3:0",
 "kind": "notable",
-"name": "Maestría: Caché de Maná",
+"name": "Maestría: Memoria Compartida",
 "x": -801.7,
 "y": 1984.2,
 "mods": [],
@@ -13451,43 +13441,9 @@
 "id": 568,
 "key": "hacker.C3:1",
 "kind": "minor",
-"name": "Maná",
+"name": "Maná y regeneración",
 "x": -826.9,
 "y": 2046.8,
-"mods": [
-{
-"stat": "mana",
-"type": "flat",
-"value": 17
-}
-],
-"cluster": "hacker.C3",
-"theme": "mana"
-},
-{
-"id": 569,
-"key": "hacker.C3:2",
-"kind": "minor",
-"name": "Regeneración de maná",
-"x": -868.5,
-"y": 1993.6,
-"mods": [
-{
-"stat": "mana_regen",
-"type": "increased",
-"value": 17
-}
-],
-"cluster": "hacker.C3",
-"theme": "mana"
-},
-{
-"id": 570,
-"key": "hacker.C3:3",
-"kind": "minor",
-"name": "Maná y regeneración",
-"x": -843.2,
-"y": 1931.0,
 "mods": [
 {
 "stat": "mana",
@@ -13498,6 +13454,45 @@
 "stat": "mana_regen",
 "type": "increased",
 "value": 9
+}
+],
+"cluster": "hacker.C3",
+"theme": "mana"
+},
+{
+"id": 569,
+"key": "hacker.C3:2",
+"kind": "minor",
+"name": "Maná por segundo",
+"x": -868.5,
+"y": 1993.6,
+"mods": [
+{
+"stat": "mana_regen_flat",
+"type": "flat",
+"value": 1.7
+}
+],
+"cluster": "hacker.C3",
+"theme": "mana"
+},
+{
+"id": 570,
+"key": "hacker.C3:3",
+"kind": "minor",
+"name": "Maná al golpear",
+"x": -843.2,
+"y": 1931.0,
+"mods": [
+{
+"stat": "mana_on_hit",
+"type": "flat",
+"value": 1
+},
+{
+"stat": "mana",
+"type": "increased",
+"value": 3
 }
 ],
 "cluster": "hacker.C3",
@@ -13580,67 +13575,9 @@
 "id": 575,
 "key": "hacker.C3:8",
 "kind": "notable",
-"name": "Memoria Dinámica",
+"name": "Malloc Infinito",
 "x": -951.6,
 "y": 1982.6,
-"mods": [
-{
-"stat": "mana",
-"type": "increased",
-"value": 20
-},
-{
-"stat": "mana_regen",
-"type": "increased",
-"value": 15
-}
-],
-"cluster": "hacker.C3",
-"theme": "mana",
-"flavor": "Crece cuando hace falta. Nunca se libera.",
-"icon": "mana"
-},
-{
-"id": 576,
-"key": "hacker.C3:9",
-"kind": "minor",
-"name": "Maná",
-"x": -893.9,
-"y": 1865.9,
-"mods": [
-{
-"stat": "mana",
-"type": "increased",
-"value": 9
-}
-],
-"cluster": "hacker.C3",
-"theme": "mana"
-},
-{
-"id": 577,
-"key": "hacker.C3:10",
-"kind": "minor",
-"name": "Maná",
-"x": -766.7,
-"y": 1838.3,
-"mods": [
-{
-"stat": "mana",
-"type": "flat",
-"value": 17
-}
-],
-"cluster": "hacker.C3",
-"theme": "mana"
-},
-{
-"id": 578,
-"key": "hacker.C3:11",
-"kind": "notable",
-"name": "Malloc Infinito",
-"x": -665.8,
-"y": 1920.6,
 "mods": [
 {
 "stat": "mana",
@@ -13659,17 +13596,83 @@
 "icon": "mana"
 },
 {
-"id": 579,
-"key": "hacker.C3:12",
+"id": 576,
+"key": "hacker.C3:9",
 "kind": "minor",
-"name": "Regeneración de maná",
-"x": -667.2,
-"y": 2050.7,
+"name": "Maná por segundo",
+"x": -893.9,
+"y": 1865.9,
+"mods": [
+{
+"stat": "mana_regen_flat",
+"type": "flat",
+"value": 1.7
+}
+],
+"cluster": "hacker.C3",
+"theme": "mana"
+},
+{
+"id": 577,
+"key": "hacker.C3:10",
+"kind": "minor",
+"name": "Maná al golpear",
+"x": -766.7,
+"y": 1838.3,
+"mods": [
+{
+"stat": "mana_on_hit",
+"type": "flat",
+"value": 1
+},
+{
+"stat": "mana",
+"type": "increased",
+"value": 3
+}
+],
+"cluster": "hacker.C3",
+"theme": "mana"
+},
+{
+"id": 578,
+"key": "hacker.C3:11",
+"kind": "notable",
+"name": "Fuga Controlada",
+"x": -665.8,
+"y": 1920.6,
 "mods": [
 {
 "stat": "mana_regen",
 "type": "increased",
-"value": 17
+"value": 50,
+"tags": [
+"recent_kill"
+]
+},
+{
+"stat": "mana",
+"type": "increased",
+"value": 8
+}
+],
+"cluster": "hacker.C3",
+"theme": "mana",
+"flavor": "Un memory leak, pero a tu favor.",
+"icon": "mana"
+},
+{
+"id": 579,
+"key": "hacker.C3:12",
+"kind": "minor",
+"name": "Maná",
+"x": -667.2,
+"y": 2050.7,
+"mods": [
+{
+"stat": "mana",
+"type": "increased",
+"value": 9
 }
 ],
 "cluster": "hacker.C3",
@@ -13679,19 +13682,14 @@
 "id": 580,
 "key": "hacker.C3:13",
 "kind": "minor",
-"name": "Maná y regeneración",
+"name": "Maná",
 "x": -769.9,
 "y": 2130.8,
 "mods": [
 {
 "stat": "mana",
-"type": "increased",
-"value": 5
-},
-{
-"stat": "mana_regen",
-"type": "increased",
-"value": 9
+"type": "flat",
+"value": 17
 }
 ],
 "cluster": "hacker.C3",
@@ -13978,81 +13976,84 @@
 "id": 594,
 "key": "hacker.D3:0",
 "kind": "minor",
-"name": "Caos y toxinas",
+"name": "Regeneración de maná",
 "x": -583.0,
 "y": 2338.4,
 "mods": [
 {
-"stat": "chaos_damage",
-"type": "increased",
-"value": 9
-},
-{
-"stat": "poison_chance",
-"type": "flat",
-"value": 5
-}
-],
-"cluster": "hacker.D3",
-"theme": "caos"
-},
-{
-"id": 595,
-"key": "hacker.D3:1",
-"kind": "minor",
-"name": "Daño de caos",
-"x": -552.4,
-"y": 2418.2,
-"mods": [
-{
-"stat": "chaos_damage",
-"type": "increased",
-"value": 18
-}
-],
-"cluster": "hacker.D3",
-"theme": "caos"
-},
-{
-"id": 596,
-"key": "hacker.D3:2",
-"kind": "minor",
-"name": "Resistencia al caos",
-"x": -647.5,
-"y": 2394.5,
-"mods": [
-{
-"stat": "chaos_res",
-"type": "flat",
-"value": 7
-}
-],
-"cluster": "hacker.D3",
-"theme": "caos"
-},
-{
-"id": 597,
-"key": "hacker.D3:3",
-"kind": "notable",
-"name": "NaN",
-"x": -616.9,
-"y": 2474.3,
-"mods": [
-{
-"stat": "chaos_res",
-"type": "flat",
-"value": 20
-},
-{
-"stat": "chaos_damage",
+"stat": "mana_regen",
 "type": "increased",
 "value": 15
 }
 ],
 "cluster": "hacker.D3",
-"theme": "caos",
-"flavor": "Not a Number. Ni un problema.",
-"icon": "caos"
+"theme": "mana"
+},
+{
+"id": 595,
+"key": "hacker.D3:1",
+"kind": "minor",
+"name": "Maná y regeneración",
+"x": -552.4,
+"y": 2418.2,
+"mods": [
+{
+"stat": "mana",
+"type": "increased",
+"value": 4
+},
+{
+"stat": "mana_regen",
+"type": "increased",
+"value": 8
+}
+],
+"cluster": "hacker.D3",
+"theme": "mana"
+},
+{
+"id": 596,
+"key": "hacker.D3:2",
+"kind": "minor",
+"name": "Maná por segundo",
+"x": -647.5,
+"y": 2394.5,
+"mods": [
+{
+"stat": "mana_regen_flat",
+"type": "flat",
+"value": 1.5
+}
+],
+"cluster": "hacker.D3",
+"theme": "mana"
+},
+{
+"id": 597,
+"key": "hacker.D3:3",
+"kind": "notable",
+"name": "Caché Caliente",
+"x": -616.9,
+"y": 2474.3,
+"mods": [
+{
+"stat": "mana_regen",
+"type": "increased",
+"value": 30,
+"tags": [
+"stationary"
+]
+},
+{
+"stat": "mana",
+"type": "increased",
+"value": 8
+}
+],
+"cluster": "hacker.D3",
+"theme": "mana",
+"flavor": "Lo que tienes a mano sale más rápido.",
+"icon": "mana"
 },
 {
 "id": 598,
@@ -15299,41 +15300,43 @@
 "id": 655,
 "key": "hechicero.B1:0",
 "kind": "notable",
-"name": "Fuga Controlada",
+"name": "Pool de Conexiones",
 "x": -1418.4,
 "y": 1108.2,
 "mods": [
 {
-"stat": "mana_regen",
-"type": "increased",
-"value": 50,
-"tags": [
-"recent_kill"
-]
-},
-{
 "stat": "mana",
 "type": "increased",
-"value": 8
+"value": 12
+},
+{
+"stat": "mana_cost_reduction",
+"type": "flat",
+"value": 6
 }
 ],
 "cluster": "hechicero.B1",
 "theme": "mana",
-"flavor": "Un memory leak, pero a tu favor.",
+"flavor": "Siempre hay una libre. Casi.",
 "icon": "mana"
 },
 {
 "id": 656,
 "key": "hechicero.B1:1",
 "kind": "minor",
-"name": "Maná",
+"name": "Maná al golpear",
 "x": -1475.4,
 "y": 1117.6,
 "mods": [
 {
+"stat": "mana_on_hit",
+"type": "flat",
+"value": 1
+},
+{
 "stat": "mana",
 "type": "increased",
-"value": 8
+"value": 3
 }
 ],
 "cluster": "hechicero.B1",
@@ -15349,8 +15352,8 @@
 "mods": [
 {
 "stat": "mana",
-"type": "flat",
-"value": 15
+"type": "increased",
+"value": 8
 }
 ],
 "cluster": "hechicero.B1",
@@ -15360,9 +15363,26 @@
 "id": 658,
 "key": "hechicero.B1:3",
 "kind": "minor",
-"name": "Regeneración de maná",
+"name": "Maná",
 "x": -1398.1,
 "y": 1054.2,
+"mods": [
+{
+"stat": "mana",
+"type": "flat",
+"value": 15
+}
+],
+"cluster": "hechicero.B1",
+"theme": "mana"
+},
+{
+"id": 659,
+"key": "hechicero.B1:4",
+"kind": "minor",
+"name": "Regeneración de maná",
+"x": -1381.4,
+"y": 1009.9,
 "mods": [
 {
 "stat": "mana_regen",
@@ -15374,12 +15394,12 @@
 "theme": "mana"
 },
 {
-"id": 659,
-"key": "hechicero.B1:4",
+"id": 660,
+"key": "hechicero.B1:5",
 "kind": "minor",
 "name": "Maná y regeneración",
-"x": -1381.4,
-"y": 1009.9,
+"x": -1381.8,
+"y": 1152.8,
 "mods": [
 {
 "stat": "mana",
@@ -15396,34 +15416,17 @@
 "theme": "mana"
 },
 {
-"id": 660,
-"key": "hechicero.B1:5",
-"kind": "minor",
-"name": "Maná",
-"x": -1381.8,
-"y": 1152.8,
-"mods": [
-{
-"stat": "mana",
-"type": "increased",
-"value": 8
-}
-],
-"cluster": "hechicero.B1",
-"theme": "mana"
-},
-{
 "id": 661,
 "key": "hechicero.B1:6",
 "kind": "minor",
-"name": "Maná",
+"name": "Maná por segundo",
 "x": -1351.8,
 "y": 1189.4,
 "mods": [
 {
-"stat": "mana",
+"stat": "mana_regen_flat",
 "type": "flat",
-"value": 15
+"value": 1.5
 }
 ],
 "cluster": "hechicero.B1",
@@ -15433,137 +15436,140 @@
 "id": 662,
 "key": "hechicero.B2:0",
 "kind": "notable",
-"name": "Hipervisor",
+"name": "Reciclaje de Memoria",
 "x": -1668.9,
 "y": 674.3,
 "mods": [
 {
-"stat": "energy_shield",
+"stat": "mana_regen",
 "type": "increased",
-"value": 25
+"value": 40,
+"tags": [
+"recent_kill"
+]
 },
 {
-"stat": "intelligence",
+"stat": "mana",
 "type": "flat",
-"value": 10
+"value": 20
 }
 ],
 "cluster": "hechicero.B2",
-"theme": "escudo",
-"flavor": "Gobierna tus máquinas virtuales. Y tu ego.",
-"icon": "escudo"
+"theme": "mana",
+"flavor": "Lo que matas vuelve a la RAM.",
+"icon": "mana"
 },
 {
 "id": 663,
 "key": "hechicero.B2:1",
 "kind": "minor",
-"name": "Escudo de energía",
+"name": "Maná al golpear",
 "x": -1766.3,
 "y": 713.6,
 "mods": [
 {
-"stat": "energy_shield",
+"stat": "mana_on_hit",
+"type": "flat",
+"value": 1
+},
+{
+"stat": "mana",
 "type": "increased",
-"value": 10
+"value": 3
 }
 ],
 "cluster": "hechicero.B2",
-"theme": "escudo"
+"theme": "mana"
 },
 {
 "id": 664,
 "key": "hechicero.B2:2",
 "kind": "minor",
-"name": "Escudo de energía",
+"name": "Maná",
 "x": -1751.7,
 "y": 609.6,
 "mods": [
 {
-"stat": "energy_shield",
-"type": "flat",
-"value": 15
+"stat": "mana",
+"type": "increased",
+"value": 8
 }
 ],
 "cluster": "hechicero.B2",
-"theme": "escudo"
+"theme": "mana"
 },
 {
 "id": 665,
 "key": "hechicero.B2:3",
 "kind": "minor",
-"name": "Escudo e inteligencia",
+"name": "Maná",
 "x": -1654.3,
 "y": 570.3,
 "mods": [
 {
-"stat": "energy_shield",
-"type": "increased",
-"value": 6
-},
-{
-"stat": "intelligence",
-"type": "flat",
-"value": 5
-}
-],
-"cluster": "hechicero.B2",
-"theme": "escudo"
-},
-{
-"id": 666,
-"key": "hechicero.B2:4",
-"kind": "minor",
-"name": "Escudo de energía",
-"x": -1571.6,
-"y": 635.0,
-"mods": [
-{
-"stat": "energy_shield",
-"type": "increased",
-"value": 10
-}
-],
-"cluster": "hechicero.B2",
-"theme": "escudo"
-},
-{
-"id": 667,
-"key": "hechicero.B2:5",
-"kind": "minor",
-"name": "Escudo de energía",
-"x": -1586.2,
-"y": 738.9,
-"mods": [
-{
-"stat": "energy_shield",
+"stat": "mana",
 "type": "flat",
 "value": 15
 }
 ],
 "cluster": "hechicero.B2",
-"theme": "escudo"
+"theme": "mana"
+},
+{
+"id": 666,
+"key": "hechicero.B2:4",
+"kind": "minor",
+"name": "Regeneración de maná",
+"x": -1571.6,
+"y": 635.0,
+"mods": [
+{
+"stat": "mana_regen",
+"type": "increased",
+"value": 15
+}
+],
+"cluster": "hechicero.B2",
+"theme": "mana"
+},
+{
+"id": 667,
+"key": "hechicero.B2:5",
+"kind": "minor",
+"name": "Maná y regeneración",
+"x": -1586.2,
+"y": 738.9,
+"mods": [
+{
+"stat": "mana",
+"type": "increased",
+"value": 4
+},
+{
+"stat": "mana_regen",
+"type": "increased",
+"value": 8
+}
+],
+"cluster": "hechicero.B2",
+"theme": "mana"
 },
 {
 "id": 668,
 "key": "hechicero.B2:6",
 "kind": "minor",
-"name": "Escudo e inteligencia",
+"name": "Maná por segundo",
 "x": -1683.5,
 "y": 778.3,
 "mods": [
 {
-"stat": "energy_shield",
-"type": "increased",
-"value": 6
-},
-{
-"stat": "intelligence",
+"stat": "mana_regen_flat",
 "type": "flat",
-"value": 5
+"value": 1.5
 }
 ],
 "cluster": "hechicero.B2",
-"theme": "escudo"
+"theme": "mana"
 },
 {
 "id": 669,
@@ -16894,14 +16900,19 @@
 "id": 728,
 "key": "hechicero.D3:0",
 "kind": "minor",
-"name": "Regeneración de maná",
+"name": "Maná al golpear",
 "x": -2322.4,
 "y": 644.1,
 "mods": [
 {
-"stat": "mana_regen",
+"stat": "mana_on_hit",
+"type": "flat",
+"value": 1
+},
+{
+"stat": "mana",
 "type": "increased",
-"value": 15
+"value": 3
 }
 ],
 "cluster": "hechicero.D3",
@@ -16911,17 +16922,12 @@
 "id": 729,
 "key": "hechicero.D3:1",
 "kind": "minor",
-"name": "Maná y regeneración",
+"name": "Maná",
 "x": -2356.5,
 "y": 690.3,
 "mods": [
 {
 "stat": "mana",
-"type": "increased",
-"value": 4
-},
-{
-"stat": "mana_regen",
 "type": "increased",
 "value": 8
 }
@@ -16939,8 +16945,8 @@
 "mods": [
 {
 "stat": "mana",
-"type": "increased",
-"value": 8
+"type": "flat",
+"value": 15
 }
 ],
 "cluster": "hechicero.D3",
@@ -16950,27 +16956,27 @@
 "id": 731,
 "key": "hechicero.D3:3",
 "kind": "notable",
-"name": "Caché Caliente",
+"name": "Buffer Lleno",
 "x": -2457.0,
 "y": 682.7,
 "mods": [
 {
-"stat": "mana_regen",
-"type": "increased",
-"value": 30,
-"tags": [
-"stationary"
-]
-},
-{
 "stat": "mana",
 "type": "increased",
-"value": 8
+"value": 10
+},
+{
+"stat": "damage",
+"type": "increased",
+"value": 18,
+"tags": [
+"full_life"
+]
 }
 ],
 "cluster": "hechicero.D3",
 "theme": "mana",
-"flavor": "Lo que tienes a mano sale más rápido.",
+"flavor": "Con todo a tope, todo pega más.",
 "icon": "mana"
 },
 {
@@ -17269,58 +17275,33 @@
 "id": 746,
 "key": "hechicero.E1:0",
 "kind": "notable",
-"name": "Kernel Comprometido",
+"name": "NaN",
 "x": -2632.7,
 "y": 1010.6,
 "mods": [
 {
-"stat": "chaos_damage",
-"type": "increased",
-"value": 22
+"stat": "chaos_res",
+"type": "flat",
+"value": 20
 },
 {
-"stat": "poison_chance",
-"type": "flat",
-"value": 8,
-"tags": [
-"recent_kill"
-]
+"stat": "chaos_damage",
+"type": "increased",
+"value": 15
 }
 ],
 "cluster": "hechicero.E1",
 "theme": "caos",
-"flavor": "Ya nada es lo que parece.",
+"flavor": "Not a Number. Ni un problema.",
 "icon": "caos"
 },
 {
 "id": 747,
 "key": "hechicero.E1:1",
 "kind": "minor",
-"name": "Caos y daño",
+"name": "Caos y toxinas",
 "x": -2689.9,
 "y": 1002.9,
-"mods": [
-{
-"stat": "chaos_damage",
-"type": "increased",
-"value": 12
-},
-{
-"stat": "damage",
-"type": "increased",
-"value": 4
-}
-],
-"cluster": "hechicero.E1",
-"theme": "caos"
-},
-{
-"id": 748,
-"key": "hechicero.E1:2",
-"kind": "minor",
-"name": "Caos y toxinas",
-"x": -2736.8,
-"y": 996.6,
 "mods": [
 {
 "stat": "chaos_damage",
@@ -17337,12 +17318,12 @@
 "theme": "caos"
 },
 {
-"id": 749,
-"key": "hechicero.E1:3",
+"id": 748,
+"key": "hechicero.E1:2",
 "kind": "minor",
 "name": "Daño de caos",
-"x": -2597.4,
-"y": 964.9,
+"x": -2736.8,
+"y": 996.6,
 "mods": [
 {
 "stat": "chaos_damage",
@@ -17354,12 +17335,12 @@
 "theme": "caos"
 },
 {
-"id": 750,
-"key": "hechicero.E1:4",
+"id": 749,
+"key": "hechicero.E1:3",
 "kind": "minor",
 "name": "Resistencia al caos",
-"x": -2568.6,
-"y": 927.5,
+"x": -2597.4,
+"y": 964.9,
 "mods": [
 {
 "stat": "chaos_res",
@@ -17371,12 +17352,12 @@
 "theme": "caos"
 },
 {
-"id": 751,
-"key": "hechicero.E1:5",
+"id": 750,
+"key": "hechicero.E1:4",
 "kind": "minor",
 "name": "Caos y daño",
-"x": -2610.7,
-"y": 1064.0,
+"x": -2568.6,
+"y": 927.5,
 "mods": [
 {
 "stat": "chaos_damage",
@@ -17393,12 +17374,12 @@
 "theme": "caos"
 },
 {
-"id": 752,
-"key": "hechicero.E1:6",
+"id": 751,
+"key": "hechicero.E1:5",
 "kind": "minor",
 "name": "Caos y toxinas",
-"x": -2592.8,
-"y": 1107.7,
+"x": -2610.7,
+"y": 1064.0,
 "mods": [
 {
 "stat": "chaos_damage",
@@ -17409,6 +17390,23 @@
 "stat": "poison_chance",
 "type": "flat",
 "value": 5
+}
+],
+"cluster": "hechicero.E1",
+"theme": "caos"
+},
+{
+"id": 752,
+"key": "hechicero.E1:6",
+"kind": "minor",
+"name": "Daño de caos",
+"x": -2592.8,
+"y": 1107.7,
+"mods": [
+{
+"stat": "chaos_damage",
+"type": "increased",
+"value": 18
 }
 ],
 "cluster": "hechicero.E1",
@@ -17932,19 +17930,24 @@
 "id": 778,
 "key": "templario.A2:0",
 "kind": "notable",
-"name": "Reinstalación Limpia",
+"name": "Hipervisor",
 "x": -957.8,
 "y": -1101.9,
 "mods": [
 {
 "stat": "energy_shield",
 "type": "increased",
-"value": 30
+"value": 25
+},
+{
+"stat": "intelligence",
+"type": "flat",
+"value": 10
 }
 ],
 "cluster": "templario.A2",
 "theme": "escudo",
-"flavor": "Formatear y empezar de cero. Tu plan para todo.",
+"flavor": "Gobierna tus máquinas virtuales. Y tu ego.",
 "icon": "escudo"
 },
 {
@@ -18147,50 +18150,33 @@
 "id": 789,
 "key": "templario.B1:0",
 "kind": "notable",
-"name": "Pool de Conexiones",
+"name": "Mente sobre Memoria",
 "x": -1668.9,
 "y": -674.3,
 "mods": [
 {
-"stat": "mana",
-"type": "increased",
-"value": 12
+"stat": "damage_taken_from_mana",
+"type": "flat",
+"value": 15
 },
 {
-"stat": "mana_cost_reduction",
-"type": "flat",
-"value": 6
+"stat": "mana",
+"type": "increased",
+"value": 10
 }
 ],
 "cluster": "templario.B1",
 "theme": "mana",
-"flavor": "Siempre hay una libre. Casi.",
+"flavor": "El golpe va a la RAM. La vida, para después.",
 "icon": "mana"
 },
 {
 "id": 790,
 "key": "templario.B1:1",
 "kind": "minor",
-"name": "Maná",
+"name": "Regeneración de maná",
 "x": -1766.3,
 "y": -713.6,
-"mods": [
-{
-"stat": "mana",
-"type": "flat",
-"value": 15
-}
-],
-"cluster": "templario.B1",
-"theme": "mana"
-},
-{
-"id": 791,
-"key": "templario.B1:2",
-"kind": "minor",
-"name": "Regeneración de maná",
-"x": -1683.5,
-"y": -778.3,
 "mods": [
 {
 "stat": "mana_regen",
@@ -18202,12 +18188,12 @@
 "theme": "mana"
 },
 {
-"id": 792,
-"key": "templario.B1:3",
+"id": 791,
+"key": "templario.B1:2",
 "kind": "minor",
 "name": "Maná y regeneración",
-"x": -1586.2,
-"y": -738.9,
+"x": -1683.5,
+"y": -778.3,
 "mods": [
 {
 "stat": "mana",
@@ -18224,17 +18210,39 @@
 "theme": "mana"
 },
 {
+"id": 792,
+"key": "templario.B1:3",
+"kind": "minor",
+"name": "Maná por segundo",
+"x": -1586.2,
+"y": -738.9,
+"mods": [
+{
+"stat": "mana_regen_flat",
+"type": "flat",
+"value": 1.5
+}
+],
+"cluster": "templario.B1",
+"theme": "mana"
+},
+{
 "id": 793,
 "key": "templario.B1:4",
 "kind": "minor",
-"name": "Maná",
+"name": "Maná al golpear",
 "x": -1571.6,
 "y": -635.0,
 "mods": [
 {
+"stat": "mana_on_hit",
+"type": "flat",
+"value": 1
+},
+{
 "stat": "mana",
 "type": "increased",
-"value": 8
+"value": 3
 }
 ],
 "cluster": "templario.B1",
@@ -18250,8 +18258,8 @@
 "mods": [
 {
 "stat": "mana",
-"type": "flat",
-"value": 15
+"type": "increased",
+"value": 8
 }
 ],
 "cluster": "templario.B1",
@@ -18261,13 +18269,13 @@
 "id": 795,
 "key": "templario.B1:6",
 "kind": "minor",
-"name": "Regeneración de maná",
+"name": "Maná",
 "x": -1751.7,
 "y": -609.6,
 "mods": [
 {
-"stat": "mana_regen",
-"type": "increased",
+"stat": "mana",
+"type": "flat",
 "value": 15
 }
 ],
@@ -18953,162 +18961,137 @@
 "id": 828,
 "key": "templario.C2:0",
 "kind": "notable",
-"name": "Antivirus Premium",
+"name": "Swap a Disco",
 "x": -1709.1,
 "y": -1287.9,
 "mods": [
 {
-"stat": "chaos_res",
-"type": "flat",
-"value": 15
-},
-{
-"stat": "fire_res",
+"stat": "damage_taken_from_mana",
 "type": "flat",
 "value": 8
 },
 {
-"stat": "cold_res",
+"stat": "mana_regen_flat",
 "type": "flat",
-"value": 8
-},
-{
-"stat": "lightning_res",
-"type": "flat",
-"value": 8
+"value": 4
 }
 ],
 "cluster": "templario.C2",
-"theme": "resistencias",
-"flavor": "Detecta amenazas. Y algún falso positivo.",
-"icon": "resistencias"
+"theme": "mana",
+"flavor": "Cuando no cabe en la vida, se paga en maná.",
+"icon": "mana"
 },
 {
 "id": 829,
 "key": "templario.C2:1",
 "kind": "minor",
-"name": "Resistencia al frío",
+"name": "Regeneración de maná",
 "x": -1732.9,
 "y": -1340.5,
 "mods": [
 {
-"stat": "cold_res",
-"type": "flat",
-"value": 12
+"stat": "mana_regen",
+"type": "increased",
+"value": 15
 }
 ],
 "cluster": "templario.C2",
-"theme": "resistencias"
+"theme": "mana"
 },
 {
 "id": 830,
 "key": "templario.C2:2",
 "kind": "minor",
-"name": "Resistencia al rayo",
+"name": "Maná y regeneración",
 "x": -1752.4,
 "y": -1383.5,
 "mods": [
 {
-"stat": "lightning_res",
-"type": "flat",
-"value": 12
+"stat": "mana",
+"type": "increased",
+"value": 4
+},
+{
+"stat": "mana_regen",
+"type": "increased",
+"value": 8
 }
 ],
 "cluster": "templario.C2",
-"theme": "resistencias"
+"theme": "mana"
 },
 {
 "id": 831,
 "key": "templario.C2:3",
 "kind": "minor",
-"name": "Resistencias elementales",
+"name": "Maná por segundo",
 "x": -1651.6,
 "y": -1282.2,
 "mods": [
 {
-"stat": "fire_res",
+"stat": "mana_regen_flat",
 "type": "flat",
-"value": 5
-},
-{
-"stat": "cold_res",
-"type": "flat",
-"value": 5
-},
-{
-"stat": "lightning_res",
-"type": "flat",
-"value": 5
+"value": 1.5
 }
 ],
 "cluster": "templario.C2",
-"theme": "resistencias"
+"theme": "mana"
 },
 {
 "id": 832,
 "key": "templario.C2:4",
 "kind": "minor",
-"name": "Resistencia a estados",
+"name": "Maná al golpear",
 "x": -1604.6,
 "y": -1277.6,
 "mods": [
 {
-"stat": "status_resist",
+"stat": "mana_on_hit",
 "type": "flat",
-"value": 8
+"value": 1
+},
+{
+"stat": "mana",
+"type": "increased",
+"value": 3
 }
 ],
 "cluster": "templario.C2",
-"theme": "resistencias"
+"theme": "mana"
 },
 {
 "id": 833,
 "key": "templario.C2:5",
 "kind": "minor",
-"name": "Estados y resistencia",
+"name": "Maná",
 "x": -1742.7,
 "y": -1241.0,
 "mods": [
 {
-"stat": "status_resist",
-"type": "flat",
-"value": 5
-},
-{
-"stat": "fire_res",
-"type": "flat",
-"value": 3
-},
-{
-"stat": "cold_res",
-"type": "flat",
-"value": 3
-},
-{
-"stat": "lightning_res",
-"type": "flat",
-"value": 3
+"stat": "mana",
+"type": "increased",
+"value": 8
 }
 ],
 "cluster": "templario.C2",
-"theme": "resistencias"
+"theme": "mana"
 },
 {
 "id": 834,
 "key": "templario.C2:6",
 "kind": "minor",
-"name": "Resistencia al fuego",
+"name": "Maná",
 "x": -1770.3,
 "y": -1202.6,
 "mods": [
 {
-"stat": "fire_res",
+"stat": "mana",
 "type": "flat",
-"value": 12
+"value": 15
 }
 ],
 "cluster": "templario.C2",
-"theme": "resistencias"
+"theme": "mana"
 },
 {
 "id": 835,
@@ -19421,27 +19404,19 @@
 "id": 849,
 "key": "templario.D0:0",
 "kind": "notable",
-"name": "Hibernación",
+"name": "Reinstalación Limpia",
 "x": -2474.0,
 "y": -173.0,
 "mods": [
 {
 "stat": "energy_shield",
 "type": "increased",
-"value": 20
-},
-{
-"stat": "energy_shield_regen",
-"type": "flat",
-"value": 6,
-"tags": [
-"stationary"
-]
+"value": 30
 }
 ],
 "cluster": "templario.D0",
 "theme": "escudo",
-"flavor": "Quieto, recarga. Como la laptop.",
+"flavor": "Formatear y empezar de cero. Tu plan para todo.",
 "icon": "escudo"
 },
 {
@@ -19695,9 +19670,26 @@
 "id": 862,
 "key": "templario.D3:0",
 "kind": "minor",
-"name": "Maná y regeneración",
+"name": "Regeneración de maná",
 "x": -1733.6,
 "y": -1674.1,
+"mods": [
+{
+"stat": "mana_regen",
+"type": "increased",
+"value": 15
+}
+],
+"cluster": "templario.D3",
+"theme": "mana"
+},
+{
+"id": 863,
+"key": "templario.D3:1",
+"kind": "minor",
+"name": "Maná y regeneración",
+"x": -1818.0,
+"y": -1687.5,
 "mods": [
 {
 "stat": "mana",
@@ -19714,34 +19706,17 @@
 "theme": "mana"
 },
 {
-"id": 863,
-"key": "templario.D3:1",
-"kind": "minor",
-"name": "Maná",
-"x": -1818.0,
-"y": -1687.5,
-"mods": [
-{
-"stat": "mana",
-"type": "increased",
-"value": 8
-}
-],
-"cluster": "templario.D3",
-"theme": "mana"
-},
-{
 "id": 864,
 "key": "templario.D3:2",
 "kind": "minor",
-"name": "Maná",
+"name": "Maná por segundo",
 "x": -1749.9,
 "y": -1758.0,
 "mods": [
 {
-"stat": "mana",
+"stat": "mana_regen_flat",
 "type": "flat",
-"value": 15
+"value": 1.5
 }
 ],
 "cluster": "templario.D3",
@@ -19751,27 +19726,24 @@
 "id": 865,
 "key": "templario.D3:3",
 "kind": "notable",
-"name": "Reciclaje de Memoria",
+"name": "Interrupción por Hardware",
 "x": -1834.3,
 "y": -1771.4,
 "mods": [
 {
-"stat": "mana_regen",
-"type": "increased",
-"value": 40,
-"tags": [
-"recent_kill"
-]
+"stat": "mana_on_hit",
+"type": "flat",
+"value": 3
 },
 {
-"stat": "mana",
-"type": "flat",
-"value": 20
+"stat": "mana_regen",
+"type": "increased",
+"value": 15
 }
 ],
 "cluster": "templario.D3",
 "theme": "mana",
-"flavor": "Lo que matas vuelve a la RAM.",
+"flavor": "Cada golpe, un ciclo de reloj de vuelta.",
 "icon": "mana"
 },
 {
@@ -20340,34 +20312,34 @@
 "id": 894,
 "key": "puerta.guerrero1:0",
 "kind": "notable",
-"name": "Actualización Obligatoria",
+"name": "Antivirus Premium",
 "x": 963.5,
 "y": -1668.8,
 "mods": [
 {
+"stat": "chaos_res",
+"type": "flat",
+"value": 15
+},
+{
 "stat": "fire_res",
 "type": "flat",
-"value": 12
+"value": 8
 },
 {
 "stat": "cold_res",
 "type": "flat",
-"value": 12
+"value": 8
 },
 {
 "stat": "lightning_res",
 "type": "flat",
-"value": 12
-},
-{
-"stat": "life",
-"type": "increased",
-"value": 4
+"value": 8
 }
 ],
 "cluster": "puerta.guerrero1",
 "theme": "resistencias",
-"flavor": "Reinicia en 3, 2, 1...",
+"flavor": "Detecta amenazas. Y algún falso positivo.",
 "icon": "resistencias"
 },
 {
@@ -20739,33 +20711,60 @@
 "id": 912,
 "key": "puerta.duelista0:0",
 "kind": "notable",
-"name": "Inyección SQL",
+"name": "Rootkit Residente",
 "x": 1222.0,
 "y": 0.0,
 "mods": [
 {
 "stat": "poison_chance",
 "type": "flat",
+"value": 12
+},
+{
+"stat": "ailment_damage",
+"type": "increased",
 "value": 15
 },
 {
 "stat": "chaos_damage",
 "type": "increased",
-"value": 20
+"value": 10
+},
+{
+"stat": "convert_elemental_to_chaos",
+"type": "flat",
+"value": 1
 }
 ],
 "cluster": "puerta.duelista0",
 "theme": "toxinas",
-"flavor": "'; DROP TABLE enemigos; --",
+"flavor": "No se va ni formateando.",
 "icon": "toxinas"
 },
 {
 "id": 913,
 "key": "puerta.duelista0:1",
 "kind": "minor",
-"name": "Envenenar y velocidad",
+"name": "Estados más dañinos",
 "x": 1272.7,
 "y": 27.7,
+"mods": [
+{
+"stat": "ailment_damage",
+"type": "increased",
+"value": 8
+}
+],
+"cluster": "puerta.duelista0",
+"theme": "toxinas"
+},
+{
+"id": 914,
+"key": "puerta.duelista0:2",
+"kind": "minor",
+"name": "Envenenar y velocidad",
+"x": 1314.1,
+"y": 50.3,
 "mods": [
 {
 "stat": "poison_chance",
@@ -20782,12 +20781,12 @@
 "theme": "toxinas"
 },
 {
-"id": 914,
-"key": "puerta.duelista0:2",
+"id": 915,
+"key": "puerta.duelista0:3",
 "kind": "minor",
 "name": "Probabilidad de envenenar",
-"x": 1314.1,
-"y": 50.3,
+"x": 1172.7,
+"y": 30.0,
 "mods": [
 {
 "stat": "poison_chance",
@@ -20799,12 +20798,12 @@
 "theme": "toxinas"
 },
 {
-"id": 915,
-"key": "puerta.duelista0:3",
+"id": 916,
+"key": "puerta.duelista0:4",
 "kind": "minor",
 "name": "Veneno y caos",
-"x": 1172.7,
-"y": 30.0,
+"x": 1132.3,
+"y": 54.6,
 "mods": [
 {
 "stat": "poison_chance",
@@ -20821,12 +20820,12 @@
 "theme": "toxinas"
 },
 {
-"id": 916,
-"key": "puerta.duelista0:4",
+"id": 917,
+"key": "puerta.duelista0:5",
 "kind": "minor",
 "name": "Estados duraderos",
-"x": 1132.3,
-"y": 54.6,
+"x": 1220.6,
+"y": -57.7,
 "mods": [
 {
 "stat": "ailment_duration",
@@ -20838,39 +20837,17 @@
 "theme": "toxinas"
 },
 {
-"id": 917,
-"key": "puerta.duelista0:5",
+"id": 918,
+"key": "puerta.duelista0:6",
 "kind": "minor",
 "name": "Estados más dañinos",
-"x": 1220.6,
-"y": -57.7,
+"x": 1219.5,
+"y": -105.0,
 "mods": [
 {
 "stat": "ailment_damage",
 "type": "increased",
 "value": 8
-}
-],
-"cluster": "puerta.duelista0",
-"theme": "toxinas"
-},
-{
-"id": 918,
-"key": "puerta.duelista0:6",
-"kind": "minor",
-"name": "Envenenar y velocidad",
-"x": 1219.5,
-"y": -105.0,
-"mods": [
-{
-"stat": "poison_chance",
-"type": "flat",
-"value": 4
-},
-{
-"stat": "attack_speed",
-"type": "increased",
-"value": 3
 }
 ],
 "cluster": "puerta.duelista0",
@@ -21784,41 +21761,43 @@
 "id": 962,
 "key": "puerta.hacker0:0",
 "kind": "notable",
-"name": "Buffer Lleno",
+"name": "Liberación de Recursos",
 "x": -611.0,
 "y": 1058.3,
 "mods": [
 {
-"stat": "mana",
-"type": "increased",
-"value": 10
+"stat": "mana_on_kill",
+"type": "flat",
+"value": 12
 },
 {
-"stat": "damage",
-"type": "increased",
-"value": 18,
-"tags": [
-"full_life"
-]
+"stat": "mana",
+"type": "flat",
+"value": 20
 }
 ],
 "cluster": "puerta.hacker0",
 "theme": "mana",
-"flavor": "Con todo a tope, todo pega más.",
+"flavor": "Proceso muerto, memoria libre.",
 "icon": "mana"
 },
 {
 "id": 963,
 "key": "puerta.hacker0:1",
 "kind": "minor",
-"name": "Regeneración de maná",
+"name": "Maná al golpear",
 "x": -660.3,
 "y": 1088.3,
 "mods": [
 {
-"stat": "mana_regen",
+"stat": "mana_on_hit",
+"type": "flat",
+"value": 1
+},
+{
+"stat": "mana",
 "type": "increased",
-"value": 15
+"value": 3
 }
 ],
 "cluster": "puerta.hacker0",
@@ -21828,17 +21807,12 @@
 "id": 964,
 "key": "puerta.hacker0:2",
 "kind": "minor",
-"name": "Maná y regeneración",
+"name": "Maná",
 "x": -700.7,
 "y": 1112.9,
 "mods": [
 {
 "stat": "mana",
-"type": "increased",
-"value": 4
-},
-{
-"stat": "mana_regen",
 "type": "increased",
 "value": 8
 }
@@ -21856,8 +21830,8 @@
 "mods": [
 {
 "stat": "mana",
-"type": "increased",
-"value": 8
+"type": "flat",
+"value": 15
 }
 ],
 "cluster": "puerta.hacker0",
@@ -21867,13 +21841,13 @@
 "id": 966,
 "key": "puerta.hacker0:4",
 "kind": "minor",
-"name": "Maná",
+"name": "Regeneración de maná",
 "x": -613.5,
 "y": 953.3,
 "mods": [
 {
-"stat": "mana",
-"type": "flat",
+"stat": "mana_regen",
+"type": "increased",
 "value": 15
 }
 ],
@@ -21884,26 +21858,9 @@
 "id": 967,
 "key": "puerta.hacker0:5",
 "kind": "minor",
-"name": "Regeneración de maná",
+"name": "Maná y regeneración",
 "x": -560.3,
 "y": 1086.0,
-"mods": [
-{
-"stat": "mana_regen",
-"type": "increased",
-"value": 15
-}
-],
-"cluster": "puerta.hacker0",
-"theme": "mana"
-},
-{
-"id": 968,
-"key": "puerta.hacker0:6",
-"kind": "minor",
-"name": "Maná y regeneración",
-"x": -518.9,
-"y": 1108.6,
 "mods": [
 {
 "stat": "mana",
@@ -21914,6 +21871,23 @@
 "stat": "mana_regen",
 "type": "increased",
 "value": 8
+}
+],
+"cluster": "puerta.hacker0",
+"theme": "mana"
+},
+{
+"id": 968,
+"key": "puerta.hacker0:6",
+"kind": "minor",
+"name": "Maná por segundo",
+"x": -518.9,
+"y": 1108.6,
+"mods": [
+{
+"stat": "mana_regen_flat",
+"type": "flat",
+"value": 1.5
 }
 ],
 "cluster": "puerta.hacker0",
