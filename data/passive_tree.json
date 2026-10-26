@@ -1,5 +1,5 @@
 {
-"version": 9,
+"version": 10,
 "themes": {
 "vida": {
 "name": "Vida",
@@ -3709,7 +3709,8 @@
 "cluster": "guerrero.B1",
 "theme": "resistencias",
 "flavor": "Por fin alguien cableó esto bien.",
-"icon": "resistencias"
+"icon": "resistencias",
+"socket": true
 },
 {
 "id": 120,
@@ -6054,30 +6055,25 @@
 "icon": "fisico",
 "choices": [
 {
-"name": "Refactor a Martillazos",
+"name": "Brute Force",
 "mods": [
 {
 "stat": "physical_damage",
 "type": "increased",
-"value": 30,
+"value": 25,
 "tags": [
 "melee"
 ]
 },
 {
-"stat": "strength",
-"type": "flat",
-"value": 10
-},
-{
-"stat": "stunned_damage",
+"stat": "attack_speed",
 "type": "increased",
-"value": 30
+"value": 5
 }
 ]
 },
 {
-"name": "Golpe de Merge",
+"name": "Commit Forzado",
 "mods": [
 {
 "stat": "physical_damage",
@@ -6085,9 +6081,9 @@
 "value": 20
 },
 {
-"stat": "damage",
+"stat": "physical_damage",
 "type": "increased",
-"value": 20,
+"value": 25,
 "tags": [
 "recent_kill"
 ]
@@ -6095,22 +6091,17 @@
 ]
 },
 {
-"name": "Rompe-Builds",
+"name": "Reescritura Total",
 "mods": [
 {
 "stat": "physical_damage",
 "type": "increased",
-"value": 25
+"value": 18
 },
 {
-"stat": "crit_multiplier",
-"type": "flat",
-"value": 15
-},
-{
-"stat": "bleed_chance",
-"type": "flat",
-"value": 10
+"stat": "attack_speed",
+"type": "increased",
+"value": 6
 }
 ]
 }
@@ -6700,7 +6691,8 @@
 "cluster": "duelista.B1",
 "theme": "evasion",
 "flavor": "No te dan si tu try/catch es lo bastante amplio.",
-"icon": "evasion"
+"icon": "evasion",
+"socket": true
 },
 {
 "id": 254,
@@ -7702,29 +7694,6 @@
 "icon": "fisico",
 "choices": [
 {
-"name": "Refactor a Martillazos",
-"mods": [
-{
-"stat": "physical_damage",
-"type": "increased",
-"value": 30,
-"tags": [
-"melee"
-]
-},
-{
-"stat": "strength",
-"type": "flat",
-"value": 10
-},
-{
-"stat": "stunned_damage",
-"type": "increased",
-"value": 30
-}
-]
-},
-{
 "name": "Golpe de Merge",
 "mods": [
 {
@@ -7759,6 +7728,24 @@
 "stat": "bleed_chance",
 "type": "flat",
 "value": 10
+}
+]
+},
+{
+"name": "Brute Force",
+"mods": [
+{
+"stat": "physical_damage",
+"type": "increased",
+"value": 25,
+"tags": [
+"melee"
+]
+},
+{
+"stat": "attack_speed",
+"type": "increased",
+"value": 5
 }
 ]
 }
@@ -9597,7 +9584,8 @@
 "cluster": "exploradora.B1",
 "theme": "movilidad",
 "flavor": "Llegas antes de que te llamen.",
-"icon": "movilidad"
+"icon": "movilidad",
+"socket": true
 },
 {
 "id": 388,
@@ -9975,6 +9963,39 @@
 "icon": "evasion",
 "choices": [
 {
+"name": "Race Condition",
+"mods": [
+{
+"stat": "evasion",
+"type": "increased",
+"value": 30
+},
+{
+"stat": "dexterity",
+"type": "flat",
+"value": 10
+}
+]
+},
+{
+"name": "Ruta Alternativa",
+"mods": [
+{
+"stat": "evasion",
+"type": "increased",
+"value": 25
+},
+{
+"stat": "movement_speed",
+"type": "increased",
+"value": 6,
+"tags": [
+"recent_kill"
+]
+}
+]
+},
+{
 "name": "Excepción Capturada",
 "mods": [
 {
@@ -9991,39 +10012,6 @@
 "stat": "max_multihilo_charges",
 "type": "flat",
 "value": 1
-}
-]
-},
-{
-"name": "Proceso en Segundo Plano",
-"mods": [
-{
-"stat": "evasion",
-"type": "increased",
-"value": 25
-},
-{
-"stat": "damage",
-"type": "increased",
-"value": 25,
-"tags": [
-"full_life"
-]
-}
-]
-},
-{
-"name": "Deploy Silencioso",
-"mods": [
-{
-"stat": "movement_speed",
-"type": "increased",
-"value": 8
-},
-{
-"stat": "evasion",
-"type": "increased",
-"value": 15
 }
 ]
 }
@@ -12448,7 +12436,8 @@
 "cluster": "hacker.B1",
 "theme": "evasion",
 "flavor": "Si hay atasco, por otro lado.",
-"icon": "evasion"
+"icon": "evasion",
+"socket": true
 },
 {
 "id": 522,
@@ -15347,7 +15336,8 @@
 "cluster": "hechicero.B1",
 "theme": "mana",
 "flavor": "Siempre hay una libre. Casi.",
-"icon": "mana"
+"icon": "mana",
+"socket": true
 },
 {
 "id": 656,
@@ -16309,6 +16299,39 @@
 "icon": "fuego",
 "choices": [
 {
+"name": "Llama Eterna",
+"mods": [
+{
+"stat": "fire_damage",
+"type": "increased",
+"value": 20
+},
+{
+"stat": "fire_res",
+"type": "flat",
+"value": 15
+}
+]
+},
+{
+"name": "Incendio Controlado",
+"mods": [
+{
+"stat": "fire_damage",
+"type": "increased",
+"value": 22
+},
+{
+"stat": "burn_chance",
+"type": "flat",
+"value": 8,
+"tags": [
+"stationary"
+]
+}
+]
+},
+{
 "name": "Thermal Throttling",
 "mods": [
 {
@@ -16328,41 +16351,6 @@
 "stat": "convert_physical_to_fire",
 "type": "flat",
 "value": 1
-}
-]
-},
-{
-"name": "Incendio en el CPD",
-"mods": [
-{
-"stat": "fire_damage",
-"type": "increased",
-"value": 25
-},
-{
-"stat": "area_of_effect",
-"type": "increased",
-"value": 8
-},
-{
-"stat": "burn_chance",
-"type": "flat",
-"value": 10
-}
-]
-},
-{
-"name": "Pasta Térmica Seca",
-"mods": [
-{
-"stat": "fire_damage",
-"type": "increased",
-"value": 40
-},
-{
-"stat": "cold_res",
-"type": "flat",
-"value": -10
 }
 ]
 }
@@ -18218,7 +18206,8 @@
 "cluster": "templario.B1",
 "theme": "mana",
 "flavor": "El golpe va a la RAM. La vida, para después.",
-"icon": "mana"
+"icon": "mana",
+"socket": true
 },
 {
 "id": 790,
@@ -18559,55 +18548,42 @@
 "icon": "legion",
 "choices": [
 {
-"name": "Redundancia Activa-Activa",
+"name": "Servicio sin Estado",
 "mods": [
-{
-"stat": "minion_life",
-"type": "increased",
-"value": 35
-},
 {
 "stat": "reservation_efficiency",
 "type": "increased",
-"value": 10
-},
-{
-"stat": "minion_damage",
-"type": "increased",
-"value": 25,
-"tags": [
-"three_allies"
-]
+"value": 20
 }
 ]
 },
 {
-"name": "Orquestador de Contenedores",
+"name": "Cadena de Mando",
 "mods": [
 {
-"stat": "extra_minions",
-"type": "flat",
-"value": 1
+"stat": "minion_damage",
+"type": "increased",
+"value": 30
 },
 {
-"stat": "minion_damage",
+"stat": "aura_effect",
 "type": "increased",
 "value": 15
 }
 ]
 },
 {
-"name": "Estado Compartido",
+"name": "Autoescalado Reactivo",
 "mods": [
 {
-"stat": "aura_effect",
+"stat": "minion_life",
 "type": "increased",
-"value": 30
+"value": 25
 },
 {
-"stat": "reservation_efficiency",
+"stat": "automaton_speed",
 "type": "increased",
-"value": 8
+"value": 12
 }
 ]
 }
@@ -20251,7 +20227,8 @@
 "cluster": "puerta.guerrero0",
 "theme": "hemorragia",
 "flavor": "Se cae el proveedor. Se cae todo lo demás.",
-"icon": "hemorragia"
+"icon": "hemorragia",
+"socket": true
 },
 {
 "id": 888,
@@ -20397,7 +20374,8 @@
 "cluster": "puerta.guerrero1",
 "theme": "resistencias",
 "flavor": "Detecta amenazas. Y algún falso positivo.",
-"icon": "resistencias"
+"icon": "resistencias",
+"socket": true
 },
 {
 "id": 895,
@@ -20552,7 +20530,19 @@
 },
 "constellation": "Constelación: Pentester",
 "flavor": "Romper cosas con permiso por escrito.",
-"icon": "atributos"
+"icon": "atributos",
+"complete_mods": [
+{
+"stat": "physical_damage",
+"type": "more",
+"value": 10
+},
+{
+"stat": "crit_multiplier",
+"type": "flat",
+"value": 20
+}
+]
 },
 {
 "id": 902,
@@ -20796,7 +20786,8 @@
 "cluster": "puerta.duelista0",
 "theme": "toxinas",
 "flavor": "No se va ni formateando.",
-"icon": "toxinas"
+"icon": "toxinas",
+"socket": true
 },
 {
 "id": 913,
@@ -20932,7 +20923,8 @@
 "cluster": "puerta.duelista1",
 "theme": "movilidad",
 "flavor": "Te mueves sin moverte del sofá.",
-"icon": "movilidad"
+"icon": "movilidad",
+"socket": true
 },
 {
 "id": 920,
@@ -21087,7 +21079,19 @@
 },
 "constellation": "Constelación: Hacker Ético",
 "flavor": "Entra sin romper. Bueno, rompe poco.",
-"icon": "atributos"
+"icon": "atributos",
+"complete_mods": [
+{
+"stat": "chaos_damage",
+"type": "more",
+"value": 10
+},
+{
+"stat": "evasion",
+"type": "more",
+"value": 10
+}
+]
 },
 {
 "id": 927,
@@ -21321,7 +21325,8 @@
 "cluster": "puerta.exploradora0",
 "theme": "criogenia",
 "flavor": "Algo va muy bien o muy mal.",
-"icon": "criogenia"
+"icon": "criogenia",
+"socket": true
 },
 {
 "id": 938,
@@ -21457,7 +21462,8 @@
 "cluster": "puerta.exploradora1",
 "theme": "sobrecarga",
 "flavor": "Ilumina el CPD entero. Y a los que hay dentro.",
-"icon": "sobrecarga"
+"icon": "sobrecarga",
+"socket": true
 },
 {
 "id": 945,
@@ -21602,7 +21608,19 @@
 },
 "constellation": "Constelación: Arquitecto",
 "flavor": "Dibuja cajas y flechas. Las cajas pelean solas.",
-"icon": "atributos"
+"icon": "atributos",
+"complete_mods": [
+{
+"stat": "minion_damage",
+"type": "more",
+"value": 12
+},
+{
+"stat": "minion_life",
+"type": "more",
+"value": 12
+}
+]
 },
 {
 "id": 952,
@@ -21836,7 +21854,8 @@
 "cluster": "puerta.hacker0",
 "theme": "mana",
 "flavor": "Proceso muerto, memoria libre.",
-"icon": "mana"
+"icon": "mana",
+"socket": true
 },
 {
 "id": 963,
@@ -21972,7 +21991,8 @@
 "cluster": "puerta.hacker1",
 "theme": "ignicion",
 "flavor": "Todo empieza con un pequeño cortocircuito.",
-"icon": "ignicion"
+"icon": "ignicion",
+"socket": true
 },
 {
 "id": 970,
@@ -22118,7 +22138,29 @@
 },
 "constellation": "Constelación: Full Stack",
 "flavor": "De todo un poco. De nada, mucho. Funciona.",
-"icon": "atributos"
+"icon": "atributos",
+"complete_mods": [
+{
+"stat": "damage",
+"type": "more",
+"value": 8
+},
+{
+"stat": "strength",
+"type": "flat",
+"value": 10
+},
+{
+"stat": "dexterity",
+"type": "flat",
+"value": 10
+},
+{
+"stat": "intelligence",
+"type": "flat",
+"value": 10
+}
+]
 },
 {
 "id": 977,
@@ -22357,7 +22399,8 @@
 "cluster": "puerta.hechicero0",
 "theme": "legion",
 "flavor": "Lo matas y vuelve igual. Reservando lo mismo.",
-"icon": "legion"
+"icon": "legion",
+"socket": true
 },
 {
 "id": 988,
@@ -22499,7 +22542,8 @@
 "cluster": "puerta.hechicero1",
 "theme": "automatizacion",
 "flavor": "Ahora apuntan a lo que se mueve y no a las palomas.",
-"icon": "automatizacion"
+"icon": "automatizacion",
+"socket": true
 },
 {
 "id": 995,
@@ -22638,7 +22682,19 @@
 },
 "constellation": "Constelación: Rubber Duck",
 "flavor": "Le explicas el problema al pato y el pato lo arregla.",
-"icon": "atributos"
+"icon": "atributos",
+"complete_mods": [
+{
+"stat": "cooldown_recovery",
+"type": "more",
+"value": 10
+},
+{
+"stat": "skill_duration",
+"type": "increased",
+"value": 15
+}
+]
 },
 {
 "id": 1002,
@@ -22875,7 +22931,8 @@
 "cluster": "puerta.templario0",
 "theme": "armadura",
 "flavor": "Plantado, no te mueve ni un terremoto.",
-"icon": "armadura"
+"icon": "armadura",
+"socket": true
 },
 {
 "id": 1013,
@@ -23021,7 +23078,8 @@
 "cluster": "puerta.templario1",
 "theme": "atributos",
 "flavor": "Permisos para todo. Responsabilidad, ninguna.",
-"icon": "atributos"
+"icon": "atributos",
+"socket": true
 },
 {
 "id": 1020,
@@ -23161,7 +23219,19 @@
 },
 "constellation": "Constelación: Pager de Guardia",
 "flavor": "Suena a las tres de la mañana. Siempre.",
-"icon": "atributos"
+"icon": "atributos",
+"complete_mods": [
+{
+"stat": "lightning_damage",
+"type": "more",
+"value": 10
+},
+{
+"stat": "life_regen",
+"type": "flat",
+"value": 8
+}
+]
 },
 {
 "id": 1027,

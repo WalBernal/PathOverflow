@@ -593,6 +593,10 @@ static func from_dict(d: Dictionary, p_class_def: Dictionary, tree: PassiveTree,
 		# y la primera reasignación es gratis (T89b: hasta cerrar el árbol con puntos gastados).
 		c.flags["passives_refunded"] = true
 		c.flags["free_respec"] = true
+		# Las ranuras de chip también cambian de sitio: los chips vuelven a la bolsa (si caben).
+		for node_id in c.inventory.chips.keys():
+			if not tree.is_socket(int(node_id)):
+				c.inventory.unsocket_chip(node_id)
 		c.recalculate()
 	return c
 

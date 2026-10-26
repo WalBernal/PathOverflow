@@ -39,6 +39,10 @@ var constellation := ""
 var requires: Dictionary = {}   # {"strength": 50, ...}
 ## Piedras angulares que chocan con esta (T92), por nombre.
 var conflicts := PackedStringArray()
+## Estrella de constelación (T93): bono extra con la constelación entera asignada.
+var complete_mods: Array[Modifier] = []
+## Ranura de chip de expansión (T93).
+var socket := false
 
 
 func is_mastery() -> bool:
@@ -73,6 +77,9 @@ static func from_dict(d: Dictionary) -> PassiveNode:
 	n.requires = d.get("requires", {})
 	n.constellation = String(d.get("constellation", ""))
 	n.conflicts = PackedStringArray(d.get("conflicts", []))
+	for md in d.get("complete_mods", []):
+		n.complete_mods.append(Modifier.from_dict(md, "tree"))
+	n.socket = bool(d.get("socket", false))
 	return n
 
 

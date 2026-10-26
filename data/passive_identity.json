@@ -446,6 +446,18 @@
           "value": 25,
           "stat": "crit_chance"
         }
+      ],
+      "complete": [
+        {
+          "stat": "physical_damage",
+          "type": "more",
+          "value": 10
+        },
+        {
+          "stat": "crit_multiplier",
+          "type": "flat",
+          "value": 20
+        }
       ]
     },
     "Hacker Ético": {
@@ -470,6 +482,18 @@
           "value": 15,
           "stat": "energy_shield"
         }
+      ],
+      "complete": [
+        {
+          "stat": "chaos_damage",
+          "type": "more",
+          "value": 10
+        },
+        {
+          "stat": "evasion",
+          "type": "more",
+          "value": 10
+        }
       ]
     },
     "Arquitecto": {
@@ -493,6 +517,18 @@
           "type": "increased",
           "value": 8,
           "stat": "aura_effect"
+        }
+      ],
+      "complete": [
+        {
+          "stat": "minion_damage",
+          "type": "more",
+          "value": 12
+        },
+        {
+          "stat": "minion_life",
+          "type": "more",
+          "value": 12
         }
       ]
     },
@@ -519,6 +555,28 @@
           "value": 10,
           "stat": "mana"
         }
+      ],
+      "complete": [
+        {
+          "stat": "damage",
+          "type": "more",
+          "value": 8
+        },
+        {
+          "stat": "strength",
+          "type": "flat",
+          "value": 10
+        },
+        {
+          "stat": "dexterity",
+          "type": "flat",
+          "value": 10
+        },
+        {
+          "stat": "intelligence",
+          "type": "flat",
+          "value": 10
+        }
       ]
     },
     "Rubber Duck": {
@@ -538,6 +596,18 @@
           "value": 10,
           "stat": "cast_speed"
         }
+      ],
+      "complete": [
+        {
+          "stat": "cooldown_recovery",
+          "type": "more",
+          "value": 10
+        },
+        {
+          "stat": "skill_duration",
+          "type": "increased",
+          "value": 15
+        }
       ]
     },
     "Pager de Guardia": {
@@ -556,6 +626,18 @@
           "type": "flat",
           "value": 6,
           "stat": "life_regen"
+        }
+      ],
+      "complete": [
+        {
+          "stat": "lightning_damage",
+          "type": "more",
+          "value": 10
+        },
+        {
+          "stat": "life_regen",
+          "type": "flat",
+          "value": 8
         }
       ]
     }

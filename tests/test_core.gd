@@ -164,6 +164,7 @@ func _initialize() -> void:
 	_test_tree_families()
 	_test_mana_family()
 	_test_new_keystones()
+	_test_tree_extras()
 	_test_events_music_colorblind()
 	_test_story_editor()
 	_test_board_milestones()
@@ -4230,6 +4231,53 @@ func _test_mana_family() -> void:
 		_check(int(found.get(s, 0)) >= 1, "el árbol tiene nodos de %s" % Stat.display_name(s))
 	var mana_clusters := _tree.clusters.values().filter(func(c: Dictionary) -> bool: return c["theme"] == "mana").size()
 	_check(mana_clusters >= 10, "la familia de maná tiene 10 clusters o más (%d)" % mana_clusters)
+
+
+## Maestrías, constelaciones y ranuras del árbol nuevo (T93).
+func _test_tree_extras() -> void:
+	# Cada maestría de una misma familia ofrece otras opciones.
+	var by_theme := {}
+	for n: PassiveNode in _tree.nodes.values():
+		if n.is_mastery():
+			var names := PackedStringArray(n.choices.map(func(ch: Dictionary) -> String: return ch["name"]))
+			var key := "%s|%s" % [n.theme if n.theme != "" else n.icon, ",".join(names)]
+			_check(not by_theme.has(key), "%s no repite las opciones de otra maestría de su familia" % n.title)
+			by_theme[key] = true
+	# Constelaciones: 6 o más, cada una con su bono por completarla.
+	_check(_tree.constellations.size() >= 6, "6 constelaciones o más (%d)" % _tree.constellations.size())
+	var star: PassiveNode = null
+	for n: PassiveNode in _tree.nodes.values():
+		if n.constellation != "" and n.kind == PassiveNode.Kind.NOTABLE:
+			_check(not n.complete_mods.is_empty(), "%s tiene bono por completar la constelación" % n.title)
+			if star == null:
+				star = n
+	var c := CharacterData.new(_classes[0], _tree)
+	c.level = 100
+	c.passives.requirement_check = Callable()
+	for id in _tree.constellations[star.constellation]:
+		c.passives._allocated[id] = true
+	_check(c.passives.constellation_complete(star.constellation), "con todos sus nodos, la constelación está completa")
+	var whole := c.passives.collect_modifiers().size()
+	var removed: int = _tree.constellations[star.constellation].filter(func(i: int) -> bool: return i != star.id)[0]
+	c.passives._allocated.erase(removed)
+	_check(not c.passives.constellation_complete(star.constellation), "le falta un nodo: no está completa")
+	_check(c.passives.collect_modifiers().size() == whole - _tree.get_node_data(removed).mods.size() - star.complete_mods.size(),
+		"sin completarla, la estrella no da el bono extra")
+	# Ranuras de chip: 18 marcadas por el generador, en las puertas y en una por región.
+	var sockets := _tree.socket_ids()
+	_check(sockets.size() == 18, "18 ranuras de chip (%d)" % sockets.size())
+	_check(sockets.all(func(i: int) -> bool:
+			var n := _tree.get_node_data(i)
+			return n.socket and (n.cluster.begins_with("puerta.") or n.cluster.ends_with(".B1"))),
+		"las ranuras están en las puertas y en el anillo B")
+	# Al cambiar el árbol, los chips engastados vuelven a la bolsa.
+	var saved := CharacterData.new(_classes[0], _tree)
+	saved.inventory.chips[999999] = ExpansionChip.new(Rarity.Item.MAGIC, 10)
+	var d := saved.to_dict()
+	d["passive_tree_version"] = _tree.version - 1
+	d["passives"] = [1]
+	var back := CharacterData.from_dict(d, _classes[0], _tree, _db)
+	_check(back.inventory.chips.is_empty() and back.inventory.bag.any(func(it) -> bool: return it is ExpansionChip), "con el árbol nuevo, los chips engastados vuelven a la bolsa")
 
 
 ## Piedras angulares nuevas (T92): cada regla con su ventaja y su contra, y los choques.

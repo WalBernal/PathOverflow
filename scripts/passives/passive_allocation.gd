@@ -181,7 +181,17 @@ func collect_modifiers(remap: Dictionary = {}) -> Array[Modifier]:
 			continue
 		for m: Modifier in own:
 			mods.append(Modifier.new(StringName(map[String(m.stat)]), m.type, m.value, m.tags, m.source) if map.has(String(m.stat)) else m)
+	for id in _allocated:
+		var n := tree.get_node_data(id)
+		if not n.complete_mods.is_empty() and constellation_complete(n.constellation):
+			mods.append_array(n.complete_mods)
 	return mods
+
+
+## Constelación entera asignada (T93): su estrella da el bono extra.
+func constellation_complete(constellation: String) -> bool:
+	var ids: Array = tree.constellations.get(constellation, [])
+	return not ids.is_empty() and ids.all(func(i: int) -> bool: return _allocated.has(i))
 
 
 # --- Maestrías: qué opción tiene elegida cada una (por defecto la primera) ---

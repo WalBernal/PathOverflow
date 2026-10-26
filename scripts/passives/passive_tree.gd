@@ -45,7 +45,17 @@ static func load_from_json(path: String) -> PassiveTree:
 	for n: PassiveNode in tree.nodes.values():
 		if n.key != "":
 			tree.keys[n.key] = n.id
+		if n.constellation != "":
+			if not tree.constellations.has(n.constellation):
+				tree.constellations[n.constellation] = [] as Array[int]
+			tree.constellations[n.constellation].append(n.id)
+		if n.socket:
+			tree._sockets.append(n.id)
 	return tree
+
+
+## Constelación (nombre) -> ids de sus nodos (T93: completarla da su bono extra).
+var constellations: Dictionary = {}
 
 
 ## Clave estable (árbol 2.0, T89) -> id del nodo. Las maestrías, el estilo y las
@@ -77,8 +87,9 @@ func neighbors(id: int) -> Array:
 	return adjacency.get(id, [])
 
 
-## Ranuras de chip de expansión: 12 notables repartidas alrededor del árbol (una
-## de cada seis, por ángulo). Con el nodo asignado, admiten un ExpansionChip.
+## Ranuras de chip de expansión: las marca el generador (`socket`, T93: las puertas
+## entre clases y un cluster de cada región). Si un árbol no trae ninguna, una de cada
+## seis notables por ángulo. Con el nodo asignado, admiten un ExpansionChip.
 const SOCKET_EVERY := 6
 var _sockets: Array[int] = []
 

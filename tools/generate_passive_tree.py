@@ -32,7 +32,7 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "data" / "passive_tree.json"
 THEMES = json.loads((ROOT / "data" / "passive_themes.json").read_text(encoding="utf-8"))["themes"]
 IDENTITY = json.loads((ROOT / "data" / "passive_identity.json").read_text(encoding="utf-8"))
-TREE_VERSION = 9   # 9: piedras angulares de T92
+TREE_VERSION = 10   # 9: piedras angulares de T92; 10: ranuras y maestrías de T93
 # Multiplicador de los aumentos de daño de las pasivas menores (que no se queden en un +4 %).
 DAMAGE_MINOR_SCALE = 1.5
 DAMAGE_STATS = {"damage", "physical_damage", "elemental_damage", "fire_damage", "cold_damage", "lightning_damage",
@@ -448,6 +448,7 @@ for a, b in IDENTITY.get("keystone_conflicts", []):
 
 minor_counter = {}
 notable_counter = {}
+mastery_counter = {}
 name_counter = {}
 for c in clusters:
     theme = c["theme"]
@@ -472,12 +473,17 @@ for c in clusters:
             n["name"], n["flavor"], n["mods"] = pool[k % len(pool)][0], pool[k % len(pool)][1], pool[k % len(pool)][2]
             n["icon"] = theme
         elif n["kind"] == "mastery":
-            # Maestría: elegir 1 de 3 bonos (los tres primeros notables de su familia).
+            # Maestría: elegir 1 de 3 bonos de su familia; cada maestría de la misma
+            # familia ofrece otros tres (rotando por la lista de notables).
             pool = THEMES[theme]["notables"]
+            m = mastery_counter.get(theme, 0)
+            mastery_counter[theme] = m + 1
             n["kind"] = "notable"
             n["name"] = "Maestría: %s" % c["name"].split(": ", 1)[-1]
             n["icon"] = theme
-            n["choices"] = [{"name": pool[k][0], "mods": pool[k][2]} for k in range(min(3, len(pool)))]
+            start = m * 3 + (m * 3) // len(pool)   # al dar la vuelta, uno más: no repite trío
+            picks = [pool[(start + j) % len(pool)] for j in range(min(3, len(pool)))]
+            n["choices"] = [{"name": p[0], "mods": p[2]} for p in picks]
 
 # Constelaciones: piden atributos y sus nodos dan más.
 for c in clusters:
@@ -492,7 +498,8 @@ for c in clusters:
         n["requires"] = req
         n["constellation"] = c["name"]
         if n["kind"] == "notable":
-            n.update({"name": "Estrella: %s" % c["constellation"], "flavor": cdef["flavor"], "mods": cdef["mods"], "icon": "atributos"})
+            n.update({"name": "Estrella: %s" % c["constellation"], "flavor": cdef["flavor"], "mods": cdef["mods"], "icon": "atributos",
+                      "complete_mods": cdef["complete"]})
         elif k % 2 == 0:
             n.update({"name": "Daño", "mods": [{"stat": "damage", "type": "increased", "value": 9}]})
         else:
@@ -504,6 +511,14 @@ for n in nodes:
     if n["kind"] == "minor" and not n["mods"]:
         stat, label = ATTR_STAT[attr_at(n["x"], n["y"])]
         n.update({"name": label, "mods": [{"stat": stat, "type": "flat", "value": ATTRIBUTE_TRAVEL}], "theme": "atributos", "cluster": n["cluster"]})
+
+# Ranuras de chip de expansión (T93): el notable de cada puerta entre clases y el del
+# primer mediano del anillo B de cada región (18 en total).
+SOCKET_CLUSTERS = [c["key"] for c in clusters if c["key"].startswith("puerta.")] + ["%s.B1" % cid for cid in REGION_THEMES]
+for key in SOCKET_CLUSTERS:
+    c = next(c for c in clusters if c["key"] == key)
+    nid = next(n for n in c["nodes"] if nodes[n]["kind"] == "notable" and not nodes[n].get("choices") and not nodes[n].get("style"))
+    nodes[nid]["socket"] = True
 
 missing = [n["key"] for n in nodes if n["kind"] in ("minor", "notable", "keystone") and not n["mods"] and not n.get("choices")]
 assert not missing, "nodos sin efecto: %s" % missing[:5]

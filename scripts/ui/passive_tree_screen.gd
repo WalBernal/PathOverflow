@@ -583,6 +583,11 @@ func _build_tooltip(node: PassiveNode) -> String:
 			parts.append("[color=#%s]%s %d (tienes %d)[/color]" % ["6fd36b" if have >= float(node.requires[key]) else "e06c6c",
 				names.get(key, key), int(node.requires[key]), int(have)])
 		t += "\n[color=#c9a7f0]✦ %s[/color]: pide %s. Sus nodos dan más.\n" % [node.constellation, "  ·  ".join(parts)]
+		if not node.complete_mods.is_empty():
+			var whole := alloc.constellation_complete(node.constellation)
+			t += "[color=#%s]Completa (%d nodos):[/color]\n" % ["c9a7f0" if whole else "8a8293", tree.constellations.get(node.constellation, []).size()]
+			for m in node.complete_mods:
+				t += "[color=#%s]    • %s[/color]\n" % ["e8d9b0" if whole else "8a8293", m.describe()]
 	if tree.is_socket(node.id):
 		var chip: ExpansionChip = _character.inventory.chips.get(node.id, null)
 		if chip:
