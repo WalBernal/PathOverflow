@@ -990,10 +990,13 @@ func _draw_orb(center: Vector2, fill: float, color: Color, reserved := 0.0) -> v
 	UiAtlas.draw_orb_frame(self, center, ORB_RADIUS)
 
 
-## Texto centrado en 160 px con la fuente de píxeles a doble tamaño y sombra.
-func _pixel_string(font: Font, pos: Vector2, text: String, color: Color) -> void:
-	var size := PixelFont.CELL_H * 2
-	draw_string(font, pos + Vector2(2, 2), text, HORIZONTAL_ALIGNMENT_CENTER, 160.0, size, Color(0, 0, 0, 0.85))
+## Cifra de los orbes centrada en 160 px: fuente normal con contorno y sombra suave
+## (antes, fuente de píxeles; el HUD va hacia un acabado menos pixel art).
+func _pixel_string(_font: Font, pos: Vector2, text: String, color: Color) -> void:
+	var font := get_theme_default_font()
+	var size := 20
+	draw_string(font, pos + Vector2(0, 2), text, HORIZONTAL_ALIGNMENT_CENTER, 160.0, size, Color(0, 0, 0, 0.55))
+	draw_string_outline(font, pos, text, HORIZONTAL_ALIGNMENT_CENTER, 160.0, size, 5, Color(0, 0, 0, 0.9))
 	draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_CENTER, 160.0, size, color)
 
 

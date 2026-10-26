@@ -173,6 +173,8 @@ static func decorate_window(panel: PanelContainer) -> void:
 			var n := maxi(0, int(a.distance_to(b) / RIVET_SPACING) - 1)
 			for k in range(1, n + 1):
 				draw_rivet(panel, a.lerp(b, float(k) / (n + 1)))
+		if UiAtlas.texture() != null:
+			return   # el marco del atlas ya trae sus esquinas redondeadas
 		var c := 22.0
 		for corner: Vector2 in [Vector2(0, 0), Vector2(r.size.x, 0), Vector2(0, r.size.y), Vector2(r.size.x, r.size.y)]:
 			var sx := 1.0 if corner.x == 0.0 else -1.0
@@ -223,7 +225,7 @@ static func window_header(title: String, subtitle: String, on_close: Callable) -
 	box.add_theme_constant_override("separation", 2)
 	var row := HBoxContainer.new()
 	box.add_child(row)
-	var t := pixel_label(title, 3, ACCENT.lightened(0.1))
+	var t := title_label(title, 26, ACCENT.lightened(0.1))
 	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(t)
 	if on_close.is_valid():
@@ -263,8 +265,20 @@ static func section_header(text: String) -> Control:
 		gem.draw_colored_polygon(PackedVector2Array([Vector2(5, 4), Vector2(10, 9), Vector2(5, 14), Vector2(0, 9)]), GOLD))
 	row.add_child(gem)
 	# La fuente de píxeles es ancha: los encabezados largos van con la normal para no ensanchar la ventana.
-	row.add_child(pixel_label(text, 2, ACCENT) if text.length() <= PIXEL_HEADER_MAX else label(text, 15, ACCENT))
+	row.add_child(title_label(text, 17, ACCENT))
 	return row
+
+
+## Título con la fuente normal, contorno oscuro y sombra (cabeceras de ventana y de
+## sección); sustituye a la fuente de píxeles para un acabado más pulido.
+static func title_label(text: String, font_size := 22, color := ACCENT) -> Label:
+	var l := label(text, font_size, color)
+	l.add_theme_constant_override("outline_size", maxi(3, font_size / 6))
+	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	l.add_theme_constant_override("shadow_offset_y", 2)
+	l.add_theme_constant_override("shadow_offset_x", 0)
+	l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.5))
+	return l
 
 
 ## Encabezados de sección con más letras que esto, con la fuente normal (T82).

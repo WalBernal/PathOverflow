@@ -4242,7 +4242,7 @@ func _test_ui_atlas() -> void:
 	if tex == null:
 		return
 	_check(tex.get_width() == UiAtlas.CELL * UiAtlas.COLUMNS and tex.get_height() == UiAtlas.CELL * (UiAtlas.ROWS + UiAtlas.BIG_ROWS), "el atlas tiene la cuadrícula de UiAtlas")
-	_check(UiAtlas.region("orb_frame").size == Vector2(96, 96) and Rect2(Vector2.ZERO, tex.get_size()).encloses(UiAtlas.region("orb_frame")),
+	_check(UiAtlas.region("orb_frame").size == Vector2(192, 192) and Rect2(Vector2.ZERO, tex.get_size()).encloses(UiAtlas.region("orb_frame")),
 		"el aro de los orbes es una pieza grande dentro del atlas")
 	var cells := {}
 	for piece in UiAtlas.PIECES:

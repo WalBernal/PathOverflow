@@ -1,8 +1,10 @@
 class_name UiAtlas
-## Piezas de interfaz en pixel art (T95): un atlas con cuadrícula fija generado por
-## tools/generate_ui_atlas.gd. Cada pieza es un marco de 9 partes (las esquinas y
-## los bordes de MARGIN px no se estiran) que UiStyle usa como StyleBoxTexture.
-## Para arte a mano, sustituye el PNG respetando la cuadrícula y los márgenes.
+## Piezas de interfaz (T95): un atlas con cuadrícula fija generado por
+## tools/generate_ui_atlas.gd, con acabado suave (degradados y bordes suavizados).
+## Cada pieza es un marco de 9 partes (las esquinas y los bordes de MARGIN px no se
+## estiran) que UiStyle usa como StyleBoxTexture. Se filtra en lineal (CanvasTexture)
+## aunque el proyecto use «nearest» para el pixel art del mundo, para que al escalar
+## la interfaz no se vean dientes. Para arte a mano, sustituye el PNG con la misma cuadrícula.
 
 const PATH := "res://assets/sprites/ui/ui_atlas.png"
 ## Lado de cada celda en el PNG (24 píxeles de arte a escala 2).
@@ -19,10 +21,10 @@ const PIECES := {
 	"hotbar_plate": Vector2i(0, 4), "flask_frame": Vector2i(2, 4), "line_edit": Vector2i(3, 4),
 }
 const ROWS := 5
-## Piezas grandes debajo de la cuadrícula, dibujadas a resolución final (no a ×2):
-## el aro de los orbes se ve grande y con píxeles de arte gordos quedaba tosco.
-const BIG_PIECES := {"orb_frame": Rect2(0, ROWS * CELL, 2 * CELL, 2 * CELL)}
-const BIG_ROWS := 2
+## Piezas grandes debajo de la cuadrícula: el aro de los orbes, a su tamaño en pantalla
+## (192 px para un orbe de radio 78), para no estirarlo.
+const BIG_PIECES := {"orb_frame": Rect2(0, ROWS * CELL, 4 * CELL, 4 * CELL)}
+const BIG_ROWS := 4
 ## Del aro del orbe, el radio interior respecto a la mitad de la pieza.
 const ORB_INNER := 0.84
 ## Casilla de objeto según la rareza (Rarity.Item: normal, mágico, raro, único).
@@ -36,7 +38,10 @@ static func texture() -> Texture2D:
 	if not _loaded:
 		_loaded = true
 		if ResourceLoader.exists(PATH):
-			_texture = load(PATH)
+			var smooth := CanvasTexture.new()
+			smooth.diffuse_texture = load(PATH)
+			smooth.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+			_texture = smooth
 	return _texture
 
 

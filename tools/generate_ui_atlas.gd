@@ -1,24 +1,22 @@
 extends SceneTree
 ## Genera assets/sprites/ui/ui_atlas.png: las piezas de interfaz de UiAtlas (marcos
 ## de ventana, botones, casillas por rareza, barras, pestañas, separador, placa de
-## la barra de habilidades, aro de orbe...). Pixel art procedural a 24×24 píxeles de
-## arte por celda, escalado ×2. Para arte propio, sustituye el PNG con la misma cuadrícula.
+## la barra de habilidades, aro de orbe...). Dibujadas a resolución final con
+## degradados y bordes suavizados (no pixel art), para ir hacia un acabado más pulido.
+## Para arte propio, sustituye el PNG con la misma cuadrícula.
 ##
 ## Uso:  Godot_v4.7.2-stable_win64_console.exe --headless --path . -s res://tools/generate_ui_atlas.gd
 
-const A := 24   # píxeles de arte por celda
-const M := 6    # margen de 9 partes en píxeles de arte (UiAtlas.MARGIN / 2)
+const C := UiAtlas.CELL   # píxeles por celda
 const OUT := "res://assets/sprites/ui/ui_atlas.png"
 
-const INK := Color("07060a")
-const GOLD := Color("b08a4a")
-const GOLD_LIGHT := Color("e0c07a")
-const GOLD_DARK := Color("5a4426")
-const BRONZE := Color("3a2c1c")
-const PANEL := Color("16131b")
-const PANEL_LIGHT := Color("221e29")
-const WINDOW_BG := Color("120f17")
-const BORDER := Color("3d3547")
+const INK := Color("050407")
+const GOLD := Color("b8924e")
+const GOLD_LIGHT := Color("ecd08e")
+const GOLD_DARK := Color("4e3a20")
+const BRONZE := Color("3b2d1e")
+const BRONZE_DARK := Color("1c150e")
+const BORDER := Color("443b50")
 
 var img: Image
 var ox := 0
@@ -26,217 +24,195 @@ var oy := 0
 
 
 func _initialize() -> void:
-	img = Image.create_empty(A * UiAtlas.COLUMNS, A * UiAtlas.ROWS, false, Image.FORMAT_RGBA8)
+	img = Image.create_empty(C * UiAtlas.COLUMNS, C * (UiAtlas.ROWS + UiAtlas.BIG_ROWS), false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
 	var painters := {
 		"window": _window, "panel": _panel, "inset": _inset, "tooltip": _tooltip,
-		"button_normal": _button.bind(PANEL_LIGHT, BORDER, false), "button_hover": _button.bind(Color("2e2836"), GOLD, false),
-		"button_pressed": _button.bind(Color("3a2f22"), GOLD_LIGHT, true), "button_disabled": _button.bind(PANEL, Color("2a2530"), false),
-		"slot_normal": _slot.bind(Color("8a8a8a")), "slot_magic": _slot.bind(Color("6f7fe0")),
-		"slot_rare": _slot.bind(Color("e0d060")), "slot_unique": _slot.bind(Color("c07030")),
+		"button_normal": _button.bind(Color("2a2531"), Color("1a1720"), BORDER, false),
+		"button_hover": _button.bind(Color("3a3243"), Color("241f2b"), GOLD, false),
+		"button_pressed": _button.bind(Color("1d1912"), Color("33291b"), GOLD_LIGHT, true),
+		"button_disabled": _button.bind(Color("19161d"), Color("141117"), Color("2c2733"), false),
+		"slot_normal": _slot.bind(Color("77727f")), "slot_magic": _slot.bind(Color("6f82ee")),
+		"slot_rare": _slot.bind(Color("e6d265")), "slot_unique": _slot.bind(Color("d0803a")),
 		"bar_frame": _bar_frame, "tab_active": _tab.bind(true), "tab_inactive": _tab.bind(false), "separator": _separator,
 		"hotbar_plate": _hotbar_plate, "flask_frame": _flask_frame, "line_edit": _line_edit,
 	}
 	for piece in UiAtlas.PIECES:
 		var cell: Vector2i = UiAtlas.PIECES[piece]
-		ox = cell.x * A
-		oy = cell.y * A
+		ox = cell.x * C
+		oy = cell.y * C
 		painters[piece].call()
-	img.resize(img.get_width() * 2, img.get_height() * 2, Image.INTERPOLATE_NEAREST)
-	# Piezas grandes, a resolución final debajo de la cuadrícula.
-	var full := Image.create_empty(img.get_width(), img.get_height() + UiAtlas.BIG_ROWS * UiAtlas.CELL, false, Image.FORMAT_RGBA8)
-	full.fill(Color(0, 0, 0, 0))
-	full.blit_rect(img, Rect2i(Vector2i.ZERO, img.get_size()), Vector2i.ZERO)
-	img = full
 	_orb_frame(UiAtlas.BIG_PIECES["orb_frame"])
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT.get_base_dir()))
 	img.save_png(OUT)
-	print("atlas de interfaz: %s (%d piezas)" % [OUT, UiAtlas.PIECES.size()])
+	print("atlas de interfaz: %s (%d piezas)" % [OUT, UiAtlas.PIECES.size() + UiAtlas.BIG_PIECES.size()])
 	quit()
 
 
-func _px(x: int, y: int, c: Color) -> void:
-	if x >= 0 and y >= 0 and x < A and y < A:
-		img.set_pixel(ox + x, oy + y, c)
+## Mezcla `col` (con su alfa por `cover`) encima del píxel (x, y) de la celda.
+func _blend(x: int, y: int, col: Color, cover: float) -> void:
+	if cover <= 0.0 or x < 0 or y < 0 or x >= C or y >= C:
+		return
+	var c := Color(col, col.a * clampf(cover, 0.0, 1.0))
+	img.set_pixel(ox + x, oy + y, img.get_pixel(ox + x, oy + y).blend(c))
 
 
-func _rect(x: int, y: int, w: int, h: int, c: Color) -> void:
-	for yy in h:
-		for xx in w:
-			_px(x + xx, y + yy, c)
+## Distancia con signo a un rectángulo redondeado (negativa dentro).
+static func _sd(p: Vector2, rect: Rect2, radius: float) -> float:
+	var half := rect.size / 2.0
+	var q := (p - rect.get_center()).abs() - (half - Vector2(radius, radius))
+	return Vector2(maxf(q.x, 0.0), maxf(q.y, 0.0)).length() + minf(maxf(q.x, q.y), 0.0) - radius
 
 
-## Borde de 1 px alrededor del rectángulo (x, y, w, h).
-func _outline(x: int, y: int, w: int, h: int, c: Color) -> void:
-	_rect(x, y, w, 1, c)
-	_rect(x, y + h - 1, w, 1, c)
-	_rect(x, y, 1, h, c)
-	_rect(x + w - 1, y, 1, h, c)
+## Caja redondeada con borde: relleno en degradado vertical (arriba → abajo), borde
+## que pasa de claro arriba a oscuro abajo, filo de tinta por fuera y un brillo
+## interior arriba. Bordes suavizados por cobertura.
+func _box(rect: Rect2, radius: float, fill_top: Color, fill_bottom: Color, border_w: float,
+		border_top: Color, border_bottom: Color, ink := true, gloss := 0.06) -> void:
+	for y in C:
+		for x in C:
+			var p := Vector2(x + 0.5, y + 0.5)
+			var d := _sd(p, rect, radius)
+			if d > 1.0:
+				continue
+			var t := clampf((p.y - rect.position.y) / maxf(1.0, rect.size.y), 0.0, 1.0)
+			var outer := clampf(0.5 - d, 0.0, 1.0)
+			if ink:
+				_blend(x, y, INK, outer)
+			var inner_rect := rect.grow(-1.0) if ink else rect
+			var di := _sd(p, inner_rect, maxf(0.0, radius - 1.0))
+			var cover := clampf(0.5 - di, 0.0, 1.0)
+			if cover <= 0.0:
+				continue
+			# Borde: entre el filo y border_w hacia dentro.
+			var b := clampf(0.5 - (-di - border_w), 0.0, 1.0)
+			var fill := fill_top.lerp(fill_bottom, t)
+			var edge := border_top.lerp(border_bottom, t)
+			_blend(x, y, fill.lerp(edge, b), cover)
+			# Brillo interior: una línea tenue justo dentro del borde, más fuerte arriba.
+			var g := clampf(1.0 - absf(-di - border_w - 0.8), 0.0, 1.0) * (1.0 - t)
+			if gloss > 0.0 and g > 0.0:
+				_blend(x, y, Color(1, 1, 1, gloss * 3.0), g)
 
 
-## Marco básico: tinta fuera, borde de color con luz arriba y sombra abajo, fondo dentro.
-func _frame(bg: Color, border: Color, width := 1) -> void:
-	_rect(1, 1, A - 2, A - 2, bg)
-	_outline(0, 0, A, A, INK)
-	for k in width:
-		_outline(1 + k, 1 + k, A - 2 - 2 * k, A - 2 - 2 * k, border)
-	_rect(2, 1, A - 4, 1, border.lightened(0.3))
-	_rect(2, A - 2, A - 4, 1, border.darkened(0.35))
-	_px(1, 1, INK)
-	_px(A - 2, 1, INK)
-	_px(1, A - 2, INK)
-	_px(A - 2, A - 2, INK)
-
-
-## Cantonera dorada en las cuatro esquinas: escuadra con un remache.
-func _corners(c: Color) -> void:
-	for corner in [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)]:
-		var sx := 1 if corner.x == 0 else -1
-		var sy := 1 if corner.y == 0 else -1
-		var bx := 1 if corner.x == 0 else A - 2
-		var by := 1 if corner.y == 0 else A - 2
-		for k in 5:
-			_px(bx + sx * k, by, c)
-			_px(bx, by + sy * k, c)
-		_px(bx + sx * 2, by + sy * 2, GOLD_LIGHT)
-		_px(bx + sx * 3, by + sy * 2, c.darkened(0.3))
-		_px(bx + sx * 2, by + sy * 3, c.darkened(0.3))
+func _cell() -> Rect2:
+	return Rect2(0, 0, C, C)
 
 
 func _window() -> void:
-	_frame(WINDOW_BG, GOLD_DARK, 2)
-	_outline(4, 4, A - 8, A - 8, Color(GOLD, 0.35))
-	_corners(GOLD)
+	_box(_cell(), 7.0, Color("1a1620"), Color("0e0c12"), 3.0, GOLD_LIGHT.darkened(0.15), GOLD_DARK, true, 0.05)
+	# Filete interior dorado, fino y translúcido.
+	for y in C:
+		for x in C:
+			var d := _sd(Vector2(x + 0.5, y + 0.5), _cell().grow(-8.0), 3.0)
+			_blend(x, y, Color(GOLD, 0.28), clampf(1.0 - absf(d), 0.0, 1.0))
 
 
 func _panel() -> void:
-	_frame(PANEL, BORDER)
-	_px(3, 3, BORDER.lightened(0.2))
-	_px(A - 4, 3, BORDER.lightened(0.2))
+	_box(_cell(), 6.0, Color("1c1922"), Color("121016"), 1.5, BORDER.lightened(0.25), BORDER.darkened(0.3))
 
 
 func _inset() -> void:
-	_rect(1, 1, A - 2, A - 2, Color("1a1620"))
-	_outline(0, 0, A, A, Color("2e2836"))
-	_rect(1, 1, A - 2, 1, Color("0d0b10"))   # sombra interior arriba
-	_rect(1, 1, 1, A - 2, Color("110e15"))
+	_box(_cell(), 4.0, Color("100d14"), Color("1b1822"), 1.0, Color("2a2533"), Color("332d3d"), false, 0.0)
 
 
 func _tooltip() -> void:
-	_rect(1, 1, A - 2, A - 2, Color(0.05, 0.04, 0.06, 0.96))
-	_outline(0, 0, A, A, GOLD_DARK)
-	_outline(1, 1, A - 2, A - 2, Color(GOLD, 0.25))
-	for p in [Vector2i(0, 0), Vector2i(A - 1, 0), Vector2i(0, A - 1), Vector2i(A - 1, A - 1)]:
-		_px(p.x, p.y, GOLD)
+	_box(_cell(), 5.0, Color(0.07, 0.06, 0.09, 0.97), Color(0.04, 0.035, 0.05, 0.97), 1.5, GOLD.darkened(0.2), GOLD_DARK, true, 0.04)
 
 
-## Botón como una tecla: luz arriba, borde inferior grueso; pulsado, al revés.
-func _button(bg: Color, border: Color, pressed: bool) -> void:
-	_rect(1, 1, A - 2, A - 2, bg)
-	_outline(0, 0, A, A, INK)
-	_outline(1, 1, A - 2, A - 2, border)
-	if pressed:
-		_rect(2, 2, A - 4, 2, bg.darkened(0.45))
-		_rect(2, A - 3, A - 4, 1, bg.lightened(0.12))
-	else:
-		_rect(2, 2, A - 4, 1, bg.lightened(0.25))
-		_rect(2, A - 4, A - 4, 2, bg.darkened(0.5))
-	_px(1, 1, INK)
-	_px(A - 2, 1, INK)
-	_px(1, A - 2, INK)
-	_px(A - 2, A - 2, INK)
+## Botón: degradado suave, borde con luz arriba; pulsado, el degradado al revés.
+func _button(top: Color, bottom: Color, border: Color, pressed: bool) -> void:
+	_box(_cell(), 5.0, top, bottom, 1.5, border.lightened(0.15) if not pressed else border.darkened(0.2), border.darkened(0.35) if not pressed else border,
+		true, 0.0 if pressed else 0.07)
 
 
-## Casilla de objeto: hundida, con el borde del color de la rareza y brillo en las esquinas.
+## Casilla de objeto: hundida (más oscura arriba), borde del color de la rareza y un
+## resplandor tenue de ese color por dentro.
 func _slot(rarity: Color) -> void:
-	_rect(1, 1, A - 2, A - 2, Color("0f0c13"))
-	_outline(0, 0, A, A, INK)
-	_outline(1, 1, A - 2, A - 2, rarity.darkened(0.35))
-	_rect(2, 2, A - 4, 1, Color("08060a"))
-	for p in [Vector2i(1, 1), Vector2i(A - 2, 1), Vector2i(1, A - 2), Vector2i(A - 2, A - 2)]:
-		_px(p.x, p.y, rarity.lightened(0.1))
+	_box(_cell(), 3.0, Color("09080c"), Color("15121a"), 1.5, rarity.darkened(0.15), rarity.darkened(0.5), true, 0.0)
+	for y in C:
+		for x in C:
+			var d := -_sd(Vector2(x + 0.5, y + 0.5), _cell().grow(-2.5), 2.0)
+			if d > 0.0:
+				_blend(x, y, Color(rarity, 0.16), clampf(1.0 - d / 6.0, 0.0, 1.0))
 
 
 func _bar_frame() -> void:
-	_rect(1, 1, A - 2, A - 2, Color("0a080c"))
-	_outline(0, 0, A, A, INK)
-	_outline(1, 1, A - 2, A - 2, GOLD_DARK)
-	_rect(2, 1, A - 4, 1, GOLD.darkened(0.2))
+	_box(_cell(), 4.0, Color("060508"), Color("0e0c11"), 2.0, GOLD.darkened(0.1), GOLD_DARK, true, 0.0)
 
 
-## Pestaña: la activa, del color del panel con borde dorado arriba; la otra, más oscura.
+## Pestaña: esquinas redondeadas solo arriba (la caja sigue por debajo de la celda).
 func _tab(active: bool) -> void:
-	var bg := PANEL_LIGHT if active else Color("100d14")
-	_rect(1, 1, A - 2, A - 1, bg)
-	_rect(0, 1, 1, A - 1, INK)
-	_rect(A - 1, 1, 1, A - 1, INK)
-	_rect(1, 0, A - 2, 1, INK)
-	_rect(1, 1, A - 2, 2 if active else 1, GOLD if active else BORDER)
-	if not active:
-		_rect(0, A - 1, A, 1, BORDER)
+	var rect := Rect2(0, 0, C, C + 10)
+	if active:
+		_box(rect, 6.0, Color("2a2531"), Color("1c1922"), 1.5, GOLD_LIGHT.darkened(0.1), GOLD.darkened(0.3), true, 0.07)
+	else:
+		_box(rect, 6.0, Color("17141b"), Color("110f14"), 1.5, BORDER, BORDER.darkened(0.3), true, 0.03)
 
 
+## Separador: línea dorada que se desvanece hacia los lados.
 func _separator() -> void:
-	var y := A / 2
-	_rect(0, y, A, 1, Color(GOLD, 0.6))
-	_rect(0, y + 1, A, 1, Color(0, 0, 0, 0.5))
-	var mid := A / 2
-	for k in 4:
-		_rect(mid - k, y - 3 + k, 1 + 2 * k, 1, GOLD)
-		_rect(mid - k, y + 3 - k, 1 + 2 * k, 1, GOLD)
-	_px(mid, y - 2, GOLD_LIGHT)
+	var y := C / 2
+	for x in C:
+		var fade := 1.0 - absf(x - C / 2.0) / (C / 2.0) * 0.6
+		_blend(x, y, Color(GOLD, 0.7 * fade), 1.0)
+		_blend(x, y + 1, Color(0, 0, 0, 0.5 * fade), 1.0)
 
 
-## Placa de la barra de habilidades: bronce con borde dorado grueso y remaches.
+## Placa de la barra de habilidades: metal de bronce con un veteado horizontal muy
+## suave, borde dorado y brillo arriba.
 func _hotbar_plate() -> void:
-	_frame(BRONZE, GOLD_DARK, 2)
-	_rect(3, 3, A - 6, 1, BRONZE.lightened(0.15))
-	for p in [Vector2i(3, 3), Vector2i(A - 4, 3), Vector2i(3, A - 4), Vector2i(A - 4, A - 4)]:
-		_px(p.x, p.y, GOLD_LIGHT)
-		_px(p.x + 1, p.y + 1, INK)
-	_corners(GOLD)
-
-
-## Aro de orbe (pieza grande, a resolución final): anillo de metal dorado con luz arriba,
-## filo de tinta por dentro y por fuera y cuatro tachuelas; el centro, transparente.
-func _orb_frame(area: Rect2) -> void:
-	var half := area.size.x / 2.0
-	var c := area.position + Vector2(half - 0.5, half - 0.5)
-	var inner := half * UiAtlas.ORB_INNER
-	for y in int(area.size.y):
-		for x in int(area.size.x):
-			var p := area.position + Vector2(x, y)
-			var d := p.distance_to(c)
-			var col := Color(0, 0, 0, 0)
-			if d >= half - 0.5 or d < inner:
-				continue   # fuera del aro o en el hueco del orbe
-			elif d >= half - 2.0 or d < inner + 1.0:
-				col = INK
-			else:
-				# Bisel: más claro arriba a la izquierda, más oscuro abajo; bandas de 2 px (pixel art).
-				var light := -((p - c).normalized().dot(Vector2(-0.6, -0.8)))
-				var band := int((d - inner) / 2.0) % 2
-				col = GOLD.lerp(GOLD_LIGHT, clampf(-light, 0.0, 1.0) * 0.7).lerp(GOLD_DARK, clampf(light, 0.0, 1.0) * 0.8)
-				if band == 1:
-					col = col.darkened(0.12)
-			if col.a > 0.0:
-				img.set_pixelv(Vector2i(p), col)
-	for k in 4:
-		var dir := Vector2.from_angle(-PI / 2.0 + TAU * k / 4.0)
-		var stud := c + dir * (inner + (half - inner) / 2.0)
-		for yy in range(-3, 4):
-			for xx in range(-3, 4):
-				var q := Vector2(xx, yy)
-				if q.length() <= 3.2:
-					img.set_pixelv(Vector2i(stud + q), INK if q.length() > 2.2 else (GOLD_LIGHT if q.y < 0 else GOLD))
+	_box(_cell(), 8.0, BRONZE.lightened(0.08), BRONZE_DARK, 3.0, GOLD_LIGHT.darkened(0.1), GOLD_DARK, true, 0.08)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	for y in range(5, C - 5):
+		var streak := rng.randf_range(-0.035, 0.035)
+		for x in range(5, C - 5):
+			_blend(x, y, Color(1, 1, 1, absf(streak)) if streak > 0.0 else Color(0, 0, 0, -streak), 1.0)
 
 
 func _flask_frame() -> void:
-	_frame(Color("0d0a10"), BRONZE.lightened(0.3))
-	_rect(2, A - 3, A - 4, 1, GOLD_DARK)
+	_box(_cell(), 5.0, Color("0c0a0f"), Color("141118"), 2.0, GOLD.darkened(0.25), BRONZE.lightened(0.1), true, 0.0)
 
 
 func _line_edit() -> void:
-	_rect(1, 1, A - 2, A - 2, Color("0a080c"))
-	_outline(0, 0, A, A, BORDER)
-	_rect(1, 1, A - 2, 1, INK)
+	_box(_cell(), 4.0, Color("08070a"), Color("110f14"), 1.0, BORDER.darkened(0.1), BORDER.lightened(0.1), false, 0.0)
+
+
+## Aro de orbe (pieza grande): anillo de metal dorado con bisel suave (luz arriba a la
+## izquierda), filos oscuros por dentro y por fuera y cuatro gemas; centro transparente.
+func _orb_frame(area: Rect2) -> void:
+	var half := area.size.x / 2.0
+	var c := area.get_center()
+	var inner := half * UiAtlas.ORB_INNER
+	var mid := (inner + half) / 2.0
+	var width := half - inner
+	for y in int(area.size.y):
+		for x in int(area.size.x):
+			var p := area.position + Vector2(x + 0.5, y + 0.5)
+			var d := p.distance_to(c)
+			var cover := clampf(half - 0.5 - d, 0.0, 1.0) * clampf(d - inner + 0.5, 0.0, 1.0)
+			if cover <= 0.0:
+				continue
+			var n := (p - c) / maxf(d, 0.001)
+			var light := n.dot(Vector2(-0.6, -0.8))   # 1 = arriba a la izquierda
+			var across := (d - mid) / (width / 2.0)    # -1 dentro, 1 fuera
+			var bevel := 1.0 - across * across          # más claro en el centro del aro
+			var col := GOLD_DARK.lerp(GOLD, 0.35 + 0.65 * bevel).lerp(GOLD_LIGHT, clampf(light, 0.0, 1.0) * bevel * 0.6)
+			col = col.darkened(clampf(-light, 0.0, 1.0) * 0.35)
+			var rim := maxf(clampf(1.4 - (half - d), 0.0, 1.0), clampf(1.4 - (d - inner), 0.0, 1.0))
+			col = col.lerp(INK, rim * 0.9)
+			var px := Vector2i(p)
+			img.set_pixelv(px, img.get_pixelv(px).blend(Color(col, cover)))
+	for k in 4:
+		var stud := c + Vector2.from_angle(-PI / 2.0 + TAU * k / 4.0) * mid
+		for yy in range(-6, 7):
+			for xx in range(-6, 7):
+				var q := Vector2(xx + 0.5, yy + 0.5)
+				var r := q.length()
+				var cover := clampf(4.6 - r, 0.0, 1.0)
+				if cover <= 0.0:
+					continue
+				var col := INK if r > 3.6 else GOLD_LIGHT.lerp(GOLD_DARK, clampf((q.y + 3.0) / 6.0, 0.0, 1.0))
+				var px := Vector2i(stud + q)
+				img.set_pixelv(px, img.get_pixelv(px).blend(Color(col, cover)))
