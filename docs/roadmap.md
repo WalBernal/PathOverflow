@@ -639,6 +639,41 @@ Origen: R4
 Origen: R4
 - Tilesets por estilo de zona con variaciones y bordes (suelo, paredes, transiciones), decoración animada (antorchas, servidores con LEDs, cables que chisporrotean, agua) y objetos de escenario con sombra; generados por herramienta y listos para arte a mano.
 - Hecho: `tools/generate_tilesets.gd` escribe en `assets/sprites/tiles/`, para los 23 estilos con suelo en pixel art, `<estilo>.png` (4 baldosas de 128×128 en fila: el suelo de siempre y tres **variantes** con grietas y motas propias que conservan los bordes de la base, así encajan sin costuras) y `<estilo>_edge.png` (**banda del borde** de 128×16 que se repite: el color de fuera entra con un filo irregular, un filo de luz del tipo de borde —racks, roca, agua, muro, lava, maleza, vacío— y una sombra que se desvanece). `ZoneArt` carga esos PNG antes que lo procedural (listos para arte a mano con la misma cuadrícula). En el suelo, ~46 % de las celdas enteras dentro del camino usan una variante (`ZoneArt.cell_variant`) y el contorno del camino lleva la banda hacia dentro (`Zone._draw_edge_strip`). Decoración animada: el agua del borde con ondas que se abren; antorchas, LEDs, racks y cables ya se animan (T100); las cajas de servidor y los obstáculos llevan sombra. Prueba `_test_tilesets`.
+
+# Roadmap 5.0 — versión para celular (26-10-2026)
+
+Pedido del usuario: generar el APK para celular. Hoy el juego no se puede jugar en un teléfono: las habilidades, la esquiva y las pociones van con teclado (Q W E R T Y, Espacio, 1-5), muchas ventanas dependen de pasar el ratón por encima y el proyecto usa el renderizador de escritorio (Forward+). Antes de exportar hay que prepararlo para pantalla táctil. **Origen: R5.** Mismo protocolo; 🛑 = parar y esperar el visto bueno.
+
+Punto de partida: ventana de 1600×900 con stretch `canvas_items`; mando ya soportado (`GamepadCursor`, acciones de Input), clic para moverse hasta el botín (`Player.move_to`) y tamaño de interfaz configurable (80-160 %). En este equipo faltan el JDK, el SDK de Android y las plantillas de exportación de Android de Godot 4.7.2 (instalarlos necesita el permiso del usuario: descargas y licencias de Android).
+
+## Fase 19 — Móvil
+
+### [ ] T106 · Renderizador y rendimiento en móvil · M
+Origen: R5
+- Renderizador `mobile` para Android (`rendering/renderer/rendering_method.mobile`) y comprobar que el filtro del mundo, la luz, el bloom, las distorsiones, los sprites por capas y las partículas funcionan con él (si alguno no, alternativa o apagarlo en móvil).
+- En dispositivos táctiles (`OS.has_feature("mobile")` o pantalla táctil), por defecto: calidad gráfica baja o media (T98), luces reducidas y tamaño de interfaz 140 %; orientación horizontal fija.
+- Medir con `capture_screens -- rendimiento` forzando el renderizador móvil y la calidad baja.
+
+### [ ] T107 · Controles táctiles: movimiento y objetivo · M
+Origen: R5
+- Detectar pantalla táctil (`DisplayServer.is_touchscreen_available()`) y mostrar un **joystick virtual** a la izquierda para moverse (aparece donde apoyas el dedo, con zona muerta); tocar el mundo fuera de los controles: ir ahí, recoger botín o hablar con un NPC (lo que ya hace el clic).
+- **Apuntado automático** para jugar con el pulgar: las habilidades apuntan al enemigo más cercano en la dirección del joystick (o al más cercano, si no se mueve), con un indicador.
+- Opción en Pausa → Controles para ocultar los controles táctiles.
+
+### [ ] T108 · Controles táctiles: habilidades, esquiva y pociones · M
+Origen: R5
+- Botones grandes a la derecha en arco para las 6 habilidades (con su icono, enfriamiento y coste, como la barra del HUD), un botón de **esquiva** y la fila de **pociones** tocables; mantener pulsado = canalizar o repetir; arrastrar desde un botón = apuntar a mano.
+- La barra del HUD de escritorio se recoloca o se oculta en táctil para no duplicar; los botones de menú (C I K P B) más grandes.
+
+### [ ] T109 · Interfaz táctil · M 🛑
+Origen: R5
+- Todo lo que hoy depende de pasar el ratón por encima, con toque: tooltip al tocar un objeto o nodo (y botón para equiparlo, venderlo o asignarlo), mantener pulsado = clic derecho, arrastrar y soltar con el dedo en inventario, alijo y habilidades, zoom con dos dedos en el árbol pasivo y el mapa; botón de pausa en pantalla; textos y objetivos táctiles de 44 px como mínimo.
+- Capturas a resolución de teléfono (2400×1080 y 1600×720) de las ventanas principales para la revisión.
+
+### [ ] T110 · Exportación a Android · S 🛑
+Origen: R5
+- Necesita el permiso del usuario al empezar: instalar JDK 17, el SDK de Android (aceptar sus licencias) y las plantillas de exportación de Android de Godot 4.7.2.
+- Preset de exportación «Android» (arm64-v8a, paquete `com.pathoverflow.game`, nombre e icono, horizontal, sin permisos extra), clave de depuración, y `build/PathOverflow.apk`; instrucciones en el README para instalarlo en el teléfono y para firmarlo con una clave propia si se quiere publicar.
 ---
 
 ## Fuera de la cola (necesitan una persona)
@@ -768,3 +803,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-26 · T103 · NPC con el personaje por capas (respiran y gesticulan al hablar) y entrada de jefe con su figura y su nombre; retratos dibujados como se decidió en T102.
 - 2026-10-26 · T104 · Objetos en el suelo con icono, sombra, brillo de rareza y vuelo en arco con rebote; cajas de servidor que se abren y sueltan botín en arco.
 - 2026-10-26 · T105 · Tilesets por estilo en PNG (suelo con 3 variantes sin costuras y banda del borde), usados en el suelo y el contorno del camino; agua animada en el borde. Roadmap 4.0 terminado.
+- 2026-10-26 · Roadmap 5.0 (T106-T110): versión para celular — renderizador móvil, controles táctiles (joystick, apuntado automático, botones de habilidades, esquiva y pociones), interfaz táctil y exportación a Android.
