@@ -176,6 +176,7 @@ func _initialize() -> void:
 	_test_player_sheet()
 	_test_npcs_and_boss_intro()
 	_test_ground_loot()
+	_test_tilesets()
 	_test_events_music_colorblind()
 	_test_story_editor()
 	_test_board_milestones()
@@ -4243,6 +4244,39 @@ func _test_mana_family() -> void:
 		_check(int(found.get(s, 0)) >= 1, "el árbol tiene nodos de %s" % Stat.display_name(s))
 	var mana_clusters := _tree.clusters.values().filter(func(c: Dictionary) -> bool: return c["theme"] == "mana").size()
 	_check(mana_clusters >= 10, "la familia de maná tiene 10 clusters o más (%d)" % mana_clusters)
+
+
+## Escenarios con tilesets (T105): variantes sin costuras, banda del borde y PNG por estilo.
+func _test_tilesets() -> void:
+	for style in ZoneArt.STYLES:
+		_check(ResourceLoader.exists(ZoneArt.TILE_DIR + style + ".png") and ResourceLoader.exists(ZoneArt.TILE_DIR + style + "_edge.png"),
+			"tileset y borde de %s generados" % style)
+	var base := ZoneArt.variant_image("forest", 0, false)
+	var v2 := ZoneArt.variant_image("forest", 2, false)
+	var same_edges := true
+	var different := false
+	for k in ZoneArt.SIZE:
+		for e in [Vector2i(k, 0), Vector2i(k, ZoneArt.SIZE - 1), Vector2i(0, k), Vector2i(ZoneArt.SIZE - 1, k)]:
+			same_edges = same_edges and base.get_pixelv(e) == v2.get_pixelv(e)
+	for y in range(10, ZoneArt.SIZE - 10, 3):
+		for x in range(10, ZoneArt.SIZE - 10, 3):
+			different = different or base.get_pixel(x, y) != v2.get_pixel(x, y)
+	_check(same_edges, "las variantes tienen los mismos bordes que la base (encajan sin costuras)")
+	_check(different, "y por dentro tienen sus propios detalles")
+	var sheet := ZoneArt.tileset_image("forest", false)
+	_check(sheet.get_width() == ZoneArt.SIZE * ZoneArt.VARIANTS and sheet.get_height() == ZoneArt.SIZE, "tileset de %d baldosas en fila" % ZoneArt.VARIANTS)
+	var strip := ZoneArt.edge_image("forest", Color("0a120a"), "thicket", false)
+	_check(strip.get_width() == ZoneArt.SIZE and strip.get_height() == ZoneArt.EDGE_H, "banda del borde de 128×16")
+	var seamless := true
+	for y in ZoneArt.EDGE_H:
+		seamless = seamless and strip.get_pixel(0, y).is_equal_approx(strip.get_pixel(ZoneArt.SIZE - 1, y)) or absf(strip.get_pixel(0, y).a - strip.get_pixel(ZoneArt.SIZE - 1, y).a) < 0.5
+	_check(seamless, "la banda se repite a lo largo sin saltos bruscos")
+	_check(strip.get_pixel(5, 0).a == 1.0 and strip.get_pixel(5, ZoneArt.EDGE_H - 1).a < 0.05, "arriba lo de fuera, abajo transparente (vale sobre cualquier suelo)")
+	var counts := [0, 0, 0, 0]
+	for y in 40:
+		for x in 40:
+			counts[ZoneArt.cell_variant(Vector2i(x, y))] += 1
+	_check(counts[0] > 600 and counts[1] > 100 and counts[2] > 100 and counts[3] > 100, "la baldosa base es la más común y las variantes salpican (%s)" % [counts])
 
 
 ## Objetos en el suelo y cofres (T104): vuelo en arco, rebote, etiqueta y tapa de la caja.

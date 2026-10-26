@@ -635,9 +635,10 @@ Origen: R4
 - Cada objeto caído con su sprite (el icono en pequeño, con sombra y un rebote al caer) y brillo por rareza; cofres y contenedores que se abren con animación y sueltan el botín en arco.
 - Hecho: cada objeto en el suelo lleva su **icono** pequeño debajo de la etiqueta, con **sombra** y un **brillo** del color de su rareza (mágico en adelante, que late); al soltarse **vuela en arco** desde donde cae (`LootManager.drop_item(item, pos, from)`) o da un saltito en su sitio, **rebota** al aterrizar y su etiqueta aparece cuando ya está en el suelo (`LootManager.arc_pos`, `label_alpha`). **Cajas de servidor** nuevas en las zonas de combate (2-4 por zona, `Zone.containers`): se abren al acercarte con la tapa que se levanta y rebota (`Zone.lid_open`), un fogonazo y chispas, y sueltan 1-3 objetos en arco desde la caja y unos tokens (`World._on_container_opened`); abiertas quedan vacías. Prueba `_test_ground_loot`.
 
-### [ ] T105 · Escenarios con tilesets · M
+### [x] T105 · Escenarios con tilesets · M
 Origen: R4
 - Tilesets por estilo de zona con variaciones y bordes (suelo, paredes, transiciones), decoración animada (antorchas, servidores con LEDs, cables que chisporrotean, agua) y objetos de escenario con sombra; generados por herramienta y listos para arte a mano.
+- Hecho: `tools/generate_tilesets.gd` escribe en `assets/sprites/tiles/`, para los 23 estilos con suelo en pixel art, `<estilo>.png` (4 baldosas de 128×128 en fila: el suelo de siempre y tres **variantes** con grietas y motas propias que conservan los bordes de la base, así encajan sin costuras) y `<estilo>_edge.png` (**banda del borde** de 128×16 que se repite: el color de fuera entra con un filo irregular, un filo de luz del tipo de borde —racks, roca, agua, muro, lava, maleza, vacío— y una sombra que se desvanece). `ZoneArt` carga esos PNG antes que lo procedural (listos para arte a mano con la misma cuadrícula). En el suelo, ~46 % de las celdas enteras dentro del camino usan una variante (`ZoneArt.cell_variant`) y el contorno del camino lleva la banda hacia dentro (`Zone._draw_edge_strip`). Decoración animada: el agua del borde con ondas que se abren; antorchas, LEDs, racks y cables ya se animan (T100); las cajas de servidor y los obstáculos llevan sombra. Prueba `_test_tilesets`.
 ---
 
 ## Fuera de la cola (necesitan una persona)
@@ -766,3 +767,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-26 · T102b · El jugador, el creador y la lista de personajes usan el personaje por capas; los retratos siguen dibujados (expresiones) (aprobado).
 - 2026-10-26 · T103 · NPC con el personaje por capas (respiran y gesticulan al hablar) y entrada de jefe con su figura y su nombre; retratos dibujados como se decidió en T102.
 - 2026-10-26 · T104 · Objetos en el suelo con icono, sombra, brillo de rareza y vuelo en arco con rebote; cajas de servidor que se abren y sueltan botín en arco.
+- 2026-10-26 · T105 · Tilesets por estilo en PNG (suelo con 3 variantes sin costuras y banda del borde), usados en el suelo y el contorno del camino; agua animada en el borde. Roadmap 4.0 terminado.

@@ -26,14 +26,122 @@ static func tile_world() -> float:
 	return SIZE * TEXEL
 
 
-static func ground(style: String) -> ImageTexture:
+static func ground(style: String) -> Texture2D:
 	if not _cache.has(style):
-		var img := Image.create(SIZE, SIZE, false, Image.FORMAT_RGBA8)
-		var rng := RandomNumberGenerator.new()
-		rng.seed = hash(style) % 100000
-		_paint(img, style, rng)
-		_cache[style] = ImageTexture.create_from_image(img)
+		_cache[style] = ImageTexture.create_from_image(variant_image(style, 0))
 	return _cache[style]
+
+
+# --- Tilesets (T105): variantes del suelo y banda del borde, en PNG para arte a mano ---
+
+## Carpeta de los tilesets (tools/generate_tilesets.gd): <estilo>.png = las VARIANTS
+## baldosas en fila (SIZE×SIZE cada una) y <estilo>_edge.png = la banda del borde
+## (SIZE×EDGE_H, se repite a lo largo). Si existen, mandan sobre lo procedural.
+const TILE_DIR := "res://assets/sprites/tiles/"
+const VARIANTS := 4
+const EDGE_H := 16
+## Color del filo del borde según el tipo de borde de la zona.
+const EDGE_RIM := {"racks": "4a5060", "cliff": "6a6052", "water": "3a6a80", "wall": "4a4652", "lava": "ff7a3a",
+	"thicket": "2a4a2a", "void": "3a6aa0", "": "5a4a3a"}
+
+
+## Baldosa `v` del estilo: la 0 es el suelo de siempre; las demás, la misma con
+## detalles extra (grietas, motas) lejos de los bordes, así encajan entre sí sin costuras.
+static func variant_image(style: String, v: int, from_file := true) -> Image:
+	var path := TILE_DIR + style + ".png"
+	if from_file and ResourceLoader.exists(path):
+		var sheet := (load(path) as Texture2D).get_image()
+		if sheet.get_width() >= SIZE * (v + 1):
+			return sheet.get_region(Rect2i(v * SIZE, 0, SIZE, SIZE))
+	var img := Image.create(SIZE, SIZE, false, Image.FORMAT_RGBA8)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(style) % 100000
+	_paint(img, style, rng)
+	if v > 0:
+		_variant_details(img, v)
+	return img
+
+
+## Detalles de una variante: grietas oscuras y motas claras del color del propio suelo,
+## a 8 texels de los bordes como mínimo.
+static func _variant_details(img: Image, v: int) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7919 * v + 13
+	for k in 3 + v:
+		var p := Vector2i(rng.randi_range(10, SIZE - 11), rng.randi_range(10, SIZE - 11))
+		var dir := Vector2i([1, -1][rng.randi() % 2], [1, 0, -1][rng.randi() % 3])
+		for s in rng.randi_range(6, 14):
+			if p.x < 8 or p.y < 8 or p.x >= SIZE - 8 or p.y >= SIZE - 8:
+				break
+			img.set_pixelv(p, img.get_pixelv(p).darkened(0.35))
+			p += dir if rng.randf() < 0.7 else Vector2i(dir.x, rng.randi_range(-1, 1))
+	for k in 18 + v * 6:
+		var p := Vector2i(rng.randi_range(8, SIZE - 9), rng.randi_range(8, SIZE - 9))
+		img.set_pixelv(p, img.get_pixelv(p).lightened(0.18))
+
+
+## Hoja con las VARIANTS baldosas en fila.
+static func tileset_image(style: String, from_file := true) -> Image:
+	var sheet := Image.create(SIZE * VARIANTS, SIZE, false, Image.FORMAT_RGBA8)
+	for v in VARIANTS:
+		sheet.blit_rect(variant_image(style, v, from_file), Rect2i(0, 0, SIZE, SIZE), Vector2i(v * SIZE, 0))
+	return sheet
+
+
+static func tileset(style: String) -> Texture2D:
+	var key := style + "#set"
+	if not _cache.has(key):
+		var path := TILE_DIR + style + ".png"
+		_cache[key] = load(path) if ResourceLoader.exists(path) else ImageTexture.create_from_image(tileset_image(style))
+	return _cache[key]
+
+
+static func variant_region(v: int) -> Rect2:
+	return Rect2(v * SIZE, 0, SIZE, SIZE)
+
+
+## Banda del borde (transición del suelo a lo de fuera): arriba, el color de fuera
+## que entra con un filo irregular; luego un filo de luz del tipo de borde y una
+## sombra que se desvanece hacia dentro (transparente abajo: vale sobre cualquier suelo).
+## Se repite sin costuras a lo largo (el filo usa senos de periodo SIZE).
+static func edge_image(style: String, outside: Color, edge_kind: String, from_file := true) -> Image:
+	var path := TILE_DIR + style + "_edge.png"
+	if from_file and ResourceLoader.exists(path):
+		return (load(path) as Texture2D).get_image()
+	var img := Image.create(SIZE, EDGE_H, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var rim := Color(EDGE_RIM.get(edge_kind, EDGE_RIM[""]))
+	var seed_v := float(hash(style) % 1000)
+	for x in SIZE:
+		var a := TAU * x / SIZE
+		var h := int(round(3.0 + 1.6 * sin(a * 3.0 + seed_v) + 1.0 * sin(a * 7.0 + seed_v * 0.3) + 0.6 * sin(a * 13.0)))
+		for y in EDGE_H:
+			var c := Color(0, 0, 0, 0)
+			if y < h:
+				c = outside.darkened(0.1) if (x + y) % 2 == 0 else outside
+			elif y < h + 1:
+				c = rim
+			elif y < h + 2:
+				c = rim.darkened(0.35)
+			else:
+				var k := float(y - h - 2) / float(EDGE_H - h - 2)
+				c = Color(0, 0, 0, 0.45 * (1.0 - k) * (1.0 - k))
+			img.set_pixel(x, y, c)
+	return img
+
+
+static func edge(style: String, outside: Color, edge_kind: String) -> Texture2D:
+	var key := style + "#edge"
+	if not _cache.has(key):
+		var path := TILE_DIR + style + "_edge.png"
+		_cache[key] = load(path) if ResourceLoader.exists(path) else ImageTexture.create_from_image(edge_image(style, outside, edge_kind))
+	return _cache[key]
+
+
+## Variante de la baldosa de una celda del mundo: la base casi siempre, a veces otra.
+static func cell_variant(cell: Vector2i) -> int:
+	var h := posmod(cell.x * 73856093 ^ cell.y * 19349663, 97)
+	return 0 if h < 52 else 1 + h % (VARIANTS - 1)
 
 
 static func _paint(img: Image, style: String, rng: RandomNumberGenerator) -> void:

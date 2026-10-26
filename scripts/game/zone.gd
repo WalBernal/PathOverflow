@@ -944,6 +944,8 @@ func _draw_static() -> void:
 		for q in area:
 			uvs.append(q / ZoneArt.tile_world())
 		layer.draw_colored_polygon(area, Color.WHITE, uvs, tex)
+		_draw_tile_variants(layer, area)
+		_draw_edge_strip(layer, area, s)
 		# Las marcas temáticas (cables, losas rotas, <defunct>, texto del BIOS...) siguen
 		# encima; en el resto del acto I el suelo ya lo dice todo.
 		if not style in ["camp", "swamp", "catacombs", "servers", "boss", "sandbox"]:
@@ -962,6 +964,53 @@ func _draw_static() -> void:
 	for o in obstacles:
 		if o.get("feature", false):
 			_draw_feature(layer, o)
+
+
+## Variantes del suelo (T105): en las celdas enteras dentro del camino, a veces otra
+## baldosa del tileset (con grietas y motas), para que el suelo no se vea repetido.
+func _draw_tile_variants(ci: CanvasItem, area: PackedVector2Array) -> void:
+	var tw := ZoneArt.tile_world()
+	var sheet := ZoneArt.tileset(style)
+	var from := (rect.position / tw).floor()
+	var to := (rect.end / tw).ceil()
+	for cy in range(int(from.y), int(to.y)):
+		for cx in range(int(from.x), int(to.x)):
+			var v := ZoneArt.cell_variant(Vector2i(cx, cy))
+			if v == 0:
+				continue
+			var cell := Rect2(Vector2(cx, cy) * tw, Vector2(tw, tw))
+			var inside := true
+			for q in [cell.position, Vector2(cell.end.x, cell.position.y), cell.end, Vector2(cell.position.x, cell.end.y)]:
+				if not Geometry2D.is_point_in_polygon(q, area):
+					inside = false
+					break
+			if inside:
+				ci.draw_texture_rect_region(sheet, cell, ZoneArt.variant_region(v))
+
+
+## Banda del borde (T105): a lo largo del contorno del camino, hacia dentro, la
+## transición del suelo a lo de fuera (filo irregular, filo de luz y sombra).
+func _draw_edge_strip(ci: CanvasItem, area: PackedVector2Array, s: Dictionary) -> void:
+	if area.size() < 3:
+		return
+	var tex := ZoneArt.edge(style, Color(s["outside"]), String(s.get("edge", "")))
+	var tw := ZoneArt.tile_world()
+	var depth := ZoneArt.EDGE_H * ZoneArt.TEXEL
+	var u := 0.0
+	for k in area.size():
+		var a := area[k]
+		var b := area[(k + 1) % area.size()]
+		var seg := b - a
+		var length := seg.length()
+		if length < 1.0:
+			continue
+		var n := seg.orthogonal().normalized()
+		if not Geometry2D.is_point_in_polygon((a + b) / 2.0 + n * 6.0, area):
+			n = -n   # hacia dentro del camino
+		var quad := PackedVector2Array([a, b, b + n * depth, a + n * depth])
+		var u1 := u + length / tw
+		ci.draw_colored_polygon(quad, Color.WHITE, PackedVector2Array([Vector2(u, 0), Vector2(u1, 0), Vector2(u1, 1), Vector2(u, 1)]), tex)
+		u = u1
 
 
 func _draw_decals(ci: CanvasItem, c: Color) -> void:
@@ -1279,6 +1328,16 @@ func _draw() -> void:
 	for c in containers:
 		if view.has_point(c["pos"]):
 			_draw_container(c)
+	if String(STYLES.get(style, {}).get("edge", "")) == "water":
+		# Agua animada (T105): ondas que se abren en el agua turbia del borde.
+		for e in _edge_props:
+			var wp: Vector2 = e["pos"] + (e["out"] as Vector2) * 40.0 * float(e["size"])
+			if not view.has_point(wp):
+				continue
+			var ph := fposmod(_time * 0.5 + float(int(e["seed"]) % 100) / 100.0, 1.0)
+			draw_set_transform(wp, 0.0, Vector2(1.0, 0.45))
+			draw_arc(Vector2.ZERO, 6.0 + 30.0 * ph, 0.0, TAU, 16, Color(0.55, 0.75, 0.85, 0.25 * (1.0 - ph)), 1.5)
+			draw_set_transform(Vector2.ZERO)
 	if style == "camp":
 		_draw_campfire(rect.get_center() + Vector2(0, -20))
 	elif style == "terminal":
