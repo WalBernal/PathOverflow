@@ -309,6 +309,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 	var weather := Weather.new()   # lluvia de datos o niebla, según el estilo
 	zone.add_child(weather)
 	weather.setup(zone.style)
+	SoundMap.floor_style = zone.style   # pasos según el suelo (T77)
 	post.attach(self, zone)   # el pixelado justo después de la zona; la luz, encima
 	post.set_style(zone.style)
 	zone.npc_interacted.connect(_on_npc_interacted)
@@ -1251,7 +1252,7 @@ func _grant_board(skill_id: String) -> void:
 
 ## Pistas la primera vez que se recoge una placa base o un módulo RAM.
 func _on_item_picked_up(item: Item) -> void:
-	Sfx.play("pickup", -4.0)
+	SoundMap.play_pickup(item)   # según el material (T77)
 	if item is Motherboard and not character.flags.has("hint_board"):
 		character.flags["hint_board"] = true
 		ui.hud.flash("¡Una placa base! Es una habilidad: instálala en la barra con K.", UiStyle.ACCENT)

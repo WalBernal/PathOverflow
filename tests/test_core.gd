@@ -148,6 +148,7 @@ func _initialize() -> void:
 	_test_skill_fx()
 	_test_pixel_icons()
 	_test_ui_identity()
+	_test_sound_map()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3714,6 +3715,35 @@ func _test_ui_identity() -> void:
 		for b in UiStyle.orb_bubbles(t, 100.0, 178.0, 120.0, 78.0):
 			_check((b[0] as Vector2).y > 120.0 and (b[0] as Vector2).y < 178.0 and (b[0] as Vector2).distance_to(Vector2(100, 100)) < 78.0, "burbuja dentro del orbe")
 	_check(UiStyle.orb_bubbles(0.5, 100.0, 178.0, 177.0, 78.0).is_empty(), "orbe vacío: sin burbujas")
+
+
+## Sonido por habilidad y por objeto (T77): capas con tono propio, materiales, suelos e interfaz.
+func _test_sound_map() -> void:
+	var exists := func(name: String) -> bool: return ResourceLoader.exists(Sfx.SFX_DIR + name + ".wav")
+	var skills: Dictionary = _db.skills.skills
+	var pitches := {}
+	for id in skills:
+		var layers := SoundMap.cast_layers(skills[id])
+		for l in layers:
+			_check(exists.call(l[0]), "%s: existe el sonido %s" % [id, l[0]])
+		pitches[snappedf(float(layers[0][2]), 0.001)] = true
+		_check(float(layers[0][2]) >= SoundMap.PITCH_BASE and float(layers[0][2]) <= SoundMap.PITCH_BASE + SoundMap.PITCH_SPREAD, "%s: tono dentro del rango" % id)
+	_check(pitches.size() > skills.size() * 0.8, "casi todas las habilidades con su propio tono (%d de %d)" % [pitches.size(), skills.size()])
+	_check(SoundMap.skill_pitch("ping_letal") == SoundMap.skill_pitch("ping_letal"), "el tono de una habilidad es estable")
+	_check(SoundMap.cast_layers(skills["barrido"]).size() == 2 and SoundMap.signature_layer(skills["ping_letal"]) == "lay_hum", "capa de firma: cuerpo a cuerpo y rayo")
+	for dt in ["fire", "cold", "lightning", "chaos", "physical"]:
+		_check(exists.call(SoundMap.impact(dt)), "impacto de %s" % dt)
+	var gen := ItemGenerator.new(_db, 77)
+	var sword := gen.generate(5, Rarity.Item.NORMAL, "espada_oxidada")
+	var robe := gen.generate(5, Rarity.Item.NORMAL, "tunica_de_seda")
+	_check(SoundMap.material(sword) == "metal" and SoundMap.material(robe) == "cloth" and SoundMap.material(gen.generate_flask(5)) == "glass"
+		and SoundMap.material(gen.generate_motherboard(5)) == "board", "material del objeto: metal, tela, cristal y placa")
+	for it in [sword, robe, gen.generate_flask(5), gen.generate_motherboard(5), gen.generate_ram(5)]:
+		_check(exists.call(SoundMap.pickup(it)) and exists.call(SoundMap.equip(it)), "recoger y equipar %s suenan" % it.display_name())
+	_check(SoundMap.drop(gen.generate(20, Rarity.Item.UNIQUE)) in ["unique_drop", "set_drop"] and SoundMap.drop(sword) == "", "caída especial solo de únicos y conjuntos")
+	_check(SoundMap.step("forest") == "step_dirt" and SoundMap.step("servers") == "step_metal" and SoundMap.step("catacombs") == "step_stone", "pasos según el suelo")
+	for name in ["ui_open", "ui_close", "ui_hover", "ui_buy", "ui_error", "set_drop", "step_stone", "step_dirt", "step_metal"]:
+		_check(exists.call(name), "existe %s" % name)
 
 
 ## Parte 2 (T72b): el ataque golpea en el cuadro de impacto de la animación.

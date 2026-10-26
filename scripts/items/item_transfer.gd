@@ -127,6 +127,8 @@ static func move(character: CharacterData, from: Dictionary, to: Dictionary) -> 
 		return problem
 	_set_at(inv, to, a)
 	_set_at(inv, from, b)
+	if String(to.get("kind", "")) in ["equip", "board", "dimm", "flask"]:
+		SoundMap.play_equip(a)   # ponérselo suena según el material (T77)
 	inv.changed.emit()
 	_stash_touched(from, to)
 	return ""

@@ -543,8 +543,10 @@ func _physics_process(delta: float) -> void:
 	if moved > 10.0:
 		var before := maxf(_walk_phase, 0.0)
 		_walk_phase = fmod(before + moved * delta / STRIDE * PI, TAU)
-		if character and Achievements.equipped(character, "steps") != "" and int(before / PI) != int(_walk_phase / PI):
-			_step_marks.append({"pos": global_position + Vector2(randf_range(-5.0, 5.0), RADIUS * 0.6), "t": STEP_MARK_TIME})   # una pisada
+		if int(before / PI) != int(_walk_phase / PI):
+			SoundMap.play_step()   # cada pisada, según el suelo (T77)
+			if character and Achievements.equipped(character, "steps") != "":
+				_step_marks.append({"pos": global_position + Vector2(randf_range(-5.0, 5.0), RADIUS * 0.6), "t": STEP_MARK_TIME})   # una pisada
 	else:
 		_walk_phase = -1.0
 	for m in _step_marks:

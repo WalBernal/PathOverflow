@@ -405,7 +405,7 @@ func buy(i: int) -> bool:
 	item.remove_meta("shop_tag")
 	character.inventory.add_item(item)
 	stock[i] = null
-	Sfx.play("pickup")
+	Sfx.play("ui_buy")
 	message.emit("Compraste %s por %d tokens." % [item.display_name(), price])
 	say("buy")
 	if _tooltip:
@@ -435,7 +435,7 @@ func _on_buyback_clicked(cell: ItemCell, button: MouseButton) -> void:
 		return
 	character.inventory.add_item(entry["item"])
 	buyback.remove_at(k)
-	Sfx.play("pickup")
+	Sfx.play("ui_buy")
 	message.emit("Recompraste %s." % (entry["item"] as Item).display_name())
 	say("buyback")
 	_tooltip.hide()

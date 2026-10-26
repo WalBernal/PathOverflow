@@ -92,6 +92,8 @@ func _notification(what: int) -> void:
 
 ## Mensaje temporal en el centro superior de la pantalla.
 func flash(text: String, color := Color("e06c6c")) -> void:
+	if color.is_equal_approx(UiStyle.DANGER):
+		Sfx.play("ui_error", -10.0)   # los avisos en rojo son errores (T77)
 	_message.text = text
 	_message.add_theme_color_override("font_color", color)
 	_message.modulate.a = 1.0

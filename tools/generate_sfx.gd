@@ -42,7 +42,28 @@ func _positional_ambients() -> Dictionary:
 	return {"emit_rack": _emit_rack, "emit_drip": _emit_drip, "emit_wind": _emit_wind}
 
 
+## T77: capas de lanzamiento, impactos por tipo, recoger y equipar por material,
+## pasos por suelo e interfaz. Con `-- t77` solo se generan estos.
+func _t77_sfx() -> Dictionary:
+	return {
+		"lay_click": _lay_click, "lay_whoosh": _lay_whoosh, "lay_hum": _lay_hum, "lay_chime": _lay_chime, "lay_thump": _lay_thump,
+		"imp_fire": _imp_fire, "imp_ice": _imp_ice, "imp_zap": _imp_zap, "imp_splat": _imp_splat, "imp_thud": _imp_thud,
+		"pick_metal": _pick_metal, "pick_cloth": _pick_cloth, "pick_glass": _pick_glass, "pick_board": _pick_board,
+		"equip_metal": _equip_metal, "equip_cloth": _equip_cloth, "set_drop": _set_drop,
+		"step_stone": _step.bind(900.0, 0.03), "step_dirt": _step.bind(420.0, 0.05), "step_metal": _step_metal,
+		"ui_open": _ui_open, "ui_close": _ui_close, "ui_hover": _ui_hover, "ui_buy": _ui_buy, "ui_error": _ui_error,
+	}
+
+
 func _initialize() -> void:
+	if OS.get_cmdline_user_args().has("t77"):
+		rng.seed = 7777
+		var t77 := _t77_sfx()
+		for name in t77:
+			_save(SFX_DIR + name + ".wav", t77[name].call())
+		print("Sonidos de T77 generados: %d" % t77.size())
+		quit()
+		return
 	if OS.get_cmdline_user_args().has("posicional"):
 		rng.seed = 5555
 		var pos := _positional_ambients()
@@ -168,6 +189,239 @@ func _lp(prev: float, x: float, cut: float) -> float:
 
 func _sq(phase: float) -> float:
 	return 1.0 if fmod(phase, 1.0) < 0.5 else -1.0
+
+
+# --- T77: capas, impactos, objetos, pasos e interfaz ---
+
+## Capa digital: ráfaga de clics de paquete (paquetes, rastreadores, bits).
+func _lay_click() -> PackedFloat32Array:
+	var b := _buf(0.16)
+	for i in b.size():
+		var t := float(i) / RATE
+		var tick := fmod(t, 0.035) < 0.004
+		b[i] = (_sq(t * 2400.0) * 0.6 if tick else 0.0) * _env(t, 0.001, 0.08)
+	return b
+
+
+## Capa de aire: barrido de ruido que sube y baja (cuerpo a cuerpo).
+func _lay_whoosh() -> PackedFloat32Array:
+	var b := _buf(0.22)
+	var lp := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		lp = _lp(lp, _noise(), 500.0 + 2500.0 * sin(PI * t / 0.22))
+		b[i] = lp * sin(PI * t / 0.22)
+	return b
+
+
+## Capa eléctrica: zumbido de red con armónicos (rayo).
+func _lay_hum() -> PackedFloat32Array:
+	var b := _buf(0.25)
+	for i in b.size():
+		var t := float(i) / RATE
+		b[i] = (_sq(t * 120.0) * 0.4 + sin(TAU * 360.0 * t) * 0.4 + _noise() * 0.2) * _env(t, 0.01, 0.09)
+	return b
+
+
+## Capa brillante: campanita (frío, buffs, auras).
+func _lay_chime() -> PackedFloat32Array:
+	var b := _buf(0.4)
+	for i in b.size():
+		var t := float(i) / RATE
+		b[i] = (sin(TAU * 1568.0 * t) + 0.5 * sin(TAU * 2349.0 * t) + 0.25 * sin(TAU * 3136.0 * t)) * _env(t, 0.002, 0.12)
+	return b
+
+
+## Capa grave: golpe sordo al suelo (áreas, novas, saltos).
+func _lay_thump() -> PackedFloat32Array:
+	var b := _buf(0.3)
+	var lp := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		lp = _lp(lp, _noise(), 300.0)
+		b[i] = sin(TAU * (90.0 - 50.0 * t) * t) * _env(t, 0.002, 0.08) + lp * 0.8 * _env(t, 0.001, 0.04)
+	return b
+
+
+## Impacto de fuego: chasquido con chisporroteo.
+func _imp_fire() -> PackedFloat32Array:
+	var b := _buf(0.3)
+	var lp := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		lp = _lp(lp, _noise(), 1800.0)
+		var crackle := _noise() if rng.randf() < 0.04 else 0.0
+		b[i] = lp * _env(t, 0.002, 0.06) + crackle * _env(t, 0.0, 0.15) * 0.6
+	return b
+
+
+## Impacto de hielo: cristalitos que se rompen.
+func _imp_ice() -> PackedFloat32Array:
+	var b := _buf(0.3)
+	for k in 5:
+		var start := int(rng.randf_range(0.0, 0.08) * RATE)
+		var f := rng.randf_range(2200.0, 4200.0)
+		for i in range(start, b.size()):
+			var t := float(i - start) / RATE
+			b[i] += sin(TAU * f * t) * _env(t, 0.0005, 0.03) * 0.5
+	for i in b.size():
+		b[i] += _noise() * 0.25 * _env(float(i) / RATE, 0.0005, 0.01)
+	return b
+
+
+## Impacto de rayo: chispazo seco.
+func _imp_zap() -> PackedFloat32Array:
+	var b := _buf(0.16)
+	for i in b.size():
+		var t := float(i) / RATE
+		b[i] = (_sq(t * rng.randf_range(800.0, 2200.0)) * 0.5 + _noise() * 0.5) * _env(t, 0.0005, 0.035)
+	return b
+
+
+## Impacto de caos: plaf húmedo que baja.
+func _imp_splat() -> PackedFloat32Array:
+	var b := _buf(0.25)
+	var lp := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		lp = _lp(lp, _noise(), 900.0 - 2500.0 * t)
+		b[i] = lp * _env(t, 0.003, 0.07) + sin(TAU * (260.0 - 500.0 * t) * t) * 0.4 * _env(t, 0.002, 0.05)
+	return b
+
+
+## Impacto físico: golpe seco.
+func _imp_thud() -> PackedFloat32Array:
+	var b := _buf(0.18)
+	var lp := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		lp = _lp(lp, _noise(), 1200.0)
+		b[i] = lp * _env(t, 0.001, 0.03) + sin(TAU * 160.0 * t) * 0.6 * _env(t, 0.001, 0.04)
+	return b
+
+
+## Recoger metal: tintineo de dos piezas.
+func _pick_metal() -> PackedFloat32Array:
+	var b := _buf(0.35)
+	for i in b.size():
+		var t := float(i) / RATE
+		var t2 := maxf(0.0, t - 0.06)
+		b[i] = (sin(TAU * 1180.0 * t) + 0.4 * sin(TAU * 2950.0 * t)) * _env(t, 0.001, 0.07) \
+			+ (sin(TAU * 1420.0 * t2) + 0.4 * sin(TAU * 3310.0 * t2)) * _env(t2, 0.001, 0.08) * (1.0 if t >= 0.06 else 0.0)
+	return b
+
+
+## Recoger tela o cuero: roce suave.
+func _pick_cloth() -> PackedFloat32Array:
+	var b := _buf(0.22)
+	var lp := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		lp = _lp(lp, _noise(), 1400.0)
+		b[i] = lp * sin(PI * t / 0.22) * (0.6 + 0.4 * sin(TAU * 18.0 * t))
+	return b
+
+
+## Recoger cristal (pociones): «clink» de botella.
+func _pick_glass() -> PackedFloat32Array:
+	var b := _buf(0.4)
+	for i in b.size():
+		var t := float(i) / RATE
+		b[i] = (sin(TAU * 1975.0 * t) + 0.6 * sin(TAU * 2810.0 * t) + 0.3 * sin(TAU * 4620.0 * t)) * _env(t, 0.0008, 0.09) + _noise() * 0.15 * _env(t, 0.0005, 0.004)
+	return b
+
+
+## Recoger placa o RAM: clic de plástico y un pitido de circuito.
+func _pick_board() -> PackedFloat32Array:
+	var b := _buf(0.2)
+	for i in b.size():
+		var t := float(i) / RATE
+		var beep := _sq(t * 1760.0) * 0.35 * (1.0 if t > 0.05 and t < 0.12 else 0.0)
+		b[i] = _noise() * _env(t, 0.0005, 0.006) + beep
+	return b
+
+
+## Equipar metal: «clanc» de cierre.
+func _equip_metal() -> PackedFloat32Array:
+	var b := _buf(0.35)
+	var lp := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		lp = _lp(lp, _noise(), 2500.0)
+		b[i] = (sin(TAU * 420.0 * t) + 0.7 * sin(TAU * 1130.0 * t)) * _env(t, 0.001, 0.08) + lp * _env(t, 0.0005, 0.015)
+	return b
+
+
+## Equipar tela: roce más largo, como ponerse una prenda.
+func _equip_cloth() -> PackedFloat32Array:
+	var b := _buf(0.35)
+	var lp := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		lp = _lp(lp, _noise(), 900.0 + 900.0 * sin(PI * t / 0.35))
+		b[i] = lp * sin(PI * t / 0.35)
+	return b
+
+
+## Caída de una pieza de conjunto: acorde verde, distinto del de los únicos.
+func _set_drop() -> PackedFloat32Array:
+	return _arpeggio([392.0, 494.0, 587.0, 784.0], 0.07, 0.35, 1)
+
+
+## Paso: golpecito filtrado (`cut` Hz, más bajo en tierra) con un poco de grava.
+func _step(cut: float, decay: float) -> PackedFloat32Array:
+	var b := _buf(0.12)
+	var lp := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		lp = _lp(lp, _noise(), cut)
+		b[i] = lp * _env(t, 0.002, decay)
+	return b
+
+
+## Paso en metal: golpecito con un leve tañido.
+func _step_metal() -> PackedFloat32Array:
+	var b := _step(1500.0, 0.02)
+	for i in b.size():
+		var t := float(i) / RATE
+		b[i] += sin(TAU * 740.0 * t) * 0.3 * _env(t, 0.001, 0.05)
+	return b
+
+
+## Abrir ventana: dos notas que suben y un roce de papel.
+func _ui_open() -> PackedFloat32Array:
+	return _arpeggio([660.0, 880.0], 0.045, 0.06)
+
+
+func _ui_close() -> PackedFloat32Array:
+	return _arpeggio([880.0, 587.0], 0.045, 0.05)
+
+
+## Pasar el ratón: tic muy corto.
+func _ui_hover() -> PackedFloat32Array:
+	var b := _buf(0.03)
+	for i in b.size():
+		var t := float(i) / RATE
+		b[i] = sin(TAU * 2600.0 * t) * _env(t, 0.0005, 0.006)
+	return b
+
+
+## Comprar: caja registradora en miniatura (campana y monedas).
+func _ui_buy() -> PackedFloat32Array:
+	var b := _arpeggio([1318.0, 1760.0], 0.05, 0.12)
+	for i in mini(b.size(), int(0.08 * RATE)):
+		b[i] += _noise() * 0.2 * _env(float(i) / RATE, 0.001, 0.02)
+	return b
+
+
+## Error: zumbido grave de dos golpes.
+func _ui_error() -> PackedFloat32Array:
+	var b := _buf(0.28)
+	for i in b.size():
+		var t := float(i) / RATE
+		var on := 1.0 if fmod(t, 0.14) < 0.1 else 0.0
+		b[i] = _sq(t * 150.0) * 0.5 * on * _env(t, 0.002, 0.2)
+	return b
 
 
 # --- Efectos ---

@@ -120,6 +120,17 @@ static func window_style() -> StyleBoxFlat:
 ## esquinas doradas. Se dibuja detrás del contenido.
 static func decorate_window(panel: PanelContainer) -> void:
 	panel.add_theme_stylebox_override("panel", window_style())
+	# Sonido al abrir y al cerrar (T77). Se mira al final del fotograma: pasar de una
+	# ventana a otra (ocultar y volver a mostrar a la vez) no suena dos veces.
+	panel.visibility_changed.connect(func() -> void:
+		var check := func() -> void:
+			if not is_instance_valid(panel) or not panel.is_inside_tree():
+				return
+			var was: bool = panel.get_meta("ui_shown", false)
+			if panel.visible != was:
+				panel.set_meta("ui_shown", panel.visible)
+				Sfx.play("ui_open" if panel.visible else "ui_close", -10.0)
+		check.call_deferred())
 	panel.draw.connect(func() -> void:
 		var r := Rect2(Vector2.ZERO, panel.size)
 		# Degradado cálido en la cabecera.
@@ -342,6 +353,9 @@ static func button(text: String, callback: Callable, min_width := 0.0) -> Button
 	b.text = text
 	b.custom_minimum_size = Vector2(min_width, 40)
 	b.pressed.connect(callback)
+	b.mouse_entered.connect(func() -> void:
+		if not b.disabled:
+			Sfx.play("ui_hover", -18.0))   # T77
 	return b
 
 

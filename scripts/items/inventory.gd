@@ -79,6 +79,7 @@ func equip_flask(bag_index: int, flask_index := -1) -> bool:
 			return false
 	bag[bag_index] = flasks[flask_index]
 	flasks[flask_index] = flask
+	SoundMap.play_equip(flask)
 	changed.emit()
 	return true
 
@@ -143,6 +144,7 @@ func equip_from_bag(index: int) -> bool:
 	var slot := target_slot_for(item)
 	bag[index] = equipment.get(slot)
 	equipment[slot] = item
+	SoundMap.play_equip(item)   # según el material (T77)
 	changed.emit()
 	return true
 
@@ -176,6 +178,7 @@ func install_board(bag_index: int, hotbar_index := -1) -> bool:
 			return false
 	bag[bag_index] = boards[hotbar_index]
 	boards[hotbar_index] = board
+	SoundMap.play_equip(board)
 	changed.emit()
 	return true
 
@@ -239,6 +242,7 @@ func install_ram(bag_index: int, hotbar_index: int, dimm_index := -1) -> String:
 	var problem := board.install(ram, dimm_index)
 	if problem == "":
 		bag[bag_index] = null
+		SoundMap.play_equip(ram)
 		changed.emit()
 	return problem
 

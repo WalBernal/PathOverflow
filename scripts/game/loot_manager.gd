@@ -59,8 +59,9 @@ func drop_item(item: Item, pos: Vector2) -> void:
 	var label_size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, Accessibility.world_size(FONT_SIZE)) + PADDING * 2.0
 	drops.append({"item": item, "rect": find_spot(pos, label_size), "text": text, "age": 0.0})
 	# Botín bueno: haz de luz del color de la rareza y su propio sonido.
-	if item.is_equipment() and (item.rarity == Rarity.Item.UNIQUE or item.rarity == Rarity.Item.SET):
-		Sfx.play("unique_drop", -3.0)
+	var special := SoundMap.drop(item)   # el único y el conjunto suenan distinto (T77)
+	if special != "":
+		Sfx.play(special, -3.0)
 	elif LootFilter.beams(item):
 		Sfx.play("coin", -2.0, 0.65)
 	queue_redraw()

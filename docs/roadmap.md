@@ -446,10 +446,11 @@ Origen: R3 (Grim Dawn/PoE: ventanas como objetos del mundo)
 
 ## Fase 11 — Sonido
 
-### [ ] T77 · Sonido por habilidad y por objeto · M
+### [x] T77 · Sonido por habilidad y por objeto · M
 Origen: R3 (Diablo: el sonido del botín)
 - Cada habilidad con su sonido de lanzamiento e impacto (capas y variaciones de tono, no uno por tipo de daño); sonidos de recoger y equipar por tipo de objeto (metal, tela, cristal, placa), de la caída de un único o de un conjunto, y pasos según el suelo.
 - Sonidos de interfaz: abrir y cerrar ventanas, pasar el ratón, comprar, error.
+- Hecho: 25 sonidos nuevos sintetizados (`generate_sfx.gd -- t77`). `SoundMap`: cada habilidad lanza su sonido de tipo más una capa de firma (clic digital, aire, zumbido, campana o golpe grave) con un tono propio sacado de su id (0,86-1,14) y ±4 % al azar; los proyectiles suenan al golpear según su daño. Recoger y equipar según el material (metal, tela, cristal, placa; los anillos y amuletos más agudos), caída propia de los conjuntos (los únicos ya la tenían), pasos en tierra, piedra o metal según el estilo de la zona, y en la interfaz: abrir y cerrar ventanas (sin repetir al pasar de una a otra), pasar el ratón por los botones, comprar y los avisos de error (en rojo). Sin escucharlo en partida: las pruebas comprueban que existen todos los sonidos y que los tonos se reparten.
 
 ### [ ] T78 · Música y avisos sonoros por intensidad · S
 Origen: R3
@@ -594,3 +595,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T74 · Firma visual por habilidad: forma de proyectil, estela, destello al lanzar y estallido al golpear, con versión ligera y respetando Menos destellos.
 - 2026-10-25 · T75 · Atlas de iconos en pixel art (32 y 16 px) de habilidades, estados y RAM, generados desde los glifos y listos para sustituir por arte a mano.
 - 2026-10-25 · T76 · Interfaz con identidad: fuente de píxeles para títulos y cifras, marcos con remaches, botones que se hunden, orbes con burbujas y texto mínimo de 12 px. Parada para revisión.
+- 2026-10-25 · T77 · Sonido por habilidad (capa de firma y tono propio), impactos por daño, recoger y equipar por material, caída de conjuntos, pasos por suelo y sonidos de interfaz.

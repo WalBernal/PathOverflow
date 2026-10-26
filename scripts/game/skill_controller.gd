@@ -977,7 +977,7 @@ func try_use(index: int) -> bool:
 				not_enough_mana.emit()
 			return false
 		_start_channel(index, p, _aim_target())
-		Sfx.play(Sfx.skill_sound(String(p["kind"]), String(p["damage_type"])))
+		SoundMap.play_cast(p)
 		skill_used.emit(index)
 		return true
 	if player.mana < p["mana_cost"]:
@@ -1019,7 +1019,7 @@ func try_use(index: int) -> bool:
 	player.play_action(Player.action_for(p), float(p["use_time"]), Player.DOT_COLORS.get(String(p["damage_type"]), Color("c8d8ff")))
 	if not (p["kind"] in SkillCalc.AUTOMATON_KINDS or p["kind"] == "aura"):
 		_cast_fx(p, target)
-	Sfx.play(Sfx.skill_sound("trap" if p["deploy"] != "" else String(p["kind"]), String(p["damage_type"])))
+	SoundMap.play_cast(p)   # su tipo + su capa de firma, con su tono (T77)
 	if p["deploy"] != "":
 		_deploy(p, target)
 		skill_used.emit(index)
@@ -2342,6 +2342,7 @@ func _update_projectiles(delta: float) -> void:
 			_effects.append({"type": "burst", "pos": pr["pos"], "radius": 14.0, "time": 0.0, "duration": 0.15, "color": pr["color"]})
 			if pr.has("fx") and enemies.impact and not light:
 				enemies.impact.skill_impact(pr["pos"], pr["fx"]["impact"], pr["color"], (pr["vel"] as Vector2).normalized())
+			Sfx.play(SoundMap.impact(String(p.get("damage_type", "physical"))), -12.0, randf_range(0.9, 1.1))   # T77
 		if pr.get("boomerang", false) or (pr["distance_left"] > 0.0 and pr["pierce_left"] >= 0):
 			still.append(pr)
 	_projectiles = still
