@@ -35,6 +35,16 @@ var planned: Dictionary = {}
 var path_source: PassiveAllocation
 const COLOR_PLANNED := Color("4fd0e0")
 const COLOR_CONSTELLATION := Color("c9a7f0")
+## Arte (T85): fondo de cada región con el color de su clase (id del nodo de inicio
+## -> Color, lo pone la pantalla), línea que se ilumina al asignar y destello al
+## completar un grupo.
+var region_colors: Dictionary = {}
+const REGION_RADIUS := 760.0
+const GLOW_TIME := 0.9
+const CLUSTER_FLASH_TIME := 1.3
+var _prev_alloc: Dictionary = {}
+var _edge_glow: Dictionary = {}       # Vector2i -> segundo en que se iluminó
+var _cluster_flashes: Array[Dictionary] = []   # {pos, t0, color}
 ## Puntos disponibles: si el camino previsto cuesta más, se pinta en rojo.
 var available_points := 0
 var zoom := 0.55
@@ -69,8 +79,42 @@ func setup(p_allocation: PassiveAllocation) -> void:
 	if _grid_tree != allocation.tree:
 		_build_grid(allocation.tree)
 	_hovered_id = -1
+	_prev_alloc = _alloc_set()   # al abrir no se ilumina nada
+	_edge_glow.clear()
+	_cluster_flashes.clear()
 	_refresh_preview()
 	queue_redraw()
+
+
+func _alloc_set() -> Dictionary:
+	var s := {}
+	for id in allocation.get_allocated_ids():
+		s[id] = true
+	return s
+
+
+## Grupos (clusters) que quedan completos con `after` y no lo estaban con `before`.
+static func completed_clusters(tree: PassiveTree, before: Dictionary, after: Dictionary) -> Array[String]:
+	var touched := {}
+	for id in after:
+		if not before.has(id):
+			var c: String = tree.get_node_data(int(id)).cluster
+			if c != "":
+				touched[c] = true
+	var out: Array[String] = []
+	for c in touched:
+		var full := true
+		for n: PassiveNode in tree.nodes.values():
+			if n.cluster == c and not after.has(n.id):
+				full = false
+				break
+		if full:
+			out.append(c)
+	return out
+
+
+static func _now() -> float:
+	return Time.get_ticks_msec() / 1000.0
 
 
 func center_on(tree_pos: Vector2) -> void:
@@ -99,8 +143,13 @@ func set_search(ids: Array) -> void:
 
 
 func _process(_delta: float) -> void:
-	if not _search.is_empty() or ascendancy_info.get("pending", false):
-		queue_redraw()  # el anillo de búsqueda y el medallón están animados
+	var now := _now()
+	for k in _edge_glow.keys():
+		if now - float(_edge_glow[k]) > GLOW_TIME:
+			_edge_glow.erase(k)
+	_cluster_flashes = _cluster_flashes.filter(func(f: Dictionary) -> bool: return now - float(f["t0"]) <= CLUSTER_FLASH_TIME)
+	if not _search.is_empty() or ascendancy_info.get("pending", false) or not _edge_glow.is_empty() or not _cluster_flashes.is_empty():
+		queue_redraw()  # el anillo de búsqueda, el medallón y los destellos están animados
 
 
 ## Detrás del inicio de la clase (hacia el centro, donde no hay pasivas); para
@@ -130,6 +179,7 @@ func _draw() -> void:
 	var visible_rect := Rect2(_to_tree(Vector2.ZERO), size / zoom).grow(40.0)
 	var too_expensive := _preview.size() > available_points
 	draw_set_transform(offset, 0.0, Vector2(zoom, zoom))
+	_draw_regions(tree, visible_rect)
 	_draw_clusters(tree, visible_rect)
 
 	for e in tree.edges:
@@ -152,6 +202,11 @@ func _draw() -> void:
 			color = Color(COLOR_PLANNED, 0.8)   # el camino del plan
 			width = 4.0
 		draw_line(a.position, b.position, color, width, true)
+		if not _edge_glow.is_empty() and _edge_glow.has(e):
+			# Recién asignada (T85): un brillo que se apaga y una chispa que la recorre.
+			var gt := clampf((_now() - float(_edge_glow[e])) / GLOW_TIME, 0.0, 1.0)
+			draw_line(a.position, b.position, Color(1.0, 0.95, 0.7, 0.7 * (1.0 - gt)), 6.0 + 10.0 * (1.0 - gt), true)
+			draw_circle(a.position.lerp(b.position, minf(1.0, gt * 2.0)), 7.0 * (1.0 - gt) + 2.0, Color(1, 1, 0.85, 1.0 - gt))
 
 	var font := get_theme_default_font()
 	var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 150.0)
@@ -172,6 +227,9 @@ func _draw() -> void:
 				draw_circle(n.position, r, fill)
 				var ring := COLOR_ALLOCATED if on else theme_color.darkened(0.55 if not available else 0.1)
 				draw_arc(n.position, r, 0.0, TAU, 24, ring, 2.5, true)
+				# Icono en pixel art de su temática (T85), solo si se ve lo bastante grande.
+				if r * zoom >= 7.0 and n.theme != "" and PassiveIcons.has_icon(n.theme):
+					PassiveIcons.draw(self, n.position, r * 1.25, n.theme, Color(1, 1, 1, 0.95) if on else Color(1, 1, 1, 0.3))
 			PassiveNode.Kind.NOTABLE, PassiveNode.Kind.KEYSTONE:
 				var keystone := n.kind == PassiveNode.Kind.KEYSTONE
 				draw_circle(n.position, r, Color("120f16"))
@@ -233,6 +291,7 @@ func _draw() -> void:
 
 	if not ascendancy_info.is_empty():
 		_draw_medallion(font, pulse)
+	_draw_cluster_flashes()
 	draw_set_transform(Vector2.ZERO)
 	_draw_labels(tree, visible_rect, font)
 
@@ -263,6 +322,33 @@ func _draw_medallion(font: Font, pulse: float) -> void:
 
 ## Fondos de los clusters: la silueta de su símbolo (corazón, llama, rayo...)
 ## brillando con el color de su temática; los que no tienen forma, un halo.
+## Fondo de cada región (T85): un resplandor del color de la clase alrededor de su inicio.
+func _draw_regions(tree: PassiveTree, visible_rect: Rect2) -> void:
+	for start_id in region_colors:
+		var n := tree.get_node_data(int(start_id))
+		if n == null or not visible_rect.grow(REGION_RADIUS).has_point(n.position):
+			continue
+		var c: Color = region_colors[start_id]
+		for k in 7:
+			var rr := REGION_RADIUS * (1.0 - k * 0.13)
+			draw_circle(n.position, rr, Color(c, 0.018 + 0.004 * k))
+
+
+## Destello al completar un grupo (T85): un anillo que se abre y chispas de píxel.
+func _draw_cluster_flashes() -> void:
+	var now := _now()
+	for f in _cluster_flashes:
+		var t := clampf((now - float(f["t0"])) / CLUSTER_FLASH_TIME, 0.0, 1.0)
+		var c: Color = f["color"]
+		var pos: Vector2 = f["pos"]
+		draw_arc(pos, 40.0 + 160.0 * t, 0.0, TAU, 48, Color(c.lightened(0.4), 0.9 * (1.0 - t)), 5.0 * (1.0 - t) + 1.0, true)
+		draw_circle(pos, 70.0 * (1.0 - t), Color(c, 0.25 * (1.0 - t)))
+		for k in 10:
+			var d := Vector2.from_angle(TAU * k / 10.0 + t)
+			var s := 6.0 * (1.0 - t) + 2.0
+			draw_rect(Rect2(pos + d * (30.0 + 190.0 * t) - Vector2(s, s) * 0.5, Vector2(s, s)), Color(1.0, 0.95, 0.75, 1.0 - t))
+
+
 func _draw_clusters(tree: PassiveTree, visible_rect: Rect2) -> void:
 	for c in tree.clusters.values():
 		var center := Vector2(c["x"], c["y"])
@@ -422,6 +508,32 @@ func _refresh_preview() -> void:
 
 
 func _on_allocation_changed() -> void:
+	# Lo recién asignado: sus líneas se iluminan y, si completa un grupo, destello.
+	var now_set := _alloc_set()
+	var tree := allocation.tree
+	var t := _now()
+	for id in now_set:
+		if _prev_alloc.has(id):
+			continue
+		for nb in tree.neighbors(int(id)):
+			if now_set.has(nb):
+				_edge_glow[Vector2i(id, nb)] = t   # en tree.edges puede ir en cualquier orden
+				_edge_glow[Vector2i(nb, id)] = t
+	var done := completed_clusters(tree, _prev_alloc, now_set)
+	if done.size() > 3:
+		done = done.slice(0, 3)   # al cargar una build entera, sin fuegos artificiales por todo el árbol
+	for c in done:
+		var pos := Vector2.ZERO
+		var count := 0
+		var theme := ""
+		for n: PassiveNode in tree.nodes.values():
+			if n.cluster == c:
+				pos += n.position
+				count += 1
+				theme = n.theme
+		_cluster_flashes.append({"pos": pos / maxf(1.0, count), "t0": t, "color": tree.theme_color(theme)})
+		Sfx.play("level_up", -12.0, 1.5)
+	_prev_alloc = now_set
 	_refresh_preview()
 	queue_redraw()
 

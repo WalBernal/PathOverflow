@@ -492,9 +492,10 @@ Origen: R3 (Grim Dawn: constelaciones)
 - Grupos temáticos por clase con un notable que cambia cómo se juega (no solo números), más keystones con su contra, y «constelaciones» opcionales que piden puntos de dos atributos.
 - Hecho: `data/passive_identity.json` (encima del árbol generado, como las maestrías, comprobando el nombre de cada nodo). Un **notable de estilo** por clase, el más cercano a su inicio que no es maestría, con una mecánica que el juego ya hace: Commit Atómico (físico a rayo), Escalado a Nivel 3 (nova al recibir golpes), Caso Límite (bomba al esquivar), Lazy Loading (+2 perforaciones), Inyección de Prompt (elemental a caos), Batch Nocturno (pulso de estática) y Rollback Automático (explosión al matar); anillo dorado en el árbol. Cuatro **piedras angulares** nuevas con contra (Hotfix en Producción, Root Access, Arquitectura Hexagonal, Kanban), que siguen siendo el notable de su cluster (`capstone`). Tres **constelaciones** exteriores (Pentester: FUE+DES, Hacker Ético: DES+INT, Arquitecto: INT+FUE) que piden 50 de cada uno para asignar o cruzar sus nodos y dan un 50 % más; puntas de estrella en el árbol y el tooltip dice cuánto tienes. Lo ya asignado se carga aunque bajen los atributos.
 
-### [ ] T85 · Arte del árbol · S 🛑
+### [x] T85 · Arte del árbol · S 🛑
 Origen: R3
 - Fondo por región de clase, iconos de nodo en pixel art, línea que se ilumina al asignar y un pequeño destello al completar un grupo.
+- Hecho: cada región del árbol tiene detrás un resplandor del color de su clase (classes.json → color); los nodos menores muestran el icono en pixel art de su temática (apagado hasta asignarlos, y solo con zoom suficiente), como ya hacían notables y piedras angulares; al asignar, cada línea nueva brilla y la recorre una chispa (0,9 s), y al completar un grupo sale un anillo con chispas de píxel de su color y un sonido corto (como mucho tres a la vez, por si se carga una build entera).
 
 ## Fase 14 — Botín y fin de juego
 
@@ -610,3 +611,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T82 · Ventanas coherentes: una sola a la izquierda, todas encogen junto al inventario, se recuerdan pestaña y filtros, waypoints y oleadas con el cursor de mando; arreglo del ancho de habilidades al 160 %.
 - 2026-10-25 · T83 · Planificador del árbol: modo plan, aplicar, deshacer y rehacer, quitar nodos con coste en tokens y build como código de texto.
 - 2026-10-25 · T84 · Identidad del árbol: notable de estilo por clase con su mecánica, cuatro piedras angulares con contra y tres constelaciones que piden dos atributos.
+- 2026-10-25 · T85 · Arte del árbol: fondo por región de clase, iconos de temática en los nodos menores, líneas que se iluminan al asignar y destello al completar un grupo. Parada para revisión.

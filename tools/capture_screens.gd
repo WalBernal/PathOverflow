@@ -629,6 +629,10 @@ func _capture_mastery() -> void:
 	screen.get("_plan_button").button_pressed = true
 	await _wait(0.5)
 	_save("131_arbol_plan")
+	# T85: aplicar el plan: las líneas recién asignadas se iluminan.
+	screen.call("apply_plan")
+	await _wait(0.12)
+	_save("132_arbol_lineas_iluminadas")
 	ui.call("_on_menu_requested", "passives")
 	world.set("_since_save", -9999.0)
 

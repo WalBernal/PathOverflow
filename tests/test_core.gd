@@ -156,6 +156,7 @@ func _initialize() -> void:
 	_test_window_memory()
 	_test_passive_plan()
 	_test_tree_identity()
+	_test_tree_art()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3977,6 +3978,32 @@ func _test_tree_identity() -> void:
 	_check(not test_alloc.find_path(star.id).is_empty(), "con ellos, sí")
 	var c := CharacterData.new(_classes[0], _tree)
 	_check(not c.meets_attributes({"strength": 999}) and c.meets_attributes({"strength": 1}), "el personaje compara sus atributos")
+
+
+## Arte del árbol (T85): destello al completar un grupo e iconos de temática.
+func _test_tree_art() -> void:
+	var cluster := ""
+	for n: PassiveNode in _tree.nodes.values():
+		if n.cluster != "":
+			cluster = n.cluster
+			break
+	var members: Array = _tree.nodes.values().filter(func(n: PassiveNode) -> bool: return n.cluster == cluster).map(func(n: PassiveNode) -> int: return n.id)
+	var before := {}
+	for id in members.slice(1):
+		before[id] = true
+	var after := before.duplicate()
+	after[members[0]] = true
+	_check(PassiveTreeView.completed_clusters(_tree, before, after) == [cluster], "el último nodo de un grupo lo completa (destello)")
+	_check(PassiveTreeView.completed_clusters(_tree, after, after).is_empty(), "sin nodos nuevos, sin destello")
+	var partial := {}
+	partial[members[0]] = true
+	_check(PassiveTreeView.completed_clusters(_tree, {}, partial).is_empty() or members.size() == 1, "un grupo a medias no destella")
+	var themes := {}
+	for n: PassiveNode in _tree.nodes.values():
+		if n.kind == PassiveNode.Kind.MINOR and n.theme != "":
+			themes[n.theme] = true
+	var with_icon := themes.keys().filter(func(t: String) -> bool: return PassiveIcons.has_icon(t))
+	_check(with_icon.size() >= themes.size() * 0.8, "los nodos menores tienen icono de su temática (%d de %d)" % [with_icon.size(), themes.size()])
 
 
 ## Parte 2 (T72b): el ataque golpea en el cuadro de impacto de la animación.

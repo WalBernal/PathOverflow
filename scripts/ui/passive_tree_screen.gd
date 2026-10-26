@@ -251,6 +251,13 @@ func show_character(character: CharacterData) -> void:
 	_ascendancy_panel.visible = false
 	_plan = PassivePlan.new(_character.passives)
 	_session_nodes.clear()
+	# Fondo por región de clase (T85): el color de cada clase alrededor de su inicio.
+	var regions := {}
+	for cdef in GameData.classes:
+		var sid := GameData.passive_tree.get_start_node_for_class(StringName(cdef["id"]))
+		if sid != -1:
+			regions[sid] = Color(String(cdef.get("color", "8a8293")))
+	_view.region_colors = regions
 	_view.setup(_character.passives)
 	var start := GameData.passive_tree.get_node_data(_character.passives.start_node_id)
 	_view.center_on.call_deferred(start.position)
