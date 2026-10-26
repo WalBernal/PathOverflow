@@ -20,6 +20,9 @@ var glow_color := Color("d9a441")
 ## "cast", "shoot"; "" = solo respira), con el arma que toque.
 var action := ""
 var weapon := ""
+## Con las hojas por capas (T102b) en vez del dibujo con formas (lista de personajes y creador).
+var use_sprites := false
+var _sprite: PlayerSprite
 const POSE_CYCLE := 3.2
 const POSE_ACTION_TIME := 0.9
 
@@ -50,11 +53,22 @@ func _draw() -> void:
 	# La figura mide ~46 unidades (con cresta); se escala para llenar el control.
 	var scale := minf(size.x / 30.0, size.y / 50.0)
 	var feet := Vector2(size.x / 2.0, size.y - 4.0 * scale)
+	var pose := {}
 	if animated:
 		_draw_pedestal(feet, scale)
 		feet.y -= scale * 2.2   # de pie sobre el pedestal
-		var pose := pose_at(_time, action, weapon)
+		pose = pose_at(_time, action, weapon)
 		pose["glow"] = glow_color
+	if use_sprites and PlayerSprite.available():
+		if _sprite == null:
+			_sprite = PlayerSprite.new()
+			add_child(_sprite)
+		_sprite.appearance = appearance
+		_sprite.position = feet
+		_sprite.sprite_scale = scale / PlayerSheet.BAKE_SCALE
+		_sprite.set_pose(facing, pose if not pose.is_empty() else {"state": "idle", "time": _time})
+		return
+	if animated:
 		CharacterAppearance.draw(self, feet, scale, appearance, facing, Color(0, 0, 0, 0), -1.0, pose)
 		return
 	CharacterAppearance.draw(self, feet, scale, appearance, facing)

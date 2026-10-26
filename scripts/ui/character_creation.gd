@@ -143,6 +143,7 @@ func _build() -> void:
 	preview_box.add_child(title)
 	_preview = AppearancePreview.new()
 	_preview.animated = true
+	_preview.use_sprites = true   # el mismo personaje por capas que en el juego (T102b)
 	_preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	preview_box.add_child(_preview)
 	var rotate_row := HBoxContainer.new()

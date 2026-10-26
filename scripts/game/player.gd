@@ -236,6 +236,55 @@ func apply_status(id: String, duration: float) -> bool:
 	return true
 
 
+## Personaje por capas (T102b): el sprite y, debajo, las pisadas y el aura de los logros.
+var _sprite: PlayerSprite
+var _under: Node2D
+var _sprite_look := {}
+
+
+## Crea el sprite por capas la primera vez (si las hojas están horneadas).
+func _ensure_sprite() -> void:
+	if _sprite != null or character == null or not is_inside_tree() or not PlayerSprite.available():
+		return
+	_under = Node2D.new()
+	_under.show_behind_parent = true
+	_under.draw.connect(_draw_under)
+	add_child(_under)
+	_sprite = PlayerSprite.new()
+	_sprite.show_behind_parent = true
+	_sprite.sprite_scale = PLAYER_SPRITE_SCALE / PlayerSheet.BAKE_SCALE
+	add_child(_sprite)
+
+
+## Pisadas y aura de los logros (debajo del personaje).
+func _draw_under() -> void:
+	var ci: CanvasItem = _under if _under != null else self
+	var tt := Time.get_ticks_msec() / 1000.0
+	for m in _step_marks:
+		Achievements.draw_step(ci, to_local(m["pos"]), character, float(m["t"]) / STEP_MARK_TIME)
+	Achievements.draw_aura(ci, Vector2(0.0, RADIUS * 0.6), character, tt)
+
+
+func _update_sprite(feet: Vector2, tint: Color) -> void:
+	if _sprite_look != character.appearance:
+		_sprite_look = character.appearance.duplicate()
+		_sprite.appearance = character.appearance
+	_sprite.position = feet
+	var pose := anim_pose()
+	_sprite.set_pose(_facing, pose, _walk_phase if is_alive() else -1.0)
+	_sprite.tint = Color(tint, 0.6) if tint.a > 0.0 else Color(0, 0, 0, 0)
+	_under.queue_redraw()
+	# El brillo de las manos al lanzar o canalizar (las hojas no lo traen).
+	var state: String = pose["state"]
+	if pose.has("glow") and state in ["cast", "channel"]:
+		var g: Color = pose["glow"]
+		var side := -1.0 if _facing.x < -0.3 else 1.0
+		var hand := feet + Vector2(side * 13.0, -26.0) * PLAYER_SPRITE_SCALE
+		var pulse := 0.75 + 0.25 * sin(float(pose["time"]) * 9.0) if state == "channel" else minf(1.0, float(pose["t"]) * 2.5)
+		draw_circle(hand, 4.5 * PLAYER_SPRITE_SCALE * pulse, Color(g, 0.35))
+		draw_circle(hand, 2.4 * PLAYER_SPRITE_SCALE * pulse, Color(g.lightened(0.4), 0.8))
+
+
 ## Cuándo empezó cada estado activo (segundos del reloj), para animar su entrada.
 var _status_since: Dictionary = {}
 
@@ -563,6 +612,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _process(delta: float) -> void:
+	_ensure_sprite()
 	_hurt_time = maxf(0.0, _hurt_time - delta)
 	_tick_anim(delta)
 	_stash_label = maxf(0.0, _stash_label - delta)
@@ -773,13 +823,16 @@ func _draw() -> void:
 	elif _hurt_time > 0.0:
 		tint = Color.RED
 	var tt := Time.get_ticks_msec() / 1000.0
-	# Cosméticos de los logros: pisadas y aura debajo, sombrero encima.
-	for m in _step_marks:
-		Achievements.draw_step(self, to_local(m["pos"]), character, float(m["t"]) / STEP_MARK_TIME)
 	var feet := Vector2(0.0, RADIUS * 0.6)
-	Achievements.draw_aura(self, feet, character, tt)
-	CharacterAppearance.draw(self, feet, PLAYER_SPRITE_SCALE, character.appearance, _facing, tint,
-		_walk_phase if is_alive() else -1.0, anim_pose())
+	if _sprite != null:
+		# T102b: el personaje con las hojas por capas (PlayerSprite), detrás de lo que
+		# se dibuja aquí encima (sombrero, estados); pisadas y aura, en _under.
+		_update_sprite(feet, tint)
+	else:
+		# Cosméticos de los logros: pisadas y aura debajo, sombrero encima.
+		_draw_under()
+		CharacterAppearance.draw(self, feet, PLAYER_SPRITE_SCALE, character.appearance, _facing, tint,
+			_walk_phase if is_alive() else -1.0, anim_pose())
 	if Achievements.equipped(character, "hat") != "" and not (anim_state() in ["dead", "dodge"]):   # tumbado o rodando, el sombrero no seguiría la cabeza
 		var hs := float(character.appearance.get("height", 1.0))
 		Achievements.draw_hat(self, feet + Vector2(0, -31.0 * hs) * PLAYER_SPRITE_SCALE, 7.0 * PLAYER_SPRITE_SCALE, character)

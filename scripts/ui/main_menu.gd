@@ -131,6 +131,7 @@ func _build() -> void:
 	detail_panel.add_child(detail_box)
 	_preview = AppearancePreview.new()
 	_preview.animated = true
+	_preview.use_sprites = true   # el mismo personaje por capas que en el juego (T102b)
 	_preview.custom_minimum_size = Vector2(0, 240)
 	detail_box.add_child(_preview)
 	_detail = RichTextLabel.new()
