@@ -509,6 +509,112 @@ Origen: R3 (PoE/Grim Dawn)
 - Parches que fijan o quitan un afijo concreto, mejorar el tier de uno a cambio de riesgo, y la mesa de Mario con historial de lo que hizo.
 - Hecho: dos parches nuevos (también caen y Mario los vende): **rollback** quita el afijo elegido, y **optimización** sube un tier el afijo elegido hasta lo que permite el nivel del objeto, con un 30 % de que se rompa y se pierda (si ya está arriba, no se gasta). Fijar un afijo ya existía (hotfix). La mesa cuenta lo que pasó («Optimizado: … → … (T2)», «Se rompió…») y guarda con el personaje un historial de las últimas 12 cosas que hizo, visible en la propia mesa.
 
+# Roadmap 4.0 — gráficos y árbol pasivo nuevo (25-10-2026)
+
+Pedido del usuario tras el Roadmap 3.0: un salto gráfico (interfaz, efectos, sprites y animación) y un **cambio radical del árbol pasivo**: muchos más nodos, otro diseño, más clusters de las familias que ya hay, una familia de maná (regeneración base plana y en %, maná máximo, daño que se lleva el maná antes que la vida) y piedras angulares nuevas. **Origen: R4.** Mismo protocolo; 🛑 = parar y esperar el visto bueno.
+
+Punto de partida (árbol versión 7, `tools/generate_passive_tree.py`): 716 nodos, 630 menores, 72 notables, 7 piedras angulares + 4 de cluster (T84), 67 clusters de 28 familias, 8 maestrías y 3 constelaciones. Los añadidos de T84 y las maestrías van en archivos aparte pegados por **id de nodo**, así que regenerar el árbol los rompe: el árbol nuevo tiene que llevar ids estables (o meterlos en el generador). El maná regenera 1,75 % del maná sin reservar por segundo × «% de regeneración»; no hay regeneración plana ni «daño al maná antes que a la vida».
+
+## Fase 15 — Árbol pasivo 2.0
+
+### [ ] T88 · Diseño del árbol 2.0 · M 🛑
+Origen: R4 (pedido del usuario)
+- Documento `docs/arbol_2.md` con el objetivo y un boceto: **~1500 nodos** (unos 1300 menores, 150 notables, 20-24 piedras angulares, 25 maestrías), más del doble de clusters y con formas distintas (rueda, estrella, cadena, rombo, panal; pequeños de 3-4 nodos, medianos de 6-8, grandes de 10-14 con dos notables), regiones por clase más anchas con un «corazón» de su estilo, un anillo exterior de constelaciones y un centro de nodos de viaje.
+- Reparto de familias: cuántos clusters de cada una (las 28 de ahora más maná, más las nuevas que salgan), dónde caen respecto a las clases y qué notables tiene cada una (sin repetir nombre ni efecto).
+- Decidir el formato de ids estables (clave por cluster y posición, p. ej. `c_fuego_2:n3`) para que maestrías, identidad, planificador y guardados no dependan del orden de generación.
+- Captura del boceto (el generador nuevo en modo «solo disposición») para revisarlo antes de llenarlo.
+
+### [ ] T89 · Generador del árbol 2.0 y migración · L (partir en dos)
+Origen: R4
+- Reescribir `tools/generate_passive_tree.py` con la disposición aprobada en T88: formas de cluster, tamaños, caminos de viaje y conexiones entre regiones; ids estables y `TREE_VERSION` 8.
+- Pasar las maestrías (`passive_masteries.json`) y la identidad (`passive_identity.json`) al formato de ids estables (o dentro del generador), con prueba de que nada quedó colgando.
+- Migración de personajes: al cargar uno de la versión 7, devolver todos los puntos con un aviso claro («El árbol cambió: tienes N puntos para repartir») y la primera reasignación gratis; el código de build pasa a `PO2:` y avisa si es de un árbol viejo.
+- Rendimiento con ~1500 nodos: la vista tiene que seguir dibujando y respondiendo al ratón sin tirones (rejilla espacial, recorte por pantalla y nivel de detalle por zoom); prueba con tiempo de dibujo medido.
+
+### [ ] T90 · Más clusters de las familias que ya hay · M
+Origen: R4 (pedido del usuario)
+- Cada una de las 28 familias con al menos 4 clusters de tamaños distintos (vida, armadura, evasión, escudo, crítico, fuego, frío, rayo, caos, área, proyectiles, legión, automatización, ignición, sobrecarga, criogenia, toxinas, hemorragia…), con menores que suban de valor del pequeño al grande y notables propios por cluster.
+- Notables nuevos con condición o efecto (no solo +%): «con un aliado cerca», «tras esquivar», «contra enemigos con estados», «mientras canalizas», «al gastar cargas»… usando las condiciones que ya existen (low_life, full_life, recent_kill, stationary, three_allies) y las que añada T92.
+- Prueba: ninguna familia con menos de 4 clusters, ningún notable repetido, todos los stats conocidos.
+
+### [ ] T91 · Familia de maná · M
+Origen: R4 (pedido del usuario)
+- Stats nuevos: **regeneración de maná plana** (maná por segundo que se suma a la base), **% de aumento de la regeneración base** (el que ya existe, bien nombrado), **maná máximo** plano y en %, **daño recibido que se lleva el maná antes que la vida** (en %, como Mente sobre Materia de PoE), maná al golpear y al matar, coste de maná reducido y eficiencia de reserva.
+- Lógica en `Player`: el daño que toca al maná se descuenta de él (si no alcanza, lo que falta va a la vida); el orbe de maná y la hoja de personaje (T81) lo muestran; regeneración plana en `_regenerate`.
+- Clusters de maná en las regiones de INT y en el anillo central (pequeños de regeneración, medianos de máximo, grandes con notable de «maná antes que vida»), y notables como «Caché caliente» (más regeneración si no lanzaste nada en 2 s) o «Sobrecarga de buffer» (el maná sobrante por encima del 90 % da daño).
+- Pruebas: con 30 % al maná, un golpe de 100 quita 30 de maná y 70 de vida; sin maná, todo a la vida; la regeneración plana se suma aunque el maná esté reservado.
+
+### [ ] T92 · Piedras angulares nuevas · M
+Origen: R4 (pedido del usuario)
+- 12-15 piedras angulares nuevas con ventaja, contra y su texto de humor, cada una con su lógica (no solo números). Ideas: **Mente sobre Materia** (40 % del daño al maná; sin regeneración de vida), **Pago por Uso** (las habilidades cuestan vida en vez de maná), **Batería Externa** (el escudo de energía protege el maná en vez de la vida), **Zero Trust** (no puedes hacer críticos; el daño no crítico ×1,4), **Monorepo** (todas tus habilidades comparten enfriamiento corto), **Caché Fría** (primer golpe a cada enemigo ×2; los siguientes -20 %), **Contenedor Efímero** (tus invocaciones duran poco pero salen de dos en dos), **Rubber Duck** (hablar con un aliado cercano te cura; sin aliados, -15 % de vida), **Legacy Code** (los objetos de nivel bajo cuentan como de tu nivel), **Pair Programming** (+1 compañero; tu daño -20 %).
+- Las cuatro de cluster de T84 pasan a piedras angulares de verdad en el árbol nuevo; las 7 de siempre se conservan.
+- Cada una con prueba de su regla (que la ventaja y la contra se apliquen) y aviso en el tooltip si choca con otra.
+
+### [ ] T93 · Maestrías, estilo y constelaciones en el árbol nuevo · M
+Origen: R4
+- Una maestría por familia y región (elegir 1 de 3), los 7 notables de estilo de T84 en su sitio nuevo y 6-8 constelaciones en el anillo exterior (una por cada par de atributos y alguna de tres) con bonos que crecen al completarlas.
+- Ranuras de chip de expansión repartidas por el árbol nuevo (las de ahora caen donde toque).
+
+### [ ] T94 · Arte del árbol 2.0 · M 🛑
+Origen: R4
+- Fondo pintado por región (nebulosa procedural con el color de la clase, capas con parallax al mover la vista), marcos de nodo en pixel art por tipo (menor, notable, piedra angular, maestría, constelación), líneas asignadas con flujo animado de luz, placas o medallones en el centro de cada cluster con su icono de familia.
+- Nivel de detalle por zoom: de lejos, regiones y clusters (con su nombre); de cerca, iconos y textos. Minimapa del árbol en una esquina con el encuadre actual.
+- Animaciones: asignar un nodo hace un pulso que viaja por el camino; completar un cluster o una constelación, destello propio (T85 ampliado).
+
+## Fase 16 — Interfaz
+
+### [ ] T95 · Tema de interfaz dibujado · M 🛑
+Origen: R4
+- Atlas de piezas de interfaz en pixel art (marcos de ventana de 9 partes, botones normal/encima/pulsado/desactivado, casillas de objeto por rareza, barras, pestañas y separadores) generado por herramienta y cargado como `StyleBoxTexture` en `UiStyle`, en vez de cajas planas; listo para cambiar por arte a mano con la misma cuadrícula.
+- HUD nuevo con esas piezas: placa de la barra de habilidades, marcos de los orbes, pociones y experiencia.
+- Revisar todas las ventanas al 80-160 % con el tema nuevo.
+
+### [ ] T96 · Pantallas de título, personajes y carga · M
+Origen: R4
+- Título con fondo animado (la ciudad de servidores, lluvia de código, el logo con brillo), selección de personaje con el personaje animado en su pose (T72) sobre un pedestal de su clase, pantalla de carga entre zonas con una ilustración de la zona y un consejo.
+- Transiciones entre pantallas (fundido, barrido de píxeles).
+
+### [ ] T97 · Animación de la interfaz · S
+Origen: R4
+- Ventanas que entran y salen con una transición corta, botones que rebotan al pulsar, números de daño con salto y escala (críticos más grandes, apilado de golpes seguidos), barra de experiencia que brilla al subir de nivel y tooltips que aparecen con un fundido. Todo con la opción de reducir movimiento (accesibilidad).
+
+## Fase 17 — Efectos
+
+### [ ] T98 · Partículas, luz y posproceso · M
+Origen: R4
+- Efectos grandes (explosiones, novas, lluvias, auras) con `GPUParticles2D` y presupuesto por pantalla; bloom ligero en las luces, distorsión de calor en el fuego y onda de choque en los golpes grandes.
+- Opción de calidad gráfica (baja, media, alta) en Pausa → Gráficos, que ajuste partículas, luces y posproceso; medir con `tools/capture_screens -- rendimiento` en cada nivel.
+
+### [ ] T99 · Estados y telegrafiados con textura · S
+Origen: R4
+- Estados animados sobre enemigos y jugador (llamas que suben, escarcha que crece, burbujas de veneno, chispas de electrocución, gotas de sangrado) y avisos de ataque en el suelo con textura y borde animado en vez de formas planas.
+
+### [ ] T100 · Ambiente y clima por zona · S
+Origen: R4
+- Más capas de ambiente: lluvia con salpicaduras en el suelo, polvo en suspensión, niebla que se desplaza, chispas de cables sueltos, LEDs que parpadean en los racks; luces de zona que reaccionan a los golpes.
+
+## Fase 18 — Sprites y animación
+
+### [ ] T101 · Enemigos con más cuadros y direcciones · M
+Origen: R4
+- Hojas de sprites por tipo con andar (6 cuadros), atacar (4), recibir golpe (2) y morir (6), mirando a los lados y hacia arriba/abajo; generadas por `tools/generate_enemy_sprites.gd` ampliado (o listas para arte a mano con la misma cuadrícula) y movidas por estado en `EnemyManager` (la `MultiMesh` elige el cuadro por instancia).
+
+### [ ] T102 · Personaje del jugador en pixel art por capas · L (partir en dos) 🛑
+Origen: R4
+- Sustituir el dibujo con formas por sprites por capas (cuerpo, pelo, cara, ropa, arma) en 4 direcciones con los estados de T72 (reposo, andar, correr, golpe por arma, hechizo, canalizar, golpe recibido, esquiva, muerte), coloreados con los colores del creador de personaje.
+- El creador, la hoja de personaje y los retratos usan los mismos sprites; con la herramienta para generarlos y la cuadrícula documentada para arte a mano.
+
+### [ ] T103 · NPC, jefes y retratos · M
+Origen: R4
+- Sprites propios para los NPC del campamento y los jefes (reposo animado y gesto al hablar), retratos de diálogo en pixel art y una entrada de jefe con su pose.
+
+### [ ] T104 · Objetos en el suelo y cofres · S
+Origen: R4
+- Cada objeto caído con su sprite (el icono en pequeño, con sombra y un rebote al caer) y brillo por rareza; cofres y contenedores que se abren con animación y sueltan el botín en arco.
+
+### [ ] T105 · Escenarios con tilesets · M
+Origen: R4
+- Tilesets por estilo de zona con variaciones y bordes (suelo, paredes, transiciones), decoración animada (antorchas, servidores con LEDs, cables que chisporrotean, agua) y objetos de escenario con sombra; generados por herramienta y listos para arte a mano.
 ---
 
 ## Fuera de la cola (necesitan una persona)
@@ -616,3 +722,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T85 · Arte del árbol: fondo por región de clase, iconos de temática en los nodos menores, líneas que se iluminan al asignar y destello al completar un grupo. Parada para revisión.
 - 2026-10-25 · T86 · Diez bases de nivel alto con implícito propio por tipo y ocho únicos cuya gracia es una mecánica, con su texto de humor.
 - 2026-10-25 · T87 · Crafteo con más decisiones: parche de rollback (quita un afijo), de optimización (sube un tier con riesgo de romperse) e historial de la mesa de Mario. Fin de la cola del Roadmap 3.0.
+- 2026-10-25 · Roadmap 4.0 (T88-T105): gráficos (interfaz, efectos, sprites y animación) y árbol pasivo 2.0 (~1500 nodos, más clusters por familia, familia de maná, piedras angulares nuevas, ids estables y migración).
