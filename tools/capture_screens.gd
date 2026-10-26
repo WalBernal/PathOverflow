@@ -92,6 +92,10 @@ func _run() -> void:
 		await _capture_tree_v2()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("capas"):
+		await _capture_player_layers()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("pantallas"):
 		await _capture_screens_t96()
 		get_tree().quit()
@@ -1183,6 +1187,42 @@ func _capture_tree_v2() -> void:
 		await _wait(0.4)
 		print("dibujo del árbol (%s, zoom %.2f): %.2f ms" % [shot[0], shot[2], view.last_draw_ms])
 		_save(shot[0])
+
+
+## Personaje por capas (T102a): arriba, el dibujo de siempre; debajo, el mismo con las
+## hojas horneadas (PlayerSprite), para varias apariencias y poses, a escala 3.
+func _capture_player_layers() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var looks := [CharacterAppearance.default()]
+	for k in 4:
+		looks.append(CharacterAppearance.random(rng))
+	var poses := [[Vector2.DOWN, {"state": "idle", "time": 0.3}, -1.0], [Vector2.RIGHT, {"state": "walk"}, 1.3],
+		[Vector2.UP, {"state": "walk"}, 4.0], [Vector2.RIGHT, {"state": "attack", "t": 0.3, "weapon": "sword"}, -1.0],
+		[Vector2.DOWN, {"state": "attack", "t": 0.25, "weapon": "dagger"}, -1.0], [Vector2.LEFT, {"state": "cast", "t": 0.8}, -1.0]]
+	var sheet := Control.new()
+	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var cell := Vector2(1600.0 / poses.size(), 900.0 / looks.size())
+	sheet.draw.connect(func() -> void:
+		sheet.draw_rect(Rect2(Vector2.ZERO, sheet.size), Color("2a2e36"))
+		for li in looks.size():
+			for pi in poses.size():
+				var p: Array = poses[pi]
+				var feet := Vector2(cell.x * (pi + 0.3), cell.y * (li + 0.92))
+				var pose: Dictionary = p[1].duplicate()
+				CharacterAppearance.draw(sheet, feet, 2.6, looks[li], p[0], Color(0, 0, 0, 0), p[2], pose))
+	_swap(sheet)
+	for li in looks.size():
+		for pi in poses.size():
+			var p: Array = poses[pi]
+			var sp := PlayerSprite.new()
+			sheet.add_child(sp)
+			sp.appearance = looks[li]
+			sp.sprite_scale = 2.6 / PlayerSheet.BAKE_SCALE
+			sp.position = Vector2(cell.x * (pi + 0.72), cell.y * (li + 0.92))
+			sp.set_pose(p[0], p[1], p[2])
+	await _wait(0.5)
+	_save("102_capas_comparacion")
 
 
 ## Pantallas de T96: título con la ciudad de servidores, selección de personaje con

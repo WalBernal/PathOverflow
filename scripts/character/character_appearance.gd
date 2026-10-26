@@ -157,6 +157,14 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 	# Brazo que golpea (el del lado al que mira) y si los dos brazos posan (hechizos).
 	var side := 1.0 if look >= 0.0 else -1.0
 	var weapon := String(pose.get("weapon", ""))
+	# Con qué gesto mueve el brazo al atacar (T102a): "swing" (tajo) o "thrust" (estocada);
+	# sin él, el del arma que lleva. Así se hornean las hojas con cualquier arma.
+	var arm_weapon := weapon
+	match String(pose.get("weapon_class", "")):
+		"swing":
+			arm_weapon = "sword"
+		"thrust":
+			arm_weapon = "dagger"
 	var posing := state in ["attack", "shoot", "cast", "channel"]
 	var both_arms := state in ["cast", "channel"]
 	# Estatura: escala las alturas (la cabeza mantiene su tamaño).
@@ -227,9 +235,9 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 		for arm: float in ([-1.0, 1.0] if both_arms else [side]):
 			var out := signf(look) if profile else arm
 			var shoulder: Vector2 = u.call((lean if profile else 7.5 * arm * tw), -22.0)
-			var ang := arm_angle(state, weapon, t, time) * (0.85 if both_arms and arm != side else 1.0)
+			var ang := arm_angle(state, arm_weapon, t, time) * (0.85 if both_arms and arm != side else 1.0)
 			var d := Vector2(sin(ang) * out, cos(ang))
-			var hand := shoulder + d * 12.0 * hs * scale * arm_reach(state, weapon, t)
+			var hand := shoulder + d * 12.0 * hs * scale * arm_reach(state, arm_weapon, t)
 			ci.draw_line(shoulder, hand, arm_color, 3.5 * width * scale)
 			if state in ["attack", "shoot"] and weapon != "":
 				draw_weapon(ci, hand, d, weapon, scale, tint)

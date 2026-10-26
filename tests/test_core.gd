@@ -173,6 +173,7 @@ func _initialize() -> void:
 	_test_fx_art()
 	_test_ambience()
 	_test_enemy_sheet()
+	_test_player_sheet()
 	_test_events_music_colorblind()
 	_test_story_editor()
 	_test_board_milestones()
@@ -4240,6 +4241,65 @@ func _test_mana_family() -> void:
 		_check(int(found.get(s, 0)) >= 1, "el árbol tiene nodos de %s" % Stat.display_name(s))
 	var mana_clusters := _tree.clusters.values().filter(func(c: Dictionary) -> bool: return c["theme"] == "mana").size()
 	_check(mana_clusters >= 10, "la familia de maná tiene 10 clusters o más (%d)" % mana_clusters)
+
+
+## Personaje por capas (T102a): cuadrícula, poses, clasificación de capas y hojas horneadas.
+func _test_player_sheet() -> void:
+	_check(PlayerSheet.columns() == 32, "32 columnas de estados (%d)" % PlayerSheet.columns())
+	_check(PlayerSheet.group_for("attack", "sword") == "attack_swing" and PlayerSheet.group_for("attack", "dagger") == "attack_thrust"
+		and PlayerSheet.group_for("attack", "") == "attack_thrust" and PlayerSheet.group_for("run", "") == "walk", "cada arma con su gesto; correr usa andar")
+	var walk := {}
+	for k in 24:
+		walk[PlayerSheet.column_for("walk", "", 0.0, 0.0, k / 24.0 * TAU)] = true
+	_check(walk.size() == PlayerSheet.frames_of("walk"), "al andar pasa por sus %d cuadros" % PlayerSheet.frames_of("walk"))
+	_check(PlayerSheet.column_for("dead", "", 1.0) == PlayerSheet.first_column("dead") + PlayerSheet.frames_of("dead") - 1, "al morir, el último cuadro")
+	for col in PlayerSheet.columns():
+		var p := PlayerSheet.pose_for(col)
+		var back := PlayerSheet.column_for(String(p["state"]), "sword" if col >= PlayerSheet.first_column("attack_swing") and col < PlayerSheet.first_column("attack_thrust") else "",
+			float(p["t"]), float(p["time"]), float(p["walk_phase"]))
+		if back != col:
+			_check(false, "la columna %d se hornea con una pose que vuelve a ella (sale %d)" % [col, back])
+			break
+	_check(PlayerSheet.dir_for(Vector2.LEFT) == [PlayerSheet.Dir.SIDE, true] and PlayerSheet.dir_for(Vector2.UP) == [PlayerSheet.Dir.UP, false]
+		and PlayerSheet.dir_for(Vector2.DOWN) == [PlayerSheet.Dir.DOWN, false], "dirección y volteo")
+	_check(PlayerSheet.classify(Color(1, 0, 0)) == PlayerSheet.LAYER_SKIN and PlayerSheet.classify(Color(0, 0.6, 0)) == PlayerSheet.LAYER_OUTFIT
+		and PlayerSheet.classify(Color(0.7, 0.7, 0)) == PlayerSheet.LAYER_HAIR and PlayerSheet.classify(Color(0, 0.8, 0.8)) == PlayerSheet.LAYER_EYES
+		and PlayerSheet.classify(Color(0.3, 0.3, 0.32)) == 0, "cada color puro es su capa; los grises, fijos")
+	# Hojas horneadas: tamaño y algo dibujado en cada variante.
+	var rows := {"body": 1, "hair": CharacterAppearance.HAIR_NAMES.size(), "beard": CharacterAppearance.BEARD_NAMES.size() - 1,
+		"accessory": CharacterAppearance.ACCESSORY_NAMES.size() - 1, "weapon": PlayerSheet.WEAPONS.size()}
+	for layer in rows:
+		var tex := PlayerSprite.texture_of(layer)
+		_check(tex != null and tex.get_width() == PlayerSheet.CW * PlayerSheet.columns() and tex.get_height() == PlayerSheet.CH * PlayerSheet.DIRS * int(rows[layer]),
+			"hoja %s horneada con su cuadrícula" % layer)
+		if tex == null:
+			continue
+		var img := tex.get_image()
+		# Los lentes son solo colores fijos (montura y cristal): van en accessory_fixed.
+		var extra: Image = PlayerSprite.texture_of("accessory_fixed").get_image() if layer == "accessory" else null
+		var empty := []
+		for v in int(rows[layer]):
+			var r := PlayerSheet.region(v, PlayerSheet.Dir.DOWN, PlayerSheet.first_column("attack_swing") + 1)
+			var solid := false
+			for y in range(int(r.position.y), int(r.end.y)):
+				for x in range(int(r.position.x), int(r.end.x)):
+					if img.get_pixel(x, y).a > 0.08 or (extra != null and extra.get_pixel(x, y).a > 0.5):
+						solid = true
+						break
+				if solid:
+					break
+			if not solid and not (layer == "hair" and v == 0):   # rapado: casi nada que dibujar
+				empty.append(v)
+		_check(empty.is_empty(), "todas las variantes de %s tienen algo dibujado: %s" % [layer, empty])
+	# Las máscaras guardan la capa en G (×8) y la luz en R.
+	var body := PlayerSprite.texture_of("body").get_image()
+	var layers := {}
+	for y in range(0, PlayerSheet.CH):
+		for x in range(0, PlayerSheet.CW):
+			var c := body.get_pixel(x, y)
+			if c.a > 0.5:
+				layers[roundi(c.g * 8.0)] = true
+	_check(layers.has(PlayerSheet.LAYER_SKIN) and layers.has(PlayerSheet.LAYER_OUTFIT) and layers.has(PlayerSheet.LAYER_ACCENT), "el cuerpo tiene piel, atuendo y detalles")
 
 
 ## Enemigos con más cuadros y direcciones (T101): la hoja y qué cuadro sale en cada estado.
