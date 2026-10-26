@@ -537,11 +537,12 @@ Origen: R4 (partida de T89, que era L)
 - Rendimiento con ~1500 nodos: la vista tiene que seguir dibujando y respondiendo al ratón sin tirones (rejilla espacial, recorte por pantalla y nivel de detalle por zoom); prueba con tiempo de dibujo medido.
 - Hecho: un personaje del árbol 7 recupera todos los puntos con un aviso que dice cuántos tiene, y hasta que cierra el árbol con puntos gastados quitar nodos es gratis (`free_respec`). Código de build `PO2:` con las **claves** de los nodos y de las maestrías (sobrevive a regenerar el árbol; avisa si algún nodo ya no existe); un `PO1:` dice que es del árbol viejo. Nivel de detalle en la vista: por debajo de zoom 0,5 los nodos se dibujan lisos (cuadros y círculos, líneas sin suavizado), y desde 0,3 los notables y piedras conservan su icono. Dibujo medido con `capture_screens -- arbol2` (`PassiveTreeView.last_draw_ms`): árbol entero 74 → 14 ms, región 24 → 20 ms, centro 17 ms.
 
-### [ ] T90 · Más clusters de las familias que ya hay · M
+### [x] T90 · Más clusters de las familias que ya hay · M
 Origen: R4 (pedido del usuario)
 - Cada una de las 28 familias con al menos 4 clusters de tamaños distintos (vida, armadura, evasión, escudo, crítico, fuego, frío, rayo, caos, área, proyectiles, legión, automatización, ignición, sobrecarga, criogenia, toxinas, hemorragia…), con menores que suban de valor del pequeño al grande y notables propios por cluster.
 - Notables nuevos con condición o efecto (no solo +%): «con un aliado cerca», «tras esquivar», «contra enemigos con estados», «mientras canalizas», «al gastar cargas»… usando las condiciones que ya existen (low_life, full_life, recent_kill, stationary, three_allies) y las que añada T92.
 - Prueba: ninguna familia con menos de 4 clusters, ningún notable repetido, todos los stats conocidos.
+- Hecho: `REGION_THEMES` repartidos para que las 28 familias tengan 4 clusters o más (maná 8, nueve familias con 5). 19 notables nuevos en `passive_themes.json`, la mayoría con condición (quieto, vida llena, vida baja, tras matar, con 3 aliados) y cuatro de maná. El generador asigna primero los notables de estilo y las piedras extra y luego nombra, sin repetir: comprueba que ningún notable ni piedra repita nombre (174 únicos), las maestrías se llaman «Maestría: <cluster>» y las constelaciones «Estrella: <nombre>». Prueba `_test_tree_families`.
 
 ### [ ] T91 · Familia de maná · M
 Origen: R4 (pedido del usuario)
@@ -732,3 +733,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T88 · Diseño del árbol 2.0: documento docs/arbol_2.md y prototipo de disposición (1540 nodos, 114 clusters, claves estables). Parada para revisión.
 - 2026-10-25 · T89 · Árbol pasivo 2.0 en el juego: 1373 nodos, 138 clusters, 149 notables, 18 maestrías y 11 piedras angulares, con claves estables y la identidad dentro del árbol.
 - 2026-10-25 · T89b · Migración al árbol 2.0 con la primera reasignación gratis, código de build PO2 por claves y nivel de detalle en la vista (árbol entero de 74 a 14 ms).
+- 2026-10-25 · T90 · Todas las familias con 4 clusters o más y 19 notables nuevos con condición; nombres de notables únicos en todo el árbol.

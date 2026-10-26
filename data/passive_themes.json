@@ -1,4081 +1,4435 @@
 {
- "version": 1,
- "_doc": "Temáticas de los clusters del árbol pasivo. Cada cluster usa UNA temática: sus pasivas menores salen de 'minors' (en orden, ciclando) y su notable de 'notables'. mods: {stat, type (flat/increased/more), value, tags}. Tags de condición: low_life, full_life, recent_kill. Tras editar, regenera el árbol: python tools/generate_passive_tree.py",
- "themes": {
-  "vida": {
-   "name": "Vida",
-   "color": "c83232",
-   "cluster_names": [
-    "Núcleo Vital",
-    "Bloque de Alimentación",
-    "Reserva de Energía",
-    "Fuente Redundante"
-   ],
-   "minors": [
-    [
-     "Vida",
-     [
-      {
-       "stat": "life",
-       "type": "flat",
-       "value": 12
-      }
-     ]
-    ],
-    [
-     "Vida",
-     [
-      {
-       "stat": "life",
-       "type": "increased",
-       "value": 6
-      }
-     ]
-    ],
-    [
-     "Vida y regeneración",
-     [
-      {
-       "stat": "life",
-       "type": "increased",
-       "value": 4
-      },
-      {
-       "stat": "life_regen",
-       "type": "flat",
-       "value": 2
-      }
-     ]
-    ],
-    [
-     "Vida y armadura",
-     [
-      {
-       "stat": "life",
-       "type": "increased",
-       "value": 4
-      },
-      {
-       "stat": "armour",
-       "type": "increased",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Vida máxima",
-     [
-      {
-       "stat": "life",
-       "type": "increased",
-       "value": 8
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Corazón de Silicio",
-     "Late a 3,2 GHz. Con ventilador.",
-     [
-      {
-       "stat": "life",
-       "type": "increased",
-       "value": 15
-      },
-      {
-       "stat": "life_regen",
-       "type": "flat",
-       "value": 6
-      },
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 20,
-       "tags": [
-        "full_life"
-       ]
-      }
-     ]
-    ],
-    [
-     "Hasta el Último Byte",
-     "Cuanto peor va, mejor rindes. Como en cada entrega.",
-     [
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 40,
-       "tags": [
-        "low_life"
-       ]
-      },
-      {
-       "stat": "life",
-       "type": "increased",
-       "value": 8
-      },
-      {
-       "stat": "life_leech",
-       "type": "flat",
-       "value": 1,
-       "tags": [
-        "low_life"
-       ]
-      }
-     ]
-    ],
-    [
-     "SAI Personal",
-     "Sistema de Alimentación Ininterrumpida. Para tu vida.",
-     [
-      {
-       "stat": "life",
-       "type": "increased",
-       "value": 10
-      },
-      {
-       "stat": "life_regen",
-       "type": "flat",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Perfil de Producción",
-     "Optimizado para no caerse. Casi nunca.",
-     [
-      {
-       "stat": "life",
-       "type": "flat",
-       "value": 40
-      },
-      {
-       "stat": "armour",
-       "type": "increased",
-       "value": 15
-      }
-     ]
-    ]
-   ]
-  },
-  "armadura": {
-   "name": "Armadura",
-   "color": "9aa0a8",
-   "cluster_names": [
-    "Muro de Contención",
-    "Capa de Abstracción",
-    "Blindaje Legacy",
-    "Búnker"
-   ],
-   "minors": [
-    [
-     "Armadura",
-     [
-      {
-       "stat": "armour",
-       "type": "increased",
-       "value": 15
-      }
-     ]
-    ],
-    [
-     "Armadura",
-     [
-      {
-       "stat": "armour",
-       "type": "flat",
-       "value": 30
-      }
-     ]
-    ],
-    [
-     "Armadura y vida",
-     [
-      {
-       "stat": "armour",
-       "type": "increased",
-       "value": 10
-      },
-      {
-       "stat": "life",
-       "type": "increased",
-       "value": 3
-      }
-     ]
-    ],
-    [
-     "Bloqueo",
-     [
-      {
-       "stat": "block_chance",
-       "type": "flat",
-       "value": 2
-      }
-     ]
-    ],
-    [
-     "Armadura y bloqueo",
-     [
-      {
-       "stat": "armour",
-       "type": "increased",
-       "value": 8
-      },
-      {
-       "stat": "block_chance",
-       "type": "flat",
-       "value": 1
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Firewall Corporativo",
-     "Bloquea todo. Incluido lo que necesitabas.",
-     [
-      {
-       "stat": "armour",
-       "type": "increased",
-       "value": 35
-      },
-      {
-       "stat": "block_chance",
-       "type": "flat",
-       "value": 4
-      }
-     ]
-    ],
-    [
-     "Hormigón Armado",
-     "Tan rígido como el código de 2005.",
-     [
-      {
-       "stat": "armour",
-       "type": "increased",
-       "value": 45
-      },
-      {
-       "stat": "movement_speed",
-       "type": "increased",
-       "value": -3
-      },
-      {
-       "stat": "max_buffer_charges",
-       "type": "flat",
-       "value": 1
-      }
-     ]
-    ],
-    [
-     "Defensa en Profundidad",
-     "Capas y capas de seguridad. Y de burocracia.",
-     [
-      {
-       "stat": "armour",
-       "type": "increased",
-       "value": 25
-      },
-      {
-       "stat": "life",
-       "type": "increased",
-       "value": 6
-      },
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 20,
-       "tags": [
-        "stationary"
-       ]
-      }
-     ]
-    ],
-    [
-     "Escudo de Producción",
-     "Recibe los golpes para que el resto del equipo no.",
-     [
-      {
-       "stat": "block_chance",
-       "type": "flat",
-       "value": 6
-      },
-      {
-       "stat": "armour",
-       "type": "flat",
-       "value": 60
-      }
-     ]
-    ]
-   ]
-  },
-  "fisico": {
-   "name": "Daño físico",
-   "color": "e8d9b0",
-   "cluster_names": [
-    "Fuerza Bruta",
-    "Refactorización Violenta",
-    "Martillo de Merge",
-    "Golpe en Producción"
-   ],
-   "minors": [
-    [
-     "Daño físico cuerpo a cuerpo",
-     [
-      {
-       "stat": "physical_damage",
-       "type": "increased",
-       "value": 10,
-       "tags": [
-        "melee"
-       ]
-      }
-     ]
-    ],
-    [
-     "Daño físico",
-     [
-      {
-       "stat": "physical_damage",
-       "type": "increased",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Fuerza",
-     [
-      {
-       "stat": "strength",
-       "type": "flat",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Daño físico y precisión",
-     [
-      {
-       "stat": "physical_damage",
-       "type": "increased",
-       "value": 6
-      },
-      {
-       "stat": "accuracy",
-       "type": "flat",
-       "value": 30
-      }
-     ]
-    ],
-    [
-     "Físico y hemorragia",
-     [
-      {
-       "stat": "physical_damage",
-       "type": "increased",
-       "value": 6
-      },
-      {
-       "stat": "bleed_chance",
-       "type": "flat",
-       "value": 4
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Refactor a Martillazos",
-     "Si no compila, más fuerza.",
-     [
-      {
-       "stat": "physical_damage",
-       "type": "increased",
-       "value": 30,
-       "tags": [
-        "melee"
-       ]
-      },
-      {
-       "stat": "strength",
-       "type": "flat",
-       "value": 10
-      },
-      {
-       "stat": "stunned_damage",
-       "type": "increased",
-       "value": 30
-      }
-     ]
-    ],
-    [
-     "Golpe de Merge",
-     "Resuelve conflictos. A golpes.",
-     [
-      {
-       "stat": "physical_damage",
-       "type": "increased",
-       "value": 20
-      },
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 20,
-       "tags": [
-        "recent_kill"
-       ]
-      }
-     ]
-    ],
-    [
-     "Rompe-Builds",
-     "Rompe todo lo que toca. Por eso no le dejan tocar main.",
-     [
-      {
-       "stat": "physical_damage",
-       "type": "increased",
-       "value": 25
-      },
-      {
-       "stat": "crit_multiplier",
-       "type": "flat",
-       "value": 15
-      },
-      {
-       "stat": "bleed_chance",
-       "type": "flat",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Brute Force",
-     "O(n!) de complejidad. O(1) de sutileza.",
-     [
-      {
-       "stat": "physical_damage",
-       "type": "increased",
-       "value": 25,
-       "tags": [
-        "melee"
-       ]
-      },
-      {
-       "stat": "attack_speed",
-       "type": "increased",
-       "value": 5
-      }
-     ]
-    ]
-   ]
-  },
-  "evasion": {
-   "name": "Evasión",
-   "color": "5cb85c",
-   "cluster_names": [
-    "Esquiva Ágil",
-    "Patrón Escurridizo",
-    "Modo Sigilo",
-    "Bypass"
-   ],
-   "minors": [
-    [
-     "Evasión",
-     [
-      {
-       "stat": "evasion",
-       "type": "increased",
-       "value": 15
-      }
-     ]
-    ],
-    [
-     "Evasión",
-     [
-      {
-       "stat": "evasion",
-       "type": "flat",
-       "value": 30
-      }
-     ]
-    ],
-    [
-     "Evasión y movimiento",
-     [
-      {
-       "stat": "evasion",
-       "type": "increased",
-       "value": 8
-      },
-      {
-       "stat": "movement_speed",
-       "type": "increased",
-       "value": 2
-      }
-     ]
-    ],
-    [
-     "Destreza",
-     [
-      {
-       "stat": "dexterity",
-       "type": "flat",
-       "value": 10
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Excepción Capturada",
-     "No te dan si tu try/catch es lo bastante amplio.",
-     [
-      {
-       "stat": "evasion",
-       "type": "increased",
-       "value": 35
-      },
-      {
-       "stat": "movement_speed",
-       "type": "increased",
-       "value": 4
-      },
-      {
-       "stat": "max_multihilo_charges",
-       "type": "flat",
-       "value": 1
-      }
-     ]
-    ],
-    [
-     "Proceso en Segundo Plano",
-     "Nadie sabe que estás ahí. Ni el profiler.",
-     [
-      {
-       "stat": "evasion",
-       "type": "increased",
-       "value": 25
-      },
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 25,
-       "tags": [
-        "full_life"
-       ]
-      }
-     ]
-    ],
-    [
-     "Deploy Silencioso",
-     "Entra y sale sin que nadie lo note. Ni el changelog.",
-     [
-      {
-       "stat": "movement_speed",
-       "type": "increased",
-       "value": 8
-      },
-      {
-       "stat": "evasion",
-       "type": "increased",
-       "value": 15
-      }
-     ]
-    ],
-    [
-     "Race Condition",
-     "A veces esquivas. A veces no. Depende del scheduler.",
-     [
-      {
-       "stat": "evasion",
-       "type": "increased",
-       "value": 30
-      },
-      {
-       "stat": "dexterity",
-       "type": "flat",
-       "value": 10
-      }
-     ]
-    ]
-   ]
-  },
-  "proyectiles": {
-   "name": "Proyectiles",
-   "color": "c8c8c8",
-   "cluster_names": [
-    "Red de Distribución",
-    "Balanceador de Carga",
-    "Tubería de Datos",
-    "Ancho de Banda"
-   ],
-   "minors": [
-    [
-     "Daño de proyectiles",
-     [
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 10,
-       "tags": [
-        "projectile"
-       ]
-      }
-     ]
-    ],
-    [
-     "Velocidad de proyectiles",
-     [
-      {
-       "stat": "projectile_speed",
-       "type": "increased",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Proyectiles",
-     [
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 6,
-       "tags": [
-        "projectile"
-       ]
-      },
-      {
-       "stat": "projectile_speed",
-       "type": "increased",
-       "value": 5
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Broadcast",
-     "Envía a todos. Spam con estilo.",
-     [
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 25,
-       "tags": [
-        "projectile"
-       ]
-      },
-      {
-       "stat": "projectile_speed",
-       "type": "increased",
-       "value": 15
-      }
-     ]
-    ],
-    [
-     "Paquetes Jumbo",
-     "MTU ilimitada. Fragmentación garantizada.",
-     [
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 30,
-       "tags": [
-        "projectile"
-       ]
-      }
-     ]
-    ],
-    [
-     "Latencia Cero",
-     "Llega antes de que lo dispares. Casi.",
-     [
-      {
-       "stat": "projectile_speed",
-       "type": "increased",
-       "value": 30
-      },
-      {
-       "stat": "attack_speed",
-       "type": "increased",
-       "value": 5
-      }
-     ]
-    ],
-    [
-     "Ping de Precisión",
-     "Responde en 1 ms. Al corazón.",
-     [
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 20,
-       "tags": [
-        "projectile"
-       ]
-      },
-      {
-       "stat": "crit_chance",
-       "type": "increased",
-       "value": 20
-      }
-     ]
-    ]
-   ]
-  },
-  "velocidad_ataque": {
-   "name": "Velocidad de ataque",
-   "color": "d9a441",
-   "cluster_names": [
-    "Ciclo de Reloj",
-    "Overclock Manual",
-    "Hilos Paralelos",
-    "Pipeline"
-   ],
-   "minors": [
-    [
-     "Velocidad de ataque",
-     [
-      {
-       "stat": "attack_speed",
-       "type": "increased",
-       "value": 4
-      }
-     ]
-    ],
-    [
-     "Velocidad de ataque y precisión",
-     [
-      {
-       "stat": "attack_speed",
-       "type": "increased",
-       "value": 3
-      },
-      {
-       "stat": "accuracy",
-       "type": "flat",
-       "value": 20
-      }
-     ]
-    ],
-    [
-     "Velocidad y daño de ataque",
-     [
-      {
-       "stat": "attack_speed",
-       "type": "increased",
-       "value": 2
-      },
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 4,
-       "tags": [
-        "attack"
-       ]
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Overclock Sin Garantía",
-     "Más rápido. Más caliente. Más caro.",
-     [
-      {
-       "stat": "attack_speed",
-       "type": "increased",
-       "value": 12
-      }
-     ]
-    ],
-    [
-     "Multihilo",
-     "Ataca en paralelo. Los bugs, también.",
-     [
-      {
-       "stat": "attack_speed",
-       "type": "increased",
-       "value": 8
-      },
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 10,
-       "tags": [
-        "attack"
-       ]
-      }
-     ]
-    ],
-    [
-     "Spam de Clicks",
-     "Tu mouse no sobrevivirá a esto.",
-     [
-      {
-       "stat": "attack_speed",
-       "type": "increased",
-       "value": 10
-      },
-      {
-       "stat": "accuracy",
-       "type": "flat",
-       "value": 60
-      }
-     ]
-    ],
-    [
-     "Sprint Final",
-     "Rápido cuando ya es tarde.",
-     [
-      {
-       "stat": "attack_speed",
-       "type": "increased",
-       "value": 15,
-       "tags": [
-        "recent_kill"
-       ]
-      },
-      {
-       "stat": "movement_speed",
-       "type": "increased",
-       "value": 3
-      }
-     ]
-    ]
-   ]
-  },
-  "critico": {
-   "name": "Crítico",
-   "color": "ff6a6a",
-   "cluster_names": [
-    "Punto de Fallo",
-    "Error Crítico",
-    "Caso Límite",
-    "Excepción Fatal"
-   ],
-   "minors": [
-    [
-     "Probabilidad de crítico",
-     [
-      {
-       "stat": "crit_chance",
-       "type": "increased",
-       "value": 12
-      }
-     ]
-    ],
-    [
-     "Multiplicador de crítico",
-     [
-      {
-       "stat": "crit_multiplier",
-       "type": "flat",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Crítico",
-     [
-      {
-       "stat": "crit_chance",
-       "type": "increased",
-       "value": 6
-      },
-      {
-       "stat": "crit_multiplier",
-       "type": "flat",
-       "value": 4
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Segmentation Fault",
-     "Acceso inválido. Al hígado.",
-     [
-      {
-       "stat": "crit_chance",
-       "type": "increased",
-       "value": 30
-      },
-      {
-       "stat": "crit_multiplier",
-       "type": "flat",
-       "value": 15
-      },
-      {
-       "stat": "max_overclock_charges",
-       "type": "flat",
-       "value": 1
-      }
-     ]
-    ],
-    [
-     "Kernel Panic",
-     "Cuando falla, falla todo.",
-     [
-      {
-       "stat": "crit_multiplier",
-       "type": "flat",
-       "value": 30
-      }
-     ]
-    ],
-    [
-     "Off-by-one",
-     "Fallas por uno. A veces aciertas por mucho.",
-     [
-      {
-       "stat": "crit_chance",
-       "type": "increased",
-       "value": 40
-      }
-     ]
-    ],
-    [
-     "Pantallazo Azul",
-     "El enemigo ve la pantalla azul. Tú, la victoria.",
-     [
-      {
-       "stat": "crit_multiplier",
-       "type": "flat",
-       "value": 20
-      },
-      {
-       "stat": "crit_chance",
-       "type": "increased",
-       "value": 15
-      }
-     ]
-    ]
-   ]
-  },
-  "escudo": {
-   "name": "Escudo de energía",
-   "color": "7fb8e0",
-   "cluster_names": [
-    "Sandbox",
-    "Entorno Aislado",
-    "Contenedor Docker",
-    "Máquina Virtual"
-   ],
-   "minors": [
-    [
-     "Escudo de energía",
-     [
-      {
-       "stat": "energy_shield",
-       "type": "increased",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Escudo de energía",
-     [
-      {
-       "stat": "energy_shield",
-       "type": "flat",
-       "value": 15
-      }
-     ]
-    ],
-    [
-     "Escudo e inteligencia",
-     [
-      {
-       "stat": "energy_shield",
-       "type": "increased",
-       "value": 6
-      },
-      {
-       "stat": "intelligence",
-       "type": "flat",
-       "value": 5
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Snapshot",
-     "Volver a un estado anterior. En la vida real no se puede.",
-     [
-      {
-       "stat": "energy_shield",
-       "type": "flat",
-       "value": 40
-      },
-      {
-       "stat": "energy_shield",
-       "type": "increased",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Contenedor Aislado",
-     "Nada entra. Nada sale. Ni la documentación.",
-     [
-      {
-       "stat": "energy_shield",
-       "type": "increased",
-       "value": 20
-      },
-      {
-       "stat": "chaos_res",
-       "type": "flat",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Hipervisor",
-     "Gobierna tus máquinas virtuales. Y tu ego.",
-     [
-      {
-       "stat": "energy_shield",
-       "type": "increased",
-       "value": 25
-      },
-      {
-       "stat": "intelligence",
-       "type": "flat",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Reinstalación Limpia",
-     "Formatear y empezar de cero. Tu plan para todo.",
-     [
-      {
-       "stat": "energy_shield",
-       "type": "increased",
-       "value": 30
-      }
-     ]
-    ]
-   ]
-  },
-  "mana": {
-   "name": "Maná",
-   "color": "3a7bd5",
-   "cluster_names": [
-    "Pila de Memoria",
-    "Heap de Maná",
-    "Caché de Maná",
-    "Memoria Compartida"
-   ],
-   "minors": [
-    [
-     "Maná",
-     [
-      {
-       "stat": "mana",
-       "type": "increased",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Maná",
-     [
-      {
-       "stat": "mana",
-       "type": "flat",
-       "value": 15
-      }
-     ]
-    ],
-    [
-     "Regeneración de maná",
-     [
-      {
-       "stat": "mana_regen",
-       "type": "increased",
-       "value": 15
-      }
-     ]
-    ],
-    [
-     "Maná y regeneración",
-     [
-      {
-       "stat": "mana",
-       "type": "increased",
-       "value": 4
-      },
-      {
-       "stat": "mana_regen",
-       "type": "increased",
-       "value": 8
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Garbage Collector",
-     "Recicla lo que tú olvidas liberar.",
-     [
-      {
-       "stat": "mana_regen",
-       "type": "increased",
-       "value": 40
-      }
-     ]
-    ],
-    [
-     "Memoria Dinámica",
-     "Crece cuando hace falta. Nunca se libera.",
-     [
-      {
-       "stat": "mana",
-       "type": "increased",
-       "value": 20
-      },
-      {
-       "stat": "mana_regen",
-       "type": "increased",
-       "value": 15
-      }
-     ]
-    ],
-    [
-     "Malloc Infinito",
-     "Pide memoria sin límite. ¿Qué podría salir mal?",
-     [
-      {
-       "stat": "mana",
-       "type": "flat",
-       "value": 50
-      },
-      {
-       "stat": "mana",
-       "type": "increased",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Fuga Controlada",
-     "Un memory leak, pero a tu favor.",
-     [
-      {
-       "stat": "mana_regen",
-       "type": "increased",
-       "value": 50,
-       "tags": [
-        "recent_kill"
-       ]
-      },
-      {
-       "stat": "mana",
-       "type": "increased",
-       "value": 8
-      }
-     ]
-    ]
-   ]
-  },
-  "fuego": {
-   "name": "Fuego",
-   "color": "e0652f",
-   "cluster_names": [
-    "Sobrecalentamiento",
-    "Sala de Servidores",
-    "Cortafuegos Literal",
-    "Thermal Paste"
-   ],
-   "minors": [
-    [
-     "Daño de fuego",
-     [
-      {
-       "stat": "fire_damage",
-       "type": "increased",
-       "value": 12
-      }
-     ]
-    ],
-    [
-     "Fuego y resistencia",
-     [
-      {
-       "stat": "fire_damage",
-       "type": "increased",
-       "value": 8
-      },
-      {
-       "stat": "fire_res",
-       "type": "flat",
-       "value": 4
-      }
-     ]
-    ],
-    [
-     "Fuego y área",
-     [
-      {
-       "stat": "fire_damage",
-       "type": "increased",
-       "value": 6
-      },
-      {
-       "stat": "area_of_effect",
-       "type": "increased",
-       "value": 3
-      }
-     ]
-    ],
-    [
-     "Fuego y quemadura",
-     [
-      {
-       "stat": "fire_damage",
-       "type": "increased",
-       "value": 6
-      },
-      {
-       "stat": "burn_chance",
-       "type": "flat",
-       "value": 4
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Thermal Throttling",
-     "Cuando se calienta, se pone serio.",
-     [
-      {
-       "stat": "fire_damage",
-       "type": "increased",
-       "value": 30
-      },
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 15,
-       "tags": [
-        "low_life"
-       ]
-      },
-      {
-       "stat": "convert_physical_to_fire",
-       "type": "flat",
-       "value": 1
-      }
-     ]
-    ],
-    [
-     "Incendio en el CPD",
-     "Quemar el centro de datos también es una forma de borrar logs.",
-     [
-      {
-       "stat": "fire_damage",
-       "type": "increased",
-       "value": 25
-      },
-      {
-       "stat": "area_of_effect",
-       "type": "increased",
-       "value": 8
-      },
-      {
-       "stat": "burn_chance",
-       "type": "flat",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Pasta Térmica Seca",
-     "Ya nada te enfría.",
-     [
-      {
-       "stat": "fire_damage",
-       "type": "increased",
-       "value": 40
-      },
-      {
-       "stat": "cold_res",
-       "type": "flat",
-       "value": -10
-      }
-     ]
-    ],
-    [
-     "Llama Eterna",
-     "while (true) { arder(); }",
-     [
-      {
-       "stat": "fire_damage",
-       "type": "increased",
-       "value": 20
-      },
-      {
-       "stat": "fire_res",
-       "type": "flat",
-       "value": 15
-      }
-     ]
-    ]
-   ]
-  },
-  "frio": {
-   "name": "Frío",
-   "color": "a0d8f0",
-   "cluster_names": [
-    "Refrigeración Líquida",
-    "Cámara Frigorífica",
-    "Cold Storage",
-    "Ventilador al Máximo"
-   ],
-   "minors": [
-    [
-     "Daño de frío",
-     [
-      {
-       "stat": "cold_damage",
-       "type": "increased",
-       "value": 12
-      }
-     ]
-    ],
-    [
-     "Frío y resistencia",
-     [
-      {
-       "stat": "cold_damage",
-       "type": "increased",
-       "value": 8
-      },
-      {
-       "stat": "cold_res",
-       "type": "flat",
-       "value": 4
-      }
-     ]
-    ],
-    [
-     "Frío y lanzamiento",
-     [
-      {
-       "stat": "cold_damage",
-       "type": "increased",
-       "value": 6
-      },
-      {
-       "stat": "cast_speed",
-       "type": "increased",
-       "value": 2
-      }
-     ]
-    ],
-    [
-     "Frío y escarcha",
-     [
-      {
-       "stat": "cold_damage",
-       "type": "increased",
-       "value": 6
-      },
-      {
-       "stat": "chill_chance",
-       "type": "flat",
-       "value": 5
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Cold Boot",
-     "Arranca en frío. Y deja todo helado.",
-     [
-      {
-       "stat": "cold_damage",
-       "type": "increased",
-       "value": 30
-      },
-      {
-       "stat": "cast_speed",
-       "type": "increased",
-       "value": 4
-      },
-      {
-       "stat": "freeze_chance",
-       "type": "flat",
-       "value": 6
-      }
-     ]
-    ],
-    [
-     "Almacenamiento en Frío",
-     "Lo que entra ahí no vuelve a moverse.",
-     [
-      {
-       "stat": "cold_damage",
-       "type": "increased",
-       "value": 25
-      },
-      {
-       "stat": "cold_res",
-       "type": "flat",
-       "value": 15
-      }
-     ]
-    ],
-    [
-     "Nitrógeno Líquido",
-     "Overclock extremo. Congelación incluida.",
-     [
-      {
-       "stat": "cold_damage",
-       "type": "increased",
-       "value": 40
-      },
-      {
-       "stat": "fire_res",
-       "type": "flat",
-       "value": -10
-      }
-     ]
-    ],
-    [
-     "Congelación de Requisitos",
-     "Ya nada puede cambiar. Ni tus enemigos.",
-     [
-      {
-       "stat": "cold_damage",
-       "type": "increased",
-       "value": 20
-      },
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 20,
-       "tags": [
-        "full_life"
-       ]
-      }
-     ]
-    ]
-   ]
-  },
-  "rayo": {
-   "name": "Rayo",
-   "color": "e8d070",
-   "cluster_names": [
-    "Sobretensión",
-    "Pico de Corriente",
-    "Bus de Datos",
-    "Fuente Conmutada"
-   ],
-   "minors": [
-    [
-     "Daño de rayo",
-     [
-      {
-       "stat": "lightning_damage",
-       "type": "increased",
-       "value": 12
-      }
-     ]
-    ],
-    [
-     "Rayo y resistencia",
-     [
-      {
-       "stat": "lightning_damage",
-       "type": "increased",
-       "value": 8
-      },
-      {
-       "stat": "lightning_res",
-       "type": "flat",
-       "value": 4
-      }
-     ]
-    ],
-    [
-     "Rayo y crítico",
-     [
-      {
-       "stat": "lightning_damage",
-       "type": "increased",
-       "value": 6
-      },
-      {
-       "stat": "crit_chance",
-       "type": "increased",
-       "value": 5
-      }
-     ]
-    ],
-    [
-     "Rayo y sobrecarga",
-     [
-      {
-       "stat": "lightning_damage",
-       "type": "increased",
-       "value": 6
-      },
-      {
-       "stat": "shock_chance",
-       "type": "flat",
-       "value": 4
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Descarga Electrostática",
-     "No toques la placa sin pulsera. O sí.",
-     [
-      {
-       "stat": "lightning_damage",
-       "type": "increased",
-       "value": 30
-      },
-      {
-       "stat": "crit_chance",
-       "type": "increased",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Pico de Tensión",
-     "Fríe todo lo conectado. Incluido el router.",
-     [
-      {
-       "stat": "lightning_damage",
-       "type": "increased",
-       "value": 40
-      },
-      {
-       "stat": "life",
-       "type": "increased",
-       "value": -4
-      },
-      {
-       "stat": "shock_chance",
-       "type": "flat",
-       "value": 10
-      },
-      {
-       "stat": "convert_physical_to_lightning",
-       "type": "flat",
-       "value": 1
-      }
-     ]
-    ],
-    [
-     "Toma de Tierra",
-     "Seguridad eléctrica. Por fin alguien la usa.",
-     [
-      {
-       "stat": "lightning_damage",
-       "type": "increased",
-       "value": 15
-      },
-      {
-       "stat": "lightning_res",
-       "type": "flat",
-       "value": 20
-      }
-     ]
-    ],
-    [
-     "Rayo Distribuido",
-     "Load balancing de electricidad.",
-     [
-      {
-       "stat": "lightning_damage",
-       "type": "increased",
-       "value": 20
-      },
-      {
-       "stat": "area_of_effect",
-       "type": "increased",
-       "value": 6
-      }
-     ]
-    ]
-   ]
-  },
-  "lanzamiento": {
-   "name": "Hechizos",
-   "color": "b04ad9",
-   "cluster_names": [
-    "Compilador Arcano",
-    "Intérprete de Hechizos",
-    "Línea de Comandos",
-    "Shell Mística"
-   ],
-   "minors": [
-    [
-     "Velocidad de lanzamiento",
-     [
-      {
-       "stat": "cast_speed",
-       "type": "increased",
-       "value": 4
-      }
-     ]
-    ],
-    [
-     "Daño de hechizos",
-     [
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 10,
-       "tags": [
-        "spell"
-       ]
-      }
-     ]
-    ],
-    [
-     "Hechizos",
-     [
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 6,
-       "tags": [
-        "spell"
-       ]
-      },
-      {
-       "stat": "cast_speed",
-       "type": "increased",
-       "value": 2
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Compilación JIT",
-     "Lanza antes de pensar. Optimiza después.",
-     [
-      {
-       "stat": "cast_speed",
-       "type": "increased",
-       "value": 12
-      },
-      {
-       "stat": "charge_spend_mana",
-       "type": "flat",
-       "value": 3
-      }
-     ]
-    ],
-    [
-     "Script Kiddie",
-     "Copia hechizos ajenos con una eficacia preocupante.",
-     [
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 25,
-       "tags": [
-        "spell"
-       ]
-      }
-     ]
-    ],
-    [
-     "Sudo Hechizo",
-     "Con permisos de administrador.",
-     [
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 20,
-       "tags": [
-        "spell"
-       ]
-      },
-      {
-       "stat": "cast_speed",
-       "type": "increased",
-       "value": 6
-      }
-     ]
-    ],
-    [
-     "One-Liner",
-     "Todo un hechizo en una línea ilegible.",
-     [
-      {
-       "stat": "cast_speed",
-       "type": "increased",
-       "value": 8
-      },
-      {
-       "stat": "crit_chance",
-       "type": "increased",
-       "value": 15,
-       "tags": [
-        "spell"
-       ]
-      }
-     ]
-    ]
-   ]
-  },
-  "caos": {
-   "name": "Caos",
-   "color": "7a3fb0",
-   "cluster_names": [
-    "Comportamiento Indefinido",
-    "Undefined",
-    "Puntero Colgante",
-    "Memoria Corrupta"
-   ],
-   "minors": [
-    [
-     "Daño de caos",
-     [
-      {
-       "stat": "chaos_damage",
-       "type": "increased",
-       "value": 12
-      }
-     ]
-    ],
-    [
-     "Resistencia al caos",
-     [
-      {
-       "stat": "chaos_res",
-       "type": "flat",
-       "value": 7
-      }
-     ]
-    ],
-    [
-     "Caos y daño",
-     [
-      {
-       "stat": "chaos_damage",
-       "type": "increased",
-       "value": 8
-      },
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 3
-      }
-     ]
-    ],
-    [
-     "Caos y toxinas",
-     [
-      {
-       "stat": "chaos_damage",
-       "type": "increased",
-       "value": 6
-      },
-      {
-       "stat": "poison_chance",
-       "type": "flat",
-       "value": 5
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Comportamiento Indefinido",
-     "A veces funciona. Nadie sabe por qué.",
-     [
-      {
-       "stat": "chaos_damage",
-       "type": "increased",
-       "value": 35
-      }
-     ]
-    ],
-    [
-     "Null Pointer",
-     "Apunta al vacío. El vacío devuelve el golpe.",
-     [
-      {
-       "stat": "chaos_damage",
-       "type": "increased",
-       "value": 25
-      },
-      {
-       "stat": "chaos_res",
-       "type": "flat",
-       "value": 12
-      },
-      {
-       "stat": "poison_chance",
-       "type": "flat",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Dangling Pointer",
-     "Señala algo que ya no existe. Duele igual.",
-     [
-      {
-       "stat": "chaos_damage",
-       "type": "increased",
-       "value": 20
-      },
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 20,
-       "tags": [
-        "recent_kill"
-       ]
-      }
-     ]
-    ],
-    [
-     "NaN",
-     "Not a Number. Ni un problema.",
-     [
-      {
-       "stat": "chaos_res",
-       "type": "flat",
-       "value": 20
-      },
-      {
-       "stat": "chaos_damage",
-       "type": "increased",
-       "value": 15
-      }
-     ]
-    ]
-   ]
-  },
-  "area": {
-   "name": "Área",
-   "color": "f0a030",
-   "cluster_names": [
-    "Radio de Explosión",
-    "Ámbito Global",
-    "Onda Expansiva",
-    "Efecto Dominó"
-   ],
-   "minors": [
-    [
-     "Área de efecto",
-     [
-      {
-       "stat": "area_of_effect",
-       "type": "increased",
-       "value": 6
-      }
-     ]
-    ],
-    [
-     "Daño de área",
-     [
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 10,
-       "tags": [
-        "area"
-       ]
-      }
-     ]
-    ],
-    [
-     "Área y daño",
-     [
-      {
-       "stat": "area_of_effect",
-       "type": "increased",
-       "value": 3
-      },
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 5,
-       "tags": [
-        "area"
-       ]
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Variable Global",
-     "Afecta a todo. Para mal, normalmente.",
-     [
-      {
-       "stat": "area_of_effect",
-       "type": "increased",
-       "value": 20
-      }
-     ]
-    ],
-    [
-     "Efecto Mariposa",
-     "Un cambio pequeño. Consecuencias enormes.",
-     [
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 25,
-       "tags": [
-        "area"
-       ]
-      },
-      {
-       "stat": "area_of_effect",
-       "type": "increased",
-       "value": 6
-      }
-     ]
-    ],
-    [
-     "rm -rf *",
-     "Borra todo lo que tenga alrededor.",
-     [
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 30,
-       "tags": [
-        "area"
-       ]
-      }
-     ]
-    ],
-    [
-     "Cascada de Errores",
-     "Un fallo provoca diez más.",
-     [
-      {
-       "stat": "area_of_effect",
-       "type": "increased",
-       "value": 12
-      },
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 12,
-       "tags": [
-        "area"
-       ]
-      }
-     ]
-    ]
-   ]
-  },
-  "resistencias": {
-   "name": "Resistencias",
-   "color": "9a9aff",
-   "cluster_names": [
-    "Parche de Seguridad",
-    "Actualización Crítica",
-    "Antivirus",
-    "Hotfix Defensivo"
-   ],
-   "minors": [
-    [
-     "Resistencia a estados",
-     [
-      {
-       "stat": "status_resist",
-       "type": "flat",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Estados y resistencia",
-     [
-      {
-       "stat": "status_resist",
-       "type": "flat",
-       "value": 5
-      },
-      {
-       "stat": "fire_res",
-       "type": "flat",
-       "value": 3
-      },
-      {
-       "stat": "cold_res",
-       "type": "flat",
-       "value": 3
-      },
-      {
-       "stat": "lightning_res",
-       "type": "flat",
-       "value": 3
-      }
-     ]
-    ],
-    [
-     "Resistencia al fuego",
-     [
-      {
-       "stat": "fire_res",
-       "type": "flat",
-       "value": 12
-      }
-     ]
-    ],
-    [
-     "Resistencia al frío",
-     [
-      {
-       "stat": "cold_res",
-       "type": "flat",
-       "value": 12
-      }
-     ]
-    ],
-    [
-     "Resistencia al rayo",
-     [
-      {
-       "stat": "lightning_res",
-       "type": "flat",
-       "value": 12
-      }
-     ]
-    ],
-    [
-     "Resistencias elementales",
-     [
-      {
-       "stat": "fire_res",
-       "type": "flat",
-       "value": 5
-      },
-      {
-       "stat": "cold_res",
-       "type": "flat",
-       "value": 5
-      },
-      {
-       "stat": "lightning_res",
-       "type": "flat",
-       "value": 5
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Cortafuegos de Estados",
-     "Nada se te pega: ni el frío, ni la descarga.",
-     [
-      {
-       "stat": "status_resist",
-       "type": "flat",
-       "value": 30
-      },
-      {
-       "stat": "fire_res",
-       "type": "flat",
-       "value": 8
-      },
-      {
-       "stat": "cold_res",
-       "type": "flat",
-       "value": 8
-      },
-      {
-       "stat": "lightning_res",
-       "type": "flat",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Toma de Tierra Certificada",
-     "Por fin alguien cableó esto bien.",
-     [
-      {
-       "stat": "status_resist",
-       "type": "flat",
-       "value": 20
-      },
-      {
-       "stat": "lightning_res",
-       "type": "flat",
-       "value": 20
-      }
-     ]
-    ],
-    [
-     "Parche del Martes",
-     "Llega puntual. Arregla lo justo.",
-     [
-      {
-       "stat": "fire_res",
-       "type": "flat",
-       "value": 15
-      },
-      {
-       "stat": "cold_res",
-       "type": "flat",
-       "value": 15
-      },
-      {
-       "stat": "lightning_res",
-       "type": "flat",
-       "value": 15
-      }
-     ]
-    ],
-    [
-     "Antivirus Premium",
-     "Detecta amenazas. Y algún falso positivo.",
-     [
-      {
-       "stat": "chaos_res",
-       "type": "flat",
-       "value": 15
-      },
-      {
-       "stat": "fire_res",
-       "type": "flat",
-       "value": 8
-      },
-      {
-       "stat": "cold_res",
-       "type": "flat",
-       "value": 8
-      },
-      {
-       "stat": "lightning_res",
-       "type": "flat",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Actualización Obligatoria",
-     "Reinicia en 3, 2, 1...",
-     [
-      {
-       "stat": "fire_res",
-       "type": "flat",
-       "value": 12
-      },
-      {
-       "stat": "cold_res",
-       "type": "flat",
-       "value": 12
-      },
-      {
-       "stat": "lightning_res",
-       "type": "flat",
-       "value": 12
-      },
-      {
-       "stat": "life",
-       "type": "increased",
-       "value": 4
-      }
-     ]
-    ]
-   ]
-  },
-  "robo_vida": {
-   "name": "Robo de vida",
-   "color": "a02040",
-   "cluster_names": [
-    "Proceso Parásito",
-    "Vampiro de Recursos",
-    "Fuga de Memoria Ajena"
-   ],
-   "minors": [
-    [
-     "Robo de vida",
-     [
-      {
-       "stat": "life_leech",
-       "type": "flat",
-       "value": 0.4
-      }
-     ]
-    ],
-    [
-     "Robo de vida y daño",
-     [
-      {
-       "stat": "life_leech",
-       "type": "flat",
-       "value": 0.2
-      },
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 4,
-       "tags": [
-        "attack"
-       ]
-      }
-     ]
-    ],
-    [
-     "Robo de vida y vida",
-     [
-      {
-       "stat": "life_leech",
-       "type": "flat",
-       "value": 0.2
-      },
-      {
-       "stat": "life",
-       "type": "increased",
-       "value": 3
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Proceso Vampiro",
-     "Consume los recursos de otros. Como cierto navegador.",
-     [
-      {
-       "stat": "life_leech",
-       "type": "flat",
-       "value": 1.5
-      }
-     ]
-    ],
-    [
-     "Swap Ajeno",
-     "Usa la memoria de los demás sin pedir permiso.",
-     [
-      {
-       "stat": "life_leech",
-       "type": "flat",
-       "value": 1
-      },
-      {
-       "stat": "life",
-       "type": "increased",
-       "value": 6
-      },
-      {
-       "stat": "damage",
-       "type": "more",
-       "value": 15,
-       "tags": [
-        "low_life"
-       ]
-      }
-     ]
-    ],
-    [
-     "Minería Ilegal",
-     "Te alimentas de máquinas ajenas.",
-     [
-      {
-       "stat": "life_leech",
-       "type": "flat",
-       "value": 1
-      },
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 10,
-       "tags": [
-        "attack"
-       ]
-      }
-     ]
-    ]
-   ]
-  },
-  "atributos": {
-   "name": "Atributos",
-   "color": "c0c0c0",
-   "cluster_names": [
-    "Configuración Base",
-    "Kernel",
-    "Núcleo del Sistema"
-   ],
-   "minors": [
-    [
-     "Todos los atributos",
-     [
-      {
-       "stat": "strength",
-       "type": "flat",
-       "value": 4
-      },
-      {
-       "stat": "dexterity",
-       "type": "flat",
-       "value": 4
-      },
-      {
-       "stat": "intelligence",
-       "type": "flat",
-       "value": 4
-      }
-     ]
-    ],
-    [
-     "Fuerza",
-     [
-      {
-       "stat": "strength",
-       "type": "flat",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Destreza",
-     [
-      {
-       "stat": "dexterity",
-       "type": "flat",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Inteligencia",
-     [
-      {
-       "stat": "intelligence",
-       "type": "flat",
-       "value": 10
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Full Stack",
-     "Sabe un poco de todo. No domina nada.",
-     [
-      {
-       "stat": "strength",
-       "type": "flat",
-       "value": 12
-      },
-      {
-       "stat": "dexterity",
-       "type": "flat",
-       "value": 12
-      },
-      {
-       "stat": "intelligence",
-       "type": "flat",
-       "value": 12
-      }
-     ]
-    ],
-    [
-     "Ingeniero 10x",
-     "Hace el trabajo de diez. Y los bugs de veinte.",
-     [
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 10
-      },
-      {
-       "stat": "life",
-       "type": "increased",
-       "value": 5
-      },
-      {
-       "stat": "mana",
-       "type": "increased",
-       "value": 5
-      }
-     ]
-    ],
-    [
-     "Café Doble",
-     "El combustible del sistema.",
-     [
-      {
-       "stat": "attack_speed",
-       "type": "increased",
-       "value": 4
-      },
-      {
-       "stat": "cast_speed",
-       "type": "increased",
-       "value": 4
-      },
-      {
-       "stat": "movement_speed",
-       "type": "increased",
-       "value": 3
-      }
-     ]
-    ],
-    [
-     "Root Access",
-     "Permisos para todo. Responsabilidad, ninguna.",
-     [
-      {
-       "stat": "strength",
-       "type": "flat",
-       "value": 8
-      },
-      {
-       "stat": "dexterity",
-       "type": "flat",
-       "value": 8
-      },
-      {
-       "stat": "intelligence",
-       "type": "flat",
-       "value": 8
-      },
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 5
-      }
-     ]
-    ]
-   ]
-  },
-  "versatil": {
-   "name": "Versatilidad",
-   "color": "d8d8e8",
-   "cluster_names": [
-    "Núcleo Full Stack",
-    "Monorepo",
-    "Stack Completo",
-    "Navaja Suiza"
-   ],
-   "minors": [
-    [
-     "Todos los atributos",
-     [
-      {
-       "stat": "strength",
-       "type": "flat",
-       "value": 5
-      },
-      {
-       "stat": "dexterity",
-       "type": "flat",
-       "value": 5
-      },
-      {
-       "stat": "intelligence",
-       "type": "flat",
-       "value": 5
-      }
-     ]
-    ],
-    [
-     "Daño y vida",
-     [
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 6
-      },
-      {
-       "stat": "life",
-       "type": "increased",
-       "value": 3
-      }
-     ]
-    ],
-    [
-     "Ataques y hechizos",
-     [
-      {
-       "stat": "attack_speed",
-       "type": "increased",
-       "value": 4
-      },
-      {
-       "stat": "cast_speed",
-       "type": "increased",
-       "value": 4
-      }
-     ]
-    ],
-    [
-     "Defensas mixtas",
-     [
-      {
-       "stat": "armour",
-       "type": "increased",
-       "value": 8
-      },
-      {
-       "stat": "evasion",
-       "type": "increased",
-       "value": 8
-      },
-      {
-       "stat": "energy_shield",
-       "type": "increased",
-       "value": 4
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Stack Completo",
-     "Front, back, base de datos y la impresora de la oficina.",
-     [
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 20
-      },
-      {
-       "stat": "strength",
-       "type": "flat",
-       "value": 10
-      },
-      {
-       "stat": "dexterity",
-       "type": "flat",
-       "value": 10
-      },
-      {
-       "stat": "intelligence",
-       "type": "flat",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Ni Junior Ni Senior",
-     "Mid. Para siempre. Pero de todo.",
-     [
-      {
-       "stat": "life",
-       "type": "increased",
-       "value": 8
-      },
-      {
-       "stat": "mana",
-       "type": "increased",
-       "value": 8
-      },
-      {
-       "stat": "energy_shield",
-       "type": "increased",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Contexto Infinito",
-     "Cambia de tarea cada cinco minutos y sigue funcionando.",
-     [
-      {
-       "stat": "attack_speed",
-       "type": "increased",
-       "value": 10
-      },
-      {
-       "stat": "cast_speed",
-       "type": "increased",
-       "value": 10
-      },
-      {
-       "stat": "cooldown_recovery",
-       "type": "increased",
-       "value": 10
-      }
-     ]
-    ]
-   ]
-  },
-  "tiempos": {
-   "name": "Enfriamientos y duración",
-   "color": "6fd3c8",
-   "cluster_names": [
-    "Planificador",
-    "Cron Maestro",
-    "Bucle de Eventos",
-    "Reloj del Sistema"
-   ],
-   "minors": [
-    [
-     "Recuperación de enfriamientos",
-     [
-      {
-       "stat": "cooldown_recovery",
-       "type": "increased",
-       "value": 6
-      }
-     ]
-    ],
-    [
-     "Duración de habilidades",
-     [
-      {
-       "stat": "skill_duration",
-       "type": "increased",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Enfriamiento y área",
-     [
-      {
-       "stat": "cooldown_recovery",
-       "type": "increased",
-       "value": 4
-      },
-      {
-       "stat": "area_of_effect",
-       "type": "increased",
-       "value": 4
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Cron Cada Segundo",
-     "* * * * * habilidad.sh. El servidor lo agradece.",
-     [
-      {
-       "stat": "cooldown_recovery",
-       "type": "increased",
-       "value": 20
-      }
-     ]
-    ],
-    [
-     "setTimeout(∞)",
-     "Lo que lanzas dura más. Bastante más.",
-     [
-      {
-       "stat": "skill_duration",
-       "type": "increased",
-       "value": 30
-      },
-      {
-       "stat": "area_of_effect",
-       "type": "increased",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Tiempo Real",
-     "Latencia cero. O eso dice el comercial.",
-     [
-      {
-       "stat": "cooldown_recovery",
-       "type": "increased",
-       "value": 12
-      },
-      {
-       "stat": "cast_speed",
-       "type": "increased",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Hilo Bloqueante",
-     "Nadie sale hasta que tú lo digas.",
-     [
-      {
-       "stat": "skill_duration",
-       "type": "increased",
-       "value": 20
-      },
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 12
-      }
-     ]
-    ]
-   ]
-  },
-  "movilidad": {
-   "name": "Movilidad",
-   "color": "9ad06a",
-   "cluster_names": [
-    "Ruta Rápida",
-    "Fibra Óptica",
-    "Atajo de Teclado",
-    "Despliegue Ágil"
-   ],
-   "minors": [
-    [
-     "Velocidad de movimiento",
-     [
-      {
-       "stat": "movement_speed",
-       "type": "increased",
-       "value": 3
-      }
-     ]
-    ],
-    [
-     "Movimiento y evasión",
-     [
-      {
-       "stat": "movement_speed",
-       "type": "increased",
-       "value": 2
-      },
-      {
-       "stat": "evasion",
-       "type": "increased",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Movimiento y enfriamientos",
-     [
-      {
-       "stat": "movement_speed",
-       "type": "increased",
-       "value": 2
-      },
-      {
-       "stat": "cooldown_recovery",
-       "type": "increased",
-       "value": 3
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Sprint Sin Planificar",
-     "Corres mucho. Hacia dónde, ya se verá.",
-     [
-      {
-       "stat": "movement_speed",
-       "type": "increased",
-       "value": 10
-      },
-      {
-       "stat": "dodge_charges",
-       "type": "flat",
-       "value": 1
-      }
-     ]
-    ],
-    [
-     "Ctrl+Alt+Escapar",
-     "La mejor defensa es no estar ahí.",
-     [
-      {
-       "stat": "movement_speed",
-       "type": "increased",
-       "value": 6
-      },
-      {
-       "stat": "evasion",
-       "type": "increased",
-       "value": 25
-      },
-      {
-       "stat": "dodge_recovery",
-       "type": "flat",
-       "value": 20
-      }
-     ]
-    ],
-    [
-     "Ping de 1 ms",
-     "Llegas antes de que te llamen.",
-     [
-      {
-       "stat": "movement_speed",
-       "type": "increased",
-       "value": 6
-      },
-      {
-       "stat": "attack_speed",
-       "type": "increased",
-       "value": 8
-      }
-     ]
-    ]
-   ]
-  },
-  "ignicion": {
-   "name": "Ignición",
-   "color": "ff7a2a",
-   "cluster_names": [
-    "Hoguera de Logs",
-    "Cortocircuito",
-    "Ventilador Muerto",
-    "Punto de Ignición"
-   ],
-   "minors": [
-    [
-     "Probabilidad de quemar",
-     [
-      {
-       "stat": "burn_chance",
-       "type": "flat",
-       "value": 6
-      }
-     ]
-    ],
-    [
-     "Quemar y fuego",
-     [
-      {
-       "stat": "burn_chance",
-       "type": "flat",
-       "value": 4
-      },
-      {
-       "stat": "fire_damage",
-       "type": "increased",
-       "value": 6
-      }
-     ]
-    ],
-    [
-     "Estados más dañinos",
-     [
-      {
-       "stat": "ailment_damage",
-       "type": "increased",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Duración de estados",
-     [
-      {
-       "stat": "ailment_duration",
-       "type": "increased",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Quemar y área",
-     [
-      {
-       "stat": "burn_chance",
-       "type": "flat",
-       "value": 4
-      },
-      {
-       "stat": "area_of_effect",
-       "type": "increased",
-       "value": 3
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Incendio Forestal en Producción",
-     "Nadie apagó el servidor. Nadie apagó nada.",
-     [
-      {
-       "stat": "burn_chance",
-       "type": "flat",
-       "value": 15
-      },
-      {
-       "stat": "ailment_damage",
-       "type": "increased",
-       "value": 20
-      }
-     ]
-    ],
-    [
-     "Thermal Runaway",
-     "Cuanto más arde, más arde.",
-     [
-      {
-       "stat": "burn_chance",
-       "type": "flat",
-       "value": 10
-      },
-      {
-       "stat": "ailment_duration",
-       "type": "increased",
-       "value": 25
-      },
-      {
-       "stat": "fire_damage",
-       "type": "increased",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Rack en Llamas",
-     "Al menos ya no hace frío en el CPD.",
-     [
-      {
-       "stat": "burn_chance",
-       "type": "flat",
-       "value": 20
-      },
-      {
-       "stat": "fire_res",
-       "type": "flat",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Chispa de Arranque",
-     "Todo empieza con un pequeño cortocircuito.",
-     [
-      {
-       "stat": "burn_chance",
-       "type": "flat",
-       "value": 12
-      },
-      {
-       "stat": "cast_speed",
-       "type": "increased",
-       "value": 6
-      }
-     ]
-    ],
-    [
-     "Combustión Espontánea",
-     "Nadie encendió nada. Ardió igual.",
-     [
-      {
-       "stat": "burn_chance",
-       "type": "flat",
-       "value": 14
-      },
-      {
-       "stat": "fire_damage",
-       "type": "increased",
-       "value": 20
-      }
-     ]
-    ],
-    [
-     "Brasas Persistentes",
-     "Los logs se apagan; las brasas, no.",
-     [
-      {
-       "stat": "ailment_duration",
-       "type": "increased",
-       "value": 35
-      },
-      {
-       "stat": "burn_chance",
-       "type": "flat",
-       "value": 8
-      }
-     ]
-    ]
-   ]
-  },
-  "sobrecarga": {
-   "name": "Sobrecarga",
-   "color": "f0e060",
-   "cluster_names": [
-    "Subestación",
-    "Picos de Voltaje",
-    "Cable Pelado",
-    "Fuente Quemada"
-   ],
-   "minors": [
-    [
-     "Probabilidad de electrocutar",
-     [
-      {
-       "stat": "shock_chance",
-       "type": "flat",
-       "value": 6
-      }
-     ]
-    ],
-    [
-     "Electrocutar y rayo",
-     [
-      {
-       "stat": "shock_chance",
-       "type": "flat",
-       "value": 4
-      },
-      {
-       "stat": "lightning_damage",
-       "type": "increased",
-       "value": 6
-      }
-     ]
-    ],
-    [
-     "Estados más dañinos",
-     [
-      {
-       "stat": "ailment_damage",
-       "type": "increased",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Duración de estados",
-     [
-      {
-       "stat": "ailment_duration",
-       "type": "increased",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Electrocutar y velocidad",
-     [
-      {
-       "stat": "shock_chance",
-       "type": "flat",
-       "value": 4
-      },
-      {
-       "stat": "cast_speed",
-       "type": "increased",
-       "value": 2
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Sobretensión de Red",
-     "El SAI no llegó a tiempo.",
-     [
-      {
-       "stat": "shock_chance",
-       "type": "flat",
-       "value": 15
-      },
-      {
-       "stat": "ailment_damage",
-       "type": "increased",
-       "value": 20
-      }
-     ]
-    ],
-    [
-     "Sin Toma de Tierra",
-     "Así se cablea en este edificio.",
-     [
-      {
-       "stat": "shock_chance",
-       "type": "flat",
-       "value": 20
-      },
-      {
-       "stat": "lightning_res",
-       "type": "flat",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Arco Eléctrico",
-     "No toques la placa sin pulsera antiestática.",
-     [
-      {
-       "stat": "shock_chance",
-       "type": "flat",
-       "value": 10
-      },
-      {
-       "stat": "crit_chance",
-       "type": "increased",
-       "value": 15
-      }
-     ]
-    ],
-    [
-     "Bobina de Tesla",
-     "Ilumina el CPD entero. Y a los que hay dentro.",
-     [
-      {
-       "stat": "shock_chance",
-       "type": "flat",
-       "value": 12
-      },
-      {
-       "stat": "area_of_effect",
-       "type": "increased",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Cortocircuito en Cadena",
-     "Un cable suelto. Cuarenta servidores menos.",
-     [
-      {
-       "stat": "shock_chance",
-       "type": "flat",
-       "value": 14
-      },
-      {
-       "stat": "extra_chains",
-       "type": "flat",
-       "value": 1
-      }
-     ]
-    ],
-    [
-     "Pararrayos",
-     "Atrae todo el daño. Y lo devuelve.",
-     [
-      {
-       "stat": "shock_chance",
-       "type": "flat",
-       "value": 10
-      },
-      {
-       "stat": "lightning_damage",
-       "type": "increased",
-       "value": 25
-      }
-     ]
-    ]
-   ]
-  },
-  "criogenia": {
-   "name": "Criogenia",
-   "color": "a0e0ff",
-   "cluster_names": [
-    "Sala Fría",
-    "Criostato",
-    "Escarcha",
-    "Refrigeración Industrial"
-   ],
-   "minors": [
-    [
-     "Probabilidad de helar",
-     [
-      {
-       "stat": "chill_chance",
-       "type": "flat",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Helar y frío",
-     [
-      {
-       "stat": "chill_chance",
-       "type": "flat",
-       "value": 5
-      },
-      {
-       "stat": "cold_damage",
-       "type": "increased",
-       "value": 6
-      }
-     ]
-    ],
-    [
-     "Probabilidad de congelar",
-     [
-      {
-       "stat": "freeze_chance",
-       "type": "flat",
-       "value": 3
-      }
-     ]
-    ],
-    [
-     "Duración de estados",
-     [
-      {
-       "stat": "ailment_duration",
-       "type": "increased",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Helar y resistencia",
-     [
-      {
-       "stat": "chill_chance",
-       "type": "flat",
-       "value": 5
-      },
-      {
-       "stat": "cold_res",
-       "type": "flat",
-       "value": 4
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Cero Absoluto",
-     "0 kelvin, 0 bugs, 0 movimiento.",
-     [
-      {
-       "stat": "freeze_chance",
-       "type": "flat",
-       "value": 10
-      },
-      {
-       "stat": "chill_chance",
-       "type": "flat",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Criostasis",
-     "Overclock extremo, enemigos extremadamente quietos.",
-     [
-      {
-       "stat": "chill_chance",
-       "type": "flat",
-       "value": 15
-      },
-      {
-       "stat": "ailment_duration",
-       "type": "increased",
-       "value": 25
-      }
-     ]
-    ],
-    [
-     "Cámara Frigorífica",
-     "Aquí se conservan los servidores. Y los enemigos.",
-     [
-      {
-       "stat": "freeze_chance",
-       "type": "flat",
-       "value": 8
-      },
-      {
-       "stat": "cold_res",
-       "type": "flat",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Escarcha en el Disipador",
-     "Algo va muy bien o muy mal.",
-     [
-      {
-       "stat": "chill_chance",
-       "type": "flat",
-       "value": 12
-      },
-      {
-       "stat": "cold_damage",
-       "type": "increased",
-       "value": 15
-      }
-     ]
-    ],
-    [
-     "Condensación Fatal",
-     "El rocío se queda helado sobre el procesador.",
-     [
-      {
-       "stat": "chill_chance",
-       "type": "flat",
-       "value": 14
-      },
-      {
-       "stat": "freeze_chance",
-       "type": "flat",
-       "value": 5
-      }
-     ]
-    ],
-    [
-     "Invierno de la IA",
-     "Se enfría la inversión. Y todo lo demás.",
-     [
-      {
-       "stat": "freeze_chance",
-       "type": "flat",
-       "value": 10
-      },
-      {
-       "stat": "cold_damage",
-       "type": "increased",
-       "value": 20
-      }
-     ]
-    ]
-   ]
-  },
-  "toxinas": {
-   "name": "Toxinas",
-   "color": "6fd36b",
-   "cluster_names": [
-    "Repositorio Infectado",
-    "Paquete Malicioso",
-    "Laboratorio de Malware",
-    "Backdoor"
-   ],
-   "minors": [
-    [
-     "Probabilidad de envenenar",
-     [
-      {
-       "stat": "poison_chance",
-       "type": "flat",
-       "value": 6
-      }
-     ]
-    ],
-    [
-     "Veneno y caos",
-     [
-      {
-       "stat": "poison_chance",
-       "type": "flat",
-       "value": 4
-      },
-      {
-       "stat": "chaos_damage",
-       "type": "increased",
-       "value": 6
-      }
-     ]
-    ],
-    [
-     "Estados duraderos",
-     [
-      {
-       "stat": "ailment_duration",
-       "type": "increased",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Estados más dañinos",
-     [
-      {
-       "stat": "ailment_damage",
-       "type": "increased",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Envenenar y velocidad",
-     [
-      {
-       "stat": "poison_chance",
-       "type": "flat",
-       "value": 4
-      },
-      {
-       "stat": "attack_speed",
-       "type": "increased",
-       "value": 2
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Dependencia Comprometida",
-     "npm install veneno@latest",
-     [
-      {
-       "stat": "poison_chance",
-       "type": "flat",
-       "value": 15
-      },
-      {
-       "stat": "ailment_damage",
-       "type": "increased",
-       "value": 20
-      }
-     ]
-    ],
-    [
-     "Ataque a la Cadena de Suministro",
-     "Infectas al proveedor y caen todos.",
-     [
-      {
-       "stat": "poison_chance",
-       "type": "flat",
-       "value": 10
-      },
-      {
-       "stat": "ailment_duration",
-       "type": "increased",
-       "value": 30
-      }
-     ]
-    ],
-    [
-     "Gusano Autorreplicante",
-     "Se copia solo. Como la deuda técnica.",
-     [
-      {
-       "stat": "poison_chance",
-       "type": "flat",
-       "value": 20
-      },
-      {
-       "stat": "chaos_res",
-       "type": "flat",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Rootkit Residente",
-     "No se va ni formateando.",
-     [
-      {
-       "stat": "poison_chance",
-       "type": "flat",
-       "value": 12
-      },
-      {
-       "stat": "ailment_damage",
-       "type": "increased",
-       "value": 15
-      },
-      {
-       "stat": "chaos_damage",
-       "type": "increased",
-       "value": 10
-      },
-      {
-       "stat": "convert_elemental_to_chaos",
-       "type": "flat",
-       "value": 1
-      }
-     ]
-    ],
-    [
-     "Inyección SQL",
-     "'; DROP TABLE enemigos; --",
-     [
-      {
-       "stat": "poison_chance",
-       "type": "flat",
-       "value": 15
-      },
-      {
-       "stat": "chaos_damage",
-       "type": "increased",
-       "value": 20
-      }
-     ]
-    ],
-    [
-     "Fuga de Memoria Tóxica",
-     "malloc(): sin free() a la vista.",
-     [
-      {
-       "stat": "poison_chance",
-       "type": "flat",
-       "value": 10
-      },
-      {
-       "stat": "ailment_duration",
-       "type": "increased",
-       "value": 30
-      },
-      {
-       "stat": "ailment_damage",
-       "type": "more",
-       "value": 15
-      }
-     ]
-    ]
-   ]
-  },
-  "hemorragia": {
-   "name": "Hemorragia",
-   "color": "c02838",
-   "cluster_names": [
-    "Cortes de Red",
-    "Hemorragia de Datos",
-    "Cable Cortado",
-    "Sectores Dañados"
-   ],
-   "minors": [
-    [
-     "Probabilidad de hacer sangrar",
-     [
-      {
-       "stat": "bleed_chance",
-       "type": "flat",
-       "value": 6
-      }
-     ]
-    ],
-    [
-     "Sangrar y físico",
-     [
-      {
-       "stat": "bleed_chance",
-       "type": "flat",
-       "value": 4
-      },
-      {
-       "stat": "physical_damage",
-       "type": "increased",
-       "value": 6
-      }
-     ]
-    ],
-    [
-     "Estados más dañinos",
-     [
-      {
-       "stat": "ailment_damage",
-       "type": "increased",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Duración de estados",
-     [
-      {
-       "stat": "ailment_duration",
-       "type": "increased",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Sangrar y vida",
-     [
-      {
-       "stat": "bleed_chance",
-       "type": "flat",
-       "value": 4
-      },
-      {
-       "stat": "life",
-       "type": "flat",
-       "value": 8
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Corte de Fibra",
-     "Alguien pasó una excavadora por el cable submarino.",
-     [
-      {
-       "stat": "bleed_chance",
-       "type": "flat",
-       "value": 15
-      },
-      {
-       "stat": "ailment_damage",
-       "type": "increased",
-       "value": 20
-      }
-     ]
-    ],
-    [
-     "Sector Defectuoso",
-     "Pierde datos a cada paso.",
-     [
-      {
-       "stat": "bleed_chance",
-       "type": "flat",
-       "value": 10
-      },
-      {
-       "stat": "ailment_duration",
-       "type": "increased",
-       "value": 25
-      },
-      {
-       "stat": "physical_damage",
-       "type": "increased",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Fuga de Paquetes",
-     "Drip, drip, drip.",
-     [
-      {
-       "stat": "bleed_chance",
-       "type": "flat",
-       "value": 20
-      },
-      {
-       "stat": "life_leech",
-       "type": "flat",
-       "value": 0.5
-      }
-     ]
-    ],
-    [
-     "Navaja de Ockham",
-     "La explicación más simple: le has cortado.",
-     [
-      {
-       "stat": "bleed_chance",
-       "type": "flat",
-       "value": 12
-      },
-      {
-       "stat": "attack_speed",
-       "type": "increased",
-       "value": 6
-      }
-     ]
-    ],
-    [
-     "Corte de Suministro",
-     "Se cae el proveedor. Se cae todo lo demás.",
-     [
-      {
-       "stat": "bleed_chance",
-       "type": "flat",
-       "value": 14
-      },
-      {
-       "stat": "physical_damage",
-       "type": "increased",
-       "value": 20
-      }
-     ]
-    ],
-    [
-     "Pérdida de Paquetes",
-     "El 30 % ya no vuelve. El resto, tampoco.",
-     [
-      {
-       "stat": "bleed_chance",
-       "type": "flat",
-       "value": 10
-      },
-      {
-       "stat": "ailment_damage",
-       "type": "increased",
-       "value": 25
-      }
-     ]
-    ]
-   ]
-  },
-  "automatizacion": {
-   "name": "Automatización",
-   "color": "7fd0e8",
-   "cluster_names": [
-    "Sala de Máquinas",
-    "Línea de Montaje",
-    "Granja de Bots",
-    "Taller de Robótica"
-   ],
-   "minors": [
-    [
-     "Daño de autómatas",
-     [
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 10,
-       "tags": [
-        "automaton"
-       ]
-      }
-     ]
-    ],
-    [
-     "Velocidad de autómatas",
-     [
-      {
-       "stat": "automaton_speed",
-       "type": "increased",
-       "value": 6
-      }
-     ]
-    ],
-    [
-     "Vida de esbirros",
-     [
-      {
-       "stat": "minion_life",
-       "type": "increased",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Daño de torretas",
-     [
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 10,
-       "tags": [
-        "totem"
-       ]
-      }
-     ]
-    ],
-    [
-     "Daño de esbirros",
-     [
-      {
-       "stat": "minion_damage",
-       "type": "increased",
-       "value": 10
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Pipeline de CI/CD",
-     "Cada commit despliega otra torreta.",
-     [
-      {
-       "stat": "automaton_speed",
-       "type": "increased",
-       "value": 15
-      },
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 15,
-       "tags": [
-        "automaton"
-       ]
-      }
-     ]
-    ],
-    [
-     "Orquestador",
-     "Tú das las órdenes; ellos hacen el trabajo.",
-     [
-      {
-       "stat": "extra_devices",
-       "type": "flat",
-       "value": 1
-      },
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 10,
-       "tags": [
-        "automaton"
-       ]
-      }
-     ]
-    ],
-    [
-     "Redundancia N+1",
-     "Si cae uno, sigue el otro.",
-     [
-      {
-       "stat": "minion_life",
-       "type": "increased",
-       "value": 30
-      },
-      {
-       "stat": "reservation_efficiency",
-       "type": "increased",
-       "value": 12
-      }
-     ]
-    ],
-    [
-     "Sensores Calibrados",
-     "Ahora apuntan a lo que se mueve y no a las palomas.",
-     [
-      {
-       "stat": "automaton_speed",
-       "type": "increased",
-       "value": 10
-      },
-      {
-       "stat": "shock_chance",
-       "type": "flat",
-       "value": 8,
-       "tags": [
-        "automaton"
-       ]
-      },
-      {
-       "stat": "burn_chance",
-       "type": "flat",
-       "value": 8,
-       "tags": [
-        "automaton"
-       ]
-      }
-     ]
-    ],
-    [
-     "Infraestructura Inmutable",
-     "Si algo falla, no se arregla: se destruye y se vuelve a desplegar.",
-     [
-      {
-       "stat": "extra_devices",
-       "type": "flat",
-       "value": 1
-      },
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 15,
-       "tags": [
-        "totem"
-       ]
-      }
-     ]
-    ],
-    [
-     "Escalado Horizontal",
-     "¿Más carga? Más robots. ¿Más robots? Más carga.",
-     [
-      {
-       "stat": "extra_minions",
-       "type": "flat",
-       "value": 1
-      },
-      {
-       "stat": "automaton_speed",
-       "type": "increased",
-       "value": 10
-      }
-     ]
-    ],
-    [
-     "Cron de la Madrugada",
-     "Corre solo. Rompe solo.",
-     [
-      {
-       "stat": "automaton_speed",
-       "type": "increased",
-       "value": 20
-      },
-      {
-       "stat": "damage",
-       "type": "increased",
-       "value": 10,
-       "tags": [
-        "automaton"
-       ]
-      }
-     ]
-    ]
-   ]
-  },
-  "legion": {
-   "name": "Legión",
-   "color": "9ad0ff",
-   "cluster_names": [
-    "Granja de Procesos",
-    "Flota de Drones",
-    "Escuadrón de Daemons",
-    "Sala de Control",
-    "Batallón Redundante"
-   ],
-   "minors": [
-    [
-     "Vida de esbirros",
-     [
-      {
-       "stat": "minion_life",
-       "type": "increased",
-       "value": 12
-      }
-     ]
-    ],
-    [
-     "Daño de esbirros",
-     [
-      {
-       "stat": "minion_damage",
-       "type": "increased",
-       "value": 12
-      }
-     ]
-    ],
-    [
-     "Eficiencia de reserva",
-     [
-      {
-       "stat": "reservation_efficiency",
-       "type": "increased",
-       "value": 6
-      }
-     ]
-    ],
-    [
-     "Efecto de auras",
-     [
-      {
-       "stat": "aura_effect",
-       "type": "increased",
-       "value": 6
-      }
-     ]
-    ],
-    [
-     "Esbirros y vida",
-     [
-      {
-       "stat": "minion_life",
-       "type": "increased",
-       "value": 6
-      },
-      {
-       "stat": "minion_damage",
-       "type": "increased",
-       "value": 6
-      }
-     ]
-    ]
-   ],
-   "notables": [
-    [
-     "Redundancia Activa-Activa",
-     "Si cae uno, ya hay otro corriendo.",
-     [
-      {
-       "stat": "minion_life",
-       "type": "increased",
-       "value": 35
-      },
-      {
-       "stat": "reservation_efficiency",
-       "type": "increased",
-       "value": 10
-      },
-      {
-       "stat": "minion_damage",
-       "type": "increased",
-       "value": 25,
-       "tags": [
-        "three_allies"
-       ]
-      }
-     ]
-    ],
-    [
-     "Orquestador de Contenedores",
-     "Cada contenedor, un daemon. Cada daemon, un problema.",
-     [
-      {
-       "stat": "extra_minions",
-       "type": "flat",
-       "value": 1
-      },
-      {
-       "stat": "minion_damage",
-       "type": "increased",
-       "value": 15
-      }
-     ]
-    ],
-    [
-     "Estado Compartido",
-     "Todas las auras leen la misma variable global.",
-     [
-      {
-       "stat": "aura_effect",
-       "type": "increased",
-       "value": 30
-      },
-      {
-       "stat": "reservation_efficiency",
-       "type": "increased",
-       "value": 8
-      }
-     ]
-    ],
-    [
-     "Servicio sin Estado",
-     "Lo matas y vuelve igual. Reservando lo mismo.",
-     [
-      {
-       "stat": "reservation_efficiency",
-       "type": "increased",
-       "value": 20
-      }
-     ]
-    ],
-    [
-     "Cadena de Mando",
-     "El jefe habla, los demás ejecutan sin preguntar.",
-     [
-      {
-       "stat": "minion_damage",
-       "type": "increased",
-       "value": 30
-      },
-      {
-       "stat": "aura_effect",
-       "type": "increased",
-       "value": 15
-      }
-     ]
-    ],
-    [
-     "Autoescalado Reactivo",
-     "Más enemigos, más daemons. Hasta que la factura llega.",
-     [
-      {
-       "stat": "minion_life",
-       "type": "increased",
-       "value": 25
-      },
-      {
-       "stat": "automaton_speed",
-       "type": "increased",
-       "value": 12
-      }
-     ]
-    ]
-   ]
+  "version": 1,
+  "_doc": "Temáticas de los clusters del árbol pasivo. Cada cluster usa UNA temática: sus pasivas menores salen de 'minors' (en orden, ciclando) y su notable de 'notables'. mods: {stat, type (flat/increased/more), value, tags}. Tags de condición: low_life, full_life, recent_kill. Tras editar, regenera el árbol: python tools/generate_passive_tree.py",
+  "themes": {
+    "vida": {
+      "name": "Vida",
+      "color": "c83232",
+      "cluster_names": [
+        "Núcleo Vital",
+        "Bloque de Alimentación",
+        "Reserva de Energía",
+        "Fuente Redundante"
+      ],
+      "minors": [
+        [
+          "Vida",
+          [
+            {
+              "stat": "life",
+              "type": "flat",
+              "value": 12
+            }
+          ]
+        ],
+        [
+          "Vida",
+          [
+            {
+              "stat": "life",
+              "type": "increased",
+              "value": 6
+            }
+          ]
+        ],
+        [
+          "Vida y regeneración",
+          [
+            {
+              "stat": "life",
+              "type": "increased",
+              "value": 4
+            },
+            {
+              "stat": "life_regen",
+              "type": "flat",
+              "value": 2
+            }
+          ]
+        ],
+        [
+          "Vida y armadura",
+          [
+            {
+              "stat": "life",
+              "type": "increased",
+              "value": 4
+            },
+            {
+              "stat": "armour",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Vida máxima",
+          [
+            {
+              "stat": "life",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Corazón de Silicio",
+          "Late a 3,2 GHz. Con ventilador.",
+          [
+            {
+              "stat": "life",
+              "type": "increased",
+              "value": 15
+            },
+            {
+              "stat": "life_regen",
+              "type": "flat",
+              "value": 6
+            },
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 20,
+              "tags": [
+                "full_life"
+              ]
+            }
+          ]
+        ],
+        [
+          "Hasta el Último Byte",
+          "Cuanto peor va, mejor rindes. Como en cada entrega.",
+          [
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 40,
+              "tags": [
+                "low_life"
+              ]
+            },
+            {
+              "stat": "life",
+              "type": "increased",
+              "value": 8
+            },
+            {
+              "stat": "life_leech",
+              "type": "flat",
+              "value": 1,
+              "tags": [
+                "low_life"
+              ]
+            }
+          ]
+        ],
+        [
+          "SAI Personal",
+          "Sistema de Alimentación Ininterrumpida. Para tu vida.",
+          [
+            {
+              "stat": "life",
+              "type": "increased",
+              "value": 10
+            },
+            {
+              "stat": "life_regen",
+              "type": "flat",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Perfil de Producción",
+          "Optimizado para no caerse. Casi nunca.",
+          [
+            {
+              "stat": "life",
+              "type": "flat",
+              "value": 40
+            },
+            {
+              "stat": "armour",
+              "type": "increased",
+              "value": 15
+            }
+          ]
+        ],
+        [
+          "Doble Fuente de Alimentación",
+          "Si una falla, la otra aguanta. Casi siempre.",
+          [
+            {
+              "stat": "life",
+              "type": "increased",
+              "value": 12
+            },
+            {
+              "stat": "life_regen",
+              "type": "flat",
+              "value": 8,
+              "tags": [
+                "stationary"
+              ]
+            }
+          ]
+        ]
+      ]
+    },
+    "armadura": {
+      "name": "Armadura",
+      "color": "9aa0a8",
+      "cluster_names": [
+        "Muro de Contención",
+        "Capa de Abstracción",
+        "Blindaje Legacy",
+        "Búnker"
+      ],
+      "minors": [
+        [
+          "Armadura",
+          [
+            {
+              "stat": "armour",
+              "type": "increased",
+              "value": 15
+            }
+          ]
+        ],
+        [
+          "Armadura",
+          [
+            {
+              "stat": "armour",
+              "type": "flat",
+              "value": 30
+            }
+          ]
+        ],
+        [
+          "Armadura y vida",
+          [
+            {
+              "stat": "armour",
+              "type": "increased",
+              "value": 10
+            },
+            {
+              "stat": "life",
+              "type": "increased",
+              "value": 3
+            }
+          ]
+        ],
+        [
+          "Bloqueo",
+          [
+            {
+              "stat": "block_chance",
+              "type": "flat",
+              "value": 2
+            }
+          ]
+        ],
+        [
+          "Armadura y bloqueo",
+          [
+            {
+              "stat": "armour",
+              "type": "increased",
+              "value": 8
+            },
+            {
+              "stat": "block_chance",
+              "type": "flat",
+              "value": 1
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Firewall Corporativo",
+          "Bloquea todo. Incluido lo que necesitabas.",
+          [
+            {
+              "stat": "armour",
+              "type": "increased",
+              "value": 35
+            },
+            {
+              "stat": "block_chance",
+              "type": "flat",
+              "value": 4
+            }
+          ]
+        ],
+        [
+          "Hormigón Armado",
+          "Tan rígido como el código de 2005.",
+          [
+            {
+              "stat": "armour",
+              "type": "increased",
+              "value": 45
+            },
+            {
+              "stat": "movement_speed",
+              "type": "increased",
+              "value": -3
+            },
+            {
+              "stat": "max_buffer_charges",
+              "type": "flat",
+              "value": 1
+            }
+          ]
+        ],
+        [
+          "Defensa en Profundidad",
+          "Capas y capas de seguridad. Y de burocracia.",
+          [
+            {
+              "stat": "armour",
+              "type": "increased",
+              "value": 25
+            },
+            {
+              "stat": "life",
+              "type": "increased",
+              "value": 6
+            },
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 20,
+              "tags": [
+                "stationary"
+              ]
+            }
+          ]
+        ],
+        [
+          "Escudo de Producción",
+          "Recibe los golpes para que el resto del equipo no.",
+          [
+            {
+              "stat": "block_chance",
+              "type": "flat",
+              "value": 6
+            },
+            {
+              "stat": "armour",
+              "type": "flat",
+              "value": 60
+            }
+          ]
+        ],
+        [
+          "Rack Anclado al Suelo",
+          "Plantado, no te mueve ni un terremoto.",
+          [
+            {
+              "stat": "armour",
+              "type": "increased",
+              "value": 30,
+              "tags": [
+                "stationary"
+              ]
+            },
+            {
+              "stat": "block_chance",
+              "type": "flat",
+              "value": 3
+            }
+          ]
+        ]
+      ]
+    },
+    "fisico": {
+      "name": "Daño físico",
+      "color": "e8d9b0",
+      "cluster_names": [
+        "Fuerza Bruta",
+        "Refactorización Violenta",
+        "Martillo de Merge",
+        "Golpe en Producción"
+      ],
+      "minors": [
+        [
+          "Daño físico cuerpo a cuerpo",
+          [
+            {
+              "stat": "physical_damage",
+              "type": "increased",
+              "value": 10,
+              "tags": [
+                "melee"
+              ]
+            }
+          ]
+        ],
+        [
+          "Daño físico",
+          [
+            {
+              "stat": "physical_damage",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Fuerza",
+          [
+            {
+              "stat": "strength",
+              "type": "flat",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Daño físico y precisión",
+          [
+            {
+              "stat": "physical_damage",
+              "type": "increased",
+              "value": 6
+            },
+            {
+              "stat": "accuracy",
+              "type": "flat",
+              "value": 30
+            }
+          ]
+        ],
+        [
+          "Físico y hemorragia",
+          [
+            {
+              "stat": "physical_damage",
+              "type": "increased",
+              "value": 6
+            },
+            {
+              "stat": "bleed_chance",
+              "type": "flat",
+              "value": 4
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Refactor a Martillazos",
+          "Si no compila, más fuerza.",
+          [
+            {
+              "stat": "physical_damage",
+              "type": "increased",
+              "value": 30,
+              "tags": [
+                "melee"
+              ]
+            },
+            {
+              "stat": "strength",
+              "type": "flat",
+              "value": 10
+            },
+            {
+              "stat": "stunned_damage",
+              "type": "increased",
+              "value": 30
+            }
+          ]
+        ],
+        [
+          "Golpe de Merge",
+          "Resuelve conflictos. A golpes.",
+          [
+            {
+              "stat": "physical_damage",
+              "type": "increased",
+              "value": 20
+            },
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 20,
+              "tags": [
+                "recent_kill"
+              ]
+            }
+          ]
+        ],
+        [
+          "Rompe-Builds",
+          "Rompe todo lo que toca. Por eso no le dejan tocar main.",
+          [
+            {
+              "stat": "physical_damage",
+              "type": "increased",
+              "value": 25
+            },
+            {
+              "stat": "crit_multiplier",
+              "type": "flat",
+              "value": 15
+            },
+            {
+              "stat": "bleed_chance",
+              "type": "flat",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Brute Force",
+          "O(n!) de complejidad. O(1) de sutileza.",
+          [
+            {
+              "stat": "physical_damage",
+              "type": "increased",
+              "value": 25,
+              "tags": [
+                "melee"
+              ]
+            },
+            {
+              "stat": "attack_speed",
+              "type": "increased",
+              "value": 5
+            }
+          ]
+        ],
+        [
+          "Commit Forzado",
+          "git push --force. Que se aparten.",
+          [
+            {
+              "stat": "physical_damage",
+              "type": "increased",
+              "value": 20
+            },
+            {
+              "stat": "physical_damage",
+              "type": "increased",
+              "value": 25,
+              "tags": [
+                "recent_kill"
+              ]
+            }
+          ]
+        ],
+        [
+          "Reescritura Total",
+          "Borrón y cuenta nueva. A golpes.",
+          [
+            {
+              "stat": "physical_damage",
+              "type": "increased",
+              "value": 18
+            },
+            {
+              "stat": "attack_speed",
+              "type": "increased",
+              "value": 6
+            }
+          ]
+        ]
+      ]
+    },
+    "evasion": {
+      "name": "Evasión",
+      "color": "5cb85c",
+      "cluster_names": [
+        "Esquiva Ágil",
+        "Patrón Escurridizo",
+        "Modo Sigilo",
+        "Bypass"
+      ],
+      "minors": [
+        [
+          "Evasión",
+          [
+            {
+              "stat": "evasion",
+              "type": "increased",
+              "value": 15
+            }
+          ]
+        ],
+        [
+          "Evasión",
+          [
+            {
+              "stat": "evasion",
+              "type": "flat",
+              "value": 30
+            }
+          ]
+        ],
+        [
+          "Evasión y movimiento",
+          [
+            {
+              "stat": "evasion",
+              "type": "increased",
+              "value": 8
+            },
+            {
+              "stat": "movement_speed",
+              "type": "increased",
+              "value": 2
+            }
+          ]
+        ],
+        [
+          "Destreza",
+          [
+            {
+              "stat": "dexterity",
+              "type": "flat",
+              "value": 10
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Excepción Capturada",
+          "No te dan si tu try/catch es lo bastante amplio.",
+          [
+            {
+              "stat": "evasion",
+              "type": "increased",
+              "value": 35
+            },
+            {
+              "stat": "movement_speed",
+              "type": "increased",
+              "value": 4
+            },
+            {
+              "stat": "max_multihilo_charges",
+              "type": "flat",
+              "value": 1
+            }
+          ]
+        ],
+        [
+          "Proceso en Segundo Plano",
+          "Nadie sabe que estás ahí. Ni el profiler.",
+          [
+            {
+              "stat": "evasion",
+              "type": "increased",
+              "value": 25
+            },
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 25,
+              "tags": [
+                "full_life"
+              ]
+            }
+          ]
+        ],
+        [
+          "Deploy Silencioso",
+          "Entra y sale sin que nadie lo note. Ni el changelog.",
+          [
+            {
+              "stat": "movement_speed",
+              "type": "increased",
+              "value": 8
+            },
+            {
+              "stat": "evasion",
+              "type": "increased",
+              "value": 15
+            }
+          ]
+        ],
+        [
+          "Race Condition",
+          "A veces esquivas. A veces no. Depende del scheduler.",
+          [
+            {
+              "stat": "evasion",
+              "type": "increased",
+              "value": 30
+            },
+            {
+              "stat": "dexterity",
+              "type": "flat",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Ruta Alternativa",
+          "Si hay atasco, por otro lado.",
+          [
+            {
+              "stat": "evasion",
+              "type": "increased",
+              "value": 25
+            },
+            {
+              "stat": "movement_speed",
+              "type": "increased",
+              "value": 6,
+              "tags": [
+                "recent_kill"
+              ]
+            }
+          ]
+        ]
+      ]
+    },
+    "proyectiles": {
+      "name": "Proyectiles",
+      "color": "c8c8c8",
+      "cluster_names": [
+        "Red de Distribución",
+        "Balanceador de Carga",
+        "Tubería de Datos",
+        "Ancho de Banda"
+      ],
+      "minors": [
+        [
+          "Daño de proyectiles",
+          [
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 10,
+              "tags": [
+                "projectile"
+              ]
+            }
+          ]
+        ],
+        [
+          "Velocidad de proyectiles",
+          [
+            {
+              "stat": "projectile_speed",
+              "type": "increased",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Proyectiles",
+          [
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 6,
+              "tags": [
+                "projectile"
+              ]
+            },
+            {
+              "stat": "projectile_speed",
+              "type": "increased",
+              "value": 5
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Broadcast",
+          "Envía a todos. Spam con estilo.",
+          [
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 25,
+              "tags": [
+                "projectile"
+              ]
+            },
+            {
+              "stat": "projectile_speed",
+              "type": "increased",
+              "value": 15
+            }
+          ]
+        ],
+        [
+          "Paquetes Jumbo",
+          "MTU ilimitada. Fragmentación garantizada.",
+          [
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 30,
+              "tags": [
+                "projectile"
+              ]
+            }
+          ]
+        ],
+        [
+          "Latencia Cero",
+          "Llega antes de que lo dispares. Casi.",
+          [
+            {
+              "stat": "projectile_speed",
+              "type": "increased",
+              "value": 30
+            },
+            {
+              "stat": "attack_speed",
+              "type": "increased",
+              "value": 5
+            }
+          ]
+        ],
+        [
+          "Ping de Precisión",
+          "Responde en 1 ms. Al corazón.",
+          [
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 20,
+              "tags": [
+                "projectile"
+              ]
+            },
+            {
+              "stat": "crit_chance",
+              "type": "increased",
+              "value": 20
+            }
+          ]
+        ]
+      ]
+    },
+    "velocidad_ataque": {
+      "name": "Velocidad de ataque",
+      "color": "d9a441",
+      "cluster_names": [
+        "Ciclo de Reloj",
+        "Overclock Manual",
+        "Hilos Paralelos",
+        "Pipeline"
+      ],
+      "minors": [
+        [
+          "Velocidad de ataque",
+          [
+            {
+              "stat": "attack_speed",
+              "type": "increased",
+              "value": 4
+            }
+          ]
+        ],
+        [
+          "Velocidad de ataque y precisión",
+          [
+            {
+              "stat": "attack_speed",
+              "type": "increased",
+              "value": 3
+            },
+            {
+              "stat": "accuracy",
+              "type": "flat",
+              "value": 20
+            }
+          ]
+        ],
+        [
+          "Velocidad y daño de ataque",
+          [
+            {
+              "stat": "attack_speed",
+              "type": "increased",
+              "value": 2
+            },
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 4,
+              "tags": [
+                "attack"
+              ]
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Overclock Sin Garantía",
+          "Más rápido. Más caliente. Más caro.",
+          [
+            {
+              "stat": "attack_speed",
+              "type": "increased",
+              "value": 12
+            }
+          ]
+        ],
+        [
+          "Multihilo",
+          "Ataca en paralelo. Los bugs, también.",
+          [
+            {
+              "stat": "attack_speed",
+              "type": "increased",
+              "value": 8
+            },
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 10,
+              "tags": [
+                "attack"
+              ]
+            }
+          ]
+        ],
+        [
+          "Spam de Clicks",
+          "Tu mouse no sobrevivirá a esto.",
+          [
+            {
+              "stat": "attack_speed",
+              "type": "increased",
+              "value": 10
+            },
+            {
+              "stat": "accuracy",
+              "type": "flat",
+              "value": 60
+            }
+          ]
+        ],
+        [
+          "Sprint Final",
+          "Rápido cuando ya es tarde.",
+          [
+            {
+              "stat": "attack_speed",
+              "type": "increased",
+              "value": 15,
+              "tags": [
+                "recent_kill"
+              ]
+            },
+            {
+              "stat": "movement_speed",
+              "type": "increased",
+              "value": 3
+            }
+          ]
+        ],
+        [
+          "Doble Click Furioso",
+          "Más rápido que el usuario impaciente.",
+          [
+            {
+              "stat": "attack_speed",
+              "type": "increased",
+              "value": 10
+            },
+            {
+              "stat": "attack_speed",
+              "type": "increased",
+              "value": 10,
+              "tags": [
+                "full_life"
+              ]
+            }
+          ]
+        ]
+      ]
+    },
+    "critico": {
+      "name": "Crítico",
+      "color": "ff6a6a",
+      "cluster_names": [
+        "Punto de Fallo",
+        "Error Crítico",
+        "Caso Límite",
+        "Excepción Fatal"
+      ],
+      "minors": [
+        [
+          "Probabilidad de crítico",
+          [
+            {
+              "stat": "crit_chance",
+              "type": "increased",
+              "value": 12
+            }
+          ]
+        ],
+        [
+          "Multiplicador de crítico",
+          [
+            {
+              "stat": "crit_multiplier",
+              "type": "flat",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Crítico",
+          [
+            {
+              "stat": "crit_chance",
+              "type": "increased",
+              "value": 6
+            },
+            {
+              "stat": "crit_multiplier",
+              "type": "flat",
+              "value": 4
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Segmentation Fault",
+          "Acceso inválido. Al hígado.",
+          [
+            {
+              "stat": "crit_chance",
+              "type": "increased",
+              "value": 30
+            },
+            {
+              "stat": "crit_multiplier",
+              "type": "flat",
+              "value": 15
+            },
+            {
+              "stat": "max_overclock_charges",
+              "type": "flat",
+              "value": 1
+            }
+          ]
+        ],
+        [
+          "Kernel Panic",
+          "Cuando falla, falla todo.",
+          [
+            {
+              "stat": "crit_multiplier",
+              "type": "flat",
+              "value": 30
+            }
+          ]
+        ],
+        [
+          "Off-by-one",
+          "Fallas por uno. A veces aciertas por mucho.",
+          [
+            {
+              "stat": "crit_chance",
+              "type": "increased",
+              "value": 40
+            }
+          ]
+        ],
+        [
+          "Pantallazo Azul",
+          "El enemigo ve la pantalla azul. Tú, la victoria.",
+          [
+            {
+              "stat": "crit_multiplier",
+              "type": "flat",
+              "value": 20
+            },
+            {
+              "stat": "crit_chance",
+              "type": "increased",
+              "value": 15
+            }
+          ]
+        ],
+        [
+          "Bug Intermitente",
+          "Solo pasa a veces. Y duele.",
+          [
+            {
+              "stat": "crit_chance",
+              "type": "increased",
+              "value": 30
+            },
+            {
+              "stat": "crit_multiplier",
+              "type": "flat",
+              "value": 15,
+              "tags": [
+                "recent_kill"
+              ]
+            }
+          ]
+        ],
+        [
+          "Fallo en Cascada",
+          "Uno cae y arrastra a todos.",
+          [
+            {
+              "stat": "crit_chance",
+              "type": "increased",
+              "value": 25
+            },
+            {
+              "stat": "crit_multiplier",
+              "type": "flat",
+              "value": 20,
+              "tags": [
+                "low_life"
+              ]
+            }
+          ]
+        ]
+      ]
+    },
+    "escudo": {
+      "name": "Escudo de energía",
+      "color": "7fb8e0",
+      "cluster_names": [
+        "Sandbox",
+        "Entorno Aislado",
+        "Contenedor Docker",
+        "Máquina Virtual"
+      ],
+      "minors": [
+        [
+          "Escudo de energía",
+          [
+            {
+              "stat": "energy_shield",
+              "type": "increased",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Escudo de energía",
+          [
+            {
+              "stat": "energy_shield",
+              "type": "flat",
+              "value": 15
+            }
+          ]
+        ],
+        [
+          "Escudo e inteligencia",
+          [
+            {
+              "stat": "energy_shield",
+              "type": "increased",
+              "value": 6
+            },
+            {
+              "stat": "intelligence",
+              "type": "flat",
+              "value": 5
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Snapshot",
+          "Volver a un estado anterior. En la vida real no se puede.",
+          [
+            {
+              "stat": "energy_shield",
+              "type": "flat",
+              "value": 40
+            },
+            {
+              "stat": "energy_shield",
+              "type": "increased",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Contenedor Aislado",
+          "Nada entra. Nada sale. Ni la documentación.",
+          [
+            {
+              "stat": "energy_shield",
+              "type": "increased",
+              "value": 20
+            },
+            {
+              "stat": "chaos_res",
+              "type": "flat",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Hipervisor",
+          "Gobierna tus máquinas virtuales. Y tu ego.",
+          [
+            {
+              "stat": "energy_shield",
+              "type": "increased",
+              "value": 25
+            },
+            {
+              "stat": "intelligence",
+              "type": "flat",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Reinstalación Limpia",
+          "Formatear y empezar de cero. Tu plan para todo.",
+          [
+            {
+              "stat": "energy_shield",
+              "type": "increased",
+              "value": 30
+            }
+          ]
+        ],
+        [
+          "Hibernación",
+          "Quieto, recarga. Como la laptop.",
+          [
+            {
+              "stat": "energy_shield",
+              "type": "increased",
+              "value": 20
+            },
+            {
+              "stat": "energy_shield_regen",
+              "type": "flat",
+              "value": 6,
+              "tags": [
+                "stationary"
+              ]
+            }
+          ]
+        ]
+      ]
+    },
+    "mana": {
+      "name": "Maná",
+      "color": "3a7bd5",
+      "cluster_names": [
+        "Pila de Memoria",
+        "Heap de Maná",
+        "Caché de Maná",
+        "Memoria Compartida"
+      ],
+      "minors": [
+        [
+          "Maná",
+          [
+            {
+              "stat": "mana",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Maná",
+          [
+            {
+              "stat": "mana",
+              "type": "flat",
+              "value": 15
+            }
+          ]
+        ],
+        [
+          "Regeneración de maná",
+          [
+            {
+              "stat": "mana_regen",
+              "type": "increased",
+              "value": 15
+            }
+          ]
+        ],
+        [
+          "Maná y regeneración",
+          [
+            {
+              "stat": "mana",
+              "type": "increased",
+              "value": 4
+            },
+            {
+              "stat": "mana_regen",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Garbage Collector",
+          "Recicla lo que tú olvidas liberar.",
+          [
+            {
+              "stat": "mana_regen",
+              "type": "increased",
+              "value": 40
+            }
+          ]
+        ],
+        [
+          "Memoria Dinámica",
+          "Crece cuando hace falta. Nunca se libera.",
+          [
+            {
+              "stat": "mana",
+              "type": "increased",
+              "value": 20
+            },
+            {
+              "stat": "mana_regen",
+              "type": "increased",
+              "value": 15
+            }
+          ]
+        ],
+        [
+          "Malloc Infinito",
+          "Pide memoria sin límite. ¿Qué podría salir mal?",
+          [
+            {
+              "stat": "mana",
+              "type": "flat",
+              "value": 50
+            },
+            {
+              "stat": "mana",
+              "type": "increased",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Fuga Controlada",
+          "Un memory leak, pero a tu favor.",
+          [
+            {
+              "stat": "mana_regen",
+              "type": "increased",
+              "value": 50,
+              "tags": [
+                "recent_kill"
+              ]
+            },
+            {
+              "stat": "mana",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Caché Caliente",
+          "Lo que tienes a mano sale más rápido.",
+          [
+            {
+              "stat": "mana_regen",
+              "type": "increased",
+              "value": 30,
+              "tags": [
+                "stationary"
+              ]
+            },
+            {
+              "stat": "mana",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Pool de Conexiones",
+          "Siempre hay una libre. Casi.",
+          [
+            {
+              "stat": "mana",
+              "type": "increased",
+              "value": 12
+            },
+            {
+              "stat": "mana_cost_reduction",
+              "type": "flat",
+              "value": 6
+            }
+          ]
+        ],
+        [
+          "Reciclaje de Memoria",
+          "Lo que matas vuelve a la RAM.",
+          [
+            {
+              "stat": "mana_regen",
+              "type": "increased",
+              "value": 40,
+              "tags": [
+                "recent_kill"
+              ]
+            },
+            {
+              "stat": "mana",
+              "type": "flat",
+              "value": 20
+            }
+          ]
+        ],
+        [
+          "Buffer Lleno",
+          "Con todo a tope, todo pega más.",
+          [
+            {
+              "stat": "mana",
+              "type": "increased",
+              "value": 10
+            },
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 18,
+              "tags": [
+                "full_life"
+              ]
+            }
+          ]
+        ]
+      ]
+    },
+    "fuego": {
+      "name": "Fuego",
+      "color": "e0652f",
+      "cluster_names": [
+        "Sobrecalentamiento",
+        "Sala de Servidores",
+        "Cortafuegos Literal",
+        "Thermal Paste"
+      ],
+      "minors": [
+        [
+          "Daño de fuego",
+          [
+            {
+              "stat": "fire_damage",
+              "type": "increased",
+              "value": 12
+            }
+          ]
+        ],
+        [
+          "Fuego y resistencia",
+          [
+            {
+              "stat": "fire_damage",
+              "type": "increased",
+              "value": 8
+            },
+            {
+              "stat": "fire_res",
+              "type": "flat",
+              "value": 4
+            }
+          ]
+        ],
+        [
+          "Fuego y área",
+          [
+            {
+              "stat": "fire_damage",
+              "type": "increased",
+              "value": 6
+            },
+            {
+              "stat": "area_of_effect",
+              "type": "increased",
+              "value": 3
+            }
+          ]
+        ],
+        [
+          "Fuego y quemadura",
+          [
+            {
+              "stat": "fire_damage",
+              "type": "increased",
+              "value": 6
+            },
+            {
+              "stat": "burn_chance",
+              "type": "flat",
+              "value": 4
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Thermal Throttling",
+          "Cuando se calienta, se pone serio.",
+          [
+            {
+              "stat": "fire_damage",
+              "type": "increased",
+              "value": 30
+            },
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 15,
+              "tags": [
+                "low_life"
+              ]
+            },
+            {
+              "stat": "convert_physical_to_fire",
+              "type": "flat",
+              "value": 1
+            }
+          ]
+        ],
+        [
+          "Incendio en el CPD",
+          "Quemar el centro de datos también es una forma de borrar logs.",
+          [
+            {
+              "stat": "fire_damage",
+              "type": "increased",
+              "value": 25
+            },
+            {
+              "stat": "area_of_effect",
+              "type": "increased",
+              "value": 8
+            },
+            {
+              "stat": "burn_chance",
+              "type": "flat",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Pasta Térmica Seca",
+          "Ya nada te enfría.",
+          [
+            {
+              "stat": "fire_damage",
+              "type": "increased",
+              "value": 40
+            },
+            {
+              "stat": "cold_res",
+              "type": "flat",
+              "value": -10
+            }
+          ]
+        ],
+        [
+          "Llama Eterna",
+          "while (true) { arder(); }",
+          [
+            {
+              "stat": "fire_damage",
+              "type": "increased",
+              "value": 20
+            },
+            {
+              "stat": "fire_res",
+              "type": "flat",
+              "value": 15
+            }
+          ]
+        ],
+        [
+          "Incendio Controlado",
+          "Arde, pero en su sitio.",
+          [
+            {
+              "stat": "fire_damage",
+              "type": "increased",
+              "value": 22
+            },
+            {
+              "stat": "burn_chance",
+              "type": "flat",
+              "value": 8,
+              "tags": [
+                "stationary"
+              ]
+            }
+          ]
+        ]
+      ]
+    },
+    "frio": {
+      "name": "Frío",
+      "color": "a0d8f0",
+      "cluster_names": [
+        "Refrigeración Líquida",
+        "Cámara Frigorífica",
+        "Cold Storage",
+        "Ventilador al Máximo"
+      ],
+      "minors": [
+        [
+          "Daño de frío",
+          [
+            {
+              "stat": "cold_damage",
+              "type": "increased",
+              "value": 12
+            }
+          ]
+        ],
+        [
+          "Frío y resistencia",
+          [
+            {
+              "stat": "cold_damage",
+              "type": "increased",
+              "value": 8
+            },
+            {
+              "stat": "cold_res",
+              "type": "flat",
+              "value": 4
+            }
+          ]
+        ],
+        [
+          "Frío y lanzamiento",
+          [
+            {
+              "stat": "cold_damage",
+              "type": "increased",
+              "value": 6
+            },
+            {
+              "stat": "cast_speed",
+              "type": "increased",
+              "value": 2
+            }
+          ]
+        ],
+        [
+          "Frío y escarcha",
+          [
+            {
+              "stat": "cold_damage",
+              "type": "increased",
+              "value": 6
+            },
+            {
+              "stat": "chill_chance",
+              "type": "flat",
+              "value": 5
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Cold Boot",
+          "Arranca en frío. Y deja todo helado.",
+          [
+            {
+              "stat": "cold_damage",
+              "type": "increased",
+              "value": 30
+            },
+            {
+              "stat": "cast_speed",
+              "type": "increased",
+              "value": 4
+            },
+            {
+              "stat": "freeze_chance",
+              "type": "flat",
+              "value": 6
+            }
+          ]
+        ],
+        [
+          "Almacenamiento en Frío",
+          "Lo que entra ahí no vuelve a moverse.",
+          [
+            {
+              "stat": "cold_damage",
+              "type": "increased",
+              "value": 25
+            },
+            {
+              "stat": "cold_res",
+              "type": "flat",
+              "value": 15
+            }
+          ]
+        ],
+        [
+          "Nitrógeno Líquido",
+          "Overclock extremo. Congelación incluida.",
+          [
+            {
+              "stat": "cold_damage",
+              "type": "increased",
+              "value": 40
+            },
+            {
+              "stat": "fire_res",
+              "type": "flat",
+              "value": -10
+            }
+          ]
+        ],
+        [
+          "Congelación de Requisitos",
+          "Ya nada puede cambiar. Ni tus enemigos.",
+          [
+            {
+              "stat": "cold_damage",
+              "type": "increased",
+              "value": 20
+            },
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 20,
+              "tags": [
+                "full_life"
+              ]
+            }
+          ]
+        ]
+      ]
+    },
+    "rayo": {
+      "name": "Rayo",
+      "color": "e8d070",
+      "cluster_names": [
+        "Sobretensión",
+        "Pico de Corriente",
+        "Bus de Datos",
+        "Fuente Conmutada"
+      ],
+      "minors": [
+        [
+          "Daño de rayo",
+          [
+            {
+              "stat": "lightning_damage",
+              "type": "increased",
+              "value": 12
+            }
+          ]
+        ],
+        [
+          "Rayo y resistencia",
+          [
+            {
+              "stat": "lightning_damage",
+              "type": "increased",
+              "value": 8
+            },
+            {
+              "stat": "lightning_res",
+              "type": "flat",
+              "value": 4
+            }
+          ]
+        ],
+        [
+          "Rayo y crítico",
+          [
+            {
+              "stat": "lightning_damage",
+              "type": "increased",
+              "value": 6
+            },
+            {
+              "stat": "crit_chance",
+              "type": "increased",
+              "value": 5
+            }
+          ]
+        ],
+        [
+          "Rayo y sobrecarga",
+          [
+            {
+              "stat": "lightning_damage",
+              "type": "increased",
+              "value": 6
+            },
+            {
+              "stat": "shock_chance",
+              "type": "flat",
+              "value": 4
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Descarga Electrostática",
+          "No toques la placa sin pulsera. O sí.",
+          [
+            {
+              "stat": "lightning_damage",
+              "type": "increased",
+              "value": 30
+            },
+            {
+              "stat": "crit_chance",
+              "type": "increased",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Pico de Tensión",
+          "Fríe todo lo conectado. Incluido el router.",
+          [
+            {
+              "stat": "lightning_damage",
+              "type": "increased",
+              "value": 40
+            },
+            {
+              "stat": "life",
+              "type": "increased",
+              "value": -4
+            },
+            {
+              "stat": "shock_chance",
+              "type": "flat",
+              "value": 10
+            },
+            {
+              "stat": "convert_physical_to_lightning",
+              "type": "flat",
+              "value": 1
+            }
+          ]
+        ],
+        [
+          "Toma de Tierra",
+          "Seguridad eléctrica. Por fin alguien la usa.",
+          [
+            {
+              "stat": "lightning_damage",
+              "type": "increased",
+              "value": 15
+            },
+            {
+              "stat": "lightning_res",
+              "type": "flat",
+              "value": 20
+            }
+          ]
+        ],
+        [
+          "Rayo Distribuido",
+          "Load balancing de electricidad.",
+          [
+            {
+              "stat": "lightning_damage",
+              "type": "increased",
+              "value": 20
+            },
+            {
+              "stat": "area_of_effect",
+              "type": "increased",
+              "value": 6
+            }
+          ]
+        ]
+      ]
+    },
+    "lanzamiento": {
+      "name": "Hechizos",
+      "color": "b04ad9",
+      "cluster_names": [
+        "Compilador Arcano",
+        "Intérprete de Hechizos",
+        "Línea de Comandos",
+        "Shell Mística"
+      ],
+      "minors": [
+        [
+          "Velocidad de lanzamiento",
+          [
+            {
+              "stat": "cast_speed",
+              "type": "increased",
+              "value": 4
+            }
+          ]
+        ],
+        [
+          "Daño de hechizos",
+          [
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 10,
+              "tags": [
+                "spell"
+              ]
+            }
+          ]
+        ],
+        [
+          "Hechizos",
+          [
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 6,
+              "tags": [
+                "spell"
+              ]
+            },
+            {
+              "stat": "cast_speed",
+              "type": "increased",
+              "value": 2
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Compilación JIT",
+          "Lanza antes de pensar. Optimiza después.",
+          [
+            {
+              "stat": "cast_speed",
+              "type": "increased",
+              "value": 12
+            },
+            {
+              "stat": "charge_spend_mana",
+              "type": "flat",
+              "value": 3
+            }
+          ]
+        ],
+        [
+          "Script Kiddie",
+          "Copia hechizos ajenos con una eficacia preocupante.",
+          [
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 25,
+              "tags": [
+                "spell"
+              ]
+            }
+          ]
+        ],
+        [
+          "Sudo Hechizo",
+          "Con permisos de administrador.",
+          [
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 20,
+              "tags": [
+                "spell"
+              ]
+            },
+            {
+              "stat": "cast_speed",
+              "type": "increased",
+              "value": 6
+            }
+          ]
+        ],
+        [
+          "One-Liner",
+          "Todo un hechizo en una línea ilegible.",
+          [
+            {
+              "stat": "cast_speed",
+              "type": "increased",
+              "value": 8
+            },
+            {
+              "stat": "crit_chance",
+              "type": "increased",
+              "value": 15,
+              "tags": [
+                "spell"
+              ]
+            }
+          ]
+        ]
+      ]
+    },
+    "caos": {
+      "name": "Caos",
+      "color": "7a3fb0",
+      "cluster_names": [
+        "Comportamiento Indefinido",
+        "Undefined",
+        "Puntero Colgante",
+        "Memoria Corrupta"
+      ],
+      "minors": [
+        [
+          "Daño de caos",
+          [
+            {
+              "stat": "chaos_damage",
+              "type": "increased",
+              "value": 12
+            }
+          ]
+        ],
+        [
+          "Resistencia al caos",
+          [
+            {
+              "stat": "chaos_res",
+              "type": "flat",
+              "value": 7
+            }
+          ]
+        ],
+        [
+          "Caos y daño",
+          [
+            {
+              "stat": "chaos_damage",
+              "type": "increased",
+              "value": 8
+            },
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 3
+            }
+          ]
+        ],
+        [
+          "Caos y toxinas",
+          [
+            {
+              "stat": "chaos_damage",
+              "type": "increased",
+              "value": 6
+            },
+            {
+              "stat": "poison_chance",
+              "type": "flat",
+              "value": 5
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Comportamiento Indefinido",
+          "A veces funciona. Nadie sabe por qué.",
+          [
+            {
+              "stat": "chaos_damage",
+              "type": "increased",
+              "value": 35
+            }
+          ]
+        ],
+        [
+          "Null Pointer",
+          "Apunta al vacío. El vacío devuelve el golpe.",
+          [
+            {
+              "stat": "chaos_damage",
+              "type": "increased",
+              "value": 25
+            },
+            {
+              "stat": "chaos_res",
+              "type": "flat",
+              "value": 12
+            },
+            {
+              "stat": "poison_chance",
+              "type": "flat",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Dangling Pointer",
+          "Señala algo que ya no existe. Duele igual.",
+          [
+            {
+              "stat": "chaos_damage",
+              "type": "increased",
+              "value": 20
+            },
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 20,
+              "tags": [
+                "recent_kill"
+              ]
+            }
+          ]
+        ],
+        [
+          "NaN",
+          "Not a Number. Ni un problema.",
+          [
+            {
+              "stat": "chaos_res",
+              "type": "flat",
+              "value": 20
+            },
+            {
+              "stat": "chaos_damage",
+              "type": "increased",
+              "value": 15
+            }
+          ]
+        ],
+        [
+          "Kernel Comprometido",
+          "Ya nada es lo que parece.",
+          [
+            {
+              "stat": "chaos_damage",
+              "type": "increased",
+              "value": 22
+            },
+            {
+              "stat": "poison_chance",
+              "type": "flat",
+              "value": 8,
+              "tags": [
+                "recent_kill"
+              ]
+            }
+          ]
+        ]
+      ]
+    },
+    "area": {
+      "name": "Área",
+      "color": "f0a030",
+      "cluster_names": [
+        "Radio de Explosión",
+        "Ámbito Global",
+        "Onda Expansiva",
+        "Efecto Dominó"
+      ],
+      "minors": [
+        [
+          "Área de efecto",
+          [
+            {
+              "stat": "area_of_effect",
+              "type": "increased",
+              "value": 6
+            }
+          ]
+        ],
+        [
+          "Daño de área",
+          [
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 10,
+              "tags": [
+                "area"
+              ]
+            }
+          ]
+        ],
+        [
+          "Área y daño",
+          [
+            {
+              "stat": "area_of_effect",
+              "type": "increased",
+              "value": 3
+            },
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 5,
+              "tags": [
+                "area"
+              ]
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Variable Global",
+          "Afecta a todo. Para mal, normalmente.",
+          [
+            {
+              "stat": "area_of_effect",
+              "type": "increased",
+              "value": 20
+            }
+          ]
+        ],
+        [
+          "Efecto Mariposa",
+          "Un cambio pequeño. Consecuencias enormes.",
+          [
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 25,
+              "tags": [
+                "area"
+              ]
+            },
+            {
+              "stat": "area_of_effect",
+              "type": "increased",
+              "value": 6
+            }
+          ]
+        ],
+        [
+          "rm -rf *",
+          "Borra todo lo que tenga alrededor.",
+          [
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 30,
+              "tags": [
+                "area"
+              ]
+            }
+          ]
+        ],
+        [
+          "Cascada de Errores",
+          "Un fallo provoca diez más.",
+          [
+            {
+              "stat": "area_of_effect",
+              "type": "increased",
+              "value": 12
+            },
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 12,
+              "tags": [
+                "area"
+              ]
+            }
+          ]
+        ]
+      ]
+    },
+    "resistencias": {
+      "name": "Resistencias",
+      "color": "9a9aff",
+      "cluster_names": [
+        "Parche de Seguridad",
+        "Actualización Crítica",
+        "Antivirus",
+        "Hotfix Defensivo"
+      ],
+      "minors": [
+        [
+          "Resistencia a estados",
+          [
+            {
+              "stat": "status_resist",
+              "type": "flat",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Estados y resistencia",
+          [
+            {
+              "stat": "status_resist",
+              "type": "flat",
+              "value": 5
+            },
+            {
+              "stat": "fire_res",
+              "type": "flat",
+              "value": 3
+            },
+            {
+              "stat": "cold_res",
+              "type": "flat",
+              "value": 3
+            },
+            {
+              "stat": "lightning_res",
+              "type": "flat",
+              "value": 3
+            }
+          ]
+        ],
+        [
+          "Resistencia al fuego",
+          [
+            {
+              "stat": "fire_res",
+              "type": "flat",
+              "value": 12
+            }
+          ]
+        ],
+        [
+          "Resistencia al frío",
+          [
+            {
+              "stat": "cold_res",
+              "type": "flat",
+              "value": 12
+            }
+          ]
+        ],
+        [
+          "Resistencia al rayo",
+          [
+            {
+              "stat": "lightning_res",
+              "type": "flat",
+              "value": 12
+            }
+          ]
+        ],
+        [
+          "Resistencias elementales",
+          [
+            {
+              "stat": "fire_res",
+              "type": "flat",
+              "value": 5
+            },
+            {
+              "stat": "cold_res",
+              "type": "flat",
+              "value": 5
+            },
+            {
+              "stat": "lightning_res",
+              "type": "flat",
+              "value": 5
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Cortafuegos de Estados",
+          "Nada se te pega: ni el frío, ni la descarga.",
+          [
+            {
+              "stat": "status_resist",
+              "type": "flat",
+              "value": 30
+            },
+            {
+              "stat": "fire_res",
+              "type": "flat",
+              "value": 8
+            },
+            {
+              "stat": "cold_res",
+              "type": "flat",
+              "value": 8
+            },
+            {
+              "stat": "lightning_res",
+              "type": "flat",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Toma de Tierra Certificada",
+          "Por fin alguien cableó esto bien.",
+          [
+            {
+              "stat": "status_resist",
+              "type": "flat",
+              "value": 20
+            },
+            {
+              "stat": "lightning_res",
+              "type": "flat",
+              "value": 20
+            }
+          ]
+        ],
+        [
+          "Parche del Martes",
+          "Llega puntual. Arregla lo justo.",
+          [
+            {
+              "stat": "fire_res",
+              "type": "flat",
+              "value": 15
+            },
+            {
+              "stat": "cold_res",
+              "type": "flat",
+              "value": 15
+            },
+            {
+              "stat": "lightning_res",
+              "type": "flat",
+              "value": 15
+            }
+          ]
+        ],
+        [
+          "Antivirus Premium",
+          "Detecta amenazas. Y algún falso positivo.",
+          [
+            {
+              "stat": "chaos_res",
+              "type": "flat",
+              "value": 15
+            },
+            {
+              "stat": "fire_res",
+              "type": "flat",
+              "value": 8
+            },
+            {
+              "stat": "cold_res",
+              "type": "flat",
+              "value": 8
+            },
+            {
+              "stat": "lightning_res",
+              "type": "flat",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Actualización Obligatoria",
+          "Reinicia en 3, 2, 1...",
+          [
+            {
+              "stat": "fire_res",
+              "type": "flat",
+              "value": 12
+            },
+            {
+              "stat": "cold_res",
+              "type": "flat",
+              "value": 12
+            },
+            {
+              "stat": "lightning_res",
+              "type": "flat",
+              "value": 12
+            },
+            {
+              "stat": "life",
+              "type": "increased",
+              "value": 4
+            }
+          ]
+        ]
+      ]
+    },
+    "robo_vida": {
+      "name": "Robo de vida",
+      "color": "a02040",
+      "cluster_names": [
+        "Proceso Parásito",
+        "Vampiro de Recursos",
+        "Fuga de Memoria Ajena"
+      ],
+      "minors": [
+        [
+          "Robo de vida",
+          [
+            {
+              "stat": "life_leech",
+              "type": "flat",
+              "value": 0.4
+            }
+          ]
+        ],
+        [
+          "Robo de vida y daño",
+          [
+            {
+              "stat": "life_leech",
+              "type": "flat",
+              "value": 0.2
+            },
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 4,
+              "tags": [
+                "attack"
+              ]
+            }
+          ]
+        ],
+        [
+          "Robo de vida y vida",
+          [
+            {
+              "stat": "life_leech",
+              "type": "flat",
+              "value": 0.2
+            },
+            {
+              "stat": "life",
+              "type": "increased",
+              "value": 3
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Proceso Vampiro",
+          "Consume los recursos de otros. Como cierto navegador.",
+          [
+            {
+              "stat": "life_leech",
+              "type": "flat",
+              "value": 1.5
+            }
+          ]
+        ],
+        [
+          "Swap Ajeno",
+          "Usa la memoria de los demás sin pedir permiso.",
+          [
+            {
+              "stat": "life_leech",
+              "type": "flat",
+              "value": 1
+            },
+            {
+              "stat": "life",
+              "type": "increased",
+              "value": 6
+            },
+            {
+              "stat": "damage",
+              "type": "more",
+              "value": 15,
+              "tags": [
+                "low_life"
+              ]
+            }
+          ]
+        ],
+        [
+          "Minería Ilegal",
+          "Te alimentas de máquinas ajenas.",
+          [
+            {
+              "stat": "life_leech",
+              "type": "flat",
+              "value": 1
+            },
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 10,
+              "tags": [
+                "attack"
+              ]
+            }
+          ]
+        ],
+        [
+          "Sanguijuela de Red",
+          "Chupa ancho de banda. Y vida.",
+          [
+            {
+              "stat": "life_leech",
+              "type": "flat",
+              "value": 0.6
+            },
+            {
+              "stat": "life_on_kill",
+              "type": "flat",
+              "value": 10
+            }
+          ]
+        ]
+      ]
+    },
+    "atributos": {
+      "name": "Atributos",
+      "color": "c0c0c0",
+      "cluster_names": [
+        "Configuración Base",
+        "Kernel",
+        "Núcleo del Sistema"
+      ],
+      "minors": [
+        [
+          "Todos los atributos",
+          [
+            {
+              "stat": "strength",
+              "type": "flat",
+              "value": 4
+            },
+            {
+              "stat": "dexterity",
+              "type": "flat",
+              "value": 4
+            },
+            {
+              "stat": "intelligence",
+              "type": "flat",
+              "value": 4
+            }
+          ]
+        ],
+        [
+          "Fuerza",
+          [
+            {
+              "stat": "strength",
+              "type": "flat",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Destreza",
+          [
+            {
+              "stat": "dexterity",
+              "type": "flat",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Inteligencia",
+          [
+            {
+              "stat": "intelligence",
+              "type": "flat",
+              "value": 10
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Full Stack",
+          "Sabe un poco de todo. No domina nada.",
+          [
+            {
+              "stat": "strength",
+              "type": "flat",
+              "value": 12
+            },
+            {
+              "stat": "dexterity",
+              "type": "flat",
+              "value": 12
+            },
+            {
+              "stat": "intelligence",
+              "type": "flat",
+              "value": 12
+            }
+          ]
+        ],
+        [
+          "Ingeniero 10x",
+          "Hace el trabajo de diez. Y los bugs de veinte.",
+          [
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 10
+            },
+            {
+              "stat": "life",
+              "type": "increased",
+              "value": 5
+            },
+            {
+              "stat": "mana",
+              "type": "increased",
+              "value": 5
+            }
+          ]
+        ],
+        [
+          "Café Doble",
+          "El combustible del sistema.",
+          [
+            {
+              "stat": "attack_speed",
+              "type": "increased",
+              "value": 4
+            },
+            {
+              "stat": "cast_speed",
+              "type": "increased",
+              "value": 4
+            },
+            {
+              "stat": "movement_speed",
+              "type": "increased",
+              "value": 3
+            }
+          ]
+        ],
+        [
+          "Acceso Root",
+          "Permisos para todo. Responsabilidad, ninguna.",
+          [
+            {
+              "stat": "strength",
+              "type": "flat",
+              "value": 8
+            },
+            {
+              "stat": "dexterity",
+              "type": "flat",
+              "value": 8
+            },
+            {
+              "stat": "intelligence",
+              "type": "flat",
+              "value": 8
+            },
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 5
+            }
+          ]
+        ]
+      ]
+    },
+    "versatil": {
+      "name": "Versatilidad",
+      "color": "d8d8e8",
+      "cluster_names": [
+        "Núcleo Full Stack",
+        "Monorepo",
+        "Stack Completo",
+        "Navaja Suiza"
+      ],
+      "minors": [
+        [
+          "Todos los atributos",
+          [
+            {
+              "stat": "strength",
+              "type": "flat",
+              "value": 5
+            },
+            {
+              "stat": "dexterity",
+              "type": "flat",
+              "value": 5
+            },
+            {
+              "stat": "intelligence",
+              "type": "flat",
+              "value": 5
+            }
+          ]
+        ],
+        [
+          "Daño y vida",
+          [
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 6
+            },
+            {
+              "stat": "life",
+              "type": "increased",
+              "value": 3
+            }
+          ]
+        ],
+        [
+          "Ataques y hechizos",
+          [
+            {
+              "stat": "attack_speed",
+              "type": "increased",
+              "value": 4
+            },
+            {
+              "stat": "cast_speed",
+              "type": "increased",
+              "value": 4
+            }
+          ]
+        ],
+        [
+          "Defensas mixtas",
+          [
+            {
+              "stat": "armour",
+              "type": "increased",
+              "value": 8
+            },
+            {
+              "stat": "evasion",
+              "type": "increased",
+              "value": 8
+            },
+            {
+              "stat": "energy_shield",
+              "type": "increased",
+              "value": 4
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Stack Completo",
+          "Front, back, base de datos y la impresora de la oficina.",
+          [
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 20
+            },
+            {
+              "stat": "strength",
+              "type": "flat",
+              "value": 10
+            },
+            {
+              "stat": "dexterity",
+              "type": "flat",
+              "value": 10
+            },
+            {
+              "stat": "intelligence",
+              "type": "flat",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Ni Junior Ni Senior",
+          "Mid. Para siempre. Pero de todo.",
+          [
+            {
+              "stat": "life",
+              "type": "increased",
+              "value": 8
+            },
+            {
+              "stat": "mana",
+              "type": "increased",
+              "value": 8
+            },
+            {
+              "stat": "energy_shield",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Contexto Infinito",
+          "Cambia de tarea cada cinco minutos y sigue funcionando.",
+          [
+            {
+              "stat": "attack_speed",
+              "type": "increased",
+              "value": 10
+            },
+            {
+              "stat": "cast_speed",
+              "type": "increased",
+              "value": 10
+            },
+            {
+              "stat": "cooldown_recovery",
+              "type": "increased",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Hombre Orquesta",
+          "Toca de todo. Mal, pero toca.",
+          [
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 10
+            },
+            {
+              "stat": "life",
+              "type": "increased",
+              "value": 5
+            },
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 15,
+              "tags": [
+                "three_allies"
+              ]
+            }
+          ]
+        ]
+      ]
+    },
+    "tiempos": {
+      "name": "Enfriamientos y duración",
+      "color": "6fd3c8",
+      "cluster_names": [
+        "Planificador",
+        "Cron Maestro",
+        "Bucle de Eventos",
+        "Reloj del Sistema"
+      ],
+      "minors": [
+        [
+          "Recuperación de enfriamientos",
+          [
+            {
+              "stat": "cooldown_recovery",
+              "type": "increased",
+              "value": 6
+            }
+          ]
+        ],
+        [
+          "Duración de habilidades",
+          [
+            {
+              "stat": "skill_duration",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Enfriamiento y área",
+          [
+            {
+              "stat": "cooldown_recovery",
+              "type": "increased",
+              "value": 4
+            },
+            {
+              "stat": "area_of_effect",
+              "type": "increased",
+              "value": 4
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Cron Cada Segundo",
+          "* * * * * habilidad.sh. El servidor lo agradece.",
+          [
+            {
+              "stat": "cooldown_recovery",
+              "type": "increased",
+              "value": 20
+            }
+          ]
+        ],
+        [
+          "setTimeout(∞)",
+          "Lo que lanzas dura más. Bastante más.",
+          [
+            {
+              "stat": "skill_duration",
+              "type": "increased",
+              "value": 30
+            },
+            {
+              "stat": "area_of_effect",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Tiempo Real",
+          "Latencia cero. O eso dice el comercial.",
+          [
+            {
+              "stat": "cooldown_recovery",
+              "type": "increased",
+              "value": 12
+            },
+            {
+              "stat": "cast_speed",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Hilo Bloqueante",
+          "Nadie sale hasta que tú lo digas.",
+          [
+            {
+              "stat": "skill_duration",
+              "type": "increased",
+              "value": 20
+            },
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 12
+            }
+          ]
+        ],
+        [
+          "Ventana de Mantenimiento",
+          "Todo vuelve antes cuando no mira nadie.",
+          [
+            {
+              "stat": "cooldown_recovery",
+              "type": "increased",
+              "value": 12
+            },
+            {
+              "stat": "skill_duration",
+              "type": "increased",
+              "value": 10,
+              "tags": [
+                "stationary"
+              ]
+            }
+          ]
+        ]
+      ]
+    },
+    "movilidad": {
+      "name": "Movilidad",
+      "color": "9ad06a",
+      "cluster_names": [
+        "Ruta Rápida",
+        "Fibra Óptica",
+        "Atajo de Teclado",
+        "Despliegue Ágil"
+      ],
+      "minors": [
+        [
+          "Velocidad de movimiento",
+          [
+            {
+              "stat": "movement_speed",
+              "type": "increased",
+              "value": 3
+            }
+          ]
+        ],
+        [
+          "Movimiento y evasión",
+          [
+            {
+              "stat": "movement_speed",
+              "type": "increased",
+              "value": 2
+            },
+            {
+              "stat": "evasion",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Movimiento y enfriamientos",
+          [
+            {
+              "stat": "movement_speed",
+              "type": "increased",
+              "value": 2
+            },
+            {
+              "stat": "cooldown_recovery",
+              "type": "increased",
+              "value": 3
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Sprint Sin Planificar",
+          "Corres mucho. Hacia dónde, ya se verá.",
+          [
+            {
+              "stat": "movement_speed",
+              "type": "increased",
+              "value": 10
+            },
+            {
+              "stat": "dodge_charges",
+              "type": "flat",
+              "value": 1
+            }
+          ]
+        ],
+        [
+          "Ctrl+Alt+Escapar",
+          "La mejor defensa es no estar ahí.",
+          [
+            {
+              "stat": "movement_speed",
+              "type": "increased",
+              "value": 6
+            },
+            {
+              "stat": "evasion",
+              "type": "increased",
+              "value": 25
+            },
+            {
+              "stat": "dodge_recovery",
+              "type": "flat",
+              "value": 20
+            }
+          ]
+        ],
+        [
+          "Ping de 1 ms",
+          "Llegas antes de que te llamen.",
+          [
+            {
+              "stat": "movement_speed",
+              "type": "increased",
+              "value": 6
+            },
+            {
+              "stat": "attack_speed",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Teletrabajo",
+          "Te mueves sin moverte del sofá.",
+          [
+            {
+              "stat": "movement_speed",
+              "type": "increased",
+              "value": 8
+            },
+            {
+              "stat": "dodge_recovery",
+              "type": "increased",
+              "value": 15
+            }
+          ]
+        ]
+      ]
+    },
+    "ignicion": {
+      "name": "Ignición",
+      "color": "ff7a2a",
+      "cluster_names": [
+        "Hoguera de Logs",
+        "Cortocircuito",
+        "Ventilador Muerto",
+        "Punto de Ignición"
+      ],
+      "minors": [
+        [
+          "Probabilidad de quemar",
+          [
+            {
+              "stat": "burn_chance",
+              "type": "flat",
+              "value": 6
+            }
+          ]
+        ],
+        [
+          "Quemar y fuego",
+          [
+            {
+              "stat": "burn_chance",
+              "type": "flat",
+              "value": 4
+            },
+            {
+              "stat": "fire_damage",
+              "type": "increased",
+              "value": 6
+            }
+          ]
+        ],
+        [
+          "Estados más dañinos",
+          [
+            {
+              "stat": "ailment_damage",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Duración de estados",
+          [
+            {
+              "stat": "ailment_duration",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Quemar y área",
+          [
+            {
+              "stat": "burn_chance",
+              "type": "flat",
+              "value": 4
+            },
+            {
+              "stat": "area_of_effect",
+              "type": "increased",
+              "value": 3
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Incendio Forestal en Producción",
+          "Nadie apagó el servidor. Nadie apagó nada.",
+          [
+            {
+              "stat": "burn_chance",
+              "type": "flat",
+              "value": 15
+            },
+            {
+              "stat": "ailment_damage",
+              "type": "increased",
+              "value": 20
+            }
+          ]
+        ],
+        [
+          "Thermal Runaway",
+          "Cuanto más arde, más arde.",
+          [
+            {
+              "stat": "burn_chance",
+              "type": "flat",
+              "value": 10
+            },
+            {
+              "stat": "ailment_duration",
+              "type": "increased",
+              "value": 25
+            },
+            {
+              "stat": "fire_damage",
+              "type": "increased",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Rack en Llamas",
+          "Al menos ya no hace frío en el CPD.",
+          [
+            {
+              "stat": "burn_chance",
+              "type": "flat",
+              "value": 20
+            },
+            {
+              "stat": "fire_res",
+              "type": "flat",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Chispa de Arranque",
+          "Todo empieza con un pequeño cortocircuito.",
+          [
+            {
+              "stat": "burn_chance",
+              "type": "flat",
+              "value": 12
+            },
+            {
+              "stat": "cast_speed",
+              "type": "increased",
+              "value": 6
+            }
+          ]
+        ],
+        [
+          "Combustión Espontánea",
+          "Nadie encendió nada. Ardió igual.",
+          [
+            {
+              "stat": "burn_chance",
+              "type": "flat",
+              "value": 14
+            },
+            {
+              "stat": "fire_damage",
+              "type": "increased",
+              "value": 20
+            }
+          ]
+        ],
+        [
+          "Brasas Persistentes",
+          "Los logs se apagan; las brasas, no.",
+          [
+            {
+              "stat": "ailment_duration",
+              "type": "increased",
+              "value": 35
+            },
+            {
+              "stat": "burn_chance",
+              "type": "flat",
+              "value": 8
+            }
+          ]
+        ]
+      ]
+    },
+    "sobrecarga": {
+      "name": "Sobrecarga",
+      "color": "f0e060",
+      "cluster_names": [
+        "Subestación",
+        "Picos de Voltaje",
+        "Cable Pelado",
+        "Fuente Quemada"
+      ],
+      "minors": [
+        [
+          "Probabilidad de electrocutar",
+          [
+            {
+              "stat": "shock_chance",
+              "type": "flat",
+              "value": 6
+            }
+          ]
+        ],
+        [
+          "Electrocutar y rayo",
+          [
+            {
+              "stat": "shock_chance",
+              "type": "flat",
+              "value": 4
+            },
+            {
+              "stat": "lightning_damage",
+              "type": "increased",
+              "value": 6
+            }
+          ]
+        ],
+        [
+          "Estados más dañinos",
+          [
+            {
+              "stat": "ailment_damage",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Duración de estados",
+          [
+            {
+              "stat": "ailment_duration",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Electrocutar y velocidad",
+          [
+            {
+              "stat": "shock_chance",
+              "type": "flat",
+              "value": 4
+            },
+            {
+              "stat": "cast_speed",
+              "type": "increased",
+              "value": 2
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Sobretensión de Red",
+          "El SAI no llegó a tiempo.",
+          [
+            {
+              "stat": "shock_chance",
+              "type": "flat",
+              "value": 15
+            },
+            {
+              "stat": "ailment_damage",
+              "type": "increased",
+              "value": 20
+            }
+          ]
+        ],
+        [
+          "Sin Toma de Tierra",
+          "Así se cablea en este edificio.",
+          [
+            {
+              "stat": "shock_chance",
+              "type": "flat",
+              "value": 20
+            },
+            {
+              "stat": "lightning_res",
+              "type": "flat",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Arco Eléctrico",
+          "No toques la placa sin pulsera antiestática.",
+          [
+            {
+              "stat": "shock_chance",
+              "type": "flat",
+              "value": 10
+            },
+            {
+              "stat": "crit_chance",
+              "type": "increased",
+              "value": 15
+            }
+          ]
+        ],
+        [
+          "Bobina de Tesla",
+          "Ilumina el CPD entero. Y a los que hay dentro.",
+          [
+            {
+              "stat": "shock_chance",
+              "type": "flat",
+              "value": 12
+            },
+            {
+              "stat": "area_of_effect",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Cortocircuito en Cadena",
+          "Un cable suelto. Cuarenta servidores menos.",
+          [
+            {
+              "stat": "shock_chance",
+              "type": "flat",
+              "value": 14
+            },
+            {
+              "stat": "extra_chains",
+              "type": "flat",
+              "value": 1
+            }
+          ]
+        ],
+        [
+          "Pararrayos",
+          "Atrae todo el daño. Y lo devuelve.",
+          [
+            {
+              "stat": "shock_chance",
+              "type": "flat",
+              "value": 10
+            },
+            {
+              "stat": "lightning_damage",
+              "type": "increased",
+              "value": 25
+            }
+          ]
+        ]
+      ]
+    },
+    "criogenia": {
+      "name": "Criogenia",
+      "color": "a0e0ff",
+      "cluster_names": [
+        "Sala Fría",
+        "Criostato",
+        "Escarcha",
+        "Refrigeración Industrial"
+      ],
+      "minors": [
+        [
+          "Probabilidad de helar",
+          [
+            {
+              "stat": "chill_chance",
+              "type": "flat",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Helar y frío",
+          [
+            {
+              "stat": "chill_chance",
+              "type": "flat",
+              "value": 5
+            },
+            {
+              "stat": "cold_damage",
+              "type": "increased",
+              "value": 6
+            }
+          ]
+        ],
+        [
+          "Probabilidad de congelar",
+          [
+            {
+              "stat": "freeze_chance",
+              "type": "flat",
+              "value": 3
+            }
+          ]
+        ],
+        [
+          "Duración de estados",
+          [
+            {
+              "stat": "ailment_duration",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Helar y resistencia",
+          [
+            {
+              "stat": "chill_chance",
+              "type": "flat",
+              "value": 5
+            },
+            {
+              "stat": "cold_res",
+              "type": "flat",
+              "value": 4
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Cero Absoluto",
+          "0 kelvin, 0 bugs, 0 movimiento.",
+          [
+            {
+              "stat": "freeze_chance",
+              "type": "flat",
+              "value": 10
+            },
+            {
+              "stat": "chill_chance",
+              "type": "flat",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Criostasis",
+          "Overclock extremo, enemigos extremadamente quietos.",
+          [
+            {
+              "stat": "chill_chance",
+              "type": "flat",
+              "value": 15
+            },
+            {
+              "stat": "ailment_duration",
+              "type": "increased",
+              "value": 25
+            }
+          ]
+        ],
+        [
+          "Cámara Frigorífica",
+          "Aquí se conservan los servidores. Y los enemigos.",
+          [
+            {
+              "stat": "freeze_chance",
+              "type": "flat",
+              "value": 8
+            },
+            {
+              "stat": "cold_res",
+              "type": "flat",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Escarcha en el Disipador",
+          "Algo va muy bien o muy mal.",
+          [
+            {
+              "stat": "chill_chance",
+              "type": "flat",
+              "value": 12
+            },
+            {
+              "stat": "cold_damage",
+              "type": "increased",
+              "value": 15
+            }
+          ]
+        ],
+        [
+          "Condensación Fatal",
+          "El rocío se queda helado sobre el procesador.",
+          [
+            {
+              "stat": "chill_chance",
+              "type": "flat",
+              "value": 14
+            },
+            {
+              "stat": "freeze_chance",
+              "type": "flat",
+              "value": 5
+            }
+          ]
+        ],
+        [
+          "Invierno de la IA",
+          "Se enfría la inversión. Y todo lo demás.",
+          [
+            {
+              "stat": "freeze_chance",
+              "type": "flat",
+              "value": 10
+            },
+            {
+              "stat": "cold_damage",
+              "type": "increased",
+              "value": 20
+            }
+          ]
+        ]
+      ]
+    },
+    "toxinas": {
+      "name": "Toxinas",
+      "color": "6fd36b",
+      "cluster_names": [
+        "Repositorio Infectado",
+        "Paquete Malicioso",
+        "Laboratorio de Malware",
+        "Backdoor"
+      ],
+      "minors": [
+        [
+          "Probabilidad de envenenar",
+          [
+            {
+              "stat": "poison_chance",
+              "type": "flat",
+              "value": 6
+            }
+          ]
+        ],
+        [
+          "Veneno y caos",
+          [
+            {
+              "stat": "poison_chance",
+              "type": "flat",
+              "value": 4
+            },
+            {
+              "stat": "chaos_damage",
+              "type": "increased",
+              "value": 6
+            }
+          ]
+        ],
+        [
+          "Estados duraderos",
+          [
+            {
+              "stat": "ailment_duration",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Estados más dañinos",
+          [
+            {
+              "stat": "ailment_damage",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Envenenar y velocidad",
+          [
+            {
+              "stat": "poison_chance",
+              "type": "flat",
+              "value": 4
+            },
+            {
+              "stat": "attack_speed",
+              "type": "increased",
+              "value": 2
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Dependencia Comprometida",
+          "npm install veneno@latest",
+          [
+            {
+              "stat": "poison_chance",
+              "type": "flat",
+              "value": 15
+            },
+            {
+              "stat": "ailment_damage",
+              "type": "increased",
+              "value": 20
+            }
+          ]
+        ],
+        [
+          "Ataque a la Cadena de Suministro",
+          "Infectas al proveedor y caen todos.",
+          [
+            {
+              "stat": "poison_chance",
+              "type": "flat",
+              "value": 10
+            },
+            {
+              "stat": "ailment_duration",
+              "type": "increased",
+              "value": 30
+            }
+          ]
+        ],
+        [
+          "Gusano Autorreplicante",
+          "Se copia solo. Como la deuda técnica.",
+          [
+            {
+              "stat": "poison_chance",
+              "type": "flat",
+              "value": 20
+            },
+            {
+              "stat": "chaos_res",
+              "type": "flat",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Rootkit Residente",
+          "No se va ni formateando.",
+          [
+            {
+              "stat": "poison_chance",
+              "type": "flat",
+              "value": 12
+            },
+            {
+              "stat": "ailment_damage",
+              "type": "increased",
+              "value": 15
+            },
+            {
+              "stat": "chaos_damage",
+              "type": "increased",
+              "value": 10
+            },
+            {
+              "stat": "convert_elemental_to_chaos",
+              "type": "flat",
+              "value": 1
+            }
+          ]
+        ],
+        [
+          "Inyección SQL",
+          "'; DROP TABLE enemigos; --",
+          [
+            {
+              "stat": "poison_chance",
+              "type": "flat",
+              "value": 15
+            },
+            {
+              "stat": "chaos_damage",
+              "type": "increased",
+              "value": 20
+            }
+          ]
+        ],
+        [
+          "Fuga de Memoria Tóxica",
+          "malloc(): sin free() a la vista.",
+          [
+            {
+              "stat": "poison_chance",
+              "type": "flat",
+              "value": 10
+            },
+            {
+              "stat": "ailment_duration",
+              "type": "increased",
+              "value": 30
+            },
+            {
+              "stat": "ailment_damage",
+              "type": "more",
+              "value": 15
+            }
+          ]
+        ]
+      ]
+    },
+    "hemorragia": {
+      "name": "Hemorragia",
+      "color": "c02838",
+      "cluster_names": [
+        "Cortes de Red",
+        "Hemorragia de Datos",
+        "Cable Cortado",
+        "Sectores Dañados"
+      ],
+      "minors": [
+        [
+          "Probabilidad de hacer sangrar",
+          [
+            {
+              "stat": "bleed_chance",
+              "type": "flat",
+              "value": 6
+            }
+          ]
+        ],
+        [
+          "Sangrar y físico",
+          [
+            {
+              "stat": "bleed_chance",
+              "type": "flat",
+              "value": 4
+            },
+            {
+              "stat": "physical_damage",
+              "type": "increased",
+              "value": 6
+            }
+          ]
+        ],
+        [
+          "Estados más dañinos",
+          [
+            {
+              "stat": "ailment_damage",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Duración de estados",
+          [
+            {
+              "stat": "ailment_duration",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Sangrar y vida",
+          [
+            {
+              "stat": "bleed_chance",
+              "type": "flat",
+              "value": 4
+            },
+            {
+              "stat": "life",
+              "type": "flat",
+              "value": 8
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Corte de Fibra",
+          "Alguien pasó una excavadora por el cable submarino.",
+          [
+            {
+              "stat": "bleed_chance",
+              "type": "flat",
+              "value": 15
+            },
+            {
+              "stat": "ailment_damage",
+              "type": "increased",
+              "value": 20
+            }
+          ]
+        ],
+        [
+          "Sector Defectuoso",
+          "Pierde datos a cada paso.",
+          [
+            {
+              "stat": "bleed_chance",
+              "type": "flat",
+              "value": 10
+            },
+            {
+              "stat": "ailment_duration",
+              "type": "increased",
+              "value": 25
+            },
+            {
+              "stat": "physical_damage",
+              "type": "increased",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Fuga de Paquetes",
+          "Drip, drip, drip.",
+          [
+            {
+              "stat": "bleed_chance",
+              "type": "flat",
+              "value": 20
+            },
+            {
+              "stat": "life_leech",
+              "type": "flat",
+              "value": 0.5
+            }
+          ]
+        ],
+        [
+          "Navaja de Ockham",
+          "La explicación más simple: le has cortado.",
+          [
+            {
+              "stat": "bleed_chance",
+              "type": "flat",
+              "value": 12
+            },
+            {
+              "stat": "attack_speed",
+              "type": "increased",
+              "value": 6
+            }
+          ]
+        ],
+        [
+          "Corte de Suministro",
+          "Se cae el proveedor. Se cae todo lo demás.",
+          [
+            {
+              "stat": "bleed_chance",
+              "type": "flat",
+              "value": 14
+            },
+            {
+              "stat": "physical_damage",
+              "type": "increased",
+              "value": 20
+            }
+          ]
+        ],
+        [
+          "Pérdida de Paquetes",
+          "El 30 % ya no vuelve. El resto, tampoco.",
+          [
+            {
+              "stat": "bleed_chance",
+              "type": "flat",
+              "value": 10
+            },
+            {
+              "stat": "ailment_damage",
+              "type": "increased",
+              "value": 25
+            }
+          ]
+        ]
+      ]
+    },
+    "automatizacion": {
+      "name": "Automatización",
+      "color": "7fd0e8",
+      "cluster_names": [
+        "Sala de Máquinas",
+        "Línea de Montaje",
+        "Granja de Bots",
+        "Taller de Robótica"
+      ],
+      "minors": [
+        [
+          "Daño de autómatas",
+          [
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 10,
+              "tags": [
+                "automaton"
+              ]
+            }
+          ]
+        ],
+        [
+          "Velocidad de autómatas",
+          [
+            {
+              "stat": "automaton_speed",
+              "type": "increased",
+              "value": 6
+            }
+          ]
+        ],
+        [
+          "Vida de esbirros",
+          [
+            {
+              "stat": "minion_life",
+              "type": "increased",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Daño de torretas",
+          [
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 10,
+              "tags": [
+                "totem"
+              ]
+            }
+          ]
+        ],
+        [
+          "Daño de esbirros",
+          [
+            {
+              "stat": "minion_damage",
+              "type": "increased",
+              "value": 10
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Pipeline de CI/CD",
+          "Cada commit despliega otra torreta.",
+          [
+            {
+              "stat": "automaton_speed",
+              "type": "increased",
+              "value": 15
+            },
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 15,
+              "tags": [
+                "automaton"
+              ]
+            }
+          ]
+        ],
+        [
+          "Orquestador",
+          "Tú das las órdenes; ellos hacen el trabajo.",
+          [
+            {
+              "stat": "extra_devices",
+              "type": "flat",
+              "value": 1
+            },
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 10,
+              "tags": [
+                "automaton"
+              ]
+            }
+          ]
+        ],
+        [
+          "Redundancia N+1",
+          "Si cae uno, sigue el otro.",
+          [
+            {
+              "stat": "minion_life",
+              "type": "increased",
+              "value": 30
+            },
+            {
+              "stat": "reservation_efficiency",
+              "type": "increased",
+              "value": 12
+            }
+          ]
+        ],
+        [
+          "Sensores Calibrados",
+          "Ahora apuntan a lo que se mueve y no a las palomas.",
+          [
+            {
+              "stat": "automaton_speed",
+              "type": "increased",
+              "value": 10
+            },
+            {
+              "stat": "shock_chance",
+              "type": "flat",
+              "value": 8,
+              "tags": [
+                "automaton"
+              ]
+            },
+            {
+              "stat": "burn_chance",
+              "type": "flat",
+              "value": 8,
+              "tags": [
+                "automaton"
+              ]
+            }
+          ]
+        ],
+        [
+          "Infraestructura Inmutable",
+          "Si algo falla, no se arregla: se destruye y se vuelve a desplegar.",
+          [
+            {
+              "stat": "extra_devices",
+              "type": "flat",
+              "value": 1
+            },
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 15,
+              "tags": [
+                "totem"
+              ]
+            }
+          ]
+        ],
+        [
+          "Escalado Horizontal",
+          "¿Más carga? Más robots. ¿Más robots? Más carga.",
+          [
+            {
+              "stat": "extra_minions",
+              "type": "flat",
+              "value": 1
+            },
+            {
+              "stat": "automaton_speed",
+              "type": "increased",
+              "value": 10
+            }
+          ]
+        ],
+        [
+          "Cron de la Madrugada",
+          "Corre solo. Rompe solo.",
+          [
+            {
+              "stat": "automaton_speed",
+              "type": "increased",
+              "value": 20
+            },
+            {
+              "stat": "damage",
+              "type": "increased",
+              "value": 10,
+              "tags": [
+                "automaton"
+              ]
+            }
+          ]
+        ]
+      ]
+    },
+    "legion": {
+      "name": "Legión",
+      "color": "9ad0ff",
+      "cluster_names": [
+        "Granja de Procesos",
+        "Flota de Drones",
+        "Escuadrón de Daemons",
+        "Sala de Control",
+        "Batallón Redundante"
+      ],
+      "minors": [
+        [
+          "Vida de esbirros",
+          [
+            {
+              "stat": "minion_life",
+              "type": "increased",
+              "value": 12
+            }
+          ]
+        ],
+        [
+          "Daño de esbirros",
+          [
+            {
+              "stat": "minion_damage",
+              "type": "increased",
+              "value": 12
+            }
+          ]
+        ],
+        [
+          "Eficiencia de reserva",
+          [
+            {
+              "stat": "reservation_efficiency",
+              "type": "increased",
+              "value": 6
+            }
+          ]
+        ],
+        [
+          "Efecto de auras",
+          [
+            {
+              "stat": "aura_effect",
+              "type": "increased",
+              "value": 6
+            }
+          ]
+        ],
+        [
+          "Esbirros y vida",
+          [
+            {
+              "stat": "minion_life",
+              "type": "increased",
+              "value": 6
+            },
+            {
+              "stat": "minion_damage",
+              "type": "increased",
+              "value": 6
+            }
+          ]
+        ]
+      ],
+      "notables": [
+        [
+          "Redundancia Activa-Activa",
+          "Si cae uno, ya hay otro corriendo.",
+          [
+            {
+              "stat": "minion_life",
+              "type": "increased",
+              "value": 35
+            },
+            {
+              "stat": "reservation_efficiency",
+              "type": "increased",
+              "value": 10
+            },
+            {
+              "stat": "minion_damage",
+              "type": "increased",
+              "value": 25,
+              "tags": [
+                "three_allies"
+              ]
+            }
+          ]
+        ],
+        [
+          "Orquestador de Contenedores",
+          "Cada contenedor, un daemon. Cada daemon, un problema.",
+          [
+            {
+              "stat": "extra_minions",
+              "type": "flat",
+              "value": 1
+            },
+            {
+              "stat": "minion_damage",
+              "type": "increased",
+              "value": 15
+            }
+          ]
+        ],
+        [
+          "Estado Compartido",
+          "Todas las auras leen la misma variable global.",
+          [
+            {
+              "stat": "aura_effect",
+              "type": "increased",
+              "value": 30
+            },
+            {
+              "stat": "reservation_efficiency",
+              "type": "increased",
+              "value": 8
+            }
+          ]
+        ],
+        [
+          "Servicio sin Estado",
+          "Lo matas y vuelve igual. Reservando lo mismo.",
+          [
+            {
+              "stat": "reservation_efficiency",
+              "type": "increased",
+              "value": 20
+            }
+          ]
+        ],
+        [
+          "Cadena de Mando",
+          "El jefe habla, los demás ejecutan sin preguntar.",
+          [
+            {
+              "stat": "minion_damage",
+              "type": "increased",
+              "value": 30
+            },
+            {
+              "stat": "aura_effect",
+              "type": "increased",
+              "value": 15
+            }
+          ]
+        ],
+        [
+          "Autoescalado Reactivo",
+          "Más enemigos, más daemons. Hasta que la factura llega.",
+          [
+            {
+              "stat": "minion_life",
+              "type": "increased",
+              "value": 25
+            },
+            {
+              "stat": "automaton_speed",
+              "type": "increased",
+              "value": 12
+            }
+          ]
+        ]
+      ]
+    }
   }
- }
 }

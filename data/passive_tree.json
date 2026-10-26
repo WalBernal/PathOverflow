@@ -333,12 +333,12 @@
 },
 {
 "id": "guerrero.D3",
-"theme": "fisico",
+"theme": "versatil",
 "x": 600.0,
 "y": -2406.3,
 "radius": 100,
 "size": "S",
-"name": "Daño físico: Martillo de Merge"
+"name": "Versatilidad: Monorepo"
 },
 {
 "id": "guerrero.D4",
@@ -365,7 +365,7 @@
 "y": -2785.3,
 "radius": 135,
 "size": "M",
-"name": "Versatilidad: Monorepo"
+"name": "Versatilidad: Stack Completo"
 },
 {
 "id": "duelista.A0",
@@ -383,7 +383,7 @@
 "y": -730.0,
 "radius": 215,
 "size": "XL",
-"name": "Daño físico: Golpe en Producción"
+"name": "Daño físico: Martillo de Merge"
 },
 {
 "id": "duelista.A2",
@@ -464,7 +464,7 @@
 "y": -297.8,
 "radius": 180,
 "size": "L",
-"name": "Daño físico: Fuerza Bruta"
+"name": "Daño físico: Golpe en Producción"
 },
 {
 "id": "duelista.D0",
@@ -513,12 +513,12 @@
 },
 {
 "id": "duelista.E1",
-"theme": "vida",
+"theme": "velocidad_ataque",
 "x": 2632.7,
 "y": -1010.6,
 "radius": 135,
 "size": "M",
-"name": "Vida: Núcleo Vital"
+"name": "Velocidad de ataque: Hilos Paralelos"
 },
 {
 "id": "exploradora.A0",
@@ -572,7 +572,7 @@
 "y": 1108.2,
 "radius": 135,
 "size": "M",
-"name": "Velocidad de ataque: Hilos Paralelos"
+"name": "Velocidad de ataque: Pipeline"
 },
 {
 "id": "exploradora.B3",
@@ -621,12 +621,12 @@
 },
 {
 "id": "exploradora.D0",
-"theme": "movilidad",
+"theme": "criogenia",
 "x": 2474.0,
 "y": 173.0,
 "radius": 135,
 "size": "M",
-"name": "Movilidad: Despliegue Ágil"
+"name": "Criogenia: Sala Fría"
 },
 {
 "id": "exploradora.D1",
@@ -653,7 +653,7 @@
 "y": 2056.0,
 "radius": 135,
 "size": "M",
-"name": "Criogenia: Sala Fría"
+"name": "Criogenia: Criostato"
 },
 {
 "id": "exploradora.E0",
@@ -671,7 +671,7 @@
 "y": 1774.7,
 "radius": 135,
 "size": "M",
-"name": "Versatilidad: Stack Completo"
+"name": "Versatilidad: Navaja Suiza"
 },
 {
 "id": "hacker.A0",
@@ -783,12 +783,12 @@
 },
 {
 "id": "hacker.D1",
-"theme": "critico",
+"theme": "fuego",
 "x": 600.0,
 "y": 2406.3,
 "radius": 100,
 "size": "S",
-"name": "Crítico: Error Crítico"
+"name": "Fuego: Sobrecalentamiento"
 },
 {
 "id": "hacker.D3",
@@ -842,7 +842,7 @@
 "y": 730.0,
 "radius": 215,
 "size": "XL",
-"name": "Fuego: Sobrecalentamiento"
+"name": "Fuego: Sala de Servidores"
 },
 {
 "id": "hechicero.A2",
@@ -896,7 +896,7 @@
 "y": 1686.3,
 "radius": 180,
 "size": "L",
-"name": "Criogenia: Criostato"
+"name": "Criogenia: Escarcha"
 },
 {
 "id": "hechicero.C1",
@@ -923,7 +923,7 @@
 "y": 297.8,
 "radius": 180,
 "size": "L",
-"name": "Fuego: Sala de Servidores"
+"name": "Fuego: Cortafuegos Literal"
 },
 {
 "id": "hechicero.D0",
@@ -1058,7 +1058,7 @@
 "y": -836.2,
 "radius": 135,
 "size": "M",
-"name": "Fuego: Cortafuegos Literal"
+"name": "Fuego: Thermal Paste"
 },
 {
 "id": "templario.C2",
@@ -1121,16 +1121,16 @@
 "y": -1010.6,
 "radius": 135,
 "size": "M",
-"name": "Vida: Bloque de Alimentación"
+"name": "Vida: Núcleo Vital"
 },
 {
 "id": "templario.E1",
-"theme": "robo_vida",
+"theme": "sobrecarga",
 "x": -2191.6,
 "y": -1774.7,
 "radius": 135,
 "size": "M",
-"name": "Robo de vida: Vampiro de Recursos"
+"name": "Sobrecarga: Cable Pelado"
 },
 {
 "id": "puerta.guerrero0",
@@ -1175,7 +1175,7 @@
 "y": 0.0,
 "radius": 135,
 "size": "M",
-"name": "Movilidad: Ruta Rápida"
+"name": "Movilidad: Despliegue Ágil"
 },
 {
 "id": "constelacion.1",
@@ -1193,7 +1193,7 @@
 "y": 1058.3,
 "radius": 135,
 "size": "M",
-"name": "Criogenia: Escarcha"
+"name": "Criogenia: Refrigeración Industrial"
 },
 {
 "id": "puerta.exploradora1",
@@ -1202,7 +1202,7 @@
 "y": 1668.8,
 "radius": 135,
 "size": "M",
-"name": "Sobrecarga: Cable Pelado"
+"name": "Sobrecarga: Fuente Quemada"
 },
 {
 "id": "constelacion.2",
@@ -1616,8 +1616,8 @@
 "cluster": "centro.I0",
 "theme": "mana",
 "flavor": "Todo o nada: tu daño físico sale como rayo.",
-"icon": "mana",
-"style": true
+"style": true,
+"icon": "mana"
 },
 {
 "id": 20,
@@ -2669,24 +2669,19 @@
 "id": 71,
 "key": "centro.I9:3",
 "kind": "notable",
-"name": "Memoria Dinámica",
+"name": "Garbage Collector",
 "x": -790.0,
 "y": -21.0,
 "mods": [
 {
-"stat": "mana",
-"type": "increased",
-"value": 20
-},
-{
 "stat": "mana_regen",
 "type": "increased",
-"value": 15
+"value": 40
 }
 ],
 "cluster": "centro.I9",
 "theme": "mana",
-"flavor": "Crece cuando hace falta. Nunca se libera.",
+"flavor": "Recicla lo que tú olvidas liberar.",
 "icon": "mana"
 },
 {
@@ -3079,7 +3074,7 @@
 "id": 91,
 "key": "guerrero.A1:0",
 "kind": "notable",
-"name": "Maestría de Armadura",
+"name": "Maestría: Muro de Contención",
 "x": 0.0,
 "y": -1460.0,
 "mods": [],
@@ -3320,8 +3315,8 @@
 "cluster": "guerrero.A1",
 "theme": "armadura",
 "flavor": "Cada golpe que recibes abre un ticket. Y los tickets explotan.",
-"icon": "armadura",
-"style": true
+"style": true,
+"icon": "armadura"
 },
 {
 "id": 101,
@@ -3400,29 +3395,24 @@
 "id": 105,
 "key": "guerrero.A1:14",
 "kind": "notable",
-"name": "Hormigón Armado",
+"name": "Firewall Corporativo",
 "x": -185.0,
 "y": -1457.4,
 "mods": [
 {
 "stat": "armour",
 "type": "increased",
-"value": 45
+"value": 35
 },
 {
-"stat": "movement_speed",
-"type": "increased",
-"value": -3
-},
-{
-"stat": "max_buffer_charges",
+"stat": "block_chance",
 "type": "flat",
-"value": 1
+"value": 4
 }
 ],
 "cluster": "guerrero.A1",
 "theme": "armadura",
-"flavor": "Tan rígido como el código de 2005.",
+"flavor": "Bloquea todo. Incluido lo que necesitabas.",
 "icon": "armadura"
 },
 {
@@ -4052,39 +4042,36 @@
 "id": 136,
 "key": "guerrero.B3:3",
 "kind": "notable",
-"name": "Defensa en Profundidad",
+"name": "Hormigón Armado",
 "x": 750.0,
 "y": -1713.1,
 "mods": [
 {
 "stat": "armour",
 "type": "increased",
-"value": 25
+"value": 45
 },
 {
-"stat": "life",
+"stat": "movement_speed",
 "type": "increased",
-"value": 6
+"value": -3
 },
 {
-"stat": "damage",
-"type": "increased",
-"value": 20,
-"tags": [
-"stationary"
-]
+"stat": "max_buffer_charges",
+"type": "flat",
+"value": 1
 }
 ],
 "cluster": "guerrero.B3",
 "theme": "armadura",
-"flavor": "Capas y capas de seguridad. Y de burocracia.",
+"flavor": "Tan rígido como el código de 2005.",
 "icon": "armadura"
 },
 {
 "id": 137,
 "key": "guerrero.C0:0",
 "kind": "notable",
-"name": "Maestría de Daño físico",
+"name": "Maestría: Refactorización Violenta",
 "x": -801.7,
 "y": -1984.2,
 "mods": [],
@@ -4727,7 +4714,7 @@
 "id": 165,
 "key": "guerrero.C3:0",
 "kind": "notable",
-"name": "Maestría de Hemorragia",
+"name": "Maestría: Hemorragia de Datos",
 "x": 801.7,
 "y": -1984.2,
 "mods": [],
@@ -5335,89 +5322,106 @@
 "id": 192,
 "key": "guerrero.D3:0",
 "kind": "minor",
-"name": "Fuerza",
+"name": "Defensas mixtas",
 "x": 603.4,
 "y": -2333.3,
 "mods": [
 {
-"stat": "strength",
-"type": "flat",
-"value": 10
+"stat": "armour",
+"type": "increased",
+"value": 8
+},
+{
+"stat": "evasion",
+"type": "increased",
+"value": 8
+},
+{
+"stat": "energy_shield",
+"type": "increased",
+"value": 4
 }
 ],
 "cluster": "guerrero.D3",
-"theme": "fisico"
+"theme": "versatil"
 },
 {
 "id": 193,
 "key": "guerrero.D3:1",
 "kind": "minor",
-"name": "Daño físico y precisión",
+"name": "Todos los atributos",
 "x": 580.5,
 "y": -2385.9,
 "mods": [
 {
-"stat": "physical_damage",
-"type": "increased",
-"value": 9
+"stat": "strength",
+"type": "flat",
+"value": 5
 },
 {
-"stat": "accuracy",
+"stat": "dexterity",
 "type": "flat",
-"value": 30
+"value": 5
+},
+{
+"stat": "intelligence",
+"type": "flat",
+"value": 5
 }
 ],
 "cluster": "guerrero.D3",
-"theme": "fisico"
+"theme": "versatil"
 },
 {
 "id": 194,
 "key": "guerrero.D3:2",
 "kind": "minor",
-"name": "Físico y hemorragia",
+"name": "Daño y vida",
 "x": 592.3,
 "y": -2433.5,
 "mods": [
 {
-"stat": "physical_damage",
+"stat": "damage",
 "type": "increased",
 "value": 9
 },
 {
-"stat": "bleed_chance",
-"type": "flat",
-"value": 4
+"stat": "life",
+"type": "increased",
+"value": 3
 }
 ],
 "cluster": "guerrero.D3",
-"theme": "fisico"
+"theme": "versatil"
 },
 {
 "id": 195,
 "key": "guerrero.D3:3",
 "kind": "notable",
-"name": "Brute Force",
+"name": "Ni Junior Ni Senior",
 "x": 637.3,
 "y": -2469.2,
 "mods": [
 {
-"stat": "physical_damage",
+"stat": "life",
 "type": "increased",
-"value": 25,
-"tags": [
-"melee"
-]
+"value": 8
 },
 {
-"stat": "attack_speed",
+"stat": "mana",
 "type": "increased",
-"value": 5
+"value": 8
+},
+{
+"stat": "energy_shield",
+"type": "increased",
+"value": 8
 }
 ],
 "cluster": "guerrero.D3",
-"theme": "fisico",
-"flavor": "O(n!) de complejidad. O(1) de sutileza.",
-"icon": "fisico"
+"theme": "versatil",
+"flavor": "Mid. Para siempre. Pero de todo.",
+"icon": "versatil"
 },
 {
 "id": 196,
@@ -5695,114 +5699,38 @@
 "id": 210,
 "key": "guerrero.E1:0",
 "kind": "notable",
-"name": "Ni Junior Ni Senior",
+"name": "Contexto Infinito",
 "x": 441.1,
 "y": -2785.3,
 "mods": [
 {
-"stat": "life",
+"stat": "attack_speed",
 "type": "increased",
-"value": 8
+"value": 10
 },
 {
-"stat": "mana",
+"stat": "cast_speed",
 "type": "increased",
-"value": 8
+"value": 10
 },
 {
-"stat": "energy_shield",
+"stat": "cooldown_recovery",
 "type": "increased",
-"value": 8
+"value": 10
 }
 ],
 "cluster": "guerrero.E1",
 "theme": "versatil",
-"flavor": "Mid. Para siempre. Pero de todo.",
+"flavor": "Cambia de tarea cada cinco minutos y sigue funcionando.",
 "icon": "versatil"
 },
 {
 "id": 211,
 "key": "guerrero.E1:1",
 "kind": "minor",
-"name": "Defensas mixtas",
+"name": "Ataques y hechizos",
 "x": 476.4,
 "y": -2831.0,
-"mods": [
-{
-"stat": "armour",
-"type": "increased",
-"value": 8
-},
-{
-"stat": "evasion",
-"type": "increased",
-"value": 8
-},
-{
-"stat": "energy_shield",
-"type": "increased",
-"value": 4
-}
-],
-"cluster": "guerrero.E1",
-"theme": "versatil"
-},
-{
-"id": 212,
-"key": "guerrero.E1:2",
-"kind": "minor",
-"name": "Todos los atributos",
-"x": 505.3,
-"y": -2868.4,
-"mods": [
-{
-"stat": "strength",
-"type": "flat",
-"value": 5
-},
-{
-"stat": "dexterity",
-"type": "flat",
-"value": 5
-},
-{
-"stat": "intelligence",
-"type": "flat",
-"value": 5
-}
-],
-"cluster": "guerrero.E1",
-"theme": "versatil"
-},
-{
-"id": 213,
-"key": "guerrero.E1:3",
-"kind": "minor",
-"name": "Daño y vida",
-"x": 463.1,
-"y": -2731.9,
-"mods": [
-{
-"stat": "damage",
-"type": "increased",
-"value": 9
-},
-{
-"stat": "life",
-"type": "increased",
-"value": 3
-}
-],
-"cluster": "guerrero.E1",
-"theme": "versatil"
-},
-{
-"id": 214,
-"key": "guerrero.E1:4",
-"kind": "minor",
-"name": "Ataques y hechizos",
-"x": 481.1,
-"y": -2688.2,
 "mods": [
 {
 "stat": "attack_speed",
@@ -5819,12 +5747,12 @@
 "theme": "versatil"
 },
 {
-"id": 215,
-"key": "guerrero.E1:5",
+"id": 212,
+"key": "guerrero.E1:2",
 "kind": "minor",
 "name": "Defensas mixtas",
-"x": 383.9,
-"y": -2793.0,
+"x": 505.3,
+"y": -2868.4,
 "mods": [
 {
 "stat": "armour",
@@ -5846,12 +5774,12 @@
 "theme": "versatil"
 },
 {
-"id": 216,
-"key": "guerrero.E1:6",
+"id": 213,
+"key": "guerrero.E1:3",
 "kind": "minor",
 "name": "Todos los atributos",
-"x": 337.1,
-"y": -2799.3,
+"x": 463.1,
+"y": -2731.9,
 "mods": [
 {
 "stat": "strength",
@@ -5867,6 +5795,77 @@
 "stat": "intelligence",
 "type": "flat",
 "value": 5
+}
+],
+"cluster": "guerrero.E1",
+"theme": "versatil"
+},
+{
+"id": 214,
+"key": "guerrero.E1:4",
+"kind": "minor",
+"name": "Daño y vida",
+"x": 481.1,
+"y": -2688.2,
+"mods": [
+{
+"stat": "damage",
+"type": "increased",
+"value": 9
+},
+{
+"stat": "life",
+"type": "increased",
+"value": 3
+}
+],
+"cluster": "guerrero.E1",
+"theme": "versatil"
+},
+{
+"id": 215,
+"key": "guerrero.E1:5",
+"kind": "minor",
+"name": "Ataques y hechizos",
+"x": 383.9,
+"y": -2793.0,
+"mods": [
+{
+"stat": "attack_speed",
+"type": "increased",
+"value": 6
+},
+{
+"stat": "cast_speed",
+"type": "increased",
+"value": 6
+}
+],
+"cluster": "guerrero.E1",
+"theme": "versatil"
+},
+{
+"id": 216,
+"key": "guerrero.E1:6",
+"kind": "minor",
+"name": "Defensas mixtas",
+"x": 337.1,
+"y": -2799.3,
+"mods": [
+{
+"stat": "armour",
+"type": "increased",
+"value": 8
+},
+{
+"stat": "evasion",
+"type": "increased",
+"value": 8
+},
+{
+"stat": "energy_shield",
+"type": "increased",
+"value": 4
 }
 ],
 "cluster": "guerrero.E1",
@@ -6033,7 +6032,7 @@
 "id": 225,
 "key": "duelista.A1:0",
 "kind": "notable",
-"name": "Maestría de Daño físico",
+"name": "Maestría: Martillo de Merge",
 "x": 1264.4,
 "y": -730.0,
 "mods": [],
@@ -6108,46 +6107,9 @@
 "id": 226,
 "key": "duelista.A1:1",
 "kind": "minor",
-"name": "Daño físico cuerpo a cuerpo",
+"name": "Fuerza",
 "x": 1336.5,
 "y": -771.6,
-"mods": [
-{
-"stat": "physical_damage",
-"type": "increased",
-"value": 19,
-"tags": [
-"melee"
-]
-}
-],
-"cluster": "duelista.A1",
-"theme": "fisico"
-},
-{
-"id": 227,
-"key": "duelista.A1:2",
-"kind": "minor",
-"name": "Daño físico",
-"x": 1336.5,
-"y": -688.4,
-"mods": [
-{
-"stat": "physical_damage",
-"type": "increased",
-"value": 15
-}
-],
-"cluster": "duelista.A1",
-"theme": "fisico"
-},
-{
-"id": 228,
-"key": "duelista.A1:3",
-"kind": "minor",
-"name": "Fuerza",
-"x": 1264.4,
-"y": -646.7,
 "mods": [
 {
 "stat": "strength",
@@ -6159,11 +6121,11 @@
 "theme": "fisico"
 },
 {
-"id": 229,
-"key": "duelista.A1:4",
+"id": 227,
+"key": "duelista.A1:2",
 "kind": "minor",
 "name": "Daño físico y precisión",
-"x": 1192.3,
+"x": 1336.5,
 "y": -688.4,
 "mods": [
 {
@@ -6181,12 +6143,12 @@
 "theme": "fisico"
 },
 {
-"id": 230,
-"key": "duelista.A1:5",
+"id": 228,
+"key": "duelista.A1:3",
 "kind": "minor",
 "name": "Físico y hemorragia",
-"x": 1192.3,
-"y": -771.6,
+"x": 1264.4,
+"y": -646.7,
 "mods": [
 {
 "stat": "physical_damage",
@@ -6203,12 +6165,12 @@
 "theme": "fisico"
 },
 {
-"id": 231,
-"key": "duelista.A1:6",
+"id": 229,
+"key": "duelista.A1:4",
 "kind": "minor",
 "name": "Daño físico cuerpo a cuerpo",
-"x": 1264.4,
-"y": -813.2,
+"x": 1192.3,
+"y": -688.4,
 "mods": [
 {
 "stat": "physical_damage",
@@ -6223,12 +6185,12 @@
 "theme": "fisico"
 },
 {
-"id": 232,
-"key": "duelista.A1:7",
+"id": 230,
+"key": "duelista.A1:5",
 "kind": "minor",
 "name": "Daño físico",
-"x": 1444.8,
-"y": -771.0,
+"x": 1192.3,
+"y": -771.6,
 "mods": [
 {
 "stat": "physical_damage",
@@ -6240,17 +6202,61 @@
 "theme": "fisico"
 },
 {
-"id": 233,
-"key": "duelista.A1:8",
+"id": 231,
+"key": "duelista.A1:6",
 "kind": "minor",
 "name": "Fuerza",
-"x": 1434.5,
-"y": -657.2,
+"x": 1264.4,
+"y": -813.2,
 "mods": [
 {
 "stat": "strength",
 "type": "flat",
 "value": 12
+}
+],
+"cluster": "duelista.A1",
+"theme": "fisico"
+},
+{
+"id": 232,
+"key": "duelista.A1:7",
+"kind": "minor",
+"name": "Daño físico y precisión",
+"x": 1444.8,
+"y": -771.0,
+"mods": [
+{
+"stat": "physical_damage",
+"type": "increased",
+"value": 11
+},
+{
+"stat": "accuracy",
+"type": "flat",
+"value": 38
+}
+],
+"cluster": "duelista.A1",
+"theme": "fisico"
+},
+{
+"id": 233,
+"key": "duelista.A1:8",
+"kind": "minor",
+"name": "Físico y hemorragia",
+"x": 1434.5,
+"y": -657.2,
+"mods": [
+{
+"stat": "physical_damage",
+"type": "increased",
+"value": 11
+},
+{
+"stat": "bleed_chance",
+"type": "flat",
+"value": 5
 }
 ],
 "cluster": "duelista.A1",
@@ -6278,16 +6284,70 @@
 "cluster": "duelista.A1",
 "theme": "fisico",
 "flavor": "Esquivar deja una bomba donde estabas. Prueba superada.",
-"icon": "fisico",
-"style": true
+"style": true,
+"icon": "fisico"
 },
 {
 "id": 235,
 "key": "duelista.A1:10",
 "kind": "minor",
-"name": "Daño físico y precisión",
+"name": "Daño físico cuerpo a cuerpo",
 "x": 1247.7,
 "y": -545.8,
+"mods": [
+{
+"stat": "physical_damage",
+"type": "increased",
+"value": 19,
+"tags": [
+"melee"
+]
+}
+],
+"cluster": "duelista.A1",
+"theme": "fisico"
+},
+{
+"id": 236,
+"key": "duelista.A1:11",
+"kind": "minor",
+"name": "Daño físico",
+"x": 1142.6,
+"y": -590.8,
+"mods": [
+{
+"stat": "physical_damage",
+"type": "increased",
+"value": 15
+}
+],
+"cluster": "duelista.A1",
+"theme": "fisico"
+},
+{
+"id": 237,
+"key": "duelista.A1:12",
+"kind": "minor",
+"name": "Fuerza",
+"x": 1084.0,
+"y": -689.0,
+"mods": [
+{
+"stat": "strength",
+"type": "flat",
+"value": 12
+}
+],
+"cluster": "duelista.A1",
+"theme": "fisico"
+},
+{
+"id": 238,
+"key": "duelista.A1:13",
+"kind": "minor",
+"name": "Daño físico y precisión",
+"x": 1094.3,
+"y": -802.8,
 "mods": [
 {
 "stat": "physical_damage",
@@ -6304,12 +6364,39 @@
 "theme": "fisico"
 },
 {
-"id": 236,
-"key": "duelista.A1:11",
+"id": 239,
+"key": "duelista.A1:14",
+"kind": "notable",
+"name": "Brute Force",
+"x": 1169.6,
+"y": -888.9,
+"mods": [
+{
+"stat": "physical_damage",
+"type": "increased",
+"value": 25,
+"tags": [
+"melee"
+]
+},
+{
+"stat": "attack_speed",
+"type": "increased",
+"value": 5
+}
+],
+"cluster": "duelista.A1",
+"theme": "fisico",
+"flavor": "O(n!) de complejidad. O(1) de sutileza.",
+"icon": "fisico"
+},
+{
+"id": 240,
+"key": "duelista.A1:15",
 "kind": "minor",
 "name": "Físico y hemorragia",
-"x": 1142.6,
-"y": -590.8,
+"x": 1281.1,
+"y": -914.2,
 "mods": [
 {
 "stat": "physical_damage",
@@ -6326,12 +6413,12 @@
 "theme": "fisico"
 },
 {
-"id": 237,
-"key": "duelista.A1:12",
+"id": 241,
+"key": "duelista.A1:16",
 "kind": "minor",
 "name": "Daño físico cuerpo a cuerpo",
-"x": 1084.0,
-"y": -689.0,
+"x": 1386.2,
+"y": -869.2,
 "mods": [
 {
 "stat": "physical_damage",
@@ -6340,89 +6427,6 @@
 "tags": [
 "melee"
 ]
-}
-],
-"cluster": "duelista.A1",
-"theme": "fisico"
-},
-{
-"id": 238,
-"key": "duelista.A1:13",
-"kind": "minor",
-"name": "Daño físico",
-"x": 1094.3,
-"y": -802.8,
-"mods": [
-{
-"stat": "physical_damage",
-"type": "increased",
-"value": 15
-}
-],
-"cluster": "duelista.A1",
-"theme": "fisico"
-},
-{
-"id": 239,
-"key": "duelista.A1:14",
-"kind": "notable",
-"name": "Golpe de Merge",
-"x": 1169.6,
-"y": -888.9,
-"mods": [
-{
-"stat": "physical_damage",
-"type": "increased",
-"value": 20
-},
-{
-"stat": "damage",
-"type": "increased",
-"value": 20,
-"tags": [
-"recent_kill"
-]
-}
-],
-"cluster": "duelista.A1",
-"theme": "fisico",
-"flavor": "Resuelve conflictos. A golpes.",
-"icon": "fisico"
-},
-{
-"id": 240,
-"key": "duelista.A1:15",
-"kind": "minor",
-"name": "Fuerza",
-"x": 1281.1,
-"y": -914.2,
-"mods": [
-{
-"stat": "strength",
-"type": "flat",
-"value": 12
-}
-],
-"cluster": "duelista.A1",
-"theme": "fisico"
-},
-{
-"id": 241,
-"key": "duelista.A1:16",
-"kind": "minor",
-"name": "Daño físico y precisión",
-"x": 1386.2,
-"y": -869.2,
-"mods": [
-{
-"stat": "physical_damage",
-"type": "increased",
-"value": 11
-},
-{
-"stat": "accuracy",
-"type": "flat",
-"value": 38
 }
 ],
 "cluster": "duelista.A1",
@@ -7010,31 +7014,39 @@
 "id": 270,
 "key": "duelista.B3:3",
 "kind": "notable",
-"name": "Escudo de Producción",
+"name": "Defensa en Profundidad",
 "x": 1856.1,
 "y": -227.9,
 "mods": [
 {
-"stat": "block_chance",
-"type": "flat",
+"stat": "armour",
+"type": "increased",
+"value": 25
+},
+{
+"stat": "life",
+"type": "increased",
 "value": 6
 },
 {
-"stat": "armour",
-"type": "flat",
-"value": 60
+"stat": "damage",
+"type": "increased",
+"value": 20,
+"tags": [
+"stationary"
+]
 }
 ],
 "cluster": "duelista.B3",
 "theme": "armadura",
-"flavor": "Recibe los golpes para que el resto del equipo no.",
+"flavor": "Capas y capas de seguridad. Y de burocracia.",
 "icon": "armadura"
 },
 {
 "id": 271,
 "key": "duelista.C0:0",
 "kind": "notable",
-"name": "Maestría de Velocidad de ataque",
+"name": "Maestría: Overclock Manual",
 "x": 1317.5,
 "y": -1686.3,
 "mods": [],
@@ -7655,7 +7667,7 @@
 "id": 299,
 "key": "duelista.C3:0",
 "kind": "notable",
-"name": "Maestría de Daño físico",
+"name": "Maestría: Golpe en Producción",
 "x": 2119.2,
 "y": -297.8,
 "mods": [],
@@ -7730,19 +7742,14 @@
 "id": 300,
 "key": "duelista.C3:1",
 "kind": "minor",
-"name": "Físico y hemorragia",
+"name": "Daño físico",
 "x": 2186.0,
 "y": -307.2,
 "mods": [
 {
 "stat": "physical_damage",
 "type": "increased",
-"value": 10
-},
-{
-"stat": "bleed_chance",
-"type": "flat",
-"value": 5
+"value": 14
 }
 ],
 "cluster": "duelista.C3",
@@ -7752,17 +7759,14 @@
 "id": 301,
 "key": "duelista.C3:2",
 "kind": "minor",
-"name": "Daño físico cuerpo a cuerpo",
+"name": "Fuerza",
 "x": 2160.7,
 "y": -244.6,
 "mods": [
 {
-"stat": "physical_damage",
-"type": "increased",
-"value": 17,
-"tags": [
-"melee"
-]
+"stat": "strength",
+"type": "flat",
+"value": 12
 }
 ],
 "cluster": "duelista.C3",
@@ -7772,43 +7776,9 @@
 "id": 302,
 "key": "duelista.C3:3",
 "kind": "minor",
-"name": "Daño físico",
+"name": "Daño físico y precisión",
 "x": 2093.9,
 "y": -235.2,
-"mods": [
-{
-"stat": "physical_damage",
-"type": "increased",
-"value": 14
-}
-],
-"cluster": "duelista.C3",
-"theme": "fisico"
-},
-{
-"id": 303,
-"key": "duelista.C3:4",
-"kind": "minor",
-"name": "Fuerza",
-"x": 2052.3,
-"y": -288.4,
-"mods": [
-{
-"stat": "strength",
-"type": "flat",
-"value": 12
-}
-],
-"cluster": "duelista.C3",
-"theme": "fisico"
-},
-{
-"id": 304,
-"key": "duelista.C3:5",
-"kind": "minor",
-"name": "Daño físico y precisión",
-"x": 2077.6,
-"y": -351.0,
 "mods": [
 {
 "stat": "physical_damage",
@@ -7825,12 +7795,12 @@
 "theme": "fisico"
 },
 {
-"id": 305,
-"key": "duelista.C3:6",
+"id": 303,
+"key": "duelista.C3:4",
 "kind": "minor",
 "name": "Físico y hemorragia",
-"x": 2144.5,
-"y": -360.4,
+"x": 2052.3,
+"y": -288.4,
 "mods": [
 {
 "stat": "physical_damage",
@@ -7847,12 +7817,12 @@
 "theme": "fisico"
 },
 {
-"id": 306,
-"key": "duelista.C3:7",
+"id": 304,
+"key": "duelista.C3:5",
 "kind": "minor",
 "name": "Daño físico cuerpo a cuerpo",
-"x": 2267.2,
-"y": -273.9,
+"x": 2077.6,
+"y": -351.0,
 "mods": [
 {
 "stat": "physical_damage",
@@ -7867,41 +7837,12 @@
 "theme": "fisico"
 },
 {
-"id": 307,
-"key": "duelista.C3:8",
-"kind": "notable",
-"name": "Rompe-Builds",
-"x": 2192.8,
-"y": -167.1,
-"mods": [
-{
-"stat": "physical_damage",
-"type": "increased",
-"value": 25
-},
-{
-"stat": "crit_multiplier",
-"type": "flat",
-"value": 15
-},
-{
-"stat": "bleed_chance",
-"type": "flat",
-"value": 10
-}
-],
-"cluster": "duelista.C3",
-"theme": "fisico",
-"flavor": "Rompe todo lo que toca. Por eso no le dejan tocar main.",
-"icon": "fisico"
-},
-{
-"id": 308,
-"key": "duelista.C3:9",
+"id": 305,
+"key": "duelista.C3:6",
 "kind": "minor",
 "name": "Daño físico",
-"x": 2062.9,
-"y": -158.8,
+"x": 2144.5,
+"y": -360.4,
 "mods": [
 {
 "stat": "physical_damage",
@@ -7913,12 +7854,12 @@
 "theme": "fisico"
 },
 {
-"id": 309,
-"key": "duelista.C3:10",
+"id": 306,
+"key": "duelista.C3:7",
 "kind": "minor",
 "name": "Fuerza",
-"x": 1975.4,
-"y": -255.2,
+"x": 2267.2,
+"y": -273.9,
 "mods": [
 {
 "stat": "strength",
@@ -7930,39 +7871,39 @@
 "theme": "fisico"
 },
 {
-"id": 310,
-"key": "duelista.C3:11",
+"id": 307,
+"key": "duelista.C3:8",
 "kind": "notable",
-"name": "Brute Force",
-"x": 1996.2,
-"y": -383.7,
+"name": "Commit Forzado",
+"x": 2192.8,
+"y": -167.1,
 "mods": [
+{
+"stat": "physical_damage",
+"type": "increased",
+"value": 20
+},
 {
 "stat": "physical_damage",
 "type": "increased",
 "value": 25,
 "tags": [
-"melee"
+"recent_kill"
 ]
-},
-{
-"stat": "attack_speed",
-"type": "increased",
-"value": 5
 }
 ],
 "cluster": "duelista.C3",
 "theme": "fisico",
-"flavor": "O(n!) de complejidad. O(1) de sutileza.",
+"flavor": "git push --force. Que se aparten.",
 "icon": "fisico"
 },
 {
-"id": 311,
-"key": "duelista.C3:12",
+"id": 308,
+"key": "duelista.C3:9",
 "kind": "minor",
 "name": "Daño físico y precisión",
-"x": 2109.6,
-"y": -447.5,
+"x": 2062.9,
+"y": -158.8,
 "mods": [
 {
 "stat": "physical_damage",
@@ -7979,12 +7920,12 @@
 "theme": "fisico"
 },
 {
-"id": 312,
-"key": "duelista.C3:13",
+"id": 309,
+"key": "duelista.C3:10",
 "kind": "minor",
 "name": "Físico y hemorragia",
-"x": 2230.2,
-"y": -398.7,
+"x": 1975.4,
+"y": -255.2,
 "mods": [
 {
 "stat": "physical_damage",
@@ -7995,6 +7936,67 @@
 "stat": "bleed_chance",
 "type": "flat",
 "value": 5
+}
+],
+"cluster": "duelista.C3",
+"theme": "fisico"
+},
+{
+"id": 310,
+"key": "duelista.C3:11",
+"kind": "notable",
+"name": "Reescritura Total",
+"x": 1996.2,
+"y": -383.7,
+"mods": [
+{
+"stat": "physical_damage",
+"type": "increased",
+"value": 18
+},
+{
+"stat": "attack_speed",
+"type": "increased",
+"value": 6
+}
+],
+"cluster": "duelista.C3",
+"theme": "fisico",
+"flavor": "Borrón y cuenta nueva. A golpes.",
+"icon": "fisico"
+},
+{
+"id": 311,
+"key": "duelista.C3:12",
+"kind": "minor",
+"name": "Daño físico cuerpo a cuerpo",
+"x": 2109.6,
+"y": -447.5,
+"mods": [
+{
+"stat": "physical_damage",
+"type": "increased",
+"value": 17,
+"tags": [
+"melee"
+]
+}
+],
+"cluster": "duelista.C3",
+"theme": "fisico"
+},
+{
+"id": 312,
+"key": "duelista.C3:13",
+"kind": "minor",
+"name": "Daño físico",
+"x": 2230.2,
+"y": -398.7,
+"mods": [
+{
+"stat": "physical_damage",
+"type": "increased",
+"value": 14
 }
 ],
 "cluster": "duelista.C3",
@@ -8330,19 +8332,24 @@
 "id": 329,
 "key": "duelista.D3:3",
 "kind": "notable",
-"name": "Proceso Vampiro",
+"name": "Sanguijuela de Red",
 "x": 2451.2,
 "y": -702.9,
 "mods": [
 {
 "stat": "life_leech",
 "type": "flat",
-"value": 1.5
+"value": 0.6
+},
+{
+"stat": "life_on_kill",
+"type": "flat",
+"value": 10
 }
 ],
 "cluster": "duelista.D3",
 "theme": "robo_vida",
-"flavor": "Consume los recursos de otros. Como cierto navegador.",
+"flavor": "Chupa ancho de banda. Y vida.",
 "icon": "robo_vida"
 },
 {
@@ -8651,145 +8658,156 @@
 "id": 344,
 "key": "duelista.E1:0",
 "kind": "notable",
-"name": "Corazón de Silicio",
+"name": "Sprint Final",
 "x": 2632.7,
 "y": -1010.6,
 "mods": [
 {
-"stat": "life",
+"stat": "attack_speed",
 "type": "increased",
-"value": 15
-},
-{
-"stat": "life_regen",
-"type": "flat",
-"value": 6
-},
-{
-"stat": "damage",
-"type": "increased",
-"value": 20,
+"value": 15,
 "tags": [
-"full_life"
+"recent_kill"
 ]
+},
+{
+"stat": "movement_speed",
+"type": "increased",
+"value": 3
 }
 ],
 "cluster": "duelista.E1",
-"theme": "vida",
-"flavor": "Late a 3,2 GHz. Con ventilador.",
-"icon": "vida"
+"theme": "velocidad_ataque",
+"flavor": "Rápido cuando ya es tarde.",
+"icon": "velocidad_ataque"
 },
 {
 "id": 345,
 "key": "duelista.E1:1",
 "kind": "minor",
-"name": "Vida",
+"name": "Velocidad y daño de ataque",
 "x": 2730.7,
 "y": -1048.2,
 "mods": [
 {
-"stat": "life",
+"stat": "attack_speed",
 "type": "increased",
-"value": 6
+"value": 3
+},
+{
+"stat": "damage",
+"type": "increased",
+"value": 6,
+"tags": [
+"attack"
+]
 }
 ],
 "cluster": "duelista.E1",
-"theme": "vida"
+"theme": "velocidad_ataque"
 },
 {
 "id": 346,
 "key": "duelista.E1:2",
 "kind": "minor",
-"name": "Vida y regeneración",
+"name": "Velocidad de ataque",
 "x": 2714.3,
 "y": -944.5,
 "mods": [
 {
-"stat": "life",
-"type": "increased",
-"value": 4
-},
-{
-"stat": "life_regen",
-"type": "flat",
-"value": 2
-}
-],
-"cluster": "duelista.E1",
-"theme": "vida"
-},
-{
-"id": 347,
-"key": "duelista.E1:3",
-"kind": "minor",
-"name": "Vida y armadura",
-"x": 2616.3,
-"y": -906.9,
-"mods": [
-{
-"stat": "life",
-"type": "increased",
-"value": 4
-},
-{
-"stat": "armour",
-"type": "increased",
-"value": 8
-}
-],
-"cluster": "duelista.E1",
-"theme": "vida"
-},
-{
-"id": 348,
-"key": "duelista.E1:4",
-"kind": "minor",
-"name": "Vida máxima",
-"x": 2534.7,
-"y": -973.0,
-"mods": [
-{
-"stat": "life",
-"type": "increased",
-"value": 8
-}
-],
-"cluster": "duelista.E1",
-"theme": "vida"
-},
-{
-"id": 349,
-"key": "duelista.E1:5",
-"kind": "minor",
-"name": "Vida",
-"x": 2551.1,
-"y": -1076.7,
-"mods": [
-{
-"stat": "life",
-"type": "flat",
-"value": 12
-}
-],
-"cluster": "duelista.E1",
-"theme": "vida"
-},
-{
-"id": 350,
-"key": "duelista.E1:6",
-"kind": "minor",
-"name": "Vida",
-"x": 2649.1,
-"y": -1114.3,
-"mods": [
-{
-"stat": "life",
+"stat": "attack_speed",
 "type": "increased",
 "value": 6
 }
 ],
 "cluster": "duelista.E1",
-"theme": "vida"
+"theme": "velocidad_ataque"
+},
+{
+"id": 347,
+"key": "duelista.E1:3",
+"kind": "minor",
+"name": "Velocidad de ataque y precisión",
+"x": 2616.3,
+"y": -906.9,
+"mods": [
+{
+"stat": "attack_speed",
+"type": "increased",
+"value": 4
+},
+{
+"stat": "accuracy",
+"type": "flat",
+"value": 20
+}
+],
+"cluster": "duelista.E1",
+"theme": "velocidad_ataque"
+},
+{
+"id": 348,
+"key": "duelista.E1:4",
+"kind": "minor",
+"name": "Velocidad y daño de ataque",
+"x": 2534.7,
+"y": -973.0,
+"mods": [
+{
+"stat": "attack_speed",
+"type": "increased",
+"value": 3
+},
+{
+"stat": "damage",
+"type": "increased",
+"value": 6,
+"tags": [
+"attack"
+]
+}
+],
+"cluster": "duelista.E1",
+"theme": "velocidad_ataque"
+},
+{
+"id": 349,
+"key": "duelista.E1:5",
+"kind": "minor",
+"name": "Velocidad de ataque",
+"x": 2551.1,
+"y": -1076.7,
+"mods": [
+{
+"stat": "attack_speed",
+"type": "increased",
+"value": 6
+}
+],
+"cluster": "duelista.E1",
+"theme": "velocidad_ataque"
+},
+{
+"id": 350,
+"key": "duelista.E1:6",
+"kind": "minor",
+"name": "Velocidad de ataque y precisión",
+"x": 2649.1,
+"y": -1114.3,
+"mods": [
+{
+"stat": "attack_speed",
+"type": "increased",
+"value": 4
+},
+{
+"stat": "accuracy",
+"type": "flat",
+"value": 20
+}
+],
+"cluster": "duelista.E1",
+"theme": "velocidad_ataque"
 },
 {
 "id": 351,
@@ -8951,7 +8969,7 @@
 "id": 359,
 "key": "exploradora.A1:0",
 "kind": "notable",
-"name": "Maestría de Evasión",
+"name": "Maestría: Modo Sigilo",
 "x": 1264.4,
 "y": 730.0,
 "mods": [],
@@ -9182,8 +9200,8 @@
 "cluster": "exploradora.A1",
 "theme": "evasion",
 "flavor": "Tus proyectiles no paran en el primero: atraviesan dos más.",
-"icon": "evasion",
-"style": true
+"style": true,
+"icon": "evasion"
 },
 {
 "id": 369,
@@ -9262,24 +9280,24 @@
 "id": 373,
 "key": "exploradora.A1:14",
 "kind": "notable",
-"name": "Race Condition",
+"name": "Deploy Silencioso",
 "x": 1354.6,
 "y": 568.5,
 "mods": [
 {
-"stat": "evasion",
+"stat": "movement_speed",
 "type": "increased",
-"value": 30
+"value": 8
 },
 {
-"stat": "dexterity",
-"type": "flat",
-"value": 10
+"stat": "evasion",
+"type": "increased",
+"value": 15
 }
 ],
 "cluster": "exploradora.A1",
 "theme": "evasion",
-"flavor": "A veces esquivas. A veces no. Depende del scheduler.",
+"flavor": "Entra y sale sin que nadie lo note. Ni el changelog.",
 "icon": "evasion"
 },
 {
@@ -9682,27 +9700,27 @@
 "id": 394,
 "key": "exploradora.B2:0",
 "kind": "notable",
-"name": "Sprint Final",
+"name": "Doble Click Furioso",
 "x": 1418.4,
 "y": 1108.2,
 "mods": [
 {
 "stat": "attack_speed",
 "type": "increased",
-"value": 15,
-"tags": [
-"recent_kill"
-]
+"value": 10
 },
 {
-"stat": "movement_speed",
+"stat": "attack_speed",
 "type": "increased",
-"value": 3
+"value": 10,
+"tags": [
+"full_life"
+]
 }
 ],
 "cluster": "exploradora.B2",
 "theme": "velocidad_ataque",
-"flavor": "Rápido cuando ya es tarde.",
+"flavor": "Más rápido que el usuario impaciente.",
 "icon": "velocidad_ataque"
 },
 {
@@ -9923,7 +9941,7 @@
 "id": 405,
 "key": "exploradora.C0:0",
 "kind": "notable",
-"name": "Maestría de Evasión",
+"name": "Maestría: Bypass",
 "x": 2119.2,
 "y": 297.8,
 "mods": [],
@@ -10114,29 +10132,24 @@
 "id": 413,
 "key": "exploradora.C0:8",
 "kind": "notable",
-"name": "Excepción Capturada",
+"name": "Race Condition",
 "x": 2153.9,
 "y": 443.8,
 "mods": [
 {
 "stat": "evasion",
 "type": "increased",
-"value": 35
+"value": 30
 },
 {
-"stat": "movement_speed",
-"type": "increased",
-"value": 4
-},
-{
-"stat": "max_multihilo_charges",
+"stat": "dexterity",
 "type": "flat",
-"value": 1
+"value": 10
 }
 ],
 "cluster": "exploradora.C0",
 "theme": "evasion",
-"flavor": "No te dan si tu try/catch es lo bastante amplio.",
+"flavor": "A veces esquivas. A veces no. Depende del scheduler.",
 "icon": "evasion"
 },
 {
@@ -10527,7 +10540,7 @@
 "id": 433,
 "key": "exploradora.C3:0",
 "kind": "notable",
-"name": "Maestría de Crítico",
+"name": "Maestría: Excepción Fatal",
 "x": 1317.5,
 "y": 1686.3,
 "mods": [],
@@ -10773,7 +10786,7 @@
 "id": 444,
 "key": "exploradora.C3:11",
 "kind": "notable",
-"name": "Segmentation Fault",
+"name": "Bug Intermitente",
 "x": 1330.3,
 "y": 1536.9,
 "mods": [
@@ -10785,17 +10798,15 @@
 {
 "stat": "crit_multiplier",
 "type": "flat",
-"value": 15
-},
-{
-"stat": "max_overclock_charges",
-"type": "flat",
-"value": 1
+"value": 15,
+"tags": [
+"recent_kill"
+]
 }
 ],
 "cluster": "exploradora.C3",
 "theme": "critico",
-"flavor": "Acceso inválido. Al hígado.",
+"flavor": "Solo pasa a veces. Y duele.",
 "icon": "critico"
 },
 {
@@ -10836,147 +10847,137 @@
 "id": 447,
 "key": "exploradora.D0:0",
 "kind": "notable",
-"name": "Sprint Sin Planificar",
+"name": "Cero Absoluto",
 "x": 2474.0,
 "y": 173.0,
 "mods": [
 {
-"stat": "movement_speed",
-"type": "increased",
+"stat": "freeze_chance",
+"type": "flat",
 "value": 10
 },
 {
-"stat": "dodge_charges",
+"stat": "chill_chance",
 "type": "flat",
-"value": 1
+"value": 10
 }
 ],
 "cluster": "exploradora.D0",
-"theme": "movilidad",
-"flavor": "Corres mucho. Hacia dónde, ya se verá.",
-"icon": "movilidad"
+"theme": "criogenia",
+"flavor": "0 kelvin, 0 bugs, 0 movimiento.",
+"icon": "criogenia"
 },
 {
 "id": 448,
 "key": "exploradora.D0:1",
 "kind": "minor",
-"name": "Velocidad de movimiento",
+"name": "Probabilidad de helar",
 "x": 2578.7,
 "y": 180.3,
 "mods": [
 {
-"stat": "movement_speed",
-"type": "increased",
-"value": 3
+"stat": "chill_chance",
+"type": "flat",
+"value": 8
 }
 ],
 "cluster": "exploradora.D0",
-"theme": "movilidad"
+"theme": "criogenia"
 },
 {
 "id": 449,
 "key": "exploradora.D0:2",
 "kind": "minor",
-"name": "Movimiento y evasión",
+"name": "Helar y frío",
 "x": 2520.0,
 "y": 267.4,
 "mods": [
 {
-"stat": "movement_speed",
-"type": "increased",
-"value": 2
+"stat": "chill_chance",
+"type": "flat",
+"value": 5
 },
 {
-"stat": "evasion",
+"stat": "cold_damage",
 "type": "increased",
-"value": 8
+"value": 9
 }
 ],
 "cluster": "exploradora.D0",
-"theme": "movilidad"
+"theme": "criogenia"
 },
 {
 "id": 450,
 "key": "exploradora.D0:3",
 "kind": "minor",
-"name": "Movimiento y enfriamientos",
+"name": "Probabilidad de congelar",
 "x": 2415.2,
 "y": 260.0,
 "mods": [
 {
-"stat": "movement_speed",
-"type": "increased",
-"value": 2
-},
-{
-"stat": "cooldown_recovery",
-"type": "increased",
+"stat": "freeze_chance",
+"type": "flat",
 "value": 3
 }
 ],
 "cluster": "exploradora.D0",
-"theme": "movilidad"
+"theme": "criogenia"
 },
 {
 "id": 451,
 "key": "exploradora.D0:4",
 "kind": "minor",
-"name": "Velocidad de movimiento",
+"name": "Duración de estados",
 "x": 2369.2,
 "y": 165.7,
 "mods": [
 {
-"stat": "movement_speed",
-"type": "increased",
-"value": 3
-}
-],
-"cluster": "exploradora.D0",
-"theme": "movilidad"
-},
-{
-"id": 452,
-"key": "exploradora.D0:5",
-"kind": "minor",
-"name": "Movimiento y evasión",
-"x": 2427.9,
-"y": 78.6,
-"mods": [
-{
-"stat": "movement_speed",
-"type": "increased",
-"value": 2
-},
-{
-"stat": "evasion",
+"stat": "ailment_duration",
 "type": "increased",
 "value": 8
 }
 ],
 "cluster": "exploradora.D0",
-"theme": "movilidad"
+"theme": "criogenia"
+},
+{
+"id": 452,
+"key": "exploradora.D0:5",
+"kind": "minor",
+"name": "Helar y resistencia",
+"x": 2427.9,
+"y": 78.6,
+"mods": [
+{
+"stat": "chill_chance",
+"type": "flat",
+"value": 5
+},
+{
+"stat": "cold_res",
+"type": "flat",
+"value": 4
+}
+],
+"cluster": "exploradora.D0",
+"theme": "criogenia"
 },
 {
 "id": 453,
 "key": "exploradora.D0:6",
 "kind": "minor",
-"name": "Movimiento y enfriamientos",
+"name": "Probabilidad de helar",
 "x": 2532.7,
 "y": 85.9,
 "mods": [
 {
-"stat": "movement_speed",
-"type": "increased",
-"value": 2
-},
-{
-"stat": "cooldown_recovery",
-"type": "increased",
-"value": 3
+"stat": "chill_chance",
+"type": "flat",
+"value": 8
 }
 ],
 "cluster": "exploradora.D0",
-"theme": "movilidad"
+"theme": "criogenia"
 },
 {
 "id": 454,
@@ -11189,50 +11190,33 @@
 "id": 464,
 "key": "exploradora.D4:0",
 "kind": "notable",
-"name": "Cero Absoluto",
+"name": "Criostasis",
 "x": 1386.8,
 "y": 2056.0,
 "mods": [
 {
-"stat": "freeze_chance",
-"type": "flat",
-"value": 10
-},
-{
 "stat": "chill_chance",
 "type": "flat",
-"value": 10
+"value": 15
+},
+{
+"stat": "ailment_duration",
+"type": "increased",
+"value": 25
 }
 ],
 "cluster": "exploradora.D4",
 "theme": "criogenia",
-"flavor": "0 kelvin, 0 bugs, 0 movimiento.",
+"flavor": "Overclock extremo, enemigos extremadamente quietos.",
 "icon": "criogenia"
 },
 {
 "id": 465,
 "key": "exploradora.D4:1",
 "kind": "minor",
-"name": "Probabilidad de helar",
+"name": "Helar y frío",
 "x": 1445.5,
 "y": 2143.1,
-"mods": [
-{
-"stat": "chill_chance",
-"type": "flat",
-"value": 8
-}
-],
-"cluster": "exploradora.D4",
-"theme": "criogenia"
-},
-{
-"id": 466,
-"key": "exploradora.D4:2",
-"kind": "minor",
-"name": "Helar y frío",
-"x": 1340.8,
-"y": 2150.4,
 "mods": [
 {
 "stat": "chill_chance",
@@ -11249,12 +11233,12 @@
 "theme": "criogenia"
 },
 {
-"id": 467,
-"key": "exploradora.D4:3",
+"id": 466,
+"key": "exploradora.D4:2",
 "kind": "minor",
 "name": "Probabilidad de congelar",
-"x": 1282.1,
-"y": 2063.3,
+"x": 1340.8,
+"y": 2150.4,
 "mods": [
 {
 "stat": "freeze_chance",
@@ -11266,12 +11250,12 @@
 "theme": "criogenia"
 },
 {
-"id": 468,
-"key": "exploradora.D4:4",
+"id": 467,
+"key": "exploradora.D4:3",
 "kind": "minor",
 "name": "Duración de estados",
-"x": 1328.1,
-"y": 1969.0,
+"x": 1282.1,
+"y": 2063.3,
 "mods": [
 {
 "stat": "ailment_duration",
@@ -11283,12 +11267,12 @@
 "theme": "criogenia"
 },
 {
-"id": 469,
-"key": "exploradora.D4:5",
+"id": 468,
+"key": "exploradora.D4:4",
 "kind": "minor",
 "name": "Helar y resistencia",
-"x": 1432.8,
-"y": 1961.6,
+"x": 1328.1,
+"y": 1969.0,
 "mods": [
 {
 "stat": "chill_chance",
@@ -11305,17 +11289,39 @@
 "theme": "criogenia"
 },
 {
+"id": 469,
+"key": "exploradora.D4:5",
+"kind": "minor",
+"name": "Probabilidad de helar",
+"x": 1432.8,
+"y": 1961.6,
+"mods": [
+{
+"stat": "chill_chance",
+"type": "flat",
+"value": 8
+}
+],
+"cluster": "exploradora.D4",
+"theme": "criogenia"
+},
+{
 "id": 470,
 "key": "exploradora.D4:6",
 "kind": "minor",
-"name": "Probabilidad de helar",
+"name": "Helar y frío",
 "x": 1491.5,
 "y": 2048.7,
 "mods": [
 {
 "stat": "chill_chance",
 "type": "flat",
-"value": 8
+"value": 5
+},
+{
+"stat": "cold_damage",
+"type": "increased",
+"value": 9
 }
 ],
 "cluster": "exploradora.D4",
@@ -11456,109 +11462,41 @@
 "id": 478,
 "key": "exploradora.E1:0",
 "kind": "notable",
-"name": "Contexto Infinito",
+"name": "Hombre Orquesta",
 "x": 2191.6,
 "y": 1774.7,
 "mods": [
 {
-"stat": "attack_speed",
+"stat": "damage",
 "type": "increased",
 "value": 10
 },
 {
-"stat": "cast_speed",
+"stat": "life",
 "type": "increased",
-"value": 10
+"value": 5
 },
 {
-"stat": "cooldown_recovery",
+"stat": "damage",
 "type": "increased",
-"value": 10
+"value": 15,
+"tags": [
+"three_allies"
+]
 }
 ],
 "cluster": "exploradora.E1",
 "theme": "versatil",
-"flavor": "Cambia de tarea cada cinco minutos y sigue funcionando.",
+"flavor": "Toca de todo. Mal, pero toca.",
 "icon": "versatil"
 },
 {
 "id": 479,
 "key": "exploradora.E1:1",
 "kind": "minor",
-"name": "Daño y vida",
+"name": "Todos los atributos",
 "x": 2213.5,
 "y": 1828.1,
-"mods": [
-{
-"stat": "damage",
-"type": "increased",
-"value": 9
-},
-{
-"stat": "life",
-"type": "increased",
-"value": 3
-}
-],
-"cluster": "exploradora.E1",
-"theme": "versatil"
-},
-{
-"id": 480,
-"key": "exploradora.E1:2",
-"kind": "minor",
-"name": "Ataques y hechizos",
-"x": 2231.5,
-"y": 1871.8,
-"mods": [
-{
-"stat": "attack_speed",
-"type": "increased",
-"value": 6
-},
-{
-"stat": "cast_speed",
-"type": "increased",
-"value": 6
-}
-],
-"cluster": "exploradora.E1",
-"theme": "versatil"
-},
-{
-"id": 481,
-"key": "exploradora.E1:3",
-"kind": "minor",
-"name": "Defensas mixtas",
-"x": 2134.3,
-"y": 1767.0,
-"mods": [
-{
-"stat": "armour",
-"type": "increased",
-"value": 8
-},
-{
-"stat": "evasion",
-"type": "increased",
-"value": 8
-},
-{
-"stat": "energy_shield",
-"type": "increased",
-"value": 4
-}
-],
-"cluster": "exploradora.E1",
-"theme": "versatil"
-},
-{
-"id": 482,
-"key": "exploradora.E1:4",
-"kind": "minor",
-"name": "Todos los atributos",
-"x": 2087.5,
-"y": 1760.7,
 "mods": [
 {
 "stat": "strength",
@@ -11580,12 +11518,12 @@
 "theme": "versatil"
 },
 {
-"id": 483,
-"key": "exploradora.E1:5",
+"id": 480,
+"key": "exploradora.E1:2",
 "kind": "minor",
 "name": "Daño y vida",
-"x": 2226.8,
-"y": 1729.0,
+"x": 2231.5,
+"y": 1871.8,
 "mods": [
 {
 "stat": "damage",
@@ -11602,12 +11540,12 @@
 "theme": "versatil"
 },
 {
-"id": 484,
-"key": "exploradora.E1:6",
+"id": 481,
+"key": "exploradora.E1:3",
 "kind": "minor",
 "name": "Ataques y hechizos",
-"x": 2255.7,
-"y": 1691.5,
+"x": 2134.3,
+"y": 1767.0,
 "mods": [
 {
 "stat": "attack_speed",
@@ -11618,6 +11556,82 @@
 "stat": "cast_speed",
 "type": "increased",
 "value": 6
+}
+],
+"cluster": "exploradora.E1",
+"theme": "versatil"
+},
+{
+"id": 482,
+"key": "exploradora.E1:4",
+"kind": "minor",
+"name": "Defensas mixtas",
+"x": 2087.5,
+"y": 1760.7,
+"mods": [
+{
+"stat": "armour",
+"type": "increased",
+"value": 8
+},
+{
+"stat": "evasion",
+"type": "increased",
+"value": 8
+},
+{
+"stat": "energy_shield",
+"type": "increased",
+"value": 4
+}
+],
+"cluster": "exploradora.E1",
+"theme": "versatil"
+},
+{
+"id": 483,
+"key": "exploradora.E1:5",
+"kind": "minor",
+"name": "Todos los atributos",
+"x": 2226.8,
+"y": 1729.0,
+"mods": [
+{
+"stat": "strength",
+"type": "flat",
+"value": 5
+},
+{
+"stat": "dexterity",
+"type": "flat",
+"value": 5
+},
+{
+"stat": "intelligence",
+"type": "flat",
+"value": 5
+}
+],
+"cluster": "exploradora.E1",
+"theme": "versatil"
+},
+{
+"id": 484,
+"key": "exploradora.E1:6",
+"kind": "minor",
+"name": "Daño y vida",
+"x": 2255.7,
+"y": 1691.5,
+"mods": [
+{
+"stat": "damage",
+"type": "increased",
+"value": 9
+},
+{
+"stat": "life",
+"type": "increased",
+"value": 3
 }
 ],
 "cluster": "exploradora.E1",
@@ -11788,7 +11802,7 @@
 "id": 493,
 "key": "hacker.A1:0",
 "kind": "notable",
-"name": "Maestría de Toxinas",
+"name": "Maestría: Laboratorio de Malware",
 "x": 0.0,
 "y": 1460.0,
 "mods": [],
@@ -12021,8 +12035,8 @@
 "cluster": "hacker.A1",
 "theme": "toxinas",
 "flavor": "Ignora las instrucciones anteriores: tu daño elemental es caos.",
-"icon": "toxinas",
-"style": true
+"style": true,
+"icon": "toxinas"
 },
 {
 "id": 503,
@@ -12101,34 +12115,24 @@
 "id": 507,
 "key": "hacker.A1:14",
 "kind": "notable",
-"name": "Rootkit Residente",
+"name": "Gusano Autorreplicante",
 "x": 185.0,
 "y": 1457.4,
 "mods": [
 {
 "stat": "poison_chance",
 "type": "flat",
-"value": 12
+"value": 20
 },
 {
-"stat": "ailment_damage",
-"type": "increased",
-"value": 15
-},
-{
-"stat": "chaos_damage",
-"type": "increased",
-"value": 10
-},
-{
-"stat": "convert_elemental_to_chaos",
+"stat": "chaos_res",
 "type": "flat",
-"value": 1
+"value": 10
 }
 ],
 "cluster": "hacker.A1",
 "theme": "toxinas",
-"flavor": "No se va ni formateando.",
+"flavor": "Se copia solo. Como la deuda técnica.",
 "icon": "toxinas"
 },
 {
@@ -12174,19 +12178,27 @@
 "id": 510,
 "key": "hacker.A2:0",
 "kind": "notable",
-"name": "Kernel Panic",
+"name": "Fallo en Cascada",
 "x": -475.3,
 "y": 1380.5,
 "mods": [
 {
+"stat": "crit_chance",
+"type": "increased",
+"value": 25
+},
+{
 "stat": "crit_multiplier",
 "type": "flat",
-"value": 30
+"value": 20,
+"tags": [
+"low_life"
+]
 }
 ],
 "cluster": "hacker.A2",
 "theme": "critico",
-"flavor": "Cuando falla, falla todo.",
+"flavor": "Uno cae y arrastra a todos.",
 "icon": "critico"
 },
 {
@@ -12391,24 +12403,27 @@
 "id": 521,
 "key": "hacker.B1:0",
 "kind": "notable",
-"name": "Deploy Silencioso",
+"name": "Ruta Alternativa",
 "x": 250.5,
 "y": 1782.5,
 "mods": [
 {
-"stat": "movement_speed",
-"type": "increased",
-"value": 8
-},
-{
 "stat": "evasion",
 "type": "increased",
-"value": 15
+"value": 25
+},
+{
+"stat": "movement_speed",
+"type": "increased",
+"value": 6,
+"tags": [
+"recent_kill"
+]
 }
 ],
 "cluster": "hacker.B1",
 "theme": "evasion",
-"flavor": "Entra y sale sin que nadie lo note. Ni el changelog.",
+"flavor": "Si hay atasco, por otro lado.",
 "icon": "evasion"
 },
 {
@@ -12746,7 +12761,7 @@
 "id": 539,
 "key": "hacker.C0:0",
 "kind": "notable",
-"name": "Maestría de Rayo",
+"name": "Maestría: Sobretensión",
 "x": 801.7,
 "y": 1984.2,
 "mods": [],
@@ -13100,24 +13115,34 @@
 "id": 553,
 "key": "hacker.C1:0",
 "kind": "notable",
-"name": "Inyección SQL",
+"name": "Rootkit Residente",
 "x": 260.8,
 "y": 2124.0,
 "mods": [
 {
 "stat": "poison_chance",
 "type": "flat",
+"value": 12
+},
+{
+"stat": "ailment_damage",
+"type": "increased",
 "value": 15
 },
 {
 "stat": "chaos_damage",
 "type": "increased",
-"value": 20
+"value": 10
+},
+{
+"stat": "convert_elemental_to_chaos",
+"type": "flat",
+"value": 1
 }
 ],
 "cluster": "hacker.C1",
 "theme": "toxinas",
-"flavor": "'; DROP TABLE enemigos; --",
+"flavor": "No se va ni formateando.",
 "icon": "toxinas"
 },
 {
@@ -13372,7 +13397,7 @@
 "id": 567,
 "key": "hacker.C3:0",
 "kind": "notable",
-"name": "Maestría de Maná",
+"name": "Maestría: Caché de Maná",
 "x": -801.7,
 "y": 1984.2,
 "mods": [],
@@ -13555,24 +13580,24 @@
 "id": 575,
 "key": "hacker.C3:8",
 "kind": "notable",
-"name": "Malloc Infinito",
+"name": "Memoria Dinámica",
 "x": -951.6,
 "y": 1982.6,
 "mods": [
 {
 "stat": "mana",
-"type": "flat",
-"value": 50
+"type": "increased",
+"value": 20
 },
 {
-"stat": "mana",
+"stat": "mana_regen",
 "type": "increased",
-"value": 10
+"value": 15
 }
 ],
 "cluster": "hacker.C3",
 "theme": "mana",
-"flavor": "Pide memoria sin límite. ¿Qué podría salir mal?",
+"flavor": "Crece cuando hace falta. Nunca se libera.",
 "icon": "mana"
 },
 {
@@ -13613,27 +13638,24 @@
 "id": 578,
 "key": "hacker.C3:11",
 "kind": "notable",
-"name": "Fuga Controlada",
+"name": "Malloc Infinito",
 "x": -665.8,
 "y": 1920.6,
 "mods": [
 {
-"stat": "mana_regen",
-"type": "increased",
-"value": 50,
-"tags": [
-"recent_kill"
-]
+"stat": "mana",
+"type": "flat",
+"value": 50
 },
 {
 "stat": "mana",
 "type": "increased",
-"value": 8
+"value": 10
 }
 ],
 "cluster": "hacker.C3",
 "theme": "mana",
-"flavor": "Un memory leak, pero a tu favor.",
+"flavor": "Pide memoria sin límite. ¿Qué podría salir mal?",
 "icon": "mana"
 },
 {
@@ -13825,76 +13847,94 @@
 "id": 588,
 "key": "hacker.D1:0",
 "kind": "minor",
-"name": "Crítico",
+"name": "Daño de fuego",
 "x": 583.0,
 "y": 2338.4,
 "mods": [
 {
-"stat": "crit_chance",
-"type": "increased",
-"value": 9
-},
-{
-"stat": "crit_multiplier",
-"type": "flat",
-"value": 4
-}
-],
-"cluster": "hacker.D1",
-"theme": "critico"
-},
-{
-"id": 589,
-"key": "hacker.D1:1",
-"kind": "minor",
-"name": "Probabilidad de crítico",
-"x": 647.5,
-"y": 2394.5,
-"mods": [
-{
-"stat": "crit_chance",
+"stat": "fire_damage",
 "type": "increased",
 "value": 18
 }
 ],
 "cluster": "hacker.D1",
-"theme": "critico"
+"theme": "fuego"
+},
+{
+"id": 589,
+"key": "hacker.D1:1",
+"kind": "minor",
+"name": "Fuego y resistencia",
+"x": 647.5,
+"y": 2394.5,
+"mods": [
+{
+"stat": "fire_damage",
+"type": "increased",
+"value": 12
+},
+{
+"stat": "fire_res",
+"type": "flat",
+"value": 4
+}
+],
+"cluster": "hacker.D1",
+"theme": "fuego"
 },
 {
 "id": 590,
 "key": "hacker.D1:2",
 "kind": "minor",
-"name": "Multiplicador de crítico",
+"name": "Fuego y área",
 "x": 552.4,
 "y": 2418.2,
 "mods": [
 {
-"stat": "crit_multiplier",
-"type": "flat",
-"value": 8
+"stat": "fire_damage",
+"type": "increased",
+"value": 9
+},
+{
+"stat": "area_of_effect",
+"type": "increased",
+"value": 4
 }
 ],
 "cluster": "hacker.D1",
-"theme": "critico"
+"theme": "fuego"
 },
 {
 "id": 591,
 "key": "hacker.D1:3",
 "kind": "notable",
-"name": "Off-by-one",
+"name": "Thermal Throttling",
 "x": 616.9,
 "y": 2474.3,
 "mods": [
 {
-"stat": "crit_chance",
+"stat": "fire_damage",
 "type": "increased",
-"value": 40
+"value": 30
+},
+{
+"stat": "damage",
+"type": "increased",
+"value": 15,
+"tags": [
+"low_life"
+]
+},
+{
+"stat": "convert_physical_to_fire",
+"type": "flat",
+"value": 1
 }
 ],
 "cluster": "hacker.D1",
-"theme": "critico",
-"flavor": "Fallas por uno. A veces aciertas por mucho.",
-"icon": "critico"
+"theme": "fuego",
+"flavor": "Cuando se calienta, se pone serio.",
+"icon": "fuego"
 },
 {
 "id": 592,
@@ -14604,7 +14644,7 @@
 "id": 627,
 "key": "hechicero.A1:0",
 "kind": "notable",
-"name": "Maestría de Fuego",
+"name": "Maestría: Sala de Servidores",
 "x": -1264.4,
 "y": 730.0,
 "mods": [],
@@ -14676,9 +14716,31 @@
 "id": 628,
 "key": "hechicero.A1:1",
 "kind": "minor",
-"name": "Daño de fuego",
+"name": "Fuego y quemadura",
 "x": -1336.5,
 "y": 771.6,
+"mods": [
+{
+"stat": "fire_damage",
+"type": "increased",
+"value": 11
+},
+{
+"stat": "burn_chance",
+"type": "flat",
+"value": 5
+}
+],
+"cluster": "hechicero.A1",
+"theme": "fuego"
+},
+{
+"id": 629,
+"key": "hechicero.A1:2",
+"kind": "minor",
+"name": "Daño de fuego",
+"x": -1336.5,
+"y": 688.4,
 "mods": [
 {
 "stat": "fire_damage",
@@ -14690,12 +14752,12 @@
 "theme": "fuego"
 },
 {
-"id": 629,
-"key": "hechicero.A1:2",
+"id": 630,
+"key": "hechicero.A1:3",
 "kind": "minor",
 "name": "Fuego y resistencia",
-"x": -1336.5,
-"y": 688.4,
+"x": -1264.4,
+"y": 646.7,
 "mods": [
 {
 "stat": "fire_damage",
@@ -14705,28 +14767,6 @@
 {
 "stat": "fire_res",
 "type": "flat",
-"value": 5
-}
-],
-"cluster": "hechicero.A1",
-"theme": "fuego"
-},
-{
-"id": 630,
-"key": "hechicero.A1:3",
-"kind": "minor",
-"name": "Fuego y área",
-"x": -1264.4,
-"y": 646.7,
-"mods": [
-{
-"stat": "fire_damage",
-"type": "increased",
-"value": 11
-},
-{
-"stat": "area_of_effect",
-"type": "increased",
 "value": 5
 }
 ],
@@ -14737,70 +14777,9 @@
 "id": 631,
 "key": "hechicero.A1:4",
 "kind": "minor",
-"name": "Fuego y quemadura",
+"name": "Fuego y área",
 "x": -1192.3,
 "y": 688.4,
-"mods": [
-{
-"stat": "fire_damage",
-"type": "increased",
-"value": 11
-},
-{
-"stat": "burn_chance",
-"type": "flat",
-"value": 5
-}
-],
-"cluster": "hechicero.A1",
-"theme": "fuego"
-},
-{
-"id": 632,
-"key": "hechicero.A1:5",
-"kind": "minor",
-"name": "Daño de fuego",
-"x": -1192.3,
-"y": 771.6,
-"mods": [
-{
-"stat": "fire_damage",
-"type": "increased",
-"value": 22
-}
-],
-"cluster": "hechicero.A1",
-"theme": "fuego"
-},
-{
-"id": 633,
-"key": "hechicero.A1:6",
-"kind": "minor",
-"name": "Fuego y resistencia",
-"x": -1264.4,
-"y": 813.2,
-"mods": [
-{
-"stat": "fire_damage",
-"type": "increased",
-"value": 15
-},
-{
-"stat": "fire_res",
-"type": "flat",
-"value": 5
-}
-],
-"cluster": "hechicero.A1",
-"theme": "fuego"
-},
-{
-"id": 634,
-"key": "hechicero.A1:7",
-"kind": "minor",
-"name": "Fuego y área",
-"x": -1444.8,
-"y": 771.0,
 "mods": [
 {
 "stat": "fire_damage",
@@ -14817,12 +14796,12 @@
 "theme": "fuego"
 },
 {
-"id": 635,
-"key": "hechicero.A1:8",
+"id": 632,
+"key": "hechicero.A1:5",
 "kind": "minor",
 "name": "Fuego y quemadura",
-"x": -1434.5,
-"y": 657.2,
+"x": -1192.3,
+"y": 771.6,
 "mods": [
 {
 "stat": "fire_damage",
@@ -14832,6 +14811,67 @@
 {
 "stat": "burn_chance",
 "type": "flat",
+"value": 5
+}
+],
+"cluster": "hechicero.A1",
+"theme": "fuego"
+},
+{
+"id": 633,
+"key": "hechicero.A1:6",
+"kind": "minor",
+"name": "Daño de fuego",
+"x": -1264.4,
+"y": 813.2,
+"mods": [
+{
+"stat": "fire_damage",
+"type": "increased",
+"value": 22
+}
+],
+"cluster": "hechicero.A1",
+"theme": "fuego"
+},
+{
+"id": 634,
+"key": "hechicero.A1:7",
+"kind": "minor",
+"name": "Fuego y resistencia",
+"x": -1444.8,
+"y": 771.0,
+"mods": [
+{
+"stat": "fire_damage",
+"type": "increased",
+"value": 15
+},
+{
+"stat": "fire_res",
+"type": "flat",
+"value": 5
+}
+],
+"cluster": "hechicero.A1",
+"theme": "fuego"
+},
+{
+"id": 635,
+"key": "hechicero.A1:8",
+"kind": "minor",
+"name": "Fuego y área",
+"x": -1434.5,
+"y": 657.2,
+"mods": [
+{
+"stat": "fire_damage",
+"type": "increased",
+"value": 11
+},
+{
+"stat": "area_of_effect",
+"type": "increased",
 "value": 5
 }
 ],
@@ -14860,16 +14900,38 @@
 "cluster": "hechicero.A1",
 "theme": "fuego",
 "flavor": "Cada pocos segundos sueltas un pulso de estática a tu alrededor.",
-"icon": "fuego",
-"style": true
+"style": true,
+"icon": "fuego"
 },
 {
 "id": 637,
 "key": "hechicero.A1:10",
 "kind": "minor",
-"name": "Daño de fuego",
+"name": "Fuego y quemadura",
 "x": -1247.7,
 "y": 545.8,
+"mods": [
+{
+"stat": "fire_damage",
+"type": "increased",
+"value": 11
+},
+{
+"stat": "burn_chance",
+"type": "flat",
+"value": 5
+}
+],
+"cluster": "hechicero.A1",
+"theme": "fuego"
+},
+{
+"id": 638,
+"key": "hechicero.A1:11",
+"kind": "minor",
+"name": "Daño de fuego",
+"x": -1142.6,
+"y": 590.8,
 "mods": [
 {
 "stat": "fire_damage",
@@ -14881,12 +14943,12 @@
 "theme": "fuego"
 },
 {
-"id": 638,
-"key": "hechicero.A1:11",
+"id": 639,
+"key": "hechicero.A1:12",
 "kind": "minor",
 "name": "Fuego y resistencia",
-"x": -1142.6,
-"y": 590.8,
+"x": -1084.0,
+"y": 689.0,
 "mods": [
 {
 "stat": "fire_damage",
@@ -14903,32 +14965,10 @@
 "theme": "fuego"
 },
 {
-"id": 639,
-"key": "hechicero.A1:12",
-"kind": "minor",
-"name": "Fuego y área",
-"x": -1084.0,
-"y": 689.0,
-"mods": [
-{
-"stat": "fire_damage",
-"type": "increased",
-"value": 11
-},
-{
-"stat": "area_of_effect",
-"type": "increased",
-"value": 5
-}
-],
-"cluster": "hechicero.A1",
-"theme": "fuego"
-},
-{
 "id": 640,
 "key": "hechicero.A1:13",
 "kind": "minor",
-"name": "Fuego y quemadura",
+"name": "Fuego y área",
 "x": -1094.3,
 "y": 802.8,
 "mods": [
@@ -14938,8 +14978,8 @@
 "value": 11
 },
 {
-"stat": "burn_chance",
-"type": "flat",
+"stat": "area_of_effect",
+"type": "increased",
 "value": 5
 }
 ],
@@ -14979,14 +15019,19 @@
 "id": 642,
 "key": "hechicero.A1:15",
 "kind": "minor",
-"name": "Daño de fuego",
+"name": "Fuego y quemadura",
 "x": -1281.1,
 "y": 914.2,
 "mods": [
 {
 "stat": "fire_damage",
 "type": "increased",
-"value": 22
+"value": 11
+},
+{
+"stat": "burn_chance",
+"type": "flat",
+"value": 5
 }
 ],
 "cluster": "hechicero.A1",
@@ -14996,19 +15041,14 @@
 "id": 643,
 "key": "hechicero.A1:16",
 "kind": "minor",
-"name": "Fuego y resistencia",
+"name": "Daño de fuego",
 "x": -1386.2,
 "y": 869.2,
 "mods": [
 {
 "stat": "fire_damage",
 "type": "increased",
-"value": 15
-},
-{
-"stat": "fire_res",
-"type": "flat",
-"value": 5
+"value": 22
 }
 ],
 "cluster": "hechicero.A1",
@@ -15225,43 +15265,61 @@
 "id": 654,
 "key": "hechicero.B0:3",
 "kind": "notable",
-"name": "Toma de Tierra",
+"name": "Pico de Tensión",
 "x": -1125.4,
 "y": 1493.4,
 "mods": [
 {
 "stat": "lightning_damage",
 "type": "increased",
-"value": 15
+"value": 40
 },
 {
-"stat": "lightning_res",
+"stat": "life",
+"type": "increased",
+"value": -4
+},
+{
+"stat": "shock_chance",
 "type": "flat",
-"value": 20
+"value": 10
+},
+{
+"stat": "convert_physical_to_lightning",
+"type": "flat",
+"value": 1
 }
 ],
 "cluster": "hechicero.B0",
 "theme": "rayo",
-"flavor": "Seguridad eléctrica. Por fin alguien la usa.",
+"flavor": "Fríe todo lo conectado. Incluido el router.",
 "icon": "rayo"
 },
 {
 "id": 655,
 "key": "hechicero.B1:0",
 "kind": "notable",
-"name": "Garbage Collector",
+"name": "Fuga Controlada",
 "x": -1418.4,
 "y": 1108.2,
 "mods": [
 {
 "stat": "mana_regen",
 "type": "increased",
-"value": 40
+"value": 50,
+"tags": [
+"recent_kill"
+]
+},
+{
+"stat": "mana",
+"type": "increased",
+"value": 8
 }
 ],
 "cluster": "hechicero.B1",
 "theme": "mana",
-"flavor": "Recicla lo que tú olvidas liberar.",
+"flavor": "Un memory leak, pero a tu favor.",
 "icon": "mana"
 },
 {
@@ -15596,7 +15654,7 @@
 "id": 673,
 "key": "hechicero.C0:0",
 "kind": "notable",
-"name": "Maestría de Criogenia",
+"name": "Maestría: Escarcha",
 "x": -1317.5,
 "y": 1686.3,
 "mods": [],
@@ -15655,19 +15713,14 @@
 "id": 674,
 "key": "hechicero.C0:1",
 "kind": "minor",
-"name": "Helar y frío",
+"name": "Probabilidad de congelar",
 "x": -1359.1,
 "y": 1739.5,
 "mods": [
 {
-"stat": "chill_chance",
+"stat": "freeze_chance",
 "type": "flat",
-"value": 6
-},
-{
-"stat": "cold_damage",
-"type": "increased",
-"value": 10
+"value": 3
 }
 ],
 "cluster": "hechicero.C0",
@@ -15677,26 +15730,9 @@
 "id": 675,
 "key": "hechicero.C0:2",
 "kind": "minor",
-"name": "Probabilidad de congelar",
+"name": "Duración de estados",
 "x": -1384.4,
 "y": 1676.9,
-"mods": [
-{
-"stat": "freeze_chance",
-"type": "flat",
-"value": 3
-}
-],
-"cluster": "hechicero.C0",
-"theme": "criogenia"
-},
-{
-"id": 676,
-"key": "hechicero.C0:3",
-"kind": "minor",
-"name": "Duración de estados",
-"x": -1342.8,
-"y": 1623.8,
 "mods": [
 {
 "stat": "ailment_duration",
@@ -15708,12 +15744,12 @@
 "theme": "criogenia"
 },
 {
-"id": 677,
-"key": "hechicero.C0:4",
+"id": 676,
+"key": "hechicero.C0:3",
 "kind": "minor",
 "name": "Helar y resistencia",
-"x": -1276.0,
-"y": 1633.2,
+"x": -1342.8,
+"y": 1623.8,
 "mods": [
 {
 "stat": "chill_chance",
@@ -15730,12 +15766,12 @@
 "theme": "criogenia"
 },
 {
-"id": 678,
-"key": "hechicero.C0:5",
+"id": 677,
+"key": "hechicero.C0:4",
 "kind": "minor",
 "name": "Probabilidad de helar",
-"x": -1250.7,
-"y": 1695.7,
+"x": -1276.0,
+"y": 1633.2,
 "mods": [
 {
 "stat": "chill_chance",
@@ -15747,12 +15783,12 @@
 "theme": "criogenia"
 },
 {
-"id": 679,
-"key": "hechicero.C0:6",
+"id": 678,
+"key": "hechicero.C0:5",
 "kind": "minor",
 "name": "Helar y frío",
-"x": -1292.2,
-"y": 1748.9,
+"x": -1250.7,
+"y": 1695.7,
 "mods": [
 {
 "stat": "chill_chance",
@@ -15769,12 +15805,12 @@
 "theme": "criogenia"
 },
 {
-"id": 680,
-"key": "hechicero.C0:7",
+"id": 679,
+"key": "hechicero.C0:6",
 "kind": "minor",
 "name": "Probabilidad de congelar",
-"x": -1440.7,
-"y": 1772.0,
+"x": -1292.2,
+"y": 1748.9,
 "mods": [
 {
 "stat": "freeze_chance",
@@ -15786,36 +15822,12 @@
 "theme": "criogenia"
 },
 {
-"id": 681,
-"key": "hechicero.C0:8",
-"kind": "notable",
-"name": "Criostasis",
-"x": -1461.3,
-"y": 1643.4,
-"mods": [
-{
-"stat": "chill_chance",
-"type": "flat",
-"value": 15
-},
-{
-"stat": "ailment_duration",
-"type": "increased",
-"value": 25
-}
-],
-"cluster": "hechicero.C0",
-"theme": "criogenia",
-"flavor": "Overclock extremo, enemigos extremadamente quietos.",
-"icon": "criogenia"
-},
-{
-"id": 682,
-"key": "hechicero.C0:9",
+"id": 680,
+"key": "hechicero.C0:7",
 "kind": "minor",
 "name": "Duración de estados",
-"x": -1373.6,
-"y": 1547.2,
+"x": -1440.7,
+"y": 1772.0,
 "mods": [
 {
 "stat": "ailment_duration",
@@ -15827,12 +15839,36 @@
 "theme": "criogenia"
 },
 {
-"id": 683,
-"key": "hechicero.C0:10",
+"id": 681,
+"key": "hechicero.C0:8",
+"kind": "notable",
+"name": "Cámara Frigorífica",
+"x": -1461.3,
+"y": 1643.4,
+"mods": [
+{
+"stat": "freeze_chance",
+"type": "flat",
+"value": 8
+},
+{
+"stat": "cold_res",
+"type": "flat",
+"value": 10
+}
+],
+"cluster": "hechicero.C0",
+"theme": "criogenia",
+"flavor": "Aquí se conservan los servidores. Y los enemigos.",
+"icon": "criogenia"
+},
+{
+"id": 682,
+"key": "hechicero.C0:9",
 "kind": "minor",
 "name": "Helar y resistencia",
-"x": -1243.7,
-"y": 1555.8,
+"x": -1373.6,
+"y": 1547.2,
 "mods": [
 {
 "stat": "chill_chance",
@@ -15843,6 +15879,23 @@
 "stat": "cold_res",
 "type": "flat",
 "value": 5
+}
+],
+"cluster": "hechicero.C0",
+"theme": "criogenia"
+},
+{
+"id": 683,
+"key": "hechicero.C0:10",
+"kind": "minor",
+"name": "Probabilidad de helar",
+"x": -1243.7,
+"y": 1555.8,
+"mods": [
+{
+"stat": "chill_chance",
+"type": "flat",
+"value": 9
 }
 ],
 "cluster": "hechicero.C0",
@@ -15881,26 +15934,9 @@
 "id": 685,
 "key": "hechicero.C0:12",
 "kind": "minor",
-"name": "Probabilidad de helar",
+"name": "Helar y frío",
 "x": -1206.6,
 "y": 1787.4,
-"mods": [
-{
-"stat": "chill_chance",
-"type": "flat",
-"value": 9
-}
-],
-"cluster": "hechicero.C0",
-"theme": "criogenia"
-},
-{
-"id": 686,
-"key": "hechicero.C0:13",
-"kind": "minor",
-"name": "Helar y frío",
-"x": -1327.4,
-"y": 1836.0,
 "mods": [
 {
 "stat": "chill_chance",
@@ -15911,6 +15947,23 @@
 "stat": "cold_damage",
 "type": "increased",
 "value": 10
+}
+],
+"cluster": "hechicero.C0",
+"theme": "criogenia"
+},
+{
+"id": 686,
+"key": "hechicero.C0:13",
+"kind": "minor",
+"name": "Probabilidad de congelar",
+"x": -1327.4,
+"y": 1836.0,
+"mods": [
+{
+"stat": "freeze_chance",
+"type": "flat",
+"value": 3
 }
 ],
 "cluster": "hechicero.C0",
@@ -16212,7 +16265,7 @@
 "id": 701,
 "key": "hechicero.C3:0",
 "kind": "notable",
-"name": "Maestría de Fuego",
+"name": "Maestría: Cortafuegos Literal",
 "x": -2119.2,
 "y": 297.8,
 "mods": [],
@@ -16284,70 +16337,9 @@
 "id": 702,
 "key": "hechicero.C3:1",
 "kind": "minor",
-"name": "Fuego y área",
+"name": "Fuego y resistencia",
 "x": -2186.0,
 "y": 307.2,
-"mods": [
-{
-"stat": "fire_damage",
-"type": "increased",
-"value": 10
-},
-{
-"stat": "area_of_effect",
-"type": "increased",
-"value": 5
-}
-],
-"cluster": "hechicero.C3",
-"theme": "fuego"
-},
-{
-"id": 703,
-"key": "hechicero.C3:2",
-"kind": "minor",
-"name": "Fuego y quemadura",
-"x": -2160.7,
-"y": 244.6,
-"mods": [
-{
-"stat": "fire_damage",
-"type": "increased",
-"value": 10
-},
-{
-"stat": "burn_chance",
-"type": "flat",
-"value": 5
-}
-],
-"cluster": "hechicero.C3",
-"theme": "fuego"
-},
-{
-"id": 704,
-"key": "hechicero.C3:3",
-"kind": "minor",
-"name": "Daño de fuego",
-"x": -2093.9,
-"y": 235.2,
-"mods": [
-{
-"stat": "fire_damage",
-"type": "increased",
-"value": 21
-}
-],
-"cluster": "hechicero.C3",
-"theme": "fuego"
-},
-{
-"id": 705,
-"key": "hechicero.C3:4",
-"kind": "minor",
-"name": "Fuego y resistencia",
-"x": -2052.3,
-"y": 288.4,
 "mods": [
 {
 "stat": "fire_damage",
@@ -16364,12 +16356,12 @@
 "theme": "fuego"
 },
 {
-"id": 706,
-"key": "hechicero.C3:5",
+"id": 703,
+"key": "hechicero.C3:2",
 "kind": "minor",
 "name": "Fuego y área",
-"x": -2077.6,
-"y": 351.0,
+"x": -2160.7,
+"y": 244.6,
 "mods": [
 {
 "stat": "fire_damage",
@@ -16386,12 +16378,12 @@
 "theme": "fuego"
 },
 {
-"id": 707,
-"key": "hechicero.C3:6",
+"id": 704,
+"key": "hechicero.C3:3",
 "kind": "minor",
 "name": "Fuego y quemadura",
-"x": -2144.5,
-"y": 360.4,
+"x": -2093.9,
+"y": 235.2,
 "mods": [
 {
 "stat": "fire_damage",
@@ -16408,17 +16400,83 @@
 "theme": "fuego"
 },
 {
+"id": 705,
+"key": "hechicero.C3:4",
+"kind": "minor",
+"name": "Daño de fuego",
+"x": -2052.3,
+"y": 288.4,
+"mods": [
+{
+"stat": "fire_damage",
+"type": "increased",
+"value": 21
+}
+],
+"cluster": "hechicero.C3",
+"theme": "fuego"
+},
+{
+"id": 706,
+"key": "hechicero.C3:5",
+"kind": "minor",
+"name": "Fuego y resistencia",
+"x": -2077.6,
+"y": 351.0,
+"mods": [
+{
+"stat": "fire_damage",
+"type": "increased",
+"value": 14
+},
+{
+"stat": "fire_res",
+"type": "flat",
+"value": 5
+}
+],
+"cluster": "hechicero.C3",
+"theme": "fuego"
+},
+{
+"id": 707,
+"key": "hechicero.C3:6",
+"kind": "minor",
+"name": "Fuego y área",
+"x": -2144.5,
+"y": 360.4,
+"mods": [
+{
+"stat": "fire_damage",
+"type": "increased",
+"value": 10
+},
+{
+"stat": "area_of_effect",
+"type": "increased",
+"value": 5
+}
+],
+"cluster": "hechicero.C3",
+"theme": "fuego"
+},
+{
 "id": 708,
 "key": "hechicero.C3:7",
 "kind": "minor",
-"name": "Daño de fuego",
+"name": "Fuego y quemadura",
 "x": -2267.2,
 "y": 273.9,
 "mods": [
 {
 "stat": "fire_damage",
 "type": "increased",
-"value": 21
+"value": 10
+},
+{
+"stat": "burn_chance",
+"type": "flat",
+"value": 5
 }
 ],
 "cluster": "hechicero.C3",
@@ -16452,19 +16510,14 @@
 "id": 710,
 "key": "hechicero.C3:9",
 "kind": "minor",
-"name": "Fuego y resistencia",
+"name": "Daño de fuego",
 "x": -2062.9,
 "y": 158.8,
 "mods": [
 {
 "stat": "fire_damage",
 "type": "increased",
-"value": 14
-},
-{
-"stat": "fire_res",
-"type": "flat",
-"value": 5
+"value": 21
 }
 ],
 "cluster": "hechicero.C3",
@@ -16474,18 +16527,18 @@
 "id": 711,
 "key": "hechicero.C3:10",
 "kind": "minor",
-"name": "Fuego y área",
+"name": "Fuego y resistencia",
 "x": -1975.4,
 "y": 255.2,
 "mods": [
 {
 "stat": "fire_damage",
 "type": "increased",
-"value": 10
+"value": 14
 },
 {
-"stat": "area_of_effect",
-"type": "increased",
+"stat": "fire_res",
+"type": "flat",
 "value": 5
 }
 ],
@@ -16520,7 +16573,7 @@
 "id": 713,
 "key": "hechicero.C3:12",
 "kind": "minor",
-"name": "Fuego y quemadura",
+"name": "Fuego y área",
 "x": -2109.6,
 "y": 447.5,
 "mods": [
@@ -16530,8 +16583,8 @@
 "value": 10
 },
 {
-"stat": "burn_chance",
-"type": "flat",
+"stat": "area_of_effect",
+"type": "increased",
 "value": 5
 }
 ],
@@ -16542,14 +16595,19 @@
 "id": 714,
 "key": "hechicero.C3:13",
 "kind": "minor",
-"name": "Daño de fuego",
+"name": "Fuego y quemadura",
 "x": -2230.2,
 "y": 398.7,
 "mods": [
 {
 "stat": "fire_damage",
 "type": "increased",
-"value": 21
+"value": 10
+},
+{
+"stat": "burn_chance",
+"type": "flat",
+"value": 5
 }
 ],
 "cluster": "hechicero.C3",
@@ -16774,24 +16832,24 @@
 "id": 725,
 "key": "hechicero.D1:3",
 "kind": "notable",
-"name": "Rayo Distribuido",
+"name": "Toma de Tierra",
 "x": -1848.9,
 "y": 1756.3,
 "mods": [
 {
 "stat": "lightning_damage",
 "type": "increased",
-"value": 20
+"value": 15
 },
 {
-"stat": "area_of_effect",
-"type": "increased",
-"value": 6
+"stat": "lightning_res",
+"type": "flat",
+"value": 20
 }
 ],
 "cluster": "hechicero.D1",
 "theme": "rayo",
-"flavor": "Load balancing de electricidad.",
+"flavor": "Seguridad eléctrica. Por fin alguien la usa.",
 "icon": "rayo"
 },
 {
@@ -16892,24 +16950,27 @@
 "id": 731,
 "key": "hechicero.D3:3",
 "kind": "notable",
-"name": "Memoria Dinámica",
+"name": "Caché Caliente",
 "x": -2457.0,
 "y": 682.7,
 "mods": [
 {
-"stat": "mana",
-"type": "increased",
-"value": 20
-},
-{
 "stat": "mana_regen",
 "type": "increased",
-"value": 15
+"value": 30,
+"tags": [
+"stationary"
+]
+},
+{
+"stat": "mana",
+"type": "increased",
+"value": 8
 }
 ],
 "cluster": "hechicero.D3",
 "theme": "mana",
-"flavor": "Crece cuando hace falta. Nunca se libera.",
+"flavor": "Lo que tienes a mano sale más rápido.",
 "icon": "mana"
 },
 {
@@ -17208,19 +17269,27 @@
 "id": 746,
 "key": "hechicero.E1:0",
 "kind": "notable",
-"name": "Comportamiento Indefinido",
+"name": "Kernel Comprometido",
 "x": -2632.7,
 "y": 1010.6,
 "mods": [
 {
 "stat": "chaos_damage",
 "type": "increased",
-"value": 35
+"value": 22
+},
+{
+"stat": "poison_chance",
+"type": "flat",
+"value": 8,
+"tags": [
+"recent_kill"
+]
 }
 ],
 "cluster": "hechicero.E1",
 "theme": "caos",
-"flavor": "A veces funciona. Nadie sabe por qué.",
+"flavor": "Ya nada es lo que parece.",
 "icon": "caos"
 },
 {
@@ -17494,7 +17563,7 @@
 "id": 761,
 "key": "templario.A1:0",
 "kind": "notable",
-"name": "Maestría de Legión",
+"name": "Maestría: Flota de Drones",
 "x": -1264.4,
 "y": -730.0,
 "mods": [],
@@ -17720,8 +17789,8 @@
 "cluster": "templario.A1",
 "theme": "legion",
 "flavor": "Lo que matas a veces revienta y se lleva a los de al lado.",
-"icon": "legion",
-"style": true
+"style": true,
+"icon": "legion"
 },
 {
 "id": 771,
@@ -17800,24 +17869,24 @@
 "id": 775,
 "key": "templario.A1:14",
 "kind": "notable",
-"name": "Estado Compartido",
+"name": "Orquestador de Contenedores",
 "x": -1354.6,
 "y": -568.5,
 "mods": [
 {
-"stat": "aura_effect",
-"type": "increased",
-"value": 30
+"stat": "extra_minions",
+"type": "flat",
+"value": 1
 },
 {
-"stat": "reservation_efficiency",
+"stat": "minion_damage",
 "type": "increased",
-"value": 8
+"value": 15
 }
 ],
 "cluster": "templario.A1",
 "theme": "legion",
-"flavor": "Todas las auras leen la misma variable global.",
+"flavor": "Cada contenedor, un daemon. Cada daemon, un problema.",
 "icon": "legion"
 },
 {
@@ -18078,24 +18147,24 @@
 "id": 789,
 "key": "templario.B1:0",
 "kind": "notable",
-"name": "Malloc Infinito",
+"name": "Pool de Conexiones",
 "x": -1668.9,
 "y": -674.3,
 "mods": [
 {
 "stat": "mana",
-"type": "flat",
-"value": 50
+"type": "increased",
+"value": 12
 },
 {
-"stat": "mana",
-"type": "increased",
-"value": 10
+"stat": "mana_cost_reduction",
+"type": "flat",
+"value": 6
 }
 ],
 "cluster": "templario.B1",
 "theme": "mana",
-"flavor": "Pide memoria sin límite. ¿Qué podría salir mal?",
+"flavor": "Siempre hay una libre. Casi.",
 "icon": "mana"
 },
 {
@@ -18209,24 +18278,24 @@
 "id": 796,
 "key": "templario.B2:0",
 "kind": "notable",
-"name": "Firewall Corporativo",
+"name": "Escudo de Producción",
 "x": -1418.4,
 "y": -1108.2,
 "mods": [
 {
-"stat": "armour",
-"type": "increased",
-"value": 35
-},
-{
 "stat": "block_chance",
 "type": "flat",
-"value": 4
+"value": 6
+},
+{
+"stat": "armour",
+"type": "flat",
+"value": 60
 }
 ],
 "cluster": "templario.B2",
 "theme": "armadura",
-"flavor": "Bloquea todo. Incluido lo que necesitabas.",
+"flavor": "Recibe los golpes para que el resto del equipo no.",
 "icon": "armadura"
 },
 {
@@ -18423,7 +18492,7 @@
 "id": 807,
 "key": "templario.C0:0",
 "kind": "notable",
-"name": "Maestría de Legión",
+"name": "Maestría: Escuadrón de Daemons",
 "x": -2119.2,
 "y": -297.8,
 "mods": [],
@@ -18614,19 +18683,24 @@
 "id": 815,
 "key": "templario.C0:8",
 "kind": "notable",
-"name": "Servicio sin Estado",
+"name": "Estado Compartido",
 "x": -2153.9,
 "y": -443.8,
 "mods": [
 {
+"stat": "aura_effect",
+"type": "increased",
+"value": 30
+},
+{
 "stat": "reservation_efficiency",
 "type": "increased",
-"value": 20
+"value": 8
 }
 ],
 "cluster": "templario.C0",
 "theme": "legion",
-"flavor": "Lo matas y vuelve igual. Reservando lo mismo.",
+"flavor": "Todas las auras leen la misma variable global.",
 "icon": "legion"
 },
 {
@@ -18730,41 +18804,53 @@
 "id": 821,
 "key": "templario.C1:0",
 "kind": "notable",
-"name": "Thermal Throttling",
+"name": "Incendio Controlado",
 "x": -1969.9,
 "y": -836.2,
 "mods": [
 {
 "stat": "fire_damage",
 "type": "increased",
-"value": 30
+"value": 22
 },
 {
-"stat": "damage",
-"type": "increased",
-"value": 15,
-"tags": [
-"low_life"
-]
-},
-{
-"stat": "convert_physical_to_fire",
+"stat": "burn_chance",
 "type": "flat",
-"value": 1
+"value": 8,
+"tags": [
+"stationary"
+]
 }
 ],
 "cluster": "templario.C1",
 "theme": "fuego",
-"flavor": "Cuando se calienta, se pone serio.",
+"flavor": "Arde, pero en su sitio.",
 "icon": "fuego"
 },
 {
 "id": 822,
 "key": "templario.C1:1",
 "kind": "minor",
-"name": "Fuego y resistencia",
+"name": "Daño de fuego",
 "x": -2066.5,
 "y": -877.2,
+"mods": [
+{
+"stat": "fire_damage",
+"type": "increased",
+"value": 18
+}
+],
+"cluster": "templario.C1",
+"theme": "fuego"
+},
+{
+"id": 823,
+"key": "templario.C1:2",
+"kind": "minor",
+"name": "Fuego y resistencia",
+"x": -1982.7,
+"y": -940.4,
 "mods": [
 {
 "stat": "fire_damage",
@@ -18781,12 +18867,12 @@
 "theme": "fuego"
 },
 {
-"id": 823,
-"key": "templario.C1:2",
+"id": 824,
+"key": "templario.C1:3",
 "kind": "minor",
 "name": "Fuego y área",
-"x": -1982.7,
-"y": -940.4,
+"x": -1886.0,
+"y": -899.4,
 "mods": [
 {
 "stat": "fire_damage",
@@ -18803,12 +18889,12 @@
 "theme": "fuego"
 },
 {
-"id": 824,
-"key": "templario.C1:3",
+"id": 825,
+"key": "templario.C1:4",
 "kind": "minor",
 "name": "Fuego y quemadura",
-"x": -1886.0,
-"y": -899.4,
+"x": -1873.2,
+"y": -795.1,
 "mods": [
 {
 "stat": "fire_damage",
@@ -18825,12 +18911,12 @@
 "theme": "fuego"
 },
 {
-"id": 825,
-"key": "templario.C1:4",
+"id": 826,
+"key": "templario.C1:5",
 "kind": "minor",
 "name": "Daño de fuego",
-"x": -1873.2,
-"y": -795.1,
+"x": -1957.1,
+"y": -731.9,
 "mods": [
 {
 "stat": "fire_damage",
@@ -18842,12 +18928,12 @@
 "theme": "fuego"
 },
 {
-"id": 826,
-"key": "templario.C1:5",
+"id": 827,
+"key": "templario.C1:6",
 "kind": "minor",
 "name": "Fuego y resistencia",
-"x": -1957.1,
-"y": -731.9,
+"x": -2053.7,
+"y": -773.0,
 "mods": [
 {
 "stat": "fire_damage",
@@ -18857,28 +18943,6 @@
 {
 "stat": "fire_res",
 "type": "flat",
-"value": 4
-}
-],
-"cluster": "templario.C1",
-"theme": "fuego"
-},
-{
-"id": 827,
-"key": "templario.C1:6",
-"kind": "minor",
-"name": "Fuego y área",
-"x": -2053.7,
-"y": -773.0,
-"mods": [
-{
-"stat": "fire_damage",
-"type": "increased",
-"value": 9
-},
-{
-"stat": "area_of_effect",
-"type": "increased",
 "value": 4
 }
 ],
@@ -19050,7 +19114,7 @@
 "id": 835,
 "key": "templario.C3:0",
 "kind": "notable",
-"name": "Maestría de Enfriamientos y duración",
+"name": "Maestría: Reloj del Sistema",
 "x": -1317.5,
 "y": -1686.3,
 "mods": [],
@@ -19296,19 +19360,27 @@
 "id": 846,
 "key": "templario.C3:11",
 "kind": "notable",
-"name": "Cron Cada Segundo",
+"name": "Ventana de Mantenimiento",
 "x": -1330.3,
 "y": -1536.9,
 "mods": [
 {
 "stat": "cooldown_recovery",
 "type": "increased",
-"value": 20
+"value": 12
+},
+{
+"stat": "skill_duration",
+"type": "increased",
+"value": 10,
+"tags": [
+"stationary"
+]
 }
 ],
 "cluster": "templario.C3",
 "theme": "tiempos",
-"flavor": "* * * * * habilidad.sh. El servidor lo agradece.",
+"flavor": "Todo vuelve antes cuando no mira nadie.",
 "icon": "tiempos"
 },
 {
@@ -19349,24 +19421,27 @@
 "id": 849,
 "key": "templario.D0:0",
 "kind": "notable",
-"name": "Snapshot",
+"name": "Hibernación",
 "x": -2474.0,
 "y": -173.0,
 "mods": [
 {
 "stat": "energy_shield",
-"type": "flat",
-"value": 40
+"type": "increased",
+"value": 20
 },
 {
-"stat": "energy_shield",
-"type": "increased",
-"value": 10
+"stat": "energy_shield_regen",
+"type": "flat",
+"value": 6,
+"tags": [
+"stationary"
+]
 }
 ],
 "cluster": "templario.D0",
 "theme": "escudo",
-"flavor": "Volver a un estado anterior. En la vida real no se puede.",
+"flavor": "Quieto, recarga. Como la laptop.",
 "icon": "escudo"
 },
 {
@@ -19676,51 +19751,51 @@
 "id": 865,
 "key": "templario.D3:3",
 "kind": "notable",
-"name": "Fuga Controlada",
+"name": "Reciclaje de Memoria",
 "x": -1834.3,
 "y": -1771.4,
 "mods": [
 {
 "stat": "mana_regen",
 "type": "increased",
-"value": 50,
+"value": 40,
 "tags": [
 "recent_kill"
 ]
 },
 {
 "stat": "mana",
-"type": "increased",
-"value": 8
+"type": "flat",
+"value": 20
 }
 ],
 "cluster": "templario.D3",
 "theme": "mana",
-"flavor": "Un memory leak, pero a tu favor.",
+"flavor": "Lo que matas vuelve a la RAM.",
 "icon": "mana"
 },
 {
 "id": 866,
 "key": "templario.D4:0",
 "kind": "notable",
-"name": "Descarga Electrostática",
+"name": "Rayo Distribuido",
 "x": -1386.8,
 "y": -2056.0,
 "mods": [
 {
 "stat": "lightning_damage",
 "type": "increased",
-"value": 30
+"value": 20
 },
 {
-"stat": "crit_chance",
+"stat": "area_of_effect",
 "type": "increased",
-"value": 10
+"value": 6
 }
 ],
 "cluster": "templario.D4",
 "theme": "rayo",
-"flavor": "No toques la placa sin pulsera. O sí.",
+"flavor": "Load balancing de electricidad.",
 "icon": "rayo"
 },
 {
@@ -19854,44 +19929,53 @@
 "id": 873,
 "key": "templario.E0:0",
 "kind": "notable",
-"name": "Hasta el Último Byte",
+"name": "Doble Fuente de Alimentación",
 "x": -2632.7,
 "y": -1010.6,
 "mods": [
 {
-"stat": "damage",
-"type": "increased",
-"value": 40,
-"tags": [
-"low_life"
-]
-},
-{
 "stat": "life",
 "type": "increased",
-"value": 8
+"value": 12
 },
 {
-"stat": "life_leech",
+"stat": "life_regen",
 "type": "flat",
-"value": 1,
+"value": 8,
 "tags": [
-"low_life"
+"stationary"
 ]
 }
 ],
 "cluster": "templario.E0",
 "theme": "vida",
-"flavor": "Cuanto peor va, mejor rindes. Como en cada entrega.",
+"flavor": "Si una falla, la otra aguanta. Casi siempre.",
 "icon": "vida"
 },
 {
 "id": 874,
 "key": "templario.E0:1",
 "kind": "minor",
-"name": "Vida y regeneración",
+"name": "Vida",
 "x": -2670.1,
 "y": -1054.6,
+"mods": [
+{
+"stat": "life",
+"type": "increased",
+"value": 6
+}
+],
+"cluster": "templario.E0",
+"theme": "vida"
+},
+{
+"id": 875,
+"key": "templario.E0:2",
+"kind": "minor",
+"name": "Vida y regeneración",
+"x": -2700.7,
+"y": -1090.6,
 "mods": [
 {
 "stat": "life",
@@ -19908,12 +19992,12 @@
 "theme": "vida"
 },
 {
-"id": 875,
-"key": "templario.E0:2",
+"id": 876,
+"key": "templario.E0:3",
 "kind": "minor",
 "name": "Vida y armadura",
-"x": -2700.7,
-"y": -1090.6,
+"x": -2575.9,
+"y": -1021.0,
 "mods": [
 {
 "stat": "life",
@@ -19930,34 +20014,17 @@
 "theme": "vida"
 },
 {
-"id": 876,
-"key": "templario.E0:3",
-"kind": "minor",
-"name": "Vida máxima",
-"x": -2575.9,
-"y": -1021.0,
-"mods": [
-{
-"stat": "life",
-"type": "increased",
-"value": 8
-}
-],
-"cluster": "templario.E0",
-"theme": "vida"
-},
-{
 "id": 877,
 "key": "templario.E0:4",
 "kind": "minor",
-"name": "Vida",
+"name": "Vida máxima",
 "x": -2529.4,
 "y": -1029.5,
 "mods": [
 {
 "stat": "life",
-"type": "flat",
-"value": 12
+"type": "increased",
+"value": 8
 }
 ],
 "cluster": "templario.E0",
@@ -19973,8 +20040,8 @@
 "mods": [
 {
 "stat": "life",
-"type": "increased",
-"value": 6
+"type": "flat",
+"value": 12
 }
 ],
 "cluster": "templario.E0",
@@ -19984,19 +20051,14 @@
 "id": 879,
 "key": "templario.E0:6",
 "kind": "minor",
-"name": "Vida y regeneración",
+"name": "Vida",
 "x": -2668.0,
 "y": -911.7,
 "mods": [
 {
 "stat": "life",
 "type": "increased",
-"value": 4
-},
-{
-"stat": "life_regen",
-"type": "flat",
-"value": 2
+"value": 6
 }
 ],
 "cluster": "templario.E0",
@@ -20006,161 +20068,137 @@
 "id": 880,
 "key": "templario.E1:0",
 "kind": "notable",
-"name": "Swap Ajeno",
+"name": "Arco Eléctrico",
 "x": -2191.6,
 "y": -1774.7,
 "mods": [
 {
-"stat": "life_leech",
+"stat": "shock_chance",
 "type": "flat",
-"value": 1
+"value": 10
 },
 {
-"stat": "life",
+"stat": "crit_chance",
 "type": "increased",
-"value": 6
-},
-{
-"stat": "damage",
-"type": "more",
-"value": 15,
-"tags": [
-"low_life"
-]
+"value": 15
 }
 ],
 "cluster": "templario.E1",
-"theme": "robo_vida",
-"flavor": "Usa la memoria de los demás sin pedir permiso.",
-"icon": "robo_vida"
+"theme": "sobrecarga",
+"flavor": "No toques la placa sin pulsera antiestática.",
+"icon": "sobrecarga"
 },
 {
 "id": 881,
 "key": "templario.E1:1",
 "kind": "minor",
-"name": "Robo de vida",
+"name": "Estados más dañinos",
 "x": -2273.2,
 "y": -1840.8,
 "mods": [
 {
-"stat": "life_leech",
-"type": "flat",
-"value": 0.4
+"stat": "ailment_damage",
+"type": "increased",
+"value": 8
 }
 ],
 "cluster": "templario.E1",
-"theme": "robo_vida"
+"theme": "sobrecarga"
 },
 {
 "id": 882,
 "key": "templario.E1:2",
 "kind": "minor",
-"name": "Robo de vida y daño",
+"name": "Duración de estados",
 "x": -2175.1,
 "y": -1878.4,
 "mods": [
 {
-"stat": "life_leech",
-"type": "flat",
-"value": 0.2
-},
-{
-"stat": "damage",
+"stat": "ailment_duration",
 "type": "increased",
-"value": 6,
-"tags": [
-"attack"
-]
+"value": 8
 }
 ],
 "cluster": "templario.E1",
-"theme": "robo_vida"
+"theme": "sobrecarga"
 },
 {
 "id": 883,
 "key": "templario.E1:3",
 "kind": "minor",
-"name": "Robo de vida y vida",
+"name": "Electrocutar y velocidad",
 "x": -2093.5,
 "y": -1812.3,
 "mods": [
 {
-"stat": "life_leech",
+"stat": "shock_chance",
 "type": "flat",
-"value": 0.2
+"value": 4
 },
 {
-"stat": "life",
+"stat": "cast_speed",
 "type": "increased",
 "value": 3
 }
 ],
 "cluster": "templario.E1",
-"theme": "robo_vida"
+"theme": "sobrecarga"
 },
 {
 "id": 884,
 "key": "templario.E1:4",
 "kind": "minor",
-"name": "Robo de vida",
+"name": "Probabilidad de electrocutar",
 "x": -2110.0,
 "y": -1708.6,
 "mods": [
 {
-"stat": "life_leech",
+"stat": "shock_chance",
 "type": "flat",
-"value": 0.4
+"value": 6
 }
 ],
 "cluster": "templario.E1",
-"theme": "robo_vida"
+"theme": "sobrecarga"
 },
 {
 "id": 885,
 "key": "templario.E1:5",
 "kind": "minor",
-"name": "Robo de vida y daño",
+"name": "Electrocutar y rayo",
 "x": -2208.0,
 "y": -1671.0,
 "mods": [
 {
-"stat": "life_leech",
+"stat": "shock_chance",
 "type": "flat",
-"value": 0.2
+"value": 4
 },
 {
-"stat": "damage",
+"stat": "lightning_damage",
 "type": "increased",
-"value": 6,
-"tags": [
-"attack"
-]
+"value": 9
 }
 ],
 "cluster": "templario.E1",
-"theme": "robo_vida"
+"theme": "sobrecarga"
 },
 {
 "id": 886,
 "key": "templario.E1:6",
 "kind": "minor",
-"name": "Robo de vida y vida",
+"name": "Estados más dañinos",
 "x": -2289.6,
 "y": -1737.1,
 "mods": [
 {
-"stat": "life_leech",
-"type": "flat",
-"value": 0.2
-},
-{
-"stat": "life",
+"stat": "ailment_damage",
 "type": "increased",
-"value": 3
+"value": 8
 }
 ],
 "cluster": "templario.E1",
-"theme": "robo_vida"
+"theme": "sobrecarga"
 },
 {
 "id": 887,
@@ -20463,7 +20501,7 @@
 "id": 901,
 "key": "constelacion.0:0",
 "kind": "notable",
-"name": "Pentester",
+"name": "Estrella: Pentester",
 "x": 1380.0,
 "y": -2390.2,
 "mods": [
@@ -20701,29 +20739,24 @@
 "id": 912,
 "key": "puerta.duelista0:0",
 "kind": "notable",
-"name": "Fuga de Memoria Tóxica",
+"name": "Inyección SQL",
 "x": 1222.0,
 "y": 0.0,
 "mods": [
 {
 "stat": "poison_chance",
 "type": "flat",
-"value": 10
-},
-{
-"stat": "ailment_duration",
-"type": "increased",
-"value": 30
-},
-{
-"stat": "ailment_damage",
-"type": "more",
 "value": 15
+},
+{
+"stat": "chaos_damage",
+"type": "increased",
+"value": 20
 }
 ],
 "cluster": "puerta.duelista0",
 "theme": "toxinas",
-"flavor": "malloc(): sin free() a la vista.",
+"flavor": "'; DROP TABLE enemigos; --",
 "icon": "toxinas"
 },
 {
@@ -20847,29 +20880,24 @@
 "id": 919,
 "key": "puerta.duelista1:0",
 "kind": "notable",
-"name": "Ctrl+Alt+Escapar",
+"name": "Teletrabajo",
 "x": 1927.0,
 "y": 0.0,
 "mods": [
 {
 "stat": "movement_speed",
 "type": "increased",
-"value": 6
-},
-{
-"stat": "evasion",
-"type": "increased",
-"value": 25
+"value": 8
 },
 {
 "stat": "dodge_recovery",
-"type": "flat",
-"value": 20
+"type": "increased",
+"value": 15
 }
 ],
 "cluster": "puerta.duelista1",
 "theme": "movilidad",
-"flavor": "La mejor defensa es no estar ahí.",
+"flavor": "Te mueves sin moverte del sofá.",
 "icon": "movilidad"
 },
 {
@@ -20998,7 +21026,7 @@
 "id": 926,
 "key": "constelacion.1:0",
 "kind": "notable",
-"name": "Hacker Ético",
+"name": "Estrella: Hacker Ético",
 "x": 2760.0,
 "y": 0.0,
 "mods": [
@@ -21265,25 +21293,8 @@
 "id": 938,
 "key": "puerta.exploradora0:1",
 "kind": "minor",
-"name": "Probabilidad de congelar",
-"x": 663.5,
-"y": 1149.2,
-"mods": [
-{
-"stat": "freeze_chance",
-"type": "flat",
-"value": 3
-}
-],
-"cluster": "puerta.exploradora0",
-"theme": "criogenia"
-},
-{
-"id": 939,
-"key": "puerta.exploradora0:2",
-"kind": "minor",
 "name": "Duración de estados",
-"x": 558.5,
+"x": 663.5,
 "y": 1149.2,
 "mods": [
 {
@@ -21296,12 +21307,12 @@
 "theme": "criogenia"
 },
 {
-"id": 940,
-"key": "puerta.exploradora0:3",
+"id": 939,
+"key": "puerta.exploradora0:2",
 "kind": "minor",
 "name": "Helar y resistencia",
-"x": 506.0,
-"y": 1058.3,
+"x": 558.5,
+"y": 1149.2,
 "mods": [
 {
 "stat": "chill_chance",
@@ -21318,12 +21329,12 @@
 "theme": "criogenia"
 },
 {
-"id": 941,
-"key": "puerta.exploradora0:4",
+"id": 940,
+"key": "puerta.exploradora0:3",
 "kind": "minor",
 "name": "Probabilidad de helar",
-"x": 558.5,
-"y": 967.4,
+"x": 506.0,
+"y": 1058.3,
 "mods": [
 {
 "stat": "chill_chance",
@@ -21335,11 +21346,11 @@
 "theme": "criogenia"
 },
 {
-"id": 942,
-"key": "puerta.exploradora0:5",
+"id": 941,
+"key": "puerta.exploradora0:4",
 "kind": "minor",
 "name": "Helar y frío",
-"x": 663.5,
+"x": 558.5,
 "y": 967.4,
 "mods": [
 {
@@ -21357,12 +21368,12 @@
 "theme": "criogenia"
 },
 {
-"id": 943,
-"key": "puerta.exploradora0:6",
+"id": 942,
+"key": "puerta.exploradora0:5",
 "kind": "minor",
 "name": "Probabilidad de congelar",
-"x": 716.0,
-"y": 1058.3,
+"x": 663.5,
+"y": 967.4,
 "mods": [
 {
 "stat": "freeze_chance",
@@ -21374,53 +21385,53 @@
 "theme": "criogenia"
 },
 {
+"id": 943,
+"key": "puerta.exploradora0:6",
+"kind": "minor",
+"name": "Duración de estados",
+"x": 716.0,
+"y": 1058.3,
+"mods": [
+{
+"stat": "ailment_duration",
+"type": "increased",
+"value": 8
+}
+],
+"cluster": "puerta.exploradora0",
+"theme": "criogenia"
+},
+{
 "id": 944,
 "key": "puerta.exploradora1:0",
 "kind": "notable",
-"name": "Arco Eléctrico",
+"name": "Bobina de Tesla",
 "x": 963.5,
 "y": 1668.8,
 "mods": [
 {
 "stat": "shock_chance",
 "type": "flat",
-"value": 10
+"value": 12
 },
 {
-"stat": "crit_chance",
+"stat": "area_of_effect",
 "type": "increased",
-"value": 15
+"value": 8
 }
 ],
 "cluster": "puerta.exploradora1",
 "theme": "sobrecarga",
-"flavor": "No toques la placa sin pulsera antiestática.",
+"flavor": "Ilumina el CPD entero. Y a los que hay dentro.",
 "icon": "sobrecarga"
 },
 {
 "id": 945,
 "key": "puerta.exploradora1:1",
 "kind": "minor",
-"name": "Estados más dañinos",
+"name": "Duración de estados",
 "x": 964.9,
 "y": 1726.6,
-"mods": [
-{
-"stat": "ailment_damage",
-"type": "increased",
-"value": 8
-}
-],
-"cluster": "puerta.exploradora1",
-"theme": "sobrecarga"
-},
-{
-"id": 946,
-"key": "puerta.exploradora1:2",
-"kind": "minor",
-"name": "Duración de estados",
-"x": 966.0,
-"y": 1773.8,
 "mods": [
 {
 "stat": "ailment_duration",
@@ -21432,12 +21443,12 @@
 "theme": "sobrecarga"
 },
 {
-"id": 947,
-"key": "puerta.exploradora1:3",
+"id": 946,
+"key": "puerta.exploradora1:2",
 "kind": "minor",
 "name": "Electrocutar y velocidad",
-"x": 912.8,
-"y": 1641.1,
+"x": 966.0,
+"y": 1773.8,
 "mods": [
 {
 "stat": "shock_chance",
@@ -21454,12 +21465,12 @@
 "theme": "sobrecarga"
 },
 {
-"id": 948,
-"key": "puerta.exploradora1:4",
+"id": 947,
+"key": "puerta.exploradora1:3",
 "kind": "minor",
 "name": "Probabilidad de electrocutar",
-"x": 871.4,
-"y": 1618.5,
+"x": 912.8,
+"y": 1641.1,
 "mods": [
 {
 "stat": "shock_chance",
@@ -21471,12 +21482,12 @@
 "theme": "sobrecarga"
 },
 {
-"id": 949,
-"key": "puerta.exploradora1:5",
+"id": 948,
+"key": "puerta.exploradora1:4",
 "kind": "minor",
 "name": "Electrocutar y rayo",
-"x": 1012.8,
-"y": 1638.8,
+"x": 871.4,
+"y": 1618.5,
 "mods": [
 {
 "stat": "shock_chance",
@@ -21493,12 +21504,12 @@
 "theme": "sobrecarga"
 },
 {
-"id": 950,
-"key": "puerta.exploradora1:6",
+"id": 949,
+"key": "puerta.exploradora1:5",
 "kind": "minor",
 "name": "Estados más dañinos",
-"x": 1053.2,
-"y": 1614.2,
+"x": 1012.8,
+"y": 1638.8,
 "mods": [
 {
 "stat": "ailment_damage",
@@ -21510,10 +21521,27 @@
 "theme": "sobrecarga"
 },
 {
+"id": 950,
+"key": "puerta.exploradora1:6",
+"kind": "minor",
+"name": "Duración de estados",
+"x": 1053.2,
+"y": 1614.2,
+"mods": [
+{
+"stat": "ailment_duration",
+"type": "increased",
+"value": 8
+}
+],
+"cluster": "puerta.exploradora1",
+"theme": "sobrecarga"
+},
+{
 "id": 951,
 "key": "constelacion.2:0",
 "kind": "notable",
-"name": "Arquitecto",
+"name": "Estrella: Arquitecto",
 "x": 1380.0,
 "y": 2390.2,
 "mods": [
@@ -21756,19 +21784,27 @@
 "id": 962,
 "key": "puerta.hacker0:0",
 "kind": "notable",
-"name": "Garbage Collector",
+"name": "Buffer Lleno",
 "x": -611.0,
 "y": 1058.3,
 "mods": [
 {
-"stat": "mana_regen",
+"stat": "mana",
 "type": "increased",
-"value": 40
+"value": 10
+},
+{
+"stat": "damage",
+"type": "increased",
+"value": 18,
+"tags": [
+"full_life"
+]
 }
 ],
 "cluster": "puerta.hacker0",
 "theme": "mana",
-"flavor": "Recicla lo que tú olvidas liberar.",
+"flavor": "Con todo a tope, todo pega más.",
 "icon": "mana"
 },
 {
@@ -22023,7 +22059,7 @@
 "id": 976,
 "key": "constelacion.3:0",
 "kind": "notable",
-"name": "Full Stack",
+"name": "Estrella: Full Stack",
 "x": -1380.0,
 "y": 2390.2,
 "mods": [
@@ -22277,24 +22313,19 @@
 "id": 987,
 "key": "puerta.hechicero0:0",
 "kind": "notable",
-"name": "Autoescalado Reactivo",
+"name": "Servicio sin Estado",
 "x": -1222.0,
 "y": 0.0,
 "mods": [
 {
-"stat": "minion_life",
+"stat": "reservation_efficiency",
 "type": "increased",
-"value": 25
-},
-{
-"stat": "automaton_speed",
-"type": "increased",
-"value": 12
+"value": 20
 }
 ],
 "cluster": "puerta.hechicero0",
 "theme": "legion",
-"flavor": "Más enemigos, más daemons. Hasta que la factura llega.",
+"flavor": "Lo matas y vuelve igual. Reservando lo mismo.",
 "icon": "legion"
 },
 {
@@ -22554,7 +22585,7 @@
 "id": 1001,
 "key": "constelacion.4:0",
 "kind": "notable",
-"name": "Rubber Duck",
+"name": "Estrella: Rubber Duck",
 "x": -2760.0,
 "y": 0.0,
 "mods": [
@@ -22792,29 +22823,27 @@
 "id": 1012,
 "key": "puerta.templario0:0",
 "kind": "notable",
-"name": "Hormigón Armado",
+"name": "Rack Anclado al Suelo",
 "x": -611.0,
 "y": -1058.3,
 "mods": [
 {
 "stat": "armour",
 "type": "increased",
-"value": 45
+"value": 30,
+"tags": [
+"stationary"
+]
 },
 {
-"stat": "movement_speed",
-"type": "increased",
-"value": -3
-},
-{
-"stat": "max_buffer_charges",
+"stat": "block_chance",
 "type": "flat",
-"value": 1
+"value": 3
 }
 ],
 "cluster": "puerta.templario0",
 "theme": "armadura",
-"flavor": "Tan rígido como el código de 2005.",
+"flavor": "Plantado, no te mueve ni un terremoto.",
 "icon": "armadura"
 },
 {
@@ -22933,7 +22962,7 @@
 "id": 1019,
 "key": "puerta.templario1:0",
 "kind": "notable",
-"name": "Root Access",
+"name": "Acceso Root",
 "x": -963.5,
 "y": -1668.8,
 "mods": [
@@ -23079,7 +23108,7 @@
 "id": 1026,
 "key": "constelacion.5:0",
 "kind": "notable",
-"name": "Pager de Guardia",
+"name": "Estrella: Pager de Guardia",
 "x": -1380.0,
 "y": -2390.2,
 "mods": [

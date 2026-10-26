@@ -161,6 +161,7 @@ func _initialize() -> void:
 	_test_crafting_decisions()
 	_test_tree_v2_layout()
 	_test_tree_migration()
+	_test_tree_families()
 	_test_events_music_colorblind()
 	_test_story_editor()
 	_test_board_milestones()
@@ -4170,6 +4171,34 @@ func _test_tree_migration() -> void:
 	var keyed := _tree.nodes.values().filter(func(n: PassiveNode) -> bool: return n.key != "")
 	_check(keyed.size() == _tree.nodes.size() and _tree.id_for_key(keyed[0].key) == keyed[0].id, "todos los nodos con clave, y la clave lleva a su id")
 	_check(PassiveTreeView.LOD_FAR_ZOOM > PassiveTreeView.LOD_ICON_ZOOM, "de lejos, el árbol se dibuja simplificado")
+
+
+## Más clusters de las familias (T90): todas con 4 o más, sin notables repetidos y con condiciones.
+func _test_tree_families() -> void:
+	var per := {}
+	for c in _tree.clusters.values():
+		if String(c["theme"]) != "":
+			per[c["theme"]] = int(per.get(c["theme"], 0)) + 1
+	for t in _tree.themes:
+		_check(int(per.get(t, 0)) >= 4, "la familia %s tiene 4 clusters o más (%d)" % [t, per.get(t, 0)])
+	var names := {}
+	var repeated := []
+	var unknown := []
+	var conditional := 0
+	var conditions := [Stat.COND_LOW_LIFE, Stat.COND_FULL_LIFE, &"recent_kill", &"stationary", &"three_allies"]
+	for n: PassiveNode in _tree.nodes.values():
+		if n.kind == PassiveNode.Kind.NOTABLE or n.kind == PassiveNode.Kind.KEYSTONE:
+			if names.has(n.title):
+				repeated.append(n.title)
+			names[n.title] = true
+			if n.mods.any(func(m: Modifier) -> bool: return m.tags.any(func(tag: StringName) -> bool: return tag in conditions)):
+				conditional += 1
+		for m in n.mods:
+			if not (m.stat in Stat.NAMES or m.stat in Stat.RULE_TEXT):
+				unknown.append(String(m.stat))
+	_check(repeated.is_empty(), "ningún notable repetido: %s" % ", ".join(repeated))
+	_check(unknown.is_empty(), "todos los stats del árbol son conocidos: %s" % ", ".join(unknown))
+	_check(conditional >= 15, "notables con condición (vida baja o llena, tras matar, quieto, con aliados): %d" % conditional)
 
 
 ## Parte 2 (T72b): el ataque golpea en el cuadro de impacto de la animación.

@@ -74,12 +74,12 @@ CENTER = ("full_stack", "Desarrollador Full Stack")
 R_START = 1100
 # Familias por región, en el orden en que se reparten por sus clusters (corazón primero).
 REGION_THEMES = {
-    "guerrero": ["vida", "armadura", "fisico", "hemorragia", "resistencias", "vida", "armadura", "fisico", "robo_vida", "legion", "hemorragia", "resistencias", "vida", "fisico", "ignicion", "vida", "versatil", "caos"],
-    "duelista": ["velocidad_ataque", "fisico", "critico", "hemorragia", "evasion", "robo_vida", "armadura", "velocidad_ataque", "critico", "movilidad", "fisico", "hemorragia", "evasion", "robo_vida", "atributos", "proyectiles", "vida", "criogenia"],
-    "exploradora": ["proyectiles", "evasion", "critico", "toxinas", "movilidad", "velocidad_ataque", "proyectiles", "evasion", "frio", "toxinas", "critico", "movilidad", "proyectiles", "tiempos", "criogenia", "caos", "versatil", "velocidad_ataque"],
-    "hacker": ["caos", "toxinas", "critico", "lanzamiento", "evasion", "escudo", "caos", "rayo", "toxinas", "tiempos", "mana", "lanzamiento", "critico", "caos", "sobrecarga", "automatizacion", "frio", "fuego"],
+    "guerrero": ["vida", "armadura", "fisico", "hemorragia", "resistencias", "vida", "armadura", "fisico", "robo_vida", "legion", "hemorragia", "resistencias", "vida", "versatil", "ignicion", "vida", "versatil", "caos"],
+    "duelista": ["velocidad_ataque", "fisico", "critico", "hemorragia", "evasion", "robo_vida", "armadura", "velocidad_ataque", "critico", "movilidad", "fisico", "hemorragia", "evasion", "robo_vida", "atributos", "proyectiles", "velocidad_ataque", "criogenia"],
+    "exploradora": ["proyectiles", "evasion", "critico", "toxinas", "movilidad", "velocidad_ataque", "proyectiles", "evasion", "frio", "toxinas", "critico", "criogenia", "proyectiles", "tiempos", "criogenia", "caos", "versatil", "velocidad_ataque"],
+    "hacker": ["caos", "toxinas", "critico", "lanzamiento", "evasion", "escudo", "caos", "rayo", "toxinas", "tiempos", "mana", "lanzamiento", "fuego", "caos", "sobrecarga", "automatizacion", "frio", "fuego"],
     "hechicero": ["lanzamiento", "fuego", "frio", "rayo", "mana", "escudo", "ignicion", "criogenia", "sobrecarga", "area", "fuego", "frio", "rayo", "mana", "ignicion", "lanzamiento", "caos", "tiempos"],
-    "templario": ["automatizacion", "legion", "escudo", "area", "mana", "armadura", "automatizacion", "legion", "fuego", "resistencias", "tiempos", "escudo", "area", "mana", "rayo", "vida", "robo_vida", "atributos"],
+    "templario": ["automatizacion", "legion", "escudo", "area", "mana", "armadura", "automatizacion", "legion", "fuego", "resistencias", "tiempos", "escudo", "area", "mana", "rayo", "vida", "sobrecarga", "atributos"],
 }
 GATE_THEMES = ["hemorragia", "resistencias", "toxinas", "movilidad", "criogenia", "sobrecarga", "mana", "ignicion", "legion", "automatizacion", "armadura", "atributos"]
 INNER_THEMES = ["mana", "vida", "atributos", "resistencias", "escudo", "versatil", "tiempos", "area", "atributos", "mana", "robo_vida", "movilidad"]
@@ -404,39 +404,6 @@ def attr_at(x, y):
     return parts[int(abs(x + y)) // 97 % len(parts)]
 
 
-minor_counter = {}
-notable_counter = {}
-name_counter = {}
-for c in clusters:
-    theme = c["theme"]
-    if theme:
-        names = THEMES[theme]["cluster_names"]
-        k = name_counter.get(theme, 0)
-        name_counter[theme] = k + 1
-        c["name"] = "%s: %s" % (THEMES[theme]["name"], names[k % len(names)])
-    factor = SIZE_SCALE.get(c["size"], 1.0)
-    for nid in c["nodes"]:
-        n = nodes[nid]
-        if n["kind"] == "minor" and theme:
-            pool = THEMES[theme]["minors"]
-            k = minor_counter.get(theme, 0)
-            minor_counter[theme] = k + 1
-            n["name"], mods = pool[k % len(pool)]
-            n["mods"] = scaled(mods, factor)
-        elif n["kind"] == "notable" and theme:
-            pool = THEMES[theme]["notables"]
-            k = notable_counter.get(theme, 0)
-            notable_counter[theme] = k + 1
-            n["name"], n["flavor"], n["mods"] = pool[k % len(pool)][0], pool[k % len(pool)][1], pool[k % len(pool)][2]
-            n["icon"] = theme
-        elif n["kind"] == "mastery":
-            # Maestría: elegir 1 de 3 bonos (los tres primeros notables de su familia).
-            pool = THEMES[theme]["notables"]
-            n["kind"] = "notable"
-            n["name"] = "Maestría de %s" % THEMES[theme]["name"]
-            n["icon"] = theme
-            n["choices"] = [{"name": pool[k][0], "mods": pool[k][2]} for k in range(min(3, len(pool)))]
-
 # Notable de estilo de cada clase: el primer notable de su corazón (el del Full Stack, en el anillo interior).
 for cid, sdef in IDENTITY.get("style", {}).items():
     if cid == "full_stack":
@@ -444,7 +411,8 @@ for cid, sdef in IDENTITY.get("style", {}).items():
     else:
         target = next(c for c in clusters if c.get("region") == cid and c.get("heart"))
     nid = next(n for n in target["nodes"] if nodes[n]["kind"] == "notable" and not nodes[n].get("choices"))
-    nodes[nid].update({"name": sdef["name"], "flavor": sdef["flavor"], "mods": sdef["mods"], "style": True})
+    nodes[nid].update({"name": sdef["name"], "flavor": sdef["flavor"], "mods": sdef["mods"], "style": True,
+                        "icon": target.get("theme") or "versatil"})
 
 # Piedras angulares: la de cada clase en su hueco K y las extra en el anillo C de cuatro regiones.
 for c in clusters:
@@ -465,6 +433,39 @@ for cid, kdef in zip(EXTRA_KEYSTONE_REGIONS, IDENTITY.get("keystones", [])):
     n = nodes[notables[-1]]
     n.update({"kind": "keystone", "name": kdef["name"], "flavor": kdef["flavor"], "mods": kdef["mods"], "icon": "versatil"})
 
+minor_counter = {}
+notable_counter = {}
+name_counter = {}
+for c in clusters:
+    theme = c["theme"]
+    if theme:
+        names = THEMES[theme]["cluster_names"]
+        k = name_counter.get(theme, 0)
+        name_counter[theme] = k + 1
+        c["name"] = "%s: %s" % (THEMES[theme]["name"], names[k % len(names)])
+    factor = SIZE_SCALE.get(c["size"], 1.0)
+    for nid in c["nodes"]:
+        n = nodes[nid]
+        if n["kind"] == "minor" and theme:
+            pool = THEMES[theme]["minors"]
+            k = minor_counter.get(theme, 0)
+            minor_counter[theme] = k + 1
+            n["name"], mods = pool[k % len(pool)]
+            n["mods"] = scaled(mods, factor)
+        elif n["kind"] == "notable" and theme and not n["name"]:
+            pool = THEMES[theme]["notables"]
+            k = notable_counter.get(theme, 0)
+            notable_counter[theme] = k + 1
+            n["name"], n["flavor"], n["mods"] = pool[k % len(pool)][0], pool[k % len(pool)][1], pool[k % len(pool)][2]
+            n["icon"] = theme
+        elif n["kind"] == "mastery":
+            # Maestría: elegir 1 de 3 bonos (los tres primeros notables de su familia).
+            pool = THEMES[theme]["notables"]
+            n["kind"] = "notable"
+            n["name"] = "Maestría: %s" % c["name"].split(": ", 1)[-1]
+            n["icon"] = theme
+            n["choices"] = [{"name": pool[k][0], "mods": pool[k][2]} for k in range(min(3, len(pool)))]
+
 # Constelaciones: piden atributos y sus nodos dan más.
 for c in clusters:
     if c["size"] != "C":
@@ -478,7 +479,7 @@ for c in clusters:
         n["requires"] = req
         n["constellation"] = c["name"]
         if n["kind"] == "notable":
-            n.update({"name": c["constellation"], "flavor": cdef["flavor"], "mods": cdef["mods"], "icon": "atributos"})
+            n.update({"name": "Estrella: %s" % c["constellation"], "flavor": cdef["flavor"], "mods": cdef["mods"], "icon": "atributos"})
         elif k % 2 == 0:
             n.update({"name": "Daño", "mods": [{"stat": "damage", "type": "increased", "value": 9}]})
         else:
@@ -493,6 +494,17 @@ for n in nodes:
 
 missing = [n["key"] for n in nodes if n["kind"] in ("minor", "notable", "keystone") and not n["mods"] and not n.get("choices")]
 assert not missing, "nodos sin efecto: %s" % missing[:5]
+# Nombres de notables y piedras angulares únicos en todo el árbol (T90); las maestrías
+# que coincidan llevan un número.
+seen_names = {}
+for n in nodes:
+    if n["kind"] in ("notable", "keystone"):
+        base = n["name"]
+        k = seen_names.get(base, 0)
+        seen_names[base] = k + 1
+        if k > 0:
+            assert n.get("choices"), "notable repetido: %s" % base
+            n["name"] = "%s %s" % (base, ["", "II", "III", "IV", "V"][min(k, 4)])
 via = sum(1 for n in nodes if n["key"].startswith("via:") or n["key"].startswith("hub:"))
 
 export_nodes = []
