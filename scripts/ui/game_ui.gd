@@ -560,6 +560,13 @@ func _build_pause_menu() -> Control:
 		GameSettings.set_value("interface", "reduced_lights", WorldPost.reduced)
 		lights.text = "Luces y clima: " + ("reducidos" if WorldPost.reduced else "completos"))
 	extra.add_child(lights)
+	var quality := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
+	quality.text = "Calidad gráfica: " + GraphicsQuality.name_of()
+	quality.tooltip_text = "Baja: 10 luces, sin partículas de GPU, sin bloom ni ondas.\nMedia: 20 luces, ráfagas de partículas, algo de bloom y ondas de choque.\nAlta: 32 luces, más partículas, bloom y distorsión de calor sobre el fuego."
+	quality.pressed.connect(func() -> void:
+		GraphicsQuality.set_level((GraphicsQuality.level + 1) % 3)
+		quality.text = "Calidad gráfica: " + GraphicsQuality.name_of())
+	extra.add_child(quality)
 	var tips_button := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
 	tips_button.text = "Consejos de mecánicas: " + ("sí" if TipPanel.enabled() else "no")
 	tips_button.tooltip_text = "Un aviso corto la primera vez que aparece la esquiva, las cargas, los golpes pesados,\nlos terrenos o una mecánica de arena de jefe."

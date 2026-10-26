@@ -1654,6 +1654,25 @@ func _benchmark() -> void:
 			n, em.count(), em.last_drawn_count, total / frames, 1000.0 / (total / frames), worst, sim / frames, skills.get("_units").size(), skills.get("_projectiles").size()])
 		if n == 300:
 			_save("32_rendimiento_300")
+	# Calidad gráfica (T98): cada nivel con los 300 enemigos, explosiones incluidas.
+	var saved_quality := GraphicsQuality.level
+	var fx: BigFx = world.get("big_fx")
+	for q in [0, 1, 2]:
+		GraphicsQuality.level = q
+		await _wait(0.5)
+		var frames_q := 0
+		var start_q := Time.get_ticks_usec()
+		var peak := 0
+		while Time.get_ticks_usec() - start_q < 3000000:
+			if frames_q % 20 == 0:
+				fx.spawn_burst(player.global_position + Vector2(randf_range(-300, 300), randf_range(-200, 200)), 120.0, Color("ff8a3a"))
+				(world.get("post") as WorldPost).add_shock(player.global_position)
+			await get_tree().process_frame
+			frames_q += 1
+			peak = maxi(peak, fx.live_particles())
+		print("calidad %s: %.2f ms por fotograma, partículas vivas como mucho %d, luces %d" % [GraphicsQuality.name_of(q), 3000.0 / frames_q, peak, (world.get("post") as WorldPost).last_lights.size()])
+		_save("98_calidad_%s" % GraphicsQuality.name_of(q))
+	GraphicsQuality.level = saved_quality
 	# Qué cuesta: se oculta una capa cada vez (con 300 enemigos).
 	var ui: GameUI = world.get("ui")
 	var zone_node: Node = world.get("zone")

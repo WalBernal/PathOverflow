@@ -27,6 +27,7 @@ var item_generator: ItemGenerator
 var ui: GameUI
 ## Filtro de pixel art del mundo (debajo de la interfaz).
 var post: WorldPost
+var big_fx: BigFx
 var quests: QuestLog
 
 var _dirty := false
@@ -92,6 +93,8 @@ func _ready() -> void:
 	numbers.enemies = enemies
 	numbers.z_index = 50
 	add_child(numbers)
+	big_fx = BigFx.new()   # ráfagas de partículas de las explosiones y novas (T98)
+	add_child(big_fx)
 	player.setup(character, enemies)
 	enemies.player = player
 	enemies.enemy_killed.connect(_on_enemy_killed)
@@ -133,6 +136,7 @@ func _ready() -> void:
 	post = WorldPost.new()
 	post.player = player
 	post.skills = skills
+	big_fx.skills = skills
 	post.enemies = enemies
 	post.loot = loot
 	add_child(post)

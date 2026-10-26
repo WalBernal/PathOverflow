@@ -117,7 +117,7 @@ func _send_lights(ratio: Vector2) -> void:
 	var canvas := player.get_canvas_transform()
 	var view := (canvas.affine_inverse() * get_viewport().get_visible_rect()).grow(260.0)
 	var found: Array[Dictionary] = []
-	var limit := LOW_LIGHTS if reduced else MAX_LIGHTS
+	var limit := light_limit()
 	var add := func(pos: Vector2, radius: float, color: Color, power: float) -> void:
 		if found.size() < limit and view.has_point(pos):
 			found.append({"pos": pos, "radius": radius, "color": color, "power": clampf(power, 0.0, 1.0)})
@@ -135,13 +135,18 @@ func _send_lights(ratio: Vector2) -> void:
 	if skills:   # auras e invocaciones con luz propia
 		for l in skills.light_allies():
 			add.call(l["pos"], l["radius"], l["color"], l["power"])
-	if not reduced:
+	if not reduced and bool(GraphicsQuality.preset()["flashes"]):
 		if enemies and enemies.impact:
 			for f in enemies.impact.flashes:
 				add.call(f["pos"], f["radius"], f["color"], f["life"] / f["max"])
+				# Onda de choque (T98): los destellos grandes recién salidos.
+				if float(f["radius"]) >= SHOCK_MIN_RADIUS and float(f["life"]) >= float(f["max"]) - 0.02:
+					add_shock(f["pos"])
 		if skills:
 			for e in skills.light_effects():
 				add.call(e["pos"], e["radius"], e["color"], e["power"])
+				if float(e["radius"]) >= SHOCK_MIN_RADIUS and float(e["power"]) > 0.95:
+					add_shock(e["pos"])   # explosiones y novas grandes recién salidas
 			for pr in skills.light_projectiles():
 				add.call(pr["pos"], 110.0, pr["color"], 0.85)
 		if enemies:
@@ -159,6 +164,77 @@ func _send_lights(ratio: Vector2) -> void:
 	_light.mat.set_shader_parameter("lights", data)
 	_light.mat.set_shader_parameter("light_colors", colors)
 	_light.mat.set_shader_parameter("light_count", found.size())
+	_send_effects(found, canvas, ratio)
+
+
+# --- T98: bloom, distorsión de calor y ondas de choque (según la calidad gráfica) ---
+
+const SHOCK_MIN_RADIUS := 140.0
+const SHOCK_TIME := 0.45
+const SHOCK_MAX_RADIUS := 230.0
+const MAX_HEAT := 8
+const MAX_SHOCKS := 6
+var _shocks: Array[Dictionary] = []   # {pos, t0}
+
+
+## Luces dinámicas como mucho: las de la calidad gráfica, y menos con «luces reducidas».
+static func light_limit() -> int:
+	var by_quality := int(GraphicsQuality.preset()["lights"])
+	return mini(LOW_LIGHTS, by_quality) if reduced else by_quality
+
+
+## Radio de una onda de choque con `age` segundos (crece rápido y frena); su fuerza baja.
+static func shock_radius(age: float) -> float:
+	var t := clampf(age / SHOCK_TIME, 0.0, 1.0)
+	return SHOCK_MAX_RADIUS * (1.0 - (1.0 - t) * (1.0 - t))
+
+
+static func shock_strength(age: float) -> float:
+	return clampf(1.0 - age / SHOCK_TIME, 0.0, 1.0)
+
+
+## ¿Es una luz de fuego (para la distorsión de calor)? Anaranjada o roja.
+static func is_fire_color(c: Color) -> bool:
+	return c.r > 0.75 and c.g < 0.75 and c.b < 0.5
+
+
+func add_shock(pos: Vector2) -> void:
+	if not bool(GraphicsQuality.preset()["shock"]) or Accessibility.reduce_motion:
+		return
+	var now := Time.get_ticks_msec() / 1000.0
+	for s in _shocks:
+		if (s["pos"] as Vector2).distance_to(pos) < 40.0 and now - float(s["t0"]) < 0.1:
+			return   # el mismo golpe en varios fotogramas
+	_shocks.append({"pos": pos, "t0": now})
+	if _shocks.size() > MAX_SHOCKS:
+		_shocks.remove_at(0)
+
+
+func _send_effects(found: Array[Dictionary], canvas: Transform2D, ratio: Vector2) -> void:
+	var q := GraphicsQuality.preset()
+	var px := canvas.get_scale().x * ratio.x
+	_light.mat.set_shader_parameter("bloom", float(q["bloom"]))
+	var heat := PackedVector4Array()
+	heat.resize(MAX_HEAT)
+	var heat_count := 0
+	if bool(q["heat"]) and not Accessibility.reduce_motion:
+		for l in found:
+			if heat_count < MAX_HEAT and is_fire_color(l["color"]):
+				var sp: Vector2 = canvas * (l["pos"] as Vector2) * ratio
+				heat[heat_count] = Vector4(sp.x, sp.y, float(l["radius"]) * 0.55 * px, 0.6 * float(l["power"]))
+				heat_count += 1
+	_light.mat.set_shader_parameter("heat", heat)
+	_light.mat.set_shader_parameter("heat_count", heat_count)
+	var now := Time.get_ticks_msec() / 1000.0
+	_shocks = _shocks.filter(func(s: Dictionary) -> bool: return now - float(s["t0"]) < SHOCK_TIME)
+	var shocks := PackedVector4Array()
+	shocks.resize(MAX_SHOCKS)
+	for k in _shocks.size():
+		var age := now - float(_shocks[k]["t0"])
+		var sp: Vector2 = canvas * (_shocks[k]["pos"] as Vector2) * ratio
+		shocks[k] = Vector4(sp.x, sp.y, shock_radius(age) * px, shock_strength(age))
+	_light.mat.set_shader_parameter("shocks", shocks)
+	_light.mat.set_shader_parameter("shock_count", _shocks.size())
 
 
 ## Una pasada: copia lo ya dibujado (BackBufferCopy) y lo cubre con el shader.

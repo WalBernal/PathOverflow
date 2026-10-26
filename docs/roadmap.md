@@ -594,10 +594,11 @@ Origen: R4
 
 ## Fase 17 — Efectos
 
-### [ ] T98 · Partículas, luz y posproceso · M
+### [x] T98 · Partículas, luz y posproceso · M
 Origen: R4
 - Efectos grandes (explosiones, novas, lluvias, auras) con `GPUParticles2D` y presupuesto por pantalla; bloom ligero en las luces, distorsión de calor en el fuego y onda de choque en los golpes grandes.
 - Opción de calidad gráfica (baja, media, alta) en Pausa → Gráficos, que ajuste partículas, luces y posproceso; medir con `tools/capture_screens -- rendimiento` en cada nivel.
+- Hecho: **calidad gráfica** (`GraphicsQuality`, Pausa → «Calidad gráfica: baja / media / alta»): luces dinámicas 10 / 20 / 32, partículas vivas como mucho 0 / 320 / 900, bloom 0 / 0,5 / 1, distorsión de calor solo en alta, ondas de choque desde media. **Ráfagas de partículas de GPU** (`BigFx`, `GPUParticles2D` de un solo disparo, del color del efecto y hacia fuera) en cada explosión o nova de las habilidades (`SkillController.burst_effects`), con el presupuesto de la calidad. En el shader de luz: **bloom** (halo suave alrededor de las luces, aparte de los escalones), **distorsión de calor** sobre las luces de fuego y **ondas de choque** (anillo que desplaza la imagen, 0,45 s) en los destellos grandes y las explosiones; «Reducir movimiento» apaga calor y ondas. Medido con `capture_screens -- rendimiento` (300 enemigos con explosiones): baja 25,0 ms, media 27,0, alta 27,0 por fotograma (`98_calidad_*`). Las auras y la lluvia siguen con su dibujo de siempre. Prueba `_test_graphics_quality`.
 
 ### [ ] T99 · Estados y telegrafiados con textura · S
 Origen: R4
@@ -749,3 +750,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T95 (revisión) · A petición del usuario, HUD e interfaz menos pixel art: el atlas se dibuja a resolución final con degradados, esquinas redondeadas y bordes suavizados, filtrado en lineal (CanvasTexture); aro de orbe de metal liso a 192 px; cifras de los orbes y títulos de ventana y de sección con la fuente normal y contorno; sin las cantoneras cuadradas en las ventanas.
 - 2026-10-25 · T96 · Título con ciudad de servidores y brillo del logo, personaje en pedestal con pose de lucimiento, pantalla de carga entre zonas con ilustración y consejo, y barrido de píxeles entre pantallas.
 - 2026-10-25 · T97 · Números de daño (con críticos y apilado), ventanas que entran con zoom, botones que rebotan, tooltips con fundido, brillo de la experiencia al subir de nivel y la opción «Reducir movimiento».
+- 2026-10-25 · T98 · Calidad gráfica baja/media/alta, ráfagas de partículas de GPU en explosiones y novas, bloom, distorsión de calor y ondas de choque en el shader de luz; medido en cada nivel.

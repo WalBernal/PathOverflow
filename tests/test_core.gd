@@ -169,6 +169,7 @@ func _initialize() -> void:
 	_test_ui_atlas()
 	_test_screens_t96()
 	_test_ui_motion()
+	_test_graphics_quality()
 	_test_events_music_colorblind()
 	_test_story_editor()
 	_test_board_milestones()
@@ -4235,6 +4236,34 @@ func _test_mana_family() -> void:
 		_check(int(found.get(s, 0)) >= 1, "el árbol tiene nodos de %s" % Stat.display_name(s))
 	var mana_clusters := _tree.clusters.values().filter(func(c: Dictionary) -> bool: return c["theme"] == "mana").size()
 	_check(mana_clusters >= 10, "la familia de maná tiene 10 clusters o más (%d)" % mana_clusters)
+
+
+## Partículas, luz y posproceso (T98): calidad gráfica, presupuesto y efectos.
+func _test_graphics_quality() -> void:
+	var low := GraphicsQuality.preset(GraphicsQuality.Level.LOW)
+	var mid := GraphicsQuality.preset(GraphicsQuality.Level.MEDIUM)
+	var high := GraphicsQuality.preset(GraphicsQuality.Level.HIGH)
+	_check(int(low["lights"]) < int(mid["lights"]) and int(mid["lights"]) < int(high["lights"]) and int(high["lights"]) <= WorldPost.MAX_LIGHTS,
+		"más luces cuanto más calidad, sin pasar del shader")
+	_check(int(low["particles"]) == 0 and int(mid["particles"]) < int(high["particles"]), "partículas: ninguna en baja, más en alta")
+	_check(not bool(low["heat"]) and bool(high["heat"]) and float(low["bloom"]) == 0.0 and float(high["bloom"]) > 0.0, "calor y bloom solo con más calidad")
+	_check(not GraphicsQuality.fits_particles(0, 20, GraphicsQuality.Level.LOW), "en baja no sale ninguna ráfaga")
+	_check(GraphicsQuality.fits_particles(0, 100, GraphicsQuality.Level.HIGH) and not GraphicsQuality.fits_particles(850, 100, GraphicsQuality.Level.HIGH),
+		"una ráfaga sale si cabe en el presupuesto")
+	_check(BigFx.burst_amount(10.0) == 16 and BigFx.burst_amount(1000.0) == 110 and BigFx.burst_amount(120.0) == 60, "partículas por ráfaga según su radio")
+	var saved := GraphicsQuality.level
+	var saved_reduced := WorldPost.reduced
+	GraphicsQuality.level = GraphicsQuality.Level.HIGH
+	WorldPost.reduced = false
+	_check(WorldPost.light_limit() == int(high["lights"]), "luces según la calidad")
+	WorldPost.reduced = true
+	_check(WorldPost.light_limit() == WorldPost.LOW_LIGHTS, "con luces reducidas, como siempre")
+	WorldPost.reduced = saved_reduced
+	GraphicsQuality.level = saved
+	_check(WorldPost.shock_radius(0.0) == 0.0 and is_equal_approx(WorldPost.shock_radius(WorldPost.SHOCK_TIME), WorldPost.SHOCK_MAX_RADIUS)
+		and WorldPost.shock_radius(WorldPost.SHOCK_TIME * 0.5) > WorldPost.SHOCK_MAX_RADIUS * 0.5, "la onda crece rápido y frena")
+	_check(WorldPost.shock_strength(WorldPost.SHOCK_TIME) == 0.0, "la onda se apaga al final")
+	_check(WorldPost.is_fire_color(Color("ff8a3a")) and not WorldPost.is_fire_color(Color("9fd8ff")), "el calor sale de las luces de fuego")
 
 
 ## Animación de la interfaz (T97): números de daño, rebotes y brillo de la experiencia.

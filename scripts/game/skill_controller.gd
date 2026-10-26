@@ -729,6 +729,16 @@ func light_effects() -> Array[Dictionary]:
 	return out
 
 
+## Explosiones y novas recién salidas que aún no tienen su ráfaga de partículas
+## (BigFx, T98): las «burst» grandes. El diccionario es el del efecto (BigFx lo marca).
+func burst_effects() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for e in _effects:
+		if e.get("type", "") == "burst" and float(e["radius"]) >= 40.0 and not e.get("big_fx", false):
+			out.append(e)
+	return out
+
+
 ## Cuánto más abajo cae la sombra de un proyectil (como si volara a esa altura).
 const PROJECTILE_SHADOW_DROP := 16.0
 
