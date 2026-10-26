@@ -29,6 +29,11 @@ const COLOR_NODE := Color("1e1b24")
 const COLOR_TEXT := Color("e8d9b0")
 
 var allocation: PassiveAllocation
+## Plan (T83): nodos marcados sin gastar (anillo cian) y, en modo plan, de dónde
+## sale el camino previsto (lo asignado + lo planeado).
+var planned: Dictionary = {}
+var path_source: PassiveAllocation
+const COLOR_PLANNED := Color("4fd0e0")
 ## Puntos disponibles: si el camino previsto cuesta más, se pinta en rojo.
 var available_points := 0
 var zoom := 0.55
@@ -138,9 +143,13 @@ func _draw() -> void:
 		if a_on and b_on:
 			color = COLOR_ALLOCATED
 			width = 6.0
-		elif not _preview.is_empty() and (a_on or _preview.has(a.id)) and (b_on or _preview.has(b.id)):
+		elif not _preview.is_empty() and (a_on or planned.has(a.id) or _preview.has(a.id)) and (b_on or planned.has(b.id) or _preview.has(b.id)) \
+				and (_preview.has(a.id) or _preview.has(b.id)):
 			color = COLOR_PREVIEW_BAD if too_expensive else COLOR_PREVIEW
 			width = 5.0
+		elif not planned.is_empty() and (a_on or planned.has(a.id)) and (b_on or planned.has(b.id)):
+			color = Color(COLOR_PLANNED, 0.8)   # el camino del plan
+			width = 4.0
 		draw_line(a.position, b.position, color, width, true)
 
 	var font := get_theme_default_font()
@@ -204,6 +213,8 @@ func _draw() -> void:
 				if chip is ExpansionChip and not (chip as ExpansionChip).transform_map().is_empty():
 					# Radio en el que transforma los nodos.
 					draw_arc(n.position, ExpansionChip.TRANSFORM_RADIUS, 0.0, TAU, 96, Color(Rarity.item_color(chip.rarity), 0.55 if on else 0.2), 2.0, true)
+		if planned.has(n.id):
+			draw_arc(n.position, r + 4.0, 0.0, TAU, 32, COLOR_PLANNED, 3.0, true)   # planeado (T83)
 		if _search.has(n.id):
 			draw_arc(n.position, r + 8.0 + pulse * 4.0, 0.0, TAU, 32, Color(1.0, 0.85, 0.2, 0.5 + 0.5 * pulse), 3.0, true)
 		if n.id == _hovered_id:
@@ -393,8 +404,9 @@ func _set_hovered(id: int) -> void:
 
 func _refresh_preview() -> void:
 	_preview.clear()
-	if _hovered_id != -1 and allocation:
-		for pid in allocation.find_path(_hovered_id):
+	var source := path_source if path_source else allocation
+	if _hovered_id != -1 and source:
+		for pid in source.find_path(_hovered_id):
 			_preview[pid] = true
 
 

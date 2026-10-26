@@ -482,9 +482,10 @@ Origen: R3
 
 ## Fase 13 — Árbol pasivo
 
-### [ ] T83 · Planificador del árbol · M
+### [x] T83 · Planificador del árbol · M
 Origen: R3 (PoE: planear la build)
 - Modo plan: marcar nodos sin gastar puntos y ver el camino; deshacer y rehacer; reasignar con coste (tokens) en vez de solo gratis o nada; exportar e importar la build como código de texto.
+- Hecho: `PassivePlan` (lógica pura, con una asignación «sombra» = asignado + planeado). «Modo plan»: click izq. planea el camino hasta un nodo sin gastar puntos (anillos y camino cian), click der. lo quita si no deja otros colgando; «Aplicar plan» asigna en el orden marcado hasta donde lleguen los puntos; «Borrar plan». Deshacer y rehacer (botones y Ctrl+Z / Ctrl+Y) de lo asignado, las maestrías y el plan, desde que se abrió el árbol. En partida, quitar un nodo cuesta `Economy.passive_refund_cost` (5 + 2 × nivel) en tokens, y reiniciar el árbol, lo de cada nodo; lo asignado en esta visita se quita gratis (en el planificador suelto, todo gratis). «Copiar build» / «Pegar build»: código `PO1:` (JSON comprimido en base64 con clase, nodos y maestrías) por el portapapeles; en partida se carga como plan (no regala puntos); en el planificador suelto cambia de clase si hace falta.
 
 ### [ ] T84 · Más identidad en el árbol · M
 Origen: R3 (Grim Dawn: constelaciones)
@@ -606,3 +607,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T80 · Alijo con pestañas de nombre y color editables, pestaña de materiales y búsqueda que resalta lo que coincide.
 - 2026-10-25 · T81 · Hoja de personaje con desglose por origen en el tooltip de cada estadística, resistencias con su tope y DPS de cada habilidad de la barra.
 - 2026-10-25 · T82 · Ventanas coherentes: una sola a la izquierda, todas encogen junto al inventario, se recuerdan pestaña y filtros, waypoints y oleadas con el cursor de mando; arreglo del ancho de habilidades al 160 %.
+- 2026-10-25 · T83 · Planificador del árbol: modo plan, aplicar, deshacer y rehacer, quitar nodos con coste en tokens y build como código de texto.

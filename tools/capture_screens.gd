@@ -617,6 +617,18 @@ func _capture_mastery() -> void:
 	screen.call("_on_node_hovered", mastery)
 	await _wait(0.5)
 	_save("130_arbol_maestria")
+	# T83: modo plan con un camino de 6-8 nodos marcado (anillos cian).
+	screen.call("_on_node_hovered", -1)
+	var plan: PassivePlan = screen.get("_plan")
+	for id in c.passives.tree.nodes:
+		var steps := plan.shadow.find_path(id).size()
+		if steps >= 6 and steps <= 8:
+			plan.plan_path(id)
+			view.call("center_on", c.passives.tree.get_node_data(id).position + Vector2(200, 0))
+			break
+	screen.get("_plan_button").button_pressed = true
+	await _wait(0.5)
+	_save("131_arbol_plan")
 	ui.call("_on_menu_requested", "passives")
 	world.set("_since_save", -9999.0)
 

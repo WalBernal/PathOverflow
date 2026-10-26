@@ -135,6 +135,12 @@ static func shop_price(item: Item) -> int:
 	return price(item)
 
 
+## Quitar un nodo del árbol pasivo en partida (T83): cuesta tokens según el nivel
+## (los asignados desde que se abrió el árbol se quitan gratis, como deshacer).
+static func passive_refund_cost(level: int) -> int:
+	return 5 + level * 2
+
+
 ## Renovar la mercancía: sube con cada renovación (se reinicia al cambiar de zona).
 static func refresh_cost(level: int, refreshes_done: int) -> int:
 	return int((10 + level * 2) * (1.0 + 0.5 * refreshes_done))

@@ -28,10 +28,26 @@ var _search_edit: LineEdit
 var _search_label: Label
 var _search_matches: Array = []
 var _search_index := -1
+## Planificador (T83): modo plan, deshacer y rehacer, y nodos asignados desde que
+## se abrió el árbol (se quitan gratis; los demás cuestan tokens en partida).
+var plan_mode := false
+var _plan: PassivePlan
+var _session_nodes := {}
+var _plan_button: Button
+var _apply_button: Button
+var _clear_plan_button: Button
+var _undo_button: Button
+var _redo_button: Button
+var _plan_label: Label
 
 
 func _ready() -> void:
 	_build_ui()
+	# Al cerrar el árbol se acaba la visita: lo asignado ya cuesta quitarlo y no se puede deshacer.
+	visibility_changed.connect(func() -> void:
+		if not visible and _plan:
+			_plan.clear_history()
+			_session_nodes.clear())
 	for control in _standalone_controls:
 		control.visible = standalone
 	_close_button.visible = not standalone
@@ -64,9 +80,55 @@ func _build_ui() -> void:
 	var top := PanelContainer.new()
 	add_child(top)
 	top.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	var rows := VBoxContainer.new()
+	rows.add_theme_constant_override("separation", 4)
+	top.add_child(rows)
 	var bar := HBoxContainer.new()
 	bar.add_theme_constant_override("separation", 12)
-	top.add_child(bar)
+	rows.add_child(bar)
+	# Segunda fila: planificador (T83).
+	var plan_row := HBoxContainer.new()
+	plan_row.add_theme_constant_override("separation", 8)
+	rows.add_child(plan_row)
+	_plan_button = Button.new()
+	_plan_button.text = "Modo plan"
+	_plan_button.toggle_mode = true
+	_plan_button.tooltip_text = "Marca nodos sin gastar puntos para ver el camino. Click izq.: planear hasta ahí · Click der.: quitar del plan."
+	_plan_button.toggled.connect(func(on: bool) -> void:
+		plan_mode = on
+		_refresh())
+	plan_row.add_child(_plan_button)
+	_apply_button = Button.new()
+	_apply_button.text = "Aplicar plan"
+	_apply_button.pressed.connect(apply_plan)
+	plan_row.add_child(_apply_button)
+	_clear_plan_button = Button.new()
+	_clear_plan_button.text = "Borrar plan"
+	_clear_plan_button.pressed.connect(func() -> void:
+		_plan.clear_plan()
+		_refresh())
+	plan_row.add_child(_clear_plan_button)
+	_undo_button = Button.new()
+	_undo_button.text = "Deshacer (Ctrl+Z)"
+	_undo_button.pressed.connect(undo)
+	plan_row.add_child(_undo_button)
+	_redo_button = Button.new()
+	_redo_button.text = "Rehacer (Ctrl+Y)"
+	_redo_button.pressed.connect(redo)
+	plan_row.add_child(_redo_button)
+	var export_button := Button.new()
+	export_button.text = "Copiar build"
+	export_button.tooltip_text = "Copia la build (lo asignado y lo planeado) como código de texto al portapapeles."
+	export_button.pressed.connect(export_build)
+	plan_row.add_child(export_button)
+	var import_button := Button.new()
+	import_button.text = "Pegar build"
+	import_button.tooltip_text = "Carga una build desde el código del portapapeles. En partida, queda como plan (no regala puntos)."
+	import_button.pressed.connect(func() -> void: import_build(DisplayServer.clipboard_get()))
+	plan_row.add_child(import_button)
+	_plan_label = _make_label("")
+	_plan_label.add_theme_color_override("font_color", PassiveTreeView.COLOR_PLANNED)
+	plan_row.add_child(_plan_label)
 
 	_close_button = Button.new()
 	_close_button.text = "Cerrar (P)"
@@ -95,7 +157,7 @@ func _build_ui() -> void:
 
 	var reset := Button.new()
 	reset.text = "Reiniciar árbol"
-	reset.pressed.connect(func() -> void: _character.passives.reset())
+	reset.pressed.connect(reset_tree)
 	bar.add_child(reset)
 
 	_search_edit = LineEdit.new()
@@ -113,7 +175,7 @@ func _build_ui() -> void:
 	_status_label.add_theme_color_override("font_color", Color("e06c6c"))
 	bar.add_child(_status_label)
 
-	var hint := _make_label("Click izq.: asignar  ·  Click der.: quitar  ·  Arrastrar: mover  ·  Rueda: zoom  ·  Enter en la búsqueda: ir al siguiente resultado")
+	var hint := _make_label("Click izq.: asignar  ·  Click der.: quitar (cuesta tokens)  ·  Arrastrar: mover  ·  Rueda: zoom  ·  Enter: siguiente resultado")
 	add_child(hint)
 	hint.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
 	hint.position += Vector2(12, -12)
@@ -126,7 +188,7 @@ func _build_ui() -> void:
 	side.anchor_bottom = 1.0
 	side.offset_left = -380.0
 	side.offset_right = -10.0
-	side.offset_top = 60.0
+	side.offset_top = 100.0   # debajo de las dos filas de botones
 	side.offset_bottom = -10.0
 	side.add_theme_stylebox_override("panel", _make_panel_style())
 	var scroll := ScrollContainer.new()
@@ -187,6 +249,8 @@ func show_character(character: CharacterData) -> void:
 	_character.stats_changed.connect(_refresh)
 
 	_ascendancy_panel.visible = false
+	_plan = PassivePlan.new(_character.passives)
+	_session_nodes.clear()
 	_view.setup(_character.passives)
 	var start := GameData.passive_tree.get_node_data(_character.passives.start_node_id)
 	_view.center_on.call_deferred(start.position)
@@ -202,14 +266,151 @@ func _on_node_clicked(id: int, button: MouseButton) -> void:
 	if button == MOUSE_BUTTON_LEFT and alloc.is_allocated(id) and alloc.tree.is_socket(id):
 		_open_chip_menu(id)
 		return
+	if plan_mode:
+		# Modo plan (T83): marcar y quitar sin gastar puntos.
+		if button == MOUSE_BUTTON_LEFT and not alloc.is_allocated(id) and not _plan.is_planned(id):
+			if _plan.plan_path(id) == 0:
+				_flash("No hay camino hasta ese nodo")
+		elif button == MOUSE_BUTTON_RIGHT and _plan.is_planned(id):
+			if not _plan.unplan(id):
+				_flash("Quitarlo dejaría otros nodos del plan sin conexión")
+		_refresh()
+		_on_node_hovered(id)
+		return
 	if button == MOUSE_BUTTON_LEFT and not alloc.is_allocated(id):
-		var cost := alloc.find_path(id).size()
-		if cost > 0 and alloc.allocate_path(id, _character.passive_points_available()) == 0:
-			_flash("Puntos insuficientes: necesitas %d" % cost)
+		var path := alloc.find_path(id)
+		if path.size() > 0 and path.size() > _character.passive_points_available():
+			_flash("Puntos insuficientes: necesitas %d" % path.size())
+		elif path.size() > 0:
+			_plan.push_history()
+			alloc.allocate_path(id, _character.passive_points_available())
+			for pid in path:
+				_session_nodes[pid] = true
+			_refresh()
 	elif button == MOUSE_BUTTON_RIGHT and alloc.is_allocated(id):
-		if not alloc.refund(id):
-			_flash("No se puede quitar: desconectaría otros nodos")
+		refund_node(id)
 	_on_node_hovered(id)
+
+
+## Quitar un nodo: gratis en el planificador suelto y para lo asignado desde que
+## se abrió el árbol; si no, cuesta tokens (T83).
+func refund_node(id: int) -> bool:
+	var alloc := _character.passives
+	if not alloc.can_refund(id):
+		_flash("No se puede quitar: desconectaría otros nodos")
+		return false
+	var cost := refund_cost([id])
+	if cost > 0 and not _character.spend_tokens(cost):
+		_flash("Quitar ese nodo cuesta %d tokens (te faltan %d)" % [cost, cost - _character.tokens])
+		return false
+	_plan.push_history()
+	alloc.refund(id)
+	_session_nodes.erase(id)
+	if cost > 0:
+		Sfx.play("coin", -6.0, 0.8)
+		_flash("Nodo quitado por %d tokens" % cost)
+	_refresh()
+	return true
+
+
+## Lo que cuesta quitar estos nodos (0 en el planificador suelto o si se asignaron en esta visita).
+func refund_cost(ids: Array) -> int:
+	if standalone:
+		return 0
+	var n := 0
+	for id in ids:
+		if not _session_nodes.has(int(id)):
+			n += 1
+	return n * Economy.passive_refund_cost(_character.level)
+
+
+## Reiniciar el árbol: en partida cuesta lo que quitar cada nodo (los de esta visita, gratis).
+func reset_tree() -> void:
+	var ids := _character.passives.get_allocated_ids().filter(func(i: int) -> bool: return i != _character.passives.start_node_id)
+	var cost := refund_cost(ids)
+	if cost > 0 and not _character.spend_tokens(cost):
+		_flash("Reiniciar el árbol cuesta %d tokens (te faltan %d)" % [cost, cost - _character.tokens])
+		return
+	_plan.push_history()
+	_character.passives.reset()
+	_session_nodes.clear()
+	if cost > 0:
+		_flash("Árbol reiniciado por %d tokens" % cost)
+	_refresh()
+
+
+func apply_plan() -> void:
+	var before := {}
+	for id in _character.passives.get_allocated_ids():
+		before[id] = true
+	var spent := _plan.apply(_character.passive_points_available())
+	if spent == 0:
+		_flash("Nada que aplicar: sin plan o sin puntos" if _plan.planned_ids().is_empty() or _character.passive_points_available() <= 0 else "El plan no conecta con lo asignado")
+	for id in _character.passives.get_allocated_ids():
+		if not before.has(id):
+			_session_nodes[id] = true   # asignado en esta visita: se puede quitar gratis
+	_refresh()
+
+
+func undo() -> void:
+	if _plan.undo():
+		_refresh()
+
+
+func redo() -> void:
+	if _plan.redo():
+		_refresh()
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if not visible or not (event is InputEventKey) or not event.pressed or not (event as InputEventKey).ctrl_pressed:
+		return
+	match (event as InputEventKey).keycode:
+		KEY_Z:
+			undo()
+			get_viewport().set_input_as_handled()
+		KEY_Y:
+			redo()
+			get_viewport().set_input_as_handled()
+
+
+## Copia la build (asignado + planeado y maestrías) al portapapeles como texto.
+func export_build() -> String:
+	var ids: Array = _character.passives.get_allocated_ids()
+	ids.append_array(_plan.planned_ids())
+	var code := PassivePlan.export_code(String(_character.class_def["id"]), ids, _character.passives.mastery_choices_dict())
+	DisplayServer.clipboard_set(code)
+	_flash("Build copiada al portapapeles (%d nodos)" % (ids.size() - 1))
+	return code
+
+
+## Carga una build de un código: en el planificador suelto, tal cual (cambia de
+## clase si hace falta); en partida, queda como plan (no regala puntos).
+func import_build(code: String) -> bool:
+	var data := PassivePlan.import_code(code)
+	if data.is_empty():
+		_flash("Ese texto no es un código de build (empieza por %s)" % PassivePlan.CODE_PREFIX)
+		return false
+	if String(data["class"]) != String(_character.class_def["id"]):
+		if not standalone:
+			_flash("Esa build es de otra clase")
+			return false
+		for k in GameData.classes.size():
+			if String(GameData.classes[k]["id"]) == String(data["class"]):
+				_class_option.select(k)
+				_select_class(k)
+	if standalone:
+		_plan.push_history()
+		_character.passives.load_mastery_choices(data["masteries"])
+		_character.passives.load_ids(data["ids"])
+		_flash("Build cargada")
+	else:
+		var n := _plan.set_plan(data["ids"])
+		plan_mode = true
+		_plan_button.set_pressed_no_signal(true)
+		_flash("Build cargada como plan: %d nodos por asignar" % n)
+	_refresh()
+	return true
 
 
 ## Menú de una maestría asignada: elegir uno de sus bonos (gratis, se puede
@@ -231,6 +432,7 @@ func _open_mastery_menu(node_id: int) -> void:
 	add_child(menu)
 	menu.index_pressed.connect(func(k: int) -> void:
 		if k < node.choices.size():
+			_plan.push_history()
 			alloc.set_mastery_choice(node_id, k)
 			Sfx.play("coin", -8.0, 1.2)
 			_refresh()
@@ -295,8 +497,22 @@ func _flash(message: String) -> void:
 
 func _refresh() -> void:
 	var available := _character.passive_points_available()
-	_view.available_points = available
+	_view.available_points = available if not plan_mode else 99999   # en el plan no hay tope
 	_view.chips = _character.inventory.chips
+	# Plan (T83): lo planeado se dibuja con anillo cian; en modo plan el camino sale de lo planeado.
+	if _plan:
+		_plan.refresh()
+		var planned := {}
+		for id in _plan.planned_ids():
+			planned[id] = true
+		_view.planned = planned
+		_view.path_source = _plan.shadow if plan_mode else null
+		var n := planned.size()
+		_plan_label.text = ("Plan: %d nodo%s%s" % [n, "" if n == 1 else "s", ("  ·  te faltan %d puntos" % _plan.points_missing(available)) if _plan.points_missing(available) > 0 else ""]) if n > 0 else ("Modo plan: click en un nodo para planear el camino" if plan_mode else "")
+		_apply_button.disabled = n == 0 or available <= 0
+		_clear_plan_button.disabled = n == 0
+		_undo_button.disabled = not _plan.can_undo()
+		_redo_button.disabled = not _plan.can_redo()
 	_view.queue_redraw()
 	_points_label.text = "Puntos: %d / %d" % [available, _character.passive_points_total()]
 	if _character.ascendancy_points_total() > 0:

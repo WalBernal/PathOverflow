@@ -154,6 +154,7 @@ func _initialize() -> void:
 	_test_stash_tabs()
 	_test_stat_breakdown()
 	_test_window_memory()
+	_test_passive_plan()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3900,6 +3901,46 @@ func _test_window_memory() -> void:
 	panel._ready()
 	_check(panel.filter in ShopPanel.FILTERS, "la tienda abre con un filtro válido (el último usado o «todo»)")
 	panel.free()
+
+
+## Planificador del árbol (T83): plan sin gastar, aplicar, deshacer, rehacer y código de build.
+func _test_passive_plan() -> void:
+	var c := CharacterData.new(_classes[0], _tree)
+	var alloc := c.passives
+	var plan := PassivePlan.new(alloc)
+	# Un nodo a 3+ pasos del inicio.
+	var target := -1
+	for id in _tree.nodes:
+		if alloc.find_path(id).size() >= 3 and alloc.find_path(id).size() <= 6:
+			target = id
+			break
+	_check(target != -1, "hay un nodo a unos pasos del inicio")
+	var path_len := alloc.find_path(target).size()
+	_check(plan.plan_path(target) == path_len and alloc.spent_points() == 0, "planear marca el camino sin gastar puntos")
+	_check(plan.is_planned(target) and plan.points_missing(1) == path_len - 1, "dice cuántos puntos faltan")
+	var first: int = plan.planned_ids()[0]
+	_check(path_len < 2 or not plan.unplan(first), "no se quita del plan un nodo del que cuelgan otros")
+	_check(plan.unplan(target) and not plan.is_planned(target), "el último del camino sí se quita")
+	plan.plan_path(target)
+	_check(plan.apply(2) == 2 and alloc.spent_points() == 2 and plan.planned_ids().size() == path_len - 2, "aplicar asigna hasta donde llegan los puntos")
+	_check(plan.undo() and alloc.spent_points() == 0 and plan.planned_ids().size() == path_len, "deshacer vuelve a como estaba (asignado y plan)")
+	_check(plan.redo() and alloc.spent_points() == 2, "rehacer")
+	plan.clear_history()
+	_check(not plan.can_undo() and not plan.can_redo(), "al cerrar el árbol se olvida el historial")
+	# Código de build.
+	var ids: Array = alloc.get_allocated_ids()
+	ids.append_array(plan.planned_ids())
+	var code := PassivePlan.export_code(String(c.class_def["id"]), ids, {"12": 1})
+	_check(code.begins_with(PassivePlan.CODE_PREFIX), "el código empieza por %s" % PassivePlan.CODE_PREFIX)
+	var back := PassivePlan.import_code(code)
+	_check(back.get("class", "") == String(c.class_def["id"]) and (back["ids"] as Array).size() == ids.size() and int(back["masteries"].get("12", 0)) == 1,
+		"exportar e importar la build da lo mismo")
+	_check(PassivePlan.import_code("hola").is_empty() and PassivePlan.import_code("PO1:12:@@@").is_empty(), "un texto que no es código no rompe nada")
+	# Importar en partida: queda como plan, sin regalar puntos.
+	var fresh := CharacterData.new(_classes[0], _tree)
+	var fplan := PassivePlan.new(fresh.passives)
+	_check(fplan.set_plan(back["ids"]) == ids.size() - 1 and fresh.passives.spent_points() == 0, "una build importada en partida es un plan")
+	_check(Economy.passive_refund_cost(30) > Economy.passive_refund_cost(5), "quitar nodos cuesta más con el nivel")
 
 
 ## Parte 2 (T72b): el ataque golpea en el cuadro de impacto de la animación.
