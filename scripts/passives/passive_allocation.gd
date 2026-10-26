@@ -37,8 +37,21 @@ func is_blocked(id: int) -> bool:
 	return n == null or (n.kind == PassiveNode.Kind.CLASS_START and id != start_node_id)
 
 
+## Constelaciones (T84): `requirement_check.call(requires)` dice si el personaje tiene
+## los atributos que pide un nodo. Solo frena asignar y planear caminos; lo ya
+## asignado se carga igual aunque los atributos hayan bajado.
+var requirement_check: Callable
+
+
+func meets_requirements(id: int) -> bool:
+	var n := tree.get_node_data(id)
+	if n == null or n.requires.is_empty() or not requirement_check.is_valid():
+		return true
+	return bool(requirement_check.call(n.requires))
+
+
 func can_allocate(id: int) -> bool:
-	if _allocated.has(id) or is_blocked(id):
+	if _allocated.has(id) or is_blocked(id) or not meets_requirements(id):
 		return false
 	for nb in tree.neighbors(id):
 		if _allocated.has(nb):
@@ -50,7 +63,7 @@ func can_allocate(id: int) -> bool:
 ## Devuelve los nodos que habría que asignar, en orden. Vacío si no hay camino.
 func find_path(target: int) -> Array[int]:
 	var result: Array[int] = []
-	if _allocated.has(target) or is_blocked(target):
+	if _allocated.has(target) or is_blocked(target) or not meets_requirements(target):
 		return result
 	var came_from := {}
 	var queue: Array[int] = []
@@ -64,7 +77,7 @@ func find_path(target: int) -> Array[int]:
 		if cur == target:
 			break
 		for nb in tree.neighbors(cur):
-			if came_from.has(nb) or is_blocked(nb):
+			if came_from.has(nb) or is_blocked(nb) or (not _allocated.has(nb) and not meets_requirements(nb)):
 				continue
 			came_from[nb] = cur
 			queue.append(nb)

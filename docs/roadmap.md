@@ -487,9 +487,10 @@ Origen: R3 (PoE: planear la build)
 - Modo plan: marcar nodos sin gastar puntos y ver el camino; deshacer y rehacer; reasignar con coste (tokens) en vez de solo gratis o nada; exportar e importar la build como código de texto.
 - Hecho: `PassivePlan` (lógica pura, con una asignación «sombra» = asignado + planeado). «Modo plan»: click izq. planea el camino hasta un nodo sin gastar puntos (anillos y camino cian), click der. lo quita si no deja otros colgando; «Aplicar plan» asigna en el orden marcado hasta donde lleguen los puntos; «Borrar plan». Deshacer y rehacer (botones y Ctrl+Z / Ctrl+Y) de lo asignado, las maestrías y el plan, desde que se abrió el árbol. En partida, quitar un nodo cuesta `Economy.passive_refund_cost` (5 + 2 × nivel) en tokens, y reiniciar el árbol, lo de cada nodo; lo asignado en esta visita se quita gratis (en el planificador suelto, todo gratis). «Copiar build» / «Pegar build»: código `PO1:` (JSON comprimido en base64 con clase, nodos y maestrías) por el portapapeles; en partida se carga como plan (no regala puntos); en el planificador suelto cambia de clase si hace falta.
 
-### [ ] T84 · Más identidad en el árbol · M
+### [x] T84 · Más identidad en el árbol · M
 Origen: R3 (Grim Dawn: constelaciones)
 - Grupos temáticos por clase con un notable que cambia cómo se juega (no solo números), más keystones con su contra, y «constelaciones» opcionales que piden puntos de dos atributos.
+- Hecho: `data/passive_identity.json` (encima del árbol generado, como las maestrías, comprobando el nombre de cada nodo). Un **notable de estilo** por clase, el más cercano a su inicio que no es maestría, con una mecánica que el juego ya hace: Commit Atómico (físico a rayo), Escalado a Nivel 3 (nova al recibir golpes), Caso Límite (bomba al esquivar), Lazy Loading (+2 perforaciones), Inyección de Prompt (elemental a caos), Batch Nocturno (pulso de estática) y Rollback Automático (explosión al matar); anillo dorado en el árbol. Cuatro **piedras angulares** nuevas con contra (Hotfix en Producción, Root Access, Arquitectura Hexagonal, Kanban), que siguen siendo el notable de su cluster (`capstone`). Tres **constelaciones** exteriores (Pentester: FUE+DES, Hacker Ético: DES+INT, Arquitecto: INT+FUE) que piden 50 de cada uno para asignar o cruzar sus nodos y dan un 50 % más; puntas de estrella en el árbol y el tooltip dice cuánto tienes. Lo ya asignado se carga aunque bajen los atributos.
 
 ### [ ] T85 · Arte del árbol · S 🛑
 Origen: R3
@@ -608,3 +609,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T81 · Hoja de personaje con desglose por origen en el tooltip de cada estadística, resistencias con su tope y DPS de cada habilidad de la barra.
 - 2026-10-25 · T82 · Ventanas coherentes: una sola a la izquierda, todas encogen junto al inventario, se recuerdan pestaña y filtros, waypoints y oleadas con el cursor de mando; arreglo del ancho de habilidades al 160 %.
 - 2026-10-25 · T83 · Planificador del árbol: modo plan, aplicar, deshacer y rehacer, quitar nodos con coste en tokens y build como código de texto.
+- 2026-10-25 · T84 · Identidad del árbol: notable de estilo por clase con su mecánica, cuatro piedras angulares con contra y tres constelaciones que piden dos atributos.

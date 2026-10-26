@@ -73,9 +73,18 @@ func condition_tags() -> Array:
 	return conditions.keys()
 
 
+## ¿Tiene los atributos que pide algo? {"strength": 50, "dexterity": 50...} (constelaciones del árbol).
+func meets_attributes(requires: Dictionary) -> bool:
+	for key in requires:
+		if stats.get_value(StringName(key)) < float(requires[key]):
+			return false
+	return true
+
+
 func _init(p_class_def: Dictionary, tree: PassiveTree) -> void:
 	class_def = p_class_def
 	passives = PassiveAllocation.new(tree, tree.get_start_node_for_class(StringName(class_def["id"])))
+	passives.requirement_check = meets_attributes   # constelaciones (T84)
 	passives.changed.connect(recalculate)
 	inventory.changed.connect(recalculate)
 	recalculate()

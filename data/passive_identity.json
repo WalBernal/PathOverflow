@@ -1,0 +1,23 @@
+{
+  "_doc": "Identidad del árbol pasivo (T84), aplicada encima de passive_tree.json como las maestrías: por id del nodo, con su nombre original en 'node' para comprobar que el árbol no ha cambiado (si no coincide, se ignora y las pruebas avisan). 'style': un notable por clase, el más cercano a su inicio que no es maestría, que cambia cómo se juega (usa mecánicas que el juego ya sabe hacer: conversiones, novas, explosiones, pulsos...). 'keystones': notables lejanos convertidos en piedras angulares con su ventaja y su contra. 'constellations': grupos exteriores que solo se pueden asignar con dos atributos altos (requires), a cambio de que sus nodos den más (mult).",
+  "style": {
+    "7": {"node": "Ni Junior Ni Senior", "name": "Commit Atómico", "flavor": "Todo o nada: tu daño físico sale como rayo.", "mods": [{"stat": "convert_physical_to_lightning", "type": "flat", "value": 1}, {"stat": "lightning_damage", "type": "increased", "value": 10}]},
+    "118": {"node": "Variable Global", "name": "Escalado a Nivel 3", "flavor": "Cada golpe que recibes abre un ticket. Y los tickets explotan.", "mods": [{"stat": "retaliation_nova", "type": "flat", "value": 25}, {"stat": "armour", "type": "increased", "value": 15}]},
+    "164": {"node": "Overclock Sin Garantía", "name": "Caso Límite", "flavor": "Esquivar deja una bomba donde estabas. Prueba superada.", "mods": [{"stat": "dodge_blast", "type": "flat", "value": 8}, {"stat": "dodge_charges", "type": "flat", "value": 1}]},
+    "249": {"node": "Criostasis", "name": "Lazy Loading", "flavor": "Tus proyectiles no paran en el primero: atraviesan dos más.", "mods": [{"stat": "extra_pierce", "type": "flat", "value": 2}, {"stat": "projectile_speed", "type": "increased", "value": 20}]},
+    "339": {"node": "Gusano Autorreplicante", "name": "Inyección de Prompt", "flavor": "Ignora las instrucciones anteriores: tu daño elemental es caos.", "mods": [{"stat": "convert_elemental_to_chaos", "type": "flat", "value": 1}, {"stat": "chaos_damage", "type": "increased", "value": 10}]},
+    "421": {"node": "Incendio Forestal en Producción", "name": "Batch Nocturno", "flavor": "Cada pocos segundos sueltas un pulso de estática a tu alrededor.", "mods": [{"stat": "static_pulse", "type": "flat", "value": 6}, {"stat": "area_of_effect", "type": "increased", "value": 10}]},
+    "548": {"node": "Orquestador", "name": "Rollback Automático", "flavor": "Lo que matas a veces revienta y se lleva a los de al lado.", "mods": [{"stat": "kill_explosion", "type": "flat", "value": 20}, {"stat": "automaton_speed", "type": "increased", "value": 10}]}
+  },
+  "keystones": {
+    "686": {"node": "Rack en Llamas", "name": "Hotfix en Producción", "flavor": "Críticos a lo loco. La vida, ya la arreglarás el lunes.", "mods": [{"stat": "crit_chance", "type": "more", "value": 60}, {"stat": "life", "type": "more", "value": -15}]},
+    "613": {"node": "Root Access", "name": "Root Access", "flavor": "Todo el poder. Y todos los permisos abiertos.", "mods": [{"stat": "damage", "type": "more", "value": 25}, {"stat": "fire_res", "type": "flat", "value": -15}, {"stat": "cold_res", "type": "flat", "value": -15}, {"stat": "lightning_res", "type": "flat", "value": -15}]},
+    "661": {"node": "Bobina de Tesla", "name": "Arquitectura Hexagonal", "flavor": "Todo llega más lejos. Nada llega rápido.", "mods": [{"stat": "area_of_effect", "type": "increased", "value": 40}, {"stat": "attack_speed", "type": "more", "value": -12}, {"stat": "cast_speed", "type": "more", "value": -12}]},
+    "712": {"node": "Servicio sin Estado", "name": "Kanban", "flavor": "Las habilidades vuelven antes. Y duran lo que dura una reunión.", "mods": [{"stat": "cooldown_recovery", "type": "increased", "value": 40}, {"stat": "skill_duration", "type": "more", "value": -30}]}
+  },
+  "constellations": {
+    "c15": {"name": "Constelación del Pentester", "requires": {"strength": 50, "dexterity": 50}, "mult": 1.5},
+    "c33": {"name": "Constelación del Hacker Ético", "requires": {"dexterity": 50, "intelligence": 50}, "mult": 1.5},
+    "c49": {"name": "Constelación del Arquitecto", "requires": {"intelligence": 50, "strength": 50}, "mult": 1.5}
+  }
+}

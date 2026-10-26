@@ -157,6 +157,7 @@ func _restore(state: Dictionary) -> void:
 
 func _sync() -> void:
 	shadow = PassiveAllocation.new(real.tree, real.start_node_id)
+	shadow.requirement_check = real.requirement_check   # las constelaciones también frenan el plan
 	var ids: Array = real.get_allocated_ids()
 	ids.append_array(_planned)
 	shadow.load_ids(ids)

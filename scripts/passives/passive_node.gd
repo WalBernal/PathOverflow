@@ -27,10 +27,22 @@ var icon := ""
 ## Maestría (data/passive_masteries.json): opciones {name, mods: Array[Modifier]};
 ## con el nodo asignado se elige una (PassiveAllocation.mastery_choice). Vacío = nodo normal.
 var choices: Array[Dictionary] = []
+## Identidad (T84, data/passive_identity.json): notable de estilo de su clase (cambia
+## cómo se juega), y constelación a la que pertenece con los atributos que pide.
+var style := false
+## Piedra angular «de cluster» (T84): sigue siendo el notable de su grupo, pero con
+## ventaja y contra como las piedras angulares (se dibuja y se nombra como ellas).
+var capstone := false
+var constellation := ""
+var requires: Dictionary = {}   # {"strength": 50, ...}
 
 
 func is_mastery() -> bool:
 	return not choices.is_empty()
+
+
+func is_keystone() -> bool:
+	return kind == Kind.KEYSTONE or capstone
 
 
 static func from_dict(d: Dictionary) -> PassiveNode:
@@ -50,7 +62,13 @@ static func from_dict(d: Dictionary) -> PassiveNode:
 
 
 func label() -> String:
-	return "Maestría (elige 1 de %d)" % choices.size() if is_mastery() else kind_label(kind)
+	if is_mastery():
+		return "Maestría (elige 1 de %d)" % choices.size()
+	if style:
+		return "Notable de estilo"
+	if capstone:
+		return kind_label(Kind.KEYSTONE)
+	return kind_label(kind)
 
 
 static func kind_label(k: Kind) -> String:

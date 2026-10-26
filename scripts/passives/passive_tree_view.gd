@@ -34,6 +34,7 @@ var allocation: PassiveAllocation
 var planned: Dictionary = {}
 var path_source: PassiveAllocation
 const COLOR_PLANNED := Color("4fd0e0")
+const COLOR_CONSTELLATION := Color("c9a7f0")
 ## Puntos disponibles: si el camino previsto cuesta más, se pinta en rojo.
 var available_points := 0
 var zoom := 0.55
@@ -213,6 +214,16 @@ func _draw() -> void:
 				if chip is ExpansionChip and not (chip as ExpansionChip).transform_map().is_empty():
 					# Radio en el que transforma los nodos.
 					draw_arc(n.position, ExpansionChip.TRANSFORM_RADIUS, 0.0, TAU, 96, Color(Rarity.item_color(chip.rarity), 0.55 if on else 0.2), 2.0, true)
+		if not n.requires.is_empty():
+			# Constelación (T84): cuatro puntas de estrella alrededor; apagadas si no llegan los atributos.
+			var lit := on or allocation.meets_requirements(n.id)
+			for k in 4:
+				var d := Vector2.from_angle(PI / 4.0 + TAU * k / 4.0)
+				draw_line(n.position + d * (r + 2.0), n.position + d * (r + 9.0), COLOR_CONSTELLATION if lit else COLOR_CONSTELLATION.darkened(0.6), 2.0, true)
+		if n.style:
+			draw_arc(n.position, r + 8.0, 0.0, TAU, 40, Color(COLOR_ALLOCATED, 0.7), 2.0, true)   # notable de estilo (T84)
+		if n.capstone:
+			draw_arc(n.position, r + 6.0, 0.0, TAU, 40, Color("b04ad9") if not on else COLOR_ALLOCATED.darkened(0.2), 2.0, true)   # como una piedra angular
 		if planned.has(n.id):
 			draw_arc(n.position, r + 4.0, 0.0, TAU, 32, COLOR_PLANNED, 3.0, true)   # planeado (T83)
 		if _search.has(n.id):

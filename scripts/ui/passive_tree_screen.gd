@@ -553,6 +553,15 @@ func _build_tooltip(node: PassiveNode) -> String:
 		t += "[color=#8a8293]%s[/color]\n" % ("Click izquierdo: elegir el bono (gratis, cuando quieras)" if alloc.is_allocated(node.id) else "Asígnala y elige uno de los tres bonos")
 	if node.flavor != "":
 		t += "\n[i][color=#a08f6a]%s[/color][/i]\n" % node.flavor
+	# Constelación (T84): qué atributos pide y si los tienes.
+	if not node.requires.is_empty():
+		var names := {"strength": "Fuerza", "dexterity": "Destreza", "intelligence": "Inteligencia"}
+		var parts := PackedStringArray()
+		for key in node.requires:
+			var have := _character.stats.get_value(StringName(key))
+			parts.append("[color=#%s]%s %d (tienes %d)[/color]" % ["6fd36b" if have >= float(node.requires[key]) else "e06c6c",
+				names.get(key, key), int(node.requires[key]), int(have)])
+		t += "\n[color=#c9a7f0]✦ %s[/color]: pide %s. Sus nodos dan más.\n" % [node.constellation, "  ·  ".join(parts)]
 	if tree.is_socket(node.id):
 		var chip: ExpansionChip = _character.inventory.chips.get(node.id, null)
 		if chip:

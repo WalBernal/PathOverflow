@@ -155,6 +155,7 @@ func _initialize() -> void:
 	_test_stat_breakdown()
 	_test_window_memory()
 	_test_passive_plan()
+	_test_tree_identity()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3941,6 +3942,41 @@ func _test_passive_plan() -> void:
 	var fplan := PassivePlan.new(fresh.passives)
 	_check(fplan.set_plan(back["ids"]) == ids.size() - 1 and fresh.passives.spent_points() == 0, "una build importada en partida es un plan")
 	_check(Economy.passive_refund_cost(30) > Economy.passive_refund_cost(5), "quitar nodos cuesta más con el nivel")
+
+
+## Más identidad en el árbol (T84): notables de estilo, piedras angulares con contra y constelaciones.
+func _test_tree_identity() -> void:
+	_check(_tree.identity_mismatches.is_empty(), "la identidad del árbol encaja con sus nodos: %s" % ", ".join(_tree.identity_mismatches))
+	var styles := _tree.nodes.values().filter(func(n: PassiveNode) -> bool: return n.style)
+	_check(styles.size() == 7, "un notable de estilo por clase (%d)" % styles.size())
+	var mechanic_stats := [Stat.CONVERT_PHYSICAL_TO_LIGHTNING, Stat.RETALIATION_NOVA, Stat.DODGE_BLAST, Stat.EXTRA_PIERCE, Stat.CONVERT_ELEMENTAL_TO_CHAOS, Stat.STATIC_PULSE, Stat.KILL_EXPLOSION]
+	for n: PassiveNode in styles:
+		_check(n.mods.any(func(m: Modifier) -> bool: return m.stat in mechanic_stats), "%s cambia cómo se juega (no solo números)" % n.title)
+	for cdef in _classes:
+		var alloc := PassiveAllocation.new(_tree, _tree.get_start_node_for_class(StringName(cdef["id"])))
+		var near := styles.filter(func(n: PassiveNode) -> bool: return alloc.find_path(n.id).size() > 0 and alloc.find_path(n.id).size() <= 6)
+		_check(not near.is_empty(), "%s tiene su notable de estilo cerca del inicio" % cdef["name"])
+	var keystones := _tree.nodes.values().filter(func(n: PassiveNode) -> bool: return n.is_keystone())
+	_check(keystones.size() >= 11, "más piedras angulares (%d)" % keystones.size())
+	for title in ["Hotfix en Producción", "Root Access", "Arquitectura Hexagonal", "Kanban"]:
+		var k: Array = keystones.filter(func(n: PassiveNode) -> bool: return n.title == title)
+		_check(k.size() == 1 and k[0].mods.any(func(m: Modifier) -> bool: return m.value < 0.0), "«%s» tiene su contra" % title)
+	# Constelaciones: piden dos atributos; sin ellos no se asignan ni se cruzan.
+	var stars := _tree.nodes.values().filter(func(n: PassiveNode) -> bool: return not n.requires.is_empty())
+	var names := {}
+	for n: PassiveNode in stars:
+		names[n.constellation] = true
+		_check(n.requires.size() == 2, "%s pide dos atributos" % n.title)
+	_check(names.size() == 3, "tres constelaciones (%d)" % names.size())
+	var star: PassiveNode = stars[0]
+	var test_alloc := PassiveAllocation.new(_tree, _tree.get_start_node_for_class(StringName(_classes[0]["id"])))
+	var ok := [false]
+	test_alloc.requirement_check = func(_r: Dictionary) -> bool: return ok[0]
+	_check(test_alloc.find_path(star.id).is_empty(), "sin los atributos, la constelación no se alcanza")
+	ok[0] = true
+	_check(not test_alloc.find_path(star.id).is_empty(), "con ellos, sí")
+	var c := CharacterData.new(_classes[0], _tree)
+	_check(not c.meets_attributes({"strength": 999}) and c.meets_attributes({"strength": 1}), "el personaje compara sus atributos")
 
 
 ## Parte 2 (T72b): el ataque golpea en el cuadro de impacto de la animación.
