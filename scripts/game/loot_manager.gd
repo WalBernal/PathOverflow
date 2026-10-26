@@ -62,8 +62,10 @@ func drop_item(item: Item, pos: Vector2) -> void:
 	var special := SoundMap.drop(item)   # el único y el conjunto suenan distinto (T77)
 	if special != "":
 		Sfx.play(special, -3.0)
+		SoundMap.stinger("loot")   # y el aviso de botín bueno en la música (T78)
 	elif LootFilter.beams(item):
-		Sfx.play("coin", -2.0, 0.65)
+		if not SoundMap.stinger("loot"):
+			Sfx.play("coin", -2.0, 0.65)
 	queue_redraw()
 
 

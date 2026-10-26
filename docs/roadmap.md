@@ -452,9 +452,10 @@ Origen: R3 (Diablo: el sonido del botín)
 - Sonidos de interfaz: abrir y cerrar ventanas, pasar el ratón, comprar, error.
 - Hecho: 25 sonidos nuevos sintetizados (`generate_sfx.gd -- t77`). `SoundMap`: cada habilidad lanza su sonido de tipo más una capa de firma (clic digital, aire, zumbido, campana o golpe grave) con un tono propio sacado de su id (0,86-1,14) y ±4 % al azar; los proyectiles suenan al golpear según su daño. Recoger y equipar según el material (metal, tela, cristal, placa; los anillos y amuletos más agudos), caída propia de los conjuntos (los únicos ya la tenían), pasos en tierra, piedra o metal según el estilo de la zona, y en la interfaz: abrir y cerrar ventanas (sin repetir al pasar de una a otra), pasar el ratón por los botones, comprar y los avisos de error (en rojo). Sin escucharlo en partida: las pruebas comprueban que existen todos los sonidos y que los tonos se reparten.
 
-### [ ] T78 · Música y avisos sonoros por intensidad · S
+### [x] T78 · Música y avisos sonoros por intensidad · S
 Origen: R3
 - Avisos cortos (stingers) al aparecer un élite, al caer botín bueno, al subir de nivel y al entrar a un jefe; transición de la capa de combate a la del jefe sin cortes.
+- Hecho: cuatro avisos sintetizados (`generate_sfx.gd -- t78`): élite (metales graves y timbal), botín bueno (destello de campanas), subida de nivel (fanfarria) y jefe (oleada, acorde grave y dos timbales). `MusicPlayer.stinger` los toca con el volumen de la música y la baja 7 dB mientras suenan; el mismo aviso no se repite antes de 6 s (salvo el de jefe). Suenan al ver por primera vez un élite o un único (a distancia de combate), al caer un único, un conjunto o algo con haz del filtro, y al subir de nivel. El paso a la pista de fase del jefe espera al siguiente tiempo de la pista que suena y entra ya en su bucle (sin intro), con fundido cruzado; la capa de combate se apaga con su propio fundido. Sin escucharlo en partida.
 
 ## Fase 12 — Ventanas de gestión
 
@@ -596,3 +597,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T75 · Atlas de iconos en pixel art (32 y 16 px) de habilidades, estados y RAM, generados desde los glifos y listos para sustituir por arte a mano.
 - 2026-10-25 · T76 · Interfaz con identidad: fuente de píxeles para títulos y cifras, marcos con remaches, botones que se hunden, orbes con burbujas y texto mínimo de 12 px. Parada para revisión.
 - 2026-10-25 · T77 · Sonido por habilidad (capa de firma y tono propio), impactos por daño, recoger y equipar por material, caída de conjuntos, pasos por suelo y sonidos de interfaz.
+- 2026-10-25 · T78 · Avisos de música (élite, botín, nivel y jefe) que bajan la música un momento, y paso a la fase del jefe a compás y sin intro.

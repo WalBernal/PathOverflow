@@ -197,6 +197,10 @@ var _combat_check := 0.0
 var _combat_calm := 0.0
 
 
+## Élites y jefes que ya se anunciaron con su aviso (por id; se vacía al cambiar de zona).
+var _sighted := {}
+
+
 func _update_combat_music(delta: float) -> void:
 	_combat_check -= delta
 	if _combat_check > 0.0:
@@ -212,6 +216,11 @@ func _update_combat_music(delta: float) -> void:
 		if enemies.positions[i].distance_to(pp) <= COMBAT_RANGE:
 			near += 1
 			strong = strong or enemies.rarities[i] >= Rarity.Enemy.ELITE
+			# Aviso al ver por primera vez un élite o un jefe (T78).
+			var sting := SoundMap.sighting_stinger(enemies.rarities[i])
+			if sting != "" and not _sighted.has(enemies.ids[i]):
+				_sighted[enemies.ids[i]] = true
+				SoundMap.stinger(sting)
 	if near >= COMBAT_ON or (strong and near >= COMBAT_ON / 2):
 		_combat_calm = COMBAT_CALM
 		MusicPlayer.set_combat(true)
@@ -310,6 +319,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 	zone.add_child(weather)
 	weather.setup(zone.style)
 	SoundMap.floor_style = zone.style   # pasos según el suelo (T77)
+	_sighted.clear()
 	post.attach(self, zone)   # el pixelado justo después de la zona; la luz, encima
 	post.set_style(zone.style)
 	zone.npc_interacted.connect(_on_npc_interacted)
@@ -1205,7 +1215,8 @@ func _on_mutex_broken() -> void:
 
 ## Los monstruos tienen el nivel de su zona; subir de nivel solo avisa.
 func _on_leveled_up(new_level: int) -> void:
-	Sfx.play("level_up")
+	if not SoundMap.stinger("level"):   # el aviso de música; sin música, el efecto de siempre
+		Sfx.play("level_up")
 	Barks.play("level", player_voice_pitch())
 	ui.hud.attention["passives"] = true   # punto nuevo: «!» en el botón P
 	if new_level == CharacterData.ASCENDANCY_LEVEL:

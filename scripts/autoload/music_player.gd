@@ -76,19 +76,46 @@ func play_zone(zone_id: String) -> void:
 	play_track(track)
 
 
-func play_track(id: String, fade := 2.0) -> void:
+## `on_beat` (T78): espera al siguiente tiempo de la pista que suena para cambiar
+## (el cambio cae a compás); `skip_intro`: la nueva entra ya en su bucle, con todas
+## sus capas (para las fases de jefe: sin esperar a que arranque la intro).
+func play_track(id: String, fade := 2.0, on_beat := false, skip_intro := false) -> void:
 	if id == _track and _wanted:
 		return
-	set_combat(false)   # la capa es de la pista anterior
+	if on_beat and _player.playing and _track != "":
+		var wait := beat_wait(_player.get_playback_position(), bpm_of(_track))
+		if wait > 0.02:
+			_track = id   # ya decidido: que otra llamada en la espera no lo repita
+			_wanted = true
+			var tw := create_tween()
+			tw.tween_interval(wait)
+			tw.tween_callback(func() -> void:
+				if _track == id:
+					_track = ""
+					play_track(id, fade, false, skip_intro))
+			return
+	set_combat(false)   # la capa es de la pista anterior (se apaga con su propio fundido)
 	_wanted = true
 	# La intro suena una vez; el bucle empieza donde acaba (music_loops.json, lo
 	# escribe tools/generate_zone_music.gd) y enlaza sin costura.
-	var stream := Sfx.load_looped(TRACK_DIR + id, int(_loop_starts().get(id, 0)), Sfx.MUSIC_RATE)
+	var loop_start := int(_loop_starts().get(id, 0))
+	var stream := Sfx.load_looped(TRACK_DIR + id, loop_start, Sfx.MUSIC_RATE)
 	if stream == null:
 		push_warning("Falta %s%s: genera la música con tools/generate_zone_music.gd" % [TRACK_DIR, id])
 		return
 	_track = id
-	_crossfade_to(stream, fade)
+	_crossfade_to(stream, fade, float(loop_start) / Sfx.MUSIC_RATE if skip_intro else 0.0)
+
+
+## Tempo de una pista (las de fase, el de su pista base: se aceleran con el tono).
+func bpm_of(id: String) -> float:
+	var tracks: Dictionary = GameData.music.get("tracks", {})
+	var base := id.trim_suffix(PHASE_SUFFIX).trim_suffix(COMBAT_SUFFIX)
+	return float(tracks.get(id, tracks.get(base, {})).get("bpm", 120.0))
+
+
+static func beat_wait(position: float, bpm: float) -> float:
+	return SoundMap.beat_wait(position, bpm)
 
 
 func _loop_starts() -> Dictionary:
@@ -115,7 +142,8 @@ func set_intensity(level: int) -> void:
 			elif Sfx.audio_path(TRACK_DIR + SUBBOSS_TRACK) != "":
 				want = SUBBOSS_TRACK
 		if want != _track:
-			play_track(want, 1.2)
+			# A compás y entrando ya en el bucle: la fase empieza sin corte ni intro (T78).
+			play_track(want, 1.6, true, level >= 1)
 	var pitch := 1.0 + 0.03 * clampi(level - 1, 0, 3)
 	if _pitch_tween:
 		_pitch_tween.kill()
@@ -156,6 +184,41 @@ func set_combat(on: bool) -> void:
 	_layer_tween.tween_property(_layer, "volume_db", _target_db() - 2.0, 1.2)
 
 
+## Avisos cortos (T78): "elite", "loot", "level" o "boss" (assets/audio/sfx/sting_<tipo>.wav).
+## Suenan con el volumen de la música y la bajan un momento para que se oigan. El
+## mismo aviso no se repite antes de STINGER_GAP s (el de jefe, siempre).
+const STINGER_GAP := 6.0
+const STINGER_DUCK_DB := 7.0
+var _sting: AudioStreamPlayer
+var _sting_last := {}
+
+
+func stinger(kind: String) -> bool:
+	if _player == null:
+		return false   # sin preparar (pruebas)
+	var now := Time.get_ticks_msec() / 1000.0
+	if kind != "boss" and now - float(_sting_last.get(kind, -100.0)) < STINGER_GAP:
+		return false
+	var stream := load(Sfx.SFX_DIR + "sting_" + kind + ".wav") as AudioStream if ResourceLoader.exists(Sfx.SFX_DIR + "sting_" + kind + ".wav") else null
+	if stream == null or _target_db() <= SILENT_DB:
+		return false
+	_sting_last[kind] = now
+	if _sting == null:
+		_sting = AudioStreamPlayer.new()
+		add_child(_sting)
+	_sting.stream = stream
+	_sting.volume_db = _target_db() + 3.0
+	_sting.play()
+	# Baja la música mientras suena el aviso y luego vuelve.
+	if _player.playing:
+		var length := stream.get_length()
+		var duck := create_tween()
+		duck.tween_property(_player, "volume_db", _target_db() - STINGER_DUCK_DB, 0.08)
+		duck.tween_interval(maxf(0.1, length - 0.5))
+		duck.tween_property(_player, "volume_db", _target_db(), 0.6)
+	return true
+
+
 ## Nombre de la capa que suena ahora ("" si ninguna), para pruebas y depuración.
 func combat_layer() -> String:
 	return _layer.stream.resource_path.get_file().get_basename() if combat and _layer.playing and _layer.stream else ""
@@ -171,7 +234,7 @@ func set_volume(value: float) -> void:
 	cfg.save(SETTINGS_PATH)
 
 
-func _crossfade_to(stream: AudioStream, fade: float) -> void:
+func _crossfade_to(stream: AudioStream, fade: float, from_position := 0.0) -> void:
 	if _tween:
 		_tween.kill()
 	var old := _player
@@ -180,7 +243,7 @@ func _crossfade_to(stream: AudioStream, fade: float) -> void:
 	_player.stream = stream
 	_player.pitch_scale = 1.0
 	_player.volume_db = SILENT_DB
-	_player.play()
+	_player.play(from_position)
 	_tween = create_tween().set_parallel(true)
 	_tween.tween_property(_player, "volume_db", _target_db(), fade)
 	if old.playing:

@@ -114,6 +114,30 @@ static func drop(item: Item) -> String:
 	return ""
 
 
+## Segundos hasta el próximo tiempo de una pista a `bpm` que va por `position` s (T78:
+## los cambios de pista caen a compás).
+static func beat_wait(position: float, bpm: float) -> float:
+	var beat := 60.0 / maxf(bpm, 1.0)
+	return beat - fmod(position, beat)
+
+
+## Aviso corto de música (T78): "elite", "loot", "level" o "boss". Sin el reproductor
+## de música (pruebas, herramientas) no hace nada y devuelve false.
+static func stinger(kind: String) -> bool:
+	var tree := Engine.get_main_loop() as SceneTree
+	var mp: Node = tree.root.get_node_or_null("MusicPlayer") if tree and tree.root else null
+	return bool(mp.call("stinger", kind)) if mp and mp.has_method("stinger") else false
+
+
+## ¿Este enemigo merece aviso al verlo por primera vez? Élites ("elite") y únicos ("boss").
+static func sighting_stinger(rarity: int) -> String:
+	if rarity == Rarity.Enemy.UNIQUE:
+		return "boss"
+	if rarity == Rarity.Enemy.ELITE:
+		return "elite"
+	return ""
+
+
 static func step(style: String) -> String:
 	return String(FLOORS.get(style, "step_stone"))
 

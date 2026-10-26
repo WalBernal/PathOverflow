@@ -149,6 +149,7 @@ func _initialize() -> void:
 	_test_pixel_icons()
 	_test_ui_identity()
 	_test_sound_map()
+	_test_stingers()
 	_test_events_music_colorblind()
 	_test_board_milestones()
 	_test_shaped_clusters()
@@ -3744,6 +3745,28 @@ func _test_sound_map() -> void:
 	_check(SoundMap.step("forest") == "step_dirt" and SoundMap.step("servers") == "step_metal" and SoundMap.step("catacombs") == "step_stone", "pasos según el suelo")
 	for name in ["ui_open", "ui_close", "ui_hover", "ui_buy", "ui_error", "set_drop", "step_stone", "step_dirt", "step_metal"]:
 		_check(exists.call(name), "existe %s" % name)
+
+
+## Música y avisos por intensidad (T78): avisos cortos y cambio de pista a compás.
+func _test_stingers() -> void:
+	for kind in ["elite", "loot", "level", "boss"]:
+		var path: String = Sfx.SFX_DIR + "sting_" + kind + ".wav"
+		_check(ResourceLoader.exists(path), "existe el aviso %s" % kind)
+		if ResourceLoader.exists(path):
+			var len_s := (load(path) as AudioStream).get_length()
+			_check(len_s > 0.3 and len_s < 2.5, "el aviso %s es corto (%.1f s)" % [kind, len_s])
+	_check(SoundMap.sighting_stinger(Rarity.Enemy.ELITE) == "elite" and SoundMap.sighting_stinger(Rarity.Enemy.UNIQUE) == "boss"
+		and SoundMap.sighting_stinger(Rarity.Enemy.NORMAL) == "" and SoundMap.sighting_stinger(Rarity.Enemy.SPECIAL) == "", "aviso al ver élites y jefes, no normales")
+	_check(not SoundMap.stinger("elite"), "sin reproductor de música (pruebas), el aviso no hace nada")
+	# A compás: a 120 bpm (medio segundo por tiempo).
+	_check(is_equal_approx(SoundMap.beat_wait(0.0, 120.0), 0.5) and is_equal_approx(SoundMap.beat_wait(1.2, 120.0), 0.3)
+		and SoundMap.beat_wait(7.49, 120.0) < 0.02, "el cambio de pista espera al siguiente tiempo")
+	for bpm in [84.0, 142.0]:
+		for pos in [0.1, 3.3, 10.0]:
+			var beat: float = 60.0 / bpm
+			var w := SoundMap.beat_wait(pos, bpm)
+			var off := fposmod(pos + w, beat)
+			_check(w > 0.0 and w <= beat + 0.0001 and minf(off, beat - off) < 0.001, "cae justo en un tiempo (%d bpm, %.1f s)" % [bpm, pos])
 
 
 ## Parte 2 (T72b): el ataque golpea en el cuadro de impacto de la animación.

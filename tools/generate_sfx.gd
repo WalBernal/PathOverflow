@@ -55,7 +55,21 @@ func _t77_sfx() -> Dictionary:
 	}
 
 
+## T78: avisos cortos de música (élite, botín bueno, subida de nivel y jefe). Con
+## `-- t78` solo se generan estos.
+func _t78_stingers() -> Dictionary:
+	return {"sting_elite": _sting_elite, "sting_loot": _sting_loot, "sting_level": _sting_level, "sting_boss": _sting_boss}
+
+
 func _initialize() -> void:
+	if OS.get_cmdline_user_args().has("t78"):
+		rng.seed = 7878
+		var t78 := _t78_stingers()
+		for name in t78:
+			_save(SFX_DIR + name + ".wav", t78[name].call(), 0.85)
+		print("Avisos de T78 generados: %d" % t78.size())
+		quit()
+		return
 	if OS.get_cmdline_user_args().has("t77"):
 		rng.seed = 7777
 		var t77 := _t77_sfx()
@@ -421,6 +435,70 @@ func _ui_error() -> PackedFloat32Array:
 		var t := float(i) / RATE
 		var on := 1.0 if fmod(t, 0.14) < 0.1 else 0.0
 		b[i] = _sq(t * 150.0) * 0.5 * on * _env(t, 0.002, 0.2)
+	return b
+
+
+# --- T78: avisos de música ---
+
+## Diente de sierra suavizado (metales graves).
+func _saw(phase: float) -> float:
+	return 2.0 * fmod(phase, 1.0) - 1.0
+
+
+## Élite: golpe de metales graves en segunda menor y un timbal.
+func _sting_elite() -> PackedFloat32Array:
+	var b := _buf(1.2)
+	var lp := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		var brass := (_saw(t * 110.0) + _saw(t * 116.5) + 0.5 * _saw(t * 55.0)) / 2.5
+		lp = _lp(lp, brass, 600.0 + 1400.0 * exp(-t / 0.15))
+		var timp := sin(TAU * (75.0 - 20.0 * t) * t) * _env(t, 0.002, 0.25)
+		b[i] = lp * _env(t, 0.01, 0.4) + timp * 0.8
+	return b
+
+
+## Botín bueno: destello que sube (arpegio mayor con séptima, campanas) y un brillo de ruido.
+func _sting_loot() -> PackedFloat32Array:
+	var b := _arpeggio([1046.0, 1318.0, 1568.0, 1976.0, 2093.0], 0.055, 0.25)
+	for i in mini(b.size(), int(0.5 * RATE)):
+		var t := float(i) / RATE
+		b[i] += _noise() * 0.08 * sin(PI * t / 0.5)
+	return b
+
+
+## Subida de nivel: fanfarria de cuadrada (do-mi-sol-do) que acaba en acorde.
+func _sting_level() -> PackedFloat32Array:
+	var b := _arpeggio([523.0, 659.0, 784.0], 0.09, 0.12, 1)
+	var start := int(0.27 * RATE)
+	var tail := _buf(0.9)
+	for i in tail.size():
+		var t := float(i) / RATE
+		tail[i] = (_sq(t * 523.0) * 0.25 + _sq(t * 659.0) * 0.2 + _sq(t * 784.0) * 0.2 + _sq(t * 1046.0) * 0.25) * _env(t, 0.005, 0.35)
+	b.resize(maxi(b.size(), start + tail.size()))
+	for i in tail.size():
+		b[start + i] += tail[i]
+	return b
+
+
+## Jefe: oleada de ruido que crece, acorde grave menor y dos golpes de timbal.
+func _sting_boss() -> PackedFloat32Array:
+	var b := _buf(2.2)
+	var lp := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		var swell := 0.0
+		if t < 0.6:
+			lp = _lp(lp, _noise(), 200.0 + 2000.0 * t)
+			swell = lp * (t / 0.6)
+		var h := maxf(0.0, t - 0.6)
+		var chord := (_saw(h * 82.4) + _saw(h * 98.0) + _saw(h * 123.5) + _saw(h * 41.2)) / 4.0 * _env(h, 0.01, 0.6) if t >= 0.6 else 0.0
+		var hit := 0.0
+		for at in [0.6, 1.0]:
+			if t >= at:
+				var u: float = t - at
+				hit += sin(TAU * (65.0 - 15.0 * u) * u) * _env(u, 0.002, 0.3)
+		b[i] = swell * 0.7 + chord * 0.8 + hit
 	return b
 
 
