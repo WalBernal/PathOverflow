@@ -87,6 +87,10 @@ func _run() -> void:
 		await _capture_windows_160(0.8)
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("arbol2"):
+		await _capture_tree_v2()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("poses"):
 		await _capture_poses()
 		get_tree().quit()
@@ -1145,6 +1149,28 @@ func _capture_player_states() -> void:
 	await _wait(0.4)
 	_save("24_congelado")
 	world.set("_since_save", -9999.0)
+
+
+## Árbol 2.0 (T88): la disposición de data/passive_tree_v2_layout.json en la vista del
+## árbol: entero, una región de cerca y el centro.
+func _capture_tree_v2() -> void:
+	var tree := PassiveTree.load_from_json("res://data/passive_tree_v2_layout.json")
+	var alloc := PassiveAllocation.new(tree, tree.get_start_node_for_class(&"guerrero"))
+	var view := PassiveTreeView.new()
+	view.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_swap(view)
+	await _wait(0.2)
+	view.setup(alloc)
+	var colors := {"guerrero": "c84b4b", "duelista": "d9a441", "exploradora": "5cb85c", "hacker": "b04ad9", "hechicero": "4fa3e0", "templario": "e8e0d0"}
+	var regions := {}
+	for cid in colors:
+		regions[tree.get_start_node_for_class(StringName(cid))] = Color(colors[cid])
+	view.region_colors = regions
+	for shot in [["88_arbol2_entero", Vector2.ZERO, 0.135], ["88_arbol2_region_guerrero", Vector2(0, -1900), 0.42], ["88_arbol2_centro", Vector2(0, 0), 0.5]]:
+		view.zoom = shot[2]
+		view.center_on(shot[1])
+		await _wait(0.4)
+		_save(shot[0])
 
 
 ## Poses del jugador (T72): cada estado en cuatro direcciones, con cada arma, a escala 3.

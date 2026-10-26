@@ -517,12 +517,13 @@ Punto de partida (árbol versión 7, `tools/generate_passive_tree.py`): 716 nodo
 
 ## Fase 15 — Árbol pasivo 2.0
 
-### [ ] T88 · Diseño del árbol 2.0 · M 🛑
+### [x] T88 · Diseño del árbol 2.0 · M 🛑
 Origen: R4 (pedido del usuario)
 - Documento `docs/arbol_2.md` con el objetivo y un boceto: **~1500 nodos** (unos 1300 menores, 150 notables, 20-24 piedras angulares, 25 maestrías), más del doble de clusters y con formas distintas (rueda, estrella, cadena, rombo, panal; pequeños de 3-4 nodos, medianos de 6-8, grandes de 10-14 con dos notables), regiones por clase más anchas con un «corazón» de su estilo, un anillo exterior de constelaciones y un centro de nodos de viaje.
 - Reparto de familias: cuántos clusters de cada una (las 28 de ahora más maná, más las nuevas que salgan), dónde caen respecto a las clases y qué notables tiene cada una (sin repetir nombre ni efecto).
 - Decidir el formato de ids estables (clave por cluster y posición, p. ej. `c_fuego_2:n3`) para que maestrías, identidad, planificador y guardados no dependan del orden de generación.
 - Captura del boceto (el generador nuevo en modo «solo disposición») para revisarlo antes de llenarlo.
+- Hecho: `docs/arbol_2.md` (cifras, estructura, formas, familias, maná, piedras angulares, ids estables, migración y cinco preguntas para decidir) y el prototipo `tools/generate_passive_tree_v2.py` → `data/passive_tree_v2_layout.json` (sin efectos; el juego no lo usa): 1540 nodos, 114 clusters (30 S, 54 M, 12 L, 6 XL, 6 piedras, 6 constelaciones), 126 notables y 18 huecos de maestría, todo conectado y sin nodos encimados; claves estables por nodo. Capturas con `capture_screens -- arbol2`. Pendiente para T89: bajar los nodos de viaje (687, demasiados) acercando anillos y sumando clusters pequeños.
 
 ### [ ] T89 · Generador del árbol 2.0 y migración · L (partir en dos)
 Origen: R4
@@ -723,3 +724,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T86 · Diez bases de nivel alto con implícito propio por tipo y ocho únicos cuya gracia es una mecánica, con su texto de humor.
 - 2026-10-25 · T87 · Crafteo con más decisiones: parche de rollback (quita un afijo), de optimización (sube un tier con riesgo de romperse) e historial de la mesa de Mario. Fin de la cola del Roadmap 3.0.
 - 2026-10-25 · Roadmap 4.0 (T88-T105): gráficos (interfaz, efectos, sprites y animación) y árbol pasivo 2.0 (~1500 nodos, más clusters por familia, familia de maná, piedras angulares nuevas, ids estables y migración).
+- 2026-10-25 · T88 · Diseño del árbol 2.0: documento docs/arbol_2.md y prototipo de disposición (1540 nodos, 114 clusters, claves estables). Parada para revisión.

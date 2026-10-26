@@ -159,6 +159,7 @@ func _initialize() -> void:
 	_test_tree_art()
 	_test_bases_and_unique_mechanics()
 	_test_crafting_decisions()
+	_test_tree_v2_layout()
 	_test_events_music_colorblind()
 	_test_story_editor()
 	_test_board_milestones()
@@ -4127,6 +4128,31 @@ func _test_crafting_decisions() -> void:
 	_check(log_entries.size() > 0 and log_entries.size() <= Crafting.LOG_MAX and String(log_entries[0]).contains("optimización"), "la mesa apunta lo que hizo (lo último primero)")
 	var saved := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())), _classes[0], _tree, _db)
 	_check(Crafting.history(saved).size() == log_entries.size(), "el historial se guarda con el personaje")
+
+
+## Árbol 2.0, diseño (T88): la disposición del prototipo se carga, está conectada y tiene claves únicas.
+func _test_tree_v2_layout() -> void:
+	var path := "res://data/passive_tree_v2_layout.json"
+	var data: Dictionary = DataLoader.load_json(path)
+	var keys := {}
+	for n in data.get("nodes", []):
+		keys[String(n.get("key", ""))] = true
+	_check(keys.size() == (data["nodes"] as Array).size() and not keys.has(""), "cada nodo del árbol 2.0 tiene su clave estable y única")
+	var tree := PassiveTree.load_from_json(path)
+	_check(tree.nodes.size() >= 1400 and tree.nodes.size() <= 1700, "el árbol 2.0 ronda los 1500 nodos (%d)" % tree.nodes.size())
+	var starts := tree.nodes.values().filter(func(n: PassiveNode) -> bool: return n.kind == PassiveNode.Kind.CLASS_START)
+	_check(starts.size() == 7, "siete inicios de clase")
+	var start := tree.get_start_node_for_class(&"full_stack")
+	var seen := {start: true}
+	var stack: Array = [start]
+	while not stack.is_empty():
+		var cur: int = stack.pop_back()
+		for nb in tree.neighbors(cur):
+			if not seen.has(nb):
+				seen[nb] = true
+				stack.append(nb)
+	_check(seen.size() == tree.nodes.size(), "todo el árbol 2.0 se alcanza desde el centro (%d de %d)" % [seen.size(), tree.nodes.size()])
+	_check((data["clusters"] as Array).size() >= 100, "más del doble de clusters (%d)" % (data["clusters"] as Array).size())
 
 
 ## Parte 2 (T72b): el ataque golpea en el cuadro de impacto de la animación.
