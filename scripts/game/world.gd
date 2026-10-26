@@ -359,6 +359,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 	zone.quest_item_picked.connect(_on_quest_item_picked)
 	zone.key_item_picked.connect(_on_key_item_picked)
 	zone.lore_picked.connect(_on_lore_picked)
+	zone.container_opened.connect(_on_container_opened)
 	zone.challenge_touched.connect(_on_challenge_touched)
 	zone.exit_blocked.connect(func(e: Dictionary) -> void: ui.hud.flash(zone.exit_blocked_reason(e), Color("e06c6c")))
 	zone.waypoint_clicked.connect(func() -> void: ui.open_waypoints(zone.id))
@@ -1307,6 +1308,16 @@ func _on_npc_interacted(npc: Dictionary) -> void:
 
 
 var _talking_npc := ""
+
+
+## Caja de servidor abierta (T104): 1-3 objetos y unos tokens que salen en arco de la caja.
+func _on_container_opened(c: Dictionary) -> void:
+	var at: Vector2 = c["pos"]
+	var count := 1 + randi() % 3
+	for k in count:
+		var spot := zone.free_spot_near(at + Vector2.from_angle(-PI / 2.0 + (k - (count - 1) / 2.0) * 0.9 + PI) * -90.0)
+		loot.drop_item(item_generator.roll_drop(enemies.area_level, 1.6), spot, at + Vector2(0, -24))
+	loot.drop_tokens(randi_range(3, 8) * maxi(1, enemies.area_level / 4), zone.free_spot_near(at + Vector2(0, 50)))
 
 
 ## Nacho saca otra caja: mercancía nueva, pagando.

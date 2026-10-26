@@ -175,6 +175,7 @@ func _initialize() -> void:
 	_test_enemy_sheet()
 	_test_player_sheet()
 	_test_npcs_and_boss_intro()
+	_test_ground_loot()
 	_test_events_music_colorblind()
 	_test_story_editor()
 	_test_board_milestones()
@@ -4242,6 +4243,26 @@ func _test_mana_family() -> void:
 		_check(int(found.get(s, 0)) >= 1, "el árbol tiene nodos de %s" % Stat.display_name(s))
 	var mana_clusters := _tree.clusters.values().filter(func(c: Dictionary) -> bool: return c["theme"] == "mana").size()
 	_check(mana_clusters >= 10, "la familia de maná tiene 10 clusters o más (%d)" % mana_clusters)
+
+
+## Objetos en el suelo y cofres (T104): vuelo en arco, rebote, etiqueta y tapa de la caja.
+func _test_ground_loot() -> void:
+	var from := Vector2(0, 0)
+	var to := Vector2(120, 40)
+	_check(LootManager.arc_pos(from, to, 0.0).is_equal_approx(from), "el objeto sale de donde cae")
+	var mid := LootManager.arc_pos(from, to, LootManager.FLY_TIME * 0.5)
+	_check(mid.y < from.lerp(to, 0.5).y - 30.0, "vuela en arco por encima de la línea recta")
+	_check(LootManager.arc_pos(from, to, LootManager.FLY_TIME).distance_to(to) < 0.5, "y aterriza en su sitio")
+	_check(LootManager.arc_pos(from, to, LootManager.FLY_TIME + 0.1).y < to.y, "rebota un poco al caer")
+	_check(LootManager.arc_pos(from, to, LootManager.FLY_TIME + 1.0).is_equal_approx(to), "y se queda quieto")
+	_check(LootManager.label_alpha(0.0) == 0.0 and LootManager.label_alpha(1.0) == 1.0, "la etiqueta aparece cuando ya ha caído")
+	var r := Rect2(100, 100, 80, 20)
+	_check(LootManager.icon_spot(r).y > r.end.y and is_equal_approx(LootManager.icon_spot(r).x, r.get_center().x), "el icono va debajo de la etiqueta")
+	_check(Zone.lid_open(0.0) == 0.0 and is_equal_approx(Zone.lid_open(Zone.CONTAINER_OPEN_TIME), 1.0), "la tapa de la caja se abre del todo")
+	var peak := 0.0
+	for k in 20:
+		peak = maxf(peak, Zone.lid_open(Zone.CONTAINER_OPEN_TIME * k / 20.0))
+	_check(peak >= 1.0, "y rebota un poco al abrirse")
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.

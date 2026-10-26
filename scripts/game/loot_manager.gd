@@ -53,11 +53,14 @@ func _visible(d: Dictionary) -> bool:
 	return show_all_held() or LootFilter.passes(d["item"])
 
 
-func drop_item(item: Item, pos: Vector2) -> void:
+## Suelta un objeto en `pos`. Con `from` (T104), sale volando en arco desde ahí (una caja,
+## un enemigo); si no, da un saltito en su sitio.
+func drop_item(item: Item, pos: Vector2, from := Vector2.INF) -> void:
 	var font := ThemeDB.fallback_font
 	var text := item.display_name()
 	var label_size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, Accessibility.world_size(FONT_SIZE)) + PADDING * 2.0
-	drops.append({"item": item, "rect": find_spot(pos, label_size), "text": text, "age": 0.0})
+	var rect := find_spot(pos, label_size)
+	drops.append({"item": item, "rect": rect, "text": text, "age": 0.0, "from": from if from != Vector2.INF else icon_spot(rect)})
 	# Botín bueno: haz de luz del color de la rareza y su propio sonido.
 	var special := SoundMap.drop(item)   # el único y el conjunto suenan distinto (T77)
 	if special != "":
@@ -108,6 +111,48 @@ func clear_all() -> void:
 	queue_redraw()
 
 
+## Objeto en el suelo (T104): su icono pequeño debajo de la etiqueta, con sombra, brillo
+## de su rareza y un vuelo en arco con rebote al caer.
+const ICON_SIZE := 26.0
+const FLY_TIME := 0.45
+const ARC_HEIGHT := 70.0
+
+
+## Dónde queda el icono de un objeto: justo debajo de su etiqueta.
+static func icon_spot(rect: Rect2) -> Vector2:
+	return rect.get_center() + Vector2(0, rect.size.y / 2.0 + ICON_SIZE * 0.5 + 2.0)
+
+
+## Posición del icono `age` segundos después de soltarse: vuela en arco de `from` a
+## `to` en FLY_TIME, y luego un rebote pequeño que se apaga.
+static func arc_pos(from: Vector2, to: Vector2, age: float) -> Vector2:
+	if age < FLY_TIME:
+		var t := age / FLY_TIME
+		var height := ARC_HEIGHT * (0.4 + 0.6 * clampf(from.distance_to(to) / 120.0, 0.0, 1.0))
+		return from.lerp(to, t) + Vector2(0, -height * 4.0 * t * (1.0 - t))
+	var b := age - FLY_TIME
+	return to + Vector2(0, -8.0 * absf(sin(b * 14.0)) * maxf(0.0, 1.0 - b / 0.35))
+
+
+## Opacidad de la etiqueta: aparece cuando el objeto ya ha caído.
+static func label_alpha(age: float) -> float:
+	return clampf((age - FLY_TIME * 0.8) / 0.2, 0.0, 1.0)
+
+
+func _draw_ground_icon(d: Dictionary, color: Color, filtered: bool) -> void:
+	var item: Item = d["item"]
+	var to := icon_spot(d["rect"])
+	var p := arc_pos(d.get("from", to), to, float(d.get("age", 9.0)))
+	var landed := float(d.get("age", 9.0)) >= FLY_TIME
+	draw_set_transform(to + Vector2(0, ICON_SIZE * 0.42), 0.0, Vector2(1.0, 0.35))
+	draw_circle(Vector2.ZERO, ICON_SIZE * (0.45 if landed else 0.3), Color(0, 0, 0, 0.35))
+	draw_set_transform(Vector2.ZERO)
+	if item.rarity >= Rarity.Item.MAGIC and not filtered:
+		var pulse := 0.75 + 0.25 * sin(Time.get_ticks_msec() / 400.0 + to.x)
+		draw_circle(p, ICON_SIZE * 0.75, Color(color, 0.12 * pulse * (1.0 + item.rarity * 0.3)))
+	ItemIcons.draw_item(self, Rect2(p - Vector2(ICON_SIZE, ICON_SIZE) / 2.0, Vector2(ICON_SIZE, ICON_SIZE)), item, Color(1, 1, 1, 0.55 if filtered else 1.0))
+
+
 func _draw() -> void:
 	var font := ThemeDB.fallback_font
 	var ascent := font.get_ascent(Accessibility.world_size(FONT_SIZE))
@@ -123,6 +168,11 @@ func _draw() -> void:
 		var filtered := not LootFilter.passes(item)   # solo se ve con Shift: atenuado
 		if filtered:
 			color = Color(color, 0.55)
+		_draw_ground_icon(d, color, filtered)
+		var alpha := label_alpha(float(d.get("age", 9.0)))
+		if alpha <= 0.0:
+			continue
+		color.a *= alpha
 		if not filtered and (LootFilter.beams(item) or item.rarity == Rarity.Item.UNIQUE or item.rarity == Rarity.Item.SET):
 			# Haz de luz: fuerte los primeros segundos, luego queda tenue (se ve de lejos).
 			var strength := 0.35 + 0.4 * clampf(1.0 - float(d.get("age", 0.0)) / 4.0, 0.0, 1.0)

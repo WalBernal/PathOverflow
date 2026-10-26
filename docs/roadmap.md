@@ -630,9 +630,10 @@ Origen: R4
 - Sprites propios para los NPC del campamento y los jefes (reposo animado y gesto al hablar), retratos de diálogo en pixel art y una entrada de jefe con su pose.
 - Hecho: los **NPC** del mundo se dibujan con el personaje por capas de T102 (`PlayerSprite`, uno por NPC detrás de su nombre y su «!»), cada uno **respirando** a su ritmo y **gesticulando** con los brazos mientras hablas con él (`Zone.npc_pose`, `Zone.talking_npc`, que pone World con el diálogo abierto); los de monitor siguen en su pantalla de fósforo. **Entrada de jefe** (`BossIntro`): la primera vez que ves a un jefe, una franja cruza la pantalla con su figura grande en su cuadro de embestida (la hoja de T101) y su nombre; entra, se queda 1,6 s y se va, sin pausar. Los jefes ya tienen sus cuadros propios con T101. Los **retratos de diálogo** siguen dibujados con detalle (expresiones, parpadeo y boca al hablar), como se decidió en T102, en vez de pasarlos a pixel art. Capturas con `capture_screens -- jefes`. Prueba `_test_npcs_and_boss_intro`.
 
-### [ ] T104 · Objetos en el suelo y cofres · S
+### [x] T104 · Objetos en el suelo y cofres · S
 Origen: R4
 - Cada objeto caído con su sprite (el icono en pequeño, con sombra y un rebote al caer) y brillo por rareza; cofres y contenedores que se abren con animación y sueltan el botín en arco.
+- Hecho: cada objeto en el suelo lleva su **icono** pequeño debajo de la etiqueta, con **sombra** y un **brillo** del color de su rareza (mágico en adelante, que late); al soltarse **vuela en arco** desde donde cae (`LootManager.drop_item(item, pos, from)`) o da un saltito en su sitio, **rebota** al aterrizar y su etiqueta aparece cuando ya está en el suelo (`LootManager.arc_pos`, `label_alpha`). **Cajas de servidor** nuevas en las zonas de combate (2-4 por zona, `Zone.containers`): se abren al acercarte con la tapa que se levanta y rebota (`Zone.lid_open`), un fogonazo y chispas, y sueltan 1-3 objetos en arco desde la caja y unos tokens (`World._on_container_opened`); abiertas quedan vacías. Prueba `_test_ground_loot`.
 
 ### [ ] T105 · Escenarios con tilesets · M
 Origen: R4
@@ -764,3 +765,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-26 · T102a · Personaje horneado por capas (cuerpo, pelo, barba, accesorio, arma) desde el dibujo de siempre, con cuadrícula documentada y composición teñida con los colores del creador (PlayerSprite).
 - 2026-10-26 · T102b · El jugador, el creador y la lista de personajes usan el personaje por capas; los retratos siguen dibujados (expresiones) (aprobado).
 - 2026-10-26 · T103 · NPC con el personaje por capas (respiran y gesticulan al hablar) y entrada de jefe con su figura y su nombre; retratos dibujados como se decidió en T102.
+- 2026-10-26 · T104 · Objetos en el suelo con icono, sombra, brillo de rareza y vuelo en arco con rebote; cajas de servidor que se abren y sueltan botín en arco.

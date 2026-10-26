@@ -247,6 +247,7 @@ func setup(p_def: Dictionary, p_player: Player, p_character: CharacterData, p_qu
 	_place_obstacles(rng)
 	_make_decals(rng)
 	_place_torches()
+	_place_containers()
 	_build_collision()
 	_ground_layer = Node2D.new()
 	_ground_layer.show_behind_parent = true
@@ -595,6 +596,87 @@ func _place_torches() -> void:
 		torches.append({"pos": p, "kind": look[0], "color": Color(look[1])})
 
 
+## Contenedores (T104): cajas de servidor que se abren al acercarte y sueltan botín
+## en arco (lo genera World con container_opened). {pos, opened, t (desde que se abrió), seed}
+signal container_opened(container: Dictionary)
+const CONTAINER_RADIUS := 56.0
+const CONTAINER_OPEN_TIME := 0.5
+var containers: Array[Dictionary] = []
+
+
+func _place_containers() -> void:
+	if safe:
+		return
+	var crng := RandomNumberGenerator.new()
+	crng.seed = hash(id) + 31
+	var wanted := clampi(int(rect.get_area() / 1200000.0), 2, 4)
+	var keys := key_points()
+	var path := _key_path(keys)
+	var inner := rect.grow(-140.0)
+	for attempt in wanted * 40:
+		if containers.size() >= wanted:
+			break
+		var p := Vector2(crng.randf_range(inner.position.x, inner.end.x), crng.randf_range(inner.position.y, inner.end.y))
+		if not _spot_is_free(p, 20.0, keys, path, 60.0):
+			continue
+		if containers.any(func(c: Dictionary) -> bool: return (c["pos"] as Vector2).distance_to(p) < 600.0):
+			continue
+		containers.append({"pos": p, "opened": false, "t": 0.0, "seed": crng.randi()})
+
+
+## Se abre el que tengas cerca (una vez) y avanza la animación de los ya abiertos.
+func _update_containers(delta: float) -> void:
+	for c in containers:
+		if c["opened"]:
+			c["t"] = float(c["t"]) + delta
+		elif player and player.global_position.distance_to(c["pos"]) < CONTAINER_RADIUS:
+			c["opened"] = true
+			c["t"] = 0.0
+			Sfx.play("ui_open", -6.0, 0.8)
+			container_opened.emit(c)
+
+
+## Cuánto se ha abierto la tapa (0..1) `t` segundos después de abrirse: rápido y con un rebote.
+static func lid_open(t: float) -> float:
+	var k := clampf(t / CONTAINER_OPEN_TIME, 0.0, 1.0)
+	return 1.0 - pow(1.0 - k, 3.0) + 0.12 * sin(k * PI) * (1.0 - k)
+
+
+## Caja de servidor: cuerpo con LEDs, tapa que se abre hacia atrás y, al abrirse,
+## un fogonazo de luz y chispas que salen.
+func _draw_container(c: Dictionary) -> void:
+	var p: Vector2 = c["pos"]
+	var body := Rect2(p + Vector2(-22, -24), Vector2(44, 24))
+	draw_set_transform(p + Vector2(0, 2), 0.0, Vector2(1.0, 0.35))
+	draw_circle(Vector2.ZERO, 26.0, Color(0, 0, 0, 0.35))
+	draw_set_transform(Vector2.ZERO)
+	draw_rect(body, Color("2a2e38"))
+	draw_rect(body, Color("14161c"), false, 2.0)
+	draw_rect(Rect2(body.position + Vector2(4, 6), Vector2(36, 3)), Color("1c1f26"))
+	for k in 3:
+		var on: bool = c["opened"] or sin(_time * 3.0 + k + float(c["seed"] % 7)) > 0.0
+		draw_rect(Rect2(body.position + Vector2(30 + k * 4, 14), Vector2(2, 2)), Color("3cff6a") if on else Color("1a3a1a"))
+	var open := lid_open(float(c["t"])) if c["opened"] else 0.0
+	# Tapa: gira sobre el borde de atrás (se ve aplastada al abrirse).
+	var hinge := body.position + Vector2(0, 0)
+	var lid_h := 8.0 * (1.0 - open) + 2.0
+	var lid := Rect2(hinge - Vector2(0, lid_h + open * 10.0), Vector2(44, lid_h))
+	draw_rect(lid, Color("3a4050").lightened(0.1 * open))
+	draw_rect(lid, Color("14161c"), false, 2.0)
+	if not c["opened"]:
+		draw_rect(Rect2(p + Vector2(-4, -27), Vector2(8, 4)), Color("d9a441"))   # cierre
+		return
+	var t := float(c["t"])
+	if t < 0.8:
+		var k := t / 0.8
+		draw_circle(p + Vector2(0, -26), 30.0 * (0.4 + k), Color(1.0, 0.85, 0.4, 0.35 * (1.0 - k)))
+		for s in 6:
+			var d := Vector2.from_angle(-PI / 2.0 + (s - 2.5) * 0.35)
+			draw_circle(p + Vector2(0, -24) + d * (10.0 + 60.0 * k), 2.0 * (1.0 - k) + 0.5, Color(1.0, 0.9, 0.5, 1.0 - k))
+	else:
+		draw_rect(Rect2(body.position + Vector2(4, 1), Vector2(36, 4)), Color("0c0e12"))   # ya vacía
+
+
 ## Puntos de luz fijos de la zona (para WorldPost): antorchas, hoguera del
 ## campamento, salidas y waypoint. {pos, radius, color, power}
 func light_points() -> Array[Dictionary]:
@@ -710,6 +792,7 @@ func _process(delta: float) -> void:
 	queue_redraw()
 	if player == null or not player.is_alive():
 		return
+	_update_containers(delta)
 	var near_exit := false
 	for e in exits:
 		if exit_visible(e) and player.global_position.distance_to(e["pos"]) < EXIT_RADIUS:
@@ -1193,6 +1276,9 @@ func _draw() -> void:
 	for t in torches:
 		if view.has_point(t["pos"]):
 			_draw_torch(t)
+	for c in containers:
+		if view.has_point(c["pos"]):
+			_draw_container(c)
 	if style == "camp":
 		_draw_campfire(rect.get_center() + Vector2(0, -20))
 	elif style == "terminal":
