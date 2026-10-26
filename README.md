@@ -378,6 +378,7 @@ El **registro de misiones** está debajo del minimapa (L para plegarlo): la prin
 
 ## Interfaz
 
+- **Animación de enemigos**: cada tipo tiene cuadros de andar, atacar (se echa atrás y embiste), recibir golpe y morir (se desploma), mirando abajo, arriba o de lado; el cuadro sale de lo que está haciendo. Hoja en `assets/sprites/enemies/enemies.png` (cuadrícula en `EnemySheet`, generada con `tools/generate_enemy_sprites.gd`; se puede sustituir por arte a mano con la misma cuadrícula).
 - **Ambiente de las zonas**: la lluvia de datos salpica en el suelo, hay polvo en suspensión en ruinas, catacumbas y fábricas, cables sueltos que chisporrotean en las zonas de servidores, LEDs que parpadean en los racks del borde y luces de la zona que se avivan con los golpes cercanos («Luces y clima reducidos» lo apaga).
 - **Estados y avisos**: llamas que suben, burbujas de veneno que revientan y gotas de sangrado sobre enemigos y jugador, escarcha que crece al helarte; los avisos de ataque en el suelo tienen un borde de trazos que gira, ondas que se cierran hacia donde cae el golpe y flechas que marcan la dirección de conos y cargas.
 - **Calidad gráfica** (Pausa → baja, media, alta): cuántas luces hay a la vez, ráfagas de partículas de GPU en explosiones y novas, bloom alrededor de las luces, distorsión de calor sobre el fuego (alta) y ondas de choque en los golpes grandes (media y alta).

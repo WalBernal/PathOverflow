@@ -242,8 +242,7 @@ func _draw_coffee(p: Vector2) -> void:
 
 
 func _draw_bug(b: Dictionary) -> void:
-	var frame := int(_time * 8.0) % 4
-	var region := Rect2(frame * 32, int(b["row"]) * 32, 32, 32)
+	var region := EnemySheet.region(int(b["row"]), EnemySheet.Dir.SIDE, EnemySheet.column_for("walk", _time))
 	var dest := Rect2(Vector2(b["x"], b["y"]) - Vector2(32, 32), Vector2(64, 64))
 	if b["dir"] < 0.0:
 		dest = Rect2(dest.position + Vector2(64, 0), Vector2(-64, 64))  # mirando a la izquierda

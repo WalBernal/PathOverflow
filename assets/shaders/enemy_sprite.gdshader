@@ -1,13 +1,13 @@
-// Enemigos dibujados con MultiMesh: un único atlas (columnas = fotogramas,
-// filas = tipos). Datos por instancia:
-//   INSTANCE_CUSTOM.x = fila del tipo, .y = desfase de animación,
+// Enemigos dibujados con MultiMesh: un único atlas (EnemySheet: columnas = cuadros
+// de andar, atacar, recibir golpe y morir; tres filas por tipo según hacia dónde
+// mira). Datos por instancia (T101: el cuadro lo elige EnemyManager según el estado):
+//   INSTANCE_CUSTOM.x = fila (tipo y dirección), .y = columna del cuadro,
 //   .z = 1 si mira a la izquierda, .w = destello al recibir daño (0..1);
-//   .w < 0 = cadáver (T73): quieto en el primer fotograma, oscuro, con alfa = -w.
+//   .w < 0 = cadáver (T73): oscuro, con alfa = -w (el cuadro, el de morir que toque).
 //   COLOR (color de instancia) = color de la rareza; alfa 0 = sin contorno.
 shader_type canvas_item;
 
-uniform vec2 grid = vec2(4.0, 5.0);
-uniform float fps = 7.0;
+uniform vec2 grid = vec2(18.0, 15.0);
 
 varying vec4 v_custom;
 varying vec4 v_rarity;
@@ -23,7 +23,7 @@ void fragment() {
 		uv.x = 1.0 - uv.x;
 	}
 	bool corpse = v_custom.w < 0.0;
-	float frame = corpse ? 0.0 : mod(floor(TIME * fps + v_custom.y), grid.x);
+	float frame = clamp(floor(v_custom.y + 0.5), 0.0, grid.x - 1.0);
 	vec2 cell_uv = (vec2(frame, v_custom.x) + uv) / grid;
 	vec4 c = texture(TEXTURE, cell_uv);
 

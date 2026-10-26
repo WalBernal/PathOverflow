@@ -172,6 +172,7 @@ func _initialize() -> void:
 	_test_graphics_quality()
 	_test_fx_art()
 	_test_ambience()
+	_test_enemy_sheet()
 	_test_events_music_colorblind()
 	_test_story_editor()
 	_test_board_milestones()
@@ -692,7 +693,8 @@ func _test_enemy_hit_one() -> void:
 	_check(em.is_in_safe_zone(Vector2(50, 0)) and not em.is_in_safe_zone(Vector2(150, 0)), "zona segura")
 	_check(EnemyManager.enemy_types().size() >= 5, "tipos de enemigo cargados")
 	var atlas := load("res://assets/sprites/enemies/enemies.png") as Texture2D
-	_check(atlas.get_height() / 32 >= EnemyManager.enemy_types().size(), "una fila del atlas por tipo")
+	_check(atlas.get_height() / EnemySheet.S >= EnemyManager.enemy_types().size() * EnemySheet.DIRS and atlas.get_width() == EnemySheet.S * EnemySheet.COLUMNS,
+		"tres filas del atlas por tipo (abajo, arriba, de lado) y 18 cuadros")
 	em.free()
 
 
@@ -4238,6 +4240,57 @@ func _test_mana_family() -> void:
 		_check(int(found.get(s, 0)) >= 1, "el árbol tiene nodos de %s" % Stat.display_name(s))
 	var mana_clusters := _tree.clusters.values().filter(func(c: Dictionary) -> bool: return c["theme"] == "mana").size()
 	_check(mana_clusters >= 10, "la familia de maná tiene 10 clusters o más (%d)" % mana_clusters)
+
+
+## Enemigos con más cuadros y direcciones (T101): la hoja y qué cuadro sale en cada estado.
+func _test_enemy_sheet() -> void:
+	_check(EnemySheet.WALK_FRAMES == 6 and EnemySheet.ATTACK_FRAMES == 4 and EnemySheet.HURT_FRAMES == 2 and EnemySheet.DIE_FRAMES == 6
+		and EnemySheet.DIE + EnemySheet.DIE_FRAMES == EnemySheet.COLUMNS, "andar 6, atacar 4, golpe 2 y morir 6: 18 cuadros seguidos")
+	_check(EnemySheet.row(3, EnemySheet.Dir.SIDE) == 11 and EnemySheet.region(3, EnemySheet.Dir.UP, 7) == Rect2(7 * 32, 10 * 32, 32, 32), "fila por tipo y dirección")
+	_check(EnemySheet.dir_for(Vector2(10, 2)) == EnemySheet.Dir.SIDE and EnemySheet.dir_for(Vector2(1, -10)) == EnemySheet.Dir.UP
+		and EnemySheet.dir_for(Vector2(1, 10)) == EnemySheet.Dir.DOWN and EnemySheet.dir_for(Vector2.ZERO) == EnemySheet.Dir.DOWN, "dirección según hacia dónde va")
+	var walk := {}
+	for k in 60:
+		walk[EnemySheet.column_for("walk", k / 60.0)] = true
+	_check(walk.size() == EnemySheet.WALK_FRAMES and walk.keys().all(func(c: int) -> bool: return c >= EnemySheet.WALK and c < EnemySheet.ATTACK),
+		"al andar pasa por sus 6 cuadros")
+	_check(EnemySheet.column_for("attack", 0.0) == EnemySheet.ATTACK and EnemySheet.column_for("attack", 0.99) == EnemySheet.ATTACK + 3, "el ataque va de la preparación al golpe")
+	_check(EnemySheet.column_for("hurt", 1.0) == EnemySheet.HURT and EnemySheet.column_for("hurt", 0.2) == EnemySheet.HURT + 1, "golpe recibido: dos cuadros")
+	_check(EnemySheet.column_for("die", 0.0) == EnemySheet.DIE and EnemySheet.column_for("die", 10.0) == EnemySheet.COLUMNS - 1, "al morir se queda en el último cuadro")
+	var idle := {}
+	for k in 40:
+		idle[EnemySheet.column_for("idle", k / 10.0)] = true
+	_check(idle.size() == 2, "quieto, respira con dos cuadros")
+	# El atlas tiene algo dibujado en cada celda de cada tipo.
+	var img := (load("res://assets/sprites/enemies/enemies.png") as Texture2D).get_image()
+	var empty := []
+	for type_row in EnemyManager.enemy_types().size():
+		for dir in EnemySheet.DIRS:
+			for col in [EnemySheet.WALK, EnemySheet.ATTACK + 2, EnemySheet.HURT, EnemySheet.COLUMNS - 1]:
+				var r := EnemySheet.region(type_row, dir, col)
+				var solid := false
+				for y in range(int(r.position.y), int(r.end.y), 2):
+					for x in range(int(r.position.x), int(r.end.x), 2):
+						if img.get_pixel(x, y).a > 0.9:
+							solid = true
+							break
+					if solid:
+						break
+				if not solid:
+					empty.append("%d/%d/%d" % [type_row, dir, col])
+	_check(empty.is_empty(), "todas las celdas tienen al enemigo dibujado: %s" % ", ".join(empty))
+	# EnemyManager elige el cuadro: quieto, andando y preparando un golpe.
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	em.spawn(Vector2.ZERO, Rarity.Enemy.NORMAL, em.type_index_of("bug"))
+	var still := em.sprite_frame(0, 0, 1.0)
+	_check(int(still.y) < 2, "quieto: cuadros de respirar")
+	em.positions[0] = Vector2(30, 0)
+	var walking := em.sprite_frame(0, 0, 1.0)
+	_check(int(walking.x) == EnemySheet.row(0, EnemySheet.Dir.SIDE), "andando hacia un lado: la fila de lado")
+	em.windups[0] = 0.4
+	_check(int(em.sprite_frame(0, 0, 1.0).y) in [EnemySheet.ATTACK, EnemySheet.ATTACK + 1], "preparando el golpe: cuadros de ataque")
+	em.free()
 
 
 ## Ambiente y clima por zona (T100): salpicaduras, polvo, chispas, LEDs y luces que reaccionan.

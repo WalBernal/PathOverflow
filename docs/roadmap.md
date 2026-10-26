@@ -612,9 +612,10 @@ Origen: R4
 
 ## Fase 18 — Sprites y animación
 
-### [ ] T101 · Enemigos con más cuadros y direcciones · M
+### [x] T101 · Enemigos con más cuadros y direcciones · M
 Origen: R4
 - Hojas de sprites por tipo con andar (6 cuadros), atacar (4), recibir golpe (2) y morir (6), mirando a los lados y hacia arriba/abajo; generadas por `tools/generate_enemy_sprites.gd` ampliado (o listas para arte a mano con la misma cuadrícula) y movidas por estado en `EnemyManager` (la `MultiMesh` elige el cuadro por instancia).
+- Hecho: nueva cuadrícula `EnemySheet`: 18 columnas (andar 6, atacar 4, golpe recibido 2, morir 6) y tres filas por tipo (abajo, arriba y de lado). `tools/generate_enemy_sprites.gd` dibuja las 4 poses base de cada tipo y de ahí saca cada estado (andar con saltito; atacar: se echa atrás, se encoge, embiste y vuelve; golpe: retrocede con un destello blanco; morir: se desploma, se ladea y se oscurece) y cada dirección (de espaldas más oscuro y sin brillos; de lado, en perfil). `EnemyManager.sprite_frame` elige fila y columna por instancia (preparando o embistiendo → atacar; recién golpeado → golpe; moviéndose → andar; quieto → respira), mirando al jugador si lo persigue o hacia donde va; el shader ya no anima por tiempo. Los cadáveres hacen la animación de morir y se quedan en el último cuadro (sin girarlos). Hoja de 576×2784. Prueba `_test_enemy_sheet`.
 
 ### [ ] T102 · Personaje del jugador en pixel art por capas · L (partir en dos) 🛑
 Origen: R4
@@ -755,3 +756,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T98 · Calidad gráfica baja/media/alta, ráfagas de partículas de GPU en explosiones y novas, bloom, distorsión de calor y ondas de choque en el shader de luz; medido en cada nivel.
 - 2026-10-25 · T99 · Estados con forma (llamas, burbujas que revientan, gotas) también en el jugador, escarcha que crece y avisos de ataque con borde de trazos que gira, ondas que se cierran y flechas.
 - 2026-10-25 · T100 · Ambiente por zona: salpicaduras de la lluvia de datos, polvo en suspensión, cables que chisporrotean, LEDs que parpadean en los racks y luces de zona que se avivan con los golpes.
+- 2026-10-25 · T101 · Enemigos con 18 cuadros (andar, atacar, golpe, morir) en tres direcciones, elegidos por estado en la MultiMesh; cadáveres con su animación de morir.

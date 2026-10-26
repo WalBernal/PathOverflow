@@ -295,7 +295,7 @@ func _ready() -> void:
 	_multimesh.mesh = quad
 	var sprite_material := ShaderMaterial.new()
 	sprite_material.shader = SPRITE_SHADER
-	sprite_material.set_shader_parameter("grid", Vector2(ATLAS_FRAMES, enemy_types().size()))
+	sprite_material.set_shader_parameter("grid", Vector2(EnemySheet.COLUMNS, enemy_types().size() * EnemySheet.DIRS))
 	# Los cadáveres, en su propia MultiMesh por debajo de los vivos (mismo atlas y shader).
 	_corpse_mm = MultiMesh.new()
 	_corpse_mm.transform_format = MultiMesh.TRANSFORM_2D
@@ -602,8 +602,7 @@ func boss_info() -> Dictionary:
 func sprite_region(i: int) -> Rect2:
 	var all_types := enemy_types()
 	var t: Dictionary = all_types[types[i]] if types[i] < all_types.size() else {}
-	var frame := ATLAS.get_size() / Vector2(ATLAS_FRAMES, maxi(1, all_types.size()))
-	return Rect2(Vector2(0.0, int(t.get("sprite_row", 0)) * frame.y), frame)
+	return EnemySheet.region(int(t.get("sprite_row", 0)), EnemySheet.Dir.DOWN, EnemySheet.WALK)
 
 
 func _update_phases(delta: float) -> void:
@@ -952,6 +951,7 @@ func clear_all() -> void:
 	pools.clear()
 	abilities.clear()
 	_cache_hit.clear()
+	_last_pos.clear()
 	casting.clear()
 	_flashes_fx.clear()
 	boss_phases.clear()
@@ -2180,6 +2180,7 @@ func _process(delta: float) -> void:
 		_multimesh.instance_count = maxi(n, _multimesh.instance_count * 2)
 	_multimesh.visible_instance_count = n
 	var all_types := enemy_types()
+	var now := Time.get_ticks_msec() / 1000.0
 	# Embestidas: van y vuelven (seno) y caducan.
 	for id in _lunges.keys():
 		_lunges[id]["t"] -= delta
@@ -2217,13 +2218,45 @@ func _process(delta: float) -> void:
 		var flash := flashes[i] / FLASH_TIME
 		if windups[i] > 0.0 and windups[i] < WINDUP_TELL:
 			flash = maxf(flash, 0.55)   # el aviso: ¡ahora viene!
-		_multimesh.set_instance_custom_data(i, Color(t.get("sprite_row", 0), phases[i], facings[i], Accessibility.flash(flash)))
+		var sheet := sprite_frame(i, int(t.get("sprite_row", 0)), now)
+		_multimesh.set_instance_custom_data(i, Color(sheet.x, sheet.y, facings[i], Accessibility.flash(flash)))
 	for id in _recoils.keys():
 		_recoils[id]["t"] -= delta
 		if _recoils[id]["t"] <= 0.0:
 			_recoils.erase(id)
 	_update_corpses(delta)
 	queue_redraw()
+
+
+## Último sitio de cada enemigo (por id) para saber si anda y hacia dónde (T101).
+var _last_pos: Dictionary = {}
+
+
+## Fila y columna de la hoja (EnemySheet) del enemigo `i` según su estado: embiste o
+## prepara el golpe (atacar), acaba de recibir uno (golpe), anda o está quieto; la
+## dirección, hacia el jugador si lo persigue o hacia donde se mueve.
+func sprite_frame(i: int, type_row: int, now: float) -> Vector2:
+	var id := ids[i]
+	var moved: Vector2 = positions[i] - (_last_pos.get(id, positions[i]) as Vector2)
+	_last_pos[id] = positions[i]
+	var look := moved
+	if windups[i] > 0.0 or dashes[i] > 0.0:
+		look = attack_dirs[i]
+	elif player != null and positions[i].distance_squared_to(player.global_position) < aggro_range * aggro_range:
+		look = player.global_position - positions[i]
+	var dir := EnemySheet.dir_for(look)
+	var column: int
+	if dashes[i] > 0.0 or (not _lunges.is_empty() and _lunges.has(id)):
+		column = EnemySheet.ATTACK + 2 + (1 if _lunges.has(id) and float(_lunges[id]["t"]) < LUNGE_TIME * 0.5 else 0)
+	elif windups[i] > 0.0:
+		column = EnemySheet.ATTACK + posmod(int(now * 6.0), 2)   # preparando: se echa atrás y se encoge
+	elif flashes[i] > 0.0:
+		column = EnemySheet.column_for("hurt", flashes[i] / FLASH_TIME)
+	elif moved.length_squared() > 0.04:
+		column = EnemySheet.column_for("walk", now, phases[i])
+	else:
+		column = EnemySheet.column_for("idle", now, phases[i])
+	return Vector2(EnemySheet.row(type_row, dir), column)
 
 
 ## Envejece los cadáveres y los pasa a su MultiMesh (tumbados, oscuros, desvaneciéndose).
@@ -2239,10 +2272,11 @@ func _update_corpses(delta: float) -> void:
 	for k in corpses.size():
 		var c: Dictionary = corpses[k]
 		var size: float = c["size"]
-		var side := -1.0 if bool(c["left"]) else 1.0
-		_corpse_mm.set_instance_transform_2d(k, Transform2D(side * PI * 0.5, Vector2(size, size * 0.9), 0.0, c["pos"] - Vector2(0.0, size * 0.12)))
+		# T101: el cadáver hace la animación de morir y se queda en su último cuadro.
+		var died := CORPSE_TIME - float(c["t"])
+		_corpse_mm.set_instance_transform_2d(k, Transform2D(0.0, Vector2(size, size), 0.0, c["pos"] - Vector2(0.0, size * 0.22)))
 		_corpse_mm.set_instance_color(k, Color(0, 0, 0, 0))
-		_corpse_mm.set_instance_custom_data(k, Color(c["row"], 0.0, 1.0 if bool(c["left"]) else 0.0, -corpse_alpha(float(c["t"]))))
+		_corpse_mm.set_instance_custom_data(k, Color(c["row"], EnemySheet.column_for("die", died), 1.0 if bool(c["left"]) else 0.0, -corpse_alpha(float(c["t"]))))
 
 
 ## Opacidad de un cadáver al que le quedan `t` segundos: entero y, al final, se desvanece.
@@ -3087,7 +3121,7 @@ func _death_feedback(i: int) -> void:
 	if leaves_corpse(kind, material):
 		var all_types := enemy_types()
 		var t: Dictionary = all_types[types[i]] if types[i] < all_types.size() else {}
-		corpses.append({"pos": positions[i], "row": float(t.get("sprite_row", 0)), "left": facings[i] > 0.5,
+		corpses.append({"pos": positions[i], "row": float(EnemySheet.row(int(t.get("sprite_row", 0)), EnemySheet.Dir.SIDE)), "left": facings[i] > 0.5,
 			"size": radii[i] * 2.0 * SPRITE_SCALE * float(t.get("scale", 1.0)), "t": CORPSE_TIME})
 		if corpses.size() > MAX_CORPSES:
 			corpses.pop_front()
@@ -3119,6 +3153,7 @@ func _remove(i: int) -> void:
 	abilities.erase(ids[i])
 	casting.erase(ids[i])
 	_cache_hit.erase(ids[i])
+	_last_pos.erase(ids[i])
 	if i != last:
 		ids[i] = ids[last]
 		positions[i] = positions[last]

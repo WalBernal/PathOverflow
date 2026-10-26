@@ -1,6 +1,8 @@
 extends SceneTree
 ## Genera assets/sprites/enemies/enemies.png: pixel art procedural de los
-## enemigos (4 fotogramas de animación por fila, 32×32 cada uno).
+## enemigos. Cada tipo se dibuja en 4 poses base y de ahí salen (T101, EnemySheet)
+## andar (6), atacar (4), recibir golpe (2) y morir (6), mirando abajo, arriba y
+## de lado: 18 columnas × 3 filas por tipo, celdas de 32×32.
 ##
 ## Uso:  Godot_v4.7.2-stable_win64_console.exe --headless --path . -s res://tools/generate_enemy_sprites.gd
 ##
@@ -23,18 +25,116 @@ func _initialize() -> void:
 	var rows: Array[Callable] = [_bug, _zombie_process, _memory_leak, _worm, _daemon, _spam_bot, _thread, _node_modules, _troll, _irq, _mutex, _wild_pointer, _twin_thread, _init_fork, _init_core,
 		_rootkit, _ghost_process, _bios_sentinel, _firmware_worm, _electromigration, _capacitor, _fw_update,
 		_beep_code, _jumper, _swollen_battery, _bad_sector, _option_rom, _watchdog, _admin]
-	img = Image.create_empty(S * FRAMES, S * rows.size(), false, Image.FORMAT_RGBA8)
-	img.fill(Color(0, 0, 0, 0))
+	var sheet := Image.create_empty(S * EnemySheet.COLUMNS, S * rows.size() * EnemySheet.DIRS, false, Image.FORMAT_RGBA8)
+	sheet.fill(Color(0, 0, 0, 0))
 	for row in rows.size():
+		# Las 4 poses base, cada una en su imagen (los dibujos usan img/ox/oy).
+		var base: Array[Image] = []
 		for f in FRAMES:
-			ox = f * S
-			oy = row * S
-			_ellipse(16, 29, 9, 2, SHADOW)
+			img = Image.create_empty(S, S, false, Image.FORMAT_RGBA8)
+			img.fill(Color(0, 0, 0, 0))
+			ox = 0
+			oy = 0
 			rows[row].call(f)
 			_outline()
-	img.save_png(ProjectSettings.globalize_path(OUT))
-	print("Escrito %s (%dx%d)" % [OUT, img.get_width(), img.get_height()])
+			base.append(img)
+		for dir in EnemySheet.DIRS:
+			var views: Array[Image] = []
+			for b in base:
+				views.append(_view(b, dir))
+			for col in EnemySheet.COLUMNS:
+				_compose(sheet, Vector2i(col * S, EnemySheet.row(row, dir) * S), views, dir, col)
+	sheet.save_png(ProjectSettings.globalize_path(OUT))
+	print("Escrito %s (%dx%d)" % [OUT, sheet.get_width(), sheet.get_height()])
 	quit()
+
+
+# --- Estados y direcciones a partir de las poses base (T101) ---
+
+const FEET := Vector2(16, 29)
+
+
+## La pose vista desde una dirección: abajo, tal cual; arriba, de espaldas (más
+## oscura y sin brillos, que suelen ser ojos y luces); de lado, algo estrecha.
+func _view(b: Image, dir: int) -> Image:
+	var out := Image.create_empty(S, S, false, Image.FORMAT_RGBA8)
+	out.fill(Color(0, 0, 0, 0))
+	for y in S:
+		for x in S:
+			var sx := x
+			if dir == EnemySheet.Dir.SIDE:
+				sx = int(round(16.0 + (x - 16.0) / 0.85)) - 1   # perfil: un 15 % más estrecho, adelantado
+			if sx < 0 or sx >= S:
+				continue
+			var c := b.get_pixel(sx, y)
+			if c.a <= 0.0:
+				continue
+			if dir == EnemySheet.Dir.UP and c != OUTLINE:
+				c = c.darkened(0.45 if c.v > 0.8 else 0.22)
+			out.set_pixel(x, y, c)
+	return out
+
+
+## Una celda: sombra en el suelo y la pose con su desplazamiento, escala, giro y tinte.
+func _compose(sheet: Image, at: Vector2i, views: Array[Image], dir: int, col: int) -> void:
+	var forward := Vector2(1, 0) if dir == EnemySheet.Dir.SIDE else (Vector2(0, -1) if dir == EnemySheet.Dir.UP else Vector2(0, 1))
+	var frame := 0
+	var offset := Vector2.ZERO
+	var scale := Vector2.ONE
+	var angle := 0.0
+	var tint := Color(0, 0, 0, 0)
+	var shadow_w := 9.0
+	if col < EnemySheet.ATTACK:   # andar: las 4 poses en bucle con un saltito
+		var k := col - EnemySheet.WALK
+		frame = k % FRAMES
+		offset.y = [0, -1, -2, -1, 0, -1][k]
+	elif col < EnemySheet.HURT:   # atacar: se echa atrás, se encoge, embiste y vuelve
+		var k := col - EnemySheet.ATTACK
+		frame = k % FRAMES
+		offset = forward * [-1.5, -2.5, 4.0, 1.0][k]
+		scale = [Vector2(1.04, 0.96), Vector2(1.1, 0.9), Vector2(0.92, 1.08), Vector2.ONE][k]
+		if dir == EnemySheet.Dir.SIDE and k == 2:
+			scale = Vector2(1.12, 0.94)
+	elif col < EnemySheet.DIE:    # golpe recibido: retrocede, blanco que se apaga
+		var k := col - EnemySheet.HURT
+		offset = -forward * [2.5, 1.0][k] + Vector2(0, -1)
+		tint = Color(1, 1, 1, [0.55, 0.25][k])
+	else:                          # morir: se desploma (se aplasta y se extiende), un poco ladeado, y se oscurece
+		var k := col - EnemySheet.DIE
+		var fall := k / float(EnemySheet.DIE_FRAMES - 1)
+		frame = mini(k, FRAMES - 1)
+		angle = -0.22 * sin(fall * PI)
+		scale = Vector2(1.0 + 0.3 * fall, 1.0 - 0.62 * fall)
+		tint = Color(0, 0, 0, k * 0.08)
+		shadow_w = 9.0 + fall * 4.0
+	# Sombra, dibujada directamente en la hoja.
+	for y in range(26, 32):
+		for x in S:
+			var dx := (x + 0.5 - 16.0) / shadow_w
+			var dy := (y + 0.5 - FEET.y) / 2.0
+			if dx * dx + dy * dy <= 1.0:
+				var p := at + Vector2i(x, y)
+				sheet.set_pixelv(p, sheet.get_pixelv(p).blend(SHADOW))
+	_blit(sheet, at, views[frame], offset, scale, angle, tint)
+
+
+## Copia `src` a la celda `at` transformada alrededor de los pies (muestreo inverso, sin suavizar).
+func _blit(sheet: Image, at: Vector2i, src: Image, offset: Vector2, scale: Vector2, angle: float, tint: Color) -> void:
+	for y in S:
+		for x in S:
+			var p := Vector2(x + 0.5, y + 0.5) - FEET - offset
+			p = p.rotated(-angle) / scale + FEET
+			var sx := int(floor(p.x))
+			var sy := int(floor(p.y))
+			if sx < 0 or sy < 0 or sx >= S or sy >= S:
+				continue
+			var c := src.get_pixel(sx, sy)
+			if c.a <= 0.0:
+				continue
+			if tint.a > 0.0:
+				c = Color(c.lerp(Color(tint.r, tint.g, tint.b), tint.a), c.a)
+			var q := at + Vector2i(x, y)
+			sheet.set_pixelv(q, sheet.get_pixelv(q).blend(c))
 
 
 # --- Primitivas (coordenadas locales al fotograma) ---
