@@ -16,14 +16,22 @@ const DANGER := Color("e06c6c")
 static func make_theme() -> Theme:
 	var theme := Theme.new()
 	theme.set_color("font_color", "Label", TEXT)
-	theme.set_stylebox("panel", "PanelContainer", panel_style())
+	theme.set_stylebox("panel", "PanelContainer", _piece("panel", 16, 16, panel_style()))
 
-	theme.set_stylebox("normal", "Button", _button_box(PANEL_LIGHT, BORDER, Color("100d14")))
-	theme.set_stylebox("hover", "Button", _button_box(Color("2e2836"), ACCENT.darkened(0.25), Color("100d14"), Color(ACCENT, 0.22)))
-	theme.set_stylebox("pressed", "Button", _button_box(Color("3a2f22"), ACCENT, Color("1a140c"), Color(0, 0, 0, 0), true))
-	theme.set_stylebox("disabled", "Button", _button_box(PANEL, Color("2a2530"), Color("100d14")))
+	# Botones (T95): piezas del atlas de interfaz; sin atlas, las cajas planas de antes.
+	theme.set_stylebox("normal", "Button", _piece("button_normal", 12, 6, _button_box(PANEL_LIGHT, BORDER, Color("100d14"))))
+	theme.set_stylebox("hover", "Button", _piece("button_hover", 12, 6, _button_box(Color("2e2836"), ACCENT.darkened(0.25), Color("100d14"), Color(ACCENT, 0.22))))
+	theme.set_stylebox("pressed", "Button", _pressed(_piece("button_pressed", 12, 6, _button_box(Color("3a2f22"), ACCENT, Color("1a140c"), Color(0, 0, 0, 0), true))))
+	theme.set_stylebox("disabled", "Button", _piece("button_disabled", 12, 6, _button_box(PANEL, Color("2a2530"), Color("100d14"))))
 	theme.set_stylebox("focus", "Button", _box(Color(0, 0, 0, 0), ACCENT.darkened(0.2), 1))
-	theme.set_stylebox("hover_pressed", "Button", _button_box(Color("3a2f22"), ACCENT.lightened(0.1), Color("1a140c"), Color(ACCENT, 0.25), true))
+	theme.set_stylebox("hover_pressed", "Button", _pressed(_piece("button_pressed", 12, 6, _button_box(Color("3a2f22"), ACCENT.lightened(0.1), Color("1a140c"), Color(ACCENT, 0.25), true))))
+	for state in ["tab_selected", "tab_hovered"]:
+		theme.set_stylebox(state, "TabBar", _piece("tab_active", 14, 6, _box(PANEL_LIGHT, ACCENT)))
+		theme.set_stylebox(state, "TabContainer", _piece("tab_active", 14, 6, _box(PANEL_LIGHT, ACCENT)))
+	theme.set_stylebox("tab_unselected", "TabBar", _piece("tab_inactive", 14, 6, _box(PANEL, BORDER)))
+	theme.set_stylebox("tab_unselected", "TabContainer", _piece("tab_inactive", 14, 6, _box(PANEL, BORDER)))
+	theme.set_stylebox("panel", "TabContainer", _piece("panel", 12, 10, panel_style()))
+	theme.set_stylebox("background", "ProgressBar", _piece("bar_frame", 3, 3, _box(Color("0a080c"), GOLD_DARK)))
 	theme.set_color("font_color", "Button", TEXT)
 	theme.set_color("font_hover_color", "Button", Color.WHITE)
 	theme.set_color("font_pressed_color", "Button", ACCENT)
@@ -31,7 +39,7 @@ static func make_theme() -> Theme:
 
 	var edit := _box(Color("0d0b10"), BORDER)
 	edit.set_corner_radius_all(6)
-	theme.set_stylebox("normal", "LineEdit", edit)
+	theme.set_stylebox("normal", "LineEdit", _piece("line_edit", 10, 6, edit))
 	theme.set_stylebox("focus", "LineEdit", _box(Color(0, 0, 0, 0), ACCENT, 1))
 	theme.set_color("font_color", "LineEdit", TEXT)
 	theme.set_color("font_placeholder_color", "LineEdit", Color("5a5363"))
@@ -54,10 +62,25 @@ static func make_theme() -> Theme:
 
 	var tip := _box(Color("0d0b10f5"), ACCENT.darkened(0.4))
 	tip.set_content_margin_all(10)
-	theme.set_stylebox("panel", "TooltipPanel", tip)
+	theme.set_stylebox("panel", "TooltipPanel", _piece("tooltip", 10, 10, tip))
 	theme.set_color("font_color", "TooltipLabel", TEXT)
 	theme.set_font_size("font_size", "TooltipLabel", 14)
 	return theme
+
+
+## Pieza del atlas de interfaz (T95) con sus márgenes de contenido; si no hay atlas,
+## `fallback` (la caja plana de siempre).
+static func _piece(piece: String, content_h: float, content_v: float, fallback: StyleBox) -> StyleBox:
+	var s := UiAtlas.box(piece, content_h, content_v)
+	return s if s != null else fallback
+
+
+## Botón pulsado: el texto 2 px más abajo (la tecla hundida).
+static func _pressed(s: StyleBox) -> StyleBox:
+	if s is StyleBoxTexture:
+		s.content_margin_top += 2.0
+		s.content_margin_bottom -= 2.0
+	return s
 
 
 static func panel_style() -> StyleBoxFlat:
@@ -100,8 +123,12 @@ const GOLD_DARK := Color("5a4426")
 const WINDOW_BG := Color("120f17")
 
 
-## Fondo de las ventanas: oscuro, con borde dorado doble y sombra.
-static func window_style() -> StyleBoxFlat:
+## Fondo de las ventanas: el marco de ventana del atlas (T95) o, sin atlas, oscuro
+## con borde dorado doble y sombra.
+static func window_style() -> StyleBox:
+	var piece := UiAtlas.box("window", 20, 16)
+	if piece != null:
+		return piece
 	var s := StyleBoxFlat.new()
 	s.bg_color = Color(WINDOW_BG, 0.97)
 	s.border_color = GOLD_DARK
@@ -136,7 +163,8 @@ static func decorate_window(panel: PanelContainer) -> void:
 		# Degradado cálido en la cabecera.
 		for k in 12:
 			panel.draw_rect(Rect2(4, 4 + k * 5, r.size.x - 8, 5), Color(0.55, 0.38, 0.15, 0.10 * (1.0 - k / 12.0)))
-		panel.draw_rect(r.grow(-6.0), Color(GOLD, 0.25), false, 1.0)
+		if UiAtlas.texture() == null:
+			panel.draw_rect(r.grow(-6.0), Color(GOLD, 0.25), false, 1.0)   # el marco del atlas ya trae su filete
 		# Remaches a lo largo de los bordes (T76): cabeza oscura con un brillo arriba a la izquierda.
 		for edge in [[Vector2(0, 7), Vector2(r.size.x, 7)], [Vector2(0, r.size.y - 7), Vector2(r.size.x, r.size.y - 7)],
 				[Vector2(7, 0), Vector2(7, r.size.y)], [Vector2(r.size.x - 7, 0), Vector2(r.size.x - 7, r.size.y)]]:

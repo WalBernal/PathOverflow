@@ -574,11 +574,12 @@ Origen: R4
 
 ## Fase 16 — Interfaz
 
-### [ ] T95 · Tema de interfaz dibujado · M 🛑
+### [x] T95 · Tema de interfaz dibujado · M 🛑
 Origen: R4
 - Atlas de piezas de interfaz en pixel art (marcos de ventana de 9 partes, botones normal/encima/pulsado/desactivado, casillas de objeto por rareza, barras, pestañas y separadores) generado por herramienta y cargado como `StyleBoxTexture` en `UiStyle`, en vez de cajas planas; listo para cambiar por arte a mano con la misma cuadrícula.
 - HUD nuevo con esas piezas: placa de la barra de habilidades, marcos de los orbes, pociones y experiencia.
 - Revisar todas las ventanas al 80-160 % con el tema nuevo.
+- Hecho: `tools/generate_ui_atlas.gd` genera `assets/sprites/ui/ui_atlas.png` (pixel art a 24 px por celda, ×2): marcos de ventana, panel, recuadro, tooltip, botón normal/encima/pulsado/desactivado, casillas por rareza (normal, mágico, raro, único), marco de barra, pestaña activa e inactiva, separador, placa de la barra de habilidades, marco de poción, campo de texto y, a resolución final debajo de la cuadrícula, el aro de los orbes (96 px). `UiAtlas` da cada pieza como `StyleBoxTexture` de 9 partes (márgenes de 12 px) y `UiStyle` la usa en el tema (botones, paneles, pestañas, tooltips, campos de texto, barras) y en las ventanas, con las cajas planas de antes si falta el PNG. HUD: placa de bronce de la barra, aros dorados en los orbes, marcos de pociones, casillas de habilidades y marco de la experiencia; las casillas de objeto llevan el marco de su rareza. Revisadas las ventanas al 80 y al 160 % (`ventanas80`, `ventanas160`). Prueba `_test_ui_atlas`.
 
 ### [ ] T96 · Pantallas de título, personajes y carga · M
 Origen: R4
@@ -741,4 +742,5 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-25 · T91 · Familia de maná: maná antes que vida, regeneración plana, maná al golpear y al matar, y 12 clusters de maná con 4 notables nuevos.
 - 2026-10-25 · T92 · 12 piedras angulares nuevas (23 en el árbol), siete con regla propia (Mente sobre Materia, Pago por Uso, Zero Trust, Caché Fría, Rate Limiting, Consistencia Eventual, Pato de Goma), condición de maná alto y aviso de choques en el tooltip; árbol versión 9.
 - 2026-10-25 · T93 · Maestrías sin opciones repetidas, bono por completar cada constelación y 18 ranuras de chip fijas (puertas y anillo B); los chips vuelven a la bolsa si cambia el árbol; árbol versión 10.
-- 2026-10-25 · T94 · Arte del árbol 2.0: fondo de estrellas y nebulosas con parallax, marcos de pixel art por tipo, flujo de luz en lo asignado, medallones de familia de lejos, minimapa y pulso por el camino al asignar (🛑 pendiente de revisión).
+- 2026-10-25 · T94 · Arte del árbol 2.0: fondo de estrellas y nebulosas con parallax, marcos de pixel art por tipo, flujo de luz en lo asignado, medallones de familia de lejos, minimapa y pulso por el camino al asignar (aprobado).
+- 2026-10-25 · T95 · Tema de interfaz dibujado: atlas de piezas en pixel art (ventanas, botones, casillas por rareza, pestañas, barras, aro de orbe) cargado como StyleBoxTexture en UiStyle y en el HUD (🛑 pendiente de revisión).

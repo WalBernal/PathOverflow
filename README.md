@@ -378,6 +378,7 @@ El **registro de misiones** está debajo del minimapa (L para plegarlo): la prin
 
 ## Interfaz
 
+- **Tema dibujado** (`assets/sprites/ui/ui_atlas.png`, generado con `tools/generate_ui_atlas.gd`; cuadrícula y piezas en `UiAtlas`): marcos de ventana, botones (normal, encima, pulsado, desactivado), casillas de objeto con el marco de su rareza, pestañas, barras, separador, tooltips y campos de texto en pixel art de 9 partes, y en el HUD la placa de bronce de la barra, los aros dorados de los orbes y los marcos de pociones, habilidades y experiencia. Para arte hecho a mano, sustituye el PNG con la misma cuadrícula (celdas de 48 px, bordes de 12 px); sin el PNG se usan las cajas planas de antes.
 - **Recuadros de lo activo** (sobre la barra de habilidades): esbirros, torretas, trampas, minas, giros y pociones de utilidad, con cuántos hay y el tiempo que les queda.
 - **Inventario y Habilidades** con marco de ventana (esquinas doradas, cabecera, botón de cerrar), siluetas en las ranuras vacías, zócalos DIMM y tarjetas de habilidad con nivel, experiencia y etiquetas.
 - **HUD**: orbes de vida/ES y maná, café y bebida energética con cargas (vapor y burbujas cuando están listas), barra de 6 habilidades con enfriamiento y coste, experiencia y botones de menú (C, I, K, P).

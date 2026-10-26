@@ -166,6 +166,7 @@ func _initialize() -> void:
 	_test_new_keystones()
 	_test_tree_extras()
 	_test_tree_art_v2()
+	_test_ui_atlas()
 	_test_events_music_colorblind()
 	_test_story_editor()
 	_test_board_milestones()
@@ -3759,9 +3760,9 @@ func _test_ui_identity() -> void:
 	_check(tiny.get_theme_font_size("font_size") >= UiStyle.MIN_FONT_SIZE, "ningún texto por debajo del mínimo legible")
 	tiny.free()
 	var theme := UiStyle.make_theme()
-	var normal := theme.get_stylebox("normal", "Button") as StyleBoxFlat
-	var pressed := theme.get_stylebox("pressed", "Button") as StyleBoxFlat
-	_check(pressed.content_margin_top > normal.content_margin_top and pressed.border_width_top > pressed.border_width_bottom, "el botón pulsado se hunde")
+	var normal := theme.get_stylebox("normal", "Button")
+	var pressed := theme.get_stylebox("pressed", "Button")
+	_check(pressed.content_margin_top > normal.content_margin_top, "el botón pulsado se hunde")   # con el atlas (T95), StyleBoxTexture
 	# Orbes: las burbujas están siempre dentro del líquido.
 	for t in [0.0, 1.3, 7.7]:
 		for b in UiStyle.orb_bubbles(t, 100.0, 178.0, 120.0, 78.0):
@@ -4232,6 +4233,35 @@ func _test_mana_family() -> void:
 		_check(int(found.get(s, 0)) >= 1, "el árbol tiene nodos de %s" % Stat.display_name(s))
 	var mana_clusters := _tree.clusters.values().filter(func(c: Dictionary) -> bool: return c["theme"] == "mana").size()
 	_check(mana_clusters >= 10, "la familia de maná tiene 10 clusters o más (%d)" % mana_clusters)
+
+
+## Tema de interfaz dibujado (T95): atlas de piezas de 9 partes cargado en UiStyle.
+func _test_ui_atlas() -> void:
+	var tex := UiAtlas.texture()
+	_check(tex != null, "el atlas de interfaz está generado (%s)" % UiAtlas.PATH)
+	if tex == null:
+		return
+	_check(tex.get_width() == UiAtlas.CELL * UiAtlas.COLUMNS and tex.get_height() == UiAtlas.CELL * (UiAtlas.ROWS + UiAtlas.BIG_ROWS), "el atlas tiene la cuadrícula de UiAtlas")
+	_check(UiAtlas.region("orb_frame").size == Vector2(96, 96) and Rect2(Vector2.ZERO, tex.get_size()).encloses(UiAtlas.region("orb_frame")),
+		"el aro de los orbes es una pieza grande dentro del atlas")
+	var cells := {}
+	for piece in UiAtlas.PIECES:
+		var cell: Vector2i = UiAtlas.PIECES[piece]
+		_check(not cells.has(cell) and cell.x < UiAtlas.COLUMNS and cell.y < UiAtlas.ROWS, "%s tiene su celda propia" % piece)
+		cells[cell] = true
+	for piece in ["window", "panel", "button_normal", "button_hover", "button_pressed", "button_disabled", "slot_normal", "slot_magic",
+			"slot_rare", "slot_unique", "bar_frame", "tab_active", "tab_inactive", "separator", "hotbar_plate", "flask_frame"]:
+		_check(UiAtlas.PIECES.has(piece), "pieza de interfaz: %s" % piece)
+	var box := UiAtlas.box("window", 20, 16)
+	_check(box is StyleBoxTexture and box.texture_margin_left == UiAtlas.MARGIN and box.content_margin_left == 20.0, "marco de ventana de 9 partes con sus márgenes")
+	var theme := UiStyle.make_theme()
+	_check(theme.get_stylebox("normal", "Button") is StyleBoxTexture and theme.get_stylebox("panel", "TooltipPanel") is StyleBoxTexture,
+		"botones y tooltips usan las piezas del atlas")
+	var pressed := theme.get_stylebox("pressed", "Button")
+	_check(pressed.content_margin_top > theme.get_stylebox("normal", "Button").content_margin_top, "el botón pulsado baja el texto")
+	_check(UiStyle.window_style() is StyleBoxTexture, "las ventanas usan el marco del atlas")
+	_check(UiAtlas.slot_piece(Rarity.Item.MAGIC) == "slot_magic" and UiAtlas.slot_piece(Rarity.Item.ULTRA_RARE) == "slot_unique", "casilla según la rareza")
+	_check(UiAtlas.box("no_existe") == null, "una pieza desconocida no rompe nada")
 
 
 ## Arte del árbol 2.0 (T94): parallax, marcos, minimapa y el pulso por el camino.

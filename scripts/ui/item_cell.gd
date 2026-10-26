@@ -101,6 +101,8 @@ func _draw() -> void:
 	draw_line(Vector2(1, 1), Vector2(size.x - 1, 1), Color(1, 1, 1, 0.06), 1.0)
 	draw_line(Vector2(1, 1), Vector2(1, size.y - 1), Color(1, 1, 1, 0.06), 1.0)
 	draw_line(Vector2(1, size.y - 1), Vector2(size.x - 1, size.y - 1), Color(0, 0, 0, 0.5), 1.0)
+	# Casilla del atlas de interfaz (T95), con el borde del color de la rareza del objeto.
+	UiAtlas.draw(self, UiAtlas.slot_piece(item.rarity) if item != null else "slot_normal", rect)
 	if item == null:
 		if dimm_socket:
 			_draw_dimm_socket(rect)

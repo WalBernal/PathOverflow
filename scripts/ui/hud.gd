@@ -360,6 +360,7 @@ func _draw() -> void:
 	# Experiencia.
 	var xp := _xp_rect()
 	var progress := float(character.experience) / float(character.experience_to_next())
+	UiAtlas.draw(self, "bar_frame", xp.grow(4.0))   # marco del atlas (T95)
 	draw_rect(xp, Color(0, 0, 0, 0.75))
 	draw_rect(Rect2(xp.position, Vector2(xp.size.x * progress, xp.size.y)), XP_COLOR)
 	for k in range(1, 10):
@@ -753,7 +754,11 @@ func _draw_status_boxes(font: Font) -> void:
 func _draw_plate() -> void:
 	var plate := _plate_rect()
 	draw_rect(plate, Color(PLATE, 0.96))
-	draw_line(plate.position, Vector2(plate.end.x, plate.position.y), TRIM, 2.0)
+	# Placa de bronce del atlas de interfaz (T95), si está; si no, el filo dorado de antes.
+	if UiAtlas.texture() != null:
+		UiAtlas.draw(self, "hotbar_plate", Rect2(plate.position, Vector2(plate.size.x, size.y - plate.position.y + 12.0)))
+	else:
+		draw_line(plate.position, Vector2(plate.end.x, plate.position.y), TRIM, 2.0)
 	# Remates que unen la placa con los orbes.
 	for side in [-1.0, 1.0]:
 		var x: float = plate.position.x if side < 0.0 else plate.end.x
@@ -766,6 +771,7 @@ func _draw_flask(i: int, font: Font) -> void:
 	var r := _flask_rect(i)
 	var f := player.flask_at(i)
 	draw_rect(r, Color(0, 0, 0, 0.55))
+	UiAtlas.draw(self, "flask_frame", r.grow(3.0))   # marco del atlas (T95)
 	if f == null:
 		draw_rect(r, TRIM.darkened(0.6), false, 1.0)
 		draw_string(font, r.position + Vector2(4.0, r.size.y - 4.0), str(i + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, MUTED)
@@ -820,9 +826,12 @@ func _status_icon(r: Rect2, id: String) -> void:
 
 func _draw_skill_slot(i: int, font: Font) -> void:
 	var r := _slot_rect(i)
-	# Marco: hueco hundido con borde dorado (como las ranuras de PoE).
+	# Marco: hueco hundido con borde dorado (como las ranuras de PoE); con el atlas, su casilla.
 	draw_rect(r.grow(3.0), Color(0, 0, 0, 0.75))
-	draw_rect(r.grow(3.0), TRIM.darkened(0.45), false, 1.0)
+	if UiAtlas.texture() != null:
+		UiAtlas.draw(self, "slot_normal", r.grow(5.0))
+	else:
+		draw_rect(r.grow(3.0), TRIM.darkened(0.45), false, 1.0)
 	draw_rect(r, Color(0, 0, 0, 0.7))
 	var board: Motherboard = character.inventory.boards[i]
 	var key_color := TEXT_COLOR
@@ -977,6 +986,8 @@ func _draw_orb(center: Vector2, fill: float, color: Color, reserved := 0.0) -> v
 			var pts := _clip_to_circle(a, b, center, ORB_RADIUS - 1.0)
 			if pts.size() == 2:
 				draw_line(pts[0], pts[1], Color(0.6, 0.8, 1.0, 0.12), 2.0)
+	# Aro dorado del atlas (T95) alrededor del orbe.
+	UiAtlas.draw_orb_frame(self, center, ORB_RADIUS)
 
 
 ## Texto centrado en 160 px con la fuente de píxeles a doble tamaño y sombra.
