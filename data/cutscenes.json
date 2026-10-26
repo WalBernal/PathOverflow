@@ -6,12 +6,12 @@
       "steps": [
         {
           "effect": "shake",
-          "strength": 1.0,
+          "strength": 1,
           "time": 0.2
         },
         {
           "effect": "glitch",
-          "strength": 1.0,
+          "strength": 1,
           "time": 0.9
         },
         {
@@ -361,7 +361,7 @@
         },
         {
           "effect": "blackout",
-          "time": 2.0
+          "time": 2
         },
         {
           "name": "Sistema",
@@ -370,7 +370,7 @@
         },
         {
           "effect": "fade_in",
-          "time": 1.0
+          "time": 1
         },
         {
           "speaker": "clara",
@@ -424,7 +424,7 @@
         },
         {
           "speaker": "player",
-          "text": "Vengo por mi constancia de servicio social. Hice mis 480 horas: seis meses pelando cables UTP, cambiando HDMI y limpiando las computadoras de la sala de cómputo B, bajo las órdenes del Inge Pepe. Si no tengo el sello, Servicios Escolares me anula la titulación."
+          "text": "Vengo por mi constancia de servicio social. Hice mis 480 horas: seis meses pelando cables UTP, cambiando HDMI y limpiando las computadoras del centro de cómputo, bajo las órdenes del Inge Pepe. Si no tengo el sello, Servicios Escolares me anula la titulación."
         },
         {
           "name": "",
@@ -455,13 +455,13 @@
       "steps": [
         {
           "effect": "lights_flicker",
-          "time": 1.0,
-          "strength": 1.0
+          "time": 1,
+          "strength": 1
         },
         {
           "effect": "fans",
           "time": 0.8,
-          "strength": 1.0
+          "strength": 1
         },
         {
           "effect": "shake",
@@ -471,7 +471,7 @@
         {
           "effect": "rafa_stands",
           "time": 0.4,
-          "strength": 1.0
+          "strength": 1
         },
         {
           "speaker": "root",
@@ -479,7 +479,7 @@
         },
         {
           "speaker": "root",
-          "text": "Si la plataforma no sube en media hora..... el Rector va a bajar personalmente a ver qué pasa..... Y no tengo ni el diagrama de red....."
+          "text": "Si la plataforma no sube en media hora..... el Rector va a venir personalmente a ver qué pasa..... Y no tengo ni el diagrama de red....."
         },
         {
           "speaker": "root",
@@ -492,7 +492,7 @@
         },
         {
           "speaker": "root",
-          "text": "Hagamos un trato..... El sistema no me deja emitirte la constancia..... la tabla está bloqueada por transacciones huérfanas....."
+          "text": "Hagamos un trato..... El sistema está caído y no me deja emitirte una constancia..... parece que la tabla está bloqueada por transacciones huérfanas....."
         },
         {
           "speaker": "root",
@@ -527,11 +527,11 @@
         {
           "name": "",
           "style": "system",
-          "text": "La TV del pasillo repite en bucle: «Ingeniería de Software: ¡inscríbete!» y «Hackatón LinceCode 2026». En letras chiquitas: «Premio: experiencia comprobable»."
+          "text": "La TV del pasillo repite en bucle: «Ingeniería de Software: ¡inscríbete!» y «Hackatón LinceCode 2026». En letras chiquitas: «Premio: 120 ADIS y una constancia con valor curricular.»."
         },
         {
           "speaker": "player",
-          "text": "Experiencia comprobable... Si la hubiera tenido, no estaría aquí."
+          "text": "Constancia con valor curricular... eso me serviría ahora mismo."
         }
       ]
     },
@@ -539,7 +539,7 @@
       "steps": [
         {
           "speaker": "kevin",
-          "text": "Profe Rafa, ¿va a querer churr...?"
+          "text": "Profe Rafa, ¿va a querer churros...?"
         },
         {
           "effect": "glitch",
@@ -567,16 +567,16 @@
         {
           "name": "",
           "style": "system",
-          "text": "Apartas una maraña de cables de corriente puenteados... y ahí está: una carpeta lila."
+          "text": "Jalas una maraña de cables de corriente puenteados... y ahí está: una carpeta lila."
         },
         {
           "effect": "shock",
           "time": 0.7,
-          "strength": 1.0
+          "strength": 1
         },
         {
           "speaker": "root",
-          "text": "¡NO JALES ESO.....!"
+          "text": "¡NO JALES ESO!..."
         }
       ]
     },
@@ -612,7 +612,7 @@
         {
           "effect": "glitch",
           "time": 0.6,
-          "strength": 1.0
+          "strength": 1
         },
         {
           "name": "",
@@ -668,7 +668,7 @@
         {
           "effect": "shake",
           "time": 0.3,
-          "strength": 1.0
+          "strength": 1
         },
         {
           "effect": "glitch",

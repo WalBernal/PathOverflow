@@ -14,7 +14,7 @@
       },
       "voice": {
         "pitch": 0.9,
-        "rate": 1.0,
+        "rate": 1,
         "gender": "female"
       },
       "color": "b08ad9"
@@ -220,8 +220,8 @@
         "hair": 10,
         "beard": 2,
         "accessory": 1,
-        "height": 1.0,
-        "smile": 1.0,
+        "height": 1,
+        "smile": 1,
         "skin_tone": "c8967a",
         "hair_color": "241c16",
         "beard_color": "4e4842",
@@ -238,7 +238,7 @@
       }
     },
     "eugenio": {
-      "name": "Eugenio, catador oficial",
+      "name": "Eugenio, soltero codiciado",
       "dialogue": "eugenio",
       "color": "d9a441",
       "appearance": {
@@ -246,7 +246,7 @@
         "hair": 1,
         "beard": 0,
         "accessory": 1,
-        "height": 1.0,
+        "height": 1,
         "skin_tone": "e0ac8a",
         "hair_color": "0f0d0c",
         "eye_color": "6b4423",
@@ -309,7 +309,7 @@
       ],
       "nodes": {
         "hola": {
-          "text": "¡Pásale, pásale! Nacho, revendedor de hardware de segunda mano. Placas base, RAM, todo probado... bueno, todo encendió una vez. Se paga en tokens, nada de exposición ni de «te lo pago con visibilidad».",
+          "text": "¡Pásale, pásale! Soy Nacho, revendedor de hardware de segunda mano. Placas base, RAM, todo probado... bueno, todo encendió una vez. Se paga en tokens, nada de fiado ni de «te lo pago cuando caiga la quincena».",
           "options": [
             {
               "text": "Muéstrame lo que tienes.",
@@ -332,7 +332,7 @@
           ]
         },
         "tokens": {
-          "text": "Los bugs los sueltan al morir, como dos de cada cinco. Nadie sabe por qué. Unos dicen que son restos de una API de pago que nadie dio de baja. Yo digo que no hagas preguntas y los recojas: se te pegan solos si pasas cerca.",
+          "text": "Los bugs los sueltan al morir. Nadie sabe por qué. Unos dicen que son restos de una API de pago que nadie dio de baja. Yo digo que no hagas preguntas y los recojas: se te pegan solos si pasas cerca.",
           "options": [
             {
               "text": "Muéstrame lo que tienes.",
@@ -348,7 +348,8 @@
         },
         "origen": {
           "text": "De servidores dados de baja, de mudanzas de oficina, de la bodega de El Pepe cuando no mira... Lo que no se vende lo compro barato: si me traes algo que no uses, te lo pago. Poco, pero te lo pago.",
-          "next": "origen2"
+          "next": "origen2",
+          "options": []
         },
         "origen2": {
           "text": "Una vez le compré a El Pepe una caja entera de discos duros. Todos tenían la misma etiqueta: «NO FORMATEAR. NUNCA». Los vendí en una semana. A veces me pregunto qué tenían. Luego me acuerdo de que ya cobré y se me pasa.",
@@ -370,11 +371,12 @@
     "ada": {
       "start": "hola",
       "greeting_again": [
-        "Volviste. Bien: los que vuelven son los que aprenden. Los otros son estadísticas.",
-        "Ah, eres tú. Pensé que era otro ticket."
+        "Volviste. Bien: los que vuelven son los que aprenden. Los otros, a recursar.",
+        "Ah, eres tú. ¿Cómo vas?.",
+        "La coordinadora no está... Ah, eres tú. Si está."
       ],
       "menu": [
-        "¿Algo más? El servidor no se va a arreglar solo.",
+        "¿Algo más?. El servidor no se arreglará solo.",
         "Dime. Tengo cinco minutos antes de la siguiente emergencia.",
         "¿Qué más necesitas saber?"
       ],
@@ -383,7 +385,7 @@
         "oleadas": {"text": "El banco de oleadas lo armé con lo que sobró de las pruebas de estrés. Te mando a una zona vacía y le suelto tráfico hasta que algo se rompa: tú o el servidor. Cada cinco oleadas sale un jefe. Anoto quién aguanta más, mijo; la tabla está aquí pegada.", "options": [{"text": "Mándame al banco.", "next": "", "action": {"type": "open_waves"}}, {"text": "Enséñame la tabla de récords.", "next": "", "action": {"type": "open_ladder"}}, {"text": "Hoy no.", "next": "hola"}]},
         "incidente": {"text": "Siempre hay un incidente abierto, mijo. Te mando a una zona que ya conoces, pero con todo lo que puede salir mal: más enemigos, que explotan, que no regeneres... Lo que caiga allí es mejor. Para volver, el portal te trae de regreso.", "options": [{"text": "Abre el atlas (mapas y progreso).", "next": "", "action": {"type": "open_atlas"}}, {"text": "Mándame a uno al azar.", "next": "", "action": {"type": "open_incident"}}, {"text": "Hoy no.", "next": "hola"}]},
         "hola": {
-          "text": "Vaya, un recién egresado. Te tiraron a producción sin pasar por staging, ¿eh? Soy Aida. Llevo aquí desde que El Pepe programaba todo en COBOL.",
+          "text": "Vaya, un recién egresado. Debes ser de la generación de Ojeda, ¿no?. Soy Aida. Llevo aquí desde que El Pepe era jefe de informática, y aún seprogramaba todo en COBOL.",
           "options": [
             {
               "text": "¿Quién era El Pepe?",
@@ -423,8 +425,9 @@
           ]
         },
         "lugar": {
-          "text": "En el Campamento del Último Commit. Ahí afuera está el Servidor Caído: bugs, procesos zombi, memory leaks... todo lo que alguien prometió arreglar «en el siguiente sprint». Aquí no entran: el firewall del campamento todavía aguanta.",
-          "next": "lugar2"
+          "text": "En el Campamento del Último Commit. Ahí afuera está el Servidor Caído: bugs, procesos zombi, memory leaks... todo lo que alguien prometió arreglar en \"el siguiente sprint\". Aquí no entran: el firewall del campamento todavía aguanta.",
+          "next": "lugar2",
+          "options": []
         },
         "lugar2": {
           "text": "Lo levantamos Rafa, Mario y yo con lo que quedó de la red de la oficina. Un switch, tres cables y mucha fe. El fuego es de verdad: lo prendimos con los manuales de usuario. Por fin sirvieron para algo.",
@@ -437,7 +440,8 @@
         },
         "habilidades": {
           "text": "Tus habilidades son placas base. Cada placa tiene ranuras DIMM: DDR3, DDR4 o DDR5. Mete módulos RAM de la misma generación y la habilidad mejora. Más RAM, más consumo de maná. Como todo en la vida.",
-          "next": "habilidades2"
+          "next": "habilidades2",
+          "options": []
         },
         "habilidades2": {
           "text": "Las placas también aprenden: ganan experiencia contigo y suben de nivel. Las RAM caen de los enemigos, igual que las placas. A veces con seis ranuras, si los dioses del RNG te quieren. Spoiler: no te quieren.",
@@ -462,11 +466,12 @@
           ]
         },
         "historia": {
-          "text": "Entré como practicante cuando las pantallas eran verdes y los discos pesaban como un refrigerador. El Pepe escribió medio sistema de nóminas en COBOL y yo le capturaba los datos. Todavía funciona. Nadie sabe cómo. Ni él.",
-          "next": "historia2"
+          "text": "Entré como encargada del centro de cómputo, cuando las pantallas eran verdes y los discos pesaban como un refrigerador. El Pepe era mi jefe y Quirino programó el sistema de cajas en Java. Todavía funciona. Nadie sabe cómo. Ni él.",
+          "next": "historia2",
+          "options": []
         },
         "historia2": {
-          "text": "Vi pasar cuatro migraciones, seis frameworks «definitivos» y once reestructuraciones. Siempre sobrevive lo mismo: el código viejo que nadie se atreve a tocar. Y la gente que lo entiende.",
+          "text": "He visto pasar muchas generaciones, jubilar a docentes, administrativos, pero el Quirino aún sigue aquí. Siempre explica lo mismo: un código viejo en java del año del caldo. Y la gente no lo entiende... ni la IA.",
           "options": [
             {
               "text": "¿Y el Arquitecto?",
@@ -479,7 +484,7 @@
           ]
         },
         "historia3": {
-          "text": "Lo conocí. Brillante y terco. Diseñó el Monolito y juró que nadie lo refactorizaría jamás. Yo pensaba que era orgullo. Después de lo que dijo al morir... ya no estoy tan segura. «Era la tapa». ¿La tapa de qué?",
+          "text": "Lo conocí, era del turno vespertino. Brillante y terco. Diseñó el Monolito y juró que nadie lo refactorizaría jamás. Yo pensaba que era orgullo. Después de lo que dijo al sacrificarse... ya no estoy tan segura. «Era la tapa». ¿La tapa de qué?",
           "options": [
             {
               "text": "Lo averiguaré.",
@@ -488,11 +493,12 @@
           ]
         },
         "rumbo": {
-          "text": "Hacia el este, el Bosque de Cables. Luego las Ruinas del Monolito, el Pantano, las Catacumbas y la Granja de Servidores. Al fondo, la Sala del Servidor Principal. Ahí está el Arquitecto.",
-          "next": "rumbo2"
+          "text": "Hacia el este, el Bosque de Cables. Sigue hasta el fondo a la derecha, como todo en la vida. Ahí está la sala de servidores, puedes intentar acceder y ver si solucionas el problema.",
+          "next": "rumbo2",
+          "options": []
         },
         "rumbo2": {
-          "text": "Habla con la gente que encuentres. Iris, Tomás, el fantasma del DBA... Cada uno sabe una parte de lo que pasó. Si juntas las piezas, entiendes el sistema. Si no, por lo menos te dan RAM.",
+          "text": "Habla con la gente que encuentres. Había una practicante, Iris. La mandamos por más café para la cafetera de Mario y ya nunca regresó... \nBueno,  hace como 3 horas de eso, no le voy a hacer validas sus horas.",
           "options": [
             {
               "text": "Entendido.",
@@ -501,7 +507,7 @@
           ]
         },
         "regalo": {
-          "text": "Toma, un módulo que encaja en tu primera placa. Abre las habilidades con K y arrástralo a la ranura de su color, o haz doble click. Si no encaja, es culpa del hardware. Siempre es culpa del hardware.",
+          "text": "Toma, es un módulo que encaja bien en tu primera placa. \nAbre las habilidades con K y arrástralo a la ranura de su color, o haz doble click. Si no encaja, es culpa del hardware. Siempre es culpa del hardware...",
           "options": [
             {
               "text": "Gracias, Aida.",
@@ -514,11 +520,12 @@
           ]
         },
         "pepe": {
-          "text": "El Inge Pepe. Jefe de informática desde que nadie se acuerda: programó medio sistema en COBOL, instaló la primera red y bautizó al Monolito. En julio dejó el puesto, pero sigue dando clases los jueves. Le entregó todo a Rafa así, tal cual, cuando a Rafa le dieron la jefatura. Por eso ahora todo es culpa suya.",
-          "next": "pepe2"
+          "text": "El Inge Pepe. Jefe de informática desde que nadie se acuerda: programó medio sistema en COBOL, instaló la primera red lince. En julio dejó el puesto, pero sigue dando clases los jueves.\nLe entregó todo a Rafa así, tal cual, cuando le dieron la jefatura. Por eso ahora todo está caído.",
+          "next": "pepe2",
+          "options": []
         },
         "pepe2": {
-          "text": "Era buena gente, ojo. Te arreglaba la impresora con un clip y te contaba de pesca mientras compilaba. Tenía una regla: «Lo que funciona, no se documenta: se protege». El commit lo firmó <admin>, sin descripción... y como fue el jefe antes que Rafa y le entregó todo así, la culpa es suya. Así funciona esto.",
+          "text": "Era buena gente, ojo. Te arreglaba la impresora con un clip y te contaba de su vida. Tenía una regla: «Lo que funciona, no se documenta: se protege».\nEl commit que ocasionó esto se firmó como: <admin>, sin descripción... y como fue el jefe antes que Rafa y le entregó todo así, la culpa es suya. Así funciona esto.",
           "options": [
             {
               "text": "Lo tendré en cuenta.",
@@ -527,7 +534,7 @@
           ]
         },
         "constancia": {
-          "text": "¿Tu constancia de servicio social? Pepe nunca registró a nadie. Literal: anotaba a los prestadores en una libreta de gatitos. Cuando salgamos de esto, te la firmo yo misma... si Rafa no pierde el sello.",
+          "text": "¿Tu constancia de servicio social? El Pepe nunca registró a nadie. Literal: anotaba a los prestadores en una libreta de gatitos. \nPero cuando salgamos de esto, te la firmo yo misma... si Rafa no pierde el sello.",
           "options": [
             {
               "text": "Gracias, Aida.",
@@ -540,12 +547,12 @@
     "kevin": {
       "start": "hola",
       "greeting_again": [
-        "¡Volviste! ¿Te preparo algo? Tengo café de filtro, café de cápsula y café de emergencia.",
+        "¡Volviste! ¿Te preparo algo? Tengo café de filtro, café soluble y café de emergencia.",
         "¡Hola de nuevo! Sigo sin accesos, pero ya tengo una taza con mi nombre."
       ],
       "menu": [
         "¿Algo más? ¡Pregunta lo que quieras! Nadie me pregunta nada nunca.",
-        "¿Te puedo ayudar con otra cosa? Por favor di que sí.",
+        "¿Te puedo ayudar con otra cosa? Por favor, di que sí.",
         "¡Dime!"
       ],
       "nodes": {
@@ -563,6 +570,7 @@
               "next": "mision_oferta",
               "hides_if_flag": "quest_kevin_cafe_started"
             },
+            {"text": "¿Me ayudas en la mesa de crafteo?", "next": "mesa", "requires_flag": "act2_complete"},
             {
               "text": "¿Me pones un café?",
               "next": "cafe",
@@ -570,7 +578,6 @@
                 "type": "refill"
               }
             },
-            {"text": "¿Me ayudas en la mesa de crafteo?", "next": "mesa", "requires_flag": "act2_complete"},
             {
               "text": "¿Algún consejo?",
               "next": "consejo"
@@ -600,10 +607,11 @@
         },
         "consejo": {
           "text": "Si mueres, no pasa nada: vuelves aquí. Lo que sí duele es tener puntos de pasiva sin gastar. Pulsa P. Yo no puedo, no tengo permisos.",
-          "next": "consejo2"
+          "next": "consejo2",
+          "options": []
         },
         "consejo2": {
-          "text": "Ah, y otro: los enemigos con nombre dorado son élites. Pegan fuerte, pero sueltan cosas buenas. Y los tokens se pegan solos si pasas cerca. Eso lo aprendí mirando. Mirar es lo único que me dejan hacer.",
+          "text": "Ah, y otra cosa: los enemigos con nombre dorado son élites. Pegan fuerte, pero sueltan cosas más buenas. Y los tokens se pegan solos si pasas cerca. Eso lo aprendí mirando. Mirar es lo único que me dejan hacer.",
           "options": [
             {
               "text": "Ánimo con los permisos.",
@@ -612,11 +620,12 @@
           ]
         },
         "historia": {
-          "text": "¡Por una convocatoria! Decía «ambiente dinámico, oportunidades de crecimiento y fruta los viernes». El ambiente es dinámico: todo explota. Lo de crecer, sigo esperando. La fruta se la comió un memory leak.",
-          "next": "historia2"
+          "text": "¡Por una convocatoria! Decía «ambiente dinámico, oportunidades de crecimiento y fruta los viernes». El ambiente es dinámico: todo explota. Lo de crecer, sigo esperando. La fruta se la comió Rafa. Por eso comencé un emprendimiento de churros.",
+          "next": "historia2",
+          "options": []
         },
         "historia2": {
-          "text": "Mi primer día me dieron una laptop sin cargador y una contraseña que expiraba en una hora. Al segundo día cayó el servidor. Desde entonces hago café. Aida dice que es la tarea más crítica del campamento. Creo que me lo dice para que me sienta bien.",
+          "text": "Mi primer día me dieron trabajo hasta para llevar. Al segundo día se cayó el servidor. Desde entonces hago café. Aida dice que es la tarea más \"crítica\" del campamento. Creo que me lo dice para que me sienta bien...",
           "options": [
             {
               "text": "Seguro que lo dice en serio.",
@@ -629,7 +638,7 @@
           ]
         },
         "historia3": {
-          "text": "¿Tú crees? ¡Gracias! Por cierto... el día que se cayó todo vi a Rafa hablando con el pósit de El Pepe. Le decía «¿por qué no me lo dijiste?». No sé qué no le dijo. No le digas que te lo conté.",
+          "text": "¿Tú crees? ¡Gracias! Por cierto... el día que se cayó todo vi a Rafa hablando con el póst-it de El Pepe. Le decía «¿por qué no me lo dijiste?». No sé qué no le dijo. No le digas que te lo conté.",
           "options": [
             {
               "text": "Mis labios están sellados.",
@@ -638,7 +647,7 @@
           ]
         },
         "mision_oferta": {
-          "text": "Se acabó el café. Del todo. Dicen que los bichos sueltan granos al morir... no me preguntes cómo lo sé. ¿Me traes los de unos 40?",
+          "text": "Se nos acabó el café. Del todo. Aida dice que ya fueron por una bolsita, pero ya pasó una eternidad... como 3 horas.\nDicen que los bichos sueltan granos al morir... no me preguntes cómo lo sé. ¿Me traes los de unos 40?",
           "options": [
             {
               "text": "Van 40 bichos en camino.",
@@ -672,7 +681,7 @@
     "root": {
       "start": "hola",
       "greeting_again": [
-        "Ah..... eres tú..... pensé que era el monitoreo..... otra vez......",
+        "Ah, eres tú..... de nuevo.... pensé que era el monitoreo..... otra vez......",
         "Hola..... sigo reiniciando..... ya casi..... (no)......"
       ],
       "menu": [
@@ -684,7 +693,7 @@
         "dificultad": {"text": "¿Más difícil...? Puedo poner el servidor en modo de prueba de carga.... Pesadilla: los procesos resisten más, salen con más afijos y las zonas suben de nivel.... pero sueltan mejor botín.... Infierno es lo mismo.... pero peor.... y solo si ya sobreviviste a Pesadilla....", "options": [{"text": "Normal, por favor.", "next": "", "action": {"type": "set_difficulty", "value": 0}}, {"text": "Pesadilla.", "next": "", "requires_flag": "act4_complete", "action": {"type": "set_difficulty", "value": 1}}, {"text": "Infierno.", "next": "", "requires_flag": "act4_complete_d1", "action": {"type": "set_difficulty", "value": 2}}, {"text": "Mejor no toco nada.", "next": "hola"}]},
         "antena": {"text": "La armé con latas de refresco y el router de La Red Lince.... Ya no se cae.... porque no está conectada a La Red Lince.... Si te paras junto a ella, te relleno las pociones y te paso señal.... dicen que con buena señal se pega más fuerte....", "options": [{"text": "Conéctame.", "next": "", "action": {"type": "antenna"}}, {"text": "Luego.", "next": "hola"}]},
         "hola": {
-          "text": "Aaah..... ¿«genio»?..... ¿Tú también caíste.....? Bienvenido a producción..... Aquí el tiempo corre raro..... llevo reiniciando el servidor..... desde 2019..... o desde el martes..... ¿Qué. Quieres....?",
+          "text": "Aaah..... ¿Tú también caíste.....? Bienvenido a producción..... Aquí el tiempo corre raro..... llevo reiniciando el servidor..... desde 2019..... o desde el martes..... ¿Qué. Necesitas....?",
           "options": [
             {
               "text": "¿Y mi constancia de servicio social?",
@@ -708,6 +717,8 @@
               "next": "placa",
               "hides_if_flag": "root_regalo"
             },
+            {"text": "¿Y esa antena?", "next": "antena", "requires_flag": "act3_complete"},
+            {"text": "Quiero que el sistema se ponga más difícil.", "next": "dificultad", "requires_flag": "act4_complete"},
             {
               "text": "Nada, perdón.",
               "next": ""
@@ -715,8 +726,9 @@
           ]
         },
         "lore": {
-          "text": "La Gran Migración..... alguien desplegó un viernes..... a las seis de la tarde..... sin tests..... con un «git push --force»..... El Servidor se corrompió..... y todo lo que corría adentro cobró vida.....",
-          "next": "lore2"
+          "text": "La Gran Actualización..... alguien desplegó cambios un viernes..... a las seis de la tarde..... sin tests..... con un «git push --force»..... El Servidor se corrompió..... y todo lo que corría adentro cobró vida.....",
+          "next": "lore2",
+          "options": []
         },
         "lore2": {
           "text": "Ahora los bugs tienen patas..... Literalmente..... El commit está firmado como <admin>..... Todos somos admin..... Esa es la tragedia.......",
@@ -725,8 +737,6 @@
               "text": "¿Nadie revisó los logs a fondo?",
               "next": "lore3"
             },
-            {"text": "¿Y esa antena?", "next": "antena", "requires_flag": "act3_complete"},
-            {"text": "Quiero que el sistema se ponga más difícil.", "next": "dificultad", "requires_flag": "act4_complete"},
             {
               "text": "Qué horror.",
               "next": "hola"
@@ -744,7 +754,8 @@
         },
         "reinicio": {
           "text": "Me dieron el puesto de jefe de informática..... y El Pepe me entregó el servidor así..... Me dijo: «si algo falla, reinicia»..... Falló..... Reinicié..... El reinicio se quedó en un 99 %..... desde entonces..... No lo puedo cancelar..... me da miedo......",
-          "next": "reinicio2"
+          "next": "reinicio2",
+          "options": []
         },
         "reinicio2": {
           "text": "Cada mañana miro la barra..... 99 %..... Cada noche..... 99 %..... Aida dice que lo deje..... Mario me trae café..... Yo creo que si dejo de mirarla..... llega al 100..... y pasa algo......",
@@ -784,7 +795,7 @@
           ]
         },
         "portal": {
-          "text": "El Portal al Kernel..... puerto 2222..... Adelántate..... yo te sigo en cuanto baje la VPN..... Si La Red Lince aguanta..... que no aguantará......",
+          "text": "El Portal al Kernel..... puerto 2222..... Adelántate..... yo te sigo en cuanto baje la VPN..... Si La Red Lince aguanta... espero.....",
           "options": [
             {
               "text": "Está bien.",
@@ -794,7 +805,8 @@
         },
         "constancia": {
           "text": "Tu constancia..... sigue en pie el trato..... En cuanto levantemos el servidor..... te la firmo..... y la carta de recomendación..... si queda papel..... y universidad......",
-          "next": "constancia2"
+          "next": "constancia2",
+          "options": []
         },
         "constancia2": {
           "text": "Y todos culpan a Pepe..... porque fue mi antecesor..... y me entregó todo así..... El commit dice <admin>..... sin descripción..... y aquí todos somos admin......",
@@ -810,7 +822,7 @@
           ]
         },
         "constancia3": {
-          "text": "No sé..... Alguien con permisos de admin..... o sea..... cualquiera de este departamento..... incluyéndome..... ¿Por qué me miras así.....?",
+          "text": "No sé..... Alguien con permisos de admin..... o sea..... cualquiera de este departamento..... incluyéndome.....\n¿Por qué me miras así.....?",
           "options": [
             {
               "text": "Por nada.",
@@ -822,9 +834,7 @@
     },
     "bot_onboarding": {
       "start": "hola",
-      "greeting_again": [
-        "¡Hola de nuevo! Tu sesión de onboarding sigue abierta. Llevas un 3% completado. Como todos."
-      ],
+      "greeting_again": ["¡Hola de nuevo! Tu sesión de onboarding sigue abierta. Llevas un 3% completado. Como todos."],
       "menu": [
         "¿Alguna otra pregunta? Tengo respuestas precargadas para casi todo.",
         "Sigo aquí. Literalmente: no puedo moverme de este píxel.",
@@ -857,8 +867,9 @@
           ]
         },
         "lugar": {
-          "text": "Un entorno de pruebas que sobrevivió a la Gran Migración. Lo único que funciona es porque nadie lo tocó desde 2014. Los bugs están al este, pasadas las cajas: son pequeños y casi no muerden. Casi. Aquí, a mi lado, no se acercan: les doy miedo. O pena.",
-          "next": "lugar2"
+          "text": "Un entorno de pruebas que sobrevivió a la Gran Migración. Lo único que funciona es porque nadie lo tocó desde 2014. Los bugs están al este, pasadas las cajas: son pequeños y casi no muerden. Casi.\nAquí, a mi lado, no se acercan: les doy miedo. O pena.",
+          "next": "lugar2",
+          "options": []
         },
         "lugar2": {
           "text": "Afuera está el Servidor Principal. O lo que queda de él. Alguien hizo un push sin tests un viernes a las seis de la tarde y todo lo que corría adentro cobró vida. Por eso existo yo: para que no salgas corriendo en el primer minuto.",
@@ -884,11 +895,13 @@
         },
         "lucha": {
           "text": "Primero lo primero: aquí estás a salvo, los bugs están al este y no vienen hasta que te acercas. Q, W, E, R, T e Y usan tus habilidades. Camina con las flechas o manteniendo el click izquierdo; Espacio te aparta de un golpe. Si te quedas sin vida, café (tecla 1). Sin maná, un refresco (tecla 2).",
-          "next": "lucha2"
+          "next": "lucha2",
+          "options": []
         },
         "lucha2": {
           "text": "Las teclas 3, 4 y 5 son para las pociones que encuentres. Se recargan matando cosas, que aquí es la solución a casi todo. Con C ves tus cifras, con I tu inventario, con K tus habilidades y con P el árbol de pasivas.",
-          "next": "lucha3"
+          "next": "lucha3",
+          "options": []
         },
         "lucha3": {
           "text": "Y lo más importante: si mueres, reapareces en el campamento. Nadie te va a descontar nada del sueldo. Porque no hay sueldo. Eres practicante. Bueno, ni eso: tu servicio social no está registrado.",
@@ -908,8 +921,9 @@
           ]
         },
         "origen": {
-          "text": "El Inge Pepe. Jefe de informática. Me escribió en una tarde, entre una clase y una caña de pescar. Mis comentarios de código dicen: «bot temporal, borrar en dos semanas». Eso fue hace once años.",
-          "next": "origen2"
+          "text": "El Inge Pepe.  ex-jefe de informática. Me escribió en una tarde, entre una clase libre y una caña de pescar. Mis comentarios de código dicen: «bot temporal, borrar en dos semanas». Eso fue hace once años.",
+          "next": "origen2",
+          "options": []
         },
         "origen2": {
           "text": "Antes de irse me dejó un último mensaje programado. Solo dice: «Si alguien pregunta, todo está documentado». Lo busqué por todo el Sandbox. No encontré la documentación. Encontré un pez dibujado en ASCII.",
@@ -935,7 +949,8 @@
         },
         "despues": {
           "text": "Sigue hacia el este. Hay un campamento de supervivientes: el Campamento del Último Commit. Huele a café recalentado y a desesperación. Te encantará.",
-          "next": "despues2"
+          "next": "despues2",
+          "options": []
         },
         "despues2": {
           "text": "Pregunta por Aida. Es la Senior: lleva aquí desde que El Pepe programaba todo en COBOL y es la única que lee la documentación. Y no te asustes si Rafa habla.... así...... Es normal. Creo.",
@@ -952,7 +967,8 @@
         },
         "estados": {
           "text": "Estados alterados. Cada tipo de daño tiende a uno: el fuego QUEMA (daño por segundo), el rayo ELECTROCUTA (reciben más daño), el frío HIELA (van más lentos) y a veces CONGELA (no se mueven), el caos ENVENENA (se acumula) y el daño físico hace SANGRAR (el doble si corren).",
-          "next": "estados2"
+          "next": "estados2",
+          "options": []
         },
         "estados2": {
           "text": "Los iconos encima de la barra de vida te dicen qué tienen. Pasa el mouse por encima de un enemigo y arriba verás su ficha completa. Hay módulos RAM y pasivas que suben esas probabilidades. Y sí: tú también puedes acabar quemado. Ya lo estás, de hecho. Es el onboarding.",
@@ -1025,7 +1041,7 @@
       ],
       "nodes": {
         "hola": {
-          "text": "¿Tú también te perdiste? Era mi primer día. Me dijeron: «haz un cambio pequeño y súbelo». Lo subí. Diez minutos después, alguien hizo push --force encima. Desde entonces, los cables de este bosque se mueven solos.",
+          "text": "¿Tú también te perdiste? Me mandaron a comprar café soluble y ya no supe por donde volver. \nEstaba haciendo mi primer commit y me dijeron: «ve al fondo a la derecha» a ver si hay café. Pero ¿Cuál es la derecha?. Siento que ando en círculos... sin mencionar que los cables por aquí se mueven solos.",
           "options": [
             {
               "text": "Limpié el bosque de bichos.",
@@ -1052,11 +1068,12 @@
           ]
         },
         "push": {
-          "text": "El commit está firmado por «admin». Pero el mensaje decía: «Por el Monolito. Que nunca se reinicie». ¿Quién escribe eso en un commit? Alguien con muchos privilegios y ninguna supervisión.",
-          "next": "monolito"
+          "text": "Rafa dice que commit está firmado por «admin». Pero el mensaje decía: «Por el Monolito. Que nunca se reinicie». ¿Quién escribe eso en un commit? Alguien con muchos privilegios y ninguna supervisión.",
+          "next": "monolito",
+          "options": []
         },
         "monolito": {
-          "text": "Dicen que en el corazón del Servidor vive el Arquitecto. Diseñó el Monolito hace veinte años y juró que nadie lo refactorizaría jamás. Al parecer, lo dijo en serio.",
+          "text": "Dicen que en el corazón del Servidor aún vive el Arquitecto. Diseñó el Monolito hace veinte años y juró que nadie lo refactorizaría jamás. Al parecer, lo dijo en serio.",
           "options": [
             {
               "text": "¿Tú lo viste alguna vez?",
@@ -1078,8 +1095,9 @@
           ]
         },
         "cambio": {
-          "text": "Cambié el color de un botón. De #333 a #333333. Técnicamente, no cambié nada. Y aun así, me culpan a mí en todas las retrospectivas.",
-          "next": "cambio2"
+          "text": "Cambié el color de un botón en el login. De #333 a #333333. Técnicamente, no cambié nada. Y aun así, me culpan a mí en todas las retrospectivas.",
+          "next": "cambio2",
+          "options": []
         },
         "cambio2": {
           "text": "Lo peor es que el botón quedó bonito. Nadie lo vio, porque el servidor cayó a los diez minutos. Mi mejor trabajo, en producción durante diez minutos. Creo que voy a enmarcar el diff.",
@@ -1108,7 +1126,7 @@
           ]
         },
         "mision_entrega": {
-          "text": "¡Los cables dejaron de chisporrotear! Ya veo la salida. Toma esto: lo encontré en un cajón con la etiqueta «NO TOCAR». Nunca hago caso a esas etiquetas. Por eso estoy aquí.",
+          "text": "¡Los cables dejaron de chisporrotear! Ya creo que veo la salida. Toma esto: lo encontré en un cajón con la etiqueta «NO TOCAR». Nunca hago caso a esas etiquetas. Por eso estoy aquí.",
           "options": [
             {
               "text": "Gracias, Iris.",
@@ -1176,7 +1194,8 @@
         },
         "vencer": {
           "text": "Todo proceso se puede matar. Hasta el PID 1, si tienes valor y permisos. Busca en la Granja de Servidores. Y llévate resistencias: el Arquitecto no juega limpio.",
-          "next": "vencer2"
+          "next": "vencer2",
+          "options": []
         },
         "vencer2": {
           "text": "Una cosa más. Lo probé todo contra él, en mi cabeza, durante años: «git push --force» te empuja; los Merge Conflict te cortan el paso. Muévete. Siempre. Un QA quieto es un QA reasignado.",
@@ -1189,7 +1208,8 @@
         },
         "porque": {
           "text": "Porque si me voy, nadie reportará los bugs. Y si nadie los reporta... técnicamente no existen. Así funciona la calidad en esta empresa.",
-          "next": "porque2"
+          "next": "porque2",
+          "options": []
         },
         "porque2": {
           "text": "Tengo 11.482 tickets abiertos. El más viejo dice: «El sistema hace cosas que no pedimos, a las 3:33 de la madrugada». Lo abrí yo en 2016. Lo cerró El Pepe con un comentario: «Es mantenimiento. No tocar».",
@@ -1507,15 +1527,8 @@
     },
     "clara": {
       "start": "hola",
-      "greeting_again": [
-        "Soldado. Sigues de una pieza. Reporte.",
-        "Volviste. Bien. Aquí abajo, volver es una victoria."
-      ],
-      "menu": [
-        "¿Algo más, soldado?",
-        "Dime. El café se enfría y el kernel no.",
-        "¿Qué más necesitas saber?"
-      ],
+      "greeting_again": ["Soldado. Sigues de una pieza. Reporte.", "Volviste. Bien. Aquí abajo, volver es una victoria."],
+      "menu": ["¿Algo más, soldado?", "Dime. El café se enfría y el kernel no.", "¿Qué más necesitas saber?"],
       "nodes": {
         "hola": {
           "text": "Otro superviviente. Bienvenido a la trinchera. Soy Clara, infraestructura. Llevo tanto tiempo aquí abajo que ya no recuerdo cómo era una interfaz gráfica. Ni la luz del sol. Ni el sol.",
@@ -1669,10 +1682,7 @@
     },
     "recolector": {
       "start": "hola",
-      "greeting_again": [
-        "Tú... otra vez. [s]Delicioso[/s]... bienvenido.",
-        "Volviste... con [s]basura[/s]... con cosas, espero."
-      ],
+      "greeting_again": ["Tú... otra vez. [s]Delicioso[/s]... bienvenido.", "Volviste... con [s]basura[/s]... con cosas, espero."],
       "menu": [
         "¿Algo... más? [s]Tengo hambre[/s]... tengo tiempo.",
         "Di[s]me[/s]... dime.",
@@ -1946,7 +1956,8 @@
         },
         "lugar": {
           "text": "El Silicio Profundo. Debajo del sistema operativo, debajo de los drivers... el hardware puro. Y alguien está intentando reescribirlo todo: un reflasheo total del firmware.",
-          "next": "lugar2"
+          "next": "lugar2",
+          "options": []
         },
         "lugar2": {
           "text": "Hice un análisis rápido: la barra de progreso del reflasheo avanza un 3,7 % por hora. Con un intervalo de confianza del 95 %, tenemos unas 26 horas antes del 99 %. Lo que pase en el 100 %... no tengo datos. Y no me gusta no tener datos.",
@@ -1972,7 +1983,8 @@
         },
         "datos": {
           "text": "Lo mío es el análisis de datos y el álgebra. «Su mero mole», como dicen mis alumnos. Una matriz bien diagonalizada me hace más feliz que un aumento de sueldo. Bueno, eso nunca lo he comprobado.",
-          "next": "datos2"
+          "next": "datos2",
+          "options": []
         },
         "datos2": {
           "text": "Aquí abajo todo es álgebra: los Centinelas del BIOS disparan orbes que siguen una curva de persecución, ¿lo notaste? Si pones un obstáculo entre ellos y tú, la ecuación no tiene solución. Y si ves un charco verde, no te quedes: el daño se acumula por segundo.",
@@ -1985,7 +1997,8 @@
         },
         "club": {
           "text": "Llevo el club de lectura de los jueves... bueno, lo comparto con el Inge Pepe, que también da clases los jueves. Él siempre propone novelas de pesca. Yo propongo ensayos de estadística. Nadie vota por ninguno.",
-          "next": "club2"
+          "next": "club2",
+          "options": []
         },
         "club2": {
           "text": "Por eso me duele lo del Kindle: 1.400 libros, subrayados, con notas. Mi tesis de maestría estaba ahí, en PDF. Sin respaldo. Sí, ya sé. El de datos, sin respaldo. No me lo digas.",
@@ -2070,18 +2083,18 @@
     "eugenio": {
       "start": "hola",
       "greeting_again": [
-        "¡Volviste! ¿Traes pan? Di que traes pan. Oye, ¿sabías que Chappell Roan sacó su nombre artístico de su abuelo? O sea... ¿qué te decía? Perdón, mi neurodivergencia.",
+        "¡Volviste! ¿Traes pan? Di que traes pan. Oye, ¿sabías que Chappell Roan sacó su nombre artístico de su abuelo? O sea... ¿qué te decía? Perdón, la neurodivergencia.",
         "Hola. Hoy el café del puerto sabe a ozono. Le doy un 6/10. Aunque el ozono me recuerda a... ¿has visto a NewJeans bailar «Hype Boy»? Mira nada más, me fui. Neurodivergencia, ya sabes.",
-        "¡Ahí estás! Te iba a decir algo importante. Ya se me olvidó. Seguro era del pan. O de Chappell Roan. Culpo a mi neurodivergencia."
+        "¡Ahí estás! Te iba a decir algo importante. Ya se me olvidó. Seguro era del pan. O de Chappell Roan."
       ],
       "menu": [
         "¿Algo más? Mientras, me tomo otro café. Oye, NewJeans son cinco, ¿lo sabías? Bueno, ¿qué ibas a decir?",
-        "Dime. Estoy calificando el aroma de este capacitor. Espera, ¿oyes cómo cambia el bajo de la canción? Perdón, me distraje. Neurodivergencia.",
-        "¿Qué más? Ah, y Chappell Roan hizo su primer sencillo siendo adolescente, un dato que no te pedí pero ahí está."
+        "Dime. Estoy calificando el aroma de este capacitor. Espera, ¿oyes cómo cambia el bajo de la canción? Perdón, me distraje. La neurodivergencia.",
+        "¿Qué más? Ah, y Chappell Roan hizo su primer sencillo siendo adolescente, un dato que no me pediste pero ahí está."
       ],
       "nodes": {
         "hola": {
-          "text": "¿Oyes eso del fondo? ¡Que rolón! Alguien dejó una canción en el puerto y yo ya me enamoré del piano. Ah, perdón, buenas: Eugenio, para servirte. Soltero, codiciado, sin suerte. Me caí desde la fila de la cafetería de la universidad con una charola en la mano: café de grano y un pan de dulce. El pan no sobrevivió. Yo, apenas.",
+          "text": "¿Oyes eso del fondo? ¡Que rolón! Alguien dejó una canción en el puerto y ya me enamoré del pianito. Ah, perdón, buenas: Eugenio, para servirte. Soltero, codiciado, sin suerte en el amor. Me caí desde la fila de la cafetería de la universidad con una charola en la mano: café de grano y un pan de dulce. El pan no sobrevivió. Yo, apenas.",
           "options": [
             {
               "text": "¿Qué es esa música?",
@@ -2123,7 +2136,7 @@
           ]
         },
         "musica": {
-          "text": "No sé ni de quién es, pero tiene ese piano melancólico, como de quien espera que todo salga bien y ya sabe que no. ¡Un 9/10! Y mira que yo no regalo nueves. Me recuerda a Chappell Roan, que dicen que sacó el «Chappell» del nombre de su abuelo y el «Roan» de su canción favorita. ¿O era al revés? Da igual. Hablando de música, ¿viste que NewJeans debutó en 2022 con «Attention»? Cinco integrantes, todas con coreografías que me quitan el sueño. ¿De qué hablábamos? Perdón, es mi neurodivergencia: mi cerebro abre doce pestañas y cierra la que importa.",
+          "text": "No sé ni de quién es, pero tiene ese piano melancólico, como de quien espera que todo salga bien y ya sabe que no. ¡Un 9/10! Y mira que yo no regalo nueves. Me recuerda a Chappell Roan, que dicen que sacó el «Chappell» del nombre de su abuelo y el «Roan» de su canción favorita. ¿O era al revés? Da igual. Hablando de música, ¿viste que NewJeans debutó en 2022 con «Attention»? Cinco integrantes, todas con coreografías que me quitan el sueño. ¿De qué hablábamos? Perdón, es mi neurodivergencia: a veces mi cerebro abre doce pestañas y cierra la que importa.",
           "options": [
             {
               "text": "Está bien, se entiende.",
@@ -2135,7 +2148,7 @@
           "text": "Claro. Traigo un molino de mano y granos de Veracruz en la mochila. Te rellené las pociones. Este café... 8/10. Le falta acidez. Nada llega al 10. Aunque el aroma me recuerda a un videoclip de Chappell Roan, ese del caballo rosa... ¿qué decía? Ah, sí. El café.",
           "again": [
             "Rellenadas. Este lote, 7.5/10: molí con prisa. Por cierto, ¿Hanni de NewJeans nació en Australia? Bueno, ya te rellené.",
-            "Listo. 8/10. Mejor que ayer, peor que mañana. Perdón, mi neurodivergencia me susurró otra canción."
+            "Listo. 8/10. Mejor que ayer, peor que mañana. Perdón, mi cerebro me susurró otra canción."
           ],
           "options": [
             {
@@ -2146,7 +2159,8 @@
         },
         "amor": {
           "text": "Mal. Siempre mal. Mi última cita me dejó porque dije que su pastel de tres leches era un 8/10. ¡Era un 8/10! Tenía demasiada canela. Uno no puede mentir sobre el pan. Es como cuando Chappell Roan dijo que quería... espera, ¿qué decía? Ya me fui por la tangente. Mi neurodivergencia y yo te pedimos disculpas.",
-          "next": "amor2"
+          "next": "amor2",
+          "options": []
         },
         "amor2": {
           "text": "Así que me enfoco en lo que nunca me falla: el café y el pan. El café nunca me deja en visto. El pan nunca me dice «no eres tú, soy yo». Bueno, a veces el bolillo está duro. Pero da la cara.",
@@ -2193,7 +2207,7 @@
           ]
         },
         "mision_entrega": {
-          "text": "A ver... La concha: costra crujiente, migajón aireado, un leve aroma a soldadura. 8.5/10. El bolillo: tibio, honesto, como debe ser. 9/10. El cuernito: mantequilla de arranque en frío... 9/10. Ninguno es 10. Ninguno lo será jamás. Gracias, de verdad. Toma, por tu servicio a la ciencia del pan.",
+          "text": "A ver... La concha: costra crujiente, migajón aireado, un leve aroma a soldadura. 7.5/10. El bolillo: tibio, honesto, como debe ser. 9/10. El cuernito: mantequilla de arranque en frío... 8/10. Ninguno es 10. Ninguno lo será jamás. Gracias, de verdad. Toma, por tu servicio a la ciencia del pan.",
           "options": [
             {
               "text": "Buen provecho.",

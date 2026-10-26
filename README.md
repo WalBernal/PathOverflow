@@ -6,6 +6,7 @@ Por ahora es solo para un jugador en local, pero la lógica está escrita para p
 ## Cómo abrirlo
 
 - **Jugar sin el editor**: doble click en `Jugar.bat` (pantalla completa, sin depurador). **F11** o **Alt+Enter** cambian entre pantalla completa y ventana en cualquier momento.
+- **Editor de historia**: doble click en `Editor de historia.bat` (botón «?» para la guía). Cada conversación se edita como un guion de tarjetas: lo que dice el personaje y las respuestas del jugador, con adónde lleva cada una, y lo avanzado (cuándo aparece una respuesta, qué hace) tras «⚙» con formularios. Vista previa navegable, Ctrl+Z, búsqueda de frases en toda la historia. Pestaña **Prólogo** con la introducción, letreros, avisos, conversaciones, ventana de contratación y consola (`data/prologue.json` y escenas `prologo_*`); también escenas, misiones y tutorial. Guarda en `data/*.json` (con copia en `user://story_backups/`), revisa referencias rotas, abre el juego con los cambios y genera `build/PathOverflow.exe`.
 - **Exportar** (`build/PathOverflow.exe`, un solo archivo con el juego dentro, pantalla completa por defecto): las plantillas de exportación de Godot 4.7.2 están instaladas en `%APPDATA%\Godot\export_templates\4.7.2.stable`. Proyecto → Exportar → Windows, o `Godot_v4.7.2-stable_win64.exe --headless --path . --export-release Windows build/PathOverflow.exe`.
 
 1. Abre Godot 4.7.2 → **Importar** → selecciona `project.godot`.

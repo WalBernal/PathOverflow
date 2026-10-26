@@ -160,6 +160,7 @@ func _initialize() -> void:
 	_test_bases_and_unique_mechanics()
 	_test_crafting_decisions()
 	_test_events_music_colorblind()
+	_test_story_editor()
 	_test_board_milestones()
 	_test_shaped_clusters()
 	_test_defense_and_dot_skills()
@@ -1725,6 +1726,40 @@ func _test_events_music_colorblind() -> void:
 	# Modo daltónico: la rareza también en letra.
 	_check(LootManager.rarity_tag(Item.new(_db.bases["espada_oxidada"], Rarity.Item.RARE, 5)) == "R"
 		and LootManager.rarity_tag(Item.new(_db.bases["espada_oxidada"], Rarity.Item.NORMAL, 5)) == "", "chapita de rareza para daltónicos")
+
+
+## Editor de historia: guardar no cambia ningún dato (ida y vuelta exacta) y los
+## datos actuales no tienen referencias rotas.
+func _test_story_editor() -> void:
+	var editor: Control = load("res://tools/story_editor.gd").new()
+	editor.load_all()
+	for key in editor.FILES:
+		var original: Variant = JSON.parse_string(FileAccess.get_file_as_string(editor.FILES[key]))
+		var again: Variant = JSON.parse_string(editor.to_json(editor.data[key]))
+		_check(again is Dictionary and JSON.stringify(again, "", false) == JSON.stringify(original, "", false),
+			"editor de historia: %s se guarda sin cambiar nada" % key)
+	_check(editor.npcs().size() >= 10 and editor.dialogues().size() >= 10 and editor.cutscenes().size() > 5, "el editor carga NPC, diálogos y escenas")
+	var problems: PackedStringArray = editor.validate()
+	_check(problems.is_empty(), "la historia no tiene referencias rotas: %s" % " | ".join(problems))
+	# Un nodo que apunta a uno inexistente se detecta.
+	var dl: Dictionary = editor.dialogues().values()[0]
+	var first: Dictionary = dl["nodes"].values()[0]
+	first["options"].append({"text": "Prueba", "next": "no_existe"})
+	_check(not editor.validate().is_empty(), "la validación avisa de una opción que va a un nodo que no existe")
+	_check(editor.to_json({"a": 1.0, "b": 0.5, "c": [1.0, 2.0]}) == "{\n  \"a\": 1,\n  \"b\": 0.5,\n  \"c\": [1, 2]\n}", "enteros sin «.0» al guardar")
+	_check(editor.compact_json({"type": "give_random", "rarity": 2.0, "x": 0.5}) == "{\"type\":\"give_random\",\"rarity\":2,\"x\":0.5}", "campos JSON compactos y en su orden")
+	# Orden de las tarjetas: el saludo primero; títulos en lenguaje llano.
+	var ada: Dictionary = editor.dialogues()["ada"]
+	var order: Array = editor.flow_order(ada)
+	_check(order[0] == ada["start"] and order.size() == ada["nodes"].size(), "las tarjetas empiezan por el saludo y están todas")
+	_check(editor._node_title(ada, ada["start"]) == "Saludo inicial" and editor._node_title(ada, "lugar").begins_with("«"), "títulos de tarjeta legibles")
+	_check(editor.as_text(["a", "b"]) == "a\nb" and editor.as_text("x") == "x", "las frases en lista se editan una por línea")
+	_check(not editor.search("constancia").is_empty(), "la búsqueda encuentra frases en toda la historia")
+	_check(editor.data["prologue"].get("intro", []).size() > 3, "el editor carga los textos del prólogo")
+	# El prólogo lee sus textos del archivo (con respaldo si faltan).
+	PrologueText.reload()
+	_check(PrologueText.text("prompts", "talk_rafa", "") != "" and PrologueText.text("hire", "no_existe", "respaldo") == "respaldo", "textos del prólogo desde data/prologue.json")
+	editor.free()
 
 
 func _zone_def(zone_id: String) -> Dictionary:

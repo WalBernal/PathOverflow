@@ -44,6 +44,19 @@ func _run() -> void:
 		await _capture_hire_no()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("editor"):
+		var ed: Control = load("res://tools/story_editor.tscn").instantiate()
+		_swap(ed)
+		await _wait(0.8)
+		_save("110_editor_dialogos")
+		ed.get("_tabs").current_tab = 1
+		await _wait(0.4)
+		_save("111_editor_escenas")
+		ed.get("_tabs").current_tab = 2
+		await _wait(0.4)
+		_save("112_editor_misiones")
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("golems"):
 		await _capture_unit_art()
 		await _capture_icons()

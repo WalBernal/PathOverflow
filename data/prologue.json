@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "_doc": "Textos del prólogo que no son diálogos (los diálogos están en cutscenes.json, escenas prologo_*). intro: texto mecanografiado del inicio (una línea vacía = párrafo nuevo). console: líneas de la consola roja del incidente. places: letrero de cada sitio. prompts: avisos de los puntos de interés (por acción). hire: ventana de contratación. hints: ayudas en pantalla. Se editan con tools/story_editor (pestaña Prólogo).",
+  "intro": [
+    "Licenciatura concluida. Promedio: 9.2. Vacantes aplicadas: 147.",
+    "",
+    "Requisitos del mercado: 5 años de experiencia en tecnologías lanzadas, dominio de tres frameworks incompatibles, disponibilidad para guardias los fines de semana y auto propio.",
+    "",
+    "Sueldo ofrecido: salario mínimo con prestaciones «superiores a la ley» (café soluble y agua de garrafón libre).",
+    "",
+    "Estado: RECHAZADO por falta de experiencia previa.",
+    "",
+    "El último salvavidas burocrático para no ahogarse en el desempleo: tramitar el título físico y concursar por una plaza de practicante con remuneración. Para eso hace falta un papel sagrado: la constancia de liberación de Servicio Social."
+  ],
+  "console": [
+    "CRITICAL: Unhandled hardware interrupt at IRQ 07",
+    "FATAL: Database connection pool exhausted",
+    "POST /api/v1/deploy/force --user admin --origin 127.0.0.1",
+    "Commit message: \"Por el Monolito. Que nunca se reinicie\"",
+    "Status: 500 Internal Server Error",
+    "Dropping user session into Ring 3 sandbox..."
+  ],
+  "places": {
+    "calle": "Av. del Mar, frente al malecón · Mazatlán · 13:47 · 38 °C",
+    "pasillo": "UAdeO · Pasillo del Departamento de Informática",
+    "oficina": "Departamento de Informática"
+  },
+  "prompts": {
+    "to_hallway": "E · Cruzar la avenida y entrar a la UAdeO",
+    "to_office": "E · Departamento de Informática",
+    "window": "E · Caja de trámites",
+    "tv": "E · Ver la TV",
+    "talk_rafa": "E · Hablar con el encargado",
+    "rack": "E · Buscar detrás del rack negro"
+  },
+  "hire": {
+    "title": "Confirmar Contratación de Emergencia",
+    "question": "¿Deseas incorporarte al equipo de infraestructura para resolver la incidencia y obtener experiencia como:",
+    "yes": "Sí",
+    "no": "No",
+    "no_sure": "¿Seguro?",
+    "refuse_error": "Error 0x80004005: Acción denegada por el mercado laboral. Requiere 3 años de experiencia previa para rechazar esta oferta.",
+    "no_gives_up": "Pues ya que..."
+  },
+  "hints": {
+    "controls": "Flechas o click: caminar   ·   E, o click en la flecha: ir e interactuar   ·   Esc: saltar prólogo",
+    "skip_again": "Esc otra vez: saltar a la elección de puesto",
+    "continue": "Click o Espacio para continuar"
+  }
+}

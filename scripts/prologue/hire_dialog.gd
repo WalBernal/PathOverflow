@@ -59,7 +59,7 @@ func _ready() -> void:
 	body.add_theme_constant_override("separation", 10)
 	_window.add_child(body)
 	var question := Label.new()
-	question.text = "¿Deseas incorporarte al equipo de infraestructura para resolver la incidencia y obtener experiencia como:"
+	question.text = PrologueText.text("hire", "question", "¿Deseas incorporarte al equipo de infraestructura para resolver la incidencia y obtener experiencia como:")
 	question.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	question.custom_minimum_size.x = WIN_SIZE.x - 120
 	var row := HBoxContainer.new()
@@ -111,14 +111,14 @@ func _ready() -> void:
 	info_box.add_child(_skills)
 
 	_yes = Button.new()
-	_yes.text = "Sí"
+	_yes.text = PrologueText.text("hire", "yes", "Sí")
 	_yes.size = NO_SIZE
 	_yes.position = Vector2(WIN_SIZE.x / 2.0 - 150, WIN_SIZE.y - 48)
 	_yes.focus_mode = Control.FOCUS_NONE
 	_yes.pressed.connect(_accept)
 	_window.add_child(_yes)
 	_no = Button.new()
-	_no.text = "No"
+	_no.text = PrologueText.text("hire", "no", "No")
 	_no.size = NO_SIZE
 	_no.position = Vector2(WIN_SIZE.x / 2.0 + 54, WIN_SIZE.y - 48)
 	_no.focus_mode = Control.FOCUS_NONE
@@ -171,7 +171,7 @@ func _draw_window() -> void:
 	for k in 40:
 		var step := (r.size.x - 8) / 40.0
 		_window.draw_rect(Rect2(4 + step * k, 4, step + 1.0, 24), BLUE_A.lerp(BLUE_B, k / 39.0))
-	_window.draw_string(_font, Vector2(12, 21), "Confirmar Contratación de Emergencia", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color.WHITE)
+	_window.draw_string(_font, Vector2(12, 21), PrologueText.text("hire", "title", "Confirmar Contratación de Emergencia"), HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color.WHITE)
 	var x := Rect2(r.size.x - 26, 7, 18, 18)
 	_window.draw_rect(x, GRAY)
 	_window.draw_rect(x, Color.BLACK, false, 1.0)
@@ -258,7 +258,7 @@ func _dodge(mouse: Vector2) -> void:
 	_no.position = target.clamp(area.position, area.end)
 	Sfx.play("blink", -8.0, 1.0 + _dodges * 0.06)
 	if tiny:
-		_no.tooltip_text = "¿Seguro?"
+		_no.tooltip_text = PrologueText.text("hire", "no_sure", "¿Seguro?")
 	_focus.queue_redraw()
 
 
@@ -267,14 +267,14 @@ func _on_no_pressed() -> void:
 	if _no_dead:
 		return
 	_no_dead = true
-	_error.text = "Error 0x80004005: Acción denegada por el mercado laboral. Requiere 3 años de experiencia previa para rechazar esta oferta."
+	_error.text = PrologueText.text("hire", "refuse_error", "Error 0x80004005: Acción denegada por el mercado laboral. Requiere 3 años de experiencia previa para rechazar esta oferta.")
 	_error_box.visible = true
 	_error_box.reset_size()
 	_error_box.position = Vector2(WIN_SIZE.x - _error_box.size.x - 16.0, WIN_SIZE.y - 60.0 - _error_box.size.y)
 	Sfx.play("player_hurt")
 	_no.pressed.disconnect(_on_no_pressed)
 	_no.remove_theme_font_size_override("font_size")
-	_no.text = "Pues ya que..."
+	_no.text = PrologueText.text("hire", "no_gives_up", "Pues ya que...")
 	_no.tooltip_text = ""
 	_no.custom_minimum_size = Vector2.ZERO
 	_no.size = Vector2(150, NO_SIZE.y)
