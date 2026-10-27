@@ -196,6 +196,7 @@ func _initialize() -> void:
 	_test_cutscene_direction()
 	_test_missing_scenes()
 	_test_mobile_defaults()
+	_test_touch_controls()
 	_test_tilesets()
 	_test_events_music_colorblind()
 	_test_story_editor()
@@ -5159,6 +5160,41 @@ func _test_mobile_defaults() -> void:
 	_check(int(GameSettings.get_value("prueba_t106", "nada", 7)) == 7, "lo que no tiene valor de celular, igual")
 	GameSettings.force_mobile = false
 	_check(int(GameSettings.get_value("prueba_t106", "nada", 7)) == 7 and int(GraphicsQuality.preset(2)["lights"]) == 32, "y al dejar de forzarlo, todo como antes")
+
+
+## Controles táctiles (T107): joystick, apuntado automático y opción para ocultarlos.
+func _test_touch_controls() -> void:
+	var o := Vector2(100, 100)
+	_check(Touch.stick_vector(o, o + Vector2(5, 0)) == Vector2.ZERO, "joystick: zona muerta")
+	_check(Touch.stick_vector(o, o + Vector2(Touch.STICK_RADIUS * 3.0, 0)).is_equal_approx(Vector2.RIGHT), "joystick: más allá del borde, a tope")
+	var half := Touch.stick_vector(o, o + Vector2(0, -Touch.STICK_RADIUS * 0.6))
+	_check(half.y < 0.0 and half.length() > 0.3 and half.length() < 0.8, "joystick: a medias, a medias y hacia arriba (%s)" % half)
+	var from := Vector2.ZERO
+	var enemies := PackedVector2Array([Vector2(150, 0), Vector2(0, -300), Vector2(-90, 10), Vector2(2000, 0)])
+	_check(Touch.aim_index(enemies, from, Vector2.ZERO) == 2, "sin joystick, apunta al más cercano")
+	_check(Touch.aim_index(enemies, from, Vector2.UP) == 1, "con el joystick arriba, al de arriba aunque esté más lejos")
+	_check(Touch.aim_index(enemies, from, Vector2.RIGHT) == 0, "con el joystick a la derecha, al de la derecha")
+	_check(Touch.aim_index(enemies, from, Vector2.DOWN) == 2, "si no hay nadie en esa dirección, al más cercano")
+	_check(Touch.aim_index(PackedVector2Array([Vector2(2000, 0)]), from, Vector2.RIGHT) == -1, "fuera de alcance, a nadie")
+	var touch := InputEventScreenTouch.new()
+	touch.pressed = true
+	Touch.note_event(touch)
+	_check(Touch.active, "un toque activa el modo táctil")
+	var emulated := InputEventMouseMotion.new()
+	emulated.device = InputEvent.DEVICE_ID_EMULATION
+	Touch.note_event(emulated)
+	_check(Touch.active, "el ratón que emula el toque no lo apaga")
+	Touch.note_event(InputEventMouseMotion.new())
+	_check(not Touch.active, "el ratón de verdad, sí")
+	var was := Touch.enabled()
+	Touch.force = true
+	Touch.set_enabled(true)
+	_check(Touch.shown(), "con pantalla táctil, los controles se ven")
+	Touch.stick = Vector2.RIGHT
+	Touch.set_enabled(false)
+	_check(not Touch.shown() and Touch.stick == Vector2.ZERO, "y en Pausa → Controles se ocultan (y sueltan el joystick)")
+	Touch.set_enabled(was)
+	Touch.force = false
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.

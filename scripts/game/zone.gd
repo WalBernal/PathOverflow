@@ -1222,11 +1222,11 @@ func quest_item_visible(q: Dictionary) -> bool:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
-		_hovered_npc = _npc_at(get_global_mouse_position())
+		_hovered_npc = _npc_at(Touch.pointer(self))
 		return
 	var mb := event as InputEventMouseButton
 	if mb and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
-		var mouse := get_global_mouse_position()
+		var mouse := Touch.pointer(self)
 		var i := _npc_at(mouse)
 		if i != -1:
 			_pending = {"kind": "npc", "npc": npcs[i]}

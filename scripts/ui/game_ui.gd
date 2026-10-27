@@ -54,6 +54,7 @@ var _act_banner: PanelContainer
 var _pause_panel: Control
 var _root: Control
 var gamepad_cursor: GamepadCursor
+var touch_controls: TouchControls
 
 
 func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot: LootManager,
@@ -78,6 +79,14 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	_root.add_child(hud)
 	hud.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	hud.menu_requested.connect(_on_menu_requested)
+
+	# Joystick y mira táctiles (T107), encima del HUD y debajo de las ventanas.
+	touch_controls = TouchControls.new()
+	touch_controls.player = player
+	touch_controls.enemies = enemies
+	touch_controls.blocked = func() -> bool:
+		return (_pause_panel != null and _pause_panel.visible) or not cursor_windows().is_empty() or (cutscene != null and cutscene.is_playing())
+	_root.add_child(touch_controls)
 
 	# El tooltip se crea antes (lo usan los paneles) pero se añade al final,
 	# para que quede por encima de todo.

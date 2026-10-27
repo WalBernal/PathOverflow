@@ -212,11 +212,11 @@ func _draw() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
-		_set_hovered(_index_at(get_global_mouse_position()))
+		_set_hovered(_index_at(Touch.pointer(self)))
 		return
 	var mb := event as InputEventMouseButton
 	if mb and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
-		var i := _index_at(get_global_mouse_position())
+		var i := _index_at(Touch.pointer(self))
 		if i != -1:
 			_pending = drops[i]
 			player.move_to(_pending["rect"].get_center())

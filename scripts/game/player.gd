@@ -204,7 +204,9 @@ func dodge() -> bool:
 		return false
 	var dir := Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down")
 	if dir == Vector2.ZERO:
-		dir = (Gamepad.aim_point(global_position, _facing) if Gamepad.active else get_global_mouse_position()) - global_position
+		dir = Touch.stick
+	if dir == Vector2.ZERO:
+		dir = (Gamepad.aim_point(global_position, _facing) if Gamepad.active else Touch.pointer(self)) - global_position
 	if dir == Vector2.ZERO:
 		dir = _facing
 	dodge_charges -= 1.0
@@ -531,7 +533,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_move_held = s["held"]
 		_move_toggled = s["toggled"]
 		if s["go_to"]:
-			move_to(get_global_mouse_position())
+			move_to(Touch.pointer(self))
 	else:
 		for i in FLASK_ACTIONS.size():
 			if event.is_action_pressed(FLASK_ACTIONS[i]):
@@ -577,6 +579,8 @@ func _physics_process(delta: float) -> void:
 		return
 
 	var dir := Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down") if not Gamepad.menu_cursor and not UiStyle.typing() else Vector2.ZERO
+	if dir == Vector2.ZERO:
+		dir = Touch.stick   # el joystick táctil (T107), como el stick del mando
 	if _move_held and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		_move_held = false  # se soltó el botón mientras otra cosa tenía el foco
 	if dir != Vector2.ZERO:
@@ -584,7 +588,7 @@ func _physics_process(delta: float) -> void:
 	if dir != Vector2.ZERO or _move_held or _move_toggled:
 		_has_auto_target = false  # una orden manual cancela el movimiento automático
 	if dir == Vector2.ZERO and (_move_held or _move_toggled):
-		var to_mouse := get_global_mouse_position() - global_position
+		var to_mouse := Touch.pointer(self) - global_position
 		if to_mouse.length() > 8.0:
 			dir = to_mouse.normalized()
 	elif dir == Vector2.ZERO and _has_auto_target:

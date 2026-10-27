@@ -38,6 +38,8 @@ Por ahora es solo para un jugador en local, pero la lógica está escrita para p
 
 Todas las teclas están en *Proyecto → Configuración del proyecto → Mapa de entrada*. Pasa el ratón por cualquier elemento del HUD para ver una ayuda.
 
+**Pantalla táctil**: apoya el dedo en la parte izquierda de la pantalla y aparece un **joystick** donde lo pusiste (con zona muerta); arrástralo para moverte. Tocar el mundo fuera de él hace lo mismo que el clic: ir ahí, recoger botín o hablar con un NPC. Las habilidades **apuntan solas** al enemigo más cercano en la dirección del joystick (o al más cercano si no lo mueves), marcado con una mira roja. Se ocultan en Pausa → Controles → «Controles táctiles» y solo salen con pantalla táctil.
+
 **Objetos**: arrastrar y soltar entre bolsa, equipo, barra de habilidades y ranuras DIMM (intercambia si hace falta; las reglas están en `ItemTransfer`). Soltar un objeto fuera de los paneles lo tira al suelo; ya no se pueden destruir con un click.
 
 **Al lanzar habilidades** el personaje solo se detiene un instante (25 % del tiempo de uso, máximo 0,15 s); el ritmo de ataque no cambia.

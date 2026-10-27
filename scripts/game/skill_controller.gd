@@ -1097,6 +1097,10 @@ func _try_auto_attack() -> void:
 func _aim_target() -> Vector2:
 	if _auto_aim != Vector2.INF:
 		return _auto_aim
+	if Touch.active:
+		# Con el pulgar: al enemigo del joystick o al más cercano (lo marca TouchControls).
+		var t := Touch.aim_index(enemies.positions, player.global_position, Touch.stick)
+		return enemies.positions[t] if t != -1 else player.global_position + player.facing_direction().normalized() * Gamepad.AIM_DISTANCE
 	if not Gamepad.active:
 		return get_global_mouse_position()
 	var stick := Vector2(Input.get_joy_axis(0, JOY_AXIS_RIGHT_X), Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y))

@@ -34,6 +34,16 @@ func _init() -> void:
 		_note.text = "Controles restaurados."
 		_refresh(), 300)
 	box.add_child(reset)
+	# Joystick y mira en pantalla (T107): solo se ven con pantalla táctil.
+	var touch := UiStyle.button("", func() -> void: pass, 300)
+	var touch_text := func() -> String:
+		return "Controles táctiles: " + ("sí" if Touch.enabled() else "no")
+	touch.text = touch_text.call()
+	touch.tooltip_text = "Joystick a la izquierda (aparece donde apoyas el dedo) y apuntado automático al enemigo más cercano\nen la dirección del joystick. Solo con pantalla táctil."
+	touch.pressed.connect(func() -> void:
+		Touch.set_enabled(not Touch.enabled())
+		touch.text = touch_text.call())
+	box.add_child(touch)
 	close_requested.connect(queue_free)
 	confirmed.connect(queue_free)
 	window_input.connect(_on_window_input)

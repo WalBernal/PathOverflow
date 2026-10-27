@@ -572,7 +572,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	var mb := event as InputEventMouseButton
 	if mb == null or not mb.pressed or mb.button_index != MOUSE_BUTTON_LEFT:
 		return
-	var i := _at(get_global_mouse_position())
+	var i := _at(Touch.pointer(self))
 	if i != -1:
 		_pending = i
 		zone.player.move_to(events[i]["pos"] + Vector2(0, 30))

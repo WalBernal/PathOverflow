@@ -29,6 +29,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("tactil"):
+		await _capture_touch()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("llegadas"):
 		await _capture_arrivals()
 		get_tree().quit()
@@ -2131,6 +2135,70 @@ func _swap(node: Node) -> void:
 
 func _wait(seconds: float) -> Signal:
 	return get_tree().create_timer(seconds).timeout
+
+
+## Controles táctiles (T107): un dedo en el joystick (toques simulados, con su clic
+## emulado) y la mira del apuntado automático; luego un toque en el mundo para ir ahí.
+func _capture_touch() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Pulgar", &"exploradora", CharacterAppearance.default(), false)
+	c.flags["zone"] = "zona1"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 12
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	Touch.force = true
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var ui: GameUI = world.get("ui")
+	if ui.cutscene.visible:
+		ui.cutscene.call("_finish")
+	world.call("travel_to", "zona2", "waypoint")
+	await _wait(1.5)
+	var player: Player = world.get("player")
+	player.set("invulnerable", true)
+	var before := player.global_position
+	var origin := Vector2(300, 450)
+	_touch(0, origin, true)
+	for k in 8:
+		await get_tree().process_frame
+		_drag(0, origin + Vector2(12.0 * (k + 1), -4.0 * (k + 1)))
+	await _wait(0.8)
+	print("tactil: joystick %s, el jugador se movió %s (por el toque, no hacia el dedo)" % [Touch.stick, player.global_position - before])
+	_save("107_joystick")
+	_touch(0, origin + Vector2(96, -32), false)
+	await _wait(0.3)
+	print("tactil: al soltar, joystick %s" % Touch.stick)
+	var at := player.global_position
+	var tap := player.get_canvas_transform() * (player.global_position + Vector2(-60, 220))   # hacia el pasillo de abajo
+	_touch(0, tap, true)
+	await get_tree().process_frame
+	_touch(0, tap, false)
+	await _wait(1.0)
+	print("tactil: tras tocar el mundo (-60, 220) más allá, el jugador se movió %s" % (player.global_position - at))
+	_save("107_tocar_mundo")
+	Touch.force = false
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
+
+
+func _touch(index: int, p: Vector2, pressed: bool) -> void:
+	var e := InputEventScreenTouch.new()
+	e.index = index
+	e.position = p
+	e.pressed = pressed
+	Input.parse_input_event(e)
+
+
+func _drag(index: int, p: Vector2) -> void:
+	var e := InputEventScreenDrag.new()
+	e.index = index
+	e.position = p
+	Input.parse_input_event(e)
 
 
 ## Escenas que faltaban (T130): la llegada al campamento del Acto I y al Socket Seguro.
