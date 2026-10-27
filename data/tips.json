@@ -1,6 +1,10 @@
 {
   "_doc": "Consejos de primera vez (TipPanel): se muestran una sola vez por personaje (bandera tip_seen_<id>) cuando la mecánica aparece en juego. Se desactivan en Pausa → Interfaz → Consejos.",
   "tips": {
+    "zone_mechanic": {
+      "title": "Mecánica de zona",
+      "text": "Cada zona de combate trae una [color=#ffd24a]mecánica principal[/color] (te la anuncia al entrar) y como mucho un evento pequeño. Su sitio sale en el minimapa con un rombo dorado. Completarla da botín extra; si la ignoras, no pasa nada."
+    },
     "dodge": {
       "title": "Esquiva: git stash",
       "text": "Te han dado. La próxima vez, [b]Espacio[/b] (o el gatillo derecho): un salto corto con un instante de invulnerabilidad que evita golpes, charcos y estados. Las cargas se ven junto a la barra y vuelven solas."

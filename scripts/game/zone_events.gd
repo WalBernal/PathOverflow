@@ -23,8 +23,8 @@ signal exploded(pos: Vector2)
 ## El proceso escoltado llegó a un tramo (1/3, 2/3): toca emboscada.
 signal escort_wave(event: Dictionary)
 
+## Los pesos y cuáles son principales o menores están en data/zone_mechanics.json (T120).
 const KINDS := ["cache", "shrine", "ambush", "deploy", "bombs", "escort", "merchant"]
-const WEIGHTS := [26, 30, 17, 12, 6, 6, 4]
 const BOMB_COUNT := 3
 const BOMB_TIME := 25.0
 const BOMB_SPREAD := 300.0
@@ -63,30 +63,40 @@ var _pending := -1
 var _time := 0.0
 
 
-func setup(p_zone: Zone, rng: RandomNumberGenerator) -> void:
+## `plan` (T120, ZoneMechanics.plan): {"main": la mecánica principal, "minor": un evento
+## menor}. Se pone la principal si es de las de ZoneEvents (marcada con "main": true) y
+## el menor si lo hay; nada más, para no saturar la zona.
+func setup(p_zone: Zone, rng: RandomNumberGenerator, plan := {}) -> void:
 	zone = p_zone
 	z_index = 0
 	if zone.safe or not zone.def.get("enemies") is Dictionary or zone.def.has("boss"):
 		return
-	var area := zone.rect.size.x * zone.rect.size.y
-	var count := clampi(int(area / 3200000.0), 2, 7)
+	var wanted: Array[Dictionary] = []
+	var main := String(plan.get("main", ""))
+	if main != "" and String(ZoneMechanics.info(main).get("kind", "")) == "event" and KINDS.has(main):
+		wanted.append({"kind": main, "main": true})
+	if String(plan.get("minor", "")) != "" and KINDS.has(String(plan["minor"])):
+		wanted.append({"kind": String(plan["minor"])})
 	var keys := zone.key_points()
 	var tries := 0
-	while events.size() < count and tries < 200:
+	while not wanted.is_empty() and tries < 300:
 		tries += 1
 		var p := Vector2(rng.randf_range(zone.rect.position.x + 300, zone.rect.end.x - 300), rng.randf_range(zone.rect.position.y + 260, zone.rect.end.y - 260))
 		p = zone.free_spot_near(p, 50.0)
 		if not zone.is_walkable(p, 50.0) or keys.any(func(k: Vector2) -> bool: return k.distance_to(p) < 520.0) \
 				or events.any(func(e: Dictionary) -> bool: return Vector2(e["pos"]).distance_to(p) < 700.0):
 			continue
-		var kind := _pick(rng)
+		var w: Dictionary = wanted.pop_front()
+		var kind := String(w["kind"])
 		var e := {"kind": kind, "pos": p, "state": "ready"}
+		if w.get("main", false):
+			e["main"] = true
 		if kind == "shrine":
 			e["shrine"] = SHRINES.keys()[rng.randi_range(0, SHRINES.size() - 1)]
 		elif kind == "escort":
 			var goal := _escort_goal(p, rng)
 			if goal == Vector2.INF:
-				e["kind"] = "cache"   # no cabe un viaje largo: se queda en datos huérfanos
+				e["kind"] = "deploy" if e.get("main", false) else "cache"   # no cabe un viaje largo: otra cosa del mismo peso
 			else:
 				e["goal"] = goal
 				e["start"] = p
@@ -103,18 +113,6 @@ func _escort_goal(from: Vector2, rng: RandomNumberGenerator) -> Vector2:
 		if q.distance_to(from) >= ESCORT_MIN_TRIP and zone.is_walkable(q, 40.0):
 			return q
 	return Vector2.INF
-
-
-func _pick(rng: RandomNumberGenerator) -> String:
-	var total := 0
-	for w in WEIGHTS:
-		total += w
-	var r := rng.randi_range(0, total - 1)
-	for k in KINDS.size():
-		r -= WEIGHTS[k]
-		if r < 0:
-			return KINDS[k]
-	return KINDS[0]
 
 
 func _process(delta: float) -> void:

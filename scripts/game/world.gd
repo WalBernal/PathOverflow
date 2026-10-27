@@ -412,6 +412,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 	ui.on_zone_changed(zone)
 	if not saved.is_empty() and (zone.layout or zone.def.has("boss")):
 		_restore_instance(saved)
+	_announce_mechanic()
 	quests.notify_zone(zone.id)
 	_mark_dirty()
 	Sfx.ambient(String(zone.def.get("style", "ruins")))
@@ -1154,6 +1155,35 @@ func _on_zone_event(e: Dictionary) -> void:
 				ui.hud.flash("«Vuelve cuando tengas %d fichas.» Te faltan %d." % [price, price - character.tokens], Color("e0a060"))
 
 
+## Mecánica principal de la zona (T120): aviso con su nombre y su frase al entrar, y el
+## consejo de primera vez. Si ya se completó en esta instancia, no se repite.
+func _announce_mechanic() -> void:
+	var main := String(zone.mechanic.get("main", ""))
+	if main == "":
+		return
+	for e in zone.events.events:
+		if e.get("main", false) and e["state"] == "done":
+			return
+	var m := ZoneMechanics.info(main)
+	ui.hud.flash("%s — %s" % [m.get("name", main), m.get("text", "")], Color("ffd24a"))
+	if ui.tips:
+		ui.tips.show_tip("zone_mechanic")
+
+
+## La principal salió bien: su recompensa del catálogo, además del botín del evento.
+func _mechanic_reward(e: Dictionary) -> void:
+	if not e.get("main", false):
+		return
+	var r: Dictionary = ZoneMechanics.info(String(e["kind"])).get("reward", {})
+	var at: Vector2 = e.get("walker", e["pos"]) if e["kind"] == "escort" else e["pos"]
+	var n := int(r.get("items", 0))
+	for k in n:
+		loot.drop_item(item_generator.roll_drop(enemies.area_level, float(r.get("rarity", 1.5))), zone.free_spot_near(at + Vector2.from_angle(TAU * k / maxf(1.0, n) + 0.5) * 110.0))
+	if float(r.get("tokens_mult", 0.0)) > 0.0:
+		loot.drop_tokens(int(Economy.drop_amount(enemies.area_level, Rarity.Enemy.ELITE, _rng) * float(r["tokens_mult"])), zone.free_spot_near(at + Vector2(0, 80)))
+	ui.hud.flash("Mecánica completada: %s. Botín extra." % ZoneMechanics.info(String(e["kind"])).get("name", ""), Color("ffd24a"))
+
+
 ## Bombas o escolta terminadas: buen botín si salió bien, un consuelo si no.
 func _on_zone_event_resolved(e: Dictionary, success: bool) -> void:
 	var at: Vector2 = e.get("walker", e["pos"]) if e["kind"] == "escort" else e["pos"]
@@ -1164,6 +1194,7 @@ func _on_zone_event_resolved(e: Dictionary, success: bool) -> void:
 		loot.drop_tokens(Economy.drop_amount(enemies.area_level, Rarity.Enemy.ELITE, _rng) * 2, zone.free_spot_near(at))
 		ui.hud.flash("¡Bombas desactivadas!" if e["kind"] == "bombs" else "El proceso llegó a su salida: exit code 0.", Color("6fd36b"))
 		Sfx.play("level_up", -6.0, 1.3)
+		_mechanic_reward(e)
 	else:
 		ui.hud.flash("Las bombas lógicas estallaron. Algo se salvó entre los escombros.", Color("ff6a5a"))
 
@@ -1215,6 +1246,7 @@ func _update_event_fights() -> void:
 		loot.drop_tokens(Economy.drop_amount(enemies.area_level, Rarity.Enemy.ELITE, _rng) * 2, zone.free_spot_near(at))
 		ui.hud.flash("Evento superado: botín en el suelo.", Color("6fd36b"))
 		Sfx.play("level_up", -6.0, 1.3)
+		_mechanic_reward(e)
 
 
 ## Hitstop: el juego se congela unos milisegundos (tiempo real) para dar peso al

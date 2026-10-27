@@ -487,7 +487,9 @@ Al terminar el Acto IV se abre el **árbol de deuda técnica** (`scripts/charact
 
 ## Eventos de zona
 
-En cada visita a una zona de combate aparecen al azar algunos eventos (`scripts/game/zone_events.gd`): **Datos huérfanos** (dos oleadas y botín), **Santuarios** (bono temporal o cargas llenas), **Emboscadas** (invisibles) y **Deploy fallido** (dos raros con escolta). Nuevos:
+**Mecánicas de zona** (versión 3.0, `data/zone_mechanics.json`, `ZoneMechanics`): cada instancia de una zona de combate trae **una mecánica principal** —se anuncia al entrar con su nombre y una frase, sale en el minimapa con un rombo dorado y, al completarla, da botín extra; ignorarla no tiene castigo— y como mucho **un evento menor**, para no saturar la zona. Principales: **Bombas lógicas**, **Proceso perdido** y **Deploy fallido** (al azar según estilo, acto y nivel) y, en sus zonas, el **Mutex** y la **Carrera Crítica** mientras no se hayan superado. Menores: Datos huérfanos, Santuarios, Emboscadas y el Comerciante ambulante. El tutorial no tiene mecánicas.
+
+Los eventos (`scripts/game/zone_events.gd`): **Datos huérfanos** (dos oleadas y botín), **Santuarios** (bono temporal o cargas llenas), **Emboscadas** (invisibles) y **Deploy fallido** (dos raros con escolta). Nuevos:
 
 - **Bombas lógicas**: al tocar la consola aparecen tres bombas con una cuenta atrás de 25 s y una oleada. Quédate 1,5 s junto a cada una para desactivarla; las que queden estallan y hacen mucho daño cerca. Bien: tres objetos y fichas; mal: uno.
 - **Proceso perdido** (escolta): un fantasmita con su PID camina hasta su salida, pero solo si estás cerca y no hay enemigos a su lado. A un tercio y a dos tercios del camino, emboscada. Al llegar: tres objetos y fichas.

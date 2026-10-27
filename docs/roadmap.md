@@ -724,11 +724,12 @@ Origen: V3
 
 ## Fase 23 — Mecánicas de zona al azar
 
-### [ ] T120 · Motor de mecánicas de zona · M
+### [x] T120 · Motor de mecánicas de zona · M
 Origen: V3
 - Catálogo `data/zone_mechanics.json` (peso, estilos y actos donde puede salir, nivel mínimo, recompensa) y presupuesto por instancia: **una mecánica principal siempre** y como mucho un evento menor de los de `ZoneEvents`; nunca dos principales. El `mutex` y la `race_condition` del Acto II cuentan como la principal de su zona.
 - Al entrar, aviso con el nombre y una frase; icono en el minimapa y consejo de primera vez (`TipPanel`). Recompensa al completarla (botín extra o tokens), sin castigo si se ignora.
 - Integración: cada zona prueba cada mecánica que le puede tocar.
+- Hecho: `data/zone_mechanics.json` (principales con nombre, frase, peso, estilos, actos, nivel mínimo, tipo —`event` la pone ZoneEvents, `fixed` la trae la zona— y recompensa; menores con su peso y `minor_chance` 0,6) y `ZoneMechanics.plan(def, rng, flags, acto)`. Hasta que lleguen las de T121-T122, las principales al azar son los eventos con objetivo que ya había (**Bombas lógicas**, **Proceso perdido** y **Deploy fallido**) y las fijas el **Mutex** y la **Carrera Crítica** (mientras su bandera no esté puesta; superadas, le toca otra). `ZoneEvents.setup(zone, rng, plan)` pone solo la principal (marcada `main`) y el menor: antes salían **2-7 eventos por zona**, ahora 1-2 (pesos de `ZoneEvents.WEIGHTS` al catálogo; una escolta principal sin sitio para el viaje pasa a deploy). El reparto sale de la semilla de la instancia (así T119 la repite) y su estado vuelve con los eventos guardados. Al entrar, aviso dorado «Nombre — frase» (no se repite si ya se completó en la instancia) y consejo `zone_mechanic`; rombo dorado en el minimapa (`Minimap.mechanic_points`: el evento, o los puntos del mutex o de la carrera); al completarla, `World._mechanic_reward` suelta el botín extra del catálogo. Comprobación: en vez de jugar cada mecánica de cada zona en la integración (que juega una al azar por zona y clase), `test_core` coloca en cada zona cada principal que le puede tocar (`_test_zone_mechanics`, >40 colocaciones) y revisa el reparto con 20 semillas por zona.
 
 ### [ ] T121 · Mecánicas nuevas, parte 1 · M
 Origen: V3
@@ -965,3 +966,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-26 · T117 · Cada instancia con su tema de enemigos (uno abunda, otro escasea, élites 0,7-1,3×), raros en otro sitio, rincón con caja rica la mitad de las veces y su tiempo (niebla, lluvia, polvo o apagón parcial) dentro del estilo.
 - 2026-10-26 · T118 · Las zonas generadas se conservan 10 minutos (hasta 8): al volver, la misma zona con el botín y los tokens del suelo, las cajas abiertas y el mapa explorado; el banco de oleadas deja de generarse.
 - 2026-10-26 · T119 · Al volver a una instancia viva, los mismos enemigos vivos (con su vida) y los eventos como estaban; la arena del jefe conserva su botín pero el jefe vuelve entero; la ventana de waypoints dice cuánto le queda a cada instancia.
+- 2026-10-26 · T120 · Motor de mecánicas de zona: una principal siempre (bombas, escolta o deploy al azar; mutex y carrera crítica en sus zonas) y como mucho un evento menor, con aviso al entrar, rombo en el minimapa, consejo y botín extra al completarla.

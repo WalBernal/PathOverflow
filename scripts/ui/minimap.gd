@@ -70,6 +70,26 @@ func _draw() -> void:
 	last_draw_ms = (Time.get_ticks_usec() - t0) / 1000.0
 
 
+## Dónde está la mecánica principal de la zona: su evento mientras no se complete o,
+## si es de las que trae la zona (mutex, carrera crítica), sus puntos.
+static func mechanic_points(z: Zone) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	if z == null or z.mechanic.is_empty() or String(z.mechanic.get("main", "")) == "":
+		return out
+	if z.events:
+		for e in z.events.events:
+			if e.get("main", false) and e["state"] != "done":
+				out.append(e["pos"])
+	if z.mechanic.get("fixed", false):
+		var m := String(z.mechanic["main"])
+		var d: Dictionary = z.def.get(String(ZoneMechanics.info(m).get("data_key", m)), {})
+		if d.has("pos"):
+			out.append(Zone._v(d["pos"]))
+		for p in d.get("positions", []):
+			out.append(Zone._v(p))
+	return out
+
+
 func _draw_map() -> void:
 	if player == null:
 		return
@@ -127,6 +147,13 @@ func _draw_map() -> void:
 					draw_colored_polygon(poly, FEATURE_COLORS.get(o["kind"], Color("4a4352")))
 		elif _inside(p):
 			draw_circle(p, maxf(1.5, o["radius"] * SCALE), Color("4a4352"))
+	# La mecánica principal de la zona (T120): rombo dorado donde está, hasta completarla.
+	for p in mechanic_points(zone):
+		var mp := _to_map(p)
+		if _inside(mp):
+			var r := 5.0
+			draw_colored_polygon(PackedVector2Array([mp + Vector2(0, -r), mp + Vector2(r, 0), mp + Vector2(0, r), mp + Vector2(-r, 0)]), Color("ffd24a"))
+			draw_polyline(PackedVector2Array([mp + Vector2(0, -r), mp + Vector2(r, 0), mp + Vector2(0, r), mp + Vector2(-r, 0), mp + Vector2(0, -r)]), Color("4a3a10"), 1.0)
 	if world_map:
 		for m in world_map.marks():
 			var mp := _to_map(Vector2(m[0], m[1]))

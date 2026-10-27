@@ -184,6 +184,7 @@ func _initialize() -> void:
 	_test_zone_shapes()
 	_test_zone_content()
 	_test_zone_instances()
+	_test_zone_mechanics()
 	_test_tilesets()
 	_test_events_music_colorblind()
 	_test_story_editor()
@@ -2491,8 +2492,10 @@ func _test_act4_boss() -> void:
 
 ## Eventos de zona nuevos (T31): bombas lógicas, escolta y comerciante ambulante.
 func _test_new_zone_events() -> void:
-	_check(ZoneEvents.KINDS.size() == ZoneEvents.WEIGHTS.size() and ZoneEvents.KINDS.has("bombs") and ZoneEvents.KINDS.has("escort") and ZoneEvents.KINDS.has("merchant"),
-		"tres eventos de zona nuevos, cada uno con su peso")
+	var catalog := ZoneMechanics.data()
+	_check(ZoneEvents.KINDS.has("bombs") and ZoneEvents.KINDS.has("escort") and ZoneEvents.KINDS.has("merchant")
+		and ZoneEvents.KINDS.all(func(k: String) -> bool: return catalog["main"].has(k) or catalog["minor"].has(k)),
+		"tres eventos de zona nuevos, cada uno con su peso (principal o menor en zone_mechanics.json)")
 	var ev := ZoneEvents.new()
 	var results: Array = []
 	var booms: Array = []
@@ -4603,6 +4606,57 @@ func _test_zone_instances() -> void:
 	_check(not ZoneLayout.applies_to(ladder_def), "el banco de oleadas no se genera")
 	a.free()
 	b.free()
+
+
+## Mecánicas de zona (T120): una principal siempre, como mucho un evento menor, las
+## fijas mientras no se superan y cada principal posible se coloca en cada zona.
+func _test_zone_mechanics() -> void:
+	var catalog := ZoneMechanics.data()
+	for id in catalog["main"]:
+		var m: Dictionary = catalog["main"][id]
+		_check(String(m.get("kind", "")) == "fixed" or ZoneEvents.KINDS.has(id), "la mecánica %s la sabe poner ZoneEvents" % id)
+		_check(String(m.get("name", "")) != "" and String(m.get("text", "")) != "", "la mecánica %s tiene nombre y frase" % id)
+	var problems := []
+	var tried := 0
+	var rng := RandomNumberGenerator.new()
+	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json", "res://data/act4.json"]:
+		var act: Dictionary = DataLoader.load_json(path)
+		for z in act.get("zones", []):
+			var def: Dictionary = z.duplicate(true)
+			Zone.scale_def(def)
+			var combat: bool = not def.get("safe", false) and not def.has("boss") and def.get("enemies") is Dictionary and def["id"] != "tutorial"
+			for k in 20:
+				rng.seed = 800 + k
+				var plan := ZoneMechanics.plan(def, rng, {}, act["id"])
+				if combat and String(plan["main"]) == "":
+					problems.append("%s: sin mecánica principal" % def["id"])
+				if not combat and (String(plan["main"]) != "" or String(plan["minor"]) != ""):
+					problems.append("%s: mecánicas donde no tocan" % def["id"])
+				if plan["minor"] != "" and catalog["main"].has(plan["minor"]):
+					problems.append("%s: dos principales" % def["id"])
+			if not combat:
+				continue
+			for key in ["mutex", "race_condition"]:
+				if def.get(key) is Dictionary:
+					rng.seed = 1
+					_check(ZoneMechanics.plan(def, rng, {}, act["id"])["main"] == key, "%s: su %s es la principal" % [def["id"], key])
+					rng.seed = 1
+					var after := ZoneMechanics.plan(def, rng, {String(def[key].get("flag", "")): true}, act["id"])
+					_check(after["main"] != key and after["main"] != "", "%s: superado el %s, le toca otra" % [def["id"], key])
+			# Cada principal que le puede tocar se coloca de verdad en la zona.
+			var zone := Zone.new()
+			zone.setup(def, null, null, null, 31337)
+			for m in ZoneMechanics.candidates(def, act["id"]):
+				tried += 1
+				var ev := ZoneEvents.new()
+				rng.seed = 5
+				ev.setup(zone, rng, {"main": m, "minor": "shrine"})
+				var mains := ev.events.filter(func(e: Dictionary) -> bool: return e.get("main", false))
+				if mains.size() != 1 or ev.events.size() > 2 or (mains[0]["kind"] != m and not (m == "escort" and mains[0]["kind"] == "deploy")):
+					problems.append("%s: %s no se colocó (%d eventos)" % [def["id"], m, ev.events.size()])
+				ev.free()
+			zone.free()
+	_check(problems.is_empty() and tried > 40, "reparto de mecánicas en todas las zonas y %d colocadas %s" % [tried, problems.slice(0, 5)])
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.

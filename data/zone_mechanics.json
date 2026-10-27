@@ -1,0 +1,18 @@
+{
+  "_doc": "Mecánicas de zona (T120, ZoneMechanics). Cada instancia de una zona de combate lleva UNA principal siempre y, como mucho, un evento menor (ZoneEvents); nunca dos principales. main: id -> {name, text (la frase del aviso al entrar), weight, styles (vacío = todos), acts (vacío = todos), min_level, kind ('event' = la pone ZoneEvents con ese tipo; 'fixed' = la trae la zona en sus datos, como el mutex o la carrera crítica, y gana a las demás mientras no se haya superado), reward {items, rarity, tokens_mult} al completarla}. minor: tipos de evento menores con su peso; minor_chance: probabilidad de que además haya uno. Ignorar una mecánica no tiene castigo.",
+  "version": 1,
+  "main": {
+    "bombs": {"name": "Bombas lógicas", "text": "Alguien dejó un cron con rm -rf. Busca la consola y desactiva las bombas a tiempo.",
+      "weight": 30, "styles": [], "acts": [], "min_level": 2, "kind": "event", "reward": {"items": 2, "rarity": 1.8, "tokens_mult": 2.0}},
+    "escort": {"name": "Proceso perdido", "text": "Un proceso huérfano busca su salida. Acompáñalo y que nadie le haga kill -9.",
+      "weight": 25, "styles": [], "acts": [], "min_level": 2, "kind": "event", "reward": {"items": 2, "rarity": 1.8, "tokens_mult": 2.0}},
+    "deploy": {"name": "Deploy fallido", "text": "Un viernes a las 18:00. Dos procesos raros se escaparon a producción: tráelos de vuelta.",
+      "weight": 35, "styles": [], "acts": [], "min_level": 1, "kind": "event", "reward": {"items": 2, "rarity": 1.6, "tokens_mult": 1.5}},
+    "mutex": {"name": "Mutex", "text": "Los candados bloquean el paso. Rómpelos todos para liberar el recurso.",
+      "weight": 0, "styles": [], "acts": [], "min_level": 1, "kind": "fixed", "data_key": "mutex", "reward": {}},
+    "race_condition": {"name": "Carrera Crítica", "text": "Dos hilos gemelos se turnan la vulnerabilidad. Golpea al que toca.",
+      "weight": 0, "styles": [], "acts": [], "min_level": 1, "kind": "fixed", "data_key": "race_condition", "reward": {}}
+  },
+  "minor": {"cache": 26, "shrine": 30, "ambush": 17, "merchant": 4},
+  "minor_chance": 0.6
+}

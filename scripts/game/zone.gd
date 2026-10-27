@@ -128,6 +128,8 @@ var layout: ZoneLayout = null
 var ground_rects: Array[Rect2] = []
 var _boundary: Array[Dictionary] = []   # frontera suelo/muro: {a, b, n hacia el suelo}
 var _seed_base := 0
+## Mecánicas de esta instancia (T120, ZoneMechanics.plan): {main, minor, fixed}.
+var mechanic: Dictionary = {}
 
 var _edges := {}                        # "top"/"bottom"/"left"/"right" -> PackedFloat32Array
 var _edge_props: Array[Dictionary] = [] # adornos del borde: {pos, out, seed}
@@ -293,8 +295,13 @@ func setup(p_def: Dictionary, p_player: Player, p_character: CharacterData, p_qu
 	events = ZoneEvents.new()
 	add_child(events)
 	var event_rng := RandomNumberGenerator.new()
-	event_rng.randomize()
-	events.setup(self, event_rng)
+	if layout:
+		event_rng.seed = _seed_base + 53   # la instancia decide (T118 la puede repetir)
+	else:
+		event_rng.randomize()
+	# Mecánicas (T120): una principal siempre y como mucho un evento menor.
+	mechanic = ZoneMechanics.plan(def, event_rng, character.flags if character else {}, String(def.get("act", "")))
+	events.setup(self, event_rng, mechanic)
 	_ground_layer.draw.connect(_draw_static)
 	add_child(_ground_layer)
 
