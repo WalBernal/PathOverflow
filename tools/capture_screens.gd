@@ -24,6 +24,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("comparar"):
+		await _capture_board_compare()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("waypoints"):
 		await _capture_waypoint_map()
 		get_tree().quit()
@@ -2110,6 +2114,44 @@ func _swap(node: Node) -> void:
 
 func _wait(seconds: float) -> Signal:
 	return get_tree().create_timer(seconds).timeout
+
+
+## Comparar placas y RAM (T127): el tooltip de una placa mejor de la que llevas (con la tuya
+## al lado) y el de una RAM con lo que haría en tus placas.
+func _capture_board_compare() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Comparar", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 12
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(3.6)
+	var ui: GameUI = world.get("ui")
+	var skills: Dictionary = gd.get("items").skills.skills
+	var mine := Motherboard.new(skills["barrido"], 3, ["DDR3", "DDR3"])
+	c.inventory.boards[0] = mine
+	var better := Motherboard.new(skills["barrido"], 9, ["DDR3", "DDR3", "DDR4"])
+	ui.item_tooltip.show_item(better, c, true)
+	ui.item_tooltip.position = Vector2(420, 80)
+	await _wait(0.6)
+	_save("127_comparar_placa")
+	var rams: Dictionary = gd.get("items").skills.rams
+	for id in rams:
+		var r := RamModule.new(rams[id])
+		if r.supports(mine.skill_def) and r.generation() == "DDR3":
+			ui.item_tooltip.show_item(r, c, true)
+			ui.item_tooltip.position = Vector2(560, 120)
+			break
+	await _wait(0.6)
+	_save("127_comparar_ram")
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
 
 
 ## Ventana de waypoints como mapa del acto (T126), con un personaje del Acto II: actos I y

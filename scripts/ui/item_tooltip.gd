@@ -98,7 +98,7 @@ func show_item(item: Item, character: CharacterData, compare: bool) -> void:
 	_character = character
 	_compare = compare
 	_requested_compare = compare
-	if not _is_side and Input.is_key_pressed(KEY_ALT) and item.is_equipment():
+	if not _is_side and Input.is_key_pressed(KEY_ALT) and wants_compare(item):
 		_compare = true   # con Alt pulsada, ya sale comparando
 		compare = true
 	_alt_held = Input.is_key_pressed(KEY_ALT)
@@ -127,6 +127,10 @@ func _update_sides(item: Item, character: CharacterData, compare: bool) -> void:
 			var e: Item = character.inventory.equipped(s)
 			if e != null and e != item:
 				equipped.append(e)
+	elif compare and character and item is Motherboard:   # la de la misma habilidad en tu barra (T127)
+		var rival := board_rival(item as Motherboard, character)
+		if rival:
+			equipped.append(rival)
 	while _sides.size() < equipped.size():
 		var side := ItemTooltip.new()
 		side._is_side = true
@@ -170,9 +174,15 @@ func is_pinned() -> bool:
 
 static func build_text(item: Item, character: CharacterData, compare: bool) -> String:
 	if item is Motherboard:
-		return _motherboard_text(item as Motherboard, character)
+		var bt := _motherboard_text(item as Motherboard, character)
+		if compare and character:   # contra la de la misma habilidad en tu barra (T127)
+			bt += "\n" + _section(board_comparison(item as Motherboard, board_rival(item as Motherboard, character), character))
+		return bt.strip_edges()
 	if item is RamModule:
-		return _ram_text(item as RamModule)
+		var rt := _ram_text(item as RamModule)
+		if compare and character:   # qué haría en cada placa de tu barra (T127)
+			rt += "\n" + _section(ram_comparison(item as RamModule, character))
+		return rt.strip_edges()
 	if item is Flask:
 		return _flask_text(item as Flask, character)
 	if item is KeyItem:
@@ -229,6 +239,86 @@ static func build_text(item: Item, character: CharacterData, compare: bool) -> S
 		else:
 			t += _section(_comparison(item, character))
 	return t.strip_edges()
+
+
+## ¿Se compara este objeto con lo equipado? Equipo, placas y RAM (T127).
+static func wants_compare(item: Item) -> bool:
+	return item != null and (item.is_equipment() or item is Motherboard or item is RamModule)
+
+
+## La placa de tu barra contra la que se compara `board`: la de la misma habilidad (null
+## si no la llevas o si `board` es esa misma).
+static func board_rival(board: Motherboard, character: CharacterData) -> Motherboard:
+	if character == null or character.inventory.boards.has(board):
+		return null
+	for b in character.inventory.boards:
+		if b is Motherboard and b != board and String(b.skill_def.get("id", "")) == String(board.skill_def.get("id", "")):
+			return b
+	return null
+
+
+## Una línea de diferencia: +/- en verde si mejora y en rojo si empeora (`lower_is_better`
+## para el coste y el enfriamiento).
+static func _delta_line(label: String, before: float, after: float, lower_is_better := false, fmt := "%d") -> String:
+	var delta := after - before
+	if absf(delta) < 0.005:
+		return ""
+	var good := delta < 0.0 if lower_is_better else delta > 0.0
+	var pct := ("  (%+.0f %%)" % (delta / absf(before) * 100.0)) if absf(before) > 0.0001 else ""
+	return "[color=#%s]%s: %s → %s%s[/color]" % [UP if good else DOWN, label, fmt % before, fmt % after, pct]
+
+
+## Placa contra la de tu barra: DPS, coste, usos/s, radio, proyectiles, enfriamiento,
+## nivel y ranuras, con lo que mejora en verde y lo que empeora en rojo.
+static func board_comparison(board: Motherboard, rival: Motherboard, character: CharacterData) -> String:
+	if character == null:
+		return ""
+	if character.inventory.boards.has(board):
+		return ""
+	if rival == null:
+		return "[color=#%s]No llevas esta habilidad en la barra: arrástrala a una casilla (K) para usarla.[/color]" % GREY
+	var a := SkillCalc.compute(rival, character)
+	var b := SkillCalc.compute(board, character)
+	var lines := PackedStringArray()
+	for row in [["DPS", "dps", false, "%d"], ["Coste de maná", "mana_cost", true, "%d"], ["Usos/s", "uses_per_second", false, "%.2f"],
+			["Radio", "radius", false, "%d"], ["Proyectiles", "projectiles", false, "%d"], ["Enfriamiento", "cooldown", true, "%.1f s"]]:
+		var l := _delta_line(row[0], float(a.get(row[1], 0.0)), float(b.get(row[1], 0.0)), row[2], row[3])
+		if l != "":
+			lines.append(l)
+	var lv := _delta_line("Nivel", rival.level, board.level)
+	if lv != "":
+		lines.append(lv)
+	var sl := _delta_line("Ranuras", rival.slots.size(), board.slots.size())
+	if sl != "":
+		lines.append(sl)
+	if lines.is_empty():
+		return "[color=#%s]Frente a la de tu barra: igual en las cifras principales.[/color]" % GREY
+	return "[color=#%s]Frente a la de tu barra:[/color]\n%s" % [GREY, "\n".join(lines)]
+
+
+## RAM contra tus placas: en cada placa de la barra que la admite, el DPS si la instalas
+## en una ranura libre de su generación (o que no hay sitio).
+static func ram_comparison(ram: RamModule, character: CharacterData) -> String:
+	if character == null:
+		return ""
+	var lines := PackedStringArray()
+	for board in character.inventory.boards:
+		if not board is Motherboard or not ram.supports(board.skill_def):
+			continue
+		var name := String(board.skill_def.get("name", board.display_name()))
+		var slot: int = board.free_slot_for(ram)
+		if slot == -1:
+			lines.append("[color=#%s]%s: sin ranura %s libre[/color]" % [GREY, name, ram.generation()])
+			continue
+		var p := SkillCalc.compute(board, character)
+		var trial := Motherboard.new(board.skill_def, board.level, board.slots)
+		trial.rams = board.rams.duplicate()
+		trial.install(ram, slot)
+		var l := _delta_line("%s, DPS" % name, float(p.get("dps", 0.0)), float(SkillCalc.compute(trial, character).get("dps", 0.0)))
+		lines.append(l if l != "" else "[color=#%s]%s: no cambia su DPS[/color]" % [GREY, name])
+	if lines.is_empty():
+		return "[color=#%s]Ninguna placa de tu barra la admite.[/color]" % GREY
+	return "[color=#%s]En tus placas:[/color]\n%s" % [GREY, "\n".join(lines)]
 
 
 ## Ranuras contra las que se compara: las dos de anillo si llevas dos anillos;

@@ -1072,4 +1072,4 @@ func _on_ground_item_hovered(item: Item) -> void:
 	if item == null:
 		item_tooltip.hide()
 	else:
-		item_tooltip.show_item(item, _character, item.is_equipment())
+		item_tooltip.show_item(item, _character, ItemTooltip.wants_compare(item))

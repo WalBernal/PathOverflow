@@ -191,6 +191,7 @@ func _initialize() -> void:
 	_test_scene_depth()
 	_test_minimap_fog()
 	_test_waypoint_map()
+	_test_board_compare()
 	_test_tilesets()
 	_test_events_music_colorblind()
 	_test_story_editor()
@@ -4993,6 +4994,41 @@ func _test_waypoint_map() -> void:
 	inst.store("zona4", {"seed": 1, "mechanic": "Apagón del CPD"}, 0.0)
 	inst.store("zona5", {"seed": 2}, 0.0)
 	_check(inst.values("mechanic", 1.0) == {"zona4": "Apagón del CPD"}, "la instancia recuerda su mecánica para la ventana")
+
+
+## Comparar placas y RAM con lo equipado (T127): la placa contra la de la misma habilidad en
+## tu barra, con lo que mejora en verde y lo que empeora en rojo; la RAM, en cada placa.
+func _test_board_compare() -> void:
+	var c := _new_character()
+	var equipped := Motherboard.new(_db.skills.skills["barrido"], 3, ["DDR3", "DDR3"] as Array[String])
+	c.inventory.boards[0] = equipped
+	var better := Motherboard.new(equipped.skill_def, equipped.level + 5, equipped.slots + ["DDR3"] as Array[String])
+	_check(ItemTooltip.board_rival(better, c) == equipped and ItemTooltip.board_rival(equipped, c) == null,
+		"una placa se compara con la de su habilidad en la barra (la de la barra, con nada)")
+	var text := ItemTooltip.build_text(better, c, true)
+	_check(text.contains("Frente a la de tu barra") and text.contains("Nivel: %d → %d" % [equipped.level, better.level]) and text.contains(ItemTooltip.UP),
+		"y dice en verde lo que mejora (nivel, ranuras, DPS)")
+	var worse := Motherboard.new(equipped.skill_def, 1, ["DDR3"] as Array[String])
+	if equipped.level > 1:
+		_check(ItemTooltip.build_text(worse, c, true).contains(ItemTooltip.DOWN), "y en rojo lo que empeora")
+	var other_def: Dictionary = {}
+	for id in _db.skills.skills:
+		if id != String(equipped.skill_def.get("id", "")) and not c.inventory.boards.any(func(b) -> bool: return b is Motherboard and b.skill_def.get("id", "") == id):
+			other_def = _db.skills.skills[id]
+			break
+	var stranger := Motherboard.new(other_def, 1, ["DDR3"] as Array[String])
+	_check(ItemTooltip.build_text(stranger, c, true).contains("No llevas esta habilidad"), "una habilidad que no llevas lo dice")
+	_check(not ItemTooltip.build_text(better, c, false).contains("Frente a la de tu barra"), "sin comparar, el tooltip de siempre")
+	var any_ram: RamModule = null
+	for id in _db.skills.rams:
+		var r := RamModule.new(_db.skills.rams[id])
+		if r.supports(equipped.skill_def):
+			any_ram = r
+			break
+	if any_ram:
+		var rt := ItemTooltip.build_text(any_ram, c, true)
+		_check(rt.contains("En tus placas") and rt.contains(String(equipped.skill_def.get("name", ""))), "una RAM dice qué haría en cada placa de tu barra")
+	_check(ItemTooltip.wants_compare(better) and ItemTooltip.wants_compare(any_ram) if any_ram else ItemTooltip.wants_compare(better), "placas y RAM se comparan como el equipo")
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.

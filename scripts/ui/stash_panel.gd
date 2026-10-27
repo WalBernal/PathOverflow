@@ -207,4 +207,4 @@ func _on_cell_hovered(cell: ItemCell, inside: bool) -> void:
 	if not inside or cell.item == null:
 		_tooltip.hide()
 		return
-	_tooltip.show_item(cell.item, character, cell.item.is_equipment())
+	_tooltip.show_item(cell.item, character, ItemTooltip.wants_compare(cell.item))

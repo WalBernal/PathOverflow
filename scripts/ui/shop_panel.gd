@@ -457,7 +457,7 @@ func _on_item_hovered(cell: ItemCell, inside: bool) -> void:
 		_tooltip.hide()
 		_hint.text = "Click en un artículo para comprarlo."
 		return
-	_tooltip.show_item(cell.item, character, cell.item.is_equipment())
+	_tooltip.show_item(cell.item, character, ItemTooltip.wants_compare(cell.item))
 	var price := Economy.shop_price(cell.item) if cell.location.get("kind", "") == "shop" else int(buyback[int(cell.location["index"])]["price"])
 	var owned := owned_board_level(character, cell.item)
 	_hint.text = "Click: comprar por %d tokens%s%s" % [price, "" if price <= character.tokens else "  (no te alcanza)",
