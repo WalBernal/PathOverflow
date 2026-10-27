@@ -2124,7 +2124,8 @@ func _capture_zone_seeds() -> void:
 			if problem != "":
 				fails += 1
 			templates[l.template] = int(templates.get(l.template, 0)) + 1
-			notes.append("%s %dx%d %.0f%%%s" % [l.template, l.width, l.height, l.floor_fraction() * 100.0, (" ¡" + problem + "!") if problem != "" else ""])
+			notes.append("%s%s%s %dx%d %.0f%%%s" % [l.template, "" if l.shape == "normal" else " " + l.shape, " rodeo" if not l.detour.is_empty() else "",
+				l.width, l.height, l.floor_fraction() * 100.0, (" ¡" + problem + "!") if problem != "" else ""])
 			imgs.append(l.draw_image(PX, Color(style["ground"]), Color(style["outside"])))
 		var w := GAP
 		var h := 0

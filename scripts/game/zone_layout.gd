@@ -24,6 +24,13 @@ const STYLE_TEMPLATES := {
 	"bus": ["racks", "plaza"], "kernel": ["plaza", "salas"], "silicio": ["plaza", "racks"], "vga16": ["salas", "racks"],
 	"sandbox": ["plaza"], "flash": ["plaza"],
 }
+## Probabilidad de cada variante de forma alargada (larga o ancha) y del rodeo.
+const SHAPE_CHANCE := 0.2
+const DETOUR_CHANCE := 0.3
+## Coste de cavar al unir puntos clave: el pasillo va por el suelo que ya hay y
+## solo cava si no queda otra (la cresta del rodeo cuesta mucho más).
+const DIG_COST := 8.0
+const HARD_COST := 80.0
 const TEMPLATE_NAMES := {"salas": "salas y pasillos", "cueva": "cueva orgánica", "plaza": "plaza con islas", "racks": "pasillos de racks"}
 
 var width := 0           # en celdas
@@ -36,8 +43,15 @@ var entries: Dictionary = {}           # nombre -> Vector2
 var waypoint := Vector2.INF
 var specials: Array[Dictionary] = []   # {kind, id, pos}: NPC, objeto de misión, prueba, objeto clave
 
+## Variante de forma (T116): "normal" (±15 %), "larga" (+20-30 % de largo) o "ancha".
+var shape := "normal"
+## Rodeo (T116): una cresta de muro de lado a lado con un solo paso en un extremo, que
+## obliga a dar la vuelta. Celdas de la cresta (no se cavan si hay otro camino).
+var detour: Array[Vector2i] = []
+
 var _rng := RandomNumberGenerator.new()
 var _seed := 0
+var _hard := {}   # celdas de muro que los pasillos evitan (la cresta del rodeo)
 
 
 ## Zonas guiadas que no se generan (el tutorial enseña cosas en sitios concretos).
@@ -285,7 +299,17 @@ func _build(def: Dictionary, p_seed: int) -> void:
 	_rng.seed = p_seed
 	_seed = p_seed
 	var base := Vector2(float(def["size"][0]), float(def["size"][1]))
-	var size := Vector2(base.x * _rng.randf_range(1.0 - SIZE_JITTER, 1.0 + SIZE_JITTER), base.y * _rng.randf_range(1.0 - SIZE_JITTER, 1.0 + SIZE_JITTER))
+	var mul := Vector2(_rng.randf_range(1.0 - SIZE_JITTER, 1.0 + SIZE_JITTER), _rng.randf_range(1.0 - SIZE_JITTER, 1.0 + SIZE_JITTER))
+	var roll := _rng.randf()
+	if roll < SHAPE_CHANCE:   # más larga en el sentido de la marcha
+		shape = "larga"
+		mul = Vector2(_rng.randf_range(1.2, 1.3), _rng.randf_range(0.85, 0.95))
+	elif roll < SHAPE_CHANCE * 2.0:
+		shape = "ancha"
+		mul = Vector2(_rng.randf_range(0.85, 0.95), _rng.randf_range(1.2, 1.3))
+	else:
+		shape = "normal"
+	var size := base * mul
 	width = maxi(16, int(size.x / CELL))
 	height = maxi(12, int(size.y / CELL))
 	cells.resize(width * height)
@@ -299,6 +323,8 @@ func _build(def: Dictionary, p_seed: int) -> void:
 	if template != "salas":
 		_erode_border()
 	_place_keys(def, base)
+	if _rng.randf() < DETOUR_CHANCE:
+		_add_detour()
 	_connect_keys()
 	_keep_reachable()
 
@@ -590,14 +616,70 @@ func _mst(pts: Array[Vector2i]) -> Array:
 
 
 ## Abre pasillos entre todos los puntos clave (árbol mínimo), así nunca quedan aislados.
+## (T116) por el camino más barato: el suelo de la plantilla cuesta 1 y cavar muro
+## DIG_COST, así se respeta la forma (la cueva sigue siendo cueva) y el rodeo.
 func _connect_keys() -> void:
 	var pts: Array[Vector2i] = []
 	for p in key_points():
 		pts.append(cell_of(p))
-	for pair in _mst(pts):
-		_carve(pts[pair[0]], pts[pair[1]], CORRIDOR_CELLS)
 	for p in pts:   # un claro alrededor de cada punto clave
 		_blob(p, 1.6, 1)
+	var astar := AStarGrid2D.new()
+	astar.region = Rect2i(0, 0, width, height)
+	astar.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_NEVER
+	astar.default_compute_heuristic = AStarGrid2D.HEURISTIC_MANHATTAN
+	astar.update()
+	for y in height:
+		for x in width:
+			var c := Vector2i(x, y)
+			if x < MARGIN or y < MARGIN or x >= width - MARGIN or y >= height - MARGIN:
+				astar.set_point_solid(c, true)
+			elif not is_floor(c):
+				astar.set_point_weight_scale(c, HARD_COST if _hard.has(c) else DIG_COST)
+	for pair in _mst(pts):
+		var path := astar.get_id_path(pts[pair[0]], pts[pair[1]])
+		var lo := -int(CORRIDOR_CELLS * 0.5)
+		for c in path:
+			if is_floor(c):
+				continue   # ya se puede pasar: no hace falta ensanchar el suelo de la plantilla
+			for dy in range(lo, CORRIDOR_CELLS + lo):
+				for dx in range(lo, CORRIDOR_CELLS + lo):
+					_put(c + Vector2i(dx, dy), 1)
+			astar.set_point_weight_scale(c, 1.0)   # los siguientes pasillos ya lo aprovechan
+
+
+## Rodeo: cresta de 2 celdas de grosor que cruza la zona de lado a lado
+## (perpendicular a la marcha, lejos de los puntos clave) con un paso de 5 celdas en
+## uno de sus extremos.
+func _add_detour() -> void:
+	var horizontal_trip := exits.all(func(e: Dictionary) -> bool: return e["side"] == "left" or e["side"] == "right")
+	var across := width if horizontal_trip else height
+	var span := height if horizontal_trip else width
+	var keys := key_points()
+	var at := -1
+	for attempt in 12:
+		var cand := int(across * _rng.randf_range(0.35, 0.65))
+		var clear := true
+		for k in keys:
+			var kc := cell_of(k)
+			if absi((kc.x if horizontal_trip else kc.y) - cand) < 4:
+				clear = false
+		if clear:
+			at = cand
+			break
+	if at < 0:
+		return
+	var gap_at_start := _rng.randf() < 0.5
+	for b in range(MARGIN, span - MARGIN):
+		var in_gap := (b < MARGIN + 5) if gap_at_start else (b >= span - MARGIN - 5)
+		for t in 2:
+			var c := Vector2i(at + t, b) if horizontal_trip else Vector2i(b, at + t)
+			if in_gap:
+				_put(c, 1)
+			else:
+				_put(c, 0)
+				_hard[c] = true
+				detour.append(c)
 
 
 func _flood(start: Vector2i) -> Dictionary:

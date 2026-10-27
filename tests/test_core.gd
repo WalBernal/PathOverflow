@@ -181,6 +181,7 @@ func _initialize() -> void:
 	_test_no_back_portals()
 	_test_zone_layout()
 	_test_generated_zones()
+	_test_zone_shapes()
 	_test_tilesets()
 	_test_events_music_colorblind()
 	_test_story_editor()
@@ -4454,6 +4455,48 @@ func _test_generated_zones() -> void:
 	camp.setup(_zone_def("campamento"), null, null, null, 1234)
 	_check(camp.layout == null and not camp.walk_polygon.is_empty(), "el campamento no se genera aunque haya semilla")
 	camp.free()
+
+
+## Variantes de forma (T116): zonas largas, anchas y con rodeo que de verdad obliga a
+## dar la vuelta; las marcas del mapa solo duran lo que su instancia.
+func _test_zone_shapes() -> void:
+	var def: Dictionary = _zone_def("zona4").duplicate(true)
+	Zone.scale_def(def)
+	var shapes := {}
+	var detours := 0
+	var detour_kept := 0
+	var detour_cells := 0
+	for k in 60:
+		var l := ZoneLayout.generate(def, 300 + k)
+		shapes[l.shape] = true
+		if l.detour.is_empty():
+			continue
+		detours += 1
+		for c in l.detour:
+			detour_cells += 1
+			if not l.is_floor(c):
+				detour_kept += 1
+	_check(shapes.has("larga") and shapes.has("ancha") and shapes.has("normal"), "salen zonas normales, largas y anchas %s" % [shapes.keys()])
+	_check(detours >= 8 and detour_kept >= detour_cells * 0.9, "zonas con rodeo cuya cresta casi no se cava (%d rodeos, %d de %d celdas en pie)" % [detours, detour_kept, detour_cells])
+	# Marcas del mapa: se quedan en la misma instancia y se borran en otra.
+	var c := _new_character()
+	var z1 := Zone.new()
+	z1.setup(def, null, null, null, 77)
+	var wm := WorldMap.new()
+	wm.character = c
+	wm.set_zone(z1)
+	wm.toggle_mark(z1.entry_point(""))
+	_check(wm.marks().size() == 1, "se puede marcar una zona generada")
+	var z1b := Zone.new()
+	z1b.setup(def, null, null, null, 77)
+	wm.set_zone(z1b)
+	_check(wm.marks().size() == 1, "la marca sigue en la misma instancia")
+	var z2 := Zone.new()
+	z2.setup(def, null, null, null, 78)
+	wm.set_zone(z2)
+	_check(wm.marks().is_empty(), "y se borra en otra instancia")
+	for n in [z1, z1b, z2, wm]:
+		n.free()
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.

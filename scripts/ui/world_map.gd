@@ -6,7 +6,8 @@ extends Control
 ## Muestra salidas con su destino, waypoint, NPCs, objetos de misión, el jefe,
 ## los enemigos cercanos, el botín bueno y al jugador. El juego no se pausa.
 ## Rueda o +/−: zoom (centrado en el jugador). Clic derecho: pone una marca
-## propia (o quita la que haya ahí); se guardan por zona en flags "marks_<zona>".
+## propia (o quita la que haya ahí); se guardan por zona en flags "marks_<zona>" (en
+## las zonas generadas, solo mientras dure su instancia).
 
 const CELL := 160.0
 const REVEAL_RADIUS := 560.0
@@ -46,6 +47,7 @@ func set_zone(new_zone: Zone) -> void:
 	_rows = maxi(1, ceili(zone.rect.size.y / CELL))
 	explored = PackedByteArray()
 	explored.resize(_cols * _rows)
+	_forget_old_marks()
 	# Las zonas generadas cambian de forma: lo explorado de otra visita no sirve (T118 lo guardará con la instancia).
 	var saved := String(character.flags.get("map_" + zone.id, "")) if character and zone.layout == null else ""
 	if saved != "":
@@ -141,6 +143,17 @@ func zoom_by(step: int) -> void:
 
 
 # --- Marcas propias ---
+
+## Zonas generadas (T116): las marcas son de una instancia. Si la zona tiene otra
+## disposición que cuando se marcaron, se borran ("marks_seed_<zona>" guarda la semilla).
+func _forget_old_marks() -> void:
+	if zone == null or character == null or zone.layout == null:
+		return
+	var seed_now := int(zone.def.get("_layout_seed", 0))
+	if int(character.flags.get("marks_seed_" + zone.id, -1)) != seed_now:
+		character.flags.erase("marks_" + zone.id)
+		character.flags["marks_seed_" + zone.id] = seed_now
+
 
 func marks() -> Array:
 	if zone == null or character == null:

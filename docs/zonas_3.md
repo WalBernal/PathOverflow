@@ -49,14 +49,15 @@ Salvo las salas, todas llevan **mordiscos en el contorno** (del tamaño proporci
 ## Cómo se genera (en orden)
 
 1. Semilla de la instancia (T118: nueva al entrar a una zona sin instancia viva; se guarda 10 minutos). Misma semilla → misma zona.
-2. Tamaño con ±15 % y plantilla del estilo.
+2. Tamaño: ±15 % por eje (60 %), o **larga** (+20-30 % de largo, −5-15 % de ancho; 20 %) o **ancha** (al revés; 20 %), T116. Plantilla del estilo.
 3. Rellenar la rejilla con la plantilla; mordiscos en el contorno.
 4. **Salidas**: cada una en su lado, a lo largo de él con ±25 % de lo que tenía en el diseño y a 10 celdas o más de otra salida del mismo lado.
 5. **Entradas**: cada una junto a la salida que tenía más cerca en el diseño (por ahí se llega); la del waypoint, junto al waypoint.
 6. **Waypoint** entre la primera y la última salida (35-65 % del camino) con un desvío lateral.
 7. **NPC, objetos de misión, pruebas y objetos clave**: cada uno en la celda de suelo más lejana de todo lo anterior entre 60 al azar (su «rincón»).
-8. **Conectar**: pasillos de 3 celdas entre todos los puntos clave (árbol mínimo) y un claro alrededor de cada uno. Así nada queda aislado aunque la plantilla haya cerrado el paso.
-9. Lo que no se alcanza desde la primera entrada pasa a muro (no quedan bolsas cerradas donde aparezcan enemigos).
+8. **Rodeo** (T116, 30 %): una cresta de muro de 2 celdas cruza la zona de lado a lado, perpendicular a la marcha y lejos de los puntos clave, con un solo paso de 5 celdas en un extremo.
+9. **Conectar**: un claro alrededor de cada punto clave y pasillos de 3 celdas entre todos (árbol mínimo) por el camino más barato (`AStarGrid2D`, T116): el suelo de la plantilla cuesta 1, cavar muro 8 y la cresta del rodeo 80. Así el pasillo va por la cueva o entre los racks en vez de abrir una zanja recta, y solo se cava donde la plantilla había cerrado el paso.
+10. Lo que no se alcanza desde la primera entrada pasa a muro (no quedan bolsas cerradas donde aparezcan enemigos).
 
 ## Garantías (comprobadas)
 
