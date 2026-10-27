@@ -183,6 +183,7 @@ func _initialize() -> void:
 	_test_generated_zones()
 	_test_zone_shapes()
 	_test_zone_content()
+	_test_zone_instances()
 	_test_tilesets()
 	_test_events_music_colorblind()
 	_test_story_editor()
@@ -4550,6 +4551,36 @@ func _test_zone_content() -> void:
 		var ra: Dictionary = a.remap_def(def)["rare_spawns"][0]
 		var rb: Dictionary = b.remap_def(def)["rare_spawns"][0]
 		_check(a.point_ok(Zone._v(ra["pos"])) and Zone._v(ra["pos"]) != Zone._v(rb["pos"]), "el raro de %s sale sobre suelo y en otro sitio en cada instancia" % zid)
+
+
+## Instancias de 10 minutos (T118): se guardan, caducan y como mucho 8; la misma semilla
+## da las mismas cajas (para restaurar cuáles se abrieron).
+func _test_zone_instances() -> void:
+	var inst := ZoneInstances.new()
+	inst.store("zona1", {"seed": 5}, 100.0)
+	_check(int(inst.peek("zona1", 100.0 + ZoneInstances.TTL - 1.0).get("seed", -1)) == 5, "antes de 10 min, la misma instancia")
+	_check(is_equal_approx(inst.time_left("zona1", 160.0), ZoneInstances.TTL - 60.0), "y se sabe cuánto le queda")
+	_check(inst.peek("zona1", 100.0 + ZoneInstances.TTL + 1.0).is_empty() and inst.size() == 0, "después, caduca y se olvida")
+	for k in ZoneInstances.MAX + 2:
+		inst.store("z%d" % k, {"seed": k}, float(k))
+	_check(inst.size() == ZoneInstances.MAX and inst.peek("z0", 20.0).is_empty() and not inst.peek("z9", 20.0).is_empty(),
+		"como mucho %d a la vez: se olvida la que se dejó antes" % ZoneInstances.MAX)
+	inst.store("z9", {"seed": 99}, 30.0)
+	_check(int(inst.peek("z9", 31.0)["seed"]) == 99, "volver a salir la sustituye y reinicia el reloj")
+	var def: Dictionary = _zone_def("zona3").duplicate(true)
+	Zone.scale_def(def)
+	var a := Zone.new()
+	a.setup(def, null, null, null, 4242)
+	var b := Zone.new()
+	b.setup(def, null, null, null, 4242)
+	var same := a.containers.size() == b.containers.size()
+	for i in mini(a.containers.size(), b.containers.size()):
+		same = same and (a.containers[i]["pos"] as Vector2).is_equal_approx(b.containers[i]["pos"])
+	_check(same and a.containers.size() > 0, "la misma semilla da las mismas cajas en el mismo orden")
+	var ladder_def := {"id": "banco", "size": [2000, 1400], "waves_mode": {"from": "zona1"}, "enemies": {}}
+	_check(not ZoneLayout.applies_to(ladder_def), "el banco de oleadas no se genera")
+	a.free()
+	b.free()
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.

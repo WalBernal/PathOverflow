@@ -70,9 +70,11 @@ var _hard := {}   # celdas de muro que los pasillos evitan (la cresta del rodeo)
 const FIXED := ["tutorial"]
 
 
-## ¿Se genera esta zona? Los campamentos, las arenas de jefe y las zonas guiadas se quedan como están.
+## ¿Se genera esta zona? Los campamentos, las arenas de jefe, los incidentes, el banco
+## de oleadas y las zonas guiadas se quedan como están.
 static func applies_to(def: Dictionary) -> bool:
-	return not bool(def.get("safe", false)) and not def.has("boss") and not def.has("incident") and not FIXED.has(String(def.get("id", "")))
+	return not bool(def.get("safe", false)) and not def.has("boss") and not def.has("incident") and not def.has("waves_mode") \
+		and not FIXED.has(String(def.get("id", "")))
 
 
 static func generate(def: Dictionary, p_seed: int) -> ZoneLayout:

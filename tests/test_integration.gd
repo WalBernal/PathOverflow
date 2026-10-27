@@ -175,6 +175,7 @@ func _play_incident(class_def: Dictionary) -> int:
 	await _frames(2)
 	await _check_gamepad_cursor(world, class_def["id"])
 	await _check_world_map(world, class_def["id"])
+	await _check_instances(world, class_def["id"])
 	world.call("_on_dialogue_action", {"type": "open_atlas"})
 	await _frames(2)
 	for child in world.get("ui").get_children():
@@ -205,6 +206,43 @@ func _play_incident(class_def: Dictionary) -> int:
 	gd.set("current_character", null)
 	_collect("%s · incidente · al cerrar" % class_def["id"])
 	return 1
+
+
+## Instancias de 10 minutos (T118): soltar algo en una zona generada, ir al campamento y
+## volver: misma zona y el objeto sigue ahí; si la instancia caduca, zona nueva y sin él.
+func _check_instances(world: Node, class_id: String) -> void:
+	var town: String = (get_node("/root/GameData").get("act") as Dictionary).get("town", "campamento")
+	world.call("travel_to", "zona1", "")
+	await _frames(2)
+	var zone: Zone = world.get("zone")
+	var loot: LootManager = world.get("loot")
+	var seed1 := int(zone.def.get("_layout_seed", -1))
+	var item: Item = (world.get("item_generator") as ItemGenerator).roll_drop(20, 1.0)
+	loot.drop_item(item, zone.entry_point("") + Vector2(150, 0))
+	loot.drop_tokens(7, zone.entry_point("") + Vector2(150, 60))
+	if zone.containers.size() > 0:
+		zone.containers[0]["opened"] = true
+	world.call("travel_to", town, "waypoint")
+	await _frames(2)
+	world.call("travel_to", "zona1", "")
+	await _frames(2)
+	zone = world.get("zone")
+	if int(zone.def.get("_layout_seed", -2)) != seed1:
+		_failures.append("%s · instancias: al volver antes de 10 min la zona es otra" % class_id)
+	if not loot.drops.any(func(d: Dictionary) -> bool: return d["item"] == item) or loot.coins.is_empty():
+		_failures.append("%s · instancias: el botín del suelo no se conservó" % class_id)
+	if zone.containers.size() > 0 and not zone.containers[0]["opened"]:
+		_failures.append("%s · instancias: la caja abierta se volvió a cerrar" % class_id)
+	world.call("travel_to", town, "waypoint")
+	await _frames(2)
+	(world.get("instances") as ZoneInstances).prune(float(world.call("_now")) + ZoneInstances.TTL + 1.0)
+	world.call("travel_to", "zona1", "")
+	await _frames(2)
+	if loot.drops.any(func(d: Dictionary) -> bool: return d["item"] == item):
+		_failures.append("%s · instancias: tras caducar sigue el botín de antes" % class_id)
+	world.call("travel_to", town, "waypoint")
+	await _frames(2)
+	_collect("%s · instancias" % class_id)
 
 
 ## Cursor de mando (GamepadCursor): con el inventario abierto se activa, la

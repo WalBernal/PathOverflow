@@ -329,12 +329,15 @@ func travel_to(zone_id: String, entry := "") -> void:
 	_shop_refreshes = 0
 	_twins = {}
 	if zone:
+		_store_instance()
 		remove_child(zone)
 		zone.queue_free()
 	enemies.clear_all()
 	loot.clear_all()
+	# La instancia de la zona (T118): la misma si volvemos antes de que caduque.
+	var saved := instances.peek(zone_id, _now())
 	zone = Zone.new()
-	zone.setup(def, player, character, quests, randi() & 0x7fffffff)   # semilla de la instancia (T115); T118 la conservará 10 min
+	zone.setup(def, player, character, quests, int(saved["seed"]) if not saved.is_empty() else randi() & 0x7fffffff)
 	add_child(zone)
 	move_child(zone, 0)  # debajo de todo lo demás
 	var emitters := AmbientEmitters.new()   # racks, goteo y viento que suenan cerca
@@ -401,6 +404,8 @@ func travel_to(zone_id: String, entry := "") -> void:
 		_discover_waypoint()   # el del campamento, al entrar (T112)
 	_check_achievements()
 	ui.on_zone_changed(zone)
+	if not saved.is_empty() and zone.layout:
+		_restore_instance(saved)
 	quests.notify_zone(zone.id)
 	_mark_dirty()
 	Sfx.ambient(String(zone.def.get("style", "ruins")))
@@ -409,6 +414,52 @@ func travel_to(zone_id: String, entry := "") -> void:
 	MusicPlayer.set_intensity(0)
 	MusicPlayer.play_zone(String(zone.def.get("incident", {}).get("from", zone.id)))   # el incidente suena como su zona
 	_check_zone_cutscene.call_deferred()
+
+
+## Instancias que duran 10 minutos (T118, ZoneInstances): solo las zonas generadas.
+var instances := ZoneInstances.new()
+
+
+## Reloj de las instancias: segundos desde que se abrió el juego (corre también en pausa).
+func _now() -> float:
+	return Time.get_ticks_msec() / 1000.0
+
+
+## Al salir de una zona generada: su semilla, el botín y los tokens del suelo, las
+## cajas abiertas y lo explorado del mapa.
+func _store_instance() -> void:
+	if zone == null or zone.layout == null:
+		return
+	var drops := []
+	for d in loot.drops:
+		var copy: Dictionary = d.duplicate()
+		copy["age"] = 9.0   # al volver ya está en el suelo (sin el vuelo en arco)
+		drops.append(copy)
+	var opened := []
+	for i in zone.containers.size():
+		if zone.containers[i]["opened"]:
+			opened.append(i)
+	instances.store(zone.id, {"seed": int(zone.def.get("_layout_seed", 0)), "drops": drops,
+		"coins": loot.coins.map(func(c: Dictionary) -> Dictionary: return c.duplicate()),
+		"opened": opened, "explored": ui.world_map.explored.duplicate()}, _now())
+
+
+## Al volver a una instancia viva: lo que quedó en el suelo, las cajas abiertas y el mapa.
+func _restore_instance(saved: Dictionary) -> void:
+	for d in saved.get("drops", []):
+		loot.drops.append(d.duplicate())
+	for c in saved.get("coins", []):
+		loot.coins.append(c.duplicate())
+	loot.queue_redraw()
+	for i in saved.get("opened", []):
+		if int(i) < zone.containers.size():
+			zone.containers[int(i)]["opened"] = true
+			zone.containers[int(i)]["t"] = 99.0
+	var explored: PackedByteArray = saved.get("explored", PackedByteArray())
+	if explored.size() == ui.world_map.explored.size():
+		for k in explored.size():
+			ui.world_map.explored[k] = maxi(ui.world_map.explored[k], explored[k])
+		ui.world_map.queue_redraw()
 
 
 ## Escena al entrar en la zona (una sola vez, según sus banderas).

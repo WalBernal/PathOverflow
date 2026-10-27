@@ -707,11 +707,12 @@ Origen: V3
 
 ## Fase 22 — Instancias que duran 10 minutos
 
-### [ ] T118 · Instancias, parte 1: la zona y el botín se conservan · M
+### [x] T118 · Instancias, parte 1: la zona y el botín se conservan · M
 Origen: V3
 - Registro de instancias en `World` (en memoria, no en el guardado): semilla, botín y tokens en el suelo, cajas abiertas, lore recogido, marcas del mapa y la hora a la que se salió. Al volver (por salida, waypoint o tras morir) antes de 10 min, la misma instancia; después, una nueva. Varias instancias a la vez (tope de ~8, se descarta la más vieja).
 - El reloj corre en tiempo de juego mientras la partida está abierta (pausa incluida); al salir al menú o cerrar el juego, se pierden.
 - No aplica a campamentos (no se generan), ni a oleadas ni pruebas de estrés (se reinician siempre).
+- Hecho: `ZoneInstances` (en memoria, `TTL` 600 s desde que sales, `MAX` 8 con la más vieja fuera; el reloj lo pone quien llama). `World.travel_to` guarda la zona generada al salir (`_store_instance`: semilla, objetos y tokens del suelo, índices de las cajas abiertas, lo explorado del mapa) y, si hay una viva, entra con su semilla y la restaura (`_restore_instance`; la misma semilla da las mismas cajas en el mismo orden). Reloj: `Time.get_ticks_msec` (corre en pausa; al salir al menú se pierde con el `World`). El lore ya se guardaba en el personaje y las marcas del mapa van con la semilla (T116), así que se conservan solos. Las pruebas de estrés no guardan estado y se cancelan al salir; el **banco de oleadas** no se genera (desde T115 se estaba generando por error: `ZoneLayout.applies_to` excluye `waves_mode`). Los enemigos todavía reaparecen enteros: T119. Pruebas `_test_zone_instances` (caducidad, tope, misma semilla = mismas cajas) y en la integración `_check_instances` (soltar objeto y tokens y abrir una caja en la zona 1, ir al campamento y volver: misma zona y todo sigue; tras caducar, sin el botín).
 
 ### [ ] T119 · Instancias, parte 2: enemigos, eventos y mecánicas · M
 Origen: V3
@@ -961,3 +962,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-26 · T115 · Las zonas de combate se generan en cada viaje con una semilla nueva: posiciones de la instancia en una copia de la definición, lo transitable, la colisión, el suelo, el borde, el minimapa y el mapa grande sobre la rejilla, y obstáculos que no cortan el paso.
 - 2026-10-26 · T116 · Zonas más largas, más anchas o con rodeo, pasillos que siguen la forma de la plantilla (A*) y marcas del mapa que duran lo que la instancia.
 - 2026-10-26 · T117 · Cada instancia con su tema de enemigos (uno abunda, otro escasea, élites 0,7-1,3×), raros en otro sitio, rincón con caja rica la mitad de las veces y su tiempo (niebla, lluvia, polvo o apagón parcial) dentro del estilo.
+- 2026-10-26 · T118 · Las zonas generadas se conservan 10 minutos (hasta 8): al volver, la misma zona con el botín y los tokens del suelo, las cajas abiertas y el mapa explorado; el banco de oleadas deja de generarse.
