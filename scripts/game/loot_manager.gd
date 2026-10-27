@@ -13,8 +13,12 @@ const PICKUP_RANGE := 50.0
 const FONT_SIZE := 14
 const PADDING := Vector2(6.0, 3.0)
 const MAX_LABEL_SHIFTS := 12
-const TOKEN_PICKUP_RANGE := 34.0
-const TOKEN_MAGNET_RANGE := 150.0
+const TOKEN_PICKUP_RANGE := 90.0
+const TOKEN_MAGNET_RANGE := 380.0
+## Velocidad mínima del imán: más rápida que el jugador, así no se quedan persiguiéndote.
+const TOKEN_MAGNET_SPEED := 420.0
+## Tope de Stat.TOKEN_PICKUP_RADIUS (%).
+const TOKEN_RADIUS_CAP := 100.0
 
 var player: Player
 var inventory: Inventory
@@ -291,19 +295,34 @@ func _update_coins(delta: float) -> void:
 	if coins.is_empty() or player == null or not player.is_alive():
 		return
 	var picked := 0
+	var mult := player.token_radius_mult() if player.character else 1.0
+	var pickup := TOKEN_PICKUP_RANGE * mult
+	var magnet := TOKEN_MAGNET_RANGE * mult
 	for i in range(coins.size() - 1, -1, -1):
 		var c := coins[i]
 		c["age"] += delta
 		var to_player := player.global_position - (c["pos"] as Vector2)
 		var dist := to_player.length()
-		if dist <= TOKEN_PICKUP_RANGE:
+		if dist <= pickup:
 			picked += int(c["amount"])
 			coins.remove_at(i)
-		elif dist <= TOKEN_MAGNET_RANGE and c["age"] > 0.35:
-			c["pos"] += to_player / dist * minf(dist, (260.0 + (TOKEN_MAGNET_RANGE - dist) * 4.0) * delta)
+		elif dist <= magnet and c["age"] > 0.35:
+			var step := to_player / dist * minf(dist, (TOKEN_MAGNET_SPEED + (magnet - dist) * 3.0) * delta)
+			c["pos"] = _magnet_step(c["pos"], step)
 	if picked > 0:
 		tokens_picked.emit(picked)
 	queue_redraw()
+
+
+## Un paso del imán sin atravesar obstáculos: si el paso recto choca, prueba a
+## deslizarse por uno de los ejes (rodea la esquina) y, si tampoco, espera.
+func _magnet_step(from: Vector2, step: Vector2) -> Vector2:
+	if not placement_check.is_valid():
+		return from + step
+	for s in [step, Vector2(step.x, 0.0), Vector2(0.0, step.y)]:
+		if s != Vector2.ZERO and placement_check.call(from + s):
+			return from + s
+	return from
 
 
 func _draw_coin(c: Dictionary, font: Font) -> void:

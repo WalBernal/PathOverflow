@@ -7563,9 +7563,31 @@
 "id": 293,
 "key": "duelista.C2:1",
 "kind": "minor",
-"name": "Velocidad de movimiento",
+"name": "Movimiento y recogida de tokens",
 "x": 2027.4,
 "y": -830.5,
+"mods": [
+{
+"stat": "movement_speed",
+"type": "increased",
+"value": 2
+},
+{
+"stat": "token_pickup_radius",
+"type": "flat",
+"value": 10
+}
+],
+"cluster": "duelista.C2",
+"theme": "movilidad"
+},
+{
+"id": 294,
+"key": "duelista.C2:2",
+"kind": "minor",
+"name": "Velocidad de movimiento",
+"x": 2074.4,
+"y": -825.8,
 "mods": [
 {
 "stat": "movement_speed",
@@ -7577,12 +7599,12 @@
 "theme": "movilidad"
 },
 {
-"id": 294,
-"key": "duelista.C2:2",
+"id": 295,
+"key": "duelista.C2:3",
 "kind": "minor",
 "name": "Movimiento y evasión",
-"x": 2074.4,
-"y": -825.8,
+"x": 1936.2,
+"y": -789.2,
 "mods": [
 {
 "stat": "movement_speed",
@@ -7599,12 +7621,12 @@
 "theme": "movilidad"
 },
 {
-"id": 295,
-"key": "duelista.C2:3",
+"id": 296,
+"key": "duelista.C2:4",
 "kind": "minor",
 "name": "Movimiento y enfriamientos",
-"x": 1936.2,
-"y": -789.2,
+"x": 1908.7,
+"y": -750.8,
 "mods": [
 {
 "stat": "movement_speed",
@@ -7613,23 +7635,6 @@
 },
 {
 "stat": "cooldown_recovery",
-"type": "increased",
-"value": 3
-}
-],
-"cluster": "duelista.C2",
-"theme": "movilidad"
-},
-{
-"id": 296,
-"key": "duelista.C2:4",
-"kind": "minor",
-"name": "Velocidad de movimiento",
-"x": 1908.7,
-"y": -750.8,
-"mods": [
-{
-"stat": "movement_speed",
 "type": "increased",
 "value": 3
 }
@@ -7641,7 +7646,7 @@
 "id": 297,
 "key": "duelista.C2:5",
 "kind": "minor",
-"name": "Movimiento y evasión",
+"name": "Movimiento y recogida de tokens",
 "x": 1946.1,
 "y": -888.8,
 "mods": [
@@ -7651,9 +7656,9 @@
 "value": 2
 },
 {
-"stat": "evasion",
-"type": "increased",
-"value": 8
+"stat": "token_pickup_radius",
+"type": "flat",
+"value": 10
 }
 ],
 "cluster": "duelista.C2",
@@ -7663,17 +7668,12 @@
 "id": 298,
 "key": "duelista.C2:6",
 "kind": "minor",
-"name": "Movimiento y enfriamientos",
+"name": "Velocidad de movimiento",
 "x": 1926.6,
 "y": -931.8,
 "mods": [
 {
 "stat": "movement_speed",
-"type": "increased",
-"value": 2
-},
-{
-"stat": "cooldown_recovery",
 "type": "increased",
 "value": 3
 }
@@ -9591,26 +9591,9 @@
 "id": 388,
 "key": "exploradora.B1:1",
 "kind": "minor",
-"name": "Velocidad de movimiento",
+"name": "Movimiento y evasión",
 "x": 1705.5,
 "y": 718.9,
-"mods": [
-{
-"stat": "movement_speed",
-"type": "increased",
-"value": 3
-}
-],
-"cluster": "exploradora.B1",
-"theme": "movilidad"
-},
-{
-"id": 389,
-"key": "exploradora.B1:2",
-"kind": "minor",
-"name": "Movimiento y evasión",
-"x": 1735.5,
-"y": 755.5,
 "mods": [
 {
 "stat": "movement_speed",
@@ -9627,12 +9610,12 @@
 "theme": "movilidad"
 },
 {
-"id": 390,
-"key": "exploradora.B1:3",
+"id": 389,
+"key": "exploradora.B1:2",
 "kind": "minor",
 "name": "Movimiento y enfriamientos",
-"x": 1611.9,
-"y": 683.7,
+"x": 1735.5,
+"y": 755.5,
 "mods": [
 {
 "stat": "movement_speed",
@@ -9643,6 +9626,28 @@
 "stat": "cooldown_recovery",
 "type": "increased",
 "value": 3
+}
+],
+"cluster": "exploradora.B1",
+"theme": "movilidad"
+},
+{
+"id": 390,
+"key": "exploradora.B1:3",
+"kind": "minor",
+"name": "Movimiento y recogida de tokens",
+"x": 1611.9,
+"y": 683.7,
+"mods": [
+{
+"stat": "movement_speed",
+"type": "increased",
+"value": 2
+},
+{
+"stat": "token_pickup_radius",
+"type": "flat",
+"value": 10
 }
 ],
 "cluster": "exploradora.B1",
@@ -20930,9 +20935,31 @@
 "id": 920,
 "key": "puerta.duelista1:1",
 "kind": "minor",
-"name": "Velocidad de movimiento",
+"name": "Movimiento y recogida de tokens",
 "x": 2032.0,
 "y": 0.0,
+"mods": [
+{
+"stat": "movement_speed",
+"type": "increased",
+"value": 2
+},
+{
+"stat": "token_pickup_radius",
+"type": "flat",
+"value": 10
+}
+],
+"cluster": "puerta.duelista1",
+"theme": "movilidad"
+},
+{
+"id": 921,
+"key": "puerta.duelista1:2",
+"kind": "minor",
+"name": "Velocidad de movimiento",
+"x": 1979.5,
+"y": 90.9,
 "mods": [
 {
 "stat": "movement_speed",
@@ -20944,11 +20971,11 @@
 "theme": "movilidad"
 },
 {
-"id": 921,
-"key": "puerta.duelista1:2",
+"id": 922,
+"key": "puerta.duelista1:3",
 "kind": "minor",
 "name": "Movimiento y evasión",
-"x": 1979.5,
+"x": 1874.5,
 "y": 90.9,
 "mods": [
 {
@@ -20966,12 +20993,12 @@
 "theme": "movilidad"
 },
 {
-"id": 922,
-"key": "puerta.duelista1:3",
+"id": 923,
+"key": "puerta.duelista1:4",
 "kind": "minor",
 "name": "Movimiento y enfriamientos",
-"x": 1874.5,
-"y": 90.9,
+"x": 1822.0,
+"y": 0.0,
 "mods": [
 {
 "stat": "movement_speed",
@@ -20980,23 +21007,6 @@
 },
 {
 "stat": "cooldown_recovery",
-"type": "increased",
-"value": 3
-}
-],
-"cluster": "puerta.duelista1",
-"theme": "movilidad"
-},
-{
-"id": 923,
-"key": "puerta.duelista1:4",
-"kind": "minor",
-"name": "Velocidad de movimiento",
-"x": 1822.0,
-"y": 0.0,
-"mods": [
-{
-"stat": "movement_speed",
 "type": "increased",
 "value": 3
 }
@@ -21008,7 +21018,7 @@
 "id": 924,
 "key": "puerta.duelista1:5",
 "kind": "minor",
-"name": "Movimiento y evasión",
+"name": "Movimiento y recogida de tokens",
 "x": 1874.5,
 "y": -90.9,
 "mods": [
@@ -21018,9 +21028,9 @@
 "value": 2
 },
 {
-"stat": "evasion",
-"type": "increased",
-"value": 8
+"stat": "token_pickup_radius",
+"type": "flat",
+"value": 10
 }
 ],
 "cluster": "puerta.duelista1",
@@ -21030,17 +21040,12 @@
 "id": 925,
 "key": "puerta.duelista1:6",
 "kind": "minor",
-"name": "Movimiento y enfriamientos",
+"name": "Velocidad de movimiento",
 "x": 1979.5,
 "y": -90.9,
 "mods": [
 {
 "stat": "movement_speed",
-"type": "increased",
-"value": 2
-},
-{
-"stat": "cooldown_recovery",
 "type": "increased",
 "value": 3
 }

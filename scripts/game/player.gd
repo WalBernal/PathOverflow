@@ -178,6 +178,11 @@ func facing_direction() -> Vector2:
 
 # --- Esquiva ---
 
+## Multiplicador del radio de recogida de tokens (Stat.TOKEN_PICKUP_RADIUS, con tope).
+func token_radius_mult() -> float:
+	return 1.0 + clampf(_stat(Stat.TOKEN_PICKUP_RADIUS), 0.0, LootManager.TOKEN_RADIUS_CAP) / 100.0
+
+
 func max_dodge_charges() -> int:
 	return DODGE_CHARGES + maxi(0, int(_stat(Stat.DODGE_CHARGES)))
 

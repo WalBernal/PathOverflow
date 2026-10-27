@@ -114,6 +114,8 @@ const DODGE_RECOVERY := &"dodge_recovery"
 const DODGE_MULTIHILO := &"dodge_multihilo"
 ## "git stash pop": al esquivar, donde estabas explota algo que hace este % de tu vida máxima como fuego.
 const DODGE_BLAST := &"dodge_blast"
+## % más de radio para recoger y atraer tokens (con tope en LootManager.TOKEN_RADIUS_CAP).
+const TOKEN_PICKUP_RADIUS := &"token_pickup_radius"
 # Nodos clave que cambian una regla del juego (valor > 0 = activo).
 ## Tipado Estático: sin críticos, pero el daño de tus habilidades nunca varía (siempre el medio).
 const STATIC_TYPING := &"static_typing"
@@ -264,6 +266,7 @@ const NAMES := {
 	DODGE_RECOVERY: "Recarga de esquiva más rápida",
 	DODGE_MULTIHILO: "Cargas de Multihilos al esquivar",
 	DODGE_BLAST: "Al esquivar, git stash pop: explosión de fuego (de tu vida máxima)",
+	TOKEN_PICKUP_RADIUS: "Radio de recogida de tokens",
 	STATIC_TYPING: "Tipado Estático: no puedes hacer críticos, pero tu daño nunca varía",
 	GARBAGE_COLLECTOR: "Recolector de Basura: maná al matar (del máximo); el maná no se regenera solo",
 	SAFE_MODE: "Modo Seguro: un golpe mortal te deja a 1 de vida 2 s (una vez cada 30 s)",
@@ -330,7 +333,7 @@ const PERCENT_STATS := [
 	BLOCK_CHANCE, FIRE_RES, COLD_RES, LIGHTNING_RES, CHAOS_RES, CRIT_MULTIPLIER, LIFE_LEECH,
 	BURN_CHANCE, SHOCK_CHANCE, CHILL_CHANCE, FREEZE_CHANCE, POISON_CHANCE, BLEED_CHANCE, STATUS_RESIST,
 	KILL_EXPLOSION, RETALIATION_NOVA, BUFFER_CHARGE_CHANCE, MULTIHILO_CHARGE_CHANCE, OVERCLOCK_CHARGE_CHANCE,
-	MANA_COST_REDUCTION, DODGE_RECOVERY, DODGE_BLAST, GARBAGE_COLLECTOR, CHARGE_SPEND_MANA,
+	MANA_COST_REDUCTION, DODGE_RECOVERY, DODGE_BLAST, GARBAGE_COLLECTOR, CHARGE_SPEND_MANA, TOKEN_PICKUP_RADIUS,
 	DAMAGE_TAKEN_FROM_MANA, ZERO_TRUST, RUBBER_DUCK,
 ]
 

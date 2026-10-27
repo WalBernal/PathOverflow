@@ -975,8 +975,9 @@ func _draw_orb(center: Vector2, fill: float, color: Color, reserved := 0.0) -> v
 				var x := center.x - half + 2.0 * half * k / 12.0
 				wave.append(Vector2(x, surface_y + sin(t * 3.0 + k * 0.9) * 1.5 + sin(t * 1.3 + k * 0.4) * 1.2))
 			var crest := wave.duplicate()
-			crest.append(Vector2(center.x + half, surface_y + 3.0))
-			crest.append(Vector2(center.x - half, surface_y + 3.0))
+			# Base bien por debajo de las ondas (bajan hasta +2,7): si casi la tocan, no se triangula.
+			crest.append(Vector2(center.x + half, surface_y + 6.0))
+			crest.append(Vector2(center.x - half, surface_y + 6.0))
 			draw_colored_polygon(crest, color)
 			draw_polyline(wave, color.lightened(0.35), 1.5, true)
 		# Brillo.

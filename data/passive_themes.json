@@ -3197,6 +3197,21 @@
               "value": 3
             }
           ]
+        ],
+        [
+          "Movimiento y recogida de tokens",
+          [
+            {
+              "stat": "movement_speed",
+              "type": "increased",
+              "value": 2
+            },
+            {
+              "stat": "token_pickup_radius",
+              "type": "flat",
+              "value": 10
+            }
+          ]
         ]
       ],
       "notables": [

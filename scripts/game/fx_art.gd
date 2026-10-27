@@ -63,9 +63,11 @@ static func chevrons(ci: CanvasItem, origin: Vector2, dir: Vector2, length: floa
 ## Lenguas de fuego que suben (quemado).
 static func flames(ci: CanvasItem, base: Vector2, r: float, tt: float, jitter: float) -> void:
 	for k in 4:
-		var ph := fmod(tt * 1.8 + k / 4.0 + jitter, 1.0)
+		var ph := fposmod(tt * 1.8 + k / 4.0 + jitter, 1.0)
 		var q := base + Vector2((k - 1.5) * r * 0.45 + sin(tt * 6.0 + k) * 1.5, -ph * r * 1.6)
 		var s := (1.0 - ph) * r * 0.28
+		if s < 0.5:
+			continue   # casi apagada: un polígono tan pequeño no se puede triangular
 		ci.draw_colored_polygon(PackedVector2Array([q + Vector2(-s, 0), q + Vector2(0, -s * 2.2), q + Vector2(s, 0), q + Vector2(0, s * 0.6)]),
 			Color(1.0, 0.45 + 0.4 * ph, 0.1, 0.85 * (1.0 - ph)))
 

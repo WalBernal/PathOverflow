@@ -137,6 +137,8 @@
     { "id": "dodge_multihilo", "kind": "suffix", "group": "dodge_multihilo", "allowed": ["gloves", "boots"], "stat": "dodge_multihilo", "type": "flat",
       "tiers": [ { "level": 30, "name": "del Fork al Esquivar", "min": 1, "max": 1, "weight": 80 } ] },
     { "id": "dodge_blast", "kind": "suffix", "group": "dodge_blast", "allowed": ["belt", "amulet"], "stat": "dodge_blast", "type": "flat",
-      "tiers": [ { "level": 12, "name": "del Stash Pop", "min": 4, "max": 7, "weight": 200 }, { "level": 32, "name": "del Stash Pop Forzado", "min": 8, "max": 12, "weight": 100 } ] }
+      "tiers": [ { "level": 12, "name": "del Stash Pop", "min": 4, "max": 7, "weight": 200 }, { "level": 32, "name": "del Stash Pop Forzado", "min": 8, "max": 12, "weight": 100 } ] },
+    { "id": "token_pickup_radius", "kind": "suffix", "group": "token_pickup_radius", "allowed": ["ring", "amulet"], "stat": "token_pickup_radius", "type": "flat",
+      "tiers": [ { "level": 2, "name": "del Imán de Nevera", "min": 10, "max": 18, "weight": 400 }, { "level": 18, "name": "del Electroimán", "min": 19, "max": 30, "weight": 250 }, { "level": 36, "name": "del Disco Duro Desmontado", "min": 31, "max": 45, "weight": 120 } ] }
   ]
 }

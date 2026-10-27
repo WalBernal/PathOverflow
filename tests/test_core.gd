@@ -176,6 +176,7 @@ func _initialize() -> void:
 	_test_player_sheet()
 	_test_npcs_and_boss_intro()
 	_test_ground_loot()
+	_test_token_pickup()
 	_test_tilesets()
 	_test_events_music_colorblind()
 	_test_story_editor()
@@ -4297,6 +4298,50 @@ func _test_ground_loot() -> void:
 	for k in 20:
 		peak = maxf(peak, Zone.lid_open(Zone.CONTAINER_OPEN_TIME * k / 20.0))
 	_check(peak >= 1.0, "y rebota un poco al abrirse")
+
+
+## Tokens desde más lejos (T111): imán, radio con el stat y sin atravesar obstáculos.
+func _test_token_pickup() -> void:
+	var c := CharacterData.new(_classes[0], _tree)
+	var pl := Player.new()
+	pl.character = c
+	var lm := LootManager.new()
+	lm.player = pl
+	var got := [0]
+	lm.tokens_picked.connect(func(n: int) -> void: got[0] += n)
+	lm.drop_tokens(7, Vector2(300, 0))
+	for k in 120:
+		lm._update_coins(1.0 / 60.0)
+	_check(got[0] == 7 and lm.coins.is_empty(), "un token a 300 px acaba en la cuenta sin moverse (%d)" % got[0])
+	lm.drop_tokens(5, Vector2(500, 0))
+	for k in 120:
+		lm._update_coins(1.0 / 60.0)
+	_check(got[0] == 7, "a 500 px no lo atrae sin el stat")
+	c.add_timed_effect("prueba_imán", [Modifier.from_dict({"stat": "token_pickup_radius", "type": "flat", "value": 500}, "prueba")] as Array[Modifier], 99.0)
+	_check(is_equal_approx(pl.token_radius_mult(), 1.0 + LootManager.TOKEN_RADIUS_CAP / 100.0), "el radio de recogida tiene tope")
+	for k in 120:
+		lm._update_coins(1.0 / 60.0)
+	_check(got[0] == 12, "con el stat sí lo atrae (%d)" % got[0])
+	c.remove_timed_effect("prueba_imán")
+	# Una pared entre el token y el jugador: no la atraviesa.
+	lm.placement_check = func(p: Vector2) -> bool: return not (p.x > 140.0 and p.x < 180.0)
+	lm.drop_tokens(3, Vector2(250, 0))
+	for k in 120:
+		lm._update_coins(1.0 / 60.0)
+	_check(got[0] == 12 and lm.coins.size() == 1 and (lm.coins[0]["pos"] as Vector2).x >= 180.0, "el imán no saca los tokens de detrás de una pared")
+	var stats := {}
+	for a in DataLoader.load_json("res://data/items/affixes.json")["affixes"]:
+		if a["stat"] == "token_pickup_radius":
+			stats[a["id"]] = a["allowed"]
+	_check(not stats.is_empty() and stats.values()[0].has("ring") and stats.values()[0].has("amulet"), "hay afijo de radio de recogida en anillos y amuletos")
+	var tree_has := false
+	for n in _tree.nodes.values():
+		for m in n.mods:
+			if m.stat == Stat.TOKEN_PICKUP_RADIUS:
+				tree_has = true
+	_check(tree_has, "y nodos del árbol que lo dan")
+	lm.free()
+	pl.free()
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.

@@ -650,11 +650,16 @@ Punto de partida: cada zona se construye igual siempre (`Zone.setup` siembra con
 
 ## Fase 20 — Viaje y comodidades
 
-### [ ] T111 · Tokens desde más lejos · S
+### [x] T111 · Tokens desde más lejos · S
 Origen: V3
 - Recogida directa de ~34 a ~90 px e imán de ~150 a ~380 px (`LootManager`), con el tirón algo más rápido para que no se queden persiguiéndote; que el imán no los saque de detrás de una pared (si el camino recto choca con un obstáculo, rodean o esperan).
 - Stat nuevo «radio de recogida de tokens» (+%) en dos o tres afijos de anillo y amuleto y en un notable menor del árbol, con tope.
 - Prueba: un token a 300 px acaba en la cuenta sin moverse.
+- Hecho: `LootManager.TOKEN_PICKUP_RANGE` 90 y `TOKEN_MAGNET_RANGE` 380, velocidad mínima del imán 420 px/s (`TOKEN_MAGNET_SPEED`); cada paso del imán mira `placement_check` y, si choca, se desliza por un eje o espera (`_magnet_step`). Stat `token_pickup_radius` (Radio de recogida de tokens, %, tope `TOKEN_RADIUS_CAP` = 100, `Player.token_radius_mult`) que agranda los dos radios: sufijo de anillos y amuletos con tres tiers (del Imán de Nevera 10-18, del Electroimán 19-30, del Disco Duro Desmontado 31-45) y un cuarto menor de movilidad, «Movimiento y recogida de tokens» (+2 % movimiento, +10 %), en 5 nodos; árbol regenerado sin cambiar su estructura (misma versión). Prueba `_test_token_pickup`. De paso, dos polígonos que no se triangulaban y tumbaban la integración: las llamas de quemado casi apagadas (`FxArt.flames`) y la cresta de la onda del orbe (`Hud._draw_orb`). La integración sigue con un fallo que ya estaba antes de la tarea (comprobado con `git stash`): pasa a T111b.
+
+### [ ] T111b · La cruceta no salta entre nodos del árbol (prueba de mando) · S
+Origen: integración de T111
+- `test_integration` (`_check_gamepad_cursor`) falla siempre con el guerrero: tras derecha, abajo e izquierda en el árbol pasivo, el cursor vuelve al mismo sitio. Ya fallaba en `b570137`, antes de T111. Averiguar si es la prueba (derecha e izquierda se anulan si abajo no encuentra nodo) o `GamepadCursor.pick_target` / `PassiveTreeView.cursor_targets`, y arreglarlo.
 
 ### [ ] T112 · Waypoints que se activan de lejos y al entrar al campamento · S
 Origen: V3
@@ -940,3 +945,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-26 · Roadmap 5.0 (T106-T110): versión para celular — renderizador móvil, controles táctiles (joystick, apuntado automático, botones de habilidades, esquiva y pociones), interfaz táctil y exportación a Android.
 - 2026-10-26 · Copia de la versión 2.0 (rama `version-2.0`, etiqueta `v2.0`) y roadmap de la versión 3.0 (T111-T131): tokens y waypoints de más lejos, solo waypoints entre actos, zonas generadas por instancia que duran 10 minutos (salvo la arena del jefe), mecánicas de zona al azar, gráficos, interfaz y escenas.
 - 2026-10-26 · La versión 3.0 (T111-T131) pasa por delante del Roadmap 5.0 (móvil, T106-T110) en la cola.
+- 2026-10-26 · T111 · Tokens desde más lejos (90 px directo, imán a 380 px que no atraviesa paredes) y stat Radio de recogida de tokens en anillos, amuletos y nodos de movilidad; arreglados dos polígonos que no se triangulaban (llamas y orbe). El fallo de la cruceta en el árbol ya existía: pasa a T111b.
