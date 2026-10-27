@@ -678,11 +678,12 @@ Origen: V3
 
 ## Fase 21 — Zonas que se generan solas
 
-### [ ] T114 · Diseño del generador de zonas · M 🛑
+### [x] T114 · Diseño del generador de zonas · M 🛑
 Origen: V3
 - Documento `docs/zonas_3.md`: qué cambia en cada instancia (forma del camino, obstáculos y accidentes, manadas, cajas, decorado, lado y sitio de las salidas, sitio del waypoint) y qué se queda fijo (lado de la entrada y orden de las zonas del acto, NPC, objetos de misión en una «sala» propia, arenas de jefe y campamentos, que no se generan).
 - Plantillas de forma por estilo (salas y pasillos, cueva orgánica, plaza abierta con islas, laberinto de racks…) con tamaño variable (±15 %) y garantías: todo conectado, la salida lejos de la entrada, el waypoint y los objetos de misión alcanzables.
 - Prototipo en `capture_screens` que dibuja 5 semillas de cada zona para la revisión.
+- Hecho: `docs/zonas_3.md` con el reparto de lo que cambia y lo fijo, la representación (rejilla de 80 px en vez de los cuatro bordes ondulados, y qué hay que adaptar en T115), las cuatro plantillas por estilo, el algoritmo paso a paso, las garantías y **seis preguntas para la revisión**. Prototipo `ZoneLayout` (aún sin usar en el juego): plantillas `salas`, `cueva`, `plaza` y `racks`, mordiscos en el contorno, salidas en su lado y separadas, entradas junto a su salida, waypoint entre entrada y salida, NPC y objetos en rincones propios, pasillos entre todos los puntos clave y fuera lo inalcanzable. Campamentos, jefes, incidentes y el tutorial quedan fijos. `capture_screens -- semillas`: 22 zonas × 5 semillas, 0 fallos de garantía, 12 ms de media por zona (66 la más lenta); imágenes en `docs/capturas/zonas_3/`. Prueba `_test_zone_layout`. **Pendiente de revisión del usuario.**
 
 ### [ ] T115 · Generador, parte 1: semilla por instancia y disposición · M
 Origen: V3
@@ -952,3 +953,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-26 · T111b · La prueba de la cruceta en el árbol fallaba por la propia prueba (derecha, abajo e izquierda volvían al nodo de partida); ahora mira que cada pulsación salte a otro nodo. Integración rápida en verde.
 - 2026-10-26 · T112 · Waypoints que se descubren a ~420 px con el waypoint en pantalla (antes 106) y los de los campamentos al entrar; comprobado en la lógica y en la integración.
 - 2026-10-26 · T113 · Solo waypoints entre actos: fuera los tres túneles de vuelta y las dos salidas a pie hacia la arena del acto anterior; los guardados viejos reciben el waypoint de los campamentos ya alcanzados.
+- 2026-10-26 · T114 · Diseño del generador de zonas (`docs/zonas_3.md`) y prototipo `ZoneLayout` con cuatro plantillas (salas, cueva, plaza, racks) sobre una rejilla de 80 px; 110 disposiciones sin fallos de garantía, 12 ms por zona; capturas en `docs/capturas/zonas_3/`. **Pendiente de revisión del usuario.**

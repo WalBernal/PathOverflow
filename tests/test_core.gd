@@ -179,6 +179,7 @@ func _initialize() -> void:
 	_test_token_pickup()
 	_test_waypoint_reach()
 	_test_no_back_portals()
+	_test_zone_layout()
 	_test_tilesets()
 	_test_events_music_colorblind()
 	_test_story_editor()
@@ -4376,6 +4377,37 @@ func _test_no_back_portals() -> void:
 	_check(Zone.reached_towns(acts, {"act1_complete": true, "act2_complete": true}, "act1") == ["campamento", "socket_seguro", "puerto_jtag"],
 		"tras terminar dos actos, sus campamentos y el siguiente, aunque estés en el primero")
 	_check(Zone.reached_towns(acts, {}, "act3").size() == 3, "estar en el Acto III da los campamentos hasta él")
+
+
+## Prototipo del generador de zonas (T114): garantías en todas las zonas, misma semilla =
+## misma zona, semillas distintas = zonas distintas; campamentos y jefes, fijos.
+func _test_zone_layout() -> void:
+	var generated := 0
+	var problems := []
+	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json", "res://data/act4.json"]:
+		for z in DataLoader.load_json(path).get("zones", []):
+			var def: Dictionary = z.duplicate(true)
+			Zone.scale_def(def)
+			if not ZoneLayout.applies_to(def):
+				_check(bool(def.get("safe", false)) or def.has("boss") or ZoneLayout.FIXED.has(def["id"]), "%s se queda fija por ser campamento, jefe o guiada" % def["id"])
+				continue
+			for k in 3:
+				var l := ZoneLayout.generate(def, 1000 + k)
+				var problem := l.check()
+				if problem != "":
+					problems.append("%s/%d: %s" % [def["id"], k, problem])
+				generated += 1
+			var a := ZoneLayout.generate(def, 42)
+			var b := ZoneLayout.generate(def, 42)
+			var c := ZoneLayout.generate(def, 43)
+			if a.cells != b.cells or a.exits[0]["pos"] != b.exits[0]["pos"]:
+				problems.append("%s: la misma semilla da otra zona" % def["id"])
+			if a.cells == c.cells:
+				problems.append("%s: dos semillas dan la misma zona" % def["id"])
+			for e in a.exits:
+				if ZoneLayout.side_of(e["pos"], a.size_px()) != e["side"]:
+					problems.append("%s: la salida a %s cambia de lado" % [def["id"], e["target"]])
+	_check(generated > 50 and problems.is_empty(), "el generador cumple sus garantías en %d disposiciones %s" % [generated, problems])
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.

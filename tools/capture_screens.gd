@@ -24,6 +24,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("semillas"):
+		_capture_zone_seeds()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("prologo"):
 		await _capture_prologue_walk()
 		get_tree().quit()
@@ -2090,6 +2094,66 @@ func _swap(node: Node) -> void:
 
 func _wait(seconds: float) -> Signal:
 	return get_tree().create_timer(seconds).timeout
+
+
+## Generador de zonas (T114): cinco semillas de cada zona que se genera, en fila, con
+## los colores de su estilo (verde entradas, amarillo salidas, azul waypoint, magenta
+## NPC y objetos). Una imagen por zona y una hoja con todas; resumen por consola.
+func _capture_zone_seeds() -> void:
+	const PX := 3
+	const GAP := 10
+	var rows: Array[Image] = []
+	var fails := 0
+	var templates := {}
+	var usec := 0
+	var slowest := 0
+	for zone_id in GameData.zones:
+		var def: Dictionary = GameData.zones[zone_id]
+		if not ZoneLayout.applies_to(def):
+			continue
+		var style: Dictionary = Zone.STYLES.get(String(def.get("style", "")), Zone.STYLES["sandbox"])
+		var imgs: Array[Image] = []
+		var notes := []
+		for k in 5:
+			var t0 := Time.get_ticks_usec()
+			var l := ZoneLayout.generate(def, hash(zone_id) + k * 7919)
+			var took := Time.get_ticks_usec() - t0
+			usec += took
+			slowest = maxi(slowest, took)
+			var problem := l.check()
+			if problem != "":
+				fails += 1
+			templates[l.template] = int(templates.get(l.template, 0)) + 1
+			notes.append("%s %dx%d %.0f%%%s" % [l.template, l.width, l.height, l.floor_fraction() * 100.0, (" ¡" + problem + "!") if problem != "" else ""])
+			imgs.append(l.draw_image(PX, Color(style["ground"]), Color(style["outside"])))
+		var w := GAP
+		var h := 0
+		for img in imgs:
+			w += img.get_width() + GAP
+			h = maxi(h, img.get_height())
+		var row := Image.create(w, h + GAP * 2, false, Image.FORMAT_RGBA8)
+		row.fill(Color("0b0b10"))
+		var x := GAP
+		for img in imgs:
+			row.blit_rect(img, Rect2i(Vector2i.ZERO, img.get_size()), Vector2i(x, GAP))
+			x += img.get_width() + GAP
+		row.save_png(ProjectSettings.globalize_path(OUT + "114_semillas_%s.png" % zone_id))
+		rows.append(row)
+		print("%-18s %s" % [zone_id, " | ".join(notes)])
+	var sheet_w := 0
+	var sheet_h := 0
+	for r in rows:
+		sheet_w = maxi(sheet_w, r.get_width())
+		sheet_h += r.get_height()
+	var sheet := Image.create(sheet_w, sheet_h, false, Image.FORMAT_RGBA8)
+	sheet.fill(Color("0b0b10"))
+	var y := 0
+	for r in rows:
+		sheet.blit_rect(r, Rect2i(Vector2i.ZERO, r.get_size()), Vector2i(0, y))
+		y += r.get_height()
+	sheet.save_png(ProjectSettings.globalize_path(OUT + "114_semillas_todas.png"))
+	print("Zonas: %d · disposiciones: %d · fallos de garantía: %d · plantillas: %s · %.0f ms de media, %.0f ms la más lenta" % [rows.size(), rows.size() * 5, fails, templates,
+		usec / 1000.0 / maxf(1.0, rows.size() * 5.0), slowest / 1000.0])
 
 
 func _save(name: String) -> void:
