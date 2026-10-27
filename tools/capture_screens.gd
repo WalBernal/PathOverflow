@@ -2115,7 +2115,8 @@ func _capture_mechanics() -> void:
 	world.set("_since_save", -9999.0)
 	await _wait(1.0)
 	var player: Node2D = world.get("player")
-	for kind in ["gc_warn", "gc", "blackout", "ticket"]:
+	player.set("invulnerable", true)   # que no muera mientras se espera a la foto
+	for kind in ["gc_warn", "gc", "blackout", "ticket", "merge", "friday", "hot_cache"]:
 		world.call("travel_to", "zona3", "")
 		world.set("_since_save", -9999.0)
 		var zone: Zone = world.get("zone")
@@ -2141,10 +2142,16 @@ func _capture_mechanics() -> void:
 			e["lights"][0]["pos"] = player.global_position + Vector2(260, -40)
 			e["lights"][1]["pos"] = player.global_position + Vector2(-300, 60)
 			e["lights"][0]["lit"] = true
-		else:
+		elif base == "ticket":
 			ev._fire(0)
+		elif base == "friday":
+			e["pos"] = player.global_position + Vector2(220, -40)
+			e["progress"] = ZoneEvents.FRIDAY_HOLD * 0.4
+		elif base == "hot_cache":
+			for k in 3:
+				e["tiles"][k]["pos"] = player.global_position + Vector2(-320 + k * 320, -170)
 		await _wait(0.7)
-		_save("121_mecanica_%s" % kind)
+		_save("%s_mecanica_%s" % ["121" if kind in ["gc_warn", "gc", "blackout", "ticket"] else "122", kind])
 	world.queue_free()
 
 

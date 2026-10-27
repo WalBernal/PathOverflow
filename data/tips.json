@@ -9,6 +9,18 @@
       "title": "Apagón del CPD",
       "text": "Las farolas con el piloto [color=#ff3030]rojo[/color] son luces de emergencia: pasa a su lado y se encienden. Cada una devuelve algo de luz a la zona; todas, botín."
     },
+    "mech_merge": {
+      "title": "Merge conflict",
+      "text": "Los enemigos llevan un aro [color=#ff6a5a]rojo (HEAD)[/color] o [color=#6ad07a]verde (main)[/color]. Si se cruzan lejos de ti, se pegan entre ellos: aléjate y deja que se resuelvan, o remata a los que queden."
+    },
+    "mech_friday": {
+      "title": "Deploy de viernes",
+      "text": "Cada poco entra una oleada por una de las salidas. Busca el terminal del pipeline y quédate 3 s en su aro para cerrarlo."
+    },
+    "mech_hot_cache": {
+      "title": "Caché caliente",
+      "text": "Las baldosas que brillan dan un bono de 6 s al pisarlas: daño, velocidad o armadura, según su color. Luego se enfrían y cambian de sitio."
+    },
     "mech_ticket": {
       "title": "Ticket urgente",
       "text": "Al tocar la consola se abre un P1: unos élites quedan marcados con [color=#ff9a5a][P1][/color] por la zona. Tumba a todos antes de que acabe la cuenta atrás que llevan encima."

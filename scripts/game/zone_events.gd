@@ -21,6 +21,13 @@ extends Node2D
 ##   se encienden al pasar a su lado y cada una devuelve algo de luz. Todas: completada.
 ## - "ticket": Ticket urgente. Al tocar la consola, unos élites quedan marcados por toda
 ##   la zona: tumbarlos antes de que acabe la cuenta atrás.
+## Y (T122), también de toda la zona:
+## - "merge": Merge conflict. Los enemigos se reparten en dos ramas (HEAD y main) y, si
+##   se cruzan lejos de ti, se pelean entre ellos. MERGE_KILLS bajas entre ellos: resuelto.
+## - "friday": Deploy de viernes. Cada cierto tiempo entra una oleada por una salida;
+##   quédate en el terminal del pipeline FRIDAY_HOLD s para cerrarlo.
+## - "hot_cache": Caché caliente. Baldosas que dan un bono corto al pisarlas, se enfrían
+##   y cambian de sitio. Usar HOT_CACHE_USES: completada.
 ## La zona dibuja y detecta; World hace aparecer enemigos y da recompensas.
 
 signal triggered(event: Dictionary)
@@ -34,11 +41,16 @@ signal escort_wave(event: Dictionary)
 signal gc_warning(event: Dictionary)
 ## Apagón: se encendió una luz de emergencia; `lit_frac` de 0 a 1.
 signal blackout_changed(event: Dictionary, lit_frac: float)
+## Deploy de viernes: toca oleada en `at` (junto a una salida).
+signal friday_wave(event: Dictionary, at: Vector2)
+## Caché caliente: el jugador pisó una baldosa con este bono (clave de HOT_CACHE_BUFFS).
+signal hot_cache_hit(event: Dictionary, buff: String)
 
 ## Los pesos y cuáles son principales o menores están en data/zone_mechanics.json (T120).
-const KINDS := ["cache", "shrine", "ambush", "deploy", "bombs", "escort", "merchant", "gc", "blackout", "ticket"]
+const KINDS := ["cache", "shrine", "ambush", "deploy", "bombs", "escort", "merchant", "gc", "blackout", "ticket",
+	"merge", "friday", "hot_cache"]
 ## Las que ocupan toda la zona y empiezan activas (sin consola que tocar).
-const ZONE_WIDE := ["gc", "blackout"]
+const ZONE_WIDE := ["gc", "blackout", "merge", "friday", "hot_cache"]
 ## Las que, si se sale de la zona a medias, se dan por cerradas al volver (su pelea
 ## apuntaba a enemigos que ya no existen con esos ids). Las de toda la zona siguen.
 const INTERRUPTIBLE := ["cache", "ambush", "deploy", "bombs", "escort", "ticket"]
@@ -56,6 +68,33 @@ const BLACKOUT_DARK := 0.42
 const TICKET_TIME := 120.0
 const TICKET_MARKS := 3
 const GC_COLOR := Color("4ae0c8")
+## Merge conflict: cada cuánto se miran las ramas, a qué distancia pelean, cuánto se
+## quitan (de su propia vida máxima por golpe) y cuántas bajas lo resuelven.
+const MERGE_TICK := 0.3
+const MERGE_REACH := 110.0
+const MERGE_PULL := 380.0
+const MERGE_DAMAGE := 0.07
+const MERGE_KILLS := 12
+## A esta distancia de ti, los enemigos te prefieren a ti antes que a la otra rama.
+const MERGE_IGNORE_PLAYER := 450.0
+const MERGE_COLORS := [Color("ff6a5a"), Color("6ad07a")]
+const MERGE_NAMES := ["HEAD", "main"]
+const FRIDAY_INTERVAL := 24.0
+const FRIDAY_MAX_WAVES := 6
+const FRIDAY_HOLD := 3.0
+const FRIDAY_RADIUS := 80.0
+const HOT_CACHE_TILES := 5
+const HOT_CACHE_RADIUS := 64.0
+const HOT_CACHE_USES := 8
+const HOT_CACHE_COOLDOWN := 4.0
+const HOT_CACHE_MOVE := 12.0
+const HOT_CACHE_SECONDS := 6.0
+const HOT_CACHE_BUFFS := {
+	"hit": {"name": "Cache hit", "text": "+35 % de daño", "color": "ff9a3a", "mods": [{"stat": "damage", "type": "more", "value": 35}]},
+	"warm": {"name": "Caché precalentada", "text": "+30 % de velocidad", "color": "6aa8ff",
+		"mods": [{"stat": "attack_speed", "type": "increased", "value": 30}, {"stat": "cast_speed", "type": "increased", "value": 30}, {"stat": "movement_speed", "type": "increased", "value": 20}]},
+	"l1": {"name": "L1", "text": "60 % más de armadura", "color": "e0c050", "mods": [{"stat": "armour", "type": "more", "value": 60}]},
+}
 const BOMB_COUNT := 3
 const BOMB_TIME := 25.0
 const BOMB_SPREAD := 300.0
@@ -152,6 +191,30 @@ func _zone_wide(kind: String, rng: RandomNumberGenerator, keys: Array[Vector2]) 
 		e["dir"] = 1.0
 		e["sweeps"] = 0
 		e["hit"] = {}
+	elif kind == "merge":
+		e["kills"] = 0
+		e["tick"] = 0.0
+		e["split"] = false   # las ramas se reparten al ver a los enemigos (World los saca después)
+		e["sparks"] = []
+	elif kind == "friday":
+		var start := zone.entry_point("")
+		var best := e["pos"] as Vector2
+		for k in 40:   # el terminal del pipeline, lejos de la entrada
+			var p := zone.free_spot_near(Vector2(rng.randf_range(zone.rect.position.x + 250, zone.rect.end.x - 250),
+				rng.randf_range(zone.rect.position.y + 250, zone.rect.end.y - 250)), 40.0)
+			if zone.is_walkable(p, 40.0) and p.distance_to(start) > best.distance_to(start):
+				best = p
+		e["pos"] = best
+		e["timer"] = FRIDAY_INTERVAL * 0.5
+		e["waves"] = 0
+		e["progress"] = 0.0
+	elif kind == "hot_cache":
+		var tiles: Array = []
+		for k in HOT_CACHE_TILES:
+			tiles.append({"pos": _hot_spot(rng, keys, tiles), "cold": 0.0, "move": rng.randf_range(HOT_CACHE_MOVE * 0.6, HOT_CACHE_MOVE),
+				"buff": HOT_CACHE_BUFFS.keys()[rng.randi_range(0, HOT_CACHE_BUFFS.size() - 1)]})
+		e["tiles"] = tiles
+		e["used"] = 0
 	else:
 		var lights: Array = []
 		var tries := 0
@@ -200,6 +263,12 @@ func _process(delta: float) -> void:
 			_update_blackout(e, pp)
 		elif e["state"] == "active" and e["kind"] == "ticket":
 			_update_ticket(e, delta)
+		elif e["state"] == "active" and e["kind"] == "merge":
+			_update_merge(e, pp, delta)
+		elif e["state"] == "active" and e["kind"] == "friday":
+			_update_friday(e, pp, delta)
+		elif e["state"] == "active" and e["kind"] == "hot_cache":
+			_update_hot_cache(e, pp, delta)
 	if _pending != -1:
 		var e := events[_pending]
 		if pp.distance_to(e["pos"]) <= RADIUS + 40.0:
@@ -336,6 +405,136 @@ func _update_ticket(e: Dictionary, delta: float) -> void:
 		resolved.emit(e, false)
 
 
+## Rama de un enemigo en el merge conflict (-1 = ninguna: únicos y jefes no se meten).
+static func branch_of(em: EnemyManager, i: int) -> int:
+	return int((em.traits[i] as Dictionary).get("branch", -1))
+
+
+## Merge conflict: reparte las ramas la primera vez (por tipo, y si la zona tiene uno
+## solo, alternando) y, cada MERGE_TICK, los de ramas distintas que estén cerca y no
+## anden detrás de ti se acercan y se pegan.
+func _update_merge(e: Dictionary, pp: Vector2, delta: float) -> void:
+	if enemies == null:
+		return
+	for s in e["sparks"]:
+		s["t"] = float(s["t"]) + delta
+	var sparks: Array = (e["sparks"] as Array).filter(func(s: Dictionary) -> bool: return float(s["t"]) < 0.5)
+	e["sparks"] = sparks   # el mismo arreglo: lo que se añada abajo se dibuja
+	if not e["split"]:
+		if enemies.positions.is_empty():
+			return
+		e["split"] = true
+		var by_type := {}
+		for i in enemies.positions.size():
+			by_type[enemies.types[i]] = true
+		var two_types := by_type.size() >= 2
+		var type_list := by_type.keys()
+		for i in enemies.positions.size():
+			if enemies.rarities[i] != Rarity.Enemy.UNIQUE:
+				enemies.traits[i]["branch"] = (type_list.find(enemies.types[i]) % 2) if two_types else (i % 2)
+	e["tick"] = float(e["tick"]) - delta
+	if e["tick"] > 0.0:
+		return
+	e["tick"] = MERGE_TICK
+	var kills := 0
+	var hit_ids: Array = []
+	for i in enemies.positions.size():
+		var bi := branch_of(enemies, i)
+		if bi < 0 or enemies.positions[i].distance_to(pp) < MERGE_IGNORE_PLAYER:
+			continue
+		var best := -1
+		var best_d := MERGE_PULL
+		for j in enemies.positions.size():
+			var bj := branch_of(enemies, j)
+			if bj < 0 or bj == bi:
+				continue
+			var d := enemies.positions[i].distance_to(enemies.positions[j])
+			if d < best_d:
+				best_d = d
+				best = j
+		if best == -1:
+			continue
+		if best_d > MERGE_REACH + enemies.radii[i] + enemies.radii[best]:
+			enemies.positions[i] = enemies.positions[i].move_toward(enemies.positions[best], 40.0)   # se buscan
+		else:
+			hit_ids.append(enemies.ids[i])
+			if sparks.size() < 14:
+				sparks.append({"pos": enemies.positions[i].lerp(enemies.positions[best], 0.5), "t": 0.0})
+	for id in hit_ids:
+		var i := enemies.index_of(id)
+		if i == -1:
+			continue
+		var dmg := enemies.max_lives[i] * MERGE_DAMAGE
+		enemies._damage(i, dmg, dmg, 0.0, 100.0)
+		if enemies.index_of(id) == -1:
+			kills += 1
+	if kills > 0:
+		e["kills"] = int(e["kills"]) + kills
+		if int(e["kills"]) >= MERGE_KILLS:
+			e["state"] = "done"
+			resolved.emit(e, true)
+
+
+## Deploy de viernes: una oleada por una salida cada FRIDAY_INTERVAL (como mucho
+## FRIDAY_MAX_WAVES); quedarse FRIDAY_HOLD s en el terminal cierra el pipeline.
+func _update_friday(e: Dictionary, pp: Vector2, delta: float) -> void:
+	if pp.distance_to(e["pos"]) <= FRIDAY_RADIUS:
+		e["progress"] = float(e["progress"]) + delta
+		if e["progress"] >= FRIDAY_HOLD:
+			e["state"] = "done"
+			resolved.emit(e, true)
+			return
+	else:
+		e["progress"] = maxf(0.0, float(e["progress"]) - delta * 0.5)
+	if int(e["waves"]) >= FRIDAY_MAX_WAVES:
+		return
+	e["timer"] = float(e["timer"]) - delta
+	if e["timer"] <= 0.0:
+		e["timer"] = FRIDAY_INTERVAL
+		e["waves"] = int(e["waves"]) + 1
+		var exits := zone.exits.filter(func(x: Dictionary) -> bool: return zone.exit_visible(x))
+		var at: Vector2 = exits[randi() % exits.size()]["pos"] if not exits.is_empty() else zone.entry_point("")
+		friday_wave.emit(e, zone.free_spot_near(at.lerp(zone.rect.get_center(), 0.08), 40.0))
+
+
+## Caché caliente: pisar una baldosa da su bono, la enfría HOT_CACHE_COOLDOWN s y la cambia
+## de sitio; las que nadie pisa también se mueven de vez en cuando.
+func _update_hot_cache(e: Dictionary, pp: Vector2, delta: float) -> void:
+	for t in e["tiles"]:
+		if float(t["cold"]) > 0.0:
+			t["cold"] = float(t["cold"]) - delta
+			if t["cold"] <= 0.0:
+				t["pos"] = _hot_spot(null, zone.key_points(), e["tiles"])
+			continue
+		t["move"] = float(t["move"]) - delta
+		if t["move"] <= 0.0:
+			t["move"] = HOT_CACHE_MOVE
+			t["pos"] = _hot_spot(null, zone.key_points(), e["tiles"])
+		elif pp.distance_to(t["pos"]) < HOT_CACHE_RADIUS:
+			t["cold"] = HOT_CACHE_COOLDOWN
+			e["used"] = int(e["used"]) + 1
+			hot_cache_hit.emit(e, String(t["buff"]))
+			t["buff"] = HOT_CACHE_BUFFS.keys().pick_random()
+			if int(e["used"]) >= HOT_CACHE_USES:
+				e["state"] = "done"
+				resolved.emit(e, true)
+				return
+
+
+## Un sitio para una baldosa de caché: suelo, lejos de los puntos clave y de las otras.
+func _hot_spot(rng: RandomNumberGenerator, keys: Array[Vector2], tiles: Array) -> Vector2:
+	var best := zone.free_spot_near(zone.rect.get_center(), 40.0)
+	for k in 60:
+		var x := rng.randf_range(zone.rect.position.x + 200, zone.rect.end.x - 200) if rng else randf_range(zone.rect.position.x + 200, zone.rect.end.x - 200)
+		var y := rng.randf_range(zone.rect.position.y + 200, zone.rect.end.y - 200) if rng else randf_range(zone.rect.position.y + 200, zone.rect.end.y - 200)
+		var p := zone.free_spot_near(Vector2(x, y), 40.0)
+		if not zone.is_walkable(p, 40.0) or keys.any(func(q: Vector2) -> bool: return q.distance_to(p) < 260.0) \
+				or tiles.any(func(t: Dictionary) -> bool: return Vector2(t["pos"]).distance_to(p) < 500.0):
+			continue
+		return p
+	return best
+
+
 ## Puntos de luz de las mecánicas (para Zone.light_points): las luces de emergencia del
 ## apagón, encendidas o con su pilotito rojo.
 func light_points() -> Array[Dictionary]:
@@ -420,6 +619,12 @@ func _draw() -> void:
 				_draw_blackout(e)
 			"ticket":
 				_draw_ticket(e)
+			"merge":
+				_draw_merge(e)
+			"friday":
+				_draw_friday(e)
+			"hot_cache":
+				_draw_hot_cache(e)
 
 
 func _shadow(p: Vector2, w: float) -> void:
@@ -571,6 +776,81 @@ func _draw_ticket(e: Dictionary) -> void:
 			draw_rect(Rect2(q + Vector2(-34, -10), Vector2(68, 18)), Color(0.1, 0.1, 0.15, 0.85))
 			draw_rect(Rect2(q + Vector2(-34, -10), Vector2(68, 18)), Color("ff9a5a"), false, 1.5)
 			zone._label(q + Vector2(-34, -8), "P1 · " + left, 68, 11, Color("ffd0a0"))
+
+
+## Merge conflict: un aro del color de su rama bajo cada enemigo a la vista y, donde
+## chocan, marcas de conflicto («<<<<<<<», «=======», «>>>>>>>») que saltan.
+func _draw_merge(e: Dictionary) -> void:
+	if e["state"] != "active" or enemies == null:
+		return
+	var view := zone._camera_rect().grow(80.0)
+	for i in enemies.positions.size():
+		var b := branch_of(enemies, i)
+		if b < 0 or not view.has_point(enemies.positions[i]):
+			continue
+		var p := enemies.positions[i] + Vector2(0, enemies.radii[i] * 0.7)
+		draw_set_transform(p, 0.0, Vector2(1.0, 0.4))
+		draw_arc(Vector2.ZERO, enemies.radii[i] + 6.0, 0.0, TAU, 20, Color(MERGE_COLORS[b], 0.8), 3.0)
+		draw_set_transform(Vector2.ZERO)
+	var font := ThemeDB.fallback_font
+	var marks := ["<<<<<<<", "=======", ">>>>>>>"]
+	for k in (e["sparks"] as Array).size():
+		var s: Dictionary = e["sparks"][k]
+		var t := float(s["t"]) / 0.5
+		draw_string(font, Vector2(s["pos"]) + Vector2(-26, -20 - 30.0 * t), marks[k % 3], HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(1.0, 0.7, 0.3, 1.0 - t))
+	if zone.player:
+		zone._label(zone.player.global_position + Vector2(-110, -110), "Merge conflict: %d / %d bajas entre ramas" % [int(e["kills"]), MERGE_KILLS], 220, 12, Color("ffb070"))
+
+
+## Deploy de viernes: el terminal del pipeline con su aro de cierre, y cuánto falta para
+## el siguiente deploy.
+func _draw_friday(e: Dictionary) -> void:
+	var p: Vector2 = e["pos"]
+	var active: bool = e["state"] == "active"
+	_shadow(p + Vector2(0, 16), 32.0)
+	draw_rect(Rect2(p + Vector2(-28, -6), Vector2(56, 20)), Color("2e2a34"))
+	var screen := Rect2(p + Vector2(-24, -50), Vector2(48, 38))
+	draw_rect(screen.grow(3), Color("3a3640"))
+	draw_rect(screen, Color("2a1010") if active else Color("102a14"))
+	for k in 3:   # el pipeline: tres etapas, la última en rojo mientras siga abierto
+		var c := Color("6ad07a") if k < 2 or not active else (Color("ff4a3a") if sin(_time * 6.0) > 0.0 else Color("601818"))
+		draw_rect(Rect2(screen.position + Vector2(5 + k * 14, 14), Vector2(10, 10)), c)
+	if not active:
+		return
+	draw_arc(p, FRIDAY_RADIUS, 0.0, TAU, 32, Color(1.0, 0.6, 0.3, 0.35), 2.0)
+	var frac := float(e["progress"]) / FRIDAY_HOLD
+	if frac > 0.0:
+		draw_arc(p, FRIDAY_RADIUS, -PI / 2.0, -PI / 2.0 + TAU * frac, 32, Color("ffd24a"), 5.0)
+	var next := "" if int(e["waves"]) >= FRIDAY_MAX_WAVES else "  ·  próximo deploy en %d s" % ceili(float(e["timer"]))
+	zone._label(p + Vector2(-130, -70), "Cerrar el pipeline" + next, 260, 13, Color("ff9a5a"))
+
+
+## Caché caliente: baldosas que brillan con el color de su bono; frías, apagadas.
+func _draw_hot_cache(e: Dictionary) -> void:
+	if e["state"] != "active":
+		return
+	var view := zone._camera_rect().grow(120.0)
+	for t in e["tiles"]:
+		var p: Vector2 = t["pos"]
+		if not view.has_point(p):
+			continue
+		var info: Dictionary = HOT_CACHE_BUFFS[t["buff"]]
+		var cold := float(t["cold"]) > 0.0
+		var col := Color(info["color"])
+		var r := Rect2(p - Vector2(HOT_CACHE_RADIUS, HOT_CACHE_RADIUS * 0.55), Vector2(HOT_CACHE_RADIUS * 2.0, HOT_CACHE_RADIUS * 1.1))
+		if cold:
+			draw_rect(r, Color(0.2, 0.25, 0.35, 0.35))
+			draw_rect(r, Color(0.5, 0.6, 0.8, 0.4), false, 2.0)
+			continue
+		var pulse := 0.55 + 0.25 * sin(_time * 4.0 + p.x)
+		draw_rect(r, Color(col, 0.25 * pulse))
+		draw_rect(r, Color(col, 0.9), false, 3.0)
+		for k in 4:   # rejilla de «líneas de caché»
+			var x := r.position.x + r.size.x * (k + 1) / 5.0
+			draw_line(Vector2(x, r.position.y + 4), Vector2(x, r.end.y - 4), Color(col, 0.35 * pulse), 1.0)
+		zone._label(p + Vector2(-70, -HOT_CACHE_RADIUS * 0.55 - 20), info["name"], 140, 12, col)
+	if zone.player:
+		zone._label(zone.player.global_position + Vector2(-90, -110), "Caché caliente: %d / %d" % [int(e["used"]), HOT_CACHE_USES], 180, 12, Color("ffd080"))
 
 
 ## Bombas lógicas: la consola y, activa, las tres bombas con su aro de desactivación y la cuenta atrás.

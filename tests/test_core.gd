@@ -186,6 +186,7 @@ func _initialize() -> void:
 	_test_zone_instances()
 	_test_zone_mechanics()
 	_test_new_mechanics_t121()
+	_test_new_mechanics_t122()
 	_test_tilesets()
 	_test_events_music_colorblind()
 	_test_story_editor()
@@ -4734,6 +4735,98 @@ func _test_new_mechanics_t121() -> void:
 	_check(t2["state"] == "done" and results.has(["ticket", false]), "si se acaba el tiempo, sale mal")
 	_check(ZoneMechanics.candidates(def, "act1").has("gc") and ZoneMechanics.candidates(def, "act1").has("blackout") and ZoneMechanics.candidates(def, "act1").has("ticket"),
 		"las tres pueden tocar en una zona del acto I")
+	ev.free()
+	zone.free()
+	player.queue_free()
+	em.free()
+
+
+## Mecánicas nuevas (T122): las ramas del merge se pelean lejos de ti y cuentan sus bajas;
+## el deploy de viernes manda oleadas hasta cerrar el pipeline; la caché caliente da su
+## bono, se enfría y se completa; y ninguna principal domina el reparto.
+func _test_new_mechanics_t122() -> void:
+	var def: Dictionary = _zone_def("zona3").duplicate(true)
+	Zone.scale_def(def)
+	var c := _new_character()
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	var player: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(player)
+	player.setup(c, em)
+	var zone := Zone.new()
+	zone.setup(def, player, c, null, 4048)
+	var ev := ZoneEvents.new()
+	ev.zone = zone
+	ev.enemies = em
+	var results: Array = []
+	ev.resolved.connect(func(e: Dictionary, ok: bool) -> void: results.append([e["kind"], ok]))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 9
+	var mid := zone.rect.get_center()
+	# Merge conflict.
+	var mg := ev._zone_wide("merge", rng, zone.key_points())
+	var a := em.spawn(mid, Rarity.Enemy.NORMAL, 0)
+	var b := em.spawn(mid + Vector2(60, 0), Rarity.Enemy.NORMAL, 1)
+	var boss := em.spawn(mid + Vector2(0, 80), Rarity.Enemy.UNIQUE, 0)
+	player.global_position = mid + Vector2(2000, 0)
+	ev._update_merge(mg, player.global_position, 0.0)
+	_check(ZoneEvents.branch_of(em, em.index_of(a)) != ZoneEvents.branch_of(em, em.index_of(b)) and ZoneEvents.branch_of(em, em.index_of(boss)) == -1,
+		"el merge reparte dos ramas por tipo (los únicos, fuera)")
+	var life_a := em.lives[em.index_of(a)]
+	ev._update_merge(mg, player.global_position, ZoneEvents.MERGE_TICK)
+	_check(em.lives[em.index_of(a)] < life_a and not (mg["sparks"] as Array).is_empty(), "las ramas que se cruzan se pegan entre ellas")
+	player.global_position = mid + Vector2(10, 0)
+	var life_a2 := em.lives[em.index_of(a)]
+	ev._update_merge(mg, player.global_position, ZoneEvents.MERGE_TICK)
+	_check(is_equal_approx(em.lives[em.index_of(a)], life_a2), "pero si estás cerca, van a por ti")
+	player.global_position = mid + Vector2(2000, 0)
+	mg["kills"] = ZoneEvents.MERGE_KILLS - 1
+	for k in 200:
+		if mg["state"] == "done":
+			break
+		ev._update_merge(mg, player.global_position, ZoneEvents.MERGE_TICK)
+	_check(mg["state"] == "done" and results.has(["merge", true]), "con sus bajas, el conflicto se resuelve")
+	em.clear_all()
+	# Deploy de viernes.
+	var fr := ev._zone_wide("friday", rng, zone.key_points())
+	var waves: Array = []
+	ev.friday_wave.connect(func(_e: Dictionary, at: Vector2) -> void: waves.append(at))
+	_check(Vector2(fr["pos"]).distance_to(zone.entry_point("")) > 600.0, "el terminal del pipeline queda lejos de la entrada")
+	for k in int(ZoneEvents.FRIDAY_INTERVAL * ZoneEvents.FRIDAY_MAX_WAVES * 2.0):
+		ev._update_friday(fr, mid + Vector2(5000, 5000), 1.0)
+	_check(waves.size() == ZoneEvents.FRIDAY_MAX_WAVES, "entran oleadas por las salidas, con tope (%d)" % waves.size())
+	for k in 40:
+		if fr["state"] == "done":
+			break
+		ev._update_friday(fr, fr["pos"], 0.1)
+	_check(fr["state"] == "done" and results.has(["friday", true]), "quedarse en el terminal cierra el pipeline")
+	# Caché caliente.
+	var hc := ev._zone_wide("hot_cache", rng, zone.key_points())
+	var buffs: Array = []
+	ev.hot_cache_hit.connect(func(_e: Dictionary, buff: String) -> void: buffs.append(buff))
+	_check((hc["tiles"] as Array).size() == ZoneEvents.HOT_CACHE_TILES, "la caché pone sus baldosas")
+	var tile: Dictionary = hc["tiles"][0]
+	ev._update_hot_cache(hc, tile["pos"], 0.05)
+	_check(buffs.size() == 1 and float(tile["cold"]) > 0.0 and ZoneEvents.HOT_CACHE_BUFFS.has(buffs[0]), "pisar una baldosa da su bono y la enfría")
+	ev._update_hot_cache(hc, tile["pos"], 0.05)
+	_check(buffs.size() == 1, "fría, no da nada")
+	for k in 200:
+		if hc["state"] == "done":
+			break
+		for t in hc["tiles"]:
+			if float(t["cold"]) <= 0.0:
+				ev._update_hot_cache(hc, t["pos"], 0.05)
+				break
+		ev._update_hot_cache(hc, mid + Vector2(9000, 9000), 1.0)
+	_check(hc["state"] == "done" and results.has(["hot_cache", true]) and int(hc["used"]) == ZoneEvents.HOT_CACHE_USES, "usar la caché las veces que pide la completa")
+	# Ninguna principal domina.
+	var total := 0.0
+	var top := 0.0
+	for id in ZoneMechanics.candidates(def, "act1"):
+		var w := float(ZoneMechanics.info(id).get("weight", 0.0))
+		total += w
+		top = maxf(top, w)
+	_check(ZoneMechanics.candidates(def, "act1").size() >= 8 and top / total < 0.2, "ninguna principal pasa del 20 %% del reparto (%.0f %%)" % (top / total * 100.0))
 	ev.free()
 	zone.free()
 	player.queue_free()

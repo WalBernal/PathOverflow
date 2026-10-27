@@ -355,6 +355,8 @@ func travel_to(zone_id: String, entry := "") -> void:
 	zone.events.resolved.connect(_on_zone_event_resolved)
 	zone.events.exploded.connect(_on_logic_bomb_exploded)
 	zone.events.gc_warning.connect(_on_gc_warning)
+	zone.events.friday_wave.connect(_on_friday_wave)
+	zone.events.hot_cache_hit.connect(_on_hot_cache_hit)
 	zone.events.blackout_changed.connect(func(_e: Dictionary, frac: float) -> void: _apply_blackout(frac))
 	zone.events.escort_wave.connect(func(e: Dictionary) -> void:
 		ui.hud.flash("¡Emboscada en el camino! Despeja al proceso para que siga.", Color("ff6a5a"))
@@ -1226,7 +1228,28 @@ func _apply_blackout(lit_frac: float) -> void:
 		Sfx.play("ui_open", -6.0, 1.4)
 
 
+## Deploy de viernes (T122): entra una oleada por una salida.
+func _on_friday_wave(e: Dictionary, at: Vector2) -> void:
+	_spawn_event_wave(at, 8, 0.25, 0.06, 150.0)
+	Sfx.play("wave", -3.0, 0.9)
+	ui.hud.flash("Deploy %d de %d: llegan por la salida. Cierra el pipeline en su terminal." % [int(e["waves"]), ZoneEvents.FRIDAY_MAX_WAVES], Color("ff9a5a"))
+
+
+## Caché caliente (T122): el bono de la baldosa, unos segundos.
+func _on_hot_cache_hit(_e: Dictionary, buff: String) -> void:
+	var info: Dictionary = ZoneEvents.HOT_CACHE_BUFFS[buff]
+	var mods: Array[Modifier] = []
+	for md in info["mods"]:
+		mods.append(Modifier.from_dict(md, "hot_cache"))
+	character.add_timed_effect("hot_cache:" + buff, mods, ZoneEvents.HOT_CACHE_SECONDS)
+	ui.hud.flash("%s: %s (%d s)" % [info["name"], info["text"], int(ZoneEvents.HOT_CACHE_SECONDS)], Color(info["color"]))
+	Sfx.play("aura_on", -4.0, 1.5)
+
+
 const RESOLVED_TEXT := {
+	"merge": ["Conflicto resuelto: las ramas se han mergeado (a golpes).", ""],
+	"friday": ["Pipeline cerrado. Nadie más despliega en viernes.", ""],
+	"hot_cache": ["La caché se enfrió: rendimiento extraído.", ""],
 	"bombs": ["¡Bombas desactivadas!", "Las bombas lógicas estallaron. Algo se salvó entre los escombros."],
 	"escort": ["El proceso llegó a su salida: exit code 0.", ""],
 	"gc": ["El Garbage Collector terminó su pasada. Memoria liberada... y botín.", ""],
