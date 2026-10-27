@@ -189,6 +189,7 @@ func _initialize() -> void:
 	_test_new_mechanics_t122()
 	_test_set_pieces()
 	_test_scene_depth()
+	_test_minimap_fog()
 	_test_tilesets()
 	_test_events_music_colorblind()
 	_test_story_editor()
@@ -4925,6 +4926,41 @@ func _test_scene_depth() -> void:
 		z.free()
 	_check(kinds["zona3"] == "water" and kinds["zona2"] == "abyss" and kinds["bus"] == "void" and kinds["zona1"] == "",
 		"parallax de agua, abismo o vacío según el borde; la maleza, no %s" % [kinds])
+
+
+## Minimapa con niebla (T125): lo que no has visto no se ve, tampoco las salidas ni el
+## waypoint; al pasar cerca, aparecen.
+func _test_minimap_fog() -> void:
+	var def: Dictionary = _zone_def("zona2").duplicate(true)
+	Zone.scale_def(def)
+	var zone := Zone.new()
+	zone.setup(def, null, null, null, 8181)
+	var c := _new_character()
+	var p: Player = load("res://scenes/game/player.tscn").instantiate()
+	p.global_position = zone.entry_point("")
+	var wm := WorldMap.new()
+	wm.player = p
+	wm.character = c
+	wm.set_zone(zone)
+	var mm := Minimap.new()
+	mm.player = p
+	mm.zone = zone
+	mm.world_map = wm
+	var far_exit: Dictionary = {}
+	for e in zone.exits:
+		if (e["pos"] as Vector2).distance_to(p.global_position) > WorldMap.REVEAL_RADIUS * 2.0:
+			far_exit = e
+	_check(not far_exit.is_empty() and not mm.seen(far_exit["pos"]), "la salida lejana no sale en el minimapa hasta verla")
+	_check(mm.seen(p.global_position), "lo que tienes alrededor, sí")
+	p.global_position = far_exit["pos"]
+	wm.reveal()
+	_check(mm.seen(far_exit["pos"]), "al llegar cerca, la salida aparece")
+	_check(not zone.has_waypoint or mm.seen(zone.waypoint) == wm.is_explored(zone.waypoint), "el waypoint, igual que en el mapa grande")
+	var mm2 := Minimap.new()
+	_check(mm2.seen(Vector2(99999, 99999)), "sin mapa grande (pruebas, herramientas), se ve todo")
+	for n in [mm, mm2, wm, zone]:
+		n.free()
+	p.free()
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.

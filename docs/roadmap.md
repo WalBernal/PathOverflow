@@ -757,9 +757,10 @@ Origen: V3
 
 ## Fase 25 — Interfaz
 
-### [ ] T125 · Minimapa con niebla que se descubre · M
+### [x] T125 · Minimapa con niebla que se descubre · M
 Origen: V3
 - Con zonas que cambian, el minimapa y el mapa grande empiezan en niebla y se descubren al pasar; lo descubierto se guarda en la instancia. Salidas y waypoint aparecen al verlos.
+- Hecho: el mapa grande ya tenía niebla, ya solo enseñaba salidas y waypoint explorados (T53) y desde T118 lo explorado de una zona generada va con su instancia (y no se carga de otra). Faltaba el minimapa, que enseñaba todo y señalaba con flechas salidas y waypoint sin haberlos visto: ahora usa la misma rejilla de 160 px del mapa grande (`Minimap.seen`, `_draw_fog`): las celdas sin explorar se tapan del color del fondo (recortadas al círculo en el borde) y salidas y waypoint (y sus flechas) solo salen si están en terreno visto. El rombo de la mecánica de la zona se ve siempre (es una guía, T120). Coste: el primer intento subió el `_draw` del minimapa de ~1,0 a ~1,75 ms; con los trozos de niebla en caché (se rehacen al moverse 32 px o al descubrir algo; mientras tanto se desplazan) queda en 1,07-1,19 ms. Captura `docs/capturas/zonas_3/125_minimapa_niebla.png`. Prueba `_test_minimap_fog`.
 
 ### [ ] T126 · Ventana de waypoints como mapa del acto · M
 Origen: V3
@@ -975,3 +976,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-26 · T122 · Merge conflict (ramas de enemigos que se pegan entre ellas), Deploy de viernes (oleadas por las salidas hasta cerrar el pipeline) y Caché caliente (baldosas con bono que se mueven); pesos igualados para que ninguna principal pase del 20 %.
 - 2026-10-26 · T123 · Salas temáticas en las zonas generadas (rack caído, cementerio de commits, backups inundada, altar del becario, servidor legacy): 1-2 por instancia según el estilo, con decorado, luz y a veces caja o lore.
 - 2026-10-26 · T124 · Obstáculos altos translúcidos con alguien detrás, sombras que se alejan de la luz, fondo con parallax más allá del borde (vacío, abismo, agua, lava) y manchas en el suelo que se guardan con la instancia; sin coste medible.
+- 2026-10-26 · T125 · Niebla en el minimapa (la del mapa grande): lo no explorado se tapa y salidas y waypoint solo salen al verlos; con caché, el minimapa cuesta lo mismo que antes.

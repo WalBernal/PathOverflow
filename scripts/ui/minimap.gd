@@ -147,6 +147,7 @@ func _draw_map() -> void:
 					draw_colored_polygon(poly, FEATURE_COLORS.get(o["kind"], Color("4a4352")))
 		elif _inside(p):
 			draw_circle(p, maxf(1.5, o["radius"] * SCALE), Color("4a4352"))
+	_draw_fog(center, circle)   # lo que aún no has visto (T125), como en el mapa grande
 	# La mecánica principal de la zona (T120): rombo dorado donde está, hasta completarla.
 	for p in mechanic_points(zone):
 		var mp := _to_map(p)
@@ -162,16 +163,17 @@ func _draw_map() -> void:
 				draw_colored_polygon(PackedVector2Array([mp + Vector2(0, -9), mp + Vector2(6, -7), mp + Vector2(0, -5)]), WorldMap.MARK_COLOR)
 	var time := Time.get_ticks_msec() / 1000.0
 
-	# Salidas: dentro, un rombo; fuera, una flecha en el borde hacia ellas.
+	# Salidas: dentro, un rombo; fuera, una flecha en el borde hacia ellas. Solo las que
+	# ya has visto (T125): en una zona generada no se sabe dónde caen hasta verlas.
 	for e in zone.exits:
-		if not zone.exit_visible(e):
+		if not zone.exit_visible(e) or not seen(e["pos"]):
 			continue
 		var p := _to_map(e["pos"])
 		if _inside(p):
 			draw_colored_polygon(PackedVector2Array([p + Vector2(0, -5), p + Vector2(5, 0), p + Vector2(0, 5), p + Vector2(-5, 0)]), Color("7fc8ff"))
 		else:
 			_edge_arrow(center, p, Color("7fc8ff"))
-	if zone.has_waypoint:
+	if zone.has_waypoint and seen(zone.waypoint):
 		var p := _to_map(zone.waypoint)
 		if _inside(p):
 			draw_circle(p, 4.0, Color("5cd0ff"))
@@ -257,6 +259,66 @@ func _draw_map() -> void:
 	draw_string(font, Vector2(0, RADIUS * 2.0 + 16.0), label, HORIZONTAL_ALIGNMENT_CENTER, RADIUS * 2.0, 12, UiStyle.TEXT)
 	draw_string_outline(font, Vector2(0, RADIUS * 2.0 + 32.0), sublabel, HORIZONTAL_ALIGNMENT_CENTER, RADIUS * 2.0, 11, 4, Color.BLACK)
 	draw_string(font, Vector2(0, RADIUS * 2.0 + 32.0), sublabel, HORIZONTAL_ALIGNMENT_CENTER, RADIUS * 2.0, 11, UiStyle.MUTED)
+
+
+## ¿Has visto ya ese punto? (la niebla del mapa grande; sin mapa grande, todo se ve)
+func seen(world: Vector2) -> bool:
+	return world_map == null or world_map.is_explored(world)
+
+
+## Niebla (T125): las celdas del mapa grande sin explorar, del color del fondo, encima del
+## suelo y los obstáculos; las del borde se recortan al círculo. Los trozos se calculan
+## una vez y se reutilizan (desplazados) mientras no te muevas FOG_REBUILD px ni se
+## descubra nada; el desfase del borde mientras tanto (~2 px) lo tapa el aro.
+const FOG_REBUILD := 32.0
+var _fog_rects: Array[Rect2] = []
+var _fog_polys: Array[PackedVector2Array] = []
+var _fog_at := Vector2.INF
+var _fog_key := -1
+
+
+func _draw_fog(center: Vector2, circle: PackedVector2Array) -> void:
+	if world_map == null or world_map.explored.is_empty():
+		return
+	var key := world_map.explored.count(1) * 7919 + zone.get_instance_id()
+	if key != _fog_key or _fog_at.distance_to(player.global_position) > FOG_REBUILD:
+		_build_fog(center, circle)
+		_fog_key = key
+		_fog_at = player.global_position
+	var shift := (_fog_at - player.global_position) * SCALE
+	var fog := Color(BG, 1.0)
+	draw_set_transform(shift)
+	for r in _fog_rects:
+		draw_rect(r, fog)
+	for poly in _fog_polys:
+		draw_colored_polygon(poly, fog)
+	draw_set_transform(Vector2.ZERO)
+
+
+func _build_fog(center: Vector2, circle: PackedVector2Array) -> void:
+	_fog_rects.clear()
+	_fog_polys.clear()
+	var cell := WorldMap.CELL
+	var reach := RADIUS / SCALE   # radio del minimapa en píxeles del mundo
+	var origin := zone.rect.position
+	var from := ((player.global_position - Vector2(reach, reach) - origin) / cell).floor()
+	var to := ((player.global_position + Vector2(reach, reach) - origin) / cell).ceil()
+	for cy in range(int(from.y), int(to.y)):
+		for cx in range(int(from.x), int(to.x)):
+			var w := origin + (Vector2(cx, cy) + Vector2(0.5, 0.5)) * cell
+			if not zone.rect.has_point(w) or world_map.is_explored(w):
+				continue
+			var a := _to_map(origin + Vector2(cx, cy) * cell)
+			var mr := Rect2(a, Vector2(cell, cell) * SCALE).grow(0.5)
+			if mr.get_center().distance_to(center) > RADIUS + mr.size.x:
+				continue
+			var quad := PackedVector2Array([mr.position, Vector2(mr.end.x, mr.position.y), mr.end, Vector2(mr.position.x, mr.end.y)])
+			if quad[0].distance_to(center) <= RADIUS and quad[1].distance_to(center) <= RADIUS and quad[2].distance_to(center) <= RADIUS and quad[3].distance_to(center) <= RADIUS:
+				_fog_rects.append(mr)
+				continue
+			for poly in Geometry2D.intersect_polygons(quad, circle):
+				if poly.size() >= 3 and not Geometry2D.triangulate_polygon(poly).is_empty():
+					_fog_polys.append(poly)
 
 
 func _draw_quest_icon(p: Vector2, time: float) -> void:
