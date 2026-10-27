@@ -49,6 +49,18 @@ var shape := "normal"
 ## obliga a dar la vuelta. Celdas de la cresta (no se cavan si hay otro camino).
 var detour: Array[Vector2i] = []
 
+## Contenido de la instancia (T117), también de la semilla:
+## - `type_weights`: peso de cada tipo de `enemies.types` al formar manadas (uno
+##   abunda ×3, otro escasea ×0,35, el resto ×1); vacío = todos igual.
+## - `elite_mult`: la probabilidad de élite de la zona multiplicada (0,7-1,3; media 1).
+## - `ambience`: {weather (si existe la clave, sustituye al del estilo: "", "fog" o
+##   "data_rain"), dust (polvo de más), dark (oscuridad de más: apagón parcial)}.
+## - `treasure`: rincón apartado con una caja de botín rica (INF = no hay).
+var type_weights: Array[float] = []
+var elite_mult := 1.0
+var ambience: Dictionary = {}
+var treasure := Vector2.INF
+
 var _rng := RandomNumberGenerator.new()
 var _seed := 0
 var _hard := {}   # celdas de muro que los pasillos evitan (la cresta del rodeo)
@@ -257,6 +269,9 @@ func remap_def(def: Dictionary) -> Dictionary:
 		out["mutex"]["positions"] = out["mutex"]["positions"].map(moved)
 	if out.get("race_condition") is Dictionary and out["race_condition"].has("pos"):
 		out["race_condition"]["pos"] = moved.call(out["race_condition"]["pos"])
+	for r in out.get("rare_spawns", []):   # los raros, cada instancia en otro sitio apartado (T117)
+		if r is Dictionary and r.has("pos"):
+			r["pos"] = arr.call(_far_spot())
 	out["_layout_seed"] = _seed
 	return out
 
@@ -327,6 +342,81 @@ func _build(def: Dictionary, p_seed: int) -> void:
 		_add_detour()
 	_connect_keys()
 	_keep_reachable()
+	_make_content(def)
+
+
+# --- Contenido de la instancia (T117) ---
+
+## Estilos donde puede haber niebla o lluvia de datos de más (además de la suya).
+const FOG_STYLES := ["forest", "swamp", "fosa", "frio", "grieta", "alcantarillas", "ruins", "catacombs", "rom", "anillo"]
+const RAIN_STYLES := ["servers", "terminal", "kernel", "bus", "bios", "setup", "silicio", "vga16", "flash", "fabrica"]
+const TREASURE_CHANCE := 0.5
+const BLACKOUT_CHANCE := 0.2
+const BLACKOUT_DARK := 0.18
+
+
+func _make_content(def: Dictionary) -> void:
+	var types: Array = def.get("enemies", {}).get("types", []) if def.get("enemies") is Dictionary else []
+	if types.size() >= 2:
+		for t in types:
+			type_weights.append(1.0)
+		var rich := _rng.randi_range(0, types.size() - 1)
+		var poor := (rich + _rng.randi_range(1, types.size() - 1)) % types.size()
+		type_weights[rich] = 3.0
+		type_weights[poor] = 0.35
+	elite_mult = _rng.randf_range(0.7, 1.3)
+	var style := String(def.get("style", ""))
+	if _rng.randf() < 0.5:   # la mitad de las veces, otro tiempo dentro de lo que pega con el estilo
+		if FOG_STYLES.has(style):
+			ambience["weather"] = ["", "fog"][_rng.randi_range(0, 1)]
+		elif RAIN_STYLES.has(style):
+			ambience["weather"] = ["", "data_rain"][_rng.randi_range(0, 1)]
+	ambience["dust"] = _rng.randf() < 0.3
+	ambience["dark"] = BLACKOUT_DARK if _rng.randf() < BLACKOUT_CHANCE else 0.0
+	if _rng.randf() < TREASURE_CHANCE:
+		treasure = _nook()
+
+
+## Índice al azar entre `count` opciones según `weights` (vacío o de otro tamaño = todas igual).
+static func pick_weighted(weights: Array[float], count: int, rng: RandomNumberGenerator) -> int:
+	if weights.size() != count:
+		return rng.randi_range(0, count - 1)
+	var total := 0.0
+	for w in weights:
+		total += w
+	var r := rng.randf() * total
+	for i in count:
+		r -= weights[i]
+		if r <= 0.0:
+			return i
+	return count - 1
+
+
+## Rincón apartado: suelo lejos de todos los puntos clave y rodeado de muro (callejón).
+func _nook() -> Vector2:
+	var keys := key_points()
+	var best := Vector2.INF
+	var best_score := -1.0
+	for attempt in 300:
+		var c := Vector2i(_rng.randi_range(MARGIN + 1, width - MARGIN - 2), _rng.randi_range(MARGIN + 1, height - MARGIN - 2))
+		if not is_floor(c):
+			continue
+		var walls := 0
+		for dy in range(-1, 2):
+			for dx in range(-1, 2):
+				if not is_floor(c + Vector2i(dx, dy)):
+					walls += 1
+		var p := center_of(c)
+		var d := INF
+		for k in keys:
+			d = minf(d, p.distance_to(k))
+		if d < CELL * 8.0:
+			continue
+		var score := d / CELL + walls * 6.0
+		if score > best_score:
+			best_score = score
+			best = p
+	return best
 
 
 # --- Plantillas de forma ---
@@ -556,7 +646,7 @@ func _far_spot() -> Vector2:
 	var best_d := -1.0
 	for attempt in 60:
 		var c := Vector2i(_rng.randi_range(MARGIN + 2, width - MARGIN - 3), _rng.randi_range(MARGIN + 2, height - MARGIN - 3))
-		if not is_floor(c) and attempt < 50:
+		if not is_floor(c):
 			continue
 		var p := center_of(c)
 		var d := INF
@@ -565,7 +655,7 @@ func _far_spot() -> Vector2:
 		if d > best_d:
 			best_d = d
 			best = p
-	return best
+	return best if best_d >= 0.0 else nearest_floor(best)
 
 
 # --- Conexión y garantías ---

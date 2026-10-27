@@ -719,7 +719,10 @@ func _place_containers() -> void:
 		return
 	var crng := RandomNumberGenerator.new()
 	crng.seed = _seed_base + 31
-	var wanted := clampi(int(rect.get_area() / 1200000.0), 2, 4)
+	if layout and layout.treasure != Vector2.INF:
+		# El rincón apartado de la instancia (T117): una caja rica, dorada.
+		containers.append({"pos": layout.treasure, "opened": false, "t": 0.0, "seed": crng.randi(), "rich": true})
+	var wanted := clampi(int(rect.get_area() / 1200000.0), 2, 4) + containers.size()
 	var keys := key_points()
 	var path := _key_path(keys)
 	var inner := rect.grow(-140.0)
@@ -760,8 +763,11 @@ func _draw_container(c: Dictionary) -> void:
 	draw_set_transform(p + Vector2(0, 2), 0.0, Vector2(1.0, 0.35))
 	draw_circle(Vector2.ZERO, 26.0, Color(0, 0, 0, 0.35))
 	draw_set_transform(Vector2.ZERO)
-	draw_rect(body, Color("2a2e38"))
-	draw_rect(body, Color("14161c"), false, 2.0)
+	var rich: bool = c.get("rich", false)
+	if rich and not c["opened"]:   # la caja rica late con un brillo dorado
+		draw_circle(p + Vector2(0, -12), 40.0 + 4.0 * sin(_time * 3.0), Color(1.0, 0.8, 0.3, 0.12))
+	draw_rect(body, Color("4a3a18") if rich else Color("2a2e38"))
+	draw_rect(body, Color("d9a441") if rich else Color("14161c"), false, 2.0)
 	draw_rect(Rect2(body.position + Vector2(4, 6), Vector2(36, 3)), Color("1c1f26"))
 	for k in 3:
 		var on: bool = c["opened"] or sin(_time * 3.0 + k + float(c["seed"] % 7)) > 0.0

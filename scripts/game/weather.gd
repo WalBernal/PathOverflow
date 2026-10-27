@@ -54,9 +54,16 @@ static func extras_for(style: String) -> Array[String]:
 	return out
 
 
-func setup(style: String, zone: Zone = null) -> void:
+## `variant` (T117, zonas generadas): {weather: sustituye al del estilo ("", "fog",
+## "data_rain"), dust: polvo de más}.
+func setup(style: String, zone: Zone = null, variant := {}) -> void:
 	kind = kind_for(style)
 	extras = extras_for(style)
+	if not WorldPost.reduced:
+		if variant.has("weather"):
+			kind = String(variant["weather"])
+		if bool(variant.get("dust", false)) and not extras.has("dust"):
+			extras.append("dust")
 	_parts.clear()
 	_splashes.clear()
 	_dust.clear()

@@ -342,11 +342,11 @@ func travel_to(zone_id: String, entry := "") -> void:
 	emitters.setup(zone)
 	var weather := Weather.new()   # lluvia de datos o niebla, según el estilo
 	zone.add_child(weather)
-	weather.setup(zone.style, zone)
+	weather.setup(zone.style, zone, zone.layout.ambience if zone.layout else {})   # el tiempo de la instancia (T117)
 	SoundMap.floor_style = zone.style   # pasos según el suelo (T77)
 	_sighted.clear()
 	post.attach(self, zone)   # el pixelado justo después de la zona; la luz, encima
-	post.set_style(zone.style)
+	post.set_style(zone.style, float(zone.layout.ambience.get("dark", 0.0)) if zone.layout else 0.0)   # apagón parcial (T117)
 	zone.npc_interacted.connect(_on_npc_interacted)
 	zone.events.triggered.connect(_on_zone_event)
 	zone.events.resolved.connect(_on_zone_event_resolved)
@@ -574,13 +574,16 @@ func _spawn_zone_enemies() -> void:
 	if not cfg.is_empty():
 		var type_ids: Array = cfg.get("types", [])
 		var size_range: Array = cfg.get("pack_size", [3, 6])
+		# Zonas generadas (T117): el tema de la instancia decide qué tipo abunda y cuántos élites.
+		var weights: Array[float] = zone.layout.type_weights if zone.layout else ([] as Array[float])
+		var elite_chance := float(cfg.get("elite_chance", 0.0)) * (zone.layout.elite_mult if zone.layout else 1.0)
 		for center in zone.pack_centers(int(cfg.get("packs", 0)), rng, float(cfg.get("keep_away", 0.0))):
-			var type := enemies.type_index_of(type_ids[rng.randi_range(0, type_ids.size() - 1)]) if not type_ids.is_empty() else -1
+			var type := enemies.type_index_of(type_ids[ZoneLayout.pick_weighted(weights, type_ids.size(), rng)]) if not type_ids.is_empty() else -1
 			var pack := rng.randi_range(int(size_range[0]), int(size_range[1]))
 			var pack_ids: Array[int] = []
 			for k in pack:
 				var rarity := Rarity.Enemy.NORMAL
-				if k == 0 and rng.randf() < float(cfg.get("elite_chance", 0.0)):
+				if k == 0 and rng.randf() < elite_chance:
 					rarity = Rarity.Enemy.ELITE
 				elif rng.randf() < float(cfg.get("special_chance", 0.0)):
 					rarity = Rarity.Enemy.SPECIAL
@@ -1326,11 +1329,12 @@ var _talking_npc := ""
 ## Caja de servidor abierta (T104): 1-3 objetos y unos tokens que salen en arco de la caja.
 func _on_container_opened(c: Dictionary) -> void:
 	var at: Vector2 = c["pos"]
-	var count := 1 + randi() % 3
+	var rich: bool = c.get("rich", false)   # la del rincón apartado (T117): más y mejor
+	var count := (3 + randi() % 3) if rich else (1 + randi() % 3)
 	for k in count:
 		var spot := zone.free_spot_near(at + Vector2.from_angle(-PI / 2.0 + (k - (count - 1) / 2.0) * 0.9 + PI) * -90.0)
-		loot.drop_item(item_generator.roll_drop(enemies.area_level, 1.6), spot, at + Vector2(0, -24))
-	loot.drop_tokens(randi_range(3, 8) * maxi(1, enemies.area_level / 4), zone.free_spot_near(at + Vector2(0, 50)))
+		loot.drop_item(item_generator.roll_drop(enemies.area_level, 2.4 if rich else 1.6), spot, at + Vector2(0, -24))
+	loot.drop_tokens(randi_range(3, 8) * maxi(1, enemies.area_level / 4) * (3 if rich else 1), zone.free_spot_near(at + Vector2(0, 50)))
 
 
 ## Nacho saca otra caja: mercancía nueva, pagando.

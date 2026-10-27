@@ -90,15 +90,16 @@ func refresh() -> void:
 		_pixel.visible = enabled()
 
 
-func set_style(style: String) -> void:
+## `extra_dark` (T117): oscuridad de más de la instancia (apagón parcial).
+func set_style(style: String, extra_dark := 0.0) -> void:
 	var g: Dictionary = GRADES.get(style, {"tint": "ffffff", "amount": 0.0, "sat": 1.05, "vignette": 0.35, "dark": 0.0})
 	for p in [_pixel, _light]:
 		p.mat.set_shader_parameter("tint", Color(g["tint"]))
 		p.mat.set_shader_parameter("tint_amount", float(g["amount"]) * 0.5)
 	_pixel.mat.set_shader_parameter("saturation", float(g["sat"]))
 	_light.mat.set_shader_parameter("vignette", float(g["vignette"]))
-	_light.mat.set_shader_parameter("darkness", float(g["dark"]))
-	_radius = float(g.get("radius", 500.0))
+	_light.mat.set_shader_parameter("darkness", clampf(float(g["dark"]) + extra_dark, 0.0, 0.75))
+	_radius = float(g.get("radius", 500.0)) * (1.0 - extra_dark * 0.6)
 
 
 func _process(_delta: float) -> void:

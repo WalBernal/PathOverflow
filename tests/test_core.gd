@@ -182,6 +182,7 @@ func _initialize() -> void:
 	_test_zone_layout()
 	_test_generated_zones()
 	_test_zone_shapes()
+	_test_zone_content()
 	_test_tilesets()
 	_test_events_music_colorblind()
 	_test_story_editor()
@@ -4497,6 +4498,58 @@ func _test_zone_shapes() -> void:
 	_check(wm.marks().is_empty(), "y se borra en otra instancia")
 	for n in [z1, z1b, z2, wm]:
 		n.free()
+
+
+## Contenido que varía (T117): tema de enemigos, élites, tiempo del estilo, rincón con
+## botín, raros en otro sitio; sin cambiar cuántas manadas hay.
+func _test_zone_content() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var counts := [0, 0, 0]
+	for k in 3000:
+		counts[ZoneLayout.pick_weighted([3.0, 1.0, 0.35] as Array[float], 3, rng)] += 1
+	_check(counts[0] > counts[1] * 2 and counts[1] > counts[2] * 2, "el sorteo con peso respeta los pesos %s" % [counts])
+	_check(ZoneLayout.pick_weighted([] as Array[float], 4, rng) in [0, 1, 2, 3], "sin pesos, todos igual")
+	var problems := []
+	var treasures := 0
+	var themes := {}
+	var seeds := 40
+	for zid in ["zona2", "zona5", "fosa", "oblea"]:
+		var def: Dictionary = _zone_def(zid).duplicate(true)
+		Zone.scale_def(def)
+		var style := String(def["style"])
+		for k in seeds:
+			var l := ZoneLayout.generate(def, 700 + k)
+			if l.type_weights.size() != def["enemies"]["types"].size() or not l.type_weights.has(3.0) or not l.type_weights.has(0.35):
+				problems.append("%s/%d: tema sin tipo que abunde y otro que escasee" % [zid, k])
+			themes[l.type_weights.find(3.0)] = true
+			if l.elite_mult < 0.7 or l.elite_mult > 1.3:
+				problems.append("%s/%d: élites fuera de rango" % [zid, k])
+			var w := String(l.ambience.get("weather", "-"))
+			if (w == "fog" and not ZoneLayout.FOG_STYLES.has(style)) or (w == "data_rain" and not ZoneLayout.RAIN_STYLES.has(style)):
+				problems.append("%s/%d: tiempo %s que no pega con %s" % [zid, k, w, style])
+			if l.treasure != Vector2.INF:
+				treasures += 1
+				if not l.point_ok(l.treasure) or not l._flood(l.cell_of(l.entries.values()[0])).has(l.cell_of(l.treasure)):
+					problems.append("%s/%d: el rincón con botín no se alcanza" % [zid, k])
+				for p in l.key_points():
+					if p.distance_to(l.treasure) < ZoneLayout.CELL * 8.0:
+						problems.append("%s/%d: el rincón está junto a un punto clave" % [zid, k])
+			var remapped := l.remap_def(def)
+			if int(remapped["enemies"]["packs"]) != int(def["enemies"]["packs"]):
+				problems.append("%s: cambia el número de manadas" % zid)
+	_check(problems.is_empty(), "tema, élites, tiempo y rincón de cada instancia en su sitio %s" % [problems.slice(0, 5)])
+	_check(themes.size() >= 3, "el tipo que abunda cambia de una instancia a otra")
+	_check(treasures > seeds * 4 * 0.3 and treasures < seeds * 4 * 0.7, "rincón con botín en cerca de la mitad de las instancias (%d de %d)" % [treasures, seeds * 4])
+	# Raros con posición (Acto II): en suelo y en otro sitio según la instancia.
+	for zid in ["fosa", "memoria_rom"]:   # las zonas con raros de posición fija
+		var def: Dictionary = _zone_def(zid).duplicate(true)
+		Zone.scale_def(def)
+		var a := ZoneLayout.generate(def, 11)
+		var b := ZoneLayout.generate(def, 12)
+		var ra: Dictionary = a.remap_def(def)["rare_spawns"][0]
+		var rb: Dictionary = b.remap_def(def)["rare_spawns"][0]
+		_check(a.point_ok(Zone._v(ra["pos"])) and Zone._v(ra["pos"]) != Zone._v(rb["pos"]), "el raro de %s sale sobre suelo y en otro sitio en cada instancia" % zid)
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.
