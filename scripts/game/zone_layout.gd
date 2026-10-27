@@ -60,6 +60,9 @@ var type_weights: Array[float] = []
 var elite_mult := 1.0
 var ambience: Dictionary = {}
 var treasure := Vector2.INF
+## Salas temáticas (T123): [{kind, pos, radius, seed, box, lore}] en claros amplios,
+## lejos de los puntos clave. Las dibuja Zone; `box`: con caja; `lore`: atrae una nota.
+var set_pieces: Array[Dictionary] = []
 
 var _rng := RandomNumberGenerator.new()
 var _seed := 0
@@ -377,6 +380,82 @@ func _make_content(def: Dictionary) -> void:
 	ambience["dark"] = BLACKOUT_DARK if _rng.randf() < BLACKOUT_CHANCE else 0.0
 	if _rng.randf() < TREASURE_CHANCE:
 		treasure = _nook()
+	_place_set_pieces(style)
+
+
+## Salas temáticas (T123): qué estilos las pueden tener (vacío = todos).
+const SET_PIECES := {
+	"rack_caido": ["servers", "terminal", "bios", "setup", "bus", "fabrica", "kernel"],
+	"cementerio_commits": ["ruins", "catacombs", "rom", "grieta", "fosa", "forest"],
+	"backups_inundada": ["swamp", "alcantarillas", "frio", "kernel", "fosa"],
+	"altar_becario": [],
+	"servidor_legacy": ["silicio", "vga16", "flash", "anillo", "bios", "rom", "setup"],
+}
+const SET_PIECE_RADIUS := 3.2   # en celdas: el claro que necesita
+const SET_PIECE_BOX := 0.4
+const SET_PIECE_LORE := 0.5
+
+
+func _place_set_pieces(style: String) -> void:
+	var kinds: Array = []
+	for k in SET_PIECES:
+		if (SET_PIECES[k] as Array).is_empty() or (SET_PIECES[k] as Array).has(style):
+			kinds.append(k)
+	var count := _rng.randi_range(1, 2)
+	var keys := key_points()
+	if treasure != Vector2.INF:
+		keys.append(treasure)
+	var r_px := SET_PIECE_RADIUS * CELL
+	for attempt in 400:
+		if set_pieces.size() >= count or kinds.is_empty():
+			break
+		var c := Vector2i(_rng.randi_range(MARGIN + 4, width - MARGIN - 5), _rng.randi_range(MARGIN + 4, height - MARGIN - 5))
+		var p := center_of(c)
+		if not _clearing(p, r_px):
+			continue
+		if keys.any(func(k: Vector2) -> bool: return k.distance_to(p) < CELL * 6.0) \
+				or set_pieces.any(func(s: Dictionary) -> bool: return Vector2(s["pos"]).distance_to(p) < CELL * 10.0):
+			continue
+		var kind: String = kinds[_rng.randi_range(0, kinds.size() - 1)]
+		if set_pieces.size() > 0 and set_pieces[0]["kind"] == kind and kinds.size() > 1:
+			continue   # dos distintas, si se puede
+		set_pieces.append({"kind": kind, "pos": p, "radius": r_px, "seed": _rng.randi(),
+			"box": _rng.randf() < SET_PIECE_BOX, "lore": _rng.randf() < SET_PIECE_LORE})
+	if set_pieces.is_empty() and not kinds.is_empty():
+		# Sin claro libre (racks densos, salas estrechas): se abre uno alrededor de una celda de
+		# suelo lejos de todo. Sigue conectado: el claro nace de suelo ya alcanzable.
+		var best := Vector2.INF
+		var best_d := -1.0
+		for attempt in 200:
+			var c := Vector2i(_rng.randi_range(MARGIN + 5, width - MARGIN - 6), _rng.randi_range(MARGIN + 5, height - MARGIN - 6))
+			if not is_floor(c):
+				continue
+			var d := INF
+			for k in keys:
+				d = minf(d, center_of(c).distance_to(k))
+			if d > best_d:
+				best_d = d
+				best = center_of(c)
+		if best != Vector2.INF and best_d >= CELL * 6.0:
+			var bc := cell_of(best)   # un disco redondo (no _blob: ondula hasta un 30 % hacia dentro)
+			var rr := ceili(SET_PIECE_RADIUS + 1.0)
+			for dy in range(-rr, rr + 1):
+				for dx in range(-rr, rr + 1):
+					if Vector2(dx, dy).length() <= SET_PIECE_RADIUS + 1.0:
+						_put(bc + Vector2i(dx, dy), 1)
+			set_pieces.append({"kind": kinds[_rng.randi_range(0, kinds.size() - 1)], "pos": best, "radius": r_px, "seed": _rng.randi(),
+				"box": _rng.randf() < SET_PIECE_BOX, "lore": _rng.randf() < SET_PIECE_LORE})
+
+
+## ¿Hay suelo en un círculo de radio `r` alrededor de `p`? (muestras en dos anillos)
+func _clearing(p: Vector2, r: float) -> bool:
+	if not point_ok(p):
+		return false
+	for ring in [0.5, 1.0]:
+		for k in 12:
+			if not point_ok(p + Vector2.from_angle(TAU * k / 12.0) * r * ring):
+				return false
+	return true
 
 
 ## Índice al azar entre `count` opciones según `weights` (vacío o de otro tamaño = todas igual).

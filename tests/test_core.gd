@@ -187,6 +187,7 @@ func _initialize() -> void:
 	_test_zone_mechanics()
 	_test_new_mechanics_t121()
 	_test_new_mechanics_t122()
+	_test_set_pieces()
 	_test_tilesets()
 	_test_events_music_colorblind()
 	_test_story_editor()
@@ -4831,6 +4832,57 @@ func _test_new_mechanics_t122() -> void:
 	zone.free()
 	player.queue_free()
 	em.free()
+
+
+## Salas temáticas (T123): 1-2 por instancia, de su estilo, en un claro y lejos de los
+## puntos clave; el rack caído estorba, algunas traen caja y la zona las alumbra.
+func _test_set_pieces() -> void:
+	var problems := []
+	var kinds := {}
+	var boxes := 0
+	var total := 0
+	for zid in ["zona2", "zona4", "zona5", "fosa", "oblea", "post", "alcantarillas"]:
+		var def: Dictionary = _zone_def(zid).duplicate(true)
+		Zone.scale_def(def)
+		var style := String(def["style"])
+		for k in 25:
+			var l := ZoneLayout.generate(def, 6100 + k)
+			if l.set_pieces.size() < 1 or l.set_pieces.size() > 2:
+				problems.append("%s/%d: %d salas" % [zid, k, l.set_pieces.size()])
+			for sp in l.set_pieces:
+				total += 1
+				kinds[sp["kind"]] = true
+				boxes += 1 if sp["box"] else 0
+				var allowed: Array = ZoneLayout.SET_PIECES[sp["kind"]]
+				if not allowed.is_empty() and not allowed.has(style):
+					problems.append("%s: %s no pega con %s" % [zid, sp["kind"], style])
+				if not l._clearing(sp["pos"], ZoneLayout.SET_PIECE_RADIUS * ZoneLayout.CELL):
+					problems.append("%s/%d: %s sin sitio" % [zid, k, sp["kind"]])
+				for p in l.key_points():
+					if p.distance_to(sp["pos"]) < ZoneLayout.CELL * 6.0:
+						problems.append("%s/%d: %s pegada a un punto clave" % [zid, k, sp["kind"]])
+	_check(problems.is_empty(), "salas temáticas en su sitio y de su estilo %s" % [problems.slice(0, 5)])
+	_check(kinds.size() == ZoneLayout.SET_PIECES.size(), "salen todas las salas temáticas %s" % [kinds.keys()])
+	_check(boxes > total * 0.2 and boxes < total * 0.6, "algunas traen caja (%d de %d)" % [boxes, total])
+	# En la zona: el rack caído pone su obstáculo, la caja aparece y la sala da luz.
+	var def5: Dictionary = _zone_def("zona5").duplicate(true)
+	Zone.scale_def(def5)
+	var checked := {}
+	for k in 60:
+		var zone := Zone.new()
+		zone.setup(def5, null, null, null, 7300 + k)
+		for sp in zone.layout.set_pieces:
+			var sp_pos: Vector2 = sp["pos"]
+			if sp["kind"] == "rack_caido" and not checked.has("rack"):
+				checked["rack"] = zone.obstacles.any(func(o: Dictionary) -> bool: return o["kind"] == "rack" and (o["pos"] as Vector2).distance_to(sp_pos) < 150.0)
+			if sp["box"] and not checked.has("box"):
+				checked["box"] = zone.containers.any(func(c: Dictionary) -> bool: return (c["pos"] as Vector2).distance_to(sp_pos) < 150.0)
+			if not checked.has("light"):
+				checked["light"] = zone.light_points().any(func(l: Dictionary) -> bool: return (l["pos"] as Vector2).distance_to(sp_pos) < 60.0)
+		zone.free()
+		if checked.size() == 3:
+			break
+	_check(checked.get("rack", false) and checked.get("box", false) and checked.get("light", false), "el rack caído estorba, la caja está y la sala da luz %s" % [checked])
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.

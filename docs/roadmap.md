@@ -744,9 +744,10 @@ Origen: V3
 
 ## Fase 24 — Gráficos
 
-### [ ] T123 · Salas temáticas en las zonas generadas · M
+### [x] T123 · Salas temáticas en las zonas generadas · M
 Origen: V3
 - «Set pieces» por estilo que el generador puede insertar (rack caído con cables, cementerio de commits, sala de backups inundada, altar del becario…), con decorado propio, luz y a veces una caja o un lore.
+- Hecho: `ZoneLayout.set_pieces` (de la semilla: se repiten en la instancia): 1-2 por instancia, de las que pegan con el estilo (`SET_PIECES`: **rack caído**, **cementerio de commits**, **sala de backups inundada**, **altar del becario** —en cualquier estilo— y **servidor legacy**), en un claro de 3,2 celdas de radio lejos de los puntos clave, del rincón con botín y entre ellas; si no hay claro (racks densos), se abre un disco de suelo alrededor de una celda alcanzable. `Zone` las cuenta como puntos clave (sin obstáculos ni manadas encima), las dibuja en la capa estática (cables y servidores sueltos; lápidas con hash y epitafio de commit; agua con cintas LTO y discos; mesa con monitor «Hola mundo», taza, velas y post-its; torre beige con CRT y el cartel «NO TOCAR · FUNCIONA (1998)») con los textos en la capa de etiquetas para que se lean, les da su luz (`SET_PIECE_LIGHTS`), el rack caído pone un rack de verdad que estorba, el 40 % trae una caja y el 50 % se queda con una nota de lore de la zona. Capturas `capture_screens -- salas` en `docs/capturas/salas/`. Prueba `_test_set_pieces`.
 
 ### [ ] T124 · Profundidad y lectura del escenario · M
 Origen: V3
@@ -971,3 +972,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-26 · T120 · Motor de mecánicas de zona: una principal siempre (bombas, escolta o deploy al azar; mutex y carrera crítica en sus zonas) y como mucho un evento menor, con aviso al entrar, rombo en el minimapa, consejo y botín extra al completarla.
 - 2026-10-26 · T121 · Mecánicas principales nuevas: Garbage Collector (barridos que dañan a todos, también a los enemigos), Apagón del CPD (luces de emergencia que devuelven la luz) y Ticket urgente (élites marcados con cuenta atrás), con su dibujo, aviso y consejo.
 - 2026-10-26 · T122 · Merge conflict (ramas de enemigos que se pegan entre ellas), Deploy de viernes (oleadas por las salidas hasta cerrar el pipeline) y Caché caliente (baldosas con bono que se mueven); pesos igualados para que ninguna principal pase del 20 %.
+- 2026-10-26 · T123 · Salas temáticas en las zonas generadas (rack caído, cementerio de commits, backups inundada, altar del becario, servidor legacy): 1-2 por instancia según el estilo, con decorado, luz y a veces caja o lore.

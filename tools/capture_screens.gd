@@ -24,6 +24,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("salas"):
+		await _capture_set_pieces()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("mecanicas"):
 		await _capture_mechanics()
 		get_tree().quit()
@@ -2098,6 +2102,47 @@ func _swap(node: Node) -> void:
 
 func _wait(seconds: float) -> Signal:
 	return get_tree().create_timer(seconds).timeout
+
+
+## Salas temáticas (T123): una foto de cada sala que salga en unas cuantas zonas.
+func _capture_set_pieces() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Salas", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 12   # sin elecciones de habilidad pendientes que tapen la foto
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var player: Node2D = world.get("player")
+	player.set("invulnerable", true)
+	var seen := {}
+	for zid in ["zona5", "zona4", "fosa", "oblea", "zona3", "zona2", "post", "alcantarillas", "zona5", "post", "zona5", "post"]:
+		(world.get("instances") as ZoneInstances).forget(zid)   # repetir zona = otra instancia (por si falta el rack caído)
+		world.call("travel_to", zid, "")
+		world.set("_since_save", -9999.0)
+		var zone: Zone = world.get("zone")
+		(world.get("enemies") as EnemyManager).clear_all()   # que se vea la sala, no la pelea
+		await _wait(0.3)
+		var ui: GameUI = world.get("ui")
+		if ui.cutscene.visible:
+			ui.cutscene.call("_finish")   # la escena al entrar (el POST) taparía la foto
+		for sp in zone.layout.set_pieces:
+			if seen.has(sp["kind"]):
+				continue
+			seen[sp["kind"]] = true
+			player.global_position = zone.free_spot_near((sp["pos"] as Vector2) + Vector2(0, 170))
+			await _wait(2.6)
+			_save("123_sala_%s" % sp["kind"])
+		if seen.size() == ZoneLayout.SET_PIECES.size():
+			break
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
 
 
 ## Mecánicas de zona (T121): el barrido del Garbage Collector (aviso y pasada), el

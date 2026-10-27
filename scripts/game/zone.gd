@@ -242,6 +242,12 @@ func setup(p_def: Dictionary, p_player: Player, p_character: CharacterData, p_qu
 		if layout:
 			note["pos"] = layout.nearest_floor(note["pos"])
 		lore_notes.append(note)
+	if layout:   # una sala temática con «lore» se queda con una nota de la zona (T123)
+		var n := 0
+		for sp in layout.set_pieces:
+			if sp["lore"] and n < lore_notes.size():
+				lore_notes[n]["pos"] = (sp["pos"] as Vector2) + Vector2(-70, 60)
+				n += 1
 	for c in def.get("challenges", []):
 		var entry: Dictionary = c.duplicate()
 		entry["pos"] = _v(c["pos"])
@@ -271,6 +277,9 @@ func setup(p_def: Dictionary, p_player: Player, p_character: CharacterData, p_qu
 	_place_features(rng)
 	_place_obstacles(rng)
 	if layout:
+		for sp in layout.set_pieces:   # el rack caído estorba de verdad
+			if sp["kind"] == "rack_caido":
+				obstacles.append({"pos": (sp["pos"] as Vector2) + Vector2(0, -110), "radius": 40.0, "kind": "rack", "seed": int(sp["seed"])})
 		_ensure_reachable()
 	_make_decals(rng)
 	_place_torches()
@@ -340,6 +349,9 @@ func key_points() -> Array[Vector2]:
 		points.append(_v(p))
 	if def.has("boss"):
 		points.append(_v(def["boss"]["pos"]))
+	if layout:   # las salas temáticas (T123): sin obstáculos ni manadas encima
+		for sp in layout.set_pieces:
+			points.append(sp["pos"])
 	return points
 
 
@@ -729,6 +741,10 @@ func _place_containers() -> void:
 	if layout and layout.treasure != Vector2.INF:
 		# El rincón apartado de la instancia (T117): una caja rica, dorada.
 		containers.append({"pos": layout.treasure, "opened": false, "t": 0.0, "seed": crng.randi(), "rich": true})
+	if layout:
+		for sp in layout.set_pieces:   # algunas salas temáticas guardan una caja (T123)
+			if sp["box"]:
+				containers.append({"pos": (sp["pos"] as Vector2) + Vector2(80, 50), "opened": false, "t": 0.0, "seed": crng.randi()})
 	var wanted := clampi(int(rect.get_area() / 1200000.0), 2, 4) + containers.size()
 	var keys := key_points()
 	var path := _key_path(keys)
@@ -800,6 +816,99 @@ func _draw_container(c: Dictionary) -> void:
 		draw_rect(Rect2(body.position + Vector2(4, 1), Vector2(36, 4)), Color("0c0e12"))   # ya vacía
 
 
+## Salas temáticas (T123): color, radio y fuerza de su luz.
+const SET_PIECE_LIGHTS := {
+	"rack_caido": ["ffa040", 260.0, 0.8], "cementerio_commits": ["8aff9a", 280.0, 0.65], "backups_inundada": ["6ab8ff", 300.0, 0.7],
+	"altar_becario": ["ffc070", 240.0, 0.85], "servidor_legacy": ["3cff6a", 260.0, 0.75],
+}
+const COMMIT_EPITAPHS := ["fix", "fix final", "fix final FINAL", "WIP", "no tocar", "revert revert", "asdf", "funciona en mi máquina",
+	"hotfix 3am", "TODO: tests", "merge main", "quitar console.log"]
+
+
+## Los textos de una sala temática (epitafios, carteles): van a la capa de etiquetas,
+## que no pasa por el filtro de pixel art, para que se lean.
+func _set_piece_labels(sp: Dictionary) -> void:
+	var p: Vector2 = sp["pos"]
+	var sd := int(sp["seed"])
+	match String(sp["kind"]):
+		"cementerio_commits":
+			for k in 6:
+				var q := p + Vector2(-150 + (k % 3) * 150, -70 + int(k / 3.0) * 120)
+				_label(q + Vector2(-34, -42), "%07x" % ((sd >> k) & 0xfffffff), 68, 9, Color("b0acbc"), false)
+				_label(q + Vector2(-40, -28), COMMIT_EPITAPHS[(sd + k * 7) % COMMIT_EPITAPHS.size()], 80, 9, Color("e0dcec"))
+		"backups_inundada":
+			_label(p + Vector2(-90, float(sp["radius"]) * 0.55 + 6), "backup_final_v2.tar.gz", 180, 11, Color("8ac0d8"))
+		"altar_becario":
+			_label(p + Vector2(-30, -50), "Hola mundo", 60, 9, PHOSPHOR, false)
+			_label(p + Vector2(-120, 84), "En memoria del becario que hizo push a main", 240, 11, Color("e0c090"))
+		"servidor_legacy":
+			_label(p + Vector2(-60, 44), "NO TOCAR · FUNCIONA (1998)", 120, 10, Color("3a3020"), false)
+
+
+## Una sala temática dibujada en la capa estática (con su suelo, para que se lea como sitio).
+func _draw_set_piece(ci: CanvasItem, sp: Dictionary) -> void:
+	var p: Vector2 = sp["pos"]
+	var sd := int(sp["seed"])
+	var r := float(sp["radius"])
+	match String(sp["kind"]):
+		"rack_caido":   # un rack tumbado, servidores sueltos y cables por el suelo
+			ci.draw_set_transform(p + Vector2(0, -40), 0.0, Vector2(1.0, 0.45))
+			ci.draw_circle(Vector2.ZERO, r * 0.8, Color(0, 0, 0, 0.18))
+			ci.draw_set_transform(Vector2.ZERO)
+			for k in 7:
+				var a := TAU * k / 7.0 + float(sd % 10) * 0.3
+				var q := p + Vector2.from_angle(a) * r * (0.35 + 0.1 * (k % 3))
+				ci.draw_line(p + Vector2(0, -60), q, [Color("c84b4b"), Color("4b8bd6"), Color("5cb85c"), Color("d9a441")][k % 4], 3.0, true)
+			for k in 4:
+				var q := p + Vector2(-110 + k * 70, 40 + (k % 2) * 30)
+				ci.draw_rect(Rect2(q, Vector2(46, 14)), Color("23262e"))
+				ci.draw_rect(Rect2(q, Vector2(46, 14)), Color("3a3f4a"), false, 2.0)
+				ci.draw_rect(Rect2(q + Vector2(36, 5), Vector2(4, 4)), Color("ff6a3a") if k % 2 == 0 else Color("3cff6a"))
+		"cementerio_commits":   # lápidas con mensajes de commit
+			for k in 6:
+				var q := p + Vector2(-150 + (k % 3) * 150, -70 + int(k / 3.0) * 120)
+				ci.draw_rect(Rect2(q + Vector2(-26, -40), Vector2(52, 52)), Color("4a4652"))
+				ci.draw_circle(q + Vector2(0, -40), 26.0, Color("4a4652"))
+				ci.draw_rect(Rect2(q + Vector2(-26, -40), Vector2(52, 52)), Color("2a2730"), false, 2.0)
+				ci.draw_rect(Rect2(q + Vector2(-30, 10), Vector2(60, 6)), Color("2e3a2a"))   # tierra removida
+		"backups_inundada":   # agua con cintas y discos flotando
+			var pts := PackedVector2Array()
+			for k in 18:
+				var a := TAU * k / 18.0
+				pts.append(p + Vector2.from_angle(a) * Vector2(r * 0.85, r * 0.55) * (0.9 + 0.1 * sin(a * 3.0 + sd)))
+			ci.draw_colored_polygon(pts, Color("16303e"))
+			ci.draw_polyline(pts + PackedVector2Array([pts[0]]), Color("2a5a70"), 3.0, true)
+			for k in 5:
+				var q := p + Vector2(-120 + k * 60, -20 + ((sd >> k) % 40) - 20)
+				if k % 2 == 0:
+					ci.draw_rect(Rect2(q, Vector2(34, 22)), Color("202024"))   # cinta LTO
+					ci.draw_circle(q + Vector2(10, 11), 5.0, Color("5a5a60"))
+					ci.draw_circle(q + Vector2(24, 11), 5.0, Color("5a5a60"))
+				else:
+					ci.draw_circle(q, 13.0, Color("9aa0aa"))   # disco
+					ci.draw_circle(q, 4.0, Color("303438"))
+		"altar_becario":   # mesa con monitor, taza, velas y post-its
+			ci.draw_rect(Rect2(p + Vector2(-70, -10), Vector2(140, 34)), Color("5b3f27"))
+			ci.draw_rect(Rect2(p + Vector2(-70, -10), Vector2(140, 34)), Color("3a2818"), false, 2.0)
+			ci.draw_rect(Rect2(p + Vector2(-34, -62), Vector2(68, 46)), Color("1a1c22"))
+			ci.draw_rect(Rect2(p + Vector2(-30, -58), Vector2(60, 38)), Color("0c2a14"))
+			ci.draw_rect(Rect2(p + Vector2(42, -26), Vector2(14, 16)), Color("e8e0d0"))   # la taza
+			for k in 5:
+				var q := p + Vector2(-110 + k * 55, 50 + (k % 2) * 12)
+				ci.draw_rect(Rect2(q, Vector2(6, 16)), Color("efe8d8"))
+				ci.draw_circle(q + Vector2(3, -4), 4.0, Color("ffb040"))
+			for k in 4:
+				ci.draw_rect(Rect2(p + Vector2(-66 + k * 16, -8 - (k % 2) * 4), Vector2(12, 12)), [Color("f2e34e"), Color("ff9ad0"), Color("8ad8ff"), Color("9aff8a")][k])
+		"servidor_legacy":   # torre beige con CRT y el cartel de «no tocar»
+			ci.draw_rect(Rect2(p + Vector2(-40, -80), Vector2(80, 110)), Color("c8bca0"))
+			ci.draw_rect(Rect2(p + Vector2(-40, -80), Vector2(80, 110)), Color("6a6250"), false, 2.0)
+			ci.draw_rect(Rect2(p + Vector2(-30, -70), Vector2(60, 40)), Color("101810"))
+			for k in 3:
+				ci.draw_rect(Rect2(p + Vector2(-26, -64 + k * 10), Vector2(30 + (sd >> k) % 20, 3)), PHOSPHOR)
+			ci.draw_rect(Rect2(p + Vector2(-24, -20), Vector2(48, 6)), Color("4a4438"))   # disquetera
+			ci.draw_rect(Rect2(p + Vector2(-60, 40), Vector2(120, 26)), Color("f2e34e"))
+
+
 ## Puntos de luz fijos de la zona (para WorldPost): antorchas, hoguera del
 ## campamento, salidas y waypoint. {pos, radius, color, power}
 func light_points() -> Array[Dictionary]:
@@ -815,6 +924,11 @@ func light_points() -> Array[Dictionary]:
 		out.append({"pos": waypoint, "radius": 160.0, "color": Color("7fb8ff"), "power": 0.6})
 	if events:
 		out.append_array(events.light_points())   # luces de emergencia del apagón (T121)
+	if layout:
+		for sp in layout.set_pieces:   # la luz de cada sala temática (T123)
+			var l: Array = SET_PIECE_LIGHTS.get(sp["kind"], [])
+			if not l.is_empty():
+				out.append({"pos": (sp["pos"] as Vector2) + Vector2(0, -30), "radius": l[1], "color": Color(l[0]), "power": l[2]})
 	return out
 
 
@@ -1134,6 +1248,9 @@ func _draw_static() -> void:
 	for o in obstacles:
 		if o.get("feature", false):
 			_draw_feature(layer, o)
+	if layout:
+		for sp in layout.set_pieces:
+			_draw_set_piece(layer, sp)
 
 
 ## Suelo de una zona generada (T115): cada rectángulo de suelo con la baldosa del
@@ -1544,6 +1661,10 @@ func _draw() -> void:
 	for c in containers:
 		if view.has_point(c["pos"]):
 			_draw_container(c)
+	if layout:   # los textos de las salas temáticas, nítidos en la capa de etiquetas (T123)
+		for sp in layout.set_pieces:
+			if view.has_point(sp["pos"]):
+				_set_piece_labels(sp)
 	if String(STYLES.get(style, {}).get("edge", "")) == "water":
 		# Agua animada (T105): ondas que se abren en el agua turbia del borde.
 		for e in _edge_props:
