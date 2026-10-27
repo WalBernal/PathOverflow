@@ -273,11 +273,18 @@ func _check_gamepad_cursor(world: Node, class_id: String) -> void:
 	await _frames(3)
 	if ui.cursor_windows() != [ui.tree_screen] or not cursor.engaged:
 		_failures.append("%s · mando: el cursor no maneja el árbol pasivo" % class_id)
+	# Cada pulsación debe saltar a otro nodo (derecha, abajo e izquierda pueden volver al
+	# de partida: lo que se mira es que cada paso se mueva, no dónde acaba).
 	var at_tree := cursor.cursor_pos
+	var trail: Array[Vector2] = [at_tree]
 	for button in [JOY_BUTTON_DPAD_RIGHT, JOY_BUTTON_DPAD_DOWN, JOY_BUTTON_DPAD_LEFT]:
 		await _press(button)
-	if cursor.cursor_pos == at_tree:
-		_failures.append("%s · mando: la cruceta no salta entre nodos del árbol" % class_id)
+		trail.append(cursor.cursor_pos)
+	var stuck := false
+	for k in range(1, trail.size()):
+		stuck = stuck or trail[k] == trail[k - 1]
+	if stuck:
+		_failures.append("%s · mando: la cruceta no salta entre nodos del árbol (pasos %s)" % [class_id, trail])
 	await _press(JOY_BUTTON_B)
 	if ui.tree_screen.visible:
 		_failures.append("%s · mando: B no cerró el árbol" % class_id)

@@ -657,9 +657,10 @@ Origen: V3
 - Prueba: un token a 300 px acaba en la cuenta sin moverse.
 - Hecho: `LootManager.TOKEN_PICKUP_RANGE` 90 y `TOKEN_MAGNET_RANGE` 380, velocidad mínima del imán 420 px/s (`TOKEN_MAGNET_SPEED`); cada paso del imán mira `placement_check` y, si choca, se desliza por un eje o espera (`_magnet_step`). Stat `token_pickup_radius` (Radio de recogida de tokens, %, tope `TOKEN_RADIUS_CAP` = 100, `Player.token_radius_mult`) que agranda los dos radios: sufijo de anillos y amuletos con tres tiers (del Imán de Nevera 10-18, del Electroimán 19-30, del Disco Duro Desmontado 31-45) y un cuarto menor de movilidad, «Movimiento y recogida de tokens» (+2 % movimiento, +10 %), en 5 nodos; árbol regenerado sin cambiar su estructura (misma versión). Prueba `_test_token_pickup`. De paso, dos polígonos que no se triangulaban y tumbaban la integración: las llamas de quemado casi apagadas (`FxArt.flames`) y la cresta de la onda del orbe (`Hud._draw_orb`). La integración sigue con un fallo que ya estaba antes de la tarea (comprobado con `git stash`): pasa a T111b.
 
-### [ ] T111b · La cruceta no salta entre nodos del árbol (prueba de mando) · S
+### [x] T111b · La cruceta no salta entre nodos del árbol (prueba de mando) · S
 Origen: integración de T111
 - `test_integration` (`_check_gamepad_cursor`) falla siempre con el guerrero: tras derecha, abajo e izquierda en el árbol pasivo, el cursor vuelve al mismo sitio. Ya fallaba en `b570137`, antes de T111. Averiguar si es la prueba (derecha e izquierda se anulan si abajo no encuentra nodo) o `GamepadCursor.pick_target` / `PassiveTreeView.cursor_targets`, y arreglarlo.
+- Hecho: era la prueba. La cruceta funciona (361 nodos a la vista; derecha a (996, 1430), abajo a (996, 1500) e izquierda al nodo de partida, que es el más cercano por ese lado), pero la prueba exigía acabar lejos del inicio. Ahora comprueba que **cada** pulsación salta a otro nodo y, si no, dice los pasos.
 
 ### [ ] T112 · Waypoints que se activan de lejos y al entrar al campamento · S
 Origen: V3
@@ -946,3 +947,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-26 · Copia de la versión 2.0 (rama `version-2.0`, etiqueta `v2.0`) y roadmap de la versión 3.0 (T111-T131): tokens y waypoints de más lejos, solo waypoints entre actos, zonas generadas por instancia que duran 10 minutos (salvo la arena del jefe), mecánicas de zona al azar, gráficos, interfaz y escenas.
 - 2026-10-26 · La versión 3.0 (T111-T131) pasa por delante del Roadmap 5.0 (móvil, T106-T110) en la cola.
 - 2026-10-26 · T111 · Tokens desde más lejos (90 px directo, imán a 380 px que no atraviesa paredes) y stat Radio de recogida de tokens en anillos, amuletos y nodos de movilidad; arreglados dos polígonos que no se triangulaban (llamas y orbe). El fallo de la cruceta en el árbol ya existía: pasa a T111b.
+- 2026-10-26 · T111b · La prueba de la cruceta en el árbol fallaba por la propia prueba (derecha, abajo e izquierda volvían al nodo de partida); ahora mira que cada pulsación salte a otro nodo. Integración rápida en verde.
