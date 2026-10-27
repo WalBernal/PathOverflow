@@ -462,13 +462,44 @@ func _play_zone(world: Node, class_id: String, zone_id: String, travel := true) 
 
 
 ## Hacia el enemigo más cercano (sin pegarse) o, de vez en cuando o si no hay, a un punto libre al azar.
+## En las zonas generadas el jugador camina en línea recta, así que se sigue la rejilla con A*
+## (si no, el enemigo más cercano tras una pared deja al piloto empujándola los 30 s).
 func _move_target(zone: Zone, enemies: EnemyManager, from: Vector2) -> Vector2:
+	var to: Vector2
 	var i := enemies.nearest_index(from, 4000.0)
 	if i != -1 and _rng.randf() < 0.85:
-		var to := enemies.positions[i]
-		return zone.free_spot_near(to + (from - to).normalized() * 90.0)
-	var r := zone.rect
-	return zone.free_spot_near(Vector2(_rng.randf_range(r.position.x, r.end.x), _rng.randf_range(r.position.y, r.end.y)))
+		to = enemies.positions[i]
+		to = to + (from - to).normalized() * 90.0
+	else:
+		var r := zone.rect
+		to = Vector2(_rng.randf_range(r.position.x, r.end.x), _rng.randf_range(r.position.y, r.end.y))
+	return zone.free_spot_near(_next_step(zone.layout, from, to))
+
+
+var _astar_for: ZoneLayout = null
+var _astar := AStarGrid2D.new()
+
+
+## Unas celdas por el camino de la rejilla hacia `to` (o `to` sin rejilla o sin camino).
+func _next_step(layout: ZoneLayout, from: Vector2, to: Vector2) -> Vector2:
+	if layout == null:
+		return to
+	if _astar_for != layout:
+		_astar_for = layout
+		_astar.region = Rect2i(0, 0, layout.width, layout.height)
+		_astar.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
+		_astar.update()
+		for y in layout.height:
+			for x in layout.width:
+				_astar.set_point_solid(Vector2i(x, y), not layout.is_floor(Vector2i(x, y)))
+	var a := layout.cell_of(from)
+	var b := layout.cell_of(layout.nearest_floor(to))
+	if _astar.is_point_solid(a) or _astar.is_point_solid(b):
+		return to
+	var path := _astar.get_id_path(a, b)
+	if path.size() <= 4:
+		return to
+	return layout.center_of(path[4])
 
 
 func _press_first_button(root: Node) -> void:

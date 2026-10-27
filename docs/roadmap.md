@@ -792,9 +792,10 @@ Origen: V3
 
 ## Fase 27 — Cierre de la versión 3.0
 
-### [ ] T131 · Revisión de la versión 3.0 · S 🛑
+### [x] T131 · Revisión de la versión 3.0 · S 🛑
 Origen: V3
 - Integración completa (30 s por zona, una sola vez al final), capturas de cada fase nueva, `README.md` al día y etiqueta `v3.0` en git.
+- Hecho: la primera integración completa dio dos «no hubo combate» al azar (exploradora en `zona2` y templario en `sector_oculto`), sin errores del motor: el piloto de la prueba caminaba en línea recta hacia el enemigo más cercano y en las zonas generadas se quedaba empujando una pared. Ahora sigue la rejilla de `ZoneLayout` con A* (`_next_step` en `tests/test_integration.gd`); repetida, la completa pasa entera (219 combinaciones de clase y zona, scripts y lógica en `[OK]`). Capturas de cada fase en `docs/capturas/` (`zonas_3`, `salas`, `mecanicas`, `profundidad`, `interfaz`, `escenas`, con las llegadas de T130). En el `README.md`, un párrafo de versiones arriba (2.0 y 3.0). Etiqueta `v3.0` en git.
 
 ---
 
@@ -987,3 +988,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-27 · T128 · El rótulo de la zona dice su mecánica; registro de sucesos plegable a la izquierda (botín raro y único, waypoints, mecánicas, instancias que caducan) y aviso 1 min antes de perder el botín de una instancia.
 - 2026-10-27 · T129 · Escenas con dirección: cámara con paneo y zoom hacia NPC o jefe, personajes que caminan y se giran, bandas de cine, cara por línea y saltar con ratón, toque o mando; repasadas cuatro escenas.
 - 2026-10-27 · T130 · Escenas que faltaban: llegada a cada uno de los 4 campamentos (una vez, no si el acto ya está completo) y epílogo corto tras cada jefe, encadenado con `on_finish.cutscene`; `cutscene_on_enter` admite listas con condiciones.
+- 2026-10-27 · T131 · Revisión de la 3.0: el piloto de la integración sigue la rejilla con A* (se atascaba en paredes de zonas generadas), integración completa en verde (219 combinaciones), capturas y README al día, etiqueta `v3.0`. **Pendiente de revisión del usuario.**

@@ -3,6 +3,8 @@
 ARPG estilo Path of Exile en **Godot 4.7**, de ambientación oscura y con sarcasmo de programador.
 Por ahora es solo para un jugador en local, pero la lógica está escrita para poder pasar a un modelo cliente-servidor en el futuro.
 
+**Versiones**: la 2.0 queda en la rama `version-2.0` (etiqueta `v2.0`). La **3.0** (etiqueta `v3.0`) trae zonas de combate que se generan en cada visita y se conservan 10 minutos (salvo la arena del jefe), una mecánica al azar por zona (como mucho un evento menor más), tokens y waypoints que se recogen y se descubren desde más lejos, vuelta entre actos solo por waypoints, salas temáticas, profundidad en el suelo, niebla en el minimapa, la ventana de waypoints como mapa del acto, comparación de placas y RAM, registro de sucesos y escenas con cámara, llegadas a cada campamento y epílogos de los jefes. El detalle, en `docs/roadmap.md` (T111-T131).
+
 ## Cómo abrirlo
 
 - **Jugar sin el editor**: doble click en `Jugar.bat` (pantalla completa, sin depurador). **F11** o **Alt+Enter** cambian entre pantalla completa y ventana en cualquier momento.
