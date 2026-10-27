@@ -122,6 +122,12 @@ var character: CharacterData
 var quests: QuestLog
 ## Contorno de la zona transitable (para el minimapa y la colisión).
 var walk_polygon := PackedVector2Array()
+## Zonas generadas (T115): la disposición de esta instancia y sus rectángulos de suelo
+## (minimapa, mapa grande y dibujo del suelo). En las demás, null y vacío.
+var layout: ZoneLayout = null
+var ground_rects: Array[Rect2] = []
+var _boundary: Array[Dictionary] = []   # frontera suelo/muro: {a, b, n hacia el suelo}
+var _seed_base := 0
 
 var _edges := {}                        # "top"/"bottom"/"left"/"right" -> PackedFloat32Array
 var _edge_props: Array[Dictionary] = [] # adornos del borde: {pos, out, seed}
@@ -189,8 +195,16 @@ static func npc_database() -> Dictionary:
 	return _npc_db
 
 
-func setup(p_def: Dictionary, p_player: Player, p_character: CharacterData, p_quests: QuestLog = null) -> void:
-	def = p_def
+## `p_seed` (T115): semilla de la instancia. Con ella, las zonas que se generan
+## (ZoneLayout.applies_to) salen con una disposición nueva; sin ella (-1), o en
+## campamentos, jefes y el tutorial, la zona de siempre (semilla fija por zona).
+func setup(p_def: Dictionary, p_player: Player, p_character: CharacterData, p_quests: QuestLog = null, p_seed := -1) -> void:
+	if p_seed >= 0 and ZoneLayout.applies_to(p_def):
+		layout = ZoneLayout.generate(p_def, p_seed)
+		def = layout.remap_def(p_def)   # copia con las posiciones de esta instancia
+	else:
+		layout = null
+		def = p_def
 	player = p_player
 	character = p_character
 	quests = p_quests
@@ -223,6 +237,8 @@ func setup(p_def: Dictionary, p_player: Player, p_character: CharacterData, p_qu
 	for n in LoreNotes.for_zone(String(def.get("id", ""))):
 		var note: Dictionary = n.duplicate()
 		note["pos"] = rect.position + rect.size * _v(n["at"])   # fracción del tamaño: no le afecta la escala
+		if layout:
+			note["pos"] = layout.nearest_floor(note["pos"])
 		lore_notes.append(note)
 	for c in def.get("challenges", []):
 		var entry: Dictionary = c.duplicate()
@@ -244,10 +260,16 @@ func setup(p_def: Dictionary, p_player: Player, p_character: CharacterData, p_qu
 		npc["position"] = placement["pos"]
 		npcs.append(npc)
 	var rng := RandomNumberGenerator.new()
-	rng.seed = hash(id)
-	_build_edges(rng)
+	_seed_base = p_seed if layout else hash(id)
+	rng.seed = _seed_base
+	if layout:
+		_build_layout_edges(rng)
+	else:
+		_build_edges(rng)
 	_place_features(rng)
 	_place_obstacles(rng)
+	if layout:
+		_ensure_reachable()
 	_make_decals(rng)
 	_place_torches()
 	_place_containers()
@@ -363,6 +385,8 @@ func edge_depth(edge: String, t: float) -> float:
 ## Lleva un punto dentro de los bordes (sin mirar obstáculos). Barato: lo usan
 ## todos los enemigos en cada tick.
 func clamp_to_walkable(p: Vector2, margin := 0.0) -> Vector2:
+	if layout:
+		return layout.clamp_point(p, margin)
 	var lx := p.x - rect.position.x
 	var ly := p.y - rect.position.y
 	var top := rect.position.y + edge_depth("top", lx) + margin
@@ -373,7 +397,10 @@ func clamp_to_walkable(p: Vector2, margin := 0.0) -> Vector2:
 
 
 func is_walkable(p: Vector2, margin := 0.0) -> bool:
-	if clamp_to_walkable(p, margin) != p:
+	if layout:
+		if not layout.point_ok(p, margin):
+			return false
+	elif clamp_to_walkable(p, margin) != p:
 		return false
 	for o in obstacles:
 		if p.distance_to(o["pos"]) < o["radius"] + margin:
@@ -434,6 +461,86 @@ func _build_edges(rng: RandomNumberGenerator) -> void:
 	_build_walk_polygon()
 	if irregular:
 		_build_edge_props(rng)
+
+
+## Zonas generadas: sin bordes ondulados; el suelo son las celdas de la disposición.
+## Los adornos del borde (racks, rocas, agua...) van a lo largo de la frontera, hacia el muro.
+func _build_layout_edges(rng: RandomNumberGenerator) -> void:
+	_edges = {}
+	walk_polygon = PackedVector2Array()
+	ground_rects = layout.rects_of(1)
+	_boundary = layout.boundary_segments()
+	if String(STYLES.get(style, {}).get("edge", "")) == "":
+		return
+	for seg in _boundary:
+		var a: Vector2 = seg["a"]
+		var b: Vector2 = seg["b"]
+		var steps := maxi(1, int(a.distance_to(b) / 80.0))
+		for k in steps:
+			var p := a.lerp(b, (k + 0.5) / steps)
+			_edge_props.append({"pos": p, "out": -(seg["n"] as Vector2), "seed": rng.randi(), "size": rng.randf_range(0.7, 1.3)})
+
+
+## Que los obstáculos no corten el paso (T115): relleno por inundación en celdas de
+## 40 px desde la primera entrada, sobre el suelo y sin obstáculos. Si algún punto clave
+## queda fuera, se quitan los obstáculos que no estén en un claro amplio; si aún falla,
+## todos.
+const REACH_CELL := 40.0
+
+
+func _ensure_reachable() -> void:
+	if _all_keys_reachable():
+		return
+	obstacles = obstacles.filter(func(o: Dictionary) -> bool: return _in_clearing(o["pos"], float(o["radius"]) + ZoneLayout.CELL * 1.5))
+	if not _all_keys_reachable():
+		obstacles.clear()
+
+
+func _in_clearing(p: Vector2, r: float) -> bool:
+	for d in [Vector2.ZERO, Vector2(r, 0), Vector2(-r, 0), Vector2(0, r), Vector2(0, -r), Vector2(r, r) * 0.7, Vector2(-r, r) * 0.7, Vector2(r, -r) * 0.7, Vector2(-r, -r) * 0.7]:
+		if not layout.point_ok(p + d):
+			return false
+	return true
+
+
+func _all_keys_reachable() -> bool:
+	var cols := ceili(rect.size.x / REACH_CELL)
+	var rows := ceili(rect.size.y / REACH_CELL)
+	var blocked := PackedByteArray()
+	blocked.resize(cols * rows)
+	for o in obstacles:
+		var r := float(o["radius"]) + 18.0
+		var c0 := ((o["pos"] as Vector2) - Vector2(r, r)) / REACH_CELL
+		var c1 := ((o["pos"] as Vector2) + Vector2(r, r)) / REACH_CELL
+		for y in range(maxi(0, int(c0.y)), mini(rows, int(c1.y) + 1)):
+			for x in range(maxi(0, int(c0.x)), mini(cols, int(c1.x) + 1)):
+				if (Vector2(x + 0.5, y + 0.5) * REACH_CELL).distance_to(o["pos"]) < r:
+					blocked[y * cols + x] = 1
+	for y in rows:
+		for x in cols:
+			if not layout.point_ok(Vector2(x + 0.5, y + 0.5) * REACH_CELL, 18.0):
+				blocked[y * cols + x] = 1
+	var cell := func(p: Vector2) -> Vector2i: return Vector2i(clampi(int(p.x / REACH_CELL), 0, cols - 1), clampi(int(p.y / REACH_CELL), 0, rows - 1))
+	var start: Vector2i = cell.call(entry_point(""))
+	var seen := {start: true}
+	var stack: Array[Vector2i] = [start]
+	while not stack.is_empty():
+		var c: Vector2i = stack.pop_back()
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var n: Vector2i = c + d
+			if n.x >= 0 and n.y >= 0 and n.x < cols and n.y < rows and blocked[n.y * cols + n.x] == 0 and not seen.has(n):
+				seen[n] = true
+				stack.append(n)
+	for k in key_points():
+		var kc: Vector2i = cell.call(k)
+		var near := false   # basta con llegar al lado (el punto mismo puede estar en un hueco)
+		for dy in range(-2, 3):
+			for dx in range(-2, 3):
+				if seen.has(kc + Vector2i(dx, dy)):
+					near = true
+		if not near:
+			return false
+	return true
 
 
 ## Contorno transitable: recorre los cuatro bordes recortando las esquinas para
@@ -582,7 +689,7 @@ func _place_torches() -> void:
 	if dark < 0.25 or safe:
 		return
 	var trng := RandomNumberGenerator.new()
-	trng.seed = hash(id) + 7
+	trng.seed = _seed_base + 7
 	var look: Array = TORCH_STYLES.get(style, ["torch", "ffa040"])
 	var wanted := clampi(int(rect.get_area() / 650000.0), 4, 28)
 	var keys := key_points()
@@ -611,7 +718,7 @@ func _place_containers() -> void:
 	if safe:
 		return
 	var crng := RandomNumberGenerator.new()
-	crng.seed = hash(id) + 31
+	crng.seed = _seed_base + 31
 	var wanted := clampi(int(rect.get_area() / 1200000.0), 2, 4)
 	var keys := key_points()
 	var path := _key_path(keys)
@@ -728,8 +835,11 @@ func _draw_torch(t: Dictionary) -> void:
 func _make_decals(rng: RandomNumberGenerator) -> void:
 	var n := int(rect.get_area() / 60000.0)
 	for i in n:
+		var p := Vector2(rng.randf_range(0, rect.size.x), rng.randf_range(0, rect.size.y))
+		if layout and not layout.point_ok(p):
+			continue   # en el muro no se ven
 		_decals.append({
-			"pos": Vector2(rng.randf_range(0, rect.size.x), rng.randf_range(0, rect.size.y)),
+			"pos": p,
 			"size": rng.randf_range(30.0, 110.0), "angle": rng.randf() * TAU, "seed": rng.randi(),
 		})
 
@@ -749,7 +859,15 @@ func _build_collision() -> void:
 		shape.shape = box
 		shape.position = wall.get_center()
 		body.add_child(shape)
-	if STYLES.get(style, {}).get("edge", "") != "" and walk_polygon.size() >= 3:
+	if layout:
+		for wall in layout.rects_of(0):   # los muros de la disposición, en rectángulos
+			var shape := CollisionShape2D.new()
+			var box := RectangleShape2D.new()
+			box.size = wall.size
+			shape.shape = box
+			shape.position = wall.get_center()
+			body.add_child(shape)
+	elif STYLES.get(style, {}).get("edge", "") != "" and walk_polygon.size() >= 3:
 		var outline := CollisionPolygon2D.new()
 		outline.build_mode = CollisionPolygon2D.BUILD_SEGMENTS
 		outline.polygon = walk_polygon
@@ -971,7 +1089,9 @@ func _draw_static() -> void:
 	var ground := Color(s["ground"])
 	var layer := _ground_layer
 	layer.draw_rect(rect.grow(BORDER), Color(s["outside"]))
-	if ZoneArt.has_ground(style):
+	if layout:
+		_draw_layout_ground(layer, s)
+	elif ZoneArt.has_ground(style):
 		# Suelo en pixel art: baldosa sin costuras repetida (UV en el mundo).
 		var tex := ZoneArt.ground(style)
 		var area := walk_polygon if walk_polygon.size() >= 3 else PackedVector2Array([rect.position, Vector2(rect.end.x, rect.position.y), rect.end, Vector2(rect.position.x, rect.end.y)])
@@ -999,6 +1119,48 @@ func _draw_static() -> void:
 	for o in obstacles:
 		if o.get("feature", false):
 			_draw_feature(layer, o)
+
+
+## Suelo de una zona generada (T115): cada rectángulo de suelo con la baldosa del
+## estilo (o su color), las variantes en las celdas enteras de suelo, la banda del
+## borde a lo largo de la frontera y las marcas del estilo.
+func _draw_layout_ground(ci: CanvasItem, s: Dictionary) -> void:
+	var textured := ZoneArt.has_ground(style)
+	var tex: Texture2D = ZoneArt.ground(style) if textured else null
+	for r in ground_rects:
+		if textured:
+			var quad := PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)])
+			var uvs := PackedVector2Array()
+			for q in quad:
+				uvs.append(q / ZoneArt.tile_world())
+			ci.draw_colored_polygon(quad, Color.WHITE, uvs, tex)
+		else:
+			ci.draw_rect(r, Color(s["ground"]))
+	if textured:
+		var tw := ZoneArt.tile_world()
+		var sheet := ZoneArt.tileset(style)
+		for cy in range(0, ceili(rect.size.y / tw)):
+			for cx in range(0, ceili(rect.size.x / tw)):
+				var v := ZoneArt.cell_variant(Vector2i(cx, cy))
+				if v == 0:
+					continue
+				var cell := Rect2(Vector2(cx, cy) * tw, Vector2(tw, tw))
+				if layout.point_ok(cell.position + Vector2(1, 1)) and layout.point_ok(cell.end - Vector2(1, 1)) \
+						and layout.point_ok(Vector2(cell.end.x - 1, cell.position.y + 1)) and layout.point_ok(Vector2(cell.position.x + 1, cell.end.y - 1)):
+					ci.draw_texture_rect_region(sheet, cell, ZoneArt.variant_region(v))
+		var edge_tex := ZoneArt.edge(style, Color(s["outside"]), String(s.get("edge", "")))
+		var depth := ZoneArt.EDGE_H * ZoneArt.TEXEL
+		for seg in _boundary:
+			var a: Vector2 = seg["a"]
+			var b: Vector2 = seg["b"]
+			var n: Vector2 = seg["n"]
+			var u1 := a.distance_to(b) / tw
+			ci.draw_colored_polygon(PackedVector2Array([a, b, b + n * depth, a + n * depth]), Color.WHITE,
+				PackedVector2Array([Vector2(0, 0), Vector2(u1, 0), Vector2(u1, 1), Vector2(0, 1)]), edge_tex)
+		if not style in ["swamp", "catacombs", "servers", "sandbox"]:
+			_draw_decals(ci, Color(s["decal"]))
+	else:
+		_draw_decals(ci, Color(s["decal"]))
 
 
 ## Variantes del suelo (T105): en las celdas enteras dentro del camino, a veces otra
@@ -1211,7 +1373,7 @@ func rack_led_points() -> Array[Vector2]:
 ## Banda del borde: lo que hay fuera del camino según el estilo de la zona.
 func _draw_edge_band(ci: CanvasItem, s: Dictionary) -> void:
 	var kind: String = s["edge"]
-	if kind == "" or walk_polygon.size() < 3:
+	if kind == "" or (walk_polygon.size() < 3 and _boundary.is_empty()):
 		return
 	var ground := Color(s["ground"])
 	var font := ThemeDB.fallback_font
@@ -1278,6 +1440,10 @@ func _draw_edge_band(ci: CanvasItem, s: Dictionary) -> void:
 				if sd % 3 == 0:
 					ci.draw_string(font, p + out * 40.0 + Vector2(-10, 4), "0x%X" % (sd % 256), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("ffb070"))
 	# Línea de orilla: separa el suelo del borde.
+	if layout:
+		for seg in _boundary:
+			ci.draw_line(seg["a"], seg["b"], ground.lightened(0.18), 3.0)
+		return
 	var closed := walk_polygon.duplicate()
 	closed.append(walk_polygon[0])
 	ci.draw_polyline(closed, ground.lightened(0.18), 3.0, true)

@@ -46,7 +46,8 @@ func set_zone(new_zone: Zone) -> void:
 	_rows = maxi(1, ceili(zone.rect.size.y / CELL))
 	explored = PackedByteArray()
 	explored.resize(_cols * _rows)
-	var saved := String(character.flags.get("map_" + zone.id, "")) if character else ""
+	# Las zonas generadas cambian de forma: lo explorado de otra visita no sirve (T118 lo guardará con la instancia).
+	var saved := String(character.flags.get("map_" + zone.id, "")) if character and zone.layout == null else ""
 	if saved != "":
 		var raw := Marshalls.base64_to_raw(saved)
 		for k in mini(raw.size() * 8, explored.size()):
@@ -56,7 +57,7 @@ func set_zone(new_zone: Zone) -> void:
 
 ## Guarda lo explorado en el personaje, en bits y base64 (unos cientos de bytes por zona).
 func save_explored() -> void:
-	if zone == null or character == null or explored.is_empty():
+	if zone == null or character == null or explored.is_empty() or zone.layout != null:
 		return
 	var raw := PackedByteArray()
 	raw.resize(ceili(explored.size() / 8.0))
@@ -223,7 +224,10 @@ func _draw() -> void:
 	var ground := PackedVector2Array()
 	for q in zone.walk_polygon:
 		ground.append(to_map.call(q))
-	if ground.size() >= 3:
+	if not zone.ground_rects.is_empty():
+		for r in zone.ground_rects:   # zona generada (T115)
+			draw_rect(Rect2(to_map.call(r.position), r.size * s), Color(GROUND, 0.85))
+	elif ground.size() >= 3:
 		draw_colored_polygon(ground, Color(GROUND, 0.85))
 		draw_polyline(ground + PackedVector2Array([ground[0]]), Color("8a6d3b", 0.7), 1.5)
 	else:

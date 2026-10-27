@@ -82,15 +82,36 @@ func _draw_map() -> void:
 	var circle := PackedVector2Array()
 	for k in 48:
 		circle.append(center + Vector2.from_angle(TAU * k / 48.0) * RADIUS)
-	var ground := PackedVector2Array()
-	if zone.walk_polygon.size() >= 3:
-		for q in zone.walk_polygon:
-			ground.append(_to_map(q))
+	if not zone.ground_rects.is_empty():
+		# Zona generada (T115): sus rectángulos de suelo, solo los que caen en el círculo.
+		var view := Rect2(Vector2.ZERO, Vector2(RADIUS, RADIUS) * 2.0)
+		for r in zone.ground_rects:
+			var a := _to_map(r.position)
+			var b := _to_map(r.end)
+			var mr := Rect2(a.min(b), (b - a).abs())
+			if not mr.intersects(view):
+				continue
+			var quad := PackedVector2Array([mr.position, Vector2(mr.end.x, mr.position.y), mr.end, Vector2(mr.position.x, mr.end.y)])
+			var corners_in := true
+			for q in quad:
+				corners_in = corners_in and q.distance_to(center) <= RADIUS
+			if corners_in:
+				draw_rect(mr, Color("2a2530"))   # entero dentro del círculo: sin recortar
+				continue
+			for poly in Geometry2D.intersect_polygons(quad, circle):
+				# El recorte con el borde puede dejar astillas sin área: no se pueden triangular.
+				if poly.size() >= 3 and not Geometry2D.triangulate_polygon(poly).is_empty():
+					draw_colored_polygon(poly, Color("2a2530"))
 	else:
-		var r := zone.rect
-		ground = PackedVector2Array([_to_map(r.position), _to_map(Vector2(r.end.x, r.position.y)), _to_map(r.end), _to_map(Vector2(r.position.x, r.end.y))])
-	for poly in Geometry2D.intersect_polygons(ground, circle):
-		draw_colored_polygon(poly, Color("2a2530"))
+		var ground := PackedVector2Array()
+		if zone.walk_polygon.size() >= 3:
+			for q in zone.walk_polygon:
+				ground.append(_to_map(q))
+		else:
+			var r := zone.rect
+			ground = PackedVector2Array([_to_map(r.position), _to_map(Vector2(r.end.x, r.position.y)), _to_map(r.end), _to_map(Vector2(r.position.x, r.end.y))])
+		for poly in Geometry2D.intersect_polygons(ground, circle):
+			draw_colored_polygon(poly, Color("2a2530"))
 
 	for o in zone.obstacles:
 		var p := _to_map(o["pos"])

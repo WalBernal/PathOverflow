@@ -334,7 +334,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 	enemies.clear_all()
 	loot.clear_all()
 	zone = Zone.new()
-	zone.setup(def, player, character, quests)
+	zone.setup(def, player, character, quests, randi() & 0x7fffffff)   # semilla de la instancia (T115); T118 la conservará 10 min
 	add_child(zone)
 	move_child(zone, 0)  # debajo de todo lo demás
 	var emitters := AmbientEmitters.new()   # racks, goteo y viento que suenan cerca

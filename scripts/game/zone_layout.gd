@@ -37,6 +37,7 @@ var waypoint := Vector2.INF
 var specials: Array[Dictionary] = []   # {kind, id, pos}: NPC, objeto de misión, prueba, objeto clave
 
 var _rng := RandomNumberGenerator.new()
+var _seed := 0
 
 
 ## Zonas guiadas que no se generan (el tutorial enseña cosas en sitios concretos).
@@ -77,6 +78,175 @@ func floor_fraction() -> float:
 	return float(n) / maxf(1.0, float(cells.size()))
 
 
+## ¿Hay suelo en `p` y a `margin` píxeles en las cuatro direcciones? (Lo que usa
+## Zone.is_walkable en las zonas generadas.)
+func point_ok(p: Vector2, margin := 0.0) -> bool:
+	if not is_floor(Vector2i(floori(p.x / CELL), floori(p.y / CELL))):
+		return false
+	if margin <= 0.0:
+		return true
+	for d in [Vector2(margin, 0), Vector2(-margin, 0), Vector2(0, margin), Vector2(0, -margin)]:
+		var q: Vector2 = p + d
+		if not is_floor(Vector2i(floori(q.x / CELL), floori(q.y / CELL))):
+			return false
+	return true
+
+
+## El punto más cercano a `p` que cumple point_ok con `margin`, buscando en las
+## celdas vecinas (barato: lo usan los enemigos en cada tick). Si no hay, `p`.
+func clamp_point(p: Vector2, margin := 0.0) -> Vector2:
+	if point_ok(p, margin):
+		return p
+	var c := Vector2i(floori(p.x / CELL), floori(p.y / CELL))
+	var m := minf(margin, CELL * 0.45)
+	var best := p
+	var best_d := INF
+	for ring in range(1, 3):
+		for dy in range(-ring, ring + 1):
+			for dx in range(-ring, ring + 1):
+				var n := c + Vector2i(dx, dy)
+				if not is_floor(n):
+					continue
+				var r := Rect2(Vector2(n) * CELL, Vector2(CELL, CELL))
+				# Hacia los lados donde la vecina también es suelo no hace falta margen.
+				var lo := r.position + Vector2(0.0 if is_floor(n + Vector2i(-1, 0)) else m, 0.0 if is_floor(n + Vector2i(0, -1)) else m)
+				var hi := r.end - Vector2(0.0 if is_floor(n + Vector2i(1, 0)) else m, 0.0 if is_floor(n + Vector2i(0, 1)) else m)
+				var q := p.clamp(lo, hi)
+				var d := q.distance_squared_to(p)
+				if d < best_d:
+					best_d = d
+					best = q
+		if best_d < INF:
+			return best
+	return p
+
+
+## Centro de la celda de suelo más cercana a `p` (para puntos que venían del diseño).
+func nearest_floor(p: Vector2) -> Vector2:
+	var c := cell_of(p)
+	if is_floor(c):
+		return center_of(c)
+	for ring in range(1, maxi(width, height)):
+		var best := Vector2i(-1, -1)
+		for dy in range(-ring, ring + 1):
+			for dx in range(-ring, ring + 1):
+				if maxi(absi(dx), absi(dy)) != ring:
+					continue
+				var n := c + Vector2i(dx, dy)
+				if is_floor(n) and (best.x < 0 or Vector2(n - c).length() < Vector2(best - c).length()):
+					best = n
+		if best.x >= 0:
+			return center_of(best)
+	return p
+
+
+## Rectángulos (en píxeles) que cubren las celdas con valor `v` (1 suelo, 0 muro):
+## tramos por fila unidos con los de la fila siguiente si tienen el mismo ancho.
+func rects_of(v: int) -> Array[Rect2]:
+	var open := {}   # Vector2i(x0, x1) -> Rect2i en celdas
+	var out: Array[Rect2] = []
+	for y in height:
+		var runs := {}
+		var x := 0
+		while x < width:
+			if cells[y * width + x] != v:
+				x += 1
+				continue
+			var x0 := x
+			while x < width and cells[y * width + x] == v:
+				x += 1
+			runs[Vector2i(x0, x)] = true
+		for key in open.keys():
+			if not runs.has(key):
+				var r: Rect2i = open[key]
+				out.append(Rect2(Vector2(r.position) * CELL, Vector2(r.size) * CELL))
+				open.erase(key)
+		for key in runs:
+			if open.has(key):
+				var r: Rect2i = open[key]
+				r.size.y += 1
+				open[key] = r
+			else:
+				open[key] = Rect2i(key.x, y, key.y - key.x, 1)
+	for key in open:
+		var r: Rect2i = open[key]
+		out.append(Rect2(Vector2(r.position) * CELL, Vector2(r.size) * CELL))
+	return out
+
+
+## Frontera entre suelo y muro en tramos rectos: {a, b, n} con `n` hacia el suelo.
+func boundary_segments() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	# Bordes horizontales: entre la fila y y la y-1.
+	for y in range(0, height + 1):
+		for n in [Vector2(0, 1), Vector2(0, -1)]:   # suelo abajo (borde superior de la celda) o arriba
+			var run_start := -1
+			for x in range(0, width + 1):
+				var below := is_floor(Vector2i(x, y)) if x < width else false
+				var above := is_floor(Vector2i(x, y - 1)) if x < width else false
+				var edge: bool = (below and not above) if n.y > 0 else (above and not below)
+				if edge and run_start < 0:
+					run_start = x
+				elif not edge and run_start >= 0:
+					out.append({"a": Vector2(run_start, y) * CELL, "b": Vector2(x, y) * CELL, "n": n})
+					run_start = -1
+	for x in range(0, width + 1):
+		for n in [Vector2(1, 0), Vector2(-1, 0)]:
+			var run_start := -1
+			for y in range(0, height + 1):
+				var right := is_floor(Vector2i(x, y)) if y < height else false
+				var left := is_floor(Vector2i(x - 1, y)) if y < height else false
+				var edge: bool = (right and not left) if n.x > 0 else (left and not right)
+				if edge and run_start < 0:
+					run_start = y
+				elif not edge and run_start >= 0:
+					out.append({"a": Vector2(x, run_start) * CELL, "b": Vector2(x, y) * CELL, "n": n})
+					run_start = -1
+	return out
+
+
+## Copia de la definición de la zona con las posiciones de esta disposición: tamaño,
+## salidas, entradas, waypoint, NPC, objetos de misión, pruebas y objetos clave; lo
+## demás que tenga posición (decorado, puntos extra, mutex, race condition) se lleva
+## en proporción al tamaño nuevo y al suelo más cercano. No toca el original.
+func remap_def(def: Dictionary) -> Dictionary:
+	var out: Dictionary = def.duplicate(true)
+	var old := Vector2(float(def["size"][0]), float(def["size"][1]))
+	var size := size_px()
+	var arr := func(p: Vector2) -> Array: return [p.x, p.y]
+	var moved := func(a: Array) -> Array:
+		var p := Vector2(float(a[0]), float(a[1])) / old * size
+		var q := nearest_floor(p)
+		return [q.x, q.y]
+	out["size"] = arr.call(size)
+	for i in mini(exits.size(), out.get("exits", []).size()):
+		out["exits"][i]["pos"] = arr.call(exits[i]["pos"])
+	for k in entries:
+		out["entries"][k] = arr.call(entries[k])
+	if waypoint != Vector2.INF:
+		out["waypoint"] = arr.call(waypoint)
+	var by_kind := {}
+	for s in specials:
+		if not by_kind.has(s["kind"]):
+			by_kind[s["kind"]] = []
+		by_kind[s["kind"]].append(s["pos"])
+	for list in [["npcs", "npc"], ["quest_items", "quest"], ["challenges", "challenge"], ["key_items", "key"]]:
+		var spots: Array = by_kind.get(list[1], [])
+		for i in mini(spots.size(), out.get(list[0], []).size()):
+			out[list[0]][i]["pos"] = arr.call(spots[i])
+	for p in out.get("props", []):
+		if p is Dictionary and p.has("pos"):
+			p["pos"] = moved.call(p["pos"])
+	if out.has("extra_points"):
+		out["extra_points"] = out["extra_points"].map(moved)
+	if out.get("mutex") is Dictionary and out["mutex"].has("positions"):
+		out["mutex"]["positions"] = out["mutex"]["positions"].map(moved)
+	if out.get("race_condition") is Dictionary and out["race_condition"].has("pos"):
+		out["race_condition"]["pos"] = moved.call(out["race_condition"]["pos"])
+	out["_layout_seed"] = _seed
+	return out
+
+
 ## Todos los puntos clave (entradas, salidas, waypoint y especiales).
 func key_points() -> Array[Vector2]:
 	var out: Array[Vector2] = []
@@ -113,6 +283,7 @@ func check() -> String:
 
 func _build(def: Dictionary, p_seed: int) -> void:
 	_rng.seed = p_seed
+	_seed = p_seed
 	var base := Vector2(float(def["size"][0]), float(def["size"][1]))
 	var size := Vector2(base.x * _rng.randf_range(1.0 - SIZE_JITTER, 1.0 + SIZE_JITTER), base.y * _rng.randf_range(1.0 - SIZE_JITTER, 1.0 + SIZE_JITTER))
 	width = maxi(16, int(size.x / CELL))
@@ -301,9 +472,17 @@ func _place_keys(def: Dictionary, base: Vector2) -> void:
 		var side := side_of(p, base)
 		var along := (p.y / base.y) if side == "left" or side == "right" else (p.x / base.x)
 		var c := Vector2i.ZERO
-		for attempt in 12:   # lejos de las otras salidas del mismo lado
-			c = _cell_on_side(side, clampf(along + _rng.randf_range(-0.25, 0.25), 0.1, 0.9))
-			if exit_cells.all(func(o: Vector2i) -> bool: return Vector2(o - c).length() >= 10.0):
+		var best_gap := -1.0
+		for attempt in 24:   # lejos de las otras salidas del mismo lado (si no se puede, la más lejana)
+			var t := clampf(along + _rng.randf_range(-0.25, 0.25), 0.1, 0.9) if attempt < 12 else attempt / 24.0 * 0.8 + 0.1
+			var cand := _cell_on_side(side, t)
+			var gap := INF
+			for o in exit_cells:
+				gap = minf(gap, Vector2(o - cand).length())
+			if gap > best_gap:
+				best_gap = gap
+				c = cand
+			if gap >= 10.0:
 				break
 		exit_cells.append(c)
 		exits.append({"target": e["target"], "side": side, "pos": center_of(c), "def_pos": p})

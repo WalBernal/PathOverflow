@@ -180,6 +180,7 @@ func _initialize() -> void:
 	_test_waypoint_reach()
 	_test_no_back_portals()
 	_test_zone_layout()
+	_test_generated_zones()
 	_test_tilesets()
 	_test_events_music_colorblind()
 	_test_story_editor()
@@ -4408,6 +4409,51 @@ func _test_zone_layout() -> void:
 				if ZoneLayout.side_of(e["pos"], a.size_px()) != e["side"]:
 					problems.append("%s: la salida a %s cambia de lado" % [def["id"], e["target"]])
 	_check(generated > 50 and problems.is_empty(), "el generador cumple sus garantías en %d disposiciones %s" % [generated, problems])
+
+
+## Zonas generadas en el juego (T115): 50 semillas por zona conectadas (la rejilla) y,
+## con la zona entera (obstáculos, colisión), 3 por zona: todo punto clave sobre suelo,
+## fuera de los obstáculos y alcanzable, y sin tocar la definición original.
+func _test_generated_zones() -> void:
+	var problems := []
+	var zones_done := 0
+	var t0 := Time.get_ticks_msec()
+	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json", "res://data/act4.json"]:
+		for z in DataLoader.load_json(path).get("zones", []):
+			var def: Dictionary = z.duplicate(true)
+			Zone.scale_def(def)
+			if not ZoneLayout.applies_to(def):
+				continue
+			zones_done += 1
+			for k in 50:
+				var problem := ZoneLayout.generate(def, 5000 + k).check()
+				if problem != "":
+					problems.append("%s/%d: %s" % [def["id"], k, problem])
+			var before := JSON.stringify(def)
+			for k in 3:
+				var zone := Zone.new()
+				zone.setup(def, null, null, null, 9000 + k)
+				if zone.layout == null:
+					problems.append("%s: no se generó" % def["id"])
+				else:
+					if not zone._all_keys_reachable():
+						problems.append("%s/%d: algún punto clave no se alcanza" % [def["id"], k])
+					for p in zone.key_points():
+						if not zone.rect.has_point(p) or not zone.layout.point_ok(p):
+							problems.append("%s/%d: punto clave fuera del suelo en %s" % [def["id"], k, p])
+						for o in zone.obstacles:
+							if p.distance_to(o["pos"]) < float(o["radius"]):
+								problems.append("%s/%d: obstáculo encima de %s" % [def["id"], k, p])
+					if not zone.is_walkable(zone.entry_point(""), 18.0):
+						problems.append("%s/%d: la entrada no es transitable" % [def["id"], k])
+				zone.free()
+			if JSON.stringify(def) != before:
+				problems.append("%s: la zona generada cambió la definición original" % def["id"])
+	_check(zones_done > 15 and problems.is_empty(), "zonas generadas conectadas y con todo en su sitio en %d zonas (%d ms) %s" % [zones_done, Time.get_ticks_msec() - t0, problems.slice(0, 6)])
+	var camp := Zone.new()
+	camp.setup(_zone_def("campamento"), null, null, null, 1234)
+	_check(camp.layout == null and not camp.walk_polygon.is_empty(), "el campamento no se genera aunque haya semilla")
+	camp.free()
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.
