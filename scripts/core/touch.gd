@@ -16,6 +16,12 @@ const AIM_CONE := deg_to_rad(40.0)
 static var active := false
 ## Dirección del joystick (largo 0-1); cero con el dedo fuera.
 static var stick := Vector2.ZERO
+## Apuntado a mano (T108): arrastrando el dedo desde un botón de habilidad, hacia
+## dónde (largo 0-1); cero = apuntado automático.
+static var aim_dir := Vector2.ZERO
+## Cuánto hay que arrastrar desde el botón para apuntar a mano, y hasta dónde llega.
+const MANUAL_AIM_MIN := 26.0
+const MANUAL_AIM_FULL := 150.0
 ## Para las pruebas y las capturas: como si hubiera pantalla táctil.
 static var force := false
 
@@ -33,6 +39,7 @@ static func set_enabled(on: bool) -> void:
 	GameSettings.set_value("controls", "touch", on)
 	if not on:
 		stick = Vector2.ZERO
+		aim_dir = Vector2.ZERO
 
 
 ## Último toque, en coordenadas de la ventana del juego (INF sin toques).
@@ -66,6 +73,18 @@ static func stick_vector(origin: Vector2, finger: Vector2, radius := STICK_RADIU
 	if t <= deadzone:
 		return Vector2.ZERO
 	return d.normalized() * minf(1.0, (t - deadzone) / (1.0 - deadzone))
+
+
+## Apuntado a mano al arrastrar `drag` px desde el botón: cero si apenas se movió.
+static func manual_aim(drag: Vector2) -> Vector2:
+	if drag.length() < MANUAL_AIM_MIN:
+		return Vector2.ZERO
+	return drag.normalized() * minf(1.0, drag.length() / MANUAL_AIM_FULL)
+
+
+## Punto del mundo al que apunta el arrastre: de 120 px (poco) al alcance entero (a tope).
+static func manual_target(from: Vector2, dir: Vector2) -> Vector2:
+	return from + dir.normalized() * lerpf(120.0, AIM_RANGE, clampf(dir.length(), 0.0, 1.0))
 
 
 ## Enemigo al que apuntan las habilidades: el más cercano dentro del cono de `dir`

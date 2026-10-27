@@ -2181,6 +2181,51 @@ func _capture_touch() -> void:
 	await _wait(1.0)
 	print("tactil: tras tocar el mundo (-60, 220) más allá, el jugador se movió %s" % (player.global_position - at))
 	_save("107_tocar_mundo")
+	# Botones (T108): mantener la habilidad 1 arrastrando para apuntar, la esquiva y una poción.
+	var hud: Hud = ui.hud
+	var to_screen := func(p: Vector2) -> Vector2: return hud.get_global_transform_with_canvas() * p
+	var used := [0]
+	(world.get("skills") as SkillController).skill_used.connect(func(_i: int) -> void: used[0] += 1)
+	var skill_at: Vector2 = to_screen.call(hud.call("_slot_rect", 0).get_center())
+	_touch(1, skill_at, true)
+	for k in 10:
+		await get_tree().process_frame
+		_drag(1, skill_at + Vector2(-9.0 * (k + 1), -6.0 * (k + 1)))
+	await _wait(1.2)
+	print("tactil: manteniendo la habilidad 1 (apuntado a mano %s) se lanzó %d veces" % [Touch.aim_dir, used[0]])
+	_save("108_botones")
+	_touch(1, skill_at, false)
+	await _wait(0.2)
+	print("tactil: al soltar, apuntado %s" % Touch.aim_dir)
+	var charges := player.dodge_charges
+	var dodge_at: Vector2 = to_screen.call(hud.call("_dodge_rect").get_center())
+	_touch(2, dodge_at, true)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_touch(2, dodge_at, false)
+	await _wait(0.2)
+	print("tactil: esquiva tocada, cargas %.1f -> %.1f" % [charges, player.dodge_charges])
+	player.life = player.max_life() * 0.5
+	var flask_before := player.flask_at(0).charges if player.flask_at(0) else -1.0
+	var flask_at: Vector2 = to_screen.call(hud.call("_flask_rect", 0).get_center())
+	_touch(3, flask_at, true)
+	await get_tree().process_frame
+	_touch(3, flask_at, false)
+	await _wait(0.2)
+	print("tactil: poción 1 tocada, cargas %s -> %s" % [flask_before, player.flask_at(0).charges if player.flask_at(0) else -1.0])
+	# Con la interfaz al 140 % (lo que trae el celular por defecto), que nada se pise.
+	var scale_was: Variant = GameSettings.get_value("interface", "scale", 1.0)
+	GameSettings.set_value("interface", "scale", 1.4)
+	ui.apply_ui_scale()
+	await _wait(0.5)
+	var tracker_end := ui.quest_tracker.get_global_rect().end.y
+	var top_slot := INF
+	for i in SkillController.ACTIONS.size():
+		top_slot = minf(top_slot, (hud.get_global_transform_with_canvas() * hud.call("_slot_rect", i).position).y)
+	print("tactil 140 %%: misiones hasta y=%.0f, la habilidad más alta empieza en y=%.0f" % [tracker_end, top_slot])
+	_save("108_botones_140")
+	GameSettings.set_value("interface", "scale", scale_was)
+	ui.apply_ui_scale()
 	Touch.force = false
 	TipPanel.set_enabled(tips_were)
 	world.queue_free()

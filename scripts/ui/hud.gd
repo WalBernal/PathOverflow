@@ -106,11 +106,45 @@ func flash(text: String, color := Color("e06c6c")) -> void:
 
 ## ¿Está el ratón sobre la placa o los orbes? (para no tirar objetos ahí)
 func is_over_hud(pos: Vector2) -> bool:
+	if touch_layout:
+		return not touch_button_at(pos).is_empty() or pos.distance_to(_life_center()) <= ORB_RADIUS + 10.0 \
+			or pos.distance_to(_mana_center()) <= ORB_RADIUS + 10.0
 	return pos.y >= _plate_rect().position.y - 12.0 or pos.distance_to(_life_center()) <= ORB_RADIUS + 10.0 \
 		or pos.distance_to(_mana_center()) <= ORB_RADIUS + 10.0
 
 
 # --- Geometría ---
+
+## Con pantalla táctil (T108) el HUD cambia de forma: sin la placa, las 6 habilidades
+## en dos arcos a la izquierda del orbe de maná (para el pulgar derecho: la 1, la
+## más cerca y más grande), la esquiva encima del orbe, y pociones y botones de menú
+## más grandes a la izquierda, fuera del joystick. Los arcos no suben más allá del
+## registro de misiones ni con la interfaz al 140 %.
+const TOUCH_SLOT := 66.0
+const TOUCH_MAIN_SLOT := 76.0
+## [radio, grados] de cada habilidad alrededor del centro del orbe de maná.
+const TOUCH_RING := [[150.0, 185.0], [150.0, 212.0], [150.0, 239.0], [232.0, 180.0], [232.0, 198.0], [232.0, 216.0]]
+const TOUCH_DODGE := 64.0
+const TOUCH_FLASK := Vector2(60, 68)
+const TOUCH_MENU := Vector2(48, 42)
+var touch_layout := false
+
+
+## ¿Qué botón táctil hay en `pos`? {kind: "skill"|"dodge"|"flask", index} o vacío.
+func touch_button_at(pos: Vector2) -> Dictionary:
+	if not touch_layout:
+		return {}
+	for i in SkillController.ACTIONS.size():
+		var r := _slot_rect(i)
+		if pos.distance_to(r.get_center()) <= r.size.x * 0.62:
+			return {"kind": "skill", "index": i}
+	if pos.distance_to(_dodge_rect().get_center()) <= TOUCH_DODGE * 0.62:
+		return {"kind": "dodge", "index": 0}
+	for i in Inventory.FLASK_SLOTS:
+		if _flask_rect(i).grow(4.0).has_point(pos):
+			return {"kind": "flask", "index": i}
+	return {}
+
 
 func _life_center() -> Vector2:
 	return Vector2(ORB_RADIUS + 28.0, size.y - ORB_RADIUS - 18.0)
@@ -126,6 +160,10 @@ func _plate_rect() -> Rect2:
 
 
 func _slot_rect(i: int) -> Rect2:
+	if touch_layout:
+		var c := _mana_center() + Vector2.from_angle(deg_to_rad(TOUCH_RING[i][1])) * float(TOUCH_RING[i][0])
+		var s := TOUCH_MAIN_SLOT if i == 0 else TOUCH_SLOT
+		return Rect2(c - Vector2(s, s) * 0.5, Vector2(s, s))
 	var plate := _plate_rect()
 	var total := SkillController.ACTIONS.size() * SLOT + (SkillController.ACTIONS.size() - 1) * SLOT_GAP
 	# Centrada; si la pantalla es estrecha (o la interfaz grande), justo después de las pociones.
@@ -135,17 +173,26 @@ func _slot_rect(i: int) -> Rect2:
 
 
 func _flask_rect(i: int) -> Rect2:
+	if touch_layout:
+		var left := _life_center().x + ORB_RADIUS + 24.0
+		return Rect2(left + i * (TOUCH_FLASK.x + 6.0), size.y - TOUCH_FLASK.y - 30.0, TOUCH_FLASK.x, TOUCH_FLASK.y)
 	var plate := _plate_rect()
 	return Rect2(plate.position.x + 16.0 + i * (FLASK_SIZE.x + 6.0), plate.position.y + 8.0, FLASK_SIZE.x, FLASK_SIZE.y)
 
 
 ## Casilla de la esquiva, a la derecha de la barra de habilidades.
 func _dodge_rect() -> Rect2:
+	if touch_layout:
+		var c := _mana_center() + Vector2(0.0, -ORB_RADIUS - TOUCH_DODGE * 0.5 - 14.0)
+		return Rect2(c - Vector2(TOUCH_DODGE, TOUCH_DODGE) * 0.5, Vector2(TOUCH_DODGE, TOUCH_DODGE))
 	var last := _slot_rect(SkillController.ACTIONS.size() - 1)
 	return Rect2(last.end.x + 14.0, last.position.y, 34.0, SLOT)
 
 
 func _xp_rect() -> Rect2:
+	if touch_layout:
+		var left := _flask_rect(0).position.x
+		return Rect2(left, size.y - 11.0, maxf(200.0, _slot_rect(3).position.x - 20.0 - left), 6.0)
 	var plate := _plate_rect()
 	return Rect2(plate.position.x, plate.position.y - 9.0, plate.size.x, 7.0)
 
@@ -161,14 +208,18 @@ func _layout() -> void:
 		_place("skill_%d" % i, _slot_rect(i))
 	_place("dodge", _dodge_rect())
 	var origin := _menu_origin()
+	var button := TOUCH_MENU if touch_layout else Vector2(34, 30)
 	for i in _menu_buttons.size():
-		_menu_buttons[i].position = origin + Vector2(i * 40.0, 8.0)
-		_menu_buttons[i].size = Vector2(34, 30)
+		_menu_buttons[i].custom_minimum_size = button
+		_menu_buttons[i].position = origin + Vector2(i * (button.x + 6.0), 8.0)
+		_menu_buttons[i].size = button
 
 
 ## Esquina de los botones de menú (C, I, K, P) y del "Nivel N": a la derecha de la
 ## barra; si no caben junto a las habilidades (interfaz grande), encima de la barra.
 func _menu_origin() -> Vector2:
+	if touch_layout:   # encima de las pociones (debajo de la zona del joystick)
+		return Vector2(_flask_rect(0).position.x, _flask_rect(0).position.y - TOUCH_MENU.y - 22.0)
 	var plate := _plate_rect()
 	var x := plate.end.x - _menu_buttons.size() * 40.0 - 12.0
 	var skills_end := _dodge_rect().end.x + 10.0
@@ -186,6 +237,9 @@ func _place(key: String, rect: Rect2) -> void:
 
 func _process(delta: float) -> void:
 	queue_redraw()
+	if Touch.shown() != touch_layout:
+		touch_layout = not touch_layout
+		_layout()
 	for k in _slot_flash.size():
 		_slot_flash[k] = maxf(0.0, _slot_flash[k] - delta)
 	_update_target(delta)
@@ -327,7 +381,8 @@ func _draw() -> void:
 	if player == null:
 		return
 	var font := get_theme_default_font()
-	_draw_plate()
+	if not touch_layout:
+		_draw_plate()
 
 	# Orbes.
 	var life_center := _life_center()
@@ -907,6 +962,8 @@ func _draw_skill_slot(i: int, font: Font) -> void:
 			key_color = Color("e06c6c")
 	else:
 		draw_rect(r, Color("3a3442"), false, 1.0)
+	if touch_layout:
+		return   # en táctil no hay tecla que enseñar
 	# Tecla en una chapita abajo a la izquierda.
 	var key: String = Controls.key_label(SkillController.ACTIONS[i])
 	var key_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x + 8.0
@@ -936,6 +993,8 @@ func _draw_dodge(font: Font) -> void:
 		draw_rect(pr, color.darkened(0.4), false, 1.0)
 	if player.is_dodging():
 		draw_rect(r.grow(1.0), Color(color, 0.8), false, 2.0)
+	if touch_layout:
+		return
 	var key_rect := Rect2(r.position.x - 2.0, r.end.y - 12.0, r.size.x + 4.0, 14.0)
 	draw_rect(key_rect, Color(PLATE, 0.95))
 	draw_rect(key_rect, TRIM.darkened(0.2), false, 1.0)

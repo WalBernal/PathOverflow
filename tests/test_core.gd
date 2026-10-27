@@ -5195,6 +5195,13 @@ func _test_touch_controls() -> void:
 	_check(not Touch.shown() and Touch.stick == Vector2.ZERO, "y en Pausa → Controles se ocultan (y sueltan el joystick)")
 	Touch.set_enabled(was)
 	Touch.force = false
+	# Botones (T108): arrastrar desde una habilidad apunta a mano.
+	_check(Touch.manual_aim(Vector2(10, 5)) == Vector2.ZERO, "pulsar sin arrastrar: apuntado automático")
+	var aim := Touch.manual_aim(Vector2(0, -Touch.MANUAL_AIM_FULL * 2.0))
+	_check(aim.is_equal_approx(Vector2.UP), "arrastrar mucho hacia arriba: apunta arriba a tope")
+	_check(Touch.manual_target(Vector2(50, 50), aim).is_equal_approx(Vector2(50, 50 - Touch.AIM_RANGE)), "a tope llega al alcance del apuntado")
+	var little := Touch.manual_aim(Vector2(Touch.MANUAL_AIM_MIN + 2.0, 0))
+	_check(little.x > 0.0 and Touch.manual_target(Vector2.ZERO, little).x < 200.0, "arrastrar poco: cerca y en esa dirección")
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.

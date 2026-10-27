@@ -84,6 +84,7 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	touch_controls = TouchControls.new()
 	touch_controls.player = player
 	touch_controls.enemies = enemies
+	touch_controls.hud = hud
 	touch_controls.blocked = func() -> bool:
 		return (_pause_panel != null and _pause_panel.visible) or not cursor_windows().is_empty() or (cutscene != null and cutscene.is_playing())
 	_root.add_child(touch_controls)
