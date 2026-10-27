@@ -65,6 +65,22 @@ func values(key: String, now: float) -> Dictionary:
 	return out
 
 
+## Zonas cuya instancia tiene botín o tokens en el suelo y caduca en menos de `within`
+## segundos (T128: para avisar antes de perderlo). [[zona, segundos, salida]], donde
+## salida es cuándo se guardó (para avisar una sola vez por instancia).
+func expiring(now: float, within: float) -> Array:
+	prune(now)
+	var out := []
+	for k in _by_zone:
+		var e: Dictionary = _by_zone[k]
+		if (e.get("drops", []) as Array).is_empty() and (e.get("coins", []) as Array).is_empty():
+			continue
+		var left := time_left(k, now)
+		if left > 0.0 and left <= within:
+			out.append([k, left, float(e["left_at"])])
+	return out
+
+
 func prune(now: float) -> void:
 	for k in _by_zone.keys():
 		if now - float(_by_zone[k]["left_at"]) >= TTL:

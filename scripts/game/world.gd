@@ -128,6 +128,9 @@ func _ready() -> void:
 	# El botín solo cae donde se puede llegar a recogerlo.
 	loot.placement_check = func(p: Vector2) -> bool: return zone == null or zone.is_walkable(p, 18.0)
 	loot.spot_fixer = func(p: Vector2) -> Vector2: return p if zone == null else zone.free_spot_near(p, 24.0)
+	loot.dropped.connect(func(item: Item) -> void:   # el botín que merece la pena, al registro (T128)
+		if item.is_equipment() and item.rarity >= Rarity.Item.RARE:
+			ui.log_event("Ha caído: %s" % item.display_name(), item.display_color()))
 
 	quests = QuestLog.new(character)
 	quests.quest_started.connect(_on_quest_started)
@@ -253,6 +256,7 @@ func _process(delta: float) -> void:
 	_update_combat_music(delta)
 	_update_twins(delta)
 	_update_challenge(delta)
+	_check_expiring(delta)
 	_update_waves(delta)
 	_update_low_life_bark(delta)
 	if not _event_fights.is_empty():
@@ -433,6 +437,25 @@ func travel_to(zone_id: String, entry := "") -> void:
 
 ## Instancias que duran 10 minutos (T118, ZoneInstances): solo las zonas generadas.
 var instances := ZoneInstances.new()
+## Aviso 1 min antes de que caduque una instancia con botín en el suelo (T128).
+const EXPIRY_WARNING := 60.0
+var _expiry_warned := {}   # "zona@salida" -> true (una vez por instancia)
+var _expiry_check := 0.0
+
+
+func _check_expiring(delta: float) -> void:
+	_expiry_check -= delta
+	if _expiry_check > 0.0:
+		return
+	_expiry_check = 1.0
+	for row in instances.expiring(_now(), EXPIRY_WARNING):
+		var key := "%s@%d" % [row[0], int(row[2])]
+		if _expiry_warned.has(key) or (zone and zone.id == row[0]):
+			continue
+		_expiry_warned[key] = true
+		var zname := String(GameData.zones.get(row[0], {}).get("name", row[0]))
+		ui.hud.flash("Lo que dejaste en %s se pierde en %s. Vuelve por waypoint si lo quieres." % [zname, ZoneInstances.clock(float(row[1]))], Color("ff9a4a"))
+		ui.log_event("%s caduca en %s (con botín en el suelo)" % [zname, ZoneInstances.clock(float(row[1]))], Color("ff9a4a"))
 
 
 ## Reloj de las instancias: segundos desde que se abrió el juego (corre también en pausa).
@@ -1055,6 +1078,7 @@ func _discover_waypoint() -> void:
 		found.append(zone.id)
 		character.flags["waypoints"] = found
 		ui.hud.flash("Waypoint descubierto: %s. Ya puedes viajar aquí." % zone.zone_name, Color("5cd0ff"))
+		ui.log_event("Waypoint descubierto: %s" % zone.zone_name, Color("5cd0ff"))
 		_mark_dirty()
 
 
@@ -1211,6 +1235,7 @@ func _mechanic_reward(e: Dictionary) -> void:
 	if float(r.get("tokens_mult", 0.0)) > 0.0:
 		loot.drop_tokens(int(Economy.drop_amount(enemies.area_level, Rarity.Enemy.ELITE, _rng) * float(r["tokens_mult"])), zone.free_spot_near(at + Vector2(0, 80)))
 	ui.hud.flash("Mecánica completada: %s. Botín extra." % ZoneMechanics.info(String(e["kind"])).get("name", ""), Color("ffd24a"))
+	ui.log_event("Mecánica completada en %s: %s" % [zone.zone_name, ZoneMechanics.info(String(e["kind"])).get("name", "")], Color("ffd24a"))
 
 
 ## Ticket urgente (T121): marca a unos élites repartidos por la zona, lejos de ti (con

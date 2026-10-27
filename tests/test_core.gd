@@ -192,6 +192,7 @@ func _initialize() -> void:
 	_test_minimap_fog()
 	_test_waypoint_map()
 	_test_board_compare()
+	_test_event_log()
 	_test_tilesets()
 	_test_events_music_colorblind()
 	_test_story_editor()
@@ -5029,6 +5030,43 @@ func _test_board_compare() -> void:
 		var rt := ItemTooltip.build_text(any_ram, c, true)
 		_check(rt.contains("En tus placas") and rt.contains(String(equipped.skill_def.get("name", ""))), "una RAM dice qué haría en cada placa de tu barra")
 	_check(ItemTooltip.wants_compare(better) and ItemTooltip.wants_compare(any_ram) if any_ram else ItemTooltip.wants_compare(better), "placas y RAM se comparan como el equipo")
+
+
+## HUD de la zona y registro de sucesos (T128): el rótulo dice la mecánica, el registro
+## guarda lo último (con tope), plegado cuenta lo nuevo, y se avisa de las instancias con
+## botín que van a caducar.
+func _test_event_log() -> void:
+	var def: Dictionary = _zone_def("zona2").duplicate(true)
+	Zone.scale_def(def)
+	var zone := Zone.new()
+	zone.setup(def, null, null, null, 4321)
+	var banner := Zone.banner_text(zone)
+	var main := String(zone.mechanic.get("main", ""))
+	_check(banner.contains(zone.zone_name) and banner.contains("Nivel de zona") and (main == "" or banner.contains(String(ZoneMechanics.info(main)["name"]))),
+		"el rótulo al entrar dice la mecánica de la instancia (%s)" % banner.replace("\n", " / "))
+	zone.free()
+	var camp := Zone.new()
+	camp.setup(_zone_def("campamento"), null, null, null)
+	_check(Zone.banner_text(camp) == camp.zone_name, "en el campamento, solo el nombre")
+	camp.free()
+	var log := EventLog.new()
+	root.add_child(log)
+	for k in EventLog.MAX_ENTRIES + 5:
+		log.add("suceso %d" % k)
+	_check(log.entries.size() == EventLog.MAX_ENTRIES and log.entries[0]["text"] == "suceso 5", "el registro guarda los últimos, con tope")
+	log.toggle()
+	log.add("nuevo 1")
+	log.add("nuevo 2")
+	_check(log.collapsed and log.unseen == 2 and log.header_text().contains("2 nuevos"), "plegado, cuenta los sucesos nuevos")
+	log.toggle()
+	_check(not log.collapsed and log.unseen == 0 and log.header_text() == "[–] Registro", "al desplegarlo, se dan por vistos")
+	log.queue_free()
+	var inst := ZoneInstances.new()
+	inst.store("zona2", {"seed": 1, "drops": [{"x": 1}], "coins": []}, 0.0)
+	inst.store("zona3", {"seed": 2, "drops": [], "coins": []}, 0.0)
+	var soon := inst.expiring(ZoneInstances.TTL - 30.0, 60.0)
+	_check(soon.size() == 1 and soon[0][0] == "zona2" and is_equal_approx(float(soon[0][1]), 30.0), "avisa de la instancia con botín que caduca en menos de un minuto (no de la vacía)")
+	_check(inst.expiring(10.0, 60.0).is_empty(), "y no antes de tiempo")
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.

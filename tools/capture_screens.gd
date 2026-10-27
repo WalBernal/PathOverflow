@@ -24,6 +24,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("registro"):
+		await _capture_event_log()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("comparar"):
 		await _capture_board_compare()
 		get_tree().quit()
@@ -2114,6 +2118,36 @@ func _swap(node: Node) -> void:
 
 func _wait(seconds: float) -> Signal:
 	return get_tree().create_timer(seconds).timeout
+
+
+## HUD de la zona y registro de sucesos (T128): el rótulo con la mecánica al entrar y el
+## registro con unos cuantos sucesos.
+func _capture_event_log() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Registro", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 12
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var ui: GameUI = world.get("ui")
+	ui.log_event("Waypoint descubierto: Las Ruinas del Monolito", Color("5cd0ff"))
+	ui.log_event("Ha caído: Bucle Infinito, anillo de Commit", Rarity.item_color(Rarity.Item.RARE))
+	ui.log_event("Mecánica completada en El Bosque de Cables: Caché caliente", Color("ffd24a"))
+	ui.log_event("Ha caído: El Último Merge", Rarity.item_color(Rarity.Item.UNIQUE))
+	ui.log_event("El Bosque de Cables caduca en 1:00 (con botín en el suelo)", Color("ff9a4a"))
+	world.call("travel_to", "zona2", "")
+	(world.get("enemies") as EnemyManager).clear_all()
+	await _wait(1.2)
+	_save("128_rotulo_y_registro")
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
 
 
 ## Comparar placas y RAM (T127): el tooltip de una placa mejor de la que llevas (con la tuya

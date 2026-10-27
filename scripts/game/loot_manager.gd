@@ -8,6 +8,8 @@ signal hovered_item_changed(item: Item)  # null = ninguno
 signal picked_up(item: Item)
 signal pickup_failed(reason: String)
 signal tokens_picked(amount: int)
+## Un objeto acaba de caer al suelo (para el registro de sucesos, T128).
+signal dropped(item: Item)
 
 const PICKUP_RANGE := 50.0
 const FONT_SIZE := 14
@@ -65,6 +67,7 @@ func drop_item(item: Item, pos: Vector2, from := Vector2.INF) -> void:
 	var label_size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, Accessibility.world_size(FONT_SIZE)) + PADDING * 2.0
 	var rect := find_spot(pos, label_size)
 	drops.append({"item": item, "rect": rect, "text": text, "age": 0.0, "from": from if from != Vector2.INF else icon_spot(rect)})
+	dropped.emit(item)
 	# Botín bueno: haz de luz del color de la rareza y su propio sonido.
 	var special := SoundMap.drop(item)   # el único y el conjunto suenan distinto (T77)
 	if special != "":

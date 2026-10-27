@@ -1119,6 +1119,18 @@ static func act_map_layout(act: Dictionary) -> Dictionary:
 	return {"cells": cells, "edges": edges, "cols": deepest + 1, "rows": rows}
 
 
+## El rótulo grande al entrar (GameUI): nombre, nivel y (T128) la mecánica principal de
+## la instancia.
+static func banner_text(z: Zone) -> String:
+	if z.safe:
+		return z.zone_name
+	var t := "%s\nNivel de zona %d" % [z.zone_name, z.level]
+	var main := String(z.mechanic.get("main", ""))
+	if main != "":
+		t += "\n◆ %s" % String(ZoneMechanics.info(main).get("name", main))
+	return t
+
+
 ## Lo que se ve de la zona, en coordenadas del mundo.
 func _screen_rect() -> Rect2:
 	if not is_inside_tree():

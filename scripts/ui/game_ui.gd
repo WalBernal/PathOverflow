@@ -49,6 +49,7 @@ var _minimap_enabled := true
 var _death_panel: PanelContainer
 var _waypoint_panel: WaypointPanel
 var _zone_banner: Label
+var event_log: EventLog
 var _act_banner: PanelContainer
 var _pause_panel: Control
 var _root: Control
@@ -218,6 +219,10 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	_zone_banner.offset_top = 165.0
 	_zone_banner.modulate.a = 0.0
 
+	event_log = EventLog.new()   # registro de sucesos, a la izquierda (T128)
+	event_log.position = Vector2(14, 64)
+	_root.add_child(event_log)
+
 	_act_banner = _build_act_banner()
 	_root.add_child(_act_banner)
 
@@ -296,12 +301,18 @@ func on_zone_changed(zone: Zone) -> void:
 	dialogue_box.close()
 	close_trade_panels()
 	_waypoint_panel.visible = false
-	_zone_banner.text = zone.zone_name if zone.safe else "%s\nNivel de zona %d" % [zone.zone_name, zone.level]
+	_zone_banner.text = Zone.banner_text(zone)
 	var tween := create_tween()
 	_zone_banner.modulate.a = 0.0
 	tween.tween_property(_zone_banner, "modulate:a", 1.0, 0.4)
 	tween.tween_interval(2.0)
 	tween.tween_property(_zone_banner, "modulate:a", 0.0, 0.8)
+
+
+## Panel de sucesos (T128): botín raro y único, waypoints, mecánicas, instancias que caducan.
+func log_event(text: String, color := UiStyle.TEXT) -> void:
+	if event_log:
+		event_log.add(text, color)
 
 
 ## Reproduce una escena; on_done se llama al terminar (o al saltarla).
@@ -966,6 +977,8 @@ func _update_minimap() -> void:
 	quest_tracker.offset_top = tracker_top
 	quest_tracker.visible = quest_tracker.quests != null and not inventory_panel.visible and not tree_screen.visible \
 		and not _overlaps_any(tracker_rect, windows)
+	if event_log:   # el registro de sucesos, igual: fuera si una ventana se le encima (T128)
+		event_log.visible = not tree_screen.visible and not cutscene.visible and not _overlaps_any(_rect_in_root(event_log), windows)
 
 
 ## Ventanas de la columna izquierda (T82): solo una a la vez; la de la derecha es el inventario.
