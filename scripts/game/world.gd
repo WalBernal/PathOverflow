@@ -327,17 +327,17 @@ func travel_to(zone_id: String, entry := "") -> void:
 		_end_waves("Sales del banco de oleadas.")
 	_close_visit()
 	_shop_refreshes = 0
-	_twins = {}
 	if zone:
-		_store_instance()
+		_store_instance()   # antes de olvidar a los gemelos: no se guardan (ver _spawn_race_condition)
 		remove_child(zone)
 		zone.queue_free()
+	_twins = {}
 	enemies.clear_all()
 	loot.clear_all()
 	# La instancia de la zona (T118): la misma si volvemos antes de que caduque.
 	var saved := instances.peek(zone_id, _now())
 	zone = Zone.new()
-	zone.setup(def, player, character, quests, int(saved["seed"]) if not saved.is_empty() else randi() & 0x7fffffff)
+	zone.setup(def, player, character, quests, int(saved["seed"]) if saved.has("seed") else randi() & 0x7fffffff)
 	add_child(zone)
 	move_child(zone, 0)  # debajo de todo lo demás
 	var emitters := AmbientEmitters.new()   # racks, goteo y viento que suenan cerca
@@ -366,7 +366,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 	zone.container_opened.connect(_on_container_opened)
 	zone.challenge_touched.connect(_on_challenge_touched)
 	zone.exit_blocked.connect(func(e: Dictionary) -> void: ui.hud.flash(zone.exit_blocked_reason(e), Color("e06c6c")))
-	zone.waypoint_clicked.connect(func() -> void: ui.open_waypoints(zone.id))
+	zone.waypoint_clicked.connect(func() -> void: ui.open_waypoints(zone.id, instances.times(_now())))
 	zone.stash_clicked.connect(func() -> void: ui.open_stash(stash))
 	zone.waypoint_touched.connect(_discover_waypoint)
 
@@ -395,7 +395,13 @@ func travel_to(zone_id: String, entry := "") -> void:
 	enemies.obstacles.clear()
 	for o in zone.obstacles:
 		enemies.obstacles.append(Vector3(o["pos"].x, o["pos"].y, o["radius"]))
-	_spawn_zone_enemies()
+	if zone.layout and saved.has("enemies"):
+		# Instancia viva (T119): los que quedaban, donde estaban; los muertos no vuelven.
+		enemies.restore(saved["enemies"])
+		_spawn_race_condition()
+		_boss_alive = false
+	else:
+		_spawn_zone_enemies()   # en la arena del jefe, siempre: vuelve a la fase 1 con toda la vida
 	_visit = Telemetry.begin(character, enemies, zone.id, enemies.area_level)
 	skills.on_zone_changed()
 
@@ -404,7 +410,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 		_discover_waypoint()   # el del campamento, al entrar (T112)
 	_check_achievements()
 	ui.on_zone_changed(zone)
-	if not saved.is_empty() and zone.layout:
+	if not saved.is_empty() and (zone.layout or zone.def.has("boss")):
 		_restore_instance(saved)
 	quests.notify_zone(zone.id)
 	_mark_dirty()
@@ -426,9 +432,13 @@ func _now() -> float:
 
 
 ## Al salir de una zona generada: su semilla, el botín y los tokens del suelo, las
-## cajas abiertas y lo explorado del mapa.
+## cajas abiertas, lo explorado del mapa, los enemigos vivos y los eventos (T119). De
+## la arena del jefe solo el botín del suelo: el jefe vuelve entero (fase 1, toda la vida).
 func _store_instance() -> void:
-	if zone == null or zone.layout == null:
+	if zone == null:
+		return
+	var boss_arena: bool = zone.def.has("boss") and zone.layout == null
+	if zone.layout == null and not boss_arena:
 		return
 	var drops := []
 	for d in loot.drops:
@@ -439,9 +449,19 @@ func _store_instance() -> void:
 	for i in zone.containers.size():
 		if zone.containers[i]["opened"]:
 			opened.append(i)
-	instances.store(zone.id, {"seed": int(zone.def.get("_layout_seed", 0)), "drops": drops,
-		"coins": loot.coins.map(func(c: Dictionary) -> Dictionary: return c.duplicate()),
-		"opened": opened, "explored": ui.world_map.explored.duplicate()}, _now())
+	var coins := loot.coins.map(func(c: Dictionary) -> Dictionary: return c.duplicate())
+	if boss_arena:
+		instances.store(zone.id, {"drops": drops, "coins": coins}, _now())
+		return
+	var events := []
+	for e in zone.events.events:
+		var copy: Dictionary = e.duplicate(true)
+		if copy["state"] == "active":
+			copy["state"] = "done"   # a medias: su pelea apuntaba a enemigos que ya no existirán con esos ids
+		events.append(copy)
+	instances.store(zone.id, {"seed": int(zone.def.get("_layout_seed", 0)), "drops": drops, "coins": coins,
+		"opened": opened, "explored": ui.world_map.explored.duplicate(),
+		"enemies": enemies.snapshot(_twins.get("ids", [])), "events": events}, _now())
 
 
 ## Al volver a una instancia viva: lo que quedó en el suelo, las cajas abiertas y el mapa.
@@ -451,6 +471,11 @@ func _restore_instance(saved: Dictionary) -> void:
 	for c in saved.get("coins", []):
 		loot.coins.append(c.duplicate())
 	loot.queue_redraw()
+	if saved.has("events"):
+		zone.events.events.clear()
+		for e in saved["events"]:
+			zone.events.events.append((e as Dictionary).duplicate(true))
+		zone.events.queue_redraw()
 	for i in saved.get("opened", []):
 		if int(i) < zone.containers.size():
 			zone.containers[int(i)]["opened"] = true
@@ -718,6 +743,23 @@ func _on_nemesis_killed(pos: Vector2) -> void:
 ## Subjefes, candados y enemigos raros definidos en la zona.
 func _spawn_zone_specials() -> void:
 	_spawn_nemesis()
+	_spawn_race_condition()
+	var mx: Dictionary = zone.def.get("mutex", {}) if zone.def.get("mutex") is Dictionary else {}
+	if not mx.is_empty() and not character.flags.has(mx.get("flag", "")):
+		for pos in mx.get("positions", []):
+			enemies.spawn(Zone._v(pos), Rarity.Enemy.ELITE, enemies.type_index_of("mutex_lock"), "Candado Mutex")
+	for r in zone.def.get("rare_spawns", []):
+		if r.has("requires_flag") and not character.flags.has(r["requires_flag"]):
+			continue
+		if r.has("unless_flag") and character.flags.has(r["unless_flag"]):
+			continue
+		var rid := enemies.spawn(Zone._v(r["pos"]), Rarity.Enemy.UNIQUE, enemies.type_index_of(r["type"]), r.get("name", ""), float(r.get("life_mult", 1.0)))
+		enemies.set_phases(rid, r.get("phases", []))   # subjefes raros con fases y barra
+
+
+## Carrera Crítica: los dos gemelos (World los sigue por id en `_twins`, así que al
+## volver a una instancia no se restauran: se crean de nuevo).
+func _spawn_race_condition() -> void:
 	var rc: Dictionary = zone.def.get("race_condition", {}) if zone.def.get("race_condition") is Dictionary else {}
 	if not rc.is_empty() and not character.flags.has(rc.get("flag", "")):
 		var p := Zone._v(rc["pos"])
@@ -731,17 +773,6 @@ func _spawn_zone_specials() -> void:
 		enemies.set_immune(b, true)
 		_twins = {"ids": [a, b], "names": names, "turn": 0, "timer": float(rc.get("swap", 4.0)),
 			"swap": float(rc.get("swap", 4.0)), "flag": rc.get("flag", ""), "pos": p}
-	var mx: Dictionary = zone.def.get("mutex", {}) if zone.def.get("mutex") is Dictionary else {}
-	if not mx.is_empty() and not character.flags.has(mx.get("flag", "")):
-		for pos in mx.get("positions", []):
-			enemies.spawn(Zone._v(pos), Rarity.Enemy.ELITE, enemies.type_index_of("mutex_lock"), "Candado Mutex")
-	for r in zone.def.get("rare_spawns", []):
-		if r.has("requires_flag") and not character.flags.has(r["requires_flag"]):
-			continue
-		if r.has("unless_flag") and character.flags.has(r["unless_flag"]):
-			continue
-		var rid := enemies.spawn(Zone._v(r["pos"]), Rarity.Enemy.UNIQUE, enemies.type_index_of(r["type"]), r.get("name", ""), float(r.get("life_mult", 1.0)))
-		enemies.set_phases(rid, r.get("phases", []))   # subjefes raros con fases y barra
 
 
 # --- Carrera Crítica: los gemelos se turnan la vulnerabilidad ---

@@ -435,6 +435,76 @@ func spawn(pos: Vector2, rarity: Rarity.Enemy, type_index := -1, custom_name := 
 	return ids[ids.size() - 1]
 
 
+## Instancias (T119): los enemigos vivos tal cual (posición, vida, rareza, tipo, nombre,
+## afijos y rol en `traits`, habilidades y fases de jefe), sin los estados alterados ni lo
+## que estuvieran haciendo. Los de `skip_ids` no se guardan.
+func snapshot(skip_ids: Array = []) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for i in positions.size():
+		var id := ids[i]
+		if skip_ids.has(id) or lives[i] <= 0.0:
+			continue
+		var e := {"pos": positions[i], "life": lives[i], "max_life": max_lives[i], "damage": damages[i], "speed": speeds[i],
+			"radius": radii[i], "rarity": rarities[i], "type": types[i], "name": names[i], "immune": immune[i],
+			"traits": (traits[i] as Dictionary).duplicate(true)}
+		if abilities.has(id):
+			e["abilities"] = (abilities[id] as Array).duplicate(true)
+		if boss_phases.has(id):
+			e["phases"] = (boss_phases[id] as Dictionary).duplicate(true)
+		if phase_shield.has(id):
+			e["shield"] = phase_shield[id]
+		out.append(e)
+	return out
+
+
+## Vuelve a poner los enemigos de snapshot() (con ids nuevos).
+func restore(list: Array) -> void:
+	for e in list:
+		var id := _next_id
+		_next_id += 1
+		ids.append(id)
+		positions.append(e["pos"])
+		lives.append(float(e["life"]))
+		max_lives.append(float(e["max_life"]))
+		damages.append(float(e["damage"]))
+		speeds.append(float(e["speed"]))
+		radii.append(float(e["radius"]))
+		cooldowns.append(randf() * ATTACK_INTERVAL)
+		rarities.append(int(e["rarity"]))
+		types.append(int(e["type"]))
+		facings.append(0.0)
+		phases.append(randf() * ATLAS_FRAMES)
+		flashes.append(0.0)
+		names.append(String(e["name"]))
+		stuns.append(0.0)
+		windups.append(0.0)
+		attack_dirs.append(Vector2.RIGHT)
+		dashes.append(0.0)
+		dash_hit.append(0)
+		immune.append(int(e["immune"]))
+		dot_dps.append(0.0)
+		dot_time.append(0.0)
+		burn_dps.append(0.0)
+		burn_time.append(0.0)
+		shock_time.append(0.0)
+		shock_amp.append(0.0)
+		chill_time.append(0.0)
+		freeze_time.append(0.0)
+		poison_dps.append(0.0)
+		poison_time.append(0.0)
+		poison_stacks.append(0)
+		bleed_dps.append(0.0)
+		bleed_time.append(0.0)
+		knocks.append(Vector2.ZERO)
+		traits.append((e["traits"] as Dictionary).duplicate(true))
+		if e.has("abilities"):
+			abilities[id] = (e["abilities"] as Array).duplicate(true)
+		if e.has("phases"):
+			boss_phases[id] = (e["phases"] as Dictionary).duplicate(true)
+		if e.has("shield"):
+			phase_shield[id] = e["shield"]
+
+
 ## Da un rol al enemigo `id` y ajusta su vida, velocidad y tamaño (ver ROLES).
 func set_role(id: int, role: String) -> void:
 	var i := index_of(id)

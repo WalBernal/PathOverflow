@@ -323,7 +323,9 @@ func set_wave_text(text: String) -> void:
 	_wave_label.visible = text != ""
 
 
-func open_waypoints(current_zone: String) -> void:
+## `instance_times`: segundos que le quedan a la instancia de cada zona (T119).
+func open_waypoints(current_zone: String, instance_times := {}) -> void:
+	_waypoint_panel.instance_times = instance_times
 	_waypoint_panel.open(_character.flags.get("waypoints", []), current_zone)
 
 

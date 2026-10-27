@@ -222,11 +222,19 @@ func _check_instances(world: Node, class_id: String) -> void:
 	loot.drop_tokens(7, zone.entry_point("") + Vector2(150, 60))
 	if zone.containers.size() > 0:
 		zone.containers[0]["opened"] = true
+	var enemies: EnemyManager = world.get("enemies")
+	for k in mini(5, enemies.positions.size()):   # quitar unos cuantos y herir a otro
+		enemies._remove(0)
+	if enemies.positions.size() > 0:
+		enemies.lives[0] = 1.0
+	var alive := enemies.positions.size()
 	world.call("travel_to", town, "waypoint")
 	await _frames(2)
 	world.call("travel_to", "zona1", "")
 	await _frames(2)
 	zone = world.get("zone")
+	if enemies.positions.size() != alive or (alive > 0 and not enemies.lives.has(1.0)):
+		_failures.append("%s · instancias: al volver no están los mismos enemigos (%d, antes %d)" % [class_id, enemies.positions.size(), alive])
 	if int(zone.def.get("_layout_seed", -2)) != seed1:
 		_failures.append("%s · instancias: al volver antes de 10 min la zona es otra" % class_id)
 	if not loot.drops.any(func(d: Dictionary) -> bool: return d["item"] == item) or loot.coins.is_empty():
@@ -240,6 +248,23 @@ func _check_instances(world: Node, class_id: String) -> void:
 	await _frames(2)
 	if loot.drops.any(func(d: Dictionary) -> bool: return d["item"] == item):
 		_failures.append("%s · instancias: tras caducar sigue el botín de antes" % class_id)
+	# Arena del jefe (T119): el jefe vuelve entero; lo que había en el suelo, no se pierde.
+	world.call("travel_to", "jefe", "")
+	await _frames(2)
+	var boss_i := enemies.rarities.find(Rarity.Enemy.UNIQUE)
+	if boss_i != -1:
+		enemies.lives[boss_i] = enemies.max_lives[boss_i] * 0.2
+		var boss_item: Item = (world.get("item_generator") as ItemGenerator).roll_drop(20, 1.0)
+		loot.drop_item(boss_item, (world.get("zone") as Zone).entry_point("") + Vector2(150, 0))
+		world.call("travel_to", town, "waypoint")
+		await _frames(2)
+		world.call("travel_to", "jefe", "")
+		await _frames(2)
+		boss_i = enemies.rarities.find(Rarity.Enemy.UNIQUE)
+		if boss_i == -1 or enemies.lives[boss_i] < enemies.max_lives[boss_i] * 0.99:
+			_failures.append("%s · instancias: el jefe no volvió con toda la vida" % class_id)
+		if not loot.drops.any(func(d: Dictionary) -> bool: return d["item"] == boss_item):
+			_failures.append("%s · instancias: el botín de la arena del jefe se perdió" % class_id)
 	world.call("travel_to", town, "waypoint")
 	await _frames(2)
 	_collect("%s · instancias" % class_id)

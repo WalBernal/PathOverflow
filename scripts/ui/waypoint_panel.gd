@@ -22,6 +22,11 @@ func _ready() -> void:
 	box.add_child(UiStyle.button("Cerrar (Esc)", func() -> void: visible = false, 0))
 
 
+## Segundos que le quedan a la instancia de cada zona (T119, ZoneInstances.times): la
+## zona sigue como la dejaste si viajas antes de que llegue a 0.
+var instance_times: Dictionary = {}
+
+
 func open(discovered: Array, current_zone: String) -> void:
 	for c in _list.get_children():
 		_list.remove_child(c)
@@ -51,6 +56,8 @@ func _add_act_buttons(a: Dictionary, discovered: Array, current_zone: String) ->
 			text += "  ·  nivel %d" % z["level"]
 		if here:
 			text += "  (aquí)"
+		elif known and float(instance_times.get(z["id"], 0.0)) > 0.0:
+			text += "  ·  como la dejaste %s" % ZoneInstances.clock(float(instance_times[z["id"]]))
 		var b := UiStyle.button(text, func() -> void: selected.emit(z["id"]), 380)
 		b.disabled = not known or here
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT

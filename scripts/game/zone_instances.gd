@@ -40,6 +40,21 @@ func time_left(zone_id: String, now: float) -> float:
 	return maxf(0.0, TTL - (now - float(e["left_at"]))) if not e.is_empty() else 0.0
 
 
+## «7:32» (minutos y segundos, redondeando hacia arriba).
+static func clock(seconds: float) -> String:
+	var s := maxi(0, ceili(seconds))
+	return "%d:%02d" % [floori(s / 60.0), s % 60]
+
+
+## {id de zona: segundos que le quedan} de todas las instancias vivas.
+func times(now: float) -> Dictionary:
+	prune(now)
+	var out := {}
+	for k in _by_zone:
+		out[k] = time_left(k, now)
+	return out
+
+
 func prune(now: float) -> void:
 	for k in _by_zone.keys():
 		if now - float(_by_zone[k]["left_at"]) >= TTL:

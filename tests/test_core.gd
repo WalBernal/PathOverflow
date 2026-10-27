@@ -4577,6 +4577,28 @@ func _test_zone_instances() -> void:
 	for i in mini(a.containers.size(), b.containers.size()):
 		same = same and (a.containers[i]["pos"] as Vector2).is_equal_approx(b.containers[i]["pos"])
 	_check(same and a.containers.size() > 0, "la misma semilla da las mismas cajas en el mismo orden")
+	# T119: enemigos guardados y restaurados tal cual, sin los que se excluyen.
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	var e1 := em.spawn(Vector2(100, 100), Rarity.Enemy.ELITE, 0, "Uno")
+	em.set_role(e1, "tank")
+	var e2 := em.spawn(Vector2(300, 100), Rarity.Enemy.NORMAL, 0)
+	var e3 := em.spawn(Vector2(500, 100), Rarity.Enemy.UNIQUE, 0, "Gemelo")
+	em.lives[em.index_of(e2)] = 5.0
+	var snap := em.snapshot([e3])
+	var life1 := em.lives[em.index_of(e1)]
+	em.clear_all()
+	em.restore(snap)
+	_check(em.positions.size() == 2 and not em.rarities.has(Rarity.Enemy.UNIQUE), "se restauran los vivos guardados, sin los excluidos (%d)" % em.positions.size())
+	var i1 := em.rarities.find(Rarity.Enemy.ELITE)
+	_check(i1 != -1 and is_equal_approx(em.lives[i1], life1) and em.role_of(i1) == "tank" and em.names[i1].begins_with("Uno"),
+		"con su vida, su rol, su rareza y su nombre")
+	_check(em.lives.has(5.0) and em.positions.has(Vector2(300, 100)), "y el herido sigue herido donde estaba")
+	em.free()
+	_check(ZoneInstances.clock(452.0) == "7:32" and ZoneInstances.clock(0.2) == "0:01", "el tiempo de la instancia en minutos y segundos")
+	var inst2 := ZoneInstances.new()
+	inst2.store("zona2", {"seed": 1}, 0.0)
+	_check(is_equal_approx(float(inst2.times(60.0).get("zona2", 0.0)), ZoneInstances.TTL - 60.0), "la ventana de waypoints sabe cuánto le queda a cada una")
 	var ladder_def := {"id": "banco", "size": [2000, 1400], "waves_mode": {"from": "zona1"}, "enemies": {}}
 	_check(not ZoneLayout.applies_to(ladder_def), "el banco de oleadas no se genera")
 	a.free()
