@@ -177,6 +177,7 @@ func _initialize() -> void:
 	_test_npcs_and_boss_intro()
 	_test_ground_loot()
 	_test_token_pickup()
+	_test_waypoint_reach()
 	_test_tilesets()
 	_test_events_music_colorblind()
 	_test_story_editor()
@@ -4342,6 +4343,16 @@ func _test_token_pickup() -> void:
 	_check(tree_has, "y nodos del árbol que lo dan")
 	lm.free()
 	pl.free()
+
+
+## Waypoints que se descubren de lejos (T112).
+func _test_waypoint_reach() -> void:
+	var wp := Vector2(1000, 1000)
+	var screen := Rect2(wp - Vector2(800, 450), Vector2(1600, 900))
+	_check(Zone.waypoint_in_reach(wp + Vector2(400, 0), wp, screen), "a 400 px y en pantalla, el waypoint se descubre")
+	_check(Zone.waypoint_in_reach(wp + Vector2(0, 300), wp), "sin saber la pantalla, basta la distancia")
+	_check(not Zone.waypoint_in_reach(wp + Vector2(500, 0), wp, screen), "a 500 px todavía no")
+	_check(not Zone.waypoint_in_reach(wp + Vector2(400, 0), wp, Rect2(wp + Vector2(100, -450), Vector2(1600, 900))), "ni si queda fuera de la pantalla")
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.

@@ -396,6 +396,8 @@ func travel_to(zone_id: String, entry := "") -> void:
 	skills.on_zone_changed()
 
 	character.flags["zone"] = zone.id
+	if zone.safe and zone.has_waypoint:
+		_discover_waypoint()   # el del campamento, al entrar (T112)
 	_check_achievements()
 	ui.on_zone_changed(zone)
 	quests.notify_zone(zone.id)

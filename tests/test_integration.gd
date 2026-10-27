@@ -326,6 +326,10 @@ func _play_zone(world: Node, class_id: String, zone_id: String, travel := true) 
 	var label := "%s · %s" % [class_id, zone_id]
 	if travel:
 		world.call("travel_to", zone_id, "")
+		var z: Zone = world.get("zone")
+		var c: CharacterData = world.get("character")
+		if z.safe and z.has_waypoint and not (c.flags.get("waypoints", []) as Array).has(zone_id):
+			_failures.append("%s: el waypoint del campamento no se descubre al entrar" % label)
 	world.set("_since_save", -9999.0)
 	var player: Player = world.get("player")
 	var skills: SkillController = world.get("skills")

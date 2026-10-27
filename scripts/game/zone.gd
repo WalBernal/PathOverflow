@@ -26,6 +26,9 @@ const TALK_RANGE := 70.0
 const CLICK_RADIUS := 28.0
 const EXIT_RADIUS := 55.0
 const WAYPOINT_RADIUS := 46.0
+## A esta distancia (y en pantalla) el waypoint se descubre solo (T112). En los
+## campamentos se descubre al entrar (World.travel_to).
+const WAYPOINT_DISCOVER_RADIUS := 420.0
 const STASH_RADIUS := 40.0
 const QUEST_ITEM_RADIUS := 40.0
 ## Tamaño de los objetos de misión (QuestItemArt) en el mundo.
@@ -787,6 +790,21 @@ func exit_blocked_reason(e: Dictionary) -> String:
 	return ""
 
 
+## ¿Se descubre el waypoint? Cerca (WAYPOINT_DISCOVER_RADIUS) y dentro de la pantalla
+## (`screen`, en coordenadas del mundo; vacío = no se sabe, solo cuenta la distancia).
+static func waypoint_in_reach(player_pos: Vector2, wp: Vector2, screen := Rect2()) -> bool:
+	if player_pos.distance_to(wp) > WAYPOINT_DISCOVER_RADIUS:
+		return false
+	return screen.size == Vector2.ZERO or screen.has_point(wp)
+
+
+## Lo que se ve de la zona, en coordenadas del mundo.
+func _screen_rect() -> Rect2:
+	if not is_inside_tree():
+		return Rect2()
+	return get_viewport().get_canvas_transform().affine_inverse() * get_viewport_rect()
+
+
 func _process(delta: float) -> void:
 	_time += delta
 	queue_redraw()
@@ -806,7 +824,7 @@ func _process(delta: float) -> void:
 				return
 	if not near_exit:
 		_exits_armed = true
-	if has_waypoint and player.global_position.distance_to(waypoint) < WAYPOINT_RADIUS + 60.0:
+	if has_waypoint and waypoint_in_reach(player.global_position, waypoint, _screen_rect()):
 		waypoint_touched.emit()
 	for q in quest_items:
 		if quest_item_visible(q) and player.global_position.distance_to(q["pos"]) < QUEST_ITEM_RADIUS:

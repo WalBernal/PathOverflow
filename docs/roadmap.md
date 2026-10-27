@@ -662,11 +662,12 @@ Origen: integración de T111
 - `test_integration` (`_check_gamepad_cursor`) falla siempre con el guerrero: tras derecha, abajo e izquierda en el árbol pasivo, el cursor vuelve al mismo sitio. Ya fallaba en `b570137`, antes de T111. Averiguar si es la prueba (derecha e izquierda se anulan si abajo no encuentra nodo) o `GamepadCursor.pick_target` / `PassiveTreeView.cursor_targets`, y arreglarlo.
 - Hecho: era la prueba. La cruceta funciona (361 nodos a la vista; derecha a (996, 1430), abajo a (996, 1500) e izquierda al nodo de partida, que es el más cercano por ese lado), pero la prueba exigía acabar lejos del inicio. Ahora comprueba que **cada** pulsación salta a otro nodo y, si no, dice los pasos.
 
-### [ ] T112 · Waypoints que se activan de lejos y al entrar al campamento · S
+### [x] T112 · Waypoints que se activan de lejos y al entrar al campamento · S
 Origen: V3
 - En las zonas de combate, el waypoint se descubre al tenerlo en pantalla y a ~420 px (en vez de 106), con su aviso y sonido de siempre.
 - En las zonas seguras (campamentos), el waypoint se descubre **al entrar**, sin acercarse (`World.travel_to` con `zone.safe`).
 - Prueba: entrar a un campamento lo apunta en `flags.waypoints`; quedarse a 400 px del waypoint de una zona de combate, también.
+- Hecho: `Zone.WAYPOINT_DISCOVER_RADIUS` = 420 y `Zone.waypoint_in_reach(jugador, waypoint, pantalla)`, que además exige que el waypoint esté dentro de lo que enseña la cámara (`Zone._screen_rect`); `World.travel_to` descubre el waypoint de las zonas seguras al entrar (mismo aviso que al tocarlo). Prueba `_test_waypoint_reach` (distancia y pantalla) y la integración comprueba en cada campamento que su waypoint queda descubierto al entrar.
 
 ### [ ] T113 · Fuera los portales de vuelta: solo waypoints entre actos · S
 Origen: V3
@@ -948,3 +949,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-26 · La versión 3.0 (T111-T131) pasa por delante del Roadmap 5.0 (móvil, T106-T110) en la cola.
 - 2026-10-26 · T111 · Tokens desde más lejos (90 px directo, imán a 380 px que no atraviesa paredes) y stat Radio de recogida de tokens en anillos, amuletos y nodos de movilidad; arreglados dos polígonos que no se triangulaban (llamas y orbe). El fallo de la cruceta en el árbol ya existía: pasa a T111b.
 - 2026-10-26 · T111b · La prueba de la cruceta en el árbol fallaba por la propia prueba (derecha, abajo e izquierda volvían al nodo de partida); ahora mira que cada pulsación salte a otro nodo. Integración rápida en verde.
+- 2026-10-26 · T112 · Waypoints que se descubren a ~420 px con el waypoint en pantalla (antes 106) y los de los campamentos al entrar; comprobado en la lógica y en la integración.
