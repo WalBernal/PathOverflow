@@ -178,6 +178,7 @@ func _initialize() -> void:
 	_test_ground_loot()
 	_test_token_pickup()
 	_test_waypoint_reach()
+	_test_no_back_portals()
 	_test_tilesets()
 	_test_events_music_colorblind()
 	_test_story_editor()
@@ -2376,7 +2377,6 @@ func _test_act4_world() -> void:
 	var camara: Dictionary = act3["zones"].filter(func(z: Dictionary) -> bool: return z["id"] == "camara_flash")[0]
 	_check(camara.get("exits", []).any(func(e: Dictionary) -> bool: return e["target"] == "post" and e.get("requires_flag", "") == "act3_complete"),
 		"tras el reflasheo, la Cámara lleva al POST")
-	_check(camara["entries"].has("from_post"), "y se puede volver del POST a la Cámara")
 	var act_paths: Array = (load("res://scripts/autoload/game_data.gd") as GDScript).get_script_constant_map()["ACT_PATHS"]
 	_check(act_paths.has("res://data/act4.json"), "el juego carga el Acto IV")
 	# Enemigos nuevos: cada uno con su afijo innato, que no sale al azar en otros.
@@ -4353,6 +4353,29 @@ func _test_waypoint_reach() -> void:
 	_check(Zone.waypoint_in_reach(wp + Vector2(0, 300), wp), "sin saber la pantalla, basta la distancia")
 	_check(not Zone.waypoint_in_reach(wp + Vector2(500, 0), wp, screen), "a 500 px todavía no")
 	_check(not Zone.waypoint_in_reach(wp + Vector2(400, 0), wp, Rect2(wp + Vector2(100, -450), Vector2(1600, 900))), "ni si queda fuera de la pantalla")
+
+
+## Solo waypoints entre actos (T113): ninguna salida lleva a un acto anterior, y los
+## guardados viejos reciben el waypoint de los campamentos ya alcanzados.
+func _test_no_back_portals() -> void:
+	var acts := []
+	var act_index := {}   # zona -> índice del acto
+	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json", "res://data/act4.json"]:
+		var a: Dictionary = DataLoader.load_json(path)
+		for z in a.get("zones", []):
+			act_index[z["id"]] = acts.size()
+		acts.append(a)
+	var back := []
+	for i in acts.size():
+		for z in acts[i].get("zones", []):
+			for e in z.get("exits", []):
+				if int(act_index.get(e["target"], i)) < i:
+					back.append("%s → %s" % [z["id"], e["target"]])
+	_check(back.is_empty(), "ninguna salida vuelve a un acto anterior %s" % [back])
+	_check(Zone.reached_towns(acts, {}, "act1") == ["campamento"], "al empezar, solo el primer campamento")
+	_check(Zone.reached_towns(acts, {"act1_complete": true, "act2_complete": true}, "act1") == ["campamento", "socket_seguro", "puerto_jtag"],
+		"tras terminar dos actos, sus campamentos y el siguiente, aunque estés en el primero")
+	_check(Zone.reached_towns(acts, {}, "act3").size() == 3, "estar en el Acto III da los campamentos hasta él")
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.

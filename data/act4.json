@@ -18,7 +18,6 @@
       "entries": {"from_camara": [190, 900], "from_cmos": [3410, 900]},
       "cutscene_on_enter": {"id": "bios_post", "unless_flag": "bios_post_vista", "set_flag": "bios_post_vista"},
       "exits": [
-        {"pos": [80, 900], "target": "camara_flash", "entry": "from_post", "label": "La Cámara de Reflasheo"},
         {"pos": [3520, 900], "target": "pila_cmos", "entry": "from_post", "label": "La Pila del CMOS"}
       ],
       "enemies": {"packs": 12, "pack_size": [5, 8], "types": ["beep_code", "jumper_suelto", "centinela_bios"], "special_chance": 0.24, "elite_chance": 0.14},
@@ -35,8 +34,7 @@
       "entries": {"from_post": [190, 700], "waypoint": [950, 900], "from_advanced": [1710, 700]},
       "exits": [
         {"pos": [80, 700], "target": "post", "entry": "from_cmos", "label": "El POST"},
-        {"pos": [1820, 700], "target": "menu_advanced", "entry": "from_cmos", "label": "El Menú Advanced"},
-        {"pos": [1500, 1180], "target": "puerto_jtag", "entry": "waypoint", "label": "Túnel al Puerto JTAG", "portal": true}
+        {"pos": [1820, 700], "target": "menu_advanced", "entry": "from_cmos", "label": "El Menú Advanced"}
       ],
       "stash": [790, 960],
       "waypoint": [950, 1000],

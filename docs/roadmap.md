@@ -669,11 +669,12 @@ Origen: V3
 - Prueba: entrar a un campamento lo apunta en `flags.waypoints`; quedarse a 400 px del waypoint de una zona de combate, también.
 - Hecho: `Zone.WAYPOINT_DISCOVER_RADIUS` = 420 y `Zone.waypoint_in_reach(jugador, waypoint, pantalla)`, que además exige que el waypoint esté dentro de lo que enseña la cámara (`Zone._screen_rect`); `World.travel_to` descubre el waypoint de las zonas seguras al entrar (mismo aviso que al tocarlo). Prueba `_test_waypoint_reach` (distancia y pantalla) y la integración comprueba en cada campamento que su waypoint queda descubierto al entrar.
 
-### [ ] T113 · Fuera los portales de vuelta: solo waypoints entre actos · S
+### [x] T113 · Fuera los portales de vuelta: solo waypoints entre actos · S
 Origen: V3
 - Quitar las salidas `portal` que llevan al acto anterior (Socket Seguro → Campamento, Puerto JTAG → Socket Seguro, Pila del CMOS → Puerto JTAG). Se quedan las que llevan hacia delante (Portal al Kernel del Campamento, portales de las arenas de jefe al siguiente campamento).
 - La ventana de waypoints ya enseña todos los actos con algún waypoint descubierto: comprobar que desde cualquier campamento se viaja a los de actos anteriores, y que las misiones, diálogos, escenas, el editor de historia y la integración no dependen de esos túneles.
 - Guardados viejos: si un personaje está en un acto posterior sin el waypoint del campamento de un acto anterior que ya terminó, dárselo al cargar.
+- Hecho: fuera los túneles Socket Seguro → Campamento, Puerto JTAG → Socket Seguro y Pila del CMOS → Puerto JTAG, y también las dos **salidas a pie** que volvían a la arena del jefe del acto anterior (Controladora de Bus → Anillo 0, POST → Cámara de Reflasheo), para que de verdad solo se vuelva por waypoint. Se quedan los portales hacia delante y los de cada arena a su propio campamento. Misiones, diálogos, escenas y la integración no dependían de ellos. `Zone.reached_towns(actos, flags, acto_de_la_zona)` dice qué campamentos ha alcanzado el personaje (hasta el acto donde está y el siguiente a cada `actN_complete`) y `World._grant_town_waypoints` se los da al cargar. Prueba `_test_no_back_portals`: ninguna salida de ninguna zona lleva a un acto anterior, más la migración.
 
 ## Fase 21 — Zonas que se generan solas
 
@@ -950,3 +951,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-26 · T111 · Tokens desde más lejos (90 px directo, imán a 380 px que no atraviesa paredes) y stat Radio de recogida de tokens en anillos, amuletos y nodos de movilidad; arreglados dos polígonos que no se triangulaban (llamas y orbe). El fallo de la cruceta en el árbol ya existía: pasa a T111b.
 - 2026-10-26 · T111b · La prueba de la cruceta en el árbol fallaba por la propia prueba (derecha, abajo e izquierda volvían al nodo de partida); ahora mira que cada pulsación salte a otro nodo. Integración rápida en verde.
 - 2026-10-26 · T112 · Waypoints que se descubren a ~420 px con el waypoint en pantalla (antes 106) y los de los campamentos al entrar; comprobado en la lógica y en la integración.
+- 2026-10-26 · T113 · Solo waypoints entre actos: fuera los tres túneles de vuelta y las dos salidas a pie hacia la arena del acto anterior; los guardados viejos reciben el waypoint de los campamentos ya alcanzados.

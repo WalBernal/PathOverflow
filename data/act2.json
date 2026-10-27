@@ -115,16 +115,6 @@
           "target": "fabrica",
           "entry": "from_socket",
           "label": "La Fábrica de Hilos"
-        },
-        {
-          "pos": [
-            1500,
-            1180
-          ],
-          "target": "campamento",
-          "entry": "waypoint",
-          "label": "Túnel al Campamento",
-          "portal": true
         }
       ],
       "stash": [

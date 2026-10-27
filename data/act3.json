@@ -34,15 +34,6 @@
       "exits": [
         {
           "pos": [
-            80,
-            900
-          ],
-          "target": "anillo0",
-          "entry": "from_controladora",
-          "label": "Anillo 0"
-        },
-        {
-          "pos": [
             3320,
             900
           ],
@@ -122,16 +113,6 @@
           "target": "oblea",
           "entry": "from_jtag",
           "label": "La Oblea de Silicio"
-        },
-        {
-          "pos": [
-            1500,
-            1180
-          ],
-          "target": "socket_seguro",
-          "entry": "waypoint",
-          "label": "Túnel al Socket Seguro",
-          "portal": true
         }
       ],
       "stash": [

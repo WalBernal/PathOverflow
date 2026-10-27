@@ -798,6 +798,23 @@ static func waypoint_in_reach(player_pos: Vector2, wp: Vector2, screen := Rect2(
 	return screen.size == Vector2.ZERO or screen.has_point(wp)
 
 
+## Campamentos que el personaje ya ha alcanzado: los de los actos hasta el de `zone_act`
+## y el siguiente a cada acto terminado («actN_complete»). Ya no hay túneles de vuelta
+## entre actos (T113): solo se regresa por waypoint.
+static func reached_towns(acts: Array, flags: Dictionary, zone_act: String) -> Array:
+	var last := 0
+	for i in acts.size():
+		if acts[i].get("id", "") == zone_act:
+			last = maxi(last, i)
+		if flags.has(String(acts[i].get("id", "")) + "_complete"):
+			last = maxi(last, mini(i + 1, acts.size() - 1))
+	var out := []
+	for i in last + 1:
+		if acts[i].has("town"):
+			out.append(acts[i]["town"])
+	return out
+
+
 ## Lo que se ve de la zona, en coordenadas del mundo.
 func _screen_rect() -> Rect2:
 	if not is_inside_tree():

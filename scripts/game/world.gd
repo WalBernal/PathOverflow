@@ -155,6 +155,7 @@ func _ready() -> void:
 	var start_zone: String = character.flags.get("zone", GameData.act.get("town", "campamento"))
 	if not GameData.zones.has(start_zone):
 		start_zone = GameData.act.get("town", "campamento")
+	_grant_town_waypoints(start_zone)
 	travel_to(start_zone, "waypoint" if GameData.zones[start_zone].get("waypoint") != null else "")
 	quests.start_auto()
 	_grant_unlocks.call_deferred()   # personajes que ya pasaron esos niveles antes del cambio
@@ -930,6 +931,16 @@ func _record_boss_time(boss_id: String, seconds: float) -> void:
 	Ladder.save_board(board)
 	if best:
 		ui.hud.flash("Récord contra este jefe: %s.%s" % [Ladder.format_time(seconds), " Puesto %d en la tabla local." % rank if rank > 0 else ""], Color("ffd24a"))
+
+
+## Guardados de antes de T113: el waypoint de cada campamento alcanzado, aunque
+## nunca se tocara (antes se volvía por los túneles).
+func _grant_town_waypoints(start_zone: String) -> void:
+	var found: Array = character.flags.get("waypoints", [])
+	for town in Zone.reached_towns(GameData.acts, character.flags, String(GameData.act_of_zone(start_zone).get("id", ""))):
+		if not found.has(town):
+			found.append(town)
+	character.flags["waypoints"] = found
 
 
 func _discover_waypoint() -> void:
