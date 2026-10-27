@@ -29,6 +29,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("telefono"):
+		await _capture_phone()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("tactil"):
 		await _capture_touch()
 		get_tree().quit()
@@ -2231,10 +2235,145 @@ func _capture_touch() -> void:
 	world.queue_free()
 
 
+## Interfaz táctil (T109) a resolución de teléfono (2400×1080 y 1600×720, 20:9) con la
+## interfaz al 140 %: partida, inventario con un objeto tocado (tooltip y botón de
+## acción), habilidades, hoja de personaje, árbol pasivo (con zoom de dos dedos), mapa
+## y pausa. De paso comprueba tocar, mantener, arrastrar y el segundo toque.
+func _capture_phone() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Pulgar", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.flags["llegada_campamento_vista"] = true
+	c.level = 14
+	var gen := ItemGenerator.new(gd.get("items"))
+	for k in 4:
+		c.inventory.add_item(gen.generate(14, Rarity.Item.RARE))
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	var scale_was: Variant = GameSettings.get_value("interface", "scale", 1.0)
+	GameSettings.set_value("interface", "scale", 1.4)
+	Touch.force = true
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var ui: GameUI = world.get("ui")
+	if ui.cutscene.visible:
+		ui.cutscene.call("_finish")
+	for res in [Vector2i(2400, 1080), Vector2i(1600, 720)]:
+		get_window().size = res
+		await _wait(0.6)
+		var tag := "%dx%d" % [res.x, res.y]
+		print("telefono %s: ventana %s, lienzo %s" % [tag, get_window().size, get_viewport().get_visible_rect().size])
+		ui.apply_ui_scale()
+		await _wait(0.3)
+		_save("109_%s_partida" % tag)
+		# Inventario: tocar un objeto de la bolsa enseña el tooltip y el botón; el segundo toque equipa.
+		ui.call("_on_menu_requested", "inventory")
+		await _wait(0.4)
+		var cell: ItemCell = null
+		for cc in ui.inventory_panel.find_children("*", "ItemCell", true, false):
+			if (cc as ItemCell).item != null and (cc as ItemCell).location.get("kind", "") == "bag":
+				cell = cc
+				break
+		if cell:
+			var at := cell.get_global_rect().get_center()
+			_touch(0, at, true)
+			await _wait(0.1)
+			_touch(0, at, false)
+			await _wait(0.4)
+			var action: Button = ui.touch_pointer.get("_action")
+			print("telefono %s: tocar un objeto → tooltip %s, botón «%s» %s" % [tag, ui.item_tooltip.visible, action.text, action.visible])
+			_save("109_%s_inventario" % tag)
+			# Mantener = clic derecho (marca de basura) y lo vuelve a quitar.
+			var item := cell.item
+			_touch(0, at, true)
+			await _wait(0.7)
+			_touch(0, at, false)
+			await _wait(0.2)
+			print("telefono %s: mantener → marca %s" % [tag, "basura" if item.junk else ("bloqueado" if item.locked else "ninguna")])
+			while item.junk or item.locked:
+				Item.cycle_mark(item)
+			# Arrastrar el objeto a otra casilla vacía de la bolsa.
+			var empty: ItemCell = null
+			var shown_rect: Rect2 = (ui.inventory_panel.get("_scroll") as Control).get_global_rect()
+			for cc in ui.inventory_panel.find_children("*", "ItemCell", true, false):
+				if (cc as ItemCell).item == null and (cc as ItemCell).location.get("kind", "") == "bag" \
+						and shown_rect.encloses((cc as ItemCell).get_global_rect()) and int((cc as ItemCell).location["index"]) > int(cell.location["index"]) + 3:
+					empty = cc
+					break
+			if empty:
+				var to := empty.get_global_rect().get_center()
+				_touch(0, at, true)
+				for k in 12:
+					await get_tree().process_frame
+					_drag(0, at.lerp(to, (k + 1) / 12.0))
+				await get_tree().process_frame
+				_touch(0, to, false)
+				await _wait(0.3)
+				print("telefono %s: arrastrar → el objeto está ahora en la casilla de destino: %s (bolsa %d → %d, destino %s)" % [tag, empty.item == item,
+					int(cell.location["index"]), c.inventory.bag.find(item), empty.location])
+				# Dos toques en el mismo objeto: el segundo hace la acción (equipar).
+				for k in 2:
+					_touch(0, to, true)
+					await _wait(0.1)
+					_touch(0, to, false)
+					await _wait(0.3)
+				print("telefono %s: dos toques → equipado: %s (%s, se puede equipar: %s)" % [tag, c.inventory.bag.find(item) == -1, item.display_name(), c.can_equip(item)])
+		ui.call("_on_menu_requested", "inventory")
+		ui.call("_on_menu_requested", "skills")
+		await _wait(0.4)
+		_save("109_%s_habilidades" % tag)
+		ui.call("_on_menu_requested", "skills")
+		ui.call("_on_menu_requested", "character")
+		await _wait(0.4)
+		_save("109_%s_personaje" % tag)
+		ui.call("_on_menu_requested", "character")
+		ui.call("_on_menu_requested", "passives")
+		await _wait(0.6)
+		var view: PassiveTreeView = ui.tree_screen.get("_view")
+		var zoom_before := view.zoom
+		var mid := view.get_global_rect().get_center()
+		_touch(0, mid - Vector2(60, 0), true)
+		await get_tree().process_frame
+		_touch(1, mid + Vector2(60, 0), true)
+		for k in 10:
+			await get_tree().process_frame
+			_drag(1, mid + Vector2(60 + 12 * (k + 1), 0))
+			_drag(0, mid - Vector2(60 + 12 * (k + 1), 0))
+		_touch(1, mid + Vector2(180, 0), false)
+		_touch(0, mid - Vector2(180, 0), false)
+		await _wait(0.3)
+		print("telefono %s: dos dedos en el árbol → zoom %.2f → %.2f" % [tag, zoom_before, view.zoom])
+		_save("109_%s_arbol" % tag)
+		ui.call("_on_menu_requested", "passives")
+		await _wait(0.3)
+		ui.world_map.toggle()
+		await _wait(0.3)
+		_save("109_%s_mapa" % tag)
+		ui.world_map.toggle()
+		var pause: Button = ui.touch_buttons.get_child(1)
+		pause.pressed.emit()
+		await _wait(0.4)
+		_save("109_%s_pausa" % tag)
+		pause.pressed.emit()
+		await _wait(0.3)
+	get_window().size = Vector2i(1600, 900)
+	GameSettings.set_value("interface", "scale", scale_was)
+	Touch.force = false
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
+
+
+## `p` en coordenadas del lienzo; el toque llega en las de la ventana (otra cosa a
+## resolución de teléfono, donde el lienzo se estira).
 func _touch(index: int, p: Vector2, pressed: bool) -> void:
 	var e := InputEventScreenTouch.new()
 	e.index = index
-	e.position = p
+	e.position = get_viewport().get_final_transform() * p
 	e.pressed = pressed
 	Input.parse_input_event(e)
 
@@ -2242,7 +2381,7 @@ func _touch(index: int, p: Vector2, pressed: bool) -> void:
 func _drag(index: int, p: Vector2) -> void:
 	var e := InputEventScreenDrag.new()
 	e.index = index
-	e.position = p
+	e.position = get_viewport().get_final_transform() * p
 	Input.parse_input_event(e)
 
 

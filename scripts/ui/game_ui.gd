@@ -55,6 +55,9 @@ var _pause_panel: Control
 var _root: Control
 var gamepad_cursor: GamepadCursor
 var touch_controls: TouchControls
+var touch_pointer: TouchPointer
+## Pausa y mapa en pantalla (T109), solo con los controles táctiles.
+var touch_buttons: HBoxContainer
 
 
 func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot: LootManager,
@@ -285,6 +288,14 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 		esc.pressed = true
 		_unhandled_input(esc)
 	add_child(gamepad_cursor)
+	# El dedo en las ventanas (T109): tooltip al tocar, acción, mantener = clic derecho, zoom con dos dedos.
+	touch_pointer = TouchPointer.new()
+	touch_pointer.windows = cursor_windows
+	touch_pointer.action_for = _touch_action
+	touch_pointer.tree_view = tree_screen.get("_view")
+	touch_pointer.world_map = world_map
+	_root.add_child(touch_pointer)
+	_build_touch_buttons(gamepad_cursor.cancel)
 	loot.hovered_item_changed.connect(_on_ground_item_hovered)
 	loot.pickup_failed.connect(hud.flash)
 	loot.picked_up.connect(func(item: Item) -> void:
@@ -425,6 +436,9 @@ func open_dialogue(npc: Dictionary, dialogue: Dictionary) -> void:
 
 
 func _process(_delta: float) -> void:
+	if touch_buttons:
+		# Con una ventana, el árbol o la pausa abiertos se apartan (las ventanas tienen su X).
+		touch_buttons.visible = Touch.shown() and not _pause_panel.visible and cursor_windows().is_empty()
 	_update_minimap()
 	_fit_trade_panels()
 	# Alejarse del NPC cierra la conversación.
@@ -700,6 +714,60 @@ func _cycle_button(text: String, values: Array, names: Array, current: Callable,
 		refresh.call())
 	refresh.call()
 	return b
+
+
+## Botones de pausa (como Esc: cierra lo abierto o pausa) y mapa grande, a la
+## izquierda del minimapa; en táctil no hay teclado para eso (T109).
+func _build_touch_buttons(cancel: Callable) -> void:
+	touch_buttons = HBoxContainer.new()
+	touch_buttons.add_theme_constant_override("separation", 6)
+	touch_buttons.anchor_left = 1.0
+	touch_buttons.anchor_right = 1.0
+	touch_buttons.offset_top = 14.0
+	touch_buttons.offset_right = minimap.offset_left - 10.0
+	touch_buttons.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_root.add_child(touch_buttons)
+	for entry in [["Mapa", func() -> void: world_map.toggle()], ["II", cancel]]:
+		var b := UiStyle.button(entry[0], entry[1], 0)
+		b.custom_minimum_size = Vector2(64 if entry[0] == "Mapa" else 48, 44)
+		b.focus_mode = Control.FOCUS_NONE
+		b.tooltip_text = "Mapa grande (Tab)" if entry[0] == "Mapa" else "Pausa (Esc): cierra lo abierto o abre el menú de pausa"
+		touch_buttons.add_child(b)
+	touch_buttons.visible = Touch.shown()
+	touch_buttons.process_mode = Node.PROCESS_MODE_ALWAYS
+
+
+## Qué hace tocar una casilla en táctil (el botón que sale sobre ella, T109): el
+## texto y el clic que lo hace, según la ventana y lo que hay abierto. {} = nada.
+func _touch_action(cell: ItemCell) -> Dictionary:
+	if cell.item == null:
+		return {}
+	var kind := String(cell.location.get("kind", ""))
+	var left := func(text: String) -> Dictionary: return {"text": text, "button": MOUSE_BUTTON_LEFT}
+	if skills_panel.is_ancestor_of(cell):
+		match kind:
+			"bag":
+				return left.call("Instalar") if cell.item is Motherboard else (left.call("Seleccionar") if cell.item is RamModule else {})
+			"board":
+				return {"text": "Quitar", "button": MOUSE_BUTTON_RIGHT}
+			"dimm":
+				return left.call("Quitar")
+		return {}
+	if stash_panel.is_ancestor_of(cell):
+		return left.call("A la bolsa") if kind == "stash" else {}
+	if shop_panel.is_ancestor_of(cell):
+		return left.call("Comprar") if kind == "shop" else (left.call("Recomprar") if kind == "buyback" else {})
+	if inventory_panel.is_ancestor_of(cell):
+		if kind in ["equip", "flask"]:
+			return left.call("Quitar")
+		if kind == "bag":
+			if stash_panel.visible:
+				return left.call("Al alijo")
+			if cell.item is Flask:
+				return left.call("Al cinturón")
+			return left.call("Equipar") if cell.item.is_equipment() else {}
+		return {}
+	return left.call("Usar")
 
 
 static func ui_scale() -> float:

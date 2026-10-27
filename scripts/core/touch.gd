@@ -12,6 +12,10 @@ const STICK_DEADZONE := 0.18
 const AIM_RANGE := 520.0
 const AIM_CONE := deg_to_rad(40.0)
 
+## Dispositivo de los clics que simula TouchPointer en las ventanas (T109): no
+## cuentan como «se usó el ratón».
+const POINTER_DEVICE := 7358
+
 ## true desde el último toque; false al usar el ratón de verdad o el mando.
 static var active := false
 ## Dirección del joystick (largo 0-1); cero con el dedo fuera.
@@ -59,7 +63,7 @@ static func note_event(event: InputEvent) -> void:
 	if event is InputEventScreenTouch or event is InputEventScreenDrag:
 		active = true
 		last_screen = event.position
-	elif (event is InputEventMouseMotion or event is InputEventMouseButton) and event.device != InputEvent.DEVICE_ID_EMULATION:
+	elif (event is InputEventMouseMotion or event is InputEventMouseButton) and not event.device in [InputEvent.DEVICE_ID_EMULATION, POINTER_DEVICE, Gamepad.CURSOR_DEVICE]:
 		active = false
 	elif event is InputEventJoypadButton:
 		active = false

@@ -5202,6 +5202,21 @@ func _test_touch_controls() -> void:
 	_check(Touch.manual_target(Vector2(50, 50), aim).is_equal_approx(Vector2(50, 50 - Touch.AIM_RANGE)), "a tope llega al alcance del apuntado")
 	var little := Touch.manual_aim(Vector2(Touch.MANUAL_AIM_MIN + 2.0, 0))
 	_check(little.x > 0.0 and Touch.manual_target(Vector2.ZERO, little).x < 200.0, "arrastrar poco: cerca y en esa dirección")
+	# Ventanas (T109): los clics que simula el dedo no apagan el modo táctil ni el del mando.
+	Touch.note_event(touch)
+	var simulated := InputEventMouseButton.new()
+	simulated.device = Touch.POINTER_DEVICE
+	Touch.note_event(simulated)
+	Gamepad.active = true
+	Gamepad.note_event(simulated)
+	_check(Touch.active and Gamepad.active, "los clics del dedo en las ventanas no cuentan como ratón")
+	Gamepad.active = false
+	Touch.active = false
+	# Objetivos táctiles de 44 px como mínimo con la interfaz del celular (140 %).
+	var ui := float(GameSettings.MOBILE_DEFAULTS["interface/scale"])
+	for s in [Hud.TOUCH_SLOT, Hud.TOUCH_DODGE, Hud.TOUCH_FLASK.x, Hud.TOUCH_MENU.y, TouchPointer.ACTION_SIZE.y, 40.0]:
+		_check(s * ui >= 44.0, "objetivo táctil de %d px a 140 %% (≥ 44)" % roundi(s * ui))
+	_check(TouchPointer.LONG_PRESS >= 0.4 and TouchPointer.LONG_PRESS <= 0.8, "mantener: medio segundo, ni más ni menos")
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.

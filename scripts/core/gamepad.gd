@@ -73,7 +73,7 @@ static func aim_point(from: Vector2, facing: Vector2) -> Vector2:
 
 ## Marca si el último dispositivo usado fue el mando o el ratón.
 static func note_event(event: InputEvent) -> void:
-	if event is InputEventMouse and event.device == CURSOR_DEVICE:
+	if event is InputEventMouse and event.device in [CURSOR_DEVICE, Touch.POINTER_DEVICE]:
 		return
 	if event is InputEventJoypadButton or (event is InputEventJoypadMotion and absf((event as InputEventJoypadMotion).axis_value) > DEADZONE):
 		active = true
