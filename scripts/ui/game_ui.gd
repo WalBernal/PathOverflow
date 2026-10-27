@@ -296,6 +296,7 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 ## Al entrar en una zona: minimapa, tutorial y el nombre de la zona en grande.
 func on_zone_changed(zone: Zone) -> void:
 	minimap.zone = zone
+	cutscene.zone = zone   # para que las escenas muevan la cámara a sus NPC (T129)
 	world_map.set_zone(zone)
 	tutorial.zone = zone
 	dialogue_box.close()

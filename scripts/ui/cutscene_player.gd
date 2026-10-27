@@ -5,8 +5,15 @@ extends Control
 ## conexión" del dinosaurio). Mientras dura, el jugador no se mueve.
 ## Las líneas avanzan solas: al terminar de escribirse, esperan un tiempo de
 ## lectura (según su longitud) o, con el narrador activado, a que la voz acabe.
-## Click, Espacio o Enter: completar el texto o pasar ya a la siguiente.
-## Esc: saltar la escena entera.
+## Click, toque, Espacio, Enter o A del mando: completar el texto o pasar ya a la
+## siguiente. Esc, B del mando o el botón «Saltar escena»: saltar la escena entera.
+## Dirección (T129), pasos {effect: ...}:
+## - "camera": la cámara va a `to` ("player", "npc:<id>", "boss", "exit:<destino>" o [x, y])
+##   con `zoom` (1 = normal) en `time` s; al acabar la escena vuelve sola.
+## - "walk": `who` ("npc:<id>" o "player") camina hasta `to` (como en camera, o {"by": [dx, dy]}).
+## - "turn": `who` (un NPC) mira a `face` ("left", "right", "player").
+## - "bars": bandas de cine (`on`: true/false); salen solas salvo `"bars": false` en la escena.
+## Y en las líneas, `expression`: "happy", "angry", "sad", "surprised" o "worried".
 
 signal finished
 ## Cada paso de efecto (también los que no conoce, para quien escuche: el prólogo).
@@ -66,7 +73,24 @@ var _rng := RandomNumberGenerator.new()
 var _input_edit: LineEdit
 var _input_step: Dictionary = {}
 const DEFAULT_PASSWORD := "admin2"
-const HINT_TEXT := "Avanza sola  ·  Click / Espacio: siguiente  ·  Esc: saltar"
+const HINT_TEXT := "Avanza sola  ·  Click / Espacio / A: siguiente  ·  Esc / B: saltar"
+## Bandas de cine (T129): alto de cada una y lo que tardan en entrar.
+const BARS_HEIGHT := 64.0
+const BARS_SPEED := 2.5
+
+## La zona donde pasa la escena (GameUI la pone): para buscar NPC, jefe y salidas.
+var zone: Zone
+var _bars := 0.0
+var _bars_target := 0.0
+var _cam_from := Vector2.ZERO    # desplazamiento de la cámara respecto al jugador
+var _cam_to := Vector2.ZERO
+var _cam_zoom_from := 1.0
+var _cam_zoom_to := 1.0
+var _cam_t := 1.0
+var _cam_time := 0.0
+var _base_zoom := Vector2.ONE
+var _movers: Array[Dictionary] = []   # {who, from, to, t, time}
+var _skip_button: Button
 
 
 func _ready() -> void:
@@ -110,6 +134,12 @@ func _ready() -> void:
 	_blip.stream = RetroSfx.blip()
 	_blip.volume_db = -14.0
 	add_child(_blip)
+	# Saltar la escena con el ratón o el dedo (T129), arriba a la derecha, sobre la banda.
+	_skip_button = UiStyle.button("Saltar escena (Esc)", skip, 0)
+	_skip_button.add_theme_font_size_override("font_size", 12)
+	_skip_button.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	_skip_button.position = Vector2(-190, 14)
+	add_child(_skip_button)
 
 
 func play(data: Dictionary, on_done: Callable) -> void:
@@ -120,9 +150,20 @@ func play(data: Dictionary, on_done: Callable) -> void:
 	_black_target = 0.0
 	_glitch = 0.0
 	_dino = false
+	_movers.clear()
+	_bars = 0.0
+	_bars_target = 0.0 if data.get("bars", true) == false else 1.0
+	_cam_from = Vector2.ZERO
+	_cam_to = Vector2.ZERO
+	_cam_t = 1.0
+	_cam_zoom_from = 1.0
+	_cam_zoom_to = 1.0
 	visible = true
 	if player:
 		player.controls_locked = true
+		var cam := _camera()
+		if cam:
+			_base_zoom = cam.zoom
 	_box.visible = false
 	_next()
 
@@ -161,6 +202,29 @@ func _next() -> void:
 				_black_target = 1.0
 			"fade_in":
 				_black_target = 0.0
+			"camera":
+				var target := resolve_point(step.get("to", "player"))
+				_cam_from = _current_cam_offset()
+				_cam_to = (target - player.global_position) if player and target != Vector2.INF else _cam_from
+				_cam_zoom_from = lerpf(_cam_zoom_from, _cam_zoom_to, _ease(_cam_t))
+				_cam_zoom_to = float(step.get("zoom", 1.0))
+				_cam_time = maxf(0.05, float(step.get("time", 0.8)))
+				_cam_t = 0.0
+			"walk":
+				var from := _position_of(String(step.get("who", "")))
+				var to_spec = step.get("to", null)
+				var to := from + Zone._v(to_spec["by"]) if to_spec is Dictionary and to_spec.has("by") else resolve_point(to_spec)
+				if from != Vector2.INF and to != Vector2.INF:
+					_movers.append({"who": String(step.get("who", "")), "from": from, "to": to, "t": 0.0, "time": maxf(0.1, float(step.get("time", 1.0)))})
+			"turn":
+				var npc := _npc(String(step.get("who", "")).trim_prefix("npc:"))
+				if not npc.is_empty():
+					var face := String(step.get("face", "player"))
+					npc["facing_override"] = {"left": Vector2(-0.5, 1.0), "right": Vector2(0.5, 1.0)}.get(face, null)
+					if npc["facing_override"] == null:
+						npc.erase("facing_override")
+			"bars":
+				_bars_target = 1.0 if step.get("on", true) else 0.0
 			"dino":
 				_dino = true
 				_dino_text = step.get("text", "")
@@ -184,6 +248,7 @@ func _show_line(step: Dictionary) -> void:
 		_portrait.appearance = CharacterAppearance.sanitize(npc.get("appearance", {}))
 		_portrait.ring_color = color
 		_portrait.glitch = 0.6 if style == "phone" or npc.get("terminal", false) else 0.0
+		_portrait.expression = String(step.get("expression", ""))   # la cara de esta línea (T129)
 	_voice = npc.get("voice", {})
 	_pitch = float(npc.get("voice", {}).get("pitch", 0.7 if style == "boss" else 1.0))
 	_rate = float(npc.get("voice", {}).get("rate", 0.9 if style == "boss" else 1.0))
@@ -288,11 +353,17 @@ func _default_inputs(from: int) -> void:
 func _finish() -> void:
 	_default_inputs(_index)
 	_stop_voice()
+	for m in _movers:   # quien estaba caminando llega a su sitio
+		_place(String(m["who"]), m["to"])
+	_movers.clear()
 	visible = false
 	_box.visible = false
 	if player:
 		player.controls_locked = false
 		_set_camera_offset(Vector2.ZERO)
+		var cam := _camera()
+		if cam:
+			cam.zoom = _base_zoom
 	finished.emit()
 	if _on_done.is_valid():
 		_on_done.call()
@@ -305,7 +376,21 @@ func _process(delta: float) -> void:
 	_glitch = maxf(0.0, _glitch - delta * 0.8)
 	_shake = maxf(0.0, _shake - delta * 1.5)
 	_black = move_toward(_black, _black_target, delta * 1.6)
-	_set_camera_offset(Vector2(_rng.randf_range(-1, 1), _rng.randf_range(-1, 1)) * _shake * 14.0)
+	_bars = move_toward(_bars, _bars_target, delta * BARS_SPEED)
+	_cam_t = minf(1.0, _cam_t + delta / maxf(0.05, _cam_time))
+	var shake := Vector2(_rng.randf_range(-1, 1), _rng.randf_range(-1, 1)) * _shake * 14.0
+	_set_camera_offset(_current_cam_offset() + shake)
+	var cam := _camera()
+	if cam:
+		cam.zoom = _base_zoom * lerpf(_cam_zoom_from, _cam_zoom_to, _ease(_cam_t))
+	for m in _movers.duplicate():
+		m["t"] = float(m["t"]) + delta
+		var k := clampf(float(m["t"]) / float(m["time"]), 0.0, 1.0)
+		var from: Vector2 = m["from"]
+		var to: Vector2 = m["to"]
+		_place(String(m["who"]), from.lerp(to, k), to - from)
+		if k >= 1.0:
+			_movers.erase(m)
 	_portrait.talking = _box.visible and (_shown < _total or (_narrating and DialogueBox.voice_busy()))
 	if _box.visible and _shown < _total:
 		var before := int(_shown)
@@ -336,6 +421,77 @@ func _set_camera_offset(o: Vector2) -> void:
 		(player.get_node("Camera2D") as Camera2D).offset = o
 
 
+func _camera() -> Camera2D:
+	return player.get_node("Camera2D") as Camera2D if player and player.has_node("Camera2D") else null
+
+
+static func _ease(t: float) -> float:
+	return t * t * (3.0 - 2.0 * t)   # suave al salir y al llegar
+
+
+func _current_cam_offset() -> Vector2:
+	return _cam_from.lerp(_cam_to, _ease(_cam_t))
+
+
+## Un punto de la escena: "player", "npc:<id>", "boss", "exit:<destino>" o [x, y] (INF si no está).
+func resolve_point(spec: Variant) -> Vector2:
+	if spec is Array and spec.size() >= 2:
+		return Vector2(float(spec[0]), float(spec[1]))
+	var s := String(spec) if spec != null else "player"
+	if s == "player":
+		return player.global_position if player else Vector2.INF
+	if zone == null:
+		return Vector2.INF
+	if s.begins_with("npc:"):
+		var npc := _npc(s.trim_prefix("npc:"))
+		return zone.npc_position(npc) if not npc.is_empty() else Vector2.INF
+	if s == "boss":
+		var b = zone.def.get("boss")
+		return Zone._v(b["pos"]) if b is Dictionary and b.has("pos") else Vector2.INF
+	if s.begins_with("exit:"):
+		for e in zone.exits:
+			if String(e["target"]) == s.trim_prefix("exit:"):
+				return e["pos"]
+	return Vector2.INF
+
+
+func _npc(id: String) -> Dictionary:
+	if zone:
+		for n in zone.npcs:
+			if String(n["id"]) == id:
+				return n
+	return {}
+
+
+func _position_of(who: String) -> Vector2:
+	return resolve_point(who if who != "" else "player")
+
+
+## Coloca a `who` en `p` (y, si camina, que mire hacia donde va).
+func _place(who: String, p: Vector2, dir := Vector2.ZERO) -> void:
+	if who == "player" or who == "":
+		if player:
+			player.global_position = p
+		return
+	var npc := _npc(who.trim_prefix("npc:"))
+	if npc.is_empty():
+		return
+	npc["position"] = [p.x, p.y]
+	if absf(dir.x) > 1.0:
+		npc["facing_override"] = Vector2(signf(dir.x) * 0.5, 1.0)
+
+
+## Saltar la escena entera (Esc, B del mando o el botón).
+func skip() -> void:
+	if not visible:
+		return
+	_default_inputs(_index)
+	_index = _steps.size()
+	_black_target = 0.0
+	_black = 0.0
+	_next()
+
+
 func _gui_input(event: InputEvent) -> void:
 	var mb := event as InputEventMouseButton
 	if mb and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
@@ -346,16 +502,13 @@ func _gui_input(event: InputEvent) -> void:
 func _input(event: InputEvent) -> void:
 	if not visible:
 		return
-	if event.is_action_pressed(&"ui_cancel"):
-		_default_inputs(_index)
-		_index = _steps.size()
-		_black_target = 0.0
-		_black = 0.0
-		_next()
+	if event.is_action_pressed(&"ui_cancel") or (event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_B):
+		skip()
 		get_viewport().set_input_as_handled()
 	elif not _input_step.is_empty():
 		return   # escribiendo: Enter y Espacio son del campo de texto
-	elif event.is_action_pressed(&"ui_accept") or (event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE):
+	elif event.is_action_pressed(&"ui_accept") or (event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE) \
+			or (event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_A):
 		_advance()
 		get_viewport().set_input_as_handled()
 
@@ -379,6 +532,10 @@ func _advance() -> void:
 
 func _draw() -> void:
 	var view := size
+	if _bars > 0.0:   # bandas de cine (T129), debajo del cuadro de texto
+		var h := BARS_HEIGHT * _ease(_bars)
+		draw_rect(Rect2(0, 0, view.x, h), Color.BLACK)
+		draw_rect(Rect2(0, view.y - h, view.x, h), Color.BLACK)
 	if _dino:
 		_draw_offline_page(view)
 	# Barra de lectura automática bajo el cuadro de texto.

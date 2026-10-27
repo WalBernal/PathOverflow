@@ -193,6 +193,7 @@ func _initialize() -> void:
 	_test_waypoint_map()
 	_test_board_compare()
 	_test_event_log()
+	_test_cutscene_direction()
 	_test_tilesets()
 	_test_events_music_colorblind()
 	_test_story_editor()
@@ -825,7 +826,7 @@ func _test_cutscenes(zones: Dictionary, npc_data: Dictionary) -> void:
 				_check(step["speaker"] == "player" or npc_data["npcs"].has(step["speaker"]), "%s: hablante desconocido %s" % [id, step["speaker"]])
 			if step.has("effect"):
 				var prologue_fx: bool = id.begins_with("prologo_") and step["effect"] in ["lights_flicker", "fans", "rafa_stands", "shock"]
-				_check(prologue_fx or step["effect"] in ["glitch", "shake", "blackout", "fade_in", "dino"], "%s: efecto desconocido" % id)
+				_check(prologue_fx or step["effect"] in ["glitch", "shake", "blackout", "fade_in", "dino", "camera", "walk", "turn", "bars"], "%s: efecto desconocido" % id)
 			else:
 				_check(step.has("text") and (step.has("speaker") or step.has("name")), "%s: línea sin texto o sin hablante" % id)
 		var travel: Dictionary = cutscenes[id].get("on_finish", {}).get("travel", {})
@@ -4706,7 +4707,8 @@ func _test_new_mechanics_t121() -> void:
 	_check(int(gc["sweeps"]) == 1 and ni != -1 and is_equal_approx(em.lives[ni], 1000.0 * (1.0 - ZoneEvents.GC_ENEMY_DAMAGE)),
 		"el barrido del GC golpea una sola vez a cada enemigo (%.0f)" % (em.lives[ni] if ni != -1 else -1.0))
 	_check(is_equal_approx(em.lives[em.index_of(boss)], em.max_lives[em.index_of(boss)]), "a los únicos y jefes no los toca")
-	_check(player.life < life_before, "y al jugador que pilla, también")
+	# Al jugador lo golpea (si no esquiva o bloquea al azar, pierde vida): se mira el golpe, no la vida.
+	_check((gc["hit"] as Dictionary).has("player") or player.life < life_before, "y al jugador que pilla, también")
 	for k in 4000:
 		if gc["state"] == "done":
 			break
@@ -5067,6 +5069,46 @@ func _test_event_log() -> void:
 	var soon := inst.expiring(ZoneInstances.TTL - 30.0, 60.0)
 	_check(soon.size() == 1 and soon[0][0] == "zona2" and is_equal_approx(float(soon[0][1]), 30.0), "avisa de la instancia con botín que caduca en menos de un minuto (no de la vacía)")
 	_check(inst.expiring(10.0, 60.0).is_empty(), "y no antes de tiempo")
+
+
+## Escenas con dirección (T129): la cámara va al NPC o al jefe y vuelve, alguien camina,
+## las bandas entran, el retrato pone cara y saltar la escena lo deja todo en su sitio.
+func _test_cutscene_direction() -> void:
+	var c := _new_character()
+	var player: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(player)
+	player.setup(c, EnemyManager.new())
+	var zone := Zone.new()
+	zone.setup(_zone_def("campamento"), player, c)
+	player.global_position = zone.entry_point("")
+	var cs := CutscenePlayer.new()
+	cs.player = player
+	cs.zone = zone
+	root.add_child(cs)
+	if cs._box == null:
+		cs._ready()   # en las pruebas el árbol aún no ha arrancado: _ready no llega solo
+	var ada_pos: Vector2 = cs.resolve_point("npc:ada")
+	_check(ada_pos != Vector2.INF and cs.resolve_point("npc:nadie") == Vector2.INF and cs.resolve_point([10, 20]) == Vector2(10, 20),
+		"la escena encuentra a sus NPC (y no se inventa los que no hay)")
+	var root_start: Vector2 = cs.resolve_point("npc:root")
+	var done := [false]
+	cs.play({"steps": [
+		{"effect": "camera", "to": "npc:ada", "zoom": 1.5, "time": 0.5},
+		{"effect": "walk", "who": "npc:root", "to": {"by": [100, 0]}, "time": 0.5},
+		{"speaker": "ada", "expression": "angry", "text": "Hola."},
+	]}, func() -> void: done[0] = true)
+	for k in 70:
+		cs._process(1.0 / 60.0)
+	var cam := player.get_node("Camera2D") as Camera2D
+	_check(cam.offset.distance_to(ada_pos - player.global_position) < 20.0 and cam.zoom.x > 1.3, "la cámara se acerca al NPC con zoom (%s)" % cam.offset)
+	_check(cs._bars > 0.9, "las bandas de cine entran solas")
+	_check(cs.resolve_point("npc:root").distance_to(root_start + Vector2(100, 0)) < 5.0, "el NPC camina hasta su sitio")
+	_check(cs._portrait.expression == "angry", "el retrato pone la cara de la línea")
+	cs.skip()
+	_check(done[0] and not cs.visible and cam.offset == Vector2.ZERO and is_equal_approx(cam.zoom.x, 1.0), "saltar la escena devuelve la cámara y su zoom")
+	cs.queue_free()
+	zone.free()
+	player.queue_free()
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.

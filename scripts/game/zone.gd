@@ -2574,12 +2574,14 @@ func _draw_npcs(ci: CanvasItem) -> void:
 		var pos := npc_position(npc)
 		var appearance := CharacterAppearance.sanitize(npc.get("appearance", {}))
 		var to_player := player.global_position - pos if player else Vector2.DOWN
+		# Mira hacia ti, salvo que una escena lo haya girado (T129).
+		var facing: Vector2 = npc["facing_override"] if npc.get("facing_override") is Vector2 else Vector2(signf(to_player.x) * 0.5, 1.0)
 		if npc.get("terminal", false):
 			_draw_terminal_npc(ci, pos, appearance)
 		elif PlayerSprite.available():
-			_update_npc_sprite(i, pos, appearance, Vector2(signf(to_player.x) * 0.5, 1.0), String(npc["id"]) == talking_npc)
+			_update_npc_sprite(i, pos, appearance, facing, String(npc["id"]) == talking_npc)
 		else:
-			CharacterAppearance.draw(ci, pos, 1.12, appearance, Vector2(signf(to_player.x) * 0.5, 1.0))
+			CharacterAppearance.draw(ci, pos, 1.12, appearance, facing)
 		var label_color := UiStyle.ACCENT if i == _hovered_npc else UiStyle.TEXT
 		var label_pos := pos + Vector2(-110.0, -52.0)
 		ci.draw_string_outline(font, label_pos, npc["name"], HORIZONTAL_ALIGNMENT_CENTER, 220.0, 14, 5, Color(0, 0, 0, 0.8))

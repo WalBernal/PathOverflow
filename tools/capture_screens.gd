@@ -24,6 +24,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("escenas"):
+		await _capture_cutscene_direction()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("registro"):
 		await _capture_event_log()
 		get_tree().quit()
@@ -2118,6 +2122,37 @@ func _swap(node: Node) -> void:
 
 func _wait(seconds: float) -> Signal:
 	return get_tree().create_timer(seconds).timeout
+
+
+## Escenas con dirección (T129): la reunión del campamento con la cámara sobre Ada (zoom
+## y bandas de cine) y luego sobre Rafa.
+func _capture_cutscene_direction() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Escenas", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 12
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(3.6)
+	world.call("play_cutscene", "reunion_campamento")
+	await _wait(1.6)
+	_save("129_escena_ada")
+	var ui: GameUI = world.get("ui")
+	for k in 3:   # hasta Rafa
+		ui.cutscene.call("_advance")
+		await _wait(0.35)
+		ui.cutscene.call("_advance")
+		await _wait(0.4)
+	await _wait(1.0)
+	_save("129_escena_rafa")
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
 
 
 ## HUD de la zona y registro de sucesos (T128): el rótulo con la mecánica al entrar y el

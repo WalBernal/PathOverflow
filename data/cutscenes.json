@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_doc": "Escenas cortas (el jugador no se mueve; click, Espacio o Enter avanzan; Esc las salta). Pasos: {speaker: id de NPC de npcs.json} o {name, style: boss | console | system} con text = una línea de diálogo (espera al jugador). {effect: glitch | shake | blackout | fade_in | dino, strength, time}: efecto; time = segundos de espera antes del siguiente paso (dino espera al jugador y muestra text). on_finish: {set_flag, travel: {zone, entry}}. Hablantes extra (CutscenePlayer.speakers): 'player' = el personaje del jugador; {jugador} en el texto se cambia por su nombre. Efectos desconocidos (lights_flicker, fans, rafa_stands, shock) los recibe quien escucha la señal effect (el prólogo).",
+  "_doc": "Escenas cortas (el jugador no se mueve; click, Espacio o Enter avanzan; Esc las salta). Pasos: {speaker: id de NPC de npcs.json} o {name, style: boss | console | system} con text = una línea de diálogo (espera al jugador). {effect: glitch | shake | blackout | fade_in | dino, strength, time}: efecto; time = segundos de espera antes del siguiente paso (dino espera al jugador y muestra text). Dirección (T129): {effect: camera, to: player | npc:<id> | boss | exit:<destino> | [x, y], zoom, time}; {effect: walk, who: npc:<id> | player, to: (como camera) o {by: [dx, dy]}, time}; {effect: turn, who: npc:<id>, face: left | right | player}; {effect: bars, on}; bandas de cine siempre salvo \"bars\": false en la escena; en las líneas, expression: happy | angry | sad | surprised | worried. on_finish: {set_flag, travel: {zone, entry}}. Hablantes extra (CutscenePlayer.speakers): 'player' = el personaje del jugador; {jugador} en el texto se cambia por su nombre. Efectos desconocidos (lights_flicker, fans, rafa_stands, shock) los recibe quien escucha la señal effect (el prólogo).",
   "cutscenes": {
     "arquitecto_muere": {
       "steps": [
@@ -14,6 +14,7 @@
           "strength": 1,
           "time": 0.9
         },
+        {"effect": "camera", "to": "boss", "zoom": 1.3, "time": 0.8},
         {
           "name": "El Arquitecto del Monolito",
           "style": "boss",
@@ -58,6 +59,7 @@
           "effect": "blackout",
           "time": 0.8
         },
+        {"effect": "camera", "to": "player", "zoom": 1.0, "time": 0.1},
         {
           "effect": "fade_in",
           "time": 0.6
@@ -72,20 +74,27 @@
     },
     "reunion_campamento": {
       "steps": [
+        {"effect": "camera", "to": "npc:ada", "zoom": 1.15, "time": 0.8},
         {
           "speaker": "ada",
+          "expression": "happy",
           "text": "¡Volviste! Lo vimos en los logs: el Arquitecto, fuera. Y el Servidor... congelado. Ni arranca ni se apaga. Como la laptop de Mario."
         },
+        {"effect": "turn", "who": "npc:kevin", "face": "player", "time": 0.1},
         {
           "speaker": "kevin",
+          "expression": "surprised",
           "text": "¡Oye! Mi laptop arranca. A veces. Si no la miras directamente."
         },
+        {"effect": "camera", "to": "npc:root", "zoom": 1.15, "time": 0.7},
         {
           "speaker": "root",
+          "expression": "worried",
           "text": "Aaah... a ver..... esto no es culpa mía.... ¿está bien?..... Yo heredé el servidor así......"
         },
         {
           "speaker": "ada",
+          "expression": "surprised",
           "text": "¿Heredado de quién?"
         },
         {
@@ -98,10 +107,12 @@
         },
         {
           "speaker": "root",
+          "expression": "sad",
           "text": "El pósit..... era la documentación......"
         },
         {
           "speaker": "ada",
+          "expression": "angry",
           "text": "Clásico Pepe. Treinta años a cargo de todo y te lo entrega así, sin documentación. Ahora todo es culpa suya."
         },
         {
@@ -122,12 +133,15 @@
           "speaker": "ada",
           "text": "Adelántate tú. Nosotros te seguimos en cuanto Rafa termine de... lo que sea que esté haciendo."
         },
+        {"effect": "walk", "who": "npc:root", "to": {"by": [70, 20]}, "time": 1.0},
         {
           "speaker": "root",
           "text": "Descargando la VPN...... 3 %......... vete yendo...... ya te alcanzo......"
         },
+        {"effect": "camera", "to": "player", "zoom": 1.0, "time": 0.7},
         {
           "speaker": "kevin",
+          "expression": "happy",
           "text": "¡Te guardo un café! Bueno, me lo tomo yo. Pero pensando en ti."
         }
       ],
@@ -308,6 +322,7 @@
           "strength": 0.8,
           "time": 0.6
         },
+        {"effect": "camera", "to": "boss", "zoom": 1.25, "time": 1.2},
         {
           "name": "init (PID 1)",
           "style": "boss",
@@ -323,6 +338,8 @@
           "style": "boss",
           "text": "Hazte a un lado... o te adoptaré también."
         },
+        {"effect": "shake", "strength": 0.6, "time": 0.3},
+        {"effect": "camera", "to": "player", "zoom": 1.0, "time": 0.8},
         {
           "speaker": "clara",
           "name": "Clara (por radio)",
@@ -723,10 +740,14 @@
     "admin_entrada": {
       "steps": [
         {"name": "", "style": "system", "text": "Una ventana de login se abre sola en medio de la oscuridad. El cursor parpadea."},
+        {"effect": "camera", "to": "boss", "zoom": 1.2, "time": 1.4},
         {"name": "admin", "style": "boss", "text": "Usuario: admin. Contraseña: a... d... m... i... n. Acceso concedido. Siempre acceso concedido."},
         {"name": "admin", "style": "boss", "text": "Veinte años con permisos sobre todo y sin que nadie me pregunte nada. Ni siquiera mi nombre. No tengo nombre: tengo un valor por defecto."},
-        {"speaker": "player", "text": "Tú hiciste el push."},
+        {"effect": "camera", "to": "player", "zoom": 1.1, "time": 0.6},
+        {"speaker": "player", "text": "Tú hiciste el push.", "expression": "angry"},
+        {"effect": "camera", "to": "boss", "zoom": 1.25, "time": 0.6},
         {"name": "admin", "style": "boss", "text": "Alguien tenía que hacer algo. Nadie se hacía responsable. Así que lo hice yo. Sin descripción. Como siempre."},
+        {"effect": "camera", "to": "player", "zoom": 1.0, "time": 0.8},
         {"speaker": "rafa_bios", "name": "Rafa (desde la puerta)", "style": "phone", "text": "Sus ventanas de login rotan.... quédate en los sectores verdes.... y si lanza Option ROMs.... mátalas antes de que lo reinstalen...."}
       ]
     },

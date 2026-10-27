@@ -779,10 +779,11 @@ Origen: V3
 
 ## Fase 26 — Escenas
 
-### [ ] T129 · Escenas con dirección · M
+### [x] T129 · Escenas con dirección · M
 Origen: V3
 - `CutscenePlayer` con pasos nuevos: paneo y zoom de cámara, temblor, personajes que caminan y se giran en la escena, bandas de cine y retrato con expresión por línea; repasar las escenas existentes para usarlos.
 - Saltar la escena entera o línea a línea, con ratón, mando y toque.
+- Hecho: pasos nuevos en `CutscenePlayer` (documentados en su cabecera y en el `_doc` de `cutscenes.json`): **camera** (`to`: player, npc:<id>, boss, exit:<destino> o [x, y]; `zoom`; `time`; con entrada y salida suaves, y al acabar o saltar la escena vuelve sola, zoom incluido), **walk** (`who` un NPC o el jugador; `to` como camera o {by: [dx, dy]}; mira hacia donde va), **turn** (un NPC mira a izquierda, derecha o a ti: `facing_override`, que ahora respeta el dibujo de los NPC en `Zone`), **bars** y **bandas de cine** que entran solas en todas las escenas (salvo `"bars": false`); el temblor ya existía y se suma a la cámara. **Expresión por línea** (`expression`: happy, angry, sad, surprised, worried) en `CharacterPortrait.EXPRESSIONS` (sonrisa y cejas). **Saltar**: línea a línea con click, toque, Espacio o la A del mando; la escena entera con Esc, la B del mando o el botón «Saltar escena (Esc)» arriba a la derecha (para ratón y toque). Repasadas: la muerte del Arquitecto, la entrada de init y la de admin (la cámara se acerca al jefe con zoom y vuelve contigo para tu réplica o la radio) y la reunión del campamento (cámara a quien habla, caras por línea, Kevin se gira y Rafa camina hacia ti). La escena de la prueba de cámara no se probó con el prólogo (no tiene zona: los pasos de cámara ahí no hacen nada). Capturas `capture_screens -- escenas` en `docs/capturas/escenas/`. Prueba `_test_cutscene_direction`; de paso, una prueba de T121 que dependía de no esquivar al azar ya no falla de vez en cuando.
 
 ### [ ] T130 · Escenas que faltan · M 🛑
 Origen: V3
@@ -983,3 +984,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-27 · T126 · La ventana de waypoints es el mapa de cada acto: pestañas, zonas unidas por sus salidas, waypoint descubierto o no, nombres ocultos hasta pisarlas y tiempo y mecánica de cada instancia viva.
 - 2026-10-27 · T127 · Placas y RAM se comparan con lo equipado al pasar el ratón: la placa contra la de su habilidad en la barra (al lado, con las diferencias en verde y rojo) y la RAM con el DPS que daría en cada placa.
 - 2026-10-27 · T128 · El rótulo de la zona dice su mecánica; registro de sucesos plegable a la izquierda (botín raro y único, waypoints, mecánicas, instancias que caducan) y aviso 1 min antes de perder el botín de una instancia.
+- 2026-10-27 · T129 · Escenas con dirección: cámara con paneo y zoom hacia NPC o jefe, personajes que caminan y se giran, bandas de cine, cara por línea y saltar con ratón, toque o mando; repasadas cuatro escenas.

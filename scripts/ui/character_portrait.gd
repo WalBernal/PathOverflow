@@ -37,6 +37,13 @@ var ring_color := UiStyle.ACCENT
 ## Glitch (por ejemplo, Rafa hablando por datos del celular).
 var glitch := 0.0
 
+## Expresión de la línea que se dice (T129, escenas): "" (la de siempre), "happy",
+## "angry", "sad", "surprised" o "worried".
+var expression := ""
+const EXPRESSIONS := {
+	"happy": {"smile": 0.7, "brow": 0.0}, "angry": {"smile": -0.4, "brow": -0.25}, "sad": {"smile": -0.6, "brow": 0.2},
+	"surprised": {"smile": 0.0, "brow": 0.28}, "worried": {"smile": -0.3, "brow": 0.18},
+}
 var _time := 0.0
 var _blink := 0.0
 var _next_blink := 2.0
@@ -134,6 +141,9 @@ func _draw() -> void:
 		"smile": 0.6 if _action == "glasses" else (-0.6 if _action == "sweat" else 0.0),
 		"brow": 0.15 if _action == "sweat" else (-0.12 if _action == "think" else 0.0),
 	}
+	if EXPRESSIONS.has(expression):   # la cara que pide la escena manda sobre los gestos sueltos
+		opts["smile"] = EXPRESSIONS[expression]["smile"]
+		opts["brow"] = EXPRESSIONS[expression]["brow"]
 	CharacterAppearance.draw_head(self, head, r, a, opts)
 
 	match _action:
