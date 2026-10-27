@@ -466,7 +466,8 @@ func _store_instance() -> void:
 		events.append(copy)
 	instances.store(zone.id, {"seed": int(zone.def.get("_layout_seed", 0)), "drops": drops, "coins": coins,
 		"opened": opened, "explored": ui.world_map.explored.duplicate(),
-		"enemies": enemies.snapshot(_twins.get("ids", [])), "events": events}, _now())
+		"enemies": enemies.snapshot(_twins.get("ids", [])), "events": events,
+		"stains": zone.stains.duplicate(true)}, _now())
 
 
 ## Al volver a una instancia viva: lo que quedó en el suelo, las cajas abiertas y el mapa.
@@ -476,6 +477,8 @@ func _restore_instance(saved: Dictionary) -> void:
 	for c in saved.get("coins", []):
 		loot.coins.append(c.duplicate())
 	loot.queue_redraw()
+	for st in saved.get("stains", []):   # las manchas del suelo (T124)
+		zone.stains.append((st as Dictionary).duplicate())
 	if saved.has("events"):
 		zone.events.events.clear()
 		for e in saved["events"]:
@@ -1360,6 +1363,10 @@ static func set_hitstop(on: bool) -> void:
 
 func _on_enemy_killed(rarity: int, experience: int, pos: Vector2, type_id: String = "") -> void:
 	Sfx.play("enemy_death", -6.0 + 2.0 * rarity, 1.0 - 0.08 * rarity)
+	if zone:   # su mancha en el suelo, según el material (T124)
+		var ti := enemies.type_index_of(type_id) if type_id != "" else -1
+		var types_list := enemies.enemy_types()
+		zone.add_stain(pos, String(types_list[ti].get("material", "digital")) if ti >= 0 and ti < types_list.size() else "digital")
 	if rarity >= Rarity.Enemy.ELITE:
 		hitstop(0.06 if rarity == Rarity.Enemy.ELITE else 0.1)
 		player.camera_shake(3.0 if rarity == Rarity.Enemy.ELITE else 6.0, 0.15)

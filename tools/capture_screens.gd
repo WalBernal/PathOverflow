@@ -24,6 +24,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("profundidad"):
+		await _capture_depth()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("salas"):
 		await _capture_set_pieces()
 		get_tree().quit()
@@ -2102,6 +2106,50 @@ func _swap(node: Node) -> void:
 
 func _wait(seconds: float) -> Signal:
 	return get_tree().create_timer(seconds).timeout
+
+
+## Profundidad (T124): el jugador detrás de algo alto (translúcido), manchas en el suelo
+## y el fondo con parallax más allá del borde (agua, abismo, vacío).
+func _capture_depth() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Profundidad", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 12
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var player: Node2D = world.get("player")
+	player.set("invulnerable", true)
+	for zid in ["zona4", "zona3", "zona2", "bus"]:
+		world.call("travel_to", zid, "")
+		world.set("_since_save", -9999.0)
+		var zone: Zone = world.get("zone")
+		(world.get("enemies") as EnemyManager).clear_all()
+		await _wait(0.3)
+		var ui: GameUI = world.get("ui")
+		if ui.cutscene.visible:
+			ui.cutscene.call("_finish")
+		var tall: Dictionary = {}
+		for o in zone.obstacles:
+			if Zone.TALL_OBSTACLES.has(o["kind"]):
+				tall = o
+				break
+		if not tall.is_empty():   # justo detrás de lo alto
+			player.global_position = (tall["pos"] as Vector2) + Vector2(0, -float(tall["radius"]) * 1.1)
+		else:   # junto al borde, para ver el fondo
+			player.global_position = zone.free_spot_near(zone.rect.position + Vector2(260, zone.rect.size.y * 0.5))
+		for k in 14:
+			zone.add_stain(player.global_position + Vector2.from_angle(k * 0.9) * (90.0 + k * 22.0), ["metal", "flesh", "digital", "crystal"][k % 4])
+		await _wait(2.4)
+		_save("124_profundidad_%s" % zid)
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
 
 
 ## Salas temáticas (T123): una foto de cada sala que salga en unas cuantas zonas.

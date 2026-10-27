@@ -285,6 +285,14 @@ func setup(p_def: Dictionary, p_player: Player, p_character: CharacterData, p_qu
 	_place_torches()
 	_place_containers()
 	_build_collision()
+	for t in torches:   # las luces fijas que proyectan sombras (T124)
+		_shadow_lights.append(t["pos"])
+	if layout:
+		for sp in layout.set_pieces:
+			_shadow_lights.append(sp["pos"])
+	if style == "camp":
+		_shadow_lights.append(rect.get_center())
+	_setup_parallax()
 	_ground_layer = Node2D.new()
 	_ground_layer.show_behind_parent = true
 	_ground_layer.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
@@ -1072,6 +1080,8 @@ func _screen_rect() -> Rect2:
 func _process(delta: float) -> void:
 	_time += delta
 	queue_redraw()
+	if _parallax:
+		_parallax.queue_redraw()
 	if player == null or not player.is_alive():
 		return
 	_update_containers(delta)
@@ -1217,7 +1227,8 @@ func _draw_static() -> void:
 	var s: Dictionary = STYLES.get(style, STYLES["sandbox"])
 	var ground := Color(s["ground"])
 	var layer := _ground_layer
-	layer.draw_rect(rect.grow(BORDER), Color(s["outside"]))
+	if _parallax_kind == "":   # con parallax, el fondo lo pone su capa (T124)
+		layer.draw_rect(rect.grow(BORDER), Color(s["outside"]))
 	if layout:
 		_draw_layout_ground(layer, s)
 	elif ZoneArt.has_ground(style):
@@ -1648,6 +1659,15 @@ static func _blob_points(o: Dictionary, scale: float, offset := Vector2.ZERO) ->
 func _draw() -> void:
 	# Solo lo que cae en cámara (las zonas grandes tienen cientos de obstáculos).
 	var view := _camera_rect().grow(DRAW_MARGIN)
+	_see_through.clear()   # quién se transparenta tras lo alto (T124): tú y los élites a la vista
+	if player:
+		_see_through.append(player.global_position)
+	var em: EnemyManager = events.enemies if events else null
+	if em:
+		for i in em.positions.size():
+			if em.rarities[i] >= Rarity.Enemy.ELITE and view.has_point(em.positions[i]):
+				_see_through.append(em.positions[i])
+	_draw_stains(view)
 	for o in obstacles:
 		if not view.grow(float(o.get("visual", 0.0))).has_point(o["pos"]):   # accidentes: hasta 160 px de radio
 			continue
@@ -1830,20 +1850,162 @@ func _draw_feature_anim(o: Dictionary) -> void:
 					Color(0.6, 0.5, 0.9, 0.4 * (1.0 - phase)))
 
 
+## Obstáculos altos (T124): se vuelven translúcidos si el jugador o un élite queda detrás.
+const TALL_OBSTACLES := ["rack", "pillar", "cable_tree", "dead_tree", "piston", "heat_sink", "monitor", "tomb", "capacitor"]
+const SEE_THROUGH_ALPHA := 0.4
+## Sombras hacia fuera de la luz (T124): a qué distancia cuenta una luz y cuánto se estira.
+const SHADOW_LIGHT_RANGE := 460.0
+const SHADOW_STRETCH := 0.9
+
+## Puntos que «ven a través» de lo alto este fotograma (el jugador y los élites a la vista).
+var _see_through: Array[Vector2] = []
+## Luces fijas que proyectan sombras (antorchas, salas temáticas, hoguera).
+var _shadow_lights: Array[Vector2] = []
+
+
+## Fondo con parallax más allá del borde (T124): solo donde «fuera» es un vacío, un
+## abismo, agua o lava (no un muro o la maleza, que son sólidos). Se mueve más despacio
+## que la cámara (PARALLAX_DEPTH) y sustituye al relleno liso de fuera.
+const PARALLAX_EDGES := {"void": "void", "cliff": "abyss", "water": "water", "lava": "lava"}
+const PARALLAX_DEPTH := 0.45
+const PARALLAX_CELL := 150.0
+var _parallax: Node2D
+var _parallax_kind := ""
+
+
+func _setup_parallax() -> void:
+	_parallax_kind = String(PARALLAX_EDGES.get(String(STYLES.get(style, {}).get("edge", "")), ""))
+	if _parallax_kind == "" or safe:
+		_parallax_kind = ""
+		return
+	_parallax = Node2D.new()
+	_parallax.show_behind_parent = true
+	_parallax.draw.connect(func() -> void: _draw_parallax(_parallax))
+	add_child(_parallax)   # antes que la capa del suelo: queda detrás
+
+
+func _draw_parallax(ci: CanvasItem) -> void:
+	var s: Dictionary = STYLES.get(style, STYLES["sandbox"])
+	var outside := Color(s["outside"])
+	var view := _camera_rect().grow(40.0)
+	ci.draw_rect(view, outside)
+	var origin := view.get_center() * PARALLAX_DEPTH   # el fondo «va» con la cámara: parece más lejos
+	var from := ((view.position - origin) / PARALLAX_CELL).floor()
+	var to := ((view.end - origin) / PARALLAX_CELL).ceil()
+	var font := ThemeDB.fallback_font
+	for cy in range(int(from.y), int(to.y)):
+		for cx in range(int(from.x), int(to.x)):
+			var h := hash(Vector2i(cx, cy)) & 0xffff
+			if h % 3 == 0:
+				continue
+			var q := origin + (Vector2(cx, cy) + Vector2((h % 97) / 97.0, (h % 89) / 89.0)) * PARALLAX_CELL
+			match _parallax_kind:
+				"void":   # bits sueltos y rejilla lejana
+					ci.draw_string(font, q, "1" if h % 2 == 0 else "0", HORIZONTAL_ALIGNMENT_LEFT, -1, 12 + h % 6,
+						Color(0.3, 0.55, 1.0, 0.08 + 0.1 * float(h % 5) / 5.0))
+					if h % 7 == 0:
+						ci.draw_line(q, q + Vector2(PARALLAX_CELL, 0), Color(0.2, 0.4, 0.8, 0.06), 1.0)
+				"abyss":   # rocas que se pierden en la profundidad
+					var rr := 18.0 + float(h % 40)
+					var pts := PackedVector2Array()
+					for k in 7:
+						pts.append(q + Vector2.from_angle(TAU * k / 7.0 + h) * rr * (0.75 + 0.25 * sin(h + k * 1.9)))
+					ci.draw_colored_polygon(pts, outside.lightened(0.06 + 0.05 * float(h % 3)))
+				"water":   # agua profunda con ondas lentas
+					var ph := fposmod(_time * 0.25 + float(h % 100) / 100.0, 1.0)
+					ci.draw_arc(q, 10.0 + 40.0 * ph, PI * 1.1, PI * 1.9, 10, Color(0.5, 0.75, 0.9, 0.12 * (1.0 - ph)), 1.5)
+				"lava":   # brasas que laten
+					var glow := 0.5 + 0.5 * sin(_time * 2.0 + h)
+					ci.draw_circle(q, 3.0 + float(h % 4), Color(1.0, 0.45, 0.15, 0.25 + 0.35 * glow))
+
+
+## Manchas que se quedan en el suelo (T124) donde cae un enemigo, según su material:
+## aceite (metal), restos (carne), glitch (digital) o esquirlas (cristal). Se guardan con
+## la instancia; como mucho STAIN_MAX (se van las más viejas).
+const STAIN_MAX := 260
+const STAIN_KINDS := {"metal": "oil", "flesh": "goo", "digital": "glitch", "crystal": "shards"}
+var stains: Array[Dictionary] = []   # {pos, kind, seed, size}
+
+
+func add_stain(pos: Vector2, material: String) -> void:
+	if safe:
+		return
+	stains.append({"pos": pos, "kind": STAIN_KINDS.get(material, "goo"), "seed": randi() % 10007, "size": randf_range(0.7, 1.3)})
+	if stains.size() > STAIN_MAX:
+		stains.pop_front()
+
+
+func _draw_stains(view: Rect2) -> void:
+	for st in stains:
+		var p: Vector2 = st["pos"]
+		if not view.has_point(p):
+			continue
+		var k := float(st["size"])
+		var sd := int(st["seed"])
+		match String(st["kind"]):
+			"oil":
+				draw_set_transform(p, float(sd % 6), Vector2(1.0, 0.5))
+				draw_circle(Vector2.ZERO, 22.0 * k, Color(0.04, 0.04, 0.06, 0.55))
+				draw_circle(Vector2(5, -3), 9.0 * k, Color(0.25, 0.15, 0.4, 0.25))   # irisado
+				draw_set_transform(Vector2.ZERO)
+			"goo":
+				draw_set_transform(p, float(sd % 6), Vector2(1.0, 0.55))
+				draw_circle(Vector2.ZERO, 18.0 * k, Color(0.28, 0.05, 0.08, 0.45))
+				for j in 3:
+					draw_circle(Vector2.from_angle(sd + j * 2.1) * 20.0 * k, 5.0 * k, Color(0.3, 0.06, 0.1, 0.4))
+				draw_set_transform(Vector2.ZERO)
+			"glitch":
+				for j in 5:
+					var q := p + Vector2((sd >> j) % 30 - 15, (sd >> (j + 2)) % 16 - 8) * k
+					draw_rect(Rect2(q.snapped(Vector2(4, 4)), Vector2(6, 4) * k), Color(0.2, 0.8, 1.0, 0.25) if j % 2 == 0 else Color(1.0, 0.2, 0.8, 0.2))
+			_:
+				for j in 4:
+					var a := float(sd + j * 1.7)
+					var q := p + Vector2.from_angle(a) * 12.0 * k
+					draw_colored_polygon(PackedVector2Array([q, q + Vector2.from_angle(a + 0.5) * 7.0, q + Vector2.from_angle(a - 0.4) * 9.0]), Color(0.7, 0.85, 1.0, 0.35))
+
+
+## ¿Tapa este sprite (`sprite_rect`, con su base en `base`) a alguien que está detrás?
+static func hides_someone(sprite_rect: Rect2, base: Vector2, points: Array[Vector2]) -> bool:
+	for q in points:
+		if q.y < base.y and sprite_rect.grow(6.0).has_point(q):
+			return true
+	return false
+
+
+## Hacia dónde cae la sombra de `p`: lejos de la luz fija más cercana (o hacia abajo).
+func shadow_dir(p: Vector2) -> Vector2:
+	var best := INF
+	var dir := Vector2.ZERO
+	for l in _shadow_lights:
+		var d := p.distance_to(l)
+		if d < best and d < SHADOW_LIGHT_RANGE and d > 1.0:
+			best = d
+			dir = (p - l) / d * (1.0 - d / SHADOW_LIGHT_RANGE)
+	return dir
+
+
 func _draw_obstacle(o: Dictionary) -> void:
 	var p: Vector2 = o["pos"]
 	var r: float = o["radius"]
 	# Semilla pequeña: sumada a ángulos en float32, una de ~4e9 los colapsa a
 	# todos en el mismo valor (polígono degenerado, error en cada frame).
 	var seed_value: int = int(o["seed"]) % 10007
-	# Sombra común.
-	draw_set_transform(p + Vector2(0, r * 0.55), 0.0, Vector2(1.0, 0.35))
+	# Sombra común, estirada lejos de la luz fija más cercana (T124).
+	var sd := shadow_dir(p)
+	var foot := p + Vector2(0, r * 0.55)
+	draw_set_transform(foot + sd * r * SHADOW_STRETCH, sd.angle() if sd != Vector2.ZERO else 0.0,
+		Vector2(1.0 + sd.length() * SHADOW_STRETCH, 0.35) if sd != Vector2.ZERO else Vector2(1.0, 0.35))
 	draw_circle(Vector2.ZERO, r * 1.05, Color(0, 0, 0, 0.35))
 	draw_set_transform(Vector2.ZERO)
 	if ObstacleArt.KINDS.has(o["kind"]):
 		# Pixel art (Acto I): el sprite en la rejilla del filtro y lo que se anima encima.
 		var s := ObstacleArt.sprite(o["kind"], r, seed_value)
-		draw_texture_rect(s["texture"], Rect2((p + s["offset"]).snapped(Vector2(ObstacleArt.PIX, ObstacleArt.PIX)), s["size"]), false)
+		var sprite_rect := Rect2((p + s["offset"]).snapped(Vector2(ObstacleArt.PIX, ObstacleArt.PIX)), s["size"])
+		var tint := Color.WHITE
+		if TALL_OBSTACLES.has(o["kind"]) and hides_someone(sprite_rect, foot, _see_through):
+			tint = Color(1, 1, 1, SEE_THROUGH_ALPHA)
+		draw_texture_rect(s["texture"], sprite_rect, false, tint)
 		if o["kind"] == "rack":
 			var box := Rect2(p - Vector2(r * 0.75, r), Vector2(r * 1.5, r * 2.0))
 			for k in 6:

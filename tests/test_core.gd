@@ -188,6 +188,7 @@ func _initialize() -> void:
 	_test_new_mechanics_t121()
 	_test_new_mechanics_t122()
 	_test_set_pieces()
+	_test_scene_depth()
 	_test_tilesets()
 	_test_events_music_colorblind()
 	_test_story_editor()
@@ -4883,6 +4884,47 @@ func _test_set_pieces() -> void:
 		if checked.size() == 3:
 			break
 	_check(checked.get("rack", false) and checked.get("box", false) and checked.get("light", false), "el rack caído estorba, la caja está y la sala da luz %s" % [checked])
+
+
+## Profundidad (T124): lo alto se transparenta si tapa a alguien, las sombras se alejan
+## de la luz, las manchas se quedan con tope y el parallax solo donde fuera es vacío.
+func _test_scene_depth() -> void:
+	var sprite := Rect2(Vector2(-30, -90), Vector2(60, 100))
+	var base := Vector2(0, 10)
+	_check(Zone.hides_someone(sprite, base, [Vector2(0, -40)] as Array[Vector2]), "alguien detrás de un rack se ve a través")
+	_check(not Zone.hides_someone(sprite, base, [Vector2(0, 30)] as Array[Vector2]) and not Zone.hides_someone(sprite, base, [Vector2(200, -40)] as Array[Vector2]),
+		"delante o al lado, no")
+	var def: Dictionary = _zone_def("zona4").duplicate(true)
+	Zone.scale_def(def)
+	var zone := Zone.new()
+	zone.setup(def, null, null, null, 515)
+	zone._shadow_lights = [Vector2(1000, 1000)] as Array[Vector2]
+	var d := zone.shadow_dir(Vector2(1100, 1000))
+	_check(d.x > 0.0 and absf(d.y) < 0.01, "la sombra cae lejos de la luz")
+	_check(zone.shadow_dir(Vector2(1050, 1000)).length() > d.length(), "y más larga cuanto más cerca está")
+	_check(zone.shadow_dir(Vector2(3000, 3000)) == Vector2.ZERO, "sin luz cerca, la de siempre")
+	for k in Zone.STAIN_MAX + 20:
+		zone.add_stain(Vector2(k, 0), "metal")
+	_check(zone.stains.size() == Zone.STAIN_MAX and zone.stains[0]["pos"] == Vector2(20, 0) and zone.stains[0]["kind"] == "oil",
+		"las manchas se quedan, con tope (se van las más viejas), y el metal deja aceite")
+	zone.add_stain(Vector2.ZERO, "crystal")
+	_check(zone.stains[zone.stains.size() - 1]["kind"] == "shards", "el cristal deja esquirlas")
+	zone.free()
+	var camp := Zone.new()
+	camp.setup(_zone_def("campamento"), null, null, null)
+	camp.add_stain(Vector2.ZERO, "flesh")
+	_check(camp.stains.is_empty() and camp._parallax_kind == "", "en el campamento ni manchas ni parallax")
+	camp.free()
+	var kinds := {}
+	for zid in ["zona3", "zona2", "bus", "anillo0", "zona1"]:
+		var z := Zone.new()
+		var zd: Dictionary = _zone_def(zid).duplicate(true)
+		Zone.scale_def(zd)
+		z.setup(zd, null, null, null, 9)
+		kinds[zid] = z._parallax_kind
+		z.free()
+	_check(kinds["zona3"] == "water" and kinds["zona2"] == "abyss" and kinds["bus"] == "void" and kinds["zona1"] == "",
+		"parallax de agua, abismo o vacío según el borde; la maleza, no %s" % [kinds])
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.
