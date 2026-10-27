@@ -185,6 +185,7 @@ func _initialize() -> void:
 	_test_zone_content()
 	_test_zone_instances()
 	_test_zone_mechanics()
+	_test_new_mechanics_t121()
 	_test_tilesets()
 	_test_events_music_colorblind()
 	_test_story_editor()
@@ -4657,6 +4658,86 @@ func _test_zone_mechanics() -> void:
 				ev.free()
 			zone.free()
 	_check(problems.is_empty() and tried > 40, "reparto de mecánicas en todas las zonas y %d colocadas %s" % [tried, problems.slice(0, 5)])
+
+
+## Mecánicas nuevas (T121): el Garbage Collector barre y golpea una vez a cada uno (no a
+## los únicos) y termina tras sus pasadas; el apagón se completa encendiendo las luces;
+## el ticket sale bien si caen los marcados a tiempo y mal si no.
+func _test_new_mechanics_t121() -> void:
+	var def: Dictionary = _zone_def("zona3").duplicate(true)
+	Zone.scale_def(def)
+	var c := _new_character()
+	var em := EnemyManager.new()
+	em.roll_affixes = false
+	var player: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(player)
+	player.setup(c, em)
+	var zone := Zone.new()
+	zone.setup(def, player, c, null, 2024)
+	var ev := ZoneEvents.new()
+	ev.zone = zone
+	ev.enemies = em
+	var results: Array = []
+	ev.resolved.connect(func(e: Dictionary, ok: bool) -> void: results.append([e["kind"], ok]))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 3
+	# Garbage Collector.
+	var gc := ev._zone_wide("gc", rng, zone.key_points())
+	var mid := zone.rect.get_center()
+	var normal := em.spawn(mid, Rarity.Enemy.NORMAL, 0)
+	var boss := em.spawn(mid + Vector2(0, 60), Rarity.Enemy.UNIQUE, 0)
+	em.max_lives[em.index_of(normal)] = 1000.0
+	em.lives[em.index_of(normal)] = 1000.0
+	player.global_position = mid + Vector2(0, -120)
+	var life_before := player.life
+	gc["timer"] = 0.0
+	for k in 400:
+		if int(gc["sweeps"]) >= 1:
+			break
+		ev._update_gc(gc, player.global_position, 0.05)
+	var ni := em.index_of(normal)
+	_check(int(gc["sweeps"]) == 1 and ni != -1 and is_equal_approx(em.lives[ni], 1000.0 * (1.0 - ZoneEvents.GC_ENEMY_DAMAGE)),
+		"el barrido del GC golpea una sola vez a cada enemigo (%.0f)" % (em.lives[ni] if ni != -1 else -1.0))
+	_check(is_equal_approx(em.lives[em.index_of(boss)], em.max_lives[em.index_of(boss)]), "a los únicos y jefes no los toca")
+	_check(player.life < life_before, "y al jugador que pilla, también")
+	for k in 4000:
+		if gc["state"] == "done":
+			break
+		ev._update_gc(gc, player.global_position, 0.05)
+	_check(gc["state"] == "done" and results.has(["gc", true]) and int(gc["sweeps"]) == ZoneEvents.GC_SWEEPS, "tras sus pasadas el GC termina y sale bien")
+	# Apagón del CPD.
+	var bo := ev._zone_wide("blackout", rng, zone.key_points())
+	var fracs: Array = []
+	ev.blackout_changed.connect(func(_e: Dictionary, f: float) -> void: fracs.append(f))
+	_check((bo["lights"] as Array).size() >= 4, "el apagón reparte sus luces de emergencia (%d)" % (bo["lights"] as Array).size())
+	var lit_points := ev.light_points()
+	for l in bo["lights"]:
+		ev._update_blackout(bo, l["pos"])
+	_check(bo["state"] == "done" and results.has(["blackout", true]) and not fracs.is_empty() and is_equal_approx(fracs[fracs.size() - 1], 1.0),
+		"encender todas las luces completa el apagón, poco a poco")
+	_check(lit_points.is_empty(), "las luces del apagón solo alumbran si el apagón está en la zona (no lo está en este ZoneEvents)")
+	ev.events = [bo]
+	_check(ev.light_points().size() == (bo["lights"] as Array).size(), "encendidas, cada luz alumbra")
+	# Ticket urgente.
+	var a := em.spawn(mid + Vector2(300, 0), Rarity.Enemy.ELITE, 0)
+	var b := em.spawn(mid + Vector2(-300, 0), Rarity.Enemy.ELITE, 0)
+	var t1 := {"kind": "ticket", "state": "active", "time_left": 10.0, "ids": [a, b], "pos": mid}
+	em._remove(em.index_of(a))
+	ev._update_ticket(t1, 0.1)
+	_check(t1["state"] == "active", "con un marcado vivo, el ticket sigue abierto")
+	em._remove(em.index_of(b))
+	ev._update_ticket(t1, 0.1)
+	_check(t1["state"] == "done" and results.has(["ticket", true]), "sin marcados vivos, el ticket sale bien")
+	var c2 := em.spawn(mid, Rarity.Enemy.ELITE, 0)
+	var t2 := {"kind": "ticket", "state": "active", "time_left": 0.05, "ids": [c2], "pos": mid}
+	ev._update_ticket(t2, 0.1)
+	_check(t2["state"] == "done" and results.has(["ticket", false]), "si se acaba el tiempo, sale mal")
+	_check(ZoneMechanics.candidates(def, "act1").has("gc") and ZoneMechanics.candidates(def, "act1").has("blackout") and ZoneMechanics.candidates(def, "act1").has("ticket"),
+		"las tres pueden tocar en una zona del acto I")
+	ev.free()
+	zone.free()
+	player.queue_free()
+	em.free()
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.

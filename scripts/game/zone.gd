@@ -813,6 +813,8 @@ func light_points() -> Array[Dictionary]:
 			out.append({"pos": e["pos"], "radius": 170.0, "color": Color("60d0ff") if not e.has("portal") else Color("c08aff"), "power": 0.6})
 	if has_waypoint:
 		out.append({"pos": waypoint, "radius": 160.0, "color": Color("7fb8ff"), "power": 0.6})
+	if events:
+		out.append_array(events.light_points())   # luces de emergencia del apagón (T121)
 	return out
 
 

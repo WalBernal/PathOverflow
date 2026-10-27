@@ -24,6 +24,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("mecanicas"):
+		await _capture_mechanics()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("semillas"):
 		_capture_zone_seeds()
 		get_tree().quit()
@@ -2094,6 +2098,54 @@ func _swap(node: Node) -> void:
 
 func _wait(seconds: float) -> Signal:
 	return get_tree().create_timer(seconds).timeout
+
+
+## Mecánicas de zona (T121): el barrido del Garbage Collector (aviso y pasada), el
+## apagón con una luz encendida y el ticket urgente con sus marcados.
+func _capture_mechanics() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Mecánicas", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 12
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var player: Node2D = world.get("player")
+	for kind in ["gc_warn", "gc", "blackout", "ticket"]:
+		world.call("travel_to", "zona3", "")
+		world.set("_since_save", -9999.0)
+		var zone: Zone = world.get("zone")
+		var ev := zone.events
+		var rng := RandomNumberGenerator.new()
+		rng.seed = 7
+		var base: String = String(kind).trim_suffix("_warn")
+		var e: Dictionary
+		if base == "ticket":
+			e = {"kind": "ticket", "pos": zone.free_spot_near(zone.rect.get_center()), "state": "ready", "main": true}
+		else:
+			e = ev._zone_wide(base, rng, zone.key_points())
+		ev.events = [e]
+		player.global_position = zone.free_spot_near(zone.rect.get_center() + Vector2(0, 160))
+		await _wait(3.2)
+		if base == "gc":
+			e["phase"] = "warn" if kind == "gc_warn" else "sweep"
+			e["timer"] = 1.5 if kind == "gc_warn" else 0.0
+			e["line"] = ZoneEvents.gc_coord(e, player.global_position) - (0.0 if kind == "gc_warn" else 220.0)
+			e["hit"] = {"player": true}
+		elif base == "blackout":
+			world.call("_apply_blackout", 0.0)
+			e["lights"][0]["pos"] = player.global_position + Vector2(260, -40)
+			e["lights"][1]["pos"] = player.global_position + Vector2(-300, 60)
+			e["lights"][0]["lit"] = true
+		else:
+			ev._fire(0)
+		await _wait(0.7)
+		_save("121_mecanica_%s" % kind)
+	world.queue_free()
 
 
 ## Generador de zonas (T114): cinco semillas de cada zona que se genera, en fila, con

@@ -13,6 +13,14 @@ extends Node2D
 ## - "escort": Escoltar un proceso. Un proceso perdido camina hasta su salida, pero
 ##   solo si estás cerca y no hay enemigos junto a él; a mitad de camino, emboscadas.
 ## - "merchant": Comerciante ambulante. Un objeto misterioso (con buena rareza) por fichas.
+## Mecánicas principales nuevas (T121), de toda la zona o con cuenta atrás:
+## - "gc": Garbage Collector. Cada cierto tiempo, tras un aviso, una línea barre la zona de
+##   lado a lado y daña a todo lo que pilla (enemigos incluidos: se puede usar). Tras
+##   GC_SWEEPS barridos, termina y da su botín.
+## - "blackout": Apagón del CPD. La zona está casi a oscuras; las luces de emergencia
+##   se encienden al pasar a su lado y cada una devuelve algo de luz. Todas: completada.
+## - "ticket": Ticket urgente. Al tocar la consola, unos élites quedan marcados por toda
+##   la zona: tumbarlos antes de que acabe la cuenta atrás.
 ## La zona dibuja y detecta; World hace aparecer enemigos y da recompensas.
 
 signal triggered(event: Dictionary)
@@ -22,9 +30,32 @@ signal resolved(event: Dictionary, success: bool)
 signal exploded(pos: Vector2)
 ## El proceso escoltado llegó a un tramo (1/3, 2/3): toca emboscada.
 signal escort_wave(event: Dictionary)
+## Garbage Collector: empieza el aviso de un barrido (World hace sonar la alarma).
+signal gc_warning(event: Dictionary)
+## Apagón: se encendió una luz de emergencia; `lit_frac` de 0 a 1.
+signal blackout_changed(event: Dictionary, lit_frac: float)
 
 ## Los pesos y cuáles son principales o menores están en data/zone_mechanics.json (T120).
-const KINDS := ["cache", "shrine", "ambush", "deploy", "bombs", "escort", "merchant"]
+const KINDS := ["cache", "shrine", "ambush", "deploy", "bombs", "escort", "merchant", "gc", "blackout", "ticket"]
+## Las que ocupan toda la zona y empiezan activas (sin consola que tocar).
+const ZONE_WIDE := ["gc", "blackout"]
+## Las que, si se sale de la zona a medias, se dan por cerradas al volver (su pelea
+## apuntaba a enemigos que ya no existen con esos ids). Las de toda la zona siguen.
+const INTERRUPTIBLE := ["cache", "ambush", "deploy", "bombs", "escort", "ticket"]
+const GC_INTERVAL := 16.0
+const GC_WARNING := 2.2
+const GC_SPEED := 620.0
+const GC_BAND := 46.0
+const GC_SWEEPS := 5
+## Daño del barrido: parte de la vida máxima del jugador y de la de cada enemigo.
+const GC_PLAYER_DAMAGE := 0.16
+const GC_ENEMY_DAMAGE := 0.45
+const BLACKOUT_LIGHTS := 6
+const LIGHT_RADIUS := 120.0
+const BLACKOUT_DARK := 0.42
+const TICKET_TIME := 120.0
+const TICKET_MARKS := 3
+const GC_COLOR := Color("4ae0c8")
 const BOMB_COUNT := 3
 const BOMB_TIME := 25.0
 const BOMB_SPREAD := 300.0
@@ -54,7 +85,7 @@ const SHRINES := {
 }
 const SHRINE_SECONDS := 20.0
 const NAMES := {"cache": "Datos huérfanos", "deploy": "Deploy fallido", "bombs": "Bombas lógicas", "escort": "Proceso perdido",
-	"merchant": "Comerciante ambulante"}
+	"merchant": "Comerciante ambulante", "gc": "Garbage Collector", "blackout": "Apagón del CPD", "ticket": "Ticket urgente"}
 
 var zone: Zone
 ## {kind, pos, state: "ready"|"active"|"done", shrine?, wave?, ids?}
@@ -78,6 +109,10 @@ func setup(p_zone: Zone, rng: RandomNumberGenerator, plan := {}) -> void:
 	if String(plan.get("minor", "")) != "" and KINDS.has(String(plan["minor"])):
 		wanted.append({"kind": String(plan["minor"])})
 	var keys := zone.key_points()
+	for w in wanted.duplicate():   # las de toda la zona no necesitan sitio propio
+		if ZONE_WIDE.has(String(w["kind"])):
+			wanted.erase(w)
+			events.append(_zone_wide(String(w["kind"]), rng, keys))
 	var tries := 0
 	while not wanted.is_empty() and tries < 300:
 		tries += 1
@@ -103,6 +138,33 @@ func setup(p_zone: Zone, rng: RandomNumberGenerator, plan := {}) -> void:
 				e["walker"] = p
 				e["waves_done"] = 0
 		events.append(e)
+
+
+## Garbage Collector o apagón: activos desde que entras. El barrido va en el sentido
+## largo de la zona; las luces de emergencia, repartidas y lejos de las entradas.
+func _zone_wide(kind: String, rng: RandomNumberGenerator, keys: Array[Vector2]) -> Dictionary:
+	var e := {"kind": kind, "pos": zone.free_spot_near(zone.rect.get_center(), 30.0), "state": "active", "main": true}
+	if kind == "gc":
+		e["across_x"] = zone.rect.size.x >= zone.rect.size.y   # la línea es vertical y avanza en x
+		e["phase"] = "wait"
+		e["timer"] = GC_INTERVAL * 0.6
+		e["line"] = 0.0
+		e["dir"] = 1.0
+		e["sweeps"] = 0
+		e["hit"] = {}
+	else:
+		var lights: Array = []
+		var tries := 0
+		while lights.size() < BLACKOUT_LIGHTS and tries < 400:
+			tries += 1
+			var p := zone.free_spot_near(Vector2(rng.randf_range(zone.rect.position.x + 200, zone.rect.end.x - 200),
+				rng.randf_range(zone.rect.position.y + 200, zone.rect.end.y - 200)), 30.0)
+			if not zone.is_walkable(p, 30.0) or keys.any(func(k: Vector2) -> bool: return k.distance_to(p) < 260.0) \
+					or lights.any(func(l: Dictionary) -> bool: return Vector2(l["pos"]).distance_to(p) < 650.0):
+				continue
+			lights.append({"pos": p, "lit": false})
+		e["lights"] = lights
+	return e
 
 
 ## Un destino caminable a buena distancia para el proceso escoltado (INF si no hay).
@@ -132,6 +194,12 @@ func _process(delta: float) -> void:
 			_update_bombs(e, pp, delta)
 		elif e["state"] == "active" and e["kind"] == "escort":
 			_update_escort(e, pp, delta)
+		elif e["state"] == "active" and e["kind"] == "gc":
+			_update_gc(e, pp, delta)
+		elif e["state"] == "active" and e["kind"] == "blackout":
+			_update_blackout(e, pp)
+		elif e["state"] == "active" and e["kind"] == "ticket":
+			_update_ticket(e, delta)
 	if _pending != -1:
 		var e := events[_pending]
 		if pp.distance_to(e["pos"]) <= RADIUS + 40.0:
@@ -155,6 +223,8 @@ func _fire(i: int) -> void:
 			var q := zone.free_spot_near(Vector2(e["pos"]) + Vector2.from_angle(TAU * k / BOMB_COUNT + 0.4) * BOMB_SPREAD, 40.0)
 			bombs.append({"pos": q, "progress": 0.0, "done": false})
 		e["bombs"] = bombs
+	elif e["kind"] == "ticket":
+		e["time_left"] = TICKET_TIME   # World marca a los élites y deja sus ids en e["ids"]
 	triggered.emit(e)
 
 
@@ -181,6 +251,103 @@ func _update_bombs(e: Dictionary, pp: Vector2, delta: float) -> void:
 				exploded.emit(b["pos"])
 		e["state"] = "done"
 		resolved.emit(e, false)
+
+
+## Coordenada de `p` a lo largo del barrido del GC.
+static func gc_coord(e: Dictionary, p: Vector2) -> float:
+	return p.x if e["across_x"] else p.y
+
+
+## Garbage Collector: espera, aviso (la línea parpadea en el borde de salida) y barrido
+## de lado a lado, que golpea una vez a cada uno (jugador y enemigos) que pille.
+func _update_gc(e: Dictionary, pp: Vector2, delta: float) -> void:
+	var lo := zone.rect.position.x if e["across_x"] else zone.rect.position.y
+	var hi := zone.rect.end.x if e["across_x"] else zone.rect.end.y
+	match String(e["phase"]):
+		"wait":
+			e["timer"] = float(e["timer"]) - delta
+			if e["timer"] <= 0.0:
+				e["phase"] = "warn"
+				e["timer"] = GC_WARNING
+				e["line"] = lo if e["dir"] > 0.0 else hi
+				gc_warning.emit(e)
+		"warn":
+			e["timer"] = float(e["timer"]) - delta
+			if e["timer"] <= 0.0:
+				e["phase"] = "sweep"
+				e["hit"] = {}
+		"sweep":
+			e["line"] = float(e["line"]) + float(e["dir"]) * GC_SPEED * delta
+			var line := float(e["line"])
+			var hit: Dictionary = e["hit"]
+			if zone.player and not hit.has("player") and absf(gc_coord(e, pp) - line) < GC_BAND:
+				hit["player"] = true
+				zone.player.take_damage(zone.player.max_life() * GC_PLAYER_DAMAGE)   # la esquiva lo evita
+			if enemies:
+				for i in range(enemies.positions.size() - 1, -1, -1):
+					if enemies.rarities[i] == Rarity.Enemy.UNIQUE or hit.has(enemies.ids[i]):
+						continue
+					if absf(gc_coord(e, enemies.positions[i]) - line) < GC_BAND + enemies.radii[i]:
+						hit[enemies.ids[i]] = true
+						var dmg := enemies.max_lives[i] * GC_ENEMY_DAMAGE
+						enemies._damage(i, dmg, dmg, 0.0, 100.0)
+			if (e["dir"] > 0.0 and line > hi) or (e["dir"] < 0.0 and line < lo):
+				e["sweeps"] = int(e["sweeps"]) + 1
+				e["dir"] = -float(e["dir"])   # el siguiente vuelve por donde vino
+				if int(e["sweeps"]) >= GC_SWEEPS:
+					e["state"] = "done"
+					resolved.emit(e, true)
+				else:
+					e["phase"] = "wait"
+					e["timer"] = GC_INTERVAL
+
+
+## Apagón: cada luz de emergencia se enciende al pasar a su lado.
+func _update_blackout(e: Dictionary, pp: Vector2) -> void:
+	var lights: Array = e["lights"]
+	var changed := false
+	var lit := 0
+	for l in lights:
+		if not l["lit"] and pp.distance_to(l["pos"]) < LIGHT_RADIUS:
+			l["lit"] = true
+			changed = true
+		if l["lit"]:
+			lit += 1
+	if not changed:
+		return
+	var frac := float(lit) / maxf(1.0, lights.size())
+	blackout_changed.emit(e, frac)
+	if lit == lights.size():
+		e["state"] = "done"
+		resolved.emit(e, true)
+
+
+## Ticket urgente: los élites marcados (e["ids"], los pone World) antes de que acabe el tiempo.
+func _update_ticket(e: Dictionary, delta: float) -> void:
+	e["time_left"] = float(e["time_left"]) - delta
+	if not e.has("ids"):
+		return
+	var alive: Array = (e["ids"] as Array).filter(func(id: int) -> bool: return enemies != null and enemies.index_of(id) != -1)
+	if alive.is_empty():
+		e["state"] = "done"
+		resolved.emit(e, true)
+	elif e["time_left"] <= 0.0:
+		e["state"] = "done"
+		resolved.emit(e, false)
+
+
+## Puntos de luz de las mecánicas (para Zone.light_points): las luces de emergencia del
+## apagón, encendidas o con su pilotito rojo.
+func light_points() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for e in events:
+		if e["kind"] == "blackout":
+			for l in e["lights"]:
+				if l["lit"]:
+					out.append({"pos": l["pos"] + Vector2(0, -40), "radius": 340.0, "color": Color("e8f0ff"), "power": 0.95})
+				elif e["state"] == "active":
+					out.append({"pos": l["pos"] + Vector2(0, -40), "radius": 70.0, "color": Color("ff3030"), "power": 0.5})
+	return out
 
 
 ## Escolta: avanza hacia su salida si estás cerca y no hay enemigos a su lado.
@@ -247,6 +414,12 @@ func _draw() -> void:
 				_draw_escort(e)
 			"merchant":
 				_draw_merchant(e)
+			"gc":
+				_draw_gc(e)
+			"blackout":
+				_draw_blackout(e)
+			"ticket":
+				_draw_ticket(e)
 
 
 func _shadow(p: Vector2, w: float) -> void:
@@ -319,6 +492,85 @@ func _draw_deploy(e: Dictionary) -> void:
 		draw_rect(Rect2(screen.position + Vector2(4, 5 + k * 7), Vector2(14 + (k * 9) % 22, 3)), Color(1, 0.5, 0.45, blink))
 	if ready:
 		zone._label(p + Vector2(-90, -58), NAMES["deploy"], 180, 13, Color("ff6a5a"))
+
+
+## Garbage Collector: en el aviso, una línea discontinua que parpadea en el borde de
+## salida con «GC»; en el barrido, una franja turquesa con su núcleo brillante y
+## `free()` que se desprenden.
+func _draw_gc(e: Dictionary) -> void:
+	if e["state"] != "active" or e["phase"] == "wait":
+		return
+	var r := zone.rect
+	var line := float(e["line"])
+	var a := Vector2(line, r.position.y) if e["across_x"] else Vector2(r.position.x, line)
+	var b := Vector2(line, r.end.y) if e["across_x"] else Vector2(r.end.x, line)
+	var along := (b - a).normalized()
+	var side := along.orthogonal()
+	if e["phase"] == "warn":
+		var blink := 0.35 + 0.35 * absf(sin(_time * 10.0))
+		var d := 0.0
+		var length := a.distance_to(b)
+		while d < length:
+			draw_line(a + along * d, a + along * minf(d + 40.0, length), Color(GC_COLOR, blink), 4.0)
+			d += 70.0
+		var at := a.lerp(b, 0.5) + side * float(e["dir"]) * 60.0
+		for k in 3:   # flechas hacia donde va a barrer
+			var tip := at + side * float(e["dir"]) * (k * 26.0)
+			draw_polyline(PackedVector2Array([tip - along * 18.0 - side * float(e["dir"]) * 14.0, tip, tip + along * 18.0 - side * float(e["dir"]) * 14.0]), Color(GC_COLOR, blink), 3.0)
+		zone._label(at + Vector2(-60, -30), "GC en %.1f s" % float(e["timer"]), 120, 14, GC_COLOR)
+		return
+	var band := PackedVector2Array([a - side * GC_BAND, b - side * GC_BAND, b + side * GC_BAND, a + side * GC_BAND])
+	draw_colored_polygon(band, Color(GC_COLOR, 0.22))
+	draw_line(a, b, Color(GC_COLOR, 0.9), 6.0)
+	draw_line(a, b, Color(1, 1, 1, 0.8), 2.0)
+	var font := ThemeDB.fallback_font
+	for k in 8:
+		var q := a.lerp(b, fposmod(k / 8.0 + _time * 0.07, 1.0)) - side * float(e["dir"]) * (20.0 + 30.0 * fposmod(_time * 1.7 + k * 0.37, 1.0))
+		draw_string(font, q, "free()", HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(GC_COLOR, 0.7))
+
+
+## Apagón: las farolas de emergencia, apagadas con su piloto rojo que parpadea o encendidas.
+func _draw_blackout(e: Dictionary) -> void:
+	for l in e["lights"]:
+		var p: Vector2 = l["pos"]
+		_shadow(p + Vector2(0, 6), 14.0)
+		draw_rect(Rect2(p + Vector2(-3, -44), Vector2(6, 46)), Color("3a3e48"))
+		var head := Rect2(p + Vector2(-12, -58), Vector2(24, 14))
+		draw_rect(head, Color("2a2e36"))
+		if l["lit"]:
+			draw_rect(head.grow(-3), Color("eaf2ff"))
+			draw_circle(p + Vector2(0, -40), 26.0, Color(0.9, 0.95, 1.0, 0.12))
+		else:
+			var on := sin(_time * 4.0 + p.x) > 0.0
+			draw_rect(head.grow(-3), Color("ff3030") if on else Color("401010"))
+			if e["state"] == "active" and zone.player and zone.player.global_position.distance_to(p) < 600.0:
+				zone._label(p + Vector2(-60, -76), "Luz de emergencia", 120, 12, Color("ff8080"))
+
+
+## Ticket urgente: la consola con el ticket y, activo, la etiqueta sobre cada élite marcado.
+func _draw_ticket(e: Dictionary) -> void:
+	var p: Vector2 = e["pos"]
+	var ready: bool = e["state"] == "ready"
+	_shadow(p + Vector2(0, 16), 30.0)
+	draw_rect(Rect2(p + Vector2(-26, -6), Vector2(52, 20)), Color("2e2a34"))
+	var screen := Rect2(p + Vector2(-22, -46), Vector2(44, 34))
+	draw_rect(screen.grow(3), Color("3a3640"))
+	draw_rect(screen, Color("1a2a4a"))
+	draw_rect(Rect2(screen.position + Vector2(4, 4), Vector2(36, 8)), Color("e05050") if ready else Color("406080"))
+	for k in 2:
+		draw_rect(Rect2(screen.position + Vector2(4, 16 + k * 7), Vector2(30 - k * 10, 3)), Color("9ab8e0"))
+	if ready:
+		zone._label(p + Vector2(-90, -58), "Ticket urgente (P1)", 180, 13, Color("ff9a5a"))
+	elif e["state"] == "active" and enemies and e.has("ids"):
+		var left := ZoneInstances.clock(float(e["time_left"]))
+		for id in e["ids"]:
+			var i := enemies.index_of(int(id))
+			if i == -1:
+				continue
+			var q := enemies.positions[i] + Vector2(0, -enemies.radii[i] - 46.0)
+			draw_rect(Rect2(q + Vector2(-34, -10), Vector2(68, 18)), Color(0.1, 0.1, 0.15, 0.85))
+			draw_rect(Rect2(q + Vector2(-34, -10), Vector2(68, 18)), Color("ff9a5a"), false, 1.5)
+			zone._label(q + Vector2(-34, -8), "P1 · " + left, 68, 11, Color("ffd0a0"))
 
 
 ## Bombas lógicas: la consola y, activa, las tres bombas con su aro de desactivación y la cuenta atrás.

@@ -354,6 +354,8 @@ func travel_to(zone_id: String, entry := "") -> void:
 	zone.events.triggered.connect(_on_zone_event)
 	zone.events.resolved.connect(_on_zone_event_resolved)
 	zone.events.exploded.connect(_on_logic_bomb_exploded)
+	zone.events.gc_warning.connect(_on_gc_warning)
+	zone.events.blackout_changed.connect(func(_e: Dictionary, frac: float) -> void: _apply_blackout(frac))
 	zone.events.escort_wave.connect(func(e: Dictionary) -> void:
 		ui.hud.flash("¡Emboscada en el camino! Despeja al proceso para que siga.", Color("ff6a5a"))
 		_spawn_event_wave(e["walker"], 7, 0.3, 0.08, 240.0))
@@ -457,7 +459,7 @@ func _store_instance() -> void:
 	var events := []
 	for e in zone.events.events:
 		var copy: Dictionary = e.duplicate(true)
-		if copy["state"] == "active":
+		if copy["state"] == "active" and ZoneEvents.INTERRUPTIBLE.has(copy["kind"]):
 			copy["state"] = "done"   # a medias: su pelea apuntaba a enemigos que ya no existirán con esos ids
 		events.append(copy)
 	instances.store(zone.id, {"seed": int(zone.def.get("_layout_seed", 0)), "drops": drops, "coins": coins,
@@ -1143,6 +1145,10 @@ func _on_zone_event(e: Dictionary) -> void:
 		"escort":
 			ui.hud.flash("Un proceso perdido quiere llegar a su salida. Solo avanza si estás cerca y no hay enemigos a su lado.", Color("8ad8ff"))
 			Sfx.play("aura_on", -4.0, 1.1)
+		"ticket":
+			e["ids"] = _mark_ticket_targets()
+			ui.hud.flash("Ticket P1 abierto: %d élites marcados por la zona. Tienes %s." % [(e["ids"] as Array).size(), ZoneInstances.clock(ZoneEvents.TICKET_TIME)], Color("ff9a5a"))
+			Sfx.play("wave", -2.0, 1.15)
 		"merchant":
 			var price := zone.events.merchant_price(e)
 			if character.spend_tokens(price):
@@ -1166,8 +1172,13 @@ func _announce_mechanic() -> void:
 			return
 	var m := ZoneMechanics.info(main)
 	ui.hud.flash("%s — %s" % [m.get("name", main), m.get("text", "")], Color("ffd24a"))
+	for e in zone.events.events:   # el apagón oscurece desde que entras (lo encendido de la instancia cuenta)
+		if e["kind"] == "blackout" and e["state"] == "active":
+			var lights: Array = e["lights"]
+			_apply_blackout(float(lights.filter(func(l: Dictionary) -> bool: return l["lit"]).size()) / maxf(1.0, lights.size()))
 	if ui.tips:
 		ui.tips.show_tip("zone_mechanic")
+		ui.tips.show_tip("mech_" + main)   # si la mecánica tiene consejo propio (T121)
 
 
 ## La principal salió bien: su recompensa del catálogo, además del botín del evento.
@@ -1184,19 +1195,68 @@ func _mechanic_reward(e: Dictionary) -> void:
 	ui.hud.flash("Mecánica completada: %s. Botín extra." % ZoneMechanics.info(String(e["kind"])).get("name", ""), Color("ffd24a"))
 
 
-## Bombas o escolta terminadas: buen botín si salió bien, un consuelo si no.
+## Ticket urgente (T121): marca a unos élites repartidos por la zona, lejos de ti (con
+## escolta). Sus ids van al evento para la cuenta atrás.
+func _mark_ticket_targets() -> Array:
+	var ids := []
+	var cfg: Dictionary = zone.def.get("enemies", {})
+	var types: Array = cfg.get("types", [])
+	for center in zone.pack_centers(ZoneEvents.TICKET_MARKS, _rng):   # repartidos y lejos de entradas y salidas
+		var t := enemies.type_index_of(types[_rng.randi_range(0, types.size() - 1)]) if not types.is_empty() else -1
+		var id := enemies.spawn(center, Rarity.Enemy.ELITE, t)
+		var i := enemies.index_of(id)
+		enemies.names[i] = "[P1] " + enemies.names[i]
+		ids.append(id)
+		_spawn_event_wave(center, 3, 0.2, 0.0, 120.0)
+	return ids
+
+
+## Garbage Collector (T121): la alarma antes de cada barrido; la primera vez, qué hacer.
+func _on_gc_warning(e: Dictionary) -> void:
+	Sfx.play("aura_on", -2.0, 0.55)
+	if int(e["sweeps"]) == 0:
+		ui.hud.flash("El Garbage Collector va a pasar: apártate de la línea o esquívala. A los enemigos también los recoge.", ZoneEvents.GC_COLOR)
+
+
+## Apagón del CPD (T121): la oscuridad de más mientras no estén todas las luces encendidas.
+func _apply_blackout(lit_frac: float) -> void:
+	var base := float(zone.layout.ambience.get("dark", 0.0)) if zone.layout else 0.0
+	post.set_style(zone.style, base + ZoneEvents.BLACKOUT_DARK * (1.0 - lit_frac))
+	if lit_frac > 0.0 and lit_frac < 1.0:
+		Sfx.play("ui_open", -6.0, 1.4)
+
+
+const RESOLVED_TEXT := {
+	"bombs": ["¡Bombas desactivadas!", "Las bombas lógicas estallaron. Algo se salvó entre los escombros."],
+	"escort": ["El proceso llegó a su salida: exit code 0.", ""],
+	"gc": ["El Garbage Collector terminó su pasada. Memoria liberada... y botín.", ""],
+	"blackout": ["Luces de emergencia encendidas: el CPD vuelve a verse.", ""],
+	"ticket": ["Ticket P1 resuelto antes del SLA.", "Ticket cerrado como «won't fix». Los marcados se quedan sin su etiqueta."],
+}
+
+
+## Una mecánica con objetivo terminó (bombas, escolta, GC, apagón, ticket): buen botín
+## si salió bien, un consuelo si no.
 func _on_zone_event_resolved(e: Dictionary, success: bool) -> void:
-	var at: Vector2 = e.get("walker", e["pos"]) if e["kind"] == "escort" else e["pos"]
+	var at: Vector2 = e.get("walker", e["pos"]) if e["kind"] == "escort" else (player.global_position if ZoneEvents.ZONE_WIDE.has(e["kind"]) else e["pos"])
 	var count := 3 if success else 1
 	for k in count:
 		loot.drop_item(item_generator.roll_drop(enemies.area_level, 1.5 if success and k == 0 else 0.5), zone.free_spot_near(at + Vector2.from_angle(TAU * k / count) * 70.0))
+	var texts: Array = RESOLVED_TEXT.get(e["kind"], ["Mecánica completada.", "Mecánica fallida."])
 	if success:
 		loot.drop_tokens(Economy.drop_amount(enemies.area_level, Rarity.Enemy.ELITE, _rng) * 2, zone.free_spot_near(at))
-		ui.hud.flash("¡Bombas desactivadas!" if e["kind"] == "bombs" else "El proceso llegó a su salida: exit code 0.", Color("6fd36b"))
+		ui.hud.flash(texts[0], Color("6fd36b"))
 		Sfx.play("level_up", -6.0, 1.3)
 		_mechanic_reward(e)
 	else:
-		ui.hud.flash("Las bombas lógicas estallaron. Algo se salvó entre los escombros.", Color("ff6a5a"))
+		ui.hud.flash(texts[1], Color("ff6a5a"))
+	if e["kind"] == "blackout":
+		_apply_blackout(1.0)
+	elif e["kind"] == "ticket" and not success:
+		for id in e.get("ids", []):
+			var i := enemies.index_of(int(id))
+			if i != -1:
+				enemies.names[i] = enemies.names[i].trim_prefix("[P1] ")
 
 
 ## Una bomba lógica sin desactivar: explota y hace mucho daño si estás cerca.
