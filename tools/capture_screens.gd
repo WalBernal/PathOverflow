@@ -24,6 +24,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("llegadas"):
+		await _capture_arrivals()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("escenas"):
 		await _capture_cutscene_direction()
 		get_tree().quit()
@@ -2122,6 +2126,35 @@ func _swap(node: Node) -> void:
 
 func _wait(seconds: float) -> Signal:
 	return get_tree().create_timer(seconds).timeout
+
+
+## Escenas que faltaban (T130): la llegada al campamento del Acto I y al Socket Seguro.
+func _capture_arrivals() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Llegadas", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "zona1"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 12
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var ui: GameUI = world.get("ui")
+	if ui.cutscene.visible:
+		ui.cutscene.call("_finish")
+	for zid in ["campamento", "socket_seguro"]:
+		world.call("travel_to", zid, "waypoint")
+		await _wait(2.2)
+		_save("130_llegada_%s" % zid)
+		if ui.cutscene.visible:
+			ui.cutscene.call("_finish")
+		await _wait(0.3)
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
 
 
 ## Escenas con dirección (T129): la reunión del campamento con la cámara sobre Ada (zoom

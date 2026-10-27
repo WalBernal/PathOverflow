@@ -73,6 +73,7 @@
     },
     {
       "id": "puerto_jtag",
+      "cutscene_on_enter": {"id": "llegada_jtag", "unless_flag": ["llegada_jtag_vista", "act3_complete"], "set_flag": "llegada_jtag_vista"},
       "name": "El Puerto de Depuración JTAG",
       "level": 27,
       "style": "bios",

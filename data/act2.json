@@ -75,6 +75,7 @@
     },
     {
       "id": "socket_seguro",
+      "cutscene_on_enter": {"id": "llegada_socket", "unless_flag": ["llegada_socket_vista", "act2_complete"], "set_flag": "llegada_socket_vista"},
       "name": "El Socket Seguro",
       "level": 14,
       "style": "terminal",

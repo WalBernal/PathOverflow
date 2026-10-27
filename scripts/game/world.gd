@@ -523,14 +523,12 @@ func _restore_instance(saved: Dictionary) -> void:
 		ui.world_map.queue_redraw()
 
 
-## Escena al entrar en la zona (una sola vez, según sus banderas).
+## Escena al entrar en la zona (una sola vez, según sus banderas). `cutscene_on_enter`
+## puede ser una escena o una lista (T130: la llegada al campamento y la reunión del
+## Acto I): se pone la primera que toque. `unless_flag` puede ser una lista.
 func _check_zone_cutscene() -> void:
-	var c: Dictionary = zone.def.get("cutscene_on_enter", {}) if zone.def.get("cutscene_on_enter") is Dictionary else {}
+	var c := Zone.pick_entry_cutscene(zone.def.get("cutscene_on_enter"), character.flags)
 	if c.is_empty():
-		return
-	if c.has("requires_flag") and not character.flags.has(c["requires_flag"]):
-		return
-	if c.has("unless_flag") and character.flags.has(c["unless_flag"]):
 		return
 	if c.has("set_flag"):
 		character.flags[c["set_flag"]] = true
@@ -558,6 +556,8 @@ func _on_cutscene_finished(on_finish: Dictionary) -> void:
 	if on_finish.has("travel"):
 		var t: Dictionary = on_finish["travel"]
 		travel_to(t.get("zone", ""), t.get("entry", ""))
+	elif on_finish.has("cutscene"):   # una escena que sigue a otra (T130: los epílogos de los jefes)
+		play_cutscene.call_deferred(String(on_finish["cutscene"]))
 
 
 func _on_exit_reached(e: Dictionary) -> void:

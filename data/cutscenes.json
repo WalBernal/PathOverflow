@@ -70,7 +70,7 @@
           "text": "El Arquitecto ha caído, pero el Servidor sigue congelado. Se ha abierto un portal al campamento."
         }
       ],
-      "on_finish": {}
+      "on_finish": {"cutscene": "arquitecto_epilogo"}
     },
     "reunion_campamento": {
       "steps": [
@@ -423,7 +423,7 @@
           "text": "Acto II completado. Se ha abierto un túnel al Socket Seguro."
         }
       ],
-      "on_finish": {}
+      "on_finish": {"cutscene": "init_epilogo"}
     },
     "prologo_rafa": {
       "steps": [
@@ -723,7 +723,8 @@
           "style": "system",
           "text": "Acto III completado. Se abrió un túnel al Puerto JTAG. Más abajo, en la BIOS, algo acaba de despertar."
         }
-      ]
+      ],
+      "on_finish": {"cutscene": "reflash_epilogo"}
     },
     "bios_post": {
       "steps": [
@@ -767,6 +768,95 @@
         {"speaker": "mario_bios", "text": "La impresora se atascó. Hay un trabajo en la cola de 2004. De un usuario llamado «pepe». Un solo archivo: lee_esto_cuando_arranque.txt."},
         {"speaker": "rafa_bios", "text": "........ Claro que sí, Pepe.... claro que sí...."},
         {"name": "", "style": "system", "text": "Acto IV completado. La historia sigue en el Acto V."}
+      ],
+      "on_finish": {"cutscene": "admin_epilogo"}
+    },
+    "arquitecto_epilogo": {
+      "steps": [
+        {"effect": "camera", "to": "exit:campamento", "zoom": 1.15, "time": 1.2},
+        {"name": "Sistema", "style": "system", "text": "El portal al campamento zumba como un ventilador al que nadie le ha quitado el polvo desde 2011."},
+        {"speaker": "ada", "name": "Aida (por el canal del campamento)", "style": "phone", "expression": "happy", "text": "¿Sigues vivo? Vuelve. Mario ya está escribiendo el post-mortem y aún no sabe si eres tú o el Arquitecto."},
+        {"speaker": "kevin", "name": "Mario (de fondo)", "style": "phone", "expression": "surprised", "text": "¡Es un borrador! ¡Los borradores no cuentan!"},
+        {"effect": "camera", "to": "player", "zoom": 1.0, "time": 0.8}
+      ]
+    },
+    "init_epilogo": {
+      "steps": [
+        {"effect": "camera", "to": "exit:socket_seguro", "zoom": 1.15, "time": 1.2},
+        {"speaker": "clara", "name": "Clara (por radio)", "style": "phone", "expression": "worried", "text": "PID 1 abajo. Nunca pensé que lo diría con alivio. Ni que lo diría en voz alta sin un ticket abierto."},
+        {"speaker": "recolector", "name": "El Recolector (por radio)", "style": "phone", "text": "Ocho mil procesos huérfanos... [s]liberados[/s] [s]recogidos[/s]... reasignados. Me quedo con los punteros. Nadie los quiere."},
+        {"speaker": "clara", "name": "Clara (por radio)", "style": "phone", "text": "Vuelve al Socket antes de que alguien escriba exit. Y no lo digas tú tampoco."},
+        {"effect": "camera", "to": "player", "zoom": 1.0, "time": 0.8}
+      ]
+    },
+    "reflash_epilogo": {
+      "steps": [
+        {"effect": "camera", "to": "exit:puerto_jtag", "zoom": 1.15, "time": 1.2},
+        {"speaker": "m_paez", "name": "M. Páez (por el puerto de depuración)", "style": "phone", "expression": "worried", "text": "La barra se detuvo en el 99 %. Estadísticamente, el último uno por ciento es el que más tarda. Y el que más miente."},
+        {"speaker": "eugenio", "name": "Eugenio (de fondo)", "style": "phone", "expression": "happy", "text": "Encontré café en la cafetería. Un 6/10. Pero sobrevivió al reflasheo, así que le subo a 7."},
+        {"speaker": "m_paez", "name": "M. Páez (por el puerto de depuración)", "style": "phone", "text": "Vuelve al Puerto JTAG. Hay que hablar de lo que viene después del firmware. Spoiler: más firmware."},
+        {"effect": "camera", "to": "player", "zoom": 1.0, "time": 0.8}
+      ]
+    },
+    "admin_epilogo": {
+      "steps": [
+        {"effect": "camera", "to": "exit:pila_cmos", "zoom": 1.15, "time": 1.2},
+        {"speaker": "berta", "name": "Berta (desde la Pila del CMOS)", "style": "phone", "expression": "surprised", "text": "¿Lo notas? El reloj... avanza. 01/01/2000, 00:00:01. ¡00:00:02! Llevo 26 años esperando este segundo."},
+        {"speaker": "eugenio_bios", "name": "Eugenio (desde la pila)", "style": "phone", "expression": "happy", "text": "Berta, el segundo te ha quedado precioso. Un 9/10. El primero de mi vida."},
+        {"effect": "camera", "to": "player", "zoom": 1.0, "time": 0.8}
+      ]
+    },
+    "llegada_campamento": {
+      "steps": [
+        {"effect": "camera", "to": "npc:ada", "zoom": 1.15, "time": 0.9},
+        {"speaker": "ada", "expression": "surprised", "text": "¿Otro practicante? ¿De dónde sales tú? ...Del Sandbox. Claro. Todos salen del Sandbox."},
+        {"speaker": "ada", "text": "Bienvenido al Campamento del Último Commit. Población: cuatro personas, un rack que suena a licuadora y una conexión que se cae si alguien estornuda."},
+        {"effect": "camera", "to": "npc:kevin", "zoom": 1.15, "time": 0.6},
+        {"speaker": "kevin", "expression": "happy", "text": "¡Hola! Yo también soy de servicio social. Llevo tres semanas. Todavía no sé qué hago, pero lo hago con muchas ganas."},
+        {"effect": "camera", "to": "npc:root", "zoom": 1.15, "time": 0.6},
+        {"speaker": "root", "expression": "worried", "text": "Aaah..... tú eres el de la constancia..... el servidor..... se cayó..... no fui yo..... bueno..... no del todo......"},
+        {"effect": "camera", "to": "npc:nacho", "zoom": 1.15, "time": 0.6},
+        {"speaker": "nacho", "text": "Psst. ¿Tokens? Tengo placas. Originales, originales. Bueno, originales de algún lado."},
+        {"effect": "camera", "to": "npc:ada", "zoom": 1.1, "time": 0.6},
+        {"speaker": "ada", "expression": "happy", "text": "Cuando termines de mirar, habla conmigo. Aquí nadie te va a hacer onboarding, pero yo lo intento."},
+        {"effect": "camera", "to": "player", "zoom": 1.0, "time": 0.7}
+      ]
+    },
+    "llegada_socket": {
+      "steps": [
+        {"effect": "camera", "to": "npc:clara", "zoom": 1.15, "time": 0.9},
+        {"speaker": "clara", "expression": "angry", "text": "Cierra la puerta. Bueno, el socket. Aquí la sesión aguanta mientras nadie escriba «exit». Te lo digo porque el último lo escribió."},
+        {"effect": "camera", "to": "npc:rafa_terminal", "zoom": 1.15, "time": 0.6},
+        {"speaker": "rafa_terminal", "expression": "happy", "text": "¡Te veo!.... bueno..... veo tu PID..... con los datos del celular..... me quedan 300 megas..... no hagas streaming......"},
+        {"effect": "camera", "to": "npc:recolector", "zoom": 1.15, "time": 0.6},
+        {"speaker": "recolector", "text": "Punt... puntero válido. Referenciado. No te [s]recojo[/s] [s]libero[/s] todavía."},
+        {"effect": "camera", "to": "npc:clara", "zoom": 1.1, "time": 0.6},
+        {"speaker": "clara", "text": "Esto es el Socket Seguro. Seguro es un decir. Pero es lo más parecido a un hogar que vas a tener en el Kernel."},
+        {"effect": "camera", "to": "player", "zoom": 1.0, "time": 0.7}
+      ]
+    },
+    "llegada_jtag": {
+      "steps": [
+        {"effect": "camera", "to": "npc:m_paez", "zoom": 1.15, "time": 0.9},
+        {"speaker": "m_paez", "expression": "surprised", "text": "Según mis cálculos, había un 73 % de probabilidades de que llegaras tú. El otro 27 % era Eugenio volviendo de la cafetería."},
+        {"effect": "camera", "to": "npc:eugenio", "zoom": 1.15, "time": 0.6},
+        {"speaker": "eugenio", "expression": "sad", "text": "Se me cayó la charola en el reflasheo. El pan era un 7/10. Pero era mi pan."},
+        {"effect": "camera", "to": "npc:rafa_terminal", "zoom": 1.15, "time": 0.6},
+        {"speaker": "rafa_terminal", "text": "El Puerto JTAG..... aquí se depuraba el hardware..... ahora nos depuramos nosotros..... con print()......"},
+        {"effect": "camera", "to": "player", "zoom": 1.0, "time": 0.7}
+      ]
+    },
+    "llegada_cmos": {
+      "steps": [
+        {"effect": "camera", "to": "npc:berta", "zoom": 1.15, "time": 0.9},
+        {"speaker": "berta", "expression": "surprised", "text": "¿Qué día es hoy? ¿Uno de enero del dos mil? Siempre es uno de enero del dos mil. Pasa, pasa, que se enfría el reloj."},
+        {"effect": "camera", "to": "npc:rafa_bios", "zoom": 1.15, "time": 0.6},
+        {"speaker": "rafa_bios", "expression": "happy", "text": "¡En persona! Bajé la VPN a mano..... literal..... por la escalera de servicio..... con la laptop en la espalda......"},
+        {"effect": "camera", "to": "npc:mario_bios", "zoom": 1.15, "time": 0.6},
+        {"speaker": "mario_bios", "expression": "sad", "text": "A mí me trajeron. Servicio social, dijeron. Yo pensé que era archivar papeles, no la BIOS."},
+        {"effect": "camera", "to": "npc:eugenio_bios", "zoom": 1.15, "time": 0.6},
+        {"speaker": "eugenio_bios", "text": "Berta, tu café: 4/10. Pero el reloj tiene encanto. Un encanto de 2000, eso sí."},
+        {"effect": "camera", "to": "player", "zoom": 1.0, "time": 0.7}
       ]
     }
   }

@@ -194,6 +194,7 @@ func _initialize() -> void:
 	_test_board_compare()
 	_test_event_log()
 	_test_cutscene_direction()
+	_test_missing_scenes()
 	_test_tilesets()
 	_test_events_music_colorblind()
 	_test_story_editor()
@@ -813,11 +814,15 @@ func _test_cutscenes(zones: Dictionary, npc_data: Dictionary) -> void:
 	for z in zones.values():
 		if z.has("boss") and z["boss"].has("death_cutscene"):
 			referenced.append(z["boss"]["death_cutscene"])
-		if z.get("cutscene_on_enter") is Dictionary:
-			referenced.append(z["cutscene_on_enter"]["id"])
+		var enters: Array = z["cutscene_on_enter"] if z.get("cutscene_on_enter") is Array else ([z["cutscene_on_enter"]] if z.get("cutscene_on_enter") is Dictionary else [])
+		for enter in enters:
+			referenced.append(enter["id"])
 		for e in z.get("exits", []):
 			if e.has("cutscene"):
 				referenced.append(e["cutscene"])
+	for id in cutscenes:   # las que siguen a otra (epílogos, T130)
+		if cutscenes[id].get("on_finish", {}).has("cutscene"):
+			referenced.append(cutscenes[id]["on_finish"]["cutscene"])
 	for id in referenced:
 		_check(cutscenes.has(id), "escena inexistente: %s" % id)
 	for id in cutscenes:
@@ -5109,6 +5114,29 @@ func _test_cutscene_direction() -> void:
 	cs.queue_free()
 	zone.free()
 	player.queue_free()
+
+
+## Escenas que faltaban (T130): la llegada a cada campamento (una vez, y no si ese acto ya
+## está terminado) y el epílogo de cada jefe tras su escena de derrota.
+func _test_missing_scenes() -> void:
+	var cutscenes: Dictionary = DataLoader.load_json("res://data/cutscenes.json")["cutscenes"]
+	var expected := {"act1": "llegada_campamento", "act2": "llegada_socket", "act3": "llegada_jtag", "act4": "llegada_cmos"}
+	for act_id in expected:
+		var act: Dictionary = DataLoader.load_json("res://data/%s.json" % act_id)
+		var town: Dictionary = act["zones"].filter(func(z: Dictionary) -> bool: return z["id"] == act["town"])[0]
+		var first := Zone.pick_entry_cutscene(town.get("cutscene_on_enter"), {})
+		_check(first.get("id", "") == expected[act_id], "%s: al llegar al campamento, su escena de llegada" % act_id)
+		var seen := Zone.pick_entry_cutscene(town.get("cutscene_on_enter"), {String(first.get("set_flag", "x")): true})
+		_check(seen.get("id", "") != expected[act_id], "%s: y solo la primera vez" % act_id)
+		_check(Zone.pick_entry_cutscene(town.get("cutscene_on_enter"), {act_id + "_complete": true}).get("id", "") != expected[act_id],
+			"%s: con el acto ya terminado (guardados viejos), no" % act_id)
+		var boss_zone: Dictionary = act["zones"].filter(func(z: Dictionary) -> bool: return z.has("boss"))[0]
+		var death := String(boss_zone["boss"].get("death_cutscene", ""))
+		var epilogue := String(cutscenes.get(death, {}).get("on_finish", {}).get("cutscene", ""))
+		_check(epilogue != "" and cutscenes.has(epilogue), "%s: tras la derrota del jefe, su epílogo (%s)" % [act_id, epilogue])
+	var camp1 := Zone.pick_entry_cutscene(DataLoader.load_json("res://data/act1.json")["zones"].filter(func(z: Dictionary) -> bool: return z["id"] == "campamento")[0]["cutscene_on_enter"],
+		{"llegada_campamento_vista": true, "act1_complete": true})
+	_check(camp1.get("id", "") == "reunion_campamento", "en el campamento del acto I sigue la reunión tras el jefe")
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.

@@ -848,7 +848,7 @@ func _set_piece_labels(sp: Dictionary) -> void:
 			_label(p + Vector2(-90, float(sp["radius"]) * 0.55 + 6), "backup_final_v2.tar.gz", 180, 11, Color("8ac0d8"))
 		"altar_becario":
 			_label(p + Vector2(-30, -50), "Hola mundo", 60, 9, PHOSPHOR, false)
-			_label(p + Vector2(-120, 84), "En memoria del becario que hizo push a main", 240, 11, Color("e0c090"))
+			_label(p + Vector2(-120, 84), "En memoria del practicante que hizo push a main", 240, 11, Color("e0c090"))
 		"servidor_legacy":
 			_label(p + Vector2(-60, 44), "NO TOCAR · FUNCIONA (1998)", 120, 10, Color("3a3020"), false)
 
@@ -1117,6 +1117,23 @@ static func act_map_layout(act: Dictionary) -> Dictionary:
 		rows = maxi(rows, r + 1)
 		cells[z["id"]] = Vector2i(c, r)
 	return {"cells": cells, "edges": edges, "cols": deepest + 1, "rows": rows}
+
+
+## La escena de entrada que toca (World._check_zone_cutscene) con estas banderas ({} si
+## ninguna). `spec`: una escena o una lista (se toma la primera que toque); `unless_flag`
+## puede ser una lista (T130).
+static func pick_entry_cutscene(spec: Variant, flags: Dictionary) -> Dictionary:
+	var options: Array = spec if spec is Array else ([spec] if spec is Dictionary else [])
+	for c in options:
+		if not c is Dictionary or not c.has("id"):
+			continue
+		if c.has("requires_flag") and not flags.has(c["requires_flag"]):
+			continue
+		var unless: Array = c["unless_flag"] if c.get("unless_flag") is Array else ([c["unless_flag"]] if c.has("unless_flag") else [])
+		if unless.any(func(f) -> bool: return flags.has(f)):
+			continue
+		return c
+	return {}
 
 
 ## El rótulo grande al entrar (GameUI): nombre, nivel y (T128) la mecánica principal de

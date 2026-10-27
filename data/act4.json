@@ -26,6 +26,7 @@
     },
     {
       "id": "pila_cmos",
+      "cutscene_on_enter": {"id": "llegada_cmos", "unless_flag": ["llegada_cmos_vista", "act4_complete"], "set_flag": "llegada_cmos_vista"},
       "name": "La Pila del CMOS",
       "level": 39,
       "style": "setup",

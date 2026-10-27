@@ -183,11 +183,18 @@
         "count": 0,
         "kinds": []
       },
-      "cutscene_on_enter": {
-        "id": "reunion_campamento",
-        "requires_flag": "act1_complete",
-        "unless_flag": "act1_reunion"
-      }
+      "cutscene_on_enter": [
+        {
+          "id": "llegada_campamento",
+          "unless_flag": ["llegada_campamento_vista", "act1_complete"],
+          "set_flag": "llegada_campamento_vista"
+        },
+        {
+          "id": "reunion_campamento",
+          "requires_flag": "act1_complete",
+          "unless_flag": "act1_reunion"
+        }
+      ]
     },
     {
       "id": "zona1",
