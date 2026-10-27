@@ -323,10 +323,13 @@ func set_wave_text(text: String) -> void:
 	_wave_label.visible = text != ""
 
 
-## `instance_times`: segundos que le quedan a la instancia de cada zona (T119).
-func open_waypoints(current_zone: String, instance_times := {}) -> void:
+## `instance_times`: segundos que le quedan a la instancia de cada zona (T119) y
+## `instance_mechanics`, su mecánica principal (T126).
+func open_waypoints(current_zone: String, instance_times := {}, instance_mechanics := {}) -> void:
 	_waypoint_panel.instance_times = instance_times
-	_waypoint_panel.open(_character.flags.get("waypoints", []), current_zone)
+	_waypoint_panel.instance_mechanics = instance_mechanics
+	_waypoint_panel.visited = _character.flags.get("visited", [])
+	_waypoint_panel.open(_character.flags.get("waypoints", []), current_zone, GameData.acts)
 
 
 func show_act_complete(act_name: String) -> void:

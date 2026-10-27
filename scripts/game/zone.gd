@@ -1070,6 +1070,55 @@ static func reached_towns(acts: Array, flags: Dictionary, zone_act: String) -> A
 	return out
 
 
+## Mapa de un acto para la ventana de waypoints (T126): {"cells": {zona: Vector2i(columna,
+## fila)}, "edges": [[zona, zona]], "cols": n, "rows": n}. Columna = cuántas salidas hay
+## desde el campamento (recorrido en anchura); en cada columna, por orden de aparición.
+static func act_map_layout(act: Dictionary) -> Dictionary:
+	var ids := {}
+	for z in act.get("zones", []):
+		ids[z["id"]] = z
+	var adj := {}
+	var edges := []
+	for z in act.get("zones", []):
+		for e in z.get("exits", []):
+			var t := String(e["target"])
+			if not ids.has(t) or t == z["id"] or e.get("portal", false):
+				continue   # los portales son teletransportes, no caminos (la arena del jefe no va junto al campamento)
+			adj[z["id"]] = adj.get(z["id"], []) + [t]
+			adj[t] = adj.get(t, []) + [z["id"]]
+			var pair := [z["id"], t] if String(z["id"]) < t else [t, z["id"]]
+			if not edges.has(pair):
+				edges.append(pair)
+	var start := String(act.get("town", ""))
+	if not ids.has(start) and not ids.is_empty():
+		start = String(ids.keys()[0])
+	var depth := {start: 0}
+	var queue := [start]
+	while not queue.is_empty():
+		var cur: String = queue.pop_front()
+		for n in adj.get(cur, []):
+			if not depth.has(n):
+				depth[n] = int(depth[cur]) + 1
+				queue.append(n)
+	var deepest := 0
+	for d in depth.values():
+		deepest = maxi(deepest, int(d))
+	for id in ids:   # las que no se alcanzan desde el campamento, al final
+		if not depth.has(id):
+			deepest += 1
+			depth[id] = deepest
+	var rows_in := {}
+	var cells := {}
+	var rows := 1
+	for z in act.get("zones", []):   # en el orden de los datos, así cada columna sale igual siempre
+		var c := int(depth[z["id"]])
+		var r := int(rows_in.get(c, 0))
+		rows_in[c] = r + 1
+		rows = maxi(rows, r + 1)
+		cells[z["id"]] = Vector2i(c, r)
+	return {"cells": cells, "edges": edges, "cols": deepest + 1, "rows": rows}
+
+
 ## Lo que se ve de la zona, en coordenadas del mundo.
 func _screen_rect() -> Rect2:
 	if not is_inside_tree():

@@ -190,6 +190,7 @@ func _initialize() -> void:
 	_test_set_pieces()
 	_test_scene_depth()
 	_test_minimap_fog()
+	_test_waypoint_map()
 	_test_tilesets()
 	_test_events_music_colorblind()
 	_test_story_editor()
@@ -4961,6 +4962,37 @@ func _test_minimap_fog() -> void:
 	for n in [mm, mm2, wm, zone]:
 		n.free()
 	p.free()
+
+
+## Mapa del acto en la ventana de waypoints (T126): cada zona en su sitio (del campamento
+## al jefe), las salidas como líneas, y el texto de cada nodo sin spoilers.
+func _test_waypoint_map() -> void:
+	for path in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json", "res://data/act4.json"]:
+		var act: Dictionary = DataLoader.load_json(path)
+		var lay := Zone.act_map_layout(act)
+		var cells: Dictionary = lay["cells"]
+		_check(cells.size() == act["zones"].size(), "%s: todas las zonas en el mapa" % act["id"])
+		_check(cells[act["town"]].x <= 1, "%s: el campamento al principio" % act["id"])
+		var used := {}
+		for id in cells:
+			if used.has(cells[id]):
+				_check(false, "%s: dos zonas en la misma casilla" % act["id"])
+			used[cells[id]] = true
+		for z in act["zones"]:
+			if z.get("boss") != null:
+				_check(cells[z["id"]].x >= int(lay["cols"]) - 2, "%s: la arena del jefe al final" % act["id"])
+		_check(not (lay["edges"] as Array).is_empty() and int(lay["cols"]) >= 4, "%s: zonas unidas por sus salidas (%d columnas)" % [act["id"], lay["cols"]])
+	var z := {"id": "zona4", "name": "Las Catacumbas", "level": 8}
+	var hidden := WaypointPanel.node_text(z, false, true, false, false, 0.0, "")
+	_check(hidden.begins_with("???") and hidden.contains("waypoint sin descubrir") and not hidden.contains("nivel"), "zona sin pisar: sin nombre ni nivel")
+	var live := WaypointPanel.node_text(z, true, true, true, false, 452.0, "Merge conflict")
+	_check(live.contains("Las Catacumbas") and live.contains("nivel 8") and live.contains("7:32") and live.contains("Merge conflict"), "con instancia viva: tiempo y mecánica")
+	_check(WaypointPanel.node_text(z, true, true, true, true, 452.0, "x").contains("(aquí)") and not WaypointPanel.node_text(z, true, true, true, true, 452.0, "x").contains("7:32"),
+		"donde estás no dice el tiempo (aún no caduca)")
+	var inst := ZoneInstances.new()
+	inst.store("zona4", {"seed": 1, "mechanic": "Apagón del CPD"}, 0.0)
+	inst.store("zona5", {"seed": 2}, 0.0)
+	_check(inst.values("mechanic", 1.0) == {"zona4": "Apagón del CPD"}, "la instancia recuerda su mecánica para la ventana")
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.

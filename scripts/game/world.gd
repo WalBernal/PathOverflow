@@ -370,7 +370,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 	zone.container_opened.connect(_on_container_opened)
 	zone.challenge_touched.connect(_on_challenge_touched)
 	zone.exit_blocked.connect(func(e: Dictionary) -> void: ui.hud.flash(zone.exit_blocked_reason(e), Color("e06c6c")))
-	zone.waypoint_clicked.connect(func() -> void: ui.open_waypoints(zone.id, instances.times(_now())))
+	zone.waypoint_clicked.connect(func() -> void: ui.open_waypoints(zone.id, instances.times(_now()), instances.values("mechanic", _now())))
 	zone.stash_clicked.connect(func() -> void: ui.open_stash(stash))
 	zone.waypoint_touched.connect(_discover_waypoint)
 
@@ -410,6 +410,10 @@ func travel_to(zone_id: String, entry := "") -> void:
 	skills.on_zone_changed()
 
 	character.flags["zone"] = zone.id
+	var visited: Array = character.flags.get("visited", [])   # para los nombres del mapa de waypoints (T126)
+	if not visited.has(zone.id):
+		visited.append(zone.id)
+		character.flags["visited"] = visited
 	if zone.safe and zone.has_waypoint:
 		_discover_waypoint()   # el del campamento, al entrar (T112)
 	_check_achievements()
@@ -467,7 +471,8 @@ func _store_instance() -> void:
 	instances.store(zone.id, {"seed": int(zone.def.get("_layout_seed", 0)), "drops": drops, "coins": coins,
 		"opened": opened, "explored": ui.world_map.explored.duplicate(),
 		"enemies": enemies.snapshot(_twins.get("ids", [])), "events": events,
-		"stains": zone.stains.duplicate(true)}, _now())
+		"stains": zone.stains.duplicate(true),
+		"mechanic": String(ZoneMechanics.info(String(zone.mechanic.get("main", ""))).get("name", ""))}, _now())
 
 
 ## Al volver a una instancia viva: lo que quedó en el suelo, las cajas abiertas y el mapa.
@@ -1034,6 +1039,14 @@ func _grant_town_waypoints(start_zone: String) -> void:
 		if not found.has(town):
 			found.append(town)
 	character.flags["waypoints"] = found
+	# Y las zonas de los actos terminados cuentan como visitadas (T126: su nombre en el mapa).
+	var visited: Array = character.flags.get("visited", [])
+	for a in GameData.acts:
+		if character.flags.has(String(a.get("id", "")) + "_complete"):
+			for z in a.get("zones", []):
+				if not visited.has(z["id"]):
+					visited.append(z["id"])
+	character.flags["visited"] = visited
 
 
 func _discover_waypoint() -> void:

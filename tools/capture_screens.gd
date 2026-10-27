@@ -24,6 +24,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("waypoints"):
+		await _capture_waypoint_map()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("profundidad"):
 		await _capture_depth()
 		get_tree().quit()
@@ -2106,6 +2110,39 @@ func _swap(node: Node) -> void:
 
 func _wait(seconds: float) -> Signal:
 	return get_tree().create_timer(seconds).timeout
+
+
+## Ventana de waypoints como mapa del acto (T126), con un personaje del Acto II: actos I y
+## II descubiertos, zonas visitadas y una instancia viva.
+func _capture_waypoint_map() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Waypoints", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.flags["act1_complete"] = true
+	c.flags["zone"] = "socket_seguro"
+	c.flags["waypoints"] = ["campamento", "zona2", "zona4", "zona5", "socket_seguro", "fabrica"]
+	c.flags["visited"] = ["tutorial", "campamento", "zona1", "zona2", "zona3", "zona4", "zona5", "jefe", "socket_seguro", "brecha_503", "fabrica"]
+	c.level = 15   # sin la elección de habilidad del nivel 16 delante
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(3.6)   # que pase el rótulo de la zona
+	var ui: GameUI = world.get("ui")
+	if ui.cutscene.visible:
+		ui.cutscene.call("_finish")
+	ui.open_waypoints("socket_seguro", {"fabrica": 452.0, "zona4": 121.0}, {"fabrica": "Merge conflict", "zona4": "Apagón del CPD"})
+	await _wait(0.6)
+	_save("126_waypoints_acto2")
+	var panel: WaypointPanel = ui.get("_waypoint_panel")
+	panel._show_act(0)
+	await _wait(0.4)
+	_save("126_waypoints_acto1")
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
 
 
 ## Profundidad (T124): el jugador detrás de algo alto (translúcido), manchas en el suelo

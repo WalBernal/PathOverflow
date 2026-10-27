@@ -55,6 +55,16 @@ func times(now: float) -> Dictionary:
 	return out
 
 
+## {id de zona: estado[key]} de las instancias vivas que lo tengan (p. ej. "mechanic").
+func values(key: String, now: float) -> Dictionary:
+	prune(now)
+	var out := {}
+	for k in _by_zone:
+		if _by_zone[k].has(key):
+			out[k] = _by_zone[k][key]
+	return out
+
+
 func prune(now: float) -> void:
 	for k in _by_zone.keys():
 		if now - float(_by_zone[k]["left_at"]) >= TTL:
