@@ -674,6 +674,140 @@ Origen: R5
 Origen: R5
 - Necesita el permiso del usuario al empezar: instalar JDK 17, el SDK de Android (aceptar sus licencias) y las plantillas de exportación de Android de Godot 4.7.2.
 - Preset de exportación «Android» (arm64-v8a, paquete `com.pathoverflow.game`, nombre e icono, horizontal, sin permisos extra), clave de depuración, y `build/PathOverflow.apk`; instrucciones en el README para instalarlo en el teléfono y para firmarlo con una clave propia si se quiere publicar.
+
+---
+
+# Versión 3.0 del juego — mundo vivo (26-10-2026)
+
+Lo hecho hasta aquí es la **versión 2.0** del juego: copia en la rama `version-2.0` y la etiqueta `v2.0` (commit `b570137`). Los títulos «Roadmap 3.0 / 4.0 / 5.0» de arriba numeran tandas de tareas, no versiones del juego. **Origen: V3** (pedido del usuario). Mismo protocolo; 🛑 = parar y esperar el visto bueno.
+
+Pedido: mejoras de gráficos, interfaz y escenas; zonas que se generan solas para que no se sientan iguales en cada visita; la zona se conserva 10 minutos (botín en el suelo y enemigos) salvo la arena del jefe, que siempre se reinicia entera; mecánicas nuevas y al menos una al azar por zona sin saturarla; tokens que se recogen de más lejos, waypoints que se activan de más lejos (los de campamento al entrar) y fuera los portales de vuelta a actos anteriores: solo se regresa por waypoint.
+
+Punto de partida: cada zona se construye igual siempre (`Zone.setup` siembra con `hash(id)`: bordes, accidentes, obstáculos, decorado, cajas) desde las posiciones fijas de `act*.json`; al viajar o al morir, `World.travel_to` borra la zona, los enemigos y el botín (`enemies.clear_all()`, `loot.clear_all()`) y la levanta de cero. Lo único que cambia por visita son los eventos (`ZoneEvents`, 7 tipos, `event_rng.randomize()`); el `mutex` y la `race_condition` del Acto II son fijos de su zona. Recogida de tokens: `LootManager.TOKEN_PICKUP_RANGE` 34 px e imán `TOKEN_MAGNET_RANGE` 150 px. Waypoint: se descubre a `Zone.WAYPOINT_RADIUS + 60` (106 px). Portales de vuelta: Socket Seguro → Campamento, Puerto JTAG → Socket Seguro y Pila del CMOS → Puerto JTAG (`"portal": true` en `act2/3/4.json`).
+
+## Fase 20 — Viaje y comodidades
+
+### [ ] T111 · Tokens desde más lejos · S
+Origen: V3
+- Recogida directa de ~34 a ~90 px e imán de ~150 a ~380 px (`LootManager`), con el tirón algo más rápido para que no se queden persiguiéndote; que el imán no los saque de detrás de una pared (si el camino recto choca con un obstáculo, rodean o esperan).
+- Stat nuevo «radio de recogida de tokens» (+%) en dos o tres afijos de anillo y amuleto y en un notable menor del árbol, con tope.
+- Prueba: un token a 300 px acaba en la cuenta sin moverse.
+
+### [ ] T112 · Waypoints que se activan de lejos y al entrar al campamento · S
+Origen: V3
+- En las zonas de combate, el waypoint se descubre al tenerlo en pantalla y a ~420 px (en vez de 106), con su aviso y sonido de siempre.
+- En las zonas seguras (campamentos), el waypoint se descubre **al entrar**, sin acercarse (`World.travel_to` con `zone.safe`).
+- Prueba: entrar a un campamento lo apunta en `flags.waypoints`; quedarse a 400 px del waypoint de una zona de combate, también.
+
+### [ ] T113 · Fuera los portales de vuelta: solo waypoints entre actos · S
+Origen: V3
+- Quitar las salidas `portal` que llevan al acto anterior (Socket Seguro → Campamento, Puerto JTAG → Socket Seguro, Pila del CMOS → Puerto JTAG). Se quedan las que llevan hacia delante (Portal al Kernel del Campamento, portales de las arenas de jefe al siguiente campamento).
+- La ventana de waypoints ya enseña todos los actos con algún waypoint descubierto: comprobar que desde cualquier campamento se viaja a los de actos anteriores, y que las misiones, diálogos, escenas, el editor de historia y la integración no dependen de esos túneles.
+- Guardados viejos: si un personaje está en un acto posterior sin el waypoint del campamento de un acto anterior que ya terminó, dárselo al cargar.
+
+## Fase 21 — Zonas que se generan solas
+
+### [ ] T114 · Diseño del generador de zonas · M 🛑
+Origen: V3
+- Documento `docs/zonas_3.md`: qué cambia en cada instancia (forma del camino, obstáculos y accidentes, manadas, cajas, decorado, lado y sitio de las salidas, sitio del waypoint) y qué se queda fijo (lado de la entrada y orden de las zonas del acto, NPC, objetos de misión en una «sala» propia, arenas de jefe y campamentos, que no se generan).
+- Plantillas de forma por estilo (salas y pasillos, cueva orgánica, plaza abierta con islas, laberinto de racks…) con tamaño variable (±15 %) y garantías: todo conectado, la salida lejos de la entrada, el waypoint y los objetos de misión alcanzables.
+- Prototipo en `capture_screens` que dibuja 5 semillas de cada zona para la revisión.
+
+### [ ] T115 · Generador, parte 1: semilla por instancia y disposición · M
+Origen: V3
+- `Zone.setup` recibe una semilla de instancia (no `hash(id)`); bordes, accidentes, obstáculos, decorado y cajas salen de ella. Salidas, waypoint, objetos de misión y lore se recolocan en puntos válidos de la plantilla, respetando el lado de cada salida.
+- Comprobación de conectividad (relleno por inundación sobre la colisión) y regenerar si falla.
+- Pruebas: 50 semillas por zona, todas conectadas, sin nada encima de un obstáculo; la integración rápida juega con semillas al azar.
+
+### [ ] T116 · Generador, parte 2: plantillas de forma por estilo · M
+Origen: V3
+- Las plantillas de T114 en el juego, una o dos por estilo; la zona puede salir más larga, más ancha o con un rodeo.
+- Minimapa, mapa grande y marcas propias (T53) con la forma nueva; las marcas se borran al cambiar de instancia.
+
+### [ ] T117 · Generador, parte 3: contenido que varía · M
+Origen: V3
+- Manadas por «tema» de instancia (la mezcla de tipos de la zona varía: más de uno, menos de otro), élites y raros en sitios distintos, cajas, decorado y algún rincón opcional con botín.
+- Variante de ambiente por instancia (niebla, lluvia de datos, apagón parcial, polvo) dentro de lo que permite el estilo.
+- Que el nivel de zona, la densidad media y la experiencia por zona no cambien (medir con la telemetría de T64).
+
+## Fase 22 — Instancias que duran 10 minutos
+
+### [ ] T118 · Instancias, parte 1: la zona y el botín se conservan · M
+Origen: V3
+- Registro de instancias en `World` (en memoria, no en el guardado): semilla, botín y tokens en el suelo, cajas abiertas, lore recogido, marcas del mapa y la hora a la que se salió. Al volver (por salida, waypoint o tras morir) antes de 10 min, la misma instancia; después, una nueva. Varias instancias a la vez (tope de ~8, se descarta la más vieja).
+- El reloj corre en tiempo de juego mientras la partida está abierta (pausa incluida); al salir al menú o cerrar el juego, se pierden.
+- No aplica a campamentos (no se generan), ni a oleadas ni pruebas de estrés (se reinician siempre).
+
+### [ ] T119 · Instancias, parte 2: enemigos, eventos y mecánicas · M
+Origen: V3
+- `EnemyManager` guarda y restaura los enemigos vivos (tipo, rareza, afijos, rol, vida, posición) y no vuelve a sacar los muertos; el némesis, si estaba, sigue ahí. Los eventos y la mecánica de zona (Fase 23) vuelven en el estado en que se dejaron.
+- **Excepción, la arena del jefe**: al morir o salir, el jefe vuelve a la fase 1 con la vida completa, sin adds, con las mecánicas de arena y la música reiniciadas; lo que haya caído al suelo en la arena sí se conserva.
+- Tiempo que le queda a la instancia en la ventana de waypoints y en el minimapa («caduca en 7:32»).
+- Prueba: morir con botín en el suelo y 20 enemigos vivos, volver y encontrar los mismos; pasados 10 min, zona nueva; morir en la fase 3 del jefe y volver a la fase 1 con la vida llena.
+
+## Fase 23 — Mecánicas de zona al azar
+
+### [ ] T120 · Motor de mecánicas de zona · M
+Origen: V3
+- Catálogo `data/zone_mechanics.json` (peso, estilos y actos donde puede salir, nivel mínimo, recompensa) y presupuesto por instancia: **una mecánica principal siempre** y como mucho un evento menor de los de `ZoneEvents`; nunca dos principales. El `mutex` y la `race_condition` del Acto II cuentan como la principal de su zona.
+- Al entrar, aviso con el nombre y una frase; icono en el minimapa y consejo de primera vez (`TipPanel`). Recompensa al completarla (botín extra o tokens), sin castigo si se ignora.
+- Integración: cada zona prueba cada mecánica que le puede tocar.
+
+### [ ] T121 · Mecánicas nuevas, parte 1 · M
+Origen: V3
+- Tres principales con su arte y sonido, por ejemplo: **Garbage Collector** (un barrido recorre la zona cada cierto tiempo y daña a todo lo que pilla, enemigos incluidos; se esquiva o se usa), **Apagón del CPD** (la zona a oscuras salvo tu radio y luces de emergencia que se encienden al pasar) y **Ticket urgente** (élites marcados que hay que tumbar antes de que acabe la cuenta atrás).
+
+### [ ] T122 · Mecánicas nuevas, parte 2 · M
+Origen: V3
+- Otras tres: **Merge conflict** (dos bandos de enemigos que se pelean entre sí si se cruzan), **Deploy de viernes** (oleadas que entran por la salida hasta cerrar el pipeline en un terminal) y **Caché caliente** (baldosas que dan un bono corto al pisarlas y se mueven).
+- Ajustar pesos y recompensas con la telemetría para que ninguna domine ni se haga pesada.
+
+## Fase 24 — Gráficos
+
+### [ ] T123 · Salas temáticas en las zonas generadas · M
+Origen: V3
+- «Set pieces» por estilo que el generador puede insertar (rack caído con cables, cementerio de commits, sala de backups inundada, altar del becario…), con decorado propio, luz y a veces una caja o un lore.
+
+### [ ] T124 · Profundidad y lectura del escenario · M
+Origen: V3
+- Obstáculos altos que se vuelven translúcidos cuando el jugador o un enemigo élite queda detrás; sombras que siguen a las luces de la zona; capa de fondo con parallax más allá del borde (vacío, abismo, agua).
+- Manchas que se quedan en el suelo (aceite, chispas quemadas, restos) y se conservan con la instancia; medir el coste con `capture_screens -- rendimiento`.
+
+## Fase 25 — Interfaz
+
+### [ ] T125 · Minimapa con niebla que se descubre · M
+Origen: V3
+- Con zonas que cambian, el minimapa y el mapa grande empiezan en niebla y se descubren al pasar; lo descubierto se guarda en la instancia. Salidas y waypoint aparecen al verlos.
+
+### [ ] T126 · Ventana de waypoints como mapa del acto · M
+Origen: V3
+- En vez de la lista: el mapa de cada acto con sus zonas unidas, el waypoint descubierto o no, la mecánica y el tiempo de la instancia viva y pestañas por acto (ahora es la única forma de volver atrás); con ratón, mando y toque.
+
+### [ ] T127 · Comparar placas y RAM con lo equipado · S
+Origen: pendiente de T70/T71
+- Al pasar el ratón por una placa o RAM (tienda, suelo, alijo, inventario), su tooltip al lado del de lo equipado en esa ranura con las diferencias en verde y rojo (DPS de la habilidad, coste, área…).
+
+### [ ] T128 · HUD de la zona y registro de sucesos · S
+Origen: V3
+- Rótulo de la zona al entrar con la mecánica activa; panel lateral plegable con lo que pasa (botín único y raro, waypoint descubierto, mecánica completada, instancia que caduca), y aviso 1 min antes de que caduque la instancia en la que tienes botín.
+
+## Fase 26 — Escenas
+
+### [ ] T129 · Escenas con dirección · M
+Origen: V3
+- `CutscenePlayer` con pasos nuevos: paneo y zoom de cámara, temblor, personajes que caminan y se giran en la escena, bandas de cine y retrato con expresión por línea; repasar las escenas existentes para usarlos.
+- Saltar la escena entera o línea a línea, con ratón, mando y toque.
+
+### [ ] T130 · Escenas que faltan · M 🛑
+Origen: V3
+- Llegada a cada campamento por primera vez y derrota de cada jefe (epílogo corto antes del portal), en `cutscenes.json` y con el humor del juego (`docs/lore.md`).
+
+## Fase 27 — Cierre de la versión 3.0
+
+### [ ] T131 · Revisión de la versión 3.0 · S 🛑
+Origen: V3
+- Integración completa (30 s por zona, una sola vez al final), capturas de cada fase nueva, `README.md` al día y etiqueta `v3.0` en git.
+
 ---
 
 ## Fuera de la cola (necesitan una persona)
@@ -804,3 +938,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-26 · T104 · Objetos en el suelo con icono, sombra, brillo de rareza y vuelo en arco con rebote; cajas de servidor que se abren y sueltan botín en arco.
 - 2026-10-26 · T105 · Tilesets por estilo en PNG (suelo con 3 variantes sin costuras y banda del borde), usados en el suelo y el contorno del camino; agua animada en el borde. Roadmap 4.0 terminado.
 - 2026-10-26 · Roadmap 5.0 (T106-T110): versión para celular — renderizador móvil, controles táctiles (joystick, apuntado automático, botones de habilidades, esquiva y pociones), interfaz táctil y exportación a Android.
+- 2026-10-26 · Copia de la versión 2.0 (rama `version-2.0`, etiqueta `v2.0`) y roadmap de la versión 3.0 (T111-T131): tokens y waypoints de más lejos, solo waypoints entre actos, zonas generadas por instancia que duran 10 minutos (salvo la arena del jefe), mecánicas de zona al azar, gráficos, interfaz y escenas.
