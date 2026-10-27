@@ -15,6 +15,10 @@ const PRESETS := [
 	{"lights": 32, "particles": 900, "bloom": 1.0, "heat": true, "shock": true, "flashes": true},
 ]
 
+## En el celular (T106), luces dinámicas como mucho, sea cual sea la calidad: cada luz
+## es una pasada más del filtro del mundo y la GPU de un teléfono lo nota.
+const MOBILE_LIGHTS := 12
+
 static var level := clampi(int(GameSettings.get_value("graphics", "quality", Level.HIGH)), 0, 2)
 
 
@@ -24,7 +28,11 @@ static func set_level(value: int) -> void:
 
 
 static func preset(at := -1) -> Dictionary:
-	return PRESETS[level if at < 0 else clampi(at, 0, 2)]
+	var p: Dictionary = PRESETS[level if at < 0 else clampi(at, 0, 2)]
+	if GameSettings.is_mobile() and int(p["lights"]) > MOBILE_LIGHTS:
+		p = p.duplicate()
+		p["lights"] = MOBILE_LIGHTS
+	return p
 
 
 static func name_of(at := -1) -> String:

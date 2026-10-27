@@ -33,6 +33,7 @@ window/size/viewport_height=900
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/size/mode.template=3
+window/handheld/orientation=4
 
 [input]
 
@@ -189,4 +190,5 @@ debug_drop_items={
 
 [rendering]
 
+renderer/rendering_method.mobile="mobile"
 textures/canvas_textures/default_texture_filter=0

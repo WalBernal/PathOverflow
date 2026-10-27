@@ -195,6 +195,7 @@ func _initialize() -> void:
 	_test_event_log()
 	_test_cutscene_direction()
 	_test_missing_scenes()
+	_test_mobile_defaults()
 	_test_tilesets()
 	_test_events_music_colorblind()
 	_test_story_editor()
@@ -5137,6 +5138,27 @@ func _test_missing_scenes() -> void:
 	var camp1 := Zone.pick_entry_cutscene(DataLoader.load_json("res://data/act1.json")["zones"].filter(func(z: Dictionary) -> bool: return z["id"] == "campamento")[0]["cutscene_on_enter"],
 		{"llegada_campamento_vista": true, "act1_complete": true})
 	_check(camp1.get("id", "") == "reunion_campamento", "en el campamento del acto I sigue la reunión tras el jefe")
+
+
+## Celular (T106): renderizador móvil, horizontal y valores por defecto.
+func _test_mobile_defaults() -> void:
+	_check(String(ProjectSettings.get_setting("rendering/renderer/rendering_method.mobile")) == "mobile", "en el celular, el renderizador mobile")
+	_check(int(ProjectSettings.get_setting("display/window/handheld/orientation")) == DisplayServer.SCREEN_SENSOR_LANDSCAPE, "y siempre en horizontal")
+	_check(not GameSettings.is_mobile(), "este equipo no cuenta como celular")
+	_check(int(GraphicsQuality.preset(2)["lights"]) == 32, "en escritorio, la calidad alta con todas sus luces")
+	var cfg := ConfigFile.new()
+	cfg.load(GameSettings.PATH)
+	GameSettings.force_mobile = true
+	_check(int(GraphicsQuality.preset(2)["lights"]) == GraphicsQuality.MOBILE_LIGHTS and int(GraphicsQuality.preset(0)["lights"]) == 10,
+		"en el celular, menos luces (la calidad baja ya tiene menos)")
+	_check(int(GraphicsQuality.PRESETS[2]["lights"]) == 32, "sin tocar los ajustes de escritorio")
+	if not cfg.has_section_key("graphics", "quality"):
+		_check(int(GameSettings.get_value("graphics", "quality", 2)) == 1, "calidad media por defecto en el celular")
+	if not cfg.has_section_key("interface", "scale"):
+		_check(is_equal_approx(float(GameSettings.get_value("interface", "scale", 1.0)), 1.4), "interfaz al 140 % por defecto en el celular")
+	_check(int(GameSettings.get_value("prueba_t106", "nada", 7)) == 7, "lo que no tiene valor de celular, igual")
+	GameSettings.force_mobile = false
+	_check(int(GameSettings.get_value("prueba_t106", "nada", 7)) == 7 and int(GraphicsQuality.preset(2)["lights"]) == 32, "y al dejar de forzarlo, todo como antes")
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.

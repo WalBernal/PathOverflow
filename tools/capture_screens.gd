@@ -20,6 +20,11 @@ func _ready() -> void:
 	LoadingCard.enabled = false   # la pantalla de carga taparía las capturas
 	BossIntro.enabled = OS.get_cmdline_user_args().has("jefes")   # la entrada de jefe, solo donde se quiere ver
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT))
+	# Como en el celular (T106): con  --rendering-method mobile  delante, además el renderizador.
+	if OS.get_cmdline_user_args().has("movil"):
+		GameSettings.force_mobile = true
+		GraphicsQuality.level = int(GameSettings.MOBILE_DEFAULTS["graphics/quality"])
+	print("renderizador: ", RenderingServer.get_current_rendering_method(), " · móvil: ", GameSettings.is_mobile())
 	_run.call_deferred()
 
 

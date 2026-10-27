@@ -807,11 +807,12 @@ Punto de partida: ventana de 1600×900 con stretch `canvas_items`; mando ya sopo
 
 ## Fase 19 — Móvil
 
-### [ ] T106 · Renderizador y rendimiento en móvil · M
+### [x] T106 · Renderizador y rendimiento en móvil · M
 Origen: R5
 - Renderizador `mobile` para Android (`rendering/renderer/rendering_method.mobile`) y comprobar que el filtro del mundo, la luz, el bloom, las distorsiones, los sprites por capas y las partículas funcionan con él (si alguno no, alternativa o apagarlo en móvil).
 - En dispositivos táctiles (`OS.has_feature("mobile")` o pantalla táctil), por defecto: calidad gráfica baja o media (T98), luces reducidas y tamaño de interfaz 140 %; orientación horizontal fija.
 - Medir con `capture_screens -- rendimiento` forzando el renderizador móvil y la calidad baja.
+- Hecho: `project.godot` con `rendering_method.mobile="mobile"` y orientación `sensor_landscape` (horizontal, en cualquiera de los dos sentidos). `GameSettings.MOBILE_DEFAULTS` (calidad media e interfaz al 140 %) se usa como valor por defecto en el celular mientras el jugador no haya elegido otro, y `GraphicsQuality.MOBILE_LIGHTS` limita a 12 las luces en cualquier calidad. **Decisión**: cuenta como celular solo `OS.has_feature("mobile")` (`GameSettings.is_mobile`, con `force_mobile` para pruebas y capturas); una laptop con pantalla táctil conserva su calidad, y los controles táctiles (T107) son los que miran la pantalla táctil. Medido con `capture_screens -- rendimiento movil` y `--rendering-method mobile` en este equipo (RTX 4050), sin un solo error: 300 enemigos a 45,6 ms por fotograma con el móvil frente a 45,5 ms con Forward+, mismas capas y efectos (filtro del mundo, luces, bloom, ondas, sprites por capas, partículas); capturas en `docs/capturas/movil/`. El rendimiento en un teléfono de verdad queda para T110, con el APK. Prueba `_test_mobile_defaults`.
 
 ### [ ] T107 · Controles táctiles: movimiento y objetivo · M
 Origen: R5
@@ -989,3 +990,5 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-27 · T129 · Escenas con dirección: cámara con paneo y zoom hacia NPC o jefe, personajes que caminan y se giran, bandas de cine, cara por línea y saltar con ratón, toque o mando; repasadas cuatro escenas.
 - 2026-10-27 · T130 · Escenas que faltaban: llegada a cada uno de los 4 campamentos (una vez, no si el acto ya está completo) y epílogo corto tras cada jefe, encadenado con `on_finish.cutscene`; `cutscene_on_enter` admite listas con condiciones.
 - 2026-10-27 · T131 · Revisión de la 3.0: el piloto de la integración sigue la rejilla con A* (se atascaba en paredes de zonas generadas), integración completa en verde (219 combinaciones), capturas y README al día, etiqueta `v3.0`. **Pendiente de revisión del usuario.**
+- 2026-10-27 · T131 · Versión 3.0 aprobada por el usuario; se sigue con la fase móvil.
+- 2026-10-27 · T106 · Renderizador `mobile` y horizontal fijo en el celular, con calidad media, interfaz al 140 % y como mucho 12 luces por defecto; los efectos funcionan igual con el renderizador móvil y cuesta lo mismo en este equipo.
