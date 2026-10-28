@@ -5220,6 +5220,23 @@ func _test_touch_controls() -> void:
 		_check(s * ui >= 44.0, "objetivo táctil de %d px a 140 %% (≥ 44)" % roundi(s * ui))
 	_check(TouchPointer.LONG_PRESS >= 0.4 and TouchPointer.LONG_PRESS <= 0.8, "mantener: medio segundo, ni más ni menos")
 	_check(TouchPointer.scroll_for(null, Vector2(0, 40)) == null, "arrastrar sin casilla: no desplaza por su cuenta")
+	# Límite de FPS (T144): automático = sin límite en el PC; en el celular 60, y 30 si va lento.
+	var fps_choice_was := GraphicsQuality.fps_choice()
+	var auto_fps_was := int(GameSettings.get_value("graphics", "auto_fps", 60))
+	GameSettings.set_value("graphics", "max_fps", -1)
+	GameSettings.set_value("graphics", "auto_fps", 60)
+	GameSettings.force_mobile = false
+	_check(GraphicsQuality.effective_fps() == 0 and not GraphicsQuality.auto_measured(20.0), "en el PC, auto: sin límite y no se toca")
+	GameSettings.force_mobile = true
+	_check(GraphicsQuality.effective_fps() == 60, "en el celular, auto: 60 de entrada")
+	_check(not GraphicsQuality.auto_measured(58.0) and GraphicsQuality.effective_fps() == 60, "si va bien, se queda en 60")
+	_check(GraphicsQuality.auto_measured(41.0) and GraphicsQuality.effective_fps() == 30, "si va lento, baja a 30")
+	GameSettings.set_value("graphics", "max_fps", 60)
+	_check(not GraphicsQuality.auto_measured(20.0) and GraphicsQuality.effective_fps() == 60, "con un límite elegido, no se toca")
+	GameSettings.force_mobile = false
+	GameSettings.set_value("graphics", "max_fps", fps_choice_was)
+	GameSettings.set_value("graphics", "auto_fps", auto_fps_was)
+	GraphicsQuality.apply_fps()
 	# Vibración (T143): con respiro entre pulsos, salvo los importantes; apagable.
 	var touch_force_was := Touch.force
 	var vib_was := Haptics.enabled()

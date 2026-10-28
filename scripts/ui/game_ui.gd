@@ -635,6 +635,23 @@ func _build_pause_menu() -> Control:
 		GraphicsQuality.set_level((GraphicsQuality.level + 1) % 3)
 		quality.text = "Calidad gráfica: " + GraphicsQuality.name_of())
 	extra.add_child(quality)
+	# Límite de FPS y contador (T144).
+	var fps := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
+	fps.text = "FPS: " + GraphicsQuality.fps_name()
+	fps.tooltip_text = "Auto: sin límite en el PC; en el celular 60, o 30 si la partida va justa (ahorra batería y calor).\n30 o 60: siempre ese tope. Sin límite: lo que dé el equipo."
+	fps.pressed.connect(func() -> void:
+		var choices := GraphicsQuality.FPS_CHOICES
+		GraphicsQuality.set_fps_choice(choices[(choices.find(GraphicsQuality.fps_choice()) + 1) % choices.size()])
+		fps.text = "FPS: " + GraphicsQuality.fps_name())
+	extra.add_child(fps)
+	var counter := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
+	counter.text = "Contador de FPS: " + ("sí" if Hud.show_fps else "no")
+	counter.tooltip_text = "La línea de arriba a la izquierda: FPS, enemigos y tiempo de simulación."
+	counter.pressed.connect(func() -> void:
+		Hud.show_fps = not Hud.show_fps
+		GameSettings.set_value("interface", "show_fps", Hud.show_fps)
+		counter.text = "Contador de FPS: " + ("sí" if Hud.show_fps else "no"))
+	extra.add_child(counter)
 	var tips_button := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
 	tips_button.text = "Consejos de mecánicas: " + ("sí" if TipPanel.enabled() else "no")
 	tips_button.tooltip_text = "Un aviso corto la primera vez que aparece la esquiva, las cargas, los golpes pesados,\nlos terrenos o una mecánica de arena de jefe."

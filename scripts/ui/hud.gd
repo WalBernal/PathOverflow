@@ -21,6 +21,10 @@ const TRIM := Color("8a6d3b")
 const TEXT_COLOR := Color("e8d9b0")
 const MUTED := Color("8a8293")
 
+## Línea de FPS y depuración arriba a la izquierda (T144, Pausa → Gráficos; en el
+## celular, apagada por defecto).
+static var show_fps := bool(GameSettings.get_value("interface", "show_fps", true))
+
 var player: Player
 var enemies: EnemyManager
 var character: CharacterData
@@ -454,6 +458,7 @@ func _process(delta: float) -> void:
 	if _info_timer > 0.0 or character == null:
 		return
 	_info_timer = 0.25
+	_info.visible = show_fps
 	_info.text = "FPS %d  ·  Enemigos %d  ·  Simulación %.2f ms  ·  F1-F4: depuración" % [
 		Engine.get_frames_per_second(), enemies.count(), enemies.last_simulation_ms]
 	_update_tooltips()

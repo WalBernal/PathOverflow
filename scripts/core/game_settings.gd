@@ -10,6 +10,7 @@ const PATH := "user://settings.cfg"
 const MOBILE_DEFAULTS := {
 	"graphics/quality": 1,
 	"interface/scale": 1.4,
+	"interface/show_fps": false,   # la línea de FPS y depuración (T144)
 }
 
 ## Para las pruebas y las capturas: hacer como si fuera un celular.

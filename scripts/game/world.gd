@@ -268,10 +268,30 @@ func _process(delta: float) -> void:
 	if not _event_fights.is_empty():
 		_update_event_fights()
 	_immune_warning = maxf(0.0, _immune_warning - delta)
+	_measure_fps(delta)
 	_since_save += delta
 	if (_dirty and _since_save >= AUTOSAVE_DELAY) or _since_save >= AUTOSAVE_INTERVAL:
 		save_now()
 
+
+## Límite de FPS automático (T144): una vez por partida, la media de FPS de
+## FPS_SAMPLE segundos con pelea (10 enemigos o más); si va lento, 30 y un aviso.
+const FPS_SAMPLE := 10.0
+var _fps_time := 0.0
+var _fps_frames := 0
+var _fps_done := false
+
+
+func _measure_fps(delta: float) -> void:
+	if _fps_done or not GameSettings.is_mobile() or GraphicsQuality.fps_choice() != -1 or enemies.count() < 10 or delta <= 0.0:
+		return
+	_fps_time += delta
+	_fps_frames += 1
+	if _fps_time < FPS_SAMPLE:
+		return
+	_fps_done = true
+	if GraphicsQuality.auto_measured(_fps_frames / _fps_time):
+		ui.hud.flash("Esto va justo: 30 FPS para cuidar la batería (Pausa → Gráficos → FPS).", UiStyle.ACCENT)
 
 ## Cerrar la ventana también guarda. En el celular (T141), salir de la app (inicio,
 ## una llamada, apagar la pantalla) guarda y deja la pausa abierta para la vuelta.
