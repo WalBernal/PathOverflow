@@ -2,8 +2,8 @@ class_name TitleScreen
 extends Control
 ## Pantalla de título: logo de «Path Overflow», lluvia de binario, snippets de
 ## código flotando, un grafo de git roto, bugs cruzando la pantalla, un rack de
-## servidores echando vapor y un café humeante. Con música. Cualquier tecla o
-## click continúa a la lista de personajes.
+## servidores echando vapor y un café humeante. Con música. Cualquier tecla,
+## click o toque continúa a la lista de personajes.
 
 const SNIPPETS := [
 	"console.log('hola, egresado');", "git push --force origin main", "sudo rm -rf /bugs",
@@ -25,6 +25,7 @@ var _city: Array = [[], []]
 const CITY_SPEED := [6.0, 14.0]
 var _logo: GameLogo
 var _leaving := false
+var _mute: Button
 
 
 func _ready() -> void:
@@ -40,6 +41,7 @@ func _ready() -> void:
 	mute.pressed.connect(func() -> void: mute.text = "Música: no" if MusicPlayer.toggle_mute() else "Música: sí")
 	mute.focus_mode = Control.FOCUS_NONE
 	add_child(mute)
+	_mute = mute
 	mute.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 16)
 	_init_effects()
 
@@ -102,9 +104,15 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 
-func _unhandled_input(event: InputEvent) -> void:
+## En _input (no _unhandled_input): la propia pantalla es un Control y se quedaba el
+## click. En el celular continúa al tocar; tocar el botón de música no cuenta.
+func _input(event: InputEvent) -> void:
 	var pressed: bool = (event is InputEventKey and event.pressed and not event.echo) \
-		or (event is InputEventMouseButton and event.pressed)
+		or (event is InputEventMouseButton and event.pressed) \
+		or (event is InputEventScreenTouch and event.pressed)
+	if pressed and (event is InputEventMouseButton or event is InputEventScreenTouch) \
+			and _mute.get_global_rect().has_point(event.position):
+		return
 	if pressed and not _leaving:
 		_leaving = true
 		ScreenTransition.change_scene(get_tree(), GameData.MAIN_MENU_SCENE)   # barrido de píxeles (T96)
@@ -144,7 +152,7 @@ func _draw() -> void:
 		draw_rect(Rect2(Vector2(0, view.y - 26.0 * (8 - k)), Vector2(view.x, 26.0 * (8 - k))), Color(0, 0, 0, a))
 	# Indicación parpadeante y versión.
 	var cursor := "_" if fmod(_time, 1.0) < 0.5 else " "
-	var prompt := "> pulsa cualquier tecla para continuar" + cursor
+	var prompt := ("> toca la pantalla para continuar" if GameSettings.is_mobile() else "> pulsa cualquier tecla para continuar") + cursor
 	var pw := font.get_string_size(prompt, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x
 	draw_string(font, Vector2((view.x - pw) / 2.0, view.y - 120.0), prompt, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("3cff6a"))
 	draw_string(font, Vector2(16, view.y - 16), "v0.1.0-alpha · compilado con café · inestable, como el código", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiStyle.MUTED)

@@ -379,7 +379,7 @@ El **registro de misiones** está debajo del minimapa (L para plegarlo): la prin
 
 ## Pantalla de título, menú y creador
 
-- **Pantalla de título** (`scenes/menu/title_screen.tscn`, escena principal): logo animado de *Path Overflow* (`GameLogo`) con efecto glitch y una pila desbordándose, lluvia de binario, `console.log`s flotando, un grafo de git que termina en `push --force`, bugs cruzando, un rack de servidores echando vapor y un café.
+- **Pantalla de título** (`scenes/menu/title_screen.tscn`, escena principal): logo animado de *Path Overflow* (`GameLogo`) con efecto glitch y una pila desbordándose, lluvia de binario, `console.log`s flotando, un grafo de git que termina en `push --force`, bugs cruzando, un rack de servidores echando vapor y un café. Se continúa con cualquier tecla, un clic o, en el celular, tocando la pantalla («toca la pantalla para continuar»).
 - **Música**: `assets/audio/title_theme.wav`, generada con `tools/generate_music.gd` (bucle de ~37 s). El autoload `MusicPlayer` la mantiene sonando entre título, menú y creador; el botón "Música" la silencia y se recuerda en `user://settings.cfg`. Para usar otra música basta con sustituir el WAV.
 - **Música de zonas y jefes**: `data/music.json` define 12 pistas (campamento, exploración, zonas oscuras/frías y jefe de cada acto) y qué pista suena en cada zona; `tools/generate_zone_music.gd` las compone en `assets/audio/music/<id>.wav` (mono 16 kHz, bucle sin costura; `-- id1 id2` para regenerar solo algunas). `MusicPlayer.play_zone()` hace fundido cruzado al cambiar de zona, y cada fase de jefe sube el tempo un 4 %. El campamento del acto III (`camp3`) es un instrumental lento de piano y pad con batería suave, de aire melancólico. Para sustituir una pista basta con reemplazar su WAV. El volumen de música, voz y su velocidad se cambian en el menú de pausa.
 - **Voces**: cada NPC de `data/npcs.json` tiene en `voice` su `pitch`, `rate`, `gender` (male/female/neutral) y `volume` opcional; el proceso aparte del narrador (`NarratorVoice`) los recibe junto con los ajustes del jugador.
@@ -711,6 +711,14 @@ Añade `*.json` en *Exportar → Recursos → Filtros para exportar archivos no-
 ```powershell
 powershell -ExecutionPolicy Bypass -File tools/build_release.ps1
 ```
+
+**Android** (`tools/instalar_android.ps1`): descarga, si faltan, el JDK 17 (a `%LOCALAPPDATA%\PathOverflowAndroid`) y las herramientas de Android (a `%LOCALAPPDATA%\Android\Sdk`), te pide aceptar las licencias del SDK, instala build-tools 36.1.0 y la plataforma 36, apunta el editor de Godot a ellos y exporta `build/PathOverflow.apk` (preset «Android»: arm64-v8a, `com.pathoverflow.game`, horizontal, sin permisos extra, firmado con la clave de depuración `%APPDATA%\Godot\keystores\debug.keystore`). Hacen falta las plantillas de exportación de Android de Godot 4.7.2.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/instalar_android.ps1
+```
+
+Para instalarlo en el teléfono: copia `build/PathOverflow.apk` al celular (cable USB, Drive o correo), ábrelo desde el administrador de archivos y permite «instalar apps de origen desconocido» a esa app cuando lo pida. Con depuración USB activada también vale `adb install -r build/PathOverflow.apk` (adb está en `%LOCALAPPDATA%\Android\Sdk\platform-tools`). Para publicarlo en una tienda hay que firmarlo con una clave propia: créala con `keytool -genkeypair -v -keystore mi_clave.keystore -alias mi_alias -keyalg RSA -keysize 2048 -validity 10000`, ponla en *Proyecto → Exportar → Android → Keystore → Release* (ruta, usuario y contraseña) y exporta con `--export-release` (para Google Play, además, AAB con `gradle_build/use_gradle_build`).
 
 ## Próximos pasos sugeridos
 
