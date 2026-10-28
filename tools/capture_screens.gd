@@ -29,6 +29,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("usar") and OS.get_cmdline_user_args().has("tactil"):
+		await _capture_touch_use()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("filtro") and OS.get_cmdline_user_args().has("tactil"):
 		await _capture_loot_filter_touch()
 		get_tree().quit()
@@ -2378,6 +2382,104 @@ func _capture_phone() -> void:
 
 ## `p` en coordenadas del lienzo; el toque llega en las de la ventana (otra cosa a
 ## resolución de teléfono, donde el lienzo se estira).
+## Botón de usar (T134) a resolución de teléfono con la interfaz al 140 %: con botín
+## cerca, tocar recoge el más raro y mantener el resto; junto a un NPC, «Hablar»;
+## tocar la etiqueta de un objeto lejano va hasta él (antes iba al toque anterior).
+func _capture_touch_use() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Pulgar", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.flags["llegada_campamento_vista"] = true
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	var scale_was: Variant = GameSettings.get_value("interface", "scale", 1.0)
+	GameSettings.set_value("interface", "scale", 1.4)
+	var rules_were: Dictionary = LootFilter.rules().duplicate(true)
+	LootFilter.apply_preset("todo")
+	Touch.force = true
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var ui: GameUI = world.get("ui")
+	if ui.cutscene.visible:
+		ui.cutscene.call("_finish")
+	get_window().size = Vector2i(2400, 1080)
+	await _wait(0.5)
+	ui.apply_ui_scale()
+	world.call("travel_to", "zona1", "waypoint")
+	await _wait(1.5)
+	var player: Player = world.get("player")
+	player.set("invulnerable", true)
+	var enemies: EnemyManager = world.get("enemies")
+	enemies.clear_all()
+	var loot: LootManager = world.get("loot")
+	var gen := ItemGenerator.new(gd.get("items"))
+	var p := player.global_position
+	var picks: Array[Item] = []
+	for r in [Rarity.Item.NORMAL, Rarity.Item.RARE, Rarity.Item.MAGIC, Rarity.Item.NORMAL]:
+		var it := gen.generate(5, r)
+		picks.append(it)
+		loot.drop_item(it, p + Vector2(70 + picks.size() * 20, -30 + picks.size() * 18))
+	await _wait(1.0)
+	var hud: Hud = ui.hud
+	var to_screen := func(q: Vector2) -> Vector2: return hud.get_global_transform_with_canvas() * q
+	print("usar: botón %s «%s» (%s)" % ["visible" if not hud.use_now.is_empty() else "OCULTO", hud.use_now.get("text", ""),
+		(hud.use_now.get("item") as Item).display_name() if hud.use_now.has("item") else "-"])
+	_save("134_usar_boton")
+	var use_at: Vector2 = to_screen.call(hud.use_rect().get_center())
+	_touch(1, use_at, true)
+	await get_tree().process_frame
+	_touch(1, use_at, false)
+	await _wait(1.2)
+	print("usar: un toque → raro en la bolsa: %s, en el suelo quedan %d" % [c.inventory.bag.has(picks[1]), loot.drops.size()])
+	_touch(1, use_at, true)
+	await _wait(0.7)
+	_touch(1, use_at, false)
+	await _wait(2.5)
+	print("usar: mantener → en el suelo quedan %d" % loot.drops.size())
+	# Tocar la etiqueta de un objeto lejano (y antes, otro punto): va al objeto, no al toque anterior.
+	var far := gen.generate(5, Rarity.Item.MAGIC)
+	loot.drop_item(far, player.global_position + Vector2(330, -90))   # (a la izquierda empieza el joystick)
+	await _wait(1.0)
+	var elsewhere := player.get_canvas_transform() * (player.global_position + Vector2(120, 140))
+	_touch(0, elsewhere, true)
+	await get_tree().process_frame
+	_touch(0, elsewhere, false)
+	await _wait(0.2)
+	player.stop_auto_move()
+	var label_at := player.get_canvas_transform() * (loot.drops[-1]["rect"] as Rect2).get_center()
+	_touch(0, label_at, true)
+	await get_tree().process_frame
+	_touch(0, label_at, false)
+	await _wait(2.5)
+	print("usar: tocar la etiqueta lejana → en la bolsa: %s" % c.inventory.bag.has(far))
+	# En el campamento, junto a un NPC: «Hablar» y tocar abre la conversación.
+	world.call("travel_to", "campamento", "waypoint")
+	await _wait(1.5)
+	var zone: Zone = world.get("zone")
+	player.global_position = zone.npc_position(zone.npcs[0]) + Vector2(0, 90)
+	await _wait(0.4)
+	print("usar: junto a %s → botón «%s»" % [zone.npcs[0]["name"], hud.use_now.get("text", "")])
+	_save("134_usar_npc")
+	use_at = to_screen.call(hud.use_rect().get_center())
+	_touch(1, use_at, true)
+	await get_tree().process_frame
+	_touch(1, use_at, false)
+	await _wait(1.5)
+	print("usar: tocar → conversación abierta: %s" % ui.dialogue_box.visible)
+	get_window().size = Vector2i(1600, 900)
+	LootFilter.rules().merge(rules_were, true)
+	LootFilter.set_rule("weapon", String(rules_were["weapon"]))
+	GameSettings.set_value("interface", "scale", scale_was)
+	Touch.force = false
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
+
+
 ## Filtro de botín con el dedo (T133), a resolución de teléfono con la interfaz al
 ## 140 % y el inventario abierto debajo: tocar gemas cambia la regla, la ventana
 ## cabe en la pantalla y no es más grande que las demás.

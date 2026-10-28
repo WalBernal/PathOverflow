@@ -127,7 +127,13 @@ const TOUCH_RING := [[150.0, 185.0], [150.0, 212.0], [150.0, 239.0], [232.0, 180
 const TOUCH_DODGE := 64.0
 const TOUCH_FLASK := Vector2(60, 68)
 const TOUCH_MENU := Vector2(48, 42)
+## Botón de usar (T134): [radio, grados] desde el orbe de maná, más allá de los arcos.
+const TOUCH_USE := 74.0
+const TOUCH_USE_AT := [318.0, 194.0]
 var touch_layout := false
+## Lo que usaría el botón (World.touch_use_target): {kind, pos, text} o vacío.
+var use_target: Callable
+var use_now: Dictionary = {}
 
 
 ## ¿Qué botón táctil hay en `pos`? {kind: "skill"|"dodge"|"flask", index} o vacío.
@@ -140,6 +146,8 @@ func touch_button_at(pos: Vector2) -> Dictionary:
 			return {"kind": "skill", "index": i}
 	if pos.distance_to(_dodge_rect().get_center()) <= TOUCH_DODGE * 0.62:
 		return {"kind": "dodge", "index": 0}
+	if not use_now.is_empty() and pos.distance_to(use_rect().get_center()) <= TOUCH_USE * 0.62:
+		return {"kind": "use", "index": 0}
 	for i in Inventory.FLASK_SLOTS:
 		if _flask_rect(i).grow(4.0).has_point(pos):
 			return {"kind": "flask", "index": i}
@@ -178,6 +186,12 @@ func _flask_rect(i: int) -> Rect2:
 		return Rect2(left + i * (TOUCH_FLASK.x + 6.0), size.y - TOUCH_FLASK.y - 30.0, TOUCH_FLASK.x, TOUCH_FLASK.y)
 	var plate := _plate_rect()
 	return Rect2(plate.position.x + 16.0 + i * (FLASK_SIZE.x + 6.0), plate.position.y + 8.0, FLASK_SIZE.x, FLASK_SIZE.y)
+
+
+## Botón táctil de usar (T134): abajo, a la izquierda de los arcos de habilidades.
+func use_rect() -> Rect2:
+	var c := _mana_center() + Vector2.from_angle(deg_to_rad(TOUCH_USE_AT[1])) * float(TOUCH_USE_AT[0])
+	return Rect2(c - Vector2(TOUCH_USE, TOUCH_USE) * 0.5, Vector2(TOUCH_USE, TOUCH_USE))
 
 
 ## Casilla de la esquiva, a la derecha de la barra de habilidades.
@@ -240,6 +254,7 @@ func _process(delta: float) -> void:
 	if Touch.shown() != touch_layout:
 		touch_layout = not touch_layout
 		_layout()
+	use_now = use_target.call() if touch_layout and use_target.is_valid() else {}
 	for k in _slot_flash.size():
 		_slot_flash[k] = maxf(0.0, _slot_flash[k] - delta)
 	_update_target(delta)
@@ -453,6 +468,8 @@ func _draw() -> void:
 	for i in SkillController.ACTIONS.size():
 		_draw_skill_slot(i, font)
 	_draw_dodge(font)
+	if touch_layout and not use_now.is_empty():
+		_draw_use(font)
 
 	_draw_status_boxes(font)
 	var boss_bar := _draw_boss_bar(font)
@@ -1000,6 +1017,43 @@ func _draw_dodge(font: Font) -> void:
 	draw_rect(key_rect, TRIM.darkened(0.2), false, 1.0)
 	draw_string(font, key_rect.position + Vector2(0, 11.0), "Esp.", HORIZONTAL_ALIGNMENT_CENTER, key_rect.size.x, 10,
 		TEXT_COLOR if player.dodge_charges >= 1.0 else Color("e06c6c"))
+
+
+## Botón de usar (T134): dorado, con un dibujo de lo que hay cerca (el icono del
+## objeto, una burbuja para hablar, un rombo para el waypoint...) y su texto debajo.
+func _draw_use(font: Font) -> void:
+	var r := use_rect()
+	var c := r.get_center()
+	var radius := TOUCH_USE * 0.5
+	var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 260.0)
+	draw_circle(c, radius + 4.0, Color(0, 0, 0, 0.75))
+	draw_circle(c, radius, Color(UiStyle.ACCENT, 0.9))
+	draw_arc(c, radius + 2.0 + pulse * 2.0, 0.0, TAU, 40, Color(1.0, 0.92, 0.6, 0.5 + 0.3 * pulse), 2.0, true)
+	var ink := Color("1a1208")
+	match String(use_now["kind"]):
+		"loot":
+			var icon := Rect2(c - Vector2(20, 20), Vector2(40, 40))
+			draw_rect(icon.grow(3.0), Color(0, 0, 0, 0.55))
+			ItemIcons.draw_item(self, icon, use_now["item"], Color.WHITE)
+		"npc":
+			draw_circle(c + Vector2(0, -3), 16.0, ink)
+			draw_colored_polygon(PackedVector2Array([c + Vector2(-6, 10), c + Vector2(4, 10), c + Vector2(-10, 20)]), ink)
+			for k in 3:
+				draw_circle(c + Vector2(-7 + k * 7, -3), 2.5, UiStyle.ACCENT)
+		"waypoint":
+			draw_colored_polygon(PackedVector2Array([c + Vector2(0, -18), c + Vector2(14, 0), c + Vector2(0, 18), c + Vector2(-14, 0)]), ink)
+			draw_circle(c, 5.0, Color("7fd4ff"))
+		"stash":
+			draw_rect(Rect2(c - Vector2(16, 10), Vector2(32, 22)), ink)
+			draw_rect(Rect2(c - Vector2(16, 14), Vector2(32, 6)), ink.lightened(0.25))
+			draw_rect(Rect2(c - Vector2(3, 6), Vector2(6, 6)), UiStyle.ACCENT)
+		_:
+			draw_circle(c, 13.0, ink)
+			draw_circle(c, 6.0, UiStyle.ACCENT)
+	var text := String(use_now.get("text", "Usar"))
+	var label_pos := Vector2(c.x - 60.0, r.end.y + 16.0)
+	draw_string_outline(font, label_pos, text, HORIZONTAL_ALIGNMENT_CENTER, 120.0, 14, 4, Color.BLACK)
+	draw_string(font, label_pos, text, HORIZONTAL_ALIGNMENT_CENTER, 120.0, 14, UiStyle.ACCENT.lightened(0.3))
 
 
 ## Sector circular para el enfriamiento (empieza arriba, sentido horario).

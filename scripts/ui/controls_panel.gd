@@ -44,6 +44,20 @@ func _init() -> void:
 		Touch.set_enabled(not Touch.enabled())
 		touch.text = touch_text.call())
 	box.add_child(touch)
+	# Recoger solo al pasar por encima (T134): apagado o desde una rareza.
+	var auto := UiStyle.button("", func() -> void: pass, 300)
+	var steps := [-1, 0, 1, 2, 3, 4]   # escalones de LootFilter.step_of
+	var names := {-1: "no", 0: "todo lo visible", 1: "mágico o más", 2: "raro o más", 3: "ultra-raro o más", 4: "solo únicos"}
+	var auto_text := func() -> String:
+		return "Recoger solo al pasar: " + String(names.get(LootManager.auto_pickup_min, "no"))
+	LootManager.load_auto_pickup()
+	auto.text = auto_text.call()
+	auto.tooltip_text = "Recoge sin tocar los objetos que pisas, si el filtro de botín los deja ver\ny son de esa rareza o más. Pensado para el celular."
+	auto.pressed.connect(func() -> void:
+		var k := steps.find(LootManager.auto_pickup_min)
+		LootManager.set_auto_pickup(steps[(k + 1) % steps.size()])
+		auto.text = auto_text.call())
+	box.add_child(auto)
 	close_requested.connect(queue_free)
 	confirmed.connect(queue_free)
 	window_input.connect(_on_window_input)

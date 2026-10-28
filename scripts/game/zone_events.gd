@@ -581,12 +581,35 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## Mando (A): el evento más cercano a `pos`, si lo hay.
 func interact_near(pos: Vector2, radius: float) -> bool:
+	var i := nearest(pos, radius)
+	if i == -1:
+		return false
+	go_to(i)
+	return true
+
+
+## El suceso que se puede usar más cercano a `pos` (T134), o -1.
+func nearest(pos: Vector2, radius: float) -> int:
+	var best := -1
+	var best_d := radius
 	for i in events.size():
-		if events[i]["kind"] != "ambush" and events[i]["state"] == "ready" and pos.distance_to(events[i]["pos"]) < radius:
-			_pending = i
-			zone.player.move_to(events[i]["pos"] + Vector2(0, 30))
-			return true
-	return false
+		var d := pos.distance_to(events[i]["pos"])
+		if events[i]["kind"] != "ambush" and events[i]["state"] == "ready" and d < best_d:
+			best_d = d
+			best = i
+	return best
+
+
+## Camina hasta el suceso `i` y lo usa al llegar.
+func go_to(i: int) -> void:
+	_pending = i
+	zone.player.move_to(events[i]["pos"] + Vector2(0, 30))
+
+
+## Texto del botón de usar para el suceso `i`.
+func use_text(i: int) -> String:
+	return {"cache": "Abrir", "shrine": "Tocar", "deploy": "Consola", "bombs": "Consola", "ticket": "Consola",
+		"escort": "Escoltar", "merchant": "Comprar"}.get(String(events[i]["kind"]), "Usar")
 
 
 func _at(pos: Vector2) -> int:

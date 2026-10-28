@@ -5182,8 +5182,10 @@ func _test_touch_controls() -> void:
 	_check(Touch.active, "un toque activa el modo táctil")
 	var emulated := InputEventMouseMotion.new()
 	emulated.device = InputEvent.DEVICE_ID_EMULATION
+	emulated.position = Vector2(321, 123)
 	Touch.note_event(emulated)
 	_check(Touch.active, "el ratón que emula el toque no lo apaga")
+	_check(Touch.last_screen == Vector2(321, 123), "y ya lleva al punto tocado (llega antes que el toque)")
 	Touch.note_event(InputEventMouseMotion.new())
 	_check(not Touch.active, "el ratón de verdad, sí")
 	var was := Touch.enabled()
@@ -5227,6 +5229,79 @@ func _test_prologue_touch() -> void:
 	_check(script.touch_use_text("E · Hablar con Rafa") == "Hablar con Rafa", "botón de usar: sin la tecla")
 	_check(script.touch_use_text("Mirar la TV") == "Mirar la TV", "botón de usar: sin tecla, igual")
 	# El joystick, el botón y los toques en el escenario: capture_screens -- prologo tactil.
+	_test_touch_pickup()
+
+
+## Botón de usar y recogida cómoda (T134): el más raro primero, mantener = todo en
+## orden, recoger solo al pasar y etiquetas más fáciles de tocar.
+func _test_touch_pickup() -> void:
+	var c := CharacterData.new(_classes[0], _tree)
+	var pl := Player.new()
+	pl.character = c
+	pl.life = 100.0
+	var lm := LootManager.new()
+	lm.player = pl
+	lm.inventory = c.inventory
+	var gen := ItemGenerator.new(_db, 7)
+	var normal := gen.generate(5, Rarity.Item.NORMAL)
+	var rare := gen.generate(5, Rarity.Item.RARE)
+	var ultra := gen.generate(5, Rarity.Item.ULTRA_RARE)
+	var rules_were: Dictionary = LootFilter.rules().duplicate(true)
+	LootFilter.apply_preset("todo")
+	lm.drop_item(normal, Vector2(20, 0))
+	lm.drop_item(rare, Vector2(120, 0))
+	lm.drop_item(ultra, Vector2(400, 0))
+	var at := func(item: Item) -> int:
+		for i in lm.drops.size():
+			if lm.drops[i]["item"] == item:
+				return i
+		return -1
+	_check(lm.best_near(Vector2.ZERO, 160.0) == at.call(rare), "botón de usar: el raro antes que el normal, aunque esté más lejos")
+	_check(lm.best_near(Vector2.ZERO, 600.0) == at.call(ultra), "y el ultra-raro antes que el raro (el enum no va en orden)")
+	_check(lm.best_near(Vector2(2000, 0), 160.0) == -1, "nada cerca: sin botón")
+	lm.pick_all_near(Vector2.ZERO, 600.0)
+	var order: Array = [lm._pending.get("item")]
+	for d in lm._queue:
+		order.append(d["item"])
+	_check(order == [ultra, rare, normal], "mantener: recoge todo, de más raro a menos")
+	# Llegar a cada uno en orden: los va metiendo en la bolsa.
+	for k in 3:
+		pl.global_position = (lm._pending["rect"] as Rect2).get_center()
+		lm._physics_process(1.0 / 60.0)
+	_check(lm.drops.is_empty() and c.inventory.bag.has(ultra) and c.inventory.bag.has(normal), "y llega a recogerlos todos (%d en el suelo)" % lm.drops.size())
+	# Recoger solo al pasar: solo lo de la rareza elegida o más.
+	var magic := gen.generate(5, Rarity.Item.MAGIC)
+	var rare2 := gen.generate(5, Rarity.Item.RARE)
+	lm.drop_item(magic, Vector2(0, 0))
+	lm.drop_item(rare2, Vector2(0, 0))
+	for d in lm.drops:
+		d["age"] = 9.0   # ya cayeron
+	var auto_was := LootManager.auto_pickup_min
+	LootManager.auto_pickup_min = -1
+	pl.global_position = Vector2.ZERO
+	lm._physics_process(1.0 / 60.0)
+	_check(lm.drops.size() == 2, "recoger solo apagado: nada se recoge sin tocar")
+	LootManager.auto_pickup_min = LootFilter.step_of(Rarity.Item.RARE)
+	for k in 3:
+		pl.global_position = (lm.drops[0]["rect"] as Rect2).get_center() if lm.drops.size() > 0 else Vector2.ZERO
+		lm._physics_process(1.0 / 60.0)
+		pl.global_position = (lm.drops[-1]["rect"] as Rect2).get_center() if lm.drops.size() > 0 else Vector2.ZERO
+		lm._physics_process(1.0 / 60.0)
+	_check(c.inventory.bag.has(rare2) and not c.inventory.bag.has(magic), "recoger solo «raro o más»: el raro sí, el mágico no")
+	LootManager.auto_pickup_min = auto_was
+	# Etiquetas más fáciles de tocar con el dedo.
+	var label := Rect2(100, 100, 80, 20)
+	var was_active := Touch.active
+	Touch.active = false
+	_check(LootManager.hit_rect(label) == label, "con ratón: solo la etiqueta")
+	Touch.active = true
+	var hit := LootManager.hit_rect(label)
+	_check(hit.size.y >= LootManager.TOUCH_TARGET_HEIGHT and hit.encloses(label) and hit.has_point(LootManager.icon_spot(label)),
+		"con el dedo: la etiqueta, su icono y 44 px de alto como mínimo (%s)" % hit)
+	Touch.active = was_active
+	LootFilter.rules().merge(rules_were, true)
+	lm.free()
+	pl.free()
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.

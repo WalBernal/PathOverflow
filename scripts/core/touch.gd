@@ -63,6 +63,10 @@ static func note_event(event: InputEvent) -> void:
 	if event is InputEventScreenTouch or event is InputEventScreenDrag:
 		active = true
 		last_screen = event.position
+	elif event is InputEventMouse and event.device == InputEvent.DEVICE_ID_EMULATION:
+		# El clic que Godot emula de un toque llega antes que el toque (T134): sin
+		# esto, tocar el mundo iba al punto del toque anterior.
+		last_screen = event.position
 	elif (event is InputEventMouseMotion or event is InputEventMouseButton) and not event.device in [InputEvent.DEVICE_ID_EMULATION, POINTER_DEVICE, Gamepad.CURSOR_DEVICE]:
 		active = false
 	elif event is InputEventJoypadButton:

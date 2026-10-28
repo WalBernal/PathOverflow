@@ -34,12 +34,30 @@ var drops: Array[Dictionary] = []
 var coins: Array[Dictionary] = []
 
 var _pending: Dictionary = {}
+## Lo que queda por recoger tras _pending (mantener el botón de usar, T134).
+var _queue: Array[Dictionary] = []
 var _hovered := -1
 var _alt_was := false
+
+## Táctil (T134): la etiqueta se toca con al menos este alto (y su icono cuenta).
+const TOUCH_TARGET_HEIGHT := 44.0
+## Recoger solo al pasar por encima (Pausa → Controles): escalón mínimo del filtro
+## (LootFilter.step_of: 0 normal .. 4 únicos), -1 = apagado.
+static var auto_pickup_min := -1
+
+
+static func load_auto_pickup() -> void:
+	auto_pickup_min = int(GameSettings.get_value("controls", "auto_pickup", -1))
+
+
+static func set_auto_pickup(rarity: int) -> void:
+	auto_pickup_min = rarity
+	GameSettings.set_value("controls", "auto_pickup", rarity)
 
 
 func _ready() -> void:
 	z_index = 2  # etiquetas por encima de enemigos y jugador
+	load_auto_pickup()
 
 
 ## Letra de la rareza para el modo daltónico ("" en el equipo normal y lo que no es equipo).
@@ -114,6 +132,7 @@ func clear_all() -> void:
 	drops.clear()
 	coins.clear()
 	_pending = {}
+	_queue.clear()
 	_set_hovered(-1)
 	queue_redraw()
 
@@ -218,8 +237,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if mb and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
 		var i := _index_at(Touch.pointer(self))
 		if i != -1:
-			_pending = drops[i]
-			player.move_to(_pending["rect"].get_center())
+			pick_index(i)
 			get_viewport().set_input_as_handled()
 
 
@@ -233,25 +251,65 @@ func _physics_process(delta: float) -> void:
 	if beams or show_all_held() != _alt_was:
 		_alt_was = show_all_held()
 		queue_redraw()
-	if _pending.is_empty() or player == null:
+	if player == null:
+		return
+	if _pending.is_empty():
+		_auto_pickup()
 		return
 	if not drops.has(_pending):
-		_pending = {}
+		_next_in_queue()
 		return
 	var center: Vector2 = _pending["rect"].get_center()
 	if player.global_position.distance_to(center) <= PICKUP_RANGE:
 		var item: Item = _pending["item"]
-		if inventory.add_item(item):
-			drops.erase(_pending)
-			picked_up.emit(item)
-			_set_hovered(-1)
-			queue_redraw()
-		else:
-			pickup_failed.emit("Inventario lleno. Como tu backlog.")
 		player.stop_auto_move()
 		_pending = {}
+		if _take(item):
+			_next_in_queue()
+		else:
+			pickup_failed.emit("Inventario lleno. Como tu backlog.")
+			_queue.clear()
 	elif not player.has_auto_target():
 		_pending = {}  # el jugador cambió de idea
+		_queue.clear()
+
+
+## Al inventario y fuera del suelo. false si no cabe.
+func _take(item: Item) -> bool:
+	if not inventory.add_item(item):
+		return false
+	for k in drops.size():
+		if drops[k]["item"] == item:
+			drops.remove_at(k)
+			break
+	picked_up.emit(item)
+	_set_hovered(-1)
+	queue_redraw()
+	return true
+
+
+func _next_in_queue() -> void:
+	_pending = {}
+	while not _queue.is_empty():
+		var d: Dictionary = _queue.pop_front()
+		if drops.has(d):
+			_pending = d
+			player.move_to(d["rect"].get_center())
+			return
+
+
+## Recoger solo (T134): lo que pisa el jugador, si el filtro lo deja ver y es de
+## la rareza elegida o más (equipo; el resto, como el normal), ya caído al suelo.
+func _auto_pickup() -> void:
+	if auto_pickup_min < 0 or not player.is_alive():
+		return
+	for d in drops.duplicate():
+		var item: Item = d["item"]
+		if float(d.get("age", 9.0)) < FLY_TIME or not LootFilter.passes(item) or LootFilter.step_of(item.rarity) < auto_pickup_min:
+			continue
+		if player.global_position.distance_to((d["rect"] as Rect2).get_center()) <= PICKUP_RANGE:
+			if not _take(item):
+				return   # bolsa llena: sin aviso cada fotograma
 
 
 ## Mando: recoge el objeto más cercano a `pos` (a menos de `radius`). true si hay alguno.
@@ -272,12 +330,65 @@ func pick_near(pos: Vector2, radius: float) -> bool:
 	return true
 
 
+## Botón de usar (T134): el objeto a recoger cerca de `pos`, el de más rareza y,
+## entre iguales, el más cercano. -1 si no hay ninguno.
+func best_near(pos: Vector2, radius: float) -> int:
+	var best := -1
+	var best_key := Vector2(-INF, 0.0)   # (rareza, -distancia)
+	for i in drops.size():
+		if not _visible(drops[i]):
+			continue
+		var d: float = (drops[i]["rect"] as Rect2).get_center().distance_to(pos)
+		if d > radius:
+			continue
+		var key := Vector2(LootFilter.step_of((drops[i]["item"] as Item).rarity), -d)
+		if key.x > best_key.x or (key.x == best_key.x and key.y > best_key.y):
+			best_key = key
+			best = i
+	return best
+
+
+## Camina hasta el objeto `i` y lo recoge.
+func pick_index(i: int) -> void:
+	_queue.clear()
+	_pending = drops[i]
+	player.move_to(_pending["rect"].get_center())
+
+
+## Mantener el botón de usar: todo lo visible a menos de `radius`, de más raro a menos.
+func pick_all_near(pos: Vector2, radius: float) -> int:
+	var found: Array[Dictionary] = []
+	for d in drops:
+		if _visible(d) and (d["rect"] as Rect2).get_center().distance_to(pos) <= radius:
+			found.append(d)
+	found.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var ra := LootFilter.step_of((a["item"] as Item).rarity)
+		var rb := LootFilter.step_of((b["item"] as Item).rarity)
+		if ra != rb:
+			return ra > rb
+		return (a["rect"] as Rect2).get_center().distance_to(pos) < (b["rect"] as Rect2).get_center().distance_to(pos))
+	_queue = found
+	_next_in_queue()
+	return found.size()
+
+
 func _index_at(world_pos: Vector2) -> int:
 	# De atrás hacia delante: la última etiqueta dibujada está encima.
 	for i in range(drops.size() - 1, -1, -1):
-		if drops[i]["rect"].has_point(world_pos) and _visible(drops[i]):
+		if hit_rect(drops[i]["rect"]).has_point(world_pos) and _visible(drops[i]):
 			return i
 	return -1
+
+
+## Dónde se puede tocar un objeto: su etiqueta; con el dedo (T134), también su icono
+## y al menos TOUCH_TARGET_HEIGHT de alto.
+static func hit_rect(label: Rect2) -> Rect2:
+	if not Touch.active:
+		return label
+	var r := label.merge(Rect2(icon_spot(label) - Vector2(ICON_SIZE, ICON_SIZE) / 2.0, Vector2(ICON_SIZE, ICON_SIZE)))
+	if r.size.y < TOUCH_TARGET_HEIGHT:
+		r = r.grow_individual(0.0, (TOUCH_TARGET_HEIGHT - r.size.y) / 2.0, 0.0, (TOUCH_TARGET_HEIGHT - r.size.y) / 2.0)
+	return r
 
 
 func _overlaps(rect: Rect2) -> bool:

@@ -147,6 +147,8 @@ func _ready() -> void:
 	ui.layer = 5   # encima del filtro de pixel art (capa 1)
 	add_child(ui)
 	ui.setup(player, enemies, character, loot, skills, quests)
+	ui.hud.use_target = touch_use_target   # botón táctil de usar (T134)
+	ui.touch_controls.use_action = touch_use
 	player.died.connect(_on_player_died)
 	ui.return_to_menu_requested.connect(_return_to_menu)
 	ui.quit_requested.connect(_quit_game)
@@ -1098,6 +1100,38 @@ func respawn() -> void:
 	player.refill()
 	ui.hide_death()
 	travel_to(GameData.town_for_zone(zone.id if zone else ""), "waypoint")
+
+
+## Botón de usar táctil (T134): alcance y, al mantenerlo, hasta dónde recoge todo.
+const TOUCH_USE_RANGE := 160.0
+const TOUCH_GATHER_RANGE := 320.0
+
+
+## Lo que usaría el botón táctil: el objeto del suelo más raro cerca o, si no hay,
+## un NPC, el waypoint, el alijo o un suceso. {kind, pos, text} o vacío.
+func touch_use_target() -> Dictionary:
+	if player == null or not player.is_alive() or zone == null:
+		return {}
+	var i := loot.best_near(player.global_position, TOUCH_USE_RANGE)
+	if i != -1:
+		return {"kind": "loot", "index": i, "pos": (loot.drops[i]["rect"] as Rect2).get_center(), "text": "Recoger",
+			"item": loot.drops[i]["item"]}
+	return zone.use_near(player.global_position, TOUCH_USE_RANGE)
+
+
+## Tocar el botón: usa lo de touch_use_target. Mantenerlo (`all`): recoge todo lo
+## visible cerca, de más raro a menos.
+func touch_use(all: bool) -> void:
+	var t := touch_use_target()
+	if t.is_empty():
+		return
+	if t["kind"] == "loot":
+		if all:
+			loot.pick_all_near(player.global_position, TOUCH_GATHER_RANGE)
+		else:
+			loot.pick_index(int(t["index"]))
+	else:
+		zone.use(t)
 
 
 func _unhandled_input(event: InputEvent) -> void:

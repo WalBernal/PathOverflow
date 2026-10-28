@@ -23,6 +23,11 @@ var enemies: EnemyManager
 var hud: Hud
 ## Devuelve true si hay algo encima (ventana, diálogo, pausa, escena): nada empieza.
 var blocked: Callable = func() -> bool: return false
+## Botón de usar del HUD (T134): World.touch_use(all). Tocar = usar lo de cerca;
+## mantener USE_HOLD s = recoger todo lo de alrededor.
+var use_action: Callable
+const USE_HOLD := 0.45
+const USE_COLOR := Color(1.0, 0.85, 0.45, 0.9)
 
 var _finger := -1
 var _origin := Vector2.ZERO
@@ -51,7 +56,8 @@ func _input(event: InputEvent) -> void:
 	# los botones ya se los queda el HUD, que tiene ahí sus zonas de ayuda).
 	if event is InputEventMouse and event.device == InputEvent.DEVICE_ID_EMULATION:
 		var mb := event as InputEventMouseButton
-		if _finger != -1 or (mb and mb.pressed and in_zone(_local(mb.position)) and _button_at(_local(mb.position)).is_empty() and not blocked.call()):
+		var on_use: bool = mb != null and mb.pressed and not blocked.call() and _button_at(_local(mb.position)).get("kind", "") == "use"   # (sin zona de ayuda en el HUD)
+		if _finger != -1 or on_use or (mb and mb.pressed and in_zone(_local(mb.position)) and _button_at(_local(mb.position)).is_empty() and not blocked.call()):
 			get_viewport().set_input_as_handled()
 		return
 	var st := event as InputEventScreenTouch
@@ -105,6 +111,9 @@ func _press_button(index: int, b: Dictionary, p: Vector2) -> void:
 		"flask":
 			if player:
 				player.use_flask(int(b["index"]))
+		"use":
+			b["time"] = Time.get_ticks_msec() / 1000.0
+			b["done"] = false
 
 
 func _release_button(index: int) -> void:
@@ -117,6 +126,9 @@ func _release_button(index: int) -> void:
 				Touch.aim_dir = Vector2.ZERO
 		"dodge":
 			Input.action_release(&"dodge")
+		"use":
+			if not b["done"] and use_action.is_valid():
+				use_action.call(false)
 
 
 ## Suelta el joystick y los botones (al levantar el dedo o si una ventana se abre encima).
@@ -129,6 +141,7 @@ func release() -> void:
 func release_all() -> void:
 	release()
 	for index in _buttons.keys():
+		_buttons[index]["done"] = true   # soltar por una ventana no usa nada
 		_release_button(index)
 	Touch.aim_dir = Vector2.ZERO
 
@@ -141,6 +154,13 @@ func _process(_delta: float) -> void:
 		return
 	if (_finger != -1 or not _buttons.is_empty()) and blocked.call():
 		release_all()
+	for b in _buttons.values():
+		if b["kind"] == "use" and not b["done"] and Time.get_ticks_msec() / 1000.0 - float(b["time"]) >= USE_HOLD:
+			b["done"] = true
+			if use_action.is_valid():
+				use_action.call(true)
+	if hud and not hud.use_now.is_empty():
+		queue_redraw()   # el contorno de lo que se va a usar
 	var aim := -1
 	if Touch.active and player and enemies and Touch.aim_dir == Vector2.ZERO:
 		aim = Touch.aim_index(enemies.positions, player.global_position, Touch.stick)
@@ -157,6 +177,14 @@ func _draw() -> void:
 		draw_circle(knob, 26.0, KNOB_COLOR)
 	for b in _buttons.values():
 		draw_circle(b["origin"], 30.0, PRESS_COLOR)   # el botón pulsado se ilumina
+	if hud and not hud.use_now.is_empty():
+		# Lo que usaría el botón (T134): cuatro esquinas doradas a su alrededor.
+		var p := _world_to_local(hud.use_now["pos"])
+		var half := Vector2(34.0, 24.0) + Vector2.ONE * 2.0 * sin(Time.get_ticks_msec() / 200.0)
+		for s: Vector2 in [Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)]:
+			var corner := p + half * s
+			draw_line(corner, corner - Vector2(12.0 * s.x, 0), USE_COLOR, 3.0)
+			draw_line(corner, corner - Vector2(0, 12.0 * s.y), USE_COLOR, 3.0)
 	if _aim != -1 and _aim < enemies.positions.size():
 		var p := _world_to_local(enemies.positions[_aim])
 		var r := 20.0 + 3.0 * sin(Time.get_ticks_msec() / 160.0)

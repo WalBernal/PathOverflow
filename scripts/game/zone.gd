@@ -1270,6 +1270,16 @@ func _physics_process(_delta: float) -> void:
 ## Mando: habla con el NPC más cercano, o usa el waypoint o el alijo, si están a
 ## menos de `radius` de `pos`. true si había algo.
 func interact_near(pos: Vector2, radius: float) -> bool:
+	var t := use_near(pos, radius)
+	if t.is_empty():
+		return false
+	use(t)
+	return true
+
+
+## Lo que se usaría cerca de `pos` (sin usarlo): el NPC más cercano, el waypoint, el
+## alijo o un suceso de zona. {kind, pos, text, ...} o vacío (botón de usar, T134).
+func use_near(pos: Vector2, radius: float) -> Dictionary:
 	var best := -1
 	var best_d := radius
 	for i in npcs.size():
@@ -1278,18 +1288,32 @@ func interact_near(pos: Vector2, radius: float) -> bool:
 			best_d = d
 			best = i
 	if best != -1:
-		_pending = {"kind": "npc", "npc": npcs[best]}
-		player.move_to(npc_position(npcs[best]) + Vector2(0, 40))
-		return true
+		return {"kind": "npc", "npc": npcs[best], "pos": npc_position(npcs[best]), "text": "Hablar"}
 	if has_waypoint and waypoint.distance_to(pos) < radius:
-		_pending = {"kind": "waypoint"}
-		player.move_to(waypoint + Vector2(0, 30))
-		return true
+		return {"kind": "waypoint", "pos": waypoint, "text": "Waypoint"}
 	if has_stash and stash_pos.distance_to(pos) < radius:
-		_pending = {"kind": "stash"}
-		player.move_to(stash_pos + Vector2(0, 34))
-		return true
-	return events != null and events.interact_near(pos, radius)
+		return {"kind": "stash", "pos": stash_pos, "text": "Alijo"}
+	if events != null:
+		var e := events.nearest(pos, radius)
+		if e != -1:
+			return {"kind": "event", "event": e, "pos": events.events[e]["pos"], "text": events.use_text(e)}
+	return {}
+
+
+## Camina hasta lo que dio use_near y lo usa al llegar.
+func use(t: Dictionary) -> void:
+	match String(t["kind"]):
+		"npc":
+			_pending = {"kind": "npc", "npc": t["npc"]}
+			player.move_to(t["pos"] + Vector2(0, 40))
+		"waypoint":
+			_pending = {"kind": "waypoint"}
+			player.move_to(waypoint + Vector2(0, 30))
+		"stash":
+			_pending = {"kind": "stash"}
+			player.move_to(stash_pos + Vector2(0, 34))
+		"event":
+			events.go_to(int(t["event"]))
 
 
 func _npc_at(pos: Vector2) -> int:
