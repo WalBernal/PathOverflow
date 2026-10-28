@@ -43,6 +43,7 @@ func _ready() -> void:
 	add_child(mute)
 	_mute = mute
 	mute.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 16)
+	GameVersion.add_label(self)   # «v3.1» abajo a la derecha (T139)
 	_init_effects()
 
 

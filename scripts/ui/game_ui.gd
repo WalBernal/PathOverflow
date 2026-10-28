@@ -716,6 +716,7 @@ func _build_pause_menu() -> Control:
 	exits.add_child(UiStyle.button("Continuar", toggle_pause_menu, 200))
 	exits.add_child(UiStyle.button("Guardar y volver al menú", func() -> void: return_to_menu_requested.emit(), 240))
 	exits.add_child(UiStyle.button("Guardar y salir del juego", func() -> void: quit_requested.emit(), 240))
+	GameVersion.add_label(overlay)   # «v3.1» abajo a la derecha (T139)
 	return overlay
 
 

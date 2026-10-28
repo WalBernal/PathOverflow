@@ -54,10 +54,6 @@ if (Test-Path $settings) {
 }
 
 Write-Host "5/5 · Exportando build/PathOverflow.apk…"
-if (-not (Test-Path $Godot)) { Write-Host "No encuentro Godot en $Godot (pásalo con -Godot <ruta>)."; exit 1 }
-New-Item -ItemType Directory -Force "build" | Out-Null
-& $Godot --headless --path . --import | Out-Null
-& $Godot --headless --path . --export-debug "Android" build/PathOverflow.apk
-if (Test-Path "build\PathOverflow.apk") { Write-Host "Listo: build\PathOverflow.apk"; exit 0 }
-Write-Host "La exportación falló: revisa los mensajes de arriba."
-exit 1
+# Con la versión de project.godot y el código de versión subido (T139).
+& powershell -ExecutionPolicy Bypass -File "$PSScriptRoot\exportar_android.ps1" -Godot $Godot
+exit $LASTEXITCODE

@@ -903,10 +903,11 @@ Origen: R6
 
 ## Fase 30 — Versión y actualizaciones
 
-### [ ] T139 · Versión visible · S
+### [x] T139 · Versión visible · S
 Origen: R6
 - Una sola fuente: `application/config/version` en `project.godot` (p. ej. «3.1.0»); el preset de Android toma de ahí `version/name` y un `version/code` que sube solo en cada exportación (`tools/instalar_android.ps1` o un `tools/exportar_android.ps1`).
 - Etiqueta discreta «v3.1» abajo a la derecha en la pantalla de título y en la pausa (no tapa los botones táctiles); en el registro de cambios del README.
+- Hecho: `config/version="3.1.0"` en `project.godot`; `GameVersion` la lee (`short()` = «v3.1», sin el «.0») y pone la etiqueta (13 px, gris) abajo a la derecha en el título y en la pausa (con la pausa abierta no hay botones táctiles). `tools/exportar_android.ps1` (con BOM, como el instalador) copia la versión al preset «Android» como `version/name`, sube `version/code` en 1 (en `export_presets.cfg`, que no va al repositorio; en el de ejemplo solo el nombre), importa y exporta (`-Release` para firmar con la clave propia); `instalar_android.ps1` lo usa en su paso 5. Probado: exportó `build/PathOverflow.apk` (45 MB) como 3.1.0 con código 2. README: sección Android y la 3.1 en «Versiones». Prueba de `GameVersion` en `_test_touch_controls`; capturas `docs/capturas/movil/139_*`.
 
 ### [ ] T140 · Aviso de actualización · M 🛑
 Origen: R6
@@ -1108,4 +1109,5 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-27 · T136 · Botones táctiles «esquina» (ataque grande junto al orbe de maná y las otras 5 en dos anillos, usar junto a la esquiva, pociones a la izquierda y menús en un ☰), con «dos arcos» como opción, tamaño 80-140 % y modo zurdo. Scripts y lógica en OK; la integración rápida se cortó a mitad (181 recorridos sin un error).
 - 2026-10-28 · T136 · El usuario pidió seguir con el loop: se toma como visto bueno.
 - 2026-10-28 · T137 · Editor de disposición táctil (mover y escalar cada botón, opacidad de los botones, Restaurar), guardado en settings.cfg.
-- 2026-10-28 · T138 · Tutorial, consejos, diálogos de controles y ayudas del prólogo con su versión para el dedo, y aro «¡Aquí!» sobre el botón de cada paso del tutorial.. **Pendiente de revisión del usuario.**
+- 2026-10-28 · T138 · Tutorial, consejos, diálogos de controles y ayudas del prólogo con su versión para el dedo, y aro «¡Aquí!» sobre el botón de cada paso del tutorial.
+- 2026-10-28 · T139 · Versión única en project.godot (3.1.0), «v3.1» en el título y la pausa, y tools/exportar_android.ps1 que la copia al APK y sube el código de versión.. **Pendiente de revisión del usuario.**

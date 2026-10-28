@@ -3,7 +3,7 @@
 ARPG estilo Path of Exile en **Godot 4.7**, de ambientación oscura y con sarcasmo de programador.
 Por ahora es solo para un jugador en local, pero la lógica está escrita para poder pasar a un modelo cliente-servidor en el futuro.
 
-**Versiones**: la 2.0 queda en la rama `version-2.0` (etiqueta `v2.0`). La **3.0** (etiqueta `v3.0`) trae zonas de combate que se generan en cada visita y se conservan 10 minutos (salvo la arena del jefe), una mecánica al azar por zona (como mucho un evento menor más), tokens y waypoints que se recogen y se descubren desde más lejos, vuelta entre actos solo por waypoints, salas temáticas, profundidad en el suelo, niebla en el minimapa, la ventana de waypoints como mapa del acto, comparación de placas y RAM, registro de sucesos y escenas con cámara, llegadas a cada campamento y epílogos de los jefes. El detalle, en `docs/roadmap.md` (T111-T131).
+**Versiones**: la 2.0 queda en la rama `version-2.0` (etiqueta `v2.0`). La **3.0** (etiqueta `v3.0`) trae zonas de combate que se generan en cada visita y se conservan 10 minutos (salvo la arena del jefe), una mecánica al azar por zona (como mucho un evento menor más), tokens y waypoints que se recogen y se descubren desde más lejos, vuelta entre actos solo por waypoints, salas temáticas, profundidad en el suelo, niebla en el minimapa, la ventana de waypoints como mapa del acto, comparación de placas y RAM, registro de sucesos y escenas con cámara, llegadas a cada campamento y epílogos de los jefes. El detalle, en `docs/roadmap.md` (T111-T131). La **3.1** (en curso) es la del celular: controles en el prólogo, filtro de botín con el dedo, botón de usar y recoger por rareza, todas las ventanas revisadas al tacto, botones en la esquina con modo zurdo y editor de disposición, tutorial para el dedo y la versión a la vista (T132-T139).
 
 ## Cómo abrirlo
 
@@ -716,6 +716,12 @@ powershell -ExecutionPolicy Bypass -File tools/build_release.ps1
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File tools/instalar_android.ps1
+```
+
+Con todo instalado, las siguientes veces basta con `tools/exportar_android.ps1` (`-Release` para la versión firmada). La **versión** sale de un solo sitio, `application/config/version` en `project.godot` (ahora 3.1.0): el script la copia al APK y sube el código de versión en cada exportación (Android solo instala encima una versión con el código más alto). Se ve abajo a la derecha en la pantalla de título y en la pausa («v3.1»).
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/exportar_android.ps1
 ```
 
 Para instalarlo en el teléfono: copia `build/PathOverflow.apk` al celular (cable USB, Drive o correo), ábrelo desde el administrador de archivos y permite «instalar apps de origen desconocido» a esa app cuando lo pida. Con depuración USB activada también vale `adb install -r build/PathOverflow.apk` (adb está en `%LOCALAPPDATA%\Android\Sdk\platform-tools`). Para publicarlo en una tienda hay que firmarlo con una clave propia: créala con `keytool -genkeypair -v -keystore mi_clave.keystore -alias mi_alias -keyalg RSA -keysize 2048 -validity 10000`, ponla en *Proyecto → Exportar → Android → Keystore → Release* (ruta, usuario y contraseña) y exporta con `--export-release` (para Google Play, además, AAB con `gradle_build/use_gradle_build`).

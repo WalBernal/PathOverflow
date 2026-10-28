@@ -5220,6 +5220,10 @@ func _test_touch_controls() -> void:
 		_check(s * ui >= 44.0, "objetivo táctil de %d px a 140 %% (≥ 44)" % roundi(s * ui))
 	_check(TouchPointer.LONG_PRESS >= 0.4 and TouchPointer.LONG_PRESS <= 0.8, "mantener: medio segundo, ni más ni menos")
 	_check(TouchPointer.scroll_for(null, Vector2(0, 40)) == null, "arrastrar sin casilla: no desplaza por su cuenta")
+	# Versión del juego (T139): una sola fuente y «v3.1» sin el «.0».
+	_check(GameVersion.full().split(".").size() == 3, "project.godot lleva la versión (%s)" % GameVersion.full())
+	_check(GameVersion.short("3.1.0") == "v3.1" and GameVersion.short("3.1.2") == "v3.1.2" and GameVersion.short("4.0.0") == "v4.0",
+		"versión corta: v3.1, v3.1.2, v4.0")
 	# Ayudas para el dedo (T138): con controles táctiles, el texto «_touch» si lo hay.
 	var force_was := Touch.force
 	var tip := {"text": "Pulsa Espacio", "text_touch": "Toca la esquiva"}
