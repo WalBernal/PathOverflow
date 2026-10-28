@@ -131,7 +131,7 @@ func _show(id: String) -> void:
 	_showing = id
 	_time_left = SHOW_TIME
 	_title.text = "Consejo · " + String(_tips[id].get("title", id))
-	_text.text = String(_tips[id].get("text", ""))
+	_text.text = Touch.text(_tips[id])   # con su versión para el dedo, si la tiene (T138)
 	visible = true
 
 

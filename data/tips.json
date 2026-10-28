@@ -31,7 +31,8 @@
     },
     "dodge": {
       "title": "Esquiva: git stash",
-      "text": "Te han dado. La próxima vez, [b]Espacio[/b] (o el gatillo derecho): un salto corto con un instante de invulnerabilidad que evita golpes, charcos y estados. Las cargas se ven junto a la barra y vuelven solas."
+      "text": "Te han dado. La próxima vez, [b]Espacio[/b] (o el gatillo derecho): un salto corto con un instante de invulnerabilidad que evita golpes, charcos y estados. Las cargas se ven junto a la barra y vuelven solas.",
+      "text_touch": "Te han dado. La próxima vez, toca la [b]esquiva[/b] (el botón de rayas encima del orbe azul): un salto corto con un instante de invulnerabilidad que evita golpes, charcos y estados. Cada raya es una carga; vuelven solas."
     },
     "charges": {
       "title": "Cargas",

@@ -92,6 +92,14 @@ static func shown() -> bool:
 	return (force or DisplayServer.is_touchscreen_available()) and enabled()
 
 
+## Texto de ayuda para quien juega con el dedo (T138): `d[key + "_touch"]` con los
+## controles táctiles a la vista y si existe; si no, `d[key]` (los de teclado).
+static func text(d: Dictionary, key := "text") -> String:
+	if shown() and d.has(key + "_touch"):
+		return String(d[key + "_touch"])
+	return String(d.get(key, ""))
+
+
 static func enabled() -> bool:
 	return bool(GameSettings.get_value("controls", "touch", true))
 

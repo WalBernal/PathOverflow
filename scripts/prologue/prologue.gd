@@ -696,7 +696,8 @@ func _draw_overlay() -> void:
 		"title":
 			_draw_title(view)
 	if _phase == "walk" and not _cutscene.is_playing():
-		var hint := PrologueText.text("hints", "controls", "Flechas o click: caminar   ·   E, o click en la flecha: ir e interactuar   ·   Esc: saltar prólogo")
+		var hint := PrologueText.text("hints", "controls_touch", "Joystick o tocar: caminar   ·   Botón dorado: usar lo que hay cerca") if Touch.shown() \
+			else PrologueText.text("hints", "controls", "Flechas o click: caminar   ·   E, o click en la flecha: ir e interactuar   ·   Esc: saltar prólogo")
 		_overlay.draw_string(font, Vector2(0, view.y - 14), hint, HORIZONTAL_ALIGNMENT_CENTER, view.x, 13, Color(1, 1, 1, 0.45))
 		var place := PrologueText.text("places", _stage.room, String({"calle": "Av. del Mar, frente al malecón · Mazatlán · 13:47 · 38 °C",
 			"pasillo": "UAdeO · Pasillo del Departamento de Informática", "oficina": "Departamento de Informática"}.get(_stage.room, "")))
@@ -721,7 +722,7 @@ func _draw_intro(view: Vector2) -> void:
 	if int(_time * 2.0) % 2 == 0:
 		_overlay.draw_string(_mono, Vector2(box.position.x, y), "█", HORIZONTAL_ALIGNMENT_LEFT, -1, 19, Color("e8e0c8"))
 	if _intro_chars >= _intro_total and _time - _intro_done_at >= INTRO_MIN_READ:
-		_overlay.draw_string(get_theme_default_font(), Vector2(0, view.y - 40), PrologueText.text("hints", "continue", "Click o Espacio para continuar"), HORIZONTAL_ALIGNMENT_CENTER, view.x, 15, Color(1, 1, 1, 0.5 + 0.3 * sin(_time * 4.0)))
+		_overlay.draw_string(get_theme_default_font(), Vector2(0, view.y - 40), (PrologueText.text("hints", "continue_touch", "Toca la pantalla para continuar") if Touch.shown() else PrologueText.text("hints", "continue", "Click o Espacio para continuar")), HORIZONTAL_ALIGNMENT_CENTER, view.x, 15, Color(1, 1, 1, 0.5 + 0.3 * sin(_time * 4.0)))
 
 
 func _draw_console(view: Vector2) -> void:

@@ -454,6 +454,7 @@ func open_dialogue(npc: Dictionary, dialogue: Dictionary) -> void:
 
 
 func _process(_delta: float) -> void:
+	hud.tutorial_point = tutorial.touch_point() if Touch.shown() and tutorial else ""   # T138
 	if touch_buttons:
 		# Con una ventana, el árbol o la pausa abiertos se apartan (las ventanas tienen su X).
 		# (el catálogo tiene su ✕ en esa esquina: el «II» la tapaba, T135)

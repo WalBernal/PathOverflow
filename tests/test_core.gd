@@ -5220,6 +5220,23 @@ func _test_touch_controls() -> void:
 		_check(s * ui >= 44.0, "objetivo táctil de %d px a 140 %% (≥ 44)" % roundi(s * ui))
 	_check(TouchPointer.LONG_PRESS >= 0.4 and TouchPointer.LONG_PRESS <= 0.8, "mantener: medio segundo, ni más ni menos")
 	_check(TouchPointer.scroll_for(null, Vector2(0, 40)) == null, "arrastrar sin casilla: no desplaza por su cuenta")
+	# Ayudas para el dedo (T138): con controles táctiles, el texto «_touch» si lo hay.
+	var force_was := Touch.force
+	var tip := {"text": "Pulsa Espacio", "text_touch": "Toca la esquiva"}
+	Touch.force = true
+	_check(Touch.text(tip) == "Toca la esquiva" and Touch.text({"text": "solo"}) == "solo", "con el dedo: el texto táctil (o el de siempre)")
+	Touch.force = false
+	_check(Touch.text(tip) == "Pulsa Espacio" or DisplayServer.is_touchscreen_available(), "con teclado: el de teclas")
+	Touch.force = force_was
+	var key_words := RegEx.create_from_string("(?i)\\b(click|clic|tecla|teclas|espacio|tab|ratón|mouse)\\b")
+	# Mayúsculas sueltas (la «y» y la «e» son palabras; «Pídele» o «B.O.B.» no son teclas).
+	var key_letters := RegEx.create_from_string("(?<![\\p{L}.])[QWERTCIKPB](?![\\p{L}.])")
+	var has_keys := func(s: String) -> bool:
+		s = s.replace("(☰ y luego I)", "").replace("(☰ y luego K)", "").replace("(☰ y luego P)", "")
+		return key_words.search(s) != null or key_letters.search(s) != null
+	for st in DataLoader.load_json("res://data/tutorial.json")["steps"]:
+		if has_keys.call(String(st["text"])):
+			_check(st.has("text_touch") and not has_keys.call(String(st["text_touch"])), "tutorial «%s»: versión para el dedo sin teclas" % st["id"])
 	# Editor de disposición (T137): mover y escalar un botón, con tope, y restaurar.
 	var custom_was := Touch.custom.duplicate(true)
 	var opacity_was := Touch.button_opacity

@@ -239,7 +239,7 @@ func _text_for(node_id: String, node: Dictionary) -> String:
 			return _pick(node["again"])
 		if node_id == start and _dialogue.has("menu"):
 			return _pick(_dialogue.get("greeting_again", _dialogue["menu"]))
-	return String(node.get("text", ""))
+	return Touch.text(node)   # con su versión para el dedo, si la tiene (T138)
 
 
 func _show_node(node_id: String) -> void:

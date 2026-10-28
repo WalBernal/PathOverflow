@@ -185,6 +185,37 @@ func touch_button_at(pos: Vector2) -> Dictionary:
 	return {}
 
 
+## Botón táctil que señala el tutorial (T138): skill_0, dodge, use, flask_0, menu_inventory...
+var tutorial_point := ""
+
+
+## Dónde está el botón `point` del tutorial (Rect2() si no se ve).
+func tutorial_rect(point: String) -> Rect2:
+	if point.begins_with("menu_"):
+		var k := MENU_IDS.find(point.trim_prefix("menu_"))
+		var b: Control = _menu_buttons[k] if k != -1 and _menu_buttons[k].visible else _menu_toggle
+		return Rect2(b.position, b.size)
+	if point == "use" and use_now.is_empty():
+		return Rect2()
+	if point.begins_with("flask_"):
+		return _flask_rect(int(point.trim_prefix("flask_")))
+	return touch_rects().get(point, Rect2())
+
+
+## Aro dorado que late alrededor del botón que señala el tutorial.
+func _draw_tutorial_point() -> void:
+	if not touch_layout or tutorial_point == "":
+		return
+	var r := tutorial_rect(tutorial_point)
+	if r.size == Vector2.ZERO:
+		return
+	var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 180.0)
+	var ring := r.grow(8.0 + 5.0 * pulse)
+	draw_rect(ring, Color(1.0, 0.85, 0.3, 0.45 + 0.45 * pulse), false, 3.0)
+	draw_string_outline(get_theme_default_font(), ring.position + Vector2(0, -6), "¡Aquí!", HORIZONTAL_ALIGNMENT_CENTER, ring.size.x, 14, 4, Color.BLACK)
+	draw_string(get_theme_default_font(), ring.position + Vector2(0, -6), "¡Aquí!", HORIZONTAL_ALIGNMENT_CENTER, ring.size.x, 14, Color("ffd84a"))
+
+
 ## Botones táctiles que mueve el editor de disposición (T137), con su sitio en pantalla.
 func touch_rects() -> Dictionary:
 	var out := {}
@@ -628,6 +659,7 @@ func _draw() -> void:
 
 	# Pociones, habilidades, esquiva y usar: en su capa (_draw_buttons_layer).
 	_buttons_layer.queue_redraw()
+	_draw_tutorial_point()
 
 	_draw_status_boxes(font)
 	var boss_bar := _draw_boss_bar(font)

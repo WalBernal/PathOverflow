@@ -29,6 +29,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("tutorial") and OS.get_cmdline_user_args().has("tactil"):
+		await _capture_touch_tutorial()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("editor") and OS.get_cmdline_user_args().has("tactil"):
 		await _capture_touch_editor()
 		get_tree().quit()
@@ -2395,6 +2399,46 @@ func _capture_phone() -> void:
 
 ## `p` en coordenadas del lienzo; el toque llega en las de la ventana (otra cosa a
 ## resolución de teléfono, donde el lienzo se estira).
+## Tutorial con el dedo (T138): el texto táctil de varios pasos y el aro «¡Aquí!»
+## sobre su botón (la habilidad grande, el ☰, la poción 1).
+func _capture_touch_tutorial() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Pulgar", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["llegada_campamento_vista"] = true
+	c.flags["tutorial_version"] = 2
+	c.flags["tutorial_step"] = 1
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	var scale_was: Variant = GameSettings.get_value("interface", "scale", 1.0)
+	GameSettings.set_value("interface", "scale", 1.4)
+	Touch.force = true
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var ui: GameUI = world.get("ui")
+	if ui.cutscene.visible:
+		ui.cutscene.call("_finish")
+	get_window().size = Vector2i(2400, 1080)
+	await _wait(0.5)
+	ui.apply_ui_scale()
+	var text: RichTextLabel = ui.tutorial.get("_text")
+	for step in [["use_skill", 1], ["equip", 4], ["flask", 5]]:
+		c.flags["tutorial_step"] = step[1]
+		ui.tutorial.call("_refresh")
+		await _wait(0.5)
+		var r: Rect2 = ui.hud.tutorial_rect(ui.hud.tutorial_point)
+		print("tutorial %s: «%s…», aro en %s sobre %s" % [step[0], text.get_parsed_text().substr(0, 60), ui.hud.tutorial_point, r])
+		_save("138_tutorial_%s" % step[0])
+	get_window().size = Vector2i(1600, 900)
+	GameSettings.set_value("interface", "scale", scale_was)
+	Touch.force = false
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
+
+
 ## Editor de disposición táctil (T137) con toques simulados: arrastrar la habilidad 1,
 ## agrandar la esquiva, bajar la opacidad, «Listo» (se guarda) y «Restaurar».
 func _capture_touch_editor() -> void:

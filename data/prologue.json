@@ -45,6 +45,8 @@
   "hints": {
     "controls": "Flechas o click: caminar   ·   E, o click en la flecha: ir e interactuar   ·   Esc: saltar prólogo",
     "skip_again": "Esc otra vez: saltar a la elección de puesto",
-    "continue": "Click o Espacio para continuar"
+    "continue": "Click o Espacio para continuar",
+    "controls_touch": "Joystick o tocar: caminar   ·   Botón dorado: usar lo que hay cerca",
+    "continue_touch": "Toca la pantalla para continuar"
   }
 }

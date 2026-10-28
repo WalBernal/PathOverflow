@@ -1669,6 +1669,10 @@ func _build_tutorial() -> void:
 		_row(_tutorial_box, String(st.get("id", "?")), _area(String(st.get("text", "")), func(v: String) -> void:
 			st["text"] = v
 			_touch("tutorial"), 50.0))
+		if st.has("text_touch"):   # versión con controles táctiles (T138)
+			_row(_tutorial_box, "%s (celular)" % st.get("id", "?"), _area(String(st["text_touch"]), func(v: String) -> void:
+				st["text_touch"] = v
+				_touch("tutorial"), 50.0))
 	_row(_tutorial_box, "Al terminar", _area(String(t.get("done", "")), func(v: String) -> void:
 		t["done"] = v
 		_touch("tutorial"), 50.0))

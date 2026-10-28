@@ -31,6 +31,7 @@ var _events := {}
 var _check_timer := 0.0
 ## Dónde estaba el jugador al empezar el paso actual (para «muévete»).
 var _step_origin := Vector2.INF
+var _touch_was := false
 var _header: Label
 var _text: RichTextLabel
 
@@ -112,6 +113,13 @@ func skip_all() -> void:
 	visible = false
 
 
+## Botón táctil que señala el paso actual (Hud lo resalta), o "".
+func touch_point() -> String:
+	if character == null or is_finished() or not visible:
+		return ""
+	return String(_steps[current_step()].get("touch_point", ""))
+
+
 func _process(delta: float) -> void:
 	if character == null or is_finished():
 		return
@@ -119,6 +127,9 @@ func _process(delta: float) -> void:
 	if _check_timer > 0.0:
 		return
 	_check_timer = CHECK_INTERVAL
+	if Touch.shown() != _touch_was:
+		_touch_was = Touch.shown()
+		_refresh()   # se pasó del ratón al dedo (o al revés): el otro texto
 	if _condition(_steps[current_step()]["id"]):
 		character.flags["tutorial_step"] = current_step() + 1
 		_events.clear()
@@ -141,7 +152,7 @@ func _refresh() -> void:
 	visible = not suppressed
 	var step: Dictionary = _steps[current_step()]
 	_header.text = "%s  ·  %d / %d" % [_title, current_step() + 1, _steps.size()]
-	var text: String = step["text"]
+	var text := Touch.text(step)   # con el dedo, su versión táctil (T138)
 	if step["id"] == "kill":
 		text += "  [color=#d9a441](%d / %d)[/color]" % [mini(int(_events.get("kill", 0)), _needed()), _needed()]
 	_text.text = text

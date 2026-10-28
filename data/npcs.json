@@ -508,6 +508,7 @@
         },
         "regalo": {
           "text": "Toma, es un módulo que encaja bien en tu primera placa. \nAbre las habilidades con K y arrástralo a la ranura de su color, o haz doble click. Si no encaja, es culpa del hardware. Siempre es culpa del hardware...",
+          "text_touch": "Toma, es un módulo que encaja bien en tu primera placa. \nAbre las habilidades (☰ y luego K) y arrástralo a la ranura de su color, o tócalo y pulsa «Instalar». Si no encaja, es culpa del hardware. Siempre es culpa del hardware...",
           "options": [
             {
               "text": "Gracias, Aida.",
@@ -594,6 +595,7 @@
         },
         "cafe": {
           "text": "¡En camino! Te rellené todas las pociones del cinturón (teclas 1 a 5): cafés para la vida, refrescos para el maná y alguna rareza de utilidad. Se recargan matando cosas. Como mi autoestima. Y si encuentras un Cold Brew por ahí... es mío.",
+          "text_touch": "¡En camino! Te rellené todas las pociones del cinturón (las cinco de abajo): cafés para la vida, refrescos para el maná y alguna rareza de utilidad. Se recargan matando cosas. Como mi autoestima. Y si encuentras un Cold Brew por ahí... es mío.",
           "again": [
             "¡Recargadas! Vuelve cuando quieras. En serio, cuando quieras. Me aburro mucho.",
             "Listo, todo lleno. ¿Sabías que el café de aquí lo hago con agua del enfriamiento de los servidores? No, mejor no lo sepas."
@@ -895,11 +897,13 @@
         },
         "lucha": {
           "text": "Primero lo primero: aquí estás a salvo, los bugs están al este y no vienen hasta que te acercas. Q, W, E, R, T e Y usan tus habilidades. Camina con las flechas o manteniendo el click izquierdo; Espacio te aparta de un golpe. Si te quedas sin vida, café (tecla 1). Sin maná, un refresco (tecla 2).",
+          "text_touch": "Primero lo primero: aquí estás a salvo, los bugs están al este y no vienen hasta que te acercas. Tus habilidades son los botones junto al orbe azul; la grande es la que más usarás. Camina con el joystick (apoya el pulgar y arrastra) y el botón de rayas, encima del orbe, te aparta de un golpe. Si te quedas sin vida, café (la poción 1). Sin maná, un refresco (la 2).",
           "next": "lucha2",
           "options": []
         },
         "lucha2": {
           "text": "Las teclas 3, 4 y 5 son para las pociones que encuentres. Se recargan matando cosas, que aquí es la solución a casi todo. Con C ves tus cifras, con I tu inventario, con K tus habilidades y con P el árbol de pasivas.",
+          "text_touch": "Las pociones 3, 4 y 5 son para las que encuentres. Se recargan matando cosas, que aquí es la solución a casi todo. En el botón ☰ están tus cifras (C), tu inventario (I), tus habilidades (K) y el árbol de pasivas (P).",
           "next": "lucha3",
           "options": []
         },
