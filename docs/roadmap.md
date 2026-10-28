@@ -841,6 +841,97 @@ Origen: R5
 
 ---
 
+# Roadmap 6.0 — experiencia en el celular (27-10-2026)
+
+Pedido del usuario tras jugar el APK de T110 en su celular: en el prólogo no aparecen el joystick ni los botones; en el acto I cuesta recoger objetos (hay que acercarse y tocar justo encima) y los botones de la derecha podrían repartirse mejor, con uno de **interactuar** (objetos, NPC, sucesos); el filtro de botín no responde al dedo (no marca ni desmarca) y su ventana es más grande que las demás; quiere ver la **versión** abajo a la derecha (p. ej. «v1.1») y poder **actualizar** si hay una nueva. **Origen: R6.** Mismo protocolo; 🛑 = parar y esperar el visto bueno. Aprobado por el usuario el 27-10-2026 tal como está.
+
+Diagnóstico de partida (leído en el código, sin probar en el teléfono):
+- El prólogo es su propia escena (`scenes/prologue/prologue.tscn`, `Prologue` + `PrologueStage`) y no lleva `GameUI`, así que tampoco `TouchControls` ni `TouchPointer`: allí solo hay clic emulado.
+- `LootFilterPanel` no está en `GameUI.cursor_windows()` (y se abre desde la pausa, que hace que esa lista salga vacía), así que `TouchPointer` no lo maneja; sus filas leen el clic con `gui_input` sobre gemas de 92×30 px (por debajo de 44 px). Se ancla con `PRESET_FULL_RECT`, de ahí que ocupe más que las otras ventanas.
+- La versión solo existe en el preset de Android (`version/name="3.0"`, `version/code=1`); no hay `application/config/version` ni etiqueta en pantalla. El APK va firmado con la clave de depuración del equipo: para instalar una versión encima de otra sin perder nada hace falta firmar siempre con la **misma** clave.
+- El tutorial (`data/tutorial.json`) habla de teclas (flechas, Espacio, Tab, 1-5).
+
+## Fase 28 — Lo que falló en el teléfono
+
+### [ ] T132 · Controles táctiles en el prólogo · S
+Origen: R6
+- Joystick y toque al mundo también en el prólogo: sacar de `GameUI` lo que no depende de la partida (`TouchControls` en modo «solo moverse», sin habilidades ni pociones) o montarlo en `Prologue`; botón de interactuar (T134) para Rafa, la TV, la ventanilla y las puertas; tocar para pasar los diálogos y las líneas de la consola roja.
+- Capturas `capture_screens -- prologo tactil` con toques simulados de la calle a la oficina.
+
+### [ ] T133 · Filtro de botín con el dedo y del tamaño de las demás ventanas · S
+Origen: R6
+- `LootFilterPanel` en `cursor_windows()` (también con la pausa abierta, que es desde donde se abre) o con su propio manejo de `InputEventScreenTouch`; gemas de 44 px de alto como mínimo; tocar una gema la marca y la desmarca, con el sonido de siempre.
+- El mismo marco que el inventario o la hoja (tamaño y posición de `UiStyle`), no a pantalla completa; si no cabe a 140 %, desplazamiento con el dedo.
+- Prueba en `_test_touch_controls`: toque simulado sobre cada fila cambia la regla.
+
+### [ ] T134 · Botón de interactuar y recogida cómoda · M
+Origen: R6
+- Botón grande de **interactuar** a la derecha (junto a los arcos de habilidades) que muestra el icono de lo más cercano que se puede usar a ~160 px: objeto del suelo, NPC, waypoint, caja, suceso de zona o salida; tocarlo camina hasta allí y lo usa; el objetivo se resalta en el mundo con un contorno.
+- Con varios objetos juntos: cada toque recoge el siguiente (de más raro a menos); mantener = recoger todo lo visible cerca.
+- Opción en Pausa → Controles: **recoger solo** al pasar por encima los objetos que el filtro deja ver de una rareza elegida o más (por defecto apagado).
+- Toque al mundo más permisivo: el nombre del objeto en el suelo cuenta como zona de toque, ampliada a 44 px de alto.
+
+### [ ] T135 · Revisión de todas las ventanas en táctil · M
+Origen: R6
+- Recorrer con toques simulados cada ventana y menú que no está en `cursor_windows` (pausa y sus submenús, opciones, catálogo, selección y creación de personaje, título, confirmaciones, escenas) y arreglar lo que no responda; objetivos de 44 px y textos de 14 px como mínimo.
+- Una prueba que abra cada ventana y toque cada botón visible (falla si alguno no recibe el toque), para que no vuelva a pasar con ventanas nuevas.
+- Pendientes de T109: desplazar la bolsa con el dedo sobre las casillas (mantener para coger el objeto, arrastrar en vertical para desplazar) y que la bolsa quepa a 140 %.
+
+## Fase 29 — Controles a la medida
+
+### [ ] T136 · Lado derecho reorganizado · M 🛑
+Origen: R6
+- Propuesta (con capturas a 2400×1080 y 1600×720 para elegir): **ataque principal** grande en la esquina inferior derecha, las otras habilidades en arco a su alrededor, la esquiva junto al pulgar y el botón de interactuar (T134) encima; los menús en una sola tecla «☰» que despliega C I K P B; las pociones en una fila corta a la izquierda del arco.
+- Si las 6 habilidades no caben cómodas: 4 a la vista y un botón para cambiar de juego de habilidades.
+- Opciones en Pausa → Controles: tamaño de los botones (80-140 %), opacidad y **modo zurdo** (joystick a la derecha y botones a la izquierda).
+
+### [ ] T137 · Editor de disposición táctil · M
+Origen: R6
+- Pantalla para arrastrar cada botón a donde se quiera y cambiar su tamaño, con «Restaurar»; se guarda en `settings.cfg`.
+
+### [ ] T138 · Tutorial y ayudas para el dedo · S
+Origen: R6
+- Textos del tutorial, de las ayudas en pantalla y de los tooltips con la versión táctil cuando `Touch.shown()` («toca el botón de esquiva», «mantén pulsado») en vez de teclas; el paso que señala un botón lo resalta en pantalla.
+
+## Fase 30 — Versión y actualizaciones
+
+### [ ] T139 · Versión visible · S
+Origen: R6
+- Una sola fuente: `application/config/version` en `project.godot` (p. ej. «3.1.0»); el preset de Android toma de ahí `version/name` y un `version/code` que sube solo en cada exportación (`tools/instalar_android.ps1` o un `tools/exportar_android.ps1`).
+- Etiqueta discreta «v3.1» abajo a la derecha en la pantalla de título y en la pausa (no tapa los botones táctiles); en el registro de cambios del README.
+
+### [ ] T140 · Aviso de actualización · M 🛑
+Origen: R6
+- **Necesita decisiones del usuario**: dónde se publica el APK (p. ej. GitHub Releases de un repositorio público, que hoy no existe: el proyecto no tiene remoto) y una **clave de firma propia** que se guarde fuera del repositorio (con la de depuración, una versión nueva no se instala encima).
+- Al llegar a la pantalla de título, `HTTPRequest` (con tiempo límite, en segundo plano, sin bloquear si no hay red) lee un `latest.json` (`version`, `code`, `url`, `notas`); si es más nueva, junto a la versión aparece «Actualización disponible: v3.2» y un botón que abre la descarga (`OS.shell_open`); Android pide instalarla encima y las partidas (`user://`) se conservan.
+- Opción para no comprobar; nunca descarga ni instala sola. Si más adelante se publica en Google Play, la tienda hace esto y se quita.
+
+## Fase 31 — Pulido de celular
+
+### [ ] T141 · La app en segundo plano y el botón Atrás · S
+Origen: R6
+- Al salir de la app, recibir una llamada o apagar la pantalla (`NOTIFICATION_APPLICATION_PAUSED` / `FOCUS_OUT`): pausar y guardar; al volver, la pausa abierta.
+- Botón o gesto **Atrás** de Android (`NOTIFICATION_WM_GO_BACK_REQUEST`) = Esc: cierra la ventana de arriba o abre la pausa; en el título, pregunta antes de salir.
+
+### [ ] T142 · Pantallas con muesca y legibilidad · S
+Origen: R6
+- Respetar la zona segura (`DisplayServer.get_display_safe_area`) para que la muesca y las esquinas redondeadas no tapen el HUD, el joystick ni los botones.
+- Tooltips de objetos que caben en pantalla con la interfaz al 140 % (más estrechos o con desplazamiento) y comparar con lo equipado uno debajo de otro.
+
+### [ ] T143 · Vibración y respuesta al toque · S
+Origen: R6
+- `Input.vibrate_handheld` corto al recibir un golpe fuerte, crítico, subir de nivel, caer un único y pulsar un botón táctil; opción para apagarlo.
+
+### [ ] T144 · Batería y rendimiento en el teléfono · M
+Origen: R6
+- Límite de FPS (30 / 60) en Opciones, 30 por defecto en el celular si mide por debajo de 50; contador de FPS opcional; medir en el teléfono del usuario una zona con muchos enemigos y bajar partículas o luces si hace falta.
+
+### [ ] T145 · Revisión en el teléfono · S 🛑
+Origen: R6
+- APK nuevo y una lista para el usuario: prólogo entero, acto I hasta el primer jefe, filtro de botín, recoger objetos con el botón, inventario, árbol, salir y volver a la app, y actualizar de una versión a otra.
+
+---
+
 ## Fuera de la cola (necesitan una persona)
 
 No las ejecuta Claude solo; quedan aquí para no perderlas.
@@ -1000,4 +1091,5 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-27 · T108 · Botones táctiles: las 6 habilidades en dos arcos junto al orbe de maná (mantener = canalizar o repetir, arrastrar = apuntar a mano), esquiva encima del orbe, pociones y menús grandes a la izquierda; la placa del HUD desaparece en táctil.
 - 2026-10-27 · T109 · Interfaz táctil en las ventanas: tocar = tooltip y botón de acción (otro toque la hace), mantener = clic derecho, arrastrar objetos, zoom con dos dedos en árbol y mapa, botones de Mapa y pausa; capturas a 2400×1080 y 1600×720. **Pendiente de revisión del usuario.**
 - 2026-10-27 · T109 · Aprobado por el usuario, con permiso para instalar lo de Android y generar el APK (T110).
-- 2026-10-27 · T110 · Exportación a Android: preset, script de instalación y exportación, y APK de depuración; la pantalla de título ya continúa con un toque (fallo visto por el usuario en su celular). **Pendiente de revisión del usuario.**
+- 2026-10-27 · T110 · Exportación a Android: preset, script de instalación y exportación, y APK de depuración; la pantalla de título ya continúa con un toque (fallo visto por el usuario en su celular)
+- 2026-10-27 · Boceto del Roadmap 6.0 (T132-T145): experiencia en el celular tras probar el APK — controles en el prólogo, filtro de botín táctil, botón de interactuar, lado derecho reorganizado, versión visible y aviso de actualización; aprobado por el usuario.. **Pendiente de revisión del usuario.**
