@@ -724,6 +724,12 @@ Con todo instalado, las siguientes veces basta con `tools/exportar_android.ps1` 
 powershell -ExecutionPolicy Bypass -File tools/exportar_android.ps1
 ```
 
+**Actualizaciones** (GitHub Releases): en la pantalla de título el juego lee `latest.json` de la última publicación del repositorio (`application/config/update_url`) y, si hay una versión más nueva, ofrece un botón «Actualización disponible · Descargar» que abre la descarga en el navegador (nunca descarga ni instala solo; se apaga en Pausa → «Buscar actualizaciones»). Para publicar: sube `application/config/version`, ejecuta `tools/publicar_version.ps1 -Repo usuario/repositorio -Notas "qué trae"` (exporta firmado con tu clave y escribe `build/latest.json`) y sube `build/PathOverflow.apk` y `build/latest.json` a una release con la etiqueta `v<versión>`. Para que cada versión se instale encima de la anterior, firma siempre con la **misma clave propia** (la de depuración cambia de un equipo a otro).
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/publicar_version.ps1 -Repo usuario/repositorio -Notas "Qué trae"
+```
+
 Para instalarlo en el teléfono: copia `build/PathOverflow.apk` al celular (cable USB, Drive o correo), ábrelo desde el administrador de archivos y permite «instalar apps de origen desconocido» a esa app cuando lo pida. Con depuración USB activada también vale `adb install -r build/PathOverflow.apk` (adb está en `%LOCALAPPDATA%\Android\Sdk\platform-tools`). Para publicarlo en una tienda hay que firmarlo con una clave propia: créala con `keytool -genkeypair -v -keystore mi_clave.keystore -alias mi_alias -keyalg RSA -keysize 2048 -validity 10000`, ponla en *Proyecto → Exportar → Android → Keystore → Release* (ruta, usuario y contraseña) y exporta con `--export-release` (para Google Play, además, AAB con `gradle_build/use_gradle_build`).
 
 ## Próximos pasos sugeridos

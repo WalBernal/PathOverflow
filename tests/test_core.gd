@@ -5224,6 +5224,14 @@ func _test_touch_controls() -> void:
 	_check(GameVersion.full().split(".").size() == 3, "project.godot lleva la versión (%s)" % GameVersion.full())
 	_check(GameVersion.short("3.1.0") == "v3.1" and GameVersion.short("3.1.2") == "v3.1.2" and GameVersion.short("4.0.0") == "v4.0",
 		"versión corta: v3.1, v3.1.2, v4.0")
+	# Aviso de actualización (T140): solo con una versión más nueva y descarga https.
+	_check(UpdateCheck.compare("3.10.0", "3.9.2") == 1 and UpdateCheck.compare("3.1", "3.1.0") == 0 and UpdateCheck.compare("3.0.9", "3.1.0") == -1,
+		"comparar versiones número a número")
+	var newer := UpdateCheck.newer('{"version": "3.2.0", "url": "https://github.com/a/b/releases/download/v3.2.0/PathOverflow.apk", "notes": "Más botones"}', "3.1.0")
+	_check(newer.get("version") == "3.2.0" and String(newer.get("url")).ends_with(".apk"), "latest.json más nuevo: se avisa")
+	_check(UpdateCheck.newer('{"version": "3.1.0", "url": "https://x/y.apk"}', "3.1.0").is_empty(), "la misma versión: nada")
+	_check(UpdateCheck.newer('{"version": "9.0.0", "url": "http://x/y.apk"}', "3.1.0").is_empty(), "sin https: nada")
+	_check(UpdateCheck.newer("<html>no es json</html>", "3.1.0").is_empty(), "respuesta rara: nada")
 	# Ayudas para el dedo (T138): con controles táctiles, el texto «_touch» si lo hay.
 	var force_was := Touch.force
 	var tip := {"text": "Pulsa Espacio", "text_touch": "Toca la esquiva"}

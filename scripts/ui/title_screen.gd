@@ -26,6 +26,7 @@ const CITY_SPEED := [6.0, 14.0]
 var _logo: GameLogo
 var _leaving := false
 var _mute: Button
+var _update: Button
 
 
 func _ready() -> void:
@@ -44,7 +45,34 @@ func _ready() -> void:
 	_mute = mute
 	mute.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 16)
 	GameVersion.add_label(self)   # «v3.1» abajo a la derecha (T139)
+	# ¿Hay una versión más nueva? (T140): un botón encima de la versión que abre la descarga.
+	var updates := UpdateCheck.new()
+	add_child(updates)
+	updates.found.connect(show_update)
+	updates.check()
 	_init_effects()
+
+
+## Botón «Actualización disponible» abajo a la derecha; abre la descarga en el navegador
+## (Android pregunta antes de instalarla encima; las partidas se conservan).
+func show_update(info: Dictionary) -> void:
+	if _update:
+		return
+	_update = UiStyle.button("Actualización disponible: %s · Descargar" % GameVersion.short(String(info["version"])),
+		func() -> void: OS.shell_open(String(info["url"])), 0)
+	_update.focus_mode = Control.FOCUS_NONE
+	_update.custom_minimum_size.y = 48.0
+	TouchPointer.gold(_update)
+	if String(info.get("notes", "")) != "":
+		_update.tooltip_text = String(info["notes"])
+	add_child(_update)
+	_update.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_update.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_update.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_update.offset_left = -12.0   # (ancho y alto: los del botón, creciendo hacia arriba a la izquierda)
+	_update.offset_right = -12.0
+	_update.offset_top = -34.0   # encima de la versión
+	_update.offset_bottom = -34.0
 
 
 func _init_effects() -> void:
@@ -112,8 +140,8 @@ func _input(event: InputEvent) -> void:
 		or (event is InputEventMouseButton and event.pressed) \
 		or (event is InputEventScreenTouch and event.pressed)
 	if pressed and (event is InputEventMouseButton or event is InputEventScreenTouch) \
-			and _mute.get_global_rect().has_point(event.position):
-		return
+			and (_mute.get_global_rect().has_point(event.position) or (_update != null and _update.get_global_rect().has_point(event.position))):
+		return   # (la música y el aviso de actualización son botones, no «continuar»)
 	if pressed and not _leaving:
 		_leaving = true
 		ScreenTransition.change_scene(get_tree(), GameData.MAIN_MENU_SCENE)   # barrido de píxeles (T96)
@@ -156,7 +184,7 @@ func _draw() -> void:
 	var prompt := ("> toca la pantalla para continuar" if GameSettings.is_mobile() else "> pulsa cualquier tecla para continuar") + cursor
 	var pw := font.get_string_size(prompt, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x
 	draw_string(font, Vector2((view.x - pw) / 2.0, view.y - 120.0), prompt, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("3cff6a"))
-	draw_string(font, Vector2(16, view.y - 16), "v0.1.0-alpha · compilado con café · inestable, como el código", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiStyle.MUTED)
+	draw_string(font, Vector2(16, view.y - 16), "compilado con café · inestable, como el código", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiStyle.MUTED)
 
 
 ## Ciudad de servidores (T96): siluetas de racks-rascacielos con ventanas (LEDs) que

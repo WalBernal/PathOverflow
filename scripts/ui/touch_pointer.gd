@@ -68,6 +68,8 @@ static func gold(b: Button) -> void:
 		box.set_corner_radius_all(6)
 		box.shadow_color = Color(0, 0, 0, 0.6)
 		box.shadow_size = 6
+		box.content_margin_left = 14.0
+		box.content_margin_right = 14.0
 		b.add_theme_stylebox_override(state, box)
 	for c in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
 		b.add_theme_color_override(c, Color("1a1208"))

@@ -29,6 +29,20 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("actualizacion"):
+		# Aviso de actualización (T140) en el título, con un latest.json de mentira.
+		Touch.force = true
+		get_window().size = Vector2i(2400, 1080)
+		var title: Node = load("res://scenes/menu/title_screen.tscn").instantiate()
+		_swap(title)
+		await _wait(1.0)
+		title.call("show_update", UpdateCheck.newer('{"version": "3.2.0", "url": "https://example.invalid/PathOverflow.apk"}', GameVersion.full()))
+		await _wait(0.5)
+		_save("140_titulo_actualizacion")
+		Touch.force = false
+		get_window().size = Vector2i(1600, 900)
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("tutorial") and OS.get_cmdline_user_args().has("tactil"):
 		await _capture_touch_tutorial()
 		get_tree().quit()

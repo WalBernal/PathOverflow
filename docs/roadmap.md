@@ -909,11 +909,14 @@ Origen: R6
 - Etiqueta discreta «v3.1» abajo a la derecha en la pantalla de título y en la pausa (no tapa los botones táctiles); en el registro de cambios del README.
 - Hecho: `config/version="3.1.0"` en `project.godot`; `GameVersion` la lee (`short()` = «v3.1», sin el «.0») y pone la etiqueta (13 px, gris) abajo a la derecha en el título y en la pausa (con la pausa abierta no hay botones táctiles). `tools/exportar_android.ps1` (con BOM, como el instalador) copia la versión al preset «Android» como `version/name`, sube `version/code` en 1 (en `export_presets.cfg`, que no va al repositorio; en el de ejemplo solo el nombre), importa y exporta (`-Release` para firmar con la clave propia); `instalar_android.ps1` lo usa en su paso 5. Probado: exportó `build/PathOverflow.apk` (45 MB) como 3.1.0 con código 2. README: sección Android y la 3.1 en «Versiones». Prueba de `GameVersion` en `_test_touch_controls`; capturas `docs/capturas/movil/139_*`.
 
-### [ ] T140 · Aviso de actualización · M 🛑
+### [x] T140 · Aviso de actualización · M 🛑
 Origen: R6
 - **Necesita decisiones del usuario**: dónde se publica el APK (p. ej. GitHub Releases de un repositorio público, que hoy no existe: el proyecto no tiene remoto) y una **clave de firma propia** que se guarde fuera del repositorio (con la de depuración, una versión nueva no se instala encima).
 - Al llegar a la pantalla de título, `HTTPRequest` (con tiempo límite, en segundo plano, sin bloquear si no hay red) lee un `latest.json` (`version`, `code`, `url`, `notas`); si es más nueva, junto a la versión aparece «Actualización disponible: v3.2» y un botón que abre la descarga (`OS.shell_open`); Android pide instalarla encima y las partidas (`user://`) se conservan.
 - Opción para no comprobar; nunca descarga ni instala sola. Si más adelante se publica en Google Play, la tienda hace esto y se quita.
+- Decisiones del usuario (28-10-2026): **GitHub Releases** y **clave propia creada por el usuario** (él escribe la contraseña).
+- Hecho: `UpdateCheck` (en la pantalla de título): `HTTPRequest` con 6 s de límite y redirecciones a `application/config/update_url` de `project.godot` (vacío hasta que exista el repositorio: entonces no pregunta nada); `newer()` solo avisa con una versión mayor (`compare`, número a número) y descarga https. El aviso es un botón dorado «Actualización disponible: v3.2 · Descargar» encima de la versión, que abre la descarga en el navegador (`OS.shell_open`); tocarlo no cuenta como «continuar». «Buscar actualizaciones: sí/no» en Pausa → Gráficos y datos (`interface/check_updates`). Permiso de internet en el preset «Android» (antes «sin permisos extra»: sin él no hay red). `tools/publicar_version.ps1 -Repo usuario/repo [-Notas]`: apunta `update_url` a `https://github.com/<repo>/releases/latest/download/latest.json`, exporta firmado (`exportar_android.ps1 -Release`) y escribe `build/latest.json`; luego se suben el APK y el JSON a una release `v<versión>`. De paso: el título decía «v0.1.0-alpha» en su texto de broma (ahora sin versión) y el estilo dorado tiene margen interior. Pruebas de `compare` y `newer`; captura `docs/capturas/movil/140_titulo_actualizacion.png` (con un latest.json de mentira).
+- **Falta (usuario)**: crear el repositorio de GitHub y la clave propia; ver los pasos en la conversación del 28-10-2026 y en el README («Exportar» → Android).
 
 ## Fase 31 — Pulido de celular
 
@@ -1110,4 +1113,5 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-28 · T136 · El usuario pidió seguir con el loop: se toma como visto bueno.
 - 2026-10-28 · T137 · Editor de disposición táctil (mover y escalar cada botón, opacidad de los botones, Restaurar), guardado en settings.cfg.
 - 2026-10-28 · T138 · Tutorial, consejos, diálogos de controles y ayudas del prólogo con su versión para el dedo, y aro «¡Aquí!» sobre el botón de cada paso del tutorial.
-- 2026-10-28 · T139 · Versión única en project.godot (3.1.0), «v3.1» en el título y la pausa, y tools/exportar_android.ps1 que la copia al APK y sube el código de versión.. **Pendiente de revisión del usuario.**
+- 2026-10-28 · T139 · Versión única en project.godot (3.1.0), «v3.1» en el título y la pausa, y tools/exportar_android.ps1 que la copia al APK y sube el código de versión.
+- 2026-10-28 · T140 · Aviso de actualización desde GitHub Releases (latest.json, botón que abre la descarga, opción para apagarlo), permiso de internet en el APK y tools/publicar_version.ps1; falta que el usuario cree el repositorio y su clave.. **Pendiente de revisión del usuario.**

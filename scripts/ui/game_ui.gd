@@ -644,6 +644,13 @@ func _build_pause_menu() -> Control:
 		GameSettings.set_value("interface", "telemetry", not Telemetry.enabled())
 		telemetry.text = "Registro local de partidas: " + ("sí" if Telemetry.enabled() else "no"))
 	extra.add_child(telemetry)
+	var updates := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
+	updates.text = "Buscar actualizaciones: " + ("sí" if UpdateCheck.enabled() else "no")
+	updates.tooltip_text = "En la pantalla de título, mira si hay una versión más nueva y la ofrece para descargar.\nNunca descarga ni instala nada por su cuenta."
+	updates.pressed.connect(func() -> void:
+		UpdateCheck.set_enabled(not UpdateCheck.enabled())
+		updates.text = "Buscar actualizaciones: " + ("sí" if UpdateCheck.enabled() else "no"))
+	extra.add_child(updates)
 	extra.add_child(UiStyle.section_header("Ventanas"))
 	var controls := UiStyle.button("Controles...", open_controls, PAUSE_BUTTON_W)
 	controls.tooltip_text = "Cambia la tecla o el botón del mando de cada acción."
