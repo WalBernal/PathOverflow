@@ -1107,4 +1107,5 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-27 · T135 · Recorrido táctil de todas las ventanas (0 botones sin respuesta): botón para reaparecer al morir, menú principal que cabe en el celular, catálogo sin joystick debajo, ventanas emergentes con el tamaño de interfaz y bolsa que se desplaza arrastrando en vertical.
 - 2026-10-27 · T136 · Botones táctiles «esquina» (ataque grande junto al orbe de maná y las otras 5 en dos anillos, usar junto a la esquiva, pociones a la izquierda y menús en un ☰), con «dos arcos» como opción, tamaño 80-140 % y modo zurdo. Scripts y lógica en OK; la integración rápida se cortó a mitad (181 recorridos sin un error).
 - 2026-10-28 · T136 · El usuario pidió seguir con el loop: se toma como visto bueno.
-- 2026-10-28 · T137 · Editor de disposición táctil (mover y escalar cada botón, opacidad de los botones, Restaurar), guardado en settings.cfg.. **Pendiente de revisión del usuario.**
+- 2026-10-28 · T137 · Editor de disposición táctil (mover y escalar cada botón, opacidad de los botones, Restaurar), guardado en settings.cfg.
+- 2026-10-28 · T138 · Tutorial, consejos, diálogos de controles y ayudas del prólogo con su versión para el dedo, y aro «¡Aquí!» sobre el botón de cada paso del tutorial.. **Pendiente de revisión del usuario.**
