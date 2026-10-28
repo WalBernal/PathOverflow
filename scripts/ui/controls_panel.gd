@@ -58,6 +58,38 @@ func _init() -> void:
 		LootManager.set_auto_pickup(steps[(k + 1) % steps.size()])
 		auto.text = auto_text.call())
 	box.add_child(auto)
+	# Botones táctiles (T136): distribución, tamaño y mano.
+	Touch.load_layout()
+	var touch_row := HBoxContainer.new()
+	touch_row.add_theme_constant_override("separation", 6)
+	box.add_child(touch_row)
+	var layout_names := {"esquina": "ataque en la esquina", "arcos": "dos arcos"}
+	var layout_b := UiStyle.button("", func() -> void: pass, 300)
+	var size_b := UiStyle.button("", func() -> void: pass, 190)
+	var hand_b := UiStyle.button("", func() -> void: pass, 150)
+	var refresh_touch := func() -> void:
+		layout_b.text = "Botones: " + String(layout_names[Touch.layout])
+		size_b.text = "Tamaño: %d %%" % roundi(Touch.button_scale * 100.0)
+		hand_b.text = "Mano: " + ("zurda" if Touch.left_handed else "diestra")
+	layout_b.tooltip_text = "Ataque en la esquina: la habilidad 1 grande junto al orbe de maná y las demás alrededor.\nDos arcos: las 6 habilidades en dos arcos a la izquierda del orbe."
+	hand_b.tooltip_text = "Zurda: el joystick a la derecha y los botones a la izquierda."
+	layout_b.pressed.connect(func() -> void:
+		Touch.layout = Touch.LAYOUTS[(Touch.LAYOUTS.find(Touch.layout) + 1) % Touch.LAYOUTS.size()]
+		Touch.save_layout()
+		refresh_touch.call())
+	size_b.pressed.connect(func() -> void:
+		var k := Touch.BUTTON_SCALES.find(snappedf(Touch.button_scale, 0.1))
+		Touch.button_scale = Touch.BUTTON_SCALES[(k + 1) % Touch.BUTTON_SCALES.size()]
+		Touch.save_layout()
+		refresh_touch.call())
+	hand_b.pressed.connect(func() -> void:
+		Touch.left_handed = not Touch.left_handed
+		Touch.save_layout()
+		refresh_touch.call())
+	refresh_touch.call()
+	touch_row.add_child(layout_b)
+	touch_row.add_child(size_b)
+	touch_row.add_child(hand_b)
 	close_requested.connect(queue_free)
 	confirmed.connect(queue_free)
 	window_input.connect(_on_window_input)

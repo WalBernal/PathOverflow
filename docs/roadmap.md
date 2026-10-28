@@ -883,15 +883,17 @@ Origen: R6
 
 ## Fase 29 — Controles a la medida
 
-### [ ] T136 · Lado derecho reorganizado · M 🛑
+### [x] T136 · Lado derecho reorganizado · M 🛑
 Origen: R6
 - Propuesta (con capturas a 2400×1080 y 1600×720 para elegir): **ataque principal** grande en la esquina inferior derecha, las otras habilidades en arco a su alrededor, la esquiva junto al pulgar y el botón de interactuar (T134) encima; los menús en una sola tecla «☰» que despliega C I K P B; las pociones en una fila corta a la izquierda del arco.
 - Si las 6 habilidades no caben cómodas: 4 a la vista y un botón para cambiar de juego de habilidades.
 - Opciones en Pausa → Controles: tamaño de los botones (80-140 %), opacidad y **modo zurdo** (joystick a la derecha y botones a la izquierda).
+- Hecho: nueva distribución **«esquina»** (por defecto): la habilidad 1 de 100 px abajo y pegada al orbe de maná, y las otras 5 en dos anillos a su alrededor (`Hud.TOUCH_CORNER_RING`: tres a 120 px a la izquierda, en diagonal y arriba; dos a 205 px entre ellas), la esquiva encima del orbe, el botón de usar entre el anillo y la esquiva (encima pisaba el registro de misiones; con botones grandes se estrecha hasta caber), las pociones en una fila a la izquierda del anillo y los menús en un **☰** que despliega C I K P B (el «!» de novedades pasa al ☰ si está recogido). La de **«dos arcos»** (T108) sigue como opción. En Pausa → Controles: **Botones** (esquina / dos arcos), **Tamaño** (80-140 %, escala botones y distancias) y **Mano** (diestra / zurda: todo el HUD de abajo y la zona del joystick en espejo; `Hud._mr`, `TouchControls.in_zone`), guardados en `settings.cfg` → controls (`Touch.load_layout`). Comprobado con `capture_screens -- botones tactil` a 2400×1080 y 1600×720 con la interfaz al 140 %: esquina al 100 %, al 120 % y zurda sin ningún botón encima de otro, fuera de pantalla ni sobre las misiones; en «dos arcos» las esquinas de algunas casillas se tocan (como desde T108). Capturas `docs/capturas/movil/136_*`. **Decisiones**: con la esquina caben las 6 habilidades sin montarse, así que no hace falta el cambio de juego de 4; la **opacidad** pasa a T137 (los botones se dibujan con el resto del HUD y hay que separarlos primero); en zurdo las pociones quedan en espejo (la 1 a la derecha).
 
 ### [ ] T137 · Editor de disposición táctil · M
 Origen: R6
 - Pantalla para arrastrar cada botón a donde se quiera y cambiar su tamaño, con «Restaurar»; se guarda en `settings.cfg`.
+- Opacidad de los botones táctiles (viene de T136): separar su dibujo del resto del HUD para poder atenuarlos.
 
 ### [ ] T138 · Tutorial y ayudas para el dedo · S
 Origen: R6
@@ -1100,4 +1102,6 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-27 · T132 · Prólogo con el dedo: joystick en la calle, el pasillo y la oficina, botón dorado de usar abajo a la derecha y tocar el escenario va al punto tocado (antes iba al del toque anterior).
 - 2026-10-27 · T133 · Filtro de botín con el dedo: el inventario de debajo ya no se queda el toque, gemas de 45 px a 140 %, vista previa y reglas finas en pestañas y filas con desplazamiento para que la ventana quepa en el celular.
 - 2026-10-27 · T134 · Botón dorado de usar en el celular (recoger el más raro, hablar, waypoint, alijo, sucesos; mantener recoge todo), recoger solo al pasar por rareza, etiquetas más fáciles de tocar y arreglado que tocar el mundo fuera al punto del toque anterior.
-- 2026-10-27 · T135 · Recorrido táctil de todas las ventanas (0 botones sin respuesta): botón para reaparecer al morir, menú principal que cabe en el celular, catálogo sin joystick debajo, ventanas emergentes con el tamaño de interfaz y bolsa que se desplaza arrastrando en vertical.. **Pendiente de revisión del usuario.**
+- 2026-10-27 · T135 · Recorrido táctil de todas las ventanas (0 botones sin respuesta): botón para reaparecer al morir, menú principal que cabe en el celular, catálogo sin joystick debajo, ventanas emergentes con el tamaño de interfaz y bolsa que se desplaza arrastrando en vertical.
+- 2026-10-27 · T136 · Botones táctiles «esquina» (ataque grande junto al orbe de maná y las otras 5 en dos anillos, usar junto a la esquiva, pociones a la izquierda y menús en un ☰), con «dos arcos» como opción, tamaño 80-140 % y modo zurdo. Scripts y lógica en OK; la integración rápida se cortó a mitad (181 recorridos sin un error).
+- 2026-10-28 · T136 · El usuario pidió seguir con el loop: se toma como visto bueno.. **Pendiente de revisión del usuario.**

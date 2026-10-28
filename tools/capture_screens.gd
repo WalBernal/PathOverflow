@@ -29,6 +29,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("botones") and OS.get_cmdline_user_args().has("tactil"):
+		await _capture_touch_layouts()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("ventanas") and OS.get_cmdline_user_args().has("tactil"):
 		var missed := await _audit_windows_touch()
 		print("ventanas táctil: %d botones sin respuesta" % missed)
@@ -2387,6 +2391,87 @@ func _capture_phone() -> void:
 
 ## `p` en coordenadas del lienzo; el toque llega en las de la ventana (otra cosa a
 ## resolución de teléfono, donde el lienzo se estira).
+## Distribuciones de los botones táctiles (T136) a 2400×1080 y 1600×720 con la
+## interfaz al 140 %: esquina, arcos, esquina al 120 % y esquina zurda (con el ☰
+## abierto). Mira que ningún botón pise a otro, ni a las misiones, ni se salga.
+func _capture_touch_layouts() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Pulgar", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.flags["llegada_campamento_vista"] = true
+	c.level = 14
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	var scale_was: Variant = GameSettings.get_value("interface", "scale", 1.0)
+	GameSettings.set_value("interface", "scale", 1.4)
+	Touch.load_layout()
+	var saved := [Touch.layout, Touch.button_scale, Touch.left_handed]
+	Touch.force = true
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var ui: GameUI = world.get("ui")
+	if ui.cutscene.visible:
+		ui.cutscene.call("_finish")
+	world.call("travel_to", "zona1", "waypoint")
+	await _wait(1.5)
+	var player: Player = world.get("player")
+	player.set("invulnerable", true)
+	(world.get("loot") as LootManager).drop_item(ItemGenerator.new(gd.get("items")).generate(5, Rarity.Item.RARE), player.global_position + Vector2(60, 20))
+	var hud: Hud = ui.hud
+	for res in [Vector2i(2400, 1080), Vector2i(1600, 720)]:
+		get_window().size = res
+		await _wait(0.5)
+		ui.apply_ui_scale()
+		for cfg in [["esquina", 1.0, false, false], ["arcos", 1.0, false, false], ["esquina", 1.2, false, false], ["esquina", 1.0, true, true]]:
+			Touch.layout = cfg[0]
+			Touch.button_scale = cfg[1]
+			Touch.left_handed = cfg[2]
+			await _wait(0.3)
+			hud.set("_menu_open", cfg[3])
+			hud.call("_layout")
+			await _wait(0.4)
+			var rects := {}
+			for i in SkillController.ACTIONS.size():
+				rects["habilidad %d" % (i + 1)] = hud.call("_slot_rect", i)
+			rects["esquiva"] = hud.call("_dodge_rect")
+			rects["usar"] = hud.use_rect()
+			for i in Inventory.FLASK_SLOTS:
+				rects["poción %d" % (i + 1)] = hud.call("_flask_rect", i)
+			rects["☰"] = Rect2((hud.get("_menu_toggle") as Control).position, (hud.get("_menu_toggle") as Control).size)
+			rects["orbe de vida"] = Rect2(hud.call("_life_center") - Vector2.ONE * Hud.ORB_RADIUS, Vector2.ONE * Hud.ORB_RADIUS * 2.0)
+			rects["orbe de maná"] = Rect2(hud.call("_mana_center") - Vector2.ONE * Hud.ORB_RADIUS, Vector2.ONE * Hud.ORB_RADIUS * 2.0)
+			var problems: Array[String] = []
+			var keys := rects.keys()
+			var view := Rect2(Vector2.ZERO, hud.size)
+			var tracker := Rect2(hud.get_global_transform_with_canvas().affine_inverse() * ui.quest_tracker.get_global_rect().position,
+				ui.quest_tracker.get_global_rect().size / hud.get_global_transform_with_canvas().get_scale())
+			for a in keys.size():
+				var ra: Rect2 = rects[keys[a]]
+				if not view.encloses(ra):
+					problems.append("%s se sale" % keys[a])
+				if ra.intersects(tracker) and not String(keys[a]).begins_with("orbe"):
+					problems.append("%s pisa las misiones" % keys[a])
+				for b in range(a + 1, keys.size()):
+					if ra.intersects(rects[keys[b]]):
+						problems.append("%s pisa %s" % [keys[a], keys[b]])
+			var tag := "%dx%d_%s_%d%s" % [res.x, res.y, cfg[0], roundi(cfg[1] * 100.0), "_zurda" if cfg[2] else ""]
+			print("botones %s: %s" % [tag, "sin choques" if problems.is_empty() else ", ".join(problems)])
+			_save("136_" + tag)
+	get_window().size = Vector2i(1600, 900)
+	Touch.layout = saved[0]
+	Touch.button_scale = saved[1]
+	Touch.left_handed = saved[2]
+	GameSettings.set_value("interface", "scale", scale_was)
+	Touch.force = false
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
+
+
 ## Revisión de las ventanas con el dedo (T135): en cada menú y ventana que no maneja
 ## TouchPointer (título, menú, creación, pausa y sus ventanas, catálogo, filtro, mapa,
 ## muerte), un toque simulado sobre cada botón visible tiene que llegarle (button_down).

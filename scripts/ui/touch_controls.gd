@@ -45,6 +45,8 @@ func _ready() -> void:
 ## ¿Empieza aquí el joystick? `p` en coordenadas de este control.
 func in_zone(p: Vector2) -> bool:
 	var r := Rect2(ZONE.position * size, ZONE.size * size)
+	if Touch.left_handed:   # modo zurdo (T136): el joystick, a la derecha
+		r.position.x = size.x - r.end.x
 	return r.has_point(p)
 
 

@@ -32,6 +32,11 @@ var _message_tween: Tween
 var _info_timer := 0.0
 var _hotspots := {}            # nombre -> Control (para tooltips de ayuda)
 var _menu_buttons: Array[Button] = []
+## Táctil (T136): ☰ que despliega los botones de menú.
+var _menu_toggle: Button
+var _menu_open := false
+## Ajustes táctiles con los que se colocó todo (para recolocar si cambian).
+var _touch_setup := []
 ## Menús con algo nuevo que ver ("skills", "passives"...): su botón lleva un «!»
 ## dorado que late hasta que se abre (p. ej. al desbloquear una habilidad).
 var attention := {}
@@ -79,9 +84,22 @@ func _ready() -> void:
 		b.tooltip_text = entry[2]
 		b.focus_mode = Control.FOCUS_NONE
 		b.custom_minimum_size = Vector2(34, 30)
-		b.pressed.connect(func() -> void: menu_requested.emit(entry[1]))
+		b.pressed.connect(func() -> void:
+			if touch_layout:
+				_menu_open = false   # el ☰ se recoge al elegir
+				_layout()
+			menu_requested.emit(entry[1]))
 		add_child(b)
 		_menu_buttons.append(b)
+	_menu_toggle = Button.new()
+	_menu_toggle.text = "☰"
+	_menu_toggle.tooltip_text = "Menús: personaje, inventario, habilidades, árbol y catálogo."
+	_menu_toggle.focus_mode = Control.FOCUS_NONE
+	_menu_toggle.pressed.connect(func() -> void:
+		_menu_open = not _menu_open
+		_layout())
+	add_child(_menu_toggle)
+	Touch.load_layout()
 	_layout()
 
 
@@ -130,6 +148,9 @@ const TOUCH_MENU := Vector2(48, 42)
 ## Botón de usar (T134): [radio, grados] desde el orbe de maná, más allá de los arcos.
 const TOUCH_USE := 74.0
 const TOUCH_USE_AT := [318.0, 194.0]
+## Distribución «esquina» (T136): ataque principal y [radio, grados] (desde él) de las\n## otras 5: tres cerca (izquierda, diagonal, arriba) y dos más lejos entre ellas.
+const TOUCH_CORNER_MAIN := 100.0
+const TOUCH_CORNER_RING := [[120.0, 180.0], [120.0, 225.0], [120.0, 270.0], [205.0, 202.0], [205.0, 248.0]]
 var touch_layout := false
 ## Lo que usaría el botón (World.touch_use_target): {kind, pos, text} o vacío.
 var use_target: Callable
@@ -144,9 +165,9 @@ func touch_button_at(pos: Vector2) -> Dictionary:
 		var r := _slot_rect(i)
 		if pos.distance_to(r.get_center()) <= r.size.x * 0.62:
 			return {"kind": "skill", "index": i}
-	if pos.distance_to(_dodge_rect().get_center()) <= TOUCH_DODGE * 0.62:
+	if pos.distance_to(_dodge_rect().get_center()) <= TOUCH_DODGE * _ts() * 0.62:
 		return {"kind": "dodge", "index": 0}
-	if not use_now.is_empty() and pos.distance_to(use_rect().get_center()) <= TOUCH_USE * 0.62:
+	if not use_now.is_empty() and pos.distance_to(use_rect().get_center()) <= TOUCH_USE * _ts() * 0.62:
 		return {"kind": "use", "index": 0}
 	for i in Inventory.FLASK_SLOTS:
 		if _flask_rect(i).grow(4.0).has_point(pos):
@@ -154,11 +175,33 @@ func touch_button_at(pos: Vector2) -> Dictionary:
 	return {}
 
 
+## Modo zurdo (T136): en táctil todo el HUD de abajo va en espejo. Las funciones
+## _raw_* calculan como si fuera diestro; las demás devuelven el sitio de verdad.
+func _mirrored() -> bool:
+	return touch_layout and Touch.left_handed
+
+
+func _mr(r: Rect2) -> Rect2:
+	return Rect2(size.x - r.end.x, r.position.y, r.size.x, r.size.y) if _mirrored() else r
+
+
+func _mp(p: Vector2) -> Vector2:
+	return Vector2(size.x - p.x, p.y) if _mirrored() else p
+
+
 func _life_center() -> Vector2:
-	return Vector2(ORB_RADIUS + 28.0, size.y - ORB_RADIUS - 18.0)
+	return _mp(_raw_life_center())
 
 
 func _mana_center() -> Vector2:
+	return _mp(_raw_mana_center())
+
+
+func _raw_life_center() -> Vector2:
+	return Vector2(ORB_RADIUS + 28.0, size.y - ORB_RADIUS - 18.0)
+
+
+func _raw_mana_center() -> Vector2:
 	return Vector2(size.x - ORB_RADIUS - 28.0, size.y - ORB_RADIUS - 18.0)
 
 
@@ -167,46 +210,110 @@ func _plate_rect() -> Rect2:
 	return Rect2(left, size.y - PLATE_HEIGHT, size.x - left * 2.0, PLATE_HEIGHT)
 
 
+## Tamaño de los botones táctiles (Pausa → Controles).
+func _ts() -> float:
+	return Touch.button_scale
+
+
+func _corner() -> bool:
+	return Touch.layout == "esquina"
+
+
+## Distribución «esquina» (T136): centro del ataque principal, abajo y pegado al orbe de maná.
+func _raw_main_center() -> Vector2:
+	return Vector2(_raw_mana_center().x - ORB_RADIUS - 22.0 - TOUCH_CORNER_MAIN * 0.5 * _ts(), size.y - TOUCH_CORNER_MAIN * 0.5 * _ts() - 16.0)
+
+
 func _slot_rect(i: int) -> Rect2:
+	return _mr(_raw_slot_rect(i)) if touch_layout else _raw_slot_rect(i)
+
+
+func _raw_slot_rect(i: int) -> Rect2:
 	if touch_layout:
-		var c := _mana_center() + Vector2.from_angle(deg_to_rad(TOUCH_RING[i][1])) * float(TOUCH_RING[i][0])
-		var s := TOUCH_MAIN_SLOT if i == 0 else TOUCH_SLOT
+		var c: Vector2
+		var s: float
+		if _corner():
+			# La 1, grande en la esquina; las otras 5 en dos anillos a su alrededor
+			# (de la izquierda hasta arriba), al alcance del pulgar.
+			var main := _raw_main_center()
+			if i == 0:
+				c = main
+				s = TOUCH_CORNER_MAIN * _ts()
+			else:
+				c = main + Vector2.from_angle(deg_to_rad(TOUCH_CORNER_RING[i - 1][1])) * float(TOUCH_CORNER_RING[i - 1][0]) * _ts()
+				s = TOUCH_SLOT * _ts()
+		else:
+			c = _raw_mana_center() + Vector2.from_angle(deg_to_rad(TOUCH_RING[i][1])) * float(TOUCH_RING[i][0]) * _ts()
+			s = (TOUCH_MAIN_SLOT if i == 0 else TOUCH_SLOT) * _ts()
 		return Rect2(c - Vector2(s, s) * 0.5, Vector2(s, s))
 	var plate := _plate_rect()
 	var total := SkillController.ACTIONS.size() * SLOT + (SkillController.ACTIONS.size() - 1) * SLOT_GAP
 	# Centrada; si la pantalla es estrecha (o la interfaz grande), justo después de las pociones.
-	var left := maxf(plate.get_center().x - total / 2.0, _flask_rect(Inventory.FLASK_SLOTS - 1).end.x + 18.0)
+	var left := maxf(plate.get_center().x - total / 2.0, _raw_flask_rect(Inventory.FLASK_SLOTS - 1).end.x + 18.0)
 	var x := left + i * (SLOT + SLOT_GAP)
 	return Rect2(x, plate.position.y + 18.0, SLOT, SLOT)
 
 
 func _flask_rect(i: int) -> Rect2:
+	return _mr(_raw_flask_rect(i)) if touch_layout else _raw_flask_rect(i)
+
+
+func _raw_flask_rect(i: int) -> Rect2:
 	if touch_layout:
-		var left := _life_center().x + ORB_RADIUS + 24.0
-		return Rect2(left + i * (TOUCH_FLASK.x + 6.0), size.y - TOUCH_FLASK.y - 30.0, TOUCH_FLASK.x, TOUCH_FLASK.y)
+		var w := TOUCH_FLASK.x * _ts()
+		var h := TOUCH_FLASK.y * _ts()
+		var left := _raw_life_center().x + ORB_RADIUS + 24.0
+		if _corner():
+			# En una fila corta a la izquierda del arco de habilidades.
+			var arc_left := _raw_main_center().x - (float(TOUCH_CORNER_RING[0][0]) + TOUCH_SLOT * 0.5) * _ts()
+			left = maxf(left, arc_left - 24.0 - Inventory.FLASK_SLOTS * (w + 6.0))
+		return Rect2(left + i * (w + 6.0), size.y - h - 30.0, w, h)
 	var plate := _plate_rect()
 	return Rect2(plate.position.x + 16.0 + i * (FLASK_SIZE.x + 6.0), plate.position.y + 8.0, FLASK_SIZE.x, FLASK_SIZE.y)
 
 
-## Botón táctil de usar (T134): abajo, a la izquierda de los arcos de habilidades.
+## Botón táctil de usar (T134). En «esquina», a la izquierda de la esquiva (T136;
+## encima pisaba el registro de misiones).
 func use_rect() -> Rect2:
-	var c := _mana_center() + Vector2.from_angle(deg_to_rad(TOUCH_USE_AT[1])) * float(TOUCH_USE_AT[0])
-	return Rect2(c - Vector2(TOUCH_USE, TOUCH_USE) * 0.5, Vector2(TOUCH_USE, TOUCH_USE))
+	return _mr(_raw_use_rect())
+
+
+func _raw_use_rect() -> Rect2:
+	var s := TOUCH_USE * _ts()
+	var c: Vector2
+	if _corner():
+		# Entre la habilidad de arriba del anillo cercano y la esquiva (más arriba pisaría
+		# las misiones); con botones grandes, tan ancho como quepa.
+		var dodge := _raw_dodge_rect()
+		var left := _raw_slot_rect(3).end.x + 5.0
+		s = clampf(dodge.position.x - 5.0 - left, 56.0, s)
+		c = Vector2(left + s * 0.5, dodge.get_center().y - 10.0)
+	else:
+		c = _raw_mana_center() + Vector2.from_angle(deg_to_rad(TOUCH_USE_AT[1])) * float(TOUCH_USE_AT[0]) * _ts()
+	return Rect2(c - Vector2(s, s) * 0.5, Vector2(s, s))
 
 
 ## Casilla de la esquiva, a la derecha de la barra de habilidades.
 func _dodge_rect() -> Rect2:
+	return _mr(_raw_dodge_rect()) if touch_layout else _raw_dodge_rect()
+
+
+func _raw_dodge_rect() -> Rect2:
 	if touch_layout:
-		var c := _mana_center() + Vector2(0.0, -ORB_RADIUS - TOUCH_DODGE * 0.5 - 14.0)
-		return Rect2(c - Vector2(TOUCH_DODGE, TOUCH_DODGE) * 0.5, Vector2(TOUCH_DODGE, TOUCH_DODGE))
-	var last := _slot_rect(SkillController.ACTIONS.size() - 1)
+		var d := TOUCH_DODGE * _ts()
+		var c := _raw_mana_center() + Vector2(0.0, -ORB_RADIUS - d * 0.5 - 14.0)
+		return Rect2(c - Vector2(d, d) * 0.5, Vector2(d, d))
+	var last := _raw_slot_rect(SkillController.ACTIONS.size() - 1)
 	return Rect2(last.end.x + 14.0, last.position.y, 34.0, SLOT)
 
 
 func _xp_rect() -> Rect2:
 	if touch_layout:
-		var left := _flask_rect(0).position.x
-		return Rect2(left, size.y - 11.0, maxf(200.0, _slot_rect(3).position.x - 20.0 - left), 6.0)
+		var left := _raw_life_center().x + ORB_RADIUS + 24.0
+		var right := _raw_flask_rect(0).position.x - 20.0 if _corner() else _raw_slot_rect(3).position.x - 20.0
+		if _corner() and right - left < 200.0:
+			right = _raw_flask_rect(Inventory.FLASK_SLOTS - 1).end.x   # (pantalla estrecha: debajo de las pociones)
+		return _mr(Rect2(left, size.y - 11.0, maxf(200.0, right - left), 6.0))
 	var plate := _plate_rect()
 	return Rect2(plate.position.x, plate.position.y - 9.0, plate.size.x, 7.0)
 
@@ -221,26 +328,41 @@ func _layout() -> void:
 	for i in SkillController.ACTIONS.size():
 		_place("skill_%d" % i, _slot_rect(i))
 	_place("dodge", _dodge_rect())
-	var origin := _menu_origin()
+	var origin := _raw_menu_origin()
 	var button := TOUCH_MENU if touch_layout else Vector2(34, 30)
+	# En táctil (T136), un botón ☰ que despliega los menús a su lado.
+	_menu_toggle.visible = touch_layout
+	var first := 0
+	if touch_layout:
+		var tr := _mr(Rect2(origin + Vector2(0, 8.0), button))
+		_menu_toggle.position = tr.position
+		_menu_toggle.size = button
+		_menu_toggle.custom_minimum_size = button
+		first = 1
 	for i in _menu_buttons.size():
 		_menu_buttons[i].custom_minimum_size = button
-		_menu_buttons[i].position = origin + Vector2(i * (button.x + 6.0), 8.0)
+		var br := Rect2(origin + Vector2((i + first) * (button.x + 6.0), 8.0), button)
+		_menu_buttons[i].position = (_mr(br) if touch_layout else br).position
 		_menu_buttons[i].size = button
+		_menu_buttons[i].visible = not touch_layout or _menu_open
 
 
 ## Esquina de los botones de menú (C, I, K, P) y del "Nivel N": a la derecha de la
 ## barra; si no caben junto a las habilidades (interfaz grande), encima de la barra.
 func _menu_origin() -> Vector2:
+	return _menu_toggle.position - Vector2(0, 8.0) if touch_layout else _raw_menu_origin()
+
+
+func _raw_menu_origin() -> Vector2:
 	if touch_layout:   # encima de las pociones (debajo de la zona del joystick)
-		return Vector2(_flask_rect(0).position.x, _flask_rect(0).position.y - TOUCH_MENU.y - 22.0)
+		var left := _raw_life_center().x + ORB_RADIUS + 24.0
+		return Vector2(left, size.y - TOUCH_FLASK.y * _ts() - 30.0 - TOUCH_MENU.y - 22.0)
 	var plate := _plate_rect()
 	var x := plate.end.x - _menu_buttons.size() * 40.0 - 12.0
-	var skills_end := _dodge_rect().end.x + 10.0
+	var skills_end := _raw_dodge_rect().end.x + 10.0
 	if x < skills_end:
 		return Vector2(plate.end.x - _menu_buttons.size() * 40.0 - 12.0, plate.position.y - 58.0)
 	return Vector2(x, plate.position.y + 24.0)
-
 
 func _place(key: String, rect: Rect2) -> void:
 	_hotspots[key].position = rect.position
@@ -251,8 +373,10 @@ func _place(key: String, rect: Rect2) -> void:
 
 func _process(delta: float) -> void:
 	queue_redraw()
-	if Touch.shown() != touch_layout:
-		touch_layout = not touch_layout
+	var setup := [Touch.layout, Touch.button_scale, Touch.left_handed]
+	if Touch.shown() != touch_layout or setup != _touch_setup:
+		touch_layout = Touch.shown()
+		_touch_setup = setup
 		_layout()
 	use_now = use_target.call() if touch_layout and use_target.is_valid() else {}
 	for k in _slot_flash.size():
@@ -449,10 +573,15 @@ func _draw() -> void:
 	var level_text := "Nivel %d" % character.level
 	draw_string(font, _menu_origin(), level_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, TEXT_COLOR)
 	# «!» sobre los botones de menú con novedades.
+	var marked: Array[Control] = []
 	for k in _menu_buttons.size():
-		if not attention.get(MENU_IDS[k], false):
-			continue
-		var br := Rect2(_menu_buttons[k].position, _menu_buttons[k].size)
+		if attention.get(MENU_IDS[k], false):
+			# Con el ☰ recogido (táctil, T136), el «!» va en el ☰.
+			var holder: Control = _menu_buttons[k] if _menu_buttons[k].visible else _menu_toggle
+			if not marked.has(holder):
+				marked.append(holder)
+	for holder in marked:
+		var br := Rect2(holder.position, holder.size)
 		var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 160.0)
 		draw_rect(br.grow(2.0 + pulse * 2.0), Color(1.0, 0.85, 0.3, 0.35 + 0.4 * pulse), false, 2.0)
 		var c := br.position + Vector2(br.size.x - 2, 2)
@@ -1024,7 +1153,7 @@ func _draw_dodge(font: Font) -> void:
 func _draw_use(font: Font) -> void:
 	var r := use_rect()
 	var c := r.get_center()
-	var radius := TOUCH_USE * 0.5
+	var radius := r.size.x * 0.5
 	var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 260.0)
 	draw_circle(c, radius + 4.0, Color(0, 0, 0, 0.75))
 	draw_circle(c, radius, Color(UiStyle.ACCENT, 0.9))

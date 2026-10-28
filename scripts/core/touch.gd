@@ -29,6 +29,29 @@ const MANUAL_AIM_FULL := 150.0
 ## Para las pruebas y las capturas: como si hubiera pantalla táctil.
 static var force := false
 
+## Botones táctiles (T136, Pausa → Controles): distribución ("esquina": el ataque
+## principal grande junto al orbe de maná y las demás en arco a su alrededor;
+## "arcos": la de T108), tamaño (0,8-1,4) y modo zurdo (todo en espejo).
+const LAYOUTS := ["esquina", "arcos"]
+const BUTTON_SCALES := [0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4]
+static var layout := "esquina"
+static var button_scale := 1.0
+static var left_handed := false
+
+
+static func load_layout() -> void:
+	layout = String(GameSettings.get_value("controls", "touch_layout", "esquina"))
+	if not LAYOUTS.has(layout):
+		layout = "esquina"
+	button_scale = clampf(float(GameSettings.get_value("controls", "touch_button_scale", 1.0)), 0.8, 1.4)
+	left_handed = bool(GameSettings.get_value("controls", "touch_left_handed", false))
+
+
+static func save_layout() -> void:
+	GameSettings.set_value("controls", "touch_layout", layout)
+	GameSettings.set_value("controls", "touch_button_scale", button_scale)
+	GameSettings.set_value("controls", "touch_left_handed", left_handed)
+
 
 ## ¿Se muestran los controles táctiles? Con pantalla táctil y sin apagarlos en Pausa → Controles.
 static func shown() -> bool:
