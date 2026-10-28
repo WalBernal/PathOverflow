@@ -926,10 +926,11 @@ Origen: R6
 - Botón o gesto **Atrás** de Android (`NOTIFICATION_WM_GO_BACK_REQUEST`) = Esc: cierra la ventana de arriba o abre la pausa; en el título, pregunta antes de salir.
 - Hecho: `World` guarda y abre la pausa (si no había nada encima y el jugador vive) con `NOTIFICATION_APPLICATION_PAUSED` y, en el celular, con `APPLICATION_FOCUS_OUT` (`World.app_left`; en el PC, cambiar de ventana no pausa). **Atrás**: `config/quit_on_go_back=false` en `project.godot` (antes Godot cerraba la app) y `GameData.go_back()`: en el título y el menú principal, «¿Salir del juego?» (`ask_quit`, con «Salir» y «Seguir»; en el título, tocar la ventana no cuenta como «continuar»); en lo demás manda un Esc (`ui_cancel`), que ya cierra la ventana de arriba, salta escenas o abre la pausa, y en el prólogo avisa y salta. Comprobado con `capture_screens -- atras`: la pregunta sale en el menú, Atrás cierra el inventario y luego abre la pausa, y salir de la app guarda (el autoguardado vuelve a 0) y deja la pausa abierta; capturas `docs/capturas/movil/141_*`.
 
-### [ ] T142 · Pantallas con muesca y legibilidad · S
+### [x] T142 · Pantallas con muesca y legibilidad · S
 Origen: R6
 - Respetar la zona segura (`DisplayServer.get_display_safe_area`) para que la muesca y las esquinas redondeadas no tapen el HUD, el joystick ni los botones.
 - Tooltips de objetos que caben en pantalla con la interfaz al 140 % (más estrechos o con desplazamiento) y comparar con lo equipado uno debajo de otro.
+- Hecho: `UiStyle.safe_margins` pasa la zona segura del celular (`DisplayServer.get_display_safe_area`, en píxeles de pantalla) a coordenadas del lienzo; `GameUI.apply_ui_scale` y `UiStyle.apply_ui_scale` (menús y prólogo) colocan la interfaz dentro de ella, y `GameUI` la vuelve a mirar cada medio segundo (al girar el celular la muesca cambia de lado sin cambiar el tamaño). En el PC no hace nada; `UiStyle.test_safe_area` la simula. **Tooltips**: si con su comparación no caben en alto se encogen (como mucho al 60 %, `ItemTooltip.MIN_FIT`) en vez de salirse por abajo; lo equipado va al lado si cabe a lo ancho y debajo si no. **Decisión**: en el celular horizontal (2000×900 de lienzo a 140 %) al lado sí cabe y apilarlo obligaba a encoger hasta el 60 % (letra de 11 px), así que solo se apila cuando al lado no cabe. Comprobado con `capture_screens -- muesca` a 2400×1080 con una muesca simulada de 120 px: la interfaz empieza en x=100 del lienzo (los 120 px de ventana) y un tooltip de ultra-raro comparando con el equipado cabe entero al 96 %; capturas `docs/capturas/movil/142_*`.
 
 ### [ ] T143 · Vibración y respuesta al toque · S
 Origen: R6
@@ -1116,4 +1117,5 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-28 · T138 · Tutorial, consejos, diálogos de controles y ayudas del prólogo con su versión para el dedo, y aro «¡Aquí!» sobre el botón de cada paso del tutorial.
 - 2026-10-28 · T139 · Versión única en project.godot (3.1.0), «v3.1» en el título y la pausa, y tools/exportar_android.ps1 que la copia al APK y sube el código de versión.
 - 2026-10-28 · T140 · Aviso de actualización desde GitHub Releases (latest.json, botón que abre la descarga, opción para apagarlo), permiso de internet en el APK y tools/publicar_version.ps1; falta que el usuario cree el repositorio y su clave.
-- 2026-10-28 · T141 · Salir de la app guarda y pausa; el botón Atrás de Android hace de Esc y en el título y el menú pregunta antes de salir (antes cerraba la app).. **Pendiente de revisión del usuario.**
+- 2026-10-28 · T141 · Salir de la app guarda y pausa; el botón Atrás de Android hace de Esc y en el título y el menú pregunta antes de salir (antes cerraba la app).
+- 2026-10-28 · T142 · La interfaz respeta la muesca y las esquinas del celular (también al girarlo) y los tooltips con comparación se encogen para caber en alto.. **Pendiente de revisión del usuario.**

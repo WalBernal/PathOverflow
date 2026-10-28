@@ -51,6 +51,8 @@ var _loot: LootManager
 var _minimap_enabled := true
 var _death_panel: PanelContainer
 var _death_label: Label
+## Márgenes de la zona segura con los que se colocó la interfaz (T142).
+var _safe_seen := Vector4.ZERO
 var _waypoint_panel: WaypointPanel
 var _zone_banner: Label
 var event_log: EventLog
@@ -455,6 +457,9 @@ func open_dialogue(npc: Dictionary, dialogue: Dictionary) -> void:
 
 func _process(_delta: float) -> void:
 	hud.tutorial_point = tutorial.touch_point() if Touch.shown() and tutorial else ""   # T138
+	# Al girar el celular, la muesca cambia de lado sin cambiar el tamaño (T142).
+	if Engine.get_process_frames() % 30 == 0 and UiStyle.safe_margins(get_viewport()) != _safe_seen:
+		apply_ui_scale()
 	if touch_buttons:
 		# Con una ventana, el árbol o la pausa abiertos se apartan (las ventanas tienen su X).
 		# (el catálogo tiene su ✕ en esa esquina: el «II» la tapaba, T135)
@@ -807,9 +812,14 @@ static func ui_scale() -> float:
 ## Escala la interfaz (menús, HUD, textos): _root ocupa la pantalla dividida por
 ## la escala y se agranda por ella, así los anclajes siguen cuadrando.
 func apply_ui_scale() -> void:
-	var s := minf(ui_scale(), maxf(1.0, get_viewport().get_visible_rect().size.y / UI_MIN_HEIGHT))
+	# Fuera de la muesca y las esquinas redondeadas del celular (T142).
+	var m := UiStyle.safe_margins(get_viewport())
+	_safe_seen = m
+	var view := get_viewport().get_visible_rect().size - Vector2(m.x + m.z, m.y + m.w)
+	var s := minf(ui_scale(), maxf(1.0, view.y / UI_MIN_HEIGHT))
+	_root.position = Vector2(m.x, m.y)
 	_root.scale = Vector2(s, s)
-	_root.size = get_viewport().get_visible_rect().size / s
+	_root.size = view / s
 	if inventory_panel:
 		inventory_panel.fit_height.call_deferred()
 	get_tree().call_group.call_deferred(&"fit_scroll", &"fit")

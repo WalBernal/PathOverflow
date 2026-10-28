@@ -29,6 +29,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("muesca"):
+		await _capture_safe_area()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("atras"):
 		await _capture_back_button()
 		get_tree().quit()
@@ -2417,6 +2421,71 @@ func _capture_phone() -> void:
 
 ## `p` en coordenadas del lienzo; el toque llega en las de la ventana (otra cosa a
 ## resolución de teléfono, donde el lienzo se estira).
+## Muesca y tooltips en el celular (T142): a 2400×1080 con la interfaz al 140 % y una
+## muesca simulada de 120 px a la izquierda (y 40 px de esquinas a la derecha): la
+## interfaz se aparta; un tooltip comparando con lo equipado va apilado y cabe en alto.
+func _capture_safe_area() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Muesca", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.flags["llegada_campamento_vista"] = true
+	var gen := ItemGenerator.new(gd.get("items"))
+	var equipped := gen.generate(30, Rarity.Item.RARE)
+	while not equipped.is_equipment() or String(equipped.base.get("slot", "")) != "body":
+		equipped = gen.generate(30, Rarity.Item.RARE)
+	c.inventory.add_item(equipped)
+	c.inventory.equip_from_bag(c.inventory.bag.find(equipped))
+	var rival := gen.generate(30, Rarity.Item.ULTRA_RARE)
+	while String(rival.base.get("slot", "")) != "body":
+		rival = gen.generate(30, Rarity.Item.ULTRA_RARE)
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	var scale_was: Variant = GameSettings.get_value("interface", "scale", 1.0)
+	GameSettings.set_value("interface", "scale", 1.4)
+	Touch.force = true
+	get_window().size = Vector2i(2400, 1080)
+	await _wait(0.4)
+	UiStyle.test_safe_area = Rect2i(120, 0, 2400 - 120 - 40, 1080)
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var ui: GameUI = world.get("ui")
+	if ui.cutscene.visible:
+		ui.cutscene.call("_finish")
+	ui.apply_ui_scale()
+	await _wait(0.4)
+	var root: Control = ui.get("_root")
+	var life: Vector2 = ui.hud.call("_life_center")
+	print("muesca: la interfaz empieza en x=%.0f (lienzo; 120 px de ventana = %.0f), el orbe de vida en x=%.0f" % [root.position.x, 120.0 * 2000.0 / 2400.0, (root.get_global_transform_with_canvas() * life).x])
+	_save("142_muesca")
+	ui.call("_on_menu_requested", "inventory")
+	await _wait(0.3)
+	var mouse := Vector2(1100, 300)
+	Input.warp_mouse(get_viewport().get_final_transform() * mouse)
+	ui.item_tooltip.show_item(rival, c, true)
+	await _wait(0.5)
+	var tip: ItemTooltip = ui.item_tooltip
+	var sides: Array = tip.get("_sides")
+	var view := get_viewport().get_visible_rect().size
+	var bottom := tip.get_global_rect().end.y
+	for s in sides:
+		if (s as Control).visible:
+			bottom = maxf(bottom, (s as Control).get_global_rect().end.y)
+	print("muesca: tooltip a escala %.2f, con %d equipado(s), de y=%.0f a y=%.0f (pantalla %.0f): %s" % [tip.scale.x, sides.filter(func(s: Control) -> bool: return s.visible).size(),
+		tip.get_global_rect().position.y, bottom, view.y, "cabe" if bottom <= view.y else "SE SALE"])
+	_save("142_tooltip_comparando")
+	UiStyle.test_safe_area = Rect2i()
+	get_window().size = Vector2i(1600, 900)
+	GameSettings.set_value("interface", "scale", scale_was)
+	Touch.force = false
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
+
+
 ## Botón Atrás y app en segundo plano (T141): en el menú pregunta antes de salir; en
 ## partida, Atrás cierra el inventario y luego abre la pausa; salir de la app guarda y pausa.
 func _capture_back_button() -> void:

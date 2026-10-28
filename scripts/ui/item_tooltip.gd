@@ -5,6 +5,8 @@ extends PanelContainer
 ## y, al lado, otro tooltip con lo que llevas equipado en esa ranura.
 
 const WIDTH := 360.0
+## Lo más que se encoge un tooltip (con su comparación) para caber en alto (T142).
+const MIN_FIT := 0.6
 const GREY := "8a8293"
 const MOD_COLOR := "8888ff"
 const FLAVOR_COLOR := "af6025"
@@ -65,6 +67,22 @@ func _process(_delta: float) -> void:
 		_requested_compare = keep
 	# En coordenadas de pantalla: la interfaz puede estar escalada (GameUI).
 	var view := get_viewport_rect().size
+	# T142: lo equipado va al lado si cabe a lo ancho y, si no (pantalla estrecha con la
+	# interfaz grande), debajo; y si no cabe en alto, todo se encoge (hasta MIN_FIT) en
+	# vez de salirse por abajo.
+	var open_sides := _sides.filter(func(s: ItemTooltip) -> bool: return s.visible)
+	var parent_scale := (get_parent() as CanvasItem).get_global_transform().get_scale().y if get_parent() is CanvasItem else 1.0
+	var sides_w := 0.0
+	var sides_h := 0.0
+	for s: ItemTooltip in open_sides:
+		sides_w = maxf(sides_w, s.size.x)
+		sides_h += s.size.y + 8.0
+	var stacked := not open_sides.is_empty() and (size.x + sides_w + 24.0) * parent_scale > view.x
+	var total := size.y + sides_h if stacked else maxf(size.y, sides_h - 8.0)
+	var fit := clampf((view.y - 8.0) / maxf(1.0, total * parent_scale), MIN_FIT, 1.0)
+	scale = Vector2(fit, fit)
+	for s in _sides:
+		s.scale = scale
 	var shown := size * get_global_transform().get_scale()
 	var pos := global_position
 	if not _frozen:
@@ -72,9 +90,15 @@ func _process(_delta: float) -> void:
 		pos = mouse + Vector2(20, 20)
 		if pos.x + shown.x > view.x:
 			pos.x = mouse.x - shown.x - 20.0
-		pos.y = clampf(pos.y, 4.0, maxf(4.0, view.y - shown.y - 4.0))
+		pos.y = clampf(pos.y, 4.0, maxf(4.0, view.y - total * parent_scale * fit - 4.0))
 		pos.x = clampf(pos.x, 4.0, maxf(4.0, view.x - shown.x - 4.0))
 		global_position = pos
+	if stacked:
+		var below := pos.y + shown.y + 8.0 * fit * parent_scale
+		for side: ItemTooltip in open_sides:
+			side.global_position = Vector2(pos.x, below)
+			below += side.size.y * side.get_global_transform().get_scale().y + 8.0 * fit * parent_scale
+		return
 	# Lo equipado, al lado: a la izquierda si cabe; si no, a la derecha. Dos
 	# anillos van uno debajo del otro.
 	var y := pos.y

@@ -315,18 +315,41 @@ static func _box(bg: Color, border: Color, border_width := 1) -> StyleBoxFlat:
 ## el control raíz se escala y ocupa la pantalla dividida por la escala.
 static func apply_ui_scale(root: Control) -> void:
 	var chosen := clampf(float(GameSettings.get_value("interface", "scale", 1.0)), 0.75, 1.6)   # igual que GameUI.UI_SCALE_MAX
-	if is_equal_approx(chosen, 1.0) or not root.is_inside_tree():
+	if not root.is_inside_tree() or (is_equal_approx(chosen, 1.0) and safe_margins(root.get_viewport()) == Vector4.ZERO):
 		return
 	var fit := func() -> void:
 		if not is_instance_valid(root) or not root.is_inside_tree():
 			return   # el menú ya se cerró
-		# Igual que GameUI.apply_ui_scale: en pantallas bajas se reduce hasta caber (560 px de alto).
-		var s := minf(chosen, maxf(1.0, root.get_viewport().get_visible_rect().size.y / 560.0))
+		# Igual que GameUI.apply_ui_scale: fuera de la muesca (T142) y, en pantallas bajas,
+		# reducida hasta caber (560 px de alto).
+		var m := safe_margins(root.get_viewport())
+		var view := root.get_viewport().get_visible_rect().size - Vector2(m.x + m.z, m.y + m.w)
+		var s := minf(chosen, maxf(1.0, view.y / 560.0))
 		root.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		root.position = Vector2(m.x, m.y)
 		root.scale = Vector2(s, s)
-		root.size = root.get_viewport().get_visible_rect().size / s
+		root.size = view / s
 	root.get_viewport().size_changed.connect(fit)
 	fit.call()
+
+
+## Pruebas y capturas (T142): como si la pantalla tuviera esta zona segura, en
+## píxeles de la ventana (Rect2i() = la de verdad).
+static var test_safe_area := Rect2i()
+
+
+## Lo que tapan la muesca y las esquinas redondeadas del celular (T142), en
+## coordenadas del lienzo: (izquierda, arriba, derecha, abajo). Cero en el PC.
+static func safe_margins(vp: Viewport) -> Vector4:
+	if test_safe_area == Rect2i() and not GameSettings.is_mobile():
+		return Vector4.ZERO
+	var win := Vector2(DisplayServer.window_get_size())
+	var safe := test_safe_area if test_safe_area != Rect2i() else DisplayServer.get_display_safe_area()
+	if safe.size.x <= 0 or safe.size.y <= 0 or win.x <= 0.0:
+		return Vector4.ZERO
+	var k := vp.get_visible_rect().size / win
+	return Vector4(maxf(0.0, safe.position.x * k.x), maxf(0.0, safe.position.y * k.y),
+		maxf(0.0, (win.x - safe.end.x) * k.x), maxf(0.0, (win.y - safe.end.y) * k.y))
 
 
 ## Última pestaña o filtro de cada ventana (T82), en settings.cfg → [ui_memory].
