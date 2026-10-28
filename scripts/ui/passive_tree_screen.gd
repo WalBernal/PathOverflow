@@ -45,6 +45,11 @@ func _ready() -> void:
 	_build_ui()
 	# Al cerrar el árbol se acaba la visita: lo asignado ya cuesta quitarlo y no se puede deshacer.
 	visibility_changed.connect(func() -> void:
+		if visible and Touch.shown() and _close_button.text != "✕ Cerrar":
+			# Con el dedo (fallo visto en el celular): «Cerrar» grande y dorado, que se vea y se toque.
+			_close_button.text = "✕ Cerrar"
+			_close_button.custom_minimum_size = Vector2(130, 44)
+			TouchPointer.gold(_close_button)
 		if not visible and _plan:
 			_plan.clear_history()
 			_session_nodes.clear()

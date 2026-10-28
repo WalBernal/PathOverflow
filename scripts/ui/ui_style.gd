@@ -345,11 +345,27 @@ static func safe_margins(vp: Viewport) -> Vector4:
 		return Vector4.ZERO
 	var win := Vector2(DisplayServer.window_get_size())
 	var safe := test_safe_area if test_safe_area != Rect2i() else DisplayServer.get_display_safe_area()
-	if safe.size.x <= 0 or safe.size.y <= 0 or win.x <= 0.0:
+	return margins_for(Rect2(safe), win, vp.get_visible_rect().size)
+
+
+## Lo más que puede ocupar cada margen (fracción del lado): una muesca de verdad
+## ocupa un 3-5 %; más es una zona segura mal informada (T142b).
+const SAFE_MAX := 0.08
+
+
+## Márgenes del lienzo `canvas` para la zona segura `safe` de una ventana `win`. Una
+## zona segura que no cabe en la ventana (p. ej. dada en la otra orientación al girar)
+## no se usa: en el celular hacía que la interfaz se saliera de la pantalla y
+## parpadeara. Cada margen, como mucho SAFE_MAX y redondeado (sin temblores).
+static func margins_for(safe: Rect2, win: Vector2, canvas: Vector2) -> Vector4:
+	if safe.size.x <= 0.0 or safe.size.y <= 0.0 or win.x <= 0.0 or win.y <= 0.0 \
+			or not Rect2(Vector2.ZERO, win).grow(1.0).encloses(safe):
 		return Vector4.ZERO
-	var k := vp.get_visible_rect().size / win
-	return Vector4(maxf(0.0, safe.position.x * k.x), maxf(0.0, safe.position.y * k.y),
-		maxf(0.0, (win.x - safe.end.x) * k.x), maxf(0.0, (win.y - safe.end.y) * k.y))
+	var k := canvas / win
+	var m := Vector4(safe.position.x * k.x, safe.position.y * k.y, (win.x - safe.end.x) * k.x, (win.y - safe.end.y) * k.y)
+	var cap := Vector4(canvas.x, canvas.y, canvas.x, canvas.y) * SAFE_MAX
+	return Vector4(roundf(clampf(m.x, 0.0, cap.x)), roundf(clampf(m.y, 0.0, cap.y)),
+		roundf(clampf(m.z, 0.0, cap.z)), roundf(clampf(m.w, 0.0, cap.w)))
 
 
 ## Última pestaña o filtro de cada ventana (T82), en settings.cfg → [ui_memory].

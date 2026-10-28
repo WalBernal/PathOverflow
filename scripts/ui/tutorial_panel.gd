@@ -76,12 +76,15 @@ func setup(p_character: CharacterData, p_player: Player) -> void:
 
 
 ## Personajes del tutorial antiguo (sin zona tutorial): siguen desde la parte
-## del campamento, o lo dan por terminado si ya lo habían acabado.
+## del campamento, o lo dan por terminado si ya lo habían acabado. Versión 3: las
+## pasivas pasaron al final (TutorialOrder).
 func _migrate() -> void:
 	if character.flags.has("tutorial_step") and not character.flags.has("tutorial_version"):
 		var old := int(character.flags["tutorial_step"])
 		character.flags["tutorial_step"] = _steps.size() if old >= 11 else _index_of("talk_ada")
-	character.flags["tutorial_version"] = 2
+	elif int(character.flags.get("tutorial_version", 0)) == 2 and character.flags.has("tutorial_step"):
+		character.flags["tutorial_step"] = TutorialOrder.migrated_step(int(character.flags["tutorial_step"]), TutorialOrder.V2, _steps)
+	character.flags["tutorial_version"] = 3
 
 
 func _index_of(step_id: String) -> int:
@@ -173,10 +176,10 @@ func _condition(step_id: String) -> bool:
 			return false
 		"kevin":
 			return character.flags.has("talked_kevin")
-		"reach_camp":
-			return zone != null and zone.id == GameData.act.get("town", "campamento")
-		"leave_camp":
-			return zone != null and zone.id == "zona1"
+		"reach_camp":   # del Sandbox solo se sale por el campamento: más allá, ya pasó por él
+			return zone != null and zone.style != "sandbox"
+		"leave_camp":   # cualquier zona de después del campamento (no solo el Bosque)
+			return zone != null and zone.style != "sandbox" and zone.id != GameData.act.get("town", "campamento")
 		"use_skill":
 			return _events.has("skill_used")
 		"kill":

@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "_doc": "Pasos del tutorial, en orden. La condición de cada paso está en scripts/ui/tutorial_panel.gd (por id). count: cantidad necesaria (p. ej. enemigos). text_touch: el texto con controles táctiles (T138). touch_point: el botón táctil que se resalta (skill_0, dodge, use, flask_0, menu_inventory, menu_skills, menu_passives...).",
   "title": "Daemon de Ayuda",
   "steps": [
@@ -19,9 +19,6 @@
     { "id": "flask", "text": "Bebe un café (tecla 1). Las pociones gastan cargas y se recargan matando enemigos. Hasta 5 en el cinturón (teclas 1-5). El café de verdad, no.",
       "text_touch": "Bebe un café: toca la poción 1. Las pociones gastan cargas y se recargan matando enemigos. Hasta 5 en el cinturón. El café de verdad, no.",
       "touch_point": "flask_0" },
-    { "id": "passives", "text": "Pulsa P y gasta un punto de pasiva. Tienes puntos sin gastar, como tu presupuesto de formación.",
-      "text_touch": "Abre el árbol (☰ y luego P) y gasta un punto de pasiva: toca un nodo y pulsa «Asignar». Tienes puntos sin gastar, como tu presupuesto de formación.",
-      "touch_point": "menu_passives" },
     { "id": "reach_camp", "text": "Sigue hacia el este hasta el campamento. Pisa el portal de la salida. B.O.B. te echará de menos (no)." },
     { "id": "talk_ada", "text": "Habla con Aida (click sobre ella). Es la única de aquí que lee la documentación.",
       "text_touch": "Habla con Aida: acércate y toca el botón dorado «Hablar» (o tócala a ella). Es la única de aquí que lee la documentación.",
@@ -32,7 +29,10 @@
     { "id": "kevin", "text": "Pídele un café a Mario, el practicante. No sirve de mucho, pero le emociona.",
       "text_touch": "Pídele un café a Mario, el practicante: acércate y toca «Hablar». No sirve de mucho, pero le emociona.",
       "touch_point": "use" },
-    { "id": "leave_camp", "text": "Sal por el este al Bosque de Cables. El waypoint del campamento te traerá de vuelta (y al morir reapareces aquí)." }
+    { "id": "leave_camp", "text": "Sal por el este al Bosque de Cables. El waypoint del campamento te traerá de vuelta (y al morir reapareces aquí)." },
+    { "id": "passives", "text": "Al subir de nivel ganas un punto de pasiva: pulsa P y gástalo. Tienes puntos sin gastar, como tu presupuesto de formación.",
+      "text_touch": "Al subir de nivel ganas un punto de pasiva: abre el árbol (☰ y luego P), toca un nodo y pulsa «Asignar». Tienes puntos sin gastar, como tu presupuesto de formación.",
+      "touch_point": "menu_passives" }
   ],
   "done": "Tutorial completado. Ya sabes tanto como el equipo de QA. Que no es mucho. Buena suerte: la vas a necesitar."
 }

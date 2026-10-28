@@ -29,6 +29,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("arbol") and OS.get_cmdline_user_args().has("tactil"):
+		await _capture_tree_close()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("muesca"):
 		await _capture_safe_area()
 		get_tree().quit()
@@ -2421,6 +2425,47 @@ func _capture_phone() -> void:
 
 ## `p` en coordenadas del lienzo; el toque llega en las de la ventana (otra cosa a
 ## resolución de teléfono, donde el lienzo se estira).
+## Árbol de pasivas con el dedo (fallo visto en el celular): abrirlo desde el ☰ y
+## cerrarlo tocando «Cerrar», a 2400×1080 con la interfaz al 140 %.
+func _capture_tree_close() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Árbol", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.flags["llegada_campamento_vista"] = true
+	var scale_was: Variant = GameSettings.get_value("interface", "scale", 1.0)
+	GameSettings.set_value("interface", "scale", 1.4)
+	Touch.force = true
+	get_window().size = Vector2i(2400, 1080)
+	await _wait(0.4)
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var ui: GameUI = world.get("ui")
+	if ui.cutscene.visible:
+		ui.cutscene.call("_finish")
+	ui.apply_ui_scale()
+	ui.call("_on_menu_requested", "passives")
+	await _wait(0.6)
+	var close: Button = ui.tree_screen.get("_close_button")
+	var at := _canvas_point(close, close.size / 2.0)
+	print("árbol: abierto %s, «Cerrar» visible %s en %s (pantalla %s)" % [ui.tree_screen.visible, close.is_visible_in_tree(), at.round(), get_viewport().get_visible_rect().size])
+	_save("fix_arbol_abierto")
+	_touch(0, at, true)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_touch(0, at, false)
+	await _wait(0.5)
+	print("árbol: tras tocar «Cerrar», abierto %s" % ui.tree_screen.visible)
+	get_window().size = Vector2i(1600, 900)
+	GameSettings.set_value("interface", "scale", scale_was)
+	Touch.force = false
+	world.queue_free()
+
+
 ## Muesca y tooltips en el celular (T142): a 2400×1080 con la interfaz al 140 % y una
 ## muesca simulada de 120 px a la izquierda (y 40 px de esquinas a la derecha): la
 ## interfaz se aparta; un tooltip comparando con lo equipado va apilado y cabe en alto.

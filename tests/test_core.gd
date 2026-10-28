@@ -5220,6 +5220,20 @@ func _test_touch_controls() -> void:
 		_check(s * ui >= 44.0, "objetivo táctil de %d px a 140 %% (≥ 44)" % roundi(s * ui))
 	_check(TouchPointer.LONG_PRESS >= 0.4 and TouchPointer.LONG_PRESS <= 0.8, "mantener: medio segundo, ni más ni menos")
 	_check(TouchPointer.scroll_for(null, Vector2(0, 40)) == null, "arrastrar sin casilla: no desplaza por su cuenta")
+	# Tutorial v3: las pasivas al final; quien iba a medias sigue por el mismo paso.
+	var tut: Array = DataLoader.load_json("res://data/tutorial.json")["steps"]
+	_check(tut[-1]["id"] == "passives", "tutorial: las pasivas, el último paso (en el Sandbox no da para subir de nivel)")
+	var v2: Array = TutorialOrder.V2
+	_check(tut[TutorialOrder.migrated_step(v2.find("passives"), v2, tut)]["id"] == "passives"
+		and tut[TutorialOrder.migrated_step(v2.find("talk_ada"), v2, tut)]["id"] == "talk_ada"
+		and TutorialOrder.migrated_step(v2.size(), v2, tut) == tut.size(), "tutorial v2 → v3: mismo paso o terminado")
+	# Zona segura (T142b): una muesca normal se respeta; una zona mal informada no mueve nada.
+	var canvas := Vector2(2000, 900)
+	var win := Vector2(2400, 1080)
+	_check(UiStyle.margins_for(Rect2(120, 0, 2240, 1080), win, canvas) == Vector4(100, 0, 33, 0), "muesca de 120 px a la izquierda: 100 de lienzo")
+	_check(UiStyle.margins_for(Rect2(0, 0, 1080, 2400), win, canvas) == Vector4.ZERO, "zona segura en la otra orientación: se ignora")
+	_check(UiStyle.margins_for(Rect2(600, 0, 1800, 1080), win, canvas).x <= 2000.0 * UiStyle.SAFE_MAX, "margen exagerado: con tope")
+	_check(UiStyle.margins_for(Rect2(), win, canvas) == Vector4.ZERO, "sin zona segura: nada")
 	# Límite de FPS (T144): automático = sin límite en el PC; en el celular 60, y 30 si va lento.
 	var fps_choice_was := GraphicsQuality.fps_choice()
 	var auto_fps_was := int(GameSettings.get_value("graphics", "auto_fps", 60))
