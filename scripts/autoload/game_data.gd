@@ -161,3 +161,33 @@ func _input(event: InputEvent) -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_PREDELETE:
 		NarratorVoice.shutdown()
+	elif what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		go_back()
+
+
+## Botón o gesto Atrás de Android (T141; en project.godot, quit_on_go_back=false):
+## en el título y el menú pregunta antes de salir (`ask_quit` de la pantalla); en lo
+## demás es Esc (cierra la ventana de arriba o abre la pausa).
+func go_back() -> void:
+	var scene := get_tree().current_scene
+	if scene and scene.has_method("ask_quit"):
+		scene.call("ask_quit")
+		return
+	for pressed in [true, false]:
+		var esc := InputEventAction.new()
+		esc.action = &"ui_cancel"
+		esc.pressed = pressed
+		Input.parse_input_event(esc)
+
+
+## Ventana «¿Salir del juego?» para el botón Atrás en el título y el menú principal.
+static func quit_dialog(parent: Node) -> ConfirmationDialog:
+	var d := ConfirmationDialog.new()
+	d.title = "Salir"
+	d.dialog_text = "¿Salir del juego? Lo guardado se queda guardado."
+	d.ok_button_text = "Salir"
+	d.cancel_button_text = "Seguir"
+	d.theme = UiStyle.make_theme()
+	d.confirmed.connect(func() -> void: parent.get_tree().quit())
+	parent.add_child(d)
+	return d

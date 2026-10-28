@@ -920,10 +920,11 @@ Origen: R6
 
 ## Fase 31 — Pulido de celular
 
-### [ ] T141 · La app en segundo plano y el botón Atrás · S
+### [x] T141 · La app en segundo plano y el botón Atrás · S
 Origen: R6
 - Al salir de la app, recibir una llamada o apagar la pantalla (`NOTIFICATION_APPLICATION_PAUSED` / `FOCUS_OUT`): pausar y guardar; al volver, la pausa abierta.
 - Botón o gesto **Atrás** de Android (`NOTIFICATION_WM_GO_BACK_REQUEST`) = Esc: cierra la ventana de arriba o abre la pausa; en el título, pregunta antes de salir.
+- Hecho: `World` guarda y abre la pausa (si no había nada encima y el jugador vive) con `NOTIFICATION_APPLICATION_PAUSED` y, en el celular, con `APPLICATION_FOCUS_OUT` (`World.app_left`; en el PC, cambiar de ventana no pausa). **Atrás**: `config/quit_on_go_back=false` en `project.godot` (antes Godot cerraba la app) y `GameData.go_back()`: en el título y el menú principal, «¿Salir del juego?» (`ask_quit`, con «Salir» y «Seguir»; en el título, tocar la ventana no cuenta como «continuar»); en lo demás manda un Esc (`ui_cancel`), que ya cierra la ventana de arriba, salta escenas o abre la pausa, y en el prólogo avisa y salta. Comprobado con `capture_screens -- atras`: la pregunta sale en el menú, Atrás cierra el inventario y luego abre la pausa, y salir de la app guarda (el autoguardado vuelve a 0) y deja la pausa abierta; capturas `docs/capturas/movil/141_*`.
 
 ### [ ] T142 · Pantallas con muesca y legibilidad · S
 Origen: R6
@@ -1114,4 +1115,5 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-28 · T137 · Editor de disposición táctil (mover y escalar cada botón, opacidad de los botones, Restaurar), guardado en settings.cfg.
 - 2026-10-28 · T138 · Tutorial, consejos, diálogos de controles y ayudas del prólogo con su versión para el dedo, y aro «¡Aquí!» sobre el botón de cada paso del tutorial.
 - 2026-10-28 · T139 · Versión única en project.godot (3.1.0), «v3.1» en el título y la pausa, y tools/exportar_android.ps1 que la copia al APK y sube el código de versión.
-- 2026-10-28 · T140 · Aviso de actualización desde GitHub Releases (latest.json, botón que abre la descarga, opción para apagarlo), permiso de internet en el APK y tools/publicar_version.ps1; falta que el usuario cree el repositorio y su clave.. **Pendiente de revisión del usuario.**
+- 2026-10-28 · T140 · Aviso de actualización desde GitHub Releases (latest.json, botón que abre la descarga, opción para apagarlo), permiso de internet en el APK y tools/publicar_version.ps1; falta que el usuario cree el repositorio y su clave.
+- 2026-10-28 · T141 · Salir de la app guarda y pausa; el botón Atrás de Android hace de Esc y en el título y el menú pregunta antes de salir (antes cerraba la app).. **Pendiente de revisión del usuario.**

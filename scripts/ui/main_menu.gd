@@ -23,6 +23,7 @@ var _play_button: Button
 var _delete_button: Button
 var _status: Label
 var _confirm: ConfirmationDialog
+var _quit_dialog: ConfirmationDialog
 var _card_group := ButtonGroup.new()
 
 
@@ -41,6 +42,13 @@ func _draw() -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:
 		queue_redraw()
+
+
+## Botón Atrás de Android (T141): preguntar antes de salir.
+func ask_quit() -> void:
+	if _quit_dialog == null:
+		_quit_dialog = GameData.quit_dialog(self)
+	GameUI.show_popup(_quit_dialog)
 
 
 func _unhandled_input(event: InputEvent) -> void:

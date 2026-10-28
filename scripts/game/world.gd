@@ -272,10 +272,22 @@ func _process(delta: float) -> void:
 		save_now()
 
 
-## Cerrar la ventana también guarda.
+## Cerrar la ventana también guarda. En el celular (T141), salir de la app (inicio,
+## una llamada, apagar la pantalla) guarda y deja la pausa abierta para la vuelta.
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		save_now()
+	elif what == NOTIFICATION_APPLICATION_PAUSED or (what == NOTIFICATION_APPLICATION_FOCUS_OUT and GameSettings.is_mobile()):
+		app_left()
+
+
+## La app pasó a segundo plano: guardar y pausar (si no había ya algo encima).
+func app_left() -> void:
+	if character == null or ui == null:
+		return
+	save_now()
+	if not get_tree().paused and player and player.is_alive():
+		ui.toggle_pause_menu()
 
 
 func save_now() -> void:

@@ -27,6 +27,7 @@ var _logo: GameLogo
 var _leaving := false
 var _mute: Button
 var _update: Button
+var _quit_dialog: ConfirmationDialog
 
 
 func _ready() -> void:
@@ -51,6 +52,13 @@ func _ready() -> void:
 	updates.found.connect(show_update)
 	updates.check()
 	_init_effects()
+
+
+## Botón Atrás de Android (T141): preguntar antes de salir (no «continuar»).
+func ask_quit() -> void:
+	if _quit_dialog == null:
+		_quit_dialog = GameData.quit_dialog(self)
+	GameUI.show_popup(_quit_dialog)
 
 
 ## Botón «Actualización disponible» abajo a la derecha; abre la descarga en el navegador
@@ -136,6 +144,8 @@ func _process(delta: float) -> void:
 ## En _input (no _unhandled_input): la propia pantalla es un Control y se quedaba el
 ## click. En el celular continúa al tocar; tocar el botón de música no cuenta.
 func _input(event: InputEvent) -> void:
+	if _quit_dialog != null and _quit_dialog.visible:
+		return   # «¿Salir del juego?» abierta: sus botones mandan
 	var pressed: bool = (event is InputEventKey and event.pressed and not event.echo) \
 		or (event is InputEventMouseButton and event.pressed) \
 		or (event is InputEventScreenTouch and event.pressed)

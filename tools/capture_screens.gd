@@ -29,6 +29,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("atras"):
+		await _capture_back_button()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("actualizacion"):
 		# Aviso de actualización (T140) en el título, con un latest.json de mentira.
 		Touch.force = true
@@ -2413,6 +2417,55 @@ func _capture_phone() -> void:
 
 ## `p` en coordenadas del lienzo; el toque llega en las de la ventana (otra cosa a
 ## resolución de teléfono, donde el lienzo se estira).
+## Botón Atrás y app en segundo plano (T141): en el menú pregunta antes de salir; en
+## partida, Atrás cierra el inventario y luego abre la pausa; salir de la app guarda y pausa.
+func _capture_back_button() -> void:
+	var gd: Node = get_node("/root/GameData")
+	Touch.force = true
+	var menu: Node = load("res://scenes/menu/main_menu.tscn").instantiate()
+	_swap(menu)
+	await _wait(0.8)
+	menu.call("ask_quit")
+	await _wait(0.4)
+	var dialog: ConfirmationDialog = menu.get("_quit_dialog")
+	print("atrás en el menú: «%s» %s" % [dialog.dialog_text, "a la vista" if dialog.visible else "NO SE VE"])
+	_save("141_menu_salir")
+	dialog.hide()
+	var c: CharacterData = gd.create_character("Atrás", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.flags["llegada_campamento_vista"] = true
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	await _wait(1.0)
+	var ui: GameUI = world.get("ui")
+	if ui.cutscene.visible:
+		ui.cutscene.call("_finish")
+	ui.call("_on_menu_requested", "inventory")
+	await _wait(0.3)
+	gd.call("go_back")
+	await _wait(0.3)
+	var inv_closed := not ui.inventory_panel.visible
+	gd.call("go_back")
+	await _wait(0.3)
+	var pause_open: bool = (ui.get("_pause_panel") as Control).visible
+	print("atrás en partida: cierra el inventario %s, luego abre la pausa %s" % [inv_closed, pause_open])
+	gd.call("go_back")
+	await _wait(0.3)
+	await _wait(1.1)
+	var since_before: float = world.get("_since_save")
+	world.call("app_left")
+	var since_after: float = world.get("_since_save")
+	await _wait(0.3)
+	print("salir de la app: guardado %s (%.1f s → %.1f s desde el último), pausa abierta %s" % [since_after < since_before, since_before, since_after,
+		(ui.get("_pause_panel") as Control).visible])
+	_save("141_app_en_segundo_plano")
+	Touch.force = false
+	world.queue_free()
+
+
 ## Tutorial con el dedo (T138): el texto táctil de varios pasos y el aro «¡Aquí!»
 ## sobre su botón (la habilidad grande, el ☰, la poción 1).
 func _capture_touch_tutorial() -> void:
