@@ -5220,6 +5220,25 @@ func _test_touch_controls() -> void:
 		_check(s * ui >= 44.0, "objetivo táctil de %d px a 140 %% (≥ 44)" % roundi(s * ui))
 	_check(TouchPointer.LONG_PRESS >= 0.4 and TouchPointer.LONG_PRESS <= 0.8, "mantener: medio segundo, ni más ni menos")
 	_check(TouchPointer.scroll_for(null, Vector2(0, 40)) == null, "arrastrar sin casilla: no desplaza por su cuenta")
+	# Editor de disposición (T137): mover y escalar un botón, con tope, y restaurar.
+	var custom_was := Touch.custom.duplicate(true)
+	var opacity_was := Touch.button_opacity
+	Touch.custom = {}
+	var base := Rect2(100, 100, 60, 60)
+	_check(Touch.customized("dodge", base) == base, "sin editar: en su sitio")
+	Touch.adjust("dodge", Vector2(30, -20))
+	Touch.adjust("dodge", Vector2.ZERO, 1.5)
+	var moved := Touch.customized("dodge", base)
+	_check(moved.get_center().is_equal_approx(base.get_center() + Vector2(30, -20)) and is_equal_approx(moved.size.x, 90.0),
+		"editor: movido 30,-20 y al 150 %% (%s)" % moved)
+	for k in 10:
+		Touch.adjust("dodge", Vector2.ZERO, 2.0)
+	_check(is_equal_approx(Touch.customized("dodge", base).size.x, 60.0 * Touch.CUSTOM_SCALE.y), "el tamaño tiene tope")
+	Touch.button_opacity = 0.4
+	Touch.reset_custom()
+	_check(Touch.customized("dodge", base) == base and Touch.button_opacity == 1.0, "Restaurar: todo en su sitio y opaco")
+	Touch.custom = custom_was
+	Touch.button_opacity = opacity_was
 	_test_prologue_touch()
 
 

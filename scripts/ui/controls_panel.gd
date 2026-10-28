@@ -8,6 +8,8 @@ var _grid: GridContainer
 ## Lo que se está reasignando: {action, kind: "key"|"pad"} o vacío.
 var _waiting: Dictionary = {}
 var _note: Label
+## Lo pone GameUI: abre el editor de disposición táctil (T137).
+var edit_layout: Callable
 
 
 func _init() -> void:
@@ -90,6 +92,13 @@ func _init() -> void:
 	touch_row.add_child(layout_b)
 	touch_row.add_child(size_b)
 	touch_row.add_child(hand_b)
+	# Mover y agrandar cada botón y su opacidad (T137): solo con pantalla táctil y en partida.
+	if Touch.shown():
+		var editor := UiStyle.button("Mover y ajustar los botones...", func() -> void:
+			if edit_layout.is_valid():
+				edit_layout.call(), 300)
+		editor.tooltip_text = "Arrastra cada botón táctil a donde quieras, cambia su tamaño y la opacidad de todos."
+		box.add_child(editor)
 	close_requested.connect(queue_free)
 	confirmed.connect(queue_free)
 	window_input.connect(_on_window_input)

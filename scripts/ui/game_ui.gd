@@ -59,6 +59,7 @@ var _pause_panel: Control
 var _root: Control
 var gamepad_cursor: GamepadCursor
 var touch_controls: TouchControls
+var touch_editor: TouchLayoutEditor
 var touch_pointer: TouchPointer
 ## Pausa y mapa en pantalla (T109), solo con los controles táctiles.
 var touch_buttons: HBoxContainer
@@ -94,9 +95,14 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	touch_controls.hud = hud
 	touch_controls.blocked = func() -> bool:
 		return (_pause_panel != null and _pause_panel.visible) or (loot_filter_panel != null and loot_filter_panel.visible) \
-			or (catalog != null and catalog.visible) \
+			or (catalog != null and catalog.visible) or (touch_editor != null and touch_editor.visible) \
 			or not cursor_windows().is_empty() or (cutscene != null and cutscene.is_playing())
 	_root.add_child(touch_controls)
+	# Editor de disposición táctil (T137): encima del HUD, con la pausa escondida.
+	touch_editor = TouchLayoutEditor.new()
+	touch_editor.hud = hud
+	touch_editor.closed.connect(func() -> void: _pause_panel.visible = true)
+	_root.add_child(touch_editor)
 
 	# El tooltip se crea antes (lo usan los paneles) pero se añade al final,
 	# para que quede por encima de todo.
@@ -452,6 +458,7 @@ func _process(_delta: float) -> void:
 		# Con una ventana, el árbol o la pausa abiertos se apartan (las ventanas tienen su X).
 		# (el catálogo tiene su ✕ en esa esquina: el «II» la tapaba, T135)
 		touch_buttons.visible = Touch.shown() and not _pause_panel.visible and not loot_filter_panel.visible and not catalog.visible \
+			and not touch_editor.visible \
 			and cursor_windows().is_empty()
 	_update_minimap()
 	_fit_trade_panels()
@@ -895,7 +902,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed(&"ui_cancel"):
 		# Esc cierra lo que esté abierto; si no hay nada, pausa.
-		if loot_filter_panel.visible:
+		if touch_editor.visible:
+			touch_editor.close()
+		elif loot_filter_panel.visible:
 			toggle_loot_filter()
 		elif catalog.visible:
 			toggle_catalog()
@@ -1025,8 +1034,17 @@ func open_ladder() -> void:
 ## Reasignar teclas y botones (desde la pausa).
 func open_controls() -> void:
 	var panel := ControlsPanel.new()
+	panel.edit_layout = func() -> void:
+		panel.queue_free()
+		open_touch_editor()
 	_root.add_child(panel)
 	show_popup(panel)
+
+
+## Editor de disposición táctil (T137): desde Pausa → Controles; al terminar vuelve la pausa.
+func open_touch_editor() -> void:
+	_pause_panel.visible = false
+	touch_editor.open()
 
 
 ## Árbol de deuda técnica (desde la pausa).

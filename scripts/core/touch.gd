@@ -37,6 +37,13 @@ const BUTTON_SCALES := [0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4]
 static var layout := "esquina"
 static var button_scale := 1.0
 static var left_handed := false
+## Editor de disposición (T137): opacidad de los botones (0,3-1) y, por botón
+## ("skill_0".."skill_5", "dodge", "use", "flasks", "menu"), [dx, dy, escala]
+## sobre su sitio de siempre (dx como si fuera diestro).
+const OPACITIES := [1.0, 0.85, 0.7, 0.55, 0.4]
+const CUSTOM_SCALE := Vector2(0.6, 1.8)
+static var button_opacity := 1.0
+static var custom := {}
 
 
 static func load_layout() -> void:
@@ -45,12 +52,39 @@ static func load_layout() -> void:
 		layout = "esquina"
 	button_scale = clampf(float(GameSettings.get_value("controls", "touch_button_scale", 1.0)), 0.8, 1.4)
 	left_handed = bool(GameSettings.get_value("controls", "touch_left_handed", false))
+	button_opacity = clampf(float(GameSettings.get_value("controls", "touch_opacity", 1.0)), 0.3, 1.0)
+	var saved: Variant = GameSettings.get_value("controls", "touch_custom", {})
+	custom = (saved as Dictionary).duplicate(true) if saved is Dictionary else {}
 
 
 static func save_layout() -> void:
 	GameSettings.set_value("controls", "touch_layout", layout)
 	GameSettings.set_value("controls", "touch_button_scale", button_scale)
 	GameSettings.set_value("controls", "touch_left_handed", left_handed)
+	GameSettings.set_value("controls", "touch_opacity", button_opacity)
+	GameSettings.set_value("controls", "touch_custom", custom)
+
+
+## `rect` (el sitio de siempre de `key`) movido y escalado como lo dejó el editor.
+static func customized(key: String, rect: Rect2) -> Rect2:
+	var c: Array = custom.get(key, [])
+	if c.size() < 3:
+		return rect
+	var k := clampf(float(c[2]), CUSTOM_SCALE.x, CUSTOM_SCALE.y)
+	var center := rect.get_center() + Vector2(float(c[0]), float(c[1]))
+	return Rect2(center - rect.size * k * 0.5, rect.size * k)
+
+
+## El editor movió `key` `delta` (ya en sentido diestro) o cambió su escala por `factor`.
+static func adjust(key: String, delta: Vector2, factor := 1.0) -> void:
+	var c: Array = custom.get(key, [0.0, 0.0, 1.0])
+	custom[key] = [float(c[0]) + delta.x, float(c[1]) + delta.y,
+		clampf(float(c[2]) * factor, CUSTOM_SCALE.x, CUSTOM_SCALE.y)]
+
+
+static func reset_custom() -> void:
+	custom = {}
+	button_opacity = 1.0
 
 
 ## ¿Se muestran los controles táctiles? Con pantalla táctil y sin apagarlos en Pausa → Controles.

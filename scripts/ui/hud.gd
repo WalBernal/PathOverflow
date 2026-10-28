@@ -32,6 +32,10 @@ var _message_tween: Tween
 var _info_timer := 0.0
 var _hotspots := {}            # nombre -> Control (para tooltips de ayuda)
 var _menu_buttons: Array[Button] = []
+## Dónde pintan las funciones de los botones (_draw_flask, _draw_skill_slot...): el
+## HUD o, al dibujar los botones, su capa propia, que se atenúa con la opacidad (T137).
+var _ci: CanvasItem = self
+var _buttons_layer: Control
 ## Táctil (T136): ☰ que despliega los botones de menú.
 var _menu_toggle: Button
 var _menu_open := false
@@ -99,6 +103,12 @@ func _ready() -> void:
 		_menu_open = not _menu_open
 		_layout())
 	add_child(_menu_toggle)
+	_buttons_layer = Control.new()
+	_buttons_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_buttons_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_buttons_layer.draw.connect(_draw_buttons_layer)
+	add_child(_buttons_layer)
+	move_child(_buttons_layer, 0)   # debajo de los botones de menú
 	Touch.load_layout()
 	_layout()
 
@@ -175,6 +185,28 @@ func touch_button_at(pos: Vector2) -> Dictionary:
 	return {}
 
 
+## Botones táctiles que mueve el editor de disposición (T137), con su sitio en pantalla.
+func touch_rects() -> Dictionary:
+	var out := {}
+	for i in SkillController.ACTIONS.size():
+		out["skill_%d" % i] = _slot_rect(i)
+	out["dodge"] = _dodge_rect()
+	out["use"] = use_rect()
+	var flasks := _flask_rect(0)
+	for i in range(1, Inventory.FLASK_SLOTS):
+		flasks = flasks.merge(_flask_rect(i))
+	out["flasks"] = flasks
+	out["menu"] = Rect2(_menu_toggle.position, _menu_toggle.size)
+	return out
+
+
+## Recoloca y repinta ya (el editor trabaja con el juego en pausa).
+func refresh_touch_layout() -> void:
+	_touch_setup = [Touch.layout, Touch.button_scale, Touch.left_handed, Touch.custom.hash()]
+	_layout()
+	queue_redraw()
+
+
 ## Modo zurdo (T136): en táctil todo el HUD de abajo va en espejo. Las funciones
 ## _raw_* calculan como si fuera diestro; las demás devuelven el sitio de verdad.
 func _mirrored() -> bool:
@@ -245,7 +277,7 @@ func _raw_slot_rect(i: int) -> Rect2:
 		else:
 			c = _raw_mana_center() + Vector2.from_angle(deg_to_rad(TOUCH_RING[i][1])) * float(TOUCH_RING[i][0]) * _ts()
 			s = (TOUCH_MAIN_SLOT if i == 0 else TOUCH_SLOT) * _ts()
-		return Rect2(c - Vector2(s, s) * 0.5, Vector2(s, s))
+		return Touch.customized("skill_%d" % i, Rect2(c - Vector2(s, s) * 0.5, Vector2(s, s)))
 	var plate := _plate_rect()
 	var total := SkillController.ACTIONS.size() * SLOT + (SkillController.ACTIONS.size() - 1) * SLOT_GAP
 	# Centrada; si la pantalla es estrecha (o la interfaz grande), justo después de las pociones.
@@ -267,7 +299,11 @@ func _raw_flask_rect(i: int) -> Rect2:
 			# En una fila corta a la izquierda del arco de habilidades.
 			var arc_left := _raw_main_center().x - (float(TOUCH_CORNER_RING[0][0]) + TOUCH_SLOT * 0.5) * _ts()
 			left = maxf(left, arc_left - 24.0 - Inventory.FLASK_SLOTS * (w + 6.0))
-		return Rect2(left + i * (w + 6.0), size.y - h - 30.0, w, h)
+		# La fila entera se mueve y escala con el editor (T137).
+		var row := Rect2(left, size.y - h - 30.0, Inventory.FLASK_SLOTS * (w + 6.0) - 6.0, h)
+		var moved := Touch.customized("flasks", row)
+		var k := moved.size.x / row.size.x
+		return Rect2(moved.position + Vector2(i * (w + 6.0) * k, 0.0), Vector2(w, h) * k)
 	var plate := _plate_rect()
 	return Rect2(plate.position.x + 16.0 + i * (FLASK_SIZE.x + 6.0), plate.position.y + 8.0, FLASK_SIZE.x, FLASK_SIZE.y)
 
@@ -290,7 +326,7 @@ func _raw_use_rect() -> Rect2:
 		c = Vector2(left + s * 0.5, dodge.get_center().y - 10.0)
 	else:
 		c = _raw_mana_center() + Vector2.from_angle(deg_to_rad(TOUCH_USE_AT[1])) * float(TOUCH_USE_AT[0]) * _ts()
-	return Rect2(c - Vector2(s, s) * 0.5, Vector2(s, s))
+	return Touch.customized("use", Rect2(c - Vector2(s, s) * 0.5, Vector2(s, s)))
 
 
 ## Casilla de la esquiva, a la derecha de la barra de habilidades.
@@ -302,7 +338,7 @@ func _raw_dodge_rect() -> Rect2:
 	if touch_layout:
 		var d := TOUCH_DODGE * _ts()
 		var c := _raw_mana_center() + Vector2(0.0, -ORB_RADIUS - d * 0.5 - 14.0)
-		return Rect2(c - Vector2(d, d) * 0.5, Vector2(d, d))
+		return Touch.customized("dodge", Rect2(c - Vector2(d, d) * 0.5, Vector2(d, d)))
 	var last := _raw_slot_rect(SkillController.ACTIONS.size() - 1)
 	return Rect2(last.end.x + 14.0, last.position.y, 34.0, SLOT)
 
@@ -356,7 +392,8 @@ func _menu_origin() -> Vector2:
 func _raw_menu_origin() -> Vector2:
 	if touch_layout:   # encima de las pociones (debajo de la zona del joystick)
 		var left := _raw_life_center().x + ORB_RADIUS + 24.0
-		return Vector2(left, size.y - TOUCH_FLASK.y * _ts() - 30.0 - TOUCH_MENU.y - 22.0)
+		var origin := Vector2(left, size.y - TOUCH_FLASK.y * _ts() - 30.0 - TOUCH_MENU.y - 22.0)
+		return Touch.customized("menu", Rect2(origin, TOUCH_MENU)).position   # (el editor solo lo mueve)
 	var plate := _plate_rect()
 	var x := plate.end.x - _menu_buttons.size() * 40.0 - 12.0
 	var skills_end := _raw_dodge_rect().end.x + 10.0
@@ -373,7 +410,7 @@ func _place(key: String, rect: Rect2) -> void:
 
 func _process(delta: float) -> void:
 	queue_redraw()
-	var setup := [Touch.layout, Touch.button_scale, Touch.left_handed]
+	var setup := [Touch.layout, Touch.button_scale, Touch.left_handed, Touch.custom.hash()]
 	if Touch.shown() != touch_layout or setup != _touch_setup:
 		touch_layout = Touch.shown()
 		_touch_setup = setup
@@ -589,16 +626,8 @@ func _draw() -> void:
 		draw_circle(c, 6.0, Color("ffd84a"))
 		draw_string(font, c + Vector2(-2, 5), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("1a1208"))
 
-	# Pociones.
-	for i in Inventory.FLASK_SLOTS:
-		_draw_flask(i, font)
-
-	# Habilidades.
-	for i in SkillController.ACTIONS.size():
-		_draw_skill_slot(i, font)
-	_draw_dodge(font)
-	if touch_layout and not use_now.is_empty():
-		_draw_use(font)
+	# Pociones, habilidades, esquiva y usar: en su capa (_draw_buttons_layer).
+	_buttons_layer.queue_redraw()
 
 	_draw_status_boxes(font)
 	var boss_bar := _draw_boss_bar(font)
@@ -980,29 +1009,29 @@ func _draw_plate() -> void:
 func _draw_flask(i: int, font: Font) -> void:
 	var r := _flask_rect(i)
 	var f := player.flask_at(i)
-	draw_rect(r, Color(0, 0, 0, 0.55))
-	UiAtlas.draw(self, "flask_frame", r.grow(3.0))   # marco del atlas (T95)
+	_ci.draw_rect(r, Color(0, 0, 0, 0.55))
+	UiAtlas.draw(_ci, "flask_frame", r.grow(3.0))   # marco del atlas (T95)
 	if f == null:
-		draw_rect(r, TRIM.darkened(0.6), false, 1.0)
-		draw_string(font, r.position + Vector2(4.0, r.size.y - 4.0), str(i + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, MUTED)
+		_ci.draw_rect(r, TRIM.darkened(0.6), false, 1.0)
+		_ci.draw_string(font, r.position + Vector2(4.0, r.size.y - 4.0), str(i + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, MUTED)
 		return
 	var color := f.display_color()
 	var fill := f.charges / f.max_charges()
 	var usable := player.can_use_flask(i)
 	var t := Time.get_ticks_msec() / 1000.0
 	if player.is_flask_active(i):
-		draw_rect(r, Color(color, 0.25 + 0.1 * sin(t * 8.0)))  # efecto activo
+		_ci.draw_rect(r, Color(color, 0.25 + 0.1 * sin(t * 8.0)))  # efecto activo
 	# El sprite (taza, lata, botella), apagado si no hay cargas suficientes.
 	var icon_rect := Rect2(r.position + Vector2(1, 3), Vector2(r.size.x - 10.0, r.size.y - 8.0))
 	_item_icon(icon_rect, f.icon(), Color.WHITE if usable else Color(0.45, 0.45, 0.5))
 	# Barra de cargas a la derecha, con una marca por cada uso.
 	var bar := Rect2(r.end.x - 7.0, r.position.y + 4.0, 4.0, r.size.y - 8.0)
-	draw_rect(bar, Color(0, 0, 0, 0.8))
-	draw_rect(Rect2(bar.position + Vector2(0, bar.size.y * (1.0 - fill)), Vector2(bar.size.x, bar.size.y * fill)), color)
+	_ci.draw_rect(bar, Color(0, 0, 0, 0.8))
+	_ci.draw_rect(Rect2(bar.position + Vector2(0, bar.size.y * (1.0 - fill)), Vector2(bar.size.x, bar.size.y * fill)), color)
 	var uses := int(f.max_charges() / f.cost())
 	for k in range(1, uses):
 		var y := bar.position.y + bar.size.y * k / uses
-		draw_line(Vector2(bar.position.x, y), Vector2(bar.end.x, y), Color(0, 0, 0, 0.9), 1.0)
+		_ci.draw_line(Vector2(bar.position.x, y), Vector2(bar.end.x, y), Color(0, 0, 0, 0.9), 1.0)
 	# Vapor del café o burbujas de las bebidas cuando está lista.
 	if usable:
 		var top := icon_rect.position + Vector2(icon_rect.size.x * 0.45, 4.0)
@@ -1010,39 +1039,39 @@ func _draw_flask(i: int, font: Font) -> void:
 			for k in 2:
 				var phase := fmod(t * 0.8 + k * 0.5, 1.0)
 				var p0 := top + Vector2(k * 8.0 - 4.0 + sin(t * 3.0 + k) * 2.0, -phase * 10.0)
-				draw_line(p0, p0 + Vector2(sin(t * 4.0 + k) * 2.0, -5.0), Color(1, 1, 1, 0.5 * (1.0 - phase)), 1.5, true)
+				_ci.draw_line(p0, p0 + Vector2(sin(t * 4.0 + k) * 2.0, -5.0), Color(1, 1, 1, 0.5 * (1.0 - phase)), 1.5, true)
 		else:
 			for k in 3:
 				var phase := fmod(t * 0.7 + k * 0.33, 1.0)
-				draw_circle(top + Vector2(k * 5.0 - 5.0, 18.0 - phase * 22.0), 1.5, Color(color.lightened(0.5), 0.6 * (1.0 - phase)))
-	draw_rect(r, TRIM if usable else TRIM.darkened(0.5), false, 1.5)
-	draw_string(font, r.position + Vector2(3.0, r.size.y - 3.0), str(i + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, TEXT_COLOR)
-	draw_string(font, r.position + Vector2(0.0, r.size.y + 12.0), "%d/%d" % [f.charges, f.max_charges()],
+				_ci.draw_circle(top + Vector2(k * 5.0 - 5.0, 18.0 - phase * 22.0), 1.5, Color(color.lightened(0.5), 0.6 * (1.0 - phase)))
+	_ci.draw_rect(r, TRIM if usable else TRIM.darkened(0.5), false, 1.5)
+	_ci.draw_string(font, r.position + Vector2(3.0, r.size.y - 3.0), str(i + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, TEXT_COLOR)
+	_ci.draw_string(font, r.position + Vector2(0.0, r.size.y + 12.0), "%d/%d" % [f.charges, f.max_charges()],
 		HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 10, MUTED)
 
 ## Iconos con la caché de texturas (IconCache): se pintan una vez, no cada fotograma.
 func _skill_icon(r: Rect2, def: Dictionary, dimmed := false) -> void:
-	IconCache.draw(self, r, "skill:%s:%s:%s:%s" % [def.get("id", ""), def.get("icon", ""), def.get("name", ""), dimmed],
+	IconCache.draw(_ci, r, "skill:%s:%s:%s:%s" % [def.get("id", ""), def.get("icon", ""), def.get("name", ""), dimmed],
 		func(ci: CanvasItem, rr: Rect2, _m: Color) -> void: SkillIcon.draw(ci, rr, def, dimmed))
 
 
 func _item_icon(r: Rect2, id: String, modulate := Color.WHITE) -> void:
-	IconCache.draw(self, r, "item:" + id, func(ci: CanvasItem, rr: Rect2, m: Color) -> void: ItemIcons.draw(ci, rr, id, m, false), modulate)
+	IconCache.draw(_ci, r, "item:" + id, func(ci: CanvasItem, rr: Rect2, m: Color) -> void: ItemIcons.draw(ci, rr, id, m, false), modulate)
 
 
 func _status_icon(r: Rect2, id: String) -> void:
-	IconCache.draw(self, r, "status:" + id, func(ci: CanvasItem, rr: Rect2, _m: Color) -> void: StatusIcon.draw(ci, rr, id))
+	IconCache.draw(_ci, r, "status:" + id, func(ci: CanvasItem, rr: Rect2, _m: Color) -> void: StatusIcon.draw(ci, rr, id))
 
 
 func _draw_skill_slot(i: int, font: Font) -> void:
 	var r := _slot_rect(i)
 	# Marco: hueco hundido con borde dorado (como las ranuras de PoE); con el atlas, su casilla.
-	draw_rect(r.grow(3.0), Color(0, 0, 0, 0.75))
+	_ci.draw_rect(r.grow(3.0), Color(0, 0, 0, 0.75))
 	if UiAtlas.texture() != null:
-		UiAtlas.draw(self, "slot_normal", r.grow(5.0))
+		UiAtlas.draw(_ci, "slot_normal", r.grow(5.0))
 	else:
-		draw_rect(r.grow(3.0), TRIM.darkened(0.45), false, 1.0)
-	draw_rect(r, Color(0, 0, 0, 0.7))
+		_ci.draw_rect(r.grow(3.0), TRIM.darkened(0.45), false, 1.0)
+	_ci.draw_rect(r, Color(0, 0, 0, 0.7))
 	var board: Motherboard = character.inventory.boards[i]
 	var key_color := TEXT_COLOR
 	if board:
@@ -1054,12 +1083,12 @@ func _draw_skill_slot(i: int, font: Font) -> void:
 			_draw_pie(r.get_center(), r.size.x * 0.48, cd, Color(0, 0, 0, 0.62))
 			var left: float = skills.cooldowns[i]
 			var cd_text := ("%.1f" % left) if left < 3.0 else str(ceili(left))
-			draw_string_outline(font, r.position + Vector2(0, r.size.y * 0.5 + 7.0), cd_text, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 18, 5, Color.BLACK)
-			draw_string(font, r.position + Vector2(0, r.size.y * 0.5 + 7.0), cd_text, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 18, Color.WHITE)
+			_ci.draw_string_outline(font, r.position + Vector2(0, r.size.y * 0.5 + 7.0), cd_text, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 18, 5, Color.BLACK)
+			_ci.draw_string(font, r.position + Vector2(0, r.size.y * 0.5 + 7.0), cd_text, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 18, Color.WHITE)
 		# Insignias de las RAM instaladas en el borde derecho (como las gemas de soporte).
-		var ram_w := RamIcon.draw_board_column(self, r, board, 15.0)
+		var ram_w := RamIcon.draw_board_column(_ci, r, board, 15.0)
 		if not p.is_empty():
-			SkillIcon.draw_ailment_pips(self, Rect2(r.position, r.size - Vector2(ram_w, 0.0)), p.get("ailments", {}))
+			SkillIcon.draw_ailment_pips(_ci, Rect2(r.position, r.size - Vector2(ram_w, 0.0)), p.get("ailments", {}))
 			if p["kind"] == "unit":
 				# Invocaciones vivas / máximo, arriba a la izquierda.
 				var alive := 0
@@ -1067,14 +1096,14 @@ func _draw_skill_slot(i: int, font: Font) -> void:
 					if e.get("persistent", false) and e["skill"].get("id", "") == p["id"]:
 						alive = e["count"]
 				var units_text := "%d/%d" % [alive, p["max_units"]]
-				draw_string_outline(font, r.position + Vector2(3, 12), units_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, 3, Color.BLACK)
-				draw_string(font, r.position + Vector2(3, 12), units_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("9ad0ff"))
+				_ci.draw_string_outline(font, r.position + Vector2(3, 12), units_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, 3, Color.BLACK)
+				_ci.draw_string(font, r.position + Vector2(3, 12), units_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("9ad0ff"))
 		# Coste de maná en una chapita arriba a la derecha.
 		var cost_text := "%d" % p.get("mana_cost", 0)
 		var cost_w := font.get_string_size(cost_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x + 6.0
 		var cost_rect := Rect2(r.end.x - cost_w - 1.0, r.position.y + 1.0, cost_w, 13.0)
-		draw_rect(cost_rect, Color(0.04, 0.06, 0.14, 0.85))
-		draw_string(font, cost_rect.position + Vector2(0, 10.5), cost_text, HORIZONTAL_ALIGNMENT_CENTER, cost_w, 10,
+		_ci.draw_rect(cost_rect, Color(0.04, 0.06, 0.14, 0.85))
+		_ci.draw_string(font, cost_rect.position + Vector2(0, 10.5), cost_text, HORIZONTAL_ALIGNMENT_CENTER, cost_w, 10,
 			Color("e06c6c") if no_mana else Color("8ab8ff"))
 		# Habilidades que gastan cargas: cuántas gastaría ahora (chapitas de su color, arriba a la izquierda).
 		var spend: Dictionary = p.get("spend_charges", {})
@@ -1082,49 +1111,49 @@ func _draw_skill_slot(i: int, font: Font) -> void:
 		for t in spend:
 			var n := int(character.charges.get(t, 0))
 			var chip := Rect2(cx, r.position.y + 2.0, 16.0, 13.0)
-			draw_rect(chip, Color(0, 0, 0, 0.8))
-			draw_rect(chip, Charges.color(t) if n > 0 else Color(Charges.color(t), 0.35), false, 1.0)
-			draw_string(font, chip.position + Vector2(0, 10.0), str(n), HORIZONTAL_ALIGNMENT_CENTER, chip.size.x, 10,
+			_ci.draw_rect(chip, Color(0, 0, 0, 0.8))
+			_ci.draw_rect(chip, Charges.color(t) if n > 0 else Color(Charges.color(t), 0.35), false, 1.0)
+			_ci.draw_string(font, chip.position + Vector2(0, 10.0), str(n), HORIZONTAL_ALIGNMENT_CENTER, chip.size.x, 10,
 				Charges.color(t) if n > 0 else MUTED)
 			cx += 18.0
 		var flash := _slot_flash[i] / 0.25
-		draw_rect(r, Motherboard.COLOR.darkened(0.2).lerp(Color("ffe8a0"), flash), false, 1.5 + 1.5 * flash)
+		_ci.draw_rect(r, Motherboard.COLOR.darkened(0.2).lerp(Color("ffe8a0"), flash), false, 1.5 + 1.5 * flash)
 		if not p.is_empty() and String(p.get("trigger", "")) != "":
 			# RAM de activación: «AUTO» y, mientras dure, su enfriamiento interno en el borde.
 			var tcd: float = skills._trigger_cd[i] if i < skills._trigger_cd.size() else 0.0
 			var tfrac := clampf(tcd / maxf(0.01, float(p["trigger_cooldown"])), 0.0, 1.0)
-			draw_rect(r.grow(1.0), Color(SkillController.TRIGGER_COLOR, 0.35 + 0.5 * (1.0 - tfrac)), false, 2.0)
+			_ci.draw_rect(r.grow(1.0), Color(SkillController.TRIGGER_COLOR, 0.35 + 0.5 * (1.0 - tfrac)), false, 2.0)
 			# Arriba a la izquierda (a la derecha va el coste de maná).
-			draw_string_outline(font, r.position + Vector2(3, 12), "AUTO", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, 3, Color.BLACK)
-			draw_string(font, r.position + Vector2(3, 12), "AUTO", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, SkillController.TRIGGER_COLOR)
+			_ci.draw_string_outline(font, r.position + Vector2(3, 12), "AUTO", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, 3, Color.BLACK)
+			_ci.draw_string(font, r.position + Vector2(3, 12), "AUTO", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, SkillController.TRIGGER_COLOR)
 			if tfrac > 0.0:
-				draw_rect(Rect2(r.position.x, r.end.y - 3.0, r.size.x * tfrac, 3.0), SkillController.TRIGGER_COLOR)
+				_ci.draw_rect(Rect2(r.position.x, r.end.y - 3.0, r.size.x * tfrac, 3.0), SkillController.TRIGGER_COLOR)
 		if not p.is_empty() and p["kind"] == "aura" and skills.is_aura_active(p["id"]):
 			var glow := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 220.0)
-			draw_rect(r.grow(1.0), Color("e0c0ff", 0.55 + 0.45 * glow), false, 2.5)
-			draw_string_outline(font, r.position + Vector2(0, 12), "ON", HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 10, 3, Color.BLACK)
-			draw_string(font, r.position + Vector2(0, 12), "ON", HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 10, Color("e0c0ff"))
+			_ci.draw_rect(r.grow(1.0), Color("e0c0ff", 0.55 + 0.45 * glow), false, 2.5)
+			_ci.draw_string_outline(font, r.position + Vector2(0, 12), "ON", HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 10, 3, Color.BLACK)
+			_ci.draw_string(font, r.position + Vector2(0, 12), "ON", HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 10, Color("e0c0ff"))
 		if no_mana:
 			key_color = Color("e06c6c")
 	else:
-		draw_rect(r, Color("3a3442"), false, 1.0)
+		_ci.draw_rect(r, Color("3a3442"), false, 1.0)
 	if touch_layout:
 		return   # en táctil no hay tecla que enseñar
 	# Tecla en una chapita abajo a la izquierda.
 	var key: String = Controls.key_label(SkillController.ACTIONS[i])
 	var key_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x + 8.0
 	var key_rect := Rect2(r.position.x - 2.0, r.end.y - 12.0, key_w, 14.0)
-	draw_rect(key_rect, Color(PLATE, 0.95))
-	draw_rect(key_rect, TRIM.darkened(0.2), false, 1.0)
-	draw_string(font, key_rect.position + Vector2(0, 11.0), key, HORIZONTAL_ALIGNMENT_CENTER, key_w, 11, key_color)
+	_ci.draw_rect(key_rect, Color(PLATE, 0.95))
+	_ci.draw_rect(key_rect, TRIM.darkened(0.2), false, 1.0)
+	_ci.draw_string(font, key_rect.position + Vector2(0, 11.0), key, HORIZONTAL_ALIGNMENT_CENTER, key_w, 11, key_color)
 
 
 ## Casilla de la esquiva: una pastilla por carga (la que se recarga, a medias) y la tecla.
 func _draw_dodge(font: Font) -> void:
 	var r := _dodge_rect()
-	draw_rect(r.grow(3.0), Color(0, 0, 0, 0.75))
-	draw_rect(r.grow(3.0), TRIM.darkened(0.45), false, 1.0)
-	draw_rect(r, Color(0, 0, 0, 0.7))
+	_ci.draw_rect(r.grow(3.0), Color(0, 0, 0, 0.75))
+	_ci.draw_rect(r.grow(3.0), TRIM.darkened(0.45), false, 1.0)
+	_ci.draw_rect(r, Color(0, 0, 0, 0.7))
 	var total := player.max_dodge_charges()
 	var shown := maxi(total, ceili(player.dodge_charges))   # la poción puede dar una de más
 	var pip_h := minf(16.0, (r.size.y - 22.0 - (shown - 1) * 3.0) / maxf(1.0, shown))
@@ -1132,19 +1161,19 @@ func _draw_dodge(font: Font) -> void:
 	for k in shown:
 		var pr := Rect2(r.position.x + 6.0, r.position.y + 6.0 + k * (pip_h + 3.0), r.size.x - 12.0, pip_h)
 		var fill := clampf(player.dodge_charges - (shown - 1 - k), 0.0, 1.0)   # se llenan de abajo arriba
-		draw_rect(pr, Color(0.1, 0.16, 0.22))
+		_ci.draw_rect(pr, Color(0.1, 0.16, 0.22))
 		if fill > 0.0:
-			draw_rect(Rect2(pr.position + Vector2(0, pr.size.y * (1.0 - fill)), Vector2(pr.size.x, pr.size.y * fill)),
+			_ci.draw_rect(Rect2(pr.position + Vector2(0, pr.size.y * (1.0 - fill)), Vector2(pr.size.x, pr.size.y * fill)),
 				color if fill >= 1.0 else Color(color, 0.45))
-		draw_rect(pr, color.darkened(0.4), false, 1.0)
+		_ci.draw_rect(pr, color.darkened(0.4), false, 1.0)
 	if player.is_dodging():
-		draw_rect(r.grow(1.0), Color(color, 0.8), false, 2.0)
+		_ci.draw_rect(r.grow(1.0), Color(color, 0.8), false, 2.0)
 	if touch_layout:
 		return
 	var key_rect := Rect2(r.position.x - 2.0, r.end.y - 12.0, r.size.x + 4.0, 14.0)
-	draw_rect(key_rect, Color(PLATE, 0.95))
-	draw_rect(key_rect, TRIM.darkened(0.2), false, 1.0)
-	draw_string(font, key_rect.position + Vector2(0, 11.0), "Esp.", HORIZONTAL_ALIGNMENT_CENTER, key_rect.size.x, 10,
+	_ci.draw_rect(key_rect, Color(PLATE, 0.95))
+	_ci.draw_rect(key_rect, TRIM.darkened(0.2), false, 1.0)
+	_ci.draw_string(font, key_rect.position + Vector2(0, 11.0), "Esp.", HORIZONTAL_ALIGNMENT_CENTER, key_rect.size.x, 10,
 		TEXT_COLOR if player.dodge_charges >= 1.0 else Color("e06c6c"))
 
 
@@ -1155,34 +1184,52 @@ func _draw_use(font: Font) -> void:
 	var c := r.get_center()
 	var radius := r.size.x * 0.5
 	var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 260.0)
-	draw_circle(c, radius + 4.0, Color(0, 0, 0, 0.75))
-	draw_circle(c, radius, Color(UiStyle.ACCENT, 0.9))
-	draw_arc(c, radius + 2.0 + pulse * 2.0, 0.0, TAU, 40, Color(1.0, 0.92, 0.6, 0.5 + 0.3 * pulse), 2.0, true)
+	_ci.draw_circle(c, radius + 4.0, Color(0, 0, 0, 0.75))
+	_ci.draw_circle(c, radius, Color(UiStyle.ACCENT, 0.9))
+	_ci.draw_arc(c, radius + 2.0 + pulse * 2.0, 0.0, TAU, 40, Color(1.0, 0.92, 0.6, 0.5 + 0.3 * pulse), 2.0, true)
 	var ink := Color("1a1208")
 	match String(use_now["kind"]):
 		"loot":
 			var icon := Rect2(c - Vector2(20, 20), Vector2(40, 40))
-			draw_rect(icon.grow(3.0), Color(0, 0, 0, 0.55))
-			ItemIcons.draw_item(self, icon, use_now["item"], Color.WHITE)
+			_ci.draw_rect(icon.grow(3.0), Color(0, 0, 0, 0.55))
+			ItemIcons.draw_item(_ci, icon, use_now["item"], Color.WHITE)
 		"npc":
-			draw_circle(c + Vector2(0, -3), 16.0, ink)
-			draw_colored_polygon(PackedVector2Array([c + Vector2(-6, 10), c + Vector2(4, 10), c + Vector2(-10, 20)]), ink)
+			_ci.draw_circle(c + Vector2(0, -3), 16.0, ink)
+			_ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-6, 10), c + Vector2(4, 10), c + Vector2(-10, 20)]), ink)
 			for k in 3:
-				draw_circle(c + Vector2(-7 + k * 7, -3), 2.5, UiStyle.ACCENT)
+				_ci.draw_circle(c + Vector2(-7 + k * 7, -3), 2.5, UiStyle.ACCENT)
 		"waypoint":
-			draw_colored_polygon(PackedVector2Array([c + Vector2(0, -18), c + Vector2(14, 0), c + Vector2(0, 18), c + Vector2(-14, 0)]), ink)
-			draw_circle(c, 5.0, Color("7fd4ff"))
+			_ci.draw_colored_polygon(PackedVector2Array([c + Vector2(0, -18), c + Vector2(14, 0), c + Vector2(0, 18), c + Vector2(-14, 0)]), ink)
+			_ci.draw_circle(c, 5.0, Color("7fd4ff"))
 		"stash":
-			draw_rect(Rect2(c - Vector2(16, 10), Vector2(32, 22)), ink)
-			draw_rect(Rect2(c - Vector2(16, 14), Vector2(32, 6)), ink.lightened(0.25))
-			draw_rect(Rect2(c - Vector2(3, 6), Vector2(6, 6)), UiStyle.ACCENT)
+			_ci.draw_rect(Rect2(c - Vector2(16, 10), Vector2(32, 22)), ink)
+			_ci.draw_rect(Rect2(c - Vector2(16, 14), Vector2(32, 6)), ink.lightened(0.25))
+			_ci.draw_rect(Rect2(c - Vector2(3, 6), Vector2(6, 6)), UiStyle.ACCENT)
 		_:
-			draw_circle(c, 13.0, ink)
-			draw_circle(c, 6.0, UiStyle.ACCENT)
+			_ci.draw_circle(c, 13.0, ink)
+			_ci.draw_circle(c, 6.0, UiStyle.ACCENT)
 	var text := String(use_now.get("text", "Usar"))
 	var label_pos := Vector2(c.x - 60.0, r.end.y + 16.0)
-	draw_string_outline(font, label_pos, text, HORIZONTAL_ALIGNMENT_CENTER, 120.0, 14, 4, Color.BLACK)
-	draw_string(font, label_pos, text, HORIZONTAL_ALIGNMENT_CENTER, 120.0, 14, UiStyle.ACCENT.lightened(0.3))
+	_ci.draw_string_outline(font, label_pos, text, HORIZONTAL_ALIGNMENT_CENTER, 120.0, 14, 4, Color.BLACK)
+	_ci.draw_string(font, label_pos, text, HORIZONTAL_ALIGNMENT_CENTER, 120.0, 14, UiStyle.ACCENT.lightened(0.3))
+
+
+## Botones (pociones, habilidades, esquiva y usar) en su capa: en táctil, con la
+## opacidad elegida (T137), sin atenuar los orbes ni lo demás.
+func _draw_buttons_layer() -> void:
+	if player == null:
+		return
+	_buttons_layer.modulate.a = Touch.button_opacity if touch_layout else 1.0
+	var font := get_theme_default_font()
+	_ci = _buttons_layer
+	for i in Inventory.FLASK_SLOTS:
+		_draw_flask(i, font)
+	for i in SkillController.ACTIONS.size():
+		_draw_skill_slot(i, font)
+	_draw_dodge(font)
+	if touch_layout and not use_now.is_empty():
+		_draw_use(font)
+	_ci = self
 
 
 ## Sector circular para el enfriamiento (empieza arriba, sentido horario).
@@ -1191,7 +1238,7 @@ func _draw_pie(center: Vector2, radius: float, fraction: float, color: Color) ->
 	var steps := 24
 	for k in steps + 1:
 		points.append(center + Vector2.from_angle(-PI / 2.0 + TAU * fraction * k / steps) * radius)
-	draw_colored_polygon(points, color)
+	_ci.draw_colored_polygon(points, color)
 
 
 ## Orbe estilo PoE: círculo rellenado desde abajo según `fill` (0..1), con marco.

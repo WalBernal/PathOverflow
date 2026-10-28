@@ -29,6 +29,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("editor") and OS.get_cmdline_user_args().has("tactil"):
+		await _capture_touch_editor()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("botones") and OS.get_cmdline_user_args().has("tactil"):
 		await _capture_touch_layouts()
 		get_tree().quit()
@@ -2391,6 +2395,86 @@ func _capture_phone() -> void:
 
 ## `p` en coordenadas del lienzo; el toque llega en las de la ventana (otra cosa a
 ## resolución de teléfono, donde el lienzo se estira).
+## Editor de disposición táctil (T137) con toques simulados: arrastrar la habilidad 1,
+## agrandar la esquiva, bajar la opacidad, «Listo» (se guarda) y «Restaurar».
+func _capture_touch_editor() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Pulgar", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.flags["llegada_campamento_vista"] = true
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	var scale_was: Variant = GameSettings.get_value("interface", "scale", 1.0)
+	GameSettings.set_value("interface", "scale", 1.4)
+	Touch.load_layout()
+	var custom_was := Touch.custom.duplicate(true)
+	var opacity_was := Touch.button_opacity
+	Touch.force = true
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var ui: GameUI = world.get("ui")
+	if ui.cutscene.visible:
+		ui.cutscene.call("_finish")
+	get_window().size = Vector2i(2400, 1080)
+	await _wait(0.5)
+	ui.apply_ui_scale()
+	ui.toggle_pause_menu()
+	await _wait(0.3)
+	ui.open_touch_editor()
+	await _wait(0.4)
+	var ed := ui.touch_editor
+	var hud := ui.hud
+	var before: Dictionary = hud.touch_rects()
+	var to_canvas := func(p: Vector2) -> Vector2: return ed.get_global_transform_with_canvas() * p
+	# Arrastrar la habilidad 1 hacia arriba a la izquierda.
+	var from: Vector2 = to_canvas.call((before["skill_0"] as Rect2).get_center())
+	_touch(0, from, true)
+	for k in 10:
+		await get_tree().process_frame
+		_drag(0, from + Vector2(-16.0, -10.0) * (k + 1))
+	_touch(0, from + Vector2(-160, -100), false)
+	await _wait(0.2)
+	# Tocar la esquiva y agrandarla dos veces; bajar la opacidad.
+	var dodge_at: Vector2 = to_canvas.call((before["dodge"] as Rect2).get_center())
+	_touch(0, dodge_at, true)
+	await get_tree().process_frame
+	_touch(0, dodge_at, false)
+	await _wait(0.2)
+	for b: Button in ed.find_children("*", "Button", true, false):
+		if b.text == "Más grande":
+			for k in 2:
+				b.pressed.emit()
+		elif b.text.begins_with("Opacidad"):
+			b.pressed.emit()
+	await _wait(0.3)
+	var after: Dictionary = hud.touch_rects()
+	print("editor: habilidad 1 %s → %s" % [(before["skill_0"] as Rect2).get_center().round(), (after["skill_0"] as Rect2).get_center().round()])
+	print("editor: esquiva %d → %d px, opacidad %d %%" % [(before["dodge"] as Rect2).size.x, (after["dodge"] as Rect2).size.x, roundi(Touch.button_opacity * 100.0)])
+	_save("137_editor")
+	ed.close()
+	await _wait(0.3)
+	ui.toggle_pause_menu()
+	await _wait(0.4)
+	_save("137_partida_editada")
+	Touch.custom = {}
+	Touch.load_layout()
+	print("editor: guardado en settings.cfg: %s, la pausa vuelve al cerrar: %s" % [Touch.custom.has("skill_0") and Touch.custom.has("dodge"), not ed.visible])
+	Touch.reset_custom()
+	Touch.custom = custom_was
+	Touch.button_opacity = opacity_was
+	Touch.save_layout()
+	get_window().size = Vector2i(1600, 900)
+	GameSettings.set_value("interface", "scale", scale_was)
+	Touch.force = false
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
+
+
 ## Distribuciones de los botones táctiles (T136) a 2400×1080 y 1600×720 con la
 ## interfaz al 140 %: esquina, arcos, esquina al 120 % y esquina zurda (con el ☰
 ## abierto). Mira que ningún botón pise a otro, ni a las misiones, ni se salga.
