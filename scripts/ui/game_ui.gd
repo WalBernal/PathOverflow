@@ -10,6 +10,7 @@ signal quit_requested
 signal dialogue_action(action: Dictionary)
 signal waypoint_selected(zone_id: String)
 signal shop_refresh_requested
+signal respawn_requested
 
 const TREE_SCREEN := preload("res://scenes/ui/passive_tree_screen.tscn")
 ## Tamaños de interfaz del menú de pausa.
@@ -21,6 +22,8 @@ const UI_SCALE_MAX := 1.6
 ## Alto mínimo (en px de interfaz) para que quepan el inventario y los menús: en
 ## pantallas bajas la escala elegida se reduce hasta caber (160 % necesita 1080p).
 const UI_MIN_HEIGHT := 560.0
+## Las ventanas emergentes ocupan como mucho esta fracción de la pantalla.
+const POPUP_MAX := 0.94
 
 var hud: Hud
 var inventory_panel: InventoryPanel
@@ -47,6 +50,7 @@ var _player: Player
 var _loot: LootManager
 var _minimap_enabled := true
 var _death_panel: PanelContainer
+var _death_label: Label
 var _waypoint_panel: WaypointPanel
 var _zone_banner: Label
 var event_log: EventLog
@@ -90,6 +94,7 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	touch_controls.hud = hud
 	touch_controls.blocked = func() -> bool:
 		return (_pause_panel != null and _pause_panel.visible) or (loot_filter_panel != null and loot_filter_panel.visible) \
+			or (catalog != null and catalog.visible) \
 			or not cursor_windows().is_empty() or (cutscene != null and cutscene.is_playing())
 	_root.add_child(touch_controls)
 
@@ -207,11 +212,17 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 
 	_death_panel = PanelContainer.new()
 	_death_panel.theme = UiStyle.make_theme()
-	var label := Label.new()
-	label.text = "HAS MUERTO\n\nStack trace:\n  en Player.take_damage()\n  en Enemy.attack()\n  en tu_decision_de_ir_sin_resistencias()\n\nPulsa R para reaparecer en el campamento"
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.add_theme_color_override("font_color", Color("e06c6c"))
-	_death_panel.add_child(label)
+	var death_box := VBoxContainer.new()
+	death_box.add_theme_constant_override("separation", 12)
+	_death_panel.add_child(death_box)
+	_death_label = Label.new()
+	_death_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_death_label.add_theme_color_override("font_color", Color("e06c6c"))
+	death_box.add_child(_death_label)
+	# Sin teclado no hay R (T135): un botón para reaparecer.
+	var respawn_button := UiStyle.button("Reaparecer en el campamento", func() -> void: respawn_requested.emit(), 300)
+	respawn_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	death_box.add_child(respawn_button)
 	_death_panel.visible = false
 	_root.add_child(_death_panel)
 	_death_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
@@ -439,7 +450,9 @@ func open_dialogue(npc: Dictionary, dialogue: Dictionary) -> void:
 func _process(_delta: float) -> void:
 	if touch_buttons:
 		# Con una ventana, el árbol o la pausa abiertos se apartan (las ventanas tienen su X).
-		touch_buttons.visible = Touch.shown() and not _pause_panel.visible and not loot_filter_panel.visible and cursor_windows().is_empty()
+		# (el catálogo tiene su ✕ en esa esquina: el «II» la tapaba, T135)
+		touch_buttons.visible = Touch.shown() and not _pause_panel.visible and not loot_filter_panel.visible and not catalog.visible \
+			and cursor_windows().is_empty()
 	_update_minimap()
 	_fit_trade_panels()
 	# Alejarse del NPC cierra la conversación.
@@ -982,39 +995,52 @@ func _on_menu_requested(menu: String) -> void:
 	_update_minimap()
 
 
+## Ventanas emergentes de la pausa (T135): con el tamaño de interfaz, como lo
+## demás, y sin salirse de la pantalla (en el celular, el botón de cerrar quedaba
+## debajo del borde).
+static func show_popup(w: Window) -> void:
+	var view := w.get_parent().get_viewport().get_visible_rect().size
+	var s := minf(ui_scale(), maxf(1.0, view.y / UI_MIN_HEIGHT))
+	var content := w.get_contents_minimum_size()
+	if content.y > 0.0:
+		s = maxf(1.0, minf(s, view.y * POPUP_MAX / content.y))   # que quepa entera (sin bajar de 100 %)
+	w.content_scale_factor = s
+	w.max_size = Vector2i(view * POPUP_MAX)
+	w.popup_centered_clamped(Vector2i.ZERO, POPUP_MAX)
+
 ## Logros y cosméticos (desde la pausa).
 func open_achievements() -> void:
 	var panel := AchievementsPanel.new(GameData.current_character)
 	_root.add_child(panel)
-	panel.popup_centered()
+	show_popup(panel)
 
 
 ## Récords del banco de oleadas y de los jefes (pausa o Aida).
 func open_ladder() -> void:
 	var panel := LadderPanel.new(GameData.current_character)
 	_root.add_child(panel)
-	panel.popup_centered()
+	show_popup(panel)
 
 
 ## Reasignar teclas y botones (desde la pausa).
 func open_controls() -> void:
 	var panel := ControlsPanel.new()
 	_root.add_child(panel)
-	panel.popup_centered()
+	show_popup(panel)
 
 
 ## Árbol de deuda técnica (desde la pausa).
 func open_tech_debt() -> void:
 	var panel := TechDebtPanel.new(GameData.current_character)
 	_root.add_child(panel)
-	panel.popup_centered()
+	show_popup(panel)
 
 
 ## Registro del lore coleccionable (desde la pausa).
 func open_lore_log() -> void:
 	var lore_log := LoreLog.new(GameData.current_character)
 	_root.add_child(lore_log)
-	lore_log.popup_centered()
+	show_popup(lore_log)
 
 
 ## Catálogo de hardware (B): pausa el juego mientras está abierto, como el árbol.
@@ -1151,6 +1177,8 @@ func toggle_passive_tree() -> void:
 
 
 func show_death() -> void:
+	_death_label.text = "HAS MUERTO\n\nStack trace:\n  en Player.take_damage()\n  en Enemy.attack()\n  en tu_decision_de_ir_sin_resistencias()" \
+		+ ("" if Touch.shown() else "\n\nPulsa R para reaparecer en el campamento")
 	_death_panel.visible = true
 	dialogue_box.close()
 	# Centrar tras calcular su tamaño.

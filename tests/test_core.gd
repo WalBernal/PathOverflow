@@ -5219,6 +5219,7 @@ func _test_touch_controls() -> void:
 	for s in [Hud.TOUCH_SLOT, Hud.TOUCH_DODGE, Hud.TOUCH_FLASK.x, Hud.TOUCH_MENU.y, TouchPointer.ACTION_SIZE.y, 40.0]:
 		_check(s * ui >= 44.0, "objetivo táctil de %d px a 140 %% (≥ 44)" % roundi(s * ui))
 	_check(TouchPointer.LONG_PRESS >= 0.4 and TouchPointer.LONG_PRESS <= 0.8, "mantener: medio segundo, ni más ni menos")
+	_check(TouchPointer.scroll_for(null, Vector2(0, 40)) == null, "arrastrar sin casilla: no desplaza por su cuenta")
 	_test_prologue_touch()
 
 

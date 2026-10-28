@@ -4,6 +4,8 @@ extends Control
 ## y el espacio de guardado activo.
 
 const CARD_HEIGHT := 84.0
+## Por debajo de este alto (lienzo / escala de interfaz) el menú se compacta (T135).
+const COMPACT_HEIGHT := 760.0
 ## Pose de lucimiento de cada clase sobre su pedestal (T96): [acción, arma].
 const CLASS_POSES := {
 	"guerrero": ["attack", "mace"], "duelista": ["attack", "sword"], "exploradora": ["shoot", "dagger"],
@@ -136,7 +138,10 @@ func _build() -> void:
 	detail_box.add_child(_preview)
 	_detail = RichTextLabel.new()
 	_detail.bbcode_enabled = true
-	_detail.fit_content = true
+	# Se desplaza en su hueco (T135): con fit_content, en el celular a 140 % empujaba
+	# «Jugar» y los botones de abajo fuera de la pantalla.
+	_detail.scroll_active = true
+	_detail.custom_minimum_size.y = 40
 	_detail.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	detail_box.add_child(_detail)
 	_play_button = UiStyle.button("Jugar", _play)
@@ -165,6 +170,17 @@ func _build() -> void:
 	refresh_size.call()
 	footer.add_child(ui_size)
 	footer.add_child(UiStyle.button("Salir", func() -> void: get_tree().quit(), 140))
+
+	# Pantalla baja (el celular con la interfaz grande): logo y figura más chicos y sin subtítulo.
+	var compact := func() -> void:
+		var low := size.y < COMPACT_HEIGHT
+		logo.custom_minimum_size.y = 84 if low else 130
+		logo.logo_scale = 0.34 if low else 0.5
+		subtitle.visible = not low
+		_preview.custom_minimum_size.y = 150 if low else 240
+		logo.queue_redraw()
+	resized.connect(compact)
+	compact.call()
 
 	_confirm = ConfirmationDialog.new()
 	_confirm.title = "Borrar personaje"

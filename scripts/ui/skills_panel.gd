@@ -484,7 +484,7 @@ func _popup(title: String, content: Control) -> void:
 	win.close_requested.connect(win.queue_free)
 	win.confirmed.connect(win.queue_free)
 	add_child(win)
-	win.popup_centered()
+	GameUI.show_popup(win)
 
 
 # --- Construcciones guardadas ---
@@ -506,7 +506,7 @@ func _open_builds() -> void:
 	_builds_win.confirmed.connect(_builds_win.queue_free)
 	add_child(_builds_win)
 	_fill_builds()
-	_builds_win.popup_centered()
+	GameUI.show_popup(_builds_win)
 
 
 func _fill_builds() -> void:

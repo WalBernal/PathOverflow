@@ -29,6 +29,11 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("ventanas") and OS.get_cmdline_user_args().has("tactil"):
+		var missed := await _audit_windows_touch()
+		print("ventanas táctil: %d botones sin respuesta" % missed)
+		get_tree().quit(1 if missed > 0 else 0)
+		return
 	if OS.get_cmdline_user_args().has("usar") and OS.get_cmdline_user_args().has("tactil"):
 		await _capture_touch_use()
 		get_tree().quit()
@@ -2382,6 +2387,178 @@ func _capture_phone() -> void:
 
 ## `p` en coordenadas del lienzo; el toque llega en las de la ventana (otra cosa a
 ## resolución de teléfono, donde el lienzo se estira).
+## Revisión de las ventanas con el dedo (T135): en cada menú y ventana que no maneja
+## TouchPointer (título, menú, creación, pausa y sus ventanas, catálogo, filtro, mapa,
+## muerte), un toque simulado sobre cada botón visible tiene que llegarle (button_down).
+## Antes de levantar el dedo el botón se desactiva, así no hace nada. Devuelve cuántos fallaron.
+func _audit_windows_touch() -> int:
+	var gd: Node = get_node("/root/GameData")
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	var scale_was: Variant = GameSettings.get_value("interface", "scale", 1.0)
+	GameSettings.set_value("interface", "scale", 1.4)
+	Touch.force = true
+	get_window().size = Vector2i(2400, 1080)
+	await _wait(0.4)
+	var missed := 0
+	# Pantallas de menú (con su escala de interfaz).
+	for path in ["res://scenes/menu/title_screen.tscn", "res://scenes/menu/main_menu.tscn", "res://scenes/menu/character_creation.tscn"]:
+		var menu: Node = load(path).instantiate()
+		_swap(menu)
+		await _wait(1.2)
+		missed += await _tap_audit(menu, path.get_file().get_basename())
+		if OS.get_cmdline_user_args().has("titulo"):
+			return missed
+	# En partida.
+	var c: CharacterData = gd.create_character("Dedos", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.flags["llegada_campamento_vista"] = true
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var ui: GameUI = world.get("ui")
+	if ui.cutscene.visible:
+		ui.cutscene.call("_finish")
+	ui.apply_ui_scale()
+	await _wait(0.3)
+	missed += await _tap_audit(ui.touch_buttons, "botones Mapa y II")
+	# La bolsa llena: arrastrar en vertical sobre las casillas la desplaza (y no mueve el objeto).
+	var gen := ItemGenerator.new(gd.get("items"))
+	for k in 60:
+		c.inventory.add_item(gen.generate(10, Rarity.Item.MAGIC))
+	ui.call("_on_menu_requested", "inventory")
+	await _wait(0.5)
+	var bag_scroll: ScrollContainer = ui.inventory_panel.get("_scroll")
+	var first: ItemCell = null
+	for cc in ui.inventory_panel.find_children("*", "ItemCell", true, false):
+		if (cc as ItemCell).item != null and (cc as ItemCell).location.get("kind", "") == "bag" and bag_scroll.get_global_rect().encloses((cc as ItemCell).get_global_rect()):
+			first = cc
+			break
+	if first:
+		var item := first.item
+		var start := _canvas_point(first, first.size / 2.0)
+		var before_scroll := bag_scroll.scroll_vertical
+		_touch(0, start, true)
+		for k in 10:
+			await get_tree().process_frame
+			_drag(0, start + Vector2(2, -14.0 * (k + 1)))
+		_touch(0, start + Vector2(2, -140), false)
+		await _wait(0.3)
+		var moved_ok := bag_scroll.scroll_vertical > before_scroll and c.inventory.bag.has(item) and first.item == item
+		print("ventanas táctil · bolsa: arrastrar hacia arriba desplaza %d → %d, el objeto sigue en su casilla: %s" % [before_scroll, bag_scroll.scroll_vertical, first.item == item])
+		if not moved_ok:
+			missed += 1
+		_save("135_bolsa_desplazada")
+	ui.call("_on_menu_requested", "inventory")
+	await _wait(0.2)
+	ui.toggle_pause_menu()
+	await _wait(0.4)
+	missed += await _tap_audit(ui.get("_pause_panel"), "pausa")
+	for opener in ["open_controls", "open_achievements", "open_ladder", "open_tech_debt", "open_lore_log"]:
+		var ui_root: Control = ui.get("_root")
+		var before := ui_root.get_child_count()
+		ui.call(opener)
+		await _wait(0.5)
+		var popup: Node = ui_root.get_child(before) if ui_root.get_child_count() > before else null
+		if popup:
+			missed += await _tap_audit(popup, opener)
+			popup.queue_free()
+			await _wait(0.2)
+	ui.toggle_pause_menu()
+	await _wait(0.2)
+	ui.toggle_loot_filter()
+	await _wait(0.5)
+	missed += await _tap_audit(ui.loot_filter_panel, "filtro de botín")
+	ui.toggle_loot_filter()
+	ui.toggle_catalog()
+	await _wait(0.5)
+	missed += await _tap_audit(ui.catalog, "catálogo")
+	ui.toggle_catalog()
+	ui.world_map.toggle()
+	await _wait(0.4)
+	missed += await _tap_audit(ui.world_map, "mapa grande")
+	ui.world_map.toggle()
+	await _wait(0.2)
+	ui.show_death()
+	await _wait(0.5)
+	missed += await _tap_audit(ui.get("_death_panel"), "muerte")
+	(ui.get("_death_panel") as Control).visible = false
+	get_window().size = Vector2i(1600, 900)
+	GameSettings.set_value("interface", "scale", scale_was)
+	Touch.force = false
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
+	return missed
+
+
+## Toca cada botón visible de `root` y mira si se entera. Imprime los que no.
+func _tap_audit(root: Node, tag: String) -> int:
+	_save("135_" + tag.replace(" ", "_"))
+	var screen := get_viewport().get_visible_rect()
+	var ok := 0
+	var bad: Array[String] = []
+	var skipped := 0
+	for b: BaseButton in root.find_children("*", "BaseButton", true, false):
+		if not b.is_visible_in_tree() or b.disabled:
+			continue
+		var center := _canvas_point(b, b.size / 2.0)
+		if not screen.has_point(center) or _clipped(b, center):
+			skipped += 1
+			continue
+		var heard := [false]
+		var hear := func() -> void: heard[0] = true
+		b.button_down.connect(hear)
+		_touch(0, center, true)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		b.disabled = true   # que al soltar no haga nada
+		_touch(0, center, false)
+		await get_tree().process_frame
+		if not is_instance_valid(b):
+			ok += 1 if heard[0] else 0   # la ventana se rehízo al tocarlo
+			continue
+		b.disabled = false
+		if b is OptionButton:
+			(b as OptionButton).get_popup().hide()   # se abre al apoyar el dedo
+		elif b is MenuButton:
+			(b as MenuButton).get_popup().hide()
+		b.button_down.disconnect(hear)
+		if heard[0]:
+			ok += 1
+		else:
+			var under := get_viewport().gui_get_hovered_control()
+			bad.append("«%s» (%s) en %s, encima: %s" % [b.text if "text" in b else b.name, b.get_class(), center.round(), under.get_path() if under else "nada"])
+	print("ventanas táctil · %s: %d responden, %d fuera de la vista%s" % [tag, ok, skipped, "" if bad.is_empty() else ", NO responden:"])
+	for line in bad:
+		print("    " + line)
+	return bad.size()
+
+
+## ¿Queda `p` fuera de algún ScrollContainer que contiene a `c`?
+func _clipped(c: Control, p: Vector2) -> bool:
+	var n := c.get_parent()
+	while n:
+		if n is ScrollContainer:
+			var sc := n as ScrollContainer
+			if not Rect2(_canvas_point(sc, Vector2.ZERO), _canvas_point(sc, sc.size) - _canvas_point(sc, Vector2.ZERO)).has_point(p):
+				return true
+		n = n.get_parent()
+	return false
+
+
+## `local` de `c` en coordenadas del lienzo de la ventana del juego (lo que espera
+## _touch), también dentro de una ventana emergente incrustada.
+func _canvas_point(c: Control, local: Vector2) -> Vector2:
+	var p := c.get_global_transform_with_canvas() * local
+	var vp := c.get_viewport()
+	if vp is Window and vp != get_tree().root:
+		p = Vector2((vp as Window).position) + p * (vp as Window).content_scale_factor
+	return p
+
 ## Botón de usar (T134) a resolución de teléfono con la interfaz al 140 %: con botín
 ## cerca, tocar recoge el más raro y mantener el resto; junto a un NPC, «Hablar»;
 ## tocar la etiqueta de un objeto lejano va hasta él (antes iba al toque anterior).

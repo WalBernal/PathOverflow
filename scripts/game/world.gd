@@ -149,6 +149,9 @@ func _ready() -> void:
 	ui.setup(player, enemies, character, loot, skills, quests)
 	ui.hud.use_target = touch_use_target   # botón táctil de usar (T134)
 	ui.touch_controls.use_action = touch_use
+	ui.respawn_requested.connect(func() -> void:
+		if not player.is_alive():
+			respawn())
 	player.died.connect(_on_player_died)
 	ui.return_to_menu_requested.connect(_return_to_menu)
 	ui.quit_requested.connect(_quit_game)
@@ -1680,11 +1683,11 @@ func _on_dialogue_action(action: Dictionary) -> void:
 		"open_atlas":
 			var atlas := AtlasPanel.new(character, open_incident)
 			ui.add_child(atlas)
-			atlas.popup_centered()
+			GameUI.show_popup(atlas)
 		"open_crafting":
 			var panel := CraftingPanel.new(character, item_generator)
 			ui.add_child(panel)
-			panel.popup_centered()
+			GameUI.show_popup(panel)
 		"antenna":
 			player.refill()
 			var mods: Array[Modifier] = [Modifier.new(Stat.DAMAGE, Modifier.Type.INCREASED, 15.0, [], "camp:antena"),

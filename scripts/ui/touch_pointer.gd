@@ -14,6 +14,9 @@ extends Control
 
 const LONG_PRESS := 0.5
 const DRAG_START := 12.0
+## Sobre una lista que se desplaza, un arrastre así de más vertical que horizontal la
+## desplaza; si no, arrastra el objeto (T135).
+const SCROLL_BIAS := 1.5
 ## Tocar otra vez lo mismo antes de este tiempo (s) es hacer su acción.
 const SECOND_TAP := 4.0
 const ACTION_SIZE := Vector2(150, 46)
@@ -149,7 +152,23 @@ func _on_drag(index: int, p: Vector2) -> void:
 	if _press["passive"]:
 		_press["at"] = p
 		return
+	if _press.has("scroll"):
+		# Desplazando la lista con el dedo: sigue al dedo (en píxeles de la lista).
+		var sc: ScrollContainer = _press["scroll"]
+		sc.scroll_vertical = int(_press["scroll_from"] - (p.y - _press["start"].y) / sc.get_global_transform_with_canvas().get_scale().y)
+		_press["at"] = p
+		get_viewport().set_input_as_handled()
+		return
 	if not _press["moved"] and p.distance_to(_press["start"]) >= DRAG_START and not _press["long_done"]:
+		var sc := scroll_for(_press["cell"], p - _press["start"])
+		if sc:
+			# Vertical sobre una lista que se desplaza (la bolsa, T135): desplazar, no arrastrar el objeto.
+			_forget()
+			_press["moved"] = true
+			_press["scroll"] = sc
+			_press["scroll_from"] = sc.scroll_vertical
+			get_viewport().set_input_as_handled()
+			return
 		_press["moved"] = true
 		_forget()
 		_send_button(_press["start"], MOUSE_BUTTON_LEFT, true)   # empieza el arrastre (o mover la vista)
@@ -175,6 +194,8 @@ func _on_up(index: int, p: Vector2) -> void:
 	if press["passive"]:
 		return
 	get_viewport().set_input_as_handled()
+	if press.has("scroll"):
+		return   # solo desplazó la lista
 	if press["moved"]:
 		_motion(p, true)
 		_send_button(p, MOUSE_BUTTON_LEFT, false)
@@ -264,6 +285,20 @@ func _tree_target(p: Vector2) -> Variant:
 		return null
 	var id := int(tree_view.get("_hovered_id"))
 	return id if id != -1 else null
+
+
+## Lista que desplaza un arrastre `drag` empezado en `cell`: la ScrollContainer que la
+## contiene, si el arrastre es sobre todo vertical y la lista tiene adónde moverse.
+static func scroll_for(cell: Variant, drag: Vector2) -> ScrollContainer:
+	if cell == null or absf(drag.y) < absf(drag.x) * SCROLL_BIAS:
+		return null
+	var n: Node = (cell as Node).get_parent()
+	while n:
+		if n is ScrollContainer:
+			var sc := n as ScrollContainer
+			return sc if sc.get_v_scroll_bar().max_value > sc.size.y + 1.0 else null
+		n = n.get_parent()
+	return null
 
 
 func _cell_at(p: Vector2) -> ItemCell:
