@@ -29,6 +29,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("filtro") and OS.get_cmdline_user_args().has("tactil"):
+		await _capture_loot_filter_touch()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("prologo") and OS.get_cmdline_user_args().has("tactil"):
 		await _capture_prologue_touch()
 		get_tree().quit()
@@ -2374,6 +2378,75 @@ func _capture_phone() -> void:
 
 ## `p` en coordenadas del lienzo; el toque llega en las de la ventana (otra cosa a
 ## resolución de teléfono, donde el lienzo se estira).
+## Filtro de botín con el dedo (T133), a resolución de teléfono con la interfaz al
+## 140 % y el inventario abierto debajo: tocar gemas cambia la regla, la ventana
+## cabe en la pantalla y no es más grande que las demás.
+func _capture_loot_filter_touch() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Filtro", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.flags["llegada_campamento_vista"] = true
+	var gen := ItemGenerator.new(gd.get("items"))
+	for k in 30:
+		c.inventory.add_item(gen.generate(14, Rarity.Item.RARE))   # casillas llenas debajo del filtro
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	var scale_was: Variant = GameSettings.get_value("interface", "scale", 1.0)
+	GameSettings.set_value("interface", "scale", 1.4)
+	var saved_rules: Dictionary = LootFilter.rules().duplicate(true)
+	Touch.force = true
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var ui: GameUI = world.get("ui")
+	if ui.cutscene.visible:
+		ui.cutscene.call("_finish")
+	for res in [Vector2i(2400, 1080), Vector2i(1600, 720)]:
+		get_window().size = res
+		await _wait(0.6)
+		ui.apply_ui_scale()
+		var tag := "%dx%d" % [res.x, res.y]
+		ui.call("_on_menu_requested", "inventory")
+		await _wait(0.3)
+		var inv_rect := ui.inventory_panel.get_global_rect()
+		LootFilter.apply_preset("todo")
+		ui.toggle_loot_filter()
+		await _wait(0.5)
+		var panel: PanelContainer = ui.loot_filter_panel.get("_panel")
+		var screen := get_viewport().get_visible_rect()
+		var rect := panel.get_global_rect()
+		print("filtro %s: ventana %s (pantalla %s, cabe: %s; inventario %s)" % [tag, rect, screen.size, screen.encloses(rect), inv_rect])
+		# Tocar la gema «Raro» de las armas y luego «Mostrar»/«Ocultar» de las pociones.
+		var rows: Array = ui.loot_filter_panel.get("_rows")
+		var gem_at := func(row: Control, k: int) -> Vector2:
+			return row.get_global_transform_with_canvas() * Vector2(190.0 + k * (LootFilterPanel.GEM.x + 4.0) + LootFilterPanel.GEM.x / 2.0, 3.0 + LootFilterPanel.GEM.y / 2.0)
+		for step in [["weapon", 0, LootFilter.STEPS.find("rare")], ["weapon", 0, 0], ["flask", LootFilter.GEAR.size() + 2, 1]]:
+			var at: Vector2 = gem_at.call(rows[step[1]], step[2])
+			_touch(0, at, true)
+			await get_tree().process_frame
+			_touch(0, at, false)
+			await _wait(0.3)
+			print("filtro %s: tocar %s gema %d → regla %s" % [tag, step[0], step[2], LootFilter.rules().get(step[0])])
+			if step[2] == LootFilter.STEPS.find("rare"):
+				_save("133_%s_filtro" % tag)
+		var gem_h: float = (rows[0] as Control).get_global_transform_with_canvas().get_scale().y * LootFilterPanel.GEM.y
+		print("filtro %s: gemas de %.0f px de alto en pantalla del lienzo" % [tag, gem_h])
+		ui.toggle_loot_filter()
+		ui.call("_on_menu_requested", "inventory")
+		await _wait(0.2)
+	get_window().size = Vector2i(1600, 900)
+	LootFilter.rules().merge(saved_rules, true)
+	LootFilter.set_rule("weapon", String(saved_rules["weapon"]))   # (guarda todo)
+	GameSettings.set_value("interface", "scale", scale_was)
+	Touch.force = false
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
+
+
 ## Prólogo con el dedo (T132): joystick en la calle y el pasillo, tocar la entrada
 ## para ir, el botón de usar junto a Rafa y tocar para pasar la conversación.
 func _capture_prologue_touch() -> void:

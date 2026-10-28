@@ -5,17 +5,26 @@ extends Control
 ## mínima y se encienden de ahí hacia arriba; lo de abajo queda apagado y
 ## tachado. El hardware (placas, RAM, pociones) se muestra u oculta. Abajo, desde
 ## qué rareza sale el haz de luz, y a la derecha una vista previa de las
-## etiquetas tal como se verán en el suelo. Todo se guarda al momento.
+## etiquetas tal como se verán en el suelo o las reglas finas (una u otra, para
+## que la ventana mida como las demás). Todo se guarda al momento. Si no cabe en
+## alto (interfaz grande en el celular), las filas se desplazan (T133).
 
 signal close_requested
 
-const GEM := Vector2(92, 30)
+## Gemas de 32 px de alto: 44 con la interfaz al 140 % del celular.
+const GEM := Vector2(92, 32)
+## Margen libre arriba y abajo de la ventana.
+const SCREEN_MARGIN := 24.0
 
 var _loot: LootManager
 var _rows: Array[Control] = []
+var _preview_box: VBoxContainer
 var _preview: Control
 var _ground_label: Label
 var _extra: VBoxContainer
+var _panel: PanelContainer
+var _scroll: ScrollContainer
+var _tab_buttons: Array[Button] = []
 
 
 func setup(loot: LootManager) -> void:
@@ -29,13 +38,13 @@ func setup(loot: LootManager) -> void:
 	var center := CenterContainer.new()
 	add_child(center)
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var panel := PanelContainer.new()
-	panel.theme = UiStyle.make_theme()
-	UiStyle.decorate_window(panel)
-	center.add_child(panel)
+	_panel = PanelContainer.new()
+	_panel.theme = UiStyle.make_theme()
+	UiStyle.decorate_window(_panel)
+	center.add_child(_panel)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 8)
-	panel.add_child(box)
+	_panel.add_child(box)
 	box.add_child(UiStyle.window_header("Filtro de botín",
 		"Lo que no pasa el filtro no existe. Hasta que mantienes Shift.", func() -> void: close_requested.emit()))
 	# Atajos.
@@ -51,9 +60,13 @@ func setup(loot: LootManager) -> void:
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 18)
 	box.add_child(columns)
+	_scroll = ScrollContainer.new()
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	columns.add_child(_scroll)
 	var left := VBoxContainer.new()
 	left.add_theme_constant_override("separation", 6)
-	columns.add_child(left)
+	_scroll.add_child(left)
+	left.minimum_size_changed.connect(_fit.call_deferred)
 	left.add_child(UiStyle.section_header("Equipo: rareza mínima para verse"))
 	for cat in LootFilter.GEAR:
 		left.add_child(_gem_row(cat, LootFilter.STEPS))
@@ -62,29 +75,64 @@ func setup(loot: LootManager) -> void:
 		left.add_child(_gem_row(cat, ["normal", "hidden"]))
 	left.add_child(UiStyle.section_header("Haz de luz y sonido desde"))
 	left.add_child(_gem_row("beam", ["magic", "rare", "ultra", "unique_only"]))
-	# Vista previa.
+	# A la derecha: la vista previa o las reglas finas, con dos pestañas.
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation", 6)
+	right.custom_minimum_size.x = 300
 	columns.add_child(right)
-	right.add_child(UiStyle.section_header("Así se verá en el suelo"))
+	var tabs := HBoxContainer.new()
+	tabs.add_theme_constant_override("separation", 6)
+	right.add_child(tabs)
+	for t in [["Vista previa", 0], ["Reglas finas", 1]]:
+		var b := UiStyle.button(t[0], func() -> void: _show_tab(t[1]), 147)
+		b.toggle_mode = true
+		tabs.add_child(b)
+		_tab_buttons.append(b)
+	_preview_box = VBoxContainer.new()
+	_preview_box.add_theme_constant_override("separation", 6)
+	right.add_child(_preview_box)
+	_preview_box.add_child(UiStyle.section_header("Así se verá en el suelo"))
 	_preview = Control.new()
 	_preview.custom_minimum_size = Vector2(300, 330)
 	_preview.draw.connect(_draw_preview)
-	right.add_child(_preview)
+	_preview_box.add_child(_preview)
 	_ground_label = UiStyle.label("", 12, UiStyle.MUTED)
-	right.add_child(_ground_label)
+	_preview_box.add_child(_ground_label)
 	# Reglas finas y filtros con nombre (se rehace al cambiar algo).
 	_extra = VBoxContainer.new()
 	_extra.add_theme_constant_override("separation", 6)
 	_extra.custom_minimum_size.x = 300
-	columns.add_child(_extra)
+	right.add_child(_extra)
+	_show_tab(0)
 	var hint := UiStyle.label("Los únicos, los de conjunto y los objetos clave se ven siempre.\nMantén Shift en el juego: lo oculto aparece atenuado.", 12, UiStyle.MUTED)
 	box.add_child(hint)
+	resized.connect(_fit)
 
 
 func open() -> void:
 	visible = true
 	_refresh()
+	_fit.call_deferred()
+
+
+func _show_tab(index: int) -> void:
+	_preview_box.visible = index == 0
+	_extra.visible = index == 1
+	for k in _tab_buttons.size():
+		_tab_buttons[k].set_pressed_no_signal(k == index)
+
+
+## Alto de las filas: enteras si caben; si no, lo que deja la pantalla, con desplazamiento.
+func _fit() -> void:
+	if _scroll == null or not visible:
+		return
+	var content := _scroll.get_child(0) as Control
+	var full := content.get_combined_minimum_size()
+	var overhead := _panel.get_combined_minimum_size().y - _scroll.get_combined_minimum_size().y
+	var h := clampf(size.y - 2.0 * SCREEN_MARGIN - overhead, 120.0, full.y)
+	if not is_equal_approx(_scroll.custom_minimum_size.y, h):
+		_scroll.custom_minimum_size = Vector2(full.x, h)
+		_panel.reset_size()
 
 
 func _refresh() -> void:
@@ -241,7 +289,7 @@ func _draw_row(row: Control, key: String, steps: Array) -> void:
 				row.draw_rect(Rect2(c, Vector2(6, 6)), UiStyle.ACCENT)
 		if hover:
 			row.draw_rect(r.grow(2.0), Color(1, 1, 1, 0.35), false, 1.0)
-		row.draw_string(font, r.position + Vector2(0, 20), label, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 12,
+		row.draw_string(font, r.position + Vector2(0, 21), label, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 12,
 			col.lightened(0.2) if lit else Color(col, 0.45))
 		if not lit and step != "hidden" and steps.size() > 2:
 			row.draw_line(r.position + Vector2(8, r.size.y / 2.0), Vector2(r.end.x - 8, r.position.y + r.size.y / 2.0), Color(col, 0.4), 1.0)

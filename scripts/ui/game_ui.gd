@@ -89,7 +89,8 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	touch_controls.enemies = enemies
 	touch_controls.hud = hud
 	touch_controls.blocked = func() -> bool:
-		return (_pause_panel != null and _pause_panel.visible) or not cursor_windows().is_empty() or (cutscene != null and cutscene.is_playing())
+		return (_pause_panel != null and _pause_panel.visible) or (loot_filter_panel != null and loot_filter_panel.visible) \
+			or not cursor_windows().is_empty() or (cutscene != null and cutscene.is_playing())
 	_root.add_child(touch_controls)
 
 	# El tooltip se crea antes (lo usan los paneles) pero se añade al final,
@@ -438,7 +439,7 @@ func open_dialogue(npc: Dictionary, dialogue: Dictionary) -> void:
 func _process(_delta: float) -> void:
 	if touch_buttons:
 		# Con una ventana, el árbol o la pausa abiertos se apartan (las ventanas tienen su X).
-		touch_buttons.visible = Touch.shown() and not _pause_panel.visible and cursor_windows().is_empty()
+		touch_buttons.visible = Touch.shown() and not _pause_panel.visible and not loot_filter_panel.visible and cursor_windows().is_empty()
 	_update_minimap()
 	_fit_trade_panels()
 	# Alejarse del NPC cierra la conversación.
@@ -945,6 +946,8 @@ func _unhandled_input(event: InputEvent) -> void:
 func cursor_windows() -> Array:
 	if _pause_panel.visible or cutscene.is_playing():
 		return []
+	if loot_filter_panel.visible:
+		return []   # tapa todo: el dedo va directo a sus gemas (T133), no a las casillas de debajo
 	if tree_screen.visible:
 		return [tree_screen]
 	if is_choosing():
