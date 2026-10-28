@@ -932,9 +932,10 @@ Origen: R6
 - Tooltips de objetos que caben en pantalla con la interfaz al 140 % (más estrechos o con desplazamiento) y comparar con lo equipado uno debajo de otro.
 - Hecho: `UiStyle.safe_margins` pasa la zona segura del celular (`DisplayServer.get_display_safe_area`, en píxeles de pantalla) a coordenadas del lienzo; `GameUI.apply_ui_scale` y `UiStyle.apply_ui_scale` (menús y prólogo) colocan la interfaz dentro de ella, y `GameUI` la vuelve a mirar cada medio segundo (al girar el celular la muesca cambia de lado sin cambiar el tamaño). En el PC no hace nada; `UiStyle.test_safe_area` la simula. **Tooltips**: si con su comparación no caben en alto se encogen (como mucho al 60 %, `ItemTooltip.MIN_FIT`) en vez de salirse por abajo; lo equipado va al lado si cabe a lo ancho y debajo si no. **Decisión**: en el celular horizontal (2000×900 de lienzo a 140 %) al lado sí cabe y apilarlo obligaba a encoger hasta el 60 % (letra de 11 px), así que solo se apila cuando al lado no cabe. Comprobado con `capture_screens -- muesca` a 2400×1080 con una muesca simulada de 120 px: la interfaz empieza en x=100 del lienzo (los 120 px de ventana) y un tooltip de ultra-raro comparando con el equipado cabe entero al 96 %; capturas `docs/capturas/movil/142_*`.
 
-### [ ] T143 · Vibración y respuesta al toque · S
+### [x] T143 · Vibración y respuesta al toque · S
 Origen: R6
 - `Input.vibrate_handheld` corto al recibir un golpe fuerte, crítico, subir de nivel, caer un único y pulsar un botón táctil; opción para apagarlo.
+- Hecho: `Haptics.pulse(causa)` con un pulso por causa (golpe que quita más del 8 % de la vida —el mismo que sacude la cámara— 45 ms; crítico 18 ms suave; subir de nivel 120 ms; caer un único o de conjunto 90 ms; botón táctil 10 ms muy suave) y 0,12 s de respiro entre pulsos para que una ráfaga de críticos no zumbe sin parar (subir de nivel y el único pasan siempre). Solo en el celular. «Vibración (celular): sí/no» en Pausa → Combate (`combat/vibration`). Permiso `vibrate` en el preset «Android» (sin él Android ignora la vibración). Pruebas en `_test_touch_controls` (respiro, importantes, apagada). Sin probar en un teléfono de verdad (en el PC no vibra).
 
 ### [ ] T144 · Batería y rendimiento en el teléfono · M
 Origen: R6
@@ -1118,4 +1119,5 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-28 · T139 · Versión única en project.godot (3.1.0), «v3.1» en el título y la pausa, y tools/exportar_android.ps1 que la copia al APK y sube el código de versión.
 - 2026-10-28 · T140 · Aviso de actualización desde GitHub Releases (latest.json, botón que abre la descarga, opción para apagarlo), permiso de internet en el APK y tools/publicar_version.ps1; falta que el usuario cree el repositorio y su clave.
 - 2026-10-28 · T141 · Salir de la app guarda y pausa; el botón Atrás de Android hace de Esc y en el título y el menú pregunta antes de salir (antes cerraba la app).
-- 2026-10-28 · T142 · La interfaz respeta la muesca y las esquinas del celular (también al girarlo) y los tooltips con comparación se encogen para caber en alto.. **Pendiente de revisión del usuario.**
+- 2026-10-28 · T142 · La interfaz respeta la muesca y las esquinas del celular (también al girarlo) y los tooltips con comparación se encogen para caber en alto.
+- 2026-10-28 · T143 · Vibración corta en el celular al recibir un golpe fuerte, críticos, subir de nivel, caer un único y pulsar botones táctiles, con respiro entre pulsos y opción para apagarla.. **Pendiente de revisión del usuario.**

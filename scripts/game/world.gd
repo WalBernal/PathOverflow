@@ -102,6 +102,7 @@ func _ready() -> void:
 	enemies.immune_hit.connect(_on_immune_hit)
 	enemies.crit_dealt.connect(func() -> void:
 		player.camera_shake(1.5, 0.06)
+		Haptics.pulse("crit")
 		hitstop(0.035))
 	tree_exiting.connect(func() -> void:
 		Engine.time_scale = 1.0
@@ -1547,6 +1548,7 @@ func _on_mutex_broken() -> void:
 
 ## Los monstruos tienen el nivel de su zona; subir de nivel solo avisa.
 func _on_leveled_up(new_level: int) -> void:
+	Haptics.pulse("level")
 	if not SoundMap.stinger("level"):   # el aviso de música; sin música, el efecto de siempre
 		Sfx.play("level_up")
 	Barks.play("level", player_voice_pitch())

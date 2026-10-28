@@ -90,6 +90,7 @@ func drop_item(item: Item, pos: Vector2, from := Vector2.INF) -> void:
 	var special := SoundMap.drop(item)   # el único y el conjunto suenan distinto (T77)
 	if special != "":
 		Sfx.play(special, -3.0)
+		Haptics.pulse("unique")   # el único y el conjunto también se notan en la mano (T143)
 		SoundMap.stinger("loot")   # y el aviso de botín bueno en la música (T78)
 	elif LootFilter.beams(item):
 		if not SoundMap.stinger("loot"):

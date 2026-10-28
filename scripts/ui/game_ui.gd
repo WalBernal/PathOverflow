@@ -700,6 +700,13 @@ func _build_pause_menu() -> Control:
 		World.set_hitstop(not World.hitstop_enabled())
 		hitstop.text = "Pausa al golpear (hitstop): " + ("sí" if World.hitstop_enabled() else "no"))
 	sound.add_child(hitstop)
+	var vibration := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
+	vibration.text = "Vibración (celular): " + ("sí" if Haptics.enabled() else "no")
+	vibration.tooltip_text = "Un toque corto al recibir un golpe fuerte, hacer un crítico, subir de nivel,\ncaer un único y pulsar un botón táctil."
+	vibration.pressed.connect(func() -> void:
+		Haptics.set_enabled(not Haptics.enabled())
+		vibration.text = "Vibración (celular): " + ("sí" if Haptics.enabled() else "no"))
+	sound.add_child(vibration)
 	var auto := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
 	auto.text = "Auto-ataque: " + ("sí" if SkillController.auto_attack else "no")
 	auto.tooltip_text = "Sin pulsar nada ni moverte, la habilidad 1 se lanza sola contra el enemigo más cercano.\nNo vale para auras, invocaciones ni canalizadas."

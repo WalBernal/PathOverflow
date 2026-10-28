@@ -102,6 +102,7 @@ func _button_at(p: Vector2) -> Dictionary:
 
 
 func _press_button(index: int, b: Dictionary, p: Vector2) -> void:
+	Haptics.pulse("button")
 	b["origin"] = p
 	b["at"] = p
 	_buttons[index] = b

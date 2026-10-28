@@ -738,6 +738,7 @@ func take_damage(amount: float) -> void:
 	_flinch = FLINCH_TIME
 	if amount > max_life() * 0.08:
 		camera_shake(clampf(amount / max_life() * 30.0, 2.0, 9.0), 0.18)   # cuanto más duele, más tiembla
+		Haptics.pulse("hit")
 	Sfx.play("player_hurt", -4.0)
 	hit_taken.emit()
 	var thorns := _stat(Stat.THORNS)
