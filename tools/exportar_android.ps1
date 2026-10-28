@@ -41,9 +41,12 @@ Write-Host "Versión $version (código $code)"
 if (-not (Test-Path $Godot)) { Write-Host "No encuentro Godot en $Godot (pásalo con -Godot <ruta>)."; exit 1 }
 New-Item -ItemType Directory -Force "$root\build" | Out-Null
 $ErrorActionPreference = "Continue"
-& $Godot --headless --path $root --import | Out-Null
+# (Start-Process -Wait: el Godot sin consola vuelve enseguida y el APK aún no estaría)
+$apk = "$root\build\PathOverflow.apk"
+if (Test-Path $apk) { Remove-Item $apk }
+Start-Process $Godot -ArgumentList @("--headless", "--path", "`"$root`"", "--import") -NoNewWindow -Wait | Out-Null
 $mode = if ($Release) { "--export-release" } else { "--export-debug" }
-& $Godot --headless --path $root $mode "Android" build/PathOverflow.apk
-if (Test-Path "$root\build\PathOverflow.apk") { Write-Host "Listo: build\PathOverflow.apk (v$version, código $code)"; exit 0 }
+Start-Process $Godot -ArgumentList @("--headless", "--path", "`"$root`"", $mode, "Android", "build/PathOverflow.apk") -NoNewWindow -Wait
+if (Test-Path $apk) { Write-Host "Listo: build\PathOverflow.apk (v$version, código $code)"; exit 0 }
 Write-Host "La exportación falló: revisa los mensajes de arriba."
 exit 1

@@ -942,9 +942,10 @@ Origen: R6
 - Límite de FPS (30 / 60) en Opciones, 30 por defecto en el celular si mide por debajo de 50; contador de FPS opcional; medir en el teléfono del usuario una zona con muchos enemigos y bajar partículas o luces si hace falta.
 - Hecho: «FPS: auto / 30 / 60 / sin límite» en Pausa → Gráficos y datos (`GraphicsQuality.fps_choice`, `Engine.max_fps`, aplicado al arrancar en `GameData`). **Auto** (por defecto): sin límite en el PC; en el celular 60 y, la primera vez que una partida pasa 10 s con 10 enemigos o más, si la media baja de 50 FPS se queda en 30 (`graphics/auto_fps`) con un aviso en pantalla. «Contador de FPS: sí/no» (la línea de FPS y depuración de arriba a la izquierda; en el celular, apagada por defecto, `MOBILE_DEFAULTS`). Pruebas en `_test_touch_controls`. **Falta**: medir en el teléfono del usuario (no se puede desde aquí) y, si hace falta, bajar partículas o luces: va a la lista de T145.
 
-### [ ] T145 · Revisión en el teléfono · S 🛑
+### [~] T145 · Revisión en el teléfono · S 🛑
 Origen: R6
 - APK nuevo y una lista para el usuario: prólogo entero, acto I hasta el primer jefe, filtro de botín, recoger objetos con el botón, inventario, árbol, salir y volver a la app, y actualizar de una versión a otra.
+- Preparado: `build/PathOverflow.apk` v3.1.0 (código 4, clave de depuración: se instala encima del de T110) y la lista en `docs/prueba_celular_3.1.md`. De paso, `exportar_android.ps1` espera a Godot (el ejecutable sin consola volvía enseguida y el script decía «falló» con el APK a medio escribir). **Esperando la prueba del usuario**; actualizar de una versión a otra queda para cuando exista el repositorio de versiones.
 
 ---
 
@@ -1122,4 +1123,5 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-28 · T141 · Salir de la app guarda y pausa; el botón Atrás de Android hace de Esc y en el título y el menú pregunta antes de salir (antes cerraba la app).
 - 2026-10-28 · T142 · La interfaz respeta la muesca y las esquinas del celular (también al girarlo) y los tooltips con comparación se encogen para caber en alto.
 - 2026-10-28 · T143 · Vibración corta en el celular al recibir un golpe fuerte, críticos, subir de nivel, caer un único y pulsar botones táctiles, con respiro entre pulsos y opción para apagarla.
-- 2026-10-28 · T144 · Límite de FPS (auto, 30, 60 o sin límite): en el celular baja solo a 30 si la partida va por debajo de 50; contador de FPS opcional, apagado en el celular.. **Pendiente de revisión del usuario.**
+- 2026-10-28 · T144 · Límite de FPS (auto, 30, 60 o sin límite): en el celular baja solo a 30 si la partida va por debajo de 50; contador de FPS opcional, apagado en el celular.
+- 2026-10-28 · T145 · APK v3.1.0 (código 4) y lista de pruebas en docs/prueba_celular_3.1.md; esperando la prueba del usuario en su teléfono.. **Pendiente de revisión del usuario.**
