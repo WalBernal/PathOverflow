@@ -29,6 +29,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("prologo") and OS.get_cmdline_user_args().has("tactil"):
+		await _capture_prologue_touch()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("telefono"):
 		await _capture_phone()
 		get_tree().quit()
@@ -2370,6 +2374,91 @@ func _capture_phone() -> void:
 
 ## `p` en coordenadas del lienzo; el toque llega en las de la ventana (otra cosa a
 ## resolución de teléfono, donde el lienzo se estira).
+## Prólogo con el dedo (T132): joystick en la calle y el pasillo, tocar la entrada
+## para ir, el botón de usar junto a Rafa y tocar para pasar la conversación.
+func _capture_prologue_touch() -> void:
+	var gd: Node = get_node("/root/GameData")
+	gd.set("pending_creation", {"name": "Prueba", "appearance": CharacterAppearance.default()})
+	Touch.force = true
+	var p: Node = load("res://scenes/prologue/prologue.tscn").instantiate()
+	_swap(p)
+	await _wait(0.5)
+	# Tocar pasa la introducción (dos toques: completa el texto y sigue).
+	for k in 2:
+		_touch(0, Vector2(1200, 300), true)
+		await get_tree().process_frame
+		_touch(0, Vector2(1200, 300), false)
+		await _wait(0.8)
+	print("prólogo táctil: tras tocar dos veces, fase %s" % p.get("_phase"))
+	p.set("_fade", 0.0)
+	var stage: PrologueStage = p.get("_stage")
+	var x0 := stage.player_x
+	var origin := Vector2(300, 450)
+	_touch(0, origin, true)
+	for k in 6:
+		await get_tree().process_frame
+		_drag(0, origin + Vector2(16.0 * (k + 1), 0))
+	await _wait(1.0)
+	print("prólogo táctil: joystick %s, de x %.0f a %.0f" % [Touch.stick, x0, stage.player_x])
+	_save("132_prologo_joystick")
+	_touch(0, origin + Vector2(96, 0), false)
+	await _wait(0.2)
+	# Tocar la entrada de la UAdeO (a la derecha del escenario): camina y entra.
+	# (primero hacia el borde derecho, porque desde el principio la entrada aún no se ve)
+	var rect: Rect2 = p.call("_screen_rect")
+	var to_screen := func(stage_p: Vector2) -> Vector2:
+		return (p as Control).get_global_transform_with_canvas() * (rect.position + stage_p / Vector2(400, 225) * rect.size)
+	var tap: Vector2 = to_screen.call(Vector2(385, PrologueStage.FLOOR_Y - 20.0))
+	_touch(0, tap, true)
+	await get_tree().process_frame
+	_touch(0, tap, false)
+	await _wait(3.5)
+	print("prólogo táctil: tocar a la derecha → x %.0f" % stage.player_x)
+	tap = to_screen.call(Vector2(PrologueStage.ENTRANCE_X - stage.cam_x, PrologueStage.FLOOR_Y - 20.0))
+	_touch(0, tap, true)
+	await get_tree().process_frame
+	_touch(0, tap, false)
+	var waited := 0.0
+	while stage.room != "pasillo" and waited < 14.0:
+		await get_tree().process_frame
+		waited += get_process_delta_time()
+	print("prólogo táctil: tocar la entrada → %s en %.1f s" % [stage.room, waited])
+	await _wait(1.0)
+	# Pasillo: joystick hacia arriba = al fondo.
+	var depth0 := stage.player_depth
+	_touch(0, origin, true)
+	for k in 6:
+		await get_tree().process_frame
+		_drag(0, origin + Vector2(0, -16.0 * (k + 1)))
+	await _wait(0.8)
+	_touch(0, origin + Vector2(0, -96), false)
+	print("prólogo táctil: pasillo, profundidad %.2f → %.2f" % [depth0, stage.player_depth])
+	_save("132_prologo_pasillo")
+	# Oficina, junto a Rafa: el botón de usar.
+	p.call("_go_room", "oficina", float(PrologueStage.HOTSPOTS["oficina"][0]["x"]))
+	await _wait(0.3)
+	var use: Button = p.get("_touch_use")
+	print("prólogo táctil: junto a Rafa, botón %s «%s» de %s" % ["visible" if use.visible else "OCULTO", use.text, use.size])
+	_save("132_prologo_usar")
+	var at := use.get_global_rect().get_center()
+	_touch(0, at, true)
+	await get_tree().process_frame
+	_touch(0, at, false)
+	await _wait(0.6)
+	var cut: CutscenePlayer = p.get("_cutscene")
+	print("prólogo táctil: tocar el botón → conversación %s" % ("sí" if cut.is_playing() else "NO"))
+	_save("132_prologo_rafa")
+	var line0: int = cut.get("_index") if cut.get("_index") != null else -1
+	for k in 3:
+		_touch(0, Vector2(800, 300), true)
+		await get_tree().process_frame
+		_touch(0, Vector2(800, 300), false)
+		await _wait(0.5)
+	print("prólogo táctil: tres toques en la conversación, línea %s → %s" % [line0, cut.get("_index")])
+	Touch.force = false
+	p.queue_free()
+
+
 func _touch(index: int, p: Vector2, pressed: bool) -> void:
 	var e := InputEventScreenTouch.new()
 	e.index = index

@@ -49,7 +49,14 @@ func _ready() -> void:
 		_forget(), int(ACTION_SIZE.x))
 	_action.custom_minimum_size = ACTION_SIZE
 	_action.add_theme_font_size_override("font_size", 18)
-	# Dorado y con sombra: tiene que verse encima de cualquier ventana.
+	gold(_action)
+	_action.visible = false
+	add_child(_action)
+
+
+## Dorado y con sombra: tiene que verse encima de cualquier ventana (y del
+## escenario, en el botón de usar del prólogo).
+static func gold(b: Button) -> void:
 	for state in ["normal", "hover", "pressed", "focus"]:
 		var box := StyleBoxFlat.new()
 		box.bg_color = UiStyle.ACCENT.darkened(0.15 if state == "pressed" else 0.0)
@@ -58,11 +65,9 @@ func _ready() -> void:
 		box.set_corner_radius_all(6)
 		box.shadow_color = Color(0, 0, 0, 0.6)
 		box.shadow_size = 6
-		_action.add_theme_stylebox_override(state, box)
+		b.add_theme_stylebox_override(state, box)
 	for c in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
-		_action.add_theme_color_override(c, Color("1a1208"))
-	_action.visible = false
-	add_child(_action)
+		b.add_theme_color_override(c, Color("1a1208"))
 
 
 func _process(_delta: float) -> void:

@@ -853,10 +853,11 @@ Diagnóstico de partida (leído en el código, sin probar en el teléfono):
 
 ## Fase 28 — Lo que falló en el teléfono
 
-### [ ] T132 · Controles táctiles en el prólogo · S
+### [x] T132 · Controles táctiles en el prólogo · S
 Origen: R6
 - Joystick y toque al mundo también en el prólogo: sacar de `GameUI` lo que no depende de la partida (`TouchControls` en modo «solo moverse», sin habilidades ni pociones) o montarlo en `Prologue`; botón de interactuar (T134) para Rafa, la TV, la ventanilla y las puertas; tocar para pasar los diálogos y las líneas de la consola roja.
 - Capturas `capture_screens -- prologo tactil` con toques simulados de la calle a la oficina.
+- Hecho: `Prologue` monta su propio `TouchControls` (sin `hud` ni enemigos: solo el joystick, que no empieza fuera de la fase de caminar, con una conversación o con la ventana de contratación) y suma `Touch.stick` a las flechas en la calle, la oficina y el pasillo (arriba = al fondo). Botón dorado **abajo a la derecha** con el nombre de lo que hay cerca («Hablar con el encargado», sin la «E ·»; `Prologue.touch_use_text`), solo con controles táctiles; el estilo dorado sale de `TouchPointer.gold`, compartido con el botón de acción de las ventanas. **Arreglo de paso**: el clic que emula un toque llega antes que el toque, así que el prólogo leía el destino del toque anterior; ahora `_mouse_stage` usa la posición del propio evento. La introducción y las conversaciones ya pasaban con el clic emulado; la consola roja avanza sola. Comprobado con `capture_screens -- prologo tactil`: dos toques pasan la introducción, el joystick camina (120 → 178 en 1 s), tocar a la derecha y luego la entrada entra al pasillo en 1,5 s, el joystick hacia arriba avanza (profundidad 0 → 0,33), junto a Rafa sale el botón (239×64) y tocarlo empieza la conversación, y tocar la pasa; capturas en `docs/capturas/movil/132_*`. **Decisión**: el botón de usar del prólogo es propio y sencillo; el de la partida es T134. Saltar el prólogo sigue siendo Esc (Atrás de Android, en T141). Prueba de `touch_use_text` en `_test_touch_controls` (la escena no se puede instanciar desde `test_core`, que compila antes que los autoloads).
 
 ### [ ] T133 · Filtro de botín con el dedo y del tamaño de las demás ventanas · S
 Origen: R6
@@ -1092,4 +1093,5 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-27 · T109 · Interfaz táctil en las ventanas: tocar = tooltip y botón de acción (otro toque la hace), mantener = clic derecho, arrastrar objetos, zoom con dos dedos en árbol y mapa, botones de Mapa y pausa; capturas a 2400×1080 y 1600×720. **Pendiente de revisión del usuario.**
 - 2026-10-27 · T109 · Aprobado por el usuario, con permiso para instalar lo de Android y generar el APK (T110).
 - 2026-10-27 · T110 · Exportación a Android: preset, script de instalación y exportación, y APK de depuración; la pantalla de título ya continúa con un toque (fallo visto por el usuario en su celular)
-- 2026-10-27 · Boceto del Roadmap 6.0 (T132-T145): experiencia en el celular tras probar el APK — controles en el prólogo, filtro de botín táctil, botón de interactuar, lado derecho reorganizado, versión visible y aviso de actualización; aprobado por el usuario.. **Pendiente de revisión del usuario.**
+- 2026-10-27 · Boceto del Roadmap 6.0 (T132-T145): experiencia en el celular tras probar el APK — controles en el prólogo, filtro de botín táctil, botón de interactuar, lado derecho reorganizado, versión visible y aviso de actualización; aprobado por el usuario.
+- 2026-10-27 · T132 · Prólogo con el dedo: joystick en la calle, el pasillo y la oficina, botón dorado de usar abajo a la derecha y tocar el escenario va al punto tocado (antes iba al del toque anterior).. **Pendiente de revisión del usuario.**

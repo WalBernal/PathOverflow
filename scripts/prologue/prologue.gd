@@ -11,7 +11,9 @@ extends Control
 ## Al terminar se crea el personaje (nombre y apariencia del creador + la clase
 ## elegida) y se entra al Sandbox. Esc: saltar a la elección de puesto.
 ## Se mueve con A/D o flechas (en el pasillo, también W/S) o con click (destino
-## fijo en el mundo); E, Espacio o click para interactuar.
+## fijo en el mundo); E, Espacio o click para interactuar. En el celular (T132),
+## joystick a la izquierda, tocar el escenario como el click y un botón abajo a la
+## derecha para usar lo que hay cerca.
 
 const STAGE_SIZE := Vector2i(400, 225)
 const WALK_SPEED := 56.0
@@ -66,6 +68,8 @@ var _overlay: Control
 var _cutscene: CutscenePlayer
 var _hire: HireDialog
 var _mono: SystemFont
+var _touch: TouchControls
+var _touch_use: Button
 
 var _intro_chars := 0.0
 var _intro_total := 0
@@ -141,6 +145,27 @@ func _build() -> void:
 	_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_overlay.draw.connect(_draw_overlay)
 	add_child(_overlay)
+	# Táctil (T132): el joystick de la partida (sin habilidades ni pociones) y un
+	# botón para usar lo que hay cerca, por debajo de las conversaciones.
+	_touch = TouchControls.new()
+	_touch.blocked = func() -> bool: return _phase != "walk" or _cutscene.is_playing() or _hire != null
+	add_child(_touch)
+	_touch_use = UiStyle.button("Usar", func() -> void:
+		var spot := _nearest_hotspot()
+		if _phase == "walk" and not _cutscene.is_playing() and not spot.is_empty():
+			_target = Vector2.INF
+			_pending_action = ""
+			_interact(String(spot["action"])), 220.0)
+	_touch_use.custom_minimum_size.y = 64.0
+	_touch_use.add_theme_font_size_override("font_size", 20)
+	TouchPointer.gold(_touch_use)
+	_touch_use.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_touch_use.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_touch_use.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_touch_use.offset_right = -40.0
+	_touch_use.offset_bottom = -40.0
+	_touch_use.visible = false
+	add_child(_touch_use)
 	_cutscene = CutscenePlayer.new()
 	_cutscene.speakers = {"player": {"name": _name, "appearance": _stage_look(), "color": "e9e5d8"}}
 	add_child(_cutscene)
@@ -195,7 +220,22 @@ func _process(delta: float) -> void:
 				_flags["finishing"] = true
 				_finish()
 	_update_screen()
+	_update_touch_use()
 	_overlay.queue_redraw()
+
+
+## El botón táctil de usar: con el nombre de lo que hay cerca, solo mientras se camina.
+func _update_touch_use() -> void:
+	var spot := _nearest_hotspot() if _phase == "walk" and not _cutscene.is_playing() and _hire == null else {}
+	_touch_use.visible = Touch.shown() and not spot.is_empty()
+	if _touch_use.visible:
+		_touch_use.text = touch_use_text(PrologueText.text("prompts", String(spot["action"]), String(spot["text"])))
+
+
+## «E · Hablar con Rafa» -> «Hablar con Rafa» (en el botón no hay tecla).
+static func touch_use_text(prompt: String) -> String:
+	var dot := prompt.find("·")
+	return prompt.substr(dot + 1).strip_edges() if dot != -1 and dot <= 4 else prompt
 
 
 func _update_screen() -> void:
@@ -245,7 +285,7 @@ func _update_walk(delta: float) -> void:
 ## Vista lateral: A/D o flechas; el click fija un destino en el mundo (no en la
 ## pantalla), así la cámara no lo arrastra y el personaje no se pasa de largo.
 func _walk_side(delta: float) -> void:
-	var dir := Input.get_axis(&"move_left", &"move_right")
+	var dir := clampf(Input.get_axis(&"move_left", &"move_right") + Touch.stick.x, -1.0, 1.0)
 	if dir != 0.0:
 		_target = Vector2.INF
 		_pending_action = ""
@@ -262,8 +302,8 @@ func _walk_side(delta: float) -> void:
 		if _target != Vector2.INF and signf(_target.x - _stage.player_x) != dir:
 			_stage.player_x = _target.x   # llegó: no se pasa del punto
 			_target = Vector2.INF
-		_stage.player_facing = Vector2(dir, 0.0)
-		_stage.walk_phase = fmod(maxf(_stage.walk_phase, 0.0) + WALK_SPEED * delta / 14.0 * PI, TAU)
+		_stage.player_facing = Vector2(signf(dir), 0.0)
+		_stage.walk_phase = fmod(maxf(_stage.walk_phase, 0.0) + absf(dir) * WALK_SPEED * delta / 14.0 * PI, TAU)
 	else:
 		_stage.walk_phase = -1.0
 	# Cámara que sigue con suavidad.
@@ -274,6 +314,7 @@ func _walk_side(delta: float) -> void:
 ## Pasillo de frente: W/S (o arriba/abajo) avanzan y retroceden; A/D, de lado.
 func _walk_hallway(delta: float) -> void:
 	var move := Vector2(Input.get_axis(&"move_left", &"move_right"), Input.get_axis(&"move_down", &"move_up"))
+	move = (move + Vector2(Touch.stick.x, -Touch.stick.y)).limit_length(1.0)   # el joystick: arriba = al fondo
 	if move != Vector2.ZERO:
 		_target = Vector2.INF
 		_pending_action = ""
@@ -352,10 +393,13 @@ func _hotspots() -> Array:
 	return list
 
 
-## El ratón en coordenadas del escenario (con la cámara).
-func _mouse_stage() -> Vector2:
+## El ratón en coordenadas del escenario (con la cámara). Con `screen` (la posición
+## del evento), ese punto: el clic que emula un toque llega antes que el toque, y el
+## cursor del sistema no siempre sigue al dedo (T132).
+func _mouse_stage(screen := Vector2.INF) -> Vector2:
 	var rect := _screen_rect()
-	var local := (get_local_mouse_position() - rect.position) / rect.size * Vector2(STAGE_SIZE)
+	var mouse := get_global_transform_with_canvas().affine_inverse() * screen if screen != Vector2.INF else get_local_mouse_position()
+	var local := (mouse - rect.position) / rect.size * Vector2(STAGE_SIZE)
 	return local + Vector2(_stage.cam_x, 0.0)
 
 
@@ -371,6 +415,7 @@ func _input(event: InputEvent) -> void:
 		return
 	var key := event as InputEventKey
 	var mb := event as InputEventMouseButton
+	var at := (event as InputEventMouse).position if event is InputEventMouse else Vector2.INF
 	if event.is_action_pressed(&"ui_cancel"):
 		if _phase in ["intro", "walk"] and not _flags.has("hired"):
 			if _skip_hint > 0.0:
@@ -382,14 +427,16 @@ func _input(event: InputEvent) -> void:
 	# Arrastrar con el botón pulsado mueve el destino (sigue al ratón).
 	if event is InputEventMouseMotion and _phase == "walk" and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		# (si va camino de un punto de interés, un temblor del ratón no lo desvía)
-		if _pending_action == "" or _target == Vector2.INF or _mouse_stage().distance_to(_target) > 40.0:
+		if _pending_action == "" or _target == Vector2.INF or _mouse_stage(at).distance_to(_target) > 40.0:
 			_pending_action = ""
-			_target = _mouse_stage()
+			_target = _mouse_stage(at)
 		return
 	var pressed := (key and key.pressed and not key.echo and key.keycode in [KEY_E, KEY_SPACE, KEY_ENTER, KEY_KP_ENTER]) \
 		or (mb and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT)
 	if not pressed:
 		return
+	if mb and _touch_use.visible and _touch_use.get_global_rect().has_point(mb.position):
+		return   # el botón de usar (no es un click al escenario)
 	match _phase:
 		"intro":
 			if _intro_chars < _intro_total:
@@ -399,15 +446,15 @@ func _input(event: InputEvent) -> void:
 				_phase = "walk"   # (un doble click no se salta el texto sin leerlo)
 		"walk":
 			var spot := _nearest_hotspot()
-			if not spot.is_empty() and (key != null or _mouse_stage().distance_to(_hotspot_pos(spot)) < 40.0):
+			if not spot.is_empty() and (key != null or _mouse_stage(at).distance_to(_hotspot_pos(spot)) < 40.0):
 				_target = Vector2.INF
 				_pending_action = ""
 				_interact(String(spot["action"]))
 				get_viewport().set_input_as_handled()
 			elif mb != null:
 				# Click sobre un punto de interés lejano: camina hasta él y lo usa al llegar.
-				var far := _hotspot_under(_mouse_stage())
-				_target = _mouse_stage() if far.is_empty() else _hotspot_pos(far)
+				var far := _hotspot_under(_mouse_stage(at))
+				_target = _mouse_stage(at) if far.is_empty() else _hotspot_pos(far)
 				_pending_action = "" if far.is_empty() else String(far["action"])
 
 

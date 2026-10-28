@@ -5217,6 +5217,16 @@ func _test_touch_controls() -> void:
 	for s in [Hud.TOUCH_SLOT, Hud.TOUCH_DODGE, Hud.TOUCH_FLASK.x, Hud.TOUCH_MENU.y, TouchPointer.ACTION_SIZE.y, 40.0]:
 		_check(s * ui >= 44.0, "objetivo táctil de %d px a 140 %% (≥ 44)" % roundi(s * ui))
 	_check(TouchPointer.LONG_PRESS >= 0.4 and TouchPointer.LONG_PRESS <= 0.8, "mantener: medio segundo, ni más ni menos")
+	_test_prologue_touch()
+
+
+## Prólogo en el celular (T132): joystick, botón de usar y su texto sin tecla.
+func _test_prologue_touch() -> void:
+	# (por ruta: Prologue usa autoloads y no compila mientras se compila este archivo)
+	var script: GDScript = load("res://scripts/prologue/prologue.gd")
+	_check(script.touch_use_text("E · Hablar con Rafa") == "Hablar con Rafa", "botón de usar: sin la tecla")
+	_check(script.touch_use_text("Mirar la TV") == "Mirar la TV", "botón de usar: sin tecla, igual")
+	# El joystick, el botón y los toques en el escenario: capture_screens -- prologo tactil.
 
 
 ## NPC, jefes y retratos (T103): poses de los NPC y la entrada de jefe.
