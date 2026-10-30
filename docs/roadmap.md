@@ -951,6 +951,71 @@ Origen: R6
 
 ---
 
+# Roadmap 7.0 — diseño y experiencia en el celular (29-10-2026) · BOCETO
+
+Pedido del usuario tras jugar la 3.1 en el celular: mejorar los controles; con varias misiones el registro tapa los botones; la jugabilidad todavía no se siente satisfactoria. **Origen: R7.** Mismo protocolo; 🛑 = parar y esperar el visto bueno. **Boceto**: orden y alcance por aprobar.
+
+Diagnóstico de partida (leído en el código):
+- `QuestTracker` cuelga del minimapa (arriba a la derecha) y crece hacia abajo sin tope: con 3-4 misiones llega a la esquina de los botones (habilidades, esquiva, usar). Solo se esconde si pisa una ventana, no si pisa el HUD táctil.
+- Los botones táctiles no dan casi respuesta propia: se iluminan con un círculo plano al pulsar; no hay aviso de «listo» al terminar el enfriamiento ni de «sin maná» en el propio botón; el joystick siempre es flotante.
+- La sensación de los golpes (números, destellos, empuje, sonido) está pensada para ver de lejos en un monitor: en un teléfono los números son chicos y muchos, y el impacto se pierde.
+
+## Fase 32 — Pantalla limpia
+
+### [ ] T146 · Registro de misiones que no tapa nada · S
+Origen: R7
+- En el celular, el registro muestra solo la misión activa (título y paso) y se pliega a una pestaña «Misiones (N)» que se abre con un toque; se pliega solo al empezar una pelea.
+- Tope de alto: nunca baja de la línea donde empiezan los botones táctiles (con cualquier distribución, tamaño y mano, y con el editor de T137); si no cabe, se pliega.
+- Captura con 6 misiones a 2400×1080 y 1600×720: ningún elemento del HUD se pisa.
+
+### [ ] T147 · Comprobador de solapes del HUD · S
+Origen: R7
+- Una prueba (captura) que recoge los rectángulos de todo lo que hay en pantalla en partida (botones, orbes, minimapa, registro, sucesos, avisos, barra de jefe, marco del objetivo, tutorial) y falla si dos se pisan, en las dos distribuciones, zurdo, al 100 % y al 140 %; se arregla lo que salga.
+
+## Fase 33 — Controles que se sienten bien
+
+### [ ] T148 · Botones con respuesta · S
+Origen: R7
+- Al pulsar: el botón se hunde (escala 0,92) y suelta un pequeño destello; enfriamiento con barrido y un «clic» visual (y vibración suave) cuando vuelve a estar listo; sin maná, el botón se pone azul apagado y tiembla al tocarlo en vez de no hacer nada.
+- Zona de toque generosa: cada botón responde también un poco fuera de su dibujo (sin quitarle sitio al vecino).
+
+### [ ] T149 · Joystick a gusto · S
+Origen: R7
+- Opción en Pausa → Controles: joystick **flotante** (como ahora), **fijo** (siempre en el mismo sitio, a la vista) o **que sigue al dedo** (si el dedo se aleja, la base va detrás); tamaño de la zona muerta; el personaje gira al instante y acelera sin retraso.
+
+### [ ] T150 · Apuntado que ayuda · M
+Origen: R7
+- Objetivo «pegajoso»: las habilidades siguen apuntando al mismo enemigo mientras siga cerca y vivo (no saltan a otro por un paso del joystick); tocar un enemigo lo fija.
+- Al arrastrar desde un botón, vista previa del alcance y del área de la habilidad (círculo, cono o línea) antes de soltar; arrastrar de vuelta al botón cancela.
+- Mira más clara: el enemigo apuntado con un contorno de su color y su barra de vida encima.
+
+### [ ] T151 · Modo automático para el ataque principal · S
+Origen: R7
+- Un interruptor junto al botón grande: el ataque principal se lanza solo contra lo que hay cerca mientras te mueves con el joystick (como en los ARPG de celular); el resto de habilidades, a mano. Se apaga solo al abrir una ventana.
+
+## Fase 34 — Que se sienta bien pegar
+
+### [ ] T152 · Golpes con peso en el celular · M
+Origen: R7
+- Enemigo golpeado: destello blanco de 60 ms y un empujón corto; los críticos, más grandes y con un número que salta.
+- Números de daño legibles en el teléfono: más grandes, menos (se suman los golpes seguidos al mismo enemigo en un solo número que crece) y opción para dejar solo los críticos.
+- Muertes con un estallido de partículas del color del enemigo y botín que sale volando hacia afuera (ya existe el arco; más fuerza y un rebote).
+
+### [ ] T153 · Ritmo de las peleas · M 🛑
+Origen: R7
+- Medir con la telemetría local (T64) una partida en el celular: tiempo entre peleas, enemigos por minuto, tiempo para matar un normal y un raro; propuesta de ajustes para el celular (manadas algo más juntas y más cerca del camino, menos paseo vacío, recompensa visible tras cada manada) y cadena de bajas (contador «x5» que da un pequeño bono de velocidad).
+- Se para para que el usuario lo pruebe y diga si se siente mejor antes de seguir.
+
+### [ ] T154 · Partidas cortas · S
+Origen: R7
+- «Continuar» de un toque en la pantalla de título (último personaje, donde lo dejaste) y un objetivo corto a la vista al entrar (la siguiente misión o «limpia esta zona: 0/N»), pensado para jugar 5 minutos.
+
+### [ ] T155 · Revisión en el teléfono · S 🛑
+Origen: R7
+- Versión nueva publicada en WalBernal/PathOverflow (llega por el aviso de actualización) y una lista corta con preguntas sobre la sensación: controles, golpes, ritmo y si algo tapa la pantalla.
+
+---
+
 ## Fuera de la cola (necesitan una persona)
 
 No las ejecuta Claude solo; quedan aquí para no perderlas.
@@ -1127,4 +1192,5 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-28 · T143 · Vibración corta en el celular al recibir un golpe fuerte, críticos, subir de nivel, caer un único y pulsar botones táctiles, con respiro entre pulsos y opción para apagarla.
 - 2026-10-28 · T144 · Límite de FPS (auto, 30, 60 o sin límite): en el celular baja solo a 30 si la partida va por debajo de 50; contador de FPS opcional, apagado en el celular.
 - 2026-10-28 · T145 · APK v3.1.0 (código 4) y lista de pruebas en docs/prueba_celular_3.1.md; esperando la prueba del usuario en su teléfono.
-- 2026-10-28 · T145 · Fallos de la primera prueba en el celular: interfaz que parpadeaba y se iba (zona segura mal informada), árbol de pasivas sin forma visible de cerrarlo y tutorial que pedía pasivas en el Sandbox y volver al campamento ya pasado.. **Pendiente de revisión del usuario.**
+- 2026-10-28 · T145 · Fallos de la primera prueba en el celular: interfaz que parpadeaba y se iba (zona segura mal informada), árbol de pasivas sin forma visible de cerrarlo y tutorial que pedía pasivas en el Sandbox y volver al campamento ya pasado.
+- 2026-10-29 · Boceto del Roadmap 7.0 (T146-T155): diseño y experiencia en el celular — registro de misiones que no tape los botones, comprobador de solapes, botones con respuesta, joystick a gusto, apuntado que ayuda, ataque automático, golpes con peso, ritmo de las peleas y partidas cortas; pendiente de aprobar.. **Pendiente de revisión del usuario.**
