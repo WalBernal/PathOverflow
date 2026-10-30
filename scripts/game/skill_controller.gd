@@ -1100,8 +1100,9 @@ func _aim_target() -> Vector2:
 	if Touch.active and Touch.aim_dir != Vector2.ZERO:
 		return Touch.manual_target(player.global_position, Touch.aim_dir)   # arrastrando desde el botón
 	if Touch.active:
-		# Con el pulgar: al enemigo del joystick o al más cercano (lo marca TouchControls).
-		var t := Touch.aim_index(enemies.positions, player.global_position, Touch.stick)
+		# Con el pulgar: al de antes si sigue a tiro (T150), si no al del joystick o al más
+		# cercano (lo marca TouchControls).
+		var t := Touch.pick_target(enemies.ids, enemies.positions, player.global_position, Touch.stick)
 		return enemies.positions[t] if t != -1 else player.global_position + player.facing_direction().normalized() * Gamepad.AIM_DISTANCE
 	if not Gamepad.active:
 		return get_global_mouse_position()

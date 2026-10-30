@@ -5220,6 +5220,24 @@ func _test_touch_controls() -> void:
 		_check(s * ui >= 44.0, "objetivo táctil de %d px a 140 %% (≥ 44)" % roundi(s * ui))
 	_check(TouchPointer.LONG_PRESS >= 0.4 and TouchPointer.LONG_PRESS <= 0.8, "mantener: medio segundo, ni más ni menos")
 	_check(TouchPointer.scroll_for(null, Vector2(0, 40)) == null, "arrastrar sin casilla: no desplaza por su cuenta")
+	# Objetivo pegajoso (T150): sigue el mismo mientras esté a tiro; tocar fija.
+	var eids := PackedInt32Array([10, 11, 12])
+	var epos := PackedVector2Array([Vector2(100, 0), Vector2(130, 10), Vector2(-200, 0)])
+	Touch.target_id = -1
+	Touch.target_fixed = false
+	var first := Touch.pick_target(eids, epos, Vector2.ZERO, Vector2.ZERO)
+	_check(first == 0 and Touch.target_id == 10, "sin objetivo: el más cercano")
+	_check(Touch.pick_target(eids, epos, Vector2.ZERO, Vector2(0.4, 0.2)) == 0, "un paso del joystick no lo cambia")
+	epos[0] = Vector2(105, 0)   # se movió, sigue a tiro
+	_check(Touch.pick_target(eids, epos, Vector2.ZERO, Vector2.ZERO) == 0, "si se mueve, sigue siendo el mismo")
+	_check(Touch.pick_target(eids, epos, Vector2.ZERO, Vector2.LEFT) == 2, "joystick claramente al otro lado: cambia")
+	_check(Touch.lock_at(eids, epos, Vector2(128, 12)) and Touch.target_id == 11 and Touch.target_fixed, "tocar un enemigo lo fija")
+	_check(Touch.pick_target(eids, epos, Vector2.ZERO, Vector2.LEFT) == 1, "fijado: aunque el joystick apunte a otro lado")
+	var gone := PackedInt32Array([10, 12])
+	_check(Touch.pick_target(gone, PackedVector2Array([Vector2(105, 0), Vector2(-200, 0)]), Vector2.ZERO, Vector2.ZERO) == 0 and not Touch.target_fixed,
+		"si el fijado muere, otro y ya sin fijar")
+	Touch.target_id = -1
+	Touch.target_fixed = false
 	# Joystick a gusto (T149): sigue al dedo y zona muerta.
 	var o2 := Vector2(100, 100)
 	_check(Touch.follow_origin(o2, o2 + Vector2(40, 0)) == o2, "sigue al dedo: dentro del radio, la base quieta")

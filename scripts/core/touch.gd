@@ -23,6 +23,8 @@ static var stick := Vector2.ZERO
 ## Apuntado a mano (T108): arrastrando el dedo desde un botón de habilidad, hacia
 ## dónde (largo 0-1); cero = apuntado automático.
 static var aim_dir := Vector2.ZERO
+## La habilidad (0-5) que se está apuntando a mano, para la vista previa (T150); -1 ninguna.
+static var aim_skill := -1
 ## Cuánto hay que arrastrar desde el botón para apuntar a mano, y hasta dónde llega.
 const MANUAL_AIM_MIN := 26.0
 const MANUAL_AIM_FULL := 150.0
@@ -183,6 +185,45 @@ static func manual_aim(drag: Vector2) -> Vector2:
 ## Punto del mundo al que apunta el arrastre: de 120 px (poco) al alcance entero (a tope).
 static func manual_target(from: Vector2, dir: Vector2) -> Vector2:
 	return from + dir.normalized() * lerpf(120.0, AIM_RANGE, clampf(dir.length(), 0.0, 1.0))
+
+
+## Objetivo pegajoso (T150): el enemigo apuntado (por su id, que no cambia aunque
+## mueran otros) sigue siéndolo mientras viva y esté a tiro, en vez de saltar a otro por
+## un paso del joystick; solo cambia si el joystick apunta claramente a otro lado.
+## Tocar un enemigo lo fija (`target_fixed`): ese no cambia hasta que muera o se aleje.
+static var target_id := -1
+static var target_fixed := false
+const STICKY_RANGE := 1.15   # × AIM_RANGE: un poco más allá antes de soltarlo
+const STICKY_TURN := deg_to_rad(100.0)
+
+
+## Índice del enemigo a apuntar (o -1), recordando el de antes (ver target_id).
+static func pick_target(ids: PackedInt32Array, positions: PackedVector2Array, from: Vector2, dir: Vector2) -> int:
+	var cur := ids.find(target_id) if target_id != -1 else -1
+	if cur != -1 and positions[cur].distance_to(from) <= AIM_RANGE * STICKY_RANGE:
+		var to := positions[cur] - from
+		if target_fixed or dir.length() < 0.5 or to.length() < 1.0 or absf(dir.angle_to(to)) <= STICKY_TURN:
+			return cur
+	var i := aim_index(positions, from, dir)
+	target_id = ids[i] if i != -1 else -1
+	target_fixed = false
+	return i
+
+
+## Tocar el mundo en `world_pos` (T150): si hay un enemigo a `reach`, queda fijado. true si sí.
+static func lock_at(ids: PackedInt32Array, positions: PackedVector2Array, world_pos: Vector2, reach := 60.0) -> bool:
+	var best := -1
+	var best_d := reach
+	for k in positions.size():
+		var d := positions[k].distance_to(world_pos)
+		if d < best_d:
+			best_d = d
+			best = k
+	if best == -1:
+		return false
+	target_id = ids[best]
+	target_fixed = true
+	return true
 
 
 ## Enemigo al que apuntan las habilidades: el más cercano dentro del cono de `dir`

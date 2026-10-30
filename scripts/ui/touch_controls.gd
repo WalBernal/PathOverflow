@@ -93,6 +93,9 @@ func _input(event: InputEvent) -> void:
 				_knob = p
 				Touch.stick = Touch.stick_vector(_origin, _knob, Touch.STICK_RADIUS, Touch.deadzone())
 				get_viewport().set_input_as_handled()
+			elif enemies and player:
+				# Tocar un enemigo lo fija como objetivo (T150); el toque sigue siendo un clic.
+				Touch.lock_at(enemies.ids, enemies.positions, player.get_canvas_transform().affine_inverse() * st.position)
 		elif st.index == _finger:
 			release()
 			get_viewport().set_input_as_handled()
@@ -110,8 +113,16 @@ func _input(event: InputEvent) -> void:
 	elif sd and _buttons.has(sd.index):
 		var b: Dictionary = _buttons[sd.index]
 		b["at"] = _local(sd.position)
-		if b["kind"] == "skill":
+		if b["kind"] == "skill" and not b.get("cancelled", false):
 			Touch.aim_dir = Touch.manual_aim(b["at"] - b["origin"])
+			Touch.aim_skill = int(b["index"])
+			if Touch.aim_dir != Vector2.ZERO:
+				b["aimed"] = true
+			elif b.get("aimed", false):
+				# Volvió al botón tras apuntar (T150): se cancela; deja de lanzar hasta soltar.
+				b["cancelled"] = true
+				Input.action_release(SkillController.ACTIONS[int(b["index"])])
+				Touch.aim_skill = -1
 		get_viewport().set_input_as_handled()
 
 
@@ -151,6 +162,7 @@ func _release_button(index: int) -> void:
 			Input.action_release(SkillController.ACTIONS[int(b["index"])])
 			if not _buttons.values().any(func(o: Dictionary) -> bool: return o["kind"] == "skill"):
 				Touch.aim_dir = Vector2.ZERO
+				Touch.aim_skill = -1
 		"dodge":
 			Input.action_release(&"dodge")
 		"use":
@@ -190,7 +202,7 @@ func _process(_delta: float) -> void:
 		queue_redraw()   # el contorno de lo que se va a usar
 	var aim := -1
 	if Touch.active and player and enemies and Touch.aim_dir == Vector2.ZERO:
-		aim = Touch.aim_index(enemies.positions, player.global_position, Touch.stick)
+		aim = Touch.pick_target(enemies.ids, enemies.positions, player.global_position, Touch.stick)   # pegajoso (T150)
 	if aim != -1 or _aim != -1 or _finger != -1 or not _buttons.is_empty() or Touch.stick_mode == "fijo":
 		queue_redraw()
 	_aim = aim
@@ -219,17 +231,79 @@ func _draw() -> void:
 			draw_line(corner, corner - Vector2(12.0 * s.x, 0), USE_COLOR, 3.0)
 			draw_line(corner, corner - Vector2(0, 12.0 * s.y), USE_COLOR, 3.0)
 	if _aim != -1 and _aim < enemies.positions.size():
-		var p := _world_to_local(enemies.positions[_aim])
-		var r := 20.0 + 3.0 * sin(Time.get_ticks_msec() / 160.0)
-		for k in 4:   # cuatro esquinas de mira
-			var a := k * TAU / 4.0 + PI / 4.0
-			draw_arc(p, r, a - 0.45, a + 0.45, 8, AIM_COLOR, 2.5, true)
+		_draw_target(_aim)
 	if Touch.aim_dir != Vector2.ZERO and player:
-		# Apuntado a mano: línea discontinua del jugador al punto y un círculo al final.
-		var from := _world_to_local(player.global_position)
-		var to := _world_to_local(Touch.manual_target(player.global_position, Touch.aim_dir))
-		draw_dashed_line(from, to, AIM_COLOR, 2.5, 10.0)
+		_draw_aim_preview()
+
+
+## Mira del objetivo (T150): esquinas del color de su rareza, más grandes en los fuertes,
+## su barra de vida encima y un candado si se fijó tocándolo.
+func _draw_target(i: int) -> void:
+	var p := _world_to_local(enemies.positions[i])
+	var k := _world_scale()
+	var color := Rarity.enemy_color(enemies.rarities[i]).lerp(AIM_COLOR, 0.35)
+	var r := (maxf(20.0, float(enemies.radii[i]) * k + 10.0)) + 3.0 * sin(Time.get_ticks_msec() / 160.0)
+	for q in 4:   # cuatro esquinas de mira
+		var a := q * TAU / 4.0 + PI / 4.0
+		draw_arc(p, r, a - 0.45, a + 0.45, 8, Color.BLACK, 5.0, true)
+		draw_arc(p, r, a - 0.45, a + 0.45, 8, color, 2.5, true)
+	var frac := clampf(enemies.lives[i] / maxf(1.0, enemies.max_lives[i]), 0.0, 1.0)
+	var bar := Rect2(p + Vector2(-26.0, -r - 14.0), Vector2(52.0, 6.0))
+	draw_rect(bar.grow(1.0), Color(0, 0, 0, 0.8))
+	draw_rect(Rect2(bar.position, Vector2(bar.size.x * frac, bar.size.y)), Color("e04040"))
+	if Touch.target_fixed:
+		var lock := bar.position + Vector2(-12.0, 3.0)
+		draw_rect(Rect2(lock + Vector2(-4, -1), Vector2(8, 6)), color)
+		draw_arc(lock + Vector2(0, -2), 3.0, PI, TAU, 8, color, 1.5)
+
+
+## Apuntando a mano desde un botón (T150): hasta dónde llega y lo que abarcaría la
+## habilidad (círculo, cono, franja o abanico de proyectiles); arrastrar de vuelta al
+## botón lo cancela.
+func _draw_aim_preview() -> void:
+	var origin_w := player.global_position
+	var target_w := Touch.manual_target(origin_w, Touch.aim_dir)
+	var from := _world_to_local(origin_w)
+	var to := _world_to_local(target_w)
+	var k := _world_scale()
+	draw_arc(from, Touch.AIM_RANGE * k, 0.0, TAU, 64, Color(AIM_COLOR, 0.18), 1.5, true)   # alcance
+	draw_dashed_line(from, to, AIM_COLOR, 2.5, 10.0)
+	var p: Dictionary = hud.skills.profile(Touch.aim_skill) if hud and hud.skills and Touch.aim_skill >= 0 else {}
+	var dir := (to - from).normalized()
+	var fill := Color(AIM_COLOR, 0.16)
+	var line := Color(AIM_COLOR, 0.8)
+	if float(p.get("angle", 0.0)) > 0.0:   # cono
+		var reach := maxf(float(p.get("range", 0.0)), maxf(float(p.get("radius", 0.0)), 160.0)) * k
+		var half := deg_to_rad(float(p["angle"])) / 2.0
+		var pts := PackedVector2Array([from])
+		for s in 13:
+			pts.append(from + dir.rotated(-half + 2.0 * half * s / 12.0) * reach)
+		draw_colored_polygon(pts, fill)
+		pts.append(from)
+		draw_polyline(pts, line, 2.0, true)
+	elif float(p.get("width", 0.0)) > 0.0:   # franja (rayo, embestida)
+		var side := dir.orthogonal() * float(p["width"]) * k / 2.0
+		var pts := PackedVector2Array([from + side, to + side, to - side, from - side])
+		draw_colored_polygon(pts, fill)
+		pts.append(from + side)
+		draw_polyline(pts, line, 2.0, true)
+	elif int(p.get("projectiles", 0)) > 1:   # abanico de proyectiles
+		var n := int(p["projectiles"])
+		var spread := deg_to_rad(float(p.get("spread_degrees", 12.0)))
+		for s in n:
+			var a := -spread / 2.0 + spread * s / maxf(1.0, n - 1)
+			draw_dashed_line(from, from + dir.rotated(a) * from.distance_to(to), line, 2.0, 8.0)
+	if float(p.get("radius", 0.0)) > 0.0 and float(p.get("angle", 0.0)) <= 0.0:   # área en el punto
+		var rad := float(p["radius"]) * k
+		draw_circle(to, rad, fill)
+		draw_arc(to, rad, 0.0, TAU, 40, line, 2.0, true)
+	else:
 		draw_arc(to, 16.0, 0.0, TAU, 24, AIM_COLOR, 2.5, true)
+
+
+## Píxeles de este control por unidad del mundo (cámara e interfaz).
+func _world_scale() -> float:
+	return (_world_to_local(Vector2(100, 0)) - _world_to_local(Vector2.ZERO)).length() / 100.0
 
 
 func _world_to_local(p: Vector2) -> Vector2:
