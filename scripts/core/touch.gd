@@ -44,6 +44,23 @@ const OPACITIES := [1.0, 0.85, 0.7, 0.55, 0.4]
 const CUSTOM_SCALE := Vector2(0.6, 1.8)
 static var button_opacity := 1.0
 static var custom := {}
+## Joystick (T149, Pausa → Controles): «flotante» (aparece donde apoyas el dedo),
+## «fijo» (siempre en el mismo sitio y a la vista) o «sigue» (flotante y, si el dedo
+## se aleja más que el radio, la base va detrás); y la zona muerta.
+const STICK_MODES := ["flotante", "fijo", "sigue"]
+const DEADZONES := {"chica": 0.1, "normal": STICK_DEADZONE, "grande": 0.28}
+static var stick_mode := "flotante"
+static var deadzone_name := "normal"
+
+
+static func deadzone() -> float:
+	return float(DEADZONES.get(deadzone_name, STICK_DEADZONE))
+
+
+## Joystick que sigue al dedo: dónde queda la base con el dedo en `finger`.
+static func follow_origin(origin: Vector2, finger: Vector2, radius := STICK_RADIUS) -> Vector2:
+	var d := finger - origin
+	return origin if d.length() <= radius else finger - d.normalized() * radius
 
 
 static func load_layout() -> void:
@@ -55,6 +72,12 @@ static func load_layout() -> void:
 	button_opacity = clampf(float(GameSettings.get_value("controls", "touch_opacity", 1.0)), 0.3, 1.0)
 	var saved: Variant = GameSettings.get_value("controls", "touch_custom", {})
 	custom = (saved as Dictionary).duplicate(true) if saved is Dictionary else {}
+	stick_mode = String(GameSettings.get_value("controls", "stick_mode", "flotante"))
+	if not STICK_MODES.has(stick_mode):
+		stick_mode = "flotante"
+	deadzone_name = String(GameSettings.get_value("controls", "stick_deadzone", "normal"))
+	if not DEADZONES.has(deadzone_name):
+		deadzone_name = "normal"
 
 
 static func save_layout() -> void:
@@ -63,6 +86,8 @@ static func save_layout() -> void:
 	GameSettings.set_value("controls", "touch_left_handed", left_handed)
 	GameSettings.set_value("controls", "touch_opacity", button_opacity)
 	GameSettings.set_value("controls", "touch_custom", custom)
+	GameSettings.set_value("controls", "stick_mode", stick_mode)
+	GameSettings.set_value("controls", "stick_deadzone", deadzone_name)
 
 
 ## `rect` (el sitio de siempre de `key`) movido y escalado como lo dejó el editor.

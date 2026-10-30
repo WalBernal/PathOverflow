@@ -17,6 +17,8 @@ const RING_COLOR := Color(1.0, 0.85, 0.45, 0.55)
 const KNOB_COLOR := Color(1.0, 0.85, 0.45, 0.75)
 const AIM_COLOR := Color(1.0, 0.45, 0.35, 0.85)
 const PRESS_COLOR := Color(1.0, 0.9, 0.55, 0.35)
+## Joystick fijo: distancia de su base al borde de la pantalla.
+const FIXED_INSET := 150.0
 
 var player: Player
 var enemies: EnemyManager
@@ -40,6 +42,18 @@ var _buttons := {}
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+
+## Joystick fijo (T149): su base, justo encima del orbe de vida (que el HUD pone en
+## espejo en zurdo); sin HUD (el prólogo), abajo en la zona del joystick.
+func fixed_base() -> Vector2:
+	if hud:
+		var life: Vector2 = hud.call("_life_center")
+		var p := hud.get_global_transform_with_canvas() * (life - Vector2(0.0, Hud.ORB_RADIUS + 16.0 + Touch.STICK_RADIUS))
+		return get_global_transform_with_canvas().affine_inverse() * p
+	var r := Rect2(ZONE.position * size, ZONE.size * size)
+	var x := r.position.x + FIXED_INSET
+	return Vector2(size.x - x if Touch.left_handed else x, r.end.y - Touch.STICK_RADIUS - 10.0)
 
 
 ## ¿Empieza aquí el joystick? `p` en coordenadas de este control.
@@ -74,8 +88,10 @@ func _input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 			elif _finger == -1 and in_zone(p):
 				_finger = st.index
-				_origin = p
+				# Fijo (T149): la base no se mueve; el dedo ya inclina desde donde cae.
+				_origin = fixed_base() if Touch.stick_mode == "fijo" else p
 				_knob = p
+				Touch.stick = Touch.stick_vector(_origin, _knob, Touch.STICK_RADIUS, Touch.deadzone())
 				get_viewport().set_input_as_handled()
 		elif st.index == _finger:
 			release()
@@ -87,7 +103,9 @@ func _input(event: InputEvent) -> void:
 	var sd := event as InputEventScreenDrag
 	if sd and sd.index == _finger:
 		_knob = _local(sd.position)
-		Touch.stick = Touch.stick_vector(_origin, _knob)
+		if Touch.stick_mode == "sigue":   # la base va detrás del dedo (T149)
+			_origin = Touch.follow_origin(_origin, _knob)
+		Touch.stick = Touch.stick_vector(_origin, _knob, Touch.STICK_RADIUS, Touch.deadzone())
 		get_viewport().set_input_as_handled()
 	elif sd and _buttons.has(sd.index):
 		var b: Dictionary = _buttons[sd.index]
@@ -173,12 +191,18 @@ func _process(_delta: float) -> void:
 	var aim := -1
 	if Touch.active and player and enemies and Touch.aim_dir == Vector2.ZERO:
 		aim = Touch.aim_index(enemies.positions, player.global_position, Touch.stick)
-	if aim != -1 or _aim != -1 or _finger != -1 or not _buttons.is_empty():
+	if aim != -1 or _aim != -1 or _finger != -1 or not _buttons.is_empty() or Touch.stick_mode == "fijo":
 		queue_redraw()
 	_aim = aim
 
 
 func _draw() -> void:
+	if _finger == -1 and Touch.stick_mode == "fijo" and not blocked.call():
+		# Fijo (T149): la base siempre a la vista, tenue, para saber dónde poner el pulgar.
+		var base := fixed_base()
+		draw_circle(base, Touch.STICK_RADIUS, Color(BASE_COLOR, BASE_COLOR.a * 0.7))
+		draw_arc(base, Touch.STICK_RADIUS, 0.0, TAU, 48, Color(RING_COLOR, 0.3), 2.0, true)
+		draw_circle(base, 26.0, Color(KNOB_COLOR, 0.25))
 	if _finger != -1:
 		draw_circle(_origin, Touch.STICK_RADIUS, BASE_COLOR)
 		draw_arc(_origin, Touch.STICK_RADIUS, 0.0, TAU, 48, RING_COLOR, 2.0, true)

@@ -92,6 +92,30 @@ func _init() -> void:
 	touch_row.add_child(layout_b)
 	touch_row.add_child(size_b)
 	touch_row.add_child(hand_b)
+	# Joystick (T149): flotante, fijo o que sigue al dedo, y su zona muerta.
+	var stick_row := HBoxContainer.new()
+	stick_row.add_theme_constant_override("separation", 6)
+	box.add_child(stick_row)
+	var stick_names := {"flotante": "donde pongas el dedo", "fijo": "fijo", "sigue": "sigue al dedo"}
+	var stick_b := UiStyle.button("", func() -> void: pass, 330)
+	var dead_b := UiStyle.button("", func() -> void: pass, 250)
+	var refresh_stick := func() -> void:
+		stick_b.text = "Joystick: " + String(stick_names[Touch.stick_mode])
+		dead_b.text = "Zona muerta: " + Touch.deadzone_name
+	stick_b.tooltip_text = "Donde pongas el dedo: aparece ahí. Fijo: siempre en el mismo sitio y a la vista.\nSigue al dedo: aparece donde lo pones y, si te alejas, la base va detrás."
+	dead_b.tooltip_text = "Cuánto hay que inclinar el joystick para que el personaje empiece a moverse."
+	stick_b.pressed.connect(func() -> void:
+		Touch.stick_mode = Touch.STICK_MODES[(Touch.STICK_MODES.find(Touch.stick_mode) + 1) % Touch.STICK_MODES.size()]
+		Touch.save_layout()
+		refresh_stick.call())
+	dead_b.pressed.connect(func() -> void:
+		var zones: Array = Touch.DEADZONES.keys()
+		Touch.deadzone_name = zones[(zones.find(Touch.deadzone_name) + 1) % zones.size()]
+		Touch.save_layout()
+		refresh_stick.call())
+	refresh_stick.call()
+	stick_row.add_child(stick_b)
+	stick_row.add_child(dead_b)
 	# Mover y agrandar cada botón y su opacidad (T137): solo con pantalla táctil y en partida.
 	if Touch.shown():
 		var editor := UiStyle.button("Mover y ajustar los botones...", func() -> void:

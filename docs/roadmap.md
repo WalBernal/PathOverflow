@@ -982,9 +982,10 @@ Origen: R7
 - Zona de toque generosa: cada botón responde también un poco fuera de su dibujo (sin quitarle sitio al vecino).
 - Hecho: mientras un dedo pulsa una habilidad, la esquiva, «Usar» o una poción, su dibujo se hunde al 92 % (`Hud.set_held`, que llama `TouchControls`); al acabar un enfriamiento, un marco claro se abre y se apaga en la casilla y el celular da un toque mínimo (`Haptics` «ready»); sin maná la casilla se tiñe de azul apagado y, al tocarla, tiembla (`Hud.deny`). **Zona de toque**: vale hasta 0,8 veces el lado desde el centro (el borde es 0,5) y, si dos botones se disputan el dedo, gana el más cercano en proporción a su tamaño (`Touch.nearest_button`); las pociones entran en el mismo reparto. Comprobado: `capture_screens -- tactil` (mantener la 1 la lanza 3 veces y se ve hundida; esquiva y poción responden) y `-- solapes` sigue en 0; captura `docs/capturas/movil/148_boton_hundido.png`. Pruebas de la zona de toque en `_test_touch_controls`. De paso, un «\n» suelto en un comentario de T136.
 
-### [ ] T149 · Joystick a gusto · S
+### [x] T149 · Joystick a gusto · S
 Origen: R7
 - Opción en Pausa → Controles: joystick **flotante** (como ahora), **fijo** (siempre en el mismo sitio, a la vista) o **que sigue al dedo** (si el dedo se aleja, la base va detrás); tamaño de la zona muerta; el personaje gira al instante y acelera sin retraso.
+- Hecho: «Joystick: donde pongas el dedo / fijo / sigue al dedo» y «Zona muerta: chica (0,1) / normal (0,18) / grande (0,28)» en Pausa → Controles (`Touch.stick_mode`, `Touch.deadzone`, en `settings.cfg`). **Fijo**: la base, tenue y siempre a la vista, justo encima del orbe de vida (en espejo en zurdo; en el prólogo, abajo en su zona); el pulgar puede caer en cualquier parte de la zona del joystick y ya inclina desde la base. **Sigue al dedo**: si el dedo pasa del radio, la base va detrás (`Touch.follow_origin`). El personaje ya giraba y arrancaba al instante (la velocidad no tiene aceleración), así que eso no cambia. Comprobado con `capture_screens -- joystick`: en los tres modos, arrastrar 300 px inclina a tope y el personaje camina (~200 px); en «sigue» la base acabó 202 px más allá; capturas `docs/capturas/movil/149_*`. Pruebas en `_test_touch_controls`.
 
 ### [ ] T150 · Apuntado que ayuda · M
 Origen: R7
@@ -1199,4 +1200,5 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-29 · Boceto del Roadmap 7.0 (T146-T155): diseño y experiencia en el celular — registro de misiones que no tape los botones, comprobador de solapes, botones con respuesta, joystick a gusto, apuntado que ayuda, ataque automático, golpes con peso, ritmo de las peleas y partidas cortas; aprobado por el usuario.
 - 2026-10-29 · T146 · Registro de misiones en el celular: resumen, todas o plegado con un toque, nunca baja hasta los botones táctiles y se pliega en las peleas.
 - 2026-10-29 · T147 · Comprobador de solapes del HUD en 17 configuraciones: de 85 solapes a 0 (texto de «Usar» encima, avisos arriba en táctil, sucesos bajo el tutorial, arcos más separados).
-- 2026-10-29 · T148 · Botones táctiles con respuesta: se hunden al pulsar, destello y toque al volver a estar listos, azul apagado y temblor sin maná, y zona de toque más generosa.. **Pendiente de revisión del usuario.**
+- 2026-10-29 · T148 · Botones táctiles con respuesta: se hunden al pulsar, destello y toque al volver a estar listos, azul apagado y temblor sin maná, y zona de toque más generosa.
+- 2026-10-29 · T149 · Joystick flotante, fijo (a la vista sobre el orbe de vida) o que sigue al dedo, y zona muerta chica, normal o grande.. **Pendiente de revisión del usuario.**

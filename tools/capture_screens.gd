@@ -29,6 +29,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("joystick"):
+		await _capture_stick_modes()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("solapes"):
 		var bad := await _audit_hud_overlaps()
 		print("solapes: %d en total" % bad)
@@ -2434,6 +2438,50 @@ func _capture_phone() -> void:
 
 ## `p` en coordenadas del lienzo; el toque llega en las de la ventana (otra cosa a
 ## resolución de teléfono, donde el lienzo se estira).
+## Joystick a gusto (T149): en cada modo, apoyar el pulgar y arrastrarlo 300 px a la
+## derecha (más que el radio): cuánto se inclina, dónde queda la base y cuánto camina.
+func _capture_stick_modes() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Pulgar", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.flags["llegada_campamento_vista"] = true
+	Touch.load_layout()
+	var mode_was := Touch.stick_mode
+	Touch.force = true
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	await _wait(1.0)
+	var ui: GameUI = world.get("ui")
+	if ui.cutscene.visible:
+		ui.cutscene.call("_finish")
+	var player: Player = world.get("player")
+	var tc := ui.touch_controls
+	for mode in Touch.STICK_MODES:
+		Touch.stick_mode = mode
+		await _wait(0.3)
+		if mode == "fijo":
+			_save("149_joystick_fijo_en_reposo")
+		var start := tc.get_global_transform_with_canvas() * (tc.fixed_base() + Vector2(-20, -30))
+		var before := player.global_position
+		_touch(0, start, true)
+		for k in 15:
+			await get_tree().process_frame
+			_drag(0, start + Vector2(20.0 * (k + 1), 0))
+		await _wait(0.6)
+		var origin: Vector2 = tc.get("_origin")
+		print("joystick %s: inclinado %s, base en %s (el dedo empezó en %s), caminó %.0f px" % [mode, Touch.stick.round(),
+			(tc.get_global_transform_with_canvas() * origin).round(), start.round(), player.global_position.distance_to(before)])
+		_save("149_joystick_%s" % mode)
+		_touch(0, start + Vector2(300, 0), false)
+		await _wait(0.3)
+	Touch.stick_mode = mode_was
+	Touch.force = false
+	world.queue_free()
+
+
 ## Comprobador de solapes del HUD (T147): en partida, con 5 misiones, el tutorial a la
 ## vista, un aviso en pantalla y algo que recoger cerca, recoge el rectángulo de cada
 ## cosa (botones táctiles uno a uno, orbes, pociones, ☰, minimapa, Mapa/II, registro

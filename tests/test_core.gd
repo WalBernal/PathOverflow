@@ -5220,6 +5220,13 @@ func _test_touch_controls() -> void:
 		_check(s * ui >= 44.0, "objetivo táctil de %d px a 140 %% (≥ 44)" % roundi(s * ui))
 	_check(TouchPointer.LONG_PRESS >= 0.4 and TouchPointer.LONG_PRESS <= 0.8, "mantener: medio segundo, ni más ni menos")
 	_check(TouchPointer.scroll_for(null, Vector2(0, 40)) == null, "arrastrar sin casilla: no desplaza por su cuenta")
+	# Joystick a gusto (T149): sigue al dedo y zona muerta.
+	var o2 := Vector2(100, 100)
+	_check(Touch.follow_origin(o2, o2 + Vector2(40, 0)) == o2, "sigue al dedo: dentro del radio, la base quieta")
+	_check(Touch.follow_origin(o2, o2 + Vector2(Touch.STICK_RADIUS + 50.0, 0)).is_equal_approx(o2 + Vector2(50, 0)), "si te alejas, la base va detrás")
+	var tilt := o2 + Vector2(Touch.STICK_RADIUS * 0.2, 0)
+	_check(Touch.stick_vector(o2, tilt, Touch.STICK_RADIUS, Touch.DEADZONES["chica"]) != Vector2.ZERO
+		and Touch.stick_vector(o2, tilt, Touch.STICK_RADIUS, Touch.DEADZONES["grande"]) == Vector2.ZERO, "zona muerta chica mueve con poco; grande, no")
 	# Zona de toque generosa (T148): un poco fuera del dibujo vale; entre dos, el más cercano.
 	var big := Rect2(0, 0, 100, 100)
 	var small := Rect2(106, 20, 60, 60)
