@@ -5220,6 +5220,15 @@ func _test_touch_controls() -> void:
 		_check(s * ui >= 44.0, "objetivo táctil de %d px a 140 %% (≥ 44)" % roundi(s * ui))
 	_check(TouchPointer.LONG_PRESS >= 0.4 and TouchPointer.LONG_PRESS <= 0.8, "mantener: medio segundo, ni más ni menos")
 	_check(TouchPointer.scroll_for(null, Vector2(0, 40)) == null, "arrastrar sin casilla: no desplaza por su cuenta")
+	# Números de daño (T152): ventana para sumar y lo guardado como sí/no.
+	var nums: Array = []
+	DamageNumbers.merge(nums, 7, Vector2.ZERO, 10.0, false, 0.0, DamageNumbers.STACK_WINDOW_TOUCH)
+	DamageNumbers.merge(nums, 7, Vector2.ZERO, 15.0, true, 0.6, DamageNumbers.STACK_WINDOW_TOUCH)
+	_check(nums.size() == 1 and is_equal_approx(float(nums[0]["amount"]), 25.0) and nums[0]["crit"], "en el celular, dos golpes a 0,6 s se suman en una cifra")
+	DamageNumbers.merge(nums, 7, Vector2.ZERO, 5.0, false, 1.0)
+	_check(nums.size() == 2, "con la ventana del PC, a 0,4 s ya es otra cifra")
+	_check(DamageNumbers.scale_at(0.0, true, 1) > DamageNumbers.scale_at(0.0, false, 1) * 1.35, "el crítico salta más que el normal")
+	_check(LootManager.arc_pos(Vector2.ZERO, Vector2(100, 0), LootManager.FLY_TIME + 0.14).y < -6.0, "el botín rebota al caer")
 	# Objetivo pegajoso (T150): sigue el mismo mientras esté a tiro; tocar fija.
 	var eids := PackedInt32Array([10, 11, 12])
 	var epos := PackedVector2Array([Vector2(100, 0), Vector2(130, 10), Vector2(-200, 0)])

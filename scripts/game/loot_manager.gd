@@ -142,7 +142,10 @@ func clear_all() -> void:
 ## de su rareza y un vuelo en arco con rebote al caer.
 const ICON_SIZE := 26.0
 const FLY_TIME := 0.45
-const ARC_HEIGHT := 70.0
+const ARC_HEIGHT := 95.0
+## Rebote al caer: alto (px) y cuánto dura.
+const BOUNCE := 14.0
+const BOUNCE_TIME := 0.55
 
 
 ## Dónde queda el icono de un objeto: justo debajo de su etiqueta.
@@ -158,7 +161,8 @@ static func arc_pos(from: Vector2, to: Vector2, age: float) -> Vector2:
 		var height := ARC_HEIGHT * (0.4 + 0.6 * clampf(from.distance_to(to) / 120.0, 0.0, 1.0))
 		return from.lerp(to, t) + Vector2(0, -height * 4.0 * t * (1.0 - t))
 	var b := age - FLY_TIME
-	return to + Vector2(0, -8.0 * absf(sin(b * 14.0)) * maxf(0.0, 1.0 - b / 0.35))
+	# Dos botes que se apagan (T152: antes uno de 8 px, apenas se notaba en el celular).
+	return to + Vector2(0, -BOUNCE * absf(sin(b * 11.0)) * maxf(0.0, 1.0 - b / BOUNCE_TIME))
 
 
 ## Opacidad de la etiqueta: aparece cuando el objeto ya ha caído.

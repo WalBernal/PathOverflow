@@ -7,25 +7,44 @@ extends Node2D
 
 const LIFETIME := 0.9
 const STACK_WINDOW := 0.35
+## En el celular (T152) los golpes seguidos se suman durante más tiempo: menos cifras y
+## más grandes, que se leen en una pantalla chica.
+const STACK_WINDOW_TOUCH := 0.7
+const TOUCH_SIZE := 1.35
 const MAX_NUMBERS := 60
-## Activados por defecto; se apagan en Pausa → Interfaz.
-static var enabled := bool(GameSettings.get_value("interface", "damage_numbers", true))
+## Pausa → Interfaz (T152): «todos», «criticos» (solo los críticos) o «no». Lo guardado
+## antes como sí/no vale igual.
+const MODES := ["todos", "criticos", "no"]
+static var mode := _load_mode()
+static var enabled := mode != "no"
 
 var enemies: EnemyManager
 var _numbers: Array[Dictionary] = []
 var _time := 0.0
 
 
+static func _load_mode() -> String:
+	var v: Variant = GameSettings.get_value("interface", "damage_numbers", "todos")
+	if v is bool:
+		return "todos" if v else "no"
+	return String(v) if MODES.has(String(v)) else "todos"
+
+
+static func set_mode(value: String) -> void:
+	mode = value if MODES.has(value) else "todos"
+	enabled = mode != "no"
+	GameSettings.set_value("interface", "damage_numbers", mode)
+
+
 static func set_enabled(on: bool) -> void:
-	enabled = on
-	GameSettings.set_value("interface", "damage_numbers", on)
+	set_mode("todos" if on else "no")
 
 
-## Añade un golpe: si el mismo enemigo recibió otro hace menos de STACK_WINDOW, se suma
+## Añade un golpe: si el mismo enemigo recibió otro hace menos de `window`, se suma
 ## a esa cifra (y vuelve a saltar); si no, cifra nueva.
-static func merge(numbers: Array, id: int, pos: Vector2, amount: float, crit: bool, now: float) -> void:
+static func merge(numbers: Array, id: int, pos: Vector2, amount: float, crit: bool, now: float, window := STACK_WINDOW) -> void:
 	for n in numbers:
-		if n["id"] == id and now - float(n["last"]) <= STACK_WINDOW:
+		if n["id"] == id and now - float(n["last"]) <= window:
 			n["amount"] = float(n["amount"]) + amount
 			n["crit"] = n["crit"] or crit
 			n["stack"] = int(n["stack"]) + 1
@@ -45,7 +64,7 @@ static func scale_at(age: float, crit: bool, stack: int, still := false) -> floa
 	if still:
 		return settle
 	var pop := clampf(1.0 - age / 0.15, 0.0, 1.0)
-	return settle * (1.0 + 0.6 * pop * pop)
+	return settle * (1.0 + (1.0 if crit else 0.6) * pop * pop)   # el crítico salta más (T152)
 
 
 ## Desplazamiento: un saltito hacia arriba y a un lado que cae un poco; sin
@@ -68,8 +87,11 @@ func _process(delta: float) -> void:
 	_time += delta
 	if enemies != null and not enemies.number_events.is_empty():
 		if enabled:
+			var window := STACK_WINDOW_TOUCH if Touch.shown() else STACK_WINDOW
 			for e in enemies.number_events:
-				merge(_numbers, e[3], e[0], e[1], e[2], _time)
+				if mode == "criticos" and not e[2]:
+					continue
+				merge(_numbers, e[3], e[0], e[1], e[2], _time, window)
 		enemies.number_events.clear()
 	_numbers = _numbers.filter(func(n: Dictionary) -> bool: return _time - float(n["t0"]) <= LIFETIME)
 	if not _numbers.is_empty() or visible:
@@ -83,7 +105,7 @@ func _draw() -> void:
 		var age := _time - float(n["t0"])
 		var side := 1.0 if int(n["id"]) % 2 == 0 else -1.0
 		var s := scale_at(age, n["crit"], n["stack"], still)
-		var size := Accessibility.world_size(roundi(15.0 * s))
+		var size := Accessibility.world_size(roundi(15.0 * s * (TOUCH_SIZE if Touch.shown() else 1.0)))
 		var p: Vector2 = n["pos"] + Vector2(0, -34) + offset_at(_time - float(n["born"]), side, still)
 		var text := label(n["amount"]) + ("!" if n["crit"] else "")
 		var color := Color("ffd84a") if n["crit"] else Color("f2ece0")

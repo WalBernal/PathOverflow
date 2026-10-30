@@ -1001,11 +1001,12 @@ Origen: R7
 
 ## Fase 34 — Que se sienta bien pegar
 
-### [ ] T152 · Golpes con peso en el celular · M
+### [x] T152 · Golpes con peso en el celular · M
 Origen: R7
 - Enemigo golpeado: destello blanco de 60 ms y un empujón corto; los críticos, más grandes y con un número que salta.
 - Números de daño legibles en el teléfono: más grandes, menos (se suman los golpes seguidos al mismo enemigo en un solo número que crece) y opción para dejar solo los críticos.
 - Muertes con un estallido de partículas del color del enemigo y botín que sale volando hacia afuera (ya existe el arco; más fuerza y un rebote).
+- Hecho: al mirar el código, buena parte ya estaba: destello al golpear (`FLASH_TIME` 0,12 s), retroceso según el daño y más fuerte con críticos, respingo de los críticos hasta en los jefes, hitstop y temblor en los críticos, números que se suman por enemigo y muertes con su efecto y su sonido según lo que mató (`ImpactFx.death`). Lo nuevo, para el celular: **números de daño** un 35 % más grandes y sumando los golpes seguidos durante 0,7 s (antes 0,35: menos cifras y más grandes); el **crítico salta más**; opción «Números de daño: todos / solo críticos / no» en Pausa → Interfaz (lo guardado como sí/no vale igual); el **botín** sube más alto al salir (arco de 95 px, antes 70) y da dos botes de 14 px al caer (antes uno de 8, apenas se veía). Pruebas en `_test_touch_controls`. **Decisión**: el estallido de muerte y el destello ya cumplían; no se tocan.
 
 ### [ ] T153 · Ritmo de las peleas · M 🛑
 Origen: R7
@@ -1205,4 +1206,5 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-29 · T148 · Botones táctiles con respuesta: se hunden al pulsar, destello y toque al volver a estar listos, azul apagado y temblor sin maná, y zona de toque más generosa.
 - 2026-10-29 · T149 · Joystick flotante, fijo (a la vista sobre el orbe de vida) o que sigue al dedo, y zona muerta chica, normal o grande.
 - 2026-10-29 · T150 · Apuntado que ayuda: objetivo pegajoso, tocar un enemigo lo fija, mira con su color y su vida, y vista previa de alcance y forma al arrastrar (volver al botón cancela).
-- 2026-10-29 · T151 · Interruptor «AUTO»: el ataque principal se lanza solo contra lo que hay cerca también caminando, al objetivo de la mira; espera con una ventana encima.. **Pendiente de revisión del usuario.**
+- 2026-10-29 · T151 · Interruptor «AUTO»: el ataque principal se lanza solo contra lo que hay cerca también caminando, al objetivo de la mira; espera con una ventana encima.
+- 2026-10-29 · T152 · Golpes que se notan en el celular: números de daño más grandes y agrupados (o solo críticos), críticos que saltan más y botín con arco más alto y dos botes.. **Pendiente de revisión del usuario.**
