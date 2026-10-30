@@ -5220,6 +5220,13 @@ func _test_touch_controls() -> void:
 		_check(s * ui >= 44.0, "objetivo táctil de %d px a 140 %% (≥ 44)" % roundi(s * ui))
 	_check(TouchPointer.LONG_PRESS >= 0.4 and TouchPointer.LONG_PRESS <= 0.8, "mantener: medio segundo, ni más ni menos")
 	_check(TouchPointer.scroll_for(null, Vector2(0, 40)) == null, "arrastrar sin casilla: no desplaza por su cuenta")
+	# Zona de toque generosa (T148): un poco fuera del dibujo vale; entre dos, el más cercano.
+	var big := Rect2(0, 0, 100, 100)
+	var small := Rect2(106, 20, 60, 60)
+	_check(Touch.nearest_button(Vector2(50, 50), [big, small]) == 0, "en el centro: ese botón")
+	_check(Touch.nearest_button(Vector2(-20, 50), [big, small]) == 0, "20 px fuera del borde: todavía cuenta")
+	_check(Touch.nearest_button(Vector2(-60, 50), [big, small]) == -1, "lejos: ningún botón")
+	_check(Touch.nearest_button(Vector2(104, 50), [big, small]) == 1, "en el hueco entre dos: el más cercano a su tamaño")
 	# Registro de misiones en el celular (T146): resumen, recorte por alto y plegado en peleas.
 	var V := QuestTracker.View
 	_check(QuestTracker.view_for(V.ALL, false, true, 6, 10.0) == V.ALL, "escritorio: lo elegido, siempre")

@@ -180,3 +180,22 @@ static func aim_index(positions: PackedVector2Array, from: Vector2, dir: Vector2
 			best_cone_d = d
 			best_cone = i
 	return best_cone if best_cone != -1 else best
+
+
+## Zona de toque: hasta este múltiplo de medio lado desde el centro (0,5 = el borde).
+const TOUCH_REACH := 0.8
+
+
+## El rectángulo de `rects` más cercano a `pos` en proporción a su tamaño, si está a
+## menos de TOUCH_REACH; -1 si ninguno.
+static func nearest_button(pos: Vector2, rects: Array) -> int:
+	var best := -1
+	var best_ratio := TOUCH_REACH
+	for k in rects.size():
+		var r: Rect2 = rects[k]
+		var d := (pos - r.get_center()).abs()
+		var ratio := maxf(d.x / maxf(1.0, r.size.x), d.y / maxf(1.0, r.size.y))   # 0,5 = el borde
+		if ratio <= best_ratio:
+			best_ratio = ratio
+			best = k
+	return best

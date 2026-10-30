@@ -12,6 +12,7 @@ const PULSES := {
 	"level": [120, 1.0],
 	"unique": [90, 1.0],
 	"button": [10, 0.25],
+	"ready": [8, 0.2],   # una habilidad vuelve a estar lista (T148)
 }
 const IMPORTANT := ["level", "unique"]
 const GAP := 0.12

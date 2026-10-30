@@ -976,10 +976,11 @@ Origen: R7
 
 ## Fase 33 — Controles que se sienten bien
 
-### [ ] T148 · Botones con respuesta · S
+### [x] T148 · Botones con respuesta · S
 Origen: R7
 - Al pulsar: el botón se hunde (escala 0,92) y suelta un pequeño destello; enfriamiento con barrido y un «clic» visual (y vibración suave) cuando vuelve a estar listo; sin maná, el botón se pone azul apagado y tiembla al tocarlo en vez de no hacer nada.
 - Zona de toque generosa: cada botón responde también un poco fuera de su dibujo (sin quitarle sitio al vecino).
+- Hecho: mientras un dedo pulsa una habilidad, la esquiva, «Usar» o una poción, su dibujo se hunde al 92 % (`Hud.set_held`, que llama `TouchControls`); al acabar un enfriamiento, un marco claro se abre y se apaga en la casilla y el celular da un toque mínimo (`Haptics` «ready»); sin maná la casilla se tiñe de azul apagado y, al tocarla, tiembla (`Hud.deny`). **Zona de toque**: vale hasta 0,8 veces el lado desde el centro (el borde es 0,5) y, si dos botones se disputan el dedo, gana el más cercano en proporción a su tamaño (`Touch.nearest_button`); las pociones entran en el mismo reparto. Comprobado: `capture_screens -- tactil` (mantener la 1 la lanza 3 veces y se ve hundida; esquiva y poción responden) y `-- solapes` sigue en 0; captura `docs/capturas/movil/148_boton_hundido.png`. Pruebas de la zona de toque en `_test_touch_controls`. De paso, un «\n» suelto en un comentario de T136.
 
 ### [ ] T149 · Joystick a gusto · S
 Origen: R7
@@ -1197,4 +1198,5 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-28 · T145 · Fallos de la primera prueba en el celular: interfaz que parpadeaba y se iba (zona segura mal informada), árbol de pasivas sin forma visible de cerrarlo y tutorial que pedía pasivas en el Sandbox y volver al campamento ya pasado.
 - 2026-10-29 · Boceto del Roadmap 7.0 (T146-T155): diseño y experiencia en el celular — registro de misiones que no tape los botones, comprobador de solapes, botones con respuesta, joystick a gusto, apuntado que ayuda, ataque automático, golpes con peso, ritmo de las peleas y partidas cortas; aprobado por el usuario.
 - 2026-10-29 · T146 · Registro de misiones en el celular: resumen, todas o plegado con un toque, nunca baja hasta los botones táctiles y se pliega en las peleas.
-- 2026-10-29 · T147 · Comprobador de solapes del HUD en 17 configuraciones: de 85 solapes a 0 (texto de «Usar» encima, avisos arriba en táctil, sucesos bajo el tutorial, arcos más separados).. **Pendiente de revisión del usuario.**
+- 2026-10-29 · T147 · Comprobador de solapes del HUD en 17 configuraciones: de 85 solapes a 0 (texto de «Usar» encima, avisos arriba en táctil, sucesos bajo el tutorial, arcos más separados).
+- 2026-10-29 · T148 · Botones táctiles con respuesta: se hunden al pulsar, destello y toque al volver a estar listos, azul apagado y temblor sin maná, y zona de toque más generosa.. **Pendiente de revisión del usuario.**

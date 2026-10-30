@@ -51,6 +51,15 @@ var attention := {}
 const MENU_IDS := ["character", "inventory", "skills", "passives", "catalog"]
 ## Destello de cada ranura de la barra al usarla (segundos restantes).
 var _slot_flash: Array[float] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+## Respuesta de los botones táctiles (T148): los que tiene un dedo encima (se hunden),
+## el destello de «listo» al acabar el enfriamiento y el temblor de «sin maná».
+var _held := {}   # "skill_0", "dodge", "use", "flask_2"... -> true
+var _ready_glow: Array[float] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+var _deny_shake: Array[float] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+var _was_cooling: Array[bool] = [false, false, false, false, false, false]
+const PRESS_SCALE := 0.92
+const READY_GLOW := 0.35
+const DENY_SHAKE := 0.3
 ## Marco del objetivo: enemigo bajo el cursor (índice) y cuánto se mantiene tras salir.
 var _target_id := -1
 var _target_linger := 0.0
@@ -169,7 +178,8 @@ const TOUCH_MENU := Vector2(48, 42)
 ## Botón de usar (T134): [radio, grados] desde el orbe de maná, más allá de los arcos.
 const TOUCH_USE := 74.0
 const TOUCH_USE_AT := [335.0, 200.0]
-## Distribución «esquina» (T136): ataque principal y [radio, grados] (desde él) de las\n## otras 5: tres cerca (izquierda, diagonal, arriba) y dos más lejos entre ellas.
+## Distribución «esquina» (T136): ataque principal y [radio, grados] (desde él) de las
+## otras 5: tres cerca (izquierda, diagonal, arriba) y dos más lejos entre ellas.
 const TOUCH_CORNER_MAIN := 100.0
 const TOUCH_CORNER_RING := [[120.0, 180.0], [120.0, 225.0], [120.0, 270.0], [205.0, 202.0], [205.0, 248.0]]
 var touch_layout := false
@@ -178,22 +188,26 @@ var use_target: Callable
 var use_now: Dictionary = {}
 
 
-## ¿Qué botón táctil hay en `pos`? {kind: "skill"|"dodge"|"flask", index} o vacío.
+## ¿Qué botón táctil hay en `pos`? {kind: "skill"|"dodge"|"flask"|"use", index} o vacío.
+## Zona generosa (T148): vale un dedo un poco fuera del dibujo (hasta Touch.TOUCH_REACH veces
+## medio lado desde el centro) y, si dos se disputan el toque, gana el más cercano en
+## proporción a su tamaño, así ninguno le quita sitio a su vecino.
 func touch_button_at(pos: Vector2) -> Dictionary:
 	if not touch_layout:
 		return {}
+	var cands: Array = []   # [kind, index, rect]
 	for i in SkillController.ACTIONS.size():
-		var r := _slot_rect(i)
-		if pos.distance_to(r.get_center()) <= r.size.x * 0.62:
-			return {"kind": "skill", "index": i}
-	if pos.distance_to(_dodge_rect().get_center()) <= TOUCH_DODGE * _ts() * 0.62:
-		return {"kind": "dodge", "index": 0}
-	if not use_now.is_empty() and pos.distance_to(use_rect().get_center()) <= TOUCH_USE * _ts() * 0.62:
-		return {"kind": "use", "index": 0}
+		cands.append(["skill", i, _slot_rect(i)])
+	cands.append(["dodge", 0, _dodge_rect()])
+	if not use_now.is_empty():
+		cands.append(["use", 0, use_rect()])
 	for i in Inventory.FLASK_SLOTS:
-		if _flask_rect(i).grow(4.0).has_point(pos):
-			return {"kind": "flask", "index": i}
-	return {}
+		cands.append(["flask", i, _flask_rect(i)])
+	var k := Touch.nearest_button(pos, cands.map(func(c: Array) -> Rect2: return c[2]))
+	return {} if k == -1 else {"kind": cands[k][0], "index": cands[k][1]}
+
+
+
 
 
 ## Botón táctil que señala el tutorial (T138): skill_0, dodge, use, flask_0, menu_inventory...
@@ -240,6 +254,28 @@ func touch_rects() -> Dictionary:
 	out["flasks"] = flasks
 	out["menu"] = Rect2(_menu_toggle.position, _menu_toggle.size)
 	return out
+
+
+## Un dedo empieza (o deja) de pulsar el botón `kind`/`index` (TouchControls, T148).
+func set_held(kind: String, index: int, on: bool) -> void:
+	var key := kind if kind in ["dodge", "use"] else "%s_%d" % [kind, index]
+	if on:
+		_held[key] = true
+	else:
+		_held.erase(key)
+
+
+## Se tocó una habilidad sin maná: tiembla (T148).
+func deny(index: int) -> void:
+	_deny_shake[index] = DENY_SHAKE
+
+
+## Hunde (y hace temblar) el dibujo que viene a continuación alrededor de `r` (T148).
+func _press_transform(r: Rect2, held: bool, shake: float) -> void:
+	var s := PRESS_SCALE if held else 1.0
+	var c := r.get_center()
+	var jolt := Vector2(sin(Time.get_ticks_msec() / 18.0) * 5.0 * shake / DENY_SHAKE, 0.0)
+	_ci.draw_set_transform(c - c * s + jolt, 0.0, Vector2(s, s))
 
 
 ## Lo que no debe taparse en táctil (T146): los botones (con su texto debajo) y el
@@ -479,6 +515,14 @@ func _process(delta: float) -> void:
 	use_now = use_target.call() if touch_layout and use_target.is_valid() else {}
 	for k in _slot_flash.size():
 		_slot_flash[k] = maxf(0.0, _slot_flash[k] - delta)
+		_ready_glow[k] = maxf(0.0, _ready_glow[k] - delta)
+		_deny_shake[k] = maxf(0.0, _deny_shake[k] - delta)
+		if touch_layout and skills:
+			var cooling := skills.cooldown_fraction(k) > 0.0
+			if _was_cooling[k] and not cooling and character.inventory.boards[k] != null:
+				_ready_glow[k] = READY_GLOW   # vuelve a estar lista: destello y un toque en la mano
+				Haptics.pulse("ready")
+			_was_cooling[k] = cooling
 	_update_target(delta)
 	_info_timer -= delta
 	if _info_timer > 0.0 or character == null:
@@ -1141,6 +1185,8 @@ func _draw_skill_slot(i: int, font: Font) -> void:
 		var p := skills.profile(i)
 		var no_mana: bool = player.mana < p.get("mana_cost", 0.0)
 		_skill_icon(r.grow(-2.0), board.skill_def, no_mana)
+		if no_mana and touch_layout:
+			_ci.draw_rect(r, Color(0.08, 0.2, 0.6, 0.4))   # sin maná: azul apagado (T148)
 		var cd := skills.cooldown_fraction(i)
 		if cd > 0.0:
 			_draw_pie(r.get_center(), r.size.x * 0.48, cd, Color(0, 0, 0, 0.62))
@@ -1286,12 +1332,25 @@ func _draw_buttons_layer() -> void:
 	var font := get_theme_default_font()
 	_ci = _buttons_layer
 	for i in Inventory.FLASK_SLOTS:
+		if touch_layout:
+			_press_transform(_flask_rect(i), _held.has("flask_%d" % i), 0.0)
 		_draw_flask(i, font)
 	for i in SkillController.ACTIONS.size():
+		if touch_layout:
+			_press_transform(_slot_rect(i), _held.has("skill_%d" % i), _deny_shake[i])
 		_draw_skill_slot(i, font)
+		if touch_layout and _ready_glow[i] > 0.0:
+			_ci.draw_set_transform(Vector2.ZERO)
+			# Lista otra vez (T148): un marco claro que se abre y se apaga.
+			var k := _ready_glow[i] / READY_GLOW
+			_ci.draw_rect(_slot_rect(i).grow(4.0 + (1.0 - k) * 10.0), Color(1.0, 0.95, 0.7, 0.8 * k), false, 3.0)
+	if touch_layout:
+		_press_transform(_dodge_rect(), _held.has("dodge"), 0.0)
 	_draw_dodge(font)
 	if touch_layout and not use_now.is_empty():
+		_press_transform(use_rect(), _held.has("use"), 0.0)
 		_draw_use(font)
+	_ci.draw_set_transform(Vector2.ZERO)
 	_ci = self
 
 

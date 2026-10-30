@@ -103,6 +103,10 @@ func _button_at(p: Vector2) -> Dictionary:
 
 func _press_button(index: int, b: Dictionary, p: Vector2) -> void:
 	Haptics.pulse("button")
+	if hud:
+		hud.set_held(b["kind"], int(b["index"]), true)   # se hunde mientras el dedo esté (T148)
+		if b["kind"] == "skill" and player and hud.skills and player.mana < float(hud.skills.profile(int(b["index"])).get("mana_cost", 0.0)):
+			hud.deny(int(b["index"]))   # sin maná: tiembla en vez de no hacer nada
 	b["origin"] = p
 	b["at"] = p
 	_buttons[index] = b
@@ -122,6 +126,8 @@ func _press_button(index: int, b: Dictionary, p: Vector2) -> void:
 func _release_button(index: int) -> void:
 	var b: Dictionary = _buttons[index]
 	_buttons.erase(index)
+	if hud:
+		hud.set_held(b["kind"], int(b["index"]), false)
 	match b["kind"]:
 		"skill":
 			Input.action_release(SkillController.ACTIONS[int(b["index"])])
