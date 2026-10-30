@@ -55,6 +55,9 @@ var _death_panel: PanelContainer
 var _death_label: Label
 ## Márgenes de la zona segura con los que se colocó la interfaz (T142).
 var _safe_seen := Vector4.ZERO
+var _safe_pending := Vector4.ZERO
+## Cuántas veces se recolocó la interfaz (diagnóstico en la línea de FPS).
+static var ui_relayouts := 0
 var _waypoint_panel: WaypointPanel
 var _zone_banner: Label
 var event_log: EventLog
@@ -461,9 +464,14 @@ func _process(_delta: float) -> void:
 	hud.tutorial_point = tutorial.touch_point() if Touch.shown() and tutorial else ""   # T138
 	if event_log and tutorial:   # el registro de sucesos, debajo del tutorial si está a la vista (T147)
 		event_log.position.y = (tutorial.position.y + tutorial.size.y + 6.0) if tutorial.visible else EVENT_LOG_Y
-	# Al girar el celular, la muesca cambia de lado sin cambiar el tamaño (T142).
-	if Engine.get_process_frames() % 30 == 0 and UiStyle.safe_margins(get_viewport()) != _safe_seen:
-		apply_ui_scale()
+	# Al girar el celular, la muesca cambia de lado sin cambiar el tamaño (T142). Antes se
+	# miraba cada medio segundo; ahora solo cada 3 s y solo si el cambio dura (si la zona
+	# segura bailaba entre dos valores, la interfaz entera saltaba: posible parpadeo).
+	if Engine.get_process_frames() % 180 == 0:
+		var m := UiStyle.safe_margins(get_viewport())
+		if m != _safe_seen and m == _safe_pending:
+			apply_ui_scale()
+		_safe_pending = m
 	if touch_buttons:
 		# Con una ventana, el árbol o la pausa abiertos se apartan (las ventanas tienen su X).
 		# (el catálogo tiene su ✕ en esa esquina: el «II» la tapaba, T135)
@@ -626,6 +634,15 @@ func _build_pause_menu() -> Control:
 		for p in get_tree().get_nodes_in_group(&"world_post"):
 			p.call("refresh"))
 	extra.add_child(pixel)
+	var fx := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
+	fx.text = "Efectos de pantalla: " + ("sí" if WorldPost.screen_fx() else "no")
+	fx.tooltip_text = "Luz, sombras, ondas y el filtro pixel art (copian la pantalla entera).\nSi en tu celular la interfaz parpadea, prueba a apagarlos."
+	fx.pressed.connect(func() -> void:
+		GameSettings.set_value("interface", "screen_fx", not WorldPost.screen_fx())
+		fx.text = "Efectos de pantalla: " + ("sí" if WorldPost.screen_fx() else "no")
+		for p in get_tree().get_nodes_in_group(&"world_post"):
+			p.call("refresh"))
+	extra.add_child(fx)
 	var lights := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
 	lights.text = "Luces y clima: " + ("reducidos" if WorldPost.reduced else "completos")
 	lights.tooltip_text = "Reducidos: sin luz de golpes ni de proyectiles, como mucho %d luces a la vez\ny sin lluvia de datos ni niebla. Se nota al cambiar de zona (el clima)." % WorldPost.LOW_LIGHTS
@@ -845,6 +862,8 @@ func apply_ui_scale() -> void:
 	# Fuera de la muesca y las esquinas redondeadas del celular (T142).
 	var m := UiStyle.safe_margins(get_viewport())
 	_safe_seen = m
+	_safe_pending = m
+	ui_relayouts += 1
 	var view := get_viewport().get_visible_rect().size - Vector2(m.x + m.z, m.y + m.w)
 	var s := minf(ui_scale(), maxf(1.0, view.y / UI_MIN_HEIGHT))
 	_root.position = Vector2(m.x, m.y)

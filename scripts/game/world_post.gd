@@ -66,6 +66,13 @@ static func enabled() -> bool:
 	return bool(GameSettings.get_value("interface", "pixel_filter", true))
 
 
+## Efectos de pantalla (luz y filtro): las dos pasadas copian la pantalla entera
+## (BackBufferCopy). Se pueden apagar del todo (Pausa → Gráficos): en algunos celulares,
+## con el renderizador Mobile, esa copia parecía tapar a ratos la interfaz.
+static func screen_fx() -> bool:
+	return bool(GameSettings.get_value("interface", "screen_fx", true))
+
+
 func _ready() -> void:
 	add_to_group(&"world_post")
 
@@ -87,7 +94,8 @@ func attach(world: Node, zone: Node) -> void:
 
 func refresh() -> void:
 	if _pixel:
-		_pixel.visible = enabled()
+		_pixel.visible = enabled() and screen_fx()
+		_light.visible = screen_fx()
 
 
 ## `extra_dark` (T117): oscuridad de más de la instancia (apagón parcial).

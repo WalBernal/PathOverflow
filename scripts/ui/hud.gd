@@ -581,6 +581,10 @@ func _process(delta: float) -> void:
 	_info.visible = show_fps
 	_info.text = "FPS %d  ·  Enemigos %d  ·  Simulación %.2f ms  ·  F1-F4: depuración" % [
 		Engine.get_frames_per_second(), enemies.count(), enemies.last_simulation_ms]
+	if touch_layout:   # diagnóstico del parpadeo en el celular: márgenes y recolocaciones
+		var m := UiStyle.safe_margins(get_viewport())
+		_info.text += "\nZona segura %d/%d/%d/%d · interfaz recolocada %d veces · %s" % [m.x, m.y, m.z, m.w, GameUI.ui_relayouts,
+			RenderingServer.get_current_rendering_method()]
 	_update_tooltips()
 
 
