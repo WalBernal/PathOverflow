@@ -29,6 +29,11 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("solapes"):
+		var bad := await _audit_hud_overlaps()
+		print("solapes: %d en total" % bad)
+		get_tree().quit(1 if bad > 0 else 0)
+		return
 	if OS.get_cmdline_user_args().has("misiones") and OS.get_cmdline_user_args().has("tactil"):
 		await _capture_quest_tracker()
 		get_tree().quit()
@@ -2429,6 +2434,121 @@ func _capture_phone() -> void:
 
 ## `p` en coordenadas del lienzo; el toque llega en las de la ventana (otra cosa a
 ## resolución de teléfono, donde el lienzo se estira).
+## Comprobador de solapes del HUD (T147): en partida, con 5 misiones, el tutorial a la
+## vista, un aviso en pantalla y algo que recoger cerca, recoge el rectángulo de cada
+## cosa (botones táctiles uno a uno, orbes, pociones, ☰, minimapa, Mapa/II, registro
+## de misiones, registro de sucesos, tutorial y aviso) y cuenta las parejas que se pisan,
+## en táctil (esquina y arcos, diestro y zurdo, botones al 100 % y al 130 %) a 2400×1080 y
+## 1600×720 con la interfaz al 140 %, y en el PC a 1600×900 al 100 %.
+func _audit_hud_overlaps() -> int:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Solapes", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_version"] = 3
+	c.flags["tutorial_step"] = 7   # «habla con Aida»: con texto largo y aro
+	c.flags["llegada_campamento_vista"] = true
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	var scale_was: Variant = GameSettings.get_value("interface", "scale", 1.0)
+	Touch.load_layout()
+	var touch_was := [Touch.layout, Touch.button_scale, Touch.left_handed, Touch.custom.duplicate(true)]
+	Touch.custom = {}
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var ui: GameUI = world.get("ui")
+	if ui.cutscene.visible:
+		ui.cutscene.call("_finish")
+	var quests: QuestLog = world.get("quests")
+	var n := 0
+	for id in quests.defs:
+		if n >= 5:
+			break
+		if quests.start(String(id)):
+			n += 1
+	ui.quest_tracker.call("_refresh")
+	var player: Player = world.get("player")
+	(world.get("loot") as LootManager).drop_item(ItemGenerator.new(gd.get("items")).generate(5, Rarity.Item.RARE), player.global_position + Vector2(50, 0))
+	var total := 0
+	var configs := []
+	for res in [Vector2i(2400, 1080), Vector2i(1600, 720)]:
+		for lay in ["esquina", "arcos"]:
+			for left in [false, true]:
+				for bs in [1.0, 1.3]:
+					configs.append([res, true, lay, left, bs, 1.4])
+	configs.append([Vector2i(1600, 900), false, "esquina", false, 1.0, 1.0])
+	for cfg in configs:
+		get_window().size = cfg[0]
+		Touch.force = cfg[1]
+		Touch.layout = cfg[2]
+		Touch.left_handed = cfg[3]
+		Touch.button_scale = cfg[4]
+		GameSettings.set_value("interface", "scale", cfg[5])
+		await _wait(0.3)
+		ui.apply_ui_scale()
+		ui.hud.flash("Un aviso cualquiera, con su texto entero para medirlo.", UiStyle.ACCENT)
+		await _wait(0.5)
+		var rects := _hud_rects(ui)
+		var hits: Array[String] = []
+		var keys := rects.keys()
+		var view := get_viewport().get_visible_rect()
+		for a in keys.size():
+			var ra: Rect2 = rects[keys[a]]
+			if not view.encloses(ra.grow(-1.0)):
+				hits.append("%s se sale" % keys[a])
+			for b in range(a + 1, keys.size()):
+				if ra.grow(-1.0).intersects((rects[keys[b]] as Rect2).grow(-1.0)):
+					hits.append("%s / %s" % [keys[a], keys[b]])
+		var tag := "%dx%d %s%s%s %d%%" % [cfg[0].x, cfg[0].y, cfg[2] if cfg[1] else "PC", " zurdo" if cfg[3] else "", "", roundi(cfg[4] * 100.0)]
+		print("solapes %s: %s" % [tag, "ninguno" if hits.is_empty() else ", ".join(hits)])
+		if not hits.is_empty():
+			_save("147_" + tag.replace(" ", "_").replace("%", ""))
+		total += hits.size()
+	Touch.layout = touch_was[0]
+	Touch.button_scale = touch_was[1]
+	Touch.left_handed = touch_was[2]
+	Touch.custom = touch_was[3]
+	get_window().size = Vector2i(1600, 900)
+	GameSettings.set_value("interface", "scale", scale_was)
+	Touch.force = false
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
+	return total
+
+
+## Rectángulos (en el lienzo) de lo que se ve del HUD y la interfaz de partida.
+func _hud_rects(ui: GameUI) -> Dictionary:
+	var out := {}
+	var hud := ui.hud
+	var to := hud.get_global_transform_with_canvas()
+	var conv := func(r: Rect2) -> Rect2: return Rect2(to * r.position, r.size * to.get_scale())
+	var life: Vector2 = hud.call("_life_center")
+	var mana: Vector2 = hud.call("_mana_center")
+	var orb := Vector2.ONE * Hud.ORB_RADIUS
+	out["orbe de vida"] = conv.call(Rect2(life - orb, orb * 2.0))
+	out["orbe de maná"] = conv.call(Rect2(mana - orb, orb * 2.0))
+	if hud.touch_layout:
+		for k: String in hud.touch_rects():
+			out[k] = conv.call(hud.touch_rects()[k])
+		if not hud.use_now.is_empty():
+			var u := hud.use_rect()
+			out["use"] = conv.call(u.grow_individual(0.0, Hud.USE_LABEL_GAP + Hud.USE_LABEL_H, 0.0, 0.0))   # con su texto encima
+	for pair in [["minimapa", ui.minimap], ["misiones", ui.quest_tracker], ["sucesos", ui.event_log], ["Mapa/II", ui.touch_buttons],
+			["tutorial", ui.tutorial], ["aviso", hud.get("_message")]]:
+		var ctl: Control = pair[1]
+		if ctl and ctl.is_visible_in_tree():
+			var r := ctl.get_global_rect()
+			if pair[0] == "aviso":   # el aviso ocupa todo el ancho: lo que mide es su texto
+				var lab := ctl as Label
+				var w := lab.get_theme_font("font").get_string_size(lab.text, HORIZONTAL_ALIGNMENT_LEFT, -1, lab.get_theme_font_size("font_size")).x * to.get_scale().x
+				r = Rect2(r.get_center().x - w / 2.0, r.position.y, w, r.size.y)
+			if r.size.x > 0.0 and r.size.y > 0.0:
+				out[pair[0]] = r
+	return out
+
+
 ## Registro de misiones en el celular (T146): con 6 misiones a 2400×1080 y 1600×720 y la
 ## interfaz al 140 %, en las dos distribuciones: no pisa ningún botón; tocar la cabecera
 ## pasa de resumen a todas y a plegado; en una pelea se pliega.

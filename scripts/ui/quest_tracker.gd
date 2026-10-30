@@ -12,6 +12,8 @@ const WIDTH := 250.0
 ## a que se maquete).
 const HEADER_H := 34.0
 const LINE_H := 18.0
+## Lo que ocupa de verdad plegado (cabecera y márgenes): con menos sitio, no se ve (T147).
+const FOLDED_MIN := 50.0
 
 var quests: QuestLog
 var collapsed := false:

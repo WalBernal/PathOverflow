@@ -24,6 +24,8 @@ const UI_SCALE_MAX := 1.6
 const UI_MIN_HEIGHT := 560.0
 ## Las ventanas emergentes ocupan como mucho esta fracción de la pantalla.
 const POPUP_MAX := 0.94
+## Alto del registro de sucesos cuando no hay tutorial encima.
+const EVENT_LOG_Y := 64.0
 
 var hud: Hud
 var inventory_panel: InventoryPanel
@@ -253,7 +255,7 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	_zone_banner.modulate.a = 0.0
 
 	event_log = EventLog.new()   # registro de sucesos, a la izquierda (T128)
-	event_log.position = Vector2(14, 64)
+	event_log.position = Vector2(14, EVENT_LOG_Y)
 	_root.add_child(event_log)
 
 	_act_banner = _build_act_banner()
@@ -457,6 +459,8 @@ func open_dialogue(npc: Dictionary, dialogue: Dictionary) -> void:
 
 func _process(_delta: float) -> void:
 	hud.tutorial_point = tutorial.touch_point() if Touch.shown() and tutorial else ""   # T138
+	if event_log and tutorial:   # el registro de sucesos, debajo del tutorial si está a la vista (T147)
+		event_log.position.y = (tutorial.position.y + tutorial.size.y + 6.0) if tutorial.visible else EVENT_LOG_Y
 	# Al girar el celular, la muesca cambia de lado sin cambiar el tamaño (T142).
 	if Engine.get_process_frames() % 30 == 0 and UiStyle.safe_margins(get_viewport()) != _safe_seen:
 		apply_ui_scale()
@@ -1149,6 +1153,8 @@ func _update_minimap() -> void:
 	# En el celular (T146): compacto y sin bajar hasta los botones táctiles que tenga debajo.
 	quest_tracker.compact = Touch.shown()
 	quest_tracker.max_height = QuestTracker.room(tracker_rect, hud.touch_obstacles()) if quest_tracker.compact else INF
+	if quest_tracker.max_height < QuestTracker.FOLDED_MIN:
+		quest_tracker.visible = false   # ni plegado cabe (botones muy grandes): los botones mandan
 	if event_log:   # el registro de sucesos, igual: fuera si una ventana se le encima (T128)
 		event_log.visible = not tree_screen.visible and not cutscene.visible and not _overlaps_any(_rect_in_root(event_log), windows)
 

@@ -154,14 +154,21 @@ func is_over_hud(pos: Vector2) -> bool:
 ## registro de misiones ni con la interfaz al 140 %.
 const TOUCH_SLOT := 66.0
 const TOUCH_MAIN_SLOT := 76.0
-## [radio, grados] de cada habilidad alrededor del centro del orbe de maná.
-const TOUCH_RING := [[150.0, 185.0], [150.0, 212.0], [150.0, 239.0], [232.0, 180.0], [232.0, 198.0], [232.0, 216.0]]
+## [radio, grados] de cada habilidad alrededor del centro del orbe de maná (T147: algo
+## más separados que en T108, donde las esquinas de las casillas se tocaban).
+const TOUCH_RING := [[170.0, 185.0], [170.0, 214.0], [170.0, 245.0], [255.0, 180.0], [255.0, 200.0], [255.0, 222.0]]
+## El texto de «Usar» (Recoger, Hablar...) va encima del botón, a esta distancia.
+const USE_LABEL_GAP := 6.0
+const USE_LABEL_H := 18.0
+## En táctil, los avisos van a esta altura (fracción de la pantalla): bajo el marco
+## del objetivo y la barra de jefe, lejos de los botones.
+const MESSAGE_TOUCH_AT := 0.26
 const TOUCH_DODGE := 64.0
 const TOUCH_FLASK := Vector2(60, 68)
 const TOUCH_MENU := Vector2(48, 42)
 ## Botón de usar (T134): [radio, grados] desde el orbe de maná, más allá de los arcos.
 const TOUCH_USE := 74.0
-const TOUCH_USE_AT := [318.0, 194.0]
+const TOUCH_USE_AT := [335.0, 200.0]
 ## Distribución «esquina» (T136): ataque principal y [radio, grados] (desde él) de las\n## otras 5: tres cerca (izquierda, diagonal, arriba) y dos más lejos entre ellas.
 const TOUCH_CORNER_MAIN := 100.0
 const TOUCH_CORNER_RING := [[120.0, 180.0], [120.0, 225.0], [120.0, 270.0], [205.0, 202.0], [205.0, 248.0]]
@@ -243,7 +250,7 @@ func touch_obstacles() -> Array:
 		return out
 	for r: Rect2 in touch_rects().values():
 		out.append(r.grow(6.0))
-	out.append(use_rect().grow_individual(30.0, 6.0, 30.0, 24.0))   # «Recoger» va debajo
+	out.append(use_rect().grow_individual(0.0, USE_LABEL_GAP + USE_LABEL_H, 0.0, 6.0))   # «Recoger» va encima
 	out.append(Rect2(_mana_center() - Vector2.ONE * (ORB_RADIUS + 10.0), Vector2.ONE * (ORB_RADIUS + 10.0) * 2.0))
 	return out
 
@@ -404,6 +411,12 @@ func _xp_rect() -> Rect2:
 
 func _layout() -> void:
 	var r := ORB_RADIUS
+	# Avisos: en el PC, sobre las cajas de estado; en táctil (T147), arriba, porque
+	# abajo caen sobre los botones (y con botones grandes, sobre las habilidades).
+	_message.anchor_top = MESSAGE_TOUCH_AT if touch_layout else 1.0
+	_message.anchor_bottom = _message.anchor_top
+	_message.offset_top = -15.0 if touch_layout else -245.0
+	_message.offset_bottom = 15.0 if touch_layout else -215.0
 	_place("life", Rect2(_life_center() - Vector2(r, r), Vector2(r, r) * 2.0))
 	_place("mana", Rect2(_mana_center() - Vector2(r, r), Vector2(r, r) * 2.0))
 	_place("xp", _xp_rect().grow(3.0))
@@ -1259,7 +1272,7 @@ func _draw_use(font: Font) -> void:
 			_ci.draw_circle(c, 13.0, ink)
 			_ci.draw_circle(c, 6.0, UiStyle.ACCENT)
 	var text := String(use_now.get("text", "Usar"))
-	var label_pos := Vector2(c.x - 60.0, r.end.y + 16.0)
+	var label_pos := Vector2(c.x - 60.0, r.position.y - USE_LABEL_GAP)   # encima: debajo pisaba la esquiva y el orbe (T147)
 	_ci.draw_string_outline(font, label_pos, text, HORIZONTAL_ALIGNMENT_CENTER, 120.0, 14, 4, Color.BLACK)
 	_ci.draw_string(font, label_pos, text, HORIZONTAL_ALIGNMENT_CENTER, 120.0, 14, UiStyle.ACCENT.lightened(0.3))
 
