@@ -249,10 +249,12 @@ func _update_combat_music(delta: float) -> void:
 	if near >= COMBAT_ON or (strong and near >= COMBAT_ON / 2):
 		_combat_calm = COMBAT_CALM
 		MusicPlayer.set_combat(true)
+		ui.quest_tracker.in_combat = true   # en el celular, el registro se pliega (T146)
 	elif near < COMBAT_OFF:
 		_combat_calm -= 0.5
 		if _combat_calm <= 0.0:
 			MusicPlayer.set_combat(false)
+			ui.quest_tracker.in_combat = false
 
 
 func _process(delta: float) -> void:

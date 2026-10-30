@@ -5220,6 +5220,15 @@ func _test_touch_controls() -> void:
 		_check(s * ui >= 44.0, "objetivo táctil de %d px a 140 %% (≥ 44)" % roundi(s * ui))
 	_check(TouchPointer.LONG_PRESS >= 0.4 and TouchPointer.LONG_PRESS <= 0.8, "mantener: medio segundo, ni más ni menos")
 	_check(TouchPointer.scroll_for(null, Vector2(0, 40)) == null, "arrastrar sin casilla: no desplaza por su cuenta")
+	# Registro de misiones en el celular (T146): resumen, recorte por alto y plegado en peleas.
+	var V := QuestTracker.View
+	_check(QuestTracker.view_for(V.ALL, false, true, 6, 10.0) == V.ALL, "escritorio: lo elegido, siempre")
+	_check(QuestTracker.view_for(V.SUMMARY, true, true, 6, INF) == V.FOLDED, "celular en pelea: plegado")
+	_check(QuestTracker.view_for(V.ALL, true, false, 6, QuestTracker.height_for(V.SUMMARY, 6) + 1.0) == V.SUMMARY,
+		"6 misiones que no caben: solo el resumen")
+	_check(QuestTracker.view_for(V.SUMMARY, true, false, 6, 20.0) == V.FOLDED, "ni el resumen cabe: plegado")
+	_check(QuestTracker.room(Rect2(1000, 100, 250, 400), [Rect2(1100, 450, 70, 70), Rect2(200, 300, 70, 70)]) == 340.0,
+		"alto libre: hasta el botón de su columna (no el de otra)")
 	# Tutorial v3: las pasivas al final; quien iba a medias sigue por el mismo paso.
 	var tut: Array = DataLoader.load_json("res://data/tutorial.json")["steps"]
 	_check(tut[-1]["id"] == "passives", "tutorial: las pasivas, el último paso (en el Sandbox no da para subir de nivel)")

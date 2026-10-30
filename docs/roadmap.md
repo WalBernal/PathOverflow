@@ -962,11 +962,12 @@ Diagnóstico de partida (leído en el código):
 
 ## Fase 32 — Pantalla limpia
 
-### [ ] T146 · Registro de misiones que no tapa nada · S
+### [x] T146 · Registro de misiones que no tapa nada · S
 Origen: R7
 - En el celular, el registro muestra solo la misión activa (título y paso) y se pliega a una pestaña «Misiones (N)» que se abre con un toque; se pliega solo al empezar una pelea.
 - Tope de alto: nunca baja de la línea donde empiezan los botones táctiles (con cualquier distribución, tamaño y mano, y con el editor de T137); si no cabe, se pliega.
 - Captura con 6 misiones a 2400×1080 y 1600×720: ningún elemento del HUD se pisa.
+- Hecho: en táctil, `QuestTracker.compact` con tres vistas que se recorren tocando la cabecera: **resumen** (la misión principal y su paso; en la cabecera «Misiones (7) · +6»), **todas** y **plegado**. `max_height` = lo que queda libre hasta el primer obstáculo de su columna (`Hud.touch_obstacles`: botones, el texto de «Usar» y el orbe de maná; `QuestTracker.room`), recalculado en cada fotograma (vale con cualquier distribución, tamaño, mano o el editor); si lo elegido no cabe, se ve lo siguiente más pequeño (`view_for`, con altos aproximados para no esperar a la maquetación). En una pelea (`in_combat`, lo pone `World` con la música de combate) se pliega solo. En el PC, como siempre (L o la cabecera pliega). Comprobado con `capture_screens -- misiones tactil` con 7 misiones a 2400×1080 y 1600×720 en las dos distribuciones: pide «todas», se ve el resumen y no pisa ningún botón; en pelea, plegado. Capturas `docs/capturas/movil/146_*`; pruebas en `_test_touch_controls`.
 
 ### [ ] T147 · Comprobador de solapes del HUD · S
 Origen: R7
@@ -1193,4 +1194,5 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-28 · T144 · Límite de FPS (auto, 30, 60 o sin límite): en el celular baja solo a 30 si la partida va por debajo de 50; contador de FPS opcional, apagado en el celular.
 - 2026-10-28 · T145 · APK v3.1.0 (código 4) y lista de pruebas en docs/prueba_celular_3.1.md; esperando la prueba del usuario en su teléfono.
 - 2026-10-28 · T145 · Fallos de la primera prueba en el celular: interfaz que parpadeaba y se iba (zona segura mal informada), árbol de pasivas sin forma visible de cerrarlo y tutorial que pedía pasivas en el Sandbox y volver al campamento ya pasado.
-- 2026-10-29 · Boceto del Roadmap 7.0 (T146-T155): diseño y experiencia en el celular — registro de misiones que no tape los botones, comprobador de solapes, botones con respuesta, joystick a gusto, apuntado que ayuda, ataque automático, golpes con peso, ritmo de las peleas y partidas cortas; aprobado por el usuario.. **Pendiente de revisión del usuario.**
+- 2026-10-29 · Boceto del Roadmap 7.0 (T146-T155): diseño y experiencia en el celular — registro de misiones que no tape los botones, comprobador de solapes, botones con respuesta, joystick a gusto, apuntado que ayuda, ataque automático, golpes con peso, ritmo de las peleas y partidas cortas; aprobado por el usuario.
+- 2026-10-29 · T146 · Registro de misiones en el celular: resumen, todas o plegado con un toque, nunca baja hasta los botones táctiles y se pliega en las peleas.. **Pendiente de revisión del usuario.**

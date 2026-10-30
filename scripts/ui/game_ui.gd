@@ -1146,8 +1146,12 @@ func _update_minimap() -> void:
 	quest_tracker.offset_top = tracker_top
 	quest_tracker.visible = quest_tracker.quests != null and not inventory_panel.visible and not tree_screen.visible \
 		and not _overlaps_any(tracker_rect, windows)
+	# En el celular (T146): compacto y sin bajar hasta los botones táctiles que tenga debajo.
+	quest_tracker.compact = Touch.shown()
+	quest_tracker.max_height = QuestTracker.room(tracker_rect, hud.touch_obstacles()) if quest_tracker.compact else INF
 	if event_log:   # el registro de sucesos, igual: fuera si una ventana se le encima (T128)
 		event_log.visible = not tree_screen.visible and not cutscene.visible and not _overlaps_any(_rect_in_root(event_log), windows)
+
 
 
 ## Ventanas de la columna izquierda (T82): solo una a la vez; la de la derecha es el inventario.

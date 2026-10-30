@@ -235,6 +235,19 @@ func touch_rects() -> Dictionary:
 	return out
 
 
+## Lo que no debe taparse en táctil (T146): los botones (con su texto debajo) y el
+## orbe de maná, en coordenadas del HUD.
+func touch_obstacles() -> Array:
+	var out: Array = []
+	if not touch_layout:
+		return out
+	for r: Rect2 in touch_rects().values():
+		out.append(r.grow(6.0))
+	out.append(use_rect().grow_individual(30.0, 6.0, 30.0, 24.0))   # «Recoger» va debajo
+	out.append(Rect2(_mana_center() - Vector2.ONE * (ORB_RADIUS + 10.0), Vector2.ONE * (ORB_RADIUS + 10.0) * 2.0))
+	return out
+
+
 ## Recoloca y repinta ya (el editor trabaja con el juego en pausa).
 func refresh_touch_layout() -> void:
 	_touch_setup = [Touch.layout, Touch.button_scale, Touch.left_handed, Touch.custom.hash()]

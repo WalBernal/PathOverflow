@@ -29,6 +29,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("misiones") and OS.get_cmdline_user_args().has("tactil"):
+		await _capture_quest_tracker()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("arbol") and OS.get_cmdline_user_args().has("tactil"):
 		await _capture_tree_close()
 		get_tree().quit()
@@ -2425,6 +2429,72 @@ func _capture_phone() -> void:
 
 ## `p` en coordenadas del lienzo; el toque llega en las de la ventana (otra cosa a
 ## resolución de teléfono, donde el lienzo se estira).
+## Registro de misiones en el celular (T146): con 6 misiones a 2400×1080 y 1600×720 y la
+## interfaz al 140 %, en las dos distribuciones: no pisa ningún botón; tocar la cabecera
+## pasa de resumen a todas y a plegado; en una pelea se pliega.
+func _capture_quest_tracker() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Misiones", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.flags["llegada_campamento_vista"] = true
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	var scale_was: Variant = GameSettings.get_value("interface", "scale", 1.0)
+	GameSettings.set_value("interface", "scale", 1.4)
+	Touch.load_layout()
+	var layout_was := Touch.layout
+	Touch.force = true
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var ui: GameUI = world.get("ui")
+	if ui.cutscene.visible:
+		ui.cutscene.call("_finish")
+	var quests: QuestLog = world.get("quests")
+	var started := 0
+	for id in quests.defs:
+		if started >= 6:
+			break
+		if quests.start(String(id)):
+			started += 1
+	ui.quest_tracker.setup(quests) if ui.quest_tracker.quests == null else ui.quest_tracker.call("_refresh")
+	var tracker := ui.quest_tracker
+	for res in [Vector2i(2400, 1080), Vector2i(1600, 720)]:
+		get_window().size = res
+		await _wait(0.5)
+		ui.apply_ui_scale()
+		for lay in ["esquina", "arcos"]:
+			Touch.layout = lay
+			tracker.chosen_view = QuestTracker.View.ALL
+			tracker.call("_refresh")
+			await _wait(0.5)
+			var r := tracker.get_global_rect()
+			var hits: Array[String] = []
+			var to_canvas := ui.hud.get_global_transform_with_canvas()
+			for o: Rect2 in ui.hud.touch_obstacles():
+				var oc := Rect2(to_canvas * o.position, o.size * to_canvas.get_scale())
+				if tracker.visible and r.intersects(oc):
+					hits.append(str(oc.position.round()))
+			var tag := "%dx%d_%s" % [res.x, res.y, lay]
+			print("misiones %s: %d activas, se ve «%s» (pidió «todas»), de y=%.0f a y=%.0f, %s" % [tag, quests.active_ids().size(),
+				["resumen", "todas", "plegado"][tracker.shown_view], r.position.y, r.end.y, "no pisa nada" if hits.is_empty() else "PISA " + ", ".join(hits)])
+			_save("146_%s" % tag)
+	tracker.in_combat = true
+	await _wait(0.2)
+	print("misiones: en pelea se ve «%s»" % ["resumen", "todas", "plegado"][tracker.shown_view])
+	tracker.in_combat = false
+	Touch.layout = layout_was
+	get_window().size = Vector2i(1600, 900)
+	GameSettings.set_value("interface", "scale", scale_was)
+	Touch.force = false
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
+
+
 ## Árbol de pasivas con el dedo (fallo visto en el celular): abrirlo desde el ☰ y
 ## cerrarlo tocando «Cerrar», a 2400×1080 con la interfaz al 140 %.
 func _capture_tree_close() -> void:
