@@ -1,7 +1,8 @@
 ﻿# Prepara una publicación en GitHub Releases (T140): exporta el APK y escribe
 # build/latest.json, el archivo que el juego lee
 # en la pantalla de título para saber si hay una versión más nueva:
-#   {"version": "3.1.0", "url": "https://github.com/<repo>/releases/download/v3.1.0/PathOverflow.apk", "notes": "..."}
+#   {"version": "3.1.0", "url": "https://github.com/<repo>/releases/latest/download/PathOverflow.apk", "notes": "..."}
+# (la etiqueta de la release puede ser cualquiera; mejor v<versión> para no liarse)
 # La primera vez apunta application/config/update_url de project.godot a
 #   https://github.com/<repo>/releases/latest/download/latest.json
 # (la última publicación). Después, en GitHub: Releases → «Draft a new release», etiqueta
@@ -43,7 +44,9 @@ if (-not $SinExportar) {
 
 $latest = [ordered]@{
 	version = $version
-	url = "https://github.com/$Repo/releases/download/v$version/PathOverflow.apk"
+	# La del APK de la última release, sea cual sea su etiqueta (con la etiqueta en la
+	# dirección, una release llamada distinto daba 404 al descargar).
+	url = "https://github.com/$Repo/releases/latest/download/PathOverflow.apk"
 	notes = $Notas
 }
 New-Item -ItemType Directory -Force "$root\build" | Out-Null
