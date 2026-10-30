@@ -951,9 +951,9 @@ Origen: R6
 
 ---
 
-# Roadmap 7.0 — diseño y experiencia en el celular (29-10-2026) · BOCETO
+# Roadmap 7.0 — diseño y experiencia en el celular (29-10-2026)
 
-Pedido del usuario tras jugar la 3.1 en el celular: mejorar los controles; con varias misiones el registro tapa los botones; la jugabilidad todavía no se siente satisfactoria. **Origen: R7.** Mismo protocolo; 🛑 = parar y esperar el visto bueno. **Boceto**: orden y alcance por aprobar.
+Pedido del usuario tras jugar la 3.1 en el celular: mejorar los controles; con varias misiones el registro tapa los botones; la jugabilidad todavía no se siente satisfactoria. **Origen: R7.** Mismo protocolo; 🛑 = parar y esperar el visto bueno. Aprobado por el usuario el 29-10-2026 («inicia en /loop»), tal como está.
 
 Diagnóstico de partida (leído en el código):
 - `QuestTracker` cuelga del minimapa (arriba a la derecha) y crece hacia abajo sin tope: con 3-4 misiones llega a la esquina de los botones (habilidades, esquiva, usar). Solo se esconde si pisa una ventana, no si pisa el HUD táctil.
@@ -1193,4 +1193,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-28 · T144 · Límite de FPS (auto, 30, 60 o sin límite): en el celular baja solo a 30 si la partida va por debajo de 50; contador de FPS opcional, apagado en el celular.
 - 2026-10-28 · T145 · APK v3.1.0 (código 4) y lista de pruebas en docs/prueba_celular_3.1.md; esperando la prueba del usuario en su teléfono.
 - 2026-10-28 · T145 · Fallos de la primera prueba en el celular: interfaz que parpadeaba y se iba (zona segura mal informada), árbol de pasivas sin forma visible de cerrarlo y tutorial que pedía pasivas en el Sandbox y volver al campamento ya pasado.
-- 2026-10-29 · Boceto del Roadmap 7.0 (T146-T155): diseño y experiencia en el celular — registro de misiones que no tape los botones, comprobador de solapes, botones con respuesta, joystick a gusto, apuntado que ayuda, ataque automático, golpes con peso, ritmo de las peleas y partidas cortas; pendiente de aprobar.. **Pendiente de revisión del usuario.**
+- 2026-10-29 · Boceto del Roadmap 7.0 (T146-T155): diseño y experiencia en el celular — registro de misiones que no tape los botones, comprobador de solapes, botones con respuesta, joystick a gusto, apuntado que ayuda, ataque automático, golpes con peso, ritmo de las peleas y partidas cortas; aprobado por el usuario.. **Pendiente de revisión del usuario.**
