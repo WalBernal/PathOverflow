@@ -1008,10 +1008,13 @@ Origen: R7
 - Muertes con un estallido de partículas del color del enemigo y botín que sale volando hacia afuera (ya existe el arco; más fuerza y un rebote).
 - Hecho: al mirar el código, buena parte ya estaba: destello al golpear (`FLASH_TIME` 0,12 s), retroceso según el daño y más fuerte con críticos, respingo de los críticos hasta en los jefes, hitstop y temblor en los críticos, números que se suman por enemigo y muertes con su efecto y su sonido según lo que mató (`ImpactFx.death`). Lo nuevo, para el celular: **números de daño** un 35 % más grandes y sumando los golpes seguidos durante 0,7 s (antes 0,35: menos cifras y más grandes); el **crítico salta más**; opción «Números de daño: todos / solo críticos / no» en Pausa → Interfaz (lo guardado como sí/no vale igual); el **botín** sube más alto al salir (arco de 95 px, antes 70) y da dos botes de 14 px al caer (antes uno de 8, apenas se veía). Pruebas en `_test_touch_controls`. **Decisión**: el estallido de muerte y el destello ya cumplían; no se tocan.
 
-### [ ] T153 · Ritmo de las peleas · M 🛑
+### [~] T153 · Ritmo de las peleas · M 🛑
 Origen: R7
 - Medir con la telemetría local (T64) una partida en el celular: tiempo entre peleas, enemigos por minuto, tiempo para matar un normal y un raro; propuesta de ajustes para el celular (manadas algo más juntas y más cerca del camino, menos paseo vacío, recompensa visible tras cada manada) y cadena de bajas (contador «x5» que da un pequeño bono de velocidad).
 - Se para para que el usuario lo pruebe y diga si se siente mejor antes de seguir.
+- Medido (telemetría local de este equipo, 26 visitas, 75 min, la mayoría en el PC): **solo el 34 % del tiempo es pelea**, pero en pelea caen 141 enemigos por minuto: mucho paseo y ráfagas muy cortas. En la primera zona (zona1, la que juega el usuario en el celular) la pelea es el 32 %; hubo zonas con varios minutos sin un solo enemigo. No hay telemetría del celular (se guarda en el propio teléfono).
+- Hecho: **racha de bajas** (`KillStreak`): las bajas con menos de 2,5 s entre ellas se encadenan; desde 5, «x5 · RACHA» arriba en el centro con una barrita que se vacía y +10 % de velocidad de movimiento (+20 % desde 15, +30 % desde 30) mientras dure; al cortarse, una racha de 8 o más deja tokens a tus pies (uno cada cuatro bajas) con un aviso: una **recompensa visible tras cada manada**. Pruebas en `_test_touch_controls`; versión **3.1.2** (código 7) preparada para publicar en WalBernal/PathOverflow (`build/PathOverflow.apk` y `build/latest.json`).
+- **Propuesta pendiente de la prueba del usuario** (no aplicada: cambia el equilibrio): en el celular, manadas un 30 % más juntas y más cerca del camino y menos espacio vacío entre ellas, para pasar del 34 % de pelea a ~50 %.
 
 ### [ ] T154 · Partidas cortas · S
 Origen: R7
@@ -1207,4 +1210,5 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-29 · T149 · Joystick flotante, fijo (a la vista sobre el orbe de vida) o que sigue al dedo, y zona muerta chica, normal o grande.
 - 2026-10-29 · T150 · Apuntado que ayuda: objetivo pegajoso, tocar un enemigo lo fija, mira con su color y su vida, y vista previa de alcance y forma al arrastrar (volver al botón cancela).
 - 2026-10-29 · T151 · Interruptor «AUTO»: el ataque principal se lanza solo contra lo que hay cerca también caminando, al objetivo de la mira; espera con una ventana encima.
-- 2026-10-29 · T152 · Golpes que se notan en el celular: números de daño más grandes y agrupados (o solo críticos), críticos que saltan más y botín con arco más alto y dos botes.. **Pendiente de revisión del usuario.**
+- 2026-10-29 · T152 · Golpes que se notan en el celular: números de daño más grandes y agrupados (o solo críticos), críticos que saltan más y botín con arco más alto y dos botes.
+- 2026-10-29 · T153 · Ritmo medido (34 % del tiempo en pelea) y racha de bajas con velocidad y tokens al cortarse; versión 3.1.2 preparada; propuesta de manadas más juntas esperando la prueba del usuario.. **Pendiente de revisión del usuario.**

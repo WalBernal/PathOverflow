@@ -271,6 +271,7 @@ func _process(delta: float) -> void:
 		_update_event_fights()
 	_immune_warning = maxf(0.0, _immune_warning - delta)
 	_measure_fps(delta)
+	_update_streak()
 	_since_save += delta
 	if (_dirty and _since_save >= AUTOSAVE_DELAY) or _since_save >= AUTOSAVE_INTERVAL:
 		save_now()
@@ -1498,6 +1499,7 @@ func _on_enemy_killed(rarity: int, experience: int, pos: Vector2, type_id: Strin
 		_check_incident_done.call_deferred()
 	player.add_flask_charges(rarity)
 	player.notify_kill()
+	_on_streak_kill()
 	skills.on_enemy_killed(pos)
 	ui.tutorial.notify("kill")
 	quests.notify_kill(zone.id, rarity, type_id)
@@ -1524,6 +1526,31 @@ func _on_enemy_killed(rarity: int, experience: int, pos: Vector2, type_id: Strin
 		character.flags["puntero_cazado"] = true
 	if _boss_alive and enemies.count_type(zone.def.get("boss", {}).get("type", "daemon")) == 0:
 		_on_boss_defeated(pos)
+
+
+## Racha de bajas (T153, KillStreak): velocidad mientras dure y tokens al cortarse.
+var _streak := KillStreak.new()
+
+
+func _on_streak_kill() -> void:
+	var n := _streak.add_kill(character.play_time)
+	ui.hud.streak = n
+	var bonus := KillStreak.speed_bonus(n)
+	if bonus > 0.0:   # se renueva con cada baja; se apaga sola si la racha se corta
+		character.add_timed_effect("racha", [Modifier.new(Stat.MOVEMENT_SPEED, Modifier.Type.INCREASED, bonus, [], "racha")] as Array[Modifier],
+			KillStreak.WINDOW + 0.3)
+
+
+func _update_streak() -> void:
+	ui.hud.streak_left = _streak.time_left(character.play_time)
+	if not _streak.expired(character.play_time):
+		return
+	var n := _streak.end()
+	ui.hud.streak = 0
+	var tokens := KillStreak.reward_tokens(n)
+	if tokens > 0 and zone:
+		loot.drop_tokens(tokens, zone.free_spot_near(player.global_position + Vector2(randf_range(-30.0, 30.0), 24.0)))
+		ui.hud.flash("Racha de %d: +%d tokens" % [n, tokens], UiStyle.ACCENT)
 
 
 func _on_boss_defeated(pos: Vector2) -> void:

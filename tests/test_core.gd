@@ -5220,6 +5220,17 @@ func _test_touch_controls() -> void:
 		_check(s * ui >= 44.0, "objetivo táctil de %d px a 140 %% (≥ 44)" % roundi(s * ui))
 	_check(TouchPointer.LONG_PRESS >= 0.4 and TouchPointer.LONG_PRESS <= 0.8, "mantener: medio segundo, ni más ni menos")
 	_check(TouchPointer.scroll_for(null, Vector2(0, 40)) == null, "arrastrar sin casilla: no desplaza por su cuenta")
+	# Racha de bajas (T153): se encadena, da velocidad por escalones y tokens al cortarse.
+	var ks := KillStreak.new()
+	for k in 6:
+		ks.add_kill(10.0 + k * 1.0)
+	_check(ks.count == 6 and KillStreak.speed_bonus(ks.count) == 10.0, "6 bajas seguidas: racha x6, +10 %% de velocidad")
+	_check(not ks.expired(16.0) and ks.expired(18.0), "se corta tras %.1f s sin bajas" % KillStreak.WINDOW)
+	_check(ks.end() == 6 and ks.count == 0, "al cortarse se cuenta y vuelve a cero")
+	_check(KillStreak.reward_tokens(7) == 0 and KillStreak.reward_tokens(12) == 3, "tokens desde 8 bajas (uno cada cuatro)")
+	_check(KillStreak.speed_bonus(16) == 20.0 and KillStreak.speed_bonus(40) == 30.0, "más racha, más velocidad (con tope)")
+	ks.add_kill(100.0)
+	_check(ks.add_kill(104.0) == 1, "dos bajas lejos: no se encadenan")
 	# Números de daño (T152): ventana para sumar y lo guardado como sí/no.
 	var nums: Array = []
 	DamageNumbers.merge(nums, 7, Vector2.ZERO, 10.0, false, 0.0, DamageNumbers.STACK_WINDOW_TOUCH)

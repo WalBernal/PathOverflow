@@ -172,6 +172,8 @@ const USE_LABEL_H := 18.0
 ## En táctil, los avisos van a esta altura (fracción de la pantalla): bajo el marco
 ## del objetivo y la barra de jefe, lejos de los botones.
 const MESSAGE_TOUCH_AT := 0.26
+## La racha de bajas (T153), arriba en el centro, por encima de los avisos.
+const STREAK_AT := 0.17
 const TOUCH_DODGE := 64.0
 const TOUCH_FLASK := Vector2(60, 68)
 const TOUCH_MENU := Vector2(48, 42)
@@ -211,6 +213,32 @@ func touch_button_at(pos: Vector2) -> Dictionary:
 
 
 
+
+
+## Racha de bajas (T153, la pone World): cuántas lleva y cuánto le queda antes de cortarse.
+var streak := 0
+var streak_left := 0.0
+
+
+## «x12 · RACHA» arriba en el centro con una barrita que se vacía; desde 5 bajas.
+func _draw_streak() -> void:
+	if streak < 5:
+		return
+	var font := get_theme_default_font()
+	var bonus := KillStreak.speed_bonus(streak)
+	var col := UiStyle.ACCENT.lerp(Color("ff7a3a"), clampf((streak - 5) / 25.0, 0.0, 1.0))
+	var center := Vector2(size.x * 0.5, size.y * STREAK_AT)
+	var big := "x%d" % streak
+	var sz := 30 + mini(14, streak / 3)
+	var w := font.get_string_size(big, HORIZONTAL_ALIGNMENT_LEFT, -1, sz).x
+	draw_string_outline(font, center + Vector2(-w / 2.0, 0), big, HORIZONTAL_ALIGNMENT_LEFT, -1, sz, 6, Color.BLACK)
+	draw_string(font, center + Vector2(-w / 2.0, 0), big, HORIZONTAL_ALIGNMENT_LEFT, -1, sz, col)
+	var sub := "RACHA · +%d %% velocidad" % roundi(bonus)
+	draw_string_outline(font, center + Vector2(-100, 18), sub, HORIZONTAL_ALIGNMENT_CENTER, 200, 12, 4, Color.BLACK)
+	draw_string(font, center + Vector2(-100, 18), sub, HORIZONTAL_ALIGNMENT_CENTER, 200, 12, col.lightened(0.3))
+	var bar := Rect2(center + Vector2(-50, 26), Vector2(100, 4))
+	draw_rect(bar, Color(0, 0, 0, 0.6))
+	draw_rect(Rect2(bar.position, Vector2(bar.size.x * clampf(streak_left / KillStreak.WINDOW, 0.0, 1.0), bar.size.y)), col)
 
 
 ## Botón táctil que señala el tutorial (T138): skill_0, dodge, use, flask_0, menu_inventory...
@@ -757,6 +785,7 @@ func _draw() -> void:
 	# Pociones, habilidades, esquiva y usar: en su capa (_draw_buttons_layer).
 	_buttons_layer.queue_redraw()
 	_draw_tutorial_point()
+	_draw_streak()
 
 	_draw_status_boxes(font)
 	var boss_bar := _draw_boss_bar(font)
