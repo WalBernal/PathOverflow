@@ -25,6 +25,9 @@ static var stick := Vector2.ZERO
 static var aim_dir := Vector2.ZERO
 ## La habilidad (0-5) que se está apuntando a mano, para la vista previa (T150); -1 ninguna.
 static var aim_skill := -1
+## Hay una ventana, la pausa o una escena encima (lo pone TouchControls): el modo
+## automático del ataque espera (T151).
+static var ui_busy := false
 ## Cuánto hay que arrastrar desde el botón para apuntar a mano, y hasta dónde llega.
 const MANUAL_AIM_MIN := 26.0
 const MANUAL_AIM_FULL := 150.0

@@ -931,7 +931,7 @@ func _physics_process(delta: float) -> void:
 			if Input.is_action_pressed(ACTIONS[i]) and try_use(i):
 				used = true
 				break
-		if not used and auto_attack and not player.manual_moving():
+		if not used and ((auto_attack and not player.manual_moving()) or touch_auto_on()):
 			_try_auto_attack()
 	_update_aura_fields()
 	character.set_condition(Stat.COND_ALLIES, _units.size() + _minions.size() + _drones.size() >= 3)
@@ -1081,10 +1081,24 @@ static func auto_attack_ok(p: Dictionary) -> bool:
 	return not (String(p.get("kind", "")) in ["aura", "unit"] or String(p.get("kind", "")) in CHANNEL_KINDS)
 
 
+## Modo automático del celular (T151, el interruptor «AUTO» junto al botón grande): la
+## habilidad 1 sale sola contra lo que hay cerca también mientras te mueves con el
+## joystick; el resto, a mano. En pausa mientras haya una ventana encima.
+static var touch_auto := false
+
+
+static func touch_auto_on() -> bool:
+	return touch_auto and Touch.shown() and not Touch.ui_busy
+
+
 func _try_auto_attack() -> void:
 	if not auto_attack_ok(profile(0)):
 		return
 	var i := enemies.nearest_index(player.global_position, AUTO_ATTACK_RANGE)
+	if touch_auto_on():   # al objetivo de la mira (pegajoso o fijado, T150) si está a tiro
+		var t := Touch.pick_target(enemies.ids, enemies.positions, player.global_position, Touch.stick)
+		if t != -1 and enemies.positions[t].distance_to(player.global_position) <= AUTO_ATTACK_RANGE:
+			i = t
 	if i == -1:
 		return
 	_auto_aim = enemies.positions[i]

@@ -177,6 +177,8 @@ const TOUCH_FLASK := Vector2(60, 68)
 const TOUCH_MENU := Vector2(48, 42)
 ## Botón de usar (T134): [radio, grados] desde el orbe de maná, más allá de los arcos.
 const TOUCH_USE := 74.0
+## Interruptor «AUTO» del ataque principal (T151).
+const TOUCH_AUTO := 40.0
 const TOUCH_USE_AT := [335.0, 200.0]
 ## Distribución «esquina» (T136): ataque principal y [radio, grados] (desde él) de las
 ## otras 5: tres cerca (izquierda, diagonal, arriba) y dos más lejos entre ellas.
@@ -199,6 +201,7 @@ func touch_button_at(pos: Vector2) -> Dictionary:
 	for i in SkillController.ACTIONS.size():
 		cands.append(["skill", i, _slot_rect(i)])
 	cands.append(["dodge", 0, _dodge_rect()])
+	cands.append(["auto", 0, auto_rect()])
 	if not use_now.is_empty():
 		cands.append(["use", 0, use_rect()])
 	for i in Inventory.FLASK_SLOTS:
@@ -248,6 +251,7 @@ func touch_rects() -> Dictionary:
 		out["skill_%d" % i] = _slot_rect(i)
 	out["dodge"] = _dodge_rect()
 	out["use"] = use_rect()
+	out["auto"] = auto_rect()
 	var flasks := _flask_rect(0)
 	for i in range(1, Inventory.FLASK_SLOTS):
 		flasks = flasks.merge(_flask_rect(i))
@@ -397,6 +401,24 @@ func _raw_flask_rect(i: int) -> Rect2:
 		return Rect2(moved.position + Vector2(i * (w + 6.0) * k, 0.0), Vector2(w, h) * k)
 	var plate := _plate_rect()
 	return Rect2(plate.position.x + 16.0 + i * (FLASK_SIZE.x + 6.0), plate.position.y + 8.0, FLASK_SIZE.x, FLASK_SIZE.y)
+
+
+## Interruptor del ataque automático (T151): un círculo chico al alcance del pulgar;
+## en «esquina», encima de la esquiva (junto al botón grande no queda hueco entre los
+## anillos y el orbe), y en «dos arcos», debajo de la habilidad 1.
+func auto_rect() -> Rect2:
+	return _mr(_raw_auto_rect())
+
+
+func _raw_auto_rect() -> Rect2:
+	var s := TOUCH_AUTO * _ts()
+	var c: Vector2
+	if _corner():
+		var dodge := _raw_dodge_rect()
+		c = dodge.get_center() - Vector2(0.0, dodge.size.y * 0.5 + 8.0 + s * 0.5)
+	else:
+		c = _raw_slot_rect(0).get_center() + Vector2(10.0, 62.0) * _ts()
+	return Touch.customized("auto", Rect2(c - Vector2(s, s) * 0.5, Vector2(s, s)))
 
 
 ## Botón táctil de usar (T134). En «esquina», a la izquierda de la esquiva (T136;
@@ -1350,8 +1372,32 @@ func _draw_buttons_layer() -> void:
 	if touch_layout and not use_now.is_empty():
 		_press_transform(use_rect(), _held.has("use"), 0.0)
 		_draw_use(font)
+	if touch_layout:
+		_press_transform(auto_rect(), _held.has("auto"), 0.0)
+		_draw_auto_toggle(font)
 	_ci.draw_set_transform(Vector2.ZERO)
 	_ci = self
+
+
+## Interruptor «AUTO» (T151): encendido, verde con un aro que gira; apagado, gris. Si la
+## habilidad 1 no se puede lanzar sola (aura, invocación, canalizada), tachado.
+func _draw_auto_toggle(font: Font) -> void:
+	var r := auto_rect()
+	var c := r.get_center()
+	var rad := r.size.x * 0.5
+	var on := SkillController.touch_auto
+	var usable := skills != null and SkillController.auto_attack_ok(skills.profile(0))
+	var col := Color("6fd36b") if on and usable else Color("8a8293")
+	_ci.draw_circle(c, rad + 2.0, Color(0, 0, 0, 0.75))
+	_ci.draw_circle(c, rad, Color(col, 0.3 if on else 0.12))
+	_ci.draw_arc(c, rad, 0.0, TAU, 32, col, 2.0, true)
+	if on and usable:
+		var a := Time.get_ticks_msec() / 300.0
+		_ci.draw_arc(c, rad - 4.0, a, a + PI * 1.2, 16, col, 2.5, true)
+	_ci.draw_string_outline(font, c + Vector2(-rad, 4.0), "AUTO", HORIZONTAL_ALIGNMENT_CENTER, rad * 2.0, 11, 3, Color.BLACK)
+	_ci.draw_string(font, c + Vector2(-rad, 4.0), "AUTO", HORIZONTAL_ALIGNMENT_CENTER, rad * 2.0, 11, col.lightened(0.3))
+	if not usable:
+		_ci.draw_line(c + Vector2(-rad, rad) * 0.7, c + Vector2(rad, -rad) * 0.7, Color("e06c6c"), 2.0)
 
 
 ## Sector circular para el enfriamiento (empieza arriba, sentido horario).

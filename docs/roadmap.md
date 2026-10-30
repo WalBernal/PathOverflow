@@ -994,9 +994,10 @@ Origen: R7
 - Mira más clara: el enemigo apuntado con un contorno de su color y su barra de vida encima.
 - Hecho: `Touch.pick_target` recuerda el objetivo por su id: sigue con el mismo mientras viva y esté a tiro (hasta 1,15 veces el alcance) y solo cambia si el joystick apunta a más de 100° de él; `SkillController` y la mira usan lo mismo. **Tocar un enemigo lo fija** (`Touch.lock_at`, a 60 px; el toque sigue siendo un clic): no cambia hasta que muera o se aleje, con un candado junto a su barra. **Mira**: esquinas del color de su rareza (más abiertas en los grandes) con borde negro y su barra de vida encima. **Arrastrando desde un botón**: el alcance (círculo tenue) y la forma de la habilidad según su perfil (cono con `angle`, franja con `width`, abanico con varios proyectiles, círculo con `radius` en el punto); volver al botón tras apuntar **cancela** (deja de lanzar hasta soltar). Comprobado con `capture_screens -- tactil` (la habilidad 1, de tres proyectiles, enseña su abanico y sigue lanzándose); captura `docs/capturas/movil/150_vista_previa_abanico.png`. Pruebas del objetivo pegajoso en `_test_touch_controls`.
 
-### [ ] T151 · Modo automático para el ataque principal · S
+### [x] T151 · Modo automático para el ataque principal · S
 Origen: R7
 - Un interruptor junto al botón grande: el ataque principal se lanza solo contra lo que hay cerca mientras te mueves con el joystick (como en los ARPG de celular); el resto de habilidades, a mano. Se apaga solo al abrir una ventana.
+- Hecho: interruptor redondo «AUTO» (40 px, verde con un aro que gira si está encendido; gris; tachado si la habilidad 1 no se puede lanzar sola: aura, invocación, canalizada, contenedor o de activación). `SkillController.touch_auto`: con él, el auto-ataque de siempre (`_try_auto_attack`, a 320 px) también funciona caminando y apunta al objetivo de la mira (pegajoso o fijado, T150) si está a tiro. Espera mientras hay una ventana, la pausa o una escena encima (`Touch.ui_busy`, que pone `TouchControls`). **Decisión**: en «esquina» va encima de la esquiva (junto al botón grande no queda hueco entre los dos anillos y el orbe) y en «dos arcos», debajo de la habilidad 1; el editor de disposición (T137) también lo mueve. Comprobado: `capture_screens -- auto tactil` (2 s caminando con 6 enemigos cerca: apagado 0 lanzamientos, encendido con un toque 2) y `-- solapes` sigue en 0; capturas `docs/capturas/movil/151_*`.
 
 ## Fase 34 — Que se sienta bien pegar
 
@@ -1203,4 +1204,5 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-29 · T147 · Comprobador de solapes del HUD en 17 configuraciones: de 85 solapes a 0 (texto de «Usar» encima, avisos arriba en táctil, sucesos bajo el tutorial, arcos más separados).
 - 2026-10-29 · T148 · Botones táctiles con respuesta: se hunden al pulsar, destello y toque al volver a estar listos, azul apagado y temblor sin maná, y zona de toque más generosa.
 - 2026-10-29 · T149 · Joystick flotante, fijo (a la vista sobre el orbe de vida) o que sigue al dedo, y zona muerta chica, normal o grande.
-- 2026-10-29 · T150 · Apuntado que ayuda: objetivo pegajoso, tocar un enemigo lo fija, mira con su color y su vida, y vista previa de alcance y forma al arrastrar (volver al botón cancela).. **Pendiente de revisión del usuario.**
+- 2026-10-29 · T150 · Apuntado que ayuda: objetivo pegajoso, tocar un enemigo lo fija, mira con su color y su vida, y vista previa de alcance y forma al arrastrar (volver al botón cancela).
+- 2026-10-29 · T151 · Interruptor «AUTO»: el ataque principal se lanza solo contra lo que hay cerca también caminando, al objetivo de la mira; espera con una ventana encima.. **Pendiente de revisión del usuario.**

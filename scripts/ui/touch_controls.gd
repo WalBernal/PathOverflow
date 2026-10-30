@@ -150,6 +150,8 @@ func _press_button(index: int, b: Dictionary, p: Vector2) -> void:
 		"use":
 			b["time"] = Time.get_ticks_msec() / 1000.0
 			b["done"] = false
+		"auto":   # interruptor del ataque automático (T151)
+			SkillController.touch_auto = not SkillController.touch_auto
 
 
 func _release_button(index: int) -> void:
@@ -187,6 +189,7 @@ func release_all() -> void:
 
 func _process(_delta: float) -> void:
 	visible = Touch.shown()
+	Touch.ui_busy = blocked.call()
 	if not visible:
 		if _finger != -1 or not _buttons.is_empty():
 			release_all()

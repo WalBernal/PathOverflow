@@ -9,7 +9,8 @@ extends Control
 signal closed
 
 const NAMES := {"skill_0": "Habilidad 1", "skill_1": "Habilidad 2", "skill_2": "Habilidad 3", "skill_3": "Habilidad 4",
-	"skill_4": "Habilidad 5", "skill_5": "Habilidad 6", "dodge": "Esquiva", "use": "Usar", "flasks": "Pociones", "menu": "Menús"}
+	"skill_4": "Habilidad 5", "skill_5": "Habilidad 6", "dodge": "Esquiva", "use": "Usar", "flasks": "Pociones", "menu": "Menús",
+	"auto": "Auto"}
 ## Lo que se agranda o achica por toque.
 const SCALE_STEP := 1.12
 

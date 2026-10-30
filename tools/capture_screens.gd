@@ -29,6 +29,10 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("auto") and OS.get_cmdline_user_args().has("tactil"):
+		await _capture_touch_auto()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("joystick"):
 		await _capture_stick_modes()
 		get_tree().quit()
@@ -2438,6 +2442,60 @@ func _capture_phone() -> void:
 
 ## `p` en coordenadas del lienzo; el toque llega en las de la ventana (otra cosa a
 ## resolución de teléfono, donde el lienzo se estira).
+## Ataque automático (T151): con enemigos cerca, 2 s caminando con el joystick sin
+## tocar nada más, con el interruptor apagado y encendido (se enciende tocándolo).
+func _capture_touch_auto() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Auto", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.flags["llegada_campamento_vista"] = true
+	Touch.force = true
+	SkillController.touch_auto = false
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	await _wait(1.0)
+	var ui: GameUI = world.get("ui")
+	if ui.cutscene.visible:
+		ui.cutscene.call("_finish")
+	world.call("travel_to", "zona1", "waypoint")
+	await _wait(1.5)
+	var player: Player = world.get("player")
+	player.set("invulnerable", true)
+	var enemies: EnemyManager = world.get("enemies")
+	var skills: SkillController = world.get("skills")
+	var casts := [0]
+	skills.skill_used.connect(func(i: int) -> void:
+		if i == 0:
+			casts[0] += 1)
+	var tc := ui.touch_controls
+	for on in [false, true]:
+		if on:   # tocar el interruptor
+			var at := ui.hud.get_global_transform_with_canvas() * ui.hud.auto_rect().get_center()
+			_touch(1, at, true)
+			await get_tree().process_frame
+			_touch(1, at, false)
+			await _wait(0.2)
+		enemies.clear_all()
+		for k in 6:
+			enemies.spawn(player.global_position + Vector2.from_angle(k * TAU / 6.0) * 140.0, Rarity.Enemy.NORMAL)
+		casts[0] = 0
+		var start := tc.get_global_transform_with_canvas() * (tc.fixed_base() + Vector2(0, -20))
+		_touch(0, start, true)
+		for k in 6:
+			await get_tree().process_frame
+			_drag(0, start + Vector2(8.0 * (k + 1), 0))
+		await _wait(2.0)
+		_save("151_auto_%s" % ("encendido" if on else "apagado"))
+		_touch(0, start + Vector2(48, 0), false)
+		print("auto %s (interruptor %s): caminando 2 s, la habilidad 1 salió %d veces" % ["encendido" if on else "apagado", SkillController.touch_auto, casts[0]])
+	SkillController.touch_auto = false
+	Touch.force = false
+	world.queue_free()
+
+
 ## Joystick a gusto (T149): en cada modo, apoyar el pulgar y arrastrarlo 300 px a la
 ## derecha (más que el radio): cuánto se inclina, dónde queda la base y cuánto camina.
 func _capture_stick_modes() -> void:
