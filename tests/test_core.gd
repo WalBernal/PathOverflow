@@ -5612,6 +5612,26 @@ func _test_player_sheet() -> void:
 			if c.a > 0.5:
 				layers[roundi(c.g * 8.0)] = true
 	_check(layers.has(PlayerSheet.LAYER_SKIN) and layers.has(PlayerSheet.LAYER_OUTFIT) and layers.has(PlayerSheet.LAYER_ACCENT), "el cuerpo tiene piel, atuendo y detalles")
+	# T163: vida encima de los cuadros: respira poco, rebota al andar y se estira al golpear.
+	var breath_max := 0.0
+	for k in 40:
+		var s: Vector2 = PlayerSprite.life({"state": "idle", "time": k * 0.1}, -1.0)[0]
+		breath_max = maxf(breath_max, maxf(absf(s.x - 1.0), absf(s.y - 1.0)))
+	_check(breath_max > 0.005 and breath_max <= 0.04, "respira, pero nunca más de ±4 %% (%.3f)" % breath_max)
+	var landing: Array = PlayerSprite.life({"state": "walk"}, 0.0)
+	var mid_step: Array = PlayerSprite.life({"state": "walk"}, PI * 0.5)
+	_check((landing[0] as Vector2).y < 1.0 and is_zero_approx(float(landing[1])) and float(mid_step[1]) < 0.0, "al pisar se aplasta en el suelo y entre pisadas se eleva")
+	var imp := CharacterAppearance.impact_fraction("attack", "sword")
+	var hit: Vector2 = PlayerSprite.life({"state": "attack", "t": imp, "weapon": "sword"}, -1.0)[0]
+	var early: Vector2 = PlayerSprite.life({"state": "attack", "t": 0.0, "weapon": "sword"}, -1.0)[0]
+	_check(hit.x > early.x and hit.x <= 1.0 + PlayerSprite.HIT_STRETCH + 0.001, "se estira justo al llegar el golpe")
+	for state in ["idle", "walk", "attack", "shoot", "cast", "channel", "hurt", "dodge", "dead", "type"]:
+		var group := PlayerSheet.group_for(state, "sword")
+		var first := PlayerSheet.first_column(group)
+		for t in [0.0, 0.5, 0.99]:
+			var col := PlayerSheet.column_for(state, "sword", t, t * 3.0, t * TAU if state == "walk" else -1.0)
+			if col < first or col >= first + PlayerSheet.frames_of(group):
+				_check(false, "%s con t=%.2f sale de sus cuadros (%d)" % [state, t, col])
 	# T161: cada clase con su equipo de oficio, horneado, y dos clases nunca con el mismo.
 	var classes_json = JSON.parse_string(FileAccess.get_file_as_string("res://data/classes.json"))
 	var class_ids: Array = classes_json["classes"].map(func(c: Dictionary) -> String: return String(c["id"]))

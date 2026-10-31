@@ -110,9 +110,41 @@ func cells() -> Dictionary:
 	}
 
 
+## Vida encima de los cuadros (T163): [escala, elevación en píxeles de hoja] según el
+## estado. Respira en reposo, rebota al andar y se estira al llegar el golpe. Desde los
+## pies (el origen), así no se despega del suelo.
+const BREATH := 0.02
+const STEP_HOP := 1.6
+const HIT_STRETCH := 0.07
+
+
+static func life(pose: Dictionary, walk_phase: float) -> Array:
+	var state := String(pose.get("state", "idle"))
+	var time := float(pose.get("time", 0.0))
+	if walk_phase >= 0.0 and state in ["idle", "walk", "run"]:
+		var step := absf(sin(walk_phase))   # 0 al pisar, 1 entre pisadas
+		var land := pow(1.0 - step, 4.0)   # aplastado justo al pisar
+		return [Vector2(1.0 + 0.03 * land, 1.0 - 0.03 * land), -STEP_HOP * step]
+	match state:
+		"idle":
+			var s := sin(time * 2.4)
+			return [Vector2(1.0 - BREATH * 0.6 * s, 1.0 + BREATH * s), 0.0]
+		"attack", "shoot":
+			var imp := CharacterAppearance.impact_fraction(state, String(pose.get("weapon", "")))
+			var d := (float(pose.get("t", 0.0)) - imp) / 0.12
+			var k := exp(-d * d)
+			return [Vector2(1.0 + HIT_STRETCH * k, 1.0 - HIT_STRETCH * 0.7 * k), 0.0]
+		"cast":
+			var k := sin(PI * clampf(float(pose.get("t", 0.0)), 0.0, 1.0))
+			return [Vector2(1.0 - 0.02 * k, 1.0 + 0.03 * k), 0.0]
+	return [Vector2.ONE, 0.0]
+
+
 func _refresh() -> void:
 	if _layers.is_empty():
 		return
+	var lf := life(_pose, _walk)
+	scale = lf[0]
 	var c := cells()
 	var width: float = CharacterAppearance.BODY_WIDTH[int(appearance["body"])]
 	var height := float(appearance.get("height", 1.0))
@@ -123,6 +155,7 @@ func _refresh() -> void:
 			l.texture = texture_of(key, variant)
 		l.visible = variant >= 0 and l.texture != null
 		l.region = PlayerSheet.region(c["_dir"], c["_col"])
+		l.position.y = float(lf[1]) * sprite_scale
 		var body_part := key in ["body", "body_fixed"]
 		l.scale = Vector2((-1.0 if c["_flip"] else 1.0) * (width if body_part else 1.0), height) * sprite_scale
 		l.queue_redraw()

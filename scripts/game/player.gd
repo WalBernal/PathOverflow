@@ -218,8 +218,23 @@ func dodge() -> bool:
 	action_lock = 0.0
 	_has_auto_target = false
 	Sfx.play("blink", -8.0, 1.35)
+	_add_dodge_dust()
 	dodged.emit()
 	return true
+
+
+## Polvo al esquivar (T163): bocanadas que salen de los pies hacia atrás y se deshacen.
+const DUST_TIME := 0.45
+const DUST_PUFFS := 6
+var _dust: Array[Dictionary] = []
+
+
+func _add_dodge_dust() -> void:
+	var feet := global_position + Vector2(0, RADIUS * 0.6)
+	for k in DUST_PUFFS:
+		var back := (-_dodge_dir).rotated(randf_range(-0.9, 0.9))
+		_dust.append({"pos": feet + Vector2(randf_range(-4, 4), randf_range(-2, 2)), "vel": back * randf_range(40.0, 90.0),
+			"t": DUST_TIME * randf_range(0.7, 1.0), "r": randf_range(3.0, 5.5)})
 
 
 ## Devuelve cargas de esquiva (poción "Stash de emergencia"); `extra` puede pasar del máximo un rato.
@@ -287,6 +302,9 @@ func _draw_under() -> void:
 		ci.draw_set_transform(Vector2.ZERO)
 	for m in _step_marks:
 		Achievements.draw_step(ci, to_local(m["pos"]), character, float(m["t"]) / STEP_MARK_TIME)
+	for d in _dust:   # polvo de la esquiva (T163): crece y se apaga
+		var k := float(d["t"]) / DUST_TIME
+		ci.draw_circle(to_local(d["pos"]), float(d["r"]) * (1.6 - 0.6 * k), Color(0.78, 0.74, 0.66, 0.45 * k))
 	Achievements.draw_aura(ci, Vector2(0.0, RADIUS * 0.6), character, tt)
 
 
@@ -637,6 +655,11 @@ func _physics_process(delta: float) -> void:
 	for m in _step_marks:
 		m["t"] = float(m["t"]) - delta
 	_step_marks = _step_marks.filter(func(m: Dictionary) -> bool: return float(m["t"]) > 0.0)
+	for d in _dust:
+		d["t"] = float(d["t"]) - delta
+		d["pos"] = (d["pos"] as Vector2) + (d["vel"] as Vector2) * delta
+		d["vel"] = (d["vel"] as Vector2) * maxf(0.0, 1.0 - 5.0 * delta)
+	_dust = _dust.filter(func(d: Dictionary) -> bool: return float(d["t"]) > 0.0)
 
 
 func _process(delta: float) -> void:
