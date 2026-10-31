@@ -1,18 +1,21 @@
 class_name HeroSprite
 extends Node2D
-## El héroe en pixel art (T176, PixelHero) en el mundo: su hoja ampliada sin suavizar,
-## de lado y volteada según hacia dónde mira. Misma API que PlayerSprite (appearance,
-## tint, set_pose) para que el jugador y los NPC la usen igual. Sus pies van en (0, 0).
-## La clase sale de `appearance["gear"]` (CharacterAppearance.with_gear) y el arma de
-## la pose; con PlayerSprite.life respira, rebota al andar y se estira al golpear.
+## El personaje dentro del servidor (T176, StudentHero) en el mundo: el alumno con su
+## apariencia y lo que lleva puesto, ampliado sin suavizar y volteado según hacia dónde
+## mira. Misma API que PlayerSprite (appearance, tint, set_pose) para que el jugador
+## lo use igual. Sus pies van en (0, 0). `appearance` es el look de
+## StudentHero.look_of (apariencia + equipo); el arma sale de la pose. Con
+## PlayerSprite.life respira, rebota al andar y se estira al golpear.
 
-## Píxeles del mundo por píxel de la hoja (el héroe mide ~23: ~53 en el mundo, lo que
-## medía el oficinista con T157).
-const HERO_SCALE := 2.3
+## Píxeles del mundo por píxel de la hoja: el alumno mide ~41 (~55 en el mundo, lo
+## que medía el oficinista con T157).
+const HERO_SCALE := 1.35
 const SHADER := preload("res://assets/shaders/hero_tint.gdshader")
 
 var appearance: Dictionary = CharacterAppearance.default():
 	set(value):
+		if value == appearance and _texture != null:
+			return
 		appearance = value
 		_texture = null
 		queue_redraw()
@@ -39,9 +42,8 @@ func _ready() -> void:
 	tint = tint
 
 
-static func class_of(a: Dictionary) -> String:
-	var g := String(a.get("gear", ""))
-	return g if PixelHero.CLASSES.has(g) else "guerrero"
+static func available() -> bool:
+	return StudentHero.available()
 
 
 func set_pose(facing: Vector2, pose: Dictionary, walk_phase := -1.0) -> void:
@@ -50,8 +52,8 @@ func set_pose(facing: Vector2, pose: Dictionary, walk_phase := -1.0) -> void:
 	var weapon := String(pose.get("weapon", ""))
 	if weapon != _weapon or _texture == null:
 		_weapon = weapon
-		_texture = PixelHero.texture(appearance, class_of(appearance), weapon)
-	_col = PixelHero.column_for(String(pose.get("state", "idle")), float(pose.get("t", 0.0)), float(pose.get("time", 0.0)), walk_phase)
+		_texture = StudentHero.texture(appearance, weapon)
+	_col = StudentHero.column_for(String(pose.get("state", "idle")), float(pose.get("t", 0.0)), float(pose.get("time", 0.0)), walk_phase)
 	var lf := PlayerSprite.life(pose, walk_phase)
 	scale = lf[0]
 	_lift = float(lf[1])
@@ -62,8 +64,8 @@ func _draw() -> void:
 	if _texture == null:
 		return
 	var s := HERO_SCALE
-	var cell := Vector2(PixelHero.CELL)
-	var feet := Vector2(PixelHero.FEET)
+	var cell := Vector2(StudentHero.CELL)
+	var feet := Vector2(StudentHero.FEET)
 	if _flip:
 		draw_set_transform(Vector2(0, _lift * s), 0.0, Vector2(-1, 1))
 	else:

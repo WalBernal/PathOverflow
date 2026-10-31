@@ -5643,42 +5643,38 @@ func _test_player_sheet() -> void:
 			var col := PlayerSheet.column_for(state, "sword", t, t * 3.0, t * TAU if state == "walk" else -1.0)
 			if col < first or col >= first + PlayerSheet.frames_of(group):
 				_check(false, "%s con t=%.2f sale de sus cuadros (%d)" % [state, t, col])
-	# T176: héroes en pixel art propios: cada clase con sus rejillas bien formadas, sus
-	# colores en la paleta, todos los cuadros con dibujo y, de pie, los pies en el suelo.
-	var pal := PixelHero.palette(CharacterAppearance.default())
-	for cls in PixelHero.CLASSES:
-		var letters := ""
-		for row in PixelHero.HEADS[cls] + PixelHero.TORSOS[cls]:
-			letters += String(row)
-		var unknown := []
-		for ch in letters:
-			if ch != "." and not pal.has(ch) and not unknown.has(ch):
-				unknown.append(ch)
-		_check(PixelHero.HEADS[cls].size() == 10 and PixelHero.TORSOS[cls].size() == 7 and unknown.is_empty(),
-			"héroe %s: cabeza 10 filas, torso 7 y todas sus letras en la paleta %s" % [cls, unknown])
-	var hero := PixelHero.build(CharacterAppearance.default(), "templario", "sword")
-	_check(hero.get_width() == PixelHero.CELL.x * PixelHero.columns() and hero.get_height() == PixelHero.CELL.y, "la hoja del héroe tiene un cuadro por pose")
+	# T176: el alumno del estilo del usuario (StudentHero): capas importadas de la lámina,
+	# recoloreado con el creador, el equipo cambia su look y cada cuadro tiene dibujo sin flotar.
+	_check(StudentHero.available(), "el arte del alumno está importado (assets/sprites/hero)")
+	for name in ["head_b", "torso_b", "legs_b", "head_c", "torso_c", "legs_c", "head_d", "torso_d", "legs_d", "torso_e", "weapon_sword", "weapon_dagger", "weapon_staff"]:
+		var layer := StudentHero._layer(name)
+		_check(layer != null and layer.get_size() == StudentHero.CELL and layer.get_used_rect().size != Vector2i.ZERO, "capa %s importada y con dibujo" % name)
+	for slot in StudentHero.LOOKS:
+		for base_id in StudentHero.LOOKS[slot]:
+			_check(StudentHero._layer(("head_" if slot == "helmet" else ("legs_" if slot == "boots" else "torso_")) + String(StudentHero.LOOKS[slot][base_id])) != null,
+				"la base %s tiene su capa" % base_id)
+	var red := CharacterAppearance.sanitize({"hair_color": "c03030", "outfit_color": "30a040"})
+	var plain := StudentHero.figure(StudentHero.look_of(red, {}))
+	var hair_px := plain.get_pixel(30, 18)
+	_check(hair_px.r > hair_px.g and hair_px.r > hair_px.b, "el pelo toma el color del creador (%s)" % hair_px.to_html(false))
+	var armored := StudentHero.figure(StudentHero.look_of(red, {"body": "cota_de_placas", "helmet": "casco_de_hierro"}))
+	var changed := 0
+	for y in StudentHero.CELL.y:
+		for x in StudentHero.CELL.x:
+			if not plain.get_pixel(x, y).is_equal_approx(armored.get_pixel(x, y)):
+				changed += 1
+	_check(changed > 300, "ponerse casco y armadura cambia el look (%d píxeles)" % changed)
+	var hero := StudentHero.build(StudentHero.look_of(red, {}), "sword")
+	_check(hero.get_width() == StudentHero.CELL.x * StudentHero.columns(), "la hoja del alumno tiene un cuadro por pose")
 	var bad_hero := []
-	for c in PixelHero.columns():
-		var used := hero.get_region(Rect2i(c * PixelHero.CELL.x, 0, PixelHero.CELL.x, PixelHero.CELL.y)).get_used_rect()
-		var anim := ""
-		for a in PixelHero.ORDER:
-			if c >= PixelHero.first_column(a):
-				anim = a
-		# (el arma puede bajar de los pies en el tajo; lo que no puede es flotar)
-		if used.size == Vector2i.ZERO or (anim in ["idle", "walk", "attack", "cast", "channel", "shoot", "type"] and used.end.y - 1 < PixelHero.FEET.y - 1):
-			bad_hero.append("%s/%d (%s)" % [anim, c, used])
-	_check(bad_hero.is_empty(), "cada cuadro del héroe tiene dibujo y, de pie, los pies en el suelo: %s" % [bad_hero])
-	_check(PixelHero.column_for("walk", 0.0, 0.0, PI) >= PixelHero.first_column("walk") and PixelHero.column_for("attack", 0.99) == PixelHero.first_column("attack") + 5
-		and PixelHero.column_for("limp", 1.0) == PixelHero.first_column("dead") + 3, "cada estado elige sus cuadros")
-	_check(PixelHero.texture(CharacterAppearance.default(), "hacker", "dagger") == PixelHero.texture(CharacterAppearance.default(), "hacker", "dagger"), "la hoja se arma una vez y se guarda")
-	# T175: un héroe de RPG por clase, y lo fijo (metal dorado, cuero) nunca se confunde con
-	# una capa de color en el pase de identificación del horneado.
-	var rpg_classes: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/classes.json"))["classes"].map(
-		func(c: Dictionary) -> String: return String(c["id"]))
-	_check(rpg_classes.all(func(id: String) -> bool: return RpgAppearance.CLASSES.has(id)), "cada clase tiene su héroe de RPG")
-	_check(PlayerSheet.classify(RpgAppearance._fixed(RpgAppearance.GOLD, Color(0, 0, 0, 0), true)) == 0
-		and PlayerSheet.classify(Color(RpgAppearance.GOLD)) != 0, "el dorado se dibuja gris al identificar (si no, sería «pelo»)")
+	for c in StudentHero.columns():
+		var used := hero.get_region(Rect2i(c * StudentHero.CELL.x, 0, StudentHero.CELL.x, StudentHero.CELL.y)).get_used_rect()
+		if used.size == Vector2i.ZERO or used.end.y - 1 < StudentHero.FEET.y - 2:
+			bad_hero.append("%d (%s)" % [c, used])
+	_check(bad_hero.is_empty(), "cada cuadro del alumno tiene dibujo y no flota: %s" % [bad_hero])
+	_check(StudentHero.column_for("attack", 0.99) == StudentHero.first_column("attack") + 3 and StudentHero.column_for("limp", 1.0) == StudentHero.first_column("dead") + 1
+		and StudentHero.column_for("idle", 0.0, 0.0, PI) >= StudentHero.first_column("walk"), "cada estado elige sus cuadros")
+	_check(StudentHero.texture(StudentHero.look_of(red, {}), "sword") == StudentHero.texture(StudentHero.look_of(red, {}), "sword"), "la hoja se arma una vez y se guarda")
 	# T161: cada clase con su equipo de oficio, horneado, y dos clases nunca con el mismo.
 	var classes_json = JSON.parse_string(FileAccess.get_file_as_string("res://data/classes.json"))
 	var class_ids: Array = classes_json["classes"].map(func(c: Dictionary) -> String: return String(c["id"]))

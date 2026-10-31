@@ -33,12 +33,12 @@ func _run() -> void:
 		await _capture_touch_auto()
 		get_tree().quit()
 		return
-	if OS.get_cmdline_user_args().has("heroes"):
-		await _capture_pixel_heroes()
-		get_tree().quit()
-		return
-	if OS.get_cmdline_user_args().has("rpg"):
-		await _capture_rpg_heroes()
+	if OS.get_cmdline_user_args().has("alumno"):
+		var sheet := Control.new()
+		sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+		sheet.draw.connect(func() -> void: sheet.draw_rect(Rect2(Vector2.ZERO, sheet.size), Color("3a3f48")))
+		_swap(sheet)
+		await _capture_students(sheet)
 		get_tree().quit()
 		return
 	if OS.get_cmdline_user_args().has("npcs"):
@@ -1448,112 +1448,39 @@ func _capture_class_gear() -> void:
 	_save("161_equipos")
 
 
-## Héroes de RPG (T175): las siete clases de frente, de lado, de espaldas y atacando,
-## dibujadas a la escala de la hoja (píxeles reales) y ampliadas sin suavizar, con el
-## contorno grueso de PlayerSprite; a la izquierda, el oficinista de ahora.
-const RPG_OUTLINE_SHADER := """
-shader_type canvas_item;
-void fragment() {
-	vec4 c = texture(TEXTURE, UV);
-	if (c.a < 0.6) {
-		float n = 0.0;
-		for (int k = 0; k < 8; k++) {
-			vec2 d = vec2(cos(float(k) * 0.785398), sin(float(k) * 0.785398)) * 2.0 * TEXTURE_PIXEL_SIZE;
-			n = max(n, texture(TEXTURE, UV + d).a);
-		}
-		if (n > 0.6) { c = vec4(0.04, 0.03, 0.06, 0.9); }
-	}
-	COLOR = c;
-}
-"""
-
-
-func _capture_rpg_heroes() -> void:
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 5
-	var sheet := Control.new()
-	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
-	sheet.draw.connect(func() -> void: sheet.draw_rect(Rect2(Vector2.ZERO, sheet.size), Color("2a2e36")))
-	_swap(sheet)
-	var shader := Shader.new()
-	shader.code = RPG_OUTLINE_SHADER
-	var poses := [[Vector2.DOWN, {"state": "idle", "time": 0.3}, -1.0], [Vector2.RIGHT, {"state": "walk"}, 1.3],
-		[Vector2.UP, {"state": "idle", "time": 0.3}, -1.0], [Vector2.RIGHT, {"state": "attack", "t": 0.3, "weapon": "sword"}, -1.0]]
-	var classes: Array = ["oficinista"] + RpgAppearance.CLASSES
-	var cell := Vector2(1600.0 / classes.size(), 900.0 / poses.size())
-	var zoom := 1.9
-	for ci in classes.size():
-		var look := CharacterAppearance.random(rng)
-		look["accessory"] = 0
-		look["rpg"] = classes[ci]
-		for pi in poses.size():
-			var p: Array = poses[pi]
-			var vp := SubViewport.new()
-			vp.size = Vector2i(PlayerSheet.CW, PlayerSheet.CH)
-			vp.transparent_bg = true
-			vp.canvas_item_default_texture_filter = Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST
-			var fig := Node2D.new()
-			var cls: String = classes[ci]
-			fig.draw.connect(func() -> void:
-				var pose: Dictionary = p[1].duplicate()
-				if cls == "oficinista":
-					CharacterAppearance.draw(fig, PlayerSheet.FEET, PlayerSheet.BAKE_SCALE, look, p[0], Color(0, 0, 0, 0), p[2], pose)
-				else:
-					RpgAppearance.draw(fig, PlayerSheet.FEET, PlayerSheet.BAKE_SCALE, look, p[0], Color(0, 0, 0, 0), p[2], pose))
-			vp.add_child(fig)
-			sheet.add_child(vp)
-			var tr := TextureRect.new()
-			tr.texture = vp.get_texture()
-			tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			tr.size = Vector2(PlayerSheet.CW, PlayerSheet.CH) * zoom
-			tr.position = Vector2(cell.x * (ci + 0.5), cell.y * (pi + 0.95)) - Vector2(PlayerSheet.FEET) * zoom
-			var mat := ShaderMaterial.new()
-			mat.shader = shader
-			tr.material = mat
-			sheet.add_child(tr)
-	await _wait(0.6)
-	_save("175_rpg")
-
-
-## Héroes en pixel art propios (T176): cada clase en una fila con reposo, andar, el
-## ataque entero, lanzar y muerto, ampliados sin suavizar. Si se pasa `zoom4`, solo
-## las dos primeras clases más grandes.
-func _capture_pixel_heroes() -> void:
-	var sheet := Control.new()
-	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
-	sheet.draw.connect(func() -> void: sheet.draw_rect(Rect2(Vector2.ZERO, sheet.size), Color("3a3f48")))
-	_swap(sheet)
-	var looks := [
-		{"outfit_color": "8a2b2b", "accent_color": "d9a441", "skin_tone": "e0ac8a", "hair_color": "2b2118"},
-		{"outfit_color": "2b4a6b", "accent_color": "c84b4b", "skin_tone": "f1d2b6", "hair_color": "b5651d", "beard": 1},
-		{"outfit_color": "2b6b45", "accent_color": "d9a441", "skin_tone": "8d5a3b", "hair_color": "0f0d0c"},
-		{"outfit_color": "5a3b6b", "accent_color": "2fd0a0", "skin_tone": "c99a7a", "hair_color": "6b3d80"},
-		{"outfit_color": "2b3f8a", "accent_color": "d9a441", "skin_tone": "f1d2b6", "hair_color": "c8c8c8", "beard": 2},
-		{"outfit_color": "f2f2f2", "accent_color": "2b6cb0", "skin_tone": "a8714f", "hair_color": "2b2118"},
-		{"outfit_color": "1d5a66", "accent_color": "e06c6c", "skin_tone": "e0ac8a", "hair_color": "d96a9a"},
+## El alumno del estilo del usuario (T176, StudentHero): arriba, apariencias del
+## creador (peinados, colores, barba, lentes, audífonos); abajo, el mismo alumno con
+## cada conjunto de equipo; de izquierda a derecha, reposo, pasos y el tajo.
+func _capture_students(sheet: Control) -> void:
+	var rows := [
+		[{"hair": 1, "hair_color": "7e4c2e", "skin_tone": "f6c8a0", "outfit_color": "2b4a8a", "eye_color": "5a4632"}, {}, "sword"],
+		[{"hair": 2, "hair_color": "0f0d0c", "skin_tone": "8d5a3b", "outfit_color": "8a2b2b", "eye_color": "3a2414", "accessory": 1}, {}, "dagger"],
+		[{"hair": 4, "hair_color": "d9b26a", "skin_tone": "f1d2b6", "outfit_color": "2b6b45", "eye_color": "2e6b8a", "accessory": 3, "accent_color": "2fd0a0"}, {}, "mace"],
+		[{"hair": 0, "hair_color": "2b2118", "skin_tone": "c99a7a", "outfit_color": "5a3b6b", "eye_color": "3d7a3d", "beard": 2}, {}, "axe"],
+		[{"hair": 1, "hair_color": "7e4c2e", "skin_tone": "f6c8a0", "outfit_color": "2b4a8a"}, {"helmet": "casco_de_hierro", "body": "cota_de_placas", "boots": "botas_de_hierro"}, "sword"],
+		[{"hair": 1, "hair_color": "7e4c2e", "skin_tone": "f6c8a0", "outfit_color": "2b4a8a"}, {"helmet": "diadema_de_seda", "body": "tunica_de_seda"}, "mace"],
+		[{"hair": 6, "hair_color": "6b3d80", "skin_tone": "a8714f", "outfit_color": "2b4a8a"}, {"helmet": "capucha_de_cuero", "body": "chaleco_de_cuero", "boots": "botas_de_cuero"}, "dagger"],
+		[{"hair": 3, "hair_color": "d96a9a", "skin_tone": "e0ac8a", "outfit_color": "1d5a66"}, {"body": "chaqueta_de_conferencias"}, "sword"],
 	]
-	var weapons := ["axe", "sword", "sword", "dagger", "mace", "mace", "sword"]
-	var frames := [["idle", 0], ["walk", 0], ["walk", 2], ["walk", 4], ["walk", 6], ["attack", 0], ["attack", 1], ["attack", 2],
-		["attack", 3], ["attack", 4], ["attack", 5], ["cast", 2], ["dead", 3]]
-	var zoom := 2.5
-	var rows := PixelHero.CLASSES.size()
-	for ci in rows:
-		var tex := PixelHero.texture(looks[ci], PixelHero.CLASSES[ci], weapons[ci])
+	var frames := [["idle", 0], ["walk", 0], ["walk", 2], ["attack", 0], ["attack", 1], ["attack", 2], ["hurt", 0], ["dead", 1]]
+	var zoom := 2.0
+	for ri in rows.size():
+		var r: Array = rows[ri]
+		var look := StudentHero.look_of(CharacterAppearance.sanitize(r[0]), r[1])
+		var tex := StudentHero.texture(look, r[2])
 		for fi in frames.size():
-			var col := PixelHero.first_column(frames[fi][0]) + int(frames[fi][1])
 			var at := AtlasTexture.new()
 			at.atlas = tex
-			at.region = Rect2(col * PixelHero.CELL.x, 0, PixelHero.CELL.x, PixelHero.CELL.y)
+			at.region = Rect2((StudentHero.first_column(frames[fi][0]) + int(frames[fi][1])) * StudentHero.CELL.x, 0, StudentHero.CELL.x, StudentHero.CELL.y)
 			var tr := TextureRect.new()
 			tr.texture = at
 			tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			tr.size = Vector2(PixelHero.CELL) * zoom
-			tr.position = Vector2(fi * PixelHero.CELL.x * zoom, ci * 900.0 / rows - 6.0)
+			tr.size = Vector2(StudentHero.CELL) * zoom
+			tr.position = Vector2((ri % 4) * 400.0 + (fi % 4) * 95.0 - 10.0, floorf(ri / 4.0) * 450.0 + floorf(fi / 4.0) * 110.0 - 10.0)
 			sheet.add_child(tr)
 	await _wait(0.4)
-	_save("176_heroes")
+	_save("176_alumnos")
 
 
 ## NPC con su objeto y su reposo (T162): cada uno de frente y, debajo, de lado, en dos
