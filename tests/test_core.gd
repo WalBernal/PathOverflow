@@ -5152,9 +5152,10 @@ func _test_missing_scenes() -> void:
 	_check(camp1.get("id", "") == "reunion_campamento", "en el campamento del acto I sigue la reunión tras el jefe")
 
 
-## Celular (T106): renderizador móvil, horizontal y valores por defecto.
+## Celular (T106): renderizador, horizontal y valores por defecto.
 func _test_mobile_defaults() -> void:
-	_check(String(ProjectSettings.get_setting("rendering/renderer/rendering_method.mobile")) == "mobile", "en el celular, el renderizador mobile")
+	# T159: Compatibility (OpenGL) en vez de Mobile (Vulkan): con Mobile la interfaz parpadeaba en el teléfono.
+	_check(String(ProjectSettings.get_setting("rendering/renderer/rendering_method.mobile")) == "gl_compatibility", "en el celular, el renderizador Compatibility")
 	_check(int(ProjectSettings.get_setting("display/window/handheld/orientation")) == DisplayServer.SCREEN_SENSOR_LANDSCAPE, "y siempre en horizontal")
 	_check(not GameSettings.is_mobile(), "este equipo no cuenta como celular")
 	_check(int(GraphicsQuality.preset(2)["lights"]) == 32, "en escritorio, la calidad alta con todas sus luces")
