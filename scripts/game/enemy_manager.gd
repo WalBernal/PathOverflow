@@ -25,6 +25,9 @@ const SPRITE_SHADER := preload("res://assets/shaders/enemy_sprite.gdshader")
 const ATLAS_FRAMES := 4
 ## Tamaño del sprite respecto al diámetro de colisión.
 const SPRITE_SCALE := 2.24
+## Lado mínimo del dibujo de un enemigo (T157): los más chicos (enjambres, procesos
+## pequeños) no bajan de aquí aunque su radio de choque sea menor.
+const MIN_DRAW_SIZE := 40.0
 const BASE_LIFE := 40.0
 const BASE_DAMAGE := 7.0
 const BASE_EXPERIENCE := 6.0
@@ -1444,7 +1447,7 @@ func hover_index(pos: Vector2, slack := 14.0) -> int:
 	var best := -1
 	var best_d := INF
 	for i in positions.size():
-		var d := positions[i].distance_to(pos) - radii[i] * SPRITE_SCALE
+		var d := positions[i].distance_to(pos) - visual_radius(radii[i])
 		if d <= slack and d < best_d:
 			best_d = d
 			best = i
@@ -2244,6 +2247,17 @@ func _resolve_beam(h: Dictionary) -> void:
 			if lives[bi] <= 0.0:
 				_kill(bi)
 
+## Lado del dibujo de un enemigo de radio de choque `radius` (T157: nunca menos de MIN_DRAW_SIZE).
+static func draw_size(radius: float, type_scale := 1.0) -> float:
+	return maxf(radius * 2.0 * SPRITE_SCALE * type_scale, MIN_DRAW_SIZE)
+
+
+## Medio lado del dibujo sin la escala del tipo: dónde van la barra, los avisos y
+## hasta dónde se le puede tocar o apuntar (crece con el dibujo de los chicos).
+static func visual_radius(radius: float) -> float:
+	return maxf(radius * SPRITE_SCALE, MIN_DRAW_SIZE * 0.5)
+
+
 func _process(delta: float) -> void:
 	var n := positions.size()
 	if n > _multimesh.instance_count:
@@ -2258,7 +2272,7 @@ func _process(delta: float) -> void:
 			_lunges.erase(id)
 	for i in n:
 		var t: Dictionary = all_types[types[i]] if types[i] < all_types.size() else {}
-		var size := radii[i] * 2.0 * SPRITE_SCALE * float(t.get("scale", 1.0))
+		var size := draw_size(radii[i], float(t.get("scale", 1.0)))
 		var sprite_scale := Vector2(size, size)
 		var offset := Vector2.ZERO
 		if dashes[i] > 0.0:
@@ -2392,10 +2406,10 @@ func _draw_all() -> void:
 		if react != "":
 			# Lo que le pasa por la cabeza: «!» de pánico, «+» busca sanador, «»» va con el comandante.
 			var mark: Array = {"panic": ["!", Color("ff8a3a")], "healer": ["+", Color("6fd36b")], "rally": ["»", Color("ffd24a")]}[react]
-			draw_string(font, positions[i] + Vector2(radii[i] * SPRITE_SCALE * 0.6, -radii[i] * SPRITE_SCALE * 1.1), mark[0],
+			draw_string(font, positions[i] + Vector2(visual_radius(radii[i]) * 0.6, -visual_radius(radii[i]) * 1.1), mark[0],
 				HORIZONTAL_ALIGNMENT_LEFT, -1, 16, mark[1])
 		if stuns[i] > 0.0 and freeze_time[i] <= 0.0:
-			_draw_stun(positions[i] + Vector2(0, -radii[i] * SPRITE_SCALE * 1.1 - 18.0))
+			_draw_stun(positions[i] + Vector2(0, -visual_radius(radii[i]) * 1.1 - 18.0))
 		if simple:
 			_draw_ailment_fx_simple(i)
 		else:
@@ -2410,7 +2424,7 @@ func _draw_all() -> void:
 		var rarity := rarities[i]
 		var r := radii[i]
 		var w := maxf(r * 2.0, 30.0)
-		var top := positions[i] + Vector2(-w / 2.0, -r * SPRITE_SCALE * 1.1 - 8.0)
+		var top := positions[i] + Vector2(-w / 2.0, -visual_radius(r) * 1.1 - 8.0)
 		var has_bar := not (rarity == Rarity.Enemy.NORMAL and lives[i] >= max_lives[i])
 		# Iconos de estados encima de la barra (o donde iría).
 		var states := _state_ids(i)
@@ -2445,7 +2459,7 @@ func _draw_all() -> void:
 	for i in labels:
 		var r := radii[i]
 		var w := maxf(r * 2.0, 30.0)
-		var top := positions[i] + Vector2(-w / 2.0, -r * SPRITE_SCALE * 1.1 - 8.0)
+		var top := positions[i] + Vector2(-w / 2.0, -visual_radius(r) * 1.1 - 8.0)
 		var name_y := -6.0 - (14.0 if not _state_ids(i).is_empty() else 0.0)
 		var name_size := Accessibility.world_size(14)
 		draw_string_outline(font, top + Vector2(-80.0, name_y), names[i], HORIZONTAL_ALIGNMENT_CENTER, w + 160.0, name_size, 4, Color(0, 0, 0, 0.8))
@@ -2694,7 +2708,7 @@ func _hatch_circle(c: Vector2, r: float, color: Color) -> void:
 ## el círculo de los que protege.
 func _draw_role(i: int, role: String, tt: float) -> void:
 	var c: Color = ROLE_COLORS[role]
-	var p := positions[i] + Vector2(0, -radii[i] * SPRITE_SCALE * 1.1 - 24.0)
+	var p := positions[i] + Vector2(0, -visual_radius(radii[i]) * 1.1 - 24.0)
 	if role == "tank":
 		var pulse := 0.5 + 0.5 * sin(tt * 3.0 + ids[i])
 		_batch_ring(positions[i], ROLE_TANK_RADIUS, 2.0, Color(c, 0.18 + 0.12 * pulse), 40)
@@ -2724,7 +2738,7 @@ func _draw_role_marks() -> void:
 ## largo que apunta hacia donde mira (con el láser encendido mientras carga el tiro).
 func _draw_role_gear(i: int, role: String, c: Color, tt: float) -> void:
 	var body := positions[i]
-	var r := radii[i] * SPRITE_SCALE
+	var r := visual_radius(radii[i])
 	var head := body + Vector2(0, -r * 0.85)
 	match role:
 		"healer":
@@ -2794,7 +2808,7 @@ func _draw_attacks(font: Font, view: Rect2) -> void:
 			post_fx.append(FxArt.marching_ring.bind(self, pos, hr, tele_t, Color(TELEGRAPH, 0.6 + 0.4 * ht)))   # borde de trazos que gira (T99)
 			post_fx.append(FxArt.closing_ripples.bind(self, pos, hr, tele_t, Color(TELEGRAPH.lightened(0.3), 0.7)))
 			_hatch_circle(pos, hr, Color.WHITE)
-			marks.append([pos + Vector2(-20.0, -radii[i] * SPRITE_SCALE * 1.1 - 30.0), TELEGRAPH.lerp(Color.WHITE, ht * 0.5)])
+			marks.append([pos + Vector2(-20.0, -visual_radius(radii[i]) * 1.1 - 30.0), TELEGRAPH.lerp(Color.WHITE, ht * 0.5)])
 		elif windups[i] > 0.0 and (traits[i] as Dictionary).get("snipe_on", false):
 			# Francotirador: línea roja que se estrecha y brilla justo antes del disparo.
 			var st := clampf(1.0 - windups[i] / ROLE_SNIPE_WINDUP, 0.0, 1.0)
@@ -2866,7 +2880,7 @@ func _draw_attacks(font: Font, view: Rect2) -> void:
 			var def: Dictionary = cast["def"]
 			var t: float = 1.0 - cast["time"] / maxf(0.05, cast["total"])
 			var label: String = "¡%s!" % def.get("name", "")
-			var top := pos + Vector2(-150.0, -radii[i] * SPRITE_SCALE * 1.1 - 40.0)
+			var top := pos + Vector2(-150.0, -visual_radius(radii[i]) * 1.1 - 40.0)
 			draw_string_outline(font, top, label, HORIZONTAL_ALIGNMENT_CENTER, 300.0, 18, 5, Color.BLACK)
 			draw_string(font, top, label, HORIZONTAL_ALIGNMENT_CENTER, 300.0, 18, Color(def.get("color", "ff8c2a")))
 			draw_arc(pos, radii[i] + 10.0, -PI / 2.0, -PI / 2.0 + TAU * t, 40, Color(def.get("color", "ff8c2a")), 3.0, true)
@@ -3187,12 +3201,12 @@ func _death_feedback(i: int) -> void:
 	var material := material_of(i)
 	if impact:
 		var tint := Rarity.enemy_color(rarities[i]) if rarities[i] != Rarity.Enemy.NORMAL else Color("c8b8a0")
-		impact.death(positions[i] - Vector2(0.0, radii[i] * 0.6), kind, radii[i] * SPRITE_SCALE * 0.5, tint, material)
+		impact.death(positions[i] - Vector2(0.0, radii[i] * 0.6), kind, visual_radius(radii[i]) * 0.5, tint, material)
 	if leaves_corpse(kind, material):
 		var all_types := enemy_types()
 		var t: Dictionary = all_types[types[i]] if types[i] < all_types.size() else {}
 		corpses.append({"pos": positions[i], "row": float(EnemySheet.row(int(t.get("sprite_row", 0)), EnemySheet.Dir.SIDE)), "left": facings[i] > 0.5,
-			"size": radii[i] * 2.0 * SPRITE_SCALE * float(t.get("scale", 1.0)), "t": CORPSE_TIME})
+			"size": draw_size(radii[i], float(t.get("scale", 1.0))), "t": CORPSE_TIME})
 		if corpses.size() > MAX_CORPSES:
 			corpses.pop_front()
 	match kind:

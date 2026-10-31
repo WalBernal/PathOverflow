@@ -14,6 +14,9 @@ const CW := 64
 const CH := 80
 const FEET := Vector2(32, 70)
 const BAKE_SCALE := 1.06
+## Escala en el mundo del jugador y de los NPC, la misma para todos (T157: un 15 %
+## más que la de las hojas; antes el jugador iba a 1,06 y los NPC a 1,12).
+const WORLD_SCALE := 1.22
 enum Dir { DOWN, UP, SIDE }
 const DIRS := 3
 ## Capas de color (canal G de las máscaras): qué color del creador las tiñe.

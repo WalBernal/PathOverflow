@@ -1318,7 +1318,7 @@ func use(t: Dictionary) -> void:
 
 func _npc_at(pos: Vector2) -> int:
 	for i in npcs.size():
-		if pos.distance_to(npc_position(npcs[i]) + Vector2(0, -18)) <= CLICK_RADIUS:
+		if pos.distance_to(npc_position(npcs[i]) + Vector2(0, -18.0 / 1.12 * PlayerSheet.WORLD_SCALE)) <= CLICK_RADIUS * PlayerSheet.WORLD_SCALE / 1.12:
 			return i
 	return -1
 
@@ -2601,10 +2601,16 @@ func _add_npc_sprite(i: int, appearance: Dictionary) -> void:
 		return
 	var sprite := PlayerSprite.new()
 	sprite.show_behind_parent = true   # nombres y "!" de la capa, encima
-	sprite.sprite_scale = 1.12 / PlayerSheet.BAKE_SCALE
+	sprite.sprite_scale = PlayerSheet.WORLD_SCALE / PlayerSheet.BAKE_SCALE
 	_npc_layer.add_child(sprite)
 	sprite.appearance = appearance
 	_npc_sprites[i] = sprite
+
+
+## Altura del nombre y de «!»/«?» sobre los pies de un NPC, según su tamaño (T157;
+## eran −52 y −70 con la escala de antes, 1,12).
+const NPC_LABEL_Y := -52.0 / 1.12 * PlayerSheet.WORLD_SCALE
+const NPC_MARK_Y := -70.0 / 1.12 * PlayerSheet.WORLD_SCALE
 
 
 ## Los NPC van en su propia capa (z 1): sin pixelar, con la luz de la zona.
@@ -2622,9 +2628,9 @@ func _draw_npcs(ci: CanvasItem) -> void:
 		elif PlayerSprite.available():
 			_update_npc_sprite(i, pos, appearance, facing, String(npc["id"]) == talking_npc)
 		else:
-			CharacterAppearance.draw(ci, pos, 1.12, appearance, facing)
+			CharacterAppearance.draw(ci, pos, PlayerSheet.WORLD_SCALE, appearance, facing)
 		var label_color := UiStyle.ACCENT if i == _hovered_npc else UiStyle.TEXT
-		var label_pos := pos + Vector2(-110.0, -52.0)
+		var label_pos := pos + Vector2(-110.0, NPC_LABEL_Y)
 		ci.draw_string_outline(font, label_pos, npc["name"], HORIZONTAL_ALIGNMENT_CENTER, 220.0, 14, 5, Color(0, 0, 0, 0.8))
 		ci.draw_string(font, label_pos, npc["name"], HORIZONTAL_ALIGNMENT_CENTER, 220.0, 14, label_color)
 		# "?" si tiene una misión lista para entregar; "!" si hay algo nuevo que hablar.
@@ -2640,5 +2646,5 @@ func _draw_npcs(ci: CanvasItem) -> void:
 			mark = "!"
 		if mark != "":
 			var bounce := sin(_time * 4.0) * 3.0
-			ci.draw_string_outline(font, pos + Vector2(-10.0, -70.0 + bounce), mark, HORIZONTAL_ALIGNMENT_CENTER, 20.0, 22, 5, Color.BLACK)
-			ci.draw_string(font, pos + Vector2(-10.0, -70.0 + bounce), mark, HORIZONTAL_ALIGNMENT_CENTER, 20.0, 22, mark_color)
+			ci.draw_string_outline(font, pos + Vector2(-10.0, NPC_MARK_Y + bounce), mark, HORIZONTAL_ALIGNMENT_CENTER, 20.0, 22, 5, Color.BLACK)
+			ci.draw_string(font, pos + Vector2(-10.0, NPC_MARK_Y + bounce), mark, HORIZONTAL_ALIGNMENT_CENTER, 20.0, 22, mark_color)

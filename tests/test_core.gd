@@ -5242,6 +5242,29 @@ func _test_touch_controls() -> void:
 			var z := GraphicsQuality.world_zoom(view, true, choice)
 			_check(z >= 1.0 and minf(view.x, view.y) / z >= 2.0 * SkillController.AUTO_ATTACK_RANGE,
 				"con %s en %s se ve el alcance del auto-ataque (zoom %.2f)" % [choice, view, z])
+	# Personajes más grandes (T157): jugador y NPC a la misma escala (PlayerSheet.WORLD_SCALE),
+	# un 15 % más; con el tamaño del mundo del celular, ×1,5 respecto a antes (lo pedido: 30-50 %).
+	_check(PlayerSheet.WORLD_SCALE >= 1.06 * 1.14, "personajes un 15 % más grandes que antes (1,06)")
+	_check(PlayerSheet.WORLD_SCALE / 1.06 * GraphicsQuality.WORLD_ZOOM_TOUCH >= 1.45, "en el celular, al menos ×1,45 que antes")
+	var body := Image.new()
+	if body.load(ProjectSettings.globalize_path(PlayerSheet.DIR_PATH + "body.png")) == OK:
+		var cell := PlayerSheet.region(0, PlayerSheet.Dir.DOWN, 0)
+		var top := int(cell.size.y)
+		for y in int(cell.size.y):
+			for x in int(cell.size.x):
+				if body.get_pixel(int(cell.position.x) + x, int(cell.position.y) + y).a > 0.6:
+					top = y
+					break
+			if top < int(cell.size.y):
+				break
+		var on_screen := (PlayerSheet.FEET.y - top) * PlayerSheet.WORLD_SCALE / PlayerSheet.BAKE_SCALE * GraphicsQuality.WORLD_ZOOM_TOUCH
+		_check(on_screen / 900.0 >= 0.065, "el personaje mide %.1f %% del alto en el celular (≥ 6,5 %%; antes 4,6)" % (on_screen / 9.0))
+	else:
+		_check(false, "se puede leer la hoja del cuerpo")
+	_check(is_equal_approx(EnemyManager.draw_size(11.0), 11.0 * 2.0 * EnemyManager.SPRITE_SCALE), "un enemigo normal se dibuja igual que antes")
+	_check(EnemyManager.draw_size(11.0 * 0.75 * 0.8, 1.0) == EnemyManager.MIN_DRAW_SIZE and EnemyManager.draw_size(5.0, 0.8) >= EnemyManager.MIN_DRAW_SIZE,
+		"un enjambre pequeño no baja del tamaño mínimo")
+	_check(EnemyManager.visual_radius(5.0) * 2.0 >= EnemyManager.MIN_DRAW_SIZE, "la barra y la zona para tocarlo siguen al dibujo")
 	# Racha de bajas (T153): se encadena, da velocidad por escalones y tokens al cortarse.
 	var ks := KillStreak.new()
 	for k in 6:

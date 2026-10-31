@@ -16,7 +16,7 @@ signal dodged
 
 const RADIUS := 14.0
 ## Tamaño del dibujo del personaje (0.9 antes; +18 % para que no quede más pequeño que las cajas).
-const PLAYER_SPRITE_SCALE := 1.06
+const PLAYER_SPRITE_SCALE := PlayerSheet.WORLD_SCALE
 ## Píxeles que avanza el personaje en cada paso (medio ciclo de la animación).
 const STRIDE := 30.0
 const BASE_MOVE_SPEED := 260.0
@@ -270,10 +270,20 @@ func _ensure_sprite() -> void:
 	add_child(_sprite)
 
 
-## Pisadas y aura de los logros (debajo del personaje).
+const PLAYER_RING_RADIUS := 15.0
+const PLAYER_RING_FLAT := 0.4
+
+
+## Anillo de la clase, pisadas y aura de los logros (debajo del personaje).
 func _draw_under() -> void:
 	var ci: CanvasItem = _under if _under != null else self
 	var tt := Time.get_ticks_msec() / 1000.0
+	# Anillo suave del color de la clase bajo los pies (T157): dónde estás, de un vistazo.
+	if _sprite != null and is_alive():
+		ci.draw_set_transform(_sprite.position, 0.0, Vector2(1.0, PLAYER_RING_FLAT))
+		ci.draw_arc(Vector2.ZERO, PLAYER_RING_RADIUS * PLAYER_SPRITE_SCALE, 0.0, TAU, 40,
+			Color(Color(character.class_def.get("color", "d9a441")), 0.5), 2.5, true)
+		ci.draw_set_transform(Vector2.ZERO)
 	for m in _step_marks:
 		Achievements.draw_step(ci, to_local(m["pos"]), character, float(m["t"]) / STEP_MARK_TIME)
 	Achievements.draw_aura(ci, Vector2(0.0, RADIUS * 0.6), character, tt)

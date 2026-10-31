@@ -6,6 +6,9 @@ extends Node2D
 ## Uso: `appearance = …` y, cada fotograma, `set_pose(facing, pose, walk_phase)`.
 
 const SHADER := preload("res://assets/shaders/player_layers.gdshader")
+## Contorno oscuro de 1 píxel de hoja (T157): para leerse sobre suelos oscuros.
+const OUTLINE_SHADER := preload("res://assets/shaders/player_outline.gdshader")
+const OUTLINE_OFFSETS: Array[Vector2] = [Vector2(-1, 0), Vector2(1, 0), Vector2(0, -1), Vector2(0, 1)]
 ## Orden de dibujo: [capa, es máscara].
 const ORDER := [["body", true], ["body_fixed", false], ["weapon", false], ["hair", true], ["beard", true],
 	["accessory", true], ["accessory_fixed", false]]
@@ -22,6 +25,7 @@ var tint := Color(0, 0, 0, 0):
 var sprite_scale := 1.0
 
 var _layers: Array[_Layer] = []
+var _outlines: Array[_Layer] = []   # una por capa, debajo de todas
 var _facing := Vector2.DOWN
 var _pose := {}
 var _walk := -1.0
@@ -41,9 +45,22 @@ static func available() -> bool:
 
 
 func _ready() -> void:
+	var outline_mat := ShaderMaterial.new()
+	outline_mat.shader = OUTLINE_SHADER
+	for entry in ORDER:
+		var o := _Layer.new()
+		o.name = String(entry[0]) + "_outline"
+		o.key = entry[0]
+		o.texture = texture_of(entry[0])
+		o.offsets = OUTLINE_OFFSETS
+		o.material = outline_mat
+		o.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		add_child(o)
+		_outlines.append(o)
 	for entry in ORDER:
 		var l := _Layer.new()
 		l.name = entry[0]
+		l.key = entry[0]
 		l.texture = texture_of(entry[0])
 		var m := ShaderMaterial.new()
 		m.shader = SHADER
@@ -96,8 +113,8 @@ func _refresh() -> void:
 	var c := cells()
 	var width: float = CharacterAppearance.BODY_WIDTH[int(appearance["body"])]
 	var height := float(appearance.get("height", 1.0))
-	for l in _layers:
-		var key := String(l.name)
+	for l in _layers + _outlines:
+		var key := l.key
 		var variant: int = c[key]
 		l.visible = variant >= 0 and l.texture != null
 		l.region = PlayerSheet.region(maxi(0, variant), c["_dir"], c["_col"])
@@ -106,11 +123,15 @@ func _refresh() -> void:
 		l.queue_redraw()
 
 
-## Una capa: dibuja su celda con los pies en el origen.
+## Una capa: dibuja su celda con los pies en el origen (el contorno, una vez por
+## desplazamiento de `offsets`, en píxeles de la hoja).
 class _Layer extends Node2D:
+	var key := ""
 	var texture: Texture2D
 	var region := Rect2()
+	var offsets: Array[Vector2] = [Vector2.ZERO]
 
 	func _draw() -> void:
 		if texture != null:
-			draw_texture_rect_region(texture, Rect2(-PlayerSheet.FEET, region.size), region)
+			for o in offsets:
+				draw_texture_rect_region(texture, Rect2(o - PlayerSheet.FEET, region.size), region)
