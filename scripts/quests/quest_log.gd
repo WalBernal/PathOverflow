@@ -117,6 +117,26 @@ func step_text(id: String) -> String:
 	return text
 
 
+## La misión a la vista (T154): «Nombre: paso» de la primera activa (la principal
+## primero); "" si no hay ninguna con un paso pendiente.
+func short_goal() -> String:
+	for id in active_ids():
+		var step := step_text(id)
+		if step != "":
+			return "%s: %s" % [defs[id].get("name", id), step]
+	return ""
+
+
+## Objetivo corto al entrar en la partida (T154): la misión a la vista o, sin
+## misiones, limpiar la zona; nada en una zona segura sin misiones.
+static func entry_goal(quest_goal: String, safe: bool, enemy_count: int) -> String:
+	if quest_goal != "":
+		return "Objetivo · " + quest_goal
+	if not safe and enemy_count > 0:
+		return "Objetivo · limpia esta zona (0/%d)" % enemy_count
+	return ""
+
+
 func _collected(step: Dictionary) -> int:
 	var n := 0
 	for item_id in step.get("items", []):

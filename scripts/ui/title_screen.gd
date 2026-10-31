@@ -27,6 +27,7 @@ var _logo: GameLogo
 var _leaving := false
 var _mute: Button
 var _update: Button
+var _continue: Button
 var _quit_dialog: ConfirmationDialog
 
 
@@ -51,7 +52,38 @@ func _ready() -> void:
 	add_child(updates)
 	updates.found.connect(show_update)
 	updates.check()
+	_add_continue()
 	_init_effects()
+
+
+## «Continuar» de un toque (T154): el último personaje jugado, donde lo dejaste,
+## sin pasar por la lista de personajes. Sin personajes no aparece.
+func _add_continue() -> void:
+	var saves := CharacterSaves.list_all()
+	if saves.is_empty():
+		return
+	var id := String(saves[0].get("id", ""))
+	_continue = UiStyle.button(CharacterSaves.continue_label(saves[0], GameData.zones), func() -> void: _continue_with(id), 0)
+	_continue.focus_mode = Control.FOCUS_NONE
+	_continue.custom_minimum_size = Vector2(380, 56)
+	_continue.add_theme_font_size_override("font_size", 20)
+	TouchPointer.gold(_continue)
+	add_child(_continue)
+	# Centrado, encima de «toca la pantalla para continuar».
+	_continue.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 170)
+	_continue.grow_horizontal = Control.GROW_DIRECTION_BOTH
+
+
+func _continue_with(id: String) -> void:
+	if _leaving:
+		return
+	var c := GameData.load_character(id)
+	if c == null:
+		_continue.text = "No se pudo cargar: entra por la lista"
+		return
+	_leaving = true
+	GameData.current_character = c
+	ScreenTransition.change_scene(get_tree(), GameData.WORLD_SCENE)
 
 
 ## Botón Atrás de Android (T141): preguntar antes de salir (no «continuar»).
@@ -150,8 +182,9 @@ func _input(event: InputEvent) -> void:
 		or (event is InputEventMouseButton and event.pressed) \
 		or (event is InputEventScreenTouch and event.pressed)
 	if pressed and (event is InputEventMouseButton or event is InputEventScreenTouch) \
-			and (_mute.get_global_rect().has_point(event.position) or (_update != null and _update.get_global_rect().has_point(event.position))):
-		return   # (la música y el aviso de actualización son botones, no «continuar»)
+			and (_mute.get_global_rect().has_point(event.position) or (_update != null and _update.get_global_rect().has_point(event.position)) \
+				or (_continue != null and _continue.get_global_rect().has_point(event.position))):
+		return   # (la música, el aviso de actualización y «Continuar» son botones, no «continuar»)
 	if pressed and not _leaving:
 		_leaving = true
 		ScreenTransition.change_scene(get_tree(), GameData.MAIN_MENU_SCENE)   # barrido de píxeles (T96)
@@ -191,7 +224,8 @@ func _draw() -> void:
 		draw_rect(Rect2(Vector2(0, view.y - 26.0 * (8 - k)), Vector2(view.x, 26.0 * (8 - k))), Color(0, 0, 0, a))
 	# Indicación parpadeante y versión.
 	var cursor := "_" if fmod(_time, 1.0) < 0.5 else " "
-	var prompt := ("> toca la pantalla para continuar" if GameSettings.is_mobile() else "> pulsa cualquier tecla para continuar") + cursor
+	var prompt := ("> toca la pantalla" if GameSettings.is_mobile() else "> pulsa cualquier tecla") \
+		+ (" para ver tus personajes" if _continue != null else " para continuar") + cursor
 	var pw := font.get_string_size(prompt, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x
 	draw_string(font, Vector2((view.x - pw) / 2.0, view.y - 120.0), prompt, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("3cff6a"))
 	draw_string(font, Vector2(16, view.y - 16), "compilado con café · inestable, como el código", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiStyle.MUTED)

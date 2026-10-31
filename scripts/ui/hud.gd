@@ -131,8 +131,8 @@ func _notification(what: int) -> void:
 		_layout()
 
 
-## Mensaje temporal en el centro superior de la pantalla.
-func flash(text: String, color := Color("e06c6c")) -> void:
+## Mensaje temporal en el centro superior de la pantalla (`hold` segundos antes de apagarse).
+func flash(text: String, color := Color("e06c6c"), hold := 2.0) -> void:
 	if color.is_equal_approx(UiStyle.DANGER):
 		Sfx.play("ui_error", -10.0)   # los avisos en rojo son errores (T77)
 	_message.text = text
@@ -141,7 +141,7 @@ func flash(text: String, color := Color("e06c6c")) -> void:
 	if _message_tween:
 		_message_tween.kill()
 	_message_tween = create_tween()
-	_message_tween.tween_interval(2.0)
+	_message_tween.tween_interval(hold)
 	_message_tween.tween_property(_message, "modulate:a", 0.0, 0.6)
 
 

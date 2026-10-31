@@ -124,6 +124,16 @@ static func delete(id: String, dir := "") -> void:
 			DirAccess.remove_absolute(p)
 
 
+## «▶ Continuar · Nombre · Nv 12 · Zona» de un guardado, para el botón del título
+## (T154); `zones` = GameData.zones (zona por id).
+static func continue_label(save: Dictionary, zones: Dictionary) -> String:
+	var text := "▶ Continuar · %s · Nv %d" % [String(save.get("name", "?")), int(save.get("level", 1))]
+	var zone_id := String((save.get("flags", {}) as Dictionary).get("zone", ""))
+	if zones.has(zone_id):
+		text += " · " + String(zones[zone_id].get("name", zone_id))
+	return text
+
+
 ## Todos los personajes guardados, el último jugado primero. También los que
 ## solo tienen copias (si el juego se cerró justo al sustituir el principal).
 ## Los archivos ilegibles se ignoran (y se avisa en la consola).

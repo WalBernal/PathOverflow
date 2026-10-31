@@ -903,6 +903,17 @@ func _test_quests() -> void:
 	log.start_auto()
 	_check(log.is_active("main_act1") and started.has("main_act1"), "la principal empieza sola")
 	_check(log.active_ids()[0] == "main_act1", "la principal va primero")
+	# Partidas cortas (T154): objetivo a la vista al entrar.
+	_check(log.short_goal().begins_with(String(log.defs["main_act1"]["name"]) + ": ") and log.short_goal() != "",
+		"objetivo corto: la principal con su paso")
+	_check(QuestLog.entry_goal(log.short_goal(), true, 0).begins_with("Objetivo · "), "con misión: «Objetivo · …»")
+	_check(QuestLog.entry_goal("", false, 12) == "Objetivo · limpia esta zona (0/12)", "sin misiones: limpiar la zona")
+	_check(QuestLog.entry_goal("", true, 0) == "", "zona segura sin misiones: nada")
+	var zones := {"campamento": {"name": "Campamento"}}
+	_check(CharacterSaves.continue_label({"name": "Ada", "level": 12, "flags": {"zone": "campamento"}}, zones) \
+		== "▶ Continuar · Ada · Nv 12 · Campamento", "«Continuar» con nombre, nivel y zona")
+	_check(CharacterSaves.continue_label({"name": "Ada", "level": 3, "flags": {"zone": "no_existe"}}, zones) == "▶ Continuar · Ada · Nv 3",
+		"«Continuar» sin una zona conocida: sin zona")
 	c.flags["talked_bot_onboarding"] = true
 	log.refresh()
 	_check(int(log.state("main_act1")["step"]) == 1, "hablar con B.O.B. avanza")

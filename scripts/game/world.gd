@@ -168,6 +168,10 @@ func _ready() -> void:
 	travel_to(start_zone, "waypoint" if GameData.zones[start_zone].get("waypoint") != null else "")
 	quests.start_auto()
 	_grant_unlocks.call_deferred()   # personajes que ya pasaron esos niveles antes del cambio
+	# Partidas cortas (T154): un objetivo a la vista al entrar.
+	var goal := QuestLog.entry_goal(quests.short_goal(), zone.safe, enemies.count())
+	if goal != "":
+		ui.hud.flash.call_deferred(goal, UiStyle.ACCENT, ENTRY_GOAL_TIME)
 
 	if character.flags.has("ascendancy_reset"):
 		character.flags.erase("ascendancy_reset")
@@ -181,6 +185,10 @@ func _ready() -> void:
 	if character.flags.has("passives_refunded"):
 		character.flags.erase("passives_refunded")
 		ui.hud.flash.call_deferred("El árbol pasivo es nuevo: tienes %d puntos para repartir (P). Hasta que cierres el árbol, quitar nodos es gratis." % character.passive_points_available(), UiStyle.ACCENT)
+
+
+## Segundos que se ve el objetivo al entrar (T154).
+const ENTRY_GOAL_TIME := 6.0
 
 
 ## Voz del personaje (Barks): un quejido al bajar de LOW_LIFE_BARK de vida, como

@@ -72,6 +72,18 @@ func _run() -> void:
 		get_window().size = Vector2i(1600, 900)
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("continuar"):
+		# «Continuar» de un toque en el título (T154), con los personajes de este equipo.
+		for touch in [true, false]:
+			Touch.force = touch
+			get_window().size = Vector2i(2400, 1080) if touch else Vector2i(1600, 900)
+			var title: Node = load("res://scenes/menu/title_screen.tscn").instantiate()
+			_swap(title)
+			await _wait(1.0)
+			_save("154_titulo_continuar" + ("_tactil" if touch else ""))
+		Touch.force = false
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("tutorial") and OS.get_cmdline_user_args().has("tactil"):
 		await _capture_touch_tutorial()
 		get_tree().quit()

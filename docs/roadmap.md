@@ -1017,9 +1017,10 @@ Origen: R7
 - 29-10-2026, prueba del usuario (Samsung Galaxy Z Fold 7, pantalla exterior): **la interfaz sigue parpadeando** (desaparece y vuelve, también el menú de pausa). Sospechosos: la copia de pantalla de los efectos (`BackBufferCopy` de `WorldPost`, que con el renderizador Mobile podría pintarse a ratos encima de la interfaz) o la zona segura (T142). Versión **3.1.3**: opción «Efectos de pantalla: sí/no» en Pausa → Gráficos (quita las dos pasadas que copian la pantalla), la zona segura ya no se vuelve a mirar cada medio segundo (cada 3 s y solo si el cambio se mantiene) y la línea del contador de FPS dice en táctil la zona segura, cuántas veces se recolocó la interfaz y el renderizador. Pendiente: que el usuario pruebe con los efectos apagados. Si no basta, siguiente paso: un APK con el renderizador Compatibility (OpenGL).
 - **Propuesta pendiente de la prueba del usuario** (no aplicada: cambia el equilibrio): en el celular, manadas un 30 % más juntas y más cerca del camino y menos espacio vacío entre ellas, para pasar del 34 % de pelea a ~50 %.
 
-### [ ] T154 · Partidas cortas · S
+### [x] T154 · Partidas cortas · S
 Origen: R7
 - «Continuar» de un toque en la pantalla de título (último personaje, donde lo dejaste) y un objetivo corto a la vista al entrar (la siguiente misión o «limpia esta zona: 0/N»), pensado para jugar 5 minutos.
+- Hecho: botón dorado **«▶ Continuar · Nombre · Nv 21 · Zona»** centrado encima de la indicación del título (solo si hay personajes; `CharacterSaves.continue_label`, el primero de `list_all`, que ya ordena por última partida): carga el personaje y entra al mundo sin pasar por la lista; tocar el resto de la pantalla sigue llevando a la lista («toca la pantalla para ver tus personajes»). Al entrar, el aviso de arriba enseña 6 s el **objetivo** (`QuestLog.short_goal` y `QuestLog.entry_goal`: «Objetivo · Misión: paso (2/5)» o, sin misiones fuera de una zona segura, «limpia esta zona (0/N)»); `Hud.flash` acepta cuánto dura. Comprobado con `capture_screens -- continuar` (2400×1080 táctil y 1600×900); captura `docs/capturas/movil/154_titulo_continuar_tactil.png`. Pruebas en `_test_quests`.
 
 ### [x] T155 · Revisión en el teléfono · S 🛑
 Origen: R7
@@ -1334,3 +1335,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-29 · T152 · Golpes que se notan en el celular: números de daño más grandes y agrupados (o solo críticos), críticos que saltan más y botín con arco más alto y dos botes.
 - 2026-10-29 · T153 · Ritmo medido (34 % del tiempo en pelea) y racha de bajas con velocidad y tokens al cortarse; versión 3.1.2 preparada; propuesta de manadas más juntas esperando la prueba del usuario.. **Pendiente de revisión del usuario.**
 - 2026-10-30 · T155 · Absorbida por el Roadmap 8.0 (tamaño y estética, T156-T173): cada etapa publica su versión (APK, latest.json y Windows) y se revisa en el teléfono.
+- 2026-10-30 · T154 · «▶ Continuar» de un toque en el título (último personaje, con su nivel y zona) y el objetivo a la vista 6 s al entrar (misión principal y su paso o «limpia esta zona (0/N)»).
