@@ -33,6 +33,10 @@ func _run() -> void:
 		await _capture_touch_auto()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("tamano"):
+		await _capture_world_size()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("joystick"):
 		await _capture_stick_modes()
 		get_tree().quit()
@@ -2456,6 +2460,45 @@ func _capture_phone() -> void:
 ## resolución de teléfono, donde el lienzo se estira).
 ## Ataque automático (T151): con enemigos cerca, 2 s caminando con el joystick sin
 ## tocar nada más, con el interruptor apagado y encendido (se enciende tocándolo).
+## Tamaño del mundo (T156): el campamento y la zona 1 con unos enemigos, a 2400×1080
+## en táctil, con la cámara al 100, 130 y 140 %. Deja la opción como estaba.
+func _capture_world_size() -> void:
+	var before := GraphicsQuality.world_zoom_choice()
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Zoom", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.flags["llegada_campamento_vista"] = true
+	Touch.force = true
+	get_window().size = Vector2i(2400, 1080)
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	await _wait(1.0)
+	var ui: GameUI = world.get("ui")
+	if ui.cutscene.visible:
+		ui.cutscene.call("_finish")
+	var player: Player = world.get("player")
+	player.set("invulnerable", true)
+	for zone_id in ["campamento", "zona1"]:
+		world.call("travel_to", zone_id, "waypoint")
+		await _wait(1.0)
+		if zone_id == "zona1":
+			var enemies: EnemyManager = world.get("enemies")
+			enemies.clear_all()
+			for k in 5:
+				enemies.spawn(player.global_position + Vector2.from_angle(k * TAU / 5.0) * 220.0, Rarity.Enemy.NORMAL)
+		for z in [1.0, 1.3, 1.4]:
+			GraphicsQuality.set_world_zoom_choice(z)
+			player.apply_world_zoom()
+			await _wait(0.6)
+			_save("156_%s_%d" % [zone_id, roundi(z * 100.0)])
+	GraphicsQuality.set_world_zoom_choice(before)
+	Touch.force = false
+	get_window().size = Vector2i(1600, 900)
+
+
 func _capture_touch_auto() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("Auto", &"guerrero", CharacterAppearance.default(), false)

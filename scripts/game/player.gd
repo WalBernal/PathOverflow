@@ -249,6 +249,13 @@ var _under: Node2D
 var _sprite_look := {}
 
 
+## Tamaño del mundo (T156): el zoom de la cámara según la opción y la vista.
+func apply_world_zoom() -> void:
+	var cam := get_node_or_null("Camera2D") as Camera2D
+	if cam and is_inside_tree():
+		cam.zoom = Vector2.ONE * GraphicsQuality.world_zoom(get_viewport_rect().size)
+
+
 ## Crea el sprite por capas la primera vez (si las hojas están horneadas).
 func _ensure_sprite() -> void:
 	if _sprite != null or character == null or not is_inside_tree() or not PlayerSprite.available():

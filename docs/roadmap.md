@@ -1042,12 +1042,13 @@ Diagnóstico de partida (leído en el código y en las capturas):
 
 ## Fase 35 — Todo más grande en el celular (versión 3.2.0)
 
-### [ ] T156 · Tamaño del mundo · M
+### [x] T156 · Tamaño del mundo · M
 Origen: R8
 - Opción «Tamaño del mundo: 100 / 115 / 130 / 150 %» en Pausa → Gráficos: zoom de la `Camera2D` del jugador (agranda personajes, enemigos, botín y efectos sin tocar la lógica ni las colisiones). Por defecto **130 % en táctil** y 100 % en el PC; se guarda en `settings.cfg`.
 - Que lo respeten las escenas (`CutscenePlayer` ya parte de `_base_zoom`), el filtro de píxeles de `WorldPost`, el clima, los indicadores de enemigos fuera de cámara y el minimapa (que no cambia).
 - Revisar que a 150 % en 1600×720 el alcance del auto-ataque (320 px) y de la mira sigan dentro de la vista; si no, tope por alto de pantalla.
 - Prueba: `GraphicsQuality` (o donde viva) devuelve 1,3 en táctil y 1,0 en el PC por defecto; con cada opción y en 1600×720 / 2400×1080, el rectángulo visible contiene un círculo de 320 px alrededor del jugador. Capturas `docs/capturas/tamano/156_*` antes y después.
+- Hecho: «Tamaño del mundo: auto / 100 / 115 / 130 / 140 %» en Pausa → Gráficos y datos (`GraphicsQuality.world_zoom`, `graphics/world_zoom` en `settings.cfg`); auto = 130 % en el celular y 100 % en el PC. `Player.apply_world_zoom` pone el zoom de su `Camera2D` al entrar en cada zona, al cambiar la opción y al cambiar el tamaño de la vista. **Decisión**: sin 150 %; el tope es el zoom que deja ver el alcance del auto-ataque (`WORLD_ZOOM_REACH` = `AUTO_ATTACK_RANGE`, 320 px) en el lado corto del lienzo: con 900 px de alto, 1,406, así que como mucho 140 %. Lo demás ya usaba la escala del lienzo (cámara de la zona, clima, enemigos en pantalla, luces de `WorldPost`, escenas a partir de `_base_zoom`); solo faltaban el radio de la luz del jugador y la rejilla del filtro pixel art de `WorldPost`, que ahora crecen con el zoom. Capturas `docs/capturas/tamano/156_*` (campamento y zona 1 a 100, 130 y 140 % en 2400×1080, con `capture_screens -- tamano`). Pruebas en `_test_touch_controls`.
 
 ### [ ] T157 · Personajes del mismo tamaño y más legibles · M
 Origen: R8
@@ -1336,3 +1337,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-29 · T153 · Ritmo medido (34 % del tiempo en pelea) y racha de bajas con velocidad y tokens al cortarse; versión 3.1.2 preparada; propuesta de manadas más juntas esperando la prueba del usuario.. **Pendiente de revisión del usuario.**
 - 2026-10-30 · T155 · Absorbida por el Roadmap 8.0 (tamaño y estética, T156-T173): cada etapa publica su versión (APK, latest.json y Windows) y se revisa en el teléfono.
 - 2026-10-30 · T154 · «▶ Continuar» de un toque en el título (último personaje, con su nivel y zona) y el objetivo a la vista 6 s al entrar (misión principal y su paso o «limpia esta zona (0/N)»).
+- 2026-10-30 · T156 · «Tamaño del mundo» (auto / 100-140 %) en Pausa → Gráficos: zoom de la cámara, 130 % por defecto en el celular, con tope para ver siempre el alcance del auto-ataque; luz del jugador y rejilla pixel art siguen el zoom.

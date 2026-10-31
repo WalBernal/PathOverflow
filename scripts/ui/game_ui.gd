@@ -84,6 +84,7 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_root)
 	get_viewport().size_changed.connect(apply_ui_scale)
+	get_viewport().size_changed.connect(player.apply_world_zoom)   # el tope del zoom depende de la vista (T156)
 	apply_ui_scale()
 
 	hud = Hud.new()
@@ -658,6 +659,18 @@ func _build_pause_menu() -> Control:
 		GraphicsQuality.set_level((GraphicsQuality.level + 1) % 3)
 		quality.text = "Calidad gráfica: " + GraphicsQuality.name_of())
 	extra.add_child(quality)
+	# Tamaño del mundo (T156).
+	var zoom := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
+	var view := get_viewport().get_visible_rect().size
+	zoom.text = "Tamaño del mundo: " + GraphicsQuality.world_zoom_name(view)
+	zoom.tooltip_text = "Acerca la cámara: personajes, enemigos y botín más grandes, pero se ve menos alrededor.\nAuto: %d %% en el celular y 100 %% en el PC. Tope: siempre se ve el alcance del ataque automático." % roundi(GraphicsQuality.WORLD_ZOOM_TOUCH * 100.0)
+	zoom.pressed.connect(func() -> void:
+		var choices := GraphicsQuality.WORLD_ZOOMS
+		GraphicsQuality.set_world_zoom_choice(choices[(choices.find(GraphicsQuality.world_zoom_choice()) + 1) % choices.size()])
+		zoom.text = "Tamaño del mundo: " + GraphicsQuality.world_zoom_name(get_viewport().get_visible_rect().size)
+		if _player:
+			_player.apply_world_zoom())
+	extra.add_child(zoom)
 	# Límite de FPS y contador (T144).
 	var fps := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
 	fps.text = "FPS: " + GraphicsQuality.fps_name()

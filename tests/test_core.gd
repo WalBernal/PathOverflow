@@ -5231,6 +5231,17 @@ func _test_touch_controls() -> void:
 		_check(s * ui >= 44.0, "objetivo táctil de %d px a 140 %% (≥ 44)" % roundi(s * ui))
 	_check(TouchPointer.LONG_PRESS >= 0.4 and TouchPointer.LONG_PRESS <= 0.8, "mantener: medio segundo, ni más ni menos")
 	_check(TouchPointer.scroll_for(null, Vector2(0, 40)) == null, "arrastrar sin casilla: no desplaza por su cuenta")
+	# Tamaño del mundo (T156): 130 % en el celular, 100 % en el PC, y siempre se ve el alcance
+	# del auto-ataque alrededor del jugador (lienzo de 1600×720 y 2400×1080 = 2000×900 y 1600×900 con «expand»).
+	var phone := Vector2(2000, 900)
+	_check(is_equal_approx(GraphicsQuality.world_zoom(phone, true, -1.0), 1.3), "tamaño del mundo auto en el celular: 130 %")
+	_check(is_equal_approx(GraphicsQuality.world_zoom(Vector2(1600, 900), false, -1.0), 1.0), "tamaño del mundo auto en el PC: 100 %")
+	_check(GraphicsQuality.WORLD_ZOOM_REACH == SkillController.AUTO_ATTACK_RANGE, "el tope del zoom usa el alcance del auto-ataque")
+	for view in [phone, Vector2(1600, 900), Vector2(1600, 1333)]:
+		for choice in GraphicsQuality.WORLD_ZOOMS:
+			var z := GraphicsQuality.world_zoom(view, true, choice)
+			_check(z >= 1.0 and minf(view.x, view.y) / z >= 2.0 * SkillController.AUTO_ATTACK_RANGE,
+				"con %s en %s se ve el alcance del auto-ataque (zoom %.2f)" % [choice, view, z])
 	# Racha de bajas (T153): se encadena, da velocidad por escalones y tokens al cortarse.
 	var ks := KillStreak.new()
 	for k in 6:

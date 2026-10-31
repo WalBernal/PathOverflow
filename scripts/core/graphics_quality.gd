@@ -67,6 +67,44 @@ static func fps_name() -> String:
 	return FPS_NAMES[v] + (" (%d)" % effective_fps() if v == -1 and effective_fps() > 0 else "")
 
 
+## Tamaño del mundo (T156, Pausa → Gráficos): zoom de la cámara del jugador. Agranda
+## personajes, enemigos, botín y efectos sin tocar la lógica ni las colisiones.
+## -1 = automático: WORLD_ZOOM_TOUCH en el celular y 1 en el PC.
+const WORLD_ZOOMS := [-1.0, 1.0, 1.15, 1.3, 1.4]
+const WORLD_ZOOM_TOUCH := 1.3
+## Lo que tiene que verse alrededor del jugador como mínimo (el alcance del
+## auto-ataque y de la mira, SkillController.AUTO_ATTACK_RANGE): pone tope al zoom.
+const WORLD_ZOOM_REACH := 320.0
+
+
+static func world_zoom_choice() -> float:
+	var v := float(GameSettings.get_value("graphics", "world_zoom", -1.0))
+	for z in WORLD_ZOOMS:
+		if is_equal_approx(v, z):
+			return z
+	return -1.0
+
+
+static func set_world_zoom_choice(v: float) -> void:
+	GameSettings.set_value("graphics", "world_zoom", v)
+
+
+## El zoom que se usa con una vista (lienzo) de `view` píxeles: el elegido o el
+## automático, sin pasar del que deja ver WORLD_ZOOM_REACH alrededor del jugador.
+static func world_zoom(view: Vector2, mobile := GameSettings.is_mobile(), choice := world_zoom_choice()) -> float:
+	var z := choice if choice > 0.0 else (WORLD_ZOOM_TOUCH if mobile else 1.0)
+	return minf(z, max_world_zoom(view))
+
+
+static func max_world_zoom(view: Vector2) -> float:
+	return maxf(1.0, minf(view.x, view.y) / (2.0 * WORLD_ZOOM_REACH))
+
+
+static func world_zoom_name(view: Vector2) -> String:
+	var pct := "%d %%" % roundi(world_zoom(view) * 100.0)
+	return ("auto (%s)" % pct) if world_zoom_choice() < 0.0 else pct
+
+
 static func set_level(value: int) -> void:
 	level = clampi(value, 0, 2)
 	GameSettings.set_value("graphics", "quality", level)

@@ -115,9 +115,10 @@ func _process(_delta: float) -> void:
 		return
 	# Con stretch "canvas_items" la ventana puede ser más grande que la vista de 1600×900.
 	var ratio := Vector2(get_window().size) / get_viewport().get_visible_rect().size
+	var zoom := player.get_canvas_transform().get_scale().x   # tamaño del mundo (T156)
 	_light.mat.set_shader_parameter("light_pos", player.get_global_transform_with_canvas().origin * ratio)
-	_light.mat.set_shader_parameter("light_radius", _radius * ratio.x)
-	_pixel.mat.set_shader_parameter("pixel", maxf(2.0, roundf(2.0 * ratio.x)))
+	_light.mat.set_shader_parameter("light_radius", _radius * zoom * ratio.x)
+	_pixel.mat.set_shader_parameter("pixel", maxf(2.0, roundf(2.0 * zoom * ratio.x)))
 	_send_lights(ratio)
 
 

@@ -435,6 +435,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 	cam.limit_top = int(zone.rect.position.y - 200)
 	cam.limit_right = int(zone.rect.end.x + 200)
 	cam.limit_bottom = int(zone.rect.end.y + 200)
+	player.apply_world_zoom()
 	cam.reset_smoothing()
 
 	var difficulty := Difficulty.current(character)
