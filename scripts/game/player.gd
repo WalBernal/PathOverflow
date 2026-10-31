@@ -258,8 +258,9 @@ func apply_status(id: String, duration: float) -> bool:
 	return true
 
 
-## Personaje por capas (T102b): el sprite y, debajo, las pisadas y el aura de los logros.
-var _sprite: PlayerSprite
+## El personaje (T176: el héroe en pixel art de su clase, HeroSprite; antes el
+## oficinista por capas de T102b) y, debajo, las pisadas y el aura de los logros.
+var _sprite: HeroSprite
 var _under: Node2D
 var _sprite_look := {}
 
@@ -272,15 +273,15 @@ func apply_world_zoom() -> void:
 		Accessibility.world_zoom = cam.zoom.x   # los textos del mundo lo compensan (T158)
 
 
-## Crea el sprite por capas la primera vez (si las hojas están horneadas).
+## Crea el sprite la primera vez.
 func _ensure_sprite() -> void:
-	if _sprite != null or character == null or not is_inside_tree() or not PlayerSprite.available():
+	if _sprite != null or character == null or not is_inside_tree():
 		return
 	_under = Node2D.new()
 	_under.show_behind_parent = true
 	_under.draw.connect(_draw_under)
 	add_child(_under)
-	_sprite = PlayerSprite.new()
+	_sprite = HeroSprite.new()
 	_sprite.show_behind_parent = true
 	_sprite.sprite_scale = PLAYER_SPRITE_SCALE / PlayerSheet.BAKE_SCALE
 	add_child(_sprite)
@@ -323,7 +324,7 @@ func _update_sprite(feet: Vector2, tint: Color) -> void:
 	if pose.has("glow") and state in ["cast", "channel"]:
 		var g: Color = pose["glow"]
 		var side := -1.0 if _facing.x < -0.3 else 1.0
-		var hand := feet + Vector2(side * 13.0, -26.0) * PLAYER_SPRITE_SCALE
+		var hand := feet + Vector2(side * 6.0, -16.0) * HeroSprite.HERO_SCALE   # (la mano del héroe en pixel art)
 		var pulse := 0.75 + 0.25 * sin(float(pose["time"]) * 9.0) if state == "channel" else minf(1.0, float(pose["t"]) * 2.5)
 		draw_circle(hand, 4.5 * PLAYER_SPRITE_SCALE * pulse, Color(g, 0.35))
 		draw_circle(hand, 2.4 * PLAYER_SPRITE_SCALE * pulse, Color(g.lightened(0.4), 0.8))

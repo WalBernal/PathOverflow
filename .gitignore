@@ -5,3 +5,6 @@
 export_presets.cfg
 __pycache__/
 build/
+
+# Packs de terceros con licencia que prohíbe volver a subirlos (p. ej. Zerie): solo de referencia, fuera de git y del juego
+assets/third_party/

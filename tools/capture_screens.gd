@@ -33,6 +33,10 @@ func _run() -> void:
 		await _capture_touch_auto()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("heroes"):
+		await _capture_pixel_heroes()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("rpg"):
 		await _capture_rpg_heroes()
 		get_tree().quit()
@@ -1510,6 +1514,46 @@ func _capture_rpg_heroes() -> void:
 			sheet.add_child(tr)
 	await _wait(0.6)
 	_save("175_rpg")
+
+
+## Héroes en pixel art propios (T176): cada clase en una fila con reposo, andar, el
+## ataque entero, lanzar y muerto, ampliados sin suavizar. Si se pasa `zoom4`, solo
+## las dos primeras clases más grandes.
+func _capture_pixel_heroes() -> void:
+	var sheet := Control.new()
+	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sheet.draw.connect(func() -> void: sheet.draw_rect(Rect2(Vector2.ZERO, sheet.size), Color("3a3f48")))
+	_swap(sheet)
+	var looks := [
+		{"outfit_color": "8a2b2b", "accent_color": "d9a441", "skin_tone": "e0ac8a", "hair_color": "2b2118"},
+		{"outfit_color": "2b4a6b", "accent_color": "c84b4b", "skin_tone": "f1d2b6", "hair_color": "b5651d", "beard": 1},
+		{"outfit_color": "2b6b45", "accent_color": "d9a441", "skin_tone": "8d5a3b", "hair_color": "0f0d0c"},
+		{"outfit_color": "5a3b6b", "accent_color": "2fd0a0", "skin_tone": "c99a7a", "hair_color": "6b3d80"},
+		{"outfit_color": "2b3f8a", "accent_color": "d9a441", "skin_tone": "f1d2b6", "hair_color": "c8c8c8", "beard": 2},
+		{"outfit_color": "f2f2f2", "accent_color": "2b6cb0", "skin_tone": "a8714f", "hair_color": "2b2118"},
+		{"outfit_color": "1d5a66", "accent_color": "e06c6c", "skin_tone": "e0ac8a", "hair_color": "d96a9a"},
+	]
+	var weapons := ["axe", "sword", "sword", "dagger", "mace", "mace", "sword"]
+	var frames := [["idle", 0], ["walk", 0], ["walk", 2], ["walk", 4], ["walk", 6], ["attack", 0], ["attack", 1], ["attack", 2],
+		["attack", 3], ["attack", 4], ["attack", 5], ["cast", 2], ["dead", 3]]
+	var zoom := 2.5
+	var rows := PixelHero.CLASSES.size()
+	for ci in rows:
+		var tex := PixelHero.texture(looks[ci], PixelHero.CLASSES[ci], weapons[ci])
+		for fi in frames.size():
+			var col := PixelHero.first_column(frames[fi][0]) + int(frames[fi][1])
+			var at := AtlasTexture.new()
+			at.atlas = tex
+			at.region = Rect2(col * PixelHero.CELL.x, 0, PixelHero.CELL.x, PixelHero.CELL.y)
+			var tr := TextureRect.new()
+			tr.texture = at
+			tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			tr.size = Vector2(PixelHero.CELL) * zoom
+			tr.position = Vector2(fi * PixelHero.CELL.x * zoom, ci * 900.0 / rows - 6.0)
+			sheet.add_child(tr)
+	await _wait(0.4)
+	_save("176_heroes")
 
 
 ## NPC con su objeto y su reposo (T162): cada uno de frente y, debajo, de lado, en dos

@@ -5643,6 +5643,35 @@ func _test_player_sheet() -> void:
 			var col := PlayerSheet.column_for(state, "sword", t, t * 3.0, t * TAU if state == "walk" else -1.0)
 			if col < first or col >= first + PlayerSheet.frames_of(group):
 				_check(false, "%s con t=%.2f sale de sus cuadros (%d)" % [state, t, col])
+	# T176: héroes en pixel art propios: cada clase con sus rejillas bien formadas, sus
+	# colores en la paleta, todos los cuadros con dibujo y, de pie, los pies en el suelo.
+	var pal := PixelHero.palette(CharacterAppearance.default())
+	for cls in PixelHero.CLASSES:
+		var letters := ""
+		for row in PixelHero.HEADS[cls] + PixelHero.TORSOS[cls]:
+			letters += String(row)
+		var unknown := []
+		for ch in letters:
+			if ch != "." and not pal.has(ch) and not unknown.has(ch):
+				unknown.append(ch)
+		_check(PixelHero.HEADS[cls].size() == 10 and PixelHero.TORSOS[cls].size() == 7 and unknown.is_empty(),
+			"héroe %s: cabeza 10 filas, torso 7 y todas sus letras en la paleta %s" % [cls, unknown])
+	var hero := PixelHero.build(CharacterAppearance.default(), "templario", "sword")
+	_check(hero.get_width() == PixelHero.CELL.x * PixelHero.columns() and hero.get_height() == PixelHero.CELL.y, "la hoja del héroe tiene un cuadro por pose")
+	var bad_hero := []
+	for c in PixelHero.columns():
+		var used := hero.get_region(Rect2i(c * PixelHero.CELL.x, 0, PixelHero.CELL.x, PixelHero.CELL.y)).get_used_rect()
+		var anim := ""
+		for a in PixelHero.ORDER:
+			if c >= PixelHero.first_column(a):
+				anim = a
+		# (el arma puede bajar de los pies en el tajo; lo que no puede es flotar)
+		if used.size == Vector2i.ZERO or (anim in ["idle", "walk", "attack", "cast", "channel", "shoot", "type"] and used.end.y - 1 < PixelHero.FEET.y - 1):
+			bad_hero.append("%s/%d (%s)" % [anim, c, used])
+	_check(bad_hero.is_empty(), "cada cuadro del héroe tiene dibujo y, de pie, los pies en el suelo: %s" % [bad_hero])
+	_check(PixelHero.column_for("walk", 0.0, 0.0, PI) >= PixelHero.first_column("walk") and PixelHero.column_for("attack", 0.99) == PixelHero.first_column("attack") + 5
+		and PixelHero.column_for("limp", 1.0) == PixelHero.first_column("dead") + 3, "cada estado elige sus cuadros")
+	_check(PixelHero.texture(CharacterAppearance.default(), "hacker", "dagger") == PixelHero.texture(CharacterAppearance.default(), "hacker", "dagger"), "la hoja se arma una vez y se guarda")
 	# T175: un héroe de RPG por clase, y lo fijo (metal dorado, cuero) nunca se confunde con
 	# una capa de color en el pase de identificación del horneado.
 	var rpg_classes: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/classes.json"))["classes"].map(
