@@ -33,6 +33,10 @@ func _run() -> void:
 		await _capture_touch_auto()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("rpg"):
+		await _capture_rpg_heroes()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("npcs"):
 		await _capture_npc_identity()
 		get_tree().quit()
@@ -1438,6 +1442,74 @@ func _capture_class_gear() -> void:
 			sp.set_pose(p[0], p[1], p[2])
 	await _wait(0.5)
 	_save("161_equipos")
+
+
+## Héroes de RPG (T175): las siete clases de frente, de lado, de espaldas y atacando,
+## dibujadas a la escala de la hoja (píxeles reales) y ampliadas sin suavizar, con el
+## contorno grueso de PlayerSprite; a la izquierda, el oficinista de ahora.
+const RPG_OUTLINE_SHADER := """
+shader_type canvas_item;
+void fragment() {
+	vec4 c = texture(TEXTURE, UV);
+	if (c.a < 0.6) {
+		float n = 0.0;
+		for (int k = 0; k < 8; k++) {
+			vec2 d = vec2(cos(float(k) * 0.785398), sin(float(k) * 0.785398)) * 2.0 * TEXTURE_PIXEL_SIZE;
+			n = max(n, texture(TEXTURE, UV + d).a);
+		}
+		if (n > 0.6) { c = vec4(0.04, 0.03, 0.06, 0.9); }
+	}
+	COLOR = c;
+}
+"""
+
+
+func _capture_rpg_heroes() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var sheet := Control.new()
+	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sheet.draw.connect(func() -> void: sheet.draw_rect(Rect2(Vector2.ZERO, sheet.size), Color("2a2e36")))
+	_swap(sheet)
+	var shader := Shader.new()
+	shader.code = RPG_OUTLINE_SHADER
+	var poses := [[Vector2.DOWN, {"state": "idle", "time": 0.3}, -1.0], [Vector2.RIGHT, {"state": "walk"}, 1.3],
+		[Vector2.UP, {"state": "idle", "time": 0.3}, -1.0], [Vector2.RIGHT, {"state": "attack", "t": 0.3, "weapon": "sword"}, -1.0]]
+	var classes: Array = ["oficinista"] + RpgAppearance.CLASSES
+	var cell := Vector2(1600.0 / classes.size(), 900.0 / poses.size())
+	var zoom := 1.9
+	for ci in classes.size():
+		var look := CharacterAppearance.random(rng)
+		look["accessory"] = 0
+		look["rpg"] = classes[ci]
+		for pi in poses.size():
+			var p: Array = poses[pi]
+			var vp := SubViewport.new()
+			vp.size = Vector2i(PlayerSheet.CW, PlayerSheet.CH)
+			vp.transparent_bg = true
+			vp.canvas_item_default_texture_filter = Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST
+			var fig := Node2D.new()
+			var cls: String = classes[ci]
+			fig.draw.connect(func() -> void:
+				var pose: Dictionary = p[1].duplicate()
+				if cls == "oficinista":
+					CharacterAppearance.draw(fig, PlayerSheet.FEET, PlayerSheet.BAKE_SCALE, look, p[0], Color(0, 0, 0, 0), p[2], pose)
+				else:
+					RpgAppearance.draw(fig, PlayerSheet.FEET, PlayerSheet.BAKE_SCALE, look, p[0], Color(0, 0, 0, 0), p[2], pose))
+			vp.add_child(fig)
+			sheet.add_child(vp)
+			var tr := TextureRect.new()
+			tr.texture = vp.get_texture()
+			tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			tr.size = Vector2(PlayerSheet.CW, PlayerSheet.CH) * zoom
+			tr.position = Vector2(cell.x * (ci + 0.5), cell.y * (pi + 0.95)) - Vector2(PlayerSheet.FEET) * zoom
+			var mat := ShaderMaterial.new()
+			mat.shader = shader
+			tr.material = mat
+			sheet.add_child(tr)
+	await _wait(0.6)
+	_save("175_rpg")
 
 
 ## NPC con su objeto y su reposo (T162): cada uno de frente y, debajo, de lado, en dos

@@ -5643,6 +5643,13 @@ func _test_player_sheet() -> void:
 			var col := PlayerSheet.column_for(state, "sword", t, t * 3.0, t * TAU if state == "walk" else -1.0)
 			if col < first or col >= first + PlayerSheet.frames_of(group):
 				_check(false, "%s con t=%.2f sale de sus cuadros (%d)" % [state, t, col])
+	# T175: un héroe de RPG por clase, y lo fijo (metal dorado, cuero) nunca se confunde con
+	# una capa de color en el pase de identificación del horneado.
+	var rpg_classes: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/classes.json"))["classes"].map(
+		func(c: Dictionary) -> String: return String(c["id"]))
+	_check(rpg_classes.all(func(id: String) -> bool: return RpgAppearance.CLASSES.has(id)), "cada clase tiene su héroe de RPG")
+	_check(PlayerSheet.classify(RpgAppearance._fixed(RpgAppearance.GOLD, Color(0, 0, 0, 0), true)) == 0
+		and PlayerSheet.classify(Color(RpgAppearance.GOLD)) != 0, "el dorado se dibuja gris al identificar (si no, sería «pelo»)")
 	# T161: cada clase con su equipo de oficio, horneado, y dos clases nunca con el mismo.
 	var classes_json = JSON.parse_string(FileAccess.get_file_as_string("res://data/classes.json"))
 	var class_ids: Array = classes_json["classes"].map(func(c: Dictionary) -> String: return String(c["id"]))
