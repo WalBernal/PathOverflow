@@ -1100,9 +1100,10 @@ Origen: R8
 - Prueba: `PlayerSprite.set_pose` con cada estado devuelve un cuadro dentro del rango de su estado; la escala de respiración nunca pasa de ±4 %.
 - Hecho: `PlayerSprite.life` pone encima de los cuadros horneados una escala desde los pies y una elevación (jugador y NPC): **respira** en reposo (±2 % de alto), al **andar** se aplasta un 3 % al pisar y se eleva 1,6 píxeles de hoja entre pisadas, al **atacar** o disparar se estira un 7 % justo cuando llega el golpe (`impact_fraction`) y al lanzar se alarga un poco. **Polvo al esquivar**: seis bocanadas que salen de los pies hacia atrás y se deshacen en 0,45 s (`Player._dust`, debajo del personaje). **Silueta tras obstáculos: no hace falta** (decisión): la zona entera (obstáculos y decorado) se dibuja debajo del jugador, así que nada lo tapa; lo único encima es la capa de los NPC, que no se cruza con él en pelea. Pruebas en `_test_player_sheet` (respiración ≤ ±4 %, pisada y estiramiento, cada estado en sus cuadros).
 
-### [ ] T164 · Versión 3.3.0 y revisión en el teléfono · S 🛑
+### [~] T164 · Versión 3.3.0 y revisión en el teléfono · S 🛑
 Origen: R8
 - Versión 3.3.0 (APK, `latest.json` y Windows) y capturas de las 7 clases y de los NPC del campamento en `docs/capturas/personajes/`; el usuario elige qué atuendos o armas cambiar antes de seguir.
+- Preparado (31-10-2026): `config/version="3.3.0"`; `run_checks -Rapida` en `[OK]`; `build/PathOverflow.apk` (45 MB, código 11, renderizador Compatibility de la 3.2.1), `build/latest.json`, `build/PathOverflow.exe` y el instalador. Capturas: `161_equipos.png` (las 7 clases en 4 poses), `162_npcs.png`, `164_campamento_130.png` y `164_zona1_130.png` (en partida, 2400×1080 al 130 %). Lista `docs/prueba_celular_3.3.md` (incluye si el parpadeo se fue con la 3.2.1 y si quiere armas de oficio). README: la 3.3 en «Versiones». **Falta (usuario)**: subir la release `v3.3.0` a WalBernal/PathOverflow, probar y decidir atuendos, armas y NPC.
 
 ## Fase 37 — Interfaz de ingeniería (versión 3.4.0)
 
