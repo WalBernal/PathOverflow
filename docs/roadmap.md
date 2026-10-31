@@ -1064,9 +1064,10 @@ Origen: R8
 - Prueba: `capture_screens -- solapes` sigue en 0 en las 16 configuraciones táctiles con cada tamaño de mundo; tamaño efectivo de letra de los números de daño ≥ 18 px de pantalla en 1600×720.
 - Hecho: todo el texto del mundo pasa por `Accessibility.world_size` (nombres de enemigos, NPC —que antes iban fijos a 14— y compañeros, etiquetas del botín, números de daño, «git stash», rótulos de la zona), que ahora divide por √zoom (`Accessibility.world_zoom`, lo pone `Player.apply_world_zoom`): en pantalla la letra crece √zoom (al 130 %, un 14 %) y el dibujo el zoom entero, así que las etiquetas ocupan menos mundo y se pisan menos; el agrupado de botín y de números trabaja en el mundo y lo aprovecha sin cambios. Los números de daño quedan en 18,4 px reales en 1600×720. Lo decorativo con letras (bits, «404», carteles) crece con el mundo. `capture_screens -- solapes`: 0 en las 16 configuraciones y en el PC (el HUD no depende del zoom). Pruebas en `_test_touch_controls`.
 
-### [ ] T159 · Versión 3.2.0 y revisión en el teléfono · S 🛑
+### [~] T159 · Versión 3.2.0 y revisión en el teléfono · S 🛑
 Origen: R8
 - Versión 3.2.0: APK + `latest.json` + ejecutable de Windows (ver la cabecera del roadmap); lista corta `docs/prueba_celular_3.2.md`: ¿el tamaño por defecto se siente bien o prefieres 115/150?, ¿se ve suficiente alrededor para esquivar?, ¿se lee el texto?, ¿la interfaz sigue parpadeando con «Efectos de pantalla» apagado? (pendiente de T153), y las preguntas de sensación de T155 (controles, golpes, ritmo, algo que tape la pantalla).
+- Preparado (30-10-2026): `config/version="3.2.0"`; `run_checks -Rapida` en `[OK]`; `publicar_version.ps1 -Repo WalBernal/PathOverflow` dejó `build/PathOverflow.apk` (45 MB, código 9, clave de depuración: se instala encima) y `build/latest.json`; `build_release.ps1` dejó `build/PathOverflow.exe` y `build/PathOverflow-Setup.exe` (Linux y macOS saltan: faltan sus plantillas). Lista `docs/prueba_celular_3.2.md` (las opciones de tamaño son 115/130/140: ver T156). README: la 3.2 en «Versiones». **Falta (usuario)**: subir el APK y el `latest.json` a una release `v3.2.0` de WalBernal/PathOverflow y probar en el teléfono.
 
 ## Fase 36 — Personajes con presencia (versión 3.3.0)
 
