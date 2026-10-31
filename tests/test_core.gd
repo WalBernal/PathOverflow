@@ -5156,6 +5156,17 @@ func _test_missing_scenes() -> void:
 func _test_mobile_defaults() -> void:
 	# T159: Compatibility (OpenGL) en vez de Mobile (Vulkan): con Mobile la interfaz parpadeaba en el teléfono.
 	_check(String(ProjectSettings.get_setting("rendering/renderer/rendering_method.mobile")) == "gl_compatibility", "en el celular, el renderizador Compatibility")
+	# Ícono de la app (T174): sus tamaños y el motivo dentro de la zona segura del adaptable.
+	_check(String(ProjectSettings.get_setting("application/config/icon")) == "res://assets/icons/icon.png", "el proyecto usa el ícono nuevo")
+	var sizes := {"icon.png": 1024, "icon_foreground.png": 432, "icon_background.png": 432}
+	for file in sizes:
+		var img := Image.new()
+		var ok := img.load(ProjectSettings.globalize_path("res://assets/icons/" + file)) == OK
+		_check(ok and img.get_width() == int(sizes[file]) and img.get_height() == int(sizes[file]), "ícono %s de %d px" % [file, sizes[file]])
+		if ok and file == "icon_foreground.png":
+			var used := img.get_used_rect()
+			var safe := Rect2i(Vector2i(72, 72), Vector2i(288, 288))   # el 66 % del centro de 432
+			_check(used.size.x > 150 and safe.encloses(used), "el motivo del ícono adaptable cabe en la zona segura (%s)" % used)
 	_check(int(ProjectSettings.get_setting("display/window/handheld/orientation")) == DisplayServer.SCREEN_SENSOR_LANDSCAPE, "y siempre en horizontal")
 	_check(not GameSettings.is_mobile(), "este equipo no cuenta como celular")
 	_check(int(GraphicsQuality.preset(2)["lights"]) == 32, "en escritorio, la calidad alta con todas sus luces")

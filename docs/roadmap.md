@@ -1112,11 +1112,12 @@ Origen: R8
 
 Pedido del usuario al revisar la 3.3 (31-10-2026). **Origen: R8b.** En el prólogo los personajes siguen siendo oficinistas (el dibujo con formas de `CharacterAppearance`, que el prólogo usa directamente); al entrar al servidor, en el acto I, se compilan como héroes de RPG. Lo de T160-T163 que no es el dibujo (hojas por capas y por variante, contorno, `PlayerSprite.life`, polvo al esquivar, objetos de NPC) se reutiliza; el dibujo chibi se sustituye en el juego, no se mezcla.
 
-### [ ] T174 · Logo de la app · S
+### [x] T174 · Logo de la app · S
 Origen: R8b
 - Ícono propio en pixel art, legible a 48 px: fondo oscuro redondeado, la pila que se desborda del logo del título (barras verdes y bloques rojos cayendo) entre `<` y `/>`, con el borde del color de acento. Generado por código (`tools/generate_app_icon.gd`, como los demás generadores) en `assets/icons/`: `icon.png` (1024), `icon_foreground.png` y `icon_background.png` para el ícono adaptable de Android (432, con la zona segura del 66 %), y el `.ico` de Windows si la plantilla lo admite.
 - `project.godot` (`config/icon`) y el preset de Android (`launcher_icons/*`) apuntan a ellos; el SVG de ahora (un `{;}` que Godot no dibuja: por eso se ve solo el círculo) se retira.
 - Prueba: los archivos existen con su tamaño y el centro del primer plano cae dentro de la zona segura (66 %) del ícono adaptable. Captura del ícono a 48, 96 y 512 px.
+- Hecho: `tools/generate_app_icon.gd` (sin ventana, `--headless`) dibuja el motivo en una rejilla de 48×48 celdas (cuatro barras verdes con luz y sombra, dos bloques rojos que se salen y un trozo cayendo, «<» y «/>» en verde agua, contorno oscuro) y lo agranda sin suavizar: `assets/icons/icon.png` (1024, fondo `0f141c` redondeado con borde), `icon_foreground.png` y `icon_background.png` (432, motivo en el 66 % central; el fondo, con una rejilla tenue de puntos) e `icon_monochrome.png` (silueta para los íconos temáticos de Android 13+; sin él salía el de Godot). `config/icon` y los presets (Windows y Android `launcher_icons/*`, también en `export_presets.example.cfg`) apuntan a ellos; fuera `icon.svg`. Comprobado: el APK lleva sus `mipmap-*/icon*.webp`. El `.exe` de Windows solo cambia de ícono si el editor tiene configurado `rcedit` (Editor → Ajustes → Exportar → Windows); el de la ventana del juego sí cambia. Captura `docs/capturas/interfaz/174_icono.png` (48, 96 y 192 px y el adaptable). Prueba en `_test_mobile_defaults`.
 
 ### [ ] T175 · Diseño de los héroes de RPG · M 🛑
 Origen: R8b
@@ -1395,3 +1396,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-31 · T162 · Cada NPC con su objeto (taza, monitor, laptop, maleta de RAM, cabeza-pantalla, tablas flotantes...) y reposo propio (Rafa teclea, Aida bebe café; el DBA, translúcido).
 - 2026-10-31 · T163 · Respiración, rebote al andar y estiramiento al golpear encima de los cuadros (jugador y NPC) y polvo al esquivar; la silueta tras obstáculos no hace falta (nada tapa al jugador).
 - 2026-10-31 · T145, T153, T159, T164 · Revisiones cerradas: el parpadeo se fue (renderizador Compatibility); el usuario pide armas de oficio, héroes de RPG desde el acto I y un logo (Fase 36b, T174-T179).
+- 2026-10-31 · T174 · Ícono de la app en pixel art (la pila que se desborda entre «<» y «/>»), con versión adaptable y monocroma para Android, generado por código.
