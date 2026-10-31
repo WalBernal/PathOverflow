@@ -254,6 +254,7 @@ func apply_world_zoom() -> void:
 	var cam := get_node_or_null("Camera2D") as Camera2D
 	if cam and is_inside_tree():
 		cam.zoom = Vector2.ONE * GraphicsQuality.world_zoom(get_viewport_rect().size)
+		Accessibility.world_zoom = cam.zoom.x   # los textos del mundo lo compensan (T158)
 
 
 ## Crea el sprite por capas la primera vez (si las hojas están horneadas).

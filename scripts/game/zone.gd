@@ -2631,8 +2631,9 @@ func _draw_npcs(ci: CanvasItem) -> void:
 			CharacterAppearance.draw(ci, pos, PlayerSheet.WORLD_SCALE, appearance, facing)
 		var label_color := UiStyle.ACCENT if i == _hovered_npc else UiStyle.TEXT
 		var label_pos := pos + Vector2(-110.0, NPC_LABEL_Y)
-		ci.draw_string_outline(font, label_pos, npc["name"], HORIZONTAL_ALIGNMENT_CENTER, 220.0, 14, 5, Color(0, 0, 0, 0.8))
-		ci.draw_string(font, label_pos, npc["name"], HORIZONTAL_ALIGNMENT_CENTER, 220.0, 14, label_color)
+		var name_size := Accessibility.world_size(14)   # (T158: con el tamaño del texto del mundo y el zoom)
+		ci.draw_string_outline(font, label_pos, npc["name"], HORIZONTAL_ALIGNMENT_CENTER, 220.0, name_size, 5, Color(0, 0, 0, 0.8))
+		ci.draw_string(font, label_pos, npc["name"], HORIZONTAL_ALIGNMENT_CENTER, 220.0, name_size, label_color)
 		# "?" si tiene una misión lista para entregar; "!" si hay algo nuevo que hablar.
 		var mark := ""
 		var mark_color := UiStyle.ACCENT

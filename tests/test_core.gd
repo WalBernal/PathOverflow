@@ -5265,6 +5265,20 @@ func _test_touch_controls() -> void:
 	_check(EnemyManager.draw_size(11.0 * 0.75 * 0.8, 1.0) == EnemyManager.MIN_DRAW_SIZE and EnemyManager.draw_size(5.0, 0.8) >= EnemyManager.MIN_DRAW_SIZE,
 		"un enjambre pequeño no baja del tamaño mínimo")
 	_check(EnemyManager.visual_radius(5.0) * 2.0 >= EnemyManager.MIN_DRAW_SIZE, "la barra y la zona para tocarlo siguen al dibujo")
+	# Textos del mundo con el zoom (T158): crecen menos que el dibujo, pero crecen; los números
+	# de daño se leen en un celular de 1600×720 (lienzo de 2000×900: 0,8 píxeles reales por píxel).
+	var keep_zoom := Accessibility.world_zoom
+	var keep_text := Accessibility.world_text
+	Accessibility.world_text = 1.0
+	Accessibility.world_zoom = 1.0
+	_check(Accessibility.world_size(14) == 14, "sin zoom, la letra del mundo como siempre")
+	Accessibility.world_zoom = GraphicsQuality.WORLD_ZOOM_TOUCH
+	var on := Accessibility.world_size_on_screen(14)
+	_check(on > 14.0 and on < 14.0 * GraphicsQuality.WORLD_ZOOM_TOUCH, "con zoom, la letra crece menos que el dibujo (%.1f px)" % on)
+	var dmg := Accessibility.world_size_on_screen(roundi(15.0 * DamageNumbers.TOUCH_SIZE)) * 0.8
+	_check(dmg >= 18.0, "números de daño de %.1f px reales en 1600×720 (≥ 18)" % dmg)
+	Accessibility.world_zoom = keep_zoom
+	Accessibility.world_text = keep_text
 	# Racha de bajas (T153): se encadena, da velocidad por escalones y tokens al cortarse.
 	var ks := KillStreak.new()
 	for k in 6:

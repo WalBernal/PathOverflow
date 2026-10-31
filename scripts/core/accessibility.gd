@@ -46,9 +46,20 @@ static func can_blink() -> bool:
 	return not reduce_flashes
 
 
-## Tamaño de letra del texto del mundo.
+## Zoom de la cámara en partida (T156, lo pone Player.apply_world_zoom).
+static var world_zoom := 1.0
+
+
+## Tamaño de letra del texto del mundo. Con el tamaño del mundo (T158) la letra no
+## crece tanto como el dibujo: en pantalla, √zoom (al 130 %, un 14 % más) y no el zoom
+## entero, para que nombres, números y etiquetas no se pisen ni tapen la pelea.
 static func world_size(base: int) -> int:
-	return maxi(6, roundi(base * world_text))
+	return maxi(6, roundi(base * world_text / sqrt(maxf(world_zoom, 1.0))))
+
+
+## Tamaño en píxeles de pantalla (del lienzo) de un texto del mundo de tamaño `base`.
+static func world_size_on_screen(base: int) -> float:
+	return world_size(base) * maxf(world_zoom, 1.0)
 
 
 static func aura_color(damage_type: String, normal: Color) -> Color:
