@@ -1021,9 +1021,129 @@ Origen: R7
 Origen: R7
 - «Continuar» de un toque en la pantalla de título (último personaje, donde lo dejaste) y un objetivo corto a la vista al entrar (la siguiente misión o «limpia esta zona: 0/N»), pensado para jugar 5 minutos.
 
-### [ ] T155 · Revisión en el teléfono · S 🛑
+### [x] T155 · Revisión en el teléfono · S 🛑
 Origen: R7
 - Versión nueva publicada en WalBernal/PathOverflow (llega por el aviso de actualización) y una lista corta con preguntas sobre la sensación: controles, golpes, ritmo y si algo tapa la pantalla.
+- 30-10-2026: absorbida por el Roadmap 8.0: cada etapa termina con su versión publicada y su revisión en el teléfono (T159, T164, T170, T173); las preguntas de sensación (y el parpadeo pendiente de T153) van en la lista de T159.
+
+---
+
+# Roadmap 8.0 — tamaño y estética: personajes y una interfaz de ingeniería (30-10-2026)
+
+Pedido del usuario tras probar la 3.1.3 en el celular: los sprites en general se ven muy chicos (crecer un 30-50 %), y una mejora estética de los sprites del jugador y los NPC y de la interfaz, más acorde con la temática de ingeniería de software, datos e inteligencia artificial. **Origen: R8.** Mismo protocolo; 🛑 = parar y esperar el visto bueno.
+
+**Cada etapa termina con una versión para probar**: se sube `application/config/version` en `project.godot`, `tools/run_checks.ps1 -Rapida` en `[OK]`, `tools/publicar_version.ps1 -Repo WalBernal/PathOverflow -Notas "…"` (deja `build/PathOverflow.apk` y `build/latest.json`; llega al teléfono por el aviso de actualización de T140) y `tools/build_release.ps1` (deja `build/PathOverflow.exe` y el instalador de Windows). Subir la release a GitHub lo hace el usuario (es publicar). Cada tarea añade **pruebas cortas** en `tests/test_core.gd` (la línea «Prueba:» dice cuáles) y se comprueba con `-Rapida` (+ `-Zonas` si toca zonas concretas).
+
+Diagnóstico de partida (leído en el código y en las capturas):
+- La cámara del jugador no tiene zoom: en 1600×900 de lienzo el personaje mide ~50 px (≈ 5,5 % del alto); en un teléfono de 2400×1080 el lienzo se ensancha (`stretch/aspect="expand"`) y aún se ve más mundo y más chico.
+- El jugador se dibuja a 1,06 (`Player.PLAYER_SPRITE_SCALE`) y los NPC a 1,12 (`Zone._add_npc_sprite`): tamaños que no casan. Las hojas (`PlayerSheet`) son celdas de 64×80 horneadas del dibujo procedural de `CharacterAppearance` (`tools/bake_player_sprites.gd`): poco detalle para crecer sin verse borroso o plano.
+- La interfaz (`UiStyle`: dorado `d9a441`, latón, remaches, orbes de vida y maná) es de fantasía oscura tipo Diablo; los textos y los nombres sí son de oficina y de software. Falta que la *forma* cuente el mismo chiste: terminal, IDE, paneles de monitoreo, grafos de datos, redes neuronales.
+
+## Fase 35 — Todo más grande en el celular (versión 3.2.0)
+
+### [ ] T156 · Tamaño del mundo · M
+Origen: R8
+- Opción «Tamaño del mundo: 100 / 115 / 130 / 150 %» en Pausa → Gráficos: zoom de la `Camera2D` del jugador (agranda personajes, enemigos, botín y efectos sin tocar la lógica ni las colisiones). Por defecto **130 % en táctil** y 100 % en el PC; se guarda en `settings.cfg`.
+- Que lo respeten las escenas (`CutscenePlayer` ya parte de `_base_zoom`), el filtro de píxeles de `WorldPost`, el clima, los indicadores de enemigos fuera de cámara y el minimapa (que no cambia).
+- Revisar que a 150 % en 1600×720 el alcance del auto-ataque (320 px) y de la mira sigan dentro de la vista; si no, tope por alto de pantalla.
+- Prueba: `GraphicsQuality` (o donde viva) devuelve 1,3 en táctil y 1,0 en el PC por defecto; con cada opción y en 1600×720 / 2400×1080, el rectángulo visible contiene un círculo de 320 px alrededor del jugador. Capturas `docs/capturas/tamano/156_*` antes y después.
+
+### [ ] T157 · Personajes del mismo tamaño y más legibles · M
+Origen: R8
+- Una sola escala para jugador y NPC (constante compartida en `PlayerSheet`), un 15 % mayor que hoy; nombres, «!» y «?» de los NPC colocados según la altura real del sprite (hoy van a −52 / −70 px fijos).
+- Lectura sobre suelos oscuros: contorno oscuro de 1 px y sombra elíptica bajo los pies (jugador, NPC y compañeros); el jugador, además, un anillo suave de su color.
+- Enemigos: tamaño mínimo en pantalla para los más pequeños (que no queden en 12-16 px) sin cambiar su radio de colisión; la zona para tocarlos/seleccionarlos crece con el dibujo.
+- Prueba: jugador y NPC usan la misma escala; la altura del sprite en pantalla con el tamaño por defecto del celular es ≥ 8 % del alto de la vista; ningún tipo de `enemies.json` se dibuja por debajo del mínimo.
+
+### [ ] T158 · Lo que flota sobre el mundo, a la medida · S
+Origen: R8
+- Con el zoom, los textos del mundo (nombres, números de daño, rótulos de salidas, nombres de objetos en el suelo, barras de vida de enemigos) no deben crecer sin control ni pisarse: tamaño de letra compensado por el zoom con un mínimo legible, y el agrupado de botín y de números de T152 con la nueva escala.
+- Prueba: `capture_screens -- solapes` sigue en 0 en las 16 configuraciones táctiles con cada tamaño de mundo; tamaño efectivo de letra de los números de daño ≥ 18 px de pantalla en 1600×720.
+
+### [ ] T159 · Versión 3.2.0 y revisión en el teléfono · S 🛑
+Origen: R8
+- Versión 3.2.0: APK + `latest.json` + ejecutable de Windows (ver la cabecera del roadmap); lista corta `docs/prueba_celular_3.2.md`: ¿el tamaño por defecto se siente bien o prefieres 115/150?, ¿se ve suficiente alrededor para esquivar?, ¿se lee el texto?, ¿la interfaz sigue parpadeando con «Efectos de pantalla» apagado? (pendiente de T153), y las preguntas de sensación de T155 (controles, golpes, ritmo, algo que tape la pantalla).
+
+## Fase 36 — Personajes con presencia (versión 3.3.0)
+
+### [ ] T160 · Hojas del personaje a doble resolución · L
+Origen: R8
+- Hornear las capas a 128×160 por celda (hoy 64×80) con más detalle en el dibujo de `CharacterAppearance`: sombreado en dos tonos y luz de borde, ojos y manos legibles, proporciones algo menos «cabezonas» y 8 cuadros al caminar (hoy 6). Se mantiene el sistema de máscaras y tintes (los colores del creador siguen valiendo) y el tamaño en pantalla de T157 (se dibuja a la mitad: más nitidez, no más grande).
+- Revisar el creador de personaje, los retratos y la vista previa (`AppearancePreview`) con las hojas nuevas.
+- Prueba: dimensiones de cada hoja = columnas × CW por filas × CH; ningún cuadro vacío; los pies caen en `FEET` en todos los cuadros (fila de píxeles opaca más baja); el canal G de las máscaras solo tiene capas válidas (`LAYER_*`).
+
+### [ ] T161 · Atuendos de oficio para las siete clases · M
+Origen: R8
+- Una silueta reconocible por clase, coherente con su nombre: **Técnico de Soporte** (chaleco con herramientas y gafete), **Tester QA** (bata con lupa y etiquetas de bug), **Desarrolladora Frontend** (sudadera con capucha y paleta de colores flotante), **Ingeniera de Prompts** (audífonos y burbujas de texto/tokens), **Científico de Datos** (tableta con gráfica holográfica), **Ingeniero DevOps** (casco con cables y LEDs de estado), **Full Stack** (mochila con laptop y stickers).
+- Detalles que brillan (LEDs, pantallas, hologramas) como capa fija con un poco de emisión; las armas conservan su mecánica pero con aspecto de oficio (teclado mecánico, cable de red, servidor de bolsillo…), si el usuario lo aprueba en T164.
+- Prueba: cada clase de `classes.json` tiene su atuendo por defecto; dos clases no comparten silueta (capa de accesorio distinta).
+
+### [ ] T162 · NPC con identidad · M
+Origen: R8
+- Cada NPC de `npcs.json` con un rasgo propio y una animación de reposo que lo cuente: Aida (la Senior) con taza de café y lentes, Mario (el Practicante) cargando cajas o un monitor, Rafa (SysAdmin) tecleando en una laptop, Nacho revendiendo RAM de una maleta, B.O.B. como robot con pantalla-cara, el Fantasma del DBA translúcido con tablas flotando, Clara con tablero de incidentes…
+- Retratos del diálogo redibujados con el mismo estilo que los sprites nuevos.
+- Prueba: no hay dos NPC con la misma apariencia completa; todo `idle_prop` o animación de `npcs.json` existe en la hoja o en el dibujo.
+
+### [ ] T163 · Animación con más vida · S
+Origen: R8
+- Respiración en reposo, rebote al caminar y estiramiento al atacar en jugador y NPC; polvo al esquivar; silueta del jugador (contorno de su color) cuando un obstáculo lo tapa.
+- Prueba: `PlayerSprite.set_pose` con cada estado devuelve un cuadro dentro del rango de su estado; la escala de respiración nunca pasa de ±4 %.
+
+### [ ] T164 · Versión 3.3.0 y revisión en el teléfono · S 🛑
+Origen: R8
+- Versión 3.3.0 (APK, `latest.json` y Windows) y capturas de las 7 clases y de los NPC del campamento en `docs/capturas/personajes/`; el usuario elige qué atuendos o armas cambiar antes de seguir.
+
+## Fase 37 — Interfaz de ingeniería (versión 3.4.0)
+
+### [ ] T165 · Guía visual y dos propuestas · S 🛑
+Origen: R8
+- `docs/estilo_visual.md`: paleta, tipografía y motivos. Dos propuestas con capturas del inventario, el HUD y un diálogo, para que el usuario elija (o mezcle):
+  - **A · Terminal/IDE**: fondo pizarra `0b1020`, paneles `111a2e`, acento cian `3ad1e6`, verde éxito `7ee787`, magenta IA `c678dd`; títulos en monoespaciada, ventanas con barra de pestaña («inventario.json ×» y los tres puntos), números de línea en las listas, cursor que parpadea.
+  - **B · Panel de monitoreo/datos**: tarjetas planas tipo dashboard, medidores circulares con marcas, gráficas mini (sparklines) y rejilla de puntos de fondo; motivos de grafo y red neuronal en marcos y separadores.
+- Los colores de rareza, de daño y del modo daltónico no cambian (son lenguaje del juego).
+- Se para hasta que el usuario elija.
+
+### [ ] T166 · Tema de ventanas, botones y tooltips · M
+Origen: R8
+- `UiStyle` con la propuesta elegida: `make_theme`, `window_style`, `window_header`, `decorate_window` (fuera remaches y latón), botones, deslizadores, pestañas, barras de desplazamiento y `ItemTooltip` (cabecera tipo documentación, afijos como líneas de código con su color).
+- Quitar colores sueltos: las ventanas toman sus colores de `UiStyle`, no de constantes propias.
+- Prueba: contraste texto/panel ≥ 4,5:1 (luminancia WCAG) para `TEXT`, `MUTED` y el acento; ninguna ventana de `scripts/ui/` usa los colores antiguos (`d9a441`, `b08a4a`…) fuera de `UiStyle`.
+
+### [ ] T167 · HUD de partida · M
+Origen: R8
+- Orbes de vida y maná como **medidores** de la propuesta elegida (vida = integridad del proceso, maná = memoria), barra de experiencia como barra de progreso con porcentaje, casillas de habilidad como teclas (keycaps), minimapa como radar con rejilla, registro de misiones como lista de TODO con casillas y registro de sucesos como consola (`[INFO]`, `[WARN]` con hora).
+- Botones táctiles (habilidades, esquiva, usar, AUTO, pociones) con el mismo estilo, sin perder el hundido, el barrido de enfriamiento y el azul de sin maná de T148.
+- Prueba: `capture_screens -- solapes` sigue en 0; los medidores muestran la misma fracción que los orbes de hoy (prueba de la función de relleno); capturas `docs/capturas/interfaz/167_*` en PC y 2400×1080.
+
+### [ ] T168 · Menús y pantallas · M
+Origen: R8
+- Título, menú principal, creación de personaje, pausa y opciones, carga (como un registro de arranque: «compilando zona… OK») y muerte (como volcado de error) con el tema nuevo; el logo de `GameLogo` adaptado.
+- Prueba: cada pantalla abre sin errores en `capture_screens` (táctil y PC) y la carga muestra su progreso de 0 a 100 %.
+
+### [ ] T169 · Fuentes y legibilidad · S
+Origen: R8
+- Una monoespaciada de licencia libre para títulos, números y la consola (si no hay ya una en `assets/fonts`, elegirla con licencia OFL y anotarla), la de siempre para textos largos; tamaños mínimos de `UiStyle.MIN_FONT_SIZE` revisados en el celular al 140 %.
+- Prueba: todos los `Label` creados por `UiStyle.label` usan ≥ `MIN_FONT_SIZE`; la fuente nueva carga y tiene los caracteres del español (á é í ó ú ñ ¿ ¡ ü).
+
+### [ ] T170 · Versión 3.4.0 y revisión en el teléfono · S 🛑
+Origen: R8
+- Versión 3.4.0 (APK, `latest.json` y Windows) y lista `docs/prueba_celular_3.4.md`: ¿se entiende cada ventana?, ¿se leen los medidores de un vistazo en pelea?, ¿algo quedó con el estilo viejo?
+
+## Fase 38 — Que todo hable el mismo idioma (versión 3.5.0)
+
+### [ ] T171 · Enemigos al nivel de los personajes · M
+Origen: R8
+- `tools/generate_enemy_sprites.gd` a doble resolución con el mismo contorno y sombreado de T160, empezando por los del acto I (los que más se ven); los demás, en la misma tarea si da el tiempo o como tarea nueva.
+- Prueba: cada enemigo de `enemies.json` tiene su cuadro en la hoja nueva y no está vacío.
+
+### [ ] T172 · Efectos con temática de datos · S
+Origen: R8
+- Partículas de impacto, muerte y botín con motivos de datos (bits, corchetes, nodos de red que se apagan), sin perder el color por tipo de daño ni el modo daltónico; el estallido de muerte de cada familia de enemigos con su glifo.
+- Prueba: `ImpactFx` sigue devolviendo el color del tipo de daño para cada tipo; con «Efectos de pantalla» apagado no se crea ninguna partícula extra.
+
+### [ ] T173 · Versión 3.5.0 y revisión final · S 🛑
+Origen: R8
+- Versión 3.5.0 (APK, `latest.json` y Windows), capturas de antes/después de toda la etapa en `docs/capturas/estetica/` y README actualizado (capturas y «Versiones»).
 
 ---
 
@@ -1213,3 +1333,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-29 · T151 · Interruptor «AUTO»: el ataque principal se lanza solo contra lo que hay cerca también caminando, al objetivo de la mira; espera con una ventana encima.
 - 2026-10-29 · T152 · Golpes que se notan en el celular: números de daño más grandes y agrupados (o solo críticos), críticos que saltan más y botín con arco más alto y dos botes.
 - 2026-10-29 · T153 · Ritmo medido (34 % del tiempo en pelea) y racha de bajas con velocidad y tokens al cortarse; versión 3.1.2 preparada; propuesta de manadas más juntas esperando la prueba del usuario.. **Pendiente de revisión del usuario.**
+- 2026-10-30 · T155 · Absorbida por el Roadmap 8.0 (tamaño y estética, T156-T173): cada etapa publica su versión (APK, latest.json y Windows) y se revisa en el teléfono.
