@@ -943,10 +943,10 @@ Origen: R6
 - Límite de FPS (30 / 60) en Opciones, 30 por defecto en el celular si mide por debajo de 50; contador de FPS opcional; medir en el teléfono del usuario una zona con muchos enemigos y bajar partículas o luces si hace falta.
 - Hecho: «FPS: auto / 30 / 60 / sin límite» en Pausa → Gráficos y datos (`GraphicsQuality.fps_choice`, `Engine.max_fps`, aplicado al arrancar en `GameData`). **Auto** (por defecto): sin límite en el PC; en el celular 60 y, la primera vez que una partida pasa 10 s con 10 enemigos o más, si la media baja de 50 FPS se queda en 30 (`graphics/auto_fps`) con un aviso en pantalla. «Contador de FPS: sí/no» (la línea de FPS y depuración de arriba a la izquierda; en el celular, apagada por defecto, `MOBILE_DEFAULTS`). Pruebas en `_test_touch_controls`. **Falta**: medir en el teléfono del usuario (no se puede desde aquí) y, si hace falta, bajar partículas o luces: va a la lista de T145.
 
-### [~] T145 · Revisión en el teléfono · S 🛑
+### [x] T145 · Revisión en el teléfono · S 🛑
 Origen: R6
 - APK nuevo y una lista para el usuario: prólogo entero, acto I hasta el primer jefe, filtro de botín, recoger objetos con el botón, inventario, árbol, salir y volver a la app, y actualizar de una versión a otra.
-- Preparado: `build/PathOverflow.apk` v3.1.0 (código 4, clave de depuración: se instala encima del de T110) y la lista en `docs/prueba_celular_3.1.md`. De paso, `exportar_android.ps1` espera a Godot (el ejecutable sin consola volvía enseguida y el script decía «falló» con el APK a medio escribir). **Esperando la prueba del usuario**; actualizar de una versión a otra queda para cuando exista el repositorio de versiones.
+- Preparado: `build/PathOverflow.apk` v3.1.0 (código 4, clave de depuración: se instala encima del de T110) y la lista en `docs/prueba_celular_3.1.md`. De paso, `exportar_android.ps1` espera a Godot (el ejecutable sin consola volvía enseguida y el script decía «falló» con el APK a medio escribir). **Esperando la prueba del usuario**; actualizar de una versión a otra queda para cuando exista el repositorio de versiones. (31-10-2026: superada por las revisiones de las versiones 3.2 y 3.3, que ya se actualizan por el aviso; se cierra.)
 - Primera prueba del usuario (28-10-2026), tres fallos arreglados: (1) **la interfaz parpadeaba y se borraba** (HUD, minimapa y misiones fuera de la pantalla): la zona segura de T142 podía venir en la otra orientación y dar márgenes enormes, y se volvía a aplicar cada medio segundo → `UiStyle.margins_for` ignora una zona segura que no cabe en la ventana, pone tope a cada margen (8 % del lado; una muesca real ocupa un 3-5 %) y redondea (sin temblores); (2) **no se podía cerrar el árbol de pasivas**: su «Cerrar (P)» era texto plano en la esquina de la muesca (y con el fallo anterior, fuera de la pantalla) → con el dedo, «✕ Cerrar» grande y dorado; comprobado con `capture_screens -- arbol tactil` (tocarlo cierra el árbol); (3) **tutorial**: pedía gastar un punto de pasiva en el Sandbox, donde no da para subir de nivel, y después «llega al campamento» con el jugador ya más allá → el paso de las pasivas va al final (tutorial versión 3, `TutorialOrder` migra a quien iba a medias al mismo paso), «llega al campamento» vale en cualquier zona que no sea el Sandbox y «sal del campamento» en cualquiera de después. Pruebas en `_test_touch_controls`.
 
 ---
@@ -1008,7 +1008,7 @@ Origen: R7
 - Muertes con un estallido de partículas del color del enemigo y botín que sale volando hacia afuera (ya existe el arco; más fuerza y un rebote).
 - Hecho: al mirar el código, buena parte ya estaba: destello al golpear (`FLASH_TIME` 0,12 s), retroceso según el daño y más fuerte con críticos, respingo de los críticos hasta en los jefes, hitstop y temblor en los críticos, números que se suman por enemigo y muertes con su efecto y su sonido según lo que mató (`ImpactFx.death`). Lo nuevo, para el celular: **números de daño** un 35 % más grandes y sumando los golpes seguidos durante 0,7 s (antes 0,35: menos cifras y más grandes); el **crítico salta más**; opción «Números de daño: todos / solo críticos / no» en Pausa → Interfaz (lo guardado como sí/no vale igual); el **botín** sube más alto al salir (arco de 95 px, antes 70) y da dos botes de 14 px al caer (antes uno de 8, apenas se veía). Pruebas en `_test_touch_controls`. **Decisión**: el estallido de muerte y el destello ya cumplían; no se tocan.
 
-### [~] T153 · Ritmo de las peleas · M 🛑
+### [x] T153 · Ritmo de las peleas · M 🛑
 Origen: R7
 - Medir con la telemetría local (T64) una partida en el celular: tiempo entre peleas, enemigos por minuto, tiempo para matar un normal y un raro; propuesta de ajustes para el celular (manadas algo más juntas y más cerca del camino, menos paseo vacío, recompensa visible tras cada manada) y cadena de bajas (contador «x5» que da un pequeño bono de velocidad).
 - Se para para que el usuario lo pruebe y diga si se siente mejor antes de seguir.
@@ -1016,6 +1016,7 @@ Origen: R7
 - Hecho: **racha de bajas** (`KillStreak`): las bajas con menos de 2,5 s entre ellas se encadenan; desde 5, «x5 · RACHA» arriba en el centro con una barrita que se vacía y +10 % de velocidad de movimiento (+20 % desde 15, +30 % desde 30) mientras dure; al cortarse, una racha de 8 o más deja tokens a tus pies (uno cada cuatro bajas) con un aviso: una **recompensa visible tras cada manada**. Pruebas en `_test_touch_controls`; versión **3.1.2** (código 7) preparada para publicar en WalBernal/PathOverflow (`build/PathOverflow.apk` y `build/latest.json`).
 - 29-10-2026, prueba del usuario (Samsung Galaxy Z Fold 7, pantalla exterior): **la interfaz sigue parpadeando** (desaparece y vuelve, también el menú de pausa). Sospechosos: la copia de pantalla de los efectos (`BackBufferCopy` de `WorldPost`, que con el renderizador Mobile podría pintarse a ratos encima de la interfaz) o la zona segura (T142). Versión **3.1.3**: opción «Efectos de pantalla: sí/no» en Pausa → Gráficos (quita las dos pasadas que copian la pantalla), la zona segura ya no se vuelve a mirar cada medio segundo (cada 3 s y solo si el cambio se mantiene) y la línea del contador de FPS dice en táctil la zona segura, cuántas veces se recolocó la interfaz y el renderizador. Pendiente: que el usuario pruebe con los efectos apagados. Si no basta, siguiente paso: un APK con el renderizador Compatibility (OpenGL).
 - **Propuesta pendiente de la prueba del usuario** (no aplicada: cambia el equilibrio): en el celular, manadas un 30 % más juntas y más cerca del camino y menos espacio vacío entre ellas, para pasar del 34 % de pelea a ~50 %.
+- 31-10-2026: el parpadeo se fue con el renderizador Compatibility (3.2.1, ver T159). Se cierra; la propuesta de las manadas pasa a la lista de T179 como pregunta.
 
 ### [x] T154 · Partidas cortas · S
 Origen: R7
@@ -1064,11 +1065,12 @@ Origen: R8
 - Prueba: `capture_screens -- solapes` sigue en 0 en las 16 configuraciones táctiles con cada tamaño de mundo; tamaño efectivo de letra de los números de daño ≥ 18 px de pantalla en 1600×720.
 - Hecho: todo el texto del mundo pasa por `Accessibility.world_size` (nombres de enemigos, NPC —que antes iban fijos a 14— y compañeros, etiquetas del botín, números de daño, «git stash», rótulos de la zona), que ahora divide por √zoom (`Accessibility.world_zoom`, lo pone `Player.apply_world_zoom`): en pantalla la letra crece √zoom (al 130 %, un 14 %) y el dibujo el zoom entero, así que las etiquetas ocupan menos mundo y se pisan menos; el agrupado de botín y de números trabaja en el mundo y lo aprovecha sin cambios. Los números de daño quedan en 18,4 px reales en 1600×720. Lo decorativo con letras (bits, «404», carteles) crece con el mundo. `capture_screens -- solapes`: 0 en las 16 configuraciones y en el PC (el HUD no depende del zoom). Pruebas en `_test_touch_controls`.
 
-### [~] T159 · Versión 3.2.0 y revisión en el teléfono · S 🛑
+### [x] T159 · Versión 3.2.0 y revisión en el teléfono · S 🛑
 Origen: R8
 - Versión 3.2.0: APK + `latest.json` + ejecutable de Windows (ver la cabecera del roadmap); lista corta `docs/prueba_celular_3.2.md`: ¿el tamaño por defecto se siente bien o prefieres 115/150?, ¿se ve suficiente alrededor para esquivar?, ¿se lee el texto?, ¿la interfaz sigue parpadeando con «Efectos de pantalla» apagado? (pendiente de T153), y las preguntas de sensación de T155 (controles, golpes, ritmo, algo que tape la pantalla).
 - Preparado (30-10-2026): `config/version="3.2.0"`; `run_checks -Rapida` en `[OK]`; `publicar_version.ps1 -Repo WalBernal/PathOverflow` dejó `build/PathOverflow.apk` (45 MB, código 9, clave de depuración: se instala encima) y `build/latest.json`; `build_release.ps1` dejó `build/PathOverflow.exe` y `build/PathOverflow-Setup.exe` (Linux y macOS saltan: faltan sus plantillas). Lista `docs/prueba_celular_3.2.md` (las opciones de tamaño son 115/130/140: ver T156). README: la 3.2 en «Versiones». **Falta (usuario)**: subir el APK y el `latest.json` a una release `v3.2.0` de WalBernal/PathOverflow y probar en el teléfono.
 - 30-10-2026, prueba del usuario: **el parpadeo de la interfaz volvió** (se había ido en la 3.1.3). Entre la 3.1.3 y la 3.2.0 ningún cambio toca la interfaz (zoom de cámara, contornos, textos del mundo, «Continuar»); que se borre toda la interfaz, pausa incluida, a ratos y no siempre, apunta al renderizador Mobile (Vulkan) del teléfono. **Versión 3.2.1**: el celular usa el renderizador **Compatibility** (OpenGL ES 3, `rendering_method.mobile="gl_compatibility"`), el paso siguiente que T153 dejó anotado; comprobado en el PC con `--rendering-method gl_compatibility`: luz, filtro pixel art, zoom y HUD iguales y sin errores de shader. La línea del contador de FPS dice el renderizador («gl_compatibility»). Pendiente: que el usuario confirme si se fue. También pidió **otra estética para los personajes** (ver T160).
+- 31-10-2026: **confirmado, el parpadeo se fue** con la 3.2.1.
 
 ## Fase 36 — Personajes con presencia (versión 3.3.0)
 
@@ -1100,12 +1102,50 @@ Origen: R8
 - Prueba: `PlayerSprite.set_pose` con cada estado devuelve un cuadro dentro del rango de su estado; la escala de respiración nunca pasa de ±4 %.
 - Hecho: `PlayerSprite.life` pone encima de los cuadros horneados una escala desde los pies y una elevación (jugador y NPC): **respira** en reposo (±2 % de alto), al **andar** se aplasta un 3 % al pisar y se eleva 1,6 píxeles de hoja entre pisadas, al **atacar** o disparar se estira un 7 % justo cuando llega el golpe (`impact_fraction`) y al lanzar se alarga un poco. **Polvo al esquivar**: seis bocanadas que salen de los pies hacia atrás y se deshacen en 0,45 s (`Player._dust`, debajo del personaje). **Silueta tras obstáculos: no hace falta** (decisión): la zona entera (obstáculos y decorado) se dibuja debajo del jugador, así que nada lo tapa; lo único encima es la capa de los NPC, que no se cruza con él en pelea. Pruebas en `_test_player_sheet` (respiración ≤ ±4 %, pisada y estiramiento, cada estado en sus cuadros).
 
-### [~] T164 · Versión 3.3.0 y revisión en el teléfono · S 🛑
+### [x] T164 · Versión 3.3.0 y revisión en el teléfono · S 🛑
 Origen: R8
 - Versión 3.3.0 (APK, `latest.json` y Windows) y capturas de las 7 clases y de los NPC del campamento en `docs/capturas/personajes/`; el usuario elige qué atuendos o armas cambiar antes de seguir.
 - Preparado (31-10-2026): `config/version="3.3.0"`; `run_checks -Rapida` en `[OK]`; `build/PathOverflow.apk` (45 MB, código 11, renderizador Compatibility de la 3.2.1), `build/latest.json`, `build/PathOverflow.exe` y el instalador. Capturas: `161_equipos.png` (las 7 clases en 4 poses), `162_npcs.png`, `164_campamento_130.png` y `164_zona1_130.png` (en partida, 2400×1080 al 130 %). Lista `docs/prueba_celular_3.3.md` (incluye si el parpadeo se fue con la 3.2.1 y si quiere armas de oficio). README: la 3.3 en «Versiones». **Falta (usuario)**: subir la release `v3.3.0` a WalBernal/PathOverflow, probar y decidir atuendos, armas y NPC.
+- 31-10-2026, respuesta del usuario: (1) **el parpadeo se fue** (renderizador Compatibility, 3.2.1); (2) quiere **armas de oficio**; (3) quiere **rehacer los personajes con estética de RPG**, no una mezcla de lo actual con chibi: desde el acto I (dentro del servidor ya son datos) pasan a ser héroes de RPG; los del prólogo se quedan como están; (4) la app necesita un **logo** (hoy el ícono es un círculo amarillo). Todo va a la **Fase 36b** (versión 3.4.0); la interfaz pasa a la 3.5.0 y lo último a la 3.6.0.
 
-## Fase 37 — Interfaz de ingeniería (versión 3.4.0)
+## Fase 36b — Héroes de RPG dentro del servidor y un logo (versión 3.4.0)
+
+Pedido del usuario al revisar la 3.3 (31-10-2026). **Origen: R8b.** En el prólogo los personajes siguen siendo oficinistas (el dibujo con formas de `CharacterAppearance`, que el prólogo usa directamente); al entrar al servidor, en el acto I, se compilan como héroes de RPG. Lo de T160-T163 que no es el dibujo (hojas por capas y por variante, contorno, `PlayerSprite.life`, polvo al esquivar, objetos de NPC) se reutiliza; el dibujo chibi se sustituye en el juego, no se mezcla.
+
+### [ ] T174 · Logo de la app · S
+Origen: R8b
+- Ícono propio en pixel art, legible a 48 px: fondo oscuro redondeado, la pila que se desborda del logo del título (barras verdes y bloques rojos cayendo) entre `<` y `/>`, con el borde del color de acento. Generado por código (`tools/generate_app_icon.gd`, como los demás generadores) en `assets/icons/`: `icon.png` (1024), `icon_foreground.png` y `icon_background.png` para el ícono adaptable de Android (432, con la zona segura del 66 %), y el `.ico` de Windows si la plantilla lo admite.
+- `project.godot` (`config/icon`) y el preset de Android (`launcher_icons/*`) apuntan a ellos; el SVG de ahora (un `{;}` que Godot no dibuja: por eso se ve solo el círculo) se retira.
+- Prueba: los archivos existen con su tamaño y el centro del primer plano cae dentro de la zona segura (66 %) del ícono adaptable. Captura del ícono a 48, 96 y 512 px.
+
+### [ ] T175 · Diseño de los héroes de RPG · M 🛑
+Origen: R8b
+- Dibujo nuevo y propio, `RpgAppearance` (no se toca `CharacterAppearance`, que se queda para el prólogo, los retratos y el creador): figura de RPG en vista 3/4 como la referencia (`docs/capturas/personajes/referencia_usuario.png`), proporciones de héroe pixel art (cabeza ~1/3, armadura con volumen), contorno oscuro, sombreado en tres tonos y brillos.
+- Un arquetipo por clase, que ya está en sus ids: **guerrero** (Técnico de Soporte) caballero con armadura pesada y yelmo; **duelista** (Tester QA) espadachín con capa corta y sombrero de ala; **exploradora** (Frontend) exploradora con capucha y capa; **hacker** (Ingeniera de Prompts) pícara con capucha y máscara; **hechicero** (Científico de Datos) mago con túnica larga y sombrero; **templario** (DevOps) paladín con armadura dorada y tabardo; **full_stack** caballero-mago con media armadura y capa. Detalles «de datos» que cuentan dónde están: runas como código, gemas que parpadean como LEDs, bordes de circuito en capas y escudos.
+- Los colores del creador siguen valiendo: el **atuendo** tiñe telas (capa, tabardo, túnica), los **detalles** los adornos, y la piel, el pelo y los ojos se ven donde el casco o la capucha los deja.
+- Hoja de muestra (`capture_screens -- rpg`): las 7 clases de frente, de lado, de espaldas y atacando, junto al personaje actual. **Se para hasta que el usuario elija** qué clases cambiar antes de hornear todas las poses.
+
+### [ ] T176 · Hojas de RPG del jugador · L
+Origen: R8b
+- Hornear `RpgAppearance` con la cuadrícula de T160 (96×120, 36 columnas, un archivo por clase y por variante de pelo/barba visibles), con el contorno, la luz en gris y `PlayerSprite.life` de siempre.
+- En el juego (todas las zonas desde el acto I), la lista de personajes y la hoja de personaje, el jugador es su héroe de RPG; el prólogo y el creador (que va antes del prólogo) siguen con el oficinista. Las animaciones de T163 y el polvo de la esquiva se conservan.
+- Prueba: cada clase tiene su hoja con todos los cuadros y los pies en `FEET`; el jugador usa la hoja de RPG fuera del prólogo y la de siempre en el prólogo.
+
+### [ ] T177 · Armas de oficio · M
+Origen: R8b
+- Mismo daño y mismo gesto (tajo o estocada); cambia el aspecto en el mundo, en los iconos y en el nombre de las bases que lo pidan: **espada** → sable de fibra óptica (hoja de luz con conector); **hacha** → teclado mecánico con teclas sueltas; **maza** → mouse con cable (se balancea como un mangual); **daga** → destornillador de precisión / memoria USB afilada. Con brillo de «datos» en el filo como los detalles de T175.
+- Prueba: cada tipo de arma (`PlayerSheet.WEAPONS`) tiene su dibujo de oficio en la hoja y su icono.
+
+### [ ] T178 · NPC de RPG desde el acto I · M
+Origen: R8b
+- Los NPC de las zonas del acto I en adelante, también como personajes de RPG (con `RpgAppearance` y un arquetipo cada uno: Aida maga anciana, Rafa ingeniero-herrero, Nacho mercader, B.O.B. autómata...), conservando sus objetos y gestos de T162. Los del prólogo, como están.
+- Prueba: los NPC de las zonas del prólogo usan el dibujo de siempre y los demás el de RPG; ninguno igual a otro.
+
+### [ ] T179 · Versión 3.4.0 y revisión en el teléfono · S 🛑
+Origen: R8b
+- Versión 3.4.0 (APK, `latest.json` y Windows) con el logo, los héroes y las armas; capturas en `docs/capturas/personajes/`; lista `docs/prueba_celular_3.4.md`. Incluye la pregunta que quedó de T153: ¿manadas un 30 % más juntas en el celular para pelear más y pasear menos?
+
+## Fase 37 — Interfaz de ingeniería (versión 3.5.0)
 
 ### [ ] T165 · Guía visual y dos propuestas · S 🛑
 Origen: R8
@@ -1137,11 +1177,11 @@ Origen: R8
 - Una monoespaciada de licencia libre para títulos, números y la consola (si no hay ya una en `assets/fonts`, elegirla con licencia OFL y anotarla), la de siempre para textos largos; tamaños mínimos de `UiStyle.MIN_FONT_SIZE` revisados en el celular al 140 %.
 - Prueba: todos los `Label` creados por `UiStyle.label` usan ≥ `MIN_FONT_SIZE`; la fuente nueva carga y tiene los caracteres del español (á é í ó ú ñ ¿ ¡ ü).
 
-### [ ] T170 · Versión 3.4.0 y revisión en el teléfono · S 🛑
+### [ ] T170 · Versión 3.5.0 y revisión en el teléfono · S 🛑
 Origen: R8
-- Versión 3.4.0 (APK, `latest.json` y Windows) y lista `docs/prueba_celular_3.4.md`: ¿se entiende cada ventana?, ¿se leen los medidores de un vistazo en pelea?, ¿algo quedó con el estilo viejo?
+- Versión 3.5.0 (APK, `latest.json` y Windows) y lista `docs/prueba_celular_3.5.md`: ¿se entiende cada ventana?, ¿se leen los medidores de un vistazo en pelea?, ¿algo quedó con el estilo viejo?
 
-## Fase 38 — Que todo hable el mismo idioma (versión 3.5.0)
+## Fase 38 — Que todo hable el mismo idioma (versión 3.6.0)
 
 ### [ ] T171 · Enemigos al nivel de los personajes · M
 Origen: R8
@@ -1153,9 +1193,9 @@ Origen: R8
 - Partículas de impacto, muerte y botín con motivos de datos (bits, corchetes, nodos de red que se apagan), sin perder el color por tipo de daño ni el modo daltónico; el estallido de muerte de cada familia de enemigos con su glifo.
 - Prueba: `ImpactFx` sigue devolviendo el color del tipo de daño para cada tipo; con «Efectos de pantalla» apagado no se crea ninguna partícula extra.
 
-### [ ] T173 · Versión 3.5.0 y revisión final · S 🛑
+### [ ] T173 · Versión 3.6.0 y revisión final · S 🛑
 Origen: R8
-- Versión 3.5.0 (APK, `latest.json` y Windows), capturas de antes/después de toda la etapa en `docs/capturas/estetica/` y README actualizado (capturas y «Versiones»).
+- Versión 3.6.0 (APK, `latest.json` y Windows), capturas de antes/después de toda la etapa en `docs/capturas/estetica/` y README actualizado (capturas y «Versiones»).
 
 ---
 
@@ -1354,3 +1394,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-31 · T161 · Equipo de oficio por clase (chaleco, bata, capucha y paleta, audífonos y globo, tableta holográfica, casco de obra, mochila) en una capa horneada propia, en el jugador y la lista de personajes.
 - 2026-10-31 · T162 · Cada NPC con su objeto (taza, monitor, laptop, maleta de RAM, cabeza-pantalla, tablas flotantes...) y reposo propio (Rafa teclea, Aida bebe café; el DBA, translúcido).
 - 2026-10-31 · T163 · Respiración, rebote al andar y estiramiento al golpear encima de los cuadros (jugador y NPC) y polvo al esquivar; la silueta tras obstáculos no hace falta (nada tapa al jugador).
+- 2026-10-31 · T145, T153, T159, T164 · Revisiones cerradas: el parpadeo se fue (renderizador Compatibility); el usuario pide armas de oficio, héroes de RPG desde el acto I y un logo (Fase 36b, T174-T179).
