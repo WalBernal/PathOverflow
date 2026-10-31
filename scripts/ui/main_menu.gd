@@ -18,6 +18,7 @@ var _scroll: ScrollContainer
 var _list: VBoxContainer
 var _empty_label: Label
 var _preview: AppearancePreview
+var _student: StudentPreview
 var _detail: RichTextLabel
 var _play_button: Button
 var _delete_button: Button
@@ -139,11 +140,20 @@ func _build() -> void:
 	var detail_box := VBoxContainer.new()
 	detail_box.add_theme_constant_override("separation", 12)
 	detail_panel.add_child(detail_box)
+	# El oficinista (como en el prólogo) y, a su lado, el alumno en el servidor con lo que
+	# lleva puesto (T180).
+	var figures := HBoxContainer.new()
+	figures.add_theme_constant_override("separation", 0)
+	detail_box.add_child(figures)
 	_preview = AppearancePreview.new()
 	_preview.animated = true
 	_preview.use_sprites = true   # el mismo personaje por capas que en el juego (T102b)
 	_preview.custom_minimum_size = Vector2(0, 240)
-	detail_box.add_child(_preview)
+	_preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	figures.add_child(_preview)
+	_student = StudentPreview.new()
+	_student.custom_minimum_size = Vector2(130, 0)
+	figures.add_child(_student)
 	_detail = RichTextLabel.new()
 	_detail.bbcode_enabled = true
 	# Se desplaza en su hueco (T135): con fit_content, en el celular a 140 % empujaba
@@ -264,6 +274,7 @@ func _select(index: int) -> void:
 	_play_button.disabled = index == -1
 	_delete_button.disabled = index == -1
 	_preview.visible = index != -1
+	_student.visible = index != -1
 	if index == -1:
 		_detail.text = "[center][color=#8a8293]Selecciona o crea un personaje.[/color][/center]"
 		return
@@ -272,6 +283,8 @@ func _select(index: int) -> void:
 		card.button_pressed = true  # así el ButtonGroup suelta los demás
 	var data := _saves[index]
 	_preview.appearance = CharacterAppearance.with_gear(CharacterAppearance.sanitize(data.get("appearance", {})), String(data.get("class_id", "")))
+	_student.equipped = StudentHero.equipped_of_save(data)
+	_student.appearance = CharacterAppearance.sanitize(data.get("appearance", {}))
 	var class_def := GameData.get_class_def(StringName(data.get("class_id", "")))
 	_preview.glow_color = Color(class_def.get("color", "d9a441"))
 	var look: Array = CLASS_POSES.get(String(data.get("class_id", "")), ["attack", "sword"])

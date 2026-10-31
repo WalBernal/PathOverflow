@@ -33,6 +33,15 @@ func _run() -> void:
 		await _capture_touch_auto()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("catalogo"):
+		await _capture_hero_catalog()
+		if OS.get_cmdline_user_args().has("menus"):   # y el creador y la lista con el alumno (T180)
+			for shot in ["02_personajes", "03_creador"]:
+				_swap(load(MENU_SCENES[shot]).instantiate())
+				await _wait(1.5)
+				_save("180_" + shot)
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("alumno"):
 		var sheet := Control.new()
 		sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -1446,6 +1455,53 @@ func _capture_class_gear() -> void:
 			sp.set_pose(p[0], p[1], p[2])
 	await _wait(0.5)
 	_save("161_equipos")
+
+
+## Peinados y accesorios del alumno (T180): la hoja a resolución real
+## (assets/sprites/hero/catalogo.png: arriba los 11 peinados, abajo los accesorios) y
+## ampliada con sus nombres. Todos con el mismo pelo, piel y ropa para compararlos.
+func _capture_hero_catalog() -> void:
+	var sheet := Control.new()
+	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sheet.draw.connect(func() -> void: sheet.draw_rect(Rect2(Vector2.ZERO, sheet.size), Color("3a3f48")))
+	_swap(sheet)
+	var base := {"hair_color": "7e4c2e", "skin_tone": "f6c8a0", "outfit_color": "2b4a8a", "eye_color": "5a4632", "accent_color": "2fd0a0"}
+	var cells := []   # [nombre, apariencia]
+	for h in CharacterAppearance.HAIR_NAMES.size():
+		var a := base.duplicate()
+		a["hair"] = h
+		cells.append([CharacterAppearance.HAIR_NAMES[h], a])
+	var hair_count := cells.size()
+	for acc in range(1, CharacterAppearance.ACCESSORY_NAMES.size()):
+		var a := base.duplicate()
+		a["accessory"] = acc
+		cells.append([CharacterAppearance.ACCESSORY_NAMES[acc], a])
+	# Hoja a resolución real: una fila de peinados y otra de accesorios.
+	var native := Image.create_empty(StudentHero.CELL.x * hair_count, StudentHero.CELL.y * 2, false, Image.FORMAT_RGBA8)
+	native.fill(Color(0, 0, 0, 0))
+	var zoom := 3.9
+	var cols := 7
+	var font := ThemeDB.fallback_font
+	var labels := []
+	for i in cells.size():
+		var fig := StudentHero.figure(StudentHero.look_of(CharacterAppearance.sanitize(cells[i][1]), {}))
+		var slot := Vector2i(i if i < hair_count else i - hair_count, 0 if i < hair_count else 1)
+		native.blit_rect(fig, Rect2i(Vector2i.ZERO, StudentHero.CELL), slot * StudentHero.CELL)
+		var tr := TextureRect.new()
+		tr.texture = ImageTexture.create_from_image(fig.get_region(Rect2i(12, 4, 36, 48)))
+		tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tr.size = Vector2(36, 48) * zoom
+		var pos := Vector2((i % cols) * 226.0 + 18.0, floorf(i / float(cols)) * 300.0 + 6.0)
+		tr.position = pos
+		sheet.add_child(tr)
+		labels.append([pos + Vector2(-30, 48 * zoom + 22), String(cells[i][0])])
+	sheet.draw.connect(func() -> void:
+		for l in labels:
+			sheet.draw_string(font, l[0], l[1], HORIZONTAL_ALIGNMENT_CENTER, 168.0, 18, Color("e8e4da")))
+	native.save_png(ProjectSettings.globalize_path("res://assets/sprites/hero/catalogo.png"))
+	await _wait(0.4)
+	_save("180_peinados_accesorios")
 
 
 ## El alumno del estilo del usuario (T176, StudentHero): arriba, apariencias del

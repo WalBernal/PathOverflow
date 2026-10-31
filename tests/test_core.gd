@@ -5675,6 +5675,30 @@ func _test_player_sheet() -> void:
 	_check(StudentHero.column_for("attack", 0.99) == StudentHero.first_column("attack") + 3 and StudentHero.column_for("limp", 1.0) == StudentHero.first_column("dead") + 1
 		and StudentHero.column_for("idle", 0.0, 0.0, PI) >= StudentHero.first_column("walk"), "cada estado elige sus cuadros")
 	_check(StudentHero.texture(StudentHero.look_of(red, {}), "sword") == StudentHero.texture(StudentHero.look_of(red, {}), "sword"), "la hoja se arma una vez y se guarda")
+	# T180: los accesorios del creador no son sombreros (lo de la cabeza lo pone el equipo),
+	# los guardados con gorra o gorro cargan sin accesorio, y cada peinado y accesorio se ve distinto.
+	for name in CharacterAppearance.ACCESSORY_NAMES:
+		_check(not (String(name).to_lower().contains("gorr") or String(name).to_lower().contains("casco") or String(name).to_lower().contains("sombrero")),
+			"el accesorio «%s» no es un sombrero" % name)
+	_check(CharacterAppearance.sanitize({"accessory": 4})["accessory"] == 0 and CharacterAppearance.sanitize({"accessory": 5})["accessory"] == 0
+		and CharacterAppearance.sanitize({"accessory": 2})["accessory"] == 2, "un guardado con gorra o gorro carga sin accesorio")
+	var figs := {}
+	var repeated := []
+	for h in CharacterAppearance.HAIR_NAMES.size():
+		var fig := StudentHero.figure(StudentHero.look_of(CharacterAppearance.sanitize({"hair": h}), {}))
+		var key := fig.get_data()
+		if figs.has(key) or fig.get_used_rect().size == Vector2i.ZERO:
+			repeated.append(CharacterAppearance.HAIR_NAMES[h])
+		figs[key] = true
+	for acc in range(1, CharacterAppearance.ACCESSORY_NAMES.size()):
+		var fig := StudentHero.figure(StudentHero.look_of(CharacterAppearance.sanitize({"accessory": acc}), {}))
+		var key := fig.get_data()
+		if figs.has(key):
+			repeated.append(CharacterAppearance.ACCESSORY_NAMES[acc])
+		figs[key] = true
+	_check(repeated.is_empty(), "cada peinado y accesorio del alumno se ve distinto: %s" % [repeated])
+	_check(StudentHero.equipped_of_save({"inventory": {"equipment": {"helmet": {"base": "casco_de_hierro"}}}})["helmet"] == "casco_de_hierro",
+		"la lista de personajes sabe qué lleva puesto cada guardado")
 	# T161: cada clase con su equipo de oficio, horneado, y dos clases nunca con el mismo.
 	var classes_json = JSON.parse_string(FileAccess.get_file_as_string("res://data/classes.json"))
 	var class_ids: Array = classes_json["classes"].map(func(c: Dictionary) -> String: return String(c["id"]))

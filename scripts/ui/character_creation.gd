@@ -25,6 +25,7 @@ var _student_id := ""
 var _record: RichTextLabel
 var _preview: AppearancePreview
 var _face: CharacterPortrait
+var _student: StudentPreview
 var _option_labels := {}      # clave -> Label del valor (complexión, peinado...)
 var _swatch_rows := {}        # clave -> Array[Button]
 var _name_edit: LineEdit
@@ -153,6 +154,17 @@ func _build() -> void:
 	rotate_row.add_child(UiStyle.button("<", _rotate.bind(-1), 48))
 	rotate_row.add_child(UiStyle.label("Girar", 14, UiStyle.MUTED))
 	rotate_row.add_child(UiStyle.button(">", _rotate.bind(1), 48))
+	# T180: y así se verá dentro del servidor (desde el acto I), en pixel art.
+	var server_row := HBoxContainer.new()
+	server_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	server_row.add_theme_constant_override("separation", 10)
+	preview_box.add_child(server_row)
+	_student = StudentPreview.new()
+	_student.custom_minimum_size = Vector2(110, 150)
+	server_row.add_child(_student)
+	var server_note := UiStyle.label("Así te verás\ndentro del servidor", 14, UiStyle.MUTED)
+	server_note.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	server_row.add_child(server_note)
 
 	# --- Apariencia ---
 	var look_panel := PanelContainer.new()
@@ -309,6 +321,8 @@ func _refresh_appearance() -> void:
 	_appearance = CharacterAppearance.sanitize(_appearance)
 	_preview.appearance = _appearance.duplicate()
 	_face.appearance = _appearance.duplicate()
+	if _student:
+		_student.appearance = _appearance.duplicate()
 	_option_labels["body"].text = CharacterAppearance.BODY_NAMES[_appearance["body"]]
 	_option_labels["height"].text = CharacterAppearance.HEIGHT_NAMES[CharacterAppearance.height_index(_appearance)]
 	_option_labels["hair"].text = CharacterAppearance.HAIR_NAMES[_appearance["hair"]]

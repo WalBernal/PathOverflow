@@ -107,6 +107,16 @@ static func look_of(appearance: Dictionary, equipped: Dictionary) -> Dictionary:
 	return look
 
 
+## Lo que lleva puesto un guardado (ranura → id de base), para la lista de personajes.
+static func equipped_of_save(data: Dictionary) -> Dictionary:
+	var out := {}
+	var equip: Dictionary = data.get("inventory", {}).get("equipment", {})
+	for slot in LOOKS:
+		var it = equip.get(slot, null)
+		out[slot] = String(it.get("base", "")) if it is Dictionary else ""
+	return out
+
+
 static func texture(look: Dictionary, weapon: String) -> ImageTexture:
 	var key := "%s|%s" % [weapon, JSON.stringify(look, "", true)]
 	if not _cache.has(key):
@@ -215,59 +225,169 @@ static func _tone(c: Color, role: String, target: Dictionary) -> Color:
 	return out
 
 
-## Peinados del creador sobre el pelo de la lámina (corto y en punta = el de la lámina).
+## Peinados del creador (T180). «Corto» es el pelo de la lámina; los demás se dibujan
+## sobre la cabeza calva de la plantilla (la cúpula de DOME), cada uno con su forma y
+## el mismo sombreado que el de la lámina: luz arriba a la izquierda, sombra abajo y a
+## la derecha, contorno contra el fondo.
+const DOME_C := Vector2(28.5, 24.0)
+const DOME_R := 9.8
+const BROW_Y := 24
+
+
 static func _hair_style(img: Image, look: Dictionary) -> void:
 	var style := int(look.get("hair", 1))
 	if style == 1:
 		return
 	var hair := Color(look.get("hair_color", "2b2118"))
 	var skin := Color(look.get("skin_tone", "c99a7a"))
-	var mask := _hair_mask(img)
-	var outline := hair.darkened(0.75).lerp(Color("1a1024"), 0.35)
-	var stubble := hair.lerp(skin, 0.45)
+	_bald(img, skin)
+	var m := {}
 	match style:
-		0, 8:   # rapado / rapado lateral: sin puntas; el resto, pelo al ras
-			for p: Vector2i in mask:
-				var keep := style == 8 and p.x >= 24 and p.x <= 33
-				if p.y < 16 and not keep:
-					img.set_pixelv(p, Color(0, 0, 0, 0))
-				elif not keep:
-					img.set_pixelv(p, stubble if img.get_pixelv(p).v > outline.v + 0.05 else outline)
-			_close_top(img, outline)
-		3:   # cresta: solo el centro alto; los lados, rapados
-			for p: Vector2i in mask:
-				if p.x < 25 or p.x > 32:
-					if p.y < 16:
-						img.set_pixelv(p, Color(0, 0, 0, 0))
-					else:
-						img.set_pixelv(p, stubble if img.get_pixelv(p).v > outline.v + 0.05 else outline)
-			_close_top(img, outline)
-		4:   # moño: sin puntas y un moño arriba
-			for p: Vector2i in mask:
-				if p.y < 16:
-					img.set_pixelv(p, Color(0, 0, 0, 0))
-			_close_top(img, outline)
-			_blob(img, Vector2i(CENTER_X, 13), 3, hair, outline)
-		5, 10:   # hacia atrás / entradas: la frente despejada
-			for p: Vector2i in mask:
-				if p.y >= 20 and p.y <= 25 and p.x >= 22 and p.x <= 35:
-					img.set_pixelv(p, skin)
-		6:   # afro: el pelo crece hacia fuera
-			_grow(img, mask, 2, hair, outline, 26)
-		2, 9:   # largo / melena: mechones hasta los hombros
-			for side in [-1, 1]:
-				var x0 := 19 if side < 0 else 37
-				for y in range(20, 34):
-					for dx in 2:
-						var x: int = x0 + dx * side
-						if img.get_pixel(x, y).a <= 0.0 or y < 30:
-							img.set_pixel(x, y, hair if dx == 0 else hair.darkened(0.25))
-					img.set_pixel(x0 + 2 * side, y, outline)
-		7:   # coleta: cae por un lado
-			for y in range(16, 30):
-				img.set_pixel(39, y, hair)
-				img.set_pixel(40, y, hair.darkened(0.25))
-				img.set_pixel(41, y, outline)
+		0:   # rapado: pelo al ras de la cúpula
+			_dome_cap(m, 0.6, 13, 20)
+			_paint_hair(img, m, hair.lerp(skin, 0.35).darkened(0.1), true)
+			return
+		2:   # largo: casquete con flequillo partido y mechones hasta los hombros
+			_dome_cap(m, 1.6, 13, 22)
+			_fringe(m, 21, 23, [22, 23, 24, 25, 26, 31, 32, 33, 34, 35])
+			_rect(m, 17, 21, 3, 13)
+			_rect(m, 37, 21, 3, 13)
+		3:   # cresta: lados rapados y una cresta alta en el centro
+			var sides := {}
+			_dome_cap(sides, 0.6, 13, 20)
+			_paint_hair(img, sides, hair.lerp(skin, 0.4).darkened(0.1), true)
+			for y in range(7, 21):
+				var w := 3 if y > 9 else 2
+				for x in range(28 - w, 29 + w - (1 if y < 9 else 0)):
+					m[Vector2i(x, y)] = true
+		4:   # moño: peinado hacia atrás y un moño arriba
+			_dome_cap(m, 1.2, 14, 21)
+			_disc(m, Vector2(28.5, 11.0), 3.6)
+		5:   # hacia atrás: con volumen, la frente despejada y raya diagonal
+			_dome_cap(m, 1.8, 12, 20)
+			_rect(m, 18, 20, 2, 5)
+			_rect(m, 38, 20, 2, 5)
+		6:   # afro: un círculo grande alrededor de la cara
+			_disc(m, Vector2(28.5, 18.0), 13.0)
+			for p: Vector2i in m.keys():
+				if p.y > 25 or (p.y >= 21 and p.x >= 20 and p.x <= 37):
+					m.erase(p)
+		7:   # coleta: recogido, flequillo corto y la coleta por la derecha
+			_dome_cap(m, 1.2, 14, 21)
+			_fringe(m, 21, 22, [21, 22, 23, 24])
+			for y in range(17, 33):
+				var w := 3 if y < 28 else 2
+				for x in range(39, 39 + w):
+					m[Vector2i(x, y)] = true
+		8:   # rapado lateral: lados rapados y el pelo largo arriba, caído a un lado
+			var sides := {}
+			_dome_cap(sides, 0.6, 17, 21)
+			_paint_hair(img, sides, hair.lerp(skin, 0.4).darkened(0.1), true)
+			_dome_cap(m, 2.2, 11, 17)
+			_fringe(m, 18, 21, [20, 21, 22, 23, 24, 25, 26])
+		9:   # melena con flequillo: corte recto en la frente y a los lados hasta el cuello
+			_dome_cap(m, 1.6, 13, 23)
+			_fringe(m, 21, 23, range(20, 38))
+			_rect(m, 17, 21, 4, 10)
+			_rect(m, 37, 21, 4, 10)
+		10:   # entradas: el nacimiento del pelo en «M», con las sienes despejadas
+			_dome_cap(m, 1.2, 14, 20)
+			for p: Vector2i in m.keys():
+				if p.y >= 18 and ((p.x >= 21 and p.x <= 25) or (p.x >= 32 and p.x <= 36)):
+					m.erase(p)
+			_rect(m, 27, 20, 4, 1)
+	_paint_hair(img, m, hair, false)
+	if style == 4 or style == 7:   # el lazo del moño o la coleta, del color de los detalles
+		var tie := Color(look.get("accent_color", "2fd0a0"))
+		for x in ([27, 28, 29, 30] if style == 4 else [39, 40, 41]):
+			img.set_pixel(x, 14 if style == 4 else 18, tie)
+
+
+## La cabeza sin pelo: quita el de la lámina y rellena la cúpula con piel (con su
+## sombra a la derecha y su contorno), respetando las cejas y la cara.
+static func _bald(img: Image, skin: Color) -> void:
+	var base := _layer("base") as Image
+	for y in range(0, 27):
+		for x in CELL.x:
+			var hex := base.get_pixel(x, y).to_html(false)
+			if ROLES.has(hex) and String(ROLES[hex][0]) in ["hair", "hair_skin"]:
+				img.set_pixel(x, y, Color(0, 0, 0, 0))
+	var shade := _tone(Color("c57d71"), "skin", {"skin": skin})
+	var outline := _tone(Color("4a2d3c"), "skin", {"skin": skin})
+	for y in range(13, BROW_Y + 3):
+		for x in CELL.x:
+			var d := Vector2(x + 0.5, y + 0.5) - DOME_C
+			if img.get_pixel(x, y).a > 0.0:
+				continue
+			if y <= BROW_Y and d.length() <= DOME_R:
+				img.set_pixel(x, y, shade if d.x > DOME_R - 3.5 or d.x < -DOME_R + 1.2 else skin)
+			elif y > BROW_Y and absf(d.x) < DOME_R - 0.5:   # las sienes (la sombra del pelo en la lámina)
+				img.set_pixel(x, y, shade)
+	for y in range(12, BROW_Y + 1):
+		for x in CELL.x:
+			var d := Vector2(x + 0.5, y + 0.5) - DOME_C
+			if img.get_pixel(x, y).a <= 0.0 and d.length() <= DOME_R + 1.0:
+				img.set_pixel(x, y, outline)
+
+
+## Casquete sobre la cúpula: `extra` píxeles por encima, de la fila `top` a `bottom`.
+static func _dome_cap(m: Dictionary, extra: float, top: int, bottom: int) -> void:
+	for y in range(top, bottom + 1):
+		for x in CELL.x:
+			if (Vector2(x + 0.5, y + 0.5) - DOME_C).length() <= DOME_R + extra:
+				m[Vector2i(x, y)] = true
+
+
+## Flequillo: mechones que bajan de `from` a `to` en las columnas dadas (más cortos en los bordes).
+static func _fringe(m: Dictionary, from: int, to: int, cols) -> void:
+	var list: Array = Array(cols)
+	for i in list.size():
+		var x: int = list[i]
+		var edge := i == 0 or i == list.size() - 1
+		for y in range(from, to + (0 if edge else 1)):
+			m[Vector2i(x, y)] = true
+
+
+static func _rect(m: Dictionary, x0: int, y0: int, w: int, h: int) -> void:
+	for y in range(y0, y0 + h):
+		for x in range(x0, x0 + w):
+			m[Vector2i(x, y)] = true
+
+
+static func _disc(m: Dictionary, c: Vector2, r: float) -> void:
+	for y in range(int(c.y - r) - 1, int(c.y + r) + 2):
+		for x in range(int(c.x - r) - 1, int(c.x + r) + 2):
+			if (Vector2(x + 0.5, y + 0.5) - c).length() <= r:
+				m[Vector2i(x, y)] = true
+
+
+## Pinta una forma de pelo con el sombreado de la lámina y contorno contra el fondo.
+## `flat`: pelo al ras (sin brillos, un solo tono con puntitos).
+static func _paint_hair(img: Image, m: Dictionary, hair: Color, flat: bool) -> void:
+	var light := hair.lightened(0.28)
+	var dark := hair.darkened(0.3)
+	var outline := hair.darkened(0.75).lerp(Color("1a1024"), 0.35)
+	for p: Vector2i in m:
+		if p.x < 0 or p.y < 0 or p.x >= CELL.x or p.y >= CELL.y:
+			continue
+		var up := m.has(p + Vector2i(0, -1))
+		var right := m.has(p + Vector2i(1, 0))
+		var down := m.has(p + Vector2i(0, 1))
+		var c := hair
+		if flat:
+			c = hair.darkened(0.15) if (p.x + p.y) % 2 == 0 else hair
+		elif not right or not down:
+			c = dark
+		elif not up and p.x < int(DOME_C.x) + 2:
+			c = light
+		elif (p.x - p.y) % 5 == 0 and up:   # mechones
+			c = dark if p.x > int(DOME_C.x) else hair.lightened(0.1)
+		img.set_pixelv(p, c)
+	for p: Vector2i in m:
+		for d: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, -1), Vector2i(0, 1)]:
+			var q := p + d
+			if q.x >= 0 and q.y >= 0 and q.x < CELL.x and q.y < CELL.y and not m.has(q) and img.get_pixelv(q).a <= 0.0:
+				img.set_pixelv(q, outline)
 
 
 static func _hair_mask(img: Image) -> Array[Vector2i]:
@@ -287,47 +407,6 @@ static func _is_hair_color(_c: Color, _img: Image, x: int, y: int) -> bool:
 	return ROLES.has(hex) and String(ROLES[hex][0]) == "hair"
 
 
-## Cierra con contorno la parte de arriba de la cabeza tras quitar las puntas.
-static func _close_top(img: Image, outline: Color) -> void:
-	for x in CELL.x:
-		for y in range(0, 27):
-			if img.get_pixel(x, y).a > 0.0:
-				if y > 0:
-					img.set_pixel(x, y - 1, outline)
-				break
-
-
-static func _blob(img: Image, center: Vector2i, r: int, color: Color, outline: Color) -> void:
-	for y in range(center.y - r - 1, center.y + r + 2):
-		for x in range(center.x - r - 1, center.x + r + 2):
-			var d := Vector2(x - center.x, y - center.y).length()
-			if d <= r:
-				img.set_pixel(x, y, color.lightened(0.2) if (x < center.x and y < center.y) else color)
-			elif d <= r + 1 and img.get_pixel(x, y).a <= 0.0:
-				img.set_pixel(x, y, outline)
-
-
-static func _grow(img: Image, mask: Array[Vector2i], steps: int, color: Color, outline: Color, max_y: int) -> void:
-	var cur := {}
-	for p in mask:
-		cur[p] = true
-	for s in steps:
-		var add := {}
-		for p: Vector2i in cur:
-			for d: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, -1)]:
-				var q := p + d
-				if q.y < max_y and q.x >= 0 and q.x < CELL.x and q.y >= 0 and img.get_pixelv(q).a <= 0.0 and not cur.has(q):
-					add[q] = true
-		for q: Vector2i in add:
-			cur[q] = true
-			img.set_pixelv(q, color.darkened(0.1 * s))
-	for p: Vector2i in cur:
-		for d: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, -1)]:
-			var q := p + d
-			if q.x >= 0 and q.y >= 0 and q.x < CELL.x and img.get_pixelv(q).a <= 0.0:
-				img.set_pixelv(q, outline)
-
-
 ## Barba: la barbilla y las mejillas bajas, del color del pelo.
 static func _beard(img: Image, look: Dictionary) -> void:
 	var hair := Color(look.get("beard_color", look.get("hair_color", "2b2118")))
@@ -339,7 +418,7 @@ static func _beard(img: Image, look: Dictionary) -> void:
 				img.set_pixel(x, y, hair if (x + y) % 3 else hair.darkened(0.25))
 
 
-## Accesorios del creador (si no lleva casco): lentes, lentes de sol, audífonos, gorra, gorro.
+## Accesorios del creador (si no lleva casco): lentes, lentes de sol y audífonos.
 static func _accessory(img: Image, look: Dictionary) -> void:
 	var dark := Color("1a1624")
 	var accent := Color(look.get("accent_color", "2a2a30"))
@@ -366,17 +445,6 @@ static func _accessory(img: Image, look: Dictionary) -> void:
 				for y in range(21, 26):
 					for dx in 3:
 						img.set_pixel(side_x + dx, y, accent if dx == 1 and y > 21 and y < 25 else dark)
-		4, 5:   # gorra / gorro de lana: cubre la parte de arriba del pelo
-			var cap := accent if int(look.get("accessory", 0)) == 4 else accent.lightened(0.15)
-			for y in range(10, 20):
-				for x in range(19, 39):
-					var inside := y >= 14 or (x >= 22 + (14 - y) and x <= 35 - (14 - y))
-					if inside:
-						img.set_pixel(x, y, cap.darkened(0.2) if y == 19 or x == 19 or x == 38 else cap)
-			if int(look.get("accessory", 0)) == 4:
-				for x in range(26, 42):
-					img.set_pixel(x, 20, cap.darkened(0.3))
-
 
 ## Un cuadro: la figura movida según la animación, con el arma.
 static func frame(body: Image, weapon: Image, anim: String, k: int) -> Image:

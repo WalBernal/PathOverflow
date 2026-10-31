@@ -17,7 +17,9 @@ const BODY_NAMES := ["Delgada", "Media", "Robusta"]
 const BODY_WIDTH := [0.82, 1.0, 1.22]
 const HAIR_NAMES := ["Rapado", "Corto", "Largo", "Cresta", "Moño", "Hacia atrás", "Afro", "Coleta", "Rapado lateral", "Melena con flequillo", "Entradas"]
 const BEARD_NAMES := ["Sin barba", "Barba de tres días", "Barba completa", "Bigote", "Candado"]
-const ACCESSORY_NAMES := ["Nada", "Lentes", "Lentes de sol", "Audífonos", "Gorra", "Gorro de lana"]
+## (T180: sin gorra ni gorro de lana; lo de la cabeza lo pone el equipo. Los guardados
+## que los llevaban, 4 y 5, cargan sin accesorio.)
+const ACCESSORY_NAMES := ["Nada", "Lentes", "Lentes de sol", "Audífonos"]
 const HEIGHT_NAMES := ["Baja", "Media", "Alta"]
 const HEIGHT_VALUES := [0.9, 1.0, 1.08]
 ## Opcionales (sobre todo para NPCs): "height" (0,8-1,15, estatura) y
@@ -68,7 +70,8 @@ static func sanitize(d: Dictionary) -> Dictionary:
 	result["body"] = clampi(int(d.get("body", result["body"])), 0, BODY_NAMES.size() - 1)
 	result["hair"] = clampi(int(d.get("hair", result["hair"])), 0, HAIR_NAMES.size() - 1)
 	result["beard"] = clampi(int(d.get("beard", 0)), 0, BEARD_NAMES.size() - 1)
-	result["accessory"] = clampi(int(d.get("accessory", 0)), 0, ACCESSORY_NAMES.size() - 1)
+	var acc := int(d.get("accessory", 0))
+	result["accessory"] = acc if acc >= 0 and acc < ACCESSORY_NAMES.size() else 0
 	for key in ["skin_tone", "hair_color", "outfit_color", "eye_color"]:
 		var value := String(d.get(key, ""))
 		if Color.html_is_valid(value):
