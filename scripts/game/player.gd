@@ -293,7 +293,8 @@ func _draw_under() -> void:
 func _update_sprite(feet: Vector2, tint: Color) -> void:
 	if _sprite_look != character.appearance:
 		_sprite_look = character.appearance.duplicate()
-		_sprite.appearance = character.appearance
+		# Con el equipo de oficio de su clase (T161).
+		_sprite.appearance = CharacterAppearance.with_gear(character.appearance, String(character.class_def.get("id", "")))
 	_sprite.position = feet
 	var pose := anim_pose()
 	_sprite.set_pose(_facing, pose, _walk_phase if is_alive() else -1.0)

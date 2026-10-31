@@ -5589,6 +5589,31 @@ func _test_player_sheet() -> void:
 			if c.a > 0.5:
 				layers[roundi(c.g * 8.0)] = true
 	_check(layers.has(PlayerSheet.LAYER_SKIN) and layers.has(PlayerSheet.LAYER_OUTFIT) and layers.has(PlayerSheet.LAYER_ACCENT), "el cuerpo tiene piel, atuendo y detalles")
+	# T161: cada clase con su equipo de oficio, horneado, y dos clases nunca con el mismo.
+	var classes_json = JSON.parse_string(FileAccess.get_file_as_string("res://data/classes.json"))
+	var class_ids: Array = classes_json["classes"].map(func(c: Dictionary) -> String: return String(c["id"]))
+	_check(class_ids.all(func(id: String) -> bool: return CharacterAppearance.GEARS.has(id)), "cada clase tiene su equipo de oficio")
+	_check(CharacterAppearance.with_gear(CharacterAppearance.default(), "hacker")["gear"] == "hacker"
+		and not CharacterAppearance.with_gear(CharacterAppearance.default(), "nadie").has("gear")
+		and CharacterAppearance.sanitize({"gear": "templario"})["gear"] == "templario", "el equipo va con la clase y sobrevive a sanitize")
+	var gear_shapes := {}
+	for gi in CharacterAppearance.GEARS.size():
+		var tex := PlayerSprite.texture_of("gear", gi)
+		if tex == null:
+			_check(false, "equipo %s horneado" % CharacterAppearance.GEARS[gi])
+			continue
+		var img := tex.get_image()
+		var shape := PackedByteArray()
+		var count := 0
+		var cell := PlayerSheet.region(PlayerSheet.Dir.DOWN, 0)
+		for y in range(int(cell.position.y), int(cell.end.y)):
+			for x in range(int(cell.position.x), int(cell.end.x)):
+				var on := img.get_pixel(x, y).a > 0.3
+				shape.append(1 if on else 0)
+				count += 1 if on else 0
+		_check(count > 20, "el equipo de %s se ve de frente (%d píxeles)" % [CharacterAppearance.GEARS[gi], count])
+		gear_shapes[shape] = true
+	_check(gear_shapes.size() == CharacterAppearance.GEARS.size(), "dos clases no comparten silueta de equipo")
 	# T160: ningún cuadro del cuerpo vacío, los pies en FEET (de pie) y solo capas válidas en G.
 	var bad_frames := []
 	var bad_layers := {}

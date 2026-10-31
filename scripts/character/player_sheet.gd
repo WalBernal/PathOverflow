@@ -35,10 +35,10 @@ const SWING_WEAPONS := ["sword", "axe", "mace"]
 ## Archivos de cada capa (assets/sprites/player/).
 const DIR_PATH := "res://assets/sprites/player/"
 const MASK_LAYERS := ["body", "hair", "beard", "accessory"]
-const FIXED_LAYERS := ["body_fixed", "accessory_fixed", "weapon"]
+const FIXED_LAYERS := ["body_fixed", "accessory_fixed", "weapon", "gear"]
 ## Capas con variantes: un archivo por variante (T160; `hair_3.png`...), así solo se
 ## carga lo que alguien lleva puesto. Cada archivo: 3 filas (direcciones) × columnas.
-const VARIANT_LAYERS := ["hair", "beard", "accessory", "accessory_fixed", "weapon"]
+const VARIANT_LAYERS := ["hair", "beard", "accessory", "accessory_fixed", "weapon", "gear"]
 ## Pase de luz (T160): se hornea en gris LUM_GRAY y el shader multiplica por
 ## 1 / LUM_GRAY, así los brillos (colores aclarados) pasan del color base.
 const LUM_GRAY := 0.65

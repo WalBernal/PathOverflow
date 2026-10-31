@@ -13,7 +13,7 @@ const OUTLINE_OFFSETS: Array[Vector2] = [Vector2(-2, 0), Vector2(2, 0), Vector2(
 	Vector2(-1.5, -1.5), Vector2(1.5, -1.5), Vector2(-1.5, 1.5), Vector2(1.5, 1.5)]
 ## Orden de dibujo: [capa, es máscara].
 const ORDER := [["body", true], ["body_fixed", false], ["weapon", false], ["hair", true], ["beard", true],
-	["accessory", true], ["accessory_fixed", false]]
+	["accessory", true], ["accessory_fixed", false], ["gear", false]]
 
 var appearance: Dictionary = CharacterAppearance.default():
 	set(value):
@@ -105,6 +105,7 @@ func cells() -> Dictionary:
 		"weapon": PlayerSheet.WEAPONS.find(weapon),
 		"hair": int(a["hair"]),
 		"beard": int(a["beard"]) - 1, "accessory": int(a["accessory"]) - 1, "accessory_fixed": int(a["accessory"]) - 1,
+		"gear": CharacterAppearance.GEARS.find(String(a.get("gear", ""))),   # equipo de la clase (T161)
 		"_dir": d[0], "_flip": d[1], "_col": col,
 	}
 

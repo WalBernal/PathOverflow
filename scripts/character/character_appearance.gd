@@ -88,6 +88,8 @@ static func sanitize(d: Dictionary) -> Dictionary:
 		result["beard_streaks"] = true
 	if d.has("smile"):
 		result["smile"] = clampf(float(d["smile"]), -1.0, 1.0)
+	if GEARS.has(String(d.get("gear", ""))):   # equipo de la clase (T161)
+		result["gear"] = String(d["gear"])
 	return result
 
 
@@ -264,6 +266,120 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 	# Cabeza: grande, chibi (T160, como la referencia del usuario; antes radio 7 en -31).
 	var head: Vector2 = u.call(lean, HEAD_Y)
 	draw_head(ci, head, HEAD_R * scale, a, {"back": back, "look": Vector2(look, 0.0), "tint": tint, "profile": profile})
+	if GEARS.has(String(a.get("gear", ""))):
+		_draw_gear(ci, String(a["gear"]), u, head, HEAD_R * scale, tw, lean, back, profile, side, scale, tint)
+
+
+## Equipo de oficio de cada clase (T161), encima de la figura: lo que la distingue
+## de lejos. Colores fijos (no se tiñen con los del creador).
+const GEARS := ["guerrero", "duelista", "exploradora", "hacker", "hechicero", "templario", "full_stack"]
+
+
+## Apariencia con el equipo de la clase `class_id` (si tiene).
+static func with_gear(a: Dictionary, class_id: String) -> Dictionary:
+	var out := a.duplicate()
+	if GEARS.has(class_id):
+		out["gear"] = class_id
+	return out
+
+
+static func _draw_gear(ci: CanvasItem, gear: String, u: Callable, head: Vector2, r: float, tw: float, lean: float,
+		back: bool, profile: bool, side: float, scale: float, tint: Color) -> void:
+	var c := func(html: String, alpha := 1.0) -> Color: return Color(_tinted(Color(html), tint), alpha)
+	var front := not back and not profile
+	match gear:
+		"guerrero":   # Técnico de Soporte: chaleco reflectante y gafete
+			var vest: Color = c.call("f08a24")
+			if front:
+				for s in [-1.0, 1.0]:
+					ci.draw_colored_polygon(PackedVector2Array([u.call(s * 8.2 * tw + lean, -24.0), u.call(s * 3.0 * tw + lean, -24.0),
+						u.call(s * 2.6 * tw, -9.0), u.call(s * 6.4 * tw, -9.0)]), vest)
+					ci.draw_rect(Rect2(u.call((-7.6 * tw if s < 0.0 else 2.8 * tw), -16.5), Vector2(4.8 * tw, 1.6) * scale), c.call("e8eef2"))
+				ci.draw_line(u.call(-1.5 * tw, -24.0), u.call(1.2 * tw, -18.5), c.call("2b6cb0"), 0.8 * scale)
+				ci.draw_rect(Rect2(u.call(0.2 * tw, -18.8), Vector2(2.8, 3.4) * scale), c.call("f4f6f8"))
+				ci.draw_rect(Rect2(u.call(0.2 * tw, -18.8), Vector2(2.8, 1.1) * scale), c.call("2b6cb0"))
+			else:
+				ci.draw_colored_polygon(PackedVector2Array([u.call(-8.2 * tw + lean, -24.0), u.call(8.2 * tw + lean, -24.0),
+					u.call(6.4 * tw, -9.0), u.call(-6.4 * tw, -9.0)]), vest)
+				ci.draw_rect(Rect2(u.call(-7.6 * tw, -16.5), Vector2(15.2 * tw, 1.6) * scale), c.call("e8eef2"))
+		"duelista":   # Tester QA: bata blanca larga, etiqueta de bug y lupa al cinto
+			var coat: Color = c.call("eef1f4")
+			if front:
+				for s in [-1.0, 1.0]:
+					ci.draw_colored_polygon(PackedVector2Array([u.call(s * 8.6 * tw + lean, -24.0), u.call(s * 3.4 * tw + lean, -24.0),
+						u.call(s * 3.6 * tw, -2.5), u.call(s * 8.0 * tw, -2.5)]), coat)
+					ci.draw_line(u.call(s * 3.4 * tw + lean, -24.0), u.call(s * 3.6 * tw, -2.5), c.call("c3c9d2"), 0.8 * scale)
+				ci.draw_circle(u.call(-6.0 * tw, -19.0), 1.3 * scale, c.call("e04848"))
+			else:
+				ci.draw_colored_polygon(PackedVector2Array([u.call(-8.6 * tw + lean, -24.0), u.call(8.6 * tw + lean, -24.0),
+					u.call(8.0 * tw, -2.5), u.call(-8.0 * tw, -2.5)]), coat)
+				ci.draw_line(u.call(0.0, -12.0), u.call(0.0, -2.5), c.call("c3c9d2"), 0.8 * scale)
+			var lens: Vector2 = u.call(side * 8.4 * tw, -6.5)
+			ci.draw_line(lens + Vector2(0, -2.0) * scale, lens + Vector2(0, -4.6) * scale, c.call("6b4a2b"), 1.0 * scale)
+			ci.draw_circle(lens, 2.0 * scale, c.call("8a8f99"))
+			ci.draw_circle(lens, 1.3 * scale, c.call("bfe6ff"))
+		"exploradora":   # Frontend: capucha de sudadera y paleta de colores flotando
+			var hood: Color = c.call("7a5cc4")
+			ci.draw_colored_polygon(PackedVector2Array([u.call(-8.4 * tw + lean, -25.5), u.call(8.4 * tw + lean, -25.5),
+				u.call(6.0 * tw + lean, -21.5), u.call(-6.0 * tw + lean, -21.5)]), hood)
+			if front:
+				ci.draw_line(u.call(-1.2 * tw, -21.5), u.call(-1.4 * tw, -16.0), c.call("f4f6f8"), 0.8 * scale)
+				ci.draw_line(u.call(1.2 * tw, -21.5), u.call(1.4 * tw, -16.0), c.call("f4f6f8"), 0.8 * scale)
+			var pal: Vector2 = u.call(-side * 13.5, -31.0)
+			var swatches := ["e05a5a", "f2c230", "4fb36b", "4b8bd6"]
+			for k in swatches.size():
+				var at := pal + Vector2((k % 2) * 3.2, (k / 2) * 3.2) * scale
+				ci.draw_rect(Rect2(at, Vector2(2.8, 2.8) * scale), c.call(swatches[k]))
+		"hacker":   # Ingeniera de Prompts: audífonos de neón y un globo de texto
+			var neon: Color = c.call("2fe0b0")
+			ci.draw_arc(head, 1.14 * r, PI * 1.08, PI * 1.92, 18, neon, maxf(1.0, r * 0.2), true)
+			for s in ([-1.0, 1.0] if not profile else [side]):
+				ci.draw_circle(head + Vector2(s * 1.02, 0.05) * r, 0.34 * r, c.call("22262e"))
+				ci.draw_circle(head + Vector2(s * 1.02, 0.05) * r, 0.2 * r, neon)
+			var bubble: Vector2 = head + Vector2(side * 1.45, -1.55) * r
+			ci.draw_rect(Rect2(bubble - Vector2(5.0, 3.2) * scale, Vector2(10.0, 6.4) * scale), c.call("f4f6f8"))
+			ci.draw_colored_polygon(PackedVector2Array([bubble + Vector2(-side * 2.5, 3.0) * scale, bubble + Vector2(-side * 0.5, 3.0) * scale,
+				bubble + Vector2(-side * 4.5, 5.6) * scale]), c.call("f4f6f8"))
+			for k in 3:
+				ci.draw_circle(bubble + Vector2(-2.6 + k * 2.6, 0.0) * scale, 0.75 * scale, c.call("2b2f3a"))
+		"hechicero":   # Científico de Datos: tableta holográfica con una gráfica
+			var o: Vector2 = u.call(side * 12.0, -25.0)
+			var w := 9.0 * scale
+			var h := 7.0 * scale
+			var panel := Rect2(o + Vector2(0.0 if side > 0.0 else -w, 0.0), Vector2(w, h))
+			ci.draw_rect(panel, c.call("4fc8ff", 0.4))
+			ci.draw_rect(panel, c.call("9fe6ff"), false, 0.8 * scale)
+			for k in 3:
+				var bh: float = [2.5, 4.5, 3.5][k] * scale
+				ci.draw_rect(Rect2(panel.position + Vector2((1.4 + k * 2.6) * scale, h - 1.0 * scale - bh), Vector2(1.6 * scale, bh)), c.call("dff7ff"))
+		"templario":   # DevOps: casco de obra con un LED de estado y un cable al hombro
+			var hat: Color = c.call("f2c230")
+			var dome := PackedVector2Array()
+			for i in 13:
+				var t := PI + PI * i / 12.0
+				dome.append(head + Vector2(cos(t) * 1.16, sin(t) * 1.16 - 0.12) * r)
+			ci.draw_colored_polygon(dome, hat)
+			ci.draw_rect(Rect2(head + Vector2(-1.36, -0.22) * r, Vector2(2.72, 0.24) * r), hat.darkened(0.2))
+			ci.draw_arc(head + Vector2(0, -0.12) * r, 0.8 * r, PI * 1.2, PI * 1.4, 6, hat.lightened(0.45), maxf(1.0, r * 0.14), true)
+			if not back:
+				ci.draw_circle(head + Vector2(0.0 if not profile else side * 0.7, -0.75) * r, 0.17 * r, c.call("5dff7a"))
+			var sh: Vector2 = u.call(-side * 7.5 * tw + lean, -23.0)
+			ci.draw_arc(sh + Vector2(0, 4.0) * scale, 4.0 * scale, -PI * 0.9, PI * 0.4, 10, c.call("2b2f3a"), 1.2 * scale, true)
+		"full_stack":   # Full Stack: mochila con laptop y stickers
+			var pack: Color = c.call("3b4252")
+			if back:
+				ci.draw_rect(Rect2(u.call(-6.0 * tw, -23.0), Vector2(12.0 * tw, 12.5) * scale), pack)
+				ci.draw_rect(Rect2(u.call(-5.0 * tw, -25.5), Vector2(10.0 * tw, 2.6) * scale), c.call("c0c6d0"))
+				ci.draw_circle(u.call(-2.5 * tw, -18.0), 1.2 * scale, c.call("e05a5a"))
+				ci.draw_circle(u.call(2.0 * tw, -15.0), 1.2 * scale, c.call("f2c230"))
+				ci.draw_rect(Rect2(u.call(-1.0 * tw, -20.5), Vector2(2.2, 2.2) * scale), c.call("4fb36b"))
+			elif profile:
+				ci.draw_rect(Rect2(u.call(-side * 4.0 * tw - (4.5 * tw if side > 0.0 else 0.0), -23.0), Vector2(4.5 * tw, 12.0) * scale), pack)
+				ci.draw_rect(Rect2(u.call(-side * 4.0 * tw - (4.5 * tw if side > 0.0 else 0.0), -25.5), Vector2(3.5 * tw, 2.6) * scale), c.call("c0c6d0"))
+			else:
+				for s in [-1.0, 1.0]:
+					ci.draw_line(u.call(s * 5.0 * tw + lean, -24.0), u.call(s * 4.4 * tw, -12.0), c.call("2b2f3a"), 1.4 * scale)
+				ci.draw_rect(Rect2(u.call(-7.4 * tw, -26.5), Vector2(14.8 * tw, 2.4) * scale), pack)
 
 
 ## Transformación de la figura entera para los estados que la mueven toda:

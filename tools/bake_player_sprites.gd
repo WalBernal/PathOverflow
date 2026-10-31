@@ -70,6 +70,14 @@ func _bake() -> void:
 	var ref_w := _repeat(body_rows, weapon_rows.size())
 	var w_ids := await _render(weapon_rows, "id")
 	_save_fixed("weapon", w_ids, await _render(weapon_rows, "real"), await _render(ref_w, "id"))
+	# Equipo de cada clase (T161): todo lo que cambia respecto al cuerpo, sea del color que sea.
+	var gear_rows := []
+	for g in CharacterAppearance.GEARS:
+		var a := base.duplicate()
+		a["gear"] = g
+		gear_rows.append({"a": a, "weapon": ""})
+	var ref_g := await _render(_repeat(body_rows, gear_rows.size()), "id")
+	_save_overlay("gear", await _render(gear_rows, "id"), await _render(gear_rows, "real"), ref_g)
 	print("hojas del personaje horneadas en %s (%d columnas, celdas de %dx%d)" % [PlayerSheet.DIR_PATH, PlayerSheet.columns(), PlayerSheet.CW, PlayerSheet.CH])
 	quit()
 
@@ -177,6 +185,20 @@ func _save_fixed(name: String, ids: Image, real: Image, ref: Image) -> void:
 			if c.a < 0.05 or (ref != null and _same(c, ref.get_pixel(x, y))):
 				continue
 			if PlayerSheet.classify(c) != 0:
+				continue
+			out.set_pixel(x, y, real.get_pixel(x, y))
+	_save(name, out)
+
+
+## Encima de todo (T161): el color real de lo que difiere de la referencia, sin mirar
+## si es un color de capa (el equipo puede ser verde, rojo o lo que haga falta).
+func _save_overlay(name: String, ids: Image, real: Image, ref: Image) -> void:
+	var out := Image.create_empty(ids.get_width(), ids.get_height(), false, Image.FORMAT_RGBA8)
+	out.fill(Color(0, 0, 0, 0))
+	for y in ids.get_height():
+		for x in ids.get_width():
+			var c := ids.get_pixel(x, y)
+			if c.a < 0.05 or _same(c, ref.get_pixel(x, y)):
 				continue
 			out.set_pixel(x, y, real.get_pixel(x, y))
 	_save(name, out)

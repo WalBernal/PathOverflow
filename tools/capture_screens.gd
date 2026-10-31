@@ -33,6 +33,10 @@ func _run() -> void:
 		await _capture_touch_auto()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("equipos"):
+		await _capture_class_gear()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("tamano"):
 		await _capture_world_size()
 		get_tree().quit()
@@ -1403,6 +1407,33 @@ func _capture_player_layers() -> void:
 			sp.set_pose(p[0], p[1], p[2])
 	await _wait(0.5)
 	_save("102_capas_comparacion")
+
+
+## Equipo de oficio de las siete clases (T161), con la hoja: de frente, de lado, de
+## espaldas y atacando.
+func _capture_class_gear() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	var sheet := Control.new()
+	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sheet.draw.connect(func() -> void: sheet.draw_rect(Rect2(Vector2.ZERO, sheet.size), Color("2a2e36")))
+	_swap(sheet)
+	var poses := [[Vector2.DOWN, {"state": "idle", "time": 0.3}, -1.0], [Vector2.RIGHT, {"state": "walk"}, 1.3],
+		[Vector2.UP, {"state": "idle", "time": 0.3}, -1.0], [Vector2.RIGHT, {"state": "attack", "t": 0.3, "weapon": "sword"}, -1.0]]
+	var gears := CharacterAppearance.GEARS
+	var cell := Vector2(1600.0 / gears.size(), 900.0 / poses.size())
+	for gi in gears.size():
+		var look := CharacterAppearance.with_gear(CharacterAppearance.random(rng), gears[gi])
+		for pi in poses.size():
+			var p: Array = poses[pi]
+			var sp := PlayerSprite.new()
+			sheet.add_child(sp)
+			sp.appearance = look
+			sp.sprite_scale = 2.4 / PlayerSheet.BAKE_SCALE
+			sp.position = Vector2(cell.x * (gi + 0.5), cell.y * (pi + 0.9))
+			sp.set_pose(p[0], p[1], p[2])
+	await _wait(0.5)
+	_save("161_equipos")
 
 
 ## Pantallas de T96: título con la ciudad de servidores, selección de personaje con

@@ -271,7 +271,7 @@ func _select(index: int) -> void:
 	if card:
 		card.button_pressed = true  # así el ButtonGroup suelta los demás
 	var data := _saves[index]
-	_preview.appearance = CharacterAppearance.sanitize(data.get("appearance", {}))
+	_preview.appearance = CharacterAppearance.with_gear(CharacterAppearance.sanitize(data.get("appearance", {})), String(data.get("class_id", "")))
 	var class_def := GameData.get_class_def(StringName(data.get("class_id", "")))
 	_preview.glow_color = Color(class_def.get("color", "d9a441"))
 	var look: Array = CLASS_POSES.get(String(data.get("class_id", "")), ["attack", "sword"])
