@@ -6,9 +6,11 @@ extends Node2D
 ## Uso: `appearance = …` y, cada fotograma, `set_pose(facing, pose, walk_phase)`.
 
 const SHADER := preload("res://assets/shaders/player_layers.gdshader")
-## Contorno oscuro de 1 píxel de hoja (T157): para leerse sobre suelos oscuros.
+## Contorno oscuro (T157): para leerse sobre suelos oscuros. T160: grueso, como la
+## referencia chibi: 2 píxeles de hoja en las ocho direcciones.
 const OUTLINE_SHADER := preload("res://assets/shaders/player_outline.gdshader")
-const OUTLINE_OFFSETS: Array[Vector2] = [Vector2(-1, 0), Vector2(1, 0), Vector2(0, -1), Vector2(0, 1)]
+const OUTLINE_OFFSETS: Array[Vector2] = [Vector2(-2, 0), Vector2(2, 0), Vector2(0, -2), Vector2(0, 2),
+	Vector2(-1.5, -1.5), Vector2(1.5, -1.5), Vector2(-1.5, 1.5), Vector2(1.5, 1.5)]
 ## Orden de dibujo: [capa, es máscara].
 const ORDER := [["body", true], ["body_fixed", false], ["weapon", false], ["hair", true], ["beard", true],
 	["accessory", true], ["accessory_fixed", false]]
@@ -32,11 +34,12 @@ var _walk := -1.0
 static var _textures := {}
 
 
-static func texture_of(layer: String) -> Texture2D:
-	if not _textures.has(layer):
-		var path := PlayerSheet.DIR_PATH + layer + ".png"
-		_textures[layer] = load(path) if ResourceLoader.exists(path) else null
-	return _textures[layer]
+## La hoja de una capa (y variante, si la capa las tiene; T160: un archivo por variante).
+static func texture_of(layer: String, variant := 0) -> Texture2D:
+	var path := PlayerSheet.file_of(layer, variant)
+	if not _textures.has(path):
+		_textures[path] = load(path) if ResourceLoader.exists(path) else null
+	return _textures[path]
 
 
 ## ¿Están horneadas las hojas? (Sin ellas, quien lo use dibuja como siempre.)
@@ -51,7 +54,6 @@ func _ready() -> void:
 		var o := _Layer.new()
 		o.name = String(entry[0]) + "_outline"
 		o.key = entry[0]
-		o.texture = texture_of(entry[0])
 		o.offsets = OUTLINE_OFFSETS
 		o.material = outline_mat
 		o.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -61,10 +63,10 @@ func _ready() -> void:
 		var l := _Layer.new()
 		l.name = entry[0]
 		l.key = entry[0]
-		l.texture = texture_of(entry[0])
 		var m := ShaderMaterial.new()
 		m.shader = SHADER
 		m.set_shader_parameter("mask", entry[1])
+		m.set_shader_parameter("light_gain", 1.0 / PlayerSheet.LUM_GRAY)
 		l.material = m
 		l.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		add_child(l)
@@ -116,8 +118,10 @@ func _refresh() -> void:
 	for l in _layers + _outlines:
 		var key := l.key
 		var variant: int = c[key]
+		if variant >= 0:
+			l.texture = texture_of(key, variant)
 		l.visible = variant >= 0 and l.texture != null
-		l.region = PlayerSheet.region(maxi(0, variant), c["_dir"], c["_col"])
+		l.region = PlayerSheet.region(c["_dir"], c["_col"])
 		var body_part := key in ["body", "body_fixed"]
 		l.scale = Vector2((-1.0 if c["_flip"] else 1.0) * (width if body_part else 1.0), height) * sprite_scale
 		l.queue_redraw()

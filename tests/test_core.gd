@@ -5248,8 +5248,8 @@ func _test_touch_controls() -> void:
 	_check(PlayerSheet.WORLD_SCALE >= 1.06 * 1.14, "personajes un 15 % más grandes que antes (1,06)")
 	_check(PlayerSheet.WORLD_SCALE / 1.06 * GraphicsQuality.WORLD_ZOOM_TOUCH >= 1.45, "en el celular, al menos ×1,45 que antes")
 	var body := Image.new()
-	if body.load(ProjectSettings.globalize_path(PlayerSheet.DIR_PATH + "body.png")) == OK:
-		var cell := PlayerSheet.region(0, PlayerSheet.Dir.DOWN, 0)
+	if body.load(ProjectSettings.globalize_path(PlayerSheet.file_of("body"))) == OK:
+		var cell := PlayerSheet.region(PlayerSheet.Dir.DOWN, 0)
 		var top := int(cell.size.y)
 		for y in int(cell.size.y):
 			for x in int(cell.size.x):
@@ -5533,7 +5533,7 @@ func _test_npcs_and_boss_intro() -> void:
 
 ## Personaje por capas (T102a): cuadrícula, poses, clasificación de capas y hojas horneadas.
 func _test_player_sheet() -> void:
-	_check(PlayerSheet.columns() == 32, "32 columnas de estados (%d)" % PlayerSheet.columns())
+	_check(PlayerSheet.columns() == 34 and PlayerSheet.frames_of("walk") == 8, "34 columnas de estados, 8 al andar (%d)" % PlayerSheet.columns())
 	_check(PlayerSheet.group_for("attack", "sword") == "attack_swing" and PlayerSheet.group_for("attack", "dagger") == "attack_thrust"
 		and PlayerSheet.group_for("attack", "") == "attack_thrust" and PlayerSheet.group_for("run", "") == "walk", "cada arma con su gesto; correr usa andar")
 	var walk := {}
@@ -5553,21 +5553,22 @@ func _test_player_sheet() -> void:
 	_check(PlayerSheet.classify(Color(1, 0, 0)) == PlayerSheet.LAYER_SKIN and PlayerSheet.classify(Color(0, 0.6, 0)) == PlayerSheet.LAYER_OUTFIT
 		and PlayerSheet.classify(Color(0.7, 0.7, 0)) == PlayerSheet.LAYER_HAIR and PlayerSheet.classify(Color(0, 0.8, 0.8)) == PlayerSheet.LAYER_EYES
 		and PlayerSheet.classify(Color(0.3, 0.3, 0.32)) == 0, "cada color puro es su capa; los grises, fijos")
-	# Hojas horneadas: tamaño y algo dibujado en cada variante.
+	# Hojas horneadas (T160: un archivo por variante, 96×120 por cuadro): tamaño y algo
+	# dibujado en cada variante.
+	_check(PlayerSheet.CW * PlayerSheet.columns() <= 4096, "las hojas caben en una textura de 4096 px de ancho")
 	var rows := {"body": 1, "hair": CharacterAppearance.HAIR_NAMES.size(), "beard": CharacterAppearance.BEARD_NAMES.size() - 1,
 		"accessory": CharacterAppearance.ACCESSORY_NAMES.size() - 1, "weapon": PlayerSheet.WEAPONS.size()}
 	for layer in rows:
-		var tex := PlayerSprite.texture_of(layer)
-		_check(tex != null and tex.get_width() == PlayerSheet.CW * PlayerSheet.columns() and tex.get_height() == PlayerSheet.CH * PlayerSheet.DIRS * int(rows[layer]),
-			"hoja %s horneada con su cuadrícula" % layer)
-		if tex == null:
-			continue
-		var img := tex.get_image()
-		# Los lentes son solo colores fijos (montura y cristal): van en accessory_fixed.
-		var extra: Image = PlayerSprite.texture_of("accessory_fixed").get_image() if layer == "accessory" else null
 		var empty := []
 		for v in int(rows[layer]):
-			var r := PlayerSheet.region(v, PlayerSheet.Dir.DOWN, PlayerSheet.first_column("attack_swing") + 1)
+			var tex := PlayerSprite.texture_of(layer, v)
+			if tex == null or tex.get_width() != PlayerSheet.CW * PlayerSheet.columns() or tex.get_height() != PlayerSheet.CH * PlayerSheet.DIRS:
+				_check(false, "hoja %s %d horneada con su cuadrícula" % [layer, v])
+				continue
+			var img := tex.get_image()
+			# Los lentes son solo colores fijos (montura y cristal): van en accessory_fixed.
+			var extra: Image = PlayerSprite.texture_of("accessory_fixed", v).get_image() if layer == "accessory" else null
+			var r := PlayerSheet.region(PlayerSheet.Dir.DOWN, PlayerSheet.first_column("attack_swing") + 1)
 			var solid := false
 			for y in range(int(r.position.y), int(r.end.y)):
 				for x in range(int(r.position.x), int(r.end.x)):
@@ -5588,6 +5589,33 @@ func _test_player_sheet() -> void:
 			if c.a > 0.5:
 				layers[roundi(c.g * 8.0)] = true
 	_check(layers.has(PlayerSheet.LAYER_SKIN) and layers.has(PlayerSheet.LAYER_OUTFIT) and layers.has(PlayerSheet.LAYER_ACCENT), "el cuerpo tiene piel, atuendo y detalles")
+	# T160: ningún cuadro del cuerpo vacío, los pies en FEET (de pie) y solo capas válidas en G.
+	var bad_frames := []
+	var bad_layers := {}
+	for dir in PlayerSheet.DIRS:
+		for col in PlayerSheet.columns():
+			var cell := PlayerSheet.region(dir, col)
+			var lowest := -1
+			for y in range(int(cell.position.y), int(cell.end.y)):
+				for x in range(int(cell.position.x), int(cell.end.x)):
+					var c := body.get_pixel(x, y)
+					if c.a > 0.6:
+						lowest = y - int(cell.position.y)
+						var g := roundi(c.g * 8.0)
+						if g < PlayerSheet.LAYER_SKIN or g > PlayerSheet.LAYER_EYES:
+							bad_layers[g] = true
+			var group := String(PlayerSheet.STATES[0][0])
+			var acc := 0
+			for s in PlayerSheet.STATES:
+				acc += int(s[1])
+				if col < acc:
+					group = s[0]
+					break
+			var standing := group in ["idle", "walk", "attack_swing", "attack_thrust", "shoot", "cast", "channel"]
+			if lowest < 0 or (standing and absi(lowest - int(PlayerSheet.FEET.y)) > 3):
+				bad_frames.append("%d/%d (%d)" % [dir, col, lowest])
+	_check(bad_frames.is_empty(), "cada cuadro del cuerpo tiene dibujo y, de pie, los pies en FEET: %s" % [bad_frames])
+	_check(bad_layers.is_empty(), "el canal G del cuerpo solo trae capas válidas: %s" % [bad_layers.keys()])
 
 
 ## Enemigos con más cuadros y direcciones (T101): la hoja y qué cuadro sale en cada estado.

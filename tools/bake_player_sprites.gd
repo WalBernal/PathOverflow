@@ -99,9 +99,9 @@ func _look_for(a: Dictionary, mode: String) -> Dictionary:
 		"id":
 			for key in PlayerSheet.ID_COLORS:
 				look[key] = PlayerSheet.ID_COLORS[key]
-		"lum":
+		"lum":   # gris y no blanco: así los brillos (colores aclarados) se notan (T160)
 			for key in PlayerSheet.ID_COLORS:
-				look[key] = "ffffff"
+				look[key] = Color(PlayerSheet.LUM_GRAY, PlayerSheet.LUM_GRAY, PlayerSheet.LUM_GRAY).to_html(false)
 	if look.get("hair_clear", false):
 		look["beard_color"] = look["hair_color"]   # la barba se ve aunque el pelo no
 		look["hair_color"] = CLEAR
@@ -164,7 +164,7 @@ func _save_mask(name: String, ids: Image, lum: Image, ref: Image, _unused: Image
 				continue
 			var l := lum.get_pixel(x, y)
 			out.set_pixel(x, y, Color(maxf(l.r, maxf(l.g, l.b)), layer / 8.0, 0.0, c.a))
-	out.save_png(ProjectSettings.globalize_path(PlayerSheet.DIR_PATH + name + ".png"))
+	_save(name, out)
 
 
 ## Fija: el color real de los píxeles que no se tiñen (y que no están en la referencia).
@@ -179,7 +179,18 @@ func _save_fixed(name: String, ids: Image, real: Image, ref: Image) -> void:
 			if PlayerSheet.classify(c) != 0:
 				continue
 			out.set_pixel(x, y, real.get_pixel(x, y))
-	out.save_png(ProjectSettings.globalize_path(PlayerSheet.DIR_PATH + name + ".png"))
+	_save(name, out)
+
+
+## Guarda la hoja; las capas con variantes, un archivo por variante (T160: cada
+## variante son DIRS filas de la imagen).
+func _save(name: String, out: Image) -> void:
+	if not name in PlayerSheet.VARIANT_LAYERS:
+		out.save_png(ProjectSettings.globalize_path(PlayerSheet.file_of(name)))
+		return
+	var h := PlayerSheet.CH * PlayerSheet.DIRS
+	for v in out.get_height() / h:
+		out.get_region(Rect2i(0, v * h, out.get_width(), h)).save_png(ProjectSettings.globalize_path(PlayerSheet.file_of(name, v)))
 
 
 static func _same(a: Color, b: Color) -> bool:

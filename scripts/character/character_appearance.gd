@@ -25,6 +25,9 @@ const HEIGHT_VALUES := [0.9, 1.0, 1.08]
 const MIN_HEIGHT := 0.8
 const MAX_HEIGHT := 1.15
 const DARK := Color(0.08, 0.06, 0.06)
+## Cabeza en la figura (T160): radio y altura del centro sobre los pies, a escala 1.
+const HEAD_R := 8.6
+const HEAD_Y := -32.0
 const MOUTH := Color("3a1a1a")
 
 
@@ -189,6 +192,7 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 			x = -2.0 * width + phase * 3.2 * signf(look)
 		var length := 9.0 + bob - lift
 		ci.draw_rect(Rect2(p.call(x, y_top), Vector2(4.0 * width, length * hs) * scale), legs)
+		ci.draw_rect(Rect2(p.call(x + 2.6 * width, y_top), Vector2(1.4 * width, length * hs) * scale), legs.darkened(0.25))   # (T160) sombra
 		ci.draw_rect(Rect2(p.call(x - 0.3, y_top + length - 1.6), Vector2(4.6 * width, 1.8) * scale), accent.darkened(0.3))
 
 	# Brazos (detrás del torso), en oposición a las piernas.
@@ -221,6 +225,15 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 	ci.draw_colored_polygon(PackedVector2Array([
 		u.call(-8.0 * tw + lean, -24.0), u.call(8.0 * tw + lean, -24.0),
 		u.call(6.0 * tw, -8.0), u.call(-6.0 * tw, -8.0)]), outfit)
+	# Tres tonos (T160, como la referencia chibi): sombra en el lado derecho y abajo,
+	# brillo en el hombro izquierdo.
+	ci.draw_colored_polygon(PackedVector2Array([
+		u.call(3.5 * tw + lean, -24.0), u.call(8.0 * tw + lean, -24.0),
+		u.call(6.0 * tw, -8.0), u.call(2.5 * tw, -8.0)]), outfit.darkened(0.22))
+	ci.draw_colored_polygon(PackedVector2Array([
+		u.call(-6.0 * tw, -12.0), u.call(6.0 * tw, -12.0), u.call(6.0 * tw, -8.0), u.call(-6.0 * tw, -8.0)]), outfit.darkened(0.32))
+	ci.draw_colored_polygon(PackedVector2Array([
+		u.call(-7.4 * tw + lean, -23.4), u.call(-3.5 * tw + lean, -23.4), u.call(-5.4 * tw, -19.0)]), outfit.lightened(0.28))
 	if not back and not profile:
 		var shirt := _tinted(Color(a["shirt_color"]), tint) if a.has("shirt_color") else accent
 		ci.draw_colored_polygon(PackedVector2Array([u.call(-3.0 + lean, -24.0), u.call(3.0 + lean, -24.0), u.call(lean, -19.0)]), shirt)
@@ -248,9 +261,9 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 				ci.draw_circle(hand, 4.5 * scale * pulse, Color(g, 0.35))
 				ci.draw_circle(hand, 2.4 * scale * pulse, Color(g.lightened(0.4), 0.8))
 
-	# Cabeza.
-	var head: Vector2 = u.call(lean, -31.0)
-	draw_head(ci, head, 7.0 * scale, a, {"back": back, "look": Vector2(look, 0.0), "tint": tint, "profile": profile})
+	# Cabeza: grande, chibi (T160, como la referencia del usuario; antes radio 7 en -31).
+	var head: Vector2 = u.call(lean, HEAD_Y)
+	draw_head(ci, head, HEAD_R * scale, a, {"back": back, "look": Vector2(look, 0.0), "tint": tint, "profile": profile})
 
 
 ## Transformación de la figura entera para los estados que la mueven toda:
@@ -390,7 +403,9 @@ static func draw_head(ci: CanvasItem, head: Vector2, r: float, a: Dictionary, op
 	if acc == 3:   # audífonos: la diadema pasa por detrás si va de espaldas
 		ci.draw_arc(head, 1.12 * r, PI * 1.05, PI * 1.95, 18, Color("2a2a30"), maxf(1.0, r * 0.16), true)
 
-	ci.draw_circle(head, r, skin)
+	# Piel en dos tonos (T160): sombra abajo a la derecha y la luz de arriba a la izquierda.
+	ci.draw_circle(head, r, skin.darkened(0.2))
+	ci.draw_circle(head + Vector2(-0.1, -0.1) * r, r * 0.86, skin)
 
 	if back:
 		if style != 0:
@@ -498,6 +513,8 @@ static func _cap(ci: CanvasItem, head: Vector2, r: float, k: float, color: Color
 		var t := PI + PI * i / 16.0
 		points.append(head + Vector2(cos(t), sin(t)) * r * k)
 	ci.draw_colored_polygon(points, color)
+	# Brillo arriba a la izquierda (T160: sombreado de la referencia chibi).
+	ci.draw_arc(head, r * k * 0.72, PI * 1.18, PI * 1.45, 8, color.lightened(0.4), maxf(1.0, r * 0.16), true)
 
 
 static func _draw_face(ci: CanvasItem, head: Vector2, r: float, a: Dictionary, opts: Dictionary,
@@ -508,7 +525,12 @@ static func _draw_face(ci: CanvasItem, head: Vector2, r: float, a: Dictionary, o
 	for side in [-1.0, 1.0]:
 		var eye := head + Vector2(side * 0.37, 0.07) * r + Vector2(shift.x, 0)
 		if not detail:
-			ci.draw_circle(eye, maxf(0.9, 0.157 * r), DARK)
+			# Ojo chibi (T160): grande y oscuro, con un brillo cuando hay sitio para él; algo
+			# más abajo, porque en las hojas el pelo va encima de la cara y lo cortaba.
+			var e := eye + Vector2(0, 0.14) * r
+			ci.draw_circle(e, maxf(0.9, 0.18 * r), DARK)
+			if r >= 10.0:
+				ci.draw_circle(e + Vector2(-0.06, -0.06) * r, 0.065 * r, Color(1, 1, 1, 0.95))
 			continue
 		if blink:
 			ci.draw_line(eye - Vector2(0.14 * r, 0), eye + Vector2(0.14 * r, 0), DARK, lw)

@@ -3,17 +3,19 @@ class_name PlayerSheet
 ## tools/bake_player_sprites.gd a partir del dibujo de CharacterAppearance:
 ## - Columnas: los estados de T72 con sus cuadros (ver STATES).
 ## - Filas: mirando abajo, arriba y de lado (a la derecha; a la izquierda se voltea).
-##   Las capas con variantes (pelo, barba, accesorio, arma) apilan sus variantes:
-##   fila = variante × 3 + dirección.
+##   Las capas con variantes (pelo, barba, accesorio, arma) van en un archivo por
+##   variante (file_of).
 ## - Celdas de CW×CH con los pies en FEET, a la escala del juego (BAKE_SCALE).
 ## Capas de máscara (cuerpo, pelo, barba, accesorio): R = luz (0..1), G = capa
 ## (LAYER_* / 8) y alfa; se tiñen con los colores del creador (PlayerSprite).
 ## Capas fijas (detalles del cuerpo y del accesorio, armas): su color real.
 
-const CW := 64
-const CH := 80
-const FEET := Vector2(32, 70)
-const BAKE_SCALE := 1.06
+## T160: a 1,5 veces la resolución de antes (64×80 a 1,06): más definido. No a 2×: las
+## hojas pasarían de 4096 px de ancho y ~230 MB de textura en el celular.
+const CW := 96
+const CH := 120
+const FEET := Vector2(48, 105)
+const BAKE_SCALE := 1.59
 ## Escala en el mundo del jugador y de los NPC, la misma para todos (T157: un 15 %
 ## más que la de las hojas; antes el jugador iba a 1,06 y los NPC a 1,12).
 const WORLD_SCALE := 1.22
@@ -26,7 +28,7 @@ const LAYER_ACCENT := 3
 const LAYER_HAIR := 4
 const LAYER_EYES := 5
 ## [estado, cuadros]. Atacar va en dos grupos: tajo (espada, hacha, maza) y estocada (daga, puño).
-const STATES := [["idle", 2], ["walk", 6], ["attack_swing", 4], ["attack_thrust", 4], ["shoot", 3], ["cast", 3],
+const STATES := [["idle", 2], ["walk", 8],["attack_swing", 4], ["attack_thrust", 4], ["shoot", 3], ["cast", 3],
 	["channel", 2], ["hurt", 2], ["dodge", 3], ["dead", 3]]
 const WEAPONS := ["sword", "axe", "mace", "dagger"]
 const SWING_WEAPONS := ["sword", "axe", "mace"]
@@ -34,6 +36,16 @@ const SWING_WEAPONS := ["sword", "axe", "mace"]
 const DIR_PATH := "res://assets/sprites/player/"
 const MASK_LAYERS := ["body", "hair", "beard", "accessory"]
 const FIXED_LAYERS := ["body_fixed", "accessory_fixed", "weapon"]
+## Capas con variantes: un archivo por variante (T160; `hair_3.png`...), así solo se
+## carga lo que alguien lleva puesto. Cada archivo: 3 filas (direcciones) × columnas.
+const VARIANT_LAYERS := ["hair", "beard", "accessory", "accessory_fixed", "weapon"]
+## Pase de luz (T160): se hornea en gris LUM_GRAY y el shader multiplica por
+## 1 / LUM_GRAY, así los brillos (colores aclarados) pasan del color base.
+const LUM_GRAY := 0.65
+
+
+static func file_of(layer: String, variant := 0) -> String:
+	return DIR_PATH + layer + ("_%d" % variant if layer in VARIANT_LAYERS else "") + ".png"
 
 
 static func columns() -> int:
@@ -130,8 +142,9 @@ static func dir_for(facing: Vector2) -> Array:
 	return [Dir.DOWN, false]
 
 
-static func region(variant: int, dir: int, col: int) -> Rect2:
-	return Rect2(col * CW, (variant * DIRS + dir) * CH, CW, CH)
+## Celda de una dirección y columna (en el archivo de la variante, si la capa las tiene).
+static func region(dir: int, col: int) -> Rect2:
+	return Rect2(col * CW, dir * CH, CW, CH)
 
 
 ## Capa de color de un píxel del pase de identificación: el canal dominante de cada
