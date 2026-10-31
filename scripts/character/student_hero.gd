@@ -116,10 +116,9 @@ static func texture(look: Dictionary, weapon: String) -> ImageTexture:
 
 static func _layer(name: String) -> Image:
 	if not _art.has(name):
+		# Siempre como recurso importado (sin pérdida): igual en el editor, las pruebas y el APK.
 		var path := DIR + name + ".png"
-		_art[name] = Image.load_from_file(ProjectSettings.globalize_path(path)) if FileAccess.file_exists(path) else null
-		if _art[name] == null and ResourceLoader.exists(path):   # en el APK, desde el recurso importado
-			_art[name] = (load(path) as Texture2D).get_image()
+		_art[name] = (load(path) as Texture2D).get_image() if ResourceLoader.exists(path) else null
 		if _art[name] != null:
 			(_art[name] as Image).convert(Image.FORMAT_RGBA8)
 	return _art[name]
