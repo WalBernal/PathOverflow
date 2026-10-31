@@ -29,7 +29,7 @@ const LAYER_HAIR := 4
 const LAYER_EYES := 5
 ## [estado, cuadros]. Atacar va en dos grupos: tajo (espada, hacha, maza) y estocada (daga, puño).
 const STATES := [["idle", 2], ["walk", 8],["attack_swing", 4], ["attack_thrust", 4], ["shoot", 3], ["cast", 3],
-	["channel", 2], ["hurt", 2], ["dodge", 3], ["dead", 3]]
+	["channel", 2], ["hurt", 2], ["dodge", 3], ["dead", 3], ["type", 2]]   # type: teclear (NPC, T162)
 const WEAPONS := ["sword", "axe", "mace", "dagger"]
 const SWING_WEAPONS := ["sword", "axe", "mace"]
 ## Archivos de cada capa (assets/sprites/player/).
@@ -98,6 +98,8 @@ static func column_for(state: String, weapon: String, t: float, time := 0.0, wal
 			k = posmod(int(floor(time / 0.65)), n)
 		"channel":
 			k = posmod(int(floor(time * 5.0)), n)
+		"type":
+			k = posmod(int(floor(time * 7.0)), n)
 		_:
 			k = clampi(int(t * n), 0, n - 1)
 	return first + k
@@ -122,6 +124,8 @@ static func pose_for(col: int) -> Dictionary:
 					pose["state"] = "attack"
 				"channel":
 					pose["time"] = k * 0.2
+				"type":
+					pose["time"] = k * 0.5
 				"dead":
 					pose["t"] = (k + 0.99) / n   # el último cuadro, ya en el suelo
 			return pose

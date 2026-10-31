@@ -2580,11 +2580,25 @@ var _npc_sprites: Dictionary = {}
 
 
 ## Pose de un NPC (T103): respira en reposo (cada uno a su ritmo) y, si habla contigo,
-## gesticula con los brazos (el gesto de lanzar, en bucle).
-static func npc_pose(index: int, time: float, talking: bool) -> Dictionary:
+## gesticula con los brazos (el gesto de lanzar, en bucle). T162, `idle` de npcs.json:
+## "type" teclea (las manos al frente, cuadros propios) y "sip" cada SIP_EVERY segundos
+## se lleva la mano (y la taza) a la boca.
+const SIP_EVERY := 5.0
+const SIP_TIME := 1.4
+
+
+static func npc_pose(index: int, time: float, talking: bool, idle := "") -> Dictionary:
 	if talking:
 		return {"state": "cast", "t": 0.25 + 0.5 * absf(sin(time * 2.6)), "time": time}
-	return {"state": "idle", "time": time + index * 0.37}
+	var own := time + index * 0.37
+	match idle:
+		"type":
+			return {"state": "type", "time": own}
+		"sip":
+			var k := fmod(own, SIP_EVERY)
+			if k < SIP_TIME:
+				return {"state": "cast", "t": 0.9 * sin(PI * k / SIP_TIME), "time": own}
+	return {"state": "idle", "time": own}
 
 
 func _update_npc_sprite(i: int, pos: Vector2, appearance: Dictionary, facing: Vector2, talking: bool) -> void:
@@ -2593,7 +2607,7 @@ func _update_npc_sprite(i: int, pos: Vector2, appearance: Dictionary, facing: Ve
 		_add_npc_sprite.call_deferred(i, appearance)
 		return
 	sprite.position = pos
-	sprite.set_pose(facing, npc_pose(i, _time, talking))
+	sprite.set_pose(facing, npc_pose(i, _time, talking, String(npcs[i].get("idle", ""))))
 
 
 func _add_npc_sprite(i: int, appearance: Dictionary) -> void:
@@ -2604,6 +2618,8 @@ func _add_npc_sprite(i: int, appearance: Dictionary) -> void:
 	sprite.sprite_scale = PlayerSheet.WORLD_SCALE / PlayerSheet.BAKE_SCALE
 	_npc_layer.add_child(sprite)
 	sprite.appearance = appearance
+	if npcs[i].get("ghost", false):   # el Fantasma del DBA, translúcido (T162)
+		sprite.modulate.a = 0.62
 	_npc_sprites[i] = sprite
 
 

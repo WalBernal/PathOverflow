@@ -170,8 +170,8 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 			arm_weapon = "sword"
 		"thrust":
 			arm_weapon = "dagger"
-	var posing := state in ["attack", "shoot", "cast", "channel"]
-	var both_arms := state in ["cast", "channel"]
+	var posing := state in ["attack", "shoot", "cast", "channel", "type"]
+	var both_arms := state in ["cast", "channel", "type"]
 	# Estatura: escala las alturas (la cabeza mantiene su tamaño).
 	var hs := float(a.get("height", 1.0))
 	var p := func(x: float, y: float) -> Vector2: return feet + Vector2(x, y * hs) * scale
@@ -200,6 +200,7 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 	# Brazos (detrás del torso), en oposición a las piernas.
 	var arm_color := outfit.darkened(0.2)
 	var carry_hand := Vector2.INF   # dónde lleva el arma si no está golpeando
+	var side_hand := Vector2.INF    # la mano del lado al que mira, en la pose que tenga (T162: objetos en la mano)
 	for arm: float in [-1.0, 1.0]:
 		if posing and (both_arms or arm == side):
 			continue   # este brazo se dibuja en su pose, delante del torso
@@ -216,6 +217,7 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 		ci.draw_circle(hand, 1.9 * scale * width, skin)
 		if arm == side:
 			carry_hand = hand
+			side_hand = hand
 	# Arma en reposo: en la mano, apuntando hacia arriba y hacia fuera (de espaldas, detrás del torso).
 	var carry := weapon != "" and carry_hand != Vector2.INF and state != "limp"
 	if carry and back:
@@ -249,10 +251,14 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 		var time := float(pose.get("time", 0.0))
 		for arm: float in ([-1.0, 1.0] if both_arms else [side]):
 			var out := signf(look) if profile else arm
+			if state == "type" and not profile:
+				out = -arm * 0.6   # teclear (T162): las manos al frente, hacia el centro
 			var shoulder: Vector2 = u.call((lean if profile else 7.5 * arm * tw), -22.0)
 			var ang := arm_angle(state, arm_weapon, t, time) * (0.85 if both_arms and arm != side else 1.0)
 			var d := Vector2(sin(ang) * out, cos(ang))
 			var hand := shoulder + d * 12.0 * hs * scale * arm_reach(state, arm_weapon, t)
+			if arm == side:
+				side_hand = hand
 			ci.draw_line(shoulder, hand, arm_color, 3.5 * width * scale)
 			if state in ["attack", "shoot"] and weapon != "":
 				draw_weapon(ci, hand, d, weapon, scale, tint)
@@ -267,12 +273,18 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 	var head: Vector2 = u.call(lean, HEAD_Y)
 	draw_head(ci, head, HEAD_R * scale, a, {"back": back, "look": Vector2(look, 0.0), "tint": tint, "profile": profile})
 	if GEARS.has(String(a.get("gear", ""))):
-		_draw_gear(ci, String(a["gear"]), u, head, HEAD_R * scale, tw, lean, back, profile, side, scale, tint)
+		if side_hand == Vector2.INF:
+			side_hand = u.call(side * 8.75 * width, -10.5)
+		_draw_gear(ci, String(a["gear"]), u, head, HEAD_R * scale, tw, lean, back, profile, side, scale, tint, side_hand)
 
 
 ## Equipo de oficio de cada clase (T161), encima de la figura: lo que la distingue
-## de lejos. Colores fijos (no se tiñen con los del creador).
-const GEARS := ["guerrero", "duelista", "exploradora", "hacker", "hechicero", "templario", "full_stack"]
+## de lejos. Colores fijos (no se tiñen con los del creador). Detrás, los objetos
+## propios de los NPC (T162, `gear` en su apariencia de npcs.json).
+const CLASS_GEARS := ["guerrero", "duelista", "exploradora", "hacker", "hechicero", "templario", "full_stack"]
+const NPC_PROPS := ["cafe", "monitor", "laptop", "maleta", "pantalla", "mapa", "tablas", "tablero", "bolsa", "cartel",
+	"planos", "rosa", "pila"]
+const GEARS := CLASS_GEARS + NPC_PROPS
 
 
 ## Apariencia con el equipo de la clase `class_id` (si tiene).
@@ -284,10 +296,90 @@ static func with_gear(a: Dictionary, class_id: String) -> Dictionary:
 
 
 static func _draw_gear(ci: CanvasItem, gear: String, u: Callable, head: Vector2, r: float, tw: float, lean: float,
-		back: bool, profile: bool, side: float, scale: float, tint: Color) -> void:
+		back: bool, profile: bool, side: float, scale: float, tint: Color, hand: Vector2) -> void:
 	var c := func(html: String, alpha := 1.0) -> Color: return Color(_tinted(Color(html), tint), alpha)
 	var front := not back and not profile
+	var box := func(center: Vector2, size: Vector2, color: Color) -> void:
+		ci.draw_rect(Rect2(center - size * scale * 0.5, size * scale), color)
 	match gear:
+		# --- Objetos de los NPC (T162) ---
+		"cafe":   # Aida: su taza de café (en la mano; se la lleva a la boca)
+			box.call(hand + Vector2(0, -1.6) * scale, Vector2(3.4, 3.8), c.call("f4f1ea"))
+			box.call(hand + Vector2(0, -3.2) * scale, Vector2(3.0, 0.8), c.call("5a3a22"))
+			ci.draw_arc(hand + Vector2(side * 2.1, -1.6) * scale, 1.1 * scale, -PI * 0.5, PI * 0.5, 6, c.call("f4f1ea"), 0.7 * scale)
+		"monitor":   # Mario: cargando un monitor
+			if back:
+				box.call(u.call(0.0, -15.5), Vector2(11.0, 8.0), c.call("2b2f3a"))
+			else:
+				box.call(u.call(lean, -15.5), Vector2(11.0, 8.0), c.call("2b2f3a"))
+				box.call(u.call(lean, -15.8), Vector2(9.2, 6.2), c.call("3f8fd6"))
+				box.call(u.call(lean - 1.5, -16.8), Vector2(4.0, 0.8), c.call("bfe6ff"))
+		"laptop":   # Rafa: tecleando en una laptop
+			if not back:
+				var at: Vector2 = u.call(lean + (side * 3.0 if profile else 0.0), -14.0)
+				box.call(at + Vector2(0, 2.4) * scale, Vector2(11.0, 1.6), c.call("8a8f99"))
+				box.call(at - Vector2(0, 1.8) * scale, Vector2(10.0, 6.6), c.call("22262e"))
+				for k in 3:
+					box.call(at + Vector2(-1.2 + k * 0.6, -3.6 + k * 1.6) * scale, Vector2(5.0 - k * 1.2, 0.7), c.call("5dff7a"))
+		"maleta":   # Nacho: maleta abierta llena de RAM
+			var m := hand + Vector2(0, 2.6) * scale
+			box.call(m, Vector2(8.0, 5.4), c.call("6b4a2b"))
+			for k in 3:
+				box.call(m + Vector2(-2.5 + k * 2.5, -0.6) * scale, Vector2(1.6, 3.4), c.call("2b8a5a"))
+				box.call(m + Vector2(-2.5 + k * 2.5, 1.0) * scale, Vector2(1.6, 0.6), c.call("e6c34a"))
+		"pantalla":   # B.O.B.: la cabeza es una pantalla con cara
+			box.call(head, Vector2(2.4, 2.0) * r / scale, c.call("2b2f3a"))
+			if not back:
+				box.call(head, Vector2(2.0, 1.6) * r / scale, c.call("10343f"))
+				for s in [-1.0, 1.0]:
+					box.call(head + Vector2(s * 0.42, -0.15) * r, Vector2(0.32, 0.36) * r / scale, c.call("4fe0ff"))
+				ci.draw_arc(head + Vector2(0, 0.15) * r, 0.36 * r, PI * 0.2, PI * 0.8, 8, c.call("4fe0ff"), maxf(1.0, 0.12 * r))
+			ci.draw_line(head + Vector2(0, -1.0) * r, head + Vector2(0, -1.5) * r, c.call("8a8f99"), maxf(1.0, 0.1 * r))
+			ci.draw_circle(head + Vector2(0, -1.55) * r, 0.14 * r, c.call("ff5a5a"))
+		"mapa":   # Iris: un mapa desplegado, perdida
+			var p := hand + Vector2(0, -2.0) * scale
+			box.call(p, Vector2(7.0, 5.4), c.call("e8dcb0"))
+			ci.draw_line(p + Vector2(-2.6, 1.6) * scale, p + Vector2(0.4, -0.6) * scale, c.call("d64a4a"), 0.7 * scale)
+			ci.draw_line(p + Vector2(0.4, -0.6) * scale, p + Vector2(2.4, 1.2) * scale, c.call("d64a4a"), 0.7 * scale)
+		"tablas":   # Fantasma del DBA: tablas flotando a su alrededor
+			for k in 2:
+				var t := head + Vector2((k * 2 - 1) * 1.9, -0.6 + k * 1.4) * r
+				ci.draw_rect(Rect2(t - Vector2(3.5, 2.5) * scale, Vector2(7.0, 5.0) * scale), c.call("9fe6ff", 0.75), false, 0.7 * scale)
+				ci.draw_line(t + Vector2(-3.5, -0.8) * scale, t + Vector2(3.5, -0.8) * scale, c.call("9fe6ff", 0.75), 0.6 * scale)
+				ci.draw_line(t + Vector2(-0.5, -2.5) * scale, t + Vector2(-0.5, 2.5) * scale, c.call("9fe6ff", 0.75), 0.6 * scale)
+		"tablero":   # Clara: portapapeles con los incidentes abiertos
+			var p := hand + Vector2(side * 1.0, -3.0) * scale
+			box.call(p, Vector2(5.6, 7.2), c.call("8a6d3b"))
+			box.call(p + Vector2(0, 0.4) * scale, Vector2(4.6, 5.8), c.call("f4f6f8"))
+			for k in 3:
+				ci.draw_circle(p + Vector2(-1.4, -1.6 + k * 1.7) * scale, 0.5 * scale, c.call("e04848" if k < 2 else "4fb36b"))
+		"bolsa":   # El Recolector: bolsa de basura al hombro
+			var p: Vector2 = u.call(-side * 7.5 * tw + lean, -27.0)
+			ci.draw_circle(p, 5.2 * scale, c.call("2b2f3a"))
+			ci.draw_circle(p + Vector2(-1.4, -1.6) * scale, 1.4 * scale, c.call("4a5060"))
+			ci.draw_line(p + Vector2(side * 3.0, 2.0) * scale, hand, c.call("2b2f3a"), 1.0 * scale)
+		"cartel":   # Sindicato de Huérfanos: cartel de protesta «404»
+			var top := hand + Vector2(0, -16.0) * scale
+			ci.draw_line(hand, top, c.call("6b4a2b"), 1.0 * scale)
+			box.call(top + Vector2(0, -2.5) * scale, Vector2(11.0, 6.4), c.call("f4f1ea"))
+			for k in 3:   # «4 0 4» con palotes
+				var x := (-3.4 + k * 3.4) * scale
+				box.call(top + Vector2(x, -2.5 * scale), Vector2(1.6, 3.6), c.call("d64a4a"))
+		"planos":   # M. Páez: planos enrollados bajo el brazo
+			var p := hand + Vector2(0, -3.0) * scale
+			ci.draw_line(p + Vector2(-side * 5.0, -2.0) * scale, p + Vector2(side * 2.0, 1.0) * scale, c.call("3b6fd6"), 2.4 * scale)
+			ci.draw_circle(p + Vector2(side * 2.0, 1.0) * scale, 1.2 * scale, c.call("dfe8ff"))
+		"rosa":   # Eugenio: una rosa
+			ci.draw_line(hand, hand + Vector2(side * 1.0, -5.0) * scale, c.call("3a8a3a"), 0.7 * scale)
+			ci.draw_circle(hand + Vector2(side * 1.0, -5.6) * scale, 1.5 * scale, c.call("d62e4a"))
+			ci.draw_circle(hand + Vector2(side * 0.6, -6.0) * scale, 0.6 * scale, c.call("ff7088"))
+		"pila":   # Berta: la pila CR2032 que es ella
+			var p: Vector2 = u.call(-side * 8.0 * tw, -18.0)
+			ci.draw_circle(p, 4.6 * scale, c.call("9aa0aa"))
+			ci.draw_circle(p, 3.8 * scale, c.call("d2d6de"))
+			ci.draw_line(p + Vector2(-1.4, 0) * scale, p + Vector2(1.4, 0) * scale, c.call("4a5060"), 0.7 * scale)
+			ci.draw_line(p + Vector2(0, -1.4) * scale, p + Vector2(0, 1.4) * scale, c.call("4a5060"), 0.7 * scale)
+		# --- Equipo de las clases (T161) ---
 		"guerrero":   # Técnico de Soporte: chaleco reflectante y gafete
 			var vest: Color = c.call("f08a24")
 			if front:
@@ -417,6 +509,8 @@ static func arm_angle(state: String, weapon: String, t: float, time := 0.0) -> f
 			return lerpf(0.3, 1.9, 1.0 - pow(1.0 - minf(1.0, t / 0.4), 2.0))
 		"channel":
 			return 1.5 + sin(time * 8.0) * 0.08
+		"type":   # teclear: las manos suben y bajan un poco, alternando (T162)
+			return 0.62 + 0.12 * cos(time * TAU)
 	return 0.0
 
 

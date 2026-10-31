@@ -3,9 +3,11 @@
   "_doc": "NPCs y sus diálogos. Nodos con texto y opciones. Opción: text, next ('' = cerrar), requires_flag / hides_if_flag, action {type: give_item | give_matching_ram | give_random | refill | set_flag | start_quest | quest_advance | companion (npc: quién te acompaña; vacío = nadie), flag, quest}. voice: tono de la voz (pitch, 1 = normal) y velocidad (rate) para el narrador y los pitidos. Las banderas se guardan en el personaje. Dónde aparece cada NPC lo dice data/act1.json. Conversación: 'menu' (frases cortas al volver al inicio), 'greeting_again' (saludo en visitas siguientes), nodo 'again' (texto si ya se leyó) y nodo con 'next' sin opciones (botón Continuar).",
   "npcs": {
     "ada": {
+      "idle": "sip",
       "name": "Aida, la Senior",
       "dialogue": "ada",
       "appearance": {
+        "gear": "cafe",
         "body": 1,
         "hair": 2,
         "skin_tone": "e0ac8a",
@@ -23,6 +25,7 @@
       "name": "Mario, el Practicante",
       "dialogue": "kevin",
       "appearance": {
+        "gear": "monitor",
         "body": 0,
         "hair": 3,
         "skin_tone": "f1d2b6",
@@ -37,9 +40,11 @@
       "color": "6fb36b"
     },
     "root": {
+      "idle": "type",
       "name": "Rafa, el SysAdmin",
       "dialogue": "root",
       "appearance": {
+        "gear": "laptop",
         "body": 1,
         "hair": 5,
         "skin_tone": "f1d2b6",
@@ -59,6 +64,7 @@
       "name": "Nacho, revendedor de hardware",
       "dialogue": "nacho",
       "appearance": {
+        "gear": "maleta",
         "body": 0,
         "hair": 1,
         "skin_tone": "c68642",
@@ -76,6 +82,7 @@
       "name": "B.O.B., Bot de Onboarding",
       "dialogue": "bot_onboarding",
       "appearance": {
+        "gear": "pantalla",
         "body": 1,
         "hair": 0,
         "skin_tone": "c8c8c8",
@@ -93,6 +100,7 @@
       "name": "Iris, la Practicante Perdida",
       "dialogue": "iris",
       "appearance": {
+        "gear": "mapa",
         "body": 0,
         "hair": 4,
         "skin_tone": "e0ac8a",
@@ -110,6 +118,7 @@
       "name": "Tomás, el Último QA",
       "dialogue": "tomas",
       "appearance": {
+        "gear": "duelista",
         "body": 2,
         "hair": 1,
         "skin_tone": "a8714f",
@@ -124,9 +133,11 @@
       "color": "d9a441"
     },
     "dba": {
+      "ghost": true,
       "name": "El Fantasma del DBA",
       "dialogue": "dba",
       "appearance": {
+        "gear": "tablas",
         "body": 1,
         "hair": 2,
         "skin_tone": "c8c8c8",
@@ -164,6 +175,7 @@
       "name": "Clara, Líder de Infraestructura",
       "dialogue": "clara",
       "appearance": {
+        "gear": "tablero",
         "body": 1,
         "hair": 2,
         "skin_tone": "a8714f",
@@ -181,6 +193,7 @@
       "name": "El Recolector",
       "dialogue": "recolector",
       "appearance": {
+        "gear": "bolsa",
         "body": 2,
         "hair": 0,
         "skin_tone": "c8c8c8",
@@ -198,6 +211,7 @@
       "name": "Sindicato de Huérfanos (PID 404)",
       "dialogue": "sindicato",
       "appearance": {
+        "gear": "cartel",
         "body": 2,
         "hair": 3,
         "skin_tone": "6b8f5e",
@@ -216,6 +230,7 @@
       "dialogue": "m_paez",
       "color": "4b8bd6",
       "appearance": {
+        "gear": "planos",
         "body": 2,
         "hair": 10,
         "beard": 2,
@@ -242,6 +257,7 @@
       "dialogue": "eugenio",
       "color": "d9a441",
       "appearance": {
+        "gear": "rosa",
         "body": 0,
         "hair": 1,
         "beard": 0,
@@ -263,35 +279,36 @@
       "name": "Berta, la Pila CR2032",
       "dialogue": "berta",
       "color": "c8c8d8",
-      "appearance": {"body": 1, "hair": 2, "height": 0.8, "skin_tone": "d8b89a", "hair_color": "e8e8f0", "outfit_color": "8a8a9a", "accent_color": "c8c8d8"},
+      "appearance": {"gear": "pila","body": 1, "hair": 2, "height": 0.8, "skin_tone": "d8b89a", "hair_color": "e8e8f0", "outfit_color": "8a8a9a", "accent_color": "c8c8d8"},
       "voice": {"pitch": 1.1, "rate": 0.85, "gender": "female"}
     },
     "rafa_bios": {
+      "idle": "type",
       "name": "Rafa, el SysAdmin (en persona)",
       "dialogue": "rafa_bios",
       "color": "3cff6a",
-      "appearance": {"body": 1, "hair": 5, "skin_tone": "f1d2b6", "hair_color": "17130f", "hair_streaks": "b9b9b9", "outfit_color": "1f1f2e", "height": 0.86},
+      "appearance": {"gear": "laptop","body": 1, "hair": 5, "skin_tone": "f1d2b6", "hair_color": "17130f", "hair_streaks": "b9b9b9", "outfit_color": "1f1f2e", "height": 0.86},
       "voice": {"pitch": 0.65, "rate": 0.9, "gender": "male"}
     },
     "mario_bios": {
       "name": "Mario, el Practicante (prestador de servicio)",
       "dialogue": "mario_bios",
       "color": "6fb36b",
-      "appearance": {"body": 0, "hair": 3, "skin_tone": "f1d2b6", "hair_color": "b5651d", "outfit_color": "2b6b45"},
+      "appearance": {"gear": "monitor","body": 0, "hair": 3, "skin_tone": "f1d2b6", "hair_color": "b5651d", "outfit_color": "2b6b45"},
       "voice": {"pitch": 1.25, "rate": 1.15, "gender": "male"}
     },
     "paez_bios": {
       "name": "M. Páez, el Inge",
       "dialogue": "paez_bios",
       "color": "4b8bd6",
-      "appearance": {"body": 2, "hair": 10, "beard": 2, "accessory": 1, "height": 1, "smile": 1, "skin_tone": "c8967a", "hair_color": "241c16", "beard_color": "4e4842", "beard_streaks": true, "eye_color": "3a2414", "outfit_color": "233a5c", "accent_color": "1a2a44", "shirt_color": "f2f2f0"},
+      "appearance": {"gear": "planos","body": 2, "hair": 10, "beard": 2, "accessory": 1, "height": 1, "smile": 1, "skin_tone": "c8967a", "hair_color": "241c16", "beard_color": "4e4842", "beard_streaks": true, "eye_color": "3a2414", "outfit_color": "233a5c", "accent_color": "1a2a44", "shirt_color": "f2f2f0"},
       "voice": {"pitch": 0.8, "rate": 0.95, "gender": "male"}
     },
     "eugenio_bios": {
       "name": "Eugenio, soltero codiciado",
       "dialogue": "eugenio_bios",
       "color": "d9a441",
-      "appearance": {"body": 0, "hair": 1, "beard": 0, "accessory": 1, "height": 1, "skin_tone": "e0ac8a", "hair_color": "0f0d0c", "eye_color": "6b4423", "outfit_color": "8a6d3b", "accent_color": "c8c8c8"},
+      "appearance": {"gear": "rosa","body": 0, "hair": 1, "beard": 0, "accessory": 1, "height": 1, "skin_tone": "e0ac8a", "hair_color": "0f0d0c", "eye_color": "6b4423", "outfit_color": "8a6d3b", "accent_color": "c8c8c8"},
       "voice": {"pitch": 1.08, "rate": 1.05, "gender": "male"}
     }
   },

@@ -33,6 +33,10 @@ func _run() -> void:
 		await _capture_touch_auto()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("npcs"):
+		await _capture_npc_identity()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("equipos"):
 		await _capture_class_gear()
 		get_tree().quit()
@@ -1434,6 +1438,41 @@ func _capture_class_gear() -> void:
 			sp.set_pose(p[0], p[1], p[2])
 	await _wait(0.5)
 	_save("161_equipos")
+
+
+## NPC con su objeto y su reposo (T162): cada uno de frente y, debajo, de lado, en dos
+## momentos (para ver el gesto de reposo: teclear, beber café...).
+func _capture_npc_identity() -> void:
+	var sheet := Control.new()
+	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sheet.draw.connect(func() -> void: sheet.draw_rect(Rect2(Vector2.ZERO, sheet.size), Color("2a2e36")))
+	_swap(sheet)
+	var db: Dictionary = Zone.npc_database().get("npcs", {})
+	var ids := []
+	var seen := {}
+	for id in db:
+		var person := String(db[id]["name"]).split(" ")[0].trim_suffix(",")
+		if not seen.has(person) and not db[id].get("terminal", false):
+			seen[person] = true
+			ids.append(id)
+	var cols := 8
+	var cell := Vector2(1600.0 / cols, 900.0 / ceili(ids.size() / float(cols)) / 2.0)
+	for k in ids.size():
+		var npc: Dictionary = db[ids[k]]
+		for row in 2:
+			var sp := PlayerSprite.new()
+			sheet.add_child(sp)
+			sp.appearance = CharacterAppearance.sanitize(npc.get("appearance", {}))
+			sp.sprite_scale = 2.2 / PlayerSheet.BAKE_SCALE
+			if npc.get("ghost", false):
+				sp.modulate.a = 0.62
+			sp.position = Vector2(cell.x * (k % cols + 0.5), cell.y * ((k / cols) * 2 + row + 0.92))
+			var facing := Vector2.DOWN if row == 0 else Vector2.RIGHT
+			# De lado, en mitad del gesto de reposo (el sorbo de café llega a los 0,7 s de su ciclo).
+			var time := 2.0 if row == 0 else fposmod(Zone.SIP_TIME * 0.5 - k * 0.37, Zone.SIP_EVERY)
+			sp.set_pose(facing, Zone.npc_pose(k, time, false, String(npc.get("idle", ""))))
+	await _wait(0.5)
+	_save("162_npcs")
 
 
 ## Pantallas de T96: título con la ciudad de servidores, selección de personaje con

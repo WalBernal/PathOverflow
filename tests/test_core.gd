@@ -5526,6 +5526,29 @@ func _test_npcs_and_boss_intro() -> void:
 	var talk := Zone.npc_pose(0, 1.0, true)
 	_check(talk["state"] == "cast" and float(talk["t"]) >= 0.25 and float(talk["t"]) <= 0.75, "al hablar gesticula con los brazos")
 	_check(PlayerSheet.group_for(String(talk["state"]), "") == "cast", "el gesto usa los cuadros de lanzar de la hoja")
+	# NPC con identidad (T162): su objeto, su reposo y ninguno igual a otro.
+	_check(Zone.npc_pose(0, 1.0, false, "type")["state"] == "type" and PlayerSheet.group_for("type", "") == "type", "teclear tiene sus cuadros")
+	_check(Zone.npc_pose(0, 0.7, false, "sip")["state"] == "cast" and Zone.npc_pose(0, 3.0, false, "sip")["state"] == "idle",
+		"el sorbo de café llega cada %.0f s y luego vuelve a respirar" % Zone.SIP_EVERY)
+	var npc_db: Dictionary = Zone.npc_database().get("npcs", {})
+	var looks_by_person := {}
+	var bad_props := []
+	for id in npc_db:
+		var npc: Dictionary = npc_db[id]
+		var look := CharacterAppearance.sanitize(npc.get("appearance", {}))
+		var gear := String(npc.get("appearance", {}).get("gear", ""))
+		if gear != "" and not CharacterAppearance.GEARS.has(gear):
+			bad_props.append(id)
+		if not String(npc.get("idle", "")) in ["", "type", "sip"]:
+			bad_props.append(id + " (idle)")
+		var person := String(npc["name"]).split(" ")[0].trim_suffix(",")   # Rafa y «Rafa (en persona)» son el mismo
+		var key := JSON.stringify(look, "", true)
+		if looks_by_person.has(key) and looks_by_person[key] != person:
+			_check(false, "%s se ve igual que %s" % [person, looks_by_person[key]])
+		looks_by_person[key] = person
+	_check(bad_props.is_empty(), "cada objeto e «idle» de npcs.json existe: %s" % [bad_props])
+	_check(CharacterAppearance.NPC_PROPS.all(func(p: String) -> bool: return PlayerSprite.texture_of("gear", CharacterAppearance.GEARS.find(p)) != null),
+		"cada objeto de NPC está horneado")
 	_check(BossIntro.slide_at(0.0) == 0.0 and BossIntro.slide_at(BossIntro.ENTER + 0.5) == 1.0 and is_zero_approx(BossIntro.slide_at(BossIntro.total_time() + 0.01)),
 		"la entrada de jefe entra, se queda y se va")
 	_check(BossIntro.total_time() < 3.0, "y dura poco (no para el juego)")
@@ -5533,7 +5556,7 @@ func _test_npcs_and_boss_intro() -> void:
 
 ## Personaje por capas (T102a): cuadrícula, poses, clasificación de capas y hojas horneadas.
 func _test_player_sheet() -> void:
-	_check(PlayerSheet.columns() == 34 and PlayerSheet.frames_of("walk") == 8, "34 columnas de estados, 8 al andar (%d)" % PlayerSheet.columns())
+	_check(PlayerSheet.columns() == 36 and PlayerSheet.frames_of("walk") == 8 and PlayerSheet.frames_of("type") == 2, "36 columnas de estados, 8 al andar y 2 al teclear (%d)" % PlayerSheet.columns())
 	_check(PlayerSheet.group_for("attack", "sword") == "attack_swing" and PlayerSheet.group_for("attack", "dagger") == "attack_thrust"
 		and PlayerSheet.group_for("attack", "") == "attack_thrust" and PlayerSheet.group_for("run", "") == "walk", "cada arma con su gesto; correr usa andar")
 	var walk := {}
