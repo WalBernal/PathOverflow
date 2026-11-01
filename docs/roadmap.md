@@ -1155,8 +1155,16 @@ Origen: R8b (pedido del usuario, 31-10-2026: «aplicar los cambios en el movimie
 - Prueba: cada dirección tiene todos sus cuadros con dibujo; de espaldas no se ven ojos ni la camisa blanca; de lado los ojos se mueven hacia donde mira.
 - Hecho: `StudentHero.figure(look, dir)` y la hoja con tres filas (`Dir.FRONT/BACK/SIDE`, `dir_for` como `PlayerSheet.dir_for`). **De espaldas**: la cara de la plantilla (`_face_mask`) se vuelve pelo de su color con su contorno y la nuca abajo (pelo al ras en los rapados); los peinados largos caen por la espalda (`LONG_BACK`); la sudadera pierde la camisa y el gafete y enseña la capucha caída; con casco, donde iba la cara (visor, gafas, la cara del mago) va el color del casco; de los accesorios, solo los audífonos. **De lado**: ojos, cejas y nariz un píxel hacia donde mira, y los lentes con ellos; a la izquierda, volteado. `HeroSprite` elige la fila con hacia dónde mira el jugador. **Creador**: «Girar» gira también al alumno (`StudentPreview.facing`). Captura `docs/capturas/personajes/181_direcciones.png` (ocho looks: frente, lado, espaldas, pasos de lado y de espaldas, tajo). Pruebas en `_test_player_sheet`.
 
+### [ ] T182 · El alumno de perfil · L
+Origen: R8b (prueba del usuario de la 3.3.3, 31-10-2026: «al caminar a la derecha o a la izquierda mira de frente, camina como cangrejo»)
+- La vista «de lado» de T181 (la cara corrida un píxel) no basta: hace falta un **perfil de verdad**. Plantilla de perfil propia a la misma escala y con el mismo estilo de la lámina (cabeza grande, contorno de color, sombreado): cabeza de perfil (nariz, un ojo, oreja, nuca), torso de lado con un brazo delante y otro detrás, piernas que se cruzan al andar (paso de verdad, no solo subir y bajar).
+- Con lo mismo que el frente: recoloreado del creador, los 16 peinados y los accesorios vistos de lado, y el equipo (casco, armadura, botas) de lado.
+- Animaciones de perfil: reposo, andar (4 cuadros con zancada), tajo, lanzar, golpe, esquiva y caída.
+- Prueba: de lado no se ven dos ojos; las piernas cambian de posición en cada cuadro del paso; cada peinado y cada pieza de equipo tienen su vista de lado con dibujo.
+
 ### [ ] T177 · Armas de oficio · M
 Origen: R8b
+- **31-10-2026 (usuario)**: con un mazo, el personaje lleva el bastón largo de la lámina; las armas tienen que verse **como lo que son**: un sprite por tipo de arma y por base (`data/items/bases.json`: espadas, hachas, mazas, dagas, con las de oficio: teclado mecánico, teclado RGB, sable de fibra óptica, cúter de cartonero, navaja multiherramienta, martillo de compilación...), en la mano y en el tajo, de frente, de espaldas y de lado. El bastón de C queda para un arma mágica si llega.
 - Mismo daño y mismo gesto (tajo o estocada); cambia el aspecto en el mundo, en los iconos y en el nombre de las bases que lo pidan: **espada** → sable de fibra óptica (hoja de luz con conector); **hacha** → teclado mecánico con teclas sueltas; **maza** → mouse con cable (se balancea como un mangual); **daga** → destornillador de precisión / memoria USB afilada. Con brillo de «datos» en el filo como los detalles de T175.
 - Prueba: cada tipo de arma (`PlayerSheet.WEAPONS`) tiene su dibujo de oficio en la hoja y su icono.
 
