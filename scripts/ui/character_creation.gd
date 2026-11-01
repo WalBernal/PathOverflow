@@ -310,6 +310,8 @@ func _cycle(key: String, count: int, step: int) -> void:
 func _rotate(step: int) -> void:
 	_facing_index = posmod(_facing_index + step, FACINGS.size())
 	_preview.facing = FACINGS[_facing_index]
+	if _student:   # el alumno gira con él (T181)
+		_student.facing = FACINGS[_facing_index]
 
 
 func _randomize_appearance() -> void:

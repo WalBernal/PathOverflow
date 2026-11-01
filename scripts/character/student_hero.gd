@@ -138,36 +138,60 @@ static func available() -> bool:
 	return _layer("base") != null
 
 
-## Hoja completa.
+## Direcciones de la hoja (una fila cada una): de frente, de espaldas y de lado
+## (tres cuartos, mirando a la derecha; a la izquierda se voltea al dibujar).
+enum Dir { FRONT, BACK, SIDE }
+const DIRS := 3
+
+
+## Fila de la hoja (y si hay que voltear) para hacia dónde mira.
+static func dir_for(facing: Vector2) -> Array:
+	if facing.y < -0.5 and absf(facing.x) < 0.75:
+		return [Dir.BACK, false]
+	if absf(facing.x) > 0.6 and absf(facing.y) < 0.75:
+		return [Dir.SIDE, facing.x < 0.0]
+	return [Dir.FRONT, false]
+
+
+## Hoja completa: una fila por dirección.
 static func build(look: Dictionary, weapon: String) -> Image:
-	var body := figure(look)
 	var weapon_img: Image = _layer("weapon_" + String(WEAPON_ART.get(weapon, ""))) if WEAPON_ART.has(weapon) else null
-	var sheet := Image.create_empty(CELL.x * columns(), CELL.y, false, Image.FORMAT_RGBA8)
+	var sheet := Image.create_empty(CELL.x * columns(), CELL.y * DIRS, false, Image.FORMAT_RGBA8)
 	sheet.fill(Color(0, 0, 0, 0))
-	var col := 0
-	for anim in ORDER:
-		var n := int(FRAMES[anim])
-		for k in n:
-			sheet.blit_rect(frame(body, weapon_img, anim, k), Rect2i(Vector2i.ZERO, CELL), Vector2i(col * CELL.x, 0))
-			col += 1
+	for dir in DIRS:
+		var body := figure(look, dir)
+		var col := 0
+		for anim in ORDER:
+			var n := int(FRAMES[anim])
+			for k in n:
+				sheet.blit_rect(frame(body, weapon_img, anim, k), Rect2i(Vector2i.ZERO, CELL), Vector2i(col * CELL.x, dir * CELL.y))
+				col += 1
 	return sheet
 
 
-## El personaje quieto, con su apariencia y su equipo (sin el arma).
-static func figure(look: Dictionary) -> Image:
+## El personaje quieto, con su apariencia y su equipo (sin el arma), en una dirección.
+static func figure(look: Dictionary, dir := Dir.FRONT) -> Image:
 	var img := (_layer("base") as Image).duplicate() as Image
 	_recolor(img, look)
-	if String(look.get("eq_helmet", "")) == "":   # con casco o capucha, el peinado no asoma
-		_hair_style(img, look)
-	if int(look.get("beard", 0)) > 0:
-		_beard(img, look)
+	var helmet_eq := String(look.get("eq_helmet", ""))
 	var body_eq := String(look.get("eq_body", ""))
 	var boots_eq := String(look.get("eq_boots", ""))
-	var helmet_eq := String(look.get("eq_helmet", ""))
+	if helmet_eq == "":   # con casco o capucha, el peinado no asoma
+		_hair_style(img, look)
+	if int(look.get("beard", 0)) > 0 and dir != Dir.BACK:
+		_beard(img, look)
+	if helmet_eq == "":
+		match dir:
+			Dir.SIDE:
+				_turn_face(img, look)
+			Dir.BACK:
+				_back_of_head(img, look)
 	if body_eq != "":
 		_over(img, _layer("torso_" + body_eq))
 		if body_eq in ROBES:
 			_over(img, _layer("legs_" + body_eq))
+	elif dir == Dir.BACK:
+		_back_of_hoodie(img, look)
 	if boots_eq != "" and not body_eq in ROBES:
 		_over(img, _layer("legs_" + boots_eq))
 	if helmet_eq != "":
@@ -178,9 +202,107 @@ static func figure(look: Dictionary) -> Image:
 				if helmet.get_pixelv(p).a <= 0.0:
 					img.set_pixelv(p, Color(0, 0, 0, 0))
 		_over(img, helmet)
+		if dir == Dir.BACK:
+			_back_of_helmet(img, helmet)
 	elif int(look.get("accessory", 0)) > 0:
-		_accessory(img, look)
+		if dir != Dir.BACK or int(look.get("accessory", 0)) == 3:   # de espaldas, solo los audífonos
+			_accessory(img, look, 1 if dir == Dir.SIDE else 0)
 	return img
+
+
+## La cara de la lámina: piel, ojos, cejas y nariz (filas de la cabeza).
+const FACE_FIXED := ["22162c", "ffffff", "32181c", "aa605c"]
+
+
+static func _face_mask() -> Array[Vector2i]:
+	var base := _layer("base") as Image
+	var out: Array[Vector2i] = []
+	for y in range(14, 30):
+		for x in range(18, 40):
+			var hex := base.get_pixel(x, y).to_html(false)
+			if hex in FACE_FIXED or (ROLES.has(hex) and String(ROLES[hex][0]) in ["skin", "eyes", "brow", "hair_skin"]):
+				out.append(Vector2i(x, y))
+	return out
+
+
+## De lado (tres cuartos): ojos, cejas y nariz un píxel hacia donde mira.
+static func _turn_face(img: Image, look: Dictionary) -> void:
+	var base := _layer("base") as Image
+	var skin := Color(look.get("skin_tone", "c99a7a"))
+	var moved := []
+	for y in range(23, 30):
+		for x in range(20, 38):
+			var hex := base.get_pixel(x, y).to_html(false)
+			if hex in FACE_FIXED or (ROLES.has(hex) and String(ROLES[hex][0]) in ["eyes", "brow"]):
+				moved.append([Vector2i(x, y), img.get_pixel(x, y)])
+	for m in moved:
+		img.set_pixelv(m[0], skin)
+	for m in moved:
+		img.set_pixelv((m[0] as Vector2i) + Vector2i(1, 0), m[1])
+
+
+## De espaldas: la cabeza es pelo (o pelo al ras en los rapados) y abajo asoma la nuca.
+const SHORT_BACK := [0, 3, 8, 10]
+const LONG_BACK := {2: 33, 9: 29, 11: 31, 14: 27, 13: 29, 7: 26, 12: 26}
+
+
+static func _back_of_head(img: Image, look: Dictionary) -> void:
+	var style := int(look.get("hair", 1))
+	var hair := Color(look.get("hair_color", "2b2118"))
+	var skin := Color(look.get("skin_tone", "c99a7a"))
+	if style in SHORT_BACK:
+		hair = hair.lerp(skin, 0.4)
+	var outline := hair.darkened(0.75).lerp(Color("1a1024"), 0.35)
+	var base := _layer("base") as Image
+	var neck := _tone(Color("c57d71"), "skin", {"skin": skin})
+	for p: Vector2i in _face_mask():
+		var hex := base.get_pixel(p.x, p.y).to_html(false)
+		var c := hair
+		if hex == "4a2d3c":
+			c = outline
+		elif p.y >= 28:
+			c = neck
+		elif p.y >= 26 or p.x > 33:
+			c = hair.darkened(0.25)
+		elif p.y < 19 and p.x < 26 and (p.x + p.y) % 3 == 0:
+			c = hair.lightened(0.25)
+		img.set_pixelv(p, c)
+	if LONG_BACK.has(style):   # el pelo largo cae por la espalda
+		for y in range(26, int(LONG_BACK[style]) + 1):
+			for x in range(22, 36):
+				var edge := x == 22 or x == 35 or y == int(LONG_BACK[style])
+				img.set_pixel(x, y, outline if edge else (hair.darkened(0.2) if (x + y) % 4 == 0 else hair))
+
+
+## De espaldas con casco: donde iba la cara (visor, gafas, la cara del mago) va su color.
+static func _back_of_helmet(img: Image, helmet: Image) -> void:
+	var fill := Color(0, 0, 0, 0)
+	# (de un lado del casco: en el centro de arriba están el penacho o la gema)
+	for p in [Vector2i(21, 18), Vector2i(36, 18), Vector2i(24, 16), Vector2i(28, 12)]:
+		if helmet.get_pixelv(p).a > 0.0:
+			fill = helmet.get_pixelv(p)
+			break
+	if fill.a <= 0.0:
+		return
+	for p: Vector2i in _face_mask():
+		if p.y < 28 and img.get_pixelv(p).a > 0.0:
+			img.set_pixelv(p, fill.darkened(0.12) if p.y > 24 else fill)
+
+
+## La sudadera por detrás: sin la camisa ni el gafete, con la capucha caída en la nuca.
+static func _back_of_hoodie(img: Image, look: Dictionary) -> void:
+	var outfit := Color(look.get("outfit_color", "2b4a6b"))
+	var mid := _tone(Color("243278"), "outfit", {"outfit": outfit})
+	var dark := _tone(Color("1a1e52"), "outfit", {"outfit": outfit})
+	var base := _layer("base") as Image
+	for y in range(29, 43):
+		for x in range(18, 40):
+			var hex := base.get_pixel(x, y).to_html(false)
+			if hex in ["ececf0", "aeadc0", "b6b4c8", "6c6a84", "28f0e6"]:
+				img.set_pixel(x, y, mid)
+	for y in range(29, 33):   # la capucha
+		for x in range(24 - (y - 29), 34 + (y - 29)):
+			img.set_pixel(x, y, dark if y == 32 or x == 24 - (y - 29) or x == 33 + (y - 29) else mid.lightened(0.08))
 
 
 static func _over(img: Image, layer: Image) -> void:
@@ -546,7 +668,8 @@ static func _beard(img: Image, look: Dictionary) -> void:
 
 
 ## Accesorios del creador (si no lleva casco): lentes, lentes de sol y audífonos.
-static func _accessory(img: Image, look: Dictionary) -> void:
+## off: los lentes se corren con la cara cuando mira de lado (T181).
+static func _accessory(img: Image, look: Dictionary, off := 0) -> void:
 	var dark := Color("1a1624")
 	var accent := Color(look.get("accent_color", "2a2a30"))
 	match int(look.get("accessory", 0)):
@@ -555,7 +678,7 @@ static func _accessory(img: Image, look: Dictionary) -> void:
 			# Los de sol, con la montura del color de los detalles (se distingue del cristal).
 			var frame: Color = accent.lightened(0.1) if sun else Color("241c2c")
 			var lens_top := Color("2c3550")
-			for lens_x in [23, 31]:   # cada cristal: columnas lens_x..lens_x+4, filas 25..29
+			for lens_x in [23 + off, 31 + off]:   # cada cristal: columnas lens_x..lens_x+4, filas 25..29
 				for x in range(lens_x, lens_x + 5):
 					img.set_pixel(x, 25, frame)
 					img.set_pixel(x, 29, frame)
@@ -568,16 +691,16 @@ static func _accessory(img: Image, look: Dictionary) -> void:
 						elif img.get_pixel(x, y).is_equal_approx(img.get_pixel(28, 27)):
 							img.set_pixel(x, y, img.get_pixel(x, y).lightened(0.12))   # el cristal claro, sobre la piel
 				# Destello en el borde de fuera de cada cristal.
-				var glint_x: int = lens_x + 1 if lens_x < 28 else lens_x + 3
+				var glint_x: int = lens_x + 1 if lens_x < 28 + off else lens_x + 3
 				img.set_pixel(glint_x, 26, Color(1, 1, 1, 0.9) if not sun else Color("9fb0d8"))
 				if sun:
-					img.set_pixel(glint_x + (1 if lens_x < 28 else -1), 27, Color("5a6a94"))
+					img.set_pixel(glint_x + (1 if lens_x < 28 + off else -1), 27, Color("5a6a94"))
 			# Puente y patillas hasta las orejas.
-			for x in range(28, 31):
+			for x in range(28 + off, 31 + off):
 				img.set_pixel(x, 26, frame)
-			for x in range(20, 23):
+			for x in range(20 + off, 23 + off):
 				img.set_pixel(x, 26, frame)
-			for x in range(36, 38):
+			for x in range(36 + off, 38 + off):
 				img.set_pixel(x, 26, frame)
 		3:   # audífonos
 			for x in range(19, 39):

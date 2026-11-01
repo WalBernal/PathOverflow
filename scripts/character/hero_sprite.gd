@@ -31,6 +31,7 @@ var _texture: Texture2D
 var _weapon := ""
 var _col := 0
 var _flip := false
+var _dir := 0
 var _lift := 0.0
 
 
@@ -47,8 +48,10 @@ static func available() -> bool:
 
 
 func set_pose(facing: Vector2, pose: Dictionary, walk_phase := -1.0) -> void:
-	if absf(facing.x) > 0.1:
-		_flip = facing.x < 0.0
+	# De frente, de espaldas o de lado (T181); de lado a la izquierda, volteado.
+	var d: Array = StudentHero.dir_for(facing)
+	_dir = int(d[0])
+	_flip = bool(d[1])
 	var weapon := String(pose.get("weapon", ""))
 	if weapon != _weapon or _texture == null:
 		_weapon = weapon
@@ -70,5 +73,5 @@ func _draw() -> void:
 		draw_set_transform(Vector2(0, _lift * s), 0.0, Vector2(-1, 1))
 	else:
 		draw_set_transform(Vector2(0, _lift * s))
-	draw_texture_rect_region(_texture, Rect2(-feet * s, cell * s), Rect2(_col * cell.x, 0, cell.x, cell.y))
+	draw_texture_rect_region(_texture, Rect2(-feet * s, cell * s), Rect2(_col * cell.x, _dir * cell.y, cell.x, cell.y))
 	draw_set_transform(Vector2.ZERO)

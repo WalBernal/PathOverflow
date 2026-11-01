@@ -5665,13 +5665,37 @@ func _test_player_sheet() -> void:
 				changed += 1
 	_check(changed > 300, "ponerse casco y armadura cambia el look (%d píxeles)" % changed)
 	var hero := StudentHero.build(StudentHero.look_of(red, {}), "sword")
-	_check(hero.get_width() == StudentHero.CELL.x * StudentHero.columns(), "la hoja del alumno tiene un cuadro por pose")
+	_check(hero.get_width() == StudentHero.CELL.x * StudentHero.columns() and hero.get_height() == StudentHero.CELL.y * StudentHero.DIRS,
+		"la hoja del alumno tiene un cuadro por pose y una fila por dirección")
 	var bad_hero := []
-	for c in StudentHero.columns():
-		var used := hero.get_region(Rect2i(c * StudentHero.CELL.x, 0, StudentHero.CELL.x, StudentHero.CELL.y)).get_used_rect()
-		if used.size == Vector2i.ZERO or used.end.y - 1 < StudentHero.FEET.y - 2:
-			bad_hero.append("%d (%s)" % [c, used])
-	_check(bad_hero.is_empty(), "cada cuadro del alumno tiene dibujo y no flota: %s" % [bad_hero])
+	for dir in StudentHero.DIRS:
+		for c in StudentHero.columns():
+			var used := hero.get_region(Rect2i(c * StudentHero.CELL.x, dir * StudentHero.CELL.y, StudentHero.CELL.x, StudentHero.CELL.y)).get_used_rect()
+			if used.size == Vector2i.ZERO or used.end.y - 1 < StudentHero.FEET.y - 2:
+				bad_hero.append("%d/%d (%s)" % [dir, c, used])
+	_check(bad_hero.is_empty(), "cada cuadro del alumno, en cada dirección, tiene dibujo y no flota: %s" % [bad_hero])
+	# T181: de espaldas no hay ojos ni camisa blanca; de lado los ojos miran hacia donde va.
+	var front := StudentHero.figure(StudentHero.look_of(red, {}), StudentHero.Dir.FRONT)
+	var back := StudentHero.figure(StudentHero.look_of(red, {}), StudentHero.Dir.BACK)
+	var side := StudentHero.figure(StudentHero.look_of(red, {}), StudentHero.Dir.SIDE)
+	var count_color := func(img: Image, hex: String) -> int:
+		var n := 0
+		for y in StudentHero.CELL.y:
+			for x in StudentHero.CELL.x:
+				if img.get_pixel(x, y).to_html(false) == hex:
+					n += 1
+		return n
+	_check(count_color.call(front, "ffffff") > 0 and count_color.call(back, "ffffff") == 0 and count_color.call(back, "ececf0") == 0,
+		"de espaldas no se ven los ojos ni la camisa")
+	var eye_x := func(img: Image) -> int:
+		for x in StudentHero.CELL.x:
+			for y in range(24, 30):
+				if img.get_pixel(x, y).to_html(false) == "ffffff":
+					return x
+		return -1
+	_check(eye_x.call(side) == eye_x.call(front) + 1, "de lado los ojos se corren hacia donde mira")
+	_check(StudentHero.dir_for(Vector2.UP)[0] == StudentHero.Dir.BACK and StudentHero.dir_for(Vector2.LEFT) == [StudentHero.Dir.SIDE, true]
+		and StudentHero.dir_for(Vector2.DOWN)[0] == StudentHero.Dir.FRONT, "cada dirección del movimiento elige su fila")
 	_check(StudentHero.column_for("attack", 0.99) == StudentHero.first_column("attack") + 3 and StudentHero.column_for("limp", 1.0) == StudentHero.first_column("dead") + 1
 		and StudentHero.column_for("idle", 0.0, 0.0, PI) >= StudentHero.first_column("walk"), "cada estado elige sus cuadros")
 	_check(StudentHero.texture(StudentHero.look_of(red, {}), "sword") == StudentHero.texture(StudentHero.look_of(red, {}), "sword"), "la hoja se arma una vez y se guarda")

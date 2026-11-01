@@ -1518,7 +1518,8 @@ func _capture_students(sheet: Control) -> void:
 		[{"hair": 6, "hair_color": "6b3d80", "skin_tone": "a8714f", "outfit_color": "2b4a8a"}, {"helmet": "capucha_de_cuero", "body": "chaleco_de_cuero", "boots": "botas_de_cuero"}, "dagger"],
 		[{"hair": 3, "hair_color": "d96a9a", "skin_tone": "e0ac8a", "outfit_color": "1d5a66"}, {"body": "chaqueta_de_conferencias"}, "sword"],
 	]
-	var frames := [["idle", 0], ["walk", 0], ["walk", 2], ["attack", 0], ["attack", 1], ["attack", 2], ["hurt", 0], ["dead", 1]]
+	# [animación, cuadro, dirección (0 frente, 1 espaldas, 2 lado)] (T181: las tres direcciones)
+	var frames := [["idle", 0, 0], ["idle", 0, 2], ["idle", 0, 1], ["walk", 0, 2], ["walk", 2, 2], ["walk", 0, 1], ["attack", 1, 2], ["attack", 2, 0]]
 	var zoom := 2.0
 	for ri in rows.size():
 		var r: Array = rows[ri]
@@ -1527,7 +1528,7 @@ func _capture_students(sheet: Control) -> void:
 		for fi in frames.size():
 			var at := AtlasTexture.new()
 			at.atlas = tex
-			at.region = Rect2((StudentHero.first_column(frames[fi][0]) + int(frames[fi][1])) * StudentHero.CELL.x, 0, StudentHero.CELL.x, StudentHero.CELL.y)
+			at.region = Rect2((StudentHero.first_column(frames[fi][0]) + int(frames[fi][1])) * StudentHero.CELL.x, int(frames[fi][2]) * StudentHero.CELL.y, StudentHero.CELL.x, StudentHero.CELL.y)
 			var tr := TextureRect.new()
 			tr.texture = at
 			tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -1536,7 +1537,7 @@ func _capture_students(sheet: Control) -> void:
 			tr.position = Vector2((ri % 4) * 400.0 + (fi % 4) * 95.0 - 10.0, floorf(ri / 4.0) * 450.0 + floorf(fi / 4.0) * 110.0 - 10.0)
 			sheet.add_child(tr)
 	await _wait(0.4)
-	_save("176_alumnos")
+	_save("181_direcciones")
 
 
 ## NPC con su objeto y su reposo (T162): cada uno de frente y, debajo, de lado, en dos

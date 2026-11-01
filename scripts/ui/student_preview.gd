@@ -16,6 +16,11 @@ var equipped: Dictionary = {}:
 		_texture = null
 		queue_redraw()
 var weapon := ""
+## Hacia dónde mira (el creador lo gira con «Girar», T181).
+var facing := Vector2.DOWN:
+	set(value):
+		facing = value
+		queue_redraw()
 
 var _texture: Texture2D
 var _time := 0.0
@@ -49,5 +54,8 @@ func _draw() -> void:
 	# El alumno mide ~41 píxeles de la hoja: que llene el alto disponible.
 	var s := floorf(maxf(1.0, size.y / 48.0))
 	var feet := Vector2(StudentHero.FEET)
-	var origin := Vector2(size.x / 2.0, size.y - 4.0) - feet * s
-	draw_texture_rect_region(_texture, Rect2(origin, cell * s), Rect2(current_column() * cell.x, 0, cell.x, cell.y))
+	var d: Array = StudentHero.dir_for(facing)
+	var origin := Vector2(size.x / 2.0, size.y - 4.0)
+	draw_set_transform(origin, 0.0, Vector2(-s if d[1] else s, s))
+	draw_texture_rect_region(_texture, Rect2(-feet, cell), Rect2(current_column() * cell.x, int(d[0]) * cell.y, cell.x, cell.y))
+	draw_set_transform(Vector2.ZERO)
