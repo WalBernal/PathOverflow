@@ -33,6 +33,10 @@ func _run() -> void:
 		await _capture_touch_auto()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("armas"):
+		await _capture_weapons()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("catalogo"):
 		await _capture_hero_catalog()
 		if OS.get_cmdline_user_args().has("menus"):   # y el creador y la lista con el alumno (T180)
@@ -1529,6 +1533,46 @@ func _capture_hero_catalog() -> void:
 		sheet.add_child(tr)
 	await _wait(0.4)
 	_save("182_perfiles")
+
+
+## Las armas del alumno (T177): cada base en la mano, de frente en reposo y de lado en el tajo.
+func _capture_weapons() -> void:
+	var sheet := Control.new()
+	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sheet.draw.connect(func() -> void: sheet.draw_rect(Rect2(Vector2.ZERO, sheet.size), Color("3a3f48")))
+	_swap(sheet)
+	var font := ThemeDB.fallback_font
+	var labels := []
+	var ids: Array = WeaponArt.ART.keys()
+	var kinds := {"espada": "sword", "estoque": "sword", "sable": "sword", "hacha": "axe", "maza": "mace", "martillo": "mace", "teclado": "mace"}
+	var cols := 5
+	for i in ids.size():
+		var id: String = ids[i]
+		var kind := "dagger"
+		for prefix in kinds:
+			if id.begins_with(prefix):
+				kind = kinds[prefix]
+		var look := StudentHero.look_of(CharacterAppearance.sanitize({"hair": 1, "outfit_color": "2b4a8a"}), {"weapon": id})
+		var tex := StudentHero.texture(look, kind)
+		var pos := Vector2((i % cols) * 320.0 + 10.0, floorf(i / float(cols)) * 290.0 + 4.0)
+		for j in 2:
+			var at := AtlasTexture.new()
+			at.atlas = tex
+			var col := StudentHero.first_column("idle") if j == 0 else StudentHero.first_column("attack") + 1
+			at.region = Rect2(col * StudentHero.CELL.x + 6, (0 if j == 0 else StudentHero.Dir.SIDE) * StudentHero.CELL.y + 2, 48, 52)
+			var tr := TextureRect.new()
+			tr.texture = at
+			tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			tr.size = Vector2(48, 52) * 2.9
+			tr.position = pos + Vector2(j * 145.0, 0)
+			sheet.add_child(tr)
+		labels.append([pos + Vector2(0, 252), id.replace("_", " ")])
+	sheet.draw.connect(func() -> void:
+		for l in labels:
+			sheet.draw_string(font, l[0], l[1], HORIZONTAL_ALIGNMENT_CENTER, 290.0, 16, Color("e8e4da")))
+	await _wait(0.4)
+	_save("177_armas")
 
 
 ## El alumno del estilo del usuario (T176, StudentHero): arriba, apariencias del

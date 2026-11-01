@@ -313,7 +313,7 @@ func _update_sprite(feet: Vector2, tint: Color) -> void:
 	# El alumno con su apariencia y lo que lleva puesto (T176): casco, armadura y botas
 	# cambian su look.
 	var equipped := {}
-	for slot in StudentHero.LOOKS:
+	for slot in StudentHero.LOOKS.keys() + ["weapon"]:   # (el arma, con el sprite de su base: T177)
 		var it: Item = character.inventory.equipment.get(slot, null)
 		equipped[slot] = String(it.base.get("id", "")) if it != null else ""
 	var look := StudentHero.look_of(character.appearance, equipped)

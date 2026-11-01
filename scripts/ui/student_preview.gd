@@ -15,7 +15,11 @@ var equipped: Dictionary = {}:
 		equipped = value
 		_texture = null
 		queue_redraw()
-var weapon := ""
+var weapon := "":
+	set(value):
+		weapon = value
+		_texture = null
+		queue_redraw()
 ## Hacia dónde mira (el creador lo gira con «Girar», T181).
 var facing := Vector2.DOWN:
 	set(value):

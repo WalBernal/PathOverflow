@@ -36,8 +36,7 @@ const LOOKS := {
 }
 ## Armaduras largas: también ponen sus piernas (la túnica tapa las botas).
 const ROBES := ["c", "e"]
-## Arma de la lámina por tipo (las de oficio de T177 llegarán aparte).
-const WEAPON_ART := {"sword": "sword", "dagger": "dagger", "mace": "staff", "axe": "staff"}
+## (T177: el arma en la mano es la de su base, WeaponArt; el bastón de C queda para un arma mágica.)
 
 ## Colores del alumno en la lámina, por papel y tono: el papel dice qué color del
 ## creador lo sustituye; se conserva el brillo relativo (HSV) para no perder el sombreado.
@@ -107,6 +106,7 @@ static func look_of(appearance: Dictionary, equipped: Dictionary) -> Dictionary:
 	for slot in LOOKS:
 		var base_id := String(equipped.get(slot, ""))
 		look["eq_" + slot] = String(LOOKS[slot].get(base_id, ""))
+	look["eq_weapon"] = String(equipped.get("weapon", ""))   # la base del arma (T177)
 	return look
 
 
@@ -114,7 +114,7 @@ static func look_of(appearance: Dictionary, equipped: Dictionary) -> Dictionary:
 static func equipped_of_save(data: Dictionary) -> Dictionary:
 	var out := {}
 	var equip: Dictionary = data.get("inventory", {}).get("equipment", {})
-	for slot in LOOKS:
+	for slot in LOOKS.keys() + ["weapon"]:
 		var it = equip.get(slot, null)
 		out[slot] = String(it.get("base", "")) if it is Dictionary else ""
 	return out
@@ -158,7 +158,8 @@ static func dir_for(facing: Vector2) -> Array:
 
 ## Hoja completa: una fila por dirección.
 static func build(look: Dictionary, weapon: String) -> Image:
-	var weapon_img: Image = _layer("weapon_" + String(WEAPON_ART.get(weapon, ""))) if WEAPON_ART.has(weapon) else null
+	# El arma de su base (T177) o, si no se sabe, la de su tipo.
+	var weapon_img: Image = WeaponArt.layer(WeaponArt.art_for(String(look.get("eq_weapon", "")), weapon), CELL, GRIP) if weapon != "" else null
 	var sheet := Image.create_empty(CELL.x * columns(), CELL.y * DIRS, false, Image.FORMAT_RGBA8)
 	sheet.fill(Color(0, 0, 0, 0))
 	for dir in DIRS:

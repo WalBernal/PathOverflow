@@ -5687,6 +5687,22 @@ func _test_player_sheet() -> void:
 		return n
 	_check(count_color.call(front, "ffffff") > 0 and count_color.call(back, "ffffff") == 0 and count_color.call(back, "ececf0") == 0,
 		"de espaldas no se ven los ojos ni la camisa")
+	# T177: cada arma del juego tiene su sprite y es el que lleva el alumno en la mano.
+	var bases_json = JSON.parse_string(FileAccess.get_file_as_string("res://data/items/bases.json"))
+	var no_art := []
+	for b in bases_json["bases"]:
+		if String(b.get("slot", "")) == "weapon":
+			var layer := WeaponArt.layer(String(b["id"]), StudentHero.CELL, StudentHero.GRIP)
+			if not WeaponArt.ART.has(String(b["id"])) or layer == null or layer.get_used_rect().size == Vector2i.ZERO:
+				no_art.append(b["id"])
+			elif layer.get_pixelv(StudentHero.GRIP).a <= 0.0:
+				no_art.append(String(b["id"]) + " (sin agarre en la mano)")
+	_check(no_art.is_empty(), "cada arma tiene su sprite con el agarre en la mano: %s" % [no_art])
+	_check(WeaponArt.art_for("nada", "mace") == "maza_de_depuracion" and WeaponArt.art_for("teclado_rgb", "mace") == "teclado_rgb", "sin base conocida, el arma de su tipo")
+	var with_keyboard := StudentHero.build(StudentHero.look_of(red, {"weapon": "teclado_mecanico"}), "mace")
+	var with_mace := StudentHero.build(StudentHero.look_of(red, {"weapon": "maza_de_depuracion"}), "mace")
+	_check(with_keyboard.get_data() != with_mace.get_data(), "dos mazas distintas (teclado y maza) se ven distintas en la mano")
+	_check(StudentHero.equipped_of_save({"inventory": {"equipment": {"weapon": {"base": "teclado_rgb"}}}})["weapon"] == "teclado_rgb", "la lista de personajes sabe qué arma lleva")
 	# T182: de lado es un perfil de verdad: un solo ojo y las piernas cambian en cada paso.
 	var profile := StudentProfile.body(StudentHero.look_of(red, {}))
 	_check(count_color.call(profile, "ffffff") == 1 and count_color.call(front, "ffffff") == 2, "de perfil se ve un solo ojo")

@@ -284,6 +284,8 @@ func _select(index: int) -> void:
 	var data := _saves[index]
 	_preview.appearance = CharacterAppearance.with_gear(CharacterAppearance.sanitize(data.get("appearance", {})), String(data.get("class_id", "")))
 	_student.equipped = StudentHero.equipped_of_save(data)
+	# Con el arma que lleva (T177): el tipo solo dice que hay arma; el dibujo, su base.
+	_student.weapon = "sword" if String(_student.equipped.get("weapon", "")) != "" else ""
 	_student.appearance = CharacterAppearance.sanitize(data.get("appearance", {}))
 	var class_def := GameData.get_class_def(StringName(data.get("class_id", "")))
 	_preview.glow_color = Color(class_def.get("color", "d9a441"))
