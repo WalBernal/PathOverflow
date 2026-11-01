@@ -229,7 +229,7 @@ func _make_cell(id: String, def: Dictionary) -> Control:
 		var sel := id == _selected
 		var r := Rect2(Vector2.ZERO, b.size)
 		b.draw_rect(r, Color(0.16, 0.13, 0.2) if sel else Color(0.08, 0.07, 0.1))
-		b.draw_rect(r, UiStyle.ACCENT if sel else Color("3a3442"), false, 2.0 if sel else 1.0)
+		b.draw_rect(r, UiStyle.ACCENT if sel else UiStyle.BORDER, false, 2.0 if sel else 1.0)
 		var icon := Rect2(Vector2((r.size.x - 56.0) / 2.0, 6.0), Vector2(56, 56))
 		if _tab == "boards":
 			SkillIcon.draw(b, icon, def, not found)
@@ -262,7 +262,7 @@ func _draw_big_icon() -> void:
 func _show_detail() -> void:
 	_big_icon.queue_redraw()
 	if _selected == "":
-		_detail.text = "[center][color=#8a8293]Nada coincide con la búsqueda.[/color][/center]"
+		_detail.text = "[center][color=#8b949e]Nada coincide con la búsqueda.[/color][/center]"
 		return
 	_detail.text = detail_text(_selected)
 
@@ -270,19 +270,19 @@ func _show_detail() -> void:
 ## Texto de la ficha (BBCode). Público para las pruebas.
 func detail_text(id: String) -> String:
 	var found := is_seen(id)
-	var status := "[color=#6fd36b]✔ Encontrada[/color]" if found else "[color=#8a8293]Aún no encontrada[/color]"
+	var status := "[color=#6fd36b]✔ Encontrada[/color]" if found else "[color=#8b949e]Aún no encontrada[/color]"
 	var t := ""
 	if _tab == "boards":
 		var def: Dictionary = _db.skills[id]
 		var board := Motherboard.new(def, 1, [])
 		t = ItemTooltip.build_text(board, character, false)
 		var extra := PackedStringArray([status])
-		extra.append("Tipo: [color=#e8d9b0]%s[/color]  ·  Daño: [color=#e8d9b0]%s[/color]" % [_kind_name(String(def.get("kind", ""))),
+		extra.append("Tipo: [color=#e6edf3]%s[/color]  ·  Daño: [color=#e6edf3]%s[/color]" % [_kind_name(String(def.get("kind", ""))),
 			RamModule.DAMAGE_TYPE_NAMES.get(def.get("damage_type", "none"), "sin daño").trim_prefix("de ")])
-		extra.append("Cae desde el nivel de zona [color=#e8d9b0]%d[/color]" % int(def.get("min_level", def.get("level", 1))))
+		extra.append("Cae desde el nivel de zona [color=#e6edf3]%d[/color]" % int(def.get("min_level", def.get("level", 1))))
 		var kits := _kits_with(id)
 		if not kits.is_empty():
-			extra.append("De serie con: [color=#d9a441]%s[/color]" % ", ".join(kits))
+			extra.append("De serie con: [color=#2dd4bf]%s[/color]" % ", ".join(kits))
 		var variants: Array = def.get("variants", [])
 		if not variants.is_empty():
 			var names := PackedStringArray()
@@ -293,22 +293,22 @@ func detail_text(id: String) -> String:
 		for rid in _db.rams:
 			if RamModule.new(_db.rams[rid]).supports(def):
 				compatible += 1
-		extra.append("RAM compatibles: [color=#e8d9b0]%d[/color] de %d" % [compatible, _db.rams.size()])
-		t += "\n[color=#3a3442]────────────────────[/color]\n" + "\n".join(extra)
+		extra.append("RAM compatibles: [color=#e6edf3]%d[/color] de %d" % [compatible, _db.rams.size()])
+		t += "\n[color=#2d3646]────────────────────[/color]\n" + "\n".join(extra)
 	else:
 		var def: Dictionary = _db.rams[id]
 		var ram := RamModule.new(def)
 		t = ItemTooltip.build_text(ram, character, false)
 		var extra := PackedStringArray([status])
-		extra.append("Grado: [color=#e8d9b0]%s[/color]  ·  Cae desde el nivel [color=#e8d9b0]%d[/color]" % [
+		extra.append("Grado: [color=#e6edf3]%s[/color]  ·  Cae desde el nivel [color=#e6edf3]%d[/color]" % [
 			["", "menor", "normal", "mayor"][clampi(ram.tier(), 1, 3)], int(def.get("min_level", 1))])
 		var works := PackedStringArray()
 		for sid in _db.skills:
 			if ram.supports(_db.skills[sid]):
 				works.append(String(_db.skills[sid]["name"]))
 		works.sort()
-		extra.append("Funciona con %d placas: [color=#8a8293]%s[/color]" % [works.size(), ", ".join(works)])
-		t += "\n[color=#3a3442]────────────────────[/color]\n" + "\n".join(extra)
+		extra.append("Funciona con %d placas: [color=#8b949e]%s[/color]" % [works.size(), ", ".join(works)])
+		t += "\n[color=#2d3646]────────────────────[/color]\n" + "\n".join(extra)
 	return t
 
 

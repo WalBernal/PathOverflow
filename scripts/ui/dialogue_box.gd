@@ -172,7 +172,7 @@ func open(p_npc: Dictionary, dialogue: Dictionary) -> void:
 	_dialogue_id = String(npc.get("dialogue", npc.get("id", "")))
 	_visited_now = {}
 	_portrait.appearance = CharacterAppearance.sanitize(npc.get("appearance", {}))
-	_portrait.ring_color = Color(npc.get("color", "d9a441"))
+	_portrait.ring_color = Color(npc.get("color", "2dd4bf"))
 	_portrait.glitch = 0.6 if npc.get("terminal", false) else 0.0
 	_name.text = npc.get("name", "?")
 	var voice: Dictionary = npc.get("voice", {})

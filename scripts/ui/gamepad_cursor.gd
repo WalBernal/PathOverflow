@@ -194,4 +194,4 @@ func _draw() -> void:
 	var arrow := PackedVector2Array([p, p + Vector2(0, SIZE), p + Vector2(SIZE * 0.3, SIZE * 0.72), p + Vector2(SIZE * 0.72, SIZE * 0.72)])
 	draw_colored_polygon(arrow, Color("f4f0e8") if not _left_held else UiStyle.ACCENT)
 	arrow.append(p)
-	draw_polyline(arrow, Color("16131b"), 2.0)
+	draw_polyline(arrow, UiStyle.PANEL, 2.0)

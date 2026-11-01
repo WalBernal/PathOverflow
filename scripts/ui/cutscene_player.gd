@@ -29,7 +29,7 @@ const DINO_TIME := 4.5
 ## Pausa mínima entre dos avances (completar línea / pasar a la siguiente).
 const ADVANCE_COOLDOWN := 0.3
 const STYLE_COLORS := {
-	"npc": Color("d9a441"), "boss": Color("e0503a"), "console": Color("3cff6a"),
+	"npc": UiStyle.ACCENT, "boss": Color("e0503a"), "console": Color("3cff6a"),
 	"system": Color("8ab0e0"), "phone": Color("6fd36b"),
 }
 

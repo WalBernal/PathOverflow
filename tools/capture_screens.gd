@@ -58,6 +58,10 @@ func _run() -> void:
 		await _capture_npc_identity()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("tema"):
+		await _capture_theme()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("propuestas"):
 		await _capture_ui_proposals()
 		get_tree().quit()
@@ -1613,6 +1617,41 @@ func _capture_students(sheet: Control) -> void:
 			sheet.add_child(tr)
 	await _wait(0.4)
 	_save("181_direcciones")
+
+
+## El tema del panel de datos (T166) en las ventanas de verdad: inventario con
+## habilidades, la hoja de personaje y un diálogo.
+func _capture_theme() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Tema", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 12
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(2.5)
+	var ui: Node = world.get("ui")
+	ui.get("cutscene").call("_finish")   # sin la escena de llegada
+	await _wait(0.5)
+	ui.call("_on_menu_requested", "inventory")
+	ui.call("_on_menu_requested", "skills")
+	await _wait(0.6)
+	_save("166_inventario")
+	ui.call("_on_menu_requested", "inventory")
+	ui.call("_on_menu_requested", "skills")
+	ui.call("_on_menu_requested", "character")
+	await _wait(0.6)
+	_save("166_hoja")
+	ui.call("_on_menu_requested", "character")
+	for npc in world.get("zone").get("npcs"):
+		if npc["id"] == "ada":
+			world.get("player").global_position = Vector2(npc["position"][0], npc["position"][1] + 60.0)
+			world.call("_on_npc_interacted", npc)
+	await _wait(2.0)
+	_save("166_dialogo")
 
 
 ## Las dos propuestas de interfaz de ingeniería (T165): inventario, descripción, diálogo y HUD.

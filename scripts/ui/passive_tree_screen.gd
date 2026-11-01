@@ -186,7 +186,7 @@ func _build_ui() -> void:
 	add_child(hint)
 	hint.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
 	hint.position += Vector2(12, -12)
-	hint.add_theme_color_override("font_color", Color("8a8293"))
+	hint.add_theme_color_override("font_color", UiStyle.MUTED)
 
 	var side := PanelContainer.new()
 	add_child(side)
@@ -227,8 +227,8 @@ func _build_ui() -> void:
 
 func _make_panel_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("16131bf2")
-	style.border_color = Color("3a3442")
+	style.bg_color = Color(UiStyle.PANEL, 0.95)
+	style.border_color = UiStyle.BORDER
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(4)
 	style.set_content_margin_all(12)
@@ -263,7 +263,7 @@ func show_character(character: CharacterData) -> void:
 	for cdef in GameData.classes:
 		var sid := GameData.passive_tree.get_start_node_for_class(StringName(cdef["id"]))
 		if sid != -1:
-			regions[sid] = Color(String(cdef.get("color", "8a8293")))
+			regions[sid] = Color(String(cdef.get("color", "8b949e")))
 	_view.region_colors = regions
 	_view.setup(_character.passives)
 	var start := GameData.passive_tree.get_node_data(_character.passives.start_node_id)
@@ -539,7 +539,7 @@ func _refresh() -> void:
 	var asc_pending := _character.can_choose_ascendancy() or (not _character.ascendancy_def.is_empty() and _character.ascendancy_points_available() > 0)
 	_view.ascendancy_info = {"unlocked": _character.level >= CharacterData.ASCENDANCY_LEVEL, "pending": asc_pending,
 		"name": _character.ascendancy_def.get("name", "Elegir ascendencia")}
-	_points_label.add_theme_color_override("font_color", Color("e06c6c") if available < 0 else Color("e8d9b0"))
+	_points_label.add_theme_color_override("font_color", Color("e06c6c") if available < 0 else UiStyle.TEXT)
 	_stats_label.text = _build_stats_text()
 	if _hovered_id != -1:
 		_on_node_hovered(_hovered_id)
@@ -558,7 +558,7 @@ func _build_tooltip(node: PassiveNode) -> String:
 		subtitle += " · " + tree.cluster_name(node.cluster)
 	elif node.kind == PassiveNode.Kind.MINOR:
 		subtitle += " · camino"
-	var t := "[b][color=#%s]%s[/color][/b]\n[color=#8a8293]%s[/color]\n" % [
+	var t := "[b][color=#%s]%s[/color][/b]\n[color=#8b949e]%s[/color]\n" % [
 		title_color.to_html(false), node.title, subtitle]
 	for m in node.mods:
 		t += "• %s\n" % m.describe()
@@ -566,17 +566,17 @@ func _build_tooltip(node: PassiveNode) -> String:
 		var chosen := alloc.mastery_choice(node.id)
 		for k in node.choices.size():
 			var on := k == chosen and alloc.is_allocated(node.id)
-			t += "[color=#%s]%s %s[/color]\n" % ["8ae0c0" if on else "8a8293", "◆" if on else "◇", node.choices[k]["name"]]
+			t += "[color=#%s]%s %s[/color]\n" % ["8ae0c0" if on else "8b949e", "◆" if on else "◇", node.choices[k]["name"]]
 			for m in node.choices[k]["mods"]:
-				t += "[color=#%s]    • %s[/color]\n" % ["e8d9b0" if on else "8a8293", m.describe()]
-		t += "[color=#8a8293]%s[/color]\n" % ("Click izquierdo: elegir el bono (gratis, cuando quieras)" if alloc.is_allocated(node.id) else "Asígnala y elige uno de los tres bonos")
+				t += "[color=#%s]    • %s[/color]\n" % ["e6edf3" if on else "8b949e", m.describe()]
+		t += "[color=#8b949e]%s[/color]\n" % ("Click izquierdo: elegir el bono (gratis, cuando quieras)" if alloc.is_allocated(node.id) else "Asígnala y elige uno de los tres bonos")
 	if node.flavor != "":
 		t += "\n[i][color=#a08f6a]%s[/color][/i]\n" % node.flavor
 	# Piedras que chocan (T92): avisa si ya tienes la otra.
 	if not node.conflicts.is_empty():
 		var clash := alloc.conflicts_with(node.id)
 		if clash.is_empty():
-			t += "[color=#8a8293]Choca con: %s[/color]\n" % ", ".join(node.conflicts)
+			t += "[color=#8b949e]Choca con: %s[/color]\n" % ", ".join(node.conflicts)
 		else:
 			t += "[color=#e06c6c]⚠ Choca con %s, que ya tienes asignada[/color]\n" % ", ".join(clash)
 	# Constelación (T84): qué atributos pide y si los tienes.
@@ -590,9 +590,9 @@ func _build_tooltip(node: PassiveNode) -> String:
 		t += "\n[color=#c9a7f0]✦ %s[/color]: pide %s. Sus nodos dan más.\n" % [node.constellation, "  ·  ".join(parts)]
 		if not node.complete_mods.is_empty():
 			var whole := alloc.constellation_complete(node.constellation)
-			t += "[color=#%s]Completa (%d nodos):[/color]\n" % ["c9a7f0" if whole else "8a8293", tree.constellations.get(node.constellation, []).size()]
+			t += "[color=#%s]Completa (%d nodos):[/color]\n" % ["c9a7f0" if whole else "8b949e", tree.constellations.get(node.constellation, []).size()]
 			for m in node.complete_mods:
-				t += "[color=#%s]    • %s[/color]\n" % ["e8d9b0" if whole else "8a8293", m.describe()]
+				t += "[color=#%s]    • %s[/color]\n" % ["e6edf3" if whole else "8b949e", m.describe()]
 	if tree.is_socket(node.id):
 		var chip: ExpansionChip = _character.inventory.chips.get(node.id, null)
 		if chip:
@@ -601,13 +601,13 @@ func _build_tooltip(node: PassiveNode) -> String:
 				t += "  [color=#a8c8ff]• %s[/color]\n" % m.describe()
 		else:
 			t += "\n[color=#c8a050]Ranura de chip de expansión vacía[/color]\n"
-		t += "[color=#8a8293]%s[/color]\n" % ("Click izquierdo: engastar o sacar un chip" if alloc.is_allocated(node.id) else "Asígnala para poder engastar un chip")
+		t += "[color=#8b949e]%s[/color]\n" % ("Click izquierdo: engastar o sacar un chip" if alloc.is_allocated(node.id) else "Asígnala para poder engastar un chip")
 	t += "\n"
 	if node.kind == PassiveNode.Kind.CLASS_START:
-		t += "[color=#8a8293]Punto de inicio[/color]"
+		t += "[color=#8b949e]Punto de inicio[/color]"
 	elif alloc.is_allocated(node.id):
 		if alloc.can_refund(node.id):
-			t += "[color=#8a8293]Click derecho para quitar[/color]"
+			t += "[color=#8b949e]Click derecho para quitar[/color]"
 		else:
 			t += "[color=#e06c6c]No se puede quitar: desconectaría otros nodos[/color]"
 	else:
@@ -627,7 +627,7 @@ func _build_stats_text() -> String:
 	var t := "[font_size=22][b]%s[/b][/font_size]\n[i][color=#a08f6a]%s[/color][/i]\n" % [c["name"], c["description"]]
 	if not _character.ascendancy_def.is_empty():
 		var a := _character.ascendancy_def
-		t += "\n[b][color=#d9a441]%s[/color][/b]\n[i][color=#a08f6a]%s[/color][/i]\n" % [a["name"], a["description"]]
+		t += "\n[b][color=#2dd4bf]%s[/color][/b]\n[i][color=#a08f6a]%s[/color][/i]\n" % [a["name"], a["description"]]
 		var passives: Array = a.get("passives", [])
 		# Los menores se repiten por el árbol: se agrupan por nombre («Pairing ×2»).
 		var counts := {}
@@ -664,7 +664,7 @@ func _build_stats_text() -> String:
 	for res in [Stat.FIRE_RES, Stat.COLD_RES, Stat.LIGHTNING_RES, Stat.CHAOS_RES]:
 		var raw := s.get_value(res)
 		var shown := minf(raw, Stat.RESISTANCE_CAP)
-		var extra := "  [color=#8a8293](%d%% sin tope)[/color]" % raw if raw > Stat.RESISTANCE_CAP else ""
+		var extra := "  [color=#8b949e](%d%% sin tope)[/color]" % raw if raw > Stat.RESISTANCE_CAP else ""
 		t += _line(Stat.display_name(res), "%d%%%s" % [shown, extra])
 
 	t += "\n[b]Ofensiva[/b]\n"
@@ -700,14 +700,14 @@ func _tree_summary() -> String:
 		else:
 			totals[key] = [m, m.value]
 	if totals.is_empty():
-		return "\n[b]Bonificaciones del árbol[/b]\n[color=#8a8293]Nada asignado todavía. Tu potencial, intacto.[/color]\n"
+		return "\n[b]Bonificaciones del árbol[/b]\n[color=#8b949e]Nada asignado todavía. Tu potencial, intacto.[/color]\n"
 	var lines: Array = []
 	for key in totals:
 		var sample: Modifier = totals[key][0]
 		var total := Modifier.new(sample.stat, sample.type, totals[key][1], sample.tags)
 		lines.append(total.describe())
 	lines.sort()
-	return "\n[b]Bonificaciones del árbol[/b]  [color=#8a8293](%d pasivas)[/color]\n[color=#8888ff]%s[/color]\n" % [
+	return "\n[b]Bonificaciones del árbol[/b]  [color=#8b949e](%d pasivas)[/color]\n[color=#8888ff]%s[/color]\n" % [
 		_character.passives.spent_points(), "\n".join(PackedStringArray(lines))]
 
 
@@ -763,7 +763,7 @@ static func _normalize(text: String) -> String:
 
 
 func _line(label: String, value: String) -> String:
-	return "%s: [color=#e8d9b0]%s[/color]\n" % [label, value]
+	return "%s: [color=#e6edf3]%s[/color]\n" % [label, value]
 
 
 func _damage_line(label: String, stat: StringName, tags: Array) -> String:

@@ -181,7 +181,7 @@ func _draw_choice(font: Font) -> void:
 	if _selected != -1:
 		var rr := _confirm_rect()
 		var enabled := not lock
-		draw_rect(rr, Color("332b22") if (_confirm_hover and enabled) else Color("221e29"))
+		draw_rect(rr, Color("332b22") if (_confirm_hover and enabled) else UiStyle.PANEL_LIGHT)
 		draw_rect(rr, UiStyle.ACCENT if enabled else Color("4a4352"), false, 2.0)
 		draw_string(font, rr.position + Vector2(0, 28), ("Elegir: %s" % options[_selected]["name"]) if enabled else "Bloqueado hasta el nivel %d" % CharacterData.ASCENDANCY_LEVEL,
 			HORIZONTAL_ALIGNMENT_CENTER, rr.size.x, 16, UiStyle.TEXT if enabled else UiStyle.MUTED)

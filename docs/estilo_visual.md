@@ -4,6 +4,9 @@ La interfaz deja el latón y los remaches de antes y adopta la temática del jue
 software, datos e inteligencia artificial. Hay dos propuestas para elegir (o mezclar); la
 elegida pasa a `UiStyle` en T166 y al HUD en T167.
 
+**Elegida (31-10-2026): B · Panel de monitoreo/datos.** Aplicada a las ventanas en T166
+(`docs/capturas/interfaz/166_*.png`).
+
 Maquetas (inventario, descripción de un objeto, diálogo y HUD), dibujadas por
 `scripts/ui/ui_proposals.gd` (`capture_screens -- propuestas`):
 

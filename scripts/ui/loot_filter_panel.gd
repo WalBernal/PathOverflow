@@ -300,7 +300,7 @@ func _draw_category_icon(ci: CanvasItem, r: Rect2, key: String) -> void:
 	var c := r.get_center()
 	var gold := UiStyle.ACCENT
 	ci.draw_rect(r, Color(0.1, 0.08, 0.12))
-	ci.draw_rect(r, Color("3a3442"), false, 1.0)
+	ci.draw_rect(r, UiStyle.BORDER, false, 1.0)
 	match key:
 		"weapon":
 			ci.draw_line(c + Vector2(-8, 8), c + Vector2(8, -8), Color("c8c8c8"), 3.0)
@@ -326,7 +326,7 @@ func _draw_category_icon(ci: CanvasItem, r: Rect2, key: String) -> void:
 				ci.draw_rect(Rect2(c + Vector2(-8 + k * 5, -2), Vector2(3, 4)), Color("1a1e28"))
 		"flask":
 			ci.draw_rect(Rect2(c - Vector2(5, 4), Vector2(10, 12)), Color("c8894a"))
-			ci.draw_rect(Rect2(c - Vector2(3, 9), Vector2(6, 5)), Color("8a8293"))
+			ci.draw_rect(Rect2(c - Vector2(3, 9), Vector2(6, 5)), UiStyle.MUTED)
 		_:
 			for k in 4:
 				ci.draw_rect(Rect2(c.x - 2.0 + k - 1.5, r.position.y + 2 + k * 6, 4, 6), Color(1, 1, 0.7, 0.3 + 0.15 * k))
@@ -336,7 +336,7 @@ func _draw_category_icon(ci: CanvasItem, r: Rect2, key: String) -> void:
 func _draw_preview() -> void:
 	var font := _preview.get_theme_default_font()
 	_preview.draw_rect(Rect2(Vector2.ZERO, _preview.size), Color("0c0b0f"))
-	_preview.draw_rect(Rect2(Vector2.ZERO, _preview.size), Color("3a3442"), false, 1.0)
+	_preview.draw_rect(Rect2(Vector2.ZERO, _preview.size), UiStyle.BORDER, false, 1.0)
 	var samples := [
 		["Espada oxidada", "weapon", Rarity.Item.NORMAL], ["Hacha de los Bugs", "weapon", Rarity.Item.MAGIC],
 		["Grito de la Pila", "armour", Rarity.Item.RARE], ["Anillo del Kernel", "jewelry", Rarity.Item.ULTRA_RARE],

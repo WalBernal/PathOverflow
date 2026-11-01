@@ -10,8 +10,8 @@ signal hovered(cell: ItemCell, inside: bool)
 signal dropped(target: ItemCell, payload: Dictionary)
 signal released_outside(cell: ItemCell)
 
-const BG := Color("16131b")
-const BORDER := Color("3a3442")
+const BG := UiStyle.PANEL
+const BORDER := UiStyle.BORDER
 const DRAG_PREVIEW_SIZE := Vector2(48, 48)
 
 var item: Item
@@ -93,16 +93,10 @@ func _notification(what: int) -> void:
 func _draw() -> void:
 	var rect := Rect2(Vector2.ZERO, size)
 	var font := get_theme_default_font()
-	# Fondo con relieve: más oscuro abajo a la derecha, filo claro arriba a la izquierda.
+	# Casilla plana del panel de datos (T166; antes, la del atlas con relieve).
 	draw_rect(rect, BG)
-	draw_rect(Rect2(rect.position, Vector2(rect.size.x, rect.size.y * 0.5)), Color(1, 1, 1, 0.025))
 	if slot_color.a > 0.0:
 		draw_rect(rect, Color(slot_color, 0.12 if item == null else 0.25))
-	draw_line(Vector2(1, 1), Vector2(size.x - 1, 1), Color(1, 1, 1, 0.06), 1.0)
-	draw_line(Vector2(1, 1), Vector2(1, size.y - 1), Color(1, 1, 1, 0.06), 1.0)
-	draw_line(Vector2(1, size.y - 1), Vector2(size.x - 1, size.y - 1), Color(0, 0, 0, 0.5), 1.0)
-	# Casilla del atlas de interfaz (T95), con el borde del color de la rareza del objeto.
-	UiAtlas.draw(self, UiAtlas.slot_piece(item.rarity) if item != null else "slot_normal", rect)
 	if item == null:
 		if dimm_socket:
 			_draw_dimm_socket(rect)

@@ -157,7 +157,7 @@ func _refresh() -> void:
 	_header.text = "%s  ·  %d / %d" % [_title, current_step() + 1, _steps.size()]
 	var text := Touch.text(step)   # con el dedo, su versión táctil (T138)
 	if step["id"] == "kill":
-		text += "  [color=#d9a441](%d / %d)[/color]" % [mini(int(_events.get("kill", 0)), _needed()), _needed()]
+		text += "  [color=#2dd4bf](%d / %d)[/color]" % [mini(int(_events.get("kill", 0)), _needed()), _needed()]
 	_text.text = text
 
 

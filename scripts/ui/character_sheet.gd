@@ -52,7 +52,7 @@ func setup(p_character: CharacterData, p_player: Player, p_skills: SkillControll
 	player = p_player
 	skills = p_skills
 	_portrait.appearance = character.appearance
-	_portrait.ring_color = Color(character.class_def.get("color", "d9a441"))
+	_portrait.ring_color = Color(character.class_def.get("color", "2dd4bf"))
 	visibility_changed.connect(func() -> void:
 		if visible:
 			_quote.text = QUOTES[_rng.randi_range(0, QUOTES.size() - 1)]

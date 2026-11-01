@@ -30,7 +30,7 @@ static func _paint(p: _Painter, id: String) -> void:
 			p.circle(35, 25, 11, Color("2a0e26"))   # luna menguante
 			p.rect(46, 52, 36, 62, Color("26222c"))
 			for k in 6:
-				p.rect(49, 56 + k * 9, 30, 6, Color("3a3442"))
+				p.rect(49, 56 + k * 9, 30, 6, UiStyle.BORDER)
 				p.rect(51, 58 + k * 9, 3, 2, Color("ff4040") if k % 2 == 0 else Color("40ff70"))
 			p.flames(64, 54, 26, 22)
 			p.circle(96, 92, 7, Color("ff2a2a"))

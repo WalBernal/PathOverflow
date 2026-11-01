@@ -15,7 +15,7 @@ var animated := false:
 	set(value):
 		animated = value
 		set_process(value)
-var glow_color := Color("d9a441")
+var glow_color := UiStyle.ACCENT
 ## Pose de lucimiento (T96): cada POSE_CYCLE s la figura hace su acción ("attack",
 ## "cast", "shoot"; "" = solo respira), con el arma que toque.
 var action := ""

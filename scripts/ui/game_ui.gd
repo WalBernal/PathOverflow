@@ -285,7 +285,7 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	cutscene = CutscenePlayer.new()
 	cutscene.player = player
 	cutscene.speakers = {"player": {"name": character.character_name, "appearance": character.appearance,
-		"color": character.class_def.get("color", "d9a441")}}
+		"color": character.class_def.get("color", "2dd4bf")}}
 	_root.add_child(cutscene)
 
 	catalog = CatalogPanel.new()

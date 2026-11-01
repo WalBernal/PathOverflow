@@ -101,7 +101,7 @@ func _draw() -> void:
 	# Halo exterior y fondo con degradado radial.
 	for k in 4:
 		draw_circle(c, radius + 4.0 - k, Color(ring_color, 0.05 + 0.04 * pulse))
-	var bg := Color("120f17")
+	var bg := UiStyle.WINDOW_BG
 	for k in 8:
 		var t := k / 7.0
 		draw_circle(c, radius * (1.0 - t * 0.55), bg.lerp(ring_color.darkened(0.55), t * 0.45))

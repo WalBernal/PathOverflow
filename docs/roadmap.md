@@ -1189,7 +1189,7 @@ Origen: R8
 - Los colores de rareza, de daño y del modo daltónico no cambian (son lenguaje del juego).
 - Se para hasta que el usuario elija.
 
-### [ ] T166 · Tema de ventanas, botones y tooltips · M
+### [x] T166 · Tema de ventanas, botones y tooltips · M
 Origen: R8
 - `UiStyle` con la propuesta elegida: `make_theme`, `window_style`, `window_header`, `decorate_window` (fuera remaches y latón), botones, deslizadores, pestañas, barras de desplazamiento y `ItemTooltip` (cabecera tipo documentación, afijos como líneas de código con su color).
 - Quitar colores sueltos: las ventanas toman sus colores de `UiStyle`, no de constantes propias.
@@ -1440,3 +1440,5 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-31 · T179 · Versión 3.4.0: APK (código 18) y latest.json, Windows e instalador; lista `docs/prueba_celular_3.4.md` (con la pregunta de las manadas de T153). Sin subir a GitHub: pendiente de la revisión del usuario 🛑.
 - 2026-10-31 · (release) · v3.4.0 subida a GitHub (WalBernal/PathOverflow) con el APK y el latest.json, a petición del usuario.
 - 2026-10-31 · T165 · Guía visual (`docs/estilo_visual.md`) y dos maquetas para elegir, dibujadas por `UiProposals`: A · Terminal/IDE y B · Panel de monitoreo/datos (`docs/capturas/interfaz/165_propuesta_a/b.png`), con contraste ≥ 4,5:1 comprobado.
+- 2026-10-31 · T165 · El usuario elige la propuesta B (panel de monitoreo/datos).
+- 2026-10-31 · T166 · `UiStyle` con la propuesta B: paleta turquesa, tarjetas planas redondeadas, botones, pestañas, barras de desplazamiento y barras de progreso; ventanas sin latón ni remaches (raya del acento y grafo de tres nodos), separador de red neuronal, fondo de puntos; tooltips con franja del color de la rareza; casillas sin el marco del atlas. Los colores sueltos de `scripts/ui` pasan a `UiStyle`. Pruebas: contraste ≥ 4,5:1 y ningún color viejo en `scripts/ui`. Capturas `docs/capturas/interfaz/166_*`.

@@ -193,7 +193,7 @@ func _refresh_summary() -> void:
 	if _summary == null or character == null:
 		return
 	# Solo la moneda: vida, daño y resistencias están en la hoja de personaje (C).
-	_summary.text = "[color=#f2c14e]●[/color] [color=#8a8293]%s[/color] [color=#f2c14e][b]%d[/b][/color]     [color=#5a5363]Las cifras del personaje: tecla C[/color]" % [
+	_summary.text = "[color=#f2c14e]●[/color] [color=#8b949e]%s[/color] [color=#f2c14e][b]%d[/b][/color]     [color=#5a5363]Las cifras del personaje: tecla C[/color]" % [
 		Economy.CURRENCY, character.tokens]
 
 

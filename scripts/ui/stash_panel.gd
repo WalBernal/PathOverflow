@@ -146,8 +146,8 @@ func _refresh() -> void:
 	if _patches_label.visible:
 		var parts := PackedStringArray()
 		for kind in Crafting.KINDS:
-			parts.append("[color=#d9a441]%s[/color] ×%d" % [Crafting.NAMES[kind], Crafting.count(character, kind)])
-		_patches_label.text = "[color=#8a8293]Tus parches (van con el personaje):[/color]  " + "   ".join(parts)
+			parts.append("[color=#2dd4bf]%s[/color] ×%d" % [Crafting.NAMES[kind], Crafting.count(character, kind)])
+		_patches_label.text = "[color=#8b949e]Tus parches (van con el personaje):[/color]  " + "   ".join(parts)
 
 
 ## Búsqueda: resalta lo que coincide en la pestaña y cuenta las de las demás.

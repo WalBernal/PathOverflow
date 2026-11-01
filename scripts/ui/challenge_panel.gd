@@ -50,7 +50,7 @@ func _ready() -> void:
 
 func open(challenge: Dictionary, rewards: Array) -> void:
 	_title.text = challenge.get("name", "Banco de Pruebas de Estrés")
-	_info.text = "Resiste [color=#ff9a4a][b]%d oleadas[/b][/color] de enemigos sin morir y sin salir de la zona.\nCada oleada es más dura que la anterior; la última trae élites.\n[color=#8a8293]Si caes, la prueba se reinicia y podrás intentarlo de nuevo.[/color]" % int(challenge.get("waves", 4))
+	_info.text = "Resiste [color=#ff9a4a][b]%d oleadas[/b][/color] de enemigos sin morir y sin salir de la zona.\nCada oleada es más dura que la anterior; la última trae élites.\n[color=#8b949e]Si caes, la prueba se reinicia y podrás intentarlo de nuevo.[/color]" % int(challenge.get("waves", 4))
 	for c in _rewards.get_children():
 		_rewards.remove_child(c)
 		c.queue_free()

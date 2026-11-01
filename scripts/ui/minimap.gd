@@ -8,7 +8,7 @@ extends Control
 const RADIUS := 100.0
 ## Píxeles del minimapa por píxel del mundo.
 const SCALE := 0.065
-const BG := Color("0d0b10e6")
+const BG := Color(UiStyle.BG, 0.9)
 const RING := Color("8a6d3b")
 ## Enemigos: gris (normales), azul claro (mágicos), amarillo (raros) y naranja (únicos).
 const ENEMY_COLORS := {

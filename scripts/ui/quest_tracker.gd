@@ -149,16 +149,16 @@ func _refresh() -> void:
 		var main: bool = def.get("main", false)
 		if not main and not side_title:
 			side_title = true
-			lines.append("[color=#8a8293]Secundarias[/color]")
+			lines.append("[color=#8b949e]Secundarias[/color]")
 		var blink: bool = _flash.has(id) and fmod(_flash[id], 0.5) < 0.25
-		var name_color := "#ffd84a" if blink else ("#d9a441" if main else "#e8d9b0")
+		var name_color := "#ffd84a" if blink else ("#2dd4bf" if main else "#e6edf3")
 		var prefix := "★ " if main else "• "
 		lines.append("[b][color=%s]%s%s[/color][/b]" % [name_color, prefix, def.get("name", id)])
 		var step := quests.step_text(id)
 		var ready: bool = quests.current_step(id).get("type", "") == "turn_in"
 		lines.append("   [color=%s]%s[/color]" % ["#6fd36b" if ready else "#b8ab90", step])
 	if ids.is_empty():
-		lines.append("[color=#8a8293]Sin misiones activas. Disfruta del silencio.[/color]")
+		lines.append("[color=#8b949e]Sin misiones activas. Disfruta del silencio.[/color]")
 	_body.text = "\n".join(lines)
 	reset_size()
 

@@ -35,7 +35,7 @@ static func draw(ci: CanvasItem, rect: Rect2, skill_def: Dictionary, dimmed := f
 				ci.draw_line(c + Vector2(s * r * 0.4, r * 0.2), c + Vector2(s * r * 0.8, r * 0.05), Color("8a8a96"), 2.0)
 		"testbot":
 			# Muñeco de pruebas con una flecha de salto.
-			ci.draw_circle(c + Vector2(0, -r * 0.45), r * 0.32, Color("e8d9b0"))
+			ci.draw_circle(c + Vector2(0, -r * 0.45), r * 0.32, UiStyle.TEXT)
 			ci.draw_rect(Rect2(c + Vector2(-r * 0.3, -r * 0.1), Vector2(r * 0.6, r * 0.7)), color.darkened(0.2))
 			ci.draw_line(c + Vector2(-r * 0.2, r * 0.6), c + Vector2(-r * 0.35, r), Color("8a8a96"), 2.5)
 			ci.draw_line(c + Vector2(r * 0.2, r * 0.6), c + Vector2(r * 0.35, r), Color("8a8a96"), 2.5)
@@ -162,7 +162,7 @@ static func draw(ci: CanvasItem, rect: Rect2, skill_def: Dictionary, dimmed := f
 			ci.draw_circle(c + Vector2(r * 0.55, -r * 0.3), r * 0.07, Color("1a1620"))
 			for k in 4:
 				ci.draw_line(c + Vector2(-r * 0.6 + k * r * 0.3, r * 0.5), c + Vector2(-r * 0.6 + k * r * 0.3, r * 0.85), color.darkened(0.35), 3.0)
-			ci.draw_circle(c + Vector2(-r * 0.55, -r * 0.55), r * 0.32, Color("e8d9b0"))
+			ci.draw_circle(c + Vector2(-r * 0.55, -r * 0.55), r * 0.32, UiStyle.TEXT)
 			ci.draw_line(c + Vector2(-r * 0.55, -r * 0.55), c + Vector2(-r * 0.55, -r * 0.78), Color("1a1620"), 2.0)
 			ci.draw_line(c + Vector2(-r * 0.55, -r * 0.55), c + Vector2(-r * 0.4, -r * 0.5), Color("1a1620"), 2.0)
 		"tracker":

@@ -265,7 +265,7 @@ func _draw() -> void:
 		if not zone.exit_visible(e) or not is_explored(e["pos"]):
 			continue
 		var p: Vector2 = to_map.call(e["pos"])
-		var col := Color("7fc8ff") if zone.exit_open(e) else Color("8a8293")
+		var col := Color("7fc8ff") if zone.exit_open(e) else UiStyle.MUTED
 		draw_colored_polygon(PackedVector2Array([p + Vector2(0, -7), p + Vector2(7, 0), p + Vector2(0, 7), p + Vector2(-7, 0)]), col)
 		var label := String(e.get("label", ""))
 		if label == "":

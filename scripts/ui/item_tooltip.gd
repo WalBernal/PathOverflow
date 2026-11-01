@@ -7,7 +7,7 @@ extends PanelContainer
 const WIDTH := 360.0
 ## Lo más que se encoge un tooltip (con su comparación) para caber en alto (T142).
 const MIN_FIT := 0.6
-const GREY := "8a8293"
+const GREY := UiStyle.MUTED_HEX
 const MOD_COLOR := "8888ff"
 const FLAVOR_COLOR := "af6025"
 const SET_ACTIVE := "1ba01b"
@@ -40,11 +40,16 @@ func _ready() -> void:
 	tree_exiting.connect(func() -> void:
 		for s in _sides:
 			s.queue_free())
+	# T166: tarjeta redondeada con una franja arriba del color de la rareza (show_item).
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("0d0b10f5")
+	style.bg_color = Color(UiStyle.BG, 0.96)
 	style.set_border_width_all(1)
-	style.border_color = Color("3a3442")
-	style.set_content_margin_all(10)
+	style.border_width_top = 4
+	style.set_corner_radius_all(8)
+	style.border_color = UiStyle.BORDER
+	style.shadow_color = Color(0, 0, 0, 0.5)
+	style.shadow_size = 8
+	style.set_content_margin_all(12)
 	add_theme_stylebox_override("panel", style)
 	_label = RichTextLabel.new()
 	_label.bbcode_enabled = true
@@ -127,7 +132,7 @@ func show_item(item: Item, character: CharacterData, compare: bool) -> void:
 		compare = true
 	_alt_held = Input.is_key_pressed(KEY_ALT)
 	var border: StyleBoxFlat = get_theme_stylebox("panel")
-	border.border_color = Rarity.item_color(item.rarity).darkened(0.3)
+	border.border_color = Rarity.item_color(item.rarity).darkened(0.15)
 	_label.text = build_text(item, character, compare)
 	if _is_side:
 		_label.text = "[center][color=#%s]· Equipado ahora ·[/color][/center]\n%s" % [GREY, _label.text]
@@ -368,36 +373,36 @@ static func _motherboard_text(board: Motherboard, character: CharacterData) -> S
 		Motherboard.COLOR.to_html(false), board.display_name(), GREY, board.level, _tag_list(skill.get("tags", []))]
 	t += _section("[i][color=#a08f6a]%s[/color][/i]" % skill.get("description", ""))
 	# Progreso de la placa: experiencia, mejoras por nivel y hitos.
-	var xp_line := "Nivel [color=#e8d9b0]%d[/color] / %d" % [board.level, Motherboard.MAX_LEVEL]
+	var xp_line := "Nivel [color=#e6edf3]%d[/color] / %d" % [board.level, Motherboard.MAX_LEVEL]
 	if board.level < Motherboard.MAX_LEVEL:
-		xp_line += "  ·  Experiencia [color=#e8d9b0]%d / %d[/color]" % [board.experience, board.experience_to_next()]
+		xp_line += "  ·  Experiencia [color=#e6edf3]%d / %d[/color]" % [board.experience, board.experience_to_next()]
 	var hits := PackedStringArray()
 	for m in SkillCalc.MILESTONES:
-		hits.append(("[color=#6fd36b]✔ nv. %d[/color]" if board.level >= m else "[color=#8a8293]nv. %d[/color]") % m)
-	t += _section("%s\n[color=#8a8293]Cada nivel: más daño, +1 %% de área y duración, -1 %% de enfriamiento.[/color]\nHitos (%s): %s" % [
+		hits.append(("[color=#6fd36b]✔ nv. %d[/color]" if board.level >= m else "[color=#8b949e]nv. %d[/color]") % m)
+	t += _section("%s\n[color=#8b949e]Cada nivel: más daño, +1 %% de área y duración, -1 %% de enfriamiento.[/color]\nHitos (%s): %s" % [
 		xp_line, SkillCalc.milestone_text(skill), "  ".join(hits)])
 	if character:
 		var p := SkillCalc.compute(board, character)
 		var lines := PackedStringArray()
 		if p["max_damage"] > 0.0:
-			lines.append("Daño: [color=#e8d9b0]%d-%d[/color]  ·  Crítico: [color=#e8d9b0]%.1f%%[/color]" % [p["min_damage"], p["max_damage"], p["crit_chance"]])
+			lines.append("Daño: [color=#e6edf3]%d-%d[/color]  ·  Crítico: [color=#e6edf3]%.1f%%[/color]" % [p["min_damage"], p["max_damage"], p["crit_chance"]])
 		if String(p.get("converted_from", "")) != "":
-			lines.append("Daño convertido: [color=#e8d9b0]%s → %s[/color]" % [RamModule.DAMAGE_TYPE_NAMES.get(p["converted_from"], ""),
+			lines.append("Daño convertido: [color=#e6edf3]%s → %s[/color]" % [RamModule.DAMAGE_TYPE_NAMES.get(p["converted_from"], ""),
 				RamModule.DAMAGE_TYPE_NAMES.get(p["damage_type"], "")])
 		if p["kind"] in SkillController.CHANNEL_KINDS:
-			lines.append("Canalizado: [color=#7fa8e0]%d de maná por segundo[/color]  ·  [color=#e8d9b0]%.2f[/color] golpes/s mientras la mantienes" % [p["mana_cost"], p["uses_per_second"]])
+			lines.append("Canalizado: [color=#7fa8e0]%d de maná por segundo[/color]  ·  [color=#e6edf3]%.2f[/color] golpes/s mientras la mantienes" % [p["mana_cost"], p["uses_per_second"]])
 		else:
-			lines.append("Coste: [color=#7fa8e0]%d de maná[/color]  ·  [color=#e8d9b0]%.2f[/color] usos/s" % [p["mana_cost"], p["uses_per_second"]])
+			lines.append("Coste: [color=#7fa8e0]%d de maná[/color]  ·  [color=#e6edf3]%.2f[/color] usos/s" % [p["mana_cost"], p["uses_per_second"]])
 		if p["radius"] > 0.0:
-			lines.append("Radio: [color=#e8d9b0]%d[/color]" % p["radius"])
+			lines.append("Radio: [color=#e6edf3]%d[/color]" % p["radius"])
 		if p["projectiles"] > 0:
-			lines.append("Proyectiles: [color=#e8d9b0]%d[/color]  ·  Atraviesan: [color=#e8d9b0]%d[/color]" % [p["projectiles"], p["pierce"]])
+			lines.append("Proyectiles: [color=#e6edf3]%d[/color]  ·  Atraviesan: [color=#e6edf3]%d[/color]" % [p["projectiles"], p["pierce"]])
 		if p["cooldown"] > 0.0:
-			lines.append("Enfriamiento: [color=#e8d9b0]%.1f s[/color]" % p["cooldown"])
+			lines.append("Enfriamiento: [color=#e6edf3]%.1f s[/color]" % p["cooldown"])
 		if p["repeats"] > 0:
-			lines.append("Se repite [color=#e8d9b0]%d[/color] vez más" % p["repeats"])
+			lines.append("Se repite [color=#e6edf3]%d[/color] vez más" % p["repeats"])
 		if p["kind"] == "unit":
-			lines.append("[color=#9ad0ff]Persistente[/color]: hasta [color=#e8d9b0]%d[/color] a la vez · vida [color=#e8d9b0]%d[/color] · reserva [color=#7fa8e0]%d %%[/color] del maná cada una" % [
+			lines.append("[color=#9ad0ff]Persistente[/color]: hasta [color=#e6edf3]%d[/color] a la vez · vida [color=#e6edf3]%d[/color] · reserva [color=#7fa8e0]%d %%[/color] del maná cada una" % [
 				p["max_units"], p["unit_life"], roundi(p["reserve"])])
 		if not (p.get("owner_buff", []) as Array).is_empty():
 			var buff_lines := PackedStringArray()
@@ -405,7 +410,7 @@ static func _motherboard_text(board: Motherboard, character: CharacterData) -> S
 				buff_lines.append(Modifier.from_dict(md).describe())
 			lines.append("[color=#c8a878]Mientras viva, te da:[/color] [color=#%s]%s[/color]" % [MOD_COLOR, " · ".join(buff_lines)])
 		if p["automaton_speed"] != 1.0:
-			lines.append("Velocidad de autómata: [color=#e8d9b0]×%.2f[/color]" % p["automaton_speed"])
+			lines.append("Velocidad de autómata: [color=#e6edf3]×%.2f[/color]" % p["automaton_speed"])
 		if not p["ailments"].is_empty():
 			var parts := PackedStringArray()
 			for id in Ailments.ALL:
@@ -461,7 +466,7 @@ static func _flask_text(flask: Flask, character: CharacterData) -> String:
 	if character and character.level < flask.required_level():
 		t += "[color=#%s]Nivel insuficiente[/color]\n" % DOWN
 	t += _section("[color=#%s]%s[/color]" % [MOD_COLOR, "\n".join(flask.effect_lines())])
-	t += _section("Cargas: [color=#e8d9b0]%d / %d[/color]  ·  Usos: [color=#e8d9b0]%d[/color]" % [flask.charges, flask.max_charges(), flask.uses_left()])
+	t += _section("Cargas: [color=#e6edf3]%d / %d[/color]  ·  Usos: [color=#e6edf3]%d[/color]" % [flask.charges, flask.max_charges(), flask.uses_left()])
 	t += _section("[i][color=#a08f6a]%s[/color][/i]" % flask.def.get("description", ""))
 	t += _section("[color=#%s]Click o arrastra al cinturón de pociones (teclas 1-5). Matar enemigos recarga las cargas.[/color]" % GREY)
 	return t.strip_edges()
@@ -474,21 +479,21 @@ static func _slot_key(item: Item) -> String:
 static func _section(body: String) -> String:
 	if body.strip_edges() == "":
 		return ""
-	return "[color=#3a3442]────────────────────[/color]\n%s\n" % body
+	return "[color=#2d3646]────────────────────[/color]\n%s\n" % body
 
 
 static func _base_lines(item: Item) -> String:
 	var lines := PackedStringArray()
 	if item.is_weapon():
-		lines.append("Daño físico: [color=#e8d9b0]%d-%d[/color]" % [item.physical_min, item.physical_max])
-		lines.append("Ataques por segundo: [color=#e8d9b0]%.2f[/color]" % item.attacks_per_second)
-		lines.append("Prob. de crítico: [color=#e8d9b0]%.1f%%[/color]" % item.crit_chance)
+		lines.append("Daño físico: [color=#e6edf3]%d-%d[/color]" % [item.physical_min, item.physical_max])
+		lines.append("Ataques por segundo: [color=#e6edf3]%.2f[/color]" % item.attacks_per_second)
+		lines.append("Prob. de crítico: [color=#e6edf3]%.1f%%[/color]" % item.crit_chance)
 	if item.armour > 0.0:
-		lines.append("Armadura: [color=#e8d9b0]%d[/color]" % item.armour)
+		lines.append("Armadura: [color=#e6edf3]%d[/color]" % item.armour)
 	if item.evasion > 0.0:
-		lines.append("Evasión: [color=#e8d9b0]%d[/color]" % item.evasion)
+		lines.append("Evasión: [color=#e6edf3]%d[/color]" % item.evasion)
 	if item.energy_shield > 0.0:
-		lines.append("Escudo de energía: [color=#e8d9b0]%d[/color]" % item.energy_shield)
+		lines.append("Escudo de energía: [color=#e6edf3]%d[/color]" % item.energy_shield)
 	return "\n".join(lines)
 
 

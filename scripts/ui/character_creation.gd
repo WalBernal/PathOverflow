@@ -287,14 +287,14 @@ func _refresh_record() -> void:
 		["Promedio", "9.2"],
 		["Vacantes aplicadas", "147"],
 		["Entrevistas", "3 (una era una pirámide de ventas)"],
-		["Experiencia", "0 años [color=#8a8293](requerida: 5)[/color]"],
+		["Experiencia", "0 años [color=#8b949e](requerida: 5)[/color]"],
 		["Servicio social", "480 h [color=#e06c6c](falta el sello)[/color]"],
 		["Título", "[color=#e06c6c]en trámite[/color]"],
-		["Estado", "[color=#d9a441]Desempleado[/color]"],
+		["Estado", "[color=#2dd4bf]Desempleado[/color]"],
 	]
 	var text := ""
 	for r in rows:
-		text += "[color=#8a8293]%s:[/color]  %s\n" % r
+		text += "[color=#8b949e]%s:[/color]  %s\n" % r
 	_record.text = text
 
 

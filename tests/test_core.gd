@@ -6067,12 +6067,33 @@ func _test_ui_atlas() -> void:
 		_check(UiAtlas.PIECES.has(piece), "pieza de interfaz: %s" % piece)
 	var box := UiAtlas.box("window", 20, 16)
 	_check(box is StyleBoxTexture and box.texture_margin_left == UiAtlas.MARGIN and box.content_margin_left == 20.0, "marco de ventana de 9 partes con sus márgenes")
+	# T166: botones, tooltips y ventanas, tarjetas planas redondeadas (sin el latón del atlas).
 	var theme := UiStyle.make_theme()
-	_check(theme.get_stylebox("normal", "Button") is StyleBoxTexture and theme.get_stylebox("panel", "TooltipPanel") is StyleBoxTexture,
-		"botones y tooltips usan las piezas del atlas")
+	var flat_button := theme.get_stylebox("normal", "Button") as StyleBoxFlat
+	_check(flat_button != null and flat_button.corner_radius_top_left >= 6 and theme.get_stylebox("panel", "TooltipPanel") is StyleBoxFlat,
+		"botones y tooltips son tarjetas redondeadas del panel de datos")
 	var pressed := theme.get_stylebox("pressed", "Button")
 	_check(pressed.content_margin_top > theme.get_stylebox("normal", "Button").content_margin_top, "el botón pulsado baja el texto")
-	_check(UiStyle.window_style() is StyleBoxTexture, "las ventanas usan el marco del atlas")
+	var win := UiStyle.window_style() as StyleBoxFlat
+	_check(win != null and win.corner_radius_top_left == UiStyle.RADIUS and win.border_color == UiStyle.BORDER, "las ventanas son tarjetas del panel de datos")
+	_check(theme.has_stylebox("grabber", "VScrollBar") and theme.has_stylebox("tab_selected", "TabBar"), "barras de desplazamiento y pestañas con el tema")
+	# Contraste WCAG ≥ 4,5:1 del texto, el texto apagado y el acento contra los paneles.
+	for bg in [UiStyle.PANEL, UiStyle.WINDOW_BG, UiStyle.PANEL_LIGHT]:
+		for fg in [UiStyle.TEXT, UiStyle.MUTED, UiStyle.ACCENT]:
+			_check(UiProposals.contrast(fg, bg) >= 4.5, "contraste %s sobre %s ≥ 4,5 (%.1f)" % [fg.to_html(false), bg.to_html(false), UiProposals.contrast(fg, bg)])
+	_check(Color(UiStyle.TEXT_HEX) == UiStyle.TEXT and Color(UiStyle.MUTED_HEX) == UiStyle.MUTED and Color(UiStyle.ACCENT_HEX) == UiStyle.ACCENT,
+		"los colores en hexadecimal del BBCode son los mismos")
+	# Ninguna ventana usa los colores del estilo de latón fuera de UiStyle.
+	var old_colors := ["d9a441", "b08a4a", "5a4426", "e8d9b0", "8a8293", "3a3442", "16131b", "221e29", "120f17", "0d0b10"]
+	var stale := []
+	for f in DirAccess.get_files_at("res://scripts/ui"):
+		if not f.ends_with(".gd") or f == "ui_style.gd":
+			continue
+		var src := FileAccess.get_file_as_string("res://scripts/ui/" + f)
+		for c in old_colors:
+			if src.contains(c):
+				stale.append("%s (%s)" % [f, c])
+	_check(stale.is_empty(), "sin colores del estilo viejo en scripts/ui: %s" % [stale])
 	_check(UiAtlas.slot_piece(Rarity.Item.MAGIC) == "slot_magic" and UiAtlas.slot_piece(Rarity.Item.ULTRA_RARE) == "slot_unique", "casilla según la rareza")
 	_check(UiAtlas.box("no_existe") == null, "una pieza desconocida no rompe nada")
 

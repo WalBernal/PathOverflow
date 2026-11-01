@@ -240,7 +240,7 @@ func _make_card(index: int) -> Button:
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 8)
 	var class_def := GameData.get_class_def(StringName(data.get("class_id", "")))
 	var stripe := ColorRect.new()
-	stripe.color = Color(class_def.get("color", "d9a441"))
+	stripe.color = Color(class_def.get("color", "2dd4bf"))
 	stripe.custom_minimum_size = Vector2(5, 0)
 	stripe.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(stripe)
@@ -276,7 +276,7 @@ func _select(index: int) -> void:
 	_preview.visible = index != -1
 	_student.visible = index != -1
 	if index == -1:
-		_detail.text = "[center][color=#8a8293]Selecciona o crea un personaje.[/color][/center]"
+		_detail.text = "[center][color=#8b949e]Selecciona o crea un personaje.[/color][/center]"
 		return
 	var card := _list.get_child(index) as Button
 	if card:
@@ -288,11 +288,11 @@ func _select(index: int) -> void:
 	_student.weapon = "sword" if String(_student.equipped.get("weapon", "")) != "" else ""
 	_student.appearance = CharacterAppearance.sanitize(data.get("appearance", {}))
 	var class_def := GameData.get_class_def(StringName(data.get("class_id", "")))
-	_preview.glow_color = Color(class_def.get("color", "d9a441"))
+	_preview.glow_color = Color(class_def.get("color", "2dd4bf"))
 	var look: Array = CLASS_POSES.get(String(data.get("class_id", "")), ["attack", "sword"])
 	_preview.action = look[0]
 	_preview.weapon = look[1]
-	_detail.text = "[center][font_size=26][color=#d9a441]%s[/color][/font_size]\n%s\n\n[color=#8a8293]%s[/color]\n\n[color=#8a8293]Tiempo jugado:[/color] %s\n[color=#8a8293]Última partida:[/color] %s[/center]" % [
+	_detail.text = "[center][font_size=26][color=#2dd4bf]%s[/color][/font_size]\n%s\n\n[color=#8b949e]%s[/color]\n\n[color=#8b949e]Tiempo jugado:[/color] %s\n[color=#8b949e]Última partida:[/color] %s[/center]" % [
 		data.get("name", "?"), _class_line(data), class_def.get("description", ""),
 		UiStyle.play_time(float(data.get("play_time", 0.0))), UiStyle.relative_time(int(data.get("last_played", 0)))]
 

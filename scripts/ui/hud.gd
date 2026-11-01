@@ -15,11 +15,11 @@ const FLASK_SIZE := Vector2(52, 60)
 const LIFE_COLOR := Color("b3262b")
 const MANA_COLOR := Color("2a4fb3")
 const ES_COLOR := Color("7fb8e0")
-const XP_COLOR := Color("d9a441")
-const PLATE := Color("16131b")
+const XP_COLOR := UiStyle.ACCENT
+const PLATE := UiStyle.PANEL
 const TRIM := Color("8a6d3b")
-const TEXT_COLOR := Color("e8d9b0")
-const MUTED := Color("8a8293")
+const TEXT_COLOR := UiStyle.TEXT
+const MUTED := UiStyle.MUTED
 
 ## Línea de FPS y depuración arriba a la izquierda (T144, Pausa → Gráficos; en el
 ## celular, apagada por defecto).
@@ -1116,7 +1116,7 @@ func _draw_status_boxes(font: Font) -> void:
 	var first := _slot_rect(0)
 	var x := first.position.x
 	var y := first.position.y - box - 34.0
-	var kind_colors := {"minion": Color("7fd07f"), "totem": Color("d9a441"), "container": Color("4a9ae0"), "trap": Color("b07a3a"), "mine": Color("a0a040"),
+	var kind_colors := {"minion": Color("7fd07f"), "totem": UiStyle.ACCENT, "container": Color("4a9ae0"), "trap": Color("b07a3a"), "mine": Color("a0a040"),
 		"spin": Color("b8b8c8"), "flask": Color("6fd36b"), "buff": Color("8ab0e0"), "drones": Color("e8d070"), "unit": Color("9ad0ff"), "aura": Color("d9b0ff")}
 	for e in entries:
 		var r := Rect2(x, y, box, box)
@@ -1300,7 +1300,7 @@ func _draw_skill_slot(i: int, font: Font) -> void:
 		if no_mana:
 			key_color = Color("e06c6c")
 	else:
-		_ci.draw_rect(r, Color("3a3442"), false, 1.0)
+		_ci.draw_rect(r, UiStyle.BORDER, false, 1.0)
 	if touch_layout:
 		return   # en táctil no hay tecla que enseñar
 	# Tecla en una chapita abajo a la izquierda.
@@ -1420,7 +1420,7 @@ func _draw_auto_toggle(font: Font) -> void:
 	var rad := r.size.x * 0.5
 	var on := SkillController.touch_auto
 	var usable := skills != null and SkillController.auto_attack_ok(skills.profile(0))
-	var col := Color("6fd36b") if on and usable else Color("8a8293")
+	var col := Color("6fd36b") if on and usable else UiStyle.MUTED
 	_ci.draw_circle(c, rad + 2.0, Color(0, 0, 0, 0.75))
 	_ci.draw_circle(c, rad, Color(col, 0.3 if on else 0.12))
 	_ci.draw_arc(c, rad, 0.0, TAU, 32, col, 2.0, true)

@@ -38,7 +38,7 @@ func _process(delta: float) -> void:
 	_time += delta
 
 
-func add(text: String, color := Color("e8d9b0")) -> void:
+func add(text: String, color := UiStyle.TEXT) -> void:
 	entries.append({"text": text, "color": color, "t": _time})
 	while entries.size() > MAX_ENTRIES:
 		entries.pop_front()
