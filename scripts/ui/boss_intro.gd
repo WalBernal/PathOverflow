@@ -56,7 +56,7 @@ func _draw_band() -> void:
 	_rect.draw_rect(Rect2(band.position, Vector2(band.size.x, 3.0)), Color(color, 0.9 * k))
 	_rect.draw_rect(Rect2(band.position + Vector2(0, band.size.y - 3.0), Vector2(band.size.x, 3.0)), Color(color, 0.9 * k))
 	# La figura del jefe, grande, en su cuadro de embestida (pose de amenaza), de lado.
-	var row := int(region.position.y / EnemySheet.S) / EnemySheet.DIRS
+	var row := EnemySheet.type_of(region)
 	var cell := EnemySheet.region(row, EnemySheet.Dir.SIDE, EnemySheet.ATTACK + 1 if fmod(_t, 0.5) < 0.25 else EnemySheet.ATTACK)
 	var fig := Rect2(band.position + Vector2(view.x * 0.18, -70.0), Vector2(220, 220))
 	_rect.draw_texture_rect_region(ATLAS, fig, cell, Color(1, 1, 1, k))

@@ -2,7 +2,12 @@ extends SceneTree
 ## Genera assets/sprites/enemies/enemies.png: pixel art procedural de los
 ## enemigos. Cada tipo se dibuja en 4 poses base y de ahí salen (T101, EnemySheet)
 ## andar (6), atacar (4), recibir golpe (2) y morir (6), mirando abajo, arriba y
-## de lado: 18 columnas × 3 filas por tipo, celdas de 32×32.
+## de lado: 18 columnas × 3 filas por tipo (en bloques, ver EnemySheet).
+##
+## T171: celdas de 64×64, al nivel de los personajes. Los dibujos siguen en
+## coordenadas de 32 (D) y se rasterizan al doble (K): las curvas y diagonales
+## salen finas, cada parte lleva luz arriba y sombra abajo (tres tonos, como
+## T160) y el contorno es de 2 px.
 ##
 ## Uso:  Godot_v4.7.2-stable_win64_console.exe --headless --path . -s res://tools/generate_enemy_sprites.gd
 ##
@@ -10,11 +15,16 @@ extends SceneTree
 ## dibujados a mano, basta con sustituir el PNG respetando la cuadrícula
 ## (columnas = fotogramas, filas = tipos; ver data/enemies.json → sprite_row).
 
-const S := 32
+const D := 32               # lado de la celda en coordenadas de dibujo
+const K := 2                # píxeles reales por unidad de dibujo
+const S := D * K            # = EnemySheet.S
 const FRAMES := 4
 const OUT := "res://assets/sprites/enemies/enemies.png"
 const OUTLINE := Color("0d0b10")
 const SHADOW := Color(0, 0, 0, 0.35)
+const LIGHT := 0.24         # aclarado del borde de arriba de cada parte
+const DARK := 0.32          # oscurecido del de abajo
+const SIDE_LIGHT := 0.1     # y algo de luz a la izquierda, sombra a la derecha
 
 var img: Image
 var ox := 0  # origen del fotograma actual
@@ -25,7 +35,8 @@ func _initialize() -> void:
 	var rows: Array[Callable] = [_bug, _zombie_process, _memory_leak, _worm, _daemon, _spam_bot, _thread, _node_modules, _troll, _irq, _mutex, _wild_pointer, _twin_thread, _init_fork, _init_core,
 		_rootkit, _ghost_process, _bios_sentinel, _firmware_worm, _electromigration, _capacitor, _fw_update,
 		_beep_code, _jumper, _swollen_battery, _bad_sector, _option_rom, _watchdog, _admin]
-	var sheet := Image.create_empty(S * EnemySheet.COLUMNS, S * rows.size() * EnemySheet.DIRS, false, Image.FORMAT_RGBA8)
+	var grid := EnemySheet.grid(rows.size())
+	var sheet := Image.create_empty(S * grid.x, S * grid.y, false, Image.FORMAT_RGBA8)
 	sheet.fill(Color(0, 0, 0, 0))
 	for row in rows.size():
 		# Las 4 poses base, cada una en su imagen (los dibujos usan img/ox/oy).
@@ -36,6 +47,7 @@ func _initialize() -> void:
 			ox = 0
 			oy = 0
 			rows[row].call(f)
+			_shade()
 			_outline()
 			base.append(img)
 		for dir in EnemySheet.DIRS:
@@ -43,7 +55,7 @@ func _initialize() -> void:
 			for b in base:
 				views.append(_view(b, dir))
 			for col in EnemySheet.COLUMNS:
-				_compose(sheet, Vector2i(col * S, EnemySheet.row(row, dir) * S), views, dir, col)
+				_compose(sheet, Vector2i(EnemySheet.region(row, dir, col).position), views, dir, col)
 	sheet.save_png(ProjectSettings.globalize_path(OUT))
 	print("Escrito %s (%dx%d)" % [OUT, sheet.get_width(), sheet.get_height()])
 	quit()
@@ -51,7 +63,7 @@ func _initialize() -> void:
 
 # --- Estados y direcciones a partir de las poses base (T101) ---
 
-const FEET := Vector2(16, 29)
+const FEET := Vector2(16, 29) * K
 
 
 ## La pose vista desde una dirección: abajo, tal cual; arriba, de espaldas (más
@@ -63,7 +75,7 @@ func _view(b: Image, dir: int) -> Image:
 		for x in S:
 			var sx := x
 			if dir == EnemySheet.Dir.SIDE:
-				sx = int(round(16.0 + (x - 16.0) / 0.85)) - 1   # perfil: un 15 % más estrecho, adelantado
+				sx = int(round(S * 0.5 + (x - S * 0.5) / 0.85)) - K   # perfil: un 15 % más estrecho, adelantado
 			if sx < 0 or sx >= S:
 				continue
 			var c := b.get_pixel(sx, y)
@@ -107,15 +119,15 @@ func _compose(sheet: Image, at: Vector2i, views: Array[Image], dir: int, col: in
 		scale = Vector2(1.0 + 0.3 * fall, 1.0 - 0.62 * fall)
 		tint = Color(0, 0, 0, k * 0.08)
 		shadow_w = 9.0 + fall * 4.0
-	# Sombra, dibujada directamente en la hoja.
-	for y in range(26, 32):
+	# Sombra, dibujada directamente en la hoja (desplazamientos y anchos en unidades de dibujo).
+	for y in range(26 * K, S):
 		for x in S:
-			var dx := (x + 0.5 - 16.0) / shadow_w
-			var dy := (y + 0.5 - FEET.y) / 2.0
+			var dx := (x + 0.5 - S * 0.5) / (shadow_w * K)
+			var dy := (y + 0.5 - FEET.y) / (2.0 * K)
 			if dx * dx + dy * dy <= 1.0:
 				var p := at + Vector2i(x, y)
 				sheet.set_pixelv(p, sheet.get_pixelv(p).blend(SHADOW))
-	_blit(sheet, at, views[frame], offset, scale, angle, tint)
+	_blit(sheet, at, views[frame], offset * K, scale, angle, tint)
 
 
 ## Copia `src` a la celda `at` transformada alrededor de los pies (muestreo inverso, sin suavizar).
@@ -137,9 +149,10 @@ func _blit(sheet: Image, at: Vector2i, src: Image, offset: Vector2, scale: Vecto
 			sheet.set_pixelv(q, sheet.get_pixelv(q).blend(c))
 
 
-# --- Primitivas (coordenadas locales al fotograma) ---
+# --- Primitivas (coordenadas de dibujo, 0..D; se rasterizan a K píxeles por unidad) ---
 
-func _px(x: int, y: int, c: Color) -> void:
+## Un píxel real de la celda.
+func _fine(x: int, y: int, c: Color) -> void:
 	if x < 0 or y < 0 or x >= S or y >= S:
 		return
 	if c.a < 1.0:
@@ -147,43 +160,118 @@ func _px(x: int, y: int, c: Color) -> void:
 	img.set_pixel(ox + x, oy + y, c)
 
 
+## Una unidad de dibujo: un bloque K×K.
+func _px(x: int, y: int, c: Color) -> void:
+	for j in K:
+		for i in K:
+			_fine(x * K + i, y * K + j, c)
+
+
 func _rect(x0: int, y0: int, x1: int, y1: int, c: Color) -> void:
-	for y in range(y0, y1 + 1):
-		for x in range(x0, x1 + 1):
-			_px(x, y, c)
+	for y in range(y0 * K, (y1 + 1) * K):
+		for x in range(x0 * K, (x1 + 1) * K):
+			_fine(x, y, c)
 
 
+## Elipse rasterizada a la resolución real: el borde sale suave, no en escalones de 2.
 func _ellipse(cx: float, cy: float, rx: float, ry: float, c: Color) -> void:
-	for y in range(int(cy - ry) - 1, int(cy + ry) + 2):
-		for x in range(int(cx - rx) - 1, int(cx + rx) + 2):
-			var dx := (x + 0.5 - cx) / rx
-			var dy := (y + 0.5 - cy) / ry
+	for y in range((int(cy - ry) - 1) * K, (int(cy + ry) + 2) * K):
+		for x in range((int(cx - rx) - 1) * K, (int(cx + rx) + 2) * K):
+			var dx := ((x + 0.5) / K - cx) / rx
+			var dy := ((y + 0.5) / K - cy) / ry
 			if dx * dx + dy * dy <= 1.0:
-				_px(x, y, c)
+				_fine(x, y, c)
 
 
+## Línea de una unidad de grueso, con los pasos a la resolución real (diagonales finas).
 func _line(x0: int, y0: int, x1: int, y1: int, c: Color) -> void:
-	var steps := maxi(absi(x1 - x0), absi(y1 - y0))
+	var steps := maxi(absi(x1 - x0), absi(y1 - y0)) * K
+	var done := {}
 	for i in steps + 1:
 		var t := float(i) / maxf(1.0, steps)
-		_px(roundi(lerpf(x0, x1, t)), roundi(lerpf(y0, y1, t)), c)
+		var p := Vector2i(roundi(lerpf(x0, x1, t) * K), roundi(lerpf(y0, y1, t) * K))
+		for j in K:
+			for k in K:
+				var q := p + Vector2i(k, j)
+				if not done.has(q):   # sin repetir: lo translúcido no se acumula
+					done[q] = true
+					_fine(q.x, q.y, c)
 
 
-## Contorno oscuro de 1 px alrededor de lo opaco, para que se lea sobre el suelo.
+## Tres tonos (T160): en cada parte (un tramo de un mismo color) la franja de
+## arriba se aclara, la de abajo se oscurece y el tercio bajo va en un tono medio,
+## con un toque de luz a la izquierda y sombra a la derecha. Las partes de menos
+## de MIN_PART px (ojos, líneas) se dejan tal cual para que no se pierdan.
+const MIN_PART := 6
+
+func _shade() -> void:
+	var src := img.duplicate() as Image
+	var up := _runs(src, Vector2i(0, -1))
+	var down := _runs(src, Vector2i(0, 1))
+	var left := _runs(src, Vector2i(-1, 0))
+	var right := _runs(src, Vector2i(1, 0))
+	for y in S:
+		for x in S:
+			var c := src.get_pixel(ox + x, oy + y)
+			if c.a <= 0.0:
+				continue
+			var i := y * S + x
+			var k := 0.0
+			var tall: int = up[i] + down[i] + 1
+			if tall >= MIN_PART:
+				if up[i] < K:
+					k += LIGHT
+				elif down[i] < K + 1:
+					k -= DARK
+				elif down[i] < tall * 0.35:
+					k -= DARK * 0.45
+			var wide: int = left[i] + right[i] + 1
+			if wide >= MIN_PART:
+				if left[i] < K:
+					k += SIDE_LIGHT
+				elif right[i] < K:
+					k -= SIDE_LIGHT
+			if k != 0.0:
+				var out := c.lightened(k) if k > 0.0 else c.darkened(-k)
+				img.set_pixel(ox + x, oy + y, Color(out, c.a))
+
+
+## Para cada píxel, cuántos píxeles seguidos del mismo color hay en la dirección `d`.
+func _runs(src: Image, d: Vector2i) -> PackedInt32Array:
+	var out := PackedInt32Array()
+	out.resize(S * S)
+	var xs := range(S) if d.x <= 0 else range(S - 1, -1, -1)
+	var ys := range(S) if d.y <= 0 else range(S - 1, -1, -1)
+	for y in ys:
+		for x in xs:
+			var q := Vector2i(x, y) + d
+			if q.x < 0 or q.y < 0 or q.x >= S or q.y >= S:
+				continue
+			if src.get_pixel(ox + q.x, oy + q.y) == src.get_pixel(ox + x, oy + y):
+				out[y * S + x] = out[q.y * S + q.x] + 1
+	return out
+
+
+## Contorno oscuro de K px (dos anillos) alrededor de lo opaco, para que se lea sobre el suelo.
 func _outline() -> void:
 	var solid := {}
 	for y in S:
 		for x in S:
 			if img.get_pixel(ox + x, oy + y).a >= 0.5:
 				solid[Vector2i(x, y)] = true
-	for y in S:
-		for x in S:
-			if solid.has(Vector2i(x, y)):
-				continue
-			for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-				if solid.has(Vector2i(x, y) + d):
-					img.set_pixel(ox + x, oy + y, OUTLINE)
-					break
+	for ring in K:
+		var add: Array[Vector2i] = []
+		for y in S:
+			for x in S:
+				if solid.has(Vector2i(x, y)):
+					continue
+				for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+					if solid.has(Vector2i(x, y) + d):
+						add.append(Vector2i(x, y))
+						break
+		for p in add:
+			img.set_pixel(ox + p.x, oy + p.y, OUTLINE)
+			solid[p] = true
 
 
 # --- Enemigos (todos miran a la derecha; el shader los voltea) ---

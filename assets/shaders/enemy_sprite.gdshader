@@ -8,6 +8,8 @@
 shader_type canvas_item;
 
 uniform vec2 grid = vec2(18.0, 15.0);
+// Bloques de la hoja (T171): BLOCK_ROWS filas por bloque, cada bloque a la derecha del anterior.
+uniform vec2 block = vec2(18.0, 48.0);
 
 varying vec4 v_custom;
 varying vec4 v_rarity;
@@ -23,13 +25,15 @@ void fragment() {
 		uv.x = 1.0 - uv.x;
 	}
 	bool corpse = v_custom.w < 0.0;
-	float frame = clamp(floor(v_custom.y + 0.5), 0.0, grid.x - 1.0);
-	vec2 cell_uv = (vec2(frame, v_custom.x) + uv) / grid;
+	float frame = clamp(floor(v_custom.y + 0.5), 0.0, block.x - 1.0);
+	float row = floor(v_custom.x + 0.5);
+	float b = floor(row / block.y);
+	vec2 cell_uv = (vec2(b * block.x + frame, row - b * block.y) + uv) / grid;
 	vec4 c = texture(TEXTURE, cell_uv);
 
 	// Contorno del color de la rareza (mágico azul, élite amarillo, único naranja).
 	if (c.a < 0.5 && v_rarity.a > 0.0) {
-		vec2 px = TEXTURE_PIXEL_SIZE;
+		vec2 px = TEXTURE_PIXEL_SIZE * 2.0;   // la hoja va al doble (T171): el mismo grosor de antes
 		float n = texture(TEXTURE, cell_uv + vec2(px.x, 0.0)).a
 			+ texture(TEXTURE, cell_uv - vec2(px.x, 0.0)).a
 			+ texture(TEXTURE, cell_uv + vec2(0.0, px.y)).a

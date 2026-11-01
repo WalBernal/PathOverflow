@@ -4,9 +4,13 @@ class_name EnemySheet
 ## - Columnas: andar (6), atacar (4), recibir golpe (2) y morir (6) = 18 cuadros.
 ## - Filas: tres por tipo (sprite_row en data/enemies.json): mirando abajo, arriba
 ##   y de lado (de lado mira a la derecha; el shader lo voltea para la izquierda).
-## Cada celda mide S×S píxeles.
+## Cada celda mide S×S píxeles (T171: 64, el doble que antes, al nivel de los
+## personajes). Para no pasar de 4096 px de alto (límite de texturas en móviles
+## viejos), las filas van en bloques de BLOCK_ROWS: el bloque b ocupa las columnas
+## b·COLUMNS .. (b+1)·COLUMNS - 1 de la hoja.
 
-const S := 32
+const S := 64
+const BLOCK_ROWS := 48
 const WALK := 0
 const WALK_FRAMES := 6
 const ATTACK := 6
@@ -27,8 +31,29 @@ static func row(type_row: int, dir: int) -> int:
 	return type_row * DIRS + dir
 
 
+## Celda (columna, fila) de la hoja para una fila lógica y un cuadro, con los bloques.
+static func cell(sheet_row: int, column: int) -> Vector2i:
+	@warning_ignore("integer_division")
+	return Vector2i(sheet_row / BLOCK_ROWS * COLUMNS + column, sheet_row % BLOCK_ROWS)
+
+
 static func region(type_row: int, dir: int, column: int) -> Rect2:
-	return Rect2(column * S, row(type_row, dir) * S, S, S)
+	return Rect2(Vector2(cell(row(type_row, dir), column) * S), Vector2(S, S))
+
+
+## Tamaño de la hoja en celdas para `types` tipos de enemigo.
+static func grid(types: int) -> Vector2i:
+	var rows := types * DIRS
+	@warning_ignore("integer_division")
+	return Vector2i(ceili(rows / float(BLOCK_ROWS)) * COLUMNS, mini(rows, BLOCK_ROWS))
+
+
+## El tipo (sprite_row) de una región devuelta por `region`.
+static func type_of(r: Rect2) -> int:
+	@warning_ignore("integer_division")
+	var c := Vector2i(r.position) / S
+	@warning_ignore("integer_division")
+	return (c.x / COLUMNS * BLOCK_ROWS + c.y) / DIRS
 
 
 ## Hacia dónde mira según hacia dónde va (o hacia quién mira): de lado si lo

@@ -719,8 +719,8 @@ func _test_enemy_hit_one() -> void:
 	_check(em.is_in_safe_zone(Vector2(50, 0)) and not em.is_in_safe_zone(Vector2(150, 0)), "zona segura")
 	_check(EnemyManager.enemy_types().size() >= 5, "tipos de enemigo cargados")
 	var atlas := load("res://assets/sprites/enemies/enemies.png") as Texture2D
-	_check(atlas.get_height() / EnemySheet.S >= EnemyManager.enemy_types().size() * EnemySheet.DIRS and atlas.get_width() == EnemySheet.S * EnemySheet.COLUMNS,
-		"tres filas del atlas por tipo (abajo, arriba, de lado) y 18 cuadros")
+	_check(Vector2i(atlas.get_size()) == EnemySheet.grid(EnemyManager.enemy_types().size()) * EnemySheet.S,
+		"tres filas del atlas por tipo (abajo, arriba, de lado) y 18 cuadros, en bloques")
 	em.free()
 
 
@@ -5865,7 +5865,7 @@ func _test_player_sheet() -> void:
 func _test_enemy_sheet() -> void:
 	_check(EnemySheet.WALK_FRAMES == 6 and EnemySheet.ATTACK_FRAMES == 4 and EnemySheet.HURT_FRAMES == 2 and EnemySheet.DIE_FRAMES == 6
 		and EnemySheet.DIE + EnemySheet.DIE_FRAMES == EnemySheet.COLUMNS, "andar 6, atacar 4, golpe 2 y morir 6: 18 cuadros seguidos")
-	_check(EnemySheet.row(3, EnemySheet.Dir.SIDE) == 11 and EnemySheet.region(3, EnemySheet.Dir.UP, 7) == Rect2(7 * 32, 10 * 32, 32, 32), "fila por tipo y dirección")
+	_check(EnemySheet.row(3, EnemySheet.Dir.SIDE) == 11 and EnemySheet.region(3, EnemySheet.Dir.UP, 7) == Rect2(7 * 64, 10 * 64, 64, 64), "fila por tipo y dirección")
 	_check(EnemySheet.dir_for(Vector2(10, 2)) == EnemySheet.Dir.SIDE and EnemySheet.dir_for(Vector2(1, -10)) == EnemySheet.Dir.UP
 		and EnemySheet.dir_for(Vector2(1, 10)) == EnemySheet.Dir.DOWN and EnemySheet.dir_for(Vector2.ZERO) == EnemySheet.Dir.DOWN, "dirección según hacia dónde va")
 	var walk := {}
@@ -5898,6 +5898,20 @@ func _test_enemy_sheet() -> void:
 				if not solid:
 					empty.append("%d/%d/%d" % [type_row, dir, col])
 	_check(empty.is_empty(), "todas las celdas tienen al enemigo dibujado: %s" % ", ".join(empty))
+	# T171: hoja al doble (64 px), en bloques para no pasar de 4096 px; cada tipo de
+	# enemies.json (por su sprite_row) tiene sus cuadros y la región sabe de qué tipo es.
+	_check(EnemySheet.S == 64 and img.get_width() == EnemySheet.S * EnemySheet.grid(EnemyManager.enemy_types().size()).x
+		and img.get_height() == EnemySheet.S * EnemySheet.grid(EnemyManager.enemy_types().size()).y
+		and img.get_width() <= 4096 and img.get_height() <= 4096, "hoja de enemigos a 64 px y de ≤ 4096 px")
+	_check(EnemySheet.region(16, EnemySheet.Dir.DOWN, 0) == Rect2(EnemySheet.COLUMNS * 64, 0, 64, 64), "el tipo 16 abre el segundo bloque")
+	var lost := []
+	for t in EnemyManager.enemy_types():
+		var sr := int(t.get("sprite_row", 0))
+		for dir in EnemySheet.DIRS:
+			var r := EnemySheet.region(sr, dir, EnemySheet.WALK)
+			if EnemySheet.type_of(r) != sr or img.get_region(Rect2i(r)).is_invisible():
+				lost.append("%s/%d" % [t.get("id", "?"), dir])
+	_check(lost.is_empty(), "cada enemigo de enemies.json tiene su cuadro en la hoja nueva: %s" % ", ".join(lost))
 	# EnemyManager elige el cuadro: quieto, andando y preparando un golpe.
 	var em := EnemyManager.new()
 	em.roll_affixes = false

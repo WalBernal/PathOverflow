@@ -298,7 +298,8 @@ func _ready() -> void:
 	_multimesh.mesh = quad
 	var sprite_material := ShaderMaterial.new()
 	sprite_material.shader = SPRITE_SHADER
-	sprite_material.set_shader_parameter("grid", Vector2(EnemySheet.COLUMNS, enemy_types().size() * EnemySheet.DIRS))
+	sprite_material.set_shader_parameter("grid", Vector2(EnemySheet.grid(enemy_types().size())))
+	sprite_material.set_shader_parameter("block", Vector2(EnemySheet.COLUMNS, EnemySheet.BLOCK_ROWS))
 	# Los cadáveres, en su propia MultiMesh por debajo de los vivos (mismo atlas y shader).
 	_corpse_mm = MultiMesh.new()
 	_corpse_mm.transform_format = MultiMesh.TRANSFORM_2D

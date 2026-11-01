@@ -275,6 +275,10 @@ func _run() -> void:
 		await _capture_tree_v2()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("enemigos"):
+		await _capture_enemies_t171()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("jefes"):
 		await _capture_npcs_and_boss()
 		get_tree().quit()
@@ -1163,7 +1167,39 @@ func _capture_roadmap2b() -> void:
 
 
 ## Acto I: cada zona con el jugador en el centro y junto a un portal.
-func _capture_act1(zone_ids: Array = ["tutorial", "campamento", "zona1", "zona2", "zona3", "zona4", "zona5", "jefe"]) -> void:
+## T171: enemigos a 64 px junto al héroe, en zonas del acto I y del III.
+func _capture_enemies_t171() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Enemigos", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 12
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var player: Node2D = world.get("player")
+	for zid in ["zona1", "zona3", "fabrica", "oblea"]:
+		world.call("travel_to", zid, "")
+		world.set("_since_save", -9999.0)
+		await _wait(3.2)
+		var zone: Zone = world.get("zone")
+		var enemies: EnemyManager = world.get("enemies")
+		if enemies.positions.is_empty():
+			continue
+		player.global_position = zone.free_spot_near(enemies.positions[0] + Vector2(-110, 30))
+		player.set("invulnerable", true)
+		var ui: GameUI = world.get("ui")
+		if ui.cutscene.visible:
+			ui.cutscene.call("_finish")
+		await _wait(0.8)
+		_save("171_partida_%s" % zid)
+	world.set("_since_save", -9999.0)
+
+
+func _capture_act1(zone_ids: Array =["tutorial", "campamento", "zona1", "zona2", "zona3", "zona4", "zona5", "jefe"]) -> void:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("ActoI", &"guerrero", CharacterAppearance.default(), false)
 	c.flags["zone"] = "campamento"

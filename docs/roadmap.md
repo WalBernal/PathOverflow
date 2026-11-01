@@ -1217,7 +1217,7 @@ Origen: R8
 
 ## Fase 38 — Que todo hable el mismo idioma (versión 3.6.0)
 
-### [ ] T171 · Enemigos al nivel de los personajes · M
+### [x] T171 · Enemigos al nivel de los personajes · M
 Origen: R8
 - `tools/generate_enemy_sprites.gd` a doble resolución con el mismo contorno y sombreado de T160, empezando por los del acto I (los que más se ven); los demás, en la misma tarea si da el tiempo o como tarea nueva.
 - Prueba: cada enemigo de `enemies.json` tiene su cuadro en la hoja nueva y no está vacío.
@@ -1446,3 +1446,5 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-31 · T168 · Pantallas con el tema: la carga como registro de arranque («[ OK ] compilando zona: … OK», progreso de 0 a 100 % con barra y cifra, ilustración en tarjeta, fondo de puntos), la muerte como volcado de error (`DeathDump`: «FATAL ProcesoTerminado», pila, nivel y zona, «pulsa R» solo con teclado), título y logo con la paleta nueva (texto claro, acento turquesa); menús, creador y pausa ya la toman de `UiStyle`. `UiStyle.mono_font()` (la del sistema hasta T169). `capture_screens -- pantallas`: las 7 pantallas en PC y táctil sin errores (`docs/capturas/interfaz/168_*`).
 - 2026-10-31 · T169 · Monoespaciada del proyecto: Fira Code (SIL OFL 1.1, `assets/fonts/FiraCode-VF.woff2` + `FiraCode-OFL.txt`), peso 450 y sin ligaduras, con la fuente normal de reserva; en la consola de sucesos, las cifras de los medidores, el % de experiencia, el registro de arranque y el volcado de muerte. Textos largos y títulos, con la de siempre. Tamaños: `MIN_FONT_SIZE` (12) se mantiene; al 140 % en el celular se lee (captura `169_hud_tactil.png`). Pruebas: carga, caracteres del español, ancho fijo y sin ligaduras.
 - 2026-10-31 · T170 · Versión 3.5.0: APK (código 19) y latest.json, Windows e instalador; lista `docs/prueba_celular_3.5.md`. Sin subir a GitHub: pendiente de la revisión del usuario 🛑.
+- 2026-11-01 · T170 · Subida a GitHub (v3.5.0, Latest) con el visto bueno del usuario, que pide seguir con la Fase 38.
+- 2026-11-01 · T171 · Enemigos a 64 px (el doble): los 29 tipos de todos los actos se rasterizan al doble con curvas y diagonales finas, tres tonos por parte (luz arriba, sombra abajo, tono medio) y contorno de 2 px; la hoja va en bloques de 48 filas (2304×3072, ≤ 4096 px para móviles viejos) con `EnemySheet.cell/grid/type_of` y el shader; el contorno de rareza conserva su grosor. Capturas `docs/capturas/estetica/171_*` (antes/después y en partida).
