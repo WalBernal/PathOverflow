@@ -192,11 +192,11 @@ func _input(event: InputEvent) -> void:
 
 func _draw() -> void:
 	var view := size
-	draw_rect(Rect2(Vector2.ZERO, view), Color("07060a"))
+	draw_rect(Rect2(Vector2.ZERO, view), UiStyle.BG)
 	# Cielo: un resplandor verdoso de pantallas sobre el horizonte.
 	for k in 10:
 		var hy := view.y * (0.45 + k * 0.05)
-		draw_rect(Rect2(0, hy, view.x, view.y * 0.05 + 1.0), Color(0.1, 0.35, 0.25, 0.012 * k))
+		draw_rect(Rect2(0, hy, view.x, view.y * 0.05 + 1.0), Color(UiStyle.ACCENT, 0.008 * k))
 	_draw_city()
 	_draw_logo_glow(view)
 	var font := get_theme_default_font()
@@ -211,7 +211,7 @@ func _draw() -> void:
 			draw_string(font, Vector2(c["x"], y), bit, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.25, 0.95, 0.45, alpha))
 	# Snippets flotando.
 	for snip in _snippets:
-		draw_string(font, Vector2(snip["x"], snip["y"]), snip["text"], HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(0.85, 0.8, 0.6, snip["alpha"]))
+		draw_string(font, Vector2(snip["x"], snip["y"]), snip["text"], HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(UiStyle.MUTED, snip["alpha"]))
 	_draw_git_graph(Vector2(70, view.y * 0.18), font)
 	_draw_server_rack(Vector2(view.x - 170, view.y - 300))
 	_draw_coffee(Vector2(150, view.y - 120))
@@ -227,7 +227,7 @@ func _draw() -> void:
 	var prompt := ("> toca la pantalla" if GameSettings.is_mobile() else "> pulsa cualquier tecla") \
 		+ (" para ver tus personajes" if _continue != null else " para continuar") + cursor
 	var pw := font.get_string_size(prompt, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x
-	draw_string(font, Vector2((view.x - pw) / 2.0, view.y - 120.0), prompt, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("3cff6a"))
+	draw_string(font, Vector2((view.x - pw) / 2.0, view.y - 120.0), prompt, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, UiStyle.ACCENT)
 	draw_string(font, Vector2(16, view.y - 16), "compilado con café · inestable, como el código", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiStyle.MUTED)
 
 

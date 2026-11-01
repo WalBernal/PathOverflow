@@ -58,6 +58,10 @@ func _run() -> void:
 		await _capture_npc_identity()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("pantallas"):
+		await _capture_screens_t168()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("hud"):
 		await _capture_hud_theme()
 		get_tree().quit()
@@ -1715,6 +1719,58 @@ func _capture_npc_identity() -> void:
 				sp.scale *= 1.6
 	await _wait(0.5)
 	_save("178_npcs")
+
+
+## Pantallas con el tema del panel de datos (T168), en el PC (1600×900) y en táctil
+## (2400×1080): título, personajes, creador, pausa, carga a mitad y al 100 % y muerte.
+func _capture_screens_t168() -> void:
+	for touch in [false, true]:
+		var tag := "tactil" if touch else "pc"
+		Touch.force = touch
+		get_window().size = Vector2i(2400, 1080) if touch else Vector2i(1600, 900)
+		for shot in [["titulo", GameData.TITLE_SCENE], ["personajes", GameData.MAIN_MENU_SCENE], ["creador", GameData.CREATION_SCENE]]:
+			_swap(load(shot[1]).instantiate())
+			await _wait(1.2)
+			_save("168_%s_%s" % [shot[0], tag])
+		for t in [0.35, LoadingCard.HOLD]:
+			var holder := Control.new()
+			holder.set_anchors_preset(Control.PRESET_FULL_RECT)
+			_swap(holder)
+			var card := LoadingCard.new()
+			card.zone_name = "El Bosque de Cables"
+			card.subtitle = "Nivel de zona 2"
+			card.style = "forest"
+			holder.add_child(card)
+			await get_tree().process_frame
+			card.set_process(false)   # quieta en ese momento de la carga
+			card._t = t
+			card._rect.queue_redraw()
+			await _wait(0.3)
+			_save("168_carga_%d_%s" % [LoadingCard.progress_at(t), tag])
+		var gd: Node = get_node("/root/GameData")
+		var c: CharacterData = gd.create_character("Pantallas", &"guerrero", CharacterAppearance.default(), false)
+		c.flags["zone"] = "zona1"
+		c.flags["tutorial_step"] = 99
+		c.flags["tutorial_seen_done"] = true
+		c.level = 7
+		gd.current_character = c
+		var world: Node = load(GameData.WORLD_SCENE).instantiate()
+		_swap(world)
+		world.set("_since_save", -9999.0)
+		await _wait(1.2)
+		var ui: GameUI = world.get("ui")
+		if ui.cutscene.visible:
+			ui.cutscene.call("_finish")
+		ui.toggle_pause_menu()
+		await _wait(0.5)
+		_save("168_pausa_%s" % tag)
+		ui.toggle_pause_menu()
+		ui.show_death()
+		await _wait(0.6)
+		_save("168_muerte_%s" % tag)
+		ui.hide_death()
+	Touch.force = false
+	get_window().size = Vector2i(1600, 900)
 
 
 ## Pantallas de T96: título con la ciudad de servidores, selección de personaje con

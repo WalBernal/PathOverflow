@@ -3,7 +3,12 @@ extends CanvasLayer
 ## Pantalla de carga entre zonas (T96): una ilustración de la zona (procedural, con
 ## los colores de su estilo y una silueta según su borde: racks, acantilados, agua,
 ## muros, lava, árboles o vacío), su nombre y un consejo. Aparece al viajar, se
-## queda un momento y se desvanece.
+## queda un momento y se desvanece. T168: con el estilo del panel de datos y, debajo,
+## un registro de arranque («compilando zona… OK») con su progreso de 0 a 100 %.
+
+## Pasos del registro de arranque; cada uno se marca OK al llegar el progreso a su parte.
+const BOOT_STEPS := ["montando el sistema de archivos de la zona", "compilando zona", "cargando procesos hostiles",
+	"sembrando botín en la memoria", "enlazando waypoints"]
 
 const TIPS_PATH := "res://data/loading_tips.json"
 const HOLD := 0.75
@@ -49,6 +54,28 @@ static func silhouette_for(style_id: String) -> String:
 	return "tents"
 
 
+## Progreso de la carga (0..100 %) en el instante `t`: se llena durante HOLD.
+static func progress_at(t: float) -> int:
+	return clampi(roundi(t / HOLD * 100.0), 0, 100)
+
+
+## Líneas del registro de arranque con un progreso: las ya hechas con «[ OK ]», la que
+## está en marcha con «[ .. ]»; al 100 %, todas OK y «listo».
+static func boot_lines(zone: String, progress: int) -> Array:
+	var out := []
+	var n := BOOT_STEPS.size()
+	for k in n:
+		var start := k * 100 / n
+		if progress < start:
+			break
+		var done := progress >= (k + 1) * 100 / n
+		var text := String(BOOT_STEPS[k]) + (": " + zone if k == 1 else "") + ("… OK" if done else "…")
+		out.append(["OK" if done else "..", text])
+	if progress >= 100:
+		out.append(["OK", "listo (100 %)"])
+	return out
+
+
 ## Opacidad en el instante `t`: entera durante HOLD y luego se desvanece en FADE.
 static func alpha_at(t: float) -> float:
 	return 1.0 if t <= HOLD else clampf(1.0 - (t - HOLD) / FADE, 0.0, 1.0)
@@ -80,30 +107,57 @@ func _draw_card() -> void:
 	var colors: Dictionary = Zone.STYLES.get(style, {"ground": "1c1922", "outside": "07060a"})
 	var sky := Color(colors.get("outside", "07060a"))
 	var ground := Color(colors.get("ground", "1c1922"))
-	_rect.draw_rect(Rect2(Vector2.ZERO, view), Color("07060a"))
-	# Ilustración: una postal ancha en el centro.
-	var art := Rect2(Vector2(view.x * 0.12, view.y * 0.14), Vector2(view.x * 0.76, view.y * 0.5))
-	UiAtlas.draw(_rect, "window", art.grow(10.0))   # el marco, debajo de la ilustración
+	UiStyle.draw_background(_rect, view)
+	# Ilustración: una postal ancha arriba, en una tarjeta.
+	var art := Rect2(Vector2(view.x * 0.14, view.y * 0.08), Vector2(view.x * 0.72, view.y * 0.42))
+	var card := StyleBoxFlat.new()
+	card.bg_color = UiStyle.PANEL
+	card.border_color = UiStyle.BORDER
+	card.set_border_width_all(1)
+	card.set_corner_radius_all(UiStyle.RADIUS)
+	card.shadow_color = Color(0, 0, 0, 0.5)
+	card.shadow_size = 12
+	_rect.draw_style_box(card, art.grow(10.0))
 	for k in 24:
 		var y := art.position.y + art.size.y * k / 24.0
 		_rect.draw_rect(Rect2(art.position.x, y, art.size.x, art.size.y / 24.0 + 1.0), sky.lerp(ground.lightened(0.12), float(k) / 23.0))
 	_draw_silhouette(art, ground)
-	# Viñeta y marco.
-	for k in 6:
+	for k in 6:   # viñeta
 		_rect.draw_rect(art.grow(-k * 3.0), Color(0, 0, 0, 0.12), false, 3.0)
-	_rect.draw_rect(art, Color(UiStyle.GOLD, 0.35), false, 1.0)
+	_rect.draw_rect(Rect2(art.position + Vector2(0, -10), Vector2(64, 3)), UiStyle.ACCENT)
+	UiStyle.draw_graph_motif(_rect, art.end + Vector2(-8, -10))
 	var font := _rect.get_theme_default_font()
-	var title_y := art.end.y + 70.0
-	_rect.draw_string_outline(font, Vector2(0, title_y), zone_name, HORIZONTAL_ALIGNMENT_CENTER, view.x, 40, 8, Color.BLACK)
-	_rect.draw_string(font, Vector2(0, title_y), zone_name, HORIZONTAL_ALIGNMENT_CENTER, view.x, 40, UiStyle.ACCENT)
+	var mono := UiStyle.mono_font()
+	var title_y := art.end.y + 56.0
+	_rect.draw_string_outline(font, Vector2(0, title_y), zone_name, HORIZONTAL_ALIGNMENT_CENTER, view.x, 38, 8, Color.BLACK)
+	_rect.draw_string(font, Vector2(0, title_y), zone_name, HORIZONTAL_ALIGNMENT_CENTER, view.x, 38, UiStyle.TEXT)
 	if subtitle != "":
-		_rect.draw_string(font, Vector2(0, title_y + 34.0), subtitle, HORIZONTAL_ALIGNMENT_CENTER, view.x, 18, UiStyle.MUTED)
+		_rect.draw_string(font, Vector2(0, title_y + 28.0), subtitle, HORIZONTAL_ALIGNMENT_CENTER, view.x, 17, UiStyle.MUTED)
+	# Registro de arranque (T168), en una consola.
+	var progress := progress_at(_t)
+	var log_box := Rect2(view.x * 0.27, title_y + 46.0, view.x * 0.46, 26.0 + 20.0 * (BOOT_STEPS.size() + 1))
+	card.bg_color = Color(UiStyle.BG, 0.92)
+	card.shadow_size = 0
+	card.set_corner_radius_all(8)
+	_rect.draw_style_box(card, log_box)
+	var y := log_box.position.y + 24.0
+	for line in boot_lines(zone_name, progress):
+		var ok: bool = line[0] == "OK"
+		_rect.draw_string(mono, Vector2(log_box.position.x + 14.0, y), "[%s]" % ("  OK  " if ok else "  ..  "), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, UiStyle.OK if ok else UiStyle.WARN)
+		_rect.draw_string(mono, Vector2(log_box.position.x + 90.0, y), String(line[1]), HORIZONTAL_ALIGNMENT_LEFT, log_box.size.x - 100.0, 14, UiStyle.TEXT if ok else UiStyle.MUTED)
+		y += 20.0
 	if tip != "":
-		_rect.draw_string(font, Vector2(view.x * 0.15, view.y - 70.0), "Consejo: " + tip, HORIZONTAL_ALIGNMENT_CENTER, view.x * 0.7, 17, UiStyle.TEXT)
-	# Barra de carga que se llena durante la espera.
-	var bar := Rect2(view.x * 0.35, view.y - 40.0, view.x * 0.3, 6.0)
-	_rect.draw_rect(bar, Color(0, 0, 0, 0.8))
-	_rect.draw_rect(Rect2(bar.position, Vector2(bar.size.x * clampf(_t / HOLD, 0.0, 1.0), bar.size.y)), UiStyle.ACCENT)
+		_rect.draw_string(font, Vector2(view.x * 0.15, view.y - 62.0), "// consejo: " + tip, HORIZONTAL_ALIGNMENT_CENTER, view.x * 0.7, 16, UiStyle.MUTED)
+	# Barra de progreso redondeada con su porcentaje.
+	var bar := Rect2(view.x * 0.32, view.y - 36.0, view.x * 0.32, 8.0)
+	var track := StyleBoxFlat.new()
+	track.bg_color = UiStyle.PANEL_LIGHT
+	track.set_corner_radius_all(4)
+	_rect.draw_style_box(track, bar)
+	if progress > 0:
+		track.bg_color = UiStyle.ACCENT
+		_rect.draw_style_box(track, Rect2(bar.position, Vector2(maxf(8.0, bar.size.x * progress / 100.0), bar.size.y)))
+	_rect.draw_string(mono, Vector2(bar.end.x + 12.0, bar.end.y + 1.0), "%d %%" % progress, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, UiStyle.ACCENT)
 
 
 ## Silueta en primer plano según el tipo de zona, siempre la misma para la misma zona.

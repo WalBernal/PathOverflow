@@ -6057,6 +6057,22 @@ func _test_screens_t96() -> void:
 		"cada estilo de zona tiene su silueta")
 	_check(LoadingCard.silhouette_for("no_existe") == "tents", "un estilo desconocido no rompe nada")
 	_check(LoadingCard.alpha_at(0.2) == 1.0 and is_zero_approx(LoadingCard.alpha_at(LoadingCard.HOLD + LoadingCard.FADE + 0.01)), "la pantalla de carga se queda y luego se desvanece")
+	# T168: la carga como registro de arranque, con su progreso de 0 a 100 %.
+	var last_pct := -1
+	var steady := true
+	for k in 21:
+		var p := LoadingCard.progress_at(LoadingCard.HOLD * k / 20.0)
+		steady = steady and p >= last_pct
+		last_pct = p
+	_check(LoadingCard.progress_at(0.0) == 0 and LoadingCard.progress_at(LoadingCard.HOLD) == 100 and LoadingCard.progress_at(9.0) == 100 and steady,
+		"la carga va de 0 a 100 % sin retroceder")
+	var boot_end := LoadingCard.boot_lines("Bosque", 100)
+	_check(LoadingCard.boot_lines("Bosque", 0).size() == 1 and String(LoadingCard.boot_lines("Bosque", 0)[0][0]) == ".."
+		and boot_end.size() == LoadingCard.BOOT_STEPS.size() + 1 and boot_end.all(func(l: Array) -> bool: return l[0] == "OK")
+		and String(boot_end[1][1]).contains("compilando zona: Bosque… OK"), "registro de arranque: «compilando zona… OK» y al final todo OK")
+	var dump := DeathDump.text("Bosque", 7, false)
+	_check(dump.contains("ProcesoTerminado") and dump.contains("Bosque") and dump.contains("nivel 7") and dump.contains("pulsa R")
+		and not DeathDump.text("Bosque", 7, true).contains("pulsa R"), "la muerte como volcado de error (sin «pulsa R» en táctil)")
 
 
 ## Tema de interfaz dibujado (T95): atlas de piezas de 9 partes cargado en UiStyle.

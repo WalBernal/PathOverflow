@@ -52,7 +52,7 @@ var _player: Player
 var _loot: LootManager
 var _minimap_enabled := true
 var _death_panel: PanelContainer
-var _death_label: Label
+var _death_label: RichTextLabel
 ## Márgenes de la zona segura con los que se colocó la interfaz (T142).
 var _safe_seen := Vector4.ZERO
 var _safe_pending := Vector4.ZERO
@@ -229,9 +229,19 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	var death_box := VBoxContainer.new()
 	death_box.add_theme_constant_override("separation", 12)
 	_death_panel.add_child(death_box)
-	_death_label = Label.new()
-	_death_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_death_label.add_theme_color_override("font_color", Color("e06c6c"))
+	# Volcado de error (T168): «HAS MUERTO» y debajo la pila, en monoespaciada.
+	var death_title := UiStyle.title_label("HAS MUERTO", 30, UiStyle.DANGER)
+	death_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	death_box.add_child(death_title)
+	_death_label = RichTextLabel.new()
+	_death_label.bbcode_enabled = true
+	_death_label.fit_content = true
+	_death_label.scroll_active = false
+	_death_label.custom_minimum_size = Vector2(560, 0)
+	_death_label.add_theme_font_override("normal_font", UiStyle.mono_font())
+	_death_label.add_theme_font_override("bold_font", UiStyle.mono_font())
+	_death_label.add_theme_font_size_override("normal_font_size", 15)
+	_death_label.add_theme_font_size_override("bold_font_size", 15)
 	death_box.add_child(_death_label)
 	# Sin teclado no hay R (T135): un botón para reaparecer.
 	var respawn_button := UiStyle.button("Reaparecer en el campamento", func() -> void: respawn_requested.emit(), 300)
@@ -1282,8 +1292,8 @@ func toggle_passive_tree() -> void:
 
 
 func show_death() -> void:
-	_death_label.text = "HAS MUERTO\n\nStack trace:\n  en Player.take_damage()\n  en Enemy.attack()\n  en tu_decision_de_ir_sin_resistencias()" \
-		+ ("" if Touch.shown() else "\n\nPulsa R para reaparecer en el campamento")
+	var zone_title: String = minimap.zone.zone_name if minimap.zone != null else ""
+	_death_label.text = DeathDump.text(zone_title, _character.level if _character != null else 1, Touch.shown())
 	_death_panel.visible = true
 	dialogue_box.close()
 	# Centrar tras calcular su tamaño.

@@ -1201,7 +1201,7 @@ Origen: R8
 - Botones táctiles (habilidades, esquiva, usar, AUTO, pociones) con el mismo estilo, sin perder el hundido, el barrido de enfriamiento y el azul de sin maná de T148.
 - Prueba: `capture_screens -- solapes` sigue en 0; los medidores muestran la misma fracción que los orbes de hoy (prueba de la función de relleno); capturas `docs/capturas/interfaz/167_*` en PC y 2400×1080.
 
-### [ ] T168 · Menús y pantallas · M
+### [x] T168 · Menús y pantallas · M
 Origen: R8
 - Título, menú principal, creación de personaje, pausa y opciones, carga (como un registro de arranque: «compilando zona… OK») y muerte (como volcado de error) con el tema nuevo; el logo de `GameLogo` adaptado.
 - Prueba: cada pantalla abre sin errores en `capture_screens` (táctil y PC) y la carga muestra su progreso de 0 a 100 %.
@@ -1443,3 +1443,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-31 · T165 · El usuario elige la propuesta B (panel de monitoreo/datos).
 - 2026-10-31 · T166 · `UiStyle` con la propuesta B: paleta turquesa, tarjetas planas redondeadas, botones, pestañas, barras de desplazamiento y barras de progreso; ventanas sin latón ni remaches (raya del acento y grafo de tres nodos), separador de red neuronal, fondo de puntos; tooltips con franja del color de la rareza; casillas sin el marco del atlas. Los colores sueltos de `scripts/ui` pasan a `UiStyle`. Pruebas: contraste ≥ 4,5:1 y ningún color viejo en `scripts/ui`. Capturas `docs/capturas/interfaz/166_*`.
 - 2026-10-31 · T167 · HUD del panel de datos: vida y maná como medidores circulares con marcas («integridad» y «memoria», porcentaje y cifras; el maná reservado, rayado al final del arco; `UiStyle.gauge_arc` llena la misma fracción que los orbes), barra de experiencia redondeada con el % junto al nivel, habilidades, pociones y esquiva como teclas, placa plana, minimapa como radar (anillos, cruz, barrido y marcas), misiones como TODO («[ ] ★», «[x]» al entregar) y registro como consola (`00:01 [INFO]`, nivel por color). Sin latón ni atlas en el HUD. `capture_screens -- solapes`: 0. Capturas `docs/capturas/interfaz/167_hud_pc/tactil.png`.
+- 2026-10-31 · T168 · Pantallas con el tema: la carga como registro de arranque («[ OK ] compilando zona: … OK», progreso de 0 a 100 % con barra y cifra, ilustración en tarjeta, fondo de puntos), la muerte como volcado de error (`DeathDump`: «FATAL ProcesoTerminado», pila, nivel y zona, «pulsa R» solo con teclado), título y logo con la paleta nueva (texto claro, acento turquesa); menús, creador y pausa ya la toman de `UiStyle`. `UiStyle.mono_font()` (la del sistema hasta T169). `capture_screens -- pantallas`: las 7 pantallas en PC y táctil sin errores (`docs/capturas/interfaz/168_*`).

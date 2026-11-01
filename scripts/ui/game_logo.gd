@@ -3,7 +3,8 @@ extends Control
 ## Logo de «Path Overflow»: título con efecto glitch (copias roja y cian que
 ## tiemblan), una pila que se desborda (stack overflow, claro), llaves de
 ## código y el subtítulo «{ el último commit }». Se dibuja con formas y texto,
-## así que escala a cualquier tamaño (`logo_scale`).
+## así que escala a cualquier tamaño (`logo_scale`). T168: con los colores del panel de
+## datos (texto claro, acento turquesa); la pila verde y roja, como la del ícono.
 
 @export var logo_scale := 1.0
 
@@ -50,7 +51,7 @@ func _draw() -> void:
 	var falling := fmod(_time * 0.6, 1.0)
 	draw_rect(Rect2(Vector2(stack_x + 30.0 * s, y2 - 110.0 * s + falling * 90.0 * s), Vector2(30.0 * s, 11.0 * s)), Color(0.9, 0.4, 0.4, 1.0 - falling))
 
-	for layer in [[Color(1.0, 0.15, 0.25, 0.75), -off], [Color(0.1, 0.9, 1.0, 0.75), off], [Color("f2e6c8"), Vector2.ZERO]]:
+	for layer in [[Color(1.0, 0.15, 0.25, 0.75), -off], [Color(0.1, 0.9, 1.0, 0.75), off], [UiStyle.TEXT, Vector2.ZERO]]:
 		var c: Color = layer[0]
 		var o: Vector2 = layer[1]
 		draw_string(font, Vector2(center.x - w1 / 2.0, y1) + o, line1, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size, c)
@@ -59,7 +60,7 @@ func _draw() -> void:
 	for k in 4:
 		var drip := fmod(_time * 0.8 + k * 0.25, 1.0)
 		draw_rect(Rect2(Vector2(center.x + w2 / 2.0 - 30.0 * s + k * 6.0 * s, y2 + drip * 40.0 * s), Vector2(4.0 * s, 4.0 * s)),
-			Color(0.95, 0.85, 0.55, 1.0 - drip))
+			Color(UiStyle.ACCENT, 1.0 - drip))
 	# Barras de ruido durante el glitch.
 	if burst:
 		for k in 3:
@@ -74,5 +75,5 @@ func _draw() -> void:
 	var brace_size := int(120 * s)
 	var bw := font.get_string_size("<", HORIZONTAL_ALIGNMENT_LEFT, -1, brace_size).x
 	var bracket_y := y2 - 4.0 * s
-	draw_string(font, Vector2(center.x - maxf(w1, w2) / 2.0 - bw - 120.0 * s, bracket_y), "<", HORIZONTAL_ALIGNMENT_LEFT, -1, brace_size, Color(0.4, 0.8, 0.5, 0.18))
-	draw_string(font, Vector2(center.x + maxf(w1, w2) / 2.0 + 30.0 * s, bracket_y), "/>", HORIZONTAL_ALIGNMENT_LEFT, -1, brace_size, Color(0.4, 0.8, 0.5, 0.18))
+	draw_string(font, Vector2(center.x - maxf(w1, w2) / 2.0 - bw - 120.0 * s, bracket_y), "<", HORIZONTAL_ALIGNMENT_LEFT, -1, brace_size, Color(UiStyle.ACCENT, 0.2))
+	draw_string(font, Vector2(center.x + maxf(w1, w2) / 2.0 + 30.0 * s, bracket_y), "/>", HORIZONTAL_ALIGNMENT_LEFT, -1, brace_size, Color(UiStyle.ACCENT, 0.2))

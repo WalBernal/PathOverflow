@@ -27,6 +27,20 @@ const GAUGE_START := 135.0
 const GAUGE_SPAN := 270.0
 
 
+static var _mono: Font
+
+
+## Monoespaciada para consolas, registros y números (T168: la del sistema; T169 elige
+## una de licencia libre para el proyecto).
+static func mono_font() -> Font:
+	if _mono == null:
+		var f := SystemFont.new()
+		f.font_names = PackedStringArray(["Cascadia Mono", "Consolas", "DejaVu Sans Mono", "Droid Sans Mono", "monospace"])
+		f.fallbacks = [ThemeDB.fallback_font]
+		_mono = f
+	return _mono
+
+
 ## Ángulos (en radianes) del arco lleno de un medidor con `fill` (0..1): empieza abajo a
 ## la izquierda y sube por arriba en el sentido del reloj. La fracción del arco es `fill`
 ## (la misma que llenaban los orbes).
