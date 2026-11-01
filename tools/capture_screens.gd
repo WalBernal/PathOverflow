@@ -1502,6 +1502,33 @@ func _capture_hero_catalog() -> void:
 	native.save_png(ProjectSettings.globalize_path("res://assets/sprites/hero/catalogo.png"))
 	await _wait(0.4)
 	_save("180_peinados_accesorios")
+	# Los mismos de perfil (T182), y abajo a la derecha el paso de lado en sus 4 cuadros.
+	for c in sheet.get_children():
+		c.queue_free()
+	await get_tree().process_frame
+	for i in cells.size():
+		var look := StudentHero.look_of(CharacterAppearance.sanitize(cells[i][1]), {})
+		var body := StudentProfile.body(look)
+		var fig := StudentProfile.frame(body, look, null, "idle", 0)
+		var tr := TextureRect.new()
+		tr.texture = ImageTexture.create_from_image(fig.get_region(Rect2i(12, 4, 36, 48)))
+		tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tr.size = Vector2(36, 48) * zoom
+		tr.position = Vector2((i % cols) * 226.0 + 18.0, floorf(i / float(cols)) * 300.0 + 6.0)
+		sheet.add_child(tr)
+	var walker := StudentHero.look_of(CharacterAppearance.sanitize(cells[1][1]), {})
+	var walker_body := StudentProfile.body(walker)
+	for k in 4:
+		var tr := TextureRect.new()
+		tr.texture = ImageTexture.create_from_image(StudentProfile.frame(walker_body, walker, null, "walk", k).get_region(Rect2i(12, 4, 36, 48)))
+		tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tr.size = Vector2(36, 48) * 2.6
+		tr.position = Vector2(1130.0 + k * 115.0, 640.0)
+		sheet.add_child(tr)
+	await _wait(0.4)
+	_save("182_perfiles")
 
 
 ## El alumno del estilo del usuario (T176, StudentHero): arriba, apariencias del

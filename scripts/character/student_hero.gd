@@ -20,6 +20,9 @@ const FRAMES := {"idle": 4, "walk": 4, "attack": 4, "cast": 2, "hurt": 2, "dead"
 ## Filas de la plantilla: dónde empiezan las piernas y el centro (para los pasos).
 const LEGS_Y := 43
 const CENTER_X := 28
+## Bandas de las capas de la lámina (las mismas que corta tools/import_hero_art.gd).
+const TORSO_ROWS := Vector2i(28, 42)
+const LEGS_ROWS := Vector2i(43, 55)
 ## Mano que lleva el arma (la del lado izquierdo de la lámina) y su punto de agarre.
 const GRIP := Vector2i(19, 40)
 
@@ -159,12 +162,14 @@ static func build(look: Dictionary, weapon: String) -> Image:
 	var sheet := Image.create_empty(CELL.x * columns(), CELL.y * DIRS, false, Image.FORMAT_RGBA8)
 	sheet.fill(Color(0, 0, 0, 0))
 	for dir in DIRS:
-		var body := figure(look, dir)
+		# De lado, el perfil de verdad (T182, StudentProfile); de frente y de espaldas, la plantilla.
+		var body := StudentProfile.body(look) if dir == Dir.SIDE else figure(look, dir)
 		var col := 0
 		for anim in ORDER:
 			var n := int(FRAMES[anim])
 			for k in n:
-				sheet.blit_rect(frame(body, weapon_img, anim, k), Rect2i(Vector2i.ZERO, CELL), Vector2i(col * CELL.x, dir * CELL.y))
+				var f := StudentProfile.frame(body, look, weapon_img, anim, k) if dir == Dir.SIDE else frame(body, weapon_img, anim, k)
+				sheet.blit_rect(f, Rect2i(Vector2i.ZERO, CELL), Vector2i(col * CELL.x, dir * CELL.y))
 				col += 1
 	return sheet
 
@@ -180,12 +185,8 @@ static func figure(look: Dictionary, dir := Dir.FRONT) -> Image:
 		_hair_style(img, look)
 	if int(look.get("beard", 0)) > 0 and dir != Dir.BACK:
 		_beard(img, look)
-	if helmet_eq == "":
-		match dir:
-			Dir.SIDE:
-				_turn_face(img, look)
-			Dir.BACK:
-				_back_of_head(img, look)
+	if helmet_eq == "" and dir == Dir.BACK:
+		_back_of_head(img, look)
 	if body_eq != "":
 		_over(img, _layer("torso_" + body_eq))
 		if body_eq in ROBES:
@@ -223,22 +224,6 @@ static func _face_mask() -> Array[Vector2i]:
 			if hex in FACE_FIXED or (ROLES.has(hex) and String(ROLES[hex][0]) in ["skin", "eyes", "brow", "hair_skin"]):
 				out.append(Vector2i(x, y))
 	return out
-
-
-## De lado (tres cuartos): ojos, cejas y nariz un píxel hacia donde mira.
-static func _turn_face(img: Image, look: Dictionary) -> void:
-	var base := _layer("base") as Image
-	var skin := Color(look.get("skin_tone", "c99a7a"))
-	var moved := []
-	for y in range(23, 30):
-		for x in range(20, 38):
-			var hex := base.get_pixel(x, y).to_html(false)
-			if hex in FACE_FIXED or (ROLES.has(hex) and String(ROLES[hex][0]) in ["eyes", "brow"]):
-				moved.append([Vector2i(x, y), img.get_pixel(x, y)])
-	for m in moved:
-		img.set_pixelv(m[0], skin)
-	for m in moved:
-		img.set_pixelv((m[0] as Vector2i) + Vector2i(1, 0), m[1])
 
 
 ## De espaldas: la cabeza es pelo (o pelo al ras en los rapados) y abajo asoma la nuca.
@@ -446,6 +431,10 @@ static func _hair_style(img: Image, look: Dictionary) -> void:
 
 ## Una forma de pelo y cómo sombrearla (las piezas se suman en `cells`).
 class Hair:
+	## Cabeza sobre la que se peina (T182: la de perfil tiene la suya).
+	var center := DOME_C
+	var radius := DOME_R
+	var crown := CROWN
 	var cells := {}   # Vector2i → true
 	var stub := {}    # pelo al ras (lados rapados)
 	var locks_px := {}   # Vector2i → 0 (lado claro del mechón) / 1 (lado oscuro)
@@ -462,15 +451,15 @@ class Hair:
 	func cap(extra: float, top: int, bottom: int) -> void:
 		for y in range(top, bottom + 1):
 			for x in CELL.x:
-				var d := Vector2(x + 0.5, y + 0.5) - DOME_C
+				var d := Vector2(x + 0.5, y + 0.5) - center
 				# Más volumen arriba que a los lados (como el pelo de la lámina).
-				if d.length() <= DOME_R + extra * clampf(-d.y / DOME_R + 0.35, 0.35, 1.0):
+				if d.length() <= radius + extra * clampf(-d.y / radius + 0.35, 0.35, 1.0):
 					_add(Vector2i(x, y))
 
 	func stubble(extra: float, top: int, bottom: int) -> void:
 		for y in range(top, bottom + 1):
 			for x in CELL.x:
-				if (Vector2(x + 0.5, y + 0.5) - DOME_C).length() <= DOME_R + extra:
+				if (Vector2(x + 0.5, y + 0.5) - center).length() <= radius + extra:
 					stub[Vector2i(x, y)] = true
 
 	## Mechones en punta: [x del centro, largo, medio ancho], desde la fila `from`.
@@ -488,7 +477,7 @@ class Hair:
 
 	## Mechón lateral de `width` del borde de la cara de la fila `from` a `to` (en punta).
 	func side(x: int, from: int, to: int, width: int, wavy := false) -> void:
-		var dir := 1 if x < DOME_C.x else -1
+		var dir := 1 if x < center.x else -1
 		for y in range(from, to + 1):
 			var w := width if y < to - 1 else maxi(1, width - (y - to + 2))
 			var wave := (1 if (y / 3) % 2 == 0 else 0) * (-dir) if wavy else 0
@@ -537,7 +526,7 @@ class Hair:
 			var w := width if k < length - 4 else maxi(1, width - (k - length + 5))
 			var sway := 1 if k > length / 2 else 0
 			for i in w:
-				_add(Vector2i(top.x - w / 2 + i + (sway if top.x > DOME_C.x else -sway), top.y + k))
+				_add(Vector2i(top.x - w / 2 + i + (sway if top.x > center.x else -sway), top.y + k))
 
 	## Trenza: eslabones de 3 píxeles que alternan.
 	func braid(top: Vector2i, length: int) -> void:
@@ -554,7 +543,7 @@ class Hair:
 		var dark := hair.darkened(0.28)
 		var deep := hair.darkened(0.45)
 		var outline := hair.darkened(0.75).lerp(Color("1a1024"), 0.35)
-		var stubble := hair.lerp(img.get_pixel(int(DOME_C.x), BROW_Y - 2), 0.4)
+		var stubble := hair.lerp(img.get_pixel(int(center.x), BROW_Y - 2), 0.4)
 		for p: Vector2i in stub:
 			if not cells.has(p):
 				img.set_pixelv(p, stubble.darkened(0.12) if (p.x + p.y) % 2 == 0 else stubble)
@@ -564,7 +553,7 @@ class Hair:
 			var up := cells.has(p + Vector2i(0, -1))
 			var down := cells.has(p + Vector2i(0, 1))
 			var right := cells.has(p + Vector2i(1, 0))
-			var r := (Vector2(p) + Vector2(0.5, 0.5) - DOME_C).length()
+			var r := (Vector2(p) + Vector2(0.5, 0.5) - center).length()
 			var c := hair
 			if flat:
 				c = hair.darkened(0.15) if (p.x + p.y) % 2 == 0 else hair
@@ -589,14 +578,14 @@ class Hair:
 					c = deep
 			elif not down or not right:
 				c = dark
-			elif r > DOME_R - 1.5 and r < DOME_R + 0.6 and p.x < int(DOME_C.x) + 3 and p.y < 19:
+			elif r > radius - 1.5 and r < radius + 0.6 and p.x < int(center.x) + 3 and p.y < 19:
 				# Brillo en arco, con un punto más claro cada tres píxeles.
 				c = shine if (p.x + p.y) % 3 == 0 else light
-			elif not up and p.x < int(DOME_C.x):
+			elif not up and p.x < int(center.x):
 				c = light
 			else:
 				# Líneas de mechón que salen de la coronilla.
-				var a := atan2(p.y + 0.5 - CROWN.y, p.x + 0.5 - CROWN.x)
+				var a := atan2(p.y + 0.5 - crown.y, p.x + 0.5 - crown.x)
 				if p.y > 11 and fmod(a * 7.0 / PI + 10.0, 1.0) < 0.14:
 					c = dark
 			img.set_pixelv(p, c)

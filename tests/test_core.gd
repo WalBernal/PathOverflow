@@ -5687,13 +5687,20 @@ func _test_player_sheet() -> void:
 		return n
 	_check(count_color.call(front, "ffffff") > 0 and count_color.call(back, "ffffff") == 0 and count_color.call(back, "ececf0") == 0,
 		"de espaldas no se ven los ojos ni la camisa")
-	var eye_x := func(img: Image) -> int:
-		for x in StudentHero.CELL.x:
-			for y in range(24, 30):
-				if img.get_pixel(x, y).to_html(false) == "ffffff":
-					return x
-		return -1
-	_check(eye_x.call(side) == eye_x.call(front) + 1, "de lado los ojos se corren hacia donde mira")
+	# T182: de lado es un perfil de verdad: un solo ojo y las piernas cambian en cada paso.
+	var profile := StudentProfile.body(StudentHero.look_of(red, {}))
+	_check(count_color.call(profile, "ffffff") == 1 and count_color.call(front, "ffffff") == 2, "de perfil se ve un solo ojo")
+	var steps := {}
+	for k in StudentHero.FRAMES["walk"]:
+		var f := StudentProfile.frame(profile, StudentHero.look_of(red, {}), null, "walk", k)
+		steps[f.get_region(Rect2i(0, StudentProfile.HIP_Y, StudentHero.CELL.x, StudentHero.CELL.y - StudentProfile.HIP_Y)).get_data()] = true
+	_check(steps.size() >= 3, "de perfil las piernas cambian de posición al andar (%d posturas)" % steps.size())
+	var bad_side := []
+	for h in CharacterAppearance.HAIR_NAMES.size():
+		var pf := StudentProfile.body(StudentHero.look_of(CharacterAppearance.sanitize({"hair": h}), {}))
+		if pf.get_region(Rect2i(0, 0, StudentHero.CELL.x, 24)).get_used_rect().size == Vector2i.ZERO:
+			bad_side.append(CharacterAppearance.HAIR_NAMES[h])
+	_check(bad_side.is_empty(), "cada peinado tiene su vista de lado: %s" % [bad_side])
 	_check(StudentHero.dir_for(Vector2.UP)[0] == StudentHero.Dir.BACK and StudentHero.dir_for(Vector2.LEFT) == [StudentHero.Dir.SIDE, true]
 		and StudentHero.dir_for(Vector2.DOWN)[0] == StudentHero.Dir.FRONT, "cada dirección del movimiento elige su fila")
 	_check(StudentHero.column_for("attack", 0.99) == StudentHero.first_column("attack") + 3 and StudentHero.column_for("limp", 1.0) == StudentHero.first_column("dead") + 1
