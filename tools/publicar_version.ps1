@@ -68,6 +68,9 @@ if (-not $Subir) {
 }
 
 # --- Subir con GitHub CLI ---
+# gh escribe avisos normales en stderr (p. ej. «release not found» al mirar si ya existe);
+# con "Stop", PowerShell 5.1 los trataba como error y cortaba el script. Aquí manda $LASTEXITCODE.
+$ErrorActionPreference = "Continue"
 # (Si la terminal se abrió antes de instalarlo, gh no está aún en su PATH: se busca donde lo deja el instalador.)
 $ghExe = (Get-Command gh -ErrorAction SilentlyContinue).Source
 if (-not $ghExe -and (Test-Path "$env:ProgramFiles\GitHub CLI\gh.exe")) { $ghExe = "$env:ProgramFiles\GitHub CLI\gh.exe" }
