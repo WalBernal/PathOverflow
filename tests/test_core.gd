@@ -3754,6 +3754,35 @@ func _test_skill_fx() -> void:
 	for k in 2000:
 		fx.trail(Vector2.ZERO, "embers", Color.ORANGE)
 	_check(fx.count() <= int(ImpactFx.MAX_PARTICLES * 0.5) + 1, "las estelas no pasan del tope de partículas")
+	fx.clear()
+	# T172: los colores siguen siendo los del tipo de daño (y los del modo daltónico),
+	# y sin «Efectos de pantalla» no hay ni una partícula de más.
+	var cb: bool = Ailments.colorblind
+	for t in ImpactFx.COLORS:
+		Ailments.colorblind = false
+		var base := ImpactFx.colors_for(t)
+		_check(base == ImpactFx.COLORS[t], "%s: los colores de su tipo de daño" % t)
+		Ailments.colorblind = true
+		var blind := ImpactFx.colors_for(t)
+		_check(blind[0] == base[0] and blind[1] == Accessibility.aura_color(t, base[1]), "%s: el tono del modo daltónico" % t)
+	Ailments.colorblind = cb
+	var screen_was: bool = WorldPost.screen_fx()
+	var counts := {}
+	for on in [false, true]:
+		GameSettings.set_value("interface", "screen_fx", on)
+		fx.clear()
+		fx.death(Vector2.ZERO, "physical", 20.0, Color.WHITE, "metal")
+		var d := fx.count()
+		fx.clear()
+		fx.hit(Vector2.ZERO, "fire", true, 0.5)
+		var h := fx.count()
+		fx.clear()
+		fx.loot(Vector2.ZERO, Color.YELLOW)
+		counts[on] = [d, h, fx.count()]
+	GameSettings.set_value("interface", "screen_fx", screen_was)
+	_check(counts[false] == [28, 12, 0], "sin efectos de pantalla, las partículas de siempre: %s" % [counts[false]])
+	_check(counts[true][0] == 28 + ImpactFx.DEATH_NODES + 1 and counts[true][1] == 13 and counts[true][2] > 0,
+		"con efectos: anillo de nodos, glifo de familia, corchete y bits del botín: %s" % [counts[true]])
 	fx.free()
 
 

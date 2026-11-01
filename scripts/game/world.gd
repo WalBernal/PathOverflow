@@ -131,7 +131,9 @@ func _ready() -> void:
 	loot.spot_fixer = func(p: Vector2) -> Vector2: return p if zone == null else zone.free_spot_near(p, 24.0)
 	loot.dropped.connect(func(item: Item) -> void:   # el botín que merece la pena, al registro (T128)
 		if item.is_equipment() and item.rarity >= Rarity.Item.RARE:
-			ui.log_event("Ha caído: %s" % item.display_name(), item.display_color()))
+			ui.log_event("Ha caído: %s" % item.display_name(), item.display_color())
+			if enemies and enemies.impact and not loot.drops.is_empty():   # y bits entre corchetes (T172)
+				enemies.impact.loot((loot.drops.back()["rect"] as Rect2).get_center(), item.display_color()))
 
 	quests = QuestLog.new(character)
 	quests.quest_started.connect(_on_quest_started)

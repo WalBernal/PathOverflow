@@ -8,6 +8,10 @@ extends Node2D
 ## hielo, se quema a ceniza, salta en chispas o se disuelve. Los destellos de los
 ## golpes de fuego y rayo y de las muertes dan luz (WorldPost.lights).
 ## Lo crea EnemyManager; solo dibuja, no toca la simulación.
+## T172, motivos de datos (solo con «Efectos de pantalla»: si no, las mismas
+## partículas de antes): los golpes sueltan algún corchete o «;», las muertes un
+## anillo de nodos de red que se apagan y el glifo de su familia (MATERIAL_GLYPHS),
+## y el botín bueno, bits que suben entre corchetes.
 
 const MAX_PARTICLES := 700
 const GRID := 2.0
@@ -21,7 +25,14 @@ const COLORS := {
 ## Color de la luz que dan los destellos (los físicos no alumbran).
 const LIGHT_COLORS := {"fire": Color("ff9a3a"), "lightning": Color("fff0a0"), "cold": Color("9fd8ff"), "chaos": Color("8aff70")}
 
-## Partículas: {pos, vel, life, max, color, size, kind ("sq", "shard", "bit", "spark"), grav, text?}
+## Glifos sueltos de los golpes y glifo de cada familia (material) al morir.
+const BRACKETS := ["{", "}", "[", "]", "<", ">", ";"]
+const MATERIAL_GLYPHS := {"digital": ["{ }", "0x0", "01"], "metal": ["#", "&&", "%"], "crystal": ["<>", "*", "+"], "flesh": [";", "~", "!"]}
+## Nodos del anillo de muerte y color al que se apagan.
+const DEATH_NODES := 6
+const NODE_OFF := Color("3a4250")
+
+## Partículas: {pos, vel, life, max, color, size, kind ("sq", "shard", "bit", "spark", "node"), grav, text?, link?}
 var _parts: Array[Dictionary] = []
 ## Destellos con luz: {pos, color, radius, life, max}
 var flashes: Array[Dictionary] = []
@@ -33,13 +44,34 @@ func _ready() -> void:
 	z_index = 0
 
 
+## Colores de las partículas de un tipo de daño (el tono medio, el del modo
+## daltónico si está puesto, como las auras).
+static func colors_for(damage_type: String) -> Array:
+	var t := damage_type if COLORS.has(damage_type) else "physical"
+	var out: Array = (COLORS[t] as Array).duplicate()
+	out[1] = Accessibility.aura_color(t, out[1])
+	return out
+
+
+## Los motivos de datos (T172) van con los efectos de pantalla.
+static func motifs() -> bool:
+	return WorldPost.screen_fx()
+
+
+func _glyph(pos: Vector2, text: String, color: Color, vel: Vector2, life: float, grav := 0.0) -> void:
+	_parts.append({"pos": pos, "vel": vel, "life": life, "max": life, "color": color, "size": 2.0, "kind": "bit", "grav": grav, "text": text})
+
+
 ## Golpe a un enemigo en `pos`. `strength` 0..1 (fracción de vida que quitó) y crítico dan más.
 func hit(pos: Vector2, damage_type: String, crit := false, strength := 0.1) -> void:
 	var t := damage_type if COLORS.has(damage_type) else "physical"
 	var n := clampi(int(3.0 + strength * 14.0) + (5 if crit else 0), 3, 12)
 	if _parts.size() + n > MAX_PARTICLES:
 		return
-	var palette: Array = COLORS[t]
+	var palette: Array = colors_for(t)
+	if motifs() and (crit or strength > 0.12):
+		_glyph(pos + Vector2(randf_range(-6, 6), -4), BRACKETS[randi() % BRACKETS.size()], palette[0],
+			Vector2(randf_range(-40, 40), -randf_range(50, 90)), 0.4, 120.0)
 	for k in n:
 		var dir := Vector2.from_angle(randf() * TAU)
 		var p := {"pos": pos + dir * randf_range(2.0, 8.0), "life": randf_range(0.25, 0.5), "color": palette[randi() % palette.size()],
@@ -88,7 +120,9 @@ func death(pos: Vector2, damage_type: String, radius: float, tint: Color, materi
 	var n := clampi(int(radius * 1.4), 14, 40)
 	if _parts.size() + n > MAX_PARTICLES:
 		n = maxi(0, MAX_PARTICLES - _parts.size())
-	var palette: Array = COLORS[t]
+	var palette: Array = colors_for(t)
+	if motifs() and _parts.size() + n + DEATH_NODES + 2 <= MAX_PARTICLES:
+		_death_motifs(pos, radius, palette, material)
 	for k in n:
 		var dir := Vector2.from_angle(randf() * TAU)
 		var start := pos + Vector2(randf_range(-radius, radius), randf_range(-radius * 1.4, radius * 0.3))
@@ -152,6 +186,33 @@ func death(pos: Vector2, damage_type: String, radius: float, tint: Color, materi
 		_parts.append(p)
 	if LIGHT_COLORS.has(t):
 		_flash(pos, LIGHT_COLORS[t], 140.0 + radius * 2.0, 0.3)
+
+
+## Anillo de nodos de red unidos que se apagan (del color del daño al gris) y el
+## glifo de la familia del enemigo, que sube y se desvanece.
+func _death_motifs(pos: Vector2, radius: float, palette: Array, material: String) -> void:
+	var r := maxf(10.0, radius * 0.9)
+	var turn := randf() * TAU
+	var ring: Array[Vector2] = []
+	for k in DEATH_NODES:
+		ring.append(pos + Vector2.from_angle(turn + TAU * k / DEATH_NODES) * Vector2(r, r * 0.6))
+	for k in DEATH_NODES:
+		var life := randf_range(0.55, 0.8)
+		_parts.append({"pos": ring[k], "vel": (ring[k] - pos).normalized() * 18.0, "life": life, "max": life, "color": palette[k % 2],
+			"size": 3.0, "kind": "node", "grav": 0.0, "link": ring[(k + 1) % DEATH_NODES] - ring[k]})
+	var glyphs: Array = MATERIAL_GLYPHS.get(material, MATERIAL_GLYPHS["digital"])
+	_glyph(pos + Vector2(-4, -radius * 0.4), glyphs[randi() % glyphs.size()], palette[0], Vector2(0, -45.0), 0.9)
+
+
+## Botín bueno (T172): bits que suben del suelo entre corchetes del color de la rareza.
+func loot(pos: Vector2, color: Color) -> void:
+	if not motifs() or _parts.size() > MAX_PARTICLES * 0.7:
+		return
+	_glyph(pos + Vector2(-16, -4), "[", color, Vector2(0, -20), 0.7)
+	_glyph(pos + Vector2(12, -4), "]", color, Vector2(0, -20), 0.7)
+	for k in 5:
+		_glyph(pos + Vector2(randf_range(-10, 8), randf_range(-2, 6)), "0" if randi() % 2 == 0 else "1", color.lightened(0.3),
+			Vector2(randf_range(-8, 8), -randf_range(40, 80)), randf_range(0.5, 0.8))
 
 
 ## Destello al lanzar una habilidad (T74, ver SkillFx): `kind` "flare" (brasas en
@@ -312,5 +373,11 @@ func _draw() -> void:
 				draw_line(at, at - (p["vel"] as Vector2) * 0.03, c, 2.0)
 			"bit":
 				draw_string(_font, at, p["text"], HORIZONTAL_ALIGNMENT_LEFT, -1, 10, c)
+			"node":
+				# Se apaga: del color del daño al gris; la arista al siguiente nodo, más tenue.
+				var off := Color(NODE_OFF.lerp(c, clampf(p["life"] / p["max"] * 1.6 - 0.3, 0.0, 1.0)), a)
+				draw_line(at, at + (p["link"] as Vector2), Color(off, a * 0.45), 1.0)
+				draw_rect(Rect2(at - Vector2(s, s) * 0.5, Vector2(s, s)).grow(1.0), Color(0.05, 0.07, 0.1, a))
+				draw_rect(Rect2(at - Vector2(s, s) * 0.5, Vector2(s, s)), off)
 			_:
 				draw_rect(Rect2(at, Vector2(s, s)), c)

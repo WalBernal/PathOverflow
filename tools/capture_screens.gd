@@ -275,6 +275,10 @@ func _run() -> void:
 		await _capture_tree_v2()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("efectos"):
+		await _capture_fx_t172()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("enemigos"):
 		await _capture_enemies_t171()
 		get_tree().quit()
@@ -1167,6 +1171,35 @@ func _capture_roadmap2b() -> void:
 
 
 ## Acto I: cada zona con el jugador en el centro y junto a un portal.
+## T172: muertes de cada familia y tipo de daño, golpes y botín con los motivos de datos.
+func _capture_fx_t172() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Efectos", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(2.0)
+	var ui: GameUI = world.get("ui")
+	if ui.cutscene.visible:
+		ui.cutscene.call("_finish")
+	var player: Node2D = world.get("player")
+	var fx: ImpactFx = (world.get("enemies") as EnemyManager).impact
+	var p := player.global_position
+	var cases := [["physical", "digital"], ["physical", "metal"], ["physical", "crystal"], ["physical", "flesh"], ["fire", "digital"], ["cold", "digital"], ["lightning", "digital"], ["chaos", "digital"]]
+	for k in cases.size():
+		var at := p + Vector2(-300 + (k % 4) * 200, -150 + (k / 4) * 220)
+		fx.death(at, cases[k][0], 22.0, Color("c8b8a0"), cases[k][1])
+		fx.hit(at + Vector2(0, 90), cases[k][0], true, 0.5)
+	fx.loot(p + Vector2(0, 90), Color("e08a2a"))
+	await _wait(0.18)
+	_save("172_efectos")
+	world.set("_since_save", -9999.0)
+
+
 ## T171: enemigos a 64 px junto al héroe, en zonas del acto I y del III.
 func _capture_enemies_t171() -> void:
 	var gd: Node = get_node("/root/GameData")
