@@ -58,6 +58,10 @@ func _run() -> void:
 		await _capture_npc_identity()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("hud"):
+		await _capture_hud_theme()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("tema"):
 		await _capture_theme()
 		get_tree().quit()
@@ -2768,6 +2772,46 @@ func _capture_phone() -> void:
 ## resolución de teléfono, donde el lienzo se estira).
 ## Ataque automático (T151): con enemigos cerca, 2 s caminando con el joystick sin
 ## tocar nada más, con el interruptor apagado y encendido (se enciende tocándolo).
+## HUD del panel de datos (T167): en la zona 1 con enemigos, en el PC (1600×900) y en
+## táctil a 2400×1080; con algo de daño, maná gastado y unos sucesos en el registro.
+func _capture_hud_theme() -> void:
+	for touch in [false, true]:
+		var gd: Node = get_node("/root/GameData")
+		var c: CharacterData = gd.create_character("HUD", &"guerrero", CharacterAppearance.default(), false)
+		c.flags["zone"] = "zona1"
+		c.flags["tutorial_step"] = 99
+		c.flags["tutorial_seen_done"] = true
+		c.level = 8
+		c.experience = int(c.experience_to_next() * 0.63)
+		Touch.force = touch
+		get_window().size = Vector2i(2400, 1080) if touch else Vector2i(1600, 900)
+		gd.current_character = c
+		var world: Node = load("res://scenes/game/world.tscn").instantiate()
+		_swap(world)
+		world.set("_since_save", -9999.0)
+		await _wait(1.2)
+		var ui: GameUI = world.get("ui")
+		if ui.cutscene.visible:
+			ui.cutscene.call("_finish")
+		var player: Player = world.get("player")
+		player.set("invulnerable", true)
+		player.life = player.max_life() * 0.72
+		player.mana = player.max_mana() * 0.55
+		var enemies: EnemyManager = world.get("enemies")
+		enemies.clear_all()
+		for k in 4:
+			enemies.spawn(player.global_position + Vector2.from_angle(k * TAU / 4.0) * 260.0, Rarity.Enemy.NORMAL)
+		var log = ui.get("event_log")
+		if log:
+			log.add("Recogiste: Botas de seguridad", Color("8888ff"))
+			log.add("Memoria baja", Color("e06c6c"))
+			log.add("Zona limpia: 14/14", Color("6fd36b"))
+		await _wait(1.5)
+		_save("167_hud_%s" % ("tactil" if touch else "pc"))
+	Touch.force = false
+	get_window().size = Vector2i(1600, 900)
+
+
 ## Tamaño del mundo (T156): el campamento y la zona 1 con unos enemigos, a 2400×1080
 ## en táctil, con la cámara al 100, 130 y 140 %. Deja la opción como estaba.
 func _capture_world_size() -> void:

@@ -9,7 +9,8 @@ const RADIUS := 100.0
 ## Píxeles del minimapa por píxel del mundo.
 const SCALE := 0.065
 const BG := Color(UiStyle.BG, 0.9)
-const RING := Color("8a6d3b")
+## Aro y retícula del radar (T167; antes, latón).
+const RING := UiStyle.ACCENT
 ## Enemigos: gris (normales), azul claro (mágicos), amarillo (raros) y naranja (únicos).
 const ENEMY_COLORS := {
 	Rarity.Enemy.NORMAL: Color("a8a8b0"),
@@ -116,12 +117,12 @@ func _draw_map() -> void:
 			for q in quad:
 				corners_in = corners_in and q.distance_to(center) <= RADIUS
 			if corners_in:
-				draw_rect(mr, Color("2a2530"))   # entero dentro del círculo: sin recortar
+				draw_rect(mr, Color("1c2733"))   # entero dentro del círculo: sin recortar
 				continue
 			for poly in Geometry2D.intersect_polygons(quad, circle):
 				# El recorte con el borde puede dejar astillas sin área: no se pueden triangular.
 				if poly.size() >= 3 and not Geometry2D.triangulate_polygon(poly).is_empty():
-					draw_colored_polygon(poly, Color("2a2530"))
+					draw_colored_polygon(poly, Color("1c2733"))
 	else:
 		var ground := PackedVector2Array()
 		if zone.walk_polygon.size() >= 3:
@@ -131,7 +132,7 @@ func _draw_map() -> void:
 			var r := zone.rect
 			ground = PackedVector2Array([_to_map(r.position), _to_map(Vector2(r.end.x, r.position.y)), _to_map(r.end), _to_map(Vector2(r.position.x, r.end.y))])
 		for poly in Geometry2D.intersect_polygons(ground, circle):
-			draw_colored_polygon(poly, Color("2a2530"))
+			draw_colored_polygon(poly, Color("1c2733"))
 
 	for o in zone.obstacles:
 		var p := _to_map(o["pos"])
@@ -250,8 +251,22 @@ func _draw_map() -> void:
 	draw_colored_polygon(PackedVector2Array([center + f * 7.0, center - f * 4.0 + f.orthogonal() * 4.5,
 		center - f * 2.0, center - f * 4.0 - f.orthogonal() * 4.5]), Color.WHITE)
 
-	draw_arc(center, RADIUS, 0.0, TAU, 64, RING, 2.5, true)
-	draw_arc(center, RADIUS + 3.0, 0.0, TAU, 64, RING.darkened(0.5), 1.5, true)
+	# Radar (T167): anillos, cruz y un barrido que gira, por encima del mapa y tenues.
+	for k in [1.0 / 3.0, 2.0 / 3.0]:
+		draw_arc(center, RADIUS * k, 0.0, TAU, 48, Color(RING, 0.18), 1.0, true)
+	draw_line(center - Vector2(RADIUS, 0), center + Vector2(RADIUS, 0), Color(RING, 0.14), 1.0)
+	draw_line(center - Vector2(0, RADIUS), center + Vector2(0, RADIUS), Color(RING, 0.14), 1.0)
+	var sweep_a := fmod(time * 1.2, TAU)
+	var sweep := PackedVector2Array([center])
+	for k in 9:
+		sweep.append(center + Vector2.from_angle(sweep_a - 0.6 + 0.6 * k / 8.0) * (RADIUS - 2.0))
+	draw_colored_polygon(sweep, Color(RING, 0.10))
+	draw_line(center, center + Vector2.from_angle(sweep_a) * (RADIUS - 2.0), Color(RING, 0.35), 1.5)
+	draw_arc(center, RADIUS, 0.0, TAU, 64, RING, 2.0, true)
+	draw_arc(center, RADIUS + 3.0, 0.0, TAU, 64, UiStyle.BORDER, 1.5, true)
+	for k in 24:   # marcas del borde
+		var d := Vector2.from_angle(TAU * k / 24.0)
+		draw_line(center + d * (RADIUS - 4.0), center + d * RADIUS, Color(RING, 0.5), 1.0)
 	var label := zone.zone_name
 	var sublabel := "Zona segura" if zone.safe else "Nivel de zona %d" % zone.level
 	var font := get_theme_default_font()
@@ -376,4 +391,4 @@ func _draw_clipped_disc(c: Vector2, r: float, color: Color) -> void:
 			p = center + (p - center).normalized() * RADIUS
 		points.append(p)
 	draw_colored_polygon(points, color)
-	draw_polyline(points + PackedVector2Array([points[0]]), Color("8a6d3b"), 1.0, true)
+	draw_polyline(points + PackedVector2Array([points[0]]), RING, 1.0, true)

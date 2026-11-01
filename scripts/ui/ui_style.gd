@@ -22,6 +22,17 @@ const ACCENT_HEX := "2dd4bf"
 const BORDER_HEX := "2d3646"
 ## Esquinas de tarjetas, botones y ventanas.
 const RADIUS := 10
+## Arco de los medidores circulares del HUD (T167): 270° abiertos por abajo, de 135° a 405°.
+const GAUGE_START := 135.0
+const GAUGE_SPAN := 270.0
+
+
+## Ángulos (en radianes) del arco lleno de un medidor con `fill` (0..1): empieza abajo a
+## la izquierda y sube por arriba en el sentido del reloj. La fracción del arco es `fill`
+## (la misma que llenaban los orbes).
+static func gauge_arc(fill: float) -> Vector2:
+	var a := deg_to_rad(GAUGE_START)
+	return Vector2(a, a + deg_to_rad(GAUGE_SPAN) * clampf(fill, 0.0, 1.0))
 
 
 static func make_theme() -> Theme:

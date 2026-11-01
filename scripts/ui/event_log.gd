@@ -3,7 +3,8 @@ extends VBoxContainer
 ## Registro de sucesos (T128): un panel lateral plegable con lo que conviene no perderse
 ## —botín raro y único, waypoints descubiertos, mecánicas completadas, instancias que
 ## caducan—, lo más nuevo arriba. Se pliega con su cabecera (ratón, toque o el cursor de
-## mando); plegado solo dice cuántos sucesos nuevos hay.
+## mando); plegado solo dice cuántos sucesos nuevos hay. T167: cada línea como en una
+## consola, con la hora de partida y su nivel («12:04 [INFO] ...»).
 
 const MAX_ENTRIES := 40
 const SHOWN := 7
@@ -74,10 +75,34 @@ func _refresh() -> void:
 	var from := maxi(0, entries.size() - SHOWN)
 	for i in range(entries.size() - 1, from - 1, -1):
 		var e: Dictionary = entries[i]
-		var l := UiStyle.label(String(e["text"]), 12, e["color"])
-		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		var l := RichTextLabel.new()
+		l.bbcode_enabled = true
+		l.fit_content = true
+		l.scroll_active = false
 		l.custom_minimum_size.x = WIDTH
+		l.add_theme_font_size_override("normal_font_size", 12)
+		l.add_theme_font_size_override("bold_font_size", 12)
 		l.add_theme_constant_override("outline_size", 4)
 		l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
 		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		l.text = console_line(String(e["text"]), e["color"], float(e["t"]))
 		_list.add_child(l)
+
+
+## Nivel de un suceso por su color: rojo → WARN, verde → OK, el resto INFO.
+static func level_of(color: Color) -> String:
+	if color.r > 0.75 and color.g < 0.55 and color.b < 0.55:
+		return "WARN"
+	if color.g > 0.7 and color.r < 0.6 and color.b < 0.7:
+		return "OK"
+	return "INFO"
+
+
+## Una línea de consola: hora de partida (mm:ss) apagada, el nivel en su color y el texto.
+static func console_line(text: String, color: Color, t: float) -> String:
+	var lv := level_of(color)
+	var lv_color: String = {"WARN": "f59e0b", "OK": "3fb950", "INFO": UiStyle.ACCENT_HEX}[lv]
+	var s := int(t)
+	text = text.replace("[", "\u0001").replace("]", "[rb]").replace("\u0001", "[lb]")   # corchetes literales
+	return "[color=#%s]%02d:%02d[/color] [color=#%s][lb]%s[rb][/color] [color=#%s]%s[/color]" % [
+		UiStyle.MUTED_HEX, s / 60, s % 60, lv_color, lv, color.to_html(false), text]

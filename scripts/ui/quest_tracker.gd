@@ -152,15 +152,21 @@ func _refresh() -> void:
 			lines.append("[color=#8b949e]Secundarias[/color]")
 		var blink: bool = _flash.has(id) and fmod(_flash[id], 0.5) < 0.25
 		var name_color := "#ffd84a" if blink else ("#2dd4bf" if main else "#e6edf3")
-		var prefix := "★ " if main else "• "
-		lines.append("[b][color=%s]%s%s[/color][/b]" % [name_color, prefix, def.get("name", id)])
 		var step := quests.step_text(id)
 		var ready: bool = quests.current_step(id).get("type", "") == "turn_in"
-		lines.append("   [color=%s]%s[/color]" % ["#6fd36b" if ready else "#b8ab90", step])
+		# Como una lista de TODO (T167): casilla marcada cuando ya solo falta entregarla.
+		lines.append(todo_line(def.get("name", id), main, ready, name_color))
+		lines.append("      [color=%s]%s[/color]" % ["#3fb950" if ready else "#c9d1d9", step])
 	if ids.is_empty():
 		lines.append("[color=#8b949e]Sin misiones activas. Disfruta del silencio.[/color]")
 	_body.text = "\n".join(lines)
 	reset_size()
+
+
+## Línea de una misión como tarea de un TODO: «[ ] ★ Nombre» (o «[x]» si está lista).
+static func todo_line(quest_name: String, main: bool, ready: bool, color: String) -> String:
+	var box := "[color=#3fb950][lb]x[rb][/color]" if ready else "[color=#8b949e][lb] [rb][/color]"
+	return "%s [b][color=%s]%s%s[/color][/b]" % [box, color, "★ " if main else "", quest_name]
 
 
 ## Qué se ve: en el escritorio, lo elegido; en el celular, plegado en las peleas y,

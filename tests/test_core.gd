@@ -5079,6 +5079,17 @@ func _test_event_log() -> void:
 	log.add("nuevo 1")
 	log.add("nuevo 2")
 	_check(log.collapsed and log.unseen == 2 and log.header_text().contains("2 nuevos"), "plegado, cuenta los sucesos nuevos")
+	# T167: el registro como consola, el medidor con la fracción de antes, misiones como TODO.
+	_check(EventLog.console_line("Botín [raro]", UiStyle.TEXT, 125.0).contains("02:05") and EventLog.console_line("x", UiStyle.TEXT, 0.0).contains("[lb]INFO[rb]")
+		and EventLog.console_line("Botín [raro]", UiStyle.TEXT, 0.0).contains("[lb]raro[rb]"), "suceso como línea de consola, con hora y nivel")
+	_check(EventLog.level_of(Color("e06c6c")) == "WARN" and EventLog.level_of(Color("6fd36b")) == "OK" and EventLog.level_of(Color("ffff77")) == "INFO",
+		"el nivel del suceso sale de su color")
+	for f in [0.0, 0.25, 0.5, 0.72, 1.0]:
+		var arc := UiStyle.gauge_arc(f)
+		_check(absf((arc.y - arc.x) / deg_to_rad(UiStyle.GAUGE_SPAN) - f) < 0.0001, "el medidor llena la misma fracción que el orbe (%.2f)" % f)
+	_check(UiStyle.gauge_arc(1.7) == UiStyle.gauge_arc(1.0) and UiStyle.gauge_arc(-1.0).y == UiStyle.gauge_arc(0.0).y, "el medidor no se pasa de lleno ni de vacío")
+	_check(QuestTracker.todo_line("Misión", true, false, "#ffffff").begins_with("[color=#8b949e][lb] [rb]") and QuestTracker.todo_line("M", false, true, "#ffffff").contains("[lb]x[rb]"),
+		"misiones como lista de TODO (casilla marcada si ya solo falta entregarla)")
 	log.toggle()
 	_check(not log.collapsed and log.unseen == 0 and log.header_text() == "[–] Registro", "al desplegarlo, se dan por vistos")
 	log.queue_free()

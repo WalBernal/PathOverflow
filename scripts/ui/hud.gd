@@ -1,23 +1,27 @@
 class_name Hud
 extends Control
-## HUD de combate, al estilo de PoE: orbe de vida (con anillo de escudo de
-## energía) y de maná en los extremos, y entre ambos una placa con las pociones,
-## la barra de habilidades, la de experiencia y accesos a los menús.
-## Todo lo importante tiene un tooltip de ayuda al pasar el ratón.
+## HUD de combate: en los extremos, los medidores de vida («integridad del proceso», con
+## anillo de escudo de energía) y de maná («memoria») y entre ambos una placa con las
+## pociones, la barra de habilidades (teclas), la de experiencia y accesos a los menús.
+## T167: con el estilo del panel de datos (medidores circulares con marcas en lugar de
+## los orbes de latón). Todo lo importante tiene un tooltip de ayuda al pasar el ratón.
 
 signal menu_requested(menu: String)  # "inventory", "skills", "passives"
 
+## Radio del medidor (el nombre viene de los orbes de antes).
 const ORB_RADIUS := 78.0
 const SLOT := 60.0
 const SLOT_GAP := 8.0
 const PLATE_HEIGHT := 92.0
 const FLASK_SIZE := Vector2(52, 60)
-const LIFE_COLOR := Color("b3262b")
-const MANA_COLOR := Color("2a4fb3")
+const LIFE_COLOR := Color("e5484d")
+const MANA_COLOR := Color("38bdf8")
 const ES_COLOR := Color("7fb8e0")
-const XP_COLOR := UiStyle.ACCENT
+const XP_COLOR := UiStyle.OK
 const PLATE := UiStyle.PANEL
-const TRIM := Color("8a6d3b")
+## Bordes de la placa, las casillas y los medidores (antes, el latón).
+const TRIM := Color("3a4a5e")
+const GAUGE_WIDTH := 14.0
 const TEXT_COLOR := UiStyle.TEXT
 const MUTED := UiStyle.MUTED
 
@@ -720,22 +724,22 @@ func _draw() -> void:
 	if not touch_layout:
 		_draw_plate()
 
-	# Orbes.
+	# Medidores (T167; antes, orbes).
 	var life_center := _life_center()
 	var mana_center := _mana_center()
-	_draw_orb(life_center, player.life / player.max_life(), LIFE_COLOR)
+	_draw_orb(life_center, player.life / player.max_life(), LIFE_COLOR, 0.0, "integridad")
 	var max_es := player.max_energy_shield()
 	if max_es > 0.0 and player.energy_shield > 0.0:
-		draw_arc(life_center, ORB_RADIUS + 7.0, -PI / 2.0, -PI / 2.0 + TAU * player.energy_shield / max_es,
-			64, ES_COLOR, 5.0, true)
+		draw_arc(life_center, ORB_RADIUS + 13.0, -PI / 2.0, -PI / 2.0 + TAU * player.energy_shield / max_es,
+			64, ES_COLOR, 4.0, true)
 	if player.barrier > 0.0:
-		# Barrera: aro blanco-azulado por fuera del orbe de vida.
+		# Barrera: aro blanco-azulado por fuera del medidor de vida.
 		var frac := player.barrier / maxf(1.0, player.barrier_max)
-		draw_arc(life_center, ORB_RADIUS + 13.0, -PI / 2.0, -PI / 2.0 + TAU * frac, 64, Color("cfe8ff"), 4.0, true)
-		draw_string(font, life_center + Vector2(-80.0, -ORB_RADIUS - 20.0), "Barrera %d" % player.barrier, HORIZONTAL_ALIGNMENT_CENTER, 160.0, 12, Color("cfe8ff"))
-	_draw_orb(mana_center, player.mana / maxf(1.0, player.unreserved_mana_max()), MANA_COLOR, player.mana_reserved)
+		draw_arc(life_center, ORB_RADIUS + 18.0, -PI / 2.0, -PI / 2.0 + TAU * frac, 64, Color("cfe8ff"), 3.0, true)
+		draw_string(font, life_center + Vector2(-80.0, -ORB_RADIUS - 24.0), "Barrera %d" % player.barrier, HORIZONTAL_ALIGNMENT_CENTER, 160.0, 12, Color("cfe8ff"))
+	_draw_orb(mana_center, player.mana / maxf(1.0, player.unreserved_mana_max()), MANA_COLOR, player.mana_reserved, "memoria")
 	_draw_player_states(life_center, font)
-	# Cifras de los orbes con la fuente de píxeles (T76), con sombra dura.
+	# Cifras de los medidores, con sombra.
 	var digits := PixelFont.font()
 	var life_text := "%d / %d" % [player.life, player.max_life()]
 	_pixel_string(digits, life_center + Vector2(-80.0, 8.0), life_text, TEXT_COLOR)
@@ -751,7 +755,6 @@ func _draw() -> void:
 	# Experiencia.
 	var xp := _xp_rect()
 	var progress := float(character.experience) / float(character.experience_to_next())
-	UiAtlas.draw(self, "bar_frame", xp.grow(4.0))   # marco del atlas (T95)
 	# Al subir de nivel (T97), la barra brilla un par de segundos.
 	if character.level != _seen_level:
 		if _seen_level > 0 and character.level > _seen_level:
@@ -761,14 +764,15 @@ func _draw() -> void:
 	if glow > 0.0:
 		for k in 4:
 			draw_rect(xp.grow(3.0 + k * 3.0), Color(1.0, 0.85, 0.35, Accessibility.flash(glow) * 0.22 * (1.0 - k / 4.0)), false, 3.0)
-	draw_rect(xp, Color(0, 0, 0, 0.75))
-	draw_rect(Rect2(xp.position, Vector2(xp.size.x * progress, xp.size.y)), XP_COLOR)
-	for k in range(1, 10):
-		var x := xp.position.x + xp.size.x * k / 10.0
-		draw_line(Vector2(x, xp.position.y), Vector2(x, xp.end.y), Color(0, 0, 0, 0.5), 1.0)
-	draw_rect(xp, TRIM, false, 1.0)
+	# Barra de progreso redondeada con su porcentaje (T167).
+	_round_rect(xp, UiStyle.BG, TRIM)
+	if progress > 0.0:
+		_round_rect(Rect2(xp.position, Vector2(maxf(xp.size.y, xp.size.x * progress), xp.size.y)), XP_COLOR)
 	var level_text := "Nivel %d" % character.level
 	draw_string(font, _menu_origin(), level_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, TEXT_COLOR)
+	# El porcentaje de la barra de progreso, al lado del nivel (T167).
+	var level_w := font.get_string_size(level_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
+	draw_string(font, _menu_origin() + Vector2(level_w + 6.0, 0), "%d %%" % floori(progress * 100.0), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, XP_COLOR.lightened(0.25))
 	# «!» sobre los botones de menú con novedades.
 	var marked: Array[Control] = []
 	for k in _menu_buttons.size():
@@ -1155,12 +1159,11 @@ func _draw_status_boxes(font: Font) -> void:
 func _draw_plate() -> void:
 	var plate := _plate_rect()
 	draw_rect(plate, Color(PLATE, 0.96))
-	# Placa de bronce del atlas de interfaz (T95), si está; si no, el filo dorado de antes.
-	if UiAtlas.texture() != null:
-		UiAtlas.draw(self, "hotbar_plate", Rect2(plate.position, Vector2(plate.size.x, size.y - plate.position.y + 12.0)))
-	else:
-		draw_line(plate.position, Vector2(plate.end.x, plate.position.y), TRIM, 2.0)
-	# Remates que unen la placa con los orbes.
+	# Tarjeta plana (T167): filo del borde arriba, una raya del acento y el grafo de tres nodos.
+	draw_line(plate.position, Vector2(plate.end.x, plate.position.y), TRIM, 1.5)
+	draw_rect(Rect2(plate.position + Vector2(36, 0), Vector2(64, 2)), UiStyle.ACCENT)
+	UiStyle.draw_graph_motif(self, Vector2(plate.end.x - 30.0, plate.position.y + 12.0))
+	# Remates que unen la placa con los medidores.
 	for side in [-1.0, 1.0]:
 		var x: float = plate.position.x if side < 0.0 else plate.end.x
 		draw_colored_polygon(PackedVector2Array([
@@ -1171,10 +1174,8 @@ func _draw_plate() -> void:
 func _draw_flask(i: int, font: Font) -> void:
 	var r := _flask_rect(i)
 	var f := player.flask_at(i)
-	_ci.draw_rect(r, Color(0, 0, 0, 0.55))
-	UiAtlas.draw(_ci, "flask_frame", r.grow(3.0))   # marco del atlas (T95)
+	_round_rect(r.grow(2.0), Color(UiStyle.BG, 0.85), TRIM, 8.0, 2)   # tecla (T167)
 	if f == null:
-		_ci.draw_rect(r, TRIM.darkened(0.6), false, 1.0)
 		_ci.draw_string(font, r.position + Vector2(4.0, r.size.y - 4.0), str(i + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, MUTED)
 		return
 	var color := f.display_color()
@@ -1206,7 +1207,8 @@ func _draw_flask(i: int, font: Font) -> void:
 			for k in 3:
 				var phase := fmod(t * 0.7 + k * 0.33, 1.0)
 				_ci.draw_circle(top + Vector2(k * 5.0 - 5.0, 18.0 - phase * 22.0), 1.5, Color(color.lightened(0.5), 0.6 * (1.0 - phase)))
-	_ci.draw_rect(r, TRIM if usable else TRIM.darkened(0.5), false, 1.5)
+	if usable:
+		_round_rect(r.grow(2.0), Color(0, 0, 0, 0), Color(color, 0.7), 8.0, 2)
 	_ci.draw_string(font, r.position + Vector2(3.0, r.size.y - 3.0), str(i + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, TEXT_COLOR)
 	_ci.draw_string(font, r.position + Vector2(0.0, r.size.y + 12.0), "%d/%d" % [f.charges, f.max_charges()],
 		HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 10, MUTED)
@@ -1227,13 +1229,8 @@ func _status_icon(r: Rect2, id: String) -> void:
 
 func _draw_skill_slot(i: int, font: Font) -> void:
 	var r := _slot_rect(i)
-	# Marco: hueco hundido con borde dorado (como las ranuras de PoE); con el atlas, su casilla.
-	_ci.draw_rect(r.grow(3.0), Color(0, 0, 0, 0.75))
-	if UiAtlas.texture() != null:
-		UiAtlas.draw(_ci, "slot_normal", r.grow(5.0))
-	else:
-		_ci.draw_rect(r.grow(3.0), TRIM.darkened(0.45), false, 1.0)
-	_ci.draw_rect(r, Color(0, 0, 0, 0.7))
+	# Tecla (keycap, T167): tarjeta redondeada con el borde de abajo más grueso.
+	_round_rect(r.grow(3.0), Color(UiStyle.BG, 0.9), TRIM, 8.0, 3)
 	var board: Motherboard = character.inventory.boards[i]
 	var key_color := TEXT_COLOR
 	if board:
@@ -1281,7 +1278,8 @@ func _draw_skill_slot(i: int, font: Font) -> void:
 				Charges.color(t) if n > 0 else MUTED)
 			cx += 18.0
 		var flash := _slot_flash[i] / 0.25
-		_ci.draw_rect(r, Motherboard.COLOR.darkened(0.2).lerp(Color("ffe8a0"), flash), false, 1.5 + 1.5 * flash)
+		if flash > 0.0:
+			_round_rect(r.grow(3.0), Color(0, 0, 0, 0), UiStyle.ACCENT.lerp(Color.WHITE, flash), 8.0, 1)
 		if not p.is_empty() and String(p.get("trigger", "")) != "":
 			# RAM de activación: «AUTO» y, mientras dure, su enfriamiento interno en el borde.
 			var tcd: float = skills._trigger_cd[i] if i < skills._trigger_cd.size() else 0.0
@@ -1299,25 +1297,20 @@ func _draw_skill_slot(i: int, font: Font) -> void:
 			_ci.draw_string(font, r.position + Vector2(0, 12), "ON", HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 10, Color("e0c0ff"))
 		if no_mana:
 			key_color = Color("e06c6c")
-	else:
-		_ci.draw_rect(r, UiStyle.BORDER, false, 1.0)
 	if touch_layout:
 		return   # en táctil no hay tecla que enseñar
 	# Tecla en una chapita abajo a la izquierda.
 	var key: String = Controls.key_label(SkillController.ACTIONS[i])
 	var key_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x + 8.0
 	var key_rect := Rect2(r.position.x - 2.0, r.end.y - 12.0, key_w, 14.0)
-	_ci.draw_rect(key_rect, Color(PLATE, 0.95))
-	_ci.draw_rect(key_rect, TRIM.darkened(0.2), false, 1.0)
+	_round_rect(key_rect, Color(PLATE, 0.95), TRIM, 4.0)
 	_ci.draw_string(font, key_rect.position + Vector2(0, 11.0), key, HORIZONTAL_ALIGNMENT_CENTER, key_w, 11, key_color)
 
 
 ## Casilla de la esquiva: una pastilla por carga (la que se recarga, a medias) y la tecla.
 func _draw_dodge(font: Font) -> void:
 	var r := _dodge_rect()
-	_ci.draw_rect(r.grow(3.0), Color(0, 0, 0, 0.75))
-	_ci.draw_rect(r.grow(3.0), TRIM.darkened(0.45), false, 1.0)
-	_ci.draw_rect(r, Color(0, 0, 0, 0.7))
+	_round_rect(r.grow(3.0), Color(UiStyle.BG, 0.9), TRIM, 8.0, 3)
 	var total := player.max_dodge_charges()
 	var shown := maxi(total, ceili(player.dodge_charges))   # la poción puede dar una de más
 	var pip_h := minf(16.0, (r.size.y - 22.0 - (shown - 1) * 3.0) / maxf(1.0, shown))
@@ -1335,8 +1328,7 @@ func _draw_dodge(font: Font) -> void:
 	if touch_layout:
 		return
 	var key_rect := Rect2(r.position.x - 2.0, r.end.y - 12.0, r.size.x + 4.0, 14.0)
-	_ci.draw_rect(key_rect, Color(PLATE, 0.95))
-	_ci.draw_rect(key_rect, TRIM.darkened(0.2), false, 1.0)
+	_round_rect(key_rect, Color(PLATE, 0.95), TRIM, 4.0)
 	_ci.draw_string(font, key_rect.position + Vector2(0, 11.0), "Esp.", HORIZONTAL_ALIGNMENT_CENTER, key_rect.size.x, 10,
 		TEXT_COLOR if player.dodge_charges >= 1.0 else Color("e06c6c"))
 
@@ -1442,52 +1434,52 @@ func _draw_pie(center: Vector2, radius: float, fraction: float, color: Color) ->
 	_ci.draw_colored_polygon(points, color)
 
 
-## Orbe estilo PoE: círculo rellenado desde abajo según `fill` (0..1), con marco.
-## `reserved`: fracción de arriba que no se puede usar (maná reservado), rayada.
-func _draw_orb(center: Vector2, fill: float, color: Color, reserved := 0.0) -> void:
+## Rectángulo redondeado (tarjetas, teclas y barras del panel de datos) en `_ci`.
+func _round_rect(r: Rect2, fill: Color, border := Color(0, 0, 0, 0), radius := -1.0, bottom := 0) -> void:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = fill
+	sb.set_corner_radius_all(int(minf(r.size.y * 0.5, 8.0) if radius < 0.0 else radius))
+	sb.anti_aliasing = true
+	if border.a > 0.0:
+		sb.border_color = border
+		sb.set_border_width_all(1)
+		sb.border_width_bottom = 1 + bottom
+	_ci.draw_style_box(sb, r)
+
+
+## Medidor circular (T167): disco del panel, marcas alrededor, pista y el arco lleno
+## según `fill`; `reserved` (maná reservado) es el final del arco, apagado y rayado.
+## `label`: qué mide (integridad, memoria), debajo de las cifras.
+func _draw_orb(center: Vector2, fill: float, color: Color, reserved := 0.0, label := "") -> void:
 	fill = clampf(fill, 0.0, 1.0)
+	var r := ORB_RADIUS - GAUGE_WIDTH * 0.5 - 4.0
 	draw_circle(center, ORB_RADIUS + 10.0, Color(PLATE, 0.96))
-	draw_circle(center, ORB_RADIUS, Color(0.05, 0.04, 0.06, 0.95))
-	if fill > 0.01:
-		draw_colored_polygon(_orb_segment(center, 0.0, fill), color)
-		var t := Time.get_ticks_msec() / 1000.0
-		# Líquido (T76): más oscuro al fondo y burbujas que suben hasta la superficie.
-		draw_colored_polygon(_orb_segment(center, 0.0, fill * 0.35), Color(0, 0, 0, 0.22))
-		var surface_y := center.y + ORB_RADIUS * (1.0 - 2.0 * fill)
-		var bottom_y := center.y + ORB_RADIUS
-		for b in UiStyle.orb_bubbles(t, center.x, bottom_y, surface_y, ORB_RADIUS):
-			draw_circle(b[0], b[1], Color(color.lightened(0.5), 0.35))
-		# Ondas en la superficie del líquido: la cresta se rellena (chapotea) y una línea clara encima.
-		var half := sqrt(maxf(0.0, ORB_RADIUS * ORB_RADIUS - pow(surface_y - center.y, 2.0)))
-		if half > 4.0:
-			var wave := PackedVector2Array()
-			for k in 13:
-				var x := center.x - half + 2.0 * half * k / 12.0
-				wave.append(Vector2(x, surface_y + sin(t * 3.0 + k * 0.9) * 1.5 + sin(t * 1.3 + k * 0.4) * 1.2))
-			var crest := wave.duplicate()
-			# Base bien por debajo de las ondas (bajan hasta +2,7): si casi la tocan, no se triangula.
-			crest.append(Vector2(center.x + half, surface_y + 6.0))
-			crest.append(Vector2(center.x - half, surface_y + 6.0))
-			draw_colored_polygon(crest, color)
-			draw_polyline(wave, color.lightened(0.35), 1.5, true)
-		# Brillo.
-		draw_circle(center + Vector2(-ORB_RADIUS * 0.35, -ORB_RADIUS * 0.4), ORB_RADIUS * 0.18, Color(1, 1, 1, 0.08))
+	draw_arc(center, ORB_RADIUS + 10.0, 0.0, TAU, 64, TRIM, 1.5, true)
+	draw_circle(center, r - GAUGE_WIDTH * 0.5 - 2.0, Color(UiStyle.BG, 0.9))
+	# Marcas cada 9° (las de cada 45°, más largas).
+	for k in 31:
+		var a := deg_to_rad(UiStyle.GAUGE_START + UiStyle.GAUGE_SPAN * k / 30.0)
+		var d := Vector2.from_angle(a)
+		var long := k % 5 == 0
+		draw_line(center + d * (ORB_RADIUS + 1.0), center + d * (ORB_RADIUS + (7.0 if long else 4.0)), Color(UiStyle.MUTED, 0.7 if long else 0.4), 1.5)
+	var full := UiStyle.gauge_arc(1.0)
+	draw_arc(center, r, full.x, full.y, 64, UiStyle.PANEL_LIGHT, GAUGE_WIDTH, true)
+	if fill > 0.005:
+		var arc := UiStyle.gauge_arc(fill)
+		draw_arc(center, r, arc.x, arc.y, 64, color, GAUGE_WIDTH, true)
+		# Brillo en la punta del arco.
+		draw_circle(center + Vector2.from_angle(arc.y) * r, GAUGE_WIDTH * 0.32, color.lightened(0.45))
 	if reserved > 0.005:
-		draw_colored_polygon(_orb_segment(center, 1.0 - reserved, 1.0), Color(0.12, 0.14, 0.22, 0.92))
-		var line_y := center.y + ORB_RADIUS * (1.0 - 2.0 * (1.0 - reserved))
-		var lhalf := sqrt(maxf(0.0, ORB_RADIUS * ORB_RADIUS - pow(line_y - center.y, 2.0)))
-		draw_line(Vector2(center.x - lhalf, line_y), Vector2(center.x + lhalf, line_y), Color("9ad0ff"), 1.5)
-		# Rayado diagonal recortado al círculo.
-		var top := center.y - ORB_RADIUS
-		for k in range(-12, 13):
-			var x0 := center.x + k * 12.0
-			var a := Vector2(x0, line_y)
-			var b := Vector2(x0 + (line_y - top), top)
-			var pts := _clip_to_circle(a, b, center, ORB_RADIUS - 1.0)
-			if pts.size() == 2:
-				draw_line(pts[0], pts[1], Color(0.6, 0.8, 1.0, 0.12), 2.0)
-	# Aro dorado del atlas (T95) alrededor del orbe.
-	UiAtlas.draw_orb_frame(self, center, ORB_RADIUS)
+		var from := UiStyle.gauge_arc(1.0 - reserved)
+		draw_arc(center, r, from.y, full.y, 32, Color(0.12, 0.14, 0.22, 0.95), GAUGE_WIDTH, true)
+		var steps := maxi(2, int(UiStyle.GAUGE_SPAN * reserved / 9.0))
+		for k in steps:
+			var a := lerpf(from.y, full.y, (k + 0.5) / steps)
+			draw_line(center + Vector2.from_angle(a) * (r - 5.0), center + Vector2.from_angle(a + 0.06) * (r + 5.0), Color(0.6, 0.8, 1.0, 0.35), 1.5)
+	var font := get_theme_default_font()
+	draw_string(font, center + Vector2(-ORB_RADIUS, -16.0), "%d%%" % roundi(fill * 100.0), HORIZONTAL_ALIGNMENT_CENTER, ORB_RADIUS * 2.0, 13, Color(color.lightened(0.3), 0.9))
+	if label != "":
+		draw_string(font, center + Vector2(-ORB_RADIUS, 44.0), label, HORIZONTAL_ALIGNMENT_CENTER, ORB_RADIUS * 2.0, 12, UiStyle.MUTED)
 
 
 ## Brillo de la barra de experiencia al subir de nivel (T97, UiMotion.level_glow).
@@ -1504,43 +1496,3 @@ func _pixel_string(_font: Font, pos: Vector2, text: String, color: Color) -> voi
 	draw_string_outline(font, pos, text, HORIZONTAL_ALIGNMENT_CENTER, 160.0, size, 5, Color(0, 0, 0, 0.9))
 	draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_CENTER, 160.0, size, color)
 
-
-## Polígono de la franja del orbe entre las alturas `from` y `to` (0 = abajo, 1 = arriba).
-func _orb_segment(center: Vector2, from: float, to: float) -> PackedVector2Array:
-	var points := PackedVector2Array()
-	var steps := 48
-	# Arco de la parte de abajo (de la línea de "to" hacia la de "from"), por la derecha y por la izquierda.
-	var y_top := center.y + ORB_RADIUS * (1.0 - 2.0 * clampf(to, 0.0, 1.0))
-	var y_bottom := center.y + ORB_RADIUS * (1.0 - 2.0 * clampf(from, 0.0, 1.0))
-	for side in [1.0, -1.0]:
-		for k in steps + 1:
-			var s := float(k) / steps
-			var y := lerpf(y_top, y_bottom, s) if side > 0.0 else lerpf(y_bottom, y_top, s)
-			var p := Vector2(center.x + side * sqrt(maxf(0.0, ORB_RADIUS * ORB_RADIUS - pow(y - center.y, 2.0))), y)
-			# Sin vértices repetidos (en los polos del círculo coinciden): la triangulación fallaría.
-			if points.is_empty() or points[points.size() - 1].distance_to(p) > 0.05:
-				points.append(p)
-	if points.size() > 2 and points[0].distance_to(points[points.size() - 1]) <= 0.05:
-		points.remove_at(points.size() - 1)
-	return points
-
-
-## Recorta el segmento a-b a un círculo; [] si queda fuera.
-func _clip_to_circle(a: Vector2, b: Vector2, center: Vector2, radius: float) -> PackedVector2Array:
-	var out := PackedVector2Array()
-	var steps := 24
-	var inside_prev := false
-	for k in steps + 1:
-		var p := a.lerp(b, float(k) / steps)
-		var inside := p.distance_to(center) <= radius
-		if inside and not inside_prev and out.is_empty():
-			out.append(p)
-		elif not inside and inside_prev and out.size() == 1:
-			out.append(a.lerp(b, float(k - 1) / steps))
-			break
-		inside_prev = inside
-	if out.size() == 1:
-		out.append(b)
-	return out
-	draw_arc(center, ORB_RADIUS, 0.0, TAU, 64, TRIM, 3.0, true)
-	draw_arc(center, ORB_RADIUS + 10.0, 0.0, TAU, 64, TRIM.darkened(0.4), 2.0, true)

@@ -1195,7 +1195,7 @@ Origen: R8
 - Quitar colores sueltos: las ventanas toman sus colores de `UiStyle`, no de constantes propias.
 - Prueba: contraste texto/panel ≥ 4,5:1 (luminancia WCAG) para `TEXT`, `MUTED` y el acento; ninguna ventana de `scripts/ui/` usa los colores antiguos (`d9a441`, `b08a4a`…) fuera de `UiStyle`.
 
-### [ ] T167 · HUD de partida · M
+### [x] T167 · HUD de partida · M
 Origen: R8
 - Orbes de vida y maná como **medidores** de la propuesta elegida (vida = integridad del proceso, maná = memoria), barra de experiencia como barra de progreso con porcentaje, casillas de habilidad como teclas (keycaps), minimapa como radar con rejilla, registro de misiones como lista de TODO con casillas y registro de sucesos como consola (`[INFO]`, `[WARN]` con hora).
 - Botones táctiles (habilidades, esquiva, usar, AUTO, pociones) con el mismo estilo, sin perder el hundido, el barrido de enfriamiento y el azul de sin maná de T148.
@@ -1442,3 +1442,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-31 · T165 · Guía visual (`docs/estilo_visual.md`) y dos maquetas para elegir, dibujadas por `UiProposals`: A · Terminal/IDE y B · Panel de monitoreo/datos (`docs/capturas/interfaz/165_propuesta_a/b.png`), con contraste ≥ 4,5:1 comprobado.
 - 2026-10-31 · T165 · El usuario elige la propuesta B (panel de monitoreo/datos).
 - 2026-10-31 · T166 · `UiStyle` con la propuesta B: paleta turquesa, tarjetas planas redondeadas, botones, pestañas, barras de desplazamiento y barras de progreso; ventanas sin latón ni remaches (raya del acento y grafo de tres nodos), separador de red neuronal, fondo de puntos; tooltips con franja del color de la rareza; casillas sin el marco del atlas. Los colores sueltos de `scripts/ui` pasan a `UiStyle`. Pruebas: contraste ≥ 4,5:1 y ningún color viejo en `scripts/ui`. Capturas `docs/capturas/interfaz/166_*`.
+- 2026-10-31 · T167 · HUD del panel de datos: vida y maná como medidores circulares con marcas («integridad» y «memoria», porcentaje y cifras; el maná reservado, rayado al final del arco; `UiStyle.gauge_arc` llena la misma fracción que los orbes), barra de experiencia redondeada con el % junto al nivel, habilidades, pociones y esquiva como teclas, placa plana, minimapa como radar (anillos, cruz, barrido y marcas), misiones como TODO («[ ] ★», «[x]» al entregar) y registro como consola (`00:01 [INFO]`, nivel por color). Sin latón ni atlas en el HUD. `capture_screens -- solapes`: 0. Capturas `docs/capturas/interfaz/167_hud_pc/tactil.png`.
