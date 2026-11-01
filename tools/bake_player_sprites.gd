@@ -42,7 +42,7 @@ func _bake() -> void:
 	_save_fixed("body_fixed", body_id, body_real, null)
 	# Pelo: una variante por peinado, comparada con el cuerpo sin pelo.
 	var hair_rows := []
-	for h in CharacterAppearance.HAIR_NAMES.size():
+	for h in CharacterAppearance.OFFICE_HAIR_COUNT:   # (los del alumno usan uno de estos, T180)
 		var a := base.duplicate()
 		a["hair"] = h
 		a.erase("hair_clear")

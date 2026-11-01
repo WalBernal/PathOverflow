@@ -15,7 +15,16 @@ const ACCENT_COLORS := ["2a2a30", "d9a441", "c8c8c8", "8a2b2b", "2b5a8a", "2b8a5
 const EYE_COLORS := ["3a2414", "6b4423", "2e6b8a", "3d7a3d", "5a5a6a", "8a6d3b", "1a1414", "9a3a6a"]
 const BODY_NAMES := ["Delgada", "Media", "Robusta"]
 const BODY_WIDTH := [0.82, 1.0, 1.22]
-const HAIR_NAMES := ["Rapado", "Corto", "Largo", "Cresta", "Moño", "Hacia atrás", "Afro", "Coleta", "Rapado lateral", "Melena con flequillo", "Entradas"]
+const HAIR_NAMES := ["Rapado", "Corto", "Largo", "Cresta", "Moño", "Hacia atrás", "Afro", "Coleta", "Rapado lateral", "Melena con flequillo", "Entradas",
+	"Ondulado", "Dos coletas", "Trenzas", "Flequillo lateral", "Rizos"]
+## El oficinista (prólogo, retratos, NPC por capas) dibuja los 11 primeros; los que
+## llegaron con el alumno (T180) usan el más parecido de ellos.
+const OFFICE_HAIR_COUNT := 11
+const OFFICE_HAIR := {11: 9, 12: 7, 13: 2, 14: 9, 15: 6}
+
+
+static func office_hair(style: int) -> int:
+	return int(OFFICE_HAIR.get(style, style)) if style >= OFFICE_HAIR_COUNT else style
 const BEARD_NAMES := ["Sin barba", "Barba de tres días", "Barba completa", "Bigote", "Candado"]
 ## (T180: sin gorra ni gorro de lana; lo de la cabeza lo pone el equipo. Los guardados
 ## que los llevaban, 4 y 5, cargan sin accesorio.)
@@ -588,7 +597,7 @@ static func draw_head(ci: CanvasItem, head: Vector2, r: float, a: Dictionary, op
 	var hair := _tinted(Color(a["hair_color"]), tint)
 	var accent := _tinted(Color(a.get("accent_color", "2a2a30")), tint)
 	var streaks := _tinted(Color(a["hair_streaks"]), tint) if a.has("hair_streaks") else Color(0, 0, 0, 0)
-	var style := int(a["hair"])
+	var style := office_hair(int(a["hair"]))
 	var beard := int(a.get("beard", 0))
 	var acc := int(a.get("accessory", 0))
 	var back: bool = opts.get("back", false)

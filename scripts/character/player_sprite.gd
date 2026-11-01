@@ -103,7 +103,7 @@ func cells() -> Dictionary:
 	return {
 		"body": 0, "body_fixed": 0,
 		"weapon": PlayerSheet.WEAPONS.find(weapon),
-		"hair": int(a["hair"]),
+		"hair": CharacterAppearance.office_hair(int(a["hair"])),
 		"beard": int(a["beard"]) - 1, "accessory": int(a["accessory"]) - 1, "accessory_fixed": int(a["accessory"]) - 1,
 		"gear": CharacterAppearance.GEARS.find(String(a.get("gear", ""))),   # equipo de la clase (T161)
 		"_dir": d[0], "_flip": d[1], "_col": col,

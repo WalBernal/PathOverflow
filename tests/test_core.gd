@@ -5590,7 +5590,7 @@ func _test_player_sheet() -> void:
 	# Hojas horneadas (T160: un archivo por variante, 96×120 por cuadro): tamaño y algo
 	# dibujado en cada variante.
 	_check(PlayerSheet.CW * PlayerSheet.columns() <= 4096, "las hojas caben en una textura de 4096 px de ancho")
-	var rows := {"body": 1, "hair": CharacterAppearance.HAIR_NAMES.size(), "beard": CharacterAppearance.BEARD_NAMES.size() - 1,
+	var rows := {"body": 1, "hair": CharacterAppearance.OFFICE_HAIR_COUNT, "beard": CharacterAppearance.BEARD_NAMES.size() - 1,
 		"accessory": CharacterAppearance.ACCESSORY_NAMES.size() - 1, "weapon": PlayerSheet.WEAPONS.size()}
 	for layer in rows:
 		var empty := []

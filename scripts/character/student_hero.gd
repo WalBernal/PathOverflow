@@ -226,12 +226,14 @@ static func _tone(c: Color, role: String, target: Dictionary) -> Color:
 
 
 ## Peinados del creador (T180). «Corto» es el pelo de la lámina; los demás se dibujan
-## sobre la cabeza calva de la plantilla (la cúpula de DOME), cada uno con su forma y
-## el mismo sombreado que el de la lámina: luz arriba a la izquierda, sombra abajo y a
-## la derecha, contorno contra el fondo.
+## sobre la cabeza calva de la plantilla (la cúpula de DOME) con las mismas reglas que
+## ese pelo: casquete con volumen, flequillo de mechones en punta (la frente asoma entre
+## ellos), mechones laterales, un brillo en arco arriba a la izquierda, líneas de mechón
+## que salen de la coronilla y contorno contra el fondo.
 const DOME_C := Vector2(28.5, 24.0)
 const DOME_R := 9.8
 const BROW_Y := 24
+const CROWN := Vector2(28.5, 7.0)
 
 
 static func _hair_style(img: Image, look: Dictionary) -> void:
@@ -240,67 +242,251 @@ static func _hair_style(img: Image, look: Dictionary) -> void:
 		return
 	var hair := Color(look.get("hair_color", "2b2118"))
 	var skin := Color(look.get("skin_tone", "c99a7a"))
+	var tie := Color(look.get("accent_color", "2fd0a0"))
 	_bald(img, skin)
-	var m := {}
+	var h := Hair.new()
 	match style:
-		0:   # rapado: pelo al ras de la cúpula
-			_dome_cap(m, 0.6, 13, 20)
-			_paint_hair(img, m, hair.lerp(skin, 0.35).darkened(0.1), true)
-			return
-		2:   # largo: casquete con flequillo partido y mechones hasta los hombros
-			_dome_cap(m, 1.6, 13, 22)
-			_fringe(m, 21, 23, [22, 23, 24, 25, 26, 31, 32, 33, 34, 35])
-			_rect(m, 17, 21, 3, 13)
-			_rect(m, 37, 21, 3, 13)
-		3:   # cresta: lados rapados y una cresta alta en el centro
-			var sides := {}
-			_dome_cap(sides, 0.6, 13, 20)
-			_paint_hair(img, sides, hair.lerp(skin, 0.4).darkened(0.1), true)
-			for y in range(7, 21):
-				var w := 3 if y > 9 else 2
-				for x in range(28 - w, 29 + w - (1 if y < 9 else 0)):
-					m[Vector2i(x, y)] = true
-		4:   # moño: peinado hacia atrás y un moño arriba
-			_dome_cap(m, 1.2, 14, 21)
-			_disc(m, Vector2(28.5, 11.0), 3.6)
-		5:   # hacia atrás: con volumen, la frente despejada y raya diagonal
-			_dome_cap(m, 1.8, 12, 20)
-			_rect(m, 18, 20, 2, 5)
-			_rect(m, 38, 20, 2, 5)
-		6:   # afro: un círculo grande alrededor de la cara
-			_disc(m, Vector2(28.5, 18.0), 13.0)
-			for p: Vector2i in m.keys():
-				if p.y > 25 or (p.y >= 21 and p.x >= 20 and p.x <= 37):
-					m.erase(p)
-		7:   # coleta: recogido, flequillo corto y la coleta por la derecha
-			_dome_cap(m, 1.2, 14, 21)
-			_fringe(m, 21, 22, [21, 22, 23, 24])
-			for y in range(17, 33):
-				var w := 3 if y < 28 else 2
-				for x in range(39, 39 + w):
-					m[Vector2i(x, y)] = true
-		8:   # rapado lateral: lados rapados y el pelo largo arriba, caído a un lado
-			var sides := {}
-			_dome_cap(sides, 0.6, 17, 21)
-			_paint_hair(img, sides, hair.lerp(skin, 0.4).darkened(0.1), true)
-			_dome_cap(m, 2.2, 11, 17)
-			_fringe(m, 18, 21, [20, 21, 22, 23, 24, 25, 26])
-		9:   # melena con flequillo: corte recto en la frente y a los lados hasta el cuello
-			_dome_cap(m, 1.6, 13, 23)
-			_fringe(m, 21, 23, range(20, 38))
-			_rect(m, 17, 21, 4, 10)
-			_rect(m, 37, 21, 4, 10)
-		10:   # entradas: el nacimiento del pelo en «M», con las sienes despejadas
-			_dome_cap(m, 1.2, 14, 20)
-			for p: Vector2i in m.keys():
-				if p.y >= 18 and ((p.x >= 21 and p.x <= 25) or (p.x >= 32 and p.x <= 36)):
-					m.erase(p)
-			_rect(m, 27, 20, 4, 1)
-	_paint_hair(img, m, hair, false)
-	if style == 4 or style == 7:   # el lazo del moño o la coleta, del color de los detalles
-		var tie := Color(look.get("accent_color", "2fd0a0"))
-		for x in ([27, 28, 29, 30] if style == 4 else [39, 40, 41]):
-			img.set_pixel(x, 14 if style == 4 else 18, tie)
+		0:   # rapado: al ras de la cúpula, sin brillo
+			h.cap(0.7, 13, 19)
+			h.flat = true
+		2:   # largo: raya al medio, flequillo abierto y mechones hasta los hombros
+			h.cap(2.0, 11, 20)
+			h.locks([[20.5, 4, 2.5], [23.0, 3, 2.0], [34.0, 3, 2.0], [36.5, 4, 2.5]], 19)
+			h.side(18, 20, 34, 3)
+			h.side(39, 20, 34, 3)
+			h.part(28)
+		3:   # cresta: lados rapados y una cresta de puntas
+			h.stubble(0.7, 13, 20)
+			h.spikes([[26.0, 13, 2.5], [28.5, 6, 3.0], [31.0, 12, 2.5], [28.5, 15, 3.5]])
+		4:   # moño: recogido, con mechones sueltos en las sienes
+			h.cap(1.2, 13, 19)
+			h.disc(Vector2(28.5, 10.5), 3.7)
+			h.locks([[20.5, 5, 1.6], [36.5, 5, 1.6]], 19)
+			h.ties.append(Rect2i(26, 13, 6, 1))
+		5:   # hacia atrás: volumen alto, frente despejada y patillas
+			h.cap(2.6, 10, 18)
+			h.side(19, 18, 23, 2)
+			h.side(38, 18, 23, 2)
+		6:   # afro: grande y rizado
+			h.disc(Vector2(28.5, 16.5), 12.5)
+			h.carve_face(21)
+			h.curly = true
+		7:   # coleta: flequillo de lado y la coleta por la derecha
+			h.cap(1.6, 12, 20)
+			h.locks([[21.0, 4, 2.5], [24.5, 3, 2.5], [28.0, 2, 2.0]], 19)
+			h.tail(Vector2i(40, 16), 17, 3)
+			h.ties.append(Rect2i(39, 17, 3, 1))
+		8:   # rapado lateral: lados rapados y el pelo de arriba caído a la izquierda
+			h.stubble(0.7, 15, 21)
+			h.cap(2.4, 10, 17)
+			h.locks([[20.0, 6, 2.5], [23.0, 5, 2.5], [26.0, 3, 2.0]], 17)
+		9:   # melena con flequillo recto, hasta la barbilla
+			h.cap(2.0, 11, 20)
+			h.locks([[20.5, 3, 1.6], [23.5, 3, 1.6], [26.5, 3, 1.6], [29.5, 3, 1.6], [32.5, 3, 1.6], [35.5, 3, 1.6]], 20)
+			h.side(18, 20, 30, 3)
+			h.side(39, 20, 30, 3)
+		10:   # entradas: nacimiento en «M» y las sienes despejadas
+			h.cap(1.4, 12, 18)
+			h.locks([[28.5, 3, 2.0]], 18)
+			h.recede(18)
+		11:   # ondulado: de lado y con ondas hasta los hombros
+			h.cap(2.2, 11, 20)
+			h.locks([[21.0, 4, 2.6], [24.5, 3, 2.4]], 19)
+			h.side(18, 20, 32, 3, true)
+			h.side(39, 20, 32, 3, true)
+			h.part(31)
+		12:   # dos coletas con lazos
+			h.cap(1.6, 12, 20)
+			h.locks([[22.0, 3, 2.2], [25.5, 3, 2.2], [31.5, 3, 2.2], [35.0, 3, 2.2]], 19)
+			h.tail(Vector2i(16, 16), 15, 3)
+			h.tail(Vector2i(41, 16), 15, 3)
+			h.ties.append(Rect2i(15, 17, 3, 1))
+			h.ties.append(Rect2i(40, 17, 3, 1))
+		13:   # trenzas: raya al medio y dos trenzas a los hombros
+			h.cap(1.8, 12, 20)
+			h.part(28)
+			h.braid(Vector2i(19, 20), 15)
+			h.braid(Vector2i(37, 20), 15)
+			h.ties.append(Rect2i(18, 35, 3, 1))
+			h.ties.append(Rect2i(36, 35, 3, 1))
+		14:   # flequillo lateral: un mechón largo que cae sobre un ojo
+			h.cap(2.0, 11, 20)
+			h.locks([[33.0, 8, 3.2], [36.0, 7, 2.4], [24.0, 3, 2.0]], 19)
+			h.side(18, 20, 26, 2)
+			h.side(39, 20, 28, 2)
+		15:   # rizos cortos
+			h.cap(2.4, 10, 19)
+			h.disc(Vector2(21.0, 19.0), 3.0)
+			h.disc(Vector2(36.0, 19.0), 3.0)
+			h.curly = true
+	h.paint(img, hair, tie)
+
+
+## Una forma de pelo y cómo sombrearla (las piezas se suman en `cells`).
+class Hair:
+	var cells := {}   # Vector2i → true
+	var stub := {}    # pelo al ras (lados rapados)
+	var locks_px := {}   # Vector2i → 0 (lado claro del mechón) / 1 (lado oscuro)
+	var gaps := {}    # raya del peinado (piel)
+	var ties: Array[Rect2i] = []
+	var flat := false
+	var curly := false
+
+	func _add(p: Vector2i) -> void:
+		if p.x >= 0 and p.y >= 0 and p.x < CELL.x and p.y < CELL.y:
+			cells[p] = true
+
+	## Casquete: la cúpula con `extra` píxeles de volumen, de la fila `top` a `bottom`.
+	func cap(extra: float, top: int, bottom: int) -> void:
+		for y in range(top, bottom + 1):
+			for x in CELL.x:
+				var d := Vector2(x + 0.5, y + 0.5) - DOME_C
+				# Más volumen arriba que a los lados (como el pelo de la lámina).
+				if d.length() <= DOME_R + extra * clampf(-d.y / DOME_R + 0.35, 0.35, 1.0):
+					_add(Vector2i(x, y))
+
+	func stubble(extra: float, top: int, bottom: int) -> void:
+		for y in range(top, bottom + 1):
+			for x in CELL.x:
+				if (Vector2(x + 0.5, y + 0.5) - DOME_C).length() <= DOME_R + extra:
+					stub[Vector2i(x, y)] = true
+
+	## Mechones en punta: [x del centro, largo, medio ancho], desde la fila `from`.
+	func locks(list: Array, from: int) -> void:
+		for l in list:
+			var cx: float = l[0]
+			var length: int = l[1]
+			var w: float = l[2]
+			for k in length + 1:
+				var half := w * (1.0 - float(k) / (length + 1))
+				for x in range(int(floor(cx - half)), int(ceil(cx + half))):
+					var p := Vector2i(x, from + k)
+					_add(p)
+					locks_px[p] = 0 if x + 0.5 < cx else 1
+
+	## Mechón lateral de `width` del borde de la cara de la fila `from` a `to` (en punta).
+	func side(x: int, from: int, to: int, width: int, wavy := false) -> void:
+		var dir := 1 if x < DOME_C.x else -1
+		for y in range(from, to + 1):
+			var w := width if y < to - 1 else maxi(1, width - (y - to + 2))
+			var wave := (1 if (y / 3) % 2 == 0 else 0) * (-dir) if wavy else 0
+			for i in w:
+				_add(Vector2i(x + i * dir + wave, y))
+
+	## Raya del peinado en la columna `x` (la piel asoma en la frente).
+	func part(x: int) -> void:
+		for y in range(17, 21):
+			gaps[Vector2i(x, y)] = true
+
+	func spikes(list: Array) -> void:
+		for s in list:
+			var cx: float = s[0]
+			var tip: int = s[1]
+			var w: float = s[2]
+			for y in range(tip, 21):
+				var half := w * clampf(float(y - tip + 1) / 5.0, 0.2, 1.0)
+				for x in range(int(floor(cx - half)), int(ceil(cx + half))):
+					_add(Vector2i(x, y))
+
+	func disc(c: Vector2, r: float) -> void:
+		for y in range(int(c.y - r) - 1, int(c.y + r) + 2):
+			for x in range(int(c.x - r) - 1, int(c.x + r) + 2):
+				if (Vector2(x + 0.5, y + 0.5) - c).length() <= r:
+					_add(Vector2i(x, y))
+
+	## Quita el pelo de delante de la cara (afro) de la fila `from` para abajo.
+	func carve_face(from: int) -> void:
+		for p: Vector2i in cells.keys():
+			if p.y >= from and p.x >= 20 and p.x <= 37:
+				cells.erase(p)
+		for p: Vector2i in cells.keys():
+			if p.y > 26:
+				cells.erase(p)
+
+	## Nacimiento en «M»: fuera el pelo de las sienes.
+	func recede(y0: int) -> void:
+		for p: Vector2i in cells.keys():
+			if p.y >= y0 - 1 and ((p.x >= 21 and p.x <= 25) or (p.x >= 32 and p.x <= 36)):
+				cells.erase(p)
+
+	## Coleta: cae desde `top` `length` filas, más fina al final.
+	func tail(top: Vector2i, length: int, width: int) -> void:
+		for k in length:
+			var w := width if k < length - 4 else maxi(1, width - (k - length + 5))
+			var sway := 1 if k > length / 2 else 0
+			for i in w:
+				_add(Vector2i(top.x - w / 2 + i + (sway if top.x > DOME_C.x else -sway), top.y + k))
+
+	## Trenza: eslabones de 3 píxeles que alternan.
+	func braid(top: Vector2i, length: int) -> void:
+		for k in length:
+			var off := 1 if (k / 2) % 2 == 0 else 0
+			for i in 3:
+				var p := Vector2i(top.x + i - 1 + off - 1 + 1, top.y + k)
+				_add(p)
+				locks_px[p] = 1 if (k % 2 == 1 and i == 2) else 0
+
+	func paint(img: Image, hair: Color, tie: Color) -> void:
+		var light := hair.lightened(0.28)
+		var shine := hair.lightened(0.5)
+		var dark := hair.darkened(0.28)
+		var deep := hair.darkened(0.45)
+		var outline := hair.darkened(0.75).lerp(Color("1a1024"), 0.35)
+		var stubble := hair.lerp(img.get_pixel(int(DOME_C.x), BROW_Y - 2), 0.4)
+		for p: Vector2i in stub:
+			if not cells.has(p):
+				img.set_pixelv(p, stubble.darkened(0.12) if (p.x + p.y) % 2 == 0 else stubble)
+		for p: Vector2i in gaps:
+			cells.erase(p)
+		for p: Vector2i in cells:
+			var up := cells.has(p + Vector2i(0, -1))
+			var down := cells.has(p + Vector2i(0, 1))
+			var right := cells.has(p + Vector2i(1, 0))
+			var r := (Vector2(p) + Vector2(0.5, 0.5) - DOME_C).length()
+			var c := hair
+			if flat:
+				c = hair.darkened(0.15) if (p.x + p.y) % 2 == 0 else hair
+			elif curly:
+				# Rizos en racimos de 3×3: brillo arriba a la izquierda, sombra abajo a la derecha.
+				var cell := Vector2i(p.x / 3, (p.y + (p.x / 3) % 2) / 3)
+				var local := Vector2i(p.x % 3, (p.y + (p.x / 3) % 2) % 3)
+				c = hair
+				if local == Vector2i(0, 0):
+					c = light
+				elif local == Vector2i(1, 0) and (cell.x + cell.y) % 2 == 0:
+					c = light
+				elif local == Vector2i(2, 2) or (local == Vector2i(1, 2) and (cell.x + cell.y) % 2 == 1):
+					c = dark
+				if p.y < 12 and local == Vector2i(0, 0):
+					c = shine
+				if not down or not right:
+					c = deep
+			elif locks_px.has(p):
+				c = light if int(locks_px[p]) == 0 else dark
+				if not down:
+					c = deep
+			elif not down or not right:
+				c = dark
+			elif r > DOME_R - 1.5 and r < DOME_R + 0.6 and p.x < int(DOME_C.x) + 3 and p.y < 19:
+				# Brillo en arco, con un punto más claro cada tres píxeles.
+				c = shine if (p.x + p.y) % 3 == 0 else light
+			elif not up and p.x < int(DOME_C.x):
+				c = light
+			else:
+				# Líneas de mechón que salen de la coronilla.
+				var a := atan2(p.y + 0.5 - CROWN.y, p.x + 0.5 - CROWN.x)
+				if p.y > 11 and fmod(a * 7.0 / PI + 10.0, 1.0) < 0.14:
+					c = dark
+			img.set_pixelv(p, c)
+		for p: Vector2i in cells:
+			for d: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, -1), Vector2i(0, 1)]:
+				var q := p + d
+				if q.x >= 0 and q.y >= 0 and q.x < CELL.x and q.y < CELL.y and not cells.has(q) and img.get_pixelv(q).a <= 0.0:
+					img.set_pixelv(q, outline)
+		for t in ties:
+			for y in range(t.position.y, t.end.y):
+				for x in range(t.position.x, t.end.x):
+					img.set_pixel(x, y, tie)
 
 
 ## La cabeza sin pelo: quita el de la lámina y rellena la cúpula con piel (con su
@@ -320,74 +506,15 @@ static func _bald(img: Image, skin: Color) -> void:
 			if img.get_pixel(x, y).a > 0.0:
 				continue
 			if y <= BROW_Y and d.length() <= DOME_R:
-				img.set_pixel(x, y, shade if d.x > DOME_R - 3.5 or d.x < -DOME_R + 1.2 else skin)
+				# Sombra solo a la derecha y abajo, como la cara de la lámina.
+				img.set_pixel(x, y, shade if d.x > DOME_R - 3.0 and y >= 19 else skin)
 			elif y > BROW_Y and absf(d.x) < DOME_R - 0.5:   # las sienes (la sombra del pelo en la lámina)
-				img.set_pixel(x, y, shade)
+				img.set_pixel(x, y, shade if d.x > 0.0 else skin)
 	for y in range(12, BROW_Y + 1):
 		for x in CELL.x:
 			var d := Vector2(x + 0.5, y + 0.5) - DOME_C
 			if img.get_pixel(x, y).a <= 0.0 and d.length() <= DOME_R + 1.0:
 				img.set_pixel(x, y, outline)
-
-
-## Casquete sobre la cúpula: `extra` píxeles por encima, de la fila `top` a `bottom`.
-static func _dome_cap(m: Dictionary, extra: float, top: int, bottom: int) -> void:
-	for y in range(top, bottom + 1):
-		for x in CELL.x:
-			if (Vector2(x + 0.5, y + 0.5) - DOME_C).length() <= DOME_R + extra:
-				m[Vector2i(x, y)] = true
-
-
-## Flequillo: mechones que bajan de `from` a `to` en las columnas dadas (más cortos en los bordes).
-static func _fringe(m: Dictionary, from: int, to: int, cols) -> void:
-	var list: Array = Array(cols)
-	for i in list.size():
-		var x: int = list[i]
-		var edge := i == 0 or i == list.size() - 1
-		for y in range(from, to + (0 if edge else 1)):
-			m[Vector2i(x, y)] = true
-
-
-static func _rect(m: Dictionary, x0: int, y0: int, w: int, h: int) -> void:
-	for y in range(y0, y0 + h):
-		for x in range(x0, x0 + w):
-			m[Vector2i(x, y)] = true
-
-
-static func _disc(m: Dictionary, c: Vector2, r: float) -> void:
-	for y in range(int(c.y - r) - 1, int(c.y + r) + 2):
-		for x in range(int(c.x - r) - 1, int(c.x + r) + 2):
-			if (Vector2(x + 0.5, y + 0.5) - c).length() <= r:
-				m[Vector2i(x, y)] = true
-
-
-## Pinta una forma de pelo con el sombreado de la lámina y contorno contra el fondo.
-## `flat`: pelo al ras (sin brillos, un solo tono con puntitos).
-static func _paint_hair(img: Image, m: Dictionary, hair: Color, flat: bool) -> void:
-	var light := hair.lightened(0.28)
-	var dark := hair.darkened(0.3)
-	var outline := hair.darkened(0.75).lerp(Color("1a1024"), 0.35)
-	for p: Vector2i in m:
-		if p.x < 0 or p.y < 0 or p.x >= CELL.x or p.y >= CELL.y:
-			continue
-		var up := m.has(p + Vector2i(0, -1))
-		var right := m.has(p + Vector2i(1, 0))
-		var down := m.has(p + Vector2i(0, 1))
-		var c := hair
-		if flat:
-			c = hair.darkened(0.15) if (p.x + p.y) % 2 == 0 else hair
-		elif not right or not down:
-			c = dark
-		elif not up and p.x < int(DOME_C.x) + 2:
-			c = light
-		elif (p.x - p.y) % 5 == 0 and up:   # mechones
-			c = dark if p.x > int(DOME_C.x) else hair.lightened(0.1)
-		img.set_pixelv(p, c)
-	for p: Vector2i in m:
-		for d: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, -1), Vector2i(0, 1)]:
-			var q := p + d
-			if q.x >= 0 and q.y >= 0 and q.x < CELL.x and q.y < CELL.y and not m.has(q) and img.get_pixelv(q).a <= 0.0:
-				img.set_pixelv(q, outline)
 
 
 static func _hair_mask(img: Image) -> Array[Vector2i]:
@@ -423,21 +550,35 @@ static func _accessory(img: Image, look: Dictionary) -> void:
 	var dark := Color("1a1624")
 	var accent := Color(look.get("accent_color", "2a2a30"))
 	match int(look.get("accessory", 0)):
-		1, 2:   # lentes (montura) / de sol (cristal oscuro)
-			for eye_x in [24, 32]:
-				for x in range(eye_x - 1, eye_x + 3):
-					img.set_pixel(x, 25, dark)
-					img.set_pixel(x, 28, dark)
-				img.set_pixel(eye_x - 1, 26, dark)
-				img.set_pixel(eye_x - 1, 27, dark)
-				img.set_pixel(eye_x + 2, 26, dark)
-				img.set_pixel(eye_x + 2, 27, dark)
-				if int(look.get("accessory", 0)) == 2:
-					for x in range(eye_x, eye_x + 2):
-						img.set_pixel(x, 26, Color("2a2f3e"))
-						img.set_pixel(x, 27, Color("3a4258"))
-			img.set_pixel(28, 26, dark)
-			img.set_pixel(29, 26, dark)
+		1, 2:   # lentes: montura alrededor de cada ojo (que se ve entero en los claros)
+			var sun := int(look.get("accessory", 0)) == 2
+			# Los de sol, con la montura del color de los detalles (se distingue del cristal).
+			var frame: Color = accent.lightened(0.1) if sun else Color("241c2c")
+			var lens_top := Color("2c3550")
+			for lens_x in [23, 31]:   # cada cristal: columnas lens_x..lens_x+4, filas 25..29
+				for x in range(lens_x, lens_x + 5):
+					img.set_pixel(x, 25, frame)
+					img.set_pixel(x, 29, frame)
+				for y in range(26, 29):
+					img.set_pixel(lens_x, y, frame)
+					img.set_pixel(lens_x + 4, y, frame)
+					for x in range(lens_x + 1, lens_x + 4):
+						if sun:   # cristal oscuro con degradado
+							img.set_pixel(x, y, lens_top.darkened(0.2 * (y - 26)))
+						elif img.get_pixel(x, y).is_equal_approx(img.get_pixel(28, 27)):
+							img.set_pixel(x, y, img.get_pixel(x, y).lightened(0.12))   # el cristal claro, sobre la piel
+				# Destello en el borde de fuera de cada cristal.
+				var glint_x: int = lens_x + 1 if lens_x < 28 else lens_x + 3
+				img.set_pixel(glint_x, 26, Color(1, 1, 1, 0.9) if not sun else Color("9fb0d8"))
+				if sun:
+					img.set_pixel(glint_x + (1 if lens_x < 28 else -1), 27, Color("5a6a94"))
+			# Puente y patillas hasta las orejas.
+			for x in range(28, 31):
+				img.set_pixel(x, 26, frame)
+			for x in range(20, 23):
+				img.set_pixel(x, 26, frame)
+			for x in range(36, 38):
+				img.set_pixel(x, 26, frame)
 		3:   # audífonos
 			for x in range(19, 39):
 				img.set_pixel(x, 14 if x > 21 and x < 36 else 16, dark)
