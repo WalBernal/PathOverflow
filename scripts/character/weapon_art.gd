@@ -14,6 +14,8 @@ const PALETTE := {
 	"r": "e04848", "R": "8a2020",                          # rojo
 	"k": "d8dce6", "K": "8a90a0", "B": "2a2833",           # teclas, plástico oscuro
 	"y": "f2c230", "Y": "b08a20", "p": "ff6ad5", "b": "4b8bd6", "W": "f4f4f4",
+	"P": "e8d8a8", "Q": "b09a68",                          # papel
+	"v": "5cbf5a", "V": "2e7d32",                          # hojas
 }
 const OUTLINE := Color("1a1624")
 
@@ -37,6 +39,20 @@ const ART := {
 	"punal_de_dia_cero": [".r.", "BrB", "BrB", "BRB", "GgG", ".L.", ".l."],
 	"cuchilla_de_carton": [".w.", ".m.", ".w.", ".m.", "yYy", "yYy", "yYy"],
 	"navaja_multiherramienta": [".w.", ".m.", ".m.", "rRr", "rWr", "rRr"],
+	# --- Lo que llevan los NPC (T178; el `gear` de su apariencia, como en T162) ---
+	"prop_cafe": ["WllW.", "WWWWW", "WWW.W", "WWWWW", "KWWK."],
+	"prop_monitor": ["BBBBBBB", "BcccccB", "BcCccCB", "BcccccB", "BBBBBBB", "...B...", ".BBBBB."],
+	"prop_laptop": ["BBBBBB", "BccccB", "BcCccB", "BBBBBB", "KkkkkK"],
+	"prop_maleta": ["..gg..", ".g..g.", "LllllL", "lllgll", "llllll", "LLLLLL"],
+	"prop_pantalla": ["BBBBB", "BcccB", "BCcCB", "BcccB", "BCCCB", "BBBBB"],
+	"prop_mapa": ["LPPPPL", ".PQPP.", ".PPQP.", ".QPPP.", "LPPPPL"],
+	"prop_tablas": ["bbbbb", "WbWbW", "bbbbb", "WbWbW", "bbbbb", "WbWbW"],
+	"prop_tablero": [".KK.", "lWWl", "lWbl", "lWWl", "lWbl", "llll"],
+	"prop_bolsa": ["..K..", ".KKK.", "KKKKK", "KKBKK", "KKKKK", ".KKK."],
+	"prop_cartel": ["WWWWWWW", "WrrWrrW", "WWWWWWW", "WrrrrWW", "WWWWWWW", "...l...", "...l...", "...l...", "...L...", "...l..."],
+	"prop_planos": [".b.", "bWb", "bbb", "bWb", "bbb", "bWb", "bbb"],
+	"prop_rosa": [".r.", "rRr", ".r.", ".v.", "vV.", ".V.", ".V."],
+	"prop_pila": [".mmm.", "mwmmM", "mmmMM", ".MMM."],
 }
 ## Fila de la mano en cada rejilla (columna: la del mango, la del centro salvo las hachas).
 const GRIPS := {
@@ -45,7 +61,14 @@ const GRIPS := {
 	"hacha_de_despido_masivo": Vector2i(4, 9), "maza_de_depuracion": Vector2i(2, 8), "martillo_de_compilacion": Vector2i(2, 8),
 	"teclado_mecanico": Vector2i(3, 8), "teclado_rgb": Vector2i(3, 8), "daga_de_root": Vector2i(1, 5),
 	"punal_de_dia_cero": Vector2i(1, 5), "cuchilla_de_carton": Vector2i(1, 5), "navaja_multiherramienta": Vector2i(1, 4),
+	# Los objetos: en la palma (abajo) o colgando del asa (arriba: maleta y bolsa).
+	"prop_cafe": Vector2i(1, 4), "prop_monitor": Vector2i(3, 6), "prop_laptop": Vector2i(2, 4),
+	"prop_maleta": Vector2i(2, 0), "prop_pantalla": Vector2i(2, 5), "prop_mapa": Vector2i(2, 4),
+	"prop_tablas": Vector2i(2, 5), "prop_tablero": Vector2i(1, 5), "prop_bolsa": Vector2i(2, 0),
+	"prop_cartel": Vector2i(3, 8), "prop_planos": Vector2i(1, 5), "prop_rosa": Vector2i(1, 6), "prop_pila": Vector2i(2, 3),
 }
+## Tipo de «arma» de los objetos de los NPC: de lado se llevan derechos, no hacia abajo.
+const PROP := "prop"
 ## Por tipo de arma, si no se sabe la base.
 const DEFAULT := {"sword": "espada_oxidada", "axe": "hacha_de_lenador", "mace": "maza_de_depuracion", "dagger": "daga_de_root"}
 

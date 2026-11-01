@@ -1170,10 +1170,10 @@ Origen: R8b
 - Prueba: cada tipo de arma (`PlayerSheet.WEAPONS`) tiene su dibujo de oficio en la hoja y su icono.
 - Hecho: `scripts/character/weapon_art.gd`: un sprite en pixel art por base (las 15 de `bases.json`), con el estilo del alumno (tres tonos y contorno oscuro), apuntando hacia arriba con el agarre marcado: espada oxidada (con óxido), espada bastarda, estoque del compilador (runas cian), sable de fibra óptica (hoja de luz), hacha de leñador, hacha de guerra doble, hacha de despido masivo (roja), maza de depuración, martillo de compilación (con su luz), **teclado mecánico** y **teclado RGB** (llevados por el cable), daga de root, puñal de día cero (filo rojo), cúter de cartonero (amarillo) y navaja multiherramienta (roja con la cruz). El jugador pasa la base de su arma (`look["eq_weapon"]`) y `StudentHero` pone ese sprite en la mano de frente, de espaldas y de lado, y lo gira en el tajo; sin base conocida, el de su tipo (`WeaponArt.DEFAULT`). La lista de personajes también enseña el arma del guardado. El bastón de C ya no se usa (queda para un arma mágica). **Iconos**: los del inventario no se tocan aquí. Captura `docs/capturas/personajes/177_armas.png` (cada arma de frente en reposo y de lado en el tajo). Pruebas en `_test_player_sheet`.
 
-### [ ] T178 · NPC de RPG desde el acto I · M
-Origen: R8b
-- Los NPC de las zonas del acto I en adelante, también como personajes de RPG (con `RpgAppearance` y un arquetipo cada uno: Aida maga anciana, Rafa ingeniero-herrero, Nacho mercader, B.O.B. autómata...), conservando sus objetos y gestos de T162. Los del prólogo, como están.
-- Prueba: los NPC de las zonas del prólogo usan el dibujo de siempre y los demás el de RPG; ninguno igual a otro.
+### [x] T178 · NPC de RPG desde el acto I · M
+Origen: R8b (redefinida tras T176/T182: con el estilo del alumno, no con `RpgAppearance`)
+- Los NPC de las zonas (del acto I en adelante) se dibujan como el alumno (`StudentHero`, `HeroSprite`): su apariencia de npcs.json con el equipo de su arquetipo (campo `server`: Aida y el DBA con túnica, Rafa y Clara con armadura de rack, B.O.B. autómata con casco y placas, Iris y el Recolector con capucha, Tomás con cota y estoque...) y en la mano su objeto de T162 (taza, laptop, maleta, cartel, planos, rosa, pila...: sprites propios en `WeaponArt`, «prop_*»), de frente, de espaldas y de perfil, con sus gestos (teclear, sorbo, hablar). El prólogo, como está.
+- Prueba: cada NPC tiene equipo y su objeto en la mano, y ninguno se ve igual a otro; la taza de Aida va en la mano. Captura: `capture_screens npcs` → docs/capturas/personajes/178_npcs.png.
 
 ### [ ] T179 · Versión 3.4.0 y revisión en el teléfono · S 🛑
 Origen: R8b
@@ -1436,3 +1436,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-31 · (herramienta) · `publicar_version.ps1 -Subir` / `-SoloSubir`: crea o actualiza la release v<versión> en GitHub con el APK y el latest.json y la marca como la última (GitHub CLI; una vez: `winget install --id GitHub.cli` y `gh auth login`).
 - 2026-10-31 · T182 · El alumno de perfil de verdad (StudentProfile): cara de lado, zancada con brazos y piernas por cuadro, los 16 peinados y los accesorios de lado y el equipo adaptado.
 - 2026-10-31 · T177 · Un sprite en pixel art por cada arma (15 bases: espadas, hachas, mazas con los dos teclados, dagas con el cúter y la navaja) en la mano del alumno, en las tres direcciones y en el tajo.
+- 2026-10-31 · T178 · Los NPC dentro del servidor, con el estilo del alumno: el equipo de su arquetipo (`server` en npcs.json) y su objeto de T162 en la mano (13 sprites «prop_*»), de frente, de espaldas y de perfil; el prólogo, igual.

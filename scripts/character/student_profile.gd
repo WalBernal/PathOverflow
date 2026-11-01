@@ -323,7 +323,7 @@ static func _over_profile_head(img: Image, layer: Image) -> void:
 
 ## Un cuadro de perfil: el cuerpo con su balanceo, el brazo y la pierna de atrás (más
 ## oscuros), las de delante, el arma en la mano de delante y, al morir, tumbado.
-static func frame(body_img: Image, look: Dictionary, weapon: Image, anim: String, k: int) -> Image:
+static func frame(body_img: Image, look: Dictionary, weapon: Image, anim: String, k: int, prop := false) -> Image:
 	var img := Image.create_empty(StudentHero.CELL.x, StudentHero.CELL.y, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
 	var pal := palette(look)
@@ -337,7 +337,9 @@ static func frame(body_img: Image, look: Dictionary, weapon: Image, anim: String
 	var back_lift := 0
 	var front_arm := 15.0   # grados: 0 abajo, 90 adelante, 180 arriba
 	var back_arm := -10.0
-	var swing := 3   # en reposo, el arma hacia abajo junto a la pierna (no tapa la cara)
+	# En reposo, el arma hacia abajo junto a la pierna (no tapa la cara); los objetos de
+	# los NPC (T178), derechos.
+	var swing := 0 if prop else 3
 	match anim:
 		"idle":
 			bob = [0, 0, 1, 1][k]

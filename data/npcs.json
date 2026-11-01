@@ -1,11 +1,12 @@
 {
   "version": 1,
-  "_doc": "NPCs y sus diálogos. Nodos con texto y opciones. Opción: text, next ('' = cerrar), requires_flag / hides_if_flag, action {type: give_item | give_matching_ram | give_random | refill | set_flag | start_quest | quest_advance | companion (npc: quién te acompaña; vacío = nadie), flag, quest}. voice: tono de la voz (pitch, 1 = normal) y velocidad (rate) para el narrador y los pitidos. Las banderas se guardan en el personaje. Dónde aparece cada NPC lo dice data/act1.json. Conversación: 'menu' (frases cortas al volver al inicio), 'greeting_again' (saludo en visitas siguientes), nodo 'again' (texto si ya se leyó) y nodo con 'next' sin opciones (botón Continuar).",
+  "_doc": "NPCs y sus diálogos. Nodos con texto y opciones. Opción: text, next ('' = cerrar), requires_flag / hides_if_flag, action {type: give_item | give_matching_ram | give_random | refill | set_flag | start_quest | quest_advance | companion (npc: quién te acompaña; vacío = nadie), flag, quest}. voice: tono de la voz (pitch, 1 = normal) y velocidad (rate) para el narrador y los pitidos. Las banderas se guardan en el personaje. Dónde aparece cada NPC lo dice data/act1.json. Conversación: 'menu' (frases cortas al volver al inicio), 'greeting_again' (saludo en visitas siguientes), nodo 'again' (texto si ya se leyó) y nodo con 'next' sin opciones (botón Continuar). server: lo que lleva dentro del servidor (ranura → base de objeto, como el alumno; weapon opcional, si no, el objeto de su gear en la mano).",
   "npcs": {
     "ada": {
       "idle": "sip",
       "name": "Aida, la Senior",
       "dialogue": "ada",
+      "server": {"body": "tunica_de_seda"},
       "appearance": {
         "gear": "cafe",
         "body": 1,
@@ -24,6 +25,7 @@
     "kevin": {
       "name": "Mario, el Practicante",
       "dialogue": "kevin",
+      "server": {"boots": "botas_de_cuero"},
       "appearance": {
         "gear": "monitor",
         "body": 0,
@@ -43,6 +45,7 @@
       "idle": "type",
       "name": "Rafa, el SysAdmin",
       "dialogue": "root",
+      "server": {"body": "armadura_de_rack", "boots": "botas_de_hierro"},
       "appearance": {
         "gear": "laptop",
         "body": 1,
@@ -63,6 +66,7 @@
     "nacho": {
       "name": "Nacho, revendedor de hardware",
       "dialogue": "nacho",
+      "server": {"body": "chaleco_de_cuero"},
       "appearance": {
         "gear": "maleta",
         "body": 0,
@@ -81,6 +85,7 @@
     "bot_onboarding": {
       "name": "B.O.B., Bot de Onboarding",
       "dialogue": "bot_onboarding",
+      "server": {"helmet": "casco_de_hierro", "body": "cota_de_placas", "boots": "botas_de_hierro"},
       "appearance": {
         "gear": "pantalla",
         "body": 1,
@@ -99,6 +104,7 @@
     "iris": {
       "name": "Iris, la Practicante Perdida",
       "dialogue": "iris",
+      "server": {"helmet": "capucha_de_cuero", "body": "chaleco_de_cuero", "boots": "botas_de_cuero"},
       "appearance": {
         "gear": "mapa",
         "body": 0,
@@ -117,6 +123,7 @@
     "tomas": {
       "name": "Tomás, el Último QA",
       "dialogue": "tomas",
+      "server": {"body": "cota_de_placas", "boots": "botas_de_hierro", "weapon": "estoque_del_compilador"},
       "appearance": {
         "gear": "duelista",
         "body": 2,
@@ -136,6 +143,7 @@
       "ghost": true,
       "name": "El Fantasma del DBA",
       "dialogue": "dba",
+      "server": {"body": "tunica_de_seda"},
       "appearance": {
         "gear": "tablas",
         "body": 1,
@@ -174,6 +182,7 @@
     "clara": {
       "name": "Clara, Líder de Infraestructura",
       "dialogue": "clara",
+      "server": {"body": "armadura_de_rack", "boots": "botas_de_seguridad"},
       "appearance": {
         "gear": "tablero",
         "body": 1,
@@ -192,6 +201,7 @@
     "recolector": {
       "name": "El Recolector",
       "dialogue": "recolector",
+      "server": {"helmet": "capucha_de_cuero", "body": "tunica_de_seda"},
       "appearance": {
         "gear": "bolsa",
         "body": 2,
@@ -210,6 +220,7 @@
     "sindicato": {
       "name": "Sindicato de Huérfanos (PID 404)",
       "dialogue": "sindicato",
+      "server": {"body": "chaleco_de_cuero", "boots": "botas_de_cuero"},
       "appearance": {
         "gear": "cartel",
         "body": 2,
@@ -228,6 +239,7 @@
     "m_paez": {
       "name": "M. Páez, el Inge",
       "dialogue": "m_paez",
+      "server": {"body": "chaqueta_de_conferencias", "boots": "botas_de_cuero"},
       "color": "4b8bd6",
       "appearance": {
         "gear": "planos",
@@ -255,6 +267,7 @@
     "eugenio": {
       "name": "Eugenio, soltero codiciado",
       "dialogue": "eugenio",
+      "server": {"body": "chaqueta_de_conferencias"},
       "color": "d9a441",
       "appearance": {
         "gear": "rosa",
@@ -278,6 +291,7 @@
     "berta": {
       "name": "Berta, la Pila CR2032",
       "dialogue": "berta",
+      "server": {"body": "chaqueta_de_conferencias", "boots": "botas_de_seguridad"},
       "color": "c8c8d8",
       "appearance": {"gear": "pila","body": 1, "hair": 2, "height": 0.8, "skin_tone": "d8b89a", "hair_color": "e8e8f0", "outfit_color": "8a8a9a", "accent_color": "c8c8d8"},
       "voice": {"pitch": 1.1, "rate": 0.85, "gender": "female"}
@@ -286,6 +300,7 @@
       "idle": "type",
       "name": "Rafa, el SysAdmin (en persona)",
       "dialogue": "rafa_bios",
+      "server": {"body": "armadura_de_rack", "boots": "botas_de_hierro"},
       "color": "3cff6a",
       "appearance": {"gear": "laptop","body": 1, "hair": 5, "skin_tone": "f1d2b6", "hair_color": "17130f", "hair_streaks": "b9b9b9", "outfit_color": "1f1f2e", "height": 0.86},
       "voice": {"pitch": 0.65, "rate": 0.9, "gender": "male"}
@@ -293,6 +308,7 @@
     "mario_bios": {
       "name": "Mario, el Practicante (prestador de servicio)",
       "dialogue": "mario_bios",
+      "server": {"boots": "botas_de_cuero"},
       "color": "6fb36b",
       "appearance": {"gear": "monitor","body": 0, "hair": 3, "skin_tone": "f1d2b6", "hair_color": "b5651d", "outfit_color": "2b6b45"},
       "voice": {"pitch": 1.25, "rate": 1.15, "gender": "male"}
@@ -300,6 +316,7 @@
     "paez_bios": {
       "name": "M. Páez, el Inge",
       "dialogue": "paez_bios",
+      "server": {"body": "chaqueta_de_conferencias", "boots": "botas_de_cuero"},
       "color": "4b8bd6",
       "appearance": {"gear": "planos","body": 2, "hair": 10, "beard": 2, "accessory": 1, "height": 1, "smile": 1, "skin_tone": "c8967a", "hair_color": "241c16", "beard_color": "4e4842", "beard_streaks": true, "eye_color": "3a2414", "outfit_color": "233a5c", "accent_color": "1a2a44", "shirt_color": "f2f2f0"},
       "voice": {"pitch": 0.8, "rate": 0.95, "gender": "male"}
@@ -307,6 +324,7 @@
     "eugenio_bios": {
       "name": "Eugenio, soltero codiciado",
       "dialogue": "eugenio_bios",
+      "server": {"body": "chaqueta_de_conferencias"},
       "color": "d9a441",
       "appearance": {"gear": "rosa","body": 0, "hair": 1, "beard": 0, "accessory": 1, "height": 1, "skin_tone": "e0ac8a", "hair_color": "0f0d0c", "eye_color": "6b4423", "outfit_color": "8a6d3b", "accent_color": "c8c8c8"},
       "voice": {"pitch": 1.08, "rate": 1.05, "gender": "male"}

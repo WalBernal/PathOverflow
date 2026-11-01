@@ -5703,6 +5703,28 @@ func _test_player_sheet() -> void:
 	var with_mace := StudentHero.build(StudentHero.look_of(red, {"weapon": "maza_de_depuracion"}), "mace")
 	_check(with_keyboard.get_data() != with_mace.get_data(), "dos mazas distintas (teclado y maza) se ven distintas en la mano")
 	_check(StudentHero.equipped_of_save({"inventory": {"equipment": {"weapon": {"base": "teclado_rgb"}}}})["weapon"] == "teclado_rgb", "la lista de personajes sabe qué arma lleva")
+	# T178: los NPC del servidor, con el estilo del alumno: equipo de su arquetipo y su
+	# objeto en la mano; ninguno se ve igual a otro (los «_bios» son los mismos personajes).
+	var npc_db: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/npcs.json"))["npcs"]
+	var npc_sheets := {}
+	var npc_bad := []
+	for npc_id in npc_db:
+		var npc: Dictionary = npc_db[npc_id]
+		if npc.get("terminal", false) or String(npc_id).ends_with("_bios"):
+			continue
+		var nl: Array = StudentHero.npc_look(npc)
+		var gear := String(npc.get("appearance", {}).get("gear", ""))
+		if gear in CharacterAppearance.NPC_PROPS and String(nl[0].get("eq_weapon", "")) != "prop_" + gear:
+			npc_bad.append("%s sin su %s" % [npc_id, gear])
+		if not npc.has("server") or String(nl[1]) == "":
+			npc_bad.append("%s sin equipo o sin nada en la mano" % npc_id)
+		var data := StudentHero.build(nl[0], nl[1]).get_data()
+		if npc_sheets.has(data):
+			npc_bad.append("%s igual que %s" % [npc_id, npc_sheets[data]])
+		npc_sheets[data] = npc_id
+	_check(npc_bad.is_empty(), "cada NPC del servidor con su equipo, su objeto y su propio look: %s" % [npc_bad])
+	var prop_layer := WeaponArt.layer("prop_cafe", StudentHero.CELL, StudentHero.GRIP)
+	_check(prop_layer != null and prop_layer.get_pixelv(StudentHero.GRIP).a > 0.0, "la taza de Aida, en la mano")
 	# T182: de lado es un perfil de verdad: un solo ojo y las piernas cambian en cada paso.
 	var profile := StudentProfile.body(StudentHero.look_of(red, {}))
 	_check(count_color.call(profile, "ffffff") == 1 and count_color.call(front, "ffffff") == 2, "de perfil se ve un solo ojo")

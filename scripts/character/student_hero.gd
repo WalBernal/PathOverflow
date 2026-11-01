@@ -120,6 +120,21 @@ static func equipped_of_save(data: Dictionary) -> Dictionary:
 	return out
 
 
+## Un NPC dentro del servidor (T178): su apariencia de npcs.json con el equipo de su
+## arquetipo (`server`: ranura → base, como el del alumno) y en la mano su objeto de
+## T162 (el `gear` de la apariencia) o el arma de `server`. Devuelve [look, tipo de arma].
+static func npc_look(npc: Dictionary) -> Array:
+	var appearance := CharacterAppearance.sanitize(npc.get("appearance", {}))
+	var equipped: Dictionary = (npc.get("server", {}) as Dictionary).duplicate()
+	var held := String(equipped.get("weapon", ""))
+	var kind := "sword" if held != "" else ""
+	var prop := "prop_" + String(npc.get("appearance", {}).get("gear", ""))
+	if held == "" and WeaponArt.ART.has(prop):
+		equipped["weapon"] = prop
+		kind = WeaponArt.PROP
+	return [look_of(appearance, equipped), kind]
+
+
 static func texture(look: Dictionary, weapon: String) -> ImageTexture:
 	var key := "%s|%s" % [weapon, JSON.stringify(look, "", true)]
 	if not _cache.has(key):
@@ -169,7 +184,7 @@ static func build(look: Dictionary, weapon: String) -> Image:
 		for anim in ORDER:
 			var n := int(FRAMES[anim])
 			for k in n:
-				var f := StudentProfile.frame(body, look, weapon_img, anim, k) if dir == Dir.SIDE else frame(body, weapon_img, anim, k)
+				var f := StudentProfile.frame(body, look, weapon_img, anim, k, weapon == WeaponArt.PROP) if dir == Dir.SIDE else frame(body, weapon_img, anim, k)
 				sheet.blit_rect(f, Rect2i(Vector2i.ZERO, CELL), Vector2i(col * CELL.x, dir * CELL.y))
 				col += 1
 	return sheet

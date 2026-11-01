@@ -1626,24 +1626,37 @@ func _capture_npc_identity() -> void:
 		if not seen.has(person) and not db[id].get("terminal", false):
 			seen[person] = true
 			ids.append(id)
+	# T178: arriba, el oficinista (prólogo) de frente; debajo, dentro del servidor (el
+	# estilo del alumno con su equipo y su objeto) de frente y de lado.
 	var cols := 8
-	var cell := Vector2(1600.0 / cols, 900.0 / ceili(ids.size() / float(cols)) / 2.0)
+	var rows := 3
+	var cell := Vector2(1600.0 / cols, 900.0 / ceili(ids.size() / float(cols)) / rows)
 	for k in ids.size():
 		var npc: Dictionary = db[ids[k]]
-		for row in 2:
-			var sp := PlayerSprite.new()
+		var nl: Array = StudentHero.npc_look(npc)
+		for row in rows:
+			var sp: Node2D
+			if row == 0:
+				sp = PlayerSprite.new()
+				sp.set("sprite_scale", 2.2 / PlayerSheet.BAKE_SCALE)
+			else:
+				sp = HeroSprite.new()
+				sp.scale = Vector2.ONE   # (set_pose lo cambia con la respiración)
 			sheet.add_child(sp)
-			sp.appearance = CharacterAppearance.sanitize(npc.get("appearance", {}))
-			sp.sprite_scale = 2.2 / PlayerSheet.BAKE_SCALE
+			sp.set("appearance", CharacterAppearance.sanitize(npc.get("appearance", {})) if row == 0 else nl[0])
 			if npc.get("ghost", false):
 				sp.modulate.a = 0.62
-			sp.position = Vector2(cell.x * (k % cols + 0.5), cell.y * ((k / cols) * 2 + row + 0.92))
-			var facing := Vector2.DOWN if row == 0 else Vector2.RIGHT
-			# De lado, en mitad del gesto de reposo (el sorbo de café llega a los 0,7 s de su ciclo).
-			var time := 2.0 if row == 0 else fposmod(Zone.SIP_TIME * 0.5 - k * 0.37, Zone.SIP_EVERY)
-			sp.set_pose(facing, Zone.npc_pose(k, time, false, String(npc.get("idle", ""))))
+			sp.position = Vector2(cell.x * (k % cols + 0.5), cell.y * ((k / cols) * rows + row + 0.92))
+			var facing := Vector2.RIGHT if row == 2 else Vector2.DOWN
+			var time := 2.0 if row != 2 else fposmod(Zone.SIP_TIME * 0.5 - k * 0.37, Zone.SIP_EVERY)
+			var pose := Zone.npc_pose(k, time, false, String(npc.get("idle", "")))
+			if row > 0:
+				pose["weapon"] = nl[1]
+			sp.call("set_pose", facing, pose)
+			if row > 0:
+				sp.scale *= 1.6
 	await _wait(0.5)
-	_save("162_npcs")
+	_save("178_npcs")
 
 
 ## Pantallas de T96: título con la ciudad de servidores, selección de personaje con

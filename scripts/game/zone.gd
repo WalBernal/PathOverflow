@@ -2602,22 +2602,35 @@ static func npc_pose(index: int, time: float, talking: bool, idle := "") -> Dict
 
 
 func _update_npc_sprite(i: int, pos: Vector2, appearance: Dictionary, facing: Vector2, talking: bool) -> void:
-	var sprite: PlayerSprite = _npc_sprites.get(i, null)
+	var sprite: Node2D = _npc_sprites.get(i, null)
 	if sprite == null:
 		_add_npc_sprite.call_deferred(i, appearance)
 		return
 	sprite.position = pos
-	sprite.set_pose(facing, npc_pose(i, _time, talking, String(npcs[i].get("idle", ""))))
+	var pose := npc_pose(i, _time, talking, String(npcs[i].get("idle", "")))
+	if sprite is HeroSprite:   # con su objeto o su arma en la mano (T178)
+		pose["weapon"] = String(sprite.get_meta("held", ""))
+	sprite.set_pose(facing, pose)
 
 
+## Dentro del servidor (T178) los NPC son como el alumno (StudentHero), con el equipo
+## de su arquetipo y su objeto; sin esa lámina, el oficinista de siempre.
 func _add_npc_sprite(i: int, appearance: Dictionary) -> void:
 	if _npc_sprites.has(i) or _npc_layer == null:
 		return
-	var sprite := PlayerSprite.new()
+	var sprite: Node2D
+	if HeroSprite.available():
+		var nl: Array = StudentHero.npc_look(npcs[i])
+		sprite = HeroSprite.new()
+		sprite.appearance = nl[0]
+		sprite.set_meta("held", nl[1])
+	else:
+		sprite = PlayerSprite.new()
+		sprite.sprite_scale = PlayerSheet.WORLD_SCALE / PlayerSheet.BAKE_SCALE
 	sprite.show_behind_parent = true   # nombres y "!" de la capa, encima
-	sprite.sprite_scale = PlayerSheet.WORLD_SCALE / PlayerSheet.BAKE_SCALE
 	_npc_layer.add_child(sprite)
-	sprite.appearance = appearance
+	if sprite is PlayerSprite:
+		sprite.appearance = appearance
 	if npcs[i].get("ghost", false):   # el Fantasma del DBA, translúcido (T162)
 		sprite.modulate.a = 0.62
 	_npc_sprites[i] = sprite
