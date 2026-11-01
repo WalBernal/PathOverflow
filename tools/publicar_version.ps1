@@ -68,13 +68,15 @@ if (-not $Subir) {
 }
 
 # --- Subir con GitHub CLI ---
-$gh = Get-Command gh -ErrorAction SilentlyContinue
-if (-not $gh) {
+# (Si la terminal se abrió antes de instalarlo, gh no está aún en su PATH: se busca donde lo deja el instalador.)
+$ghExe = (Get-Command gh -ErrorAction SilentlyContinue).Source
+if (-not $ghExe -and (Test-Path "$env:ProgramFiles\GitHub CLI\gh.exe")) { $ghExe = "$env:ProgramFiles\GitHub CLI\gh.exe" }
+if (-not $ghExe) {
 	Write-Host "Falta GitHub CLI (gh). Instálalo una vez con:  winget install --id GitHub.cli"
 	Write-Host "y conéctalo a tu cuenta con:  gh auth login   (luego vuelve a correr esto con -SoloSubir)."
 	exit 1
 }
-& gh auth status *> $null
+& $ghExe auth status *> $null
 if ($LASTEXITCODE -ne 0) {
 	Write-Host "GitHub CLI no tiene sesión: corre  gh auth login  una vez y vuelve a intentarlo con -SoloSubir."
 	exit 1
@@ -85,14 +87,14 @@ if (-not (Test-Path $apk)) { Write-Host "No está build\PathOverflow.apk: export
 $tag = "v$version"
 $title = "Path Overflow $version"
 $body = if ($Notas -ne "") { $Notas } else { "Versión $version." }
-& gh release view $tag --repo $Repo *> $null
+& $ghExe release view $tag --repo $Repo *> $null
 if ($LASTEXITCODE -eq 0) {
 	# Ya existe: se sustituyen los archivos y se vuelve a marcar como la última.
-	& gh release upload $tag $apk $json --repo $Repo --clobber
+	& $ghExe release upload $tag $apk $json --repo $Repo --clobber
 	if ($LASTEXITCODE -ne 0) { Write-Host "No se pudieron subir los archivos a $tag."; exit 1 }
-	& gh release edit $tag --repo $Repo --title $title --notes $body --latest | Out-Null
+	& $ghExe release edit $tag --repo $Repo --title $title --notes $body --latest | Out-Null
 } else {
-	& gh release create $tag $apk $json --repo $Repo --title $title --notes $body --latest
+	& $ghExe release create $tag $apk $json --repo $Repo --title $title --notes $body --latest
 	if ($LASTEXITCODE -ne 0) { Write-Host "No se pudo crear la release $tag."; exit 1 }
 }
 Write-Host "Publicada: https://github.com/$Repo/releases/tag/$tag (el juego la verá en el aviso de actualización)."
