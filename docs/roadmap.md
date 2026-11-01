@@ -1423,3 +1423,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-31 · T175 · Diseño de los héroes de RPG (RpgAppearance): caballero, espadachín, exploradora, pícara, mago, paladín y caballero-mago, con runas y gemas cian; hoja de muestra para que el usuario elija.
 - 2026-10-31 · T180 · Peinados del alumno redibujados (11, cada uno con su forma), hoja de peinados y accesorios, accesorios sin sombreros y el alumno en pixel art en el creador y la lista de personajes.
 - 2026-10-31 · T181 · El alumno de espaldas (nuca, pelo largo por la espalda, capucha de la sudadera, casco por detrás) y de lado (la cara gira hacia donde camina); el creador lo gira.
+- 2026-10-31 · (herramienta) · `publicar_version.ps1 -Subir` / `-SoloSubir`: crea o actualiza la release v<versión> en GitHub con el APK y el latest.json y la marca como la última (GitHub CLI; una vez: `winget install --id GitHub.cli` y `gh auth login`).

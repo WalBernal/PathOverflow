@@ -730,6 +730,13 @@ powershell -ExecutionPolicy Bypass -File tools/exportar_android.ps1
 powershell -ExecutionPolicy Bypass -File tools/publicar_version.ps1 -Repo usuario/repositorio -Notas "Qué trae"
 ```
 
+**Subirla sola** con GitHub CLI: `-Subir` exporta y además crea (o actualiza) la release `v<versión>` con el APK y el `latest.json` y la marca como la última; `-SoloSubir` sube lo que ya está en `build\` sin exportar de nuevo. Una sola vez en el equipo: `winget install --id GitHub.cli` y `gh auth login` (con tu cuenta de GitHub).
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/publicar_version.ps1 -Repo WalBernal/PathOverflow -Notas "Qué trae" -Subir
+powershell -ExecutionPolicy Bypass -File tools/publicar_version.ps1 -Repo WalBernal/PathOverflow -Notas "Qué trae" -SoloSubir
+```
+
 Para instalarlo en el teléfono: copia `build/PathOverflow.apk` al celular (cable USB, Drive o correo), ábrelo desde el administrador de archivos y permite «instalar apps de origen desconocido» a esa app cuando lo pida. Con depuración USB activada también vale `adb install -r build/PathOverflow.apk` (adb está en `%LOCALAPPDATA%\Android\Sdk\platform-tools`). Para publicarlo en una tienda hay que firmarlo con una clave propia: créala con `keytool -genkeypair -v -keystore mi_clave.keystore -alias mi_alias -keyalg RSA -keysize 2048 -validity 10000`, ponla en *Proyecto → Exportar → Android → Keystore → Release* (ruta, usuario y contraseña) y exporta con `--export-release` (para Google Play, además, AAB con `gradle_build/use_gradle_build`).
 
 ## Próximos pasos sugeridos
