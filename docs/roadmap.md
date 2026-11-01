@@ -1175,7 +1175,7 @@ Origen: R8b (redefinida tras T176/T182: con el estilo del alumno, no con `RpgApp
 - Los NPC de las zonas (del acto I en adelante) se dibujan como el alumno (`StudentHero`, `HeroSprite`): su apariencia de npcs.json con el equipo de su arquetipo (campo `server`: Aida y el DBA con túnica, Rafa y Clara con armadura de rack, B.O.B. autómata con casco y placas, Iris y el Recolector con capucha, Tomás con cota y estoque...) y en la mano su objeto de T162 (taza, laptop, maleta, cartel, planos, rosa, pila...: sprites propios en `WeaponArt`, «prop_*»), de frente, de espaldas y de perfil, con sus gestos (teclear, sorbo, hablar). El prólogo, como está.
 - Prueba: cada NPC tiene equipo y su objeto en la mano, y ninguno se ve igual a otro; la taza de Aida va en la mano. Captura: `capture_screens npcs` → docs/capturas/personajes/178_npcs.png.
 
-### [ ] T179 · Versión 3.4.0 y revisión en el teléfono · S 🛑
+### [x] T179 · Versión 3.4.0 y revisión en el teléfono · S 🛑
 Origen: R8b
 - Versión 3.4.0 (APK, `latest.json` y Windows) con el logo, los héroes y las armas; capturas en `docs/capturas/personajes/`; lista `docs/prueba_celular_3.4.md`. Incluye la pregunta que quedó de T153: ¿manadas un 30 % más juntas en el celular para pelear más y pasear menos?
 
@@ -1437,3 +1437,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-31 · T182 · El alumno de perfil de verdad (StudentProfile): cara de lado, zancada con brazos y piernas por cuadro, los 16 peinados y los accesorios de lado y el equipo adaptado.
 - 2026-10-31 · T177 · Un sprite en pixel art por cada arma (15 bases: espadas, hachas, mazas con los dos teclados, dagas con el cúter y la navaja) en la mano del alumno, en las tres direcciones y en el tajo.
 - 2026-10-31 · T178 · Los NPC dentro del servidor, con el estilo del alumno: el equipo de su arquetipo (`server` en npcs.json) y su objeto de T162 en la mano (13 sprites «prop_*»), de frente, de espaldas y de perfil; el prólogo, igual.
+- 2026-10-31 · T179 · Versión 3.4.0: APK (código 18) y latest.json, Windows e instalador; lista `docs/prueba_celular_3.4.md` (con la pregunta de las manadas de T153). Sin subir a GitHub: pendiente de la revisión del usuario 🛑.
