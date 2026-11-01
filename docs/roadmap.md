@@ -1227,7 +1227,7 @@ Origen: R8
 - Partículas de impacto, muerte y botín con motivos de datos (bits, corchetes, nodos de red que se apagan), sin perder el color por tipo de daño ni el modo daltónico; el estallido de muerte de cada familia de enemigos con su glifo.
 - Prueba: `ImpactFx` sigue devolviendo el color del tipo de daño para cada tipo; con «Efectos de pantalla» apagado no se crea ninguna partícula extra.
 
-### [ ] T173 · Versión 3.6.0 y revisión final · S 🛑
+### [x] T173 · Versión 3.6.0 y revisión final · S 🛑
 Origen: R8
 - Versión 3.6.0 (APK, `latest.json` y Windows), capturas de antes/después de toda la etapa en `docs/capturas/estetica/` y README actualizado (capturas y «Versiones»).
 
@@ -1449,3 +1449,4 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-11-01 · T170 · Subida a GitHub (v3.5.0, Latest) con el visto bueno del usuario, que pide seguir con la Fase 38.
 - 2026-11-01 · T171 · Enemigos a 64 px (el doble): los 29 tipos de todos los actos se rasterizan al doble con curvas y diagonales finas, tres tonos por parte (luz arriba, sombra abajo, tono medio) y contorno de 2 px; la hoja va en bloques de 48 filas (2304×3072, ≤ 4096 px para móviles viejos) con `EnemySheet.cell/grid/type_of` y el shader; el contorno de rareza conserva su grosor. Capturas `docs/capturas/estetica/171_*` (antes/después y en partida).
 - 2026-11-01 · T172 · Motivos de datos en `ImpactFx`: los golpes fuertes sueltan un corchete o «;», cada muerte un anillo de nodos de red unidos que se apagan (del color del daño al gris) y el glifo de su familia (digital «{ }», metal «#», cristal «<>», carne «;»), y el botín raro o mejor, bits que suben entre corchetes de su color. `ImpactFx.colors_for` da los colores del tipo de daño con el tono del modo daltónico; con «Efectos de pantalla» apagado salen las partículas de siempre. Captura `172_efectos.png`.
+- 2026-11-01 · T173 · Versión 3.6.0: APK (código 21) y latest.json, Windows e instalador; antes/después de la etapa en `docs/capturas/estetica/173_antes_despues.png` (3.2 frente a 3.6) y lista `docs/prueba_celular_3.6.md`. Sin subir a GitHub: pendiente de la revisión del usuario 🛑.
