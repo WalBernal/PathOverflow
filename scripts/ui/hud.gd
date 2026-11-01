@@ -772,7 +772,7 @@ func _draw() -> void:
 	draw_string(font, _menu_origin(), level_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, TEXT_COLOR)
 	# El porcentaje de la barra de progreso, al lado del nivel (T167).
 	var level_w := font.get_string_size(level_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
-	draw_string(font, _menu_origin() + Vector2(level_w + 6.0, 0), "%d %%" % floori(progress * 100.0), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, XP_COLOR.lightened(0.25))
+	draw_string(UiStyle.mono_font(), _menu_origin() + Vector2(level_w + 6.0, 0), "%d %%" % floori(progress * 100.0), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, XP_COLOR.lightened(0.25))
 	# «!» sobre los botones de menú con novedades.
 	var marked: Array[Control] = []
 	for k in _menu_buttons.size():
@@ -1477,7 +1477,7 @@ func _draw_orb(center: Vector2, fill: float, color: Color, reserved := 0.0, labe
 			var a := lerpf(from.y, full.y, (k + 0.5) / steps)
 			draw_line(center + Vector2.from_angle(a) * (r - 5.0), center + Vector2.from_angle(a + 0.06) * (r + 5.0), Color(0.6, 0.8, 1.0, 0.35), 1.5)
 	var font := get_theme_default_font()
-	draw_string(font, center + Vector2(-ORB_RADIUS, -16.0), "%d%%" % roundi(fill * 100.0), HORIZONTAL_ALIGNMENT_CENTER, ORB_RADIUS * 2.0, 13, Color(color.lightened(0.3), 0.9))
+	draw_string(UiStyle.mono_font(), center + Vector2(-ORB_RADIUS, -16.0), "%d%%" % roundi(fill * 100.0), HORIZONTAL_ALIGNMENT_CENTER, ORB_RADIUS * 2.0, 13, Color(color.lightened(0.3), 0.9))
 	if label != "":
 		draw_string(font, center + Vector2(-ORB_RADIUS, 44.0), label, HORIZONTAL_ALIGNMENT_CENTER, ORB_RADIUS * 2.0, 12, UiStyle.MUTED)
 
@@ -1490,7 +1490,7 @@ var _level_glow_at := -100.0
 ## Cifra de los orbes centrada en 160 px: fuente normal con contorno y sombra suave
 ## (antes, fuente de píxeles; el HUD va hacia un acabado menos pixel art).
 func _pixel_string(_font: Font, pos: Vector2, text: String, color: Color) -> void:
-	var font := get_theme_default_font()
+	var font := UiStyle.mono_font()   # cifras en la monoespaciada (T169)
 	var size := 20
 	draw_string(font, pos + Vector2(0, 2), text, HORIZONTAL_ALIGNMENT_CENTER, 160.0, size, Color(0, 0, 0, 0.55))
 	draw_string_outline(font, pos, text, HORIZONTAL_ALIGNMENT_CENTER, 160.0, size, 5, Color(0, 0, 0, 0.9))

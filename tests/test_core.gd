@@ -5177,6 +5177,19 @@ func _test_ui_proposals() -> void:
 	_check(low.is_empty(), "las dos propuestas de interfaz tienen contraste suficiente: %s" % [low])
 	_check(absf(UiProposals.contrast(Color.WHITE, Color.BLACK) - 21.0) < 0.01, "contraste blanco/negro = 21")
 	_check(FileAccess.file_exists("res://docs/estilo_visual.md"), "la guía visual existe")
+	# T169: la monoespaciada del proyecto (Fira Code, OFL) carga, tiene el español y es monoespaciada.
+	var mono := UiStyle.mono_font()
+	var base: Font = (mono as FontVariation).base_font if mono is FontVariation else null
+	_check(base != null and FileAccess.file_exists("res://assets/fonts/FiraCode-OFL.txt"), "la monoespaciada es la del proyecto, con su licencia OFL")
+	var missing := ""
+	for ch in "áéíóúñ¿¡üÁÉÍÓÚÑÜ":
+		if base == null or not base.has_char(ch.unicode_at(0)):
+			missing += ch
+	_check(missing == "", "la monoespaciada tiene los caracteres del español (faltan: «%s»)" % missing)
+	_check(is_equal_approx(mono.get_string_size("iiii", HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x, mono.get_string_size("MMMM", HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x),
+		"todas las letras miden lo mismo")
+	_check(mono.get_string_size("->", HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x > mono.get_string_size("-", HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x * 1.5,
+		"sin ligaduras: «->» son dos caracteres")
 
 
 func _test_mobile_defaults() -> void:

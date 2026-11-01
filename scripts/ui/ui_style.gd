@@ -30,14 +30,29 @@ const GAUGE_SPAN := 270.0
 static var _mono: Font
 
 
-## Monoespaciada para consolas, registros y números (T168: la del sistema; T169 elige
-## una de licencia libre para el proyecto).
+## Monoespaciada del proyecto (T169): Fira Code, licencia SIL OFL 1.1
+## (assets/fonts/FiraCode-OFL.txt), sin ligaduras (que «->» o «!=» se lean tal cual) y
+## un poco más gruesa que su peso por defecto; lo que no tenga, de la fuente normal.
+const MONO_PATH := "res://assets/fonts/FiraCode-VF.woff2"
+const MONO_WEIGHT := 450
+
+
+## Monoespaciada para consolas, registros y números. Sin el archivo, la del sistema.
 static func mono_font() -> Font:
 	if _mono == null:
-		var f := SystemFont.new()
-		f.font_names = PackedStringArray(["Cascadia Mono", "Consolas", "DejaVu Sans Mono", "Droid Sans Mono", "monospace"])
-		f.fallbacks = [ThemeDB.fallback_font]
-		_mono = f
+		if ResourceLoader.exists(MONO_PATH):
+			var ts := TextServerManager.get_primary_interface()
+			var f := FontVariation.new()
+			f.base_font = load(MONO_PATH)
+			f.variation_opentype = {ts.name_to_tag("wght"): MONO_WEIGHT}
+			f.opentype_features = {ts.name_to_tag("calt"): 0, ts.name_to_tag("liga"): 0}
+			f.fallbacks = [ThemeDB.fallback_font]
+			_mono = f
+		else:
+			var sf := SystemFont.new()
+			sf.font_names = PackedStringArray(["Consolas", "DejaVu Sans Mono", "Droid Sans Mono", "monospace"])
+			sf.fallbacks = [ThemeDB.fallback_font]
+			_mono = sf
 	return _mono
 
 

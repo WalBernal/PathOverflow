@@ -80,6 +80,7 @@ func _refresh() -> void:
 		l.fit_content = true
 		l.scroll_active = false
 		l.custom_minimum_size.x = WIDTH
+		l.add_theme_font_override("normal_font", UiStyle.mono_font())   # consola (T169)
 		l.add_theme_font_size_override("normal_font_size", 12)
 		l.add_theme_font_size_override("bold_font_size", 12)
 		l.add_theme_constant_override("outline_size", 4)

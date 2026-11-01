@@ -746,3 +746,5 @@ Para instalarlo en el teléfono: copia `build/PathOverflow.apk` al celular (cabl
 3. Ascendencias mediante pruebas (ahora se eligen libremente en el árbol pasivo).
 4. **Acto II: Kernel Panic.** Ya está preparado el gancho (portal en el campamento, misión principal, bandera `act2_started`). Idea de zonas: Espacio de Usuario → Tabla de Procesos → Cementerio de Huérfanos (procesos zombi sindicados) → Scheduler (enemigos que se turnan) → Memoria Virtual (páginas que aparecen y desaparecen) → jefe **init (PID 1)**. Hace falta un `act2.json`, que `GameData` cargue varios actos y que el waypoint muestre los dos.
 5. Editor del árbol pasivo dentro de Godot.
+
+**Fuentes**: la monoespaciada de la interfaz (consola, cifras, pantalla de carga y de muerte) es Fira Code (https://github.com/tonsky/FiraCode), con licencia SIL Open Font License 1.1: `assets/fonts/FiraCode-VF.woff2` y su licencia en `assets/fonts/FiraCode-OFL.txt`.
