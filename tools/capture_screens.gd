@@ -58,6 +58,10 @@ func _run() -> void:
 		await _capture_npc_identity()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("propuestas"):
+		await _capture_ui_proposals()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("equipos"):
 		await _capture_class_gear()
 		get_tree().quit()
@@ -1609,6 +1613,17 @@ func _capture_students(sheet: Control) -> void:
 			sheet.add_child(tr)
 	await _wait(0.4)
 	_save("181_direcciones")
+
+
+## Las dos propuestas de interfaz de ingeniería (T165): inventario, descripción, diálogo y HUD.
+func _capture_ui_proposals() -> void:
+	var mock := UiProposals.new()
+	mock.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_swap(mock)
+	for v in ["a", "b"]:
+		mock.variant = v
+		await _wait(0.4)
+		_save("165_propuesta_" + v)
 
 
 ## NPC con su objeto y su reposo (T162): cada uno de frente y, debajo, de lado, en dos

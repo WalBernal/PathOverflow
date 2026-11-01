@@ -1181,7 +1181,7 @@ Origen: R8b
 
 ## Fase 37 — Interfaz de ingeniería (versión 3.5.0)
 
-### [ ] T165 · Guía visual y dos propuestas · S 🛑
+### [x] T165 · Guía visual y dos propuestas · S 🛑
 Origen: R8
 - `docs/estilo_visual.md`: paleta, tipografía y motivos. Dos propuestas con capturas del inventario, el HUD y un diálogo, para que el usuario elija (o mezcle):
   - **A · Terminal/IDE**: fondo pizarra `0b1020`, paneles `111a2e`, acento cian `3ad1e6`, verde éxito `7ee787`, magenta IA `c678dd`; títulos en monoespaciada, ventanas con barra de pestaña («inventario.json ×» y los tres puntos), números de línea en las listas, cursor que parpadea.
@@ -1438,3 +1438,5 @@ No las ejecuta Claude solo; quedan aquí para no perderlas.
 - 2026-10-31 · T177 · Un sprite en pixel art por cada arma (15 bases: espadas, hachas, mazas con los dos teclados, dagas con el cúter y la navaja) en la mano del alumno, en las tres direcciones y en el tajo.
 - 2026-10-31 · T178 · Los NPC dentro del servidor, con el estilo del alumno: el equipo de su arquetipo (`server` en npcs.json) y su objeto de T162 en la mano (13 sprites «prop_*»), de frente, de espaldas y de perfil; el prólogo, igual.
 - 2026-10-31 · T179 · Versión 3.4.0: APK (código 18) y latest.json, Windows e instalador; lista `docs/prueba_celular_3.4.md` (con la pregunta de las manadas de T153). Sin subir a GitHub: pendiente de la revisión del usuario 🛑.
+- 2026-10-31 · (release) · v3.4.0 subida a GitHub (WalBernal/PathOverflow) con el APK y el latest.json, a petición del usuario.
+- 2026-10-31 · T165 · Guía visual (`docs/estilo_visual.md`) y dos maquetas para elegir, dibujadas por `UiProposals`: A · Terminal/IDE y B · Panel de monitoreo/datos (`docs/capturas/interfaz/165_propuesta_a/b.png`), con contraste ≥ 4,5:1 comprobado.

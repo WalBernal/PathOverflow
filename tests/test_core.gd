@@ -196,6 +196,7 @@ func _initialize() -> void:
 	_test_cutscene_direction()
 	_test_missing_scenes()
 	_test_mobile_defaults()
+	_test_ui_proposals()
 	_test_touch_controls()
 	_test_tilesets()
 	_test_events_music_colorblind()
@@ -5153,6 +5154,20 @@ func _test_missing_scenes() -> void:
 
 
 ## Celular (T106): renderizador, horizontal y valores por defecto.
+## T165: las dos propuestas de interfaz se leen (contraste WCAG ≥ 4,5 contra el panel) y la
+## guía existe.
+func _test_ui_proposals() -> void:
+	var low := []
+	for v in UiProposals.PALETTES:
+		for key in ["text", "muted", "accent", "ok"]:
+			var ratio := UiProposals.contrast(UiProposals.color(v, key), UiProposals.color(v, "panel"))
+			if ratio < 4.5:
+				low.append("%s.%s %.1f" % [v, key, ratio])
+	_check(low.is_empty(), "las dos propuestas de interfaz tienen contraste suficiente: %s" % [low])
+	_check(absf(UiProposals.contrast(Color.WHITE, Color.BLACK) - 21.0) < 0.01, "contraste blanco/negro = 21")
+	_check(FileAccess.file_exists("res://docs/estilo_visual.md"), "la guía visual existe")
+
+
 func _test_mobile_defaults() -> void:
 	# T159: Compatibility (OpenGL) en vez de Mobile (Vulkan): con Mobile la interfaz parpadeaba en el teléfono.
 	_check(String(ProjectSettings.get_setting("rendering/renderer/rendering_method.mobile")) == "gl_compatibility", "en el celular, el renderizador Compatibility")
