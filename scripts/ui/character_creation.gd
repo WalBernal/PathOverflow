@@ -32,6 +32,11 @@ var _name_edit: LineEdit
 var _error: Label
 var _create_button: Button
 var _skip_prologue: CheckBox
+## Arrastre sobre la figura para girarla (T185): píxeles acumulados hacia un lado.
+const DRAG_STEP := 48.0
+var _drag := 0.0
+var _selected_swatches: Array[StyleBoxFlat] = []   # su marco late (T185)
+var _built := false
 
 
 func _ready() -> void:
@@ -44,6 +49,7 @@ func _ready() -> void:
 		_existing_names.append(data.get("name", ""))
 	_build()
 	_refresh_appearance()
+	_built = true
 	_refresh_record()
 	_name_edit.grab_focus()
 	for k in 10:
@@ -56,7 +62,33 @@ func _process(delta: float) -> void:
 		_floaters[i]["y"] -= _floaters[i]["speed"] * delta
 		if _floaters[i]["y"] < -20.0:
 			_floaters[i] = _new_floater(false)
+	var pulse := 0.5 + 0.5 * sin(_time * 5.0)
+	for style in _selected_swatches:
+		style.border_color = UiStyle.ACCENT.lerp(Color.WHITE, 0.55 * pulse)
 	queue_redraw()
+
+
+## Pasos de giro que da un arrastre acumulado de `drag` píxeles (y lo que sobra).
+static func drag_steps(drag: float) -> Array:
+	var steps := int(drag / DRAG_STEP)
+	return [steps, drag - steps * DRAG_STEP]
+
+
+func _on_preview_input(event: InputEvent) -> void:
+	var dx := 0.0
+	if event is InputEventScreenDrag:
+		dx = event.relative.x
+	elif event is InputEventMouseMotion and event.button_mask & MOUSE_BUTTON_MASK_LEFT:
+		dx = event.relative.x
+	elif (event is InputEventMouseButton or event is InputEventScreenTouch) and not event.pressed:
+		_drag = 0.0
+		return
+	if dx == 0.0:
+		return
+	var r := drag_steps(_drag + dx)
+	_drag = r[1]
+	if r[0] != 0:
+		_rotate(-signi(r[0]))   # arrastrar a la derecha gira como el botón «<»
 
 
 func _new_floater(anywhere: bool) -> Dictionary:
@@ -146,7 +178,13 @@ func _build() -> void:
 	_preview.animated = true
 	_preview.use_sprites = true   # el mismo personaje por capas que en el juego (T102b)
 	_preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_preview.action = "cast"   # posa de vez en cuando (no hay arma: la clase llega en el prólogo)
 	preview_box.add_child(_preview)
+	# Arrastrar sobre la figura la gira (T185).
+	_preview.mouse_filter = Control.MOUSE_FILTER_STOP
+	_preview.mouse_default_cursor_shape = Control.CURSOR_DRAG
+	_preview.tooltip_text = "Arrastra para girar"
+	_preview.gui_input.connect(_on_preview_input)
 	var rotate_row := HBoxContainer.new()
 	rotate_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	rotate_row.add_theme_constant_override("separation", 12)
@@ -271,6 +309,7 @@ func _swatch_row(key: String, colors: Array) -> Control:
 		b.pressed.connect(func() -> void:
 			_appearance[key] = hex
 			_refresh_appearance())
+		UiStyle.juicy(b)   # rebote y sonido (T185)
 		row.add_child(b)
 		buttons.append(b)
 	_swatch_rows[key] = buttons
@@ -309,7 +348,7 @@ func _cycle(key: String, count: int, step: int) -> void:
 
 func _rotate(step: int) -> void:
 	_facing_index = posmod(_facing_index + step, FACINGS.size())
-	_preview.facing = FACINGS[_facing_index]
+	_preview.turn_to(FACINGS[_facing_index])   # con el paso intermedio (T185)
 	if _student:   # el alumno gira con él (T181)
 		_student.facing = FACINGS[_facing_index]
 
@@ -322,6 +361,10 @@ func _randomize_appearance() -> void:
 func _refresh_appearance() -> void:
 	_appearance = CharacterAppearance.sanitize(_appearance)
 	_preview.appearance = _appearance.duplicate()
+	# El pedestal toma el color del atuendo y cada cambio da un «pop» con destello (T185).
+	_preview.glow_color = Color(String(_appearance.get("outfit_color", "2dd4bf")))
+	if _built:
+		_preview.flash()
 	_face.appearance = _appearance.duplicate()
 	if _student:
 		_student.appearance = _appearance.duplicate()
@@ -330,6 +373,7 @@ func _refresh_appearance() -> void:
 	_option_labels["hair"].text = CharacterAppearance.HAIR_NAMES[_appearance["hair"]]
 	_option_labels["beard"].text = CharacterAppearance.BEARD_NAMES[_appearance["beard"]]
 	_option_labels["accessory"].text = CharacterAppearance.ACCESSORY_NAMES[_appearance["accessory"]]
+	_selected_swatches.clear()
 	for key in _swatch_rows:
 		for b: Button in _swatch_rows[key]:
 			var hex := b.tooltip_text.substr(1)
@@ -339,6 +383,8 @@ func _refresh_appearance() -> void:
 			style.border_color = UiStyle.ACCENT if selected else UiStyle.BORDER
 			style.set_border_width_all(3 if selected else 1)
 			style.set_corner_radius_all(3)
+			if selected:
+				_selected_swatches.append(style)
 			for state in ["normal", "hover", "pressed", "focus"]:
 				b.add_theme_stylebox_override(state, style)
 

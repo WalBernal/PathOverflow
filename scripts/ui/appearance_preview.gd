@@ -23,6 +23,15 @@ var weapon := ""
 ## Con las hojas por capas (T102b) en vez del dibujo con formas (lista de personajes y creador).
 var use_sprites := false
 var _sprite: PlayerSprite
+var _holder: Node2D   # el sprite va dentro: así se encoge al girar sin pisar su propia escala
+## Giro con paso intermedio (T185): la figura se estrecha, cambia de dirección a mitad
+## y vuelve a su ancho. `_turn_p` va de 0 a 1 (1 = quieta).
+const TURN_TIME := 0.18
+var _turn_from := Vector2.DOWN
+var _turn_p := 1.0
+## Gira sola (lista de personajes): abajo → lado → arriba → lado, y de frente para posar.
+var auto_turn := false
+const AUTO_TURN := [Vector2.DOWN, Vector2.RIGHT, Vector2.UP, Vector2.LEFT]
 const POSE_CYCLE := 3.2
 const POSE_ACTION_TIME := 0.9
 
@@ -52,14 +61,50 @@ static func pose_at(time: float, act: String, weapon_kind := "") -> Dictionary:
 	return {"state": act, "t": (cyc - start) / POSE_ACTION_TIME, "time": time, "weapon": weapon_kind if act != "cast" else ""}
 
 
+## Ancho de la figura a mitad de un giro (p de 0 a 1): se estrecha y vuelve.
+static func turn_squash(p: float) -> float:
+	return 1.0 - 0.6 * sin(PI * clampf(p, 0.0, 1.0))
+
+
+## Hacia dónde mira la figura que gira sola en el instante `time`: una dirección por
+## ciclo de pose y de frente un poco antes de la acción, para posar mirando a cámara.
+static func facing_at(time: float) -> Vector2:
+	var cyc := fposmod(time, POSE_CYCLE)
+	if cyc >= POSE_CYCLE - POSE_ACTION_TIME - TURN_TIME:
+		return Vector2.DOWN
+	return AUTO_TURN[int(time / POSE_CYCLE) % AUTO_TURN.size()]
+
+
+## Gira hacia `dir` con el paso intermedio (con «reducir movimiento», al instante).
+func turn_to(dir: Vector2) -> void:
+	if dir == facing:
+		return
+	_turn_from = shown_facing()
+	facing = dir
+	_turn_p = 1.0 if Accessibility.reduce_motion else 0.0
+
+
+## La dirección que se ve ahora: la de antes hasta la mitad del giro.
+func shown_facing() -> Vector2:
+	return _turn_from if _turn_p < 0.5 else facing
+
+
+## Avanza el tiempo de la figura (lo que hace cada fotograma, sin dibujar).
+func step(delta: float) -> void:
+	_time += delta
+	_flash = maxf(0.0, _flash - delta / FLASH_TIME)
+	_turn_p = minf(1.0, _turn_p + delta / TURN_TIME)
+	if auto_turn:
+		turn_to(facing_at(_time))
+
+
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_process(animated)
 
 
 func _process(delta: float) -> void:
-	_time += delta
-	_flash = maxf(0.0, _flash - delta / FLASH_TIME)
+	step(delta)
 	queue_redraw()
 
 
@@ -75,19 +120,25 @@ func _draw() -> void:
 		pose["glow"] = glow_color
 		if _flash > 0.0:
 			_draw_flash(feet, scale)
+	var squash := turn_squash(_turn_p) if _turn_p < 1.0 else 1.0
+	var looking := shown_facing()
 	if use_sprites and PlayerSprite.available():
 		if _sprite == null:
+			_holder = Node2D.new()
+			add_child(_holder)
 			_sprite = PlayerSprite.new()
-			add_child(_sprite)
+			_holder.add_child(_sprite)
 		_sprite.appearance = appearance
-		_sprite.position = feet
+		_holder.position = feet
+		_holder.scale = Vector2(squash, 1.0)
 		_sprite.sprite_scale = scale / PlayerSheet.BAKE_SCALE
-		_sprite.set_pose(facing, pose if not pose.is_empty() else {"state": "idle", "time": _time})
+		_sprite.set_pose(looking, pose if not pose.is_empty() else {"state": "idle", "time": _time})
 		return
+	# (el dibujo con formas usa su propio draw_set_transform: gira sin estrecharse)
 	if animated:
-		CharacterAppearance.draw(self, feet, scale, appearance, facing, Color(0, 0, 0, 0), -1.0, pose)
+		CharacterAppearance.draw(self, feet, scale, appearance, looking, Color(0, 0, 0, 0), -1.0, pose)
 		return
-	CharacterAppearance.draw(self, feet, scale, appearance, facing)
+	CharacterAppearance.draw(self, feet, scale, appearance, looking)
 
 
 ## Destello al cambiar de personaje (T184): columna de luz del color de la clase y

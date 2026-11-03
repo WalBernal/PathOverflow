@@ -164,6 +164,7 @@ func _build() -> void:
 	_preview = AppearancePreview.new()
 	_preview.animated = true
 	_preview.use_sprites = true   # el mismo personaje por capas que en el juego (T102b)
+	_preview.auto_turn = true     # gira despacio y se pone de frente para posar (T185)
 	_preview.custom_minimum_size = Vector2(0, 240)
 	_preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	figures.add_child(_preview)

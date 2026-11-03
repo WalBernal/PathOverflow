@@ -6143,6 +6143,27 @@ func _test_screens_t96() -> void:
 	_check(act["state"] == "attack" and is_equal_approx(act["t"], 0.5) and act["weapon"] == "sword", "a mitad de la acción, atacando con su arma")
 	_check(AppearancePreview.pose_at(AppearancePreview.POSE_CYCLE - 0.1, "cast", "sword")["weapon"] == "", "al lanzar no lleva arma")
 	_check(AppearancePreview.pose_at(3.0, "", "")["state"] == "idle", "sin acción, siempre quieta")
+	# T185: girar con paso intermedio. Ocho giros seguidos vuelven a la dirección de
+	# partida y, pasado el giro, la figura no queda a medio paso.
+	var fig := AppearancePreview.new()
+	var dirs := [Vector2.DOWN, Vector2.LEFT, Vector2.UP, Vector2.RIGHT]
+	for k in 8:
+		fig.turn_to(dirs[(k + 1) % 4])
+		fig.step(0.05)
+	fig.step(1.0)
+	_check(fig.shown_facing() == Vector2.DOWN and fig._turn_p == 1.0, "ocho giros vuelven al frente y la figura acaba entera")
+	fig.turn_to(Vector2.LEFT)
+	_check(fig.shown_facing() == Vector2.DOWN, "al empezar el giro aún mira hacia donde miraba")
+	fig.step(AppearancePreview.TURN_TIME * 0.6)
+	_check(fig.shown_facing() == Vector2.LEFT, "pasada la mitad ya mira hacia el nuevo lado")
+	fig.free()
+	_check(AppearancePreview.turn_squash(0.5) < 0.5 and AppearancePreview.turn_squash(0.0) == 1.0 and is_equal_approx(AppearancePreview.turn_squash(1.0), 1.0),
+		"a mitad del giro la figura se estrecha y luego vuelve a su ancho")
+	var sides := {}
+	for k in 4:
+		sides[AppearancePreview.facing_at(AppearancePreview.POSE_CYCLE * k + 0.5)] = true
+	var pose_t := AppearancePreview.POSE_CYCLE * 2.0 - AppearancePreview.POSE_ACTION_TIME * 0.5
+	_check(sides.size() == 4 and AppearancePreview.facing_at(pose_t) == Vector2.DOWN, "en la lista gira por los cuatro lados y posa de frente")
 	# Pantalla de carga: consejos, silueta según el borde de la zona y el desvanecido.
 	_check(LoadingCard.tips().size() >= 15, "15 consejos de carga o más (%d)" % LoadingCard.tips().size())
 	_check(LoadingCard.tip_for(3) == LoadingCard.tip_for(3) and LoadingCard.tip_for(3) != "", "el consejo depende de la semilla")
