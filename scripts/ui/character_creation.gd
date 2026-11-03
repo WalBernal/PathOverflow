@@ -366,8 +366,8 @@ func _create() -> void:
 		return
 	GameData.pending_creation = {"name": _name_edit.text.strip_edges(), "appearance": _appearance.duplicate(),
 		"skip_prologue": _skip_prologue.button_pressed}
-	get_tree().change_scene_to_file(GameData.PROLOGUE_SCENE)
+	ScreenTransition.change_scene(get_tree(), GameData.PROLOGUE_SCENE)   # con el barrido (T183)
 
 
 func _back() -> void:
-	get_tree().change_scene_to_file(GameData.MAIN_MENU_SCENE)
+	ScreenTransition.change_scene(get_tree(), GameData.MAIN_MENU_SCENE)

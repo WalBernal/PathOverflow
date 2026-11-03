@@ -41,7 +41,7 @@ Para encadenarlas: `/siguiente-tarea` hace una; `/loop /siguiente-tarea` las va 
 
 ## Fase 39 — Primera impresión: título, personajes y prólogo (versión 3.7.0)
 
-### [ ] T183 · Transiciones sin cortes · M
+### [x] T183 · Transiciones sin cortes · M
 Origen: R9
 - Título con fundido de entrada al abrir el juego y un sonido al pulsar para continuar (`title_screen.gd:34-56`, `:188-190`).
 - Creador → prólogo y creador → menú con `ScreenTransition` en vez de `change_scene_to_file` directo (`character_creation.gd:369`, `:373`).
@@ -324,3 +324,4 @@ Ideas que no están en la cola. Se pasan a tareas cuando el usuario las elija.
 ## Registro
 
 - 2026-11-02 · — · Roadmap 2 creado a partir de la revisión de las pantallas iniciales, las 62 habilidades y las invocaciones.
+- 2026-11-02 · T183 · Transiciones sin cortes: el título sale de negro en 0,8 s (el aviso espera) y suena al continuar; creador → prólogo, creador → menú y prólogo → mundo con el barrido (el mundo abre con su tarjeta de carga); `ScreenTransition` espera 2 fotogramas tapado tras el cambio, limita el delta a 1/30 s (`step`) y suena muy bajo; la tarjeta de carga tapa desde el primer fotograma con el fondo y el contenido entra en 0,18 s, sin salto de progreso. Pruebas del destape tras un delta de 2 s y del fundido del contenido.

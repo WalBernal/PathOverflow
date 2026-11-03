@@ -54,6 +54,22 @@ func _ready() -> void:
 	updates.check()
 	_add_continue()
 	_init_effects()
+	_fade_in()
+
+
+## T183: al abrir el juego la pantalla sale de negro (no aparece entera en el primer
+## fotograma); el aviso «pulsa una tecla» espera a que termine.
+const FADE_IN := 0.8
+
+func _fade_in() -> void:
+	var veil := ColorRect.new()
+	veil.color = ScreenTransition.COLOR
+	veil.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(veil)
+	veil.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var tw := veil.create_tween()
+	tw.tween_property(veil, "color:a", 0.0, FADE_IN).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.tween_callback(veil.queue_free)
 
 
 ## «Continuar» de un toque (T154): el último personaje jugado, donde lo dejaste,
@@ -187,6 +203,7 @@ func _input(event: InputEvent) -> void:
 		return   # (la música, el aviso de actualización y «Continuar» son botones, no «continuar»)
 	if pressed and not _leaving:
 		_leaving = true
+		Sfx.play("ui_open", -10.0)   # T183: pulsar para continuar suena
 		ScreenTransition.change_scene(get_tree(), GameData.MAIN_MENU_SCENE)   # barrido de píxeles (T96)
 
 
@@ -223,12 +240,14 @@ func _draw() -> void:
 		draw_rect(Rect2(Vector2.ZERO, Vector2(view.x, 26.0 * (8 - k))), Color(0, 0, 0, a))
 		draw_rect(Rect2(Vector2(0, view.y - 26.0 * (8 - k)), Vector2(view.x, 26.0 * (8 - k))), Color(0, 0, 0, a))
 	# Indicación parpadeante y versión.
+	draw_string(font, Vector2(16, view.y - 16), "compilado con café · inestable, como el código", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiStyle.MUTED)
+	if _time < FADE_IN:
+		return   # el aviso entra cuando la pantalla ya salió de negro
 	var cursor := "_" if fmod(_time, 1.0) < 0.5 else " "
 	var prompt := ("> toca la pantalla" if GameSettings.is_mobile() else "> pulsa cualquier tecla") \
 		+ (" para ver tus personajes" if _continue != null else " para continuar") + cursor
 	var pw := font.get_string_size(prompt, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x
 	draw_string(font, Vector2((view.x - pw) / 2.0, view.y - 120.0), prompt, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, UiStyle.ACCENT)
-	draw_string(font, Vector2(16, view.y - 16), "compilado con café · inestable, como el código", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiStyle.MUTED)
 
 
 ## Ciudad de servidores (T96): siluetas de racks-rascacielos con ventanas (LEDs) que

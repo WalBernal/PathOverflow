@@ -6100,6 +6100,23 @@ func _test_screens_t96() -> void:
 			var th := ScreenTransition.cell_threshold(c, r, cols, rows)
 			all_in_range = all_in_range and th >= 0.0 and th <= 1.0
 	_check(all_in_range, "todas las celdas se encienden dentro del barrido")
+	# T183: el destape dura lo mismo aunque el primer fotograma tras el cambio traiga 2 s.
+	var reveal_frames := func(first_delta: float) -> int:
+		var t := 0.0
+		var frames := 0
+		var d := first_delta
+		while t < ScreenTransition.REVEAL_TIME:
+			t += ScreenTransition.step(d)
+			d = 1.0 / 60.0
+			frames += 1
+		return frames
+	var smooth: int = reveal_frames.call(1.0 / 60.0)
+	var after_load: int = reveal_frames.call(2.0)
+	_check(after_load >= smooth - 2, "el destape no se salta tras una carga pesada (%d fotogramas frente a %d)" % [after_load, smooth])
+	var tr := ScreenTransition.new()
+	tr._phase = "settle"
+	_check(tr.coverage() == 1.0, "mientras la escena nueva se asienta, la pantalla sigue tapada")
+	tr.free()
 	# Pose de lucimiento: quieta casi todo el ciclo y la acción al final, de principio a fin.
 	_check(AppearancePreview.pose_at(0.5, "attack", "sword")["state"] == "idle", "al principio del ciclo, quieta")
 	var act := AppearancePreview.pose_at(AppearancePreview.POSE_CYCLE - AppearancePreview.POSE_ACTION_TIME * 0.5, "attack", "sword")
@@ -6113,6 +6130,8 @@ func _test_screens_t96() -> void:
 		"cada estilo de zona tiene su silueta")
 	_check(LoadingCard.silhouette_for("no_existe") == "tents", "un estilo desconocido no rompe nada")
 	_check(LoadingCard.alpha_at(0.2) == 1.0 and is_zero_approx(LoadingCard.alpha_at(LoadingCard.HOLD + LoadingCard.FADE + 0.01)), "la pantalla de carga se queda y luego se desvanece")
+	_check(LoadingCard.content_alpha_at(0.0) == 0.0 and LoadingCard.content_alpha_at(LoadingCard.CONTENT_IN) == 1.0
+		and is_zero_approx(LoadingCard.content_alpha_at(LoadingCard.HOLD + LoadingCard.FADE)), "el contenido de la carga entra con un fundido y sale con ella (T183)")
 	# T168: la carga como registro de arranque, con su progreso de 0 a 100 %.
 	var last_pct := -1
 	var steady := true

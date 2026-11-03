@@ -22,6 +22,7 @@ var subtitle := ""
 var style := ""
 var tip := ""
 var _t := 0.0
+var _bg: Control
 var _rect: Control
 var _seed := 0
 
@@ -81,24 +82,41 @@ static func alpha_at(t: float) -> float:
 	return 1.0 if t <= HOLD else clampf(1.0 - (t - HOLD) / FADE, 0.0, 1.0)
 
 
+## T183: el fondo tapa la zona desde el primer fotograma (la nueva se construye detrás),
+## pero la ilustración y los textos entran con un fundido corto.
+const CONTENT_IN := 0.18
+
+static func content_alpha_at(t: float) -> float:
+	return minf(clampf(t / CONTENT_IN, 0.0, 1.0), alpha_at(t))
+
+
 func _ready() -> void:
 	layer = 110
 	_seed = hash(zone_name)
 	if tip == "":
 		tip = tip_for(_seed + Time.get_ticks_msec() / 1000)
+	_bg = Control.new()
+	_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bg.draw.connect(func() -> void: UiStyle.draw_background(_bg, _bg.size))
+	add_child(_bg)
 	_rect = Control.new()
 	_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_rect.draw.connect(_draw_card)
+	_rect.modulate.a = 0.0
 	add_child(_rect)
 
 
 func _process(delta: float) -> void:
-	_t += delta
+	# El primer fotograma trae el delta de construir la zona: sin el límite, el
+	# progreso arrancaba saltado (T183).
+	_t += ScreenTransition.step(delta)
 	if _t >= HOLD + FADE:
 		queue_free()
 		return
-	_rect.modulate.a = alpha_at(_t)
+	_bg.modulate.a = alpha_at(_t)
+	_rect.modulate.a = content_alpha_at(_t)
 	_rect.queue_redraw()
 
 
@@ -107,7 +125,7 @@ func _draw_card() -> void:
 	var colors: Dictionary = Zone.STYLES.get(style, {"ground": "1c1922", "outside": "07060a"})
 	var sky := Color(colors.get("outside", "07060a"))
 	var ground := Color(colors.get("ground", "1c1922"))
-	UiStyle.draw_background(_rect, view)
+	# (el fondo lo pinta _bg, que no espera al fundido del contenido)
 	# Ilustración: una postal ancha arriba, en una tarjeta.
 	var art := Rect2(Vector2(view.x * 0.14, view.y * 0.08), Vector2(view.x * 0.72, view.y * 0.42))
 	var card := StyleBoxFlat.new()

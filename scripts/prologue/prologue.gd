@@ -676,7 +676,8 @@ func _finish() -> void:
 	GameData.save_character(c)
 	GameData.current_character = c
 	GameData.pending_creation = {}
-	get_tree().change_scene_to_file(GameData.WORLD_SCENE)
+	# T183: con el barrido; el mundo abre con su tarjeta de carga, sin congelarse en negro.
+	ScreenTransition.change_scene(get_tree(), GameData.WORLD_SCENE)
 
 
 # --- Capa de arriba: texto mecanografiado, consola, fundidos y título ---

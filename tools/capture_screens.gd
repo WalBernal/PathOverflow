@@ -1813,6 +1813,7 @@ func _capture_screens_t168() -> void:
 			await get_tree().process_frame
 			card.set_process(false)   # quieta en ese momento de la carga
 			card._t = t
+			card._rect.modulate.a = LoadingCard.content_alpha_at(t)
 			card._rect.queue_redraw()
 			await _wait(0.3)
 			_save("168_carga_%d_%s" % [LoadingCard.progress_at(t), tag])

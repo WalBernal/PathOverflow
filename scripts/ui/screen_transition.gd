@@ -8,9 +8,15 @@ const CELL := 40.0
 const COVER_TIME := 0.38
 const REVEAL_TIME := 0.42
 const COLOR := Color("07060a")
+## T183: el fotograma que sigue a un cambio de escena pesado trae un delta enorme; el
+## barrido nunca avanza más que esto por fotograma, para que el destape se vea entero.
+const MAX_STEP := 1.0 / 30.0
+## Fotogramas que espera tapado tras el cambio antes de destapar (la escena nueva se asienta).
+const SETTLE_FRAMES := 2
 
 var _t := 0.0
-var _phase := "cover"   # cover → (cambio) → reveal
+var _phase := "cover"   # cover → (cambio) → settle → reveal
+var _settle := 0
 var _target := ""
 var _rect: Control
 
@@ -41,22 +47,38 @@ func _ready() -> void:
 	_rect.mouse_filter = Control.MOUSE_FILTER_STOP   # nada de clicks a medio barrido
 	_rect.draw.connect(_draw_cells)
 	add_child(_rect)
+	Sfx.play("lay_whoosh", -20.0)   # T183: el barrido suena, muy bajo
+
+
+## Cuánto avanza el barrido con un delta: nunca más que MAX_STEP (T183).
+static func step(delta: float) -> float:
+	return clampf(delta, 0.0, MAX_STEP)
 
 
 func _process(delta: float) -> void:
-	_t += delta
+	if _phase == "settle":
+		_settle += 1
+		if _settle >= SETTLE_FRAMES:
+			_phase = "reveal"
+			_t = 0.0
+		return
+	_t += step(delta)
 	if _phase == "cover" and _t >= COVER_TIME:
-		_phase = "reveal"
-		_t = 0.0
+		_phase = "settle"
+		_settle = 0
 		get_tree().change_scene_to_file(_target)
 	elif _phase == "reveal" and _t >= REVEAL_TIME:
 		queue_free()
 	_rect.queue_redraw()
 
 
-## Proporción tapada en este instante: sube al tapar y baja al destapar.
+## Proporción tapada en este instante: sube al tapar, se queda entera mientras la
+## escena nueva se asienta y baja al destapar.
 func coverage() -> float:
-	return clampf(_t / COVER_TIME, 0.0, 1.0) if _phase == "cover" else 1.0 - clampf(_t / REVEAL_TIME, 0.0, 1.0)
+	match _phase:
+		"cover": return clampf(_t / COVER_TIME, 0.0, 1.0)
+		"settle": return 1.0
+	return 1.0 - clampf(_t / REVEAL_TIME, 0.0, 1.0)
 
 
 func _draw_cells() -> void:
