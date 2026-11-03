@@ -5522,6 +5522,25 @@ func _test_prologue_touch() -> void:
 	var script: GDScript = load("res://scripts/prologue/prologue.gd")
 	_check(script.touch_use_text("E · Hablar con Rafa") == "Hablar con Rafa", "botón de usar: sin la tecla")
 	_check(script.touch_use_text("Mirar la TV") == "Mirar la TV", "botón de usar: sin tecla, igual")
+	# T187: el tecleo de la intro suena las mismas veces a 30, 60 y 144 FPS.
+	var clicks_at := func(fps: float) -> int:
+		var chars := 0.0
+		var n := 0
+		while chars < 300.0:
+			var before := chars
+			chars = minf(300.0, chars + 60.0 / fps)
+			n += script.key_clicks(before, chars)
+		return n
+	var c30: int = clicks_at.call(30.0)
+	var c60: int = clicks_at.call(60.0)
+	var c144: int = clicks_at.call(144.0)
+	_check(c30 == c60 and c60 == c144 and c60 == 100, "prólogo: el tecleo no depende de los FPS (%d, %d, %d)" % [c30, c60, c144])
+	_check(PrologueStage.rafa_facing(false, 200.0, true).x < -0.9 and PrologueStage.rafa_facing(false, 60.0, true) == Vector2(-0.3, 1.0)
+		and PrologueStage.rafa_facing(true, 0.0, true) == Vector2.LEFT, "prólogo: Rafa teclea, mira al jugador cuando se acerca y de pie lo encara")
+	var peak := 0.0
+	for k in 21:
+		peak = maxf(peak, PrologueStage.rafa_rise(k / 20.0))
+	_check(is_zero_approx(PrologueStage.rafa_rise(0.0)) and PrologueStage.rafa_rise(1.0) == 1.0 and peak > 1.0, "prólogo: Rafa se levanta con un impulso y se asienta")
 	# El joystick, el botón y los toques en el escenario: capture_screens -- prologo tactil.
 	_test_touch_pickup()
 

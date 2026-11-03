@@ -41,6 +41,16 @@ var _no_armed := true      # vuelve a esquivar cuando el ratón se aleja
 var _no_dead := false
 var _dodges := 0
 var _font: Font
+## Apariencia del jugador: el puesto elegido se ve con su figura y su atuendo (T187).
+var appearance: Dictionary = CharacterAppearance.default()
+var _figure: AppearancePreview
+## Velo de fondo (T187): entra con un fundido en vez de aparecer de golpe.
+var _veil := 0.0
+const VEIL := 0.35
+const NO_SLIDE := 0.12
+var _opened := false
+var _closing := false
+var _no_tween: Tween
 
 
 func _ready() -> void:
@@ -98,8 +108,19 @@ func _ready() -> void:
 	info_panel.add_theme_stylebox_override("panel", sunken)
 	info_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(info_panel)
+	var info_row := HBoxContainer.new()
+	info_row.add_theme_constant_override("separation", 8)
+	info_panel.add_child(info_row)
+	# La figura del puesto (T187): posa con su arma y respira, como en la lista de personajes.
+	_figure = AppearancePreview.new()
+	_figure.animated = true
+	_figure.use_sprites = true
+	_figure.custom_minimum_size = Vector2(90, 150)
+	_figure.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	info_row.add_child(_figure)
 	var info_box := VBoxContainer.new()
-	info_panel.add_child(info_box)
+	info_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info_row.add_child(info_box)
 	_info = RichTextLabel.new()
 	_info.bbcode_enabled = true
 	_info.fit_content = true
@@ -153,10 +174,31 @@ func _ready() -> void:
 func _center() -> void:
 	var area := size if size.x > 0.0 else get_viewport_rect().size
 	_window.position = ((area - WIN_SIZE) / 2.0).round()
+	if not _opened:   # la primera vez, la ventana entra con un zoom corto (T187)
+		_opened = true
+		UiMotion.window_in(_window)
+		Sfx.play("ui_open", -8.0)
+		create_tween().tween_property(self, "_veil", VEIL, 0.25)
+
+
+## Se cierra con un fundido y se libera sola (T187).
+func close() -> void:
+	if _closing:
+		return
+	_closing = true
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	Sfx.play("ui_close", -8.0)
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(_window, "modulate:a", 0.0, 0.16)
+	tw.tween_property(self, "_veil", 0.0, 0.2)
+	if not Accessibility.reduce_motion:
+		_window.pivot_offset = WIN_SIZE / 2.0
+		tw.tween_property(_window, "scale", Vector2(0.96, 0.96), 0.16)
+	tw.chain().tween_callback(queue_free)
 
 
 func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, 0.35))
+	draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, _veil))
 
 
 func _draw_window() -> void:
@@ -199,6 +241,14 @@ func _refresh_info() -> void:
 	var trait_def: Dictionary = c.get("trait", {})
 	if not trait_def.is_empty():
 		_info.text += "\n[color=#0a3a7a][b]Rasgo: %s.[/b] %s[/color]" % [trait_def.get("name", ""), trait_def.get("description", "")]
+	var class_id := String(c.get("id", ""))
+	_figure.appearance = CharacterAppearance.with_gear(CharacterAppearance.sanitize(appearance), class_id)
+	_figure.glow_color = Color(c.get("color", "2dd4bf"))
+	var look: Array = MainMenu.CLASS_POSES.get(class_id, ["attack", "sword"])
+	_figure.action = look[0]
+	_figure.weapon = look[1]
+	if _opened:
+		_figure.flash()
 	for child in _skills.get_children():
 		child.queue_free()
 	for skill_id in c.get("starter_skills", []):
@@ -214,12 +264,16 @@ func _refresh_info() -> void:
 		name.text = def.get("name", "")
 		name.add_theme_color_override("font_color", Color.BLACK)
 		name.add_theme_font_size_override("font_size", 12)
-		name.custom_minimum_size.x = 150
+		name.custom_minimum_size.x = 118   # (con la figura al lado, tres caben en la ventana)
 		name.autowrap_mode = TextServer.AUTOWRAP_WORD
 		_skills.add_child(name)
 
 
 func _process(_delta: float) -> void:
+	if _veil < VEIL or _closing:
+		queue_redraw()   # el velo entrando o saliendo
+	if _closing:
+		return
 	if not _no_dead and _no_scale < 0.95:
 		_focus.queue_redraw()   # el recuadro punteado parpadea
 	if _no_dead or _no_scale <= MIN_SCALE:
@@ -255,7 +309,12 @@ func _dodge(mouse: Vector2) -> void:
 			if c.distance_to(mouse) > 140.0 and not yes_zone.intersects(Rect2(c, w)):
 				target = c
 				break
-	_no.position = target.clamp(area.position, area.end)
+	# Se desliza rápido hasta el hueco (T187) en vez de teletransportarse.
+	if _no_tween:
+		_no_tween.kill()
+	_no_tween = _no.create_tween()
+	_no_tween.tween_property(_no, "position", target.clamp(area.position, area.end), NO_SLIDE).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_no_tween.parallel().tween_method(func(_v: float) -> void: _focus.queue_redraw(), 0.0, 1.0, NO_SLIDE)
 	Sfx.play("blink", -8.0, 1.0 + _dodges * 0.06)
 	if tiny:
 		_no.tooltip_text = PrologueText.text("hire", "no_sure", "¿Seguro?")
@@ -267,10 +326,13 @@ func _on_no_pressed() -> void:
 	if _no_dead:
 		return
 	_no_dead = true
+	if _no_tween:
+		_no_tween.kill()   # se le atinó a medio deslizarse: se queda donde va a ir
 	_error.text = PrologueText.text("hire", "refuse_error", "Error 0x80004005: Acción denegada por el mercado laboral. Requiere 3 años de experiencia previa para rechazar esta oferta.")
 	_error_box.visible = true
 	_error_box.reset_size()
 	_error_box.position = Vector2(WIN_SIZE.x - _error_box.size.x - 16.0, WIN_SIZE.y - 60.0 - _error_box.size.y)
+	UiMotion.window_in(_error_box)   # el globo aparece con un pop (T187)
 	Sfx.play("player_hurt")
 	_no.pressed.disconnect(_on_no_pressed)
 	_no.remove_theme_font_size_override("font_size")

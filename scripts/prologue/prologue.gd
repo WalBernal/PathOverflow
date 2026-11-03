@@ -59,6 +59,9 @@ var _flags := {}
 var _time := 0.0
 var _fade := 1.0
 var _fade_target := 0.0
+## Velo de la intro que se desvanece al empezar a caminar (T187): 1 → 0 en INTRO_FADE_OUT.
+const INTRO_FADE_OUT := 0.6
+var _intro_out := 0.0
 
 var _viewport: SubViewport
 var _stage: PrologueStage
@@ -104,6 +107,7 @@ func _ready() -> void:
 	if bool(pending.get("skip_prologue", false)):
 		_go_room("oficina", 200.0)
 		_stage.rafa_standing = true
+		_stage.rafa_stand_k = 1.0   # ya de pie: sin animación de levantarse
 		_phase = "hire"
 		_fade = 0.0
 		_open_hire()
@@ -192,13 +196,15 @@ func _process(delta: float) -> void:
 	_glitch = maxf(0.0, _glitch - delta * 0.6)
 	_flash = maxf(0.0, _flash - delta * 1.5)
 	_skip_hint = maxf(0.0, _skip_hint - delta)
+	_intro_out = maxf(0.0, _intro_out - delta / INTRO_FADE_OUT)
 	match _phase:
 		"intro":
 			var was_done := _intro_chars >= _intro_total
+			var before := _intro_chars
 			_intro_chars = minf(_intro_total, _intro_chars + delta * INTRO_CPS)
 			if not was_done and _intro_chars >= _intro_total:
 				_intro_done_at = _time
-			if int(_intro_chars) % 3 == 0 and _intro_chars < _intro_total:
+			if key_clicks(before, _intro_chars) > 0 and _intro_chars < _intro_total:
 				Sfx.play("trap", -18.0, 2.2)
 		"walk":
 			_update_walk(delta)
@@ -222,6 +228,13 @@ func _process(delta: float) -> void:
 	_update_screen()
 	_update_touch_use()
 	_overlay.queue_redraw()
+
+
+## Teclas que suenan al pasar de `before` a `after` caracteres escritos: una cada 3
+## caracteres, al cruzar el umbral (T187). Antes sonaba en cada fotograma en que el
+## número de caracteres era múltiplo de 3, así que a más FPS, más teclas.
+static func key_clicks(before: float, after: float) -> int:
+	return maxi(0, int(after) / 3 - int(before) / 3)
 
 
 ## El botón táctil de usar: con el nombre de lo que hay cerca, solo mientras se camina.
@@ -444,6 +457,7 @@ func _input(event: InputEvent) -> void:
 				_intro_done_at = _time
 			elif _time - _intro_done_at >= INTRO_MIN_READ:
 				_phase = "walk"   # (un doble click no se salta el texto sin leerlo)
+				_intro_out = 1.0
 		"walk":
 			var spot := _nearest_hotspot()
 			if not spot.is_empty() and (key != null or _mouse_stage(at).distance_to(_hotspot_pos(spot)) < 40.0):
@@ -549,6 +563,7 @@ func _skip_to_hire() -> void:
 	_fade_target = 0.0
 	_go_room("oficina", 200.0)
 	_stage.rafa_standing = true
+	_stage.rafa_stand_k = 1.0
 	_flags["talked"] = true
 	_phase = "hire"
 	Sfx.ambient("oficina")
@@ -560,11 +575,12 @@ func _open_hire() -> void:
 	_stage.prompt = {}
 	_glitch = 0.4
 	_hire = HireDialog.new()
+	_hire.appearance = _appearance   # cada puesto, con su figura y su atuendo (T187)
 	add_child(_hire)
 	UiStyle.apply_ui_scale.call_deferred(_hire)
 	_hire.hired.connect(func(class_id: StringName) -> void:
 		_class_id = class_id
-		_hire.queue_free()
+		_hire.close()   # sale con su animación y se libera sola (T187)
 		_hire = null
 		_flags["hired"] = true
 		if bool(GameData.pending_creation.get("skip_prologue", false)):
@@ -690,6 +706,9 @@ func _draw_overlay() -> void:
 	match _phase:
 		"intro":
 			_draw_intro(view)
+		"walk", "busy":
+			if _intro_out > 0.0:
+				_draw_intro(view, _intro_out)
 		"console":
 			_draw_console(view)
 		"fall":
@@ -707,8 +726,20 @@ func _draw_overlay() -> void:
 		_overlay.draw_string(font, Vector2(0, 60), PrologueText.text("hints", "skip_again", "Esc otra vez: saltar a la elección de puesto"), HORIZONTAL_ALIGNMENT_CENTER, view.x, 16, Color(1, 0.85, 0.4, minf(1.0, _skip_hint)))
 
 
-func _draw_intro(view: Vector2) -> void:
-	_overlay.draw_rect(Rect2(Vector2.ZERO, view), Color(0, 0, 0, 0.72))
+## `alpha`: al pasar a caminar, el velo y el texto se desvanecen (T187) en vez de
+## desaparecer en un fotograma.
+func _draw_intro(view: Vector2, alpha := 1.0) -> void:
+	_overlay.draw_rect(Rect2(Vector2.ZERO, view), Color(0, 0, 0, 0.72 * alpha))
+	if alpha < 1.0:
+		var fading := _intro_text.substr(0, int(_intro_chars))
+		var fy := view.y * 0.16
+		for paragraph in fading.split("\n"):
+			for line in _wrap(paragraph, view.x * 0.68, 19):
+				_overlay.draw_string(_mono, Vector2(view.x * 0.16, fy - 12.0 * (1.0 - alpha)), line, HORIZONTAL_ALIGNMENT_LEFT, -1, 19, Color("e8e0c8", alpha))
+				fy += 26.0
+			if paragraph == "":
+				fy += 14.0
+		return
 	var shown := _intro_text.substr(0, int(_intro_chars))
 	var box := Rect2(view.x * 0.16, view.y * 0.16, view.x * 0.68, view.y * 0.68)
 	var y := box.position.y

@@ -2510,6 +2510,7 @@ func _capture_minimap() -> void:
 
 ## El botón «No» de la contratación tras muchos esquives: pequeño pero legible.
 func _capture_hire_no() -> void:
+	get_tree().paused = false   # (el minimapa de antes deja el juego en pausa: la ventana entra con tweens)
 	var p: Node = load("res://scenes/prologue/prologue.tscn").instantiate()
 	_swap(p)
 	await _wait(0.8)

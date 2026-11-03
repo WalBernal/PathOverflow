@@ -123,11 +123,33 @@ func width() -> float:
 	return ROOM_WIDTH.get(room, VIEW.x)
 
 
+## Rafa se levanta con una animación corta en vez de un corte (T187): 0 sentado, 1 de pie.
+const RAFA_STAND_TIME := 0.45
+var rafa_stand_k := 0.0
+
+
 func _process(delta: float) -> void:
 	time += delta
 	flicker = maxf(0.0, flicker - delta)
 	rack_shake = maxf(0.0, rack_shake - delta * 0.2)
+	rafa_stand_k = move_toward(rafa_stand_k, 1.0 if rafa_standing else 0.0, delta / RAFA_STAND_TIME)
 	queue_redraw()
+
+
+## Cuánto se ha levantado Rafa (0..1) con un pequeño impulso al final: se pasa un poco
+## hacia arriba y se asienta.
+static func rafa_rise(k: float) -> float:
+	return UiMotion.overshoot(k, 0.0) if k < 1.0 else 1.0
+
+
+## Hacia dónde mira Rafa sentado: al monitor tecleando, o al jugador cuando entra en la
+## oficina y se acerca (T187).
+static func rafa_facing(standing: bool, player_x_now: float, in_office: bool) -> Vector2:
+	if standing:
+		return Vector2.LEFT
+	if in_office and player_x_now > 120.0:
+		return Vector2(-1.0, 0.5)
+	return Vector2(-0.3, 1.0)
 
 
 func _draw() -> void:
@@ -190,7 +212,9 @@ func _draw_player() -> void:
 		sc *= 1.0 - 0.85 * player_pull * player_pull
 		_draw_pull_trail(home, feet, player_pull, Color("3cff6a"))
 		_draw_scream(feet, player_pull, "¡¿QUÉ PASA?!")
-	CharacterAppearance.draw(self, feet, sc, look, player_facing, Color(0, 0, 0, 0), walk_phase)
+	# Quieto, respira (T187); antes se quedaba congelado a media zancada.
+	var pose := {} if walk_phase >= 0.0 or player_pull > 0.0 else {"state": "idle", "time": time}
+	CharacterAppearance.draw(self, feet, sc, look, player_facing, Color(0, 0, 0, 0), walk_phase, pose)
 	if outfit_shift < 0.5:
 		# Marcas de sudor y el portafolio de plástico bajo el brazo (de espaldas no se ven).
 		var hs := float(look.get("height", 1.0))
@@ -755,12 +779,18 @@ func _draw_office() -> void:
 		_draw_vortex()
 	# Rafa, de pie o sentado tras la barricada.
 	# Sentado solo asoma la cabeza sobre el escritorio; al levantarse de golpe, medio cuerpo.
-	var rafa_feet := Vector2(314, FLOOR_Y - (12.0 if rafa_standing else 0.0))
+	# T187: se levanta con un impulso; sentado teclea (respira rápido, como quien escribe)
+	# y gira la cabeza hacia el jugador cuando este se acerca.
+	var rise := rafa_rise(rafa_stand_k)
+	var rafa_feet := Vector2(314, FLOOR_Y - 12.0 * rise)
 	var rp := pull_of("rafa")
 	if rp < 1.0:
 		var at := pulled_pos(rafa_feet, rp)
 		_draw_pull_trail(rafa_feet, at, rp, Color("e06c6c"))
-		CharacterAppearance.draw(self, at, 1.0 - 0.85 * rp * rp, rafa_look, Vector2.LEFT if rafa_standing else Vector2(-0.3, 1.0))
+		var standing := rafa_stand_k >= 0.5
+		var rafa_pose := {"state": "idle", "time": time * (1.0 if standing else 4.0)}
+		CharacterAppearance.draw(self, at, 1.0 - 0.85 * rp * rp, rafa_look, rafa_facing(standing, player_x, room == "oficina"),
+			Color(0, 0, 0, 0), -1.0, rafa_pose)
 		_draw_scream(at, rp, "¡MI MONOLITOOO!")
 
 
