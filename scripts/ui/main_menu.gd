@@ -273,6 +273,8 @@ func _make_card(index: int) -> Button:
 	portrait.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	portrait.ring_color = stripe.color
 	portrait.appearance = CharacterAppearance.sanitize(data.get("appearance", {}))
+	portrait.still = true   # solo se anima la tarjeta elegida (T186)
+	portrait.name = "Portrait"
 	row.add_child(portrait)
 	var texts := VBoxContainer.new()
 	texts.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -306,6 +308,10 @@ func _select(index: int) -> void:
 	var card := _list.get_child(index) as Button
 	if card:
 		card.button_pressed = true  # así el ButtonGroup suelta los demás
+	for k in _list.get_child_count():   # T186: solo respira el retrato elegido
+		var p := _list.get_child(k).find_child("Portrait", true, false) as CharacterPortrait
+		if p:
+			p.still = k != index
 	var data := _saves[index]
 	_preview.appearance = CharacterAppearance.with_gear(CharacterAppearance.sanitize(data.get("appearance", {})), String(data.get("class_id", "")))
 	_student.equipped = StudentHero.equipped_of_save(data)

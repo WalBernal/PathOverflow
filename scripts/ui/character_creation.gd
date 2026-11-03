@@ -37,6 +37,7 @@ const DRAG_STEP := 48.0
 var _drag := 0.0
 var _selected_swatches: Array[StyleBoxFlat] = []   # su marco late (T185)
 var _built := false
+var _floater_layer: Control
 
 
 func _ready() -> void:
@@ -47,6 +48,11 @@ func _ready() -> void:
 	MusicPlayer.play_title()
 	for data in CharacterSaves.list_all():
 		_existing_names.append(data.get("name", ""))
+	_floater_layer = Control.new()
+	_floater_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_floater_layer.draw.connect(_draw_floaters)
+	add_child(_floater_layer)
+	_floater_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_build()
 	_refresh_appearance()
 	_built = true
@@ -65,7 +71,7 @@ func _process(delta: float) -> void:
 	var pulse := 0.5 + 0.5 * sin(_time * 5.0)
 	for style in _selected_swatches:
 		style.border_color = UiStyle.ACCENT.lerp(Color.WHITE, 0.55 * pulse)
-	queue_redraw()
+	_floater_layer.queue_redraw()   # el fondo fijo no se redibuja cada fotograma (T186)
 
 
 ## Pasos de giro que da un arrastre acumulado de `drag` píxeles (y lo que sobra).
@@ -105,12 +111,22 @@ func _new_floater(anywhere: bool) -> Dictionary:
 		"speed": _rng.randf_range(10.0, 26.0), "alpha": _rng.randf_range(0.05, 0.14), "binary": binary}
 
 
+## El fondo (rejilla, resplandor y viñeta) solo se pinta al cambiar de tamaño (T186).
 func _draw() -> void:
 	UiStyle.draw_background(self, size)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED:
+		queue_redraw()
+
+
+## Los textos que flotan, en su propia capa: lo único que se redibuja cada fotograma.
+func _draw_floaters() -> void:
 	var font := get_theme_default_font()
 	for f in _floaters:
 		var color := Color(0.25, 0.95, 0.45, f["alpha"]) if f["binary"] else Color(0.85, 0.8, 0.6, f["alpha"])
-		draw_string(font, Vector2(f["x"], f["y"]), f["text"], HORIZONTAL_ALIGNMENT_LEFT, -1, 15, color)
+		_floater_layer.draw_string(font, Vector2(f["x"], f["y"]), f["text"], HORIZONTAL_ALIGNMENT_LEFT, -1, 15, color)
 
 
 func _unhandled_input(event: InputEvent) -> void:

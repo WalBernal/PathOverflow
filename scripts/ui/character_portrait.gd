@@ -36,6 +36,12 @@ var talking := false
 var ring_color := UiStyle.ACCENT
 ## Glitch (por ejemplo, Rafa hablando por datos del celular).
 var glitch := 0.0
+## Quieto (T186): no respira ni parpadea, y no se redibuja cada fotograma (las tarjetas
+## de la lista de personajes que no están elegidas).
+var still := false:
+	set(value):
+		still = value
+		queue_redraw()
 
 ## Expresión de la línea que se dice (T129, escenas): "" (la de siempre), "happy",
 ## "angry", "sad", "surprised" o "worried".
@@ -59,7 +65,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if not is_visible_in_tree():
+	if still or not is_visible_in_tree():
 		return
 	_time += delta
 	_next_blink -= delta

@@ -131,8 +131,19 @@ func show_update(info: Dictionary) -> void:
 	_update.offset_bottom = -34.0
 
 
+## Al cambiar el tamaño de la ventana o girar el celular, la lluvia, los textos y la
+## ciudad se vuelven a repartir (T186): antes quedaban huecos.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED and not _columns.is_empty():
+		_init_effects()
+
+
 func _init_effects() -> void:
-	var view := get_viewport_rect().size
+	var view := size if size.x > 0.0 else get_viewport_rect().size
+	_columns.clear()
+	_snippets.clear()
+	_bugs.clear()
+	_city = [[], []]
 	for x in range(0, int(view.x), 22):
 		_columns.append({"x": float(x), "y": _rng.randf_range(-view.y, view.y), "speed": _rng.randf_range(40, 140),
 			"length": _rng.randi_range(6, 18), "seed": _rng.randi()})
@@ -145,8 +156,25 @@ func _init_effects() -> void:
 		while x < view.x + 200.0:
 			var w := _rng.randf_range(50, 110) if layer == 0 else _rng.randf_range(70, 150)
 			var h := _rng.randf_range(0.18, 0.34) * view.y if layer == 0 else _rng.randf_range(0.12, 0.26) * view.y
-			_city[layer].append({"x": x, "w": w, "h": h, "seed": _rng.randi(), "antenna": _rng.randf() < 0.35})
+			var seed_value := _rng.randi()
+			_city[layer].append({"x": x, "w": w, "h": h, "seed": seed_value, "antenna": _rng.randf() < 0.35,
+				"windows": city_windows(w, h, seed_value)})
 			x += w + _rng.randf_range(6, 26)
+
+
+## Ventanas (LEDs) de un edificio, calculadas una vez (T186): [posición, fase]. Antes se
+## creaba un generador de números al azar por edificio en cada fotograma.
+static func city_windows(w: float, h: float, seed_value: int) -> Array:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var out := []
+	for r in int(h / 18.0):
+		for c in int(w / 14.0):
+			var phase := rng.randf()
+			if rng.randf() < 0.45:
+				continue
+			out.append([Vector2(6 + c * 14.0, 10 + r * 18.0), phase])
+	return out
 
 
 func _new_snippet(view: Vector2, anywhere := false) -> Dictionary:
@@ -264,18 +292,10 @@ func _draw_city() -> void:
 				continue
 			draw_rect(rect, body)
 			draw_rect(Rect2(rect.position, Vector2(rect.size.x, 2.0)), Color(tint, 0.25))
-			var rng := RandomNumberGenerator.new()
-			rng.seed = int(b["seed"])
-			var cols := int(b["w"] / 14.0)
-			var rows := int(b["h"] / 18.0)
-			for r in rows:
-				for c in cols:
-					var phase := rng.randf()
-					if rng.randf() < 0.45:
-						continue
-					var on := sin(_time * (0.6 + phase * 1.5) + phase * 40.0) > -0.3
-					var p := rect.position + Vector2(6 + c * 14.0, 10 + r * 18.0)
-					draw_rect(Rect2(p, Vector2(6, 3)), Color(tint, tint.a * (1.0 if on else 0.15)))
+			for win in b["windows"]:
+				var phase: float = win[1]
+				var on := sin(_time * (0.6 + phase * 1.5) + phase * 40.0) > -0.3
+				draw_rect(Rect2(rect.position + win[0], Vector2(6, 3)), Color(tint, tint.a * (1.0 if on else 0.15)))
 			if b["antenna"]:
 				var top := Vector2(rect.position.x + rect.size.x * 0.5, rect.position.y)
 				draw_line(top, top + Vector2(0, -26), body.lightened(0.15), 2.0)

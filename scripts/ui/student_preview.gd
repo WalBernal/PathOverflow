@@ -28,6 +28,7 @@ var facing := Vector2.DOWN:
 
 var _texture: Texture2D
 var _time := 0.0
+var _drawn_column := -1
 
 
 func _ready() -> void:
@@ -35,10 +36,12 @@ func _ready() -> void:
 	custom_minimum_size = Vector2(150, 150)
 
 
+## Solo se redibuja cuando cambia el cuadro de la hoja (T186), no cada fotograma.
 func _process(delta: float) -> void:
 	if is_visible_in_tree():
 		_time += delta
-		queue_redraw()
+		if current_column() != _drawn_column:
+			queue_redraw()
 
 
 ## Cuadro de ahora: respira 4 s y camina 2 s en el sitio.
@@ -60,6 +63,7 @@ func _draw() -> void:
 	var feet := Vector2(StudentHero.FEET)
 	var d: Array = StudentHero.dir_for(facing)
 	var origin := Vector2(size.x / 2.0, size.y - 4.0)
+	_drawn_column = current_column()
 	draw_set_transform(origin, 0.0, Vector2(-s if d[1] else s, s))
-	draw_texture_rect_region(_texture, Rect2(-feet, cell), Rect2(current_column() * cell.x, int(d[0]) * cell.y, cell.x, cell.y))
+	draw_texture_rect_region(_texture, Rect2(-feet, cell), Rect2(_drawn_column * cell.x, int(d[0]) * cell.y, cell.x, cell.y))
 	draw_set_transform(Vector2.ZERO)
