@@ -5540,6 +5540,19 @@ func _test_prologue_touch() -> void:
 	var peak := 0.0
 	for k in 21:
 		peak = maxf(peak, PrologueStage.rafa_rise(k / 20.0))
+	# T188: lo que cruza la calle entra por un lado y sale por el otro, sin saltos en medio.
+	var inside := true
+	var prev_x := PrologueStage.loop_x(40.0, 30.0, 0.0, 760.0)
+	var wraps := 0
+	for k in 600:
+		var x := PrologueStage.loop_x(40.0, 30.0, k * 0.1, 760.0)
+		inside = inside and x >= -40.0 and x < 800.0
+		if x < prev_x:
+			wraps += 1
+		prev_x = x
+	_check(inside and wraps == 2, "prólogo: los autos cruzan la calle y vuelven a entrar (%d vueltas)" % wraps)
+	_check(PrologueStage.hall_door_open(1.0) == 0.0 and PrologueStage.hall_door_open(PrologueStage.HALL_WALK) == 1.0
+		and PrologueStage.hall_door_open(PrologueStage.HALL_WALK + 2.0) == 0.0, "prólogo: la puerta del pasillo se abre al llegar alguien y se cierra sola")
 	_check(is_zero_approx(PrologueStage.rafa_rise(0.0)) and PrologueStage.rafa_rise(1.0) == 1.0 and peak > 1.0, "prólogo: Rafa se levanta con un impulso y se asienta")
 	# El joystick, el botón y los toques en el escenario: capture_screens -- prologo tactil.
 	_test_touch_pickup()

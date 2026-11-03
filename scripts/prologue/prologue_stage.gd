@@ -94,6 +94,8 @@ var prompt: Dictionary = {}
 var goal := Vector2.INF
 var _font: Font
 var _papers: Array[Dictionary] = []
+var _walker_looks: Array[Dictionary] = []   # peatones de la calle y la figura del pasillo (T188)
+var _hall_look: Dictionary = {}
 
 
 func _ready() -> void:
@@ -103,6 +105,11 @@ func _ready() -> void:
 	for k in 12:
 		_papers.append({"x": rng.randf_range(20, 380), "y": rng.randf_range(150, 205), "r": rng.randf_range(-0.6, 0.6),
 			"speed": rng.randf_range(0.5, 1.5), "phase": rng.randf() * TAU})
+	for p in WALKERS:
+		rng.seed = int(p[2])
+		_walker_looks.append(CharacterAppearance.random(rng))
+	rng.seed = 404
+	_hall_look = CharacterAppearance.random(rng)
 
 
 ## Pasillo: de (lateral, profundidad) a un punto del escenario, y al revés.
@@ -278,6 +285,60 @@ func _draw_street() -> void:
 		var x := k * 20.0 + fmod(time * 5.0, 20.0)
 		draw_line(Vector2(x, 216 + (k % 2) * 4), Vector2(x + 8, 216 + (k % 2) * 4), Color("9fd0e4"), 1.0)
 	draw_line(Vector2(0, 211), Vector2(w, 211), Color("f0ece0"), 1.0)
+	_draw_street_life(w)
+
+
+## Posición x de algo que cruza en bucle (autos, peatones, gaviotas): entra por un lado
+## y, al salir por el otro, vuelve a empezar; `span` es el ancho del sitio.
+static func loop_x(base: float, speed: float, t: float, span: float) -> float:
+	return fposmod(base + speed * t, span + 80.0) - 40.0
+
+
+## Autos de la avenida en bucle: [x de salida, velocidad (signo = sentido), y de las
+## ruedas, color]. El carril de atrás va hacia la izquierda.
+const TRAFFIC := [[40.0, -26.0, 183.0, "5a7a9a"], [420.0, -31.0, 183.0, "e8e4d8"],
+	[200.0, 38.0, 189.0, "c03a3a"], [600.0, 34.0, 189.0, "2a2a2e"]]
+## Peatones en la banqueta de la escuela: [x de salida, velocidad, semilla del aspecto].
+const WALKERS := [[120.0, 11.0, 7], [520.0, -9.0, 31]]
+
+
+## La calle con vida (T188): autos que pasan por la avenida, gente en la banqueta,
+## gaviotas y el sol brillando en el mar.
+func _draw_street_life(w: float) -> void:
+	for g in 3:   # gaviotas: una V que aletea
+		var gx := loop_x(100.0 + g * 260.0, 9.0 + g * 3.0, time, w)
+		var gy := 38.0 + g * 9.0 + sin(time * 0.8 + g) * 4.0
+		var flap := sin(time * 7.0 + g * 2.0) * 2.0
+		draw_line(Vector2(gx - 4, gy - flap), Vector2(gx, gy), Color("f4f4f0"), 1.0)
+		draw_line(Vector2(gx, gy), Vector2(gx + 4, gy - flap), Color("f4f4f0"), 1.0)
+	for i in WALKERS.size():
+		var p: Array = WALKERS[i]
+		var px := loop_x(p[0], p[1], time, w)
+		var look: Dictionary = _walker_looks[i]
+		var phase := fmod(absf(px) / 6.0 * PI, TAU)
+		CharacterAppearance.draw(self, Vector2(px, 175.0), 0.55, look, Vector2.RIGHT if p[1] > 0.0 else Vector2.LEFT, Color(0, 0, 0, 0), phase)
+	for car in TRAFFIC:
+		_draw_car(loop_x(car[0], car[1], time, w), car[2], Color(car[3]), car[1] < 0.0)
+	for k in 16:   # destellos del sol sobre el agua
+		var gx := fposmod(k * 53.7 + sin(time * 0.7 + k) * 6.0, w)
+		if sin(time * 3.0 + k * 1.7) > 0.55:
+			draw_rect(Rect2(gx, 214 + (k % 4) * 2.5, 2, 1), Color(1, 1, 0.92, 0.9))
+
+
+## Auto de perfil, en pixel art: carrocería, cabina con cristal y ruedas que giran.
+func _draw_car(x: float, wheel_y: float, col: Color, left: bool) -> void:
+	var dir := -1.0 if left else 1.0
+	var body := Rect2(x - 13, wheel_y - 7, 26, 5)
+	draw_rect(body, col)
+	draw_rect(Rect2(body.position, Vector2(body.size.x, 1)), col.lightened(0.25))
+	var cab := Rect2(x - 7 - dir * 1.0, wheel_y - 11, 13, 4)
+	draw_rect(cab, col)
+	draw_rect(cab.grow(-1), Color("6a8a9a"))
+	draw_rect(Rect2(x + dir * 12.0 - 1.0, wheel_y - 6, 2, 1), Color("fff2a0"))   # faro
+	for wx in [x - 8.0, x + 8.0]:
+		draw_circle(Vector2(wx, wheel_y - 1), 2.2, Color("1e1e22"))
+		var spin := time * 9.0 * dir
+		draw_line(Vector2(wx, wheel_y - 1), Vector2(wx, wheel_y - 1) + Vector2.from_angle(spin) * 1.6, Color("8a8a8a"), 1.0)
 
 
 ## Calle lateral que baja hacia el fondo (separa la escuela de la torre): el muro
@@ -504,6 +565,12 @@ func _draw_street_front() -> void:
 	for k in int(w / 12.0) + 1:
 		draw_rect(Rect2(k * 12.0, 204, 2, 8), Color("f0ece0"))
 	draw_line(Vector2(0, 204), Vector2(w, 204), Color("f0ece0"), 1.0)
+	# Hojas de palmera que vuelan con la brisa del mar (T188).
+	for k in 5:
+		var lx := loop_x(k * 170.0, -16.0 - k * 3.0, time, w)
+		var ly := 150.0 + k * 11.0 + sin(time * 1.6 + k * 2.0) * 6.0
+		var turn := sin(time * 3.0 + k)
+		draw_rect(Rect2(lx, ly, 3.0 if turn > 0.0 else 2.0, 1.0 if turn > 0.0 else 2.0), Color("6f9a4a") if k % 2 else Color("b89a5a"))
 
 
 func _draw_palm(base: Vector2) -> void:
@@ -590,6 +657,46 @@ func _draw_hallway() -> void:
 	draw_string(_font, caja.position + Vector2(11, 59), "Regreso en 15 min", HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color("3a3a3a"))
 	# A la derecha de la caja: la TV plana con la promoción.
 	_draw_tv(Rect2(back.position.x + 84, 64, 92, 56))
+	_draw_hall_life(back)
+
+
+## Cada cuánto cruza alguien por el fondo del pasillo y cuánto tarda en llegar a la puerta.
+const HALL_CYCLE := 15.0
+const HALL_WALK := 6.5
+
+
+## Cuánto está abierta la puerta del fondo (0..1) en el instante `t` del ciclo: se abre
+## cuando llega quien cruza, y se cierra sola detrás de él.
+static func hall_door_open(t: float) -> float:
+	if t < HALL_WALK - 0.8:
+		return 0.0
+	if t < HALL_WALK:
+		return (t - (HALL_WALK - 0.8)) / 0.8
+	return clampf(1.0 - (t - HALL_WALK - 0.4) / 0.9, 0.0, 1.0)
+
+
+## El pasillo con vida (T188): polvo que flota en la luz de las lámparas y alguien que
+## cruza al fondo y sale por una puerta que se cierra tras él.
+func _draw_hall_life(back: Rect2) -> void:
+	for j in 18:   # motas de polvo en los conos de luz
+		var lamp := j % 2
+		var half := lerpf(30.0, 14.0, lamp / 4.0) * 1.3
+		var x := 200.0 + sin(time * 0.25 + j * 2.1) * half
+		var y := lerpf(14.0, 40.0, lamp / 4.0) + fposmod(j * 17.0 + time * (2.0 + j % 3), 150.0)
+		draw_rect(Rect2(x, y, 1, 1), Color(1, 0.98, 0.85, 0.35 + 0.25 * sin(time * 2.0 + j)))
+	var door := Rect2(back.end.x - 28, HALL_FAR_Y - 30, 20, 30)
+	var t := fmod(time, HALL_CYCLE)
+	var open := hall_door_open(t)
+	draw_rect(door, Color("2a241c"))   # el hueco oscuro
+	var panel_w := door.size.x * (1.0 - 0.8 * open)   # la hoja gira hacia dentro
+	draw_rect(Rect2(door.position, Vector2(panel_w, door.size.y)), Color("8a6a4a"))
+	draw_rect(Rect2(door.position, Vector2(panel_w, door.size.y)), Color("5a442e"), false, 1.0)
+	if panel_w > 6.0:
+		draw_rect(Rect2(door.position.x + panel_w - 4, door.position.y + 15, 2, 2), Color("d9c070"))
+	if t < HALL_WALK:   # alguien cruza el fondo, de la caja hacia la puerta
+		var k := t / HALL_WALK
+		var fx := lerpf(back.position.x - 6.0, door.get_center().x, k)
+		CharacterAppearance.draw(self, Vector2(fx, HALL_FAR_Y), 0.42, _hall_look, Vector2.RIGHT, Color(0, 0, 0, 0), fmod(t * 2.6 * PI, TAU))
 
 
 ## Pasillo con el detalle de la calle: aplanado con tramado en las paredes (más
@@ -763,6 +870,12 @@ func _draw_office() -> void:
 		draw_rect(Rect2(m.position, Vector2(m.size.x, 1)), Color("eee4c0"))   # luz arriba
 		draw_rect(Rect2(m.end.x - 1, m.position.y, 1, m.size.y), Color("a89c74"))   # sombra a la derecha
 		draw_rect(m.grow(-4), Color("3a4a3a"))
+		# T188: código que se desplaza en las pantallas viejas (verde tenue, sube línea a línea).
+		var screen := m.grow(-4)
+		for j in 4:
+			var ly := screen.position.y + 2.0 + fposmod(j * 3.5 - time * (3.0 + k), screen.size.y - 3.0)
+			var lw := 3.0 + fposmod(j * 7.0 + k * 5.0 + floorf(time * 0.8), screen.size.x - 6.0)
+			draw_rect(Rect2(screen.position.x + 2.0 + (j % 2) * 2.0, ly, lw, 1), Color(0.4, 1.0, 0.5, 0.45))
 		draw_rect(Rect2(m.position + Vector2(5, 5), Vector2(6, 2)), Color(1, 1, 1, 0.18))   # reflejo del cristal
 	# El rack negro del rincón (y su temblor).
 	var rack := Rect2(Vector2(350, 70) + shake, Vector2(42, 128))
@@ -870,6 +983,10 @@ func _draw_office_front() -> void:
 	draw_rect(Rect2(326, 168, 7, 8), Color("f0f0f0"))
 	draw_arc(Vector2(334, 172), 2.5, -PI / 2.0, PI / 2.0, 6, Color("f0f0f0"), 1.0)
 	draw_line(Vector2(327, 171), Vector2(332, 171), Color("4a4a4a"), 1.0)
+	for s in 3:   # el café todavía humea (T188)
+		var rise := fposmod(time * 0.6 + s / 3.0, 1.0)
+		var sx := 329.5 + sin(time * 2.0 + s * 2.0 + rise * 5.0) * 1.5
+		draw_rect(Rect2(sx, 166.0 - rise * 12.0, 1, 2), Color(1, 1, 1, 0.45 * (1.0 - rise)))
 	# Barricada de cajas y manuales engargolados (a un lado, sin tapar al jugador).
 	for b in [Rect2(208, 174, 24, 24), Rect2(212, 156, 18, 18)]:
 		draw_rect(b, Color("b08a5a"))
