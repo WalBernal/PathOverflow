@@ -49,6 +49,38 @@ static func level_glow(since: float) -> float:
 	return (1.0 - since / LEVEL_GLOW_TIME) * (0.75 + 0.25 * cos(since * 9.0))
 
 
+## Entrada escalonada (T184): cada pieza aparece un poco después de la anterior.
+const STAGGER_START := 0.12
+const STAGGER_STEP := 0.07
+const STAGGER_TIME := 0.24
+
+
+## Cuándo empieza a entrar la pieza número `k`.
+static func stagger_delay(k: int) -> float:
+	return STAGGER_START + STAGGER_STEP * maxi(k, 0)
+
+
+## Hace entrar `nodes` en orden: fundido y, si se puede mover, crecen desde el 96 %.
+static func stagger_in(nodes: Array) -> void:
+	for k in nodes.size():
+		var c := nodes[k] as Control
+		if c == null or not c.is_inside_tree():
+			continue
+		c.modulate.a = 0.0
+		var tw := c.create_tween().set_parallel(true)
+		tw.tween_property(c, "modulate:a", 1.0, STAGGER_TIME).set_delay(stagger_delay(k))
+		if not Accessibility.reduce_motion:
+			c.pivot_offset = c.size / 2.0
+			c.scale = Vector2(0.96, 0.96)
+			tw.tween_property(c, "scale", Vector2.ONE, STAGGER_TIME).set_delay(stagger_delay(k)) \
+				.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## Cuánto tarda un texto en escribirse a máquina (T184): rápido, sin pasar de medio segundo.
+static func typewriter_time(chars: int) -> float:
+	return clampf(chars / 400.0, 0.12, 0.5)
+
+
 ## Fundido de entrada (tooltips de objeto).
 static func fade_in(c: CanvasItem) -> void:
 	if not c.is_inside_tree():

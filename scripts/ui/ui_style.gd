@@ -531,10 +531,20 @@ static func button(text: String, callback: Callable, min_width := 0.0) -> Button
 	b.text = text
 	b.custom_minimum_size = Vector2(min_width, 40)
 	b.pressed.connect(callback)
-	b.pressed.connect(func() -> void: UiMotion.bounce(b))   # rebote al pulsar (T97)
+	juicy(b)
+	return b
+
+
+## Respuesta de un botón (T97, T77, T184): rebota y suena al pulsar y suena bajito al
+## pasar por encima. Para los botones hechos a mano (tarjetas, muestras de color).
+static func juicy(b: BaseButton) -> BaseButton:
+	b.set_meta("ui_juicy", true)
+	b.pressed.connect(func() -> void:
+		UiMotion.bounce(b)
+		Sfx.play("ui_hover", -12.0, 1.7))   # el clic: el mismo tic, más agudo
 	b.mouse_entered.connect(func() -> void:
 		if not b.disabled:
-			Sfx.play("ui_hover", -18.0))   # T77
+			Sfx.play("ui_hover", -18.0))
 	return b
 
 

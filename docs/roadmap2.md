@@ -50,7 +50,7 @@ Origen: R9
 - Tarjeta de carga con fundido de entrada y sin salto de progreso en el primer fotograma (`loading_card.gd:57-81`).
 - Prueba: el destape de `ScreenTransition` dura lo mismo aunque el primer delta sea de 2 s.
 
-### [ ] T184 · Menú principal vivo · M
+### [x] T184 · Menú principal vivo · M
 Origen: R9
 - Fondo animado y barato: rejilla de puntos cacheada en textura, lluvia de binario tenue y bits que suben, sin competir con el personaje (`main_menu.gd:39-45`, `ui_style.gd:542-558`).
 - Entrada escalonada de logo, tarjetas y panel con `UiMotion` al terminar el barrido.
@@ -325,3 +325,4 @@ Ideas que no están en la cola. Se pasan a tareas cuando el usuario las elija.
 
 - 2026-11-02 · — · Roadmap 2 creado a partir de la revisión de las pantallas iniciales, las 62 habilidades y las invocaciones.
 - 2026-11-02 · T183 · Transiciones sin cortes: el título sale de negro en 0,8 s (el aviso espera) y suena al continuar; creador → prólogo, creador → menú y prólogo → mundo con el barrido (el mundo abre con su tarjeta de carga); `ScreenTransition` espera 2 fotogramas tapado tras el cambio, limita el delta a 1/30 s (`step`) y suena muy bajo; la tarjeta de carga tapa desde el primer fotograma con el fondo y el contenido entra en 0,18 s, sin salto de progreso. Pruebas del destape tras un delta de 2 s y del fundido del contenido.
+- 2026-11-02 · T184 · Menú principal vivo: `MenuBackdrop` con paquetes de datos que recorren la rejilla de puntos (giran en los cruces, estela corta, nodos que se encienden; de 8 a 28 según la pantalla y quieto con «reducir movimiento»), la rejilla sigue dibujándose solo al cambiar de tamaño; logo, lista, detalle y pie entran escalonados (`UiMotion.stagger_in`); `UiStyle.juicy` da rebote, sonido al pasar y clic a todos los botones, también a las tarjetas; al cambiar de personaje, destello en el pedestal, su color pasa al de la clase con un fundido y el detalle se escribe a máquina; cambiar de espacio o borrar hace entrar las tarjetas escalonadas y el tamaño de interfaz recarga con el barrido.

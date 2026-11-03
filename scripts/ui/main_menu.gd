@@ -26,14 +26,30 @@ var _status: Label
 var _confirm: ConfirmationDialog
 var _quit_dialog: ConfirmationDialog
 var _card_group := ButtonGroup.new()
+## Piezas que entran escalonadas al abrir el menú (T184).
+var _entrance: Array[Control] = []
+var _glow_tween: Tween
 
 
 func _ready() -> void:
 	theme = UiStyle.make_theme()
 	MusicPlayer.play_title()
+	var backdrop := MenuBackdrop.new()   # paquetes por la rejilla (T184)
+	add_child(backdrop)
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_build()
 	_reload()
 	UiStyle.apply_ui_scale(self)
+	_enter()
+
+
+## Entrada escalonada (T184): logo, lista, detalle y pie, uno tras otro, cuando el
+## barrido ya se está retirando. Esperan tapados un fotograma a tener su tamaño.
+func _enter() -> void:
+	for c in _entrance:
+		c.modulate.a = 0.0
+	await get_tree().process_frame
+	UiMotion.stagger_in(_entrance)
 
 
 func _draw() -> void:
@@ -110,7 +126,7 @@ func _build() -> void:
 	slot_button.pressed.connect(func() -> void:
 		CharacterSaves.set_slot(CharacterSaves.slot() % CharacterSaves.SLOTS + 1)
 		refresh_slot.call()
-		_reload())
+		_reload(true))
 	refresh_slot.call()
 	header.add_child(slot_button)
 	_scroll = ScrollContainer.new()
@@ -184,7 +200,7 @@ func _build() -> void:
 	ui_size.pressed.connect(func() -> void:
 		var k := GameUI.UI_SCALES.find(_closest_scale(GameUI.ui_scale()))
 		GameSettings.set_value("interface", "scale", GameUI.UI_SCALES[(k + 1) % GameUI.UI_SCALES.size()])
-		get_tree().reload_current_scene())
+		ScreenTransition.change_scene(get_tree(), scene_file_path))   # con el barrido, no un corte (T184)
 	refresh_size.call()
 	footer.add_child(ui_size)
 	footer.add_child(UiStyle.button("Salir", func() -> void: get_tree().quit(), 140))
@@ -199,6 +215,7 @@ func _build() -> void:
 		logo.queue_redraw()
 	resized.connect(compact)
 	compact.call()
+	_entrance.assign([logo, subtitle, list_panel, detail_panel, footer])
 
 	_confirm = ConfirmationDialog.new()
 	_confirm.title = "Borrar personaje"
@@ -208,8 +225,10 @@ func _build() -> void:
 	add_child(_confirm)
 
 
-func _reload() -> void:
+## `animate`: al cambiar de espacio o borrar, las tarjetas entran escalonadas (T184).
+func _reload(animate := false) -> void:
 	_saves = CharacterSaves.list_all()
+	_selected = -1   # la lista es otra: la primera tarjeta cuenta como un cambio
 	for child in _list.get_children():
 		_list.remove_child(child)  # ya, no al final del frame: _select() usa los índices
 		child.queue_free()
@@ -218,6 +237,9 @@ func _reload() -> void:
 	_empty_label.visible = _saves.is_empty()
 	_scroll.visible = not _saves.is_empty()
 	_select(0 if not _saves.is_empty() else -1)
+	if animate:
+		var cards: Array = _list.get_children()
+		UiMotion.stagger_in(cards if not cards.is_empty() else [_empty_label])
 
 
 func _make_card(index: int) -> Button:
@@ -232,6 +254,7 @@ func _make_card(index: int) -> Button:
 		if mb and mb.double_click and mb.button_index == MOUSE_BUTTON_LEFT:
 			_select(index)
 			_play())
+	UiStyle.juicy(card)   # rebota y suena como los demás botones (T184)
 
 	var row := HBoxContainer.new()
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -270,6 +293,7 @@ func _class_line(data: Dictionary) -> String:
 
 
 func _select(index: int) -> void:
+	var changed := index != _selected
 	_selected = index
 	_play_button.disabled = index == -1
 	_delete_button.disabled = index == -1
@@ -288,13 +312,27 @@ func _select(index: int) -> void:
 	_student.weapon = "sword" if String(_student.equipped.get("weapon", "")) != "" else ""
 	_student.appearance = CharacterAppearance.sanitize(data.get("appearance", {}))
 	var class_def := GameData.get_class_def(StringName(data.get("class_id", "")))
-	_preview.glow_color = Color(class_def.get("color", "2dd4bf"))
+	var class_color := Color(class_def.get("color", "2dd4bf"))
 	var look: Array = CLASS_POSES.get(String(data.get("class_id", "")), ["attack", "sword"])
 	_preview.action = look[0]
 	_preview.weapon = look[1]
 	_detail.text = "[center][font_size=26][color=#2dd4bf]%s[/color][/font_size]\n%s\n\n[color=#8b949e]%s[/color]\n\n[color=#8b949e]Tiempo jugado:[/color] %s\n[color=#8b949e]Última partida:[/color] %s[/center]" % [
 		data.get("name", "?"), _class_line(data), class_def.get("description", ""),
 		UiStyle.play_time(float(data.get("play_time", 0.0))), UiStyle.relative_time(int(data.get("last_played", 0)))]
+	if not changed or not is_inside_tree():
+		_preview.glow_color = class_color
+		return
+	# T184: el cambio se ve. Destello en el pedestal, su color pasa al de la clase con
+	# un fundido y el detalle se escribe a máquina.
+	_preview.flash()
+	_student.modulate.a = 0.0
+	_student.create_tween().tween_property(_student, "modulate:a", 1.0, 0.25).set_delay(0.08)
+	if _glow_tween:
+		_glow_tween.kill()
+	_glow_tween = create_tween()
+	_glow_tween.tween_property(_preview, "glow_color", class_color, 0.35)
+	_detail.visible_ratio = 0.0
+	_detail.create_tween().tween_property(_detail, "visible_ratio", 1.0, UiMotion.typewriter_time(_detail.get_total_character_count()))
 
 
 func _play() -> void:
@@ -321,4 +359,4 @@ func _ask_delete() -> void:
 
 func _delete_selected() -> void:
 	CharacterSaves.delete(_saves[_selected]["id"])
-	_reload()
+	_reload(true)

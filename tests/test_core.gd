@@ -168,6 +168,7 @@ func _initialize() -> void:
 	_test_tree_art_v2()
 	_test_ui_atlas()
 	_test_screens_t96()
+	_test_menu_t184()
 	_test_ui_motion()
 	_test_graphics_quality()
 	_test_fx_art()
@@ -6084,6 +6085,25 @@ func _test_ui_motion() -> void:
 		peak = maxf(peak, UiMotion.overshoot(k / 20.0))
 	_check(peak > 1.0, "el rebote se pasa un poco antes de asentarse")
 	_check(UiMotion.level_glow(0.1) > 0.5 and UiMotion.level_glow(UiMotion.LEVEL_GLOW_TIME + 0.1) == 0.0 and UiMotion.level_glow(-1.0) == 0.0, "la barra de experiencia brilla al subir de nivel y se apaga")
+
+
+## Menú principal vivo (T184): botones con respuesta, entrada escalonada y fondo.
+func _test_menu_t184() -> void:
+	var b := UiStyle.button("Jugar", func() -> void: pass)
+	var card := Button.new()
+	UiStyle.juicy(card)
+	_check(b.has_meta("ui_juicy") and card.has_meta("ui_juicy") and card.pressed.get_connections().size() >= 1,
+		"los botones de UiStyle y las tarjetas hechas a mano rebotan y suenan al pulsar")
+	b.free()
+	card.free()
+	# El menú ya no crea botones a mano sin darles respuesta: todo Button.new() pasa por juicy.
+	var src := FileAccess.get_file_as_string("res://scripts/ui/main_menu.gd")
+	_check(src.count("Button.new()") <= src.count("UiStyle.juicy("), "ningún botón del menú se crea sin pasar por UiStyle")
+	_check(UiMotion.stagger_delay(1) > UiMotion.stagger_delay(0) and UiMotion.stagger_delay(4) < 0.6, "la entrada escalonada va en orden y no tarda")
+	_check(UiMotion.typewriter_time(2000) <= 0.5 and UiMotion.typewriter_time(0) > 0.0, "el detalle se escribe en medio segundo como mucho")
+	_check(MenuBackdrop.packet_count(Vector2(390, 844)) >= 8 and MenuBackdrop.packet_count(Vector2(3840, 2160)) <= 28, "paquetes del fondo: los justos en el celular y en 4K")
+	_check(MenuBackdrop.snap(Vector2(13, 37)) == Vector2(24, 48), "los paquetes van por la rejilla de puntos")
+	_check(MenuBackdrop.fade(0.0, 4.0) == 0.0 and MenuBackdrop.fade(2.0, 4.0) == 1.0, "los paquetes entran y salen con un fundido")
 
 
 ## Pantallas de título, personajes y carga (T96): barrido, poses y pantalla de carga.
