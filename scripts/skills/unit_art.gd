@@ -9,7 +9,7 @@ class_name UnitArt
 ## su progreso, la fase de caminar (solo avanza al moverse) y la escala de la
 ## unidad. Sin `anim` se dibuja como siempre: mirando a la derecha y quieta.
 
-const STATES := ["idle", "walk", "attack", "spawn", "warp", "hurt", "die"]
+const STATES := ["idle", "walk", "attack", "spawn", "warp", "leap", "hurt", "die"]
 ## Duración de cada estado con tiempo propio.
 const SPAWN_TIME := 0.4
 const ATTACK_TIME := 0.25
@@ -45,6 +45,17 @@ const STILL_SPEED := 20.0
 const SCALE_MONOLITH := 1.35
 const SCALE_MICROSERVICES := 0.8
 const SCALE_TRIO := 0.75
+## Ataques que se ven (T202): embestida de las de cuerpo a cuerpo (como el
+## _lunge_to de los enemigos; los tanques, más corta), retroceso de las de
+## distancia y salto en arco (dura LEAP_TIME y sube según la distancia).
+const LUNGE_REACH := 11.0
+const TANK_LUNGE := 7.0
+const RECOIL := 3.5
+const LEAP_TIME := 0.38
+const LEAP_ARC_MIN := 28.0
+const LEAP_ARC_MAX := 80.0
+## Figuras con cañón propio, que dibujan el fogonazo al disparar.
+const MUZZLE_FIGURES := ["robot_centinela", "bot_rastreador", "golem_gpu"]
 
 # Estado del dibujo en curso (lo fija draw() antes de llamar a cada figura).
 static var _flip := 1.0          # 1 = mira a la derecha, -1 = a la izquierda
@@ -53,6 +64,7 @@ static var _walk := 0.0          # fase de caminar
 static var _aim := Vector2.RIGHT # hacia el objetivo, en el espacio de la figura (ya volteado)
 static var _focus := false       # tiene un objetivo fijado (mira en vez de vigilar)
 static var _base := Transform2D.IDENTITY
+static var _atk := 0.0           # progreso del ataque (0 = no ataca): tridente, mordida, fogonazo…
 
 
 static func draw(ci: CanvasItem, skill_id: String, behavior: String, p: Vector2, ph: float, c: Color, anim := {}) -> void:
@@ -61,6 +73,7 @@ static func draw(ci: CanvasItem, skill_id: String, behavior: String, p: Vector2,
 	_walk = 0.0
 	_aim = Vector2.RIGHT
 	_focus = false
+	_atk = 0.0
 	_base = Transform2D.IDENTITY
 	var at := p
 	if not anim.is_empty():
@@ -68,14 +81,24 @@ static func draw(ci: CanvasItem, skill_id: String, behavior: String, p: Vector2,
 		_move = clampf(float(anim.get("move", 0.0)), 0.0, 1.0)
 		_walk = float(anim.get("walk", 0.0))
 		var aim: Vector2 = anim.get("aim", Vector2.RIGHT)
-		_aim = Vector2(aim.x * _flip, aim.y).normalized() if aim.length() > 0.01 else Vector2.RIGHT
+		var aim_world := aim.normalized() if aim.length() > 0.01 else Vector2(_flip, 0.0)
+		_aim = Vector2(aim_world.x * _flip, aim_world.y)
 		_focus = bool(anim.get("focus", false))
 		var state := String(anim.get("state", "idle"))
 		var t := float(anim.get("t", 0.0))
-		# Herida: además del retroceso, se inclina hacia atrás.
-		var tilt := -0.14 * sin(t * PI) * _flip if state == "hurt" else 0.0
-		_base = Transform2D(tilt, _state_scale(state, t, ph) * float(anim.get("scale", 1.0)) * Vector2(_flip, 1.0), 0.0,
-			p + Vector2(_state_shift(state, t) * _flip, 0.0))
+		var sc := float(anim.get("scale", 1.0))
+		# Herida: además del retroceso, se inclina hacia atrás. Saltando: sube el
+		# morro al despegar y lo baja al caer.
+		var tilt := 0.0
+		if state == "hurt":
+			tilt = -0.14 * sin(t * PI) * _flip
+		elif state == "leap":
+			tilt = 0.5 * (t - 0.5) * _flip
+		var shift := Vector2(_state_shift(state, t) * _flip, -float(anim.get("hop", 0.0)))
+		if state == "attack":
+			_atk = maxf(0.001, t)
+			shift += attack_offset(behavior, t, aim_world) * sc
+		_base = Transform2D(tilt, _state_scale(state, t, ph) * sc * Vector2(_flip, 1.0), 0.0, p + shift)
 		ci.draw_set_transform_matrix(_base)
 		at = Vector2.ZERO
 	_figure(ci, skill_id, behavior, at, ph, c)
@@ -152,12 +175,14 @@ static func anim(u: Dictionary) -> Dictionary:
 			t = float(u.get("dying", 0.0)) / DIE_TIME
 		"warp":
 			t = 1.0 - float(u.get("warp", 0.0)) / WARP_TIME
+		"leap":
+			t = float(u.get("leap_t", 0.0)) / LEAP_TIME
 	var sc := float(u.get("scale", 1.0))
 	var r := float(u.get("radius", 12.0))
 	var orbit := String(u.get("behavior", "")) == "orbit"
 	return {"facing": float(u.get("facing", 1.0)), "aim": u.get("aim", Vector2.RIGHT), "state": state, "t": clampf(t, 0.0, 1.0),
 		"walk": float(u.get("walk", 0.0)), "move": float(u.get("move", 0.0)), "scale": sc,
-		"focus": float(u.get("look", 0.0)) > 0.0,
+		"focus": float(u.get("look", 0.0)) > 0.0, "hop": leap_height(u),
 		# Alto de la figura (y, si orbita, cuánto bajan sus pies desde el centro) para la compilación.
 		"height": figure_height(u), "lift": r * sc if orbit else 0.0}
 
@@ -176,6 +201,8 @@ static func state_of(u: Dictionary) -> String:
 		return "warp"
 	if float(u.get("spawn", 0.0)) > 0.0:
 		return "spawn"
+	if u.has("leap_to"):
+		return "leap"
 	if float(u.get("atk", 0.0)) > 0.0:
 		return "attack"
 	if float(u.get("hurt", 0.0)) > 0.0:
@@ -216,6 +243,30 @@ static func look(u: Dictionary, dir: Vector2) -> void:
 static func strike(u: Dictionary, dir: Vector2) -> void:
 	look(u, dir)
 	u["atk"] = ATTACK_TIME
+
+
+## Desplazamiento del cuerpo al atacar hacia `aim` (en el mundo), con t de 0 a 1:
+## las de cuerpo a cuerpo y los tanques embisten (salen rápido y vuelven
+## despacio); las de distancia (y las que orbitan) retroceden con el disparo.
+static func attack_offset(behavior: String, t: float, aim: Vector2) -> Vector2:
+	if behavior == "ranged" or behavior == "orbit":
+		var kick := t / 0.15 if t < 0.15 else 1.0 - smoothstep(0.15, 1.0, t)
+		return -aim * RECOIL * kick
+	var reach := TANK_LUNGE if behavior == "tank" else LUNGE_REACH
+	var k := 1.0 - pow(1.0 - t / 0.3, 2.0) if t < 0.3 else 1.0 - smoothstep(0.3, 1.0, t)
+	return aim * reach * k
+
+
+## Altura del cuerpo sobre el suelo durante un salto (0 si no salta).
+static func leap_height(u: Dictionary) -> float:
+	if not u.has("leap_to"):
+		return 0.0
+	return sin(clampf(float(u.get("leap_t", 0.0)) / LEAP_TIME, 0.0, 1.0) * PI) * float(u.get("leap_arc", LEAP_ARC_MIN))
+
+
+## Arco de un salto según lo largo que es.
+static func leap_arc(dist: float) -> float:
+	return clampf(dist * 0.3, LEAP_ARC_MIN, LEAP_ARC_MAX)
 
 
 ## Escala de dibujo por nodo clave y variante (no cambia el tamaño de colisión).
@@ -330,20 +381,40 @@ static func _state_scale(state: String, t: float, ph: float) -> Vector2:
 		"hurt":
 			var k := sin(t * PI)
 			return Vector2(1.0 - 0.06 * k, 1.0 + 0.04 * k)
+		"leap":
+			# Estirada al despegar y al caer, encogida en lo alto.
+			var k := 1.0 - sin(t * PI)
+			return Vector2(1.0 - 0.1 * k + 0.05 * (1.0 - k), 1.0 + 0.14 * k - 0.08 * (1.0 - k))
 		"idle":
 			var breath := sin(ph * 0.35)
 			return Vector2(1.0 - 0.015 * breath, 1.0 + 0.025 * breath)
 	return Vector2.ONE
 
 
-## Desplazamiento horizontal hacia delante (positivo) según el estado.
+## Desplazamiento horizontal hacia delante (positivo) según el estado (el del
+## ataque va aparte, hacia el objetivo: attack_offset).
 static func _state_shift(state: String, t: float) -> float:
-	match state:
-		"attack":
-			return sin(t * PI) * 4.0
-		"hurt":
-			return -sin(t * PI) * 6.0
+	if state == "hurt":
+		return -sin(t * PI) * 6.0
 	return 0.0
+
+
+## Fuerza del golpe en curso: 0 sin atacar, 1 en lo más fuerte (a 1/3 del ataque).
+static func _strike_k() -> float:
+	if _atk <= 0.0:
+		return 0.0
+	return _atk / 0.33 if _atk < 0.33 else 1.0 - smoothstep(0.33, 1.0, _atk)
+
+
+## Fogonazo en la boca de un cañón (`dir`, en el espacio de la figura) justo al disparar.
+static func _muzzle(ci: CanvasItem, tip: Vector2, dir: Vector2, c: Color) -> void:
+	if _atk <= 0.0 or _atk > 0.45:
+		return
+	var k := 1.0 - _atk / 0.45
+	ci.draw_circle(tip + dir * 1.5, 1.5 + 3.0 * k, Color(1.0, 0.95, 0.7, 0.85 * k))
+	ci.draw_line(tip, tip + dir * (4.0 + 6.0 * k), Color(c.lightened(0.4), 0.9 * k), 2.0)
+	for s in [-1.0, 1.0]:
+		ci.draw_line(tip, tip + dir.rotated(s * 0.8) * (2.0 + 4.0 * k), Color(1.0, 0.9, 0.6, 0.7 * k), 1.0)
 
 
 ## Transformación local relativa a la de la figura (sombras, obleas).
@@ -394,8 +465,10 @@ static func _sentinel(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
 	ci.draw_rect(Rect2(p + Vector2(-6, -13 + bob), Vector2(12, 5)), Color("10161c"))
 	ci.draw_rect(Rect2(p + Vector2(-5, -12 + bob), Vector2(10 * (0.5 + 0.5 * sin(ph * 0.7)), 3)), c)
 	var pivot := p + Vector2(8, -6 + bob)
-	ci.draw_line(pivot, pivot + _barrel() * 9.0, Color("3a3f4a"), 4.0)
-	ci.draw_circle(pivot + _barrel() * 9.0, 1.5, Color(c, 0.8))
+	var tip := pivot + _barrel() * (9.0 - 3.0 * _strike_k())   # el cañón se recoge al disparar
+	ci.draw_line(pivot, tip, Color("3a3f4a"), 4.0)
+	ci.draw_circle(tip, 1.5, Color(c, 0.8))
+	_muzzle(ci, tip, _barrel(), c)
 	ci.draw_line(p + Vector2(0, -16 + bob), p + Vector2(0, -22 + bob), Color("8a8a96"), 1.5)
 	ci.draw_circle(p + Vector2(0, -23 + bob), 2.0, c)
 
@@ -410,9 +483,17 @@ static func _daemon(ci: CanvasItem, p: Vector2, ph: float) -> void:
 	var eye := _aim * 0.8
 	ci.draw_circle(p + Vector2(-2.5, -19 - hop) + eye, 1.3, Color("ffe070"))
 	ci.draw_circle(p + Vector2(2.5, -19 - hop) + eye, 1.3, Color("ffe070"))
-	ci.draw_line(p + Vector2(11, -2 - hop), p + Vector2(11, -26 - hop), Color("c8c8c8"), 1.5, true)
-	for k in 3:
-		ci.draw_line(p + Vector2(8 + k * 3, -26 - hop), p + Vector2(8 + k * 3, -31 - hop), Color("c8c8c8"), 1.5, true)
+	# Tridente: en alto en reposo; al atacar se baja hacia el objetivo y pincha.
+	var k := _strike_k()
+	var dir := Vector2.UP.slerp(_aim, minf(1.0, k * 1.6)) if _atk > 0.0 else Vector2.UP
+	var grip := p + Vector2(11, -14 - hop) + _aim * 6.0 * k
+	var tip := grip + dir * 12.0
+	var side := dir.orthogonal()
+	ci.draw_line(grip - dir * 12.0, tip, Color("c8c8c8"), 1.5, true)
+	ci.draw_line(tip - side * 3.0, tip + side * 3.0, Color("c8c8c8"), 1.5, true)
+	for q in 3:
+		var root := tip + side * (q - 1) * 3.0
+		ci.draw_line(root, root + dir * 5.0, Color("c8c8c8"), 1.5, true)
 
 
 ## Golem de hardware: torres de PC apiladas con LEDs y un monitor por cabeza.
@@ -422,8 +503,10 @@ static func _golem(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
 	ci.draw_rect(Rect2(p + Vector2(-16, -28 + sway), Vector2(32, 30)), Color("2a2724"), false, 2.0)
 	for k in 4:
 		ci.draw_circle(p + Vector2(-10 + k * 6, -6 + sway), 1.6, c if fmod(ph + k, 3.0) < 1.5 else Color("2a2a20"))
+	var slam := _strike_k()
 	for s in [-1.0, 1.0]:
-		ci.draw_rect(Rect2(p + Vector2(s * 16 - (8 if s < 0 else 0), -24 + sway + _stride(s, 2.0)), Vector2(8, 22)), Color("47443f"))
+		# Al golpear, los brazos suben y caen sobre el objetivo (el de delante, más).
+		ci.draw_rect(Rect2(p + Vector2(s * 16 - (8 if s < 0 else 0) + (4.0 if s > 0 else 2.0) * slam, -24 + sway + _stride(s, 2.0) - 6.0 * slam), Vector2(8, 22)), Color("47443f"))
 	var look := Vector2(_aim.x * 1.5, _aim.y * 1.5)
 	ci.draw_rect(Rect2(p + Vector2(-11, -44 + sway) + look, Vector2(22, 16)), Color("b8b8b0"))
 	ci.draw_rect(Rect2(p + Vector2(-9, -42 + sway) + look, Vector2(18, 11)), Color("10200f"))
@@ -455,8 +538,10 @@ static func _titan(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
 		for k in 3:
 			var a := ph * 6.0 + k * TAU / 3.0
 			ci.draw_line(sh, sh + Vector2.from_angle(a) * 6.0, Color("8a8f9c"), 2.0)
-		ci.draw_rect(Rect2(sh + Vector2(-5, 8), Vector2(10, 24 + _stride(s, 2.0))), Color("3a3f4a"))
-		ci.draw_rect(Rect2(sh + Vector2(-7, 30), Vector2(14, 8)), Color("4a4f5c"))
+		# Al golpear, el puño de delante se adelanta hacia el objetivo.
+		var punch := _aim * 8.0 * _strike_k() if s > 0.0 else Vector2.ZERO
+		ci.draw_rect(Rect2(sh + Vector2(-5, 8) + punch * 0.5, Vector2(10, 24 + _stride(s, 2.0))), Color("3a3f4a"))
+		ci.draw_rect(Rect2(sh + Vector2(-7, 30) + punch, Vector2(14, 8)), Color("4a4f5c"))
 	var head := Rect2(p + Vector2(-14, -82 + sway) + Vector2(_aim.x, _aim.y) * 2.0, Vector2(28, 18))
 	ci.draw_rect(head, Color("4a4f5c"))
 	ci.draw_rect(Rect2(head.position + Vector2(4, 6), Vector2(20, 6)), Color("10161c"))
@@ -498,8 +583,14 @@ static func _dummy(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
 	ci.draw_rect(Rect2(p + Vector2(-6, -20), Vector2(12, 13)), Color("e8c040"))
 	ci.draw_rect(Rect2(p + Vector2(-6, -20), Vector2(6, 6.5)), Color("2a2a2a"))
 	ci.draw_rect(Rect2(p + Vector2(0, -13.5), Vector2(6, 6.5)), Color("2a2a2a"))
+	var punch := _strike_k()
 	for s in [-1.0, 1.0]:
-		ci.draw_line(p + Vector2(s * 6, -18), p + Vector2(s * 10, -11 - run * s * 2.0 + idle * s), Color("e8c040"), 2.5, true)
+		var hand := p + Vector2(s * 10, -11 - run * s * 2.0 + idle * s)
+		if s > 0.0 and punch > 0.0:
+			hand = hand.lerp(p + Vector2(6, -16) + _aim * 11.0, punch)   # puñetazo de prueba
+		ci.draw_line(p + Vector2(s * 6, -18), hand, Color("e8c040"), 2.5, true)
+		if s > 0.0 and punch > 0.0:
+			ci.draw_circle(hand, 2.0, Color("2a2a2a"))
 	var head := p + Vector2(0, -26) + _aim * 1.0
 	ci.draw_circle(head, 5.5, Color("e8c040"))
 	ci.draw_arc(head, 3.2, 0.0, TAU, 10, Color("2a2a2a"), 1.0)
@@ -551,9 +642,18 @@ static func _watchdog(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
 		ci.draw_line(p + Vector2(x, -6), p + Vector2(x + trot * (1.0 if k % 2 == 0 else -1.0) * 2.0, 0), Color("5a4430"), 2.5, true)
 	ci.draw_colored_polygon(QuestItemArt.ellipse(p + Vector2(-1, -10 + absf(trot) * -1.0), 12.0, 6.0), body)
 	ci.draw_line(p + Vector2(-12, -12), p + Vector2(-17, -18 - absf(sin(ph * 2.0)) * 3.0), body, 2.5, true)   # cola (menea siempre)
-	var head := p + Vector2(11, -17) + Vector2(maxf(0.0, _aim.x) * 1.0, _aim.y * 3.0)
+	var bite := _strike_k()
+	var head := p + Vector2(11, -17) + Vector2(maxf(0.0, _aim.x) * 1.0, _aim.y * 3.0) + _aim * 4.0 * bite
 	ci.draw_circle(head, 5.5, body)
-	ci.draw_colored_polygon(PackedVector2Array([head + Vector2(3, -1), head + Vector2(9, 1), head + Vector2(3, 3)]), body.darkened(0.15))   # hocico
+	if bite > 0.05:
+		# Mordida: la mandíbula se abre y enseña los dientes.
+		var gape := 3.0 * bite
+		ci.draw_colored_polygon(PackedVector2Array([head + Vector2(3, -1 - gape), head + Vector2(10, -gape), head + Vector2(3, 1)]), body.darkened(0.15))
+		ci.draw_colored_polygon(PackedVector2Array([head + Vector2(3, 2), head + Vector2(9, 3 + gape), head + Vector2(3, 4)]), body.darkened(0.3))
+		for q in 2:
+			ci.draw_line(head + Vector2(5 + q * 3, 0 - gape * 0.6), head + Vector2(5 + q * 3, 1.5 - gape * 0.6), Color("f0f0e0"), 1.0)
+	else:
+		ci.draw_colored_polygon(PackedVector2Array([head + Vector2(3, -1), head + Vector2(9, 1), head + Vector2(3, 3)]), body.darkened(0.15))   # hocico
 	ci.draw_colored_polygon(PackedVector2Array([head + Vector2(-3, -4), head + Vector2(-1, -10), head + Vector2(1, -4)]), body.darkened(0.3))   # oreja
 	ci.draw_circle(head + Vector2(1.5, -1.5), 1.1, Color("ffe070"))
 	ci.draw_line(p + Vector2(6, -14), p + Vector2(7, -9), c if fmod(ph, 1.0) < 0.5 else c.darkened(0.6), 2.0)   # collar con LED
@@ -573,9 +673,10 @@ static func _bug_hunter(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void
 	ci.draw_arc(p + Vector2(-11, -16 + bob), 3.5, 0.0, TAU, 10, Color("c8c8c8"), 1.5, true)
 	ci.draw_line(p + Vector2(-9, -13 + bob), p + Vector2(-6, -10 + bob), Color("8a6d3b"), 1.5)
 	var mouth := p + Vector2(7, -14 + bob)
-	var tip := mouth + _barrel() * 9.5
+	var tip := mouth + _barrel() * (9.5 - 2.5 * _strike_k())
 	ci.draw_line(mouth, tip, Color("6a5a4a"), 2.0)
 	ci.draw_circle(tip, 1.2, c)
+	_muzzle(ci, tip, _barrel(), c)   # el soplido del dardo
 
 
 # --- Golems (cada uno con su silueta: nada de cajas con patas) ---
@@ -610,6 +711,8 @@ static func _golem_silicon(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> v
 			var base := t + Vector2(s * (17 + k * 3), -12 + k * 3)
 			ci.draw_colored_polygon(PackedVector2Array([base + Vector2(-3, 2), base + Vector2(s * 2, -10 + k * 2), base + Vector2(3, 2)]), light if k == 0 else mid)
 		var arm := t + Vector2(s * 20, 2 + _stride(s + 0.5, 2.0) + _rest(ph, 0.5, 0.6))
+		if s > 0.0:
+			arm += (_aim * 9.0 + Vector2(0, -5)) * _strike_k()   # al golpear, el brazo de delante cae sobre el objetivo
 		ci.draw_colored_polygon(PackedVector2Array([arm + Vector2(-4, -4), arm + Vector2(4, -4), arm + Vector2(6, 12), arm + Vector2(0, 18), arm + Vector2(-6, 12)]), dark)
 	# Cabeza: gema pequeña con dos ojos que miran al objetivo.
 	var h := t + Vector2(0, -27) + _aim * 1.5
@@ -653,11 +756,15 @@ static func _golem_overclock(ci: CanvasItem, p: Vector2, ph: float, c: Color) ->
 	var core := body + Vector2(0, 12)
 	ci.draw_circle(core, 7.0 + run, Color(c, 0.35))
 	ci.draw_circle(core, 4.0, Color("ffe070"))
-	# Brazos: barras de cobre (heatpipes) que bracean al correr.
+	# Brazos: barras de cobre (heatpipes) que bracean al correr; al golpear, el de
+	# delante sale disparado hacia el objetivo.
 	for s in [-1.0, 1.0]:
 		var sh := body + Vector2(s * 14, 4)
-		ci.draw_line(sh, sh + Vector2(s * 4 - run * s * 5.0, 16), Color("c87a3a"), 3.0)
-		ci.draw_circle(sh + Vector2(s * 4 - run * s * 5.0, 16), 2.5, Color("e0a060"))
+		var fist := sh + Vector2(s * 4 - run * s * 5.0, 16)
+		if s > 0.0:
+			fist = fist.lerp(sh + _aim * 18.0, _strike_k())
+		ci.draw_line(sh, fist, Color("c87a3a"), 3.0)
+		ci.draw_circle(fist, 2.5, Color("e0a060"))
 	# Cabeza: carcasa de ventilador con aspas girando muy rápido.
 	var head := body + Vector2(2, -9) + _aim * 1.5
 	ci.draw_circle(head, 9.0, Color("2a2a30"))
@@ -698,6 +805,16 @@ static func _golem_utp(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
 	for s in [-1.0, 1.0]:
 		var sh := center + Vector2(s * 16, -4)
 		var hand := sh + Vector2(s * 10 + sin(ph * 1.3 + s) * (1.5 + 2.5 * _move), 20)
+		if s > 0.0 and _atk > 0.0:
+			# Latigazo: el brazo de delante se echa atrás y restalla hacia el objetivo.
+			var lash := sh + _aim * 26.0 + Vector2(0, -4)
+			var back := sh + Vector2(-6, -14)
+			if _atk < 0.15:
+				hand = hand.lerp(back, _atk / 0.15)
+			elif _atk < 0.3:
+				hand = back.lerp(lash, (_atk - 0.15) / 0.15)
+			else:
+				hand = lash.lerp(hand, smoothstep(0.3, 1.0, _atk))
 		var mid := sh.lerp(hand, 0.5) + Vector2(s * 6, 0)
 		ci.draw_polyline(PackedVector2Array([sh, mid, hand]), cols[0 if s < 0 else 1], 3.0, true)
 		ci.draw_rect(Rect2(hand + Vector2(-4, 0), Vector2(8, 7)), Color(0.85, 0.9, 0.95, 0.8))
@@ -747,6 +864,8 @@ static func _golem_gpu(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
 	ci.draw_rect(Rect2(head.position + Vector2(10, 3), Vector2(6, 4)), Color("0c0d10"))
 	ci.draw_rect(Rect2(head.position + Vector2(3, 4), Vector2(3, 2)), c)
 	ci.draw_rect(Rect2(head.position + Vector2(11, 4), Vector2(3, 2)), c)
+	# Dispara por los puertos de vídeo: fogonazo hacia el objetivo.
+	_muzzle(ci, head.get_center() + _barrel() * 9.0, _barrel(), c)
 
 
 ## Golem de Kernel: un espectro que flota sobre una cola de píxeles que se
@@ -770,9 +889,11 @@ static func _golem_kernel(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> vo
 	ci.draw_rect(face, Color("2a1640"))
 	ci.draw_rect(face, Color(c, 0.9), false, 1.0)
 	_text(ci, face.position + Vector2(3, 11), ":(", 10, Color("e0d0ff"))
-	# Manos espectrales.
+	# Manos espectrales: al golpear, la de delante se alarga hacia el objetivo.
 	for s in [-1.0, 1.0]:
 		var hand := top + Vector2(s * 19, 14 + sin(ph + s) * 3.0)
+		if s > 0.0:
+			hand += _aim * 12.0 * _strike_k()
 		ci.draw_circle(hand, 3.5, Color(c, 0.5))
 		ci.draw_circle(hand, 2.0, Color("b0ff90"))
 	# Volcados de memoria girando: «0x», «#», «$», «PID».

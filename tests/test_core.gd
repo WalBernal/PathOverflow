@@ -234,6 +234,7 @@ func _initialize() -> void:
 	_test_prologue_reachable()
 	_test_unit_animation()
 	_test_unit_spawn_death()
+	_test_unit_attacks()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -8751,6 +8752,80 @@ func _test_unit_spawn_death() -> void:
 	_check(sc._debris.size() == UnitArt.DEBRIS_MAX, "nunca más de %d piezas a la vez" % UnitArt.DEBRIS_MAX)
 	sc.clear_units()
 	_check(sc._debris.is_empty(), "clear_units también quita las piezas")
+	sc.queue_free()
+	player.queue_free()
+	em.queue_free()
+
+## Ataques que se ven (T202): las de cuerpo a cuerpo embisten hacia el objetivo y
+## las de distancia retroceden; el salto lleva el cuerpo en arco y golpea al caer;
+## el Golem UTP restalla un cable y la Torreta CI apunta y retrocede.
+func _test_unit_attacks() -> void:
+	var lunge := UnitArt.attack_offset("melee", 0.3, Vector2.LEFT)
+	var recoil := UnitArt.attack_offset("ranged", 0.15, Vector2.LEFT)
+	_check(lunge.x < -5.0 and recoil.x > 1.0, "cuerpo a cuerpo embiste hacia el objetivo y a distancia retrocede (%.1f, %.1f)" % [lunge.x, recoil.x])
+	_check(UnitArt.attack_offset("melee", 1.0, Vector2.LEFT).length() < 0.01, "y al acabar el ataque vuelve a su sitio")
+	_check(UnitArt.attack_offset("tank", 0.3, Vector2.RIGHT).x < lunge.length(), "los tanques embisten menos")
+	var c := CharacterData.new(_classes[5], _tree)
+	var em := EnemyManager.new()
+	root.add_child(em)
+	var player: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(player)
+	player.setup(c, em)
+	player.global_position = Vector2(60000, 60000)
+	var sc := SkillController.new()
+	root.add_child(sc)
+	# Salto del Bot de Pruebas: despega, sube en arco y golpea al caer.
+	c.inventory.set_board(0, Motherboard.new(_db.skills.skills["bot_pruebas"], 5, []))
+	sc.setup(player, em, c)
+	sc._summon_unit(sc.profile(0), player.global_position, Color.WHITE)
+	_check(sc._units.size() == 1, "hay un Bot de Pruebas")
+	if sc._units.size() == 1:
+		var u: Dictionary = sc._units[0]
+		u["spawn"] = 0.0
+		u["pos"] = player.global_position
+		em.spawn(player.global_position + Vector2(300, 0), Rarity.Enemy.NORMAL, -1, "", 1000.0)
+		u["ab_cds"] = [0.0]
+		u["cd"] = 5.0
+		var start: Vector2 = u["pos"]
+		sc._update_units(0.016)
+		_check(u.has("leap_to") and (u["pos"] as Vector2).distance_to(start) < 1.0, "al saltar despega desde donde está, sin teletransportarse")
+		sc._update_units(UnitArt.LEAP_TIME * 0.5)
+		_check(UnitArt.state_of(u) == "leap" and UnitArt.leap_height(u) > UnitArt.LEAP_ARC_MIN * 0.8, "a mitad del salto va por el aire (%.0f px)" % UnitArt.leap_height(u))
+		_check(float(UnitArt.anim(u)["hop"]) > 0.0, "y el dibujo lo sabe")
+		var mid_x := (u["pos"] as Vector2).x
+		_check(mid_x > start.x + 60.0, "avanza en arco hacia el objetivo")
+		var quakes := sc._effects.filter(func(e: Dictionary) -> bool: return e["type"] == "quake").size()
+		sc._update_units(UnitArt.LEAP_TIME * 0.6)
+		_check(not u.has("leap_to") and (u["pos"] as Vector2).x > start.x + 200.0, "cae junto al objetivo")
+		_check(sc._effects.filter(func(e: Dictionary) -> bool: return e["type"] == "quake").size() > quakes, "y golpea el suelo al caer")
+		sc.clear_units()
+	em.clear_all()
+	sc._effects.clear()
+	# Latigazo del Golem UTP.
+	c.inventory.set_board(0, Motherboard.new(_db.skills.skills["golem_utp"], 5, []))
+	sc._summon_unit(sc.profile(0), player.global_position, Color.WHITE)
+	if sc._units.size() == 1:
+		var g: Dictionary = sc._units[0]
+		g["spawn"] = 0.0
+		g["pos"] = player.global_position
+		g["ab_cds"] = [9.0, 9.0]
+		g["cd"] = 0.0
+		em.spawn(player.global_position + Vector2(25, 0), Rarity.Enemy.NORMAL, -1, "", 1000.0)
+		sc._update_units(0.016)
+		_check(sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "whip"), "el Golem UTP ataca con un latigazo de cable")
+		_check(not sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "quake"), "no con el anillo del tanque")
+		sc.clear_units()
+	em.clear_all()
+	# Torreta CI: el cañón apunta al objetivo y retrocede al disparar.
+	c.inventory.set_board(0, Motherboard.new(_db.skills.skills["torreta_ci"], 5, []))
+	sc._deploy(sc.profile(0), player.global_position + Vector2(40, 0))
+	_check(sc._devices.size() == 1, "hay una torreta")
+	if sc._devices.size() == 1:
+		var d: Dictionary = sc._devices[0]
+		d["armed_in"] = 0.0
+		em.spawn((d["pos"] as Vector2) + Vector2(0, 150), Rarity.Enemy.NORMAL, -1, "", 1000.0)
+		sc._update_devices(0.016)
+		_check((d.get("aim", Vector2.ZERO) as Vector2).y > 0.9 and float(d.get("kick", 0.0)) > 0.0, "la torreta apunta hacia abajo y su cañón retrocede al disparar")
 	sc.queue_free()
 	player.queue_free()
 	em.queue_free()

@@ -222,6 +222,7 @@ func _run() -> void:
 		await _capture_unit_art()
 		await _capture_unit_states()
 		await _capture_unit_life()
+		await _capture_unit_attacks()
 		get_tree().quit()
 		return
 	if OS.get_cmdline_user_args().has("habilidades"):
@@ -4518,3 +4519,40 @@ func _capture_unit_life() -> void:
 	_swap(sheet)
 	await _wait(0.5)
 	_save("201_aparecer_y_morir")
+
+## Ataques que se ven (T202): embestida de las de cuerpo a cuerpo (tridente,
+## mordida, puñetazo, golpe de golem), retroceso y fogonazo de las de distancia,
+## y el salto con el cuerpo en arco.
+func _capture_unit_attacks() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var skills: Dictionary = gd.get("items").skills.skills
+	var units: Array = []
+	for id in skills:
+		if skills[id]["kind"] == "unit":
+			units.append(skills[id])
+	var cols := [["quieta", {"state": "idle"}], ["ataca 10 %", {"state": "attack", "t": 0.1}], ["ataca 33 %", {"state": "attack", "t": 0.33}],
+		["ataca 60 %", {"state": "attack", "t": 0.6}], ["ataca ←", {"state": "attack", "t": 0.3, "facing": -1.0, "aim": Vector2(-1, 0.3)}],
+		["salta 20 %", {"state": "leap", "t": 0.2, "hop": 40.0}], ["salta 50 %", {"state": "leap", "t": 0.5, "hop": 60.0}], ["salta 85 %", {"state": "leap", "t": 0.85, "hop": 27.0}]]
+	var half := 6
+	for page in ceili(units.size() / float(half)):
+		var part := units.slice(page * half, mini(units.size(), (page + 1) * half))
+		var sheet := Control.new()
+		sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+		sheet.draw.connect(func() -> void:
+			sheet.draw_rect(Rect2(Vector2.ZERO, sheet.size), Color("1d2a26"))
+			var font := sheet.get_theme_default_font()
+			for k in cols.size():
+				sheet.draw_string(font, Vector2(150 + k * 140, 28), cols[k][0], HORIZONTAL_ALIGNMENT_CENTER, 120, 13)
+			for i in part.size():
+				var y := 175.0 + i * 140.0
+				var col := Color(part[i].get("icon", {}).get("color", "c8c8c8"))
+				sheet.draw_string(font, Vector2(8, y - 20), part[i]["name"], HORIZONTAL_ALIGNMENT_LEFT, 140, 12)
+				for k in cols.size():
+					var a: Dictionary = {"facing": 1.0, "aim": Vector2.RIGHT, "t": 0.0, "walk": 0.0, "move": 0.0, "scale": 1.3, "focus": true}
+					a.merge(cols[k][1], true)
+					var x := 210.0 + k * 140.0
+					sheet.draw_line(Vector2(x - 40, y + 2), Vector2(x + 40, y + 2), Color(1, 1, 1, 0.12), 1.0)   # suelo
+					UnitArt.draw(sheet, part[i]["id"], part[i]["unit"]["behavior"], Vector2(x, y), 2.0, col, a))
+		_swap(sheet)
+		await _wait(0.5)
+		_save("202_ataques_%d" % (page + 1))
