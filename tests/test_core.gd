@@ -233,6 +233,7 @@ func _initialize() -> void:
 	_test_rams_everywhere()
 	_test_prologue_reachable()
 	_test_skill_sound_kinds()
+	_test_skill_signatures()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -8604,3 +8605,26 @@ func _test_skill_sound_kinds() -> void:
 	_check(not Sfx.has_skill_sound("mine") and not Sfx.has_skill_sound("totem") and Sfx.skill_sound("inventado") == Sfx.DEFAULT_SKILL_SOUND,
 		"los tipos que no existen (mina, tótem) no tienen entrada propia")
 	_check(SoundMap.signature_layer({"kind": "quake"}) == "" and SoundMap.signature_layer({"kind": "heal"}) == "", "sin capas para los tipos quake y heal, que no existen")
+
+## T196: cada una de las 62 habilidades tiene su capa de firma propia en SoundMap,
+## su archivo existe y dura lo de una capa (0,05-0,6 s), y ya no usa la compartida.
+func _test_skill_signatures() -> void:
+	var skills: Dictionary = _db.skills.skills
+	_check(skills.size() == 62 and SoundMap.SIGNATURES.size() == skills.size(), "62 habilidades y 62 firmas (%d y %d)" % [skills.size(), SoundMap.SIGNATURES.size()])
+	var names := {}
+	for id in skills:
+		var sig := SoundMap.signature(id)
+		_check(sig == "sig_" + id, "%s: tiene su entrada propia en SoundMap (%s)" % [id, sig])
+		names[sig] = true
+		var path := Sfx.SFX_DIR + sig + ".wav"
+		_check(ResourceLoader.exists(path), "%s: existe %s (tools/generate_sfx.gd -- t196)" % [id, path])
+		var wav := load(path) as AudioStreamWAV if ResourceLoader.exists(path) else null
+		_check(wav != null and wav.get_length() >= 0.05 and wav.get_length() <= 0.6, "%s: su firma dura lo de una capa (%.2f s)" % [id, wav.get_length() if wav else -1.0])
+		var layers := SoundMap.cast_layers(skills[id])
+		_check(layers.size() == 2 and layers[1][0] == sig and float(layers[1][1]) == SoundMap.SIGNATURE_DB and float(layers[1][2]) == 1.0,
+			"%s: suena su base y su firma a -6 dB con tono fijo (%s)" % [id, str(layers)])
+		_check(not String(layers[1][0]).begins_with("lay_"), "%s: ya no usa la capa compartida" % id)
+	_check(names.size() == skills.size(), "ninguna firma repetida")
+	var made := {"id": "inventada", "kind": "projectile", "damage_type": "lightning"}
+	_check(SoundMap.signature("inventada") == "" and SoundMap.cast_layers(made)[1][0] == "lay_hum",
+		"una habilidad sin firma propia sigue con la capa compartida")
