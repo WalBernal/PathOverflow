@@ -82,6 +82,10 @@ func _run() -> void:
 		await _capture_training_dummy()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("basura"):
+		await _capture_inventory_marks()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("tamano"):
 		await _capture_world_size()
 		get_tree().quit()
@@ -4474,6 +4478,55 @@ func _capture_training_dummy() -> void:
 		print("muñeco: %s · escala de interfaz %s · panel %s" % [TrainingPanel.lines(dummy.stats()), (ui.get("_root") as Control).scale, ui.training_panel.visible])
 		_save("212_muneco" if pass_i == 0 else "212_muneco_140_tactil")
 	Touch.force = false
+	GameSettings.set_value("interface", "scale", saved_scale)
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
+
+
+## Inventario más rápido (T213): bolsa con basura y bloqueados, la tienda de Aida
+## abierta y el tooltip de un objeto marcado; con ratón (100 %), dedo (140 %) y mando.
+func _capture_inventory_marks() -> void:
+	var saved_scale: Variant = GameSettings.get_value("interface", "scale", 1.0)
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Basura", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.flags["llegada_campamento_vista"] = true
+	c.level = 12
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	gd.current_character = c
+	var gen := ItemGenerator.new(gd.get("items"))
+	for k in 18:
+		var it := gen.generate(12, [Rarity.Item.NORMAL, Rarity.Item.MAGIC, Rarity.Item.RARE][k % 3])
+		it.junk = k % 4 == 1
+		it.locked = k % 5 == 3 and not it.junk
+		c.inventory.add_item(it)
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var ui: GameUI = world.get("ui")
+	if ui.cutscene.visible:
+		ui.cutscene.call("_finish")
+	for pass_i in 3:
+		Touch.force = pass_i == 1
+		Gamepad.active = pass_i == 2
+		GameSettings.set_value("interface", "scale", 1.4 if pass_i == 1 else 1.0)
+		ui.apply_ui_scale()
+		ui.open_shop(Economy.generate_gear_stock(gen, c.level), "aida")
+		ui.inventory_panel.visible = true
+		await _wait(0.4)
+		var cells: Array = ui.inventory_panel.get("_bag_cells")
+		var cell: ItemCell = cells.filter(func(x: ItemCell) -> bool: return x.item != null and x.item.junk)[0]
+		ui.item_tooltip.show_item(cell.item, c, false)
+		ui.item_tooltip.global_position = cell.get_global_rect().end + Vector2(8, 8)
+		await _wait(0.3)
+		_save(["213_basura_pc", "213_basura_140_tactil", "213_basura_mando"][pass_i])
+		ui.close_trade_panels()
+	Touch.force = false
+	Gamepad.active = false
 	GameSettings.set_value("interface", "scale", saved_scale)
 	TipPanel.set_enabled(tips_were)
 	world.queue_free()

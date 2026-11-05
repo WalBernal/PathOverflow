@@ -234,6 +234,7 @@ func _initialize() -> void:
 	_test_prologue_reachable()
 	_test_skill_preview()
 	_test_training_dummy()
+	_test_inventory_quick()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -8687,3 +8688,35 @@ func _test_training_dummy() -> void:
 					"muñeco: el campamento %s (%s) tiene su servidor de pruebas" % [z["id"], town])
 	dummy.free()
 	em.free()
+
+
+## Inventario más rápido (T213): la marca se ve en el tooltip y en el título de la
+## bolsa, y la ayuda dice el gesto del ratón, el dedo o el mando.
+func _test_inventory_quick() -> void:
+	_check(InventoryPanel.mark_gesture_for(false, false) == "Click derecho" and InventoryPanel.mark_gesture_for(true, false) == "Mantén pulsado"
+		and InventoryPanel.mark_gesture_for(true, true) == "X", "marcas: el gesto según ratón, dedo o mando")
+	for args in [[false, false], [true, false], [false, true]]:
+		var h := InventoryPanel.help_text(args[0], args[1])
+		_check(h.contains(InventoryPanel.mark_gesture_for(args[0], args[1]) + ": basura / bloqueado / sin marca"),
+			"marcas: la ayuda del inventario dice cómo marcar (%s)" % [args])
+	var gen := ItemGenerator.new(_db, 213)
+	var c := CharacterData.new(_classes[0], _tree)
+	var sword := gen.generate(10, Rarity.Item.RARE, "espada_oxidada")
+	_check(ItemTooltip.mark_line(sword, "X") == "" and not ItemTooltip.build_text(sword, c, false).contains("Bloqueado"),
+		"marcas: sin marca, el tooltip no dice nada")
+	sword.junk = true
+	_check(ItemTooltip.build_text(sword, c, false).contains("Basura") and ItemTooltip.mark_line(sword, "X").contains("X: bloquear"),
+		"marcas: la basura se ve en el tooltip con cómo bloquearla")
+	sword.junk = false
+	sword.locked = true
+	_check(ItemTooltip.mark_line(sword, "Mantén pulsado").contains("no se vende ni se tira"), "marcas: lo bloqueado avisa en el tooltip")
+	var board := gen.generate_motherboard(10)
+	board.junk = true
+	_check(ItemTooltip.build_text(board, c, false).ends_with(ItemTooltip.mark_line(board, InventoryPanel.mark_gesture())),
+		"marcas: también en las placas (debajo de la vista previa)")
+	var inv := Inventory.new()
+	inv.bag[0] = sword
+	inv.bag[5] = board
+	_check(InventoryPanel.bag_title(inv) == "Bolsa  (2 / %d)  ·  1 de basura" % Inventory.BAG_SIZE, "marcas: el título de la bolsa cuenta la basura")
+	board.junk = false
+	_check(InventoryPanel.bag_title(inv) == "Bolsa  (2 / %d)" % Inventory.BAG_SIZE, "marcas: sin basura, solo la ocupación")

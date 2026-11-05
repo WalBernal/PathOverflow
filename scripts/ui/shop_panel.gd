@@ -59,6 +59,8 @@ var _refresh_button: Button
 var _bulk_normal: Button
 var _bulk_magic: Button
 var _bulk_junk: Button
+## Ayuda bajo «Vender», con el gesto de marcar del control que usas (T213).
+var _sell_help: Label
 var _scroll: ScrollContainer
 var _seen_refreshes := 0
 var _shown := false
@@ -155,11 +157,11 @@ func _ready() -> void:
 	_bulk_normal = UiStyle.button("", sell_bulk.bind(Rarity.Item.NORMAL), 240)
 	_bulk_magic = UiStyle.button("", sell_bulk.bind(Rarity.Item.MAGIC), 240)
 	_bulk_junk = UiStyle.button("", sell_junk, 240)
-	_bulk_junk.tooltip_text = "Click derecho en la bolsa: basura → bloqueado → sin marca.\nLo bloqueado no se vende ni se tira."
 	bulk.add_child(_bulk_normal)
 	bulk.add_child(_bulk_magic)
 	bulk.add_child(_bulk_junk)
-	box.add_child(UiStyle.label("Arrastra aquí un objeto de la bolsa. Se paga el %d%% de lo que vale a la venta." % int(Economy.SELL_FRACTION * 100), 12, UiStyle.MUTED))
+	_sell_help = UiStyle.label("", 12, UiStyle.MUTED)
+	box.add_child(_sell_help)
 	box.add_child(UiStyle.section_header("Recomprar"))
 	_buyback_row = HBoxContainer.new()
 	_buyback_row.add_theme_constant_override("separation", 6)
@@ -396,6 +398,17 @@ func _refresh_header() -> void:
 	var junk := Economy.junk_sell(character.inventory)
 	_bulk_junk.text = "Vender lo marcado como basura (%d · %d)" % [junk[0].size(), junk[1]]
 	_bulk_junk.disabled = junk[0].is_empty()
+	# T213: la ayuda dice el gesto de lo que usas (ratón, dedo o mando).
+	var gesture := InventoryPanel.mark_gesture()
+	_bulk_junk.tooltip_text = "%s en la bolsa: basura → bloqueado → sin marca.\nLo bloqueado no se vende ni se tira (tampoco con los botones de lote)." % gesture
+	_sell_help.text = "Arrastra aquí un objeto de la bolsa. Se paga el %d%% de lo que vale.\n%s en la bolsa: basura → bloqueado → sin marca. Lo bloqueado no se vende." % [
+		int(Economy.SELL_FRACTION * 100), gesture]
+
+
+## Si pasas del ratón al mando (o al dedo) con la tienda abierta, la ayuda lo sigue (T213).
+func _process(_delta: float) -> void:
+	if visible and _sell_help and character and not _sell_help.text.contains("\n%s en la bolsa" % InventoryPanel.mark_gesture()):
+		_refresh_header()
 
 
 ## Compra el artículo `i` del puesto. Devuelve si se compró.
@@ -501,7 +514,7 @@ func _on_sell_dropped(_target: ItemCell, payload: Dictionary) -> void:
 		message.emit("Eso no se vende: lo vas a necesitar.")
 		return
 	if item.locked:
-		message.emit("Está bloqueado. Quítale el candado (click derecho en la bolsa) si de verdad lo quieres vender.")
+		message.emit("Está bloqueado. Quítale el candado (%s en la bolsa) si de verdad lo quieres vender." % InventoryPanel.mark_gesture().to_lower())
 		return
 	var value := Economy.sell_price(item)
 	ItemTransfer.take(character, from)

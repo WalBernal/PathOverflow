@@ -38,6 +38,8 @@ var _bag_header: Control
 var _scroll: ScrollContainer
 var _content: VBoxContainer
 var _box: VBoxContainer
+## Pie con la ayuda (cambia con el ratón, el dedo o el mando: T213).
+var _help: Label
 ## Silueta de lo que va en cada ranura vacía.
 const SLOT_ICONS := {
 	"weapon": "espada_oxidada", "helmet": "casco_de_hierro", "body": "cota_de_placas", "gloves": "guantes_de_cuero",
@@ -145,8 +147,47 @@ func _ready() -> void:
 		grid.add_child(cell)
 		_bag_cells.append(cell)
 
-	box.add_child(UiStyle.label("Arrastra para mover o equipar  ·  Click: equipar / quitar (también pociones)  ·  Arrastra fuera para tirar\nClick derecho: basura / bloqueado / sin marca  ·  Alt: comparar con lo equipado", 11, UiStyle.MUTED))
+	_help = UiStyle.label(help_text(Touch.shown(), Gamepad.active), 11, UiStyle.MUTED)
+	box.add_child(_help)
+	visibility_changed.connect(_refresh_help)
 	fit_height.call_deferred()
+
+
+## Cómo se cambia la marca (basura / bloqueado) con lo que estás usando (T213):
+## el ratón, el dedo (pulsación larga) o el cursor de mando (X).
+static func mark_gesture_for(touch: bool, pad: bool) -> String:
+	if pad:
+		return "X"
+	if touch:
+		return "Mantén pulsado"
+	return "Click derecho"
+
+
+static func mark_gesture() -> String:
+	return mark_gesture_for(Touch.shown(), Gamepad.active)
+
+
+## La ayuda del pie del inventario según el control (T213).
+static func help_text(touch: bool, pad: bool) -> String:
+	var gesture := mark_gesture_for(touch, pad)
+	if pad:
+		return "A: equipar / quitar  ·  Mantén A y mueve: arrastrar  ·  Cruceta: saltar de casilla\n%s: basura / bloqueado / sin marca  ·  Y: fijar la comparación" % gesture
+	if touch:
+		return "Toca: equipar / quitar  ·  Arrastra para mover  ·  Arrastra fuera para tirar\n%s: basura / bloqueado / sin marca" % gesture
+	return "Arrastra para mover o equipar  ·  Click: equipar / quitar (también pociones)  ·  Arrastra fuera para tirar\n%s: basura / bloqueado / sin marca  ·  Alt: comparar con lo equipado" % gesture
+
+
+func _refresh_help() -> void:
+	if _help and visible:
+		var t := help_text(Touch.shown(), Gamepad.active)
+		if _help.text != t:
+			_help.text = t
+
+
+## Se puede pasar del ratón al mando con la ventana abierta: la ayuda lo sigue.
+func _process(_delta: float) -> void:
+	if visible:
+		_refresh_help()
 
 
 ## Ajusta el alto del área con desplazamiento a lo que queda de pantalla (todo
@@ -184,9 +225,22 @@ func _refresh() -> void:
 	if _silhouette:
 		_silhouette.appearance = character.appearance
 	if _bag_header:
-		var used := character.inventory.bag.filter(func(it) -> bool: return it != null).size()
-		(_bag_header.get_child(1) as Label).text = "Bolsa  (%d / %d)" % [used, Inventory.BAG_SIZE]
+		(_bag_header.get_child(1) as Label).text = bag_title(character.inventory)
+	_refresh_help()
 	_refresh_summary()
+
+
+## Título de la bolsa: ocupación y, si hay, cuánto está marcado como basura (T213).
+static func bag_title(inv: Inventory) -> String:
+	var used := 0
+	var junk := 0
+	for it in inv.bag:
+		if it != null:
+			used += 1
+			if (it as Item).junk and not (it as Item).locked:   # lo mismo que vende la tienda
+				junk += 1
+	var t := "Bolsa  (%d / %d)" % [used, Inventory.BAG_SIZE]
+	return t + ("  ·  %d de basura" % junk if junk > 0 else "")
 
 
 func _refresh_summary() -> void:
@@ -225,6 +279,8 @@ func _on_cell_clicked(cell: ItemCell, button: MouseButton) -> void:
 		cell.queue_redraw()
 		character.inventory.changed.emit()   # se guarda y se recalcula la venta de basura
 		message.emit("%s: %s." % [cell.item.display_name(), mark])
+		Sfx.play("pickup", -12.0, 0.8 if mark == "basura" else (1.3 if mark == "bloqueado" else 1.0))
+		_on_cell_hovered(cell, true)   # el tooltip dice la marca nueva
 		return
 	if cell.item == null or button != MOUSE_BUTTON_LEFT:
 		return

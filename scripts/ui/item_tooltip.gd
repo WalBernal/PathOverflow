@@ -233,6 +233,21 @@ func is_pinned() -> bool:
 
 
 static func build_text(item: Item, character: CharacterData, compare: bool) -> String:
+	var mark := mark_line(item, InventoryPanel.mark_gesture())
+	return _item_text(item, character, compare) + ("\n" + mark if mark != "" else "")
+
+
+## La marca del jugador (T213): basura (se vende con un botón en la tienda) o
+## bloqueado (no se vende ni se tira), y cómo cambiarla. "" sin marca.
+static func mark_line(item: Item, gesture: String) -> String:
+	if item.locked:   # el candado manda: lo bloqueado nunca se vende
+		return "[color=#f2c14e]● Bloqueado[/color] [color=#%s]· no se vende ni se tira · %s: quitar la marca[/color]" % [GREY, gesture]
+	if item.junk:
+		return "[color=#e08080]● Basura[/color] [color=#%s]· se vende con «Vender lo marcado» en la tienda · %s: bloquear[/color]" % [GREY, gesture]
+	return ""
+
+
+static func _item_text(item: Item, character: CharacterData, compare: bool) -> String:
 	if item is Motherboard:
 		var bt := _motherboard_text(item as Motherboard, character)
 		if compare and character:   # contra la de la misma habilidad en tu barra (T127)

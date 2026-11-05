@@ -1321,7 +1321,7 @@ func _on_drop_to_ground(location: Dictionary) -> void:
 		return
 	var held := ItemTransfer.get_at(_character.inventory, location)
 	if held and held.locked:
-		hud.flash("Está bloqueado: no se tira. Click derecho en la bolsa para quitarle el candado.", UiStyle.ACCENT)
+		hud.flash("Está bloqueado: no se tira. %s en la bolsa para quitarle el candado." % InventoryPanel.mark_gesture(), UiStyle.ACCENT)
 		return
 	var item := ItemTransfer.take(_character, location)
 	if item:
