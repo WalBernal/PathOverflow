@@ -1930,11 +1930,13 @@ func _update_units(delta: float) -> void:
 						if u["behavior"] == "tank":
 							if p["stun"] > 0.0:
 								enemies.stun_in_radius(pos, p["radius"], p["stun"])
+							# Tras el golpe, `i` ya no vale: si el objetivo muere, otro ocupa su hueco
+							# (o el índice se sale de la lista). Por eso el latigazo apunta a pos + to.
 							_damage_area(pos, p["radius"], p)
 							if u["skill_id"] == "golem_utp":
 								# Golem UTP: un latigazo de cable que restalla sobre el objetivo.
 								_effects.append({"type": "whip", "pos": pos + Vector2(float(u["facing"]) * 16.0, -30.0) * float(u.get("scale", 1.0)),
-									"end": enemies.positions[i], "time": 0.0, "duration": 0.3, "color": u["color"]})
+									"end": pos + to, "time": 0.0, "duration": 0.3, "color": u["color"]})
 							else:
 								_effects.append({"type": "quake", "pos": pos, "radius": p["radius"], "time": 0.0, "duration": 0.35, "color": u["color"]})
 						else:

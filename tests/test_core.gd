@@ -8825,6 +8825,20 @@ func _test_unit_attacks() -> void:
 		sc._update_units(0.016)
 		_check(sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "whip"), "el Golem UTP ataca con un latigazo de cable")
 		_check(not sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "quake"), "no con el anillo del tanque")
+		# Si el golpe mata al objetivo (el último de la lista), el latigazo sigue
+		# yendo a donde estaba y no lee un índice que ya no existe.
+		em.clear_all()
+		sc._effects.clear()
+		g["cd"] = 0.0
+		var target := player.global_position + Vector2(25, 0)
+		em.spawn(target, Rarity.Enemy.NORMAL, -1, "", 1.0)
+		em.lives[0] = 0.01
+		var errors_before: int = _script_errors.errors.size()
+		sc._update_units(0.016)
+		var whips := sc._effects.filter(func(e: Dictionary) -> bool: return e["type"] == "whip")
+		_check(em.positions.is_empty() and whips.size() == 1 and (whips[0]["end"] as Vector2).distance_to(target) < 1.0
+			and _script_errors.errors.size() == errors_before, "el latigazo que mata a su objetivo restalla donde estaba")
+		_check(sc._units.size() == 1, "y el golem sigue en la lista")
 		sc.clear_units()
 	em.clear_all()
 	# Torreta CI: el cañón apunta al objetivo y retrocede al disparar.
