@@ -232,6 +232,7 @@ func _initialize() -> void:
 	_test_quest_item_art()
 	_test_rams_everywhere()
 	_test_prologue_reachable()
+	_test_skill_poses()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -5676,7 +5677,7 @@ func _test_npcs_and_boss_intro() -> void:
 
 ## Personaje por capas (T102a): cuadrícula, poses, clasificación de capas y hojas horneadas.
 func _test_player_sheet() -> void:
-	_check(PlayerSheet.columns() == 36 and PlayerSheet.frames_of("walk") == 8 and PlayerSheet.frames_of("type") == 2, "36 columnas de estados, 8 al andar y 2 al teclear (%d)" % PlayerSheet.columns())
+	_check(PlayerSheet.columns() == 42 and PlayerSheet.frames_of("walk") == 8 and PlayerSheet.frames_of("type") == 2, "42 columnas de estados, 8 al andar y 2 al teclear (%d)" % PlayerSheet.columns())
 	_check(PlayerSheet.group_for("attack", "sword") == "attack_swing" and PlayerSheet.group_for("attack", "dagger") == "attack_thrust"
 		and PlayerSheet.group_for("attack", "") == "attack_thrust" and PlayerSheet.group_for("run", "") == "walk", "cada arma con su gesto; correr usa andar")
 	var walk := {}
@@ -8579,3 +8580,49 @@ func _test_thermal_shock_and_status_resist() -> void:
 	pa.queue_free()
 	pb.queue_free()
 	e2.queue_free()
+
+
+## Animación por tipo de habilidad (T198): cada habilidad del catálogo con su pose,
+## cada pose en las dos hojas (oficinista y alumno) con su cuadro de impacto, el salto
+## en el aire hasta caer y las hojas dentro de 4096 px.
+func _test_skill_poses() -> void:
+	var c := _new_character()
+	var gen := ItemGenerator.new(_db, 198)
+	var expect := {"aura_overclock": "aura", "aura_throttling": "aura", "esta_en_produccion": "shout", "daily_standup": "shout",
+		"rollback_grito": "shout", "proceso_hijo": "summon", "robot_centinela": "summon", "golem_kernel": "summon", "torreta_ci": "summon",
+		"drones_vigilancia": "summon", "bot_pruebas": "summon", "reinicio_forzado": "leap", "git_revert": "leap", "pipe_de_datos": "channel",
+		"tormenta_tickets": "channel", "barrido": "attack", "rafaga_de_paquetes": "shoot", "fork_bomb": "cast", "modo_seguro": "cast"}
+	for id in expect:
+		var p := SkillCalc.compute(gen.generate_motherboard(1, id), c)
+		_check(Player.action_for(p) == expect[id], "%s se anima como %s (sale %s)" % [id, expect[id], Player.action_for(p)])
+	var catalog: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/skills/skills.json"))
+	var used := {}
+	for s in catalog["skills"]:
+		used[Player.action_for(s)] = true
+	for pose in ["shout", "leap", "summon", "aura", "channel"]:
+		_check(used.has(pose), "alguna habilidad usa la pose %s" % pose)
+	for pose in used:
+		var group := PlayerSheet.group_for(String(pose), "sword")
+		_check(PlayerSheet.first_column(group) != -1 and (StudentHero.first_column(String(pose)) != -1 or pose == "shoot"),   # (el alumno dispara con el tajo)
+			"la pose %s está en las dos hojas" % pose)
+	for pose in CharacterAppearance.SKILL_POSES:
+		# El golpe cae en el último cuadro de la pose (el de impacto), en las dos hojas.
+		var imp := CharacterAppearance.impact_fraction(pose, "")
+		_check(imp > 0.0, "%s tiene cuadro de impacto" % pose)
+		_check(PlayerSheet.column_for(pose, "", imp) == PlayerSheet.first_column(pose) + PlayerSheet.frames_of(pose) - 1,
+			"oficinista: al llegar el impacto de %s, su último cuadro" % pose)
+		_check(StudentHero.column_for(pose, imp) == StudentHero.first_column(pose) + int(StudentHero.FRAMES[pose]) - 1
+			and StudentHero.column_for(pose, 0.0) == StudentHero.first_column(pose), "alumno: %s empieza anticipando y acaba en el impacto" % pose)
+	_check(float(PlayerSprite.life({"state": "leap", "t": 0.25}, -1.0)[1]) < -PlayerSprite.LEAP_HEIGHT * 0.5
+		and is_zero_approx(float(PlayerSprite.life({"state": "leap", "t": 0.5}, -1.0)[1]))
+		and (PlayerSprite.life({"state": "leap", "t": 0.52}, -1.0)[0] as Vector2).y < 0.95, "salto: en el aire, en el suelo al caer y aplastado")
+	_check(StudentHero.column_for("channel", 0.0, 0.0) != StudentHero.column_for("channel", 0.0, 0.25), "canalizar alterna sus cuadros")
+	_check(PlayerSheet.CW * PlayerSheet.columns() <= PlayerSheet.MAX_SIDE and StudentHero.CELL.x * StudentHero.columns() <= PlayerSheet.MAX_SIDE,
+		"hojas del oficinista (%d px) y del alumno (%d px) por debajo de 4096" % [PlayerSheet.CW * PlayerSheet.columns(), StudentHero.CELL.x * StudentHero.columns()])
+	var p := Player.new()
+	p.character = c
+	p.life = 10.0
+	p.play_action("leap", 0.4)
+	p._tick_anim(0.1)
+	_check(p.anim_state() == "leap" and is_equal_approx(float(p.anim_pose()["t"]), 0.25), "el jugador salta y la pose avanza con la acción")
+	p.free()

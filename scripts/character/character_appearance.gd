@@ -139,7 +139,10 @@ static func _ellipse(ci: CanvasItem, c: Vector2, rx: float, ry: float, color: Co
 ## lanzar)}. Estados: "idle" (respira), "walk", "run" (zancada y balanceo mayores),
 ## "attack" (golpe según el arma), "shoot" (lanza hacia delante), "cast" (sube las
 ## manos), "channel" (manos delante, brillando), "hurt" (retrocede), "dodge" (se
-## agacha y rueda) y "dead" (cae de lado). Sin pose, la figura de siempre.
+## agacha y rueda) y "dead" (cae de lado). T198, por tipo de habilidad: "shout" (toma
+## aire encogido y abre los brazos al gritar), "leap" (agachado con el arma en alto y
+## golpe al caer), "summon" (una mano al suelo, brillando, la otra en alto) y "aura"
+## (brazos abiertos, las dos manos brillando). Sin pose, la figura de siempre.
 static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 		facing := Vector2.DOWN, tint := Color(0, 0, 0, 0), walk_phase := -1.0, pose := {}) -> void:
 	var state := String(pose.get("state", ""))
@@ -171,6 +174,7 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 	var bob := absf(cos(walk_phase)) * 1.3 * run_k if walking else 0.0  # el cuerpo sube entre pisadas
 	if state == "idle":
 		bob = (sin(float(pose.get("time", 0.0)) * 2.4) * 0.5 + 0.5) * 0.7   # respira
+	bob += action_bob(state, t)   # T198: se agacha para saltar, toma aire, se crece al gritar
 	# Brazo que golpea (el del lado al que mira) y si los dos brazos posan (hechizos).
 	var side := 1.0 if look >= 0.0 else -1.0
 	var weapon := String(pose.get("weapon", ""))
@@ -182,8 +186,8 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 			arm_weapon = "sword"
 		"thrust":
 			arm_weapon = "dagger"
-	var posing := state in ["attack", "shoot", "cast", "channel", "type"]
-	var both_arms := state in ["cast", "channel", "type"]
+	var posing := state in (["attack", "shoot", "cast", "channel", "type"] + SKILL_POSES)
+	var both_arms := state in (["cast", "channel", "type"] + SKILL_POSES)
 	# Estatura: escala las alturas (la cabeza mantiene su tamaño).
 	var hs := float(a.get("height", 1.0))
 	var p := func(x: float, y: float) -> Vector2: return feet + Vector2(x, y * hs) * scale
@@ -267,19 +271,23 @@ static func draw(ci: CanvasItem, feet: Vector2, scale: float, a: Dictionary,
 				out = -arm * 0.6   # teclear (T162): las manos al frente, hacia el centro
 			var shoulder: Vector2 = u.call((lean if profile else 7.5 * arm * tw), -22.0)
 			var ang := arm_angle(state, arm_weapon, t, time) * (0.85 if both_arms and arm != side else 1.0)
+			if state == "summon" and arm != side:
+				ang = 2.4   # invocar (T198): la otra mano en alto
 			var d := Vector2(sin(ang) * out, cos(ang))
 			var hand := shoulder + d * 12.0 * hs * scale * arm_reach(state, arm_weapon, t)
 			if arm == side:
 				side_hand = hand
 			ci.draw_line(shoulder, hand, arm_color, 3.5 * width * scale)
-			if state in ["attack", "shoot"] and weapon != "":
+			# El arma en la mano del golpe (con los dos brazos en pose, solo en la de su lado).
+			if weapon != "" and (state in ["attack", "shoot"] or (state in SKILL_POSES and arm == side)):
 				draw_weapon(ci, hand, d, weapon, scale, tint)
 			ci.draw_circle(hand, 1.9 * scale * width, skin)
-			if pose.has("glow") and state in ["cast", "channel"]:
+			if pose.has("glow") and state in GLOW_POSES and (state != "summon" or arm == side):
 				var g: Color = pose["glow"]
-				var pulse := 0.75 + 0.25 * sin(time * 9.0) if state == "channel" else minf(1.0, t * 2.5)
-				ci.draw_circle(hand, 4.5 * scale * pulse, Color(g, 0.35))
-				ci.draw_circle(hand, 2.4 * scale * pulse, Color(g.lightened(0.4), 0.8))
+				var pulse := 0.75 + 0.25 * sin(time * 9.0) if state in ["channel", "aura"] else minf(1.0, t * 2.5)
+				var big := 1.3 if state == "summon" else 1.0
+				ci.draw_circle(hand, 4.5 * scale * pulse * big, Color(g, 0.35))
+				ci.draw_circle(hand, 2.4 * scale * pulse * big, Color(g.lightened(0.4), 0.8))
 
 	# Cabeza: grande, chibi (T160, como la referencia del usuario; antes radio 7 en -31).
 	var head: Vector2 = u.call(lean, HEAD_Y)
@@ -523,6 +531,36 @@ static func arm_angle(state: String, weapon: String, t: float, time := 0.0) -> f
 			return 1.5 + sin(time * 8.0) * 0.08
 		"type":   # teclear: las manos suben y bajan un poco, alternando (T162)
 			return 0.62 + 0.12 * cos(time * TAU)
+		# T198: la primera mitad es la anticipación y la segunda el cuadro de impacto
+		# (las hojas tienen dos cuadros: uno en cada mitad).
+		"shout":   # brazos pegados al tomar aire; abiertos y en alto al gritar
+			return 0.3 if t < 0.5 else lerpf(2.3, 2.15, (t - 0.5) / 0.5)
+		"leap":   # el arma en alto en el salto; abajo y delante al caer
+			return 2.9 if t < 0.5 else lerpf(0.5, 0.7, (t - 0.5) / 0.5)
+		"summon":   # la mano del lado hacia el suelo, delante (la otra, en alto: draw)
+			return lerpf(0.3, 0.85, minf(1.0, t / 0.3))
+		"aura":   # brazos abiertos en cruz, con un vaivén lento
+			return lerpf(0.3, 1.65, minf(1.0, t / 0.3)) + sin(time * 3.0) * 0.06
+	return 0.0
+
+
+## Poses por tipo de habilidad (T198, Player.action_for) y las que llevan brillo en las manos.
+const SKILL_POSES := ["shout", "leap", "summon", "aura"]
+const GLOW_POSES := ["cast", "channel", "summon", "aura"]
+
+
+## Cuánto sube (+) o baja (-) el cuerpo en una pose de habilidad (T198): agachado al
+## saltar y al caer, encogido al tomar aire, crecido al gritar, inclinado al invocar.
+static func action_bob(state: String, t: float) -> float:
+	match state:
+		"leap":
+			return -2.4 if t < 0.5 else -3.2
+		"shout":
+			return -1.0 if t < 0.5 else 1.0
+		"summon":
+			return -1.6
+		"aura":
+			return 0.8
 	return 0.0
 
 
@@ -534,6 +572,10 @@ static func impact_fraction(state: String, weapon: String) -> float:
 			return 0.47 if weapon in ["sword", "axe", "mace"] else 0.3
 		"shoot":
 			return 0.38
+		# T198: al caer del salto, al soltar el grito, al tocar el suelo al invocar o al
+		# alzarse con el aura: el segundo cuadro de las hojas de dos (las de uno, el único).
+		"leap", "shout", "summon", "aura":
+			return 0.5
 	return 0.0
 
 

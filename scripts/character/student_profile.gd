@@ -367,6 +367,37 @@ static func frame(body_img: Image, look: Dictionary, weapon: Image, anim: String
 		"dead", "dodge":
 			bob = [1, 3][k]
 			lean = 1
+		# T198, por tipo de habilidad: el primer cuadro anticipa y el segundo es el impacto.
+		"channel":   # brazos delante, el arma apuntando
+			front_arm = [85.0, 95.0][k]
+			back_arm = [80.0, 90.0][k]
+			bob = -1
+			swing = 2
+		"shout":   # encogido tomando aire; echado atrás con los brazos en alto al gritar
+			front_arm = [20.0, 150.0][k]
+			back_arm = [10.0, 140.0][k]
+			bob = [1, -1][k]
+			lean = [1, -1][k]
+			swing = [3, 1][k]
+		"leap":   # agachado con el arma sobre la cabeza; al caer, el arma al suelo
+			front_arm = [170.0, 60.0][k]
+			back_arm = [160.0, 50.0][k]
+			bob = [2, 3][k]
+			lean = [-1, 1][k]
+			swing = [1, 3][k]
+			front_foot = 3
+			back_foot = -4
+		"summon":   # alza el arma y señala el suelo delante; la otra mano, en alto
+			front_arm = [120.0, 45.0][k]
+			back_arm = [150.0, 160.0][k]
+			bob = [-1, 1][k]
+			lean = [0, 1][k]
+			swing = [1, 3][k]
+		"aura":   # brazos delante y arriba, erguido
+			front_arm = [70.0, 105.0][k]
+			back_arm = [70.0, 115.0][k]
+			bob = [0, -1][k]
+			swing = [0, 1][k]
 	# Pierna y brazo de atrás.
 	if not robe:
 		_leg(img, Vector2i(26, HIP_Y), back_foot, back_lift, pal, true, boots_eq)

@@ -28,8 +28,14 @@ const LAYER_ACCENT := 3
 const LAYER_HAIR := 4
 const LAYER_EYES := 5
 ## [estado, cuadros]. Atacar va en dos grupos: tajo (espada, hacha, maza) y estocada (daga, puño).
+## T198: grito, salto, invocar y aura (Player.action_for); los de dos cuadros tienen la
+## anticipación y el cuadro de impacto. 42 columnas = 4032 px, por debajo de los 4096
+## que aguantan los móviles viejos: no caben más.
 const STATES := [["idle", 2], ["walk", 8],["attack_swing", 4], ["attack_thrust", 4], ["shoot", 3], ["cast", 3],
-	["channel", 2], ["hurt", 2], ["dodge", 3], ["dead", 3], ["type", 2]]   # type: teclear (NPC, T162)
+	["channel", 2], ["hurt", 2], ["dodge", 3], ["dead", 3], ["type", 2],   # type: teclear (NPC, T162)
+	["shout", 2], ["leap", 2], ["summon", 1], ["aura", 1]]
+## Ancho máximo de una hoja (píxeles por lado que aguantan las GPU de los móviles viejos).
+const MAX_SIDE := 4096
 const WEAPONS := ["sword", "axe", "mace", "dagger"]
 const SWING_WEAPONS := ["sword", "axe", "mace"]
 ## Archivos de cada capa (assets/sprites/player/).
