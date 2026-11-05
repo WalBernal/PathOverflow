@@ -8733,6 +8733,14 @@ func _test_buff_signatures() -> void:
 		_check(skills.has(id) and String(skills[id]["kind"]) == "aura", "el estilo de aura %s es de un aura que existe" % id)
 		tints[SkillFx.aura_tint(id, Color.BLACK).to_html()] = true
 	_check(tints.size() == SkillFx.AURA_STYLE.size(), "cada aura tiene su color (%d distintos)" % tints.size())
+	var was_cb := Ailments.colorblind
+	Ailments.colorblind = true
+	var cb_tints := {}
+	for id in SkillFx.AURA_STYLE:
+		cb_tints[SkillFx.aura_tint(id, Color.BLACK).to_html()] = true
+	Ailments.colorblind = was_cb
+	_check(cb_tints.size() == SkillFx.AURA_STYLE.size() and cb_tints.keys() != tints.keys(),
+		"en modo daltónico cada aura toma su color seguro y siguen distintas (%d)" % cb_tints.size())
 	var c := _new_character()
 	var em := EnemyManager.new()
 	root.add_child(em)
@@ -8780,6 +8788,9 @@ func _test_buff_signatures() -> void:
 				pl.global_position = Vector2(100, 0)
 				sc._update_effects(0.01)
 				_check((e["lag"] as Vector2).x < 100.0, "el segundo hilo de Hiperthreading va con retraso")
+				pl.global_position = Vector2(2000, 0)
+				sc._update_effects(0.01)
+				_check(e["lag"] == Vector2(2000, 0), "tras un salto largo (cambio de zona) el segundo hilo no cruza el mapa")
 			"daily_standup":
 				for k in 3:
 					pl.global_position = Vector2(60 + 20 * k, 0)

@@ -501,6 +501,16 @@ func _has_buff(effect_id: String) -> bool:
 ## que va con retraso y las huellas de Daily. Se apaga al acabarse el buff o la barrera.
 func _update_live(e: Dictionary, delta: float) -> void:
 	var pos := player.global_position
+	if pos.distance_to(e["pos"]) > 300.0:
+		# Un salto (cambio de zona o teletransporte largo): el doble no cruza el mapa
+		# y las huellas no se quedan pintadas donde ya no está el jugador.
+		if e.has("lag"):
+			e["lag"] = pos
+		if e.has("step_times"):
+			var times: PackedFloat32Array = e["step_times"]
+			times.fill(-9.0)
+			e["step_times"] = times
+			e["last_step"] = pos
 	e["pos"] = pos
 	if float(e["end"]) >= 0.0:
 		return
