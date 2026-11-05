@@ -78,6 +78,10 @@ func _run() -> void:
 		await _capture_class_gear()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("muneco"):
+		await _capture_training_dummy()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("tamano"):
 		await _capture_world_size()
 		get_tree().quit()
@@ -4414,6 +4418,58 @@ func _capture_zone_seeds() -> void:
 	sheet.save_png(ProjectSettings.globalize_path(OUT + "114_semillas_todas.png"))
 	print("Zonas: %d · disposiciones: %d · fallos de garantía: %d · plantillas: %s · %.0f ms de media, %.0f ms la más lenta" % [rows.size(), rows.size() * 5, fails, templates,
 		usec / 1000.0 / maxf(1.0, rows.size() * 5.0), slowest / 1000.0])
+
+
+## Muñeco de prácticas (T212): el servidor de pruebas del campamento recibiendo la
+## habilidad 1 de verdad, golpes de fuego y rayo y una quemadura; con la interfaz al
+## 100 % y luego al 140 % con los controles táctiles.
+func _capture_training_dummy() -> void:
+	var saved_scale: Variant = GameSettings.get_value("interface", "scale", 1.0)
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Pruebas", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.flags["llegada_campamento_vista"] = true
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var ui: GameUI = world.get("ui")
+	if ui.cutscene.visible:
+		ui.cutscene.call("_finish")
+	var dummy: TrainingDummy = world.get("training_dummy")
+	var player: Player = world.get("player")
+	var em: EnemyManager = world.get("enemies")
+	var skills: SkillController = world.get("skills")
+	GameSettings.set_value("interface", "scale", 1.0)
+	ui.apply_ui_scale()
+	for pass_i in 2:
+		if pass_i == 1:
+			GameSettings.set_value("interface", "scale", 1.4)
+			Touch.force = true
+			ui.apply_ui_scale()
+			dummy.events.clear()
+		player.global_position = dummy.spot + Vector2(-90, 20)
+		for k in 14:
+			skills.try_use(0)
+			var i := dummy.index()
+			em.hit_ailments = {"type": ["fire", "lightning"][k % 2]}
+			em.hit_index(i, 30.0, 60.0, 20.0, 150.0)
+			if k == 3:
+				em.apply_ailment(i, "burn", 200.0)
+			em.hit_ailments = {}
+			await _wait(0.2)
+		await _wait(0.3)
+		print("muñeco: %s · escala de interfaz %s · panel %s" % [TrainingPanel.lines(dummy.stats()), (ui.get("_root") as Control).scale, ui.training_panel.visible])
+		_save("212_muneco" if pass_i == 0 else "212_muneco_140_tactil")
+	Touch.force = false
+	GameSettings.set_value("interface", "scale", saved_scale)
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
 
 
 func _save(name: String) -> void:

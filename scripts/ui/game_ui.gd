@@ -61,6 +61,9 @@ static var ui_relayouts := 0
 var _waypoint_panel: WaypointPanel
 var _zone_banner: Label
 var event_log: EventLog
+## Cifras del muñeco de prácticas del campamento (T212).
+var training_panel: TrainingPanel
+const TRAINING_PANEL_Y := 56.0
 var _act_banner: PanelContainer
 var _pause_panel: Control
 var _root: Control
@@ -271,6 +274,15 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	event_log = EventLog.new()   # registro de sucesos, a la izquierda (T128)
 	event_log.position = Vector2(14, EVENT_LOG_Y)
 	_root.add_child(event_log)
+
+	training_panel = TrainingPanel.new()   # muñeco de prácticas (T212): arriba al centro
+	training_panel.visible = false
+	_root.add_child(training_panel)
+	training_panel.anchor_left = 0.5
+	training_panel.anchor_right = 0.5
+	training_panel.offset_left = -TrainingPanel.WIDTH * 0.5
+	training_panel.offset_right = TrainingPanel.WIDTH * 0.5
+	training_panel.offset_top = TRAINING_PANEL_Y
 
 	_act_banner = _build_act_banner()
 	_root.add_child(_act_banner)
@@ -1199,8 +1211,19 @@ func _update_minimap() -> void:
 	quest_tracker.max_height = QuestTracker.room(tracker_rect, hud.touch_obstacles()) if quest_tracker.compact else INF
 	if quest_tracker.max_height < QuestTracker.FOLDED_MIN:
 		quest_tracker.visible = false   # ni plegado cabe (botones muy grandes): los botones mandan
-	if event_log:   # el registro de sucesos, igual: fuera si una ventana se le encima (T128)
-		event_log.visible = not tree_screen.visible and not cutscene.visible and not _overlaps_any(_rect_in_root(event_log), windows)
+	if training_panel:   # el del muñeco (T212): cerca de él y sin nada encima
+		var others := windows.duplicate()
+		for w: Control in [inventory_panel, tips, dialogue_box, quest_tracker, minimap, touch_buttons]:
+			if w != null and w.visible:
+				others.append(_rect_in_root(w))
+		for r: Rect2 in hud.touch_obstacles():
+			others.append(r)
+		training_panel.visible = training_panel.wanted and training_panel.dummy != null and not tree_screen.visible \
+			and not cutscene.visible and not get_tree().paused and not _overlaps_any(_rect_in_root(training_panel), others)
+	if event_log:   # el registro de sucesos, igual: fuera si una ventana se le encima (T128), o el panel del muñeco (T212)
+		var log_rect := _rect_in_root(event_log)
+		event_log.visible = not tree_screen.visible and not cutscene.visible and not _overlaps_any(log_rect, windows) \
+			and not (training_panel != null and training_panel.visible and log_rect.intersects(_rect_in_root(training_panel)))
 
 
 

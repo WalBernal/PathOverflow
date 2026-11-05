@@ -1323,7 +1323,7 @@ func _damage(i: int, min_damage: float, max_damage: float, crit_chance: float, c
 	last_damage_dealt += minf(damage, lives[i])
 	_count_damage(minf(damage, lives[i]))
 	if number_events.size() < 200:
-		number_events.append([positions[i], damage, crit, ids[i]])   # números de daño (T97)
+		number_events.append([positions[i], damage, crit, ids[i], dmg_type])   # números de daño (T97); el tipo, para el muñeco (T212)
 	lives[i] -= damage
 	flashes[i] = FLASH_TIME
 	if lives[i] <= 0.0:

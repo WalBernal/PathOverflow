@@ -277,6 +277,7 @@ func _process(delta: float) -> void:
 	_check_expiring(delta)
 	_update_waves(delta)
 	_update_low_life_bark(delta)
+	_update_training_panel()
 	if not _event_fights.is_empty():
 		_update_event_fights()
 	_immune_warning = maxf(0.0, _immune_warning - delta)
@@ -462,6 +463,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 		_boss_alive = false
 	else:
 		_spawn_zone_enemies()   # en la arena del jefe, siempre: vuelve a la fase 1 con toda la vida
+	_place_training_dummy()
 	_visit = Telemetry.begin(character, enemies, zone.id, enemies.area_level)
 	skills.on_zone_changed()
 
@@ -692,6 +694,32 @@ func _reforge_weapon() -> void:
 	ui.hud.flash("Mario reforjó tu arma (%d fichas): %s." % [cost, fresh.display_name()], Color("8fe08a"))
 	Sfx.play("coin")
 	_mark_dirty()
+
+
+## Muñeco de prácticas (T212): en los campamentos con `training_dummy` (su sitio), un
+## servidor de pruebas para comparar placas y RAM sin salir; sus cifras, en el panel
+## de arriba mientras estás cerca.
+var training_dummy: TrainingDummy
+
+
+func _place_training_dummy() -> void:
+	if training_dummy:
+		training_dummy.enemies = null   # que no se vuelva a poner en la zona nueva antes de irse
+		training_dummy.queue_free()
+		training_dummy = null
+	ui.training_panel.dummy = null
+	if not zone.def.get("training_dummy") is Array:
+		return
+	training_dummy = TrainingDummy.new()
+	add_child(training_dummy)
+	move_child(training_dummy, enemies.get_index() + 1)   # encima del candado, debajo del jugador
+	training_dummy.setup(enemies, Zone._v(zone.def["training_dummy"]))
+	ui.training_panel.dummy = training_dummy
+
+
+func _update_training_panel() -> void:
+	ui.training_panel.wanted = training_dummy != null and player.is_alive() \
+		and player.global_position.distance_to(training_dummy.spot) <= TrainingDummy.PANEL_RANGE
 
 
 ## El acompañante (Companions): su bono y, en las zonas de combate, el que te sigue.
