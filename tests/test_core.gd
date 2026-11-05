@@ -235,6 +235,7 @@ func _initialize() -> void:
 	_test_move_signatures()
 	_test_spell_signatures()
 	_test_flamewar_tongues()
+	_test_buff_signatures()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -2123,7 +2124,7 @@ func _test_warcries() -> void:
 		sc._units[0]["life"] = float(sc._units[0]["max_life"]) * 0.5
 		sc._execute(SkillCalc.compute(Motherboard.new(_db.skills.skills["rollback_grito"], 1, []), c), Vector2(50, 0))
 		_check(is_equal_approx(float(sc._units[0]["life"]), float(sc._units[0]["max_life"]) * 0.8), "¡Rollback! cura un 30 %% a las invocaciones")
-	_check(sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "ring" and float(e["radius"]) >= 170.0), "el grito se ve como una onda grande")
+	_check(sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "firma" and String(e["firma"]) in shouts), "el grito se ve con su onda propia (T195)")
 	sc.free()
 	pl.free()
 	em.free()
@@ -8717,3 +8718,93 @@ func _test_flamewar_tongues() -> void:
 								if Geometry2D.triangulate_polygon(pts).is_empty():
 									bad += 1
 	_check(bad == 0, "las lenguas de llama de Flamewar siempre se pueden dibujar (%d rotas)" % bad)
+
+
+## Firmas de buffs, gritos, barrera y auras (T195): las seis se lanzan con su efecto propio
+## (las que duran, pegado al jugador hasta que se acaba el buff o la barrera) y no con el
+## anillo genérico; cada aura tiene su color, se desdibuja al apagarla y las hostiles
+## saben qué enemigos tienen dentro.
+func _test_buff_signatures() -> void:
+	var skills: Dictionary = _db.skills.skills
+	for id in SkillFx.BUFF_IDS:
+		_check(skills.has(id) and SkillFx.has_fx(id), "la firma de buff %s es de una habilidad que existe" % id)
+	var tints := {}
+	for id in SkillFx.AURA_STYLE:
+		_check(skills.has(id) and String(skills[id]["kind"]) == "aura", "el estilo de aura %s es de un aura que existe" % id)
+		tints[SkillFx.aura_tint(id, Color.BLACK).to_html()] = true
+	_check(tints.size() == SkillFx.AURA_STYLE.size(), "cada aura tiene su color (%d distintos)" % tints.size())
+	var c := _new_character()
+	var em := EnemyManager.new()
+	root.add_child(em)
+	var pl: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(pl)
+	pl.setup(c, em)
+	var sc := SkillController.new()
+	sc.player = pl
+	sc.enemies = em
+	sc.character = c
+	var u := {"pos": Vector2(30, 0), "behavior": "melee", "radius": 10.0, "life": 50.0, "max_life": 100.0, "skill_id": "prueba", "profile": {"reserve": 0.0}}
+	sc._units.append(u)
+	for id in SkillFx.BUFF_IDS:
+		sc._effects.clear()
+		pl.global_position = Vector2.ZERO
+		var p := SkillCalc.compute(Motherboard.new(skills[id], 5, []), c)
+		sc._execute(p, Vector2(80, 0))
+		var mine := sc._effects.filter(func(e: Dictionary) -> bool: return e["type"] == "firma" and e["firma"] == id)
+		_check(mine.size() == 1, "%s se lanza con su firma propia" % id)
+		_check(not sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "ring"), "%s ya no suelta el anillo genérico" % id)
+		if mine.is_empty():
+			continue
+		var e: Dictionary = mine[0]
+		if SkillFx.is_live(id):
+			_check(e["live"] and float(e["duration"]) >= float(p["duration"]), "%s dura lo que su buff" % id)
+			pl.global_position = Vector2(40, 0)
+			sc._update_effects(0.15)
+			_check(e["pos"] == Vector2(40, 0) and float(e["end"]) < 0.0, "%s sigue al jugador mientras dura" % id)
+		match id:
+			"rollback_grito":
+				_check(e["marks"].size() == 1, "¡Rollback! suelta un «+» de la invocación curada")
+			"modo_seguro":
+				sc._buff_fx_hit()
+				_check(float(e.get("hit", -9.0)) == float(e["time"]), "el hexágono de Modo Seguro destella al recibir un golpe")
+				c.remove_timed_effect("skill:modo_seguro")
+				sc._update_effects(0.05)
+				_check(float(e["end"]) >= 0.0, "Modo Seguro se apaga al acabarse el buff")
+				sc._update_effects(0.5)
+				_check(not sc._effects.has(e), "y luego desaparece")
+			"firewall_personal":
+				pl.barrier = 0.0
+				sc._update_effects(0.05)
+				_check(float(e["end"]) >= 0.0, "el muro de Firewall cae al acabarse la barrera")
+			"hiperthreading":
+				pl.global_position = Vector2(100, 0)
+				sc._update_effects(0.01)
+				_check((e["lag"] as Vector2).x < 100.0, "el segundo hilo de Hiperthreading va con retraso")
+			"daily_standup":
+				for k in 3:
+					pl.global_position = Vector2(60 + 20 * k, 0)
+					sc._update_effects(0.11)
+				_check(int(e["step_n"]) >= 2, "Daily deja huellas de prisa (%d)" % int(e["step_n"]))
+	# Auras: al activarla empieza su animación; al apagarla, su anillo se desdibuja.
+	sc._effects.clear()
+	pl.global_position = Vector2.ZERO
+	em.clear_all()
+	var i := em.index_of(em.spawn(Vector2(60, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug")))
+	em.lives[i] = 1.0e6
+	em.max_lives[i] = 1.0e6
+	for id in SkillFx.AURA_STYLE:
+		var p := SkillCalc.compute(Motherboard.new(skills[id], 5, []), c)
+		sc._execute(p, Vector2(80, 0))
+		_check(sc.is_aura_active(id) and float(sc._auras[-1]["on_t"]) == 0.0, "%s se activa con su animación" % id)
+		sc._update_effects(0.3)
+		_check(float(sc._auras[-1]["on_t"]) > 0.25, "%s lleva la cuenta de cuánto está encendida" % id)
+		if not p.get("aura_enemy", {}).is_empty():
+			_check(sc._auras[-1]["inside"].size() == 1 and sc._auras[-1]["entered"].has(em.ids[i]), "%s sabe qué enemigo tiene dentro" % id)
+		sc._execute(p, Vector2(80, 0))
+		_check(not sc.is_aura_active(id) and sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "firma" and e["firma"] == "aura_off"),
+			"%s se desdibuja al apagarla" % id)
+		_check(not sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "ring"), "%s ya no suelta anillos genéricos" % id)
+		sc._effects.clear()
+	sc.free()
+	pl.queue_free()
+	em.queue_free()

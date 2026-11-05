@@ -112,6 +112,7 @@ func _restore_auras(ids: Array) -> void:
 	for p in _profiles:
 		if not p.is_empty() and p["kind"] == "aura" and String(p["id"]) in ids:
 			var a := {"skill_id": p["id"], "profile": p, "color": DAMAGE_COLORS.get(p["damage_type"], Color.WHITE), "sig": str(p["aura_mods"]), "anchor": Vector2.INF}
+			_aura_fx_state(a, 1.0)   # ya encendida: sin la animación de activarse
 			_auras.append(a)
 			_apply_aura_effect(a)
 	_update_reservation()
@@ -292,7 +293,8 @@ func on_zone_changed() -> void:
 	for a in _auras:
 		a["anchor"] = Vector2.INF   # las auras ancladas se mudan contigo (se fijan al llegar)
 	_projectiles.clear()
-	_effects.clear()
+	# Lo que sigue al jugador mientras dura su buff (T195) se muda con él.
+	_effects.assign(_effects.filter(func(e: Dictionary) -> bool: return e.get("live", false)))
 	_pending.clear()
 	_traps.clear()
 	_devices.clear()
@@ -395,20 +397,159 @@ func _apply_aura_effect(a: Dictionary) -> void:
 func _toggle_aura(p: Dictionary, color: Color) -> void:
 	for k in _auras.size():
 		if _auras[k]["skill_id"] == p["id"]:
+			# Su anillo se desdibuja en sentido contrario donde estaba (T195).
+			var center := aura_center(_auras[k])
+			_effects.append(SkillFx.move_fx("aura_off", center, center, Vector2.RIGHT,
+				float(_auras[k]["profile"].get("aura_radius", 0.0)), SkillFx.aura_tint(String(p["id"]), color)))
 			character.remove_timed_effect("aura:" + String(p["id"]))
 			_auras.remove_at(k)
 			_remember_auras()
 			Sfx.play("aura_off", -6.0)
-			_effects.append({"type": "ring", "pos": player.global_position, "radius": 70.0, "time": 0.0, "duration": 0.4, "color": Color(color, 0.5)})
 			refresh_profiles()
 			return
 	var a := {"skill_id": p["id"], "profile": p, "color": color, "sig": str(p["aura_mods"]), "anchor": player.global_position}
+	_aura_fx_state(a, 0.0)
 	_auras.append(a)
 	_remember_auras()
 	Sfx.play("aura_on", -4.0)
-	_effects.append({"type": "ring", "pos": player.global_position, "radius": 90.0, "time": 0.0, "duration": 0.7, "color": color})
 	_apply_aura_effect(a)   # recalcula las stats y, con ello, los perfiles y la reserva
 	_update_reservation()
+
+
+# --- Firmas de buffs, gritos, barrera y auras (T195) ---
+
+## Lo que el dibujo de un aura necesita guardar: cuánto lleva encendida (`on_t`) y, en
+## las hostiles, qué enemigos tiene dentro (hasta SkillFx.AURA_MARKS, por índice y por
+## id) y desde cuándo (`entered`, id → on_t al entrar); se mira cada 0,25 s, no por fotograma.
+func _aura_fx_state(a: Dictionary, on_t: float) -> void:
+	a["on_t"] = on_t
+	a["scan"] = 0.0
+	a["inside"] = PackedInt32Array()
+	a["inside_ids"] = PackedInt32Array()
+	a["entered"] = {}
+
+
+func _update_aura_fx(delta: float) -> void:
+	for a in _auras:
+		if not a.has("on_t"):
+			_aura_fx_state(a, 1.0)
+		a["on_t"] = float(a["on_t"]) + delta
+		if a["profile"].get("aura_enemy", {}).is_empty():
+			continue
+		a["scan"] = float(a["scan"]) - delta
+		if a["scan"] > 0.0:
+			continue
+		a["scan"] = 0.25
+		var idx := PackedInt32Array()
+		var ids := PackedInt32Array()
+		var seen := {}
+		if not fx_light():   # con muchos enemigos en pantalla, sin marcas
+			var old: Dictionary = a["entered"]
+			var center := aura_center(a)
+			var r := float(a["profile"]["aura_radius"])
+			for i in enemies.positions.size():
+				if enemies.positions[i].distance_to(center) <= r:
+					var eid := enemies.ids[i]
+					seen[eid] = old.get(eid, a["on_t"])
+					if idx.size() < SkillFx.AURA_MARKS:
+						idx.append(i)
+						ids.append(eid)
+		a["inside"] = idx
+		a["inside_ids"] = ids
+		a["entered"] = seen
+
+
+## Efecto de lanzamiento de un buff, grito o barrera con firma. Los que siguen al jugador
+## mientras dura el buff ("live") los mueve _update_live; relanzarlo quita el anterior.
+func _buff_fx(p: Dictionary, origin: Vector2, device := false) -> void:
+	var id := String(p["id"])
+	var live := SkillFx.is_live(id) and not device
+	var cast := float(SkillFx.BUFF_FX.get(id, 0.4))
+	if live:
+		_effects.assign(_effects.filter(func(e: Dictionary) -> bool: return not (e["type"] == "firma" and e["firma"] == id)))
+	var extra := {"cast": cast, "live": live, "end": -1.0}
+	if live:
+		extra["duration"] = maxf(cast, float(p.get("duration", cast))) + SkillFx.BUFF_FADE
+	var marks := PackedVector2Array()
+	match id:
+		"rollback_grito":
+			if float(p.get("heal_allies", 0.0)) > 0.0:
+				for u in _units:
+					if marks.size() < SkillFx.MAX_MARKS:
+						marks.append(u["pos"])
+		"hiperthreading":
+			extra["lag"] = origin
+			extra["back"] = Vector2(-4, 0)
+		"daily_standup":
+			var steps := PackedVector2Array()
+			steps.resize(SkillFx.DAILY_STEPS)
+			var times := PackedFloat32Array()
+			times.resize(SkillFx.DAILY_STEPS)
+			times.fill(-9.0)
+			extra.merge({"steps": steps, "step_times": times, "step_n": 0, "step_t": 0.0, "last_step": origin})
+	_move_fx(p, origin, origin, Vector2.RIGHT, DAMAGE_COLORS["none"], marks, extra)
+
+
+func _has_buff(effect_id: String) -> bool:
+	for te in character.timed_effects:
+		if te["id"] == effect_id:
+			return true
+	return false
+
+
+## Lo que sigue al jugador mientras dura el buff: su posición, el doble de Hiperthreading
+## que va con retraso y las huellas de Daily. Se apaga al acabarse el buff o la barrera.
+func _update_live(e: Dictionary, delta: float) -> void:
+	var pos := player.global_position
+	e["pos"] = pos
+	if float(e["end"]) >= 0.0:
+		return
+	var id := String(e["firma"])
+	var over: bool = not player.is_alive() or float(e["time"]) >= float(e["duration"]) - SkillFx.BUFF_FADE
+	if float(e["time"]) > 0.1:
+		over = over or (player.barrier <= 0.0 if id == "firewall_personal" else not _has_buff("skill:" + id))
+	if over:
+		e["end"] = e["time"]
+		e["duration"] = float(e["time"]) + (0.3 if id == "firewall_personal" else SkillFx.BUFF_FADE)
+		return
+	match id:
+		"hiperthreading":
+			# El segundo hilo: va 0,05 s por detrás y un poco detrás según hacia dónde se mueve.
+			e["lag"] = (e["lag"] as Vector2).lerp(pos, clampf(delta / 0.05, 0.0, 1.0))
+			if player.velocity.length() > 1.0:
+				e["back"] = -player.velocity.normalized() * 4.0
+		"daily_standup":
+			e["step_t"] = float(e["step_t"]) + delta
+			if e["step_t"] >= 0.1:
+				e["step_t"] = 0.0
+				if pos.distance_to(e["last_step"]) > 2.0:
+					var n := int(e["step_n"])
+					var slot := n % SkillFx.DAILY_STEPS
+					var steps: PackedVector2Array = e["steps"]
+					var times: PackedFloat32Array = e["step_times"]
+					steps[slot] = pos + Vector2(3.0 if n % 2 == 0 else -3.0, 2.0)
+					times[slot] = e["time"]
+					e["steps"] = steps
+					e["step_times"] = times
+					e["step_n"] = n + 1
+					e["last_step"] = pos
+
+
+## Al recibir un golpe: el hexágono de Modo Seguro destella y, si la barrera de Firewall lo
+## absorbe, el ladrillo del lado del golpe suelta «DENY» (como mucho uno cada 0,25 s).
+func _buff_fx_hit() -> void:
+	for e in _effects:
+		if e["type"] != "firma" or not e.get("live", false) or float(e["end"]) >= 0.0:
+			continue
+		match String(e["firma"]):
+			"modo_seguro":
+				e["hit"] = e["time"]
+			"firewall_personal":
+				if player.barrier > 0.0 and float(e["time"]) - float(e.get("hit", -9.0)) > 0.25:
+					e["hit"] = e["time"]
+					var i := enemies.nearest_index(player.global_position, 240.0)
+					var d := (enemies.positions[i] - player.global_position).normalized() if i != -1 else Vector2.RIGHT
+					e["hit_dir"] = d if d != Vector2.ZERO else Vector2.RIGHT
 
 
 func profile(index: int) -> Dictionary:
@@ -755,7 +896,7 @@ func light_allies() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var t := Time.get_ticks_msec() / 1000.0
 	for a in _auras:
-		var c := Accessibility.aura_color(String(a["profile"].get("damage_type", "")), a["color"])
+		var c := SkillFx.aura_tint(String(a["skill_id"]), Accessibility.aura_color(String(a["profile"].get("damage_type", "")), a["color"]))
 		out.append({"pos": aura_center(a), "radius": maxf(140.0, float(a["profile"].get("aura_radius", 0.0)) * 0.6), "color": c, "power": 0.35 + 0.05 * sin(t * 2.0)})
 	for u in _units:
 		out.append({"pos": u["pos"], "radius": 70.0 + float(u["radius"]) * 2.0, "color": u["color"], "power": 0.5})
@@ -784,21 +925,28 @@ const SHOUT_COLOR := Color("e08a50")
 ## Grito (potenciador con etiqueta warcry): sus mods ya llegan a las invocaciones
 ## por las stats (daño y vida de esbirros, velocidad de autómatas); aquí se ve la
 ## onda, destella cada aliado y, si la habilidad cura (heal_allies), los cura.
-func _shout(p: Dictionary, origin: Vector2) -> void:
-	_effects.append({"type": "ring", "pos": origin, "radius": 170.0, "time": 0.0, "duration": 0.5, "color": SHOUT_COLOR})
-	_effects.append({"type": "ring", "pos": origin, "radius": 90.0, "time": 0.0, "duration": 0.35, "color": SHOUT_COLOR})
-	for group in [_units, _minions, _devices]:
-		for a in group:
-			if a.has("pos"):
-				_effects.append({"type": "ring", "pos": a["pos"], "radius": 24.0, "time": 0.0, "duration": 0.45, "color": SHOUT_COLOR})
+func _shout(p: Dictionary, origin: Vector2, device := false) -> void:
+	# Con firma (T195) cada grito tiene su onda, su texto y lo que lleva cada invocación.
+	var firma := SkillFx.has_fx(String(p["id"]))
+	if firma:
+		_buff_fx(p, origin, device)
+	else:
+		_effects.append({"type": "ring", "pos": origin, "radius": 170.0, "time": 0.0, "duration": 0.5, "color": SHOUT_COLOR})
+		_effects.append({"type": "ring", "pos": origin, "radius": 90.0, "time": 0.0, "duration": 0.35, "color": SHOUT_COLOR})
+		for group in [_units, _minions, _devices]:
+			for a in group:
+				if a.has("pos"):
+					_effects.append({"type": "ring", "pos": a["pos"], "radius": 24.0, "time": 0.0, "duration": 0.45, "color": SHOUT_COLOR})
 	if float(p.get("heal_allies", 0.0)) > 0.0:
-		heal_units(float(p["heal_allies"]))
+		heal_units(float(p["heal_allies"]), not firma)
 
 
-func heal_units(fraction: float) -> void:
+## `rings`: el anillo verde de cada curado (sin él con ¡Rollback!, que suelta sus «+»).
+func heal_units(fraction: float, rings := true) -> void:
 	for u in _units:
 		u["life"] = minf(u["max_life"], u["life"] + u["max_life"] * fraction)
-		_effects.append({"type": "ring", "pos": u["pos"], "radius": 30.0, "time": 0.0, "duration": 0.4, "color": Color("6fd36b")})
+		if rings:
+			_effects.append({"type": "ring", "pos": u["pos"], "radius": 30.0, "time": 0.0, "duration": 0.4, "color": Color("6fd36b")})
 	for d in _devices:
 		var hp: Dictionary = d.get("ally", {})
 		if not hp.is_empty():
@@ -825,6 +973,7 @@ func on_enemy_killed(pos: Vector2) -> void:
 func on_player_hit() -> void:
 	_roll_charge("buffer")
 	queue_trigger("on_hit")
+	_buff_fx_hit()
 	var chance := character.stats.get_value(Stat.RETALIATION_NOVA)
 	if chance <= 0.0 or _nova_cooldown > 0.0 or randf() * 100.0 >= chance:
 		return
@@ -1331,7 +1480,10 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 		"barrier":
 			if not device:
 				player.add_barrier(p["barrier"], p["duration"])
-			_effects.append({"type": "ring", "pos": origin, "radius": 60.0, "time": 0.0, "duration": 0.5, "color": Color("cfe8ff")})
+			if firma:
+				_buff_fx(p, origin, device)
+			else:
+				_effects.append({"type": "ring", "pos": origin, "radius": 60.0, "time": 0.0, "duration": 0.5, "color": Color("cfe8ff")})
 		"buff":
 			if not device:
 				var mods: Array[Modifier] = []
@@ -1339,7 +1491,9 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 					mods.append(Modifier.from_dict(md, "skill:" + String(p["id"])))
 				character.add_timed_effect("skill:" + String(p["id"]), mods, p["duration"])
 			if p["tags"].has(&"warcry"):
-				_shout(p, origin)
+				_shout(p, origin, device)
+			elif firma:
+				_buff_fx(p, origin, device)
 			else:
 				_effects.append({"type": "ring", "pos": origin, "radius": 45.0, "time": 0.0, "duration": 0.6, "color": Color("e8d070")})
 		"curse_area":
@@ -2556,12 +2710,18 @@ func _cast_fx(p: Dictionary, target: Vector2) -> void:
 	var dir := (target - player.global_position).normalized() if target != player.global_position else Vector2.RIGHT
 	var color: Color = Player.DOT_COLORS.get(String(p["damage_type"]), Color("e8e0d0"))
 	enemies.impact.cast(player.global_position + dir * 16.0 + Vector2(0, -24.0), SkillFx.signature(p)["cast"], color, dir)
+	if _has_buff("skill:hiperthreading"):
+		# Hiperthreading (T195): el segundo hilo suelta su propio destello, un poco detrás.
+		enemies.impact.cast(player.global_position + dir * 10.0 + dir.orthogonal() * 8.0 + Vector2(0, -24.0), SkillFx.signature(p)["cast"], color, dir)
 
 
 func _update_effects(delta: float) -> void:
+	_update_aura_fx(delta)
 	var still: Array[Dictionary] = []
 	for e in _effects:
 		e["time"] += delta
+		if e.get("live", false) and player != null:
+			_update_live(e, delta)
 		if e["time"] < e["duration"]:
 			still.append(e)
 	_effects = still
@@ -2610,6 +2770,8 @@ func _draw() -> void:
 		match e["type"]:
 			"firma":
 				SkillFx.draw_move_fx(self, e, fx_font, fx_lite, Accessibility.reduce_flashes)
+				if e.get("live", false) and not fx_lite:
+					_draw_buff_allies(e)
 			"leap":
 				# Arco del salto: una sombra que recorre el camino y una estela.
 				var a: Vector2 = e["pos"]
@@ -2791,39 +2953,83 @@ func _draw_minions() -> void:
 		draw_rect(Rect2(p + Vector2(-10, -26), Vector2(20 * life, 2)), Color("7fd07f"))
 
 
-## Aros girando alrededor del jugador (uno por aura) y una marca sobre cada aliado beneficiado.
+## Color de un aura: el suyo (T195) o, si no tiene estilo, rojo las hostiles y el de su tipo las demás.
+func _aura_tint(a: Dictionary) -> Color:
+	var hostile: bool = not a["profile"].get("aura_enemy", {}).is_empty()
+	var fallback: Color = Color("e06c6c") if hostile else Accessibility.aura_color(String(a["profile"].get("damage_type", "")), a["color"])
+	return SkillFx.aura_tint(String(a["skill_id"]), fallback)
+
+
+## Cada aura con su anillo y su motivo en el borde (T195: engranajes, placas, llaves,
+## banderas, trazos que giran hacia atrás o dientes con mira), unos aros de su color a
+## los pies del jugador (uno por aura) y lo que se ve en los aliados o enemigos de dentro.
 func _draw_auras() -> void:
 	if _auras.is_empty() or not player.is_alive():
 		return
 	var tt := Time.get_ticks_msec() / 1000.0
-	# Alcance: un círculo tenue con el radio de cada aura (las que debilitan, en rojo).
+	var light := fx_light()
+	var dim := Accessibility.reduce_flashes
+	var font := ThemeDB.fallback_font
 	for a in _auras:
 		var ar := float(a["profile"].get("aura_radius", 0.0))
-		if ar > 0.0:
-			var hostile: bool = not a["profile"].get("aura_enemy", {}).is_empty()
-			var rc: Color = Color("e06c6c") if hostile else Accessibility.aura_color(String(a["profile"].get("damage_type", "")), a["color"])
-			var ac := aura_center(a)
-			if bool(a["profile"].get("aura_anchor", false)):
-				# Torre de Señal: una antena en el centro del aura anclada.
-				draw_line(ac, ac + Vector2(0, -34), Color("8a8a96"), 3.0)
-				draw_circle(ac + Vector2(0, -36), 4.0 + sin(Time.get_ticks_msec() / 200.0), rc)
-			draw_set_transform(ac, 0.0, Vector2(1.0, 0.62))
-			draw_circle(Vector2.ZERO, ar, Color(rc, 0.035 if hostile else 0.02))
-			draw_arc(Vector2.ZERO, ar, 0.0, TAU, 64, Color(rc, 0.28), 1.5, true)
-			draw_set_transform(Vector2.ZERO)
-	var k := 0
+		if ar <= 0.0:
+			continue
+		var id := String(a["skill_id"])
+		var hostile: bool = not a["profile"].get("aura_enemy", {}).is_empty()
+		var rc := _aura_tint(a)
+		var ac := aura_center(a)
+		if bool(a["profile"].get("aura_anchor", false)):
+			# Torre de Señal: una antena en el centro del aura anclada.
+			draw_line(ac, ac + Vector2(0, -34), Color("8a8a96"), 3.0)
+			draw_circle(ac + Vector2(0, -36), 4.0 + sin(Time.get_ticks_msec() / 200.0), rc)
+		var on_t := float(a.get("on_t", 1.0))
+		SkillFx.draw_aura(self, id, ac, ar, rc, on_t, tt, hostile)
+		if hostile:
+			var idx: PackedInt32Array = a.get("inside", PackedInt32Array())
+			var ids: PackedInt32Array = a.get("inside_ids", PackedInt32Array())
+			var entered: Dictionary = a.get("entered", {})
+			var aimed := int(on_t / 0.5) % maxi(1, idx.size())
+			for j in idx.size():
+				var i := idx[j]
+				if i >= enemies.positions.size() or enemies.ids[i] != ids[j]:
+					continue   # murió o se movió de sitio en las listas desde la última mirada
+				var h := maxf(30.0, enemies.radii[i] * 2.4 + 12.0)
+				SkillFx.draw_aura_enemy(self, id, enemies.positions[i], h, on_t - float(entered.get(ids[j], -9.0)), tt, rc, j == aimed, font, light)
+		else:
+			var k := 0
+			for u in _units:
+				if u["behavior"] == "orbit" or (u["pos"] as Vector2).distance_to(ac) > ar:
+					continue
+				SkillFx.draw_aura_ally(self, id, u["pos"], float(u["radius"]), k, tt, rc, dim)
+				k += 1
+			if id == "aura_mantenimiento" and player.global_position.distance_to(ac) <= ar:
+				SkillFx.draw_aura_ally(self, id, player.global_position, 12.0, k, tt, rc, dim)
+	var n := 0
 	for a in _auras:
-		var c: Color = Accessibility.aura_color(String(a["profile"].get("damage_type", "")), a["color"])
-		var radius := 54.0 + k * 9.0
+		var c := _aura_tint(a)
+		var radius := 54.0 + n * 9.0
 		draw_set_transform(player.global_position + Vector2(0, 14), 0.0, Vector2(1.0, 0.5))
 		for q in 4:
-			var a0 := tt * (0.9 + k * 0.3) + TAU * q / 4.0
+			var a0 := tt * (0.9 + n * 0.3) + TAU * q / 4.0
 			draw_arc(Vector2.ZERO, radius, a0, a0 + 0.9, 10, Color(c, 0.55), 2.0, true)
 		draw_set_transform(Vector2.ZERO)
-		for u in _units:
-			if u["behavior"] != "orbit":
-				draw_circle((u["pos"] as Vector2) + Vector2(0, u["radius"] * 0.5), 3.0 + sin(tt * 4.0 + k) * 0.6, Color(c, 0.5))
-		k += 1
+		n += 1
+
+
+## Lo que lleva cada invocación mientras dura un grito con firma (T195).
+func _draw_buff_allies(e: Dictionary) -> void:
+	var id := String(e["firma"])
+	if id != "esta_en_produccion" and id != "daily_standup":
+		return
+	var k := 0
+	for u in _units:
+		if u["behavior"] != "orbit" and k < SkillFx.MAX_MARKS:
+			SkillFx.draw_buff_ally(self, e, u["pos"], float(u["radius"]), k, Accessibility.reduce_flashes)
+			k += 1
+	for m in _minions:
+		if k < SkillFx.MAX_MARKS:
+			SkillFx.draw_buff_ally(self, e, m["pos"], 10.0, k, Accessibility.reduce_flashes)
+			k += 1
 
 
 ## Invocaciones persistentes: cada comportamiento tiene su figura.
