@@ -232,6 +232,7 @@ func _initialize() -> void:
 	_test_quest_item_art()
 	_test_rams_everywhere()
 	_test_prologue_reachable()
+	_test_skill_sound_kinds()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -8579,3 +8580,27 @@ func _test_thermal_shock_and_status_resist() -> void:
 	pa.queue_free()
 	pb.queue_free()
 	e2.queue_free()
+
+
+## T192: cada tipo de habilidad del catálogo tiene su sonido al lanzar (ninguno cae
+## al de por defecto) y los que sonaban a disparo suenan a lo que son.
+func _test_skill_sound_kinds() -> void:
+	var skills: Dictionary = _db.skills.skills
+	for id in skills:
+		var s: Dictionary = skills[id]
+		var kind := "trap" if String(s.get("deploy", "")) != "" else String(s.get("kind", ""))
+		_check(Sfx.has_skill_sound(kind), "%s: el tipo %s tiene sonido propio al lanzar" % [id, kind])
+		var base := String(SoundMap.cast_layers(s)[0][0])
+		_check(ResourceLoader.exists(Sfx.SFX_DIR + base + ".wav"), "%s: existe su sonido %s" % [id, base])
+		if kind == "unit" or kind == "drones" or kind == "minion":
+			_check(base == "summon", "%s: la invocación suena a invocación, no a %s" % [id, base])
+		if kind == "aura":
+			_check(base == "aura_on", "%s: el aura suena a aura_on al encenderse, no a %s" % [id, base])
+	var expected := {"reinicio_forzado": "swing", "fuzzing": "swing", "core_dump": "thump", "flamewar": "fire",
+		"fork_bomb": "explosion", "stack_overflow": "cold", "rafaga_de_paquetes": "projectile", "torreta_ci": "trap",
+		"cascada_css": "cold", "derrame_aceite": "fire", "git_revert": "blink", "drones_vigilancia": "summon"}
+	for id in expected:
+		_check(String(SoundMap.cast_layers(skills[id])[0][0]) == expected[id], "%s suena a %s (suena a %s)" % [id, expected[id], SoundMap.cast_layers(skills[id])[0][0]])
+	_check(not Sfx.has_skill_sound("mine") and not Sfx.has_skill_sound("totem") and Sfx.skill_sound("inventado") == Sfx.DEFAULT_SKILL_SOUND,
+		"los tipos que no existen (mina, tótem) no tienen entrada propia")
+	_check(SoundMap.signature_layer({"kind": "quake"}) == "" and SoundMap.signature_layer({"kind": "heal"}) == "", "sin capas para los tipos quake y heal, que no existen")

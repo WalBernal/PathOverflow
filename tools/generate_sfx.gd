@@ -62,6 +62,12 @@ func _t78_stingers() -> Dictionary:
 
 
 func _initialize() -> void:
+	if OS.get_cmdline_user_args().has("t192"):
+		rng.seed = 192
+		_save(SFX_DIR + "thump.wav", _thump())
+		print("Sonido de T192 generado: thump")
+		quit()
+		return
 	if OS.get_cmdline_user_args().has("t189"):
 		rng.seed = 189
 		_save(SFX_DIR + "sting_commit.wav", _sting_commit(), 0.85)
@@ -153,6 +159,9 @@ func _initialize() -> void:
 	for name in positional:
 		_save(AMB_DIR + name + ".wav", _loopable(positional[name].call()), 0.8)
 		ambients[name] = positional[name]
+	rng.seed = 192
+	_save(SFX_DIR + "thump.wav", _thump())
+	late_sfx["thump"] = _thump
 	print("Sonidos generados: %d efectos y %d ambientes" % [sfx.size() + late_sfx.size(), ambients.size()])
 	quit()
 
@@ -606,6 +615,23 @@ func _explosion() -> PackedFloat32Array:
 		var t := float(i) / RATE
 		f = _lp(f, _noise(), 1200.0 * exp(-t * 3.0) + 100.0)
 		b[i] = f * 2.0 * _env(t, 0.003, 0.25) + sin(TAU * lerpf(90.0, 40.0, t / 0.7) * t) * 0.8 * _env(t, 0.002, 0.15)
+	return b
+
+
+## Golpe de área física (T192: Core Dump y las áreas sin elemento): un bombo grave
+## que cae de 85 a 35 Hz, con un crujido de ruido filtrado al principio y un rebote
+## sordo 60 ms después. Más corto y seco que la explosión, sin la cola de fuego.
+func _thump() -> PackedFloat32Array:
+	var b := _buf(0.45)
+	var f := 0.0
+	var ph := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		ph += lerpf(85.0, 35.0, minf(1.0, t / 0.3)) / RATE
+		f = _lp(f, _noise(), 700.0 * exp(-t * 8.0) + 120.0)
+		var body := sin(TAU * ph) * _env(t, 0.002, 0.12)
+		var rebound := sin(TAU * 60.0 * (t - 0.06)) * 0.4 * _env(t - 0.06, 0.003, 0.05) if t > 0.06 else 0.0
+		b[i] = body + rebound + f * 1.4 * _env(t, 0.001, 0.05)
 	return b
 
 

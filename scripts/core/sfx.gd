@@ -95,34 +95,45 @@ static func set_loop(wav: AudioStreamWAV, begin := 0) -> void:
 	wav.loop_end = frames
 
 
+## Sonido al lanzar de los tipos que suenan igual sea cual sea su daño (T192):
+## cuerpo a cuerpo y saltos, movimientos, buffs, invocaciones, trampas y auras
+## (el aura suena una sola vez al encenderla, con aura_on).
+const KIND_SOUNDS := {
+	"melee_area": "swing", "spin": "swing", "dash": "swing", "charge": "swing", "leap_slam": "swing",
+	"blink": "blink", "ssh": "blink", "backflip": "blink",
+	"buff": "buff", "barrier": "barrier", "aura": "aura_on",
+	"minion": "summon", "drones": "summon", "unit": "summon",
+	"trap": "trap",
+}
+## Tipos que suenan a su daño (fuego, frío, rayo o caos) → lo que suenan si son
+## físicos o sin tipo: los proyectiles, a disparo; las áreas, a golpe (thump); el
+## cono físico (Fuzzing), a tajo.
+const DAMAGE_KINDS := {
+	"projectile": "projectile", "homing": "projectile", "boomerang": "projectile", "dot_projectile": "projectile",
+	"rain": "projectile", "chain": "projectile", "beam": "projectile",
+	"channel_beam": "projectile", "channel_storm": "projectile",
+	"ground_aoe": "thump", "nova": "thump", "terrain": "thump", "degen_area": "thump", "curse_area": "thump",
+	"cone": "swing",
+}
+const ELEMENT_SOUNDS := {"fire": "fire", "cold": "cold", "lightning": "lightning", "chaos": "chaos"}
+## Lo que suena un tipo que no está en ninguna de las dos tablas.
+const DEFAULT_SKILL_SOUND := "projectile"
+
+
+## ¿Tiene `kind` sonido propio al lanzar (no cae en DEFAULT_SKILL_SOUND)?
+static func has_skill_sound(kind: String) -> bool:
+	return KIND_SOUNDS.has(kind) or DAMAGE_KINDS.has(kind)
+
+
 ## Efecto al lanzar una habilidad, según su tipo y su daño principal.
 static func skill_sound(kind: String, damage_type := "") -> String:
-	match kind:
-		"melee_area", "spin", "dash", "charge":
-			return "swing"
-		"blink", "ssh", "backflip":
-			return "blink"
-		"buff":
-			return "buff"
-		"barrier":
-			return "barrier"
-		"minion", "drones":
-			return "summon"
-		"trap", "mine", "totem":
-			return "trap"
-		"ground_aoe", "nova":
-			if damage_type == "fire":
-				return "explosion"
-	match damage_type:
-		"fire":
-			return "fire"
-		"cold":
-			return "cold"
-		"lightning":
-			return "lightning"
-		"chaos":
-			return "chaos"
-	return "projectile"
+	if KIND_SOUNDS.has(kind):
+		return String(KIND_SOUNDS[kind])
+	if not DAMAGE_KINDS.has(kind):
+		return DEFAULT_SKILL_SOUND
+	if damage_type == "fire" and kind in ["ground_aoe", "nova"]:
+		return "explosion"
+	return String(ELEMENT_SOUNDS.get(damage_type, DAMAGE_KINDS[kind]))
 
 
 ## Archivo de ambiente para un estilo de zona ("" = silencio).

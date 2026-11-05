@@ -31,7 +31,7 @@ static func skill_pitch(id: String) -> float:
 static func signature_layer(p: Dictionary) -> String:
 	var tags: Array = p.get("tags", [])
 	var kind := String(p.get("kind", ""))
-	if kind in ["ground_aoe", "nova", "quake", "leap_slam", "melee_area", "charge"] and not ("spell" in tags and String(p.get("damage_type", "")) == "cold"):
+	if kind in ["ground_aoe", "nova", "leap_slam", "melee_area", "charge"] and not ("spell" in tags and String(p.get("damage_type", "")) == "cold"):
 		return "lay_thump"
 	if "melee" in tags:
 		return "lay_whoosh"
@@ -42,14 +42,18 @@ static func signature_layer(p: Dictionary) -> String:
 			return "lay_chime"
 		"physical":
 			return "lay_click"
-	return "lay_chime" if kind in ["buff", "aura", "barrier", "heal"] else ""
+	return "lay_chime" if kind in ["buff", "aura", "barrier"] else ""
+
+
+## Volumen de la capa de tipo cuando no va a 0 dB (el encendido de un aura, como antes de T192).
+const BASE_VOLUME := {"aura_on": -4.0}
 
 
 ## Capas al lanzar: [[sonido, volumen dB, tono]].
 static func cast_layers(p: Dictionary) -> Array:
 	var pitch := skill_pitch(String(p.get("id", "")))
 	var base := Sfx.skill_sound("trap" if String(p.get("deploy", "")) != "" else String(p.get("kind", "")), String(p.get("damage_type", "")))
-	var layers: Array = [[base, 0.0, pitch]]
+	var layers: Array = [[base, float(BASE_VOLUME.get(base, 0.0)), pitch]]
 	var sig := signature_layer(p)
 	if sig != "":
 		layers.append([sig, -6.0, pitch * 1.05])

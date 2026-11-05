@@ -405,7 +405,7 @@ func _toggle_aura(p: Dictionary, color: Color) -> void:
 	var a := {"skill_id": p["id"], "profile": p, "color": color, "sig": str(p["aura_mods"]), "anchor": player.global_position}
 	_auras.append(a)
 	_remember_auras()
-	Sfx.play("aura_on", -4.0)
+	SoundMap.play_cast(p)   # aura_on + su capa de firma: la única vez que suena al encenderla (T192)
 	_effects.append({"type": "ring", "pos": player.global_position, "radius": 90.0, "time": 0.0, "duration": 0.7, "color": color})
 	_apply_aura_effect(a)   # recalcula las stats y, con ello, los perfiles y la reserva
 	_update_reservation()
@@ -1030,7 +1030,8 @@ func try_use(index: int) -> bool:
 	player.play_action(Player.action_for(p), float(p["use_time"]), Player.DOT_COLORS.get(String(p["damage_type"]), Color("c8d8ff")))
 	if not (p["kind"] in SkillCalc.AUTOMATON_KINDS or p["kind"] == "aura"):
 		_cast_fx(p, target)
-	SoundMap.play_cast(p)   # su tipo + su capa de firma, con su tono (T77)
+	if p["kind"] != "aura":   # el aura suena al encenderse o apagarse (_toggle_aura), no dos veces
+		SoundMap.play_cast(p)   # su tipo + su capa de firma, con su tono (T77)
 	if p["deploy"] != "":
 		_deploy(p, target)
 		skill_used.emit(index)
