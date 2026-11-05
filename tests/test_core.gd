@@ -232,6 +232,7 @@ func _initialize() -> void:
 	_test_quest_item_art()
 	_test_rams_everywhere()
 	_test_prologue_reachable()
+	_test_skill_preview()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -8579,3 +8580,53 @@ func _test_thermal_shock_and_status_resist() -> void:
 	pa.queue_free()
 	pb.queue_free()
 	e2.queue_free()
+
+
+## T211: la vista previa del tooltip de cada habilidad muestra algo del dibujo de
+## SkillController y, si hace daño, golpea a algún servidor de prueba en cada vuelta;
+## al acabar la vuelta empieza otra sola. Con una RAM de torreta, la torreta dispara.
+func _test_skill_preview() -> void:
+	var c := _new_character()
+	var gen := ItemGenerator.new(_db, 4)
+	var preview := SkillPreview.new()
+	root.add_child(preview)
+	var blind := PackedStringArray()
+	var harmless := PackedStringArray()
+	for id in _db.skills.skills:
+		var p := SkillCalc.compute(gen.generate_motherboard(10, id), c)
+		preview.play(p)
+		var seen := 0
+		var hits := 0
+		var t := 0.0
+		while t < SkillPreview.cycle_seconds(p) - 0.1:
+			preview.step(0.05)
+			t += 0.05
+			seen = maxi(seen, preview.visible_things())
+			hits = maxi(hits, preview.hits)
+		if seen == 0:
+			blind.append(id)
+		if hits == 0 and float(p["max_damage"]) > 0.0:
+			harmless.append("%s (%s)" % [id, p["kind"]])
+	_check(blind.is_empty(), "vista previa: toda habilidad dibuja algo (sin nada: %s)" % ", ".join(blind))
+	_check(harmless.is_empty(), "vista previa: las que hacen daño golpean a un servidor (no golpean: %s)" % ", ".join(harmless))
+	var p := SkillCalc.compute(gen.generate_motherboard(10, "rafaga_de_paquetes"), c)
+	preview.play(p)
+	for k in 28:   # 1,4 s: casi al final de la vuelta
+		preview.step(0.05)
+	var mid := preview.hits
+	for k in 7:    # 0,35 s más: ya empezó otra
+		preview.step(0.05)
+	_check(mid > 0 and preview.playing() and preview.hits < mid, "vista previa: al acabar la vuelta vuelve a empezar (%d golpes al final de una, %d al empezar la otra)" % [mid, preview.hits])
+	var turret := p.duplicate()
+	turret["deploy"] = "totem"
+	preview.play(turret)
+	var shots := 0
+	for k in 60:
+		preview.step(0.05)
+		shots = maxi(shots, preview.hits)
+	_check(shots > 0 and SkillPreview.cycle_seconds(turret) == SkillPreview.LONG_CYCLE, "vista previa: la torreta desplegada dispara sola")
+	preview.stop()
+	_check(not preview.playing() and preview.visible_things() == 0, "vista previa: al cerrar el tooltip se limpia")
+	_check(SkillPreview.start_position({"kind": "nova", "radius": 135.0}).x > SkillPreview.START.x
+		and SkillPreview.start_position({"kind": "projectile"}) == SkillPreview.START, "vista previa: la nova empieza cerca de los servidores; el proyectil, lejos")
+	preview.free()

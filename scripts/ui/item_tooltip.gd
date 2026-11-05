@@ -15,6 +15,9 @@ const UP := "6fb36b"
 const DOWN := "e06c6c"
 
 var _label: RichTextLabel
+## Placas (T211): la habilidad en bucle entre el nombre (_label) y las cifras (_body).
+var _preview: SkillPreview
+var _body: RichTextLabel
 ## Tooltips de lo equipado (comparación lado a lado; dos si es un anillo y
 ## llevas dos); los coloca este.
 var _sides: Array[ItemTooltip] = []
@@ -35,6 +38,7 @@ func _ready() -> void:
 	visible = false
 	visibility_changed.connect(func() -> void:
 		if not visible:
+			_preview.stop()   # al volver a abrirlo, la vista previa empieza desde el lanzamiento
 			for s in _sides:
 				s.hide())
 	tree_exiting.connect(func() -> void:
@@ -51,12 +55,28 @@ func _ready() -> void:
 	style.shadow_size = 8
 	style.set_content_margin_all(12)
 	add_theme_stylebox_override("panel", style)
-	_label = RichTextLabel.new()
-	_label.bbcode_enabled = true
-	_label.fit_content = true
-	_label.custom_minimum_size = Vector2(WIDTH, 0)
-	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_label)
+	# T211: en las placas, el nombre arriba, la vista previa animada y debajo el resto.
+	var box := VBoxContainer.new()
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_theme_constant_override("separation", 6)
+	add_child(box)
+	_label = _rich_label()
+	box.add_child(_label)
+	_preview = SkillPreview.new()
+	_preview.visible = false
+	box.add_child(_preview)
+	_body = _rich_label()
+	_body.visible = false
+	box.add_child(_body)
+
+
+static func _rich_label() -> RichTextLabel:
+	var l := RichTextLabel.new()
+	l.bbcode_enabled = true
+	l.fit_content = true
+	l.custom_minimum_size = Vector2(WIDTH, 0)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return l
 
 
 func _process(_delta: float) -> void:
@@ -133,7 +153,18 @@ func show_item(item: Item, character: CharacterData, compare: bool) -> void:
 	_alt_held = Input.is_key_pressed(KEY_ALT)
 	var border: StyleBoxFlat = get_theme_stylebox("panel")
 	border.border_color = Rarity.item_color(item.rarity).darkened(0.15)
-	_label.text = build_text(item, character, compare)
+	var text := build_text(item, character, compare)
+	# T211: la placa con su vista previa (no en la de al lado: ya se ve en la principal).
+	var cut := text.find("[/center]") if item is Motherboard and character and not _is_side else -1
+	_body.visible = cut != -1
+	_preview.visible = cut != -1
+	if cut != -1:
+		_body.text = text.substr(cut + "[/center]".length()).strip_edges()
+		text = text.substr(0, cut + "[/center]".length())
+		_preview.play(SkillCalc.compute(item as Motherboard, character), character)
+	else:
+		_preview.stop()
+	_label.text = text
 	if _is_side:
 		_label.text = "[center][color=#%s]· Equipado ahora ·[/color][/center]\n%s" % [GREY, _label.text]
 	elif _frozen:

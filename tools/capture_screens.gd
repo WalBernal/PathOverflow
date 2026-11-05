@@ -218,6 +218,10 @@ func _run() -> void:
 		await _benchmark()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("vista"):
+		await _capture_skill_preview()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("habilidades"):
 		await _capture_unit_art()
 		await _capture_skills_with_rams()
@@ -4415,3 +4419,89 @@ func _capture_zone_seeds() -> void:
 func _save(name: String) -> void:
 	get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path(OUT + name + ".png"))
 	print("captura: ", name)
+
+
+## Vista previa animada de la habilidad (T211): el muestrario de las 62 (cuatro hojas de
+## 20, a 0,3 y a 1,2 s de empezar), y el tooltip de una placa en la tienda, con la interfaz al 140 %
+## y en el celular.
+func _capture_skill_preview() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Vista", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	var skills: Dictionary = gd.get("items").skills.skills
+	var ids: Array = skills.keys()
+	var sheet := Control.new()
+	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sheet.draw.connect(func() -> void: sheet.draw_rect(Rect2(Vector2.ZERO, sheet.size), Color("0e1116")))
+	_swap(sheet)
+	for page in ceili(ids.size() / 20.0):
+		for child in sheet.get_children():
+			child.queue_free()
+		var grid := GridContainer.new()
+		grid.columns = 4
+		grid.position = Vector2(16, 8)
+		grid.add_theme_constant_override("h_separation", 24)
+		grid.add_theme_constant_override("v_separation", 2)
+		sheet.add_child(grid)
+		for k in range(page * 20, mini(ids.size(), page * 20 + 20)):
+			var box := VBoxContainer.new()
+			box.add_theme_constant_override("separation", 0)
+			var name := Label.new()
+			name.text = "%s · %s" % [skills[ids[k]]["name"], skills[ids[k]]["kind"]]
+			name.add_theme_font_size_override("font_size", 12)
+			box.add_child(name)
+			var preview := SkillPreview.new()
+			box.add_child(preview)
+			grid.add_child(box)
+			preview.play(SkillCalc.compute(Motherboard.new(skills[ids[k]], 10, []), c), c)
+		await _wait(0.3)
+		_save("211_muestrario_%d_a" % (page + 1))
+		await _wait(0.9)
+		_save("211_muestrario_%d_b" % (page + 1))
+	gd.current_character = c
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(3.6)
+	var ui: GameUI = world.get("ui")
+	while ui.cutscene.is_playing():   # la llegada al campamento
+		ui.cutscene.skip()
+		await _wait(0.3)
+	ui.open_shop(Economy.generate_stock(ItemGenerator.new(gd.get("items")), c.level))
+	await _wait(0.5)
+	for shot in [["rafaga_de_paquetes", 0.45], ["stack_overflow", 0.2], ["golem_hardware", 2.2], ["tormenta_tickets", 1.4]]:
+		get_viewport().warp_mouse(Vector2(620, 70))
+		ui.item_tooltip.show_item(Motherboard.new(skills[shot[0]], 10, ["DDR3", "DDR4"]), c, false)
+		await _wait(float(shot[1]))
+		_save("211_tienda_%s" % shot[0])
+		ui.item_tooltip.hide()
+	var saved_scale := float(GameSettings.get_value("interface", "scale", 1.0))
+	GameSettings.set_value("interface", "scale", 1.4)
+	ui.apply_ui_scale()
+	await _wait(0.4)
+	get_viewport().warp_mouse(Vector2(560, 40))
+	ui.item_tooltip.show_item(Motherboard.new(skills["excepcion_en_cadena"], 10, ["DDR3"]), c, true)
+	await _wait(0.3)
+	_save("211_interfaz_140")
+	ui.item_tooltip.hide()
+	GameSettings.set_value("interface", "scale", saved_scale)
+	ui.close_trade_panels()
+	# En el celular: tocar una placa de la bolsa abre el tooltip con la vista previa.
+	Touch.force = true
+	get_window().size = Vector2i(2400, 1080)
+	ui.apply_ui_scale()
+	ui.call("_on_menu_requested", "inventory")
+	await _wait(0.5)
+	get_viewport().warp_mouse(Vector2(900, 120))
+	ui.item_tooltip.show_item(Motherboard.new(skills["campo_estatica"], 10, ["DDR3"]), c, false)
+	await _wait(1.0)
+	_save("211_tactil")
+	ui.item_tooltip.hide()
+	Touch.force = false
+	get_window().size = Vector2i(1600, 900)
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
