@@ -8798,6 +8798,17 @@ func _test_unit_attacks() -> void:
 		sc._update_units(UnitArt.LEAP_TIME * 0.6)
 		_check(not u.has("leap_to") and (u["pos"] as Vector2).x > start.x + 200.0, "cae junto al objetivo")
 		_check(sc._effects.filter(func(e: Dictionary) -> bool: return e["type"] == "quake").size() > quakes, "y golpea el suelo al caer")
+		# Cambio de zona a medio salto: llega con el jugador y no acaba el salto en la zona anterior.
+		em.clear_all()
+		u["ab_cds"] = [99.0]
+		u["leap_from"] = start
+		u["leap_to"] = start + Vector2(5000, 0)
+		u["leap_t"] = 0.1
+		u["leap_hit"] = [75.0, 1.5]
+		sc.on_zone_changed()
+		sc._update_units(UnitArt.LEAP_TIME)
+		var gap := (u["pos"] as Vector2).distance_to(player.global_position)
+		_check(not u.has("leap_to") and gap < 120.0, "al cambiar de zona a medio salto llega con el jugador (%.0f px)" % gap)
 		sc.clear_units()
 	em.clear_all()
 	sc._effects.clear()

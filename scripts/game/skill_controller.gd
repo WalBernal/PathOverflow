@@ -89,6 +89,8 @@ const DEVICE_RULES := {
 const TURRET_DEVICES := ["totem", "container"]
 ## Segundos que dura el retroceso del cañón de la torreta al disparar.
 const TURRET_KICK := 0.18
+## Claves de un salto en curso de una invocación (_unit_leap_step).
+const LEAP_KEYS := ["leap_to", "leap_from", "leap_t", "leap_hit"]
 const MINION_SPEED := 240.0
 const MINION_SEARCH := 450.0
 var _mana_warning_cooldown := 0.0
@@ -320,6 +322,11 @@ func on_zone_changed() -> void:
 		k += 1
 	for u in _units:
 		u["pos"] = player.global_position + Vector2.from_angle(TAU * k / maxf(1.0, _units.size() + _minions.size())) * 55.0
+		# A medio salto o desvaneciéndose: no termina en la zona anterior.
+		for key in LEAP_KEYS:
+			u.erase(key)
+		if u.has("warp_to"):
+			u["warp_to"] = u["pos"]
 		k += 1
 	_companion = {}
 
@@ -1784,7 +1791,7 @@ func _unit_warp(u: Dictionary, to: Vector2) -> void:
 	if not u.has("warp_to"):
 		u["warp"] = UnitArt.WARP_TIME
 	u["warp_to"] = to
-	for key in ["leap_to", "leap_from", "leap_t", "leap_hit"]:
+	for key in LEAP_KEYS:
 		u.erase(key)   # si estaba saltando, el salto se pierde
 
 
@@ -1858,7 +1865,7 @@ func _update_units(delta: float) -> void:
 				corpse["dying"] = 0.0
 				corpse["move"] = 0.0
 				corpse.erase("warp")
-				for key in ["leap_to", "leap_from", "leap_t", "leap_hit"]:
+				for key in LEAP_KEYS:
 					corpse.erase(key)   # cae donde estaba, no en el aire
 				_dying_units.append(corpse)
 			unit_lost.emit(String(p["name"]))
@@ -2110,7 +2117,7 @@ func _unit_leap_step(u: Dictionary, p: Dictionary, delta: float) -> void:
 	if s < 1.0:
 		return
 	var hit: Array = u["leap_hit"]
-	for key in ["leap_to", "leap_from", "leap_t", "leap_hit"]:
+	for key in LEAP_KEYS:
 		u.erase(key)
 	_ctx(p)
 	var leap_radius := float(hit[0]) * float(p.get("area_scale", 1.0))
