@@ -739,6 +739,30 @@ static func _jit(sd: int, k: int) -> float:
 	return (hash01(sd, k) - 0.5) * 4.0
 
 
+## Hasta dónde tiene que haber llegado el cono para dibujar las lenguas (más cortas, sus
+## puntos se juntan en la rejilla y el polígono no se triangula).
+const FLAME_MIN_REACH := 40.0
+
+
+## Una lengua de llama de largo `ln` y medio ancho `w` en la dirección `d`: seis puntos
+## que tiemblan ±2 px. Los medios anchos no bajan de 6 y 4 px, así los dos lados nunca se
+## cruzan ni coinciden al pegarse a la rejilla (si no, «triangulation failed»).
+static func _flame_tongue(o: Vector2, d: Vector2, ln: float, w: float, sd: int, k: int) -> PackedVector2Array:
+	var side := d.orthogonal()
+	var w1 := maxf(6.0, w + _jit(sd, k * 9 + 1))
+	var w2 := maxf(4.0, w * 0.55 + _jit(sd, k * 9 + 2))
+	var w4 := maxf(4.0, w * 0.55 + _jit(sd, k * 9 + 4))
+	var w5 := maxf(6.0, w + _jit(sd, k * 9 + 5))
+	return PackedVector2Array([
+		_snap(o + d * 4.0),
+		_snap(o + d * maxf(ln * 0.4, 12.0) + side * w1),
+		_snap(o + d * maxf(ln * 0.75, 22.0) + side * w2),
+		_snap(o + d * maxf(ln, 32.0) + side * _jit(sd, k * 9 + 3)),
+		_snap(o + d * maxf(ln * 0.75, 22.0) - side * w4),
+		_snap(o + d * maxf(ln * 0.4, 12.0) - side * w5),
+	])
+
+
 ## Flamewar: los bocadillos «TAB» y «SPC» en los bordes del cono, tres lenguas de llama
 ## que avanzan hasta el radio con brasas «!», y un «>:(» que arde en cada enemigo.
 static func _fx_flamewar(ci: CanvasItem, e: Dictionary, s: float, font: Font, light: bool, dim: bool) -> void:
@@ -751,22 +775,12 @@ static func _fx_flamewar(ci: CanvasItem, e: Dictionary, s: float, font: Font, li
 	var sd: int = e["seed"] + (0 if dim else int(s * 30.0))
 	var reach := r * ramp(s, 0.0, 0.25)
 	var fade := 1.0 - ramp(s, 0.27, 0.4)
-	if fade > 0.0 and reach > 16.0:
+	if fade > 0.0 and reach > FLAME_MIN_REACH:
 		var w := maxf(6.0, reach * sin(half) * 0.4)
 		for k in 3:
 			var d := dir.rotated(lerpf(-half, half, k / 2.0) * 0.66)
-			var side := d.orthogonal()
 			for layer in 2:
-				var sc := 1.0 if layer == 0 else 0.55
-				var ln := reach * (1.0 if layer == 0 else 0.8)
-				var pts := PackedVector2Array([
-					_snap(o + d * 8.0),
-					_snap(o + d * ln * 0.4 + side * (w * sc + _jit(sd, k * 9 + 1))),
-					_snap(o + d * ln * 0.75 + side * (w * sc * 0.55 + _jit(sd, k * 9 + 2))),
-					_snap(o + d * ln + side * _jit(sd, k * 9 + 3)),
-					_snap(o + d * ln * 0.75 - side * (w * sc * 0.55 + _jit(sd, k * 9 + 4))),
-					_snap(o + d * ln * 0.4 - side * (w * sc + _jit(sd, k * 9 + 5))),
-				])
+				var pts := _flame_tongue(o, d, reach * (1.0 if layer == 0 else 0.8), w * (1.0 if layer == 0 else 0.55), sd, k)
 				ci.draw_colored_polygon(pts, Color(c if layer == 0 else FLAME_YELLOW, (0.7 if layer == 0 else 0.85) * fade))
 	if light:
 		return

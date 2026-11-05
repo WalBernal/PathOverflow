@@ -234,6 +234,7 @@ func _initialize() -> void:
 	_test_prologue_reachable()
 	_test_move_signatures()
 	_test_spell_signatures()
+	_test_flamewar_tongues()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -8691,3 +8692,28 @@ func _test_spell_signatures() -> void:
 	sc.free()
 	pl.queue_free()
 	em.queue_free()
+
+
+## Revisión de T194: las lenguas de Flamewar, pegadas a la rejilla, siempre se triangulan
+## (antes, con el cono corto o estrecho, dos puntos coincidían y Godot daba «triangulation failed»).
+func _test_flamewar_tongues() -> void:
+	var bad := 0
+	for sd in 30:
+		for ri in [60.0, 120.0, 200.0]:
+			for hd in [10.0, 30.0, 60.0, 120.0]:
+				var half := deg_to_rad(hd)
+				for ai in 12:
+					var dir := Vector2.from_angle(TAU * ai / 12.0 + 0.13)
+					for si in 26:
+						var reach: float = ri * SkillFx.ramp(si * 0.01, 0.0, 0.25)
+						if reach <= SkillFx.FLAME_MIN_REACH:
+							continue
+						var w := maxf(6.0, reach * sin(half) * 0.4)
+						for k in 3:
+							var d := dir.rotated(lerpf(-half, half, k / 2.0) * 0.66)
+							for layer in 2:
+								var pts := SkillFx._flame_tongue(Vector2(37.3, -11.9), d, reach * (1.0 if layer == 0 else 0.8),
+									w * (1.0 if layer == 0 else 0.55), sd * 7919 + si, k)
+								if Geometry2D.triangulate_polygon(pts).is_empty():
+									bad += 1
+	_check(bad == 0, "las lenguas de llama de Flamewar siempre se pueden dibujar (%d rotas)" % bad)
