@@ -8720,3 +8720,7 @@ func _test_inventory_quick() -> void:
 	_check(InventoryPanel.bag_title(inv) == "Bolsa  (2 / %d)  ·  1 de basura" % Inventory.BAG_SIZE, "marcas: el título de la bolsa cuenta la basura")
 	board.junk = false
 	_check(InventoryPanel.bag_title(inv) == "Bolsa  (2 / %d)" % Inventory.BAG_SIZE, "marcas: sin basura, solo la ocupación")
+	_check(InventoryPanel.gesture_in_sentence("X") == "X" and InventoryPanel.gesture_in_sentence("Click derecho") == "click derecho",
+		"marcas: en mitad de una frase el botón del mando sigue en mayúscula")
+	_check(InventoryPanel.help_text(true, false).contains("Otra vez: equipar"),
+		"marcas: la ayuda con el dedo dice que el primer toque solo enseña el objeto")

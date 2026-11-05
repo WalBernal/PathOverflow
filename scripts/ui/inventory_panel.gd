@@ -167,13 +167,18 @@ static func mark_gesture() -> String:
 	return mark_gesture_for(Touch.shown(), Gamepad.active)
 
 
+## El gesto en mitad de una frase: en minúscula, salvo el botón del mando («X»).
+static func gesture_in_sentence(gesture: String) -> String:
+	return gesture if gesture.length() <= 1 else gesture.to_lower()
+
+
 ## La ayuda del pie del inventario según el control (T213).
 static func help_text(touch: bool, pad: bool) -> String:
 	var gesture := mark_gesture_for(touch, pad)
 	if pad:
 		return "A: equipar / quitar  ·  Mantén A y mueve: arrastrar  ·  Cruceta: saltar de casilla\n%s: basura / bloqueado / sin marca  ·  Y: fijar la comparación" % gesture
 	if touch:
-		return "Toca: equipar / quitar  ·  Arrastra para mover  ·  Arrastra fuera para tirar\n%s: basura / bloqueado / sin marca" % gesture
+		return "Toca: ver  ·  Otra vez: equipar / quitar  ·  Arrastra para mover o, fuera, para tirar\n%s: basura / bloqueado / sin marca" % gesture
 	return "Arrastra para mover o equipar  ·  Click: equipar / quitar (también pociones)  ·  Arrastra fuera para tirar\n%s: basura / bloqueado / sin marca  ·  Alt: comparar con lo equipado" % gesture
 
 

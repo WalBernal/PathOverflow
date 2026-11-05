@@ -514,7 +514,7 @@ func _on_sell_dropped(_target: ItemCell, payload: Dictionary) -> void:
 		message.emit("Eso no se vende: lo vas a necesitar.")
 		return
 	if item.locked:
-		message.emit("Está bloqueado. Quítale el candado (%s en la bolsa) si de verdad lo quieres vender." % InventoryPanel.mark_gesture().to_lower())
+		message.emit("Está bloqueado. Quítale el candado (%s en la bolsa) si de verdad lo quieres vender." % InventoryPanel.gesture_in_sentence(InventoryPanel.mark_gesture()))
 		return
 	var value := Economy.sell_price(item)
 	ItemTransfer.take(character, from)
