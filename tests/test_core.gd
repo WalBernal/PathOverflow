@@ -8690,6 +8690,19 @@ func _test_unit_spawn_death() -> void:
 	sc._update_units(0.016)
 	_check((u["pos"] as Vector2).x < before.x - 5.0, "al recibir un golpe retrocede (%.1f → %.1f)" % [before.x, (u["pos"] as Vector2).x])
 	_check(float(u["hurt"]) > 0.0 and UnitArt.anim(u)["state"] == "hurt", "y queda herida un momento")
+	# Golpes seguidos (una horda) mientras aún retrocede: no la empujan más.
+	var mid: Vector2 = u["pos"]
+	for k in 5:
+		u["hurt"] = 0.15
+		sc._update_units(0.016)
+	_check((u["pos"] as Vector2).x > mid.x - 3.0, "los golpes seguidos no la arrastran (%.1f → %.1f)" % [mid.x, (u["pos"] as Vector2).x])
+	# Acabado el retroceso, el siguiente golpe sí la vuelve a empujar.
+	for k in 12:
+		sc._update_units(0.016)
+	var rest: Vector2 = u["pos"]
+	u["hurt"] = 0.15
+	sc._update_units(0.016)
+	_check((u["pos"] as Vector2).x < rest.x - 2.0, "y el siguiente golpe, ya recuperada, la vuelve a empujar")
 	# Al caer: piezas y bits que saltan, caen al suelo y se apagan.
 	u["life"] = 0.0
 	sc._update_units(0.016)

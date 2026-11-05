@@ -1804,9 +1804,12 @@ func _update_units(delta: float) -> void:
 	var lost := false
 	var still: Array[Dictionary] = []
 	for u in _units:
-		# Golpe nuevo (EnemyManager vuelve a poner «hurt» arriba): retrocede.
+		# Golpe nuevo (EnemyManager vuelve a poner «hurt» arriba): retrocede. Solo si
+		# ya acabó el retroceso anterior: rodeada por una horda, cada golpe la empujaría
+		# 7 px y se deslizaría sin parar.
 		var hurt := float(u.get("hurt", 0.0))
-		if hurt > float(u.get("hurt_last", 0.0)) + 0.001 and u["behavior"] != "orbit" and not u.has("warp_to"):
+		var hurt_last := float(u.get("hurt_last", 0.0))
+		if hurt > hurt_last + 0.001 and hurt_last <= 0.0 and u["behavior"] != "orbit" and not u.has("warp_to"):
 			_unit_knockback(u)
 		u["hurt"] = maxf(0.0, hurt - delta)
 		u["hurt_last"] = u["hurt"]
