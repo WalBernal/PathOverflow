@@ -233,6 +233,7 @@ func _initialize() -> void:
 	_test_rams_everywhere()
 	_test_prologue_reachable()
 	_test_unit_animation()
+	_test_unit_spawn_death()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -8637,6 +8638,89 @@ func _test_unit_animation() -> void:
 		sc._dying_units.append({"dying": 0.0})
 		sc.clear_units()
 		_check(sc._dying_units.is_empty(), "clear_units también quita las que caían")
+	sc.queue_free()
+	player.queue_free()
+	em.queue_free()
+
+## Aparecer y morir (T201): al relanzar se desvanece y reaparece compilándose en
+## vez de teletransportarse, al recibir un golpe retrocede, y al caer (también
+## esbirros, drones y torretas) se desarma en piezas que caen y se apagan.
+func _test_unit_spawn_death() -> void:
+	var c := CharacterData.new(_classes[5], _tree)
+	var em := EnemyManager.new()
+	root.add_child(em)
+	var player: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(player)
+	player.setup(c, em)
+	player.global_position = Vector2(50000, 50000)
+	var sc := SkillController.new()
+	root.add_child(sc)
+	c.inventory.set_board(0, Motherboard.new(_db.skills.skills["daemon_segundo_plano"], 5, []))
+	sc.setup(player, em, c)
+	var p := sc.profile(0)
+	for k in int(p["max_units"]):
+		sc._summon_unit(p, player.global_position, Color.WHITE)
+	_check(not sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "ring"), "aparece compilándose, sin el anillo de antes")
+	var u: Dictionary = sc._units[0]
+	for k in 10:
+		sc._update_units(0.05)
+	# Relanzar con todas en pie: la más dañada se desvanece donde está y reaparece junto al jugador.
+	u["pos"] = player.global_position + Vector2(400, 0)
+	u["life"] = 1.0
+	for o in sc._units:
+		if o != u:
+			o["life"] = o["max_life"]
+	var far: Vector2 = u["pos"]
+	sc._summon_unit(p, player.global_position, Color.WHITE)
+	_check(UnitArt.state_of(u) == "warp" and u["pos"] == far, "al relanzar, primero se desvanece donde estaba")
+	sc._update_units(0.1)
+	_check(u["pos"] == far, "mientras se desvanece no se teletransporta")
+	sc._update_units(0.15)
+	_check((u["pos"] as Vector2).distance_to(player.global_position) < 80.0 and UnitArt.state_of(u) == "spawn", "luego reaparece junto al jugador compilándose")
+	var a := UnitArt.anim(u)
+	_check(float(a["height"]) > 10.0, "la compilación sabe el alto de la figura")
+	# Golpe: retrocede alejándose del enemigo.
+	for k in 10:
+		sc._update_units(0.05)
+	u["pos"] = player.global_position + Vector2(-60, 0)
+	u["cd"] = 5.0   # al lado del enemigo y sin atacar: solo cuenta el retroceso
+	em.spawn((u["pos"] as Vector2) + Vector2(20, 0), Rarity.Enemy.NORMAL, -1, "", 1000.0)
+	var before: Vector2 = u["pos"]
+	u["hurt"] = 0.15
+	sc._update_units(0.016)
+	_check((u["pos"] as Vector2).x < before.x - 5.0, "al recibir un golpe retrocede (%.1f → %.1f)" % [before.x, (u["pos"] as Vector2).x])
+	_check(float(u["hurt"]) > 0.0 and UnitArt.anim(u)["state"] == "hurt", "y queda herida un momento")
+	# Al caer: piezas y bits que saltan, caen al suelo y se apagan.
+	u["life"] = 0.0
+	sc._update_units(0.016)
+	_check(sc._debris.size() >= 8, "al caer se desarma en piezas y bits (%d)" % sc._debris.size())
+	_check(sc._debris.any(func(d: Dictionary) -> bool: return d["bit"]) and sc._debris.any(func(d: Dictionary) -> bool: return not d["bit"]), "hay piezas y bits")
+	for k in 40:
+		UnitArt.update_debris(sc._debris, 0.02)
+	_check(sc._debris.all(func(d: Dictionary) -> bool: return float(d["h"]) == 0.0), "las piezas acaban en el suelo")
+	for k in 20:
+		sc._update_units(0.05)
+	_check(sc._debris.is_empty(), "y se apagan")
+	# Proceso Hijo, Drones de Vigilancia y torretas también se desarman al caducar.
+	sc._minions.append({"life": 0.01, "cd": 1.0, "phase": 0.0, "pos": Vector2.ZERO, "color": Color.WHITE, "profile": {}})
+	sc._update_minions(0.05)
+	_check(not sc._debris.is_empty(), "el Proceso Hijo se desarma al terminar")
+	sc._debris.clear()
+	sc._drones.append({"life": 0.01, "next": 1.0, "angle": 0.0, "color": Color.WHITE, "profile": {}})
+	sc._update_drones(0.05)
+	_check(not sc._debris.is_empty(), "el dron de vigilancia se desarma al caducar")
+	sc._debris.clear()
+	sc._devices.append({"kind": "totem", "pos": Vector2.ZERO, "life": 0.01, "armed_in": 0.0, "color": Color.WHITE})
+	sc._devices.append({"kind": "container", "pos": Vector2(100, 0), "life": 9.0, "armed_in": 0.0, "color": Color.WHITE,
+		"ally": {"life": 0.0, "max_life": 10.0}, "profile": {"id": "x"}})
+	sc._update_devices(0.05)
+	_check(sc._devices.is_empty() and sc._debris.size() >= 20, "la torreta que caduca y el contenedor destruido se desarman (%d)" % sc._debris.size())
+	# Tope de piezas para el rendimiento.
+	for k in 40:
+		UnitArt.shatter(sc._debris, Vector2.ZERO, 60.0, [Color.WHITE], 10, 10)
+	_check(sc._debris.size() == UnitArt.DEBRIS_MAX, "nunca más de %d piezas a la vez" % UnitArt.DEBRIS_MAX)
+	sc.clear_units()
+	_check(sc._debris.is_empty(), "clear_units también quita las piezas")
 	sc.queue_free()
 	player.queue_free()
 	em.queue_free()

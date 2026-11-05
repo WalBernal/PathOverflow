@@ -9,11 +9,31 @@ class_name UnitArt
 ## su progreso, la fase de caminar (solo avanza al moverse) y la escala de la
 ## unidad. Sin `anim` se dibuja como siempre: mirando a la derecha y quieta.
 
-const STATES := ["idle", "walk", "attack", "spawn", "hurt", "die"]
+const STATES := ["idle", "walk", "attack", "spawn", "warp", "hurt", "die"]
 ## Duración de cada estado con tiempo propio.
 const SPAWN_TIME := 0.4
 const ATTACK_TIME := 0.25
 const DIE_TIME := 0.35
+## Al relanzar (o al quedarse atrás) se desvanece en bits y reaparece compilándose.
+const WARP_TIME := 0.2
+## Piezas y bits al desarmarse (T201): cuánto duran, cómo caen y cuántas a la vez como mucho.
+const DEBRIS_TIME := 0.9
+const DEBRIS_GRAVITY := 1100.0
+const DEBRIS_MAX := 160
+const BIT_COLOR := Color("3cff6a")
+## Colores de las piezas de cada figura (el de la habilidad se añade al desarmarla).
+const DEBRIS_COLORS := {
+	"robot_centinela": [Color("6e7480"), Color("4a4f5c")],
+	"daemon_segundo_plano": [Color("b8322a"), Color("f0e0c0")],
+	"golem_hardware": [Color("5a5650"), Color("b8b8b0")],
+	"mainframe_titan": [Color("2c3038"), Color("4a4f5c")],
+	"bot_pruebas": [Color("e8c040"), Color("2a2a2a")],
+	"mina_rodante": [Color("26262c"), Color("8a8a96")],
+	"proceso_hijo": [Color("2f4a3a"), Color("b8b8b0")],
+	"dron": [Color("3a3f4a"), Color("8a8a96")],
+	"torreta": [Color("23262e"), Color("4a4f5c")],
+	"contenedor": [Color("1d63a8"), Color("8ac4f0")],
+}
 ## Tras atacar o fijar un objetivo, cuánto sigue mirándolo aunque se mueva.
 const LOOK_TIME := 0.35
 ## Fase de caminar por píxel recorrido (a 220 px/s, ~1,2 zancadas por segundo).
@@ -50,8 +70,12 @@ static func draw(ci: CanvasItem, skill_id: String, behavior: String, p: Vector2,
 		var aim: Vector2 = anim.get("aim", Vector2.RIGHT)
 		_aim = Vector2(aim.x * _flip, aim.y).normalized() if aim.length() > 0.01 else Vector2.RIGHT
 		_focus = bool(anim.get("focus", false))
-		_base = Transform2D(0.0, _state_scale(String(anim.get("state", "idle")), float(anim.get("t", 0.0)), ph) * float(anim.get("scale", 1.0)) * Vector2(_flip, 1.0), 0.0,
-			p + Vector2(_state_shift(String(anim.get("state", "idle")), float(anim.get("t", 0.0))) * _flip, 0.0))
+		var state := String(anim.get("state", "idle"))
+		var t := float(anim.get("t", 0.0))
+		# Herida: además del retroceso, se inclina hacia atrás.
+		var tilt := -0.14 * sin(t * PI) * _flip if state == "hurt" else 0.0
+		_base = Transform2D(tilt, _state_scale(state, t, ph) * float(anim.get("scale", 1.0)) * Vector2(_flip, 1.0), 0.0,
+			p + Vector2(_state_shift(state, t) * _flip, 0.0))
 		ci.draw_set_transform_matrix(_base)
 		at = Vector2.ZERO
 	_figure(ci, skill_id, behavior, at, ph, c)
@@ -59,6 +83,12 @@ static func draw(ci: CanvasItem, skill_id: String, behavior: String, p: Vector2,
 		ci.draw_set_transform_matrix(Transform2D.IDENTITY)
 		_base = Transform2D.IDENTITY
 		_flip = 1.0
+		# Aparecer y reaparecer: bits que llegan (o se van) y la línea de compilación.
+		var st := String(anim.get("state", ""))
+		if st == "spawn" or st == "warp":
+			var tt := float(anim.get("t", 0.0))
+			_compile(ci, p + Vector2(0.0, float(anim.get("lift", 0.0))), tt if st == "spawn" else 1.0 - tt,
+				float(anim.get("height", 30.0)), c)
 
 
 static func _figure(ci: CanvasItem, skill_id: String, behavior: String, p: Vector2, ph: float, c: Color) -> void:
@@ -120,15 +150,30 @@ static func anim(u: Dictionary) -> Dictionary:
 			t = 1.0 - clampf(float(u.get("hurt", 0.0)) / 0.15, 0.0, 1.0)
 		"die":
 			t = float(u.get("dying", 0.0)) / DIE_TIME
+		"warp":
+			t = 1.0 - float(u.get("warp", 0.0)) / WARP_TIME
+	var sc := float(u.get("scale", 1.0))
+	var r := float(u.get("radius", 12.0))
+	var orbit := String(u.get("behavior", "")) == "orbit"
 	return {"facing": float(u.get("facing", 1.0)), "aim": u.get("aim", Vector2.RIGHT), "state": state, "t": clampf(t, 0.0, 1.0),
-		"walk": float(u.get("walk", 0.0)), "move": float(u.get("move", 0.0)), "scale": float(u.get("scale", 1.0)),
-		"focus": float(u.get("look", 0.0)) > 0.0}
+		"walk": float(u.get("walk", 0.0)), "move": float(u.get("move", 0.0)), "scale": sc,
+		"focus": float(u.get("look", 0.0)) > 0.0,
+		# Alto de la figura (y, si orbita, cuánto bajan sus pies desde el centro) para la compilación.
+		"height": figure_height(u), "lift": r * sc if orbit else 0.0}
+
+
+## Alto aproximado de la figura en el mundo (para compilarla y desarmarla).
+static func figure_height(u: Dictionary) -> float:
+	var r := float(u.get("radius", 12.0)) * float(u.get("scale", 1.0))
+	return r * 2.0 if String(u.get("behavior", "")) == "orbit" else r * 2.4
 
 
 ## Estado de animación, de más a menos prioritario.
 static func state_of(u: Dictionary) -> String:
 	if u.has("dying"):
 		return "die"
+	if float(u.get("warp", 0.0)) > 0.0:
+		return "warp"
 	if float(u.get("spawn", 0.0)) > 0.0:
 		return "spawn"
 	if float(u.get("atk", 0.0)) > 0.0:
@@ -185,6 +230,88 @@ static func scale_for(variant: String, monolith: bool, microservices: bool) -> f
 	return s
 
 
+# --- Aparecer y morir (T201) ---
+
+## Compilación: bits que vuelan desde alrededor hasta su sitio en el cuerpo, uno
+## tras otro, y una línea que sube de los pies a la cabeza (t de 0 a 1). Al
+## revés (t de 1 a 0), los bits se van: así se desvanece al reaparecer.
+static func _compile(ci: CanvasItem, feet: Vector2, t: float, height: float, c: Color) -> void:
+	if t >= 1.0:
+		return
+	var w := maxf(8.0, height * 0.45)
+	var line := feet + Vector2(0.0, -height * t)
+	ci.draw_line(line - Vector2(w, 0.0), line + Vector2(w, 0.0), Color(BIT_COLOR, 0.8 * (1.0 - t)), 2.0)
+	for k in 10:
+		var s := clampf(t * 1.6 - k * 0.06, 0.0, 1.0)   # cada bit sale un poco después
+		if s >= 1.0:
+			continue
+		var a := k * 2.39996   # ángulo áureo: repartidos sin azar (no tiemblan entre fotogramas)
+		var from := feet + Vector2(cos(a) * (w + 26.0), -height * 0.5 + sin(a) * (height * 0.5 + 18.0))
+		var to := feet + Vector2(cos(a * 1.7) * w * 0.5, -height * (0.1 + 0.8 * fmod(k * 0.37, 1.0)))
+		var q := from.lerp(to, s * s * (3.0 - 2.0 * s))
+		ci.draw_rect(Rect2(q - Vector2(1.5, 1.5), Vector2(3, 3)), Color(BIT_COLOR if k % 2 == 0 else c, 1.0 - 0.6 * s))
+
+
+## Colores de las piezas de una figura: los suyos y el de la habilidad.
+static func debris_colors(key: String, c: Color) -> Array:
+	var cols: Array = DEBRIS_COLORS.get(key, [Color("3a3f4a"), Color("8a8f9c")]).duplicate()
+	cols.append(c)
+	return cols
+
+
+## Desarma una figura: añade a `out` piezas (cuadraditos que giran) y bits que
+## saltan de su cuerpo (de `lift` a `lift + height` sobre los pies) y caen al
+## suelo, rebotan y se apagan. Si ya hay DEBRIS_MAX, no añade más.
+static func shatter(out: Array, feet: Vector2, height: float, cols: Array, pieces: int, bits: int, lift := 0.0) -> void:
+	var n := mini(pieces + bits, DEBRIS_MAX - out.size())
+	var big := clampf(height / 30.0, 0.7, 2.2)
+	for k in n:
+		var bit := k >= pieces
+		out.append({"pos": feet + Vector2(randf_range(-0.3, 0.3) * height, randf_range(-5.0, 5.0)),
+			"h": lift + randf_range(0.2, 0.95) * height, "vh": randf_range(60.0, 180.0),
+			"vel": Vector2(randf_range(-110.0, 110.0), randf_range(-25.0, 25.0)) * (0.7 + 0.3 * big),
+			"rot": randf() * TAU, "spin": randf_range(-14.0, 14.0), "t": 0.0, "bit": bit,
+			"size": 2.5 if bit else randf_range(3.0, 6.0) * big,
+			"col": (BIT_COLOR if k % 2 == 0 else cols[cols.size() - 1]) if bit else cols[k % cols.size()]})
+
+
+## Avanza las piezas: caen, rebotan una vez, se paran y se quitan al apagarse.
+static func update_debris(arr: Array, delta: float) -> void:
+	for i in range(arr.size() - 1, -1, -1):
+		var d: Dictionary = arr[i]
+		d["t"] += delta
+		if d["t"] >= DEBRIS_TIME:
+			arr.remove_at(i)
+			continue
+		if d["h"] > 0.0 or d["vh"] > 0.0:
+			d["vh"] -= DEBRIS_GRAVITY * delta
+			d["h"] += d["vh"] * delta
+			d["pos"] += d["vel"] * delta
+			d["rot"] += d["spin"] * delta
+			if d["h"] <= 0.0:
+				d["h"] = 0.0
+				if d["vh"] < -120.0:
+					d["vh"] = -d["vh"] * 0.3   # rebote
+					d["vel"] *= 0.5
+					d["spin"] *= 0.5
+				else:
+					d["vh"] = 0.0
+
+
+static func draw_debris(ci: CanvasItem, arr: Array) -> void:
+	for d in arr:
+		var a := 1.0 - smoothstep(0.6, 1.0, float(d["t"]) / DEBRIS_TIME)
+		var col: Color = d["col"]
+		var q: Vector2 = d["pos"] + Vector2(0.0, -float(d["h"]))
+		var s: float = d["size"]
+		if d["bit"]:
+			ci.draw_rect(Rect2(q - Vector2(1.0, 1.5), Vector2(2.0, 3.0)), Color(col, a))
+			continue
+		var ax := Vector2.from_angle(d["rot"]) * s * 0.5
+		var ay := ax.orthogonal()
+		ci.draw_colored_polygon(PackedVector2Array([q - ax - ay, q + ax - ay, q + ax + ay, q - ax + ay]), Color(col, a))
+
+
 ## Deformación del cuerpo según el estado (pivote en los pies): respira quieta,
 ## crece con rebote al aparecer, se aplasta al atacar y se hunde al morir.
 static func _state_scale(state: String, t: float, ph: float) -> Vector2:
@@ -197,6 +324,12 @@ static func _state_scale(state: String, t: float, ph: float) -> Vector2:
 			return Vector2(1.0 + 0.08 * hit, 1.0 - 0.06 * hit)
 		"die":
 			return Vector2(1.0 + 0.3 * t, maxf(0.05, 1.0 - 0.9 * t))
+		"warp":
+			# Se desvanece estrechándose en una línea de bits antes de reaparecer.
+			return Vector2(maxf(0.05, 1.0 - 0.95 * t), 1.0 + 0.2 * t)
+		"hurt":
+			var k := sin(t * PI)
+			return Vector2(1.0 - 0.06 * k, 1.0 + 0.04 * k)
 		"idle":
 			var breath := sin(ph * 0.35)
 			return Vector2(1.0 - 0.015 * breath, 1.0 + 0.025 * breath)
@@ -209,7 +342,7 @@ static func _state_shift(state: String, t: float) -> float:
 		"attack":
 			return sin(t * PI) * 4.0
 		"hurt":
-			return -sin(t * PI) * 3.0
+			return -sin(t * PI) * 6.0
 	return 0.0
 
 

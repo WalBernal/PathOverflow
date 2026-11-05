@@ -221,6 +221,7 @@ func _run() -> void:
 	if OS.get_cmdline_user_args().has("invocaciones"):
 		await _capture_unit_art()
 		await _capture_unit_states()
+		await _capture_unit_life()
 		get_tree().quit()
 		return
 	if OS.get_cmdline_user_args().has("habilidades"):
@@ -4460,3 +4461,60 @@ func _capture_unit_states() -> void:
 		_swap(sheet)
 		await _wait(0.5)
 		_save("200_invocaciones_estados_%d" % (page + 1))
+
+## Aparecer y morir (T201): compilación de bits, desvanecerse al relanzar, golpe
+## recibido y desarmarse en piezas (también torreta, contenedor, Proceso Hijo y dron).
+func _capture_unit_life() -> void:
+	seed(201)
+	var gd: Node = get_node("/root/GameData")
+	var skills: Dictionary = gd.get("items").skills.skills
+	var units: Array = []
+	for id in skills:
+		if skills[id]["kind"] == "unit" and units.size() < 5:
+			units.append(skills[id])
+	var cols := [["compila 25 %", {"state": "spawn", "t": 0.25}], ["compila 60 %", {"state": "spawn", "t": 0.6}],
+		["se va (relanza)", {"state": "warp", "t": 0.5}], ["golpe", {"state": "hurt", "t": 0.5}],
+		["se desarma", {"state": "die", "t": 0.4}], ["piezas 0,15 s", {}], ["piezas 0,5 s", {}]]
+	# Piezas simuladas de cada figura a los 0,15 s y a los 0,5 s.
+	var debris: Array = []
+	for i in units.size():
+		for k in [5, 6]:
+			var arr: Array = []
+			var feet := Vector2(150 + k * 150, 130.0 + i * 128.0)
+			var u := {"radius": float(units[i]["unit"].get("radius", 12.0)), "behavior": units[i]["unit"]["behavior"], "scale": 1.5}
+			UnitArt.shatter(arr, feet, UnitArt.figure_height(u), UnitArt.debris_colors(units[i]["id"], Color(units[i].get("icon", {}).get("color", "c8c8c8"))), 12, 12)
+			for f in (8 if k == 5 else 25):
+				UnitArt.update_debris(arr, 0.02)
+			debris.append_array(arr)
+	var devices: Array = []
+	var dev_keys := ["proceso_hijo", "dron", "torreta", "contenedor"]
+	for k in dev_keys.size():
+		var arr: Array = []
+		UnitArt.shatter(arr, Vector2(260 + k * 300, 860), 40.0, UnitArt.debris_colors(dev_keys[k], Color("6fd36b")), 8, 8, 30.0 if dev_keys[k] == "dron" else 0.0)
+		for f in 10:
+			UnitArt.update_debris(arr, 0.02)
+		devices.append_array(arr)
+	var sheet := Control.new()
+	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sheet.draw.connect(func() -> void:
+		sheet.draw_rect(Rect2(Vector2.ZERO, sheet.size), Color("1d2a26"))
+		var font := sheet.get_theme_default_font()
+		for k in cols.size():
+			sheet.draw_string(font, Vector2(90 + k * 150, 28), cols[k][0], HORIZONTAL_ALIGNMENT_CENTER, 120, 13)
+		for i in units.size():
+			var y := 130.0 + i * 128.0
+			var col := Color(units[i].get("icon", {}).get("color", "c8c8c8"))
+			sheet.draw_string(font, Vector2(8, y - 20), units[i]["name"], HORIZONTAL_ALIGNMENT_LEFT, 140, 12)
+			for k in 5:
+				var a: Dictionary = {"facing": 1.0, "aim": Vector2.RIGHT, "t": 0.0, "walk": 0.0, "move": 0.0, "scale": 1.5}
+				a.merge(cols[k][1], true)
+				var u := {"radius": float(units[i]["unit"].get("radius", 12.0)), "behavior": units[i]["unit"]["behavior"], "scale": 1.5}
+				a["height"] = UnitArt.figure_height(u)
+				a["lift"] = u["radius"] * 2.0 if u["behavior"] == "orbit" else 0.0
+				UnitArt.draw(sheet, units[i]["id"], units[i]["unit"]["behavior"], Vector2(150 + k * 150, y), 2.0, col, a)
+		UnitArt.draw_debris(sheet, debris)
+		sheet.draw_string(font, Vector2(8, 770), "Proceso Hijo · Dron de Vigilancia · Torreta CI · Contenedor Docker (0,2 s)", HORIZONTAL_ALIGNMENT_LEFT, -1, 13)
+		UnitArt.draw_debris(sheet, devices))
+	_swap(sheet)
+	await _wait(0.5)
+	_save("201_aparecer_y_morir")
