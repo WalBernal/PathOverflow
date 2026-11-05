@@ -1489,7 +1489,8 @@ func _nova_extra(p: Dictionary) -> Dictionary:
 			var rings := []
 			for t in spent:
 				rings.append(Charges.color(t))
-			return {"rings": rings, "crit": spent.has("overclock")}
+			# Con Memoria sin ECC el Overclock no da críticos: sin destello.
+			return {"rings": rings, "crit": spent.has("overclock") and float(p["crit_chance"]) >= 100.0}
 	return {}
 
 
