@@ -20,7 +20,8 @@ const SIGNATURES := {
 	"rafaga_de_paquetes": {"projectile": "packet"},
 	"paquete_rastreador": {"projectile": "tracker", "trail": "dots"},
 	"corrupcion_datos": {"projectile": "glitch"},
-	"ping_letal": {"projectile": "bolt", "cast": "spark"},
+	# Ping Letal (T194): un punto con arcos de radar y, al golpear, su tiempo de respuesta.
+	"ping_letal": {"projectile": "sonar", "cast": "spark", "hit_fx": "ping_letal_hit"},
 	"torreta_ci": {"projectile": "bolt"},
 	"cascada_css": {"projectile": "shard"},
 }
@@ -98,6 +99,14 @@ static func draw_projectile(ci: CanvasItem, pos: Vector2, dir: Vector2, color: C
 			ci.draw_colored_polygon(quad.call(2, 6, -4, 4), core)
 			if shape == "tracker" and fmod(time * 4.0, 1.0) < 0.5:
 				ci.draw_colored_polygon(quad.call(-4, -2, -8, -4), Color("ff6a6a"))   # la antena que parpadea
+		"sonar":
+			# Ping (T194): un punto con dos arcos de radar delante que se redibujan cada 0,1 s.
+			var pulse := 0.0 if dim else float(int(time * 10.0) % 2) * 2.0
+			var ang := dir.angle()
+			ci.draw_line(at - dir * 12.0, at, Color(color, 0.4), 2.0)
+			for k in 2:
+				ci.draw_arc(at, 8.0 + 6.0 * k + pulse, ang - PI / 6.0, ang + PI / 6.0, 6, Color(color, 0.9 - 0.3 * k), 2.0)
+			ci.draw_rect(Rect2(at - Vector2(2, 2), Vector2(4, 4)), core if dim else Color.WHITE)
 		_:
 			ci.draw_line(at - dir * 18.0, at, Color(color, 0.5), 4.0, true)
 			ci.draw_circle(at, 5.0, color)
@@ -135,12 +144,19 @@ static func has_move_fx(id: String) -> bool:
 	return MOVE_FX.has(id)
 
 
+## Si la habilidad tiene firma propia (de cuerpo a cuerpo y movimiento o de hechizo).
+static func has_fx(id: String) -> bool:
+	return MOVE_FX.has(id) or SPELL_IDS.has(id)
+
+
 ## Efecto «firma» para SkillController._effects. `marks`: dónde estaban los enemigos
-## golpeados; `ok`/`err`: verde y rojo (los del modo daltónico si está puesto).
+## golpeados; `ok`/`err`: verde y rojo (los del modo daltónico si está puesto). `extra`
+## puede cambiar la firma (p. ej. «ping_letal_hit», el golpe) y la duración.
 static func move_fx(id: String, pos: Vector2, end: Vector2, dir: Vector2, radius: float, color: Color,
 		marks := PackedVector2Array(), extra := {}) -> Dictionary:
-	var e := {"type": "firma", "firma": id, "pos": pos, "end": end, "dir": dir, "radius": radius, "time": 0.0,
-		"duration": float(MOVE_FX.get(id, 0.4)), "color": color, "marks": marks, "seed": randi() % 100000,
+	var key := String(extra.get("firma", id))
+	var e := {"type": "firma", "firma": key, "pos": pos, "end": end, "dir": dir, "radius": radius, "time": 0.0,
+		"duration": float(MOVE_FX.get(key, SPELL_FX.get(key, 0.4))), "color": color, "marks": marks, "seed": randi() % 100000,
 		"ok": Color("5cb85c"), "err": Color("d9534f")}
 	e.merge(extra, true)
 	return e
@@ -180,6 +196,28 @@ static func draw_move_fx(ci: CanvasItem, e: Dictionary, font: Font, light := fal
 			_fx_ssh(ci, e, s, light, dim)
 		"git_revert":
 			_fx_revert_jump(ci, e, s)
+		"ping_letal":
+			_fx_ping_cast(ci, e, s, font, light, dim)
+		"ping_letal_hit":
+			_fx_ping_hit(ci, e, s, font, light)
+		"fork_bomb":
+			_fx_fork_bomb(ci, e, s, light, dim)
+		"stack_overflow":
+			_fx_stack(ci, e, s, light, dim)
+		"flamewar":
+			_fx_flamewar(ci, e, s, font, light, dim)
+		"rayo_produccion":
+			_fx_rayo_charge(ci, e, s, font, light)
+		"rayo_produccion_fire":
+			_fx_rayo_fire(ci, e, s, font, light, dim)
+		"deadlock":
+			_fx_deadlock(ci, e, s, light, dim)
+		"excepcion_en_cadena":
+			_fx_exception(ci, e, s, font, light, dim)
+		"fuga_de_memoria":
+			_fx_leak_drop(ci, e, s)
+		"core_dump":
+			_fx_core_dump(ci, e, s, font, light, dim)
 
 
 ## Barrido: tres arcos que barren 360° desde el cursor, tokens que saltan y una
@@ -533,3 +571,468 @@ static func draw_revert_zone(ci: CanvasItem, pos: Vector2, r: float, col: Color,
 	# El fantasma: parpadea cada 0,5 s (fijo con Menos destellos).
 	var blink := 0.5 if dim or fmod(life, 1.0) < 0.5 else 0.3
 	_silhouette(ci, pos, Color(col.lightened(0.3), blink * fade))
+
+
+# --- Firmas de hechizos y proyectiles (T194) ---
+# Las nueve de la ficha de T191 que compartían la forma de su tipo de daño o el efecto
+# genérico de su kind (anillo, cono, rayo, zigzag, marcador o charco). Van por el mismo
+# camino que las de T193: un {"type": "firma"} en SkillController._effects que se dibuja
+# con draw_move_fx; el charco de Fuga de Memoria, con draw_leak_zone. Algunas tienen un
+# segundo efecto para el golpe («ping_letal_hit», «rayo_produccion_fire»).
+
+## Las habilidades con firma de hechizo.
+const SPELL_IDS := ["ping_letal", "fork_bomb", "stack_overflow", "flamewar", "rayo_produccion",
+	"deadlock", "excepcion_en_cadena", "fuga_de_memoria", "core_dump"]
+## Duración (s) de cada efecto; las de retardo, aturdimiento o saltos la cambian al lanzarse.
+const SPELL_FX := {
+	"ping_letal": 0.3, "ping_letal_hit": 0.5, "fork_bomb": 0.95, "stack_overflow": 0.75, "flamewar": 0.42,
+	"rayo_produccion": 0.45, "rayo_produccion_fire": 0.35, "deadlock": 1.75, "excepcion_en_cadena": 0.5,
+	"fuga_de_memoria": 0.25, "core_dump": 0.62,
+}
+const FLAME_YELLOW := Color("ffc04a")
+const DUMP_GREY := Color("c8ccd4")
+const BUBBLE_DARK := Color("1e2229")
+## Separación de las celdas de memoria del charco de Fuga de Memoria (celdas de 6×6).
+const LEAK_PITCH := 10.0
+
+
+## Rectángulo girado: x a lo largo de `dir`, y a lo ancho.
+static func _oriented(at: Vector2, dir: Vector2, x0: float, x1: float, y0: float, y1: float) -> PackedVector2Array:
+	var side := dir.orthogonal()
+	return PackedVector2Array([at + dir * x0 + side * y0, at + dir * x1 + side * y0, at + dir * x1 + side * y1, at + dir * x0 + side * y1])
+
+
+## Bocadillo de comentario (rectángulo y piquito) con su texto; `w` es el ancho.
+static func _speech(ci: CanvasItem, font: Font, at: Vector2, text: String, w: float, col: Color, text_col: Color, size := TEXT_1X) -> void:
+	var q := _snap(at)
+	var half := Vector2(_snap(Vector2(w * 0.5, 0)).x, 6)
+	ci.draw_rect(Rect2(q - half, half * 2.0), Color(BUBBLE_DARK, 0.85 * col.a))
+	ci.draw_rect(Rect2(q - half, half * 2.0), col, false, 2.0)
+	ci.draw_colored_polygon(PackedVector2Array([q + Vector2(-4, 6), q + Vector2(2, 6), q + Vector2(-4, 10)]), col)
+	if text != "":
+		_label(ci, font, q + Vector2(0, 4), text, size, text_col)
+
+
+## Un «!» de 2 px de ancho (barra y punto).
+static func _bang(ci: CanvasItem, at: Vector2, col: Color) -> void:
+	ci.draw_rect(Rect2(at + Vector2(-1, -4), Vector2(2, 4)), col)
+	ci.draw_rect(Rect2(at + Vector2(-1, 2), Vector2(2, 2)), col)
+
+
+## Ping Letal al lanzar: «64 bytes» sobre el jugador y un destello cuadrado en la mano.
+static func _fx_ping_cast(ci: CanvasItem, e: Dictionary, s: float, font: Font, light: bool, dim: bool) -> void:
+	var a: Vector2 = e["pos"]
+	var dir: Vector2 = e["dir"]
+	var c: Color = e["color"]
+	var flash := 1.0 - ramp(s, 0.0, 0.12)
+	if flash > 0.0:
+		var q := _snap(a + dir * 16.0 + Vector2(0, -24))
+		ci.draw_rect(Rect2(q - Vector2(3, 3), Vector2(6, 6)), Color(c.lightened(0.25) if dim else Color.WHITE, flash))
+	if not light:
+		_label(ci, font, a + Vector2(0, -50.0 - 10.0 * ramp(s, 0.0, 0.3)), "64 bytes", TEXT_1X, Color(c, 1.0 - ramp(s, 0.2, 0.3)))
+
+
+## Ping Letal en cada enemigo: su tiempo de respuesta y, en el último, el eco.
+static func _fx_ping_hit(ci: CanvasItem, e: Dictionary, s: float, font: Font, light: bool) -> void:
+	var at: Vector2 = e["pos"]
+	var c: Color = e["color"]
+	if bool(e.get("echo", false)):
+		var g := ramp(s, 0.0, 0.35)
+		ci.draw_arc(_snap(at), 2.0 + 22.0 * g, 0.0, TAU, 24, Color(c, 0.8 * (1.0 - g)), 2.0)
+	if not light:
+		_label(ci, font, at + Vector2(16, -28.0 - 8.0 * ramp(s, 0.0, 0.5)), "%dms" % int(e.get("ms", 12)), TEXT_1X,
+			Color(c.lightened(0.3), 1.0 - ramp(s, 0.35, 0.5)))
+
+
+## Dónde acaba la copia k (0..15) de Fork Bomb: repartidas por el radio en espiral; la 0, en el centro.
+static func _fork_spot(e: Dictionary, k: int) -> Vector2:
+	if k == 0:
+		return e["pos"]
+	var r: float = e["radius"]
+	return e["pos"] + Vector2.from_angle(2.39996 * k + hash01(e["seed"], 0) * TAU) * r * 0.85 * sqrt((k + 0.5) / 16.0)
+
+
+## Fork Bomb: el cuadrado se divide en 2, 4, 8 y 16 copias durante el retardo (cada
+## una se aparta de su madre) y las 16 estallan a la vez, con el anillo y el humo.
+static func _fx_fork_bomb(ci: CanvasItem, e: Dictionary, s: float, light: bool, dim: bool) -> void:
+	var at := _snap(e["pos"])
+	var r: float = e["radius"]
+	var c: Color = e["color"]
+	var core := c.lightened(0.3 if dim else 0.6)
+	var delay := maxf(0.05, float(e.get("delay", 0.45)))
+	var q := delay / 4.0
+	if s < delay:
+		ci.draw_arc(at, r, 0.0, TAU, 40, Color(c, 0.2 + 0.25 * ramp(s, 0.0, delay)), 2.0)
+		var lvl := mini(int(s / q), 3)
+		var n := 1 << (lvl + 1)   # 2, 4, 8 y 16
+		var stride := 16 / n
+		var f := ramp(s, 0.04, q * 0.7) if lvl == 0 else ramp(s - lvl * q, 0.0, q * 0.7)
+		for j in n:
+			if lvl == 0 and j == 1 and s < 0.04:
+				break   # al lanzar, un solo cuadrado
+			var k := j * stride
+			var to := _fork_spot(e, k)
+			var from := _fork_spot(e, k - stride) if j % 2 == 1 else to   # la copia nueva sale de su madre
+			var p := _snap(from.lerp(to, f))
+			ci.draw_rect(Rect2(p - Vector2(3, 3), Vector2(6, 6)), c)
+			ci.draw_rect(Rect2(p - Vector2(1, 1), Vector2(2, 2)), core)
+		return
+	var u := s - delay
+	var boom := ramp(u, 0.0, 0.12)
+	var out := 1.0 - ramp(u, 0.12, 0.3)
+	if out > 0.0:
+		for k in 16:
+			var p := _snap(_fork_spot(e, k))
+			ci.draw_circle(p, lerpf(4.0, 10.0, boom), Color(c, 0.85 * out))
+			ci.draw_circle(p, lerpf(2.0, 5.0, boom), Color(core, 0.9 * out))
+	var ring := ramp(u, 0.08, 0.35)
+	if ring > 0.0 and ring < 1.0:
+		ci.draw_arc(at, r * (0.75 + 0.25 * ring), 0.0, TAU, 48, Color(c.lightened(0.2), 0.9 * (1.0 - ring)), 3.0)
+	if light:
+		return
+	for k in 3:
+		var sm := ramp(u, 0.1 + 0.04 * k, 0.5)
+		if sm > 0.0 and sm < 1.0:
+			ci.draw_circle(_snap(_fork_spot(e, 3 + 5 * k) + Vector2(0, -16.0 * sm)), 5.0 + 8.0 * sm, Color(TOKEN_GREY, 0.45 * (1.0 - sm)))
+
+
+## Stack Overflow: cinco bloques se apilan sobre el jugador (el último, rojo), la pila se
+## derrumba en ocho bloques que se deslizan hasta el radio dejando escarcha, y cada
+## enemigo queda un momento en un cuadro de hielo.
+static func _fx_stack(ci: CanvasItem, e: Dictionary, s: float, light: bool, dim: bool) -> void:
+	var at := _snap(e["pos"])
+	var r: float = e["radius"]
+	var c: Color = e["color"]
+	var err: Color = e["err"]
+	var frost := c.lightened(0.4) if dim else Color.WHITE
+	if s < 0.22:
+		var gone := 1.0 - ramp(s, 0.16, 0.22)
+		for k in 5:
+			if s < 0.03 * k:
+				break
+			ci.draw_rect(Rect2(at + Vector2(-8, -46 - 6 * k), Vector2(16, 4)), Color(err if k == 4 else c, gone))
+	var go := ramp(s, 0.16, 0.41)
+	var fade := 1.0 - ramp(s, 0.41, 0.58)
+	var mid := at + Vector2(0, -12)
+	if go > 0.0 and fade > 0.0:
+		for k in 8:
+			var d := Vector2.from_angle(TAU * k / 8.0)
+			ci.draw_rect(Rect2(_snap(mid + d * r * go) - Vector2(8, 2), Vector2(16, 4)), Color(err if k == 0 else c, fade))
+			if light:
+				continue
+			for j in 3:
+				var f := 0.25 * (j + 1)
+				if go >= f:
+					var q := _snap(mid + d * r * f + d.orthogonal() * (hash01(e["seed"], k * 3 + j) - 0.5) * 8.0)
+					ci.draw_rect(Rect2(q - Vector2(1, 1), Vector2(2, 2)), Color(frost, 0.8 * fade))
+	for m in e["marks"]:
+		var reach := 0.16 + 0.25 * clampf(m.distance_to(e["pos"]) / maxf(1.0, r), 0.0, 1.0)
+		var box := ramp(s, reach, reach + 0.04) * (1.0 - ramp(s, reach + 0.26, reach + 0.32))
+		if box > 0.0:
+			var rect := Rect2(_snap(m) + Vector2(-14, -34), Vector2(28, 38))
+			ci.draw_rect(rect, Color(c, 0.22 * box))
+			ci.draw_rect(rect, Color(c.lightened(0.35), 0.9 * box), false, 2.0)
+
+
+## Desplazamiento de ±2 px de una llama (fijo con Menos destellos).
+static func _jit(sd: int, k: int) -> float:
+	return (hash01(sd, k) - 0.5) * 4.0
+
+
+## Flamewar: los bocadillos «TAB» y «SPC» en los bordes del cono, tres lenguas de llama
+## que avanzan hasta el radio con brasas «!», y un «>:(» que arde en cada enemigo.
+static func _fx_flamewar(ci: CanvasItem, e: Dictionary, s: float, font: Font, light: bool, dim: bool) -> void:
+	var o: Vector2 = e["pos"]
+	var dir: Vector2 = e["dir"]
+	var r: float = e["radius"]
+	var half: float = e.get("half", 0.6)
+	var c: Color = e["color"]
+	var err: Color = e["err"]
+	var sd: int = e["seed"] + (0 if dim else int(s * 30.0))
+	var reach := r * ramp(s, 0.0, 0.25)
+	var fade := 1.0 - ramp(s, 0.27, 0.4)
+	if fade > 0.0 and reach > 16.0:
+		var w := maxf(6.0, reach * sin(half) * 0.4)
+		for k in 3:
+			var d := dir.rotated(lerpf(-half, half, k / 2.0) * 0.66)
+			var side := d.orthogonal()
+			for layer in 2:
+				var sc := 1.0 if layer == 0 else 0.55
+				var ln := reach * (1.0 if layer == 0 else 0.8)
+				var pts := PackedVector2Array([
+					_snap(o + d * 8.0),
+					_snap(o + d * ln * 0.4 + side * (w * sc + _jit(sd, k * 9 + 1))),
+					_snap(o + d * ln * 0.75 + side * (w * sc * 0.55 + _jit(sd, k * 9 + 2))),
+					_snap(o + d * ln + side * _jit(sd, k * 9 + 3)),
+					_snap(o + d * ln * 0.75 - side * (w * sc * 0.55 + _jit(sd, k * 9 + 4))),
+					_snap(o + d * ln * 0.4 - side * (w * sc + _jit(sd, k * 9 + 5))),
+				])
+				ci.draw_colored_polygon(pts, Color(c if layer == 0 else FLAME_YELLOW, (0.7 if layer == 0 else 0.85) * fade))
+	if light:
+		return
+	var ba := 1.0 - ramp(s, 0.28, 0.38)
+	if ba > 0.0:
+		for k in 2:
+			var q := o + dir.rotated(half if k == 1 else -half) * r * 0.45 + Vector2(0, -18)
+			_speech(ci, font, q, "TAB" if k == 0 else "SPC", 26.0, Color(c.lightened(0.3), ba), Color(FLAME_YELLOW, ba))
+	for k in 5:
+		var age := ramp(s, 0.05 + 0.04 * k, 0.3 + 0.04 * k)
+		if age > 0.0 and age < 1.0:
+			var q := o + dir.rotated(lerpf(-half, half, hash01(e["seed"], k + 20))) * reach * (0.3 + 0.6 * hash01(e["seed"], k + 30))
+			_bang(ci, _snap(q + Vector2(0, -14.0 * age)), Color(err, 1.0 - age))
+	var burn := ramp(s, 0.08, 0.12) * (1.0 - ramp(s, 0.32, 0.42))
+	if burn > 0.0:
+		var shrink := ramp(s, 0.12, 0.42)
+		for m in e["marks"]:
+			_speech(ci, font, m + Vector2(16, -32), ">:(" if shrink < 0.6 else "", lerpf(24.0, 10.0, shrink),
+				Color(c.lerp(err, shrink), burn), Color(FLAME_YELLOW, burn), TEXT_1X if shrink < 0.3 else 8)
+
+
+## Rayo de Producción, la carga: la franja que va a barrer, una línea discontinua con
+## «main» cada 60 px y una barra de progreso que se llena sobre el jugador.
+static func _fx_rayo_charge(ci: CanvasItem, e: Dictionary, s: float, font: Font, light: bool) -> void:
+	var a: Vector2 = e["pos"]
+	var dir: Vector2 = e["dir"]
+	var length: float = e.get("length", 600.0)
+	var c: Color = e["color"]
+	var t := ramp(s, 0.0, e["duration"])
+	ci.draw_line(a, a + dir * length, Color(c, 0.08 + 0.1 * t), e["radius"])
+	for k in mini(int(length / 16.0), 80):
+		ci.draw_line(_snap(a + dir * 16.0 * k), _snap(a + dir * (16.0 * k + 10.0)), Color(c, 0.5 + 0.4 * t), 2.0)
+	if not light:
+		for k in range(1, mini(int(length / 60.0), 16) + 1):
+			_label(ci, font, a + dir * 60.0 * k + Vector2(0, -8), "main", TEXT_1X, Color(c.lightened(0.3), 0.75))
+	var bar := _snap(a + Vector2(-10, -56))
+	ci.draw_rect(Rect2(bar - Vector2(2, 2), Vector2(24, 8)), Color(BUBBLE_DARK, 0.85))
+	ci.draw_rect(Rect2(bar, Vector2(_snap(Vector2(20.0 * t, 0)).x, 4)), c)
+
+
+## Rayo de Producción, el disparo: núcleo y halo con tres franjas de alarma que corren
+## a lo largo, un «500» al final y chispas en cada enemigo golpeado.
+static func _fx_rayo_fire(ci: CanvasItem, e: Dictionary, s: float, font: Font, light: bool, dim: bool) -> void:
+	var a: Vector2 = e["pos"]
+	var b: Vector2 = e["end"]
+	var dir: Vector2 = e["dir"]
+	var w: float = e["radius"]
+	var c: Color = e["color"]
+	var err: Color = e["err"]
+	var on := 1.0 - ramp(s, 0.2, 0.3)
+	if on > 0.0:
+		ci.draw_line(a, b, Color(c, 0.55 * on), w * (1.0 + 0.3 * ramp(s, 0.0, 0.3)))
+		ci.draw_line(a, b, Color(c.lightened(0.3) if dim else Color.WHITE, 0.95 * on), 4.0)
+		var length := a.distance_to(b)
+		for k in 3:
+			var mid := a + dir * length * fmod(ramp(s, 0.0, 0.25) * 1.2 + k / 3.0, 1.0)
+			for j in 4:
+				var x := 6.0 * (j - 2)
+				ci.draw_colored_polygon(_oriented(mid, dir, x, x + 6.0, -w * 0.3, w * 0.3), Color(err if j % 2 == 0 else PIPE_YELLOW, 0.8 * on))
+	if light:
+		return
+	_label(ci, font, b + Vector2(0, -24.0 + 10.0 * ramp(s, 0.0, 0.35)), "500", TEXT_2X, Color(err, 1.0 - ramp(s, 0.25, 0.35)))
+	if s < 0.25:
+		for m in e["marks"]:
+			for k in 4:
+				var q := _snap(m + Vector2(0, -14) + Vector2(hash01(e["seed"], k) - 0.5, hash01(e["seed"], k + 4) - 0.5) * 20.0)
+				ci.draw_rect(Rect2(q, Vector2(2, 2)), Color(PIPE_YELLOW, 1.0 - ramp(s, 0.15, 0.25)))
+
+
+## Reloj de arena de 6×8 girado `angle` alrededor de `at`.
+static func _hourglass(ci: CanvasItem, at: Vector2, angle: float, col: Color) -> void:
+	var top := PackedVector2Array([Vector2(-3, -4), Vector2(3, -4), Vector2(0, 0)])
+	var bottom := PackedVector2Array([Vector2(0, 0), Vector2(3, 4), Vector2(-3, 4)])
+	for k in 3:
+		top[k] = at + top[k].rotated(angle)
+		bottom[k] = at + bottom[k].rotated(angle)
+	ci.draw_colored_polygon(top, col)
+	ci.draw_colored_polygon(bottom, col)
+
+
+## Deadlock: dos candados y dos flechas que se persiguen en círculo, un anillo de cadena
+## que se expande hasta el radio, y un reloj de arena que gira sobre cada aturdido.
+static func _fx_deadlock(ci: CanvasItem, e: Dictionary, s: float, light: bool, dim: bool) -> void:
+	var at := _snap(e["pos"])
+	var r: float = e["radius"]
+	var c: Color = e["color"]
+	var cast := 1.0 - ramp(s, 0.45, 0.6)
+	if cast > 0.0:
+		for sgn in [-1.0, 1.0]:
+			_padlock(ci, at + Vector2(18.0 * sgn, -30), Color(LOCK_YELLOW, cast), 1.0)
+		var spin := TAU * ramp(s, 0.0, 0.6)
+		var rr := r * 0.5
+		for k in 2:
+			var a0 := spin + PI * k - PI / 2.0
+			ci.draw_arc(at, rr, a0 - 1.2, a0, 10, Color(c.lightened(0.3), cast), 2.0)
+			var tip := at + Vector2.from_angle(a0) * rr
+			var tang := Vector2.from_angle(a0 + PI / 2.0)
+			var rad := Vector2.from_angle(a0)
+			ci.draw_colored_polygon(PackedVector2Array([tip + tang * 6.0, tip + rad * 4.0, tip - rad * 4.0]), Color(c.lightened(0.3), cast))
+	var grow := ramp(s, 0.0, 0.2)
+	var fade := 1.0 - ramp(s, 0.3, 0.55)
+	if grow > 0.0 and fade > 0.0:
+		var R := r * grow
+		var n := clampi(int(TAU * R / 12.0), 6, 72)
+		for k in n:
+			var ang := TAU * k / n
+			var tang := Vector2.from_angle(ang + PI / 2.0)
+			var p := at + Vector2.from_angle(ang) * R
+			var link := _oriented(p, tang, -3, 3, -1.5, 1.5) if k % 2 == 0 else _oriented(p, tang, -1.5, 1.5, -3, 3)
+			ci.draw_colored_polygon(link, Color(c.lightened(0.2), 0.9 * fade))
+	var stun: float = e.get("stun", 1.0)
+	var on := ramp(s, 0.12, 0.2) * (1.0 - ramp(s, stun - 0.15, stun + 0.1))
+	if on <= 0.0:
+		return
+	# El reloj se da la vuelta cada 0,5 s.
+	var flip := PI * (int(s / 0.5) + ramp(fmod(s, 0.5), 0.35, 0.5))
+	var frost := c.lightened(0.4) if dim else Color.WHITE
+	var marks: PackedVector2Array = e["marks"]
+	for k in marks.size():
+		var q := _snap(marks[k] + Vector2(0, -46))
+		_hourglass(ci, q, flip, Color(c.lightened(0.45), on))
+		if light:
+			continue
+		for j in 4:
+			var d := Vector2.from_angle(TAU * j / 4.0 + hash01(e["seed"], k * 4 + j))
+			ci.draw_rect(Rect2(_snap(marks[k] + Vector2(0, -14) + d * 14.0) - Vector2(1, 1), Vector2(2, 2)), Color(frost, 0.7 * on))
+
+
+## Triángulo de aviso de 12×10 con su «!».
+static func _warning(ci: CanvasItem, at: Vector2, fill: Color, mark: Color) -> void:
+	ci.draw_colored_polygon(PackedVector2Array([at + Vector2(0, -6), at + Vector2(6, 4), at + Vector2(-6, 4)]), fill)
+	ci.draw_rect(Rect2(at + Vector2(-1, -3), Vector2(2, 4)), mark)
+	ci.draw_rect(Rect2(at + Vector2(-1, 2), Vector2(2, 2)), mark)
+
+
+## Excepción en Cadena: «throw» sobre el jugador; cada salto, un zigzag que adelgaza con
+## una tira de stack trace por encima; un aviso «!» en cada enemigo y «Uncaught» en el último.
+static func _fx_exception(ci: CanvasItem, e: Dictionary, s: float, font: Font, light: bool, dim: bool) -> void:
+	var hops: PackedVector2Array = e["hops"]
+	var c: Color = e["color"]
+	var err: Color = e["err"]
+	var sd: int = e["seed"]
+	var flicker := 0 if dim else int(s * 30.0)
+	var miss: bool = e.get("miss", false)
+	if not light:
+		_label(ci, font, e["pos"] + Vector2(0, -50.0 - 8.0 * ramp(s, 0.0, 0.4)), "throw", TEXT_1X, Color(COMMIT_ORANGE, 1.0 - ramp(s, 0.3, 0.4)))
+	for k in hops.size() - 1:
+		var u := s - 0.06 * k
+		if u < 0.0:
+			break
+		if u > 0.5:
+			continue
+		var a := hops[k]
+		var b := hops[k + 1]
+		var fade := 1.0 - ramp(u, 0.18, 0.3)
+		if fade > 0.0:
+			var side := (b - a).orthogonal().normalized()
+			var pts := PackedVector2Array([_snap(a)])
+			for j in range(1, 6):
+				pts.append(_snap(a.lerp(b, j / 6.0) + side * (hash01(sd + flicker, k * 8 + j) - 0.5) * 16.0))
+			pts.append(_snap(b))
+			ci.draw_polyline(pts, Color(c, fade), maxf(2.0, 4.0 - k))
+			if not light:
+				var f := ramp(u, 0.0, 0.2)
+				for j in 3:
+					var q := _snap(a.lerp(b, clampf(f - 0.08 * j, 0.0, 1.0)) + Vector2(0, -8))
+					ci.draw_rect(Rect2(q - Vector2(2, 1), Vector2(4, 2)), Color(DUMP_GREY, fade))
+		if miss:
+			continue
+		var warn := ramp(u, 0.02, 0.06) * (1.0 - ramp(u, 0.32, 0.4))
+		if warn > 0.0:
+			_warning(ci, _snap(b + Vector2(16, -30)), Color(PIPE_YELLOW, warn), Color(err, warn))
+		if k == hops.size() - 2 and not light:
+			_label(ci, font, b + Vector2(0, -48.0 - 8.0 * ramp(u, 0.0, 0.5)), "Uncaught", TEXT_1X, Color(err, 1.0 - ramp(u, 0.4, 0.5)))
+
+
+## Fuga de Memoria al lanzar: una gota morada cae del jugador al punto.
+static func _fx_leak_drop(ci: CanvasItem, e: Dictionary, s: float) -> void:
+	var a: Vector2 = e["pos"] + Vector2(0, -24)
+	var b: Vector2 = e["end"]
+	var c: Color = e["color"]
+	var f := ramp(s, 0.0, 0.15)
+	if f < 1.0:
+		var q := _snap(a.lerp(b, f) + Vector2(0, -sin(f * PI) * 30.0))
+		ci.draw_rect(Rect2(q + Vector2(-3, -2), Vector2(6, 6)), c)
+		ci.draw_rect(Rect2(q + Vector2(-1, -4), Vector2(2, 2)), c)
+	else:
+		var g := ramp(s, 0.15, 0.25)
+		ci.draw_arc(_snap(b), 4.0 + 10.0 * g, 0.0, TAU, 12, Color(c.lightened(0.3), 1.0 - g), 2.0)
+
+
+## Charco de Fuga de Memoria: una rejilla de celdas de memoria que se encienden una a una
+## y no se apagan, y crece del 60 % al 100 % del radio a lo largo de su duración. Sobre
+## quien lo pisa suben burbujas con «MB» (`bubbles`, de hace `bubble_age` s).
+static func draw_leak_zone(ci: CanvasItem, pos: Vector2, r: float, col: Color, sd: int, elapsed: float, total: float,
+		fade: float, bubbles: PackedVector2Array, bubble_age: float, font: Font, light := false) -> void:
+	var at := _snap(pos)
+	var grow := r * lerpf(0.6, 1.0, clampf(elapsed / maxf(0.1, total), 0.0, 1.0))
+	var pts := PackedVector2Array()
+	for k in 24:
+		pts.append(at + Vector2.from_angle(TAU * k / 24.0) * Vector2(grow, grow * 0.7))
+	ci.draw_colored_polygon(pts, Color(col, 0.14 * fade))
+	if light:
+		return
+	var lit_upto := 0.2 + 0.8 * clampf(elapsed / maxf(0.1, total * 0.7), 0.0, 1.0)
+	var border := Color(col.lightened(0.35), 0.6 * fade)
+	var inner := Color(col, 0.55 * fade)
+	var nx := int(grow / LEAK_PITCH)
+	var ny := int(grow * 0.7 / LEAK_PITCH)
+	for gy in range(-ny, ny + 1):
+		for gx in range(-nx, nx + 1):
+			var off := Vector2(gx * LEAK_PITCH, gy * LEAK_PITCH)
+			if Vector2(off.x, off.y / 0.7).length() > grow - 3.0 or hash01(sd, (gx + 64) * 131 + gy + 64) > lit_upto:
+				continue
+			ci.draw_rect(Rect2(at + off - Vector2(3, 3), Vector2(6, 6)), border)
+			ci.draw_rect(Rect2(at + off - Vector2(2, 2), Vector2(4, 4)), inner)
+	if bubble_age >= 0.5:
+		return
+	var alpha := (1.0 - ramp(bubble_age, 0.35, 0.5)) * fade
+	for k in bubbles.size():
+		var q := _snap(bubbles[k] + Vector2(-8.0 + 4.0 * (k % 3), -26.0 - 14.0 * ramp(bubble_age, 0.0, 0.5)))
+		ci.draw_arc(q, 4.0, 0.0, TAU, 10, Color(col.lightened(0.45), alpha), 2.0)
+		_label(ci, font, q + Vector2(16, 4), "MB", TEXT_1X, Color(col.lightened(0.45), alpha))
+
+
+## Anillo de 16 bloques cuadrados de `size` px a `R` del centro (`phase` gira medio bloque).
+static func _block_ring(ci: CanvasItem, at: Vector2, R: float, size: float, col: Color, phase := 0.0) -> void:
+	if R < 2.0 or col.a <= 0.0:
+		return
+	for k in 16:
+		var q := _snap(at + Vector2.from_angle(TAU * (k + phase) / 16.0) * R)
+		ci.draw_rect(Rect2(q - Vector2(size, size) * 0.5, Vector2(size, size)), col)
+
+
+## Core Dump: un volcado hexadecimal que sale en espiral, un anillo de bloques y otro por
+## cada tipo de carga gastado (sin cargas, un anillo fino gris), y «core» en cada enemigo.
+static func _fx_core_dump(ci: CanvasItem, e: Dictionary, s: float, font: Font, light: bool, dim: bool) -> void:
+	var at := _snap(e["pos"])
+	var r: float = e["radius"]
+	var c: Color = e["color"]
+	var rings: Array = e.get("rings", [])
+	if not light:
+		var sp := ramp(s, 0.0, 0.2)
+		var sa := 1.0 - ramp(s, 0.2, 0.32)
+		if sa > 0.0:
+			for k in 12:
+				var q := _snap(at + Vector2(0, -20) + Vector2.from_angle(k * 0.52 + sp * 2.4) * (6.0 + sp * (14.0 + 3.0 * k)))
+				ci.draw_rect(Rect2(q - Vector2(2, 1), Vector2(4, 2)), Color(DUMP_GREY, sa))
+	if rings.is_empty():
+		var g := ramp(s, 0.0, 0.25)
+		var fade := 1.0 - ramp(s, 0.3, 0.45)
+		_block_ring(ci, at, r * g, 4.0, Color(TOKEN_GREY, 0.8 * fade))
+		if g > 0.0:
+			ci.draw_arc(at, r * g, 0.0, TAU, 40, Color(TOKEN_GREY, 0.5 * fade), 1.0)
+	else:
+		_block_ring(ci, at, r * ramp(s, 0.0, 0.25), 6.0, Color(c, 0.9 * (1.0 - ramp(s, 0.3, 0.45))))
+		for i in rings.size():
+			var d := 0.05 * (i + 1)
+			_block_ring(ci, at, r * ramp(s, d, d + 0.25) * (1.0 - 0.08 * (i + 1)), 6.0,
+				Color(rings[i], 0.9 * (1.0 - ramp(s, 0.3 + d, 0.45 + d))), 0.5 * (i + 1))
+	var alpha := ramp(s, 0.1, 0.14) * (1.0 - ramp(s, 0.4, 0.5))
+	if alpha <= 0.0:
+		return
+	var crit := bool(e.get("crit", false)) and s >= 0.1 and s < 0.2
+	for m in e["marks"]:
+		if crit:
+			ci.draw_rect(Rect2(_snap(m) + Vector2(-5, -19), Vector2(10, 10)), Color(c.lightened(0.25), 0.6) if dim else Color.WHITE)
+		if not light:
+			_label(ci, font, m + Vector2(16, -26), "core", TEXT_1X, Color(c.lightened(0.3), alpha))

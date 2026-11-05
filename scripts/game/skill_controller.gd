@@ -697,10 +697,13 @@ func _spend_charges(p: Dictionary) -> Dictionary:
 	var q := p.duplicate()
 	var mult := 1.0
 	var mana_per_charge := character.stats.get_value(Stat.CHARGE_SPEND_MANA)
+	var spent := []   # los tipos que se gastaron, para la firma de Core Dump (T194)
+	q["spent"] = spent
 	for t in spend:
 		var n := character.spend_charges(t)
 		if n <= 0:
 			continue
+		spent.append(String(t))
 		if mana_per_charge > 0.0:
 			player.mana = minf(player.max_mana(), player.mana + player.unreserved_mana_max() * mana_per_charge / 100.0 * n)
 		match t:
@@ -713,7 +716,9 @@ func _spend_charges(p: Dictionary) -> Dictionary:
 				if float(q["crit_chance"]) > 0.0:   # Memoria sin ECC: nunca hace críticos
 					q["crit_chance"] = 100.0
 				q["crit_multiplier"] = float(q["crit_multiplier"]) + 20.0 * n
-		_effects.append({"type": "burst", "pos": player.global_position, "radius": 40.0 + 12.0 * n, "time": 0.0, "duration": 0.35, "color": Charges.color(t)})
+		# Con firma (Core Dump, T194) las cargas gastadas son sus anillos: el destello queda oculto.
+		_effects.append({"type": "burst", "pos": player.global_position, "radius": 40.0 + 12.0 * n, "time": 0.0, "duration": 0.35, "color": Charges.color(t),
+			"hidden": String(p["id"]) == "core_dump"})
 	q["min_damage"] = float(q["min_damage"]) * mult
 	q["max_damage"] = float(q["max_damage"]) * mult
 	return q
@@ -1236,9 +1241,9 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 	if dir == Vector2.ZERO:
 		dir = Vector2.RIGHT
 	_ctx(p)
-	# Firma propia de cuerpo a cuerpo y movimiento (T193): en vez del anillo, la estela,
-	# el cono, el salto o el zigzag genéricos de su kind.
-	var firma := SkillFx.has_move_fx(String(p["id"]))
+	# Firma propia de cuerpo a cuerpo y movimiento (T193) o de hechizo (T194): en vez del
+	# anillo, la estela, el cono, el salto, el rayo, el marcador o el zigzag genéricos de su kind.
+	var firma := SkillFx.has_fx(String(p["id"]))
 	match p["kind"]:
 		"leap_slam":
 			# Salto: se mueve con colisión (no atraviesa paredes) y golpea al caer.
@@ -1272,9 +1277,10 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 		"melee_area", "nova":
 			if p["stun"] > 0.0:
 				enemies.stun_in_radius(origin, p["radius"], p["stun"])
-				_effects.append({"type": "lock", "pos": origin, "radius": p["radius"], "time": 0.0, "duration": 0.6, "color": color})
+				if not firma:
+					_effects.append({"type": "lock", "pos": origin, "radius": p["radius"], "time": 0.0, "duration": 0.6, "color": color})
 			if firma:
-				_move_fx(p, origin, origin, dir, color, _marks_in_radius(origin, p["radius"]))
+				_move_fx(p, origin, origin, dir, color, _marks_in_radius(origin, p["radius"]), _nova_extra(p))
 			_damage_area(origin, p["radius"], p)
 			if not firma:
 				_effects.append({"type": "ring", "pos": origin, "radius": p["radius"], "time": 0.0, "duration": 0.25, "color": color})
@@ -1303,9 +1309,13 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 			if not firma:
 				_effects.append({"type": "cone", "pos": origin, "dir": dir, "radius": p["radius"], "half": half, "time": 0.0, "duration": 0.35, "color": color})
 		"beam":
-			_pending.append({"type": "beam", "time": p["delay"], "pos": origin, "dir": dir, "profile": p, "color": color})
-			_effects.append({"type": "beam_marker", "pos": origin, "dir": dir, "radius": p["width"], "length": p["range"],
-				"time": 0.0, "duration": p["delay"], "color": color})
+			_pending.append({"type": "beam", "time": p["delay"], "pos": origin, "dir": dir, "profile": p, "color": color, "firma": firma})
+			if firma:
+				_move_fx(p, origin, origin + dir * float(p["range"]), dir, color, PackedVector2Array(),
+					{"radius": float(p["width"]), "length": float(p["range"]), "duration": float(p["delay"])})
+			else:
+				_effects.append({"type": "beam_marker", "pos": origin, "dir": dir, "radius": p["width"], "length": p["range"],
+					"time": 0.0, "duration": p["delay"], "color": color})
 		"boomerang":
 			_fire_volley(p, origin, dir, color, {"pierce_left": 999, "boomerang": true, "returning": false, "spin": 0.0, "homing": false})
 		"spin":
@@ -1349,7 +1359,11 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 				_drones.pop_front()
 		"degen_area":
 			var offset := (target - origin).limit_length(p["range"])
-			_clouds.append({"pos": origin + offset, "life": p["duration"], "next": 0.0, "profile": p, "color": color, "seed": randi()})
+			# Con su firma (T194), la gota que cae y un charco de celdas de memoria que crece.
+			_clouds.append({"pos": origin + offset, "life": p["duration"], "next": 0.0, "profile": p, "color": color, "seed": randi(),
+				"leak": firma, "mb": PackedVector2Array(), "mb_age": 0.5})
+			if firma:
+				_move_fx(p, origin, origin + offset, dir, color)
 		"trap":
 			var offset := (target - origin).limit_length(p["range"])
 			_traps.append({"pos": origin + offset, "armed_in": 0.5, "life": p["duration"], "profile": p, "color": color})
@@ -1358,11 +1372,17 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 		"chain":
 			_chain(p, origin, target, color)
 		"projectile":
+			if firma:
+				_move_fx(p, origin, origin, dir, color)
 			_fire_volley(p, origin, dir, color)
 		"ground_aoe":
 			var offset := (target - origin).limit_length(p["range"])
-			_pending.append({"type": "blast", "time": p["delay"], "pos": origin + offset, "profile": p, "color": color})
-			_effects.append({"type": "marker", "pos": origin + offset, "radius": p["radius"], "time": 0.0, "duration": p["delay"], "color": color})
+			_pending.append({"type": "blast", "time": p["delay"], "pos": origin + offset, "profile": p, "color": color, "firma": firma})
+			if firma:
+				_move_fx(p, origin + offset, origin + offset, dir, color, PackedVector2Array(),
+					{"delay": float(p["delay"]), "duration": float(p["delay"]) + 0.5})
+			else:
+				_effects.append({"type": "marker", "pos": origin + offset, "radius": p["radius"], "time": 0.0, "duration": p["delay"], "color": color})
 		"blink":
 			if device:
 				return
@@ -1457,6 +1477,22 @@ func _move_fx(p: Dictionary, from: Vector2, to: Vector2, dir: Vector2, color: Co
 	_effects.append(e)
 
 
+## Lo propio de cada nova con firma (T194): cuánto dura el aturdimiento de Deadlock y los
+## anillos de Core Dump (uno del color de cada tipo de carga gastado; crítico con Overclock).
+func _nova_extra(p: Dictionary) -> Dictionary:
+	match String(p["id"]):
+		"deadlock":
+			var stun := float(p["stun"])
+			return {"stun": stun, "duration": maxf(0.65, stun + 0.15)}
+		"core_dump":
+			var spent: Array = p.get("spent", [])
+			var rings := []
+			for t in spent:
+				rings.append(Charges.color(t))
+			return {"rings": rings, "crit": spent.has("overclock")}
+	return {}
+
+
 ## Dónde están (hasta SkillFx.MAX_MARKS) los enemigos que va a golpear una firma, para
 ## sus marcas; se mira antes del golpe, así cuentan también los que mueren. Con muchos
 ## enemigos en pantalla (versión ligera) no hay marcas y no se busca nada.
@@ -1533,18 +1569,29 @@ func _fire_volley(p: Dictionary, origin: Vector2, dir: Vector2, color: Color, ex
 
 ## Cadena: el enemigo más cercano al cursor (a tiro) y luego salta al más cercano no golpeado.
 func _chain(p: Dictionary, origin: Vector2, target: Vector2, color: Color) -> void:
+	# Con su firma (T194), un solo efecto con todos los saltos en vez de un zigzag por salto.
+	var firma := SkillFx.has_fx(String(p["id"]))
+	var hops := PackedVector2Array([origin])
 	var first := enemies.nearest_index(target, 160.0)
 	if first == -1 or enemies.positions[first].distance_to(origin) > p["range"]:
 		first = enemies.nearest_index(origin, p["range"])
 	if first == -1:
-		_effects.append({"type": "zap", "pos": origin, "end": origin + (target - origin).limit_length(p["range"]), "time": 0.0, "duration": 0.2, "color": color})
+		var miss := origin + (target - origin).limit_length(p["range"])
+		if firma:
+			hops.append(miss)
+			_move_fx(p, origin, miss, (miss - origin).normalized(), color, PackedVector2Array(), {"hops": hops, "miss": true})
+		else:
+			_effects.append({"type": "zap", "pos": origin, "end": miss, "time": 0.0, "duration": 0.2, "color": color})
 		return
 	var hit := {}
 	var from := origin
 	var i := first
 	for k in int(p["chains"]) + 1:
 		var at := enemies.positions[i]
-		_effects.append({"type": "zap", "pos": from, "end": at, "time": -0.06 * k, "duration": 0.3, "color": color})
+		if firma:
+			hops.append(at)
+		else:
+			_effects.append({"type": "zap", "pos": from, "end": at, "time": -0.06 * k, "duration": 0.3, "color": color})
 		var scale := pow(float(p["chain_damage"]), k)
 		hit[enemies.hit_index(i, p["min_damage"] * scale, p["max_damage"] * scale, p["crit_chance"], p["crit_multiplier"])] = true
 		_leech(p)
@@ -1552,6 +1599,9 @@ func _chain(p: Dictionary, origin: Vector2, target: Vector2, color: Color) -> vo
 		i = enemies.nearest_index(at, p["chain_range"], hit)
 		if i == -1:
 			break
+	if firma:
+		_move_fx(p, origin, hops[hops.size() - 1], (hops[1] - origin).normalized(), color, PackedVector2Array(),
+			{"hops": hops, "duration": 0.06 * (hops.size() - 2) + 0.52})
 
 
 func _update_spin(delta: float) -> void:
@@ -2203,6 +2253,12 @@ func _update_clouds(delta: float) -> void:
 			_ctx(p, k)
 			enemies.hit_in_radius(c["pos"], p["radius"], p["min_damage"] * k, p["max_damage"] * k, 0.0, 100.0)
 			_leech(p)
+		if c.get("leak", false):
+			# Burbujas «MB» sobre quien pisa la Fuga de Memoria, una tanda cada 0,5 s (T194).
+			c["mb_age"] = float(c["mb_age"]) + delta
+			if c["mb_age"] >= 0.5:
+				c["mb_age"] = 0.0
+				c["mb"] = _marks_in_radius(c["pos"], p["radius"])
 		if c["life"] > 0.0:
 			still.append(c)
 	_clouds = still
@@ -2392,13 +2448,20 @@ func _update_pending(delta: float) -> void:
 			_damage_area(e["pos"], radius, p)
 			if p["damage_type"] == "fire":
 				_ignite_oil_near(e["pos"], radius)
-			_effects.append({"type": "burst", "pos": e["pos"], "radius": radius, "time": 0.0, "duration": 0.3, "color": e["color"]})
+			# Con firma (Fork Bomb, T194) la explosión la dibuja ella; el «burst» queda oculto
+			# para la luz y las partículas.
+			_effects.append({"type": "burst", "pos": e["pos"], "radius": radius, "time": 0.0, "duration": 0.3, "color": e["color"],
+				"hidden": e.get("firma", false)})
 		elif e["type"] == "beam":
 			var end: Vector2 = e["pos"] + e["dir"] * p["range"]
+			var marks := _marks_in_segment(e["pos"], end, p["width"] * 0.5) if e.get("firma", false) else PackedVector2Array()
 			enemies.hit_in_segment(e["pos"], end, p["width"] * 0.5, p["min_damage"], p["max_damage"], p["crit_chance"], p["crit_multiplier"])
 			_leech(p)
-			_effects.append({"type": "beam", "pos": e["pos"], "dir": e["dir"], "radius": p["width"], "length": p["range"],
-				"time": 0.0, "duration": 0.35, "color": e["color"]})
+			if e.get("firma", false):
+				_move_fx(p, e["pos"], end, e["dir"], e["color"], marks, {"firma": "rayo_produccion_fire", "radius": float(p["width"])})
+			else:
+				_effects.append({"type": "beam", "pos": e["pos"], "dir": e["dir"], "radius": p["width"], "length": p["range"],
+					"time": 0.0, "duration": 0.35, "color": e["color"]})
 		elif player.is_alive():
 			_execute(p, e["target"])
 	_pending = still
@@ -2468,7 +2531,12 @@ func _update_projectiles(delta: float) -> void:
 			if pr.has("fx") and enemies.impact and not light:
 				enemies.impact.skill_impact(pr["pos"], pr["fx"]["impact"], pr["color"], (pr["vel"] as Vector2).normalized())
 			Sfx.play(SoundMap.impact(String(p.get("damage_type", "physical"))), -12.0, randf_range(0.9, 1.1))   # T77
-		if pr.get("boomerang", false) or (pr["distance_left"] > 0.0 and pr["pierce_left"] >= 0):
+		var keep: bool = pr.get("boomerang", false) or (pr["distance_left"] > 0.0 and pr["pierce_left"] >= 0)
+		if hit != -1 and pr.has("fx") and pr["fx"].has("hit_fx") and not light:
+			# Golpe con firma (Ping Letal, T194): su tiempo de respuesta y, si ya no sigue, el eco.
+			_move_fx(p, pr["pos"], pr["pos"], (pr["vel"] as Vector2).normalized(), pr["color"], PackedVector2Array(),
+				{"firma": pr["fx"]["hit_fx"], "ms": randi_range(1, 99), "echo": not keep})
+		if keep:
 			still.append(pr)
 	_projectiles = still
 	_triggering = false
@@ -2627,7 +2695,8 @@ func _draw() -> void:
 				draw_circle(e["pos"], r, Color(c, 0.15 * (1.0 - t)))
 				draw_arc(e["pos"], r, 0.0, TAU, 48, Color(c, 0.8 * (1.0 - t)), 3.0, true)
 			"burst":
-				draw_circle(e["pos"], e["radius"] * (0.5 + 0.5 * t), Color(c, 0.45 * (1.0 - t)))
+				if not e.get("hidden", false):
+					draw_circle(e["pos"], e["radius"] * (0.5 + 0.5 * t), Color(c, 0.45 * (1.0 - t)))
 			"marker":
 				draw_arc(e["pos"], e["radius"], 0.0, TAU, 48, Color(c, 0.35 + 0.4 * t), 2.0, true)
 				draw_circle(e["pos"], e["radius"] * t, Color(c, 0.12))
@@ -2891,6 +2960,12 @@ func _draw_clouds() -> void:
 		var col: Color = c["color"]
 		if c.get("revert", false):
 			SkillFx.draw_revert_zone(self, p, r, col, c["err"], int(c["seed"]), float(c["life"]), fade, fx_light(), Accessibility.reduce_flashes)
+			continue
+		if c.get("leak", false):
+			# Fuga de Memoria (T194): con más de tres charcos a la vez, la rejilla se simplifica.
+			var total: float = c["profile"]["duration"]
+			SkillFx.draw_leak_zone(self, p, r, Accessibility.aura_color("chaos", col), int(c["seed"]), total - float(c["life"]), total, fade,
+				c["mb"], float(c["mb_age"]), ThemeDB.fallback_font, fx_light() or _clouds.size() > 3)
 			continue
 		draw_set_transform(p, 0.0, Vector2(1.0, 0.7))
 		draw_circle(Vector2.ZERO, r, Color(col, 0.18 * fade))

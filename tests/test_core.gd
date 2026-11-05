@@ -233,6 +233,7 @@ func _initialize() -> void:
 	_test_rams_everywhere()
 	_test_prologue_reachable()
 	_test_move_signatures()
+	_test_spell_signatures()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -3731,8 +3732,8 @@ func _test_enemy_weight() -> void:
 ## Efectos de habilidades con más cuerpo (T74): firma por habilidad y partículas con tope.
 func _test_skill_fx() -> void:
 	var skills: Dictionary = _db.skills.skills
-	_check(SkillFx.signature(skills["ping_letal"])["projectile"] == "bolt" and SkillFx.signature(skills["rafaga_de_paquetes"])["projectile"] == "packet",
-		"el ping es un rayo en zigzag y la ráfaga, paquetes")
+	_check(SkillFx.signature(skills["ping_letal"])["projectile"] == "sonar" and SkillFx.signature(skills["rafaga_de_paquetes"])["projectile"] == "packet",
+		"el ping es un punto de radar (T194) y la ráfaga, paquetes")
 	_check(SkillFx.signature({"id": "nueva", "damage_type": "fire"})["projectile"] == "fireball", "sin firma propia: la de su tipo de daño")
 	var shapes := {}
 	for id in skills:
@@ -8619,6 +8620,74 @@ func _test_move_signatures() -> void:
 			var marks: PackedVector2Array = mine[0]["marks"]
 			_check(marks.size() >= 1 and marks.size() <= SkillFx.MAX_MARKS, "%s marca a los enemigos que golpea (%d)" % [id, marks.size()])
 	_check(sc._clouds.size() == 1 and sc._clouds[0].get("revert", false), "Git Revert deja la zona de diff con el fantasma")
+	sc.free()
+	pl.queue_free()
+	em.queue_free()
+
+
+## Firmas de hechizos y proyectiles (T194): las nueve de la ficha de T191 se dibujan con
+## su efecto propio y no con el genérico de su kind (anillo, cono, rayo, zigzag, marcador).
+func _test_spell_signatures() -> void:
+	var skills: Dictionary = _db.skills.skills
+	for id in SkillFx.SPELL_IDS:
+		_check(skills.has(id) and SkillFx.SPELL_FX.has(id) and SkillFx.has_fx(id), "la firma de hechizo %s es de una habilidad que existe" % id)
+	_check(SkillFx.signature({"id": "ping_letal", "damage_type": "lightning"})["projectile"] == "sonar",
+		"Ping Letal vuela con su forma propia (sonar) y no con la del tipo rayo")
+	var c := _new_character()
+	var em := EnemyManager.new()
+	root.add_child(em)
+	var pl: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(pl)
+	pl.setup(c, em)
+	var sc := SkillController.new()
+	sc.player = pl
+	sc.enemies = em
+	sc.character = c
+	var generic := ["ring", "cone", "lock", "zap", "beam", "beam_marker", "marker"]
+	for id in SkillFx.SPELL_IDS:
+		em.clear_all()
+		sc._effects.clear()
+		sc._clouds.clear()
+		sc._pending.clear()
+		sc._projectiles.clear()
+		pl.global_position = Vector2.ZERO
+		for k in 3:
+			var i := em.index_of(em.spawn(Vector2(50 + 30 * k, 4 * k), Rarity.Enemy.NORMAL, em.type_index_of("bug")))
+			em.lives[i] = 1.0e6
+			em.max_lives[i] = 1.0e6
+		var p := SkillCalc.compute(Motherboard.new(skills[id], 5, []), c)
+		if id == "core_dump":
+			c.charges["multihilo"] = 2
+			c.charges["overclock"] = 1
+			p = sc._spend_charges(p)
+		sc._execute(p, Vector2(80, 0))
+		sc._update_pending(2.0)   # el retardo de Fork Bomb y la carga del rayo
+		for k in 20:
+			sc._update_projectiles(0.02)
+		var mine := sc._effects.filter(func(e: Dictionary) -> bool: return e["type"] == "firma" and String(e["firma"]).begins_with(id))
+		_check(mine.size() >= 1, "%s se lanza con su firma propia" % id)
+		_check(not sc._effects.any(func(e: Dictionary) -> bool: return e["type"] in generic), "%s ya no suelta el efecto genérico de su kind" % id)
+		_check(not sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "burst" and float(e["radius"]) >= 40.0 and not e.get("hidden", false)),
+			"%s no tapa su firma con una explosión genérica" % id)
+		var fx := {}
+		for e in mine:
+			fx[String(e["firma"])] = e
+		match id:
+			"ping_letal":
+				_check(fx.has("ping_letal_hit"), "Ping Letal marca el tiempo de respuesta en cada enemigo que atraviesa")
+			"fork_bomb":
+				_check(sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "burst" and e.get("hidden", false)),
+					"Fork Bomb deja su explosión oculta para la luz y las partículas")
+			"rayo_produccion":
+				_check(fx.has("rayo_produccion_fire") and fx["rayo_produccion_fire"]["marks"].size() >= 1, "el Rayo de Producción dispara con su firma y chispea en quien golpea")
+			"excepcion_en_cadena":
+				_check(fx.has(id) and fx[id]["hops"].size() >= 3, "Excepción en Cadena guarda sus saltos (%d)" % (fx[id]["hops"].size() if fx.has(id) else 0))
+			"fuga_de_memoria":
+				_check(sc._clouds.size() == 1 and sc._clouds[0].get("leak", false), "Fuga de Memoria deja el charco de celdas de memoria")
+			"deadlock":
+				_check(fx.has(id) and fx[id]["marks"].size() >= 1 and float(fx[id]["duration"]) >= float(p["stun"]), "Deadlock pone el reloj de arena mientras dura el aturdimiento")
+			"core_dump":
+				_check(fx.has(id) and fx[id]["rings"].size() == 2 and fx[id]["crit"], "Core Dump pone un anillo por tipo de carga gastado y destella con Overclock")
 	sc.free()
 	pl.queue_free()
 	em.queue_free()
