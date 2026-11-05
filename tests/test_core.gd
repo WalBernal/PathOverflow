@@ -8607,7 +8607,7 @@ func _test_skill_sound_kinds() -> void:
 	_check(SoundMap.signature_layer({"kind": "quake"}) == "" and SoundMap.signature_layer({"kind": "heal"}) == "", "sin capas para los tipos quake y heal, que no existen")
 
 ## T196: cada una de las 62 habilidades tiene su capa de firma propia en SoundMap,
-## su archivo existe y dura lo de una capa (0,05-0,6 s), y ya no usa la compartida.
+## su archivo existe y dura lo de una capa (0,1-0,5 s, como pide la ficha de T191), y ya no usa la compartida.
 func _test_skill_signatures() -> void:
 	var skills: Dictionary = _db.skills.skills
 	_check(skills.size() == 62 and SoundMap.SIGNATURES.size() == skills.size(), "62 habilidades y 62 firmas (%d y %d)" % [skills.size(), SoundMap.SIGNATURES.size()])
@@ -8619,7 +8619,7 @@ func _test_skill_signatures() -> void:
 		var path := Sfx.SFX_DIR + sig + ".wav"
 		_check(ResourceLoader.exists(path), "%s: existe %s (tools/generate_sfx.gd -- t196)" % [id, path])
 		var wav := load(path) as AudioStreamWAV if ResourceLoader.exists(path) else null
-		_check(wav != null and wav.get_length() >= 0.05 and wav.get_length() <= 0.6, "%s: su firma dura lo de una capa (%.2f s)" % [id, wav.get_length() if wav else -1.0])
+		_check(wav != null and wav.get_length() >= 0.099 and wav.get_length() <= 0.501, "%s: su firma dura lo de una capa (%.2f s)" % [id, wav.get_length() if wav else -1.0])
 		var layers := SoundMap.cast_layers(skills[id])
 		_check(layers.size() == 2 and layers[1][0] == sig and float(layers[1][1]) == SoundMap.SIGNATURE_DB and float(layers[1][2]) == 1.0,
 			"%s: suena su base y su firma a -6 dB con tono fijo (%s)" % [id, str(layers)])

@@ -1331,7 +1331,8 @@ func _sig_rollback_grito() -> PackedFloat32Array:
 	var rev := _hiss(0.3, 1500.0, 4000.0, 1.0)
 	for i in rev.size():
 		rev[i] *= float(i) / rev.size()
-	return _seq([[rev, 0.0], [_arpeggio([1046.5, 783.99, 659.25, 523.25], 0.04, 0.04), 0.3, 0.6]])
+	# Arpegio de 0,195 s (4 × 0,03 + 3 × 0,025) para no pasar de los 0,5 s de la ficha.
+	return _seq([[rev, 0.0], [_arpeggio([1046.5, 783.99, 659.25, 523.25], 0.03, 0.025), 0.3, 0.6]])
 
 
 ## Overclock: ventilador que acelera.
@@ -1492,7 +1493,7 @@ func _sig_cascada_css() -> PackedFloat32Array:
 
 ## fork(): dos clics iguales.
 func _sig_proceso_hijo() -> PackedFloat32Array:
-	return _seq([[_blip(1000.0), 0.0], [_blip(1000.0), 0.04]])
+	return _seq([[_blip(1000.0), 0.0], [_blip(1000.0), 0.04], [_buf(0.1), 0.0]])   # 0,1 s como mínimo, como las demás
 
 
 ## Hélice de los drones.
