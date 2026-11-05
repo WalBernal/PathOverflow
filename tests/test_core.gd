@@ -232,6 +232,7 @@ func _initialize() -> void:
 	_test_quest_item_art()
 	_test_rams_everywhere()
 	_test_prologue_reachable()
+	_test_move_signatures()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -8579,3 +8580,45 @@ func _test_thermal_shock_and_status_resist() -> void:
 	pa.queue_free()
 	pb.queue_free()
 	e2.queue_free()
+
+
+## Firmas de cuerpo a cuerpo y movimiento (T193): las ocho habilidades de la ficha de
+## T191 se dibujan con su efecto propio (SkillFx.move_fx) y no con el genérico de su kind.
+func _test_move_signatures() -> void:
+	var skills: Dictionary = _db.skills.skills
+	for id in SkillFx.MOVE_FX:
+		_check(skills.has(id), "la firma %s es de una habilidad que existe" % id)
+	_check(is_equal_approx(SkillFx.hash01(123, 4), SkillFx.hash01(123, 4)) and SkillFx.hash01(123, 4) >= 0.0 and SkillFx.hash01(123, 4) < 1.0,
+		"lo «al azar» de una firma es fijo de un fotograma a otro")
+	var c := _new_character()
+	var em := EnemyManager.new()
+	root.add_child(em)
+	var pl: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(pl)
+	pl.setup(c, em)
+	var sc := SkillController.new()
+	sc.player = pl
+	sc.enemies = em
+	sc.character = c
+	var generic := ["ring", "trail", "cone", "leap", "quake", "zap"]
+	for id in SkillFx.MOVE_FX:
+		em.clear_all()
+		sc._effects.clear()
+		sc._clouds.clear()
+		pl.global_position = Vector2.ZERO
+		for k in 3:
+			var i := em.index_of(em.spawn(Vector2(20 + 20 * k, 6 * k), Rarity.Enemy.NORMAL, em.type_index_of("bug")))
+			em.lives[i] = 1.0e6
+			em.max_lives[i] = 1.0e6
+		var p := SkillCalc.compute(Motherboard.new(skills[id], 5, []), c)
+		sc._execute(p, Vector2(120, 0))
+		var mine := sc._effects.filter(func(e: Dictionary) -> bool: return e["type"] == "firma" and e["firma"] == id)
+		_check(mine.size() == 1, "%s se lanza con su firma propia" % id)
+		_check(not sc._effects.any(func(e: Dictionary) -> bool: return e["type"] in generic), "%s ya no suelta el efecto genérico de su kind" % id)
+		if id in ["barrido", "deploy_continuo", "fuzzing", "force_push"] and mine.size() == 1:
+			var marks: PackedVector2Array = mine[0]["marks"]
+			_check(marks.size() >= 1 and marks.size() <= SkillFx.MAX_MARKS, "%s marca a los enemigos que golpea (%d)" % [id, marks.size()])
+	_check(sc._clouds.size() == 1 and sc._clouds[0].get("revert", false), "Git Revert deja la zona de diff con el fantasma")
+	sc.free()
+	pl.queue_free()
+	em.queue_free()

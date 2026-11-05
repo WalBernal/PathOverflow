@@ -1236,6 +1236,9 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 	if dir == Vector2.ZERO:
 		dir = Vector2.RIGHT
 	_ctx(p)
+	# Firma propia de cuerpo a cuerpo y movimiento (T193): en vez del anillo, la estela,
+	# el cono, el salto o el zigzag genéricos de su kind.
+	var firma := SkillFx.has_move_fx(String(p["id"]))
 	match p["kind"]:
 		"leap_slam":
 			# Salto: se mueve con colisión (no atraviesa paredes) y golpea al caer.
@@ -1244,11 +1247,17 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 				player.move_and_collide(land - origin)
 				player.stop_auto_move()
 				land = player.global_position
-			_effects.append({"type": "leap", "pos": origin, "end": land, "time": 0.0, "duration": 0.3, "color": color})
+			if firma:
+				_move_fx(p, origin, land, dir, color)
+				if not device and not Accessibility.reduce_motion:
+					player.camera_shake(3.0, 0.15)
+			else:
+				_effects.append({"type": "leap", "pos": origin, "end": land, "time": 0.0, "duration": 0.3, "color": color})
 			if p["stun"] > 0.0:
 				enemies.stun_in_radius(land, p["radius"], p["stun"])
 			_damage_area(land, p["radius"], p)
-			_effects.append({"type": "quake", "pos": land, "radius": p["radius"], "time": 0.0, "duration": 0.45, "color": color})
+			if not firma:
+				_effects.append({"type": "quake", "pos": land, "radius": p["radius"], "time": 0.0, "duration": 0.45, "color": color})
 		"rain":
 			var center := origin + (target - origin).limit_length(p["range"])
 			var hits: int = maxi(1, p["rain_hits"])
@@ -1264,8 +1273,11 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 			if p["stun"] > 0.0:
 				enemies.stun_in_radius(origin, p["radius"], p["stun"])
 				_effects.append({"type": "lock", "pos": origin, "radius": p["radius"], "time": 0.0, "duration": 0.6, "color": color})
+			if firma:
+				_move_fx(p, origin, origin, dir, color, _marks_in_radius(origin, p["radius"]))
 			_damage_area(origin, p["radius"], p)
-			_effects.append({"type": "ring", "pos": origin, "radius": p["radius"], "time": 0.0, "duration": 0.25, "color": color})
+			if not firma:
+				_effects.append({"type": "ring", "pos": origin, "radius": p["radius"], "time": 0.0, "duration": 0.25, "color": color})
 		"dash":
 			# Embestida: se mueve con colisión (no atraviesa paredes) y golpea lo que hay en la línea.
 			var offset := (target - origin).limit_length(p["range"])
@@ -1274,14 +1286,22 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 				player.move_and_collide(offset)
 				player.stop_auto_move()
 				end = player.global_position
+			if firma:
+				_move_fx(p, origin, end, dir, color, _marks_in_segment(origin, end, p["width"] * 0.5))
 			enemies.hit_in_segment(origin, end, p["width"] * 0.5, p["min_damage"], p["max_damage"], p["crit_chance"], p["crit_multiplier"])
 			_leech(p)
-			_effects.append({"type": "trail", "pos": origin, "end": end, "radius": p["width"], "time": 0.0, "duration": 0.3, "color": color})
+			if not firma:
+				_effects.append({"type": "trail", "pos": origin, "end": end, "radius": p["width"], "time": 0.0, "duration": 0.3, "color": color})
 		"cone":
 			var half := deg_to_rad(p["angle"]) / 2.0
+			if firma:
+				var ctx: Dictionary = p.get("ailment_ctx", {})
+				_move_fx(p, origin, origin, dir, color, _marks_in_cone(origin, dir, p["radius"], half),
+					{"half": half, "bleed": float(ctx.get("chances", {}).get(Ailments.BLEED, 0.0)) / 100.0})
 			enemies.hit_in_cone(origin, dir, p["radius"], half, p["min_damage"], p["max_damage"], p["crit_chance"], p["crit_multiplier"])
 			_leech(p)
-			_effects.append({"type": "cone", "pos": origin, "dir": dir, "radius": p["radius"], "half": half, "time": 0.0, "duration": 0.35, "color": color})
+			if not firma:
+				_effects.append({"type": "cone", "pos": origin, "dir": dir, "radius": p["radius"], "half": half, "time": 0.0, "duration": 0.35, "color": color})
 		"beam":
 			_pending.append({"type": "beam", "time": p["delay"], "pos": origin, "dir": dir, "profile": p, "color": color})
 			_effects.append({"type": "beam_marker", "pos": origin, "dir": dir, "radius": p["width"], "length": p["range"],
@@ -1347,10 +1367,14 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 			if device:
 				return
 			var offset := (target - origin).limit_length(p["range"])
-			_effects.append({"type": "ring", "pos": origin, "radius": 30.0, "time": 0.0, "duration": 0.3, "color": color})
+			if not firma:
+				_effects.append({"type": "ring", "pos": origin, "radius": 30.0, "time": 0.0, "duration": 0.3, "color": color})
 			player.global_position = _landing(origin + offset)
 			player.stop_auto_move()
-			_effects.append({"type": "ring", "pos": player.global_position, "radius": 40.0, "time": 0.0, "duration": 0.3, "color": color})
+			if firma:
+				_move_fx(p, origin, player.global_position, dir, color)
+			else:
+				_effects.append({"type": "ring", "pos": player.global_position, "radius": 40.0, "time": 0.0, "duration": 0.3, "color": color})
 		"terrain":
 			# Terreno: aceite, estática o refrigerante en el suelo (ver _update_terrains).
 			var offset := (target - origin).limit_length(p["range"])
@@ -1364,11 +1388,14 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 			if device:
 				return
 			var dest := _landing(origin + (target - origin).limit_length(p["range"]))
-			_ssh_burst(origin, p, color)
+			_ssh_burst(origin, p, color, not firma)
 			player.global_position = dest
 			player.stop_auto_move()
-			_ssh_burst(dest, p, color)
-			_effects.append({"type": "zap", "pos": origin, "end": dest, "time": 0.0, "duration": 0.25, "color": color})
+			_ssh_burst(dest, p, color, not firma)
+			if firma:
+				_move_fx(p, origin, dest, dir, color)
+			else:
+				_effects.append({"type": "zap", "pos": origin, "end": dest, "time": 0.0, "duration": 0.25, "color": color})
 		"charge":
 			# Force Push: carga hasta el primer enemigo en el cono hacia el cursor, lo
 			# arrolla con los de alrededor, los empuja lejos y los aturde un momento.
@@ -1382,21 +1409,31 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 			player.move_and_collide(hit_at - origin)
 			player.stop_auto_move()
 			var end := player.global_position
-			_effects.append({"type": "trail", "pos": origin, "end": end, "radius": 40.0, "time": 0.0, "duration": 0.3, "color": color})
+			if firma:
+				_move_fx(p, origin, end, dir, color, _marks_in_radius(end, p["radius"] + 20.0) if first != -1 else PackedVector2Array(),
+					{"hit": first != -1})
+			else:
+				_effects.append({"type": "trail", "pos": origin, "end": end, "radius": 40.0, "time": 0.0, "duration": 0.3, "color": color})
 			if first != -1:
 				_damage_area(end, p["radius"], p)
 				enemies.push_in_radius(end, p["radius"] + 20.0, float(p["def"].get("push", 2.0)))
 				if p["stun"] > 0.0:
 					enemies.stun_in_radius(end, p["radius"], p["stun"])
-				_effects.append({"type": "quake", "pos": end, "radius": p["radius"], "time": 0.0, "duration": 0.35, "color": color})
+				if not firma:
+					_effects.append({"type": "quake", "pos": end, "radius": p["radius"], "time": 0.0, "duration": 0.35, "color": color})
 		"backflip":
 			# Git Revert: salto hacia atrás (lejos del cursor) que deja una zona helada.
 			if device:
 				return
-			_clouds.append({"pos": origin, "life": p["duration"], "next": 0.0, "profile": p, "color": color, "seed": randi()})
+			# Con su firma (T193), la zona es un diff con el fantasma de donde estabas.
+			_clouds.append({"pos": origin, "life": p["duration"], "next": 0.0, "profile": p, "color": color, "seed": randi(),
+				"revert": firma, "err": Accessibility.aura_color("fire", Color("d9534f"))})
 			player.move_and_collide(-dir * float(p["range"]))
 			player.stop_auto_move()
-			_effects.append({"type": "leap", "pos": origin, "end": player.global_position, "time": 0.0, "duration": 0.25, "color": color})
+			if firma:
+				_move_fx(p, origin, player.global_position, dir, color)
+			else:
+				_effects.append({"type": "leap", "pos": origin, "end": player.global_position, "time": 0.0, "duration": 0.25, "color": color})
 
 
 ## Dónde cae un teletransporte: el punto libre más cercano (sin paredes ni obstáculos).
@@ -1404,9 +1441,60 @@ func _landing(pos: Vector2) -> Vector2:
 	return spot_fixer.call(pos) if spot_fixer.is_valid() else pos
 
 
-func _ssh_burst(pos: Vector2, p: Dictionary, color: Color) -> void:
+func _ssh_burst(pos: Vector2, p: Dictionary, color: Color, ring := true) -> void:
 	_damage_area(pos, p["radius"], p)
-	_effects.append({"type": "ring", "pos": pos, "radius": p["radius"], "time": 0.0, "duration": 0.3, "color": color})
+	if ring:
+		_effects.append({"type": "ring", "pos": pos, "radius": p["radius"], "time": 0.0, "duration": 0.3, "color": color})
+
+
+## Firma de cuerpo a cuerpo o movimiento (T193, SkillFx.move_fx). El color del daño, el
+## verde y el rojo pasan por el modo daltónico como las auras.
+func _move_fx(p: Dictionary, from: Vector2, to: Vector2, dir: Vector2, color: Color, marks := PackedVector2Array(), extra := {}) -> void:
+	var dtype := String(p.get("damage_type", "physical"))
+	var e := SkillFx.move_fx(String(p["id"]), from, to, dir, float(p.get("radius", 0.0)), Accessibility.aura_color(dtype, color), marks, extra)
+	e["ok"] = Accessibility.aura_color("none", e["ok"])
+	e["err"] = Accessibility.aura_color("fire", e["err"])
+	_effects.append(e)
+
+
+## Dónde están (hasta SkillFx.MAX_MARKS) los enemigos que va a golpear una firma, para
+## sus marcas; se mira antes del golpe, así cuentan también los que mueren. Con muchos
+## enemigos en pantalla (versión ligera) no hay marcas y no se busca nada.
+func _marks_in_radius(center: Vector2, radius: float) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	if fx_light():
+		return out
+	for i in enemies.positions.size():
+		if enemies.positions[i].distance_to(center) <= radius + enemies.radii[i]:
+			out.append(enemies.positions[i])
+			if out.size() >= SkillFx.MAX_MARKS:
+				break
+	return out
+
+
+func _marks_in_cone(origin: Vector2, dir: Vector2, radius: float, half: float) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	if fx_light():
+		return out
+	for i in enemies.positions.size():
+		var to := enemies.positions[i] - origin
+		if to.length() <= radius + enemies.radii[i] and (to.length() < enemies.radii[i] or absf(dir.angle_to(to)) <= half):
+			out.append(enemies.positions[i])
+			if out.size() >= SkillFx.MAX_MARKS:
+				break
+	return out
+
+
+func _marks_in_segment(a: Vector2, b: Vector2, half_width: float) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	if fx_light():
+		return out
+	for i in enemies.positions.size():
+		if Geometry2D.get_closest_point_to_segment(enemies.positions[i], a, b).distance_to(enemies.positions[i]) <= half_width + enemies.radii[i]:
+			out.append(enemies.positions[i])
+			if out.size() >= SkillFx.MAX_MARKS:
+				break
+	return out
 
 
 ## Primer enemigo (el más cercano) dentro de un cono de semiángulo `half` hacia `dir`; -1 si no hay.
@@ -2443,12 +2531,16 @@ func _draw() -> void:
 			var a: float = spin["angle"] + TAU * k / 3.0
 			draw_arc(center, p["radius"] * 0.8, a, a + 1.1, 12, Color(c, 0.85), 5.0, true)
 			draw_line(center + Vector2.from_angle(a + 1.1) * p["radius"] * 0.5, center + Vector2.from_angle(a + 1.1) * p["radius"], Color(c, 0.7), 3.0, true)
+	var fx_lite := fx_light()
+	var fx_font := ThemeDB.fallback_font
 	for e in _effects:
 		if e["time"] < 0.0:
 			continue
 		var t: float = e["time"] / e["duration"]
 		var c: Color = e["color"]
 		match e["type"]:
+			"firma":
+				SkillFx.draw_move_fx(self, e, fx_font, fx_lite, Accessibility.reduce_flashes)
 			"leap":
 				# Arco del salto: una sombra que recorre el camino y una estela.
 				var a: Vector2 = e["pos"]
@@ -2539,7 +2631,7 @@ func _draw() -> void:
 			"marker":
 				draw_arc(e["pos"], e["radius"], 0.0, TAU, 48, Color(c, 0.35 + 0.4 * t), 2.0, true)
 				draw_circle(e["pos"], e["radius"] * t, Color(c, 0.12))
-	var light := fx_light()
+	var light := fx_lite
 	var fx_time := Time.get_ticks_msec() / 1000.0
 	# Sombra de cada proyectil en el suelo (vuelan): primero todas, debajo.
 	for pr in _projectiles:
@@ -2797,6 +2889,9 @@ func _draw_clouds() -> void:
 		var r: float = c["profile"]["radius"]
 		var fade := clampf(c["life"] / 0.4, 0.0, 1.0)
 		var col: Color = c["color"]
+		if c.get("revert", false):
+			SkillFx.draw_revert_zone(self, p, r, col, c["err"], int(c["seed"]), float(c["life"]), fade, fx_light(), Accessibility.reduce_flashes)
+			continue
 		draw_set_transform(p, 0.0, Vector2(1.0, 0.7))
 		draw_circle(Vector2.ZERO, r, Color(col, 0.18 * fade))
 		draw_circle(Vector2.ZERO, r * 0.7, Color(col, 0.18 * fade))
