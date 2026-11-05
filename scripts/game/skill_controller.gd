@@ -296,6 +296,7 @@ func on_zone_changed() -> void:
 		a["anchor"] = Vector2.INF   # las auras ancladas se mudan contigo (se fijan al llegar)
 	_projectiles.clear()
 	_effects.clear()
+	_dying_units.clear()   # las que caían se quedan en la zona anterior
 	_pending.clear()
 	_traps.clear()
 	_devices.clear()
@@ -319,6 +320,7 @@ func on_zone_changed() -> void:
 ## Quita todas las invocaciones persistentes (al morir).
 func clear_units() -> void:
 	_units.clear()
+	_dying_units.clear()
 	_update_reservation()
 	_sync_golem_buffs()
 
@@ -1753,7 +1755,7 @@ func _update_units(delta: float) -> void:
 		for d in _dying_units:
 			d["dying"] += delta
 			d["phase"] += delta * 6.0
-		_dying_units = _dying_units.filter(func(d: Dictionary) -> bool: return float(d["dying"]) < UnitArt.DIE_TIME)
+		_dying_units.assign(_dying_units.filter(func(d: Dictionary) -> bool: return float(d["dying"]) < UnitArt.DIE_TIME))
 	if _units.is_empty():
 		return
 	if not player.is_alive():
@@ -2032,6 +2034,8 @@ func _unit_shoot(u: Dictionary, p: Dictionary, reach_range: float) -> void:
 	u["cd"] = p["unit_interval"]
 	var dir: Vector2 = (enemies.positions[t] - pos).normalized()
 	UnitArt.strike(u, dir)
+	# Sigue apuntando a ese objetivo hasta el siguiente disparo (no se voltea hacia la marcha entre tiro y tiro).
+	u["look"] = clampf(float(p["unit_interval"]) + 0.1, UnitArt.LOOK_TIME, 1.5)
 	_fire_volley(p, pos, dir, u["color"], {}, reach_range * 1.5)
 	_effects.append({"type": "burst", "pos": pos + dir * 10.0, "radius": 8.0, "time": 0.0, "duration": 0.12, "color": u["color"]})
 

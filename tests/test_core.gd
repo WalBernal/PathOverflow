@@ -8633,6 +8633,10 @@ func _test_unit_animation() -> void:
 		for k in 10:
 			sc._update_units(0.05)
 		_check(sc._dying_units.is_empty(), "y luego desaparece")
+		# Al morir el jugador no quedan cuerpos cayendo.
+		sc._dying_units.append({"dying": 0.0})
+		sc.clear_units()
+		_check(sc._dying_units.is_empty(), "clear_units también quita las que caían")
 	sc.queue_free()
 	player.queue_free()
 	em.queue_free()
