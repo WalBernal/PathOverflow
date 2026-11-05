@@ -293,7 +293,7 @@ static func _fx_reboot(ci: CanvasItem, e: Dictionary, s: float, font: Font, ligh
 			var d := Vector2.from_angle(TAU * k / 6.0 + hash01(e["seed"], k) * 0.6) * half * 0.95
 			ci.draw_line(center, center + d * crack, Color(Color.WHITE if not dim else c.lightened(0.25), 0.8 * bs), 2.0)
 		if not light and s < 0.3:
-			_label(ci, font, center + Vector2(0, 7), ":(", TEXT_2X, Color(1, 1, 1, 0.9 * (1.0 - ramp(s, 0.2, 0.3))))
+			_label(ci, font, center + Vector2(0, 7), ":(", TEXT_2X, Color(Color.WHITE if not dim else c.lightened(0.25), 0.9 *(1.0 - ramp(s, 0.2, 0.3))))
 	# Copias fantasma por la parábola, con su sombra que se encoge en el punto alto.
 	var ghost := 1.0 - ramp(s, 0.0, 0.35)
 	if ghost > 0.0 and a.distance_to(b) > 8.0:
@@ -529,7 +529,7 @@ static func draw_revert_zone(ci: CanvasItem, pos: Vector2, r: float, col: Color,
 			var f := hash01(sd, k)
 			var edge := k % 4
 			var q := top + (Vector2(f * half.x * 2.0, 0.0 if edge == 0 else half.y * 2.0) if edge < 2 else Vector2(0.0 if edge == 2 else half.x * 2.0, f * half.y * 2.0))
-			ci.draw_rect(Rect2(_snap(q) - Vector2(1, 1), Vector2(2, 2)), Color(1, 1, 1, 0.8 * fade))
+			ci.draw_rect(Rect2(_snap(q) - Vector2(1, 1), Vector2(2, 2)), Color(Color.WHITE if not dim else col.lightened(0.4), 0.8 * fade))
 	# El fantasma: parpadea cada 0,5 s (fijo con Menos destellos).
 	var blink := 0.5 if dim or fmod(life, 1.0) < 0.5 else 0.3
 	_silhouette(ci, pos, Color(col.lightened(0.3), blink * fade))
