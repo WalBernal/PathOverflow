@@ -57,7 +57,7 @@ func _initialize() -> void:
 		# Versión de combate: misma pista (tempo, compases y acordes) con batería
 		# frenética y bajo pulsante; MusicPlayer cambia a ella en el mismo punto.
 		if String(data["tracks"][id].get("drums", "none")) in COMBAT_DRUMS and not id.ends_with("_fase") \
-				and not id.begins_with("camp") and not id.begins_with("boss"):
+				and not id.begins_with("camp") and not id.begins_with("boss") and not id.begins_with("prologo"):   # (en el prólogo no se pelea)
 			var t: Dictionary = data["tracks"][id].duplicate(true)
 			t["drums"] = "frenzy"
 			t["bass"] = "pulse"   # "from" igual: la intro dura lo mismo y el bucle empieza en el mismo sitio

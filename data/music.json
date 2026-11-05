@@ -110,6 +110,18 @@
       "prog": [[0, "m"], [0, "m"], [10, "M"], [8, "M"]], "prog_b": [[5, "m"], [3, "M"], [10, "M"], [7, "M"]], "arp_lift": true,
       "pad": 0.04, "bass": "eighth", "arp": "up", "arp_wave": "square", "lead": "pluck", "drums": "drive",
       "from": {"arp": 0, "lead": 2, "drums": 0}
+    },
+    "prologo_calle": {
+      "name": "Mediodía en el malecón (prólogo: la calle y el pasillo)", "bpm": 92, "bars": 16, "chord_bars": 2, "seed": 1347, "root": 50, "scale": "major",
+      "prog": [[0, "M"], [7, "M"], [9, "m"], [5, "M"]], "prog_b": [[5, "M"], [4, "m"], [2, "m"], [7, "sus"]], "arp_lift": true,
+      "pad": 0.04, "bass": "root", "arp": "broken", "arp_wave": "piano", "lead": "bell", "drums": "soft",
+      "from": {"arp": 0, "lead": 2, "drums": 4}
+    },
+    "prologo_oficina": {
+      "name": "Algo huele a quemado (prólogo: la oficina)", "bpm": 76, "bars": 16, "chord_bars": 2, "seed": 2004, "root": 45, "scale": "minor",
+      "prog": [[0, "m"], [8, "M"], [3, "M"], [10, "M"]], "prog_b": [[5, "m"], [8, "M"], [10, "sus"], [7, "M"]],
+      "pad": 0.05, "bass": "root", "arp": "ballad", "arp_wave": "bell", "lead": "piano", "drums": "none",
+      "from": {"arp": 0, "lead": 4}
     }
   },
   "zones": {

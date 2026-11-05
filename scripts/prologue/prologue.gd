@@ -93,6 +93,15 @@ var _absorb_time := 0.0
 var _absorb_cues := {}   # quién ya gritó (cada uno una vez)
 
 
+## Tema de cada sitio del prólogo (T189): tranquilo en la calle y el pasillo, tenso en
+## la oficina. Calla cuando entra la consola roja.
+const ROOM_MUSIC := {"calle": "prologo_calle", "pasillo": "prologo_calle", "oficina": "prologo_oficina"}
+
+
+static func music_for(room: String) -> String:
+	return String(ROOM_MUSIC.get(room, ""))
+
+
 func _ready() -> void:
 	MusicPlayer.stop_music()
 	var pending: Dictionary = GameData.pending_creation
@@ -502,6 +511,8 @@ func _interact(action: String) -> void:
 
 
 func _go_room(room: String, x: float) -> void:
+	if music_for(room) != "":
+		MusicPlayer.play_track(music_for(room), 2.5)   # (si ya suena, sigue sin cortarse)
 	_stage.room = room
 	_stage.player_x = x
 	_stage.player_depth = 0.0
@@ -594,6 +605,7 @@ func _start_console() -> void:
 	_phase = "console"
 	_console_text = "\n".join(PackedStringArray(PrologueText.lines("console", CONSOLE_LINES)))
 	_console_chars = 0.0
+	MusicPlayer.stop_music(1.2)   # la música se apaga cuando entra la consola roja (T189)
 	Sfx.play("wave", -6.0, 0.7)
 
 
@@ -683,6 +695,7 @@ func _start_title() -> void:
 	_fade_target = 1.0
 	Sfx.ambient("")
 	Sfx.play("explosion", -4.0, 0.7)
+	MusicPlayer.stinger("commit")   # golpe musical en «EL ÚLTIMO COMMIT» (T189)
 
 
 func _finish() -> void:

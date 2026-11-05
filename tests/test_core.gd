@@ -5522,6 +5522,14 @@ func _test_prologue_touch() -> void:
 	var script: GDScript = load("res://scripts/prologue/prologue.gd")
 	_check(script.touch_use_text("E · Hablar con Rafa") == "Hablar con Rafa", "botón de usar: sin la tecla")
 	_check(script.touch_use_text("Mirar la TV") == "Mirar la TV", "botón de usar: sin tecla, igual")
+	# T189: cada sitio del prólogo tiene su tema, y su pista y el golpe del título existen.
+	var music: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/music.json"))
+	var themed := true
+	for room in ["calle", "pasillo", "oficina"]:
+		var track: String = script.music_for(room)
+		themed = themed and music["tracks"].has(track) and ResourceLoader.exists("res://assets/audio/music/%s.ogg" % track)
+	_check(themed and script.music_for("calle") != script.music_for("oficina"), "prólogo: la calle y la oficina tienen su propio tema")
+	_check(FileAccess.file_exists("res://assets/audio/sfx/sting_commit.wav"), "prólogo: el golpe musical de «EL ÚLTIMO COMMIT» existe")
 	# T187: el tecleo de la intro suena las mismas veces a 30, 60 y 144 FPS.
 	var clicks_at := func(fps: float) -> int:
 		var chars := 0.0

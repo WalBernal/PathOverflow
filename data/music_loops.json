@@ -16,13 +16,15 @@
   "dark1_combate": 349090.0,
   "deep3": 365714.0,
   "deep3_combate": 365714.0,
-  "estres": 111304,
-  "estres_combate": 111304,
+  "estres": 111304.0,
+  "estres_combate": 111304.0,
   "field1": 274285.0,
   "field1_combate": 274285.0,
   "field2": 260338.0,
   "field2_combate": 260338.0,
   "field3": 274285.0,
   "field3_combate": 274285.0,
+  "prologo_calle": 333913,
+  "prologo_oficina": 404210,
   "subjefe": 0.0
 }

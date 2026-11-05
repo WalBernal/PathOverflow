@@ -62,6 +62,11 @@ func _t78_stingers() -> Dictionary:
 
 
 func _initialize() -> void:
+	if OS.get_cmdline_user_args().has("t189"):
+		rng.seed = 189
+		_save(SFX_DIR + "sting_commit.wav", _sting_commit(), 0.85)
+		print("Aviso de T189 generado: sting_commit")
+		return
 	if OS.get_cmdline_user_args().has("t78"):
 		rng.seed = 7878
 		var t78 := _t78_stingers()
@@ -499,6 +504,23 @@ func _sting_boss() -> PackedFloat32Array:
 				var u: float = t - at
 				hit += sin(TAU * (65.0 - 15.0 * u) * u) * _env(u, 0.002, 0.3)
 		b[i] = swell * 0.7 + chord * 0.8 + hit
+	return b
+
+
+## «EL ÚLTIMO COMMIT» (T189): golpe grave, acorde mayor abierto que se queda sonando
+## y se va degradando a 8 bits (cada vez con menos resolución), como el mundo al caer.
+func _sting_commit() -> PackedFloat32Array:
+	var b := _buf(3.0)
+	var lp := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		var boom := sin(TAU * (55.0 - 18.0 * t) * t) * _env(t, 0.002, 0.5)
+		var chord := (_saw(t * 98.0) + _saw(t * 146.8) + _saw(t * 196.0) + _saw(t * 246.9) * 0.6) / 3.6
+		lp = _lp(lp, chord, 500.0 + 2500.0 * exp(-t / 0.4))
+		var sustain := lp * _env(t, 0.01, 1.6)
+		var steps := lerpf(64.0, 4.0, clampf(t / 2.6, 0.0, 1.0))   # menos niveles: se pixela el sonido
+		sustain = roundf(sustain * steps) / steps
+		b[i] = boom * 0.9 + sustain * 0.75 + _noise() * 0.12 * _env(t, 0.001, 0.08)
 	return b
 
 
