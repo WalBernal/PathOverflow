@@ -218,6 +218,11 @@ func _run() -> void:
 		await _benchmark()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("invocaciones"):
+		await _capture_unit_art()
+		await _capture_unit_states()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("habilidades"):
 		await _capture_unit_art()
 		await _capture_skills_with_rams()
@@ -4415,3 +4420,43 @@ func _capture_zone_seeds() -> void:
 func _save(name: String) -> void:
 	get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path(OUT + name + ".png"))
 	print("captura: ", name)
+
+
+## Motor de animación de invocaciones (T200): cada una en sus estados (quieta,
+## caminando a un lado y al otro, atacando a la izquierda, apareciendo, herida y
+## muriendo) y con las escalas de Monolito, Microservicios y el Clúster de tres.
+func _capture_unit_states() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var skills: Dictionary = gd.get("items").skills.skills
+	var units: Array = []
+	for id in skills:
+		if skills[id]["kind"] == "unit":
+			units.append(skills[id])
+	var cols := [["quieta", {"state": "idle"}], ["camina →", {"state": "walk", "move": 1.0, "walk": 1.2}],
+		["camina ←", {"state": "walk", "move": 1.0, "walk": 2.8, "facing": -1.0, "aim": Vector2.LEFT}],
+		["ataca ←", {"state": "attack", "t": 0.5, "facing": -1.0, "aim": Vector2(-1, -0.4), "focus": true}],
+		["apunta ↘", {"state": "idle", "aim": Vector2(1, 0.5), "focus": true}],
+		["aparece", {"state": "spawn", "t": 0.45}], ["herida", {"state": "hurt", "t": 0.5}], ["muere", {"state": "die", "t": 0.5}],
+		["Monolito", {"state": "idle", "scale": UnitArt.SCALE_MONOLITH}], ["Microserv.", {"state": "idle", "scale": UnitArt.SCALE_MICROSERVICES}],
+		["Clúster", {"state": "idle", "scale": UnitArt.SCALE_TRIO}]]
+	var half := 6
+	for page in ceili(units.size() / float(half)):
+		var part := units.slice(page * half, mini(units.size(), (page + 1) * half))
+		var sheet := Control.new()
+		sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+		sheet.draw.connect(func() -> void:
+			sheet.draw_rect(Rect2(Vector2.ZERO, sheet.size), Color("1d2a26"))
+			var font := sheet.get_theme_default_font()
+			for k in cols.size():
+				sheet.draw_string(font, Vector2(150 + k * 130, 28), cols[k][0], HORIZONTAL_ALIGNMENT_CENTER, 120, 13)
+			for i in part.size():
+				var y := 150.0 + i * 140.0
+				var col := Color(part[i].get("icon", {}).get("color", "c8c8c8"))
+				sheet.draw_string(font, Vector2(8, y - 20), part[i]["name"], HORIZONTAL_ALIGNMENT_LEFT, 140, 12)
+				for k in cols.size():
+					var a: Dictionary = {"facing": 1.0, "aim": Vector2.RIGHT, "t": 0.0, "walk": 0.0, "move": 0.0, "scale": 1.0}
+					a.merge(cols[k][1], true)
+					UnitArt.draw(sheet, part[i]["id"], part[i]["unit"]["behavior"], Vector2(210 + k * 130, y), 2.0, col, a))
+		_swap(sheet)
+		await _wait(0.5)
+		_save("200_invocaciones_estados_%d" % (page + 1))

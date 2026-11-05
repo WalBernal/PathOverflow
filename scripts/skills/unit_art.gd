@@ -1,11 +1,67 @@
 class_name UnitArt
 ## Dibujo de las invocaciones persistentes, cada una con su figura (hasta que
-## haya arte final). `p` son los pies (o el centro si orbita); `ph` la fase de
-## animación; `c` el color de la habilidad. Lo usan SkillController y la
-## herramienta de capturas.
+## haya arte final). `p` son los pies (o el centro si orbita); `ph` el reloj de
+## animación (siempre corre: LEDs, ventiladores, visores); `c` el color de la
+## habilidad. Lo usan SkillController y la herramienta de capturas.
+##
+## Motor de animación (T200): `anim` (ver `anim()`) trae hacia dónde mira, hacia
+## dónde apunta, el estado (quieto, caminar, atacar, aparecer, herido, morir) con
+## su progreso, la fase de caminar (solo avanza al moverse) y la escala de la
+## unidad. Sin `anim` se dibuja como siempre: mirando a la derecha y quieta.
+
+const STATES := ["idle", "walk", "attack", "spawn", "hurt", "die"]
+## Duración de cada estado con tiempo propio.
+const SPAWN_TIME := 0.4
+const ATTACK_TIME := 0.25
+const DIE_TIME := 0.35
+## Tras atacar o fijar un objetivo, cuánto sigue mirándolo aunque se mueva.
+const LOOK_TIME := 0.35
+## Fase de caminar por píxel recorrido (a 220 px/s, ~1,2 zancadas por segundo).
+const WALK_PER_PX := 0.035
+## Por debajo de esta velocidad (px/s) cuenta como quieta.
+const STILL_SPEED := 20.0
+## Escala por nodo clave o variante: Monolito más grande; Microservicios y el
+## Clúster de tres, más pequeños.
+const SCALE_MONOLITH := 1.35
+const SCALE_MICROSERVICES := 0.8
+const SCALE_TRIO := 0.75
+
+# Estado del dibujo en curso (lo fija draw() antes de llamar a cada figura).
+static var _flip := 1.0          # 1 = mira a la derecha, -1 = a la izquierda
+static var _move := 0.0          # 0 quieta … 1 caminando (mezcla las dos animaciones)
+static var _walk := 0.0          # fase de caminar
+static var _aim := Vector2.RIGHT # hacia el objetivo, en el espacio de la figura (ya volteado)
+static var _focus := false       # tiene un objetivo fijado (mira en vez de vigilar)
+static var _base := Transform2D.IDENTITY
 
 
-static func draw(ci: CanvasItem, skill_id: String, behavior: String, p: Vector2, ph: float, c: Color) -> void:
+static func draw(ci: CanvasItem, skill_id: String, behavior: String, p: Vector2, ph: float, c: Color, anim := {}) -> void:
+	_flip = 1.0
+	_move = 0.0
+	_walk = 0.0
+	_aim = Vector2.RIGHT
+	_focus = false
+	_base = Transform2D.IDENTITY
+	var at := p
+	if not anim.is_empty():
+		_flip = -1.0 if float(anim.get("facing", 1.0)) < 0.0 else 1.0
+		_move = clampf(float(anim.get("move", 0.0)), 0.0, 1.0)
+		_walk = float(anim.get("walk", 0.0))
+		var aim: Vector2 = anim.get("aim", Vector2.RIGHT)
+		_aim = Vector2(aim.x * _flip, aim.y).normalized() if aim.length() > 0.01 else Vector2.RIGHT
+		_focus = bool(anim.get("focus", false))
+		_base = Transform2D(0.0, _state_scale(String(anim.get("state", "idle")), float(anim.get("t", 0.0)), ph) * float(anim.get("scale", 1.0)) * Vector2(_flip, 1.0), 0.0,
+			p + Vector2(_state_shift(String(anim.get("state", "idle")), float(anim.get("t", 0.0))) * _flip, 0.0))
+		ci.draw_set_transform_matrix(_base)
+		at = Vector2.ZERO
+	_figure(ci, skill_id, behavior, at, ph, c)
+	if not anim.is_empty():
+		ci.draw_set_transform_matrix(Transform2D.IDENTITY)
+		_base = Transform2D.IDENTITY
+		_flip = 1.0
+
+
+static func _figure(ci: CanvasItem, skill_id: String, behavior: String, p: Vector2, ph: float, c: Color) -> void:
 	match skill_id:
 		"robot_centinela":
 			_sentinel(ci, p, ph, c)
@@ -49,29 +105,178 @@ static func draw(ci: CanvasItem, skill_id: String, behavior: String, p: Vector2,
 					_daemon(ci, p, ph)
 
 
-## Robot centinela: patas, torso con visor que barre y un cañón.
+# --- Motor de animación ---
+
+## Datos de animación de una invocación para draw().
+static func anim(u: Dictionary) -> Dictionary:
+	var state := state_of(u)
+	var t := 0.0
+	match state:
+		"spawn":
+			t = 1.0 - float(u.get("spawn", 0.0)) / SPAWN_TIME
+		"attack":
+			t = 1.0 - float(u.get("atk", 0.0)) / ATTACK_TIME
+		"hurt":
+			t = 1.0 - clampf(float(u.get("hurt", 0.0)) / 0.15, 0.0, 1.0)
+		"die":
+			t = float(u.get("dying", 0.0)) / DIE_TIME
+	return {"facing": float(u.get("facing", 1.0)), "aim": u.get("aim", Vector2.RIGHT), "state": state, "t": clampf(t, 0.0, 1.0),
+		"walk": float(u.get("walk", 0.0)), "move": float(u.get("move", 0.0)), "scale": float(u.get("scale", 1.0)),
+		"focus": float(u.get("look", 0.0)) > 0.0}
+
+
+## Estado de animación, de más a menos prioritario.
+static func state_of(u: Dictionary) -> String:
+	if u.has("dying"):
+		return "die"
+	if float(u.get("spawn", 0.0)) > 0.0:
+		return "spawn"
+	if float(u.get("atk", 0.0)) > 0.0:
+		return "attack"
+	if float(u.get("hurt", 0.0)) > 0.0:
+		return "hurt"
+	if float(u.get("move", 0.0)) > 0.5:
+		return "walk"
+	return "idle"
+
+
+## Avanza la animación un fotograma: la fase de caminar solo con lo que se ha
+## movido (`moved`, en píxeles), los temporizadores de estado y, si camina sin
+## un objetivo fijado, se voltea hacia donde va.
+static func tick(u: Dictionary, delta: float, moved: Vector2) -> void:
+	var dist := moved.length()
+	var moving := dist > STILL_SPEED * delta
+	u["walk"] = float(u.get("walk", 0.0)) + dist * WALK_PER_PX
+	u["move"] = move_toward(float(u.get("move", 0.0)), 1.0 if moving else 0.0, delta * 6.0)
+	u["spawn"] = maxf(0.0, float(u.get("spawn", 0.0)) - delta)
+	u["atk"] = maxf(0.0, float(u.get("atk", 0.0)) - delta)
+	u["look"] = maxf(0.0, float(u.get("look", 0.0)) - delta)
+	if moving and float(u["look"]) <= 0.0:
+		u["aim"] = moved / dist
+		if absf(moved.x) > dist * 0.2:
+			u["facing"] = signf(moved.x)
+
+
+## Mira hacia `dir` (un objetivo): voltea la figura y apunta cañón o cabeza.
+static func look(u: Dictionary, dir: Vector2) -> void:
+	if dir.length() < 0.01:
+		return
+	u["aim"] = dir.normalized()
+	u["look"] = LOOK_TIME
+	if absf(dir.x) > 0.01:
+		u["facing"] = signf(dir.x)
+
+
+## Ataca hacia `dir`: mira y entra en el estado de ataque.
+static func strike(u: Dictionary, dir: Vector2) -> void:
+	look(u, dir)
+	u["atk"] = ATTACK_TIME
+
+
+## Escala de dibujo por nodo clave y variante (no cambia el tamaño de colisión).
+static func scale_for(variant: String, monolith: bool, microservices: bool) -> float:
+	var s := 1.0
+	if monolith:
+		s *= SCALE_MONOLITH
+	elif microservices:
+		s *= SCALE_MICROSERVICES
+	if variant == "trio":
+		s *= SCALE_TRIO
+	return s
+
+
+## Deformación del cuerpo según el estado (pivote en los pies): respira quieta,
+## crece con rebote al aparecer, se aplasta al atacar y se hunde al morir.
+static func _state_scale(state: String, t: float, ph: float) -> Vector2:
+	match state:
+		"spawn":
+			var k := t / 0.7 * 1.12 if t < 0.7 else lerpf(1.12, 1.0, (t - 0.7) / 0.3)
+			return Vector2(lerpf(0.6, 1.0, minf(1.0, t * 1.4)), k)
+		"attack":
+			var hit := sin(t * PI)
+			return Vector2(1.0 + 0.08 * hit, 1.0 - 0.06 * hit)
+		"die":
+			return Vector2(1.0 + 0.3 * t, maxf(0.05, 1.0 - 0.9 * t))
+		"idle":
+			var breath := sin(ph * 0.35)
+			return Vector2(1.0 - 0.015 * breath, 1.0 + 0.025 * breath)
+	return Vector2.ONE
+
+
+## Desplazamiento horizontal hacia delante (positivo) según el estado.
+static func _state_shift(state: String, t: float) -> float:
+	match state:
+		"attack":
+			return sin(t * PI) * 4.0
+		"hurt":
+			return -sin(t * PI) * 3.0
+	return 0.0
+
+
+## Transformación local relativa a la de la figura (sombras, obleas).
+static func _set_xf(ci: CanvasItem, pos: Vector2, sc: Vector2) -> void:
+	ci.draw_set_transform_matrix(_base * Transform2D(0.0, sc, 0.0, pos))
+
+
+static func _reset_xf(ci: CanvasItem) -> void:
+	ci.draw_set_transform_matrix(_base)
+
+
+## Texto que no se ve al revés cuando la figura mira a la izquierda.
+static func _text(ci: CanvasItem, pos: Vector2, s: String, size: int, col: Color) -> void:
+	var font := ThemeDB.fallback_font
+	if _flip > 0.0:
+		ci.draw_string(font, pos, s, HORIZONTAL_ALIGNMENT_LEFT, -1, size, col)
+		return
+	var w := font.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
+	_set_xf(ci, pos + Vector2(w * 0.5, 0.0), Vector2(-1.0, 1.0))
+	ci.draw_string(font, Vector2(-w * 0.5, 0.0), s, HORIZONTAL_ALIGNMENT_LEFT, -1, size, col)
+	_reset_xf(ci)
+
+
+## Balanceo al caminar (amplitud `amp`), que se apaga al pararse.
+static func _stride(offset: float, amp: float) -> float:
+	return sin(_walk + offset) * amp * _move
+
+
+## Respiración/flote en espera, que se apaga al caminar.
+static func _rest(ph: float, speed: float, amp: float) -> float:
+	return sin(ph * speed) * amp * (1.0 - _move)
+
+
+## Dirección del cañón: la de apuntado, sin pasarse de ±50° (no dispara hacia atrás).
+static func _barrel() -> Vector2:
+	return Vector2.from_angle(clampf(_aim.angle(), -0.9, 0.9))
+
+
+# --- Figuras ---
+
+## Robot centinela: patas, torso con visor que barre y un cañón que apunta.
 static func _sentinel(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
-	var bob := sin(ph) * 1.5
+	var bob := -absf(sin(_walk)) * 1.5 * _move + _rest(ph, 0.4, 0.8)
 	for s in [-1.0, 1.0]:
-		ci.draw_line(p + Vector2(s * 4, 2), p + Vector2(s * 6 + sin(ph + s) * 2.0, 10), Color("4a4f5c"), 3.0, true)
+		ci.draw_line(p + Vector2(s * 4, 2), p + Vector2(s * 6 + _stride(s * 1.5, 3.0), 10), Color("4a4f5c"), 3.0, true)
 	ci.draw_rect(Rect2(p + Vector2(-9, -16 + bob), Vector2(18, 16)), Color("6e7480"))
 	ci.draw_rect(Rect2(p + Vector2(-9, -16 + bob), Vector2(18, 16)), Color("2f333c"), false, 1.5)
 	ci.draw_rect(Rect2(p + Vector2(-6, -13 + bob), Vector2(12, 5)), Color("10161c"))
 	ci.draw_rect(Rect2(p + Vector2(-5, -12 + bob), Vector2(10 * (0.5 + 0.5 * sin(ph * 0.7)), 3)), c)
-	ci.draw_rect(Rect2(p + Vector2(8, -8 + bob), Vector2(9, 4)), Color("3a3f4a"))
+	var pivot := p + Vector2(8, -6 + bob)
+	ci.draw_line(pivot, pivot + _barrel() * 9.0, Color("3a3f4a"), 4.0)
+	ci.draw_circle(pivot + _barrel() * 9.0, 1.5, Color(c, 0.8))
 	ci.draw_line(p + Vector2(0, -16 + bob), p + Vector2(0, -22 + bob), Color("8a8a96"), 1.5)
 	ci.draw_circle(p + Vector2(0, -23 + bob), 2.0, c)
 
 
 ## Daemon (el de BSD): cuerpecillo rojo con cuernos y un tridente.
 static func _daemon(ci: CanvasItem, p: Vector2, ph: float) -> void:
-	var hop := absf(sin(ph)) * 3.0
+	var hop := absf(sin(_walk)) * 3.0 * _move + (0.8 + _rest(ph, 0.5, 0.8))
 	ci.draw_circle(p + Vector2(0, -8 - hop), 9.0, Color("b8322a"))
 	ci.draw_circle(p + Vector2(0, -19 - hop), 6.5, Color("c83a30"))
 	for s in [-1.0, 1.0]:
 		ci.draw_colored_polygon(PackedVector2Array([p + Vector2(s * 3, -24 - hop), p + Vector2(s * 8, -31 - hop), p + Vector2(s * 6, -22 - hop)]), Color("f0e0c0"))
-	ci.draw_circle(p + Vector2(-2.5, -19 - hop), 1.3, Color("ffe070"))
-	ci.draw_circle(p + Vector2(2.5, -19 - hop), 1.3, Color("ffe070"))
+	var eye := _aim * 0.8
+	ci.draw_circle(p + Vector2(-2.5, -19 - hop) + eye, 1.3, Color("ffe070"))
+	ci.draw_circle(p + Vector2(2.5, -19 - hop) + eye, 1.3, Color("ffe070"))
 	ci.draw_line(p + Vector2(11, -2 - hop), p + Vector2(11, -26 - hop), Color("c8c8c8"), 1.5, true)
 	for k in 3:
 		ci.draw_line(p + Vector2(8 + k * 3, -26 - hop), p + Vector2(8 + k * 3, -31 - hop), Color("c8c8c8"), 1.5, true)
@@ -79,27 +284,28 @@ static func _daemon(ci: CanvasItem, p: Vector2, ph: float) -> void:
 
 ## Golem de hardware: torres de PC apiladas con LEDs y un monitor por cabeza.
 static func _golem(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
-	var sway := sin(ph * 0.5) * 1.5
+	var sway := _stride(0.0, 1.5) + _rest(ph, 0.3, 0.6)
 	ci.draw_rect(Rect2(p + Vector2(-16, -28 + sway), Vector2(32, 30)), Color("5a5650"))
 	ci.draw_rect(Rect2(p + Vector2(-16, -28 + sway), Vector2(32, 30)), Color("2a2724"), false, 2.0)
 	for k in 4:
 		ci.draw_circle(p + Vector2(-10 + k * 6, -6 + sway), 1.6, c if fmod(ph + k, 3.0) < 1.5 else Color("2a2a20"))
 	for s in [-1.0, 1.0]:
-		ci.draw_rect(Rect2(p + Vector2(s * 16 - (8 if s < 0 else 0), -24 + sway + sin(ph + s) * 2.0), Vector2(8, 22)), Color("47443f"))
-	ci.draw_rect(Rect2(p + Vector2(-11, -44 + sway), Vector2(22, 16)), Color("b8b8b0"))
-	ci.draw_rect(Rect2(p + Vector2(-9, -42 + sway), Vector2(18, 11)), Color("10200f"))
-	ci.draw_string(ThemeDB.fallback_font, p + Vector2(-8, -33 + sway), "ò_ó", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("3cff6a"))
+		ci.draw_rect(Rect2(p + Vector2(s * 16 - (8 if s < 0 else 0), -24 + sway + _stride(s, 2.0)), Vector2(8, 22)), Color("47443f"))
+	var look := Vector2(_aim.x * 1.5, _aim.y * 1.5)
+	ci.draw_rect(Rect2(p + Vector2(-11, -44 + sway) + look, Vector2(22, 16)), Color("b8b8b0"))
+	ci.draw_rect(Rect2(p + Vector2(-9, -42 + sway) + look, Vector2(18, 11)), Color("10200f"))
+	_text(ci, p + Vector2(-8, -33 + sway) + look, "ò_ó", 9, Color("3cff6a"))
 
 
 ## Mainframe Titán: un armario de servidores con piernas, hombreras de ventilador,
 ## un ojo-láser y LEDs que corren por el pecho. El doble de grande que el golem.
 static func _titan(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
-	var sway := sin(ph * 0.4) * 2.0
-	ci.draw_set_transform(p + Vector2(0, 4), 0.0, Vector2(1.0, 0.35))
+	var sway := _stride(0.0, 2.0) + _rest(ph, 0.25, 1.0)
+	_set_xf(ci, p + Vector2(0, 4), Vector2(1.0, 0.35))
 	ci.draw_circle(Vector2.ZERO, 34.0, Color(0, 0, 0, 0.35))
-	ci.draw_set_transform(Vector2.ZERO)
+	_reset_xf(ci)
 	for s in [-1.0, 1.0]:   # piernas
-		ci.draw_rect(Rect2(p + Vector2(s * 12 - 7, -14 + sin(ph + s) * 2.0), Vector2(14, 16)), Color("3a3f4a"))
+		ci.draw_rect(Rect2(p + Vector2(s * 12 - 7, -14 + _stride(s, 2.0)), Vector2(14, 16)), Color("3a3f4a"))
 		ci.draw_rect(Rect2(p + Vector2(s * 12 - 9, 0), Vector2(18, 5)), Color("2a2e36"))
 	var body := Rect2(p + Vector2(-24, -62 + sway), Vector2(48, 50))
 	ci.draw_rect(body, Color("2c3038"))
@@ -116,12 +322,14 @@ static func _titan(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
 		for k in 3:
 			var a := ph * 6.0 + k * TAU / 3.0
 			ci.draw_line(sh, sh + Vector2.from_angle(a) * 6.0, Color("8a8f9c"), 2.0)
-		ci.draw_rect(Rect2(sh + Vector2(-5, 8), Vector2(10, 24 + sin(ph + s) * 2.0)), Color("3a3f4a"))
+		ci.draw_rect(Rect2(sh + Vector2(-5, 8), Vector2(10, 24 + _stride(s, 2.0))), Color("3a3f4a"))
 		ci.draw_rect(Rect2(sh + Vector2(-7, 30), Vector2(14, 8)), Color("4a4f5c"))
-	var head := Rect2(p + Vector2(-14, -82 + sway), Vector2(28, 18))
+	var head := Rect2(p + Vector2(-14, -82 + sway) + Vector2(_aim.x, _aim.y) * 2.0, Vector2(28, 18))
 	ci.draw_rect(head, Color("4a4f5c"))
 	ci.draw_rect(Rect2(head.position + Vector2(4, 6), Vector2(20, 6)), Color("10161c"))
-	ci.draw_rect(Rect2(head.position + Vector2(8 + 6.0 * sin(ph * 0.8), 7), Vector2(6, 4)), Color("ff3a3a"))   # ojo-láser
+	# Ojo-láser: barre en espera y se clava hacia el objetivo al apuntar.
+	var eye_x := 8.0 + 6.0 * (_aim.x if _focus else sin(ph * 0.8))
+	ci.draw_rect(Rect2(head.position + Vector2(eye_x, 7), Vector2(6, 4)), Color("ff3a3a"))
 	ci.draw_line(head.position + Vector2(14, 0), head.position + Vector2(14, -8), Color("8a8f9c"), 2.0)
 	ci.draw_circle(head.position + Vector2(14, -9), 2.5, c)
 
@@ -143,38 +351,42 @@ static func _drone(ci: CanvasItem, skill_id: String, p: Vector2, ph: float, c: C
 			ci.draw_arc(p + Vector2(0, 1), 4.5, PI, TAU, 8, c, 2.0, true)
 			ci.draw_arc(p + Vector2(0, 1), 9.0 + sin(ph) * 0.8, PI * 1.1, PI * 1.9, 10, Color(c, 0.5), 1.5, true)
 		_:
-			ci.draw_circle(p, 2.6 + 0.6 * sin(ph * 2.0), c)
+			# El escolta: el núcleo-ojo mira al objetivo.
+			ci.draw_circle(p + _aim * 1.5, 2.6 + 0.6 * sin(ph * 2.0), c)
 			ci.draw_circle(p + Vector2(0, 7), 1.5 + absf(sin(ph * 5.0)), Color("ffb040"))   # tobera
 
 
 ## Bot de Pruebas: muñeco de choque (crash test) amarillo y negro, con su diana.
 static func _dummy(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
-	var run := sin(ph * 1.6)
+	var run := _stride(0.0, 1.0)
+	var idle := _rest(ph, 0.4, 1.0)
 	for s in [-1.0, 1.0]:
 		ci.draw_line(p + Vector2(s * 3, -8), p + Vector2(s * 4 + run * s * 3.0, 0), Color("2a2a2a"), 3.0, true)
 	ci.draw_rect(Rect2(p + Vector2(-6, -20), Vector2(12, 13)), Color("e8c040"))
 	ci.draw_rect(Rect2(p + Vector2(-6, -20), Vector2(6, 6.5)), Color("2a2a2a"))
 	ci.draw_rect(Rect2(p + Vector2(0, -13.5), Vector2(6, 6.5)), Color("2a2a2a"))
 	for s in [-1.0, 1.0]:
-		ci.draw_line(p + Vector2(s * 6, -18), p + Vector2(s * 10, -11 - run * s * 2.0), Color("e8c040"), 2.5, true)
-	ci.draw_circle(p + Vector2(0, -26), 5.5, Color("e8c040"))
-	ci.draw_arc(p + Vector2(0, -26), 3.2, 0.0, TAU, 10, Color("2a2a2a"), 1.0)
-	ci.draw_circle(p + Vector2(0, -26), 1.0, c)
+		ci.draw_line(p + Vector2(s * 6, -18), p + Vector2(s * 10, -11 - run * s * 2.0 + idle * s), Color("e8c040"), 2.5, true)
+	var head := p + Vector2(0, -26) + _aim * 1.0
+	ci.draw_circle(head, 5.5, Color("e8c040"))
+	ci.draw_arc(head, 3.2, 0.0, TAU, 10, Color("2a2a2a"), 1.0)
+	ci.draw_circle(head, 1.0, c)
 
 
 ## Mina Rodante: bomba sobre dos ruedas con una mecha que chisporrotea.
 static func _wheel_mine(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
+	var rock := _rest(ph, 0.6, 0.6)
 	for s in [-1.0, 1.0]:
 		var w := p + Vector2(s * 7, -4)
 		ci.draw_circle(w, 4.5, Color("3a3a40"))
-		ci.draw_line(w, w + Vector2.from_angle(ph * 4.0 * s) * 3.5, Color("8a8a96"), 1.0)
-	ci.draw_circle(p + Vector2(0, -12), 9.0, Color("26262c"))
-	ci.draw_circle(p + Vector2(-3, -15), 2.5, Color("5a5a66"))
-	ci.draw_rect(Rect2(p + Vector2(-3, -22), Vector2(6, 3)), Color("8a8a96"))
-	ci.draw_line(p + Vector2(0, -22), p + Vector2(5, -28), Color("8a6d3b"), 1.5, true)
+		ci.draw_line(w, w + Vector2.from_angle(_walk * 1.5 + s) * 3.5, Color("8a8a96"), 1.0)   # ruedan al avanzar
+	ci.draw_circle(p + Vector2(rock, -12), 9.0, Color("26262c"))
+	ci.draw_circle(p + Vector2(-3 + rock, -15), 2.5, Color("5a5a66"))
+	ci.draw_rect(Rect2(p + Vector2(-3 + rock, -22), Vector2(6, 3)), Color("8a8a96"))
+	ci.draw_line(p + Vector2(rock, -22), p + Vector2(5 + rock, -28), Color("8a6d3b"), 1.5, true)
 	var spark := 0.5 + 0.5 * sin(ph * 12.0)
-	ci.draw_circle(p + Vector2(5, -29), 1.8 + spark * 1.5, Color(1.0, 0.8, 0.3, 0.9))
-	ci.draw_circle(p + Vector2(0, -12), 3.0, Color(c, 0.4 + 0.4 * spark))
+	ci.draw_circle(p + Vector2(5 + rock, -29), 1.8 + spark * 1.5, Color(1.0, 0.8, 0.3, 0.9))
+	ci.draw_circle(p + Vector2(rock, -12), 3.0, Color(c, 0.4 + 0.4 * spark))
 
 
 ## Agente IA: un orbe flotante con dos ojos verdes, una sonrisa y burbujas de datos.
@@ -185,12 +397,13 @@ static func _agent(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
 	ci.draw_arc(o, 10.0, 0.0, TAU, 20, c, 2.0, true)
 	ci.draw_arc(o, 13.0, ph, ph + 1.6, 8, Color(c, 0.5), 1.5, true)
 	var blink := fmod(ph, 4.0) > 3.8
+	var eye := _aim * 1.5   # los ojos miran al objetivo
 	for s in [-1.0, 1.0]:
 		if blink:
-			ci.draw_line(o + Vector2(s * 3.5 - 1.5, -2), o + Vector2(s * 3.5 + 1.5, -2), Color("3cff9a"), 1.5)
+			ci.draw_line(o + Vector2(s * 3.5 - 1.5, -2) + eye, o + Vector2(s * 3.5 + 1.5, -2) + eye, Color("3cff9a"), 1.5)
 		else:
-			ci.draw_circle(o + Vector2(s * 3.5, -2), 1.8, Color("3cff9a"))
-	ci.draw_arc(o + Vector2(0, 2), 3.5, 0.3, PI - 0.3, 6, Color("3cff9a"), 1.2, true)
+			ci.draw_circle(o + Vector2(s * 3.5, -2) + eye, 1.8, Color("3cff9a"))
+	ci.draw_arc(o + Vector2(0, 2) + eye * 0.5, 3.5, 0.3, PI - 0.3, 6, Color("3cff9a"), 1.2, true)
 	for k in 3:
 		var t := fmod(ph * 0.5 + k * 0.33, 1.0)
 		ci.draw_circle(o + Vector2(8 + k * 2, -10 - t * 12.0), 1.2 + k * 0.4, Color(c, 0.8 * (1.0 - t)))
@@ -198,14 +411,14 @@ static func _agent(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
 
 ## Watchdog: perro guardián de chapa con collar parpadeante (reinicia lo que se cuelga).
 static func _watchdog(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
-	var trot := sin(ph * 1.8)
+	var trot := _stride(0.0, 1.0)
 	var body := Color("8a6a4a")
 	for k in 4:
 		var x := -9.0 + k * 6.0
 		ci.draw_line(p + Vector2(x, -6), p + Vector2(x + trot * (1.0 if k % 2 == 0 else -1.0) * 2.0, 0), Color("5a4430"), 2.5, true)
-	ci.draw_colored_polygon(QuestItemArt.ellipse(p + Vector2(-1, -10), 12.0, 6.0), body)
-	ci.draw_line(p + Vector2(-12, -12), p + Vector2(-17, -18 - absf(trot) * 3.0), body, 2.5, true)   # cola
-	var head := p + Vector2(11, -17)
+	ci.draw_colored_polygon(QuestItemArt.ellipse(p + Vector2(-1, -10 + absf(trot) * -1.0), 12.0, 6.0), body)
+	ci.draw_line(p + Vector2(-12, -12), p + Vector2(-17, -18 - absf(sin(ph * 2.0)) * 3.0), body, 2.5, true)   # cola (menea siempre)
+	var head := p + Vector2(11, -17) + Vector2(maxf(0.0, _aim.x) * 1.0, _aim.y * 3.0)
 	ci.draw_circle(head, 5.5, body)
 	ci.draw_colored_polygon(PackedVector2Array([head + Vector2(3, -1), head + Vector2(9, 1), head + Vector2(3, 3)]), body.darkened(0.15))   # hocico
 	ci.draw_colored_polygon(PackedVector2Array([head + Vector2(-3, -4), head + Vector2(-1, -10), head + Vector2(1, -4)]), body.darkened(0.3))   # oreja
@@ -213,21 +426,23 @@ static func _watchdog(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
 	ci.draw_line(p + Vector2(6, -14), p + Vector2(7, -9), c if fmod(ph, 1.0) < 0.5 else c.darkened(0.6), 2.0)   # collar con LED
 
 
-## Bot Rastreador: robot de QA sobre una rueda, con lupa y cerbatana de dardos.
+## Bot Rastreador: robot de QA sobre una rueda, con lupa y cerbatana que apunta.
 static func _bug_hunter(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
-	var bob := sin(ph) * 1.0
+	var bob := _stride(0.0, 1.0) + _rest(ph, 0.4, 0.7)
 	ci.draw_circle(p + Vector2(0, -4), 4.5, Color("3a3a40"))
-	ci.draw_line(p + Vector2(0, -4), p + Vector2(0, -4) + Vector2.from_angle(ph * 3.0) * 3.5, Color("8a8a96"), 1.0)
+	ci.draw_line(p + Vector2(0, -4), p + Vector2(0, -4) + Vector2.from_angle(_walk * 1.5) * 3.5, Color("8a8a96"), 1.0)
 	ci.draw_rect(Rect2(p + Vector2(-7, -20 + bob), Vector2(14, 13)), Color("4a7a4a"))
 	ci.draw_rect(Rect2(p + Vector2(-7, -20 + bob), Vector2(14, 13)), Color("1f331f"), false, 1.5)
-	ci.draw_string(ThemeDB.fallback_font, p + Vector2(-6, -10 + bob), "QA", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("dff0d0"))
+	_text(ci, p + Vector2(-6, -10 + bob), "QA", 8, Color("dff0d0"))
 	ci.draw_circle(p + Vector2(0, -25 + bob), 5.0, Color("5a8a5a"))
-	ci.draw_circle(p + Vector2(1.5, -25 + bob), 2.0, c)
+	ci.draw_circle(p + Vector2(1.5, -25 + bob) + _aim * 1.0, 2.0, c)
 	# Lupa a un lado y cerbatana al otro.
 	ci.draw_arc(p + Vector2(-11, -16 + bob), 3.5, 0.0, TAU, 10, Color("c8c8c8"), 1.5, true)
 	ci.draw_line(p + Vector2(-9, -13 + bob), p + Vector2(-6, -10 + bob), Color("8a6d3b"), 1.5)
-	ci.draw_line(p + Vector2(7, -14 + bob), p + Vector2(16, -16 + bob), Color("6a5a4a"), 2.0)
-	ci.draw_circle(p + Vector2(16, -16 + bob), 1.2, c)
+	var mouth := p + Vector2(7, -14 + bob)
+	var tip := mouth + _barrel() * 9.5
+	ci.draw_line(mouth, tip, Color("6a5a4a"), 2.0)
+	ci.draw_circle(tip, 1.2, c)
 
 
 # --- Golems (cada uno con su silueta: nada de cajas con patas) ---
@@ -235,12 +450,12 @@ static func _bug_hunter(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void
 ## Golem del Silicio: coloso de cristal en bruto, con un die de chip brillando
 ## en el pecho, esquirlas en los hombros y obleas que orbitan a su alrededor.
 static func _golem_silicon(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
-	var sway := sin(ph * 0.45) * 1.5
+	var sway := _stride(0.0, 1.5) + _rest(ph, 0.3, 0.8)
 	var dark := Color("3e5866")
 	var mid := Color("6f93a6")
 	var light := Color("b8dcec")
 	for s in [-1.0, 1.0]:   # piernas: columnas hexagonales
-		var lp := p + Vector2(s * 9, -2 + sin(ph + s) * 1.5)
+		var lp := p + Vector2(s * 9, -2 + _stride(s, 1.5))
 		ci.draw_colored_polygon(PackedVector2Array([lp + Vector2(-6, 2), lp + Vector2(-7, -10), lp + Vector2(-3, -16), lp + Vector2(4, -16), lp + Vector2(7, -10), lp + Vector2(6, 2)]), dark)
 		ci.draw_line(lp + Vector2(-3, -15), lp + Vector2(-5, 0), mid, 1.5)
 	# Torso: una gema irregular con caras claras y oscuras.
@@ -261,10 +476,10 @@ static func _golem_silicon(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> v
 		for k in 3:
 			var base := t + Vector2(s * (17 + k * 3), -12 + k * 3)
 			ci.draw_colored_polygon(PackedVector2Array([base + Vector2(-3, 2), base + Vector2(s * 2, -10 + k * 2), base + Vector2(3, 2)]), light if k == 0 else mid)
-		var arm := t + Vector2(s * 20, 2 + sin(ph * 0.9 + s) * 2.0)
+		var arm := t + Vector2(s * 20, 2 + _stride(s + 0.5, 2.0) + _rest(ph, 0.5, 0.6))
 		ci.draw_colored_polygon(PackedVector2Array([arm + Vector2(-4, -4), arm + Vector2(4, -4), arm + Vector2(6, 12), arm + Vector2(0, 18), arm + Vector2(-6, 12)]), dark)
-	# Cabeza: gema pequeña con dos ojos.
-	var h := t + Vector2(0, -27)
+	# Cabeza: gema pequeña con dos ojos que miran al objetivo.
+	var h := t + Vector2(0, -27) + _aim * 1.5
 	ci.draw_colored_polygon(PackedVector2Array([h + Vector2(-7, 2), h + Vector2(-4, -7), h + Vector2(5, -7), h + Vector2(8, 2), h + Vector2(0, 7)]), mid)
 	ci.draw_rect(Rect2(h + Vector2(-4, -2), Vector2(2, 2)), c)
 	ci.draw_rect(Rect2(h + Vector2(2, -2), Vector2(2, 2)), c)
@@ -272,19 +487,19 @@ static func _golem_silicon(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> v
 	for k in 3:
 		var a := ph * 0.6 + TAU * k / 3.0
 		var wp := t + Vector2(cos(a) * 30.0, sin(a) * 9.0 - 4.0)
-		ci.draw_set_transform(wp, 0.0, Vector2(1.0, 0.45))
+		_set_xf(ci, wp, Vector2(1.0, 0.45))
 		ci.draw_circle(Vector2.ZERO, 5.0, Color(light, 0.85 if sin(a) > 0.0 else 0.4))
 		ci.draw_arc(Vector2.ZERO, 5.0, 0.0, TAU, 10, Color(c, 0.7), 1.0)
-		ci.draw_set_transform(Vector2.ZERO)
+		_reset_xf(ci)
 
 
-## Golem de Overclock: un disipador de aletas al rojo vivo, inclinado hacia
-## delante como si corriera, con un ventilador por cabeza y llamas de calor.
+## Golem de Overclock: un disipador de aletas al rojo vivo, que se inclina hacia
+## delante al correr, con un ventilador por cabeza y llamas de calor.
 static func _golem_overclock(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
-	var run := sin(ph * 2.2)
-	var lean := 4.0
+	var run := _stride(0.0, 1.0)
+	var lean := 1.0 + 3.0 * _move
 	for s in [-1.0, 1.0]:   # piernas de muelle (zigzag)
-		var hip := p + Vector2(s * 5 + lean * 0.3, -14)
+		var hip := p + Vector2(s * 5 + lean * 0.3, -14 + _rest(ph, 0.8, 1.0))
 		var foot := p + Vector2(s * 5 + run * s * 6.0, 0)
 		var pts := PackedVector2Array([hip])
 		for k in 5:
@@ -294,7 +509,7 @@ static func _golem_overclock(ci: CanvasItem, p: Vector2, ph: float, c: Color) ->
 		ci.draw_polyline(pts, Color("9a9aa6"), 2.0)
 		ci.draw_rect(Rect2(foot + Vector2(-4, -1), Vector2(8, 3)), Color("4a4a56"))
 	# Cuerpo: aletas verticales que pasan de aluminio a rojo vivo abajo.
-	var body := p + Vector2(lean, -38)
+	var body := p + Vector2(lean, -38 + _rest(ph, 0.8, 1.0))
 	for k in 7:
 		var x := -12.0 + k * 4.0
 		var heat := 0.5 + 0.5 * sin(ph * 3.0 + k)
@@ -311,7 +526,7 @@ static func _golem_overclock(ci: CanvasItem, p: Vector2, ph: float, c: Color) ->
 		ci.draw_line(sh, sh + Vector2(s * 4 - run * s * 5.0, 16), Color("c87a3a"), 3.0)
 		ci.draw_circle(sh + Vector2(s * 4 - run * s * 5.0, 16), 2.5, Color("e0a060"))
 	# Cabeza: carcasa de ventilador con aspas girando muy rápido.
-	var head := body + Vector2(2, -9)
+	var head := body + Vector2(2, -9) + _aim * 1.5
 	ci.draw_circle(head, 9.0, Color("2a2a30"))
 	ci.draw_arc(head, 9.0, 0.0, TAU, 16, Color("8a8a96"), 1.5)
 	for k in 5:
@@ -329,7 +544,7 @@ static func _golem_overclock(ci: CanvasItem, p: Vector2, ph: float, c: Color) ->
 ## retuercen, con dos LEDs de puerto por ojos y brazos que acaban en conectores RJ45.
 static func _golem_utp(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
 	var cols := [Color("3a6fd0"), Color("e0802a"), Color("3aa04a"), Color("8a5a30"), Color("d8d8d8")]
-	var center := p + Vector2(0, -26)
+	var center := p + Vector2(0, -26 + _rest(ph, 0.3, 1.0) - absf(_stride(0.0, 1.5)))
 	# La maraña: lazos de cable alrededor del centro, cada uno moviéndose un poco.
 	for k in 14:
 		var col: Color = cols[k % cols.size()]
@@ -343,33 +558,34 @@ static func _golem_utp(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
 	# Patas: tres manojos de cable que llegan al suelo.
 	for s in [-1.0, 0.0, 1.0]:
 		var top := center + Vector2(s * 9, 12)
-		var foot := p + Vector2(s * 12 + sin(ph + s) * 2.0, 0)
+		var foot := p + Vector2(s * 12 + _stride(s * 2.0, 3.0), 0)
 		ci.draw_line(top, foot, cols[int(s + 1)], 3.0)
 		ci.draw_line(top + Vector2(2, 0), foot + Vector2(3, 0), Color(cols[4], 0.7), 1.5)
 	# Brazos: cables largos que cuelgan y se balancean, con un RJ45 al final.
 	for s in [-1.0, 1.0]:
 		var sh := center + Vector2(s * 16, -4)
-		var hand := sh + Vector2(s * 10 + sin(ph * 1.3 + s) * 4.0, 20)
+		var hand := sh + Vector2(s * 10 + sin(ph * 1.3 + s) * (1.5 + 2.5 * _move), 20)
 		var mid := sh.lerp(hand, 0.5) + Vector2(s * 6, 0)
 		ci.draw_polyline(PackedVector2Array([sh, mid, hand]), cols[0 if s < 0 else 1], 3.0, true)
 		ci.draw_rect(Rect2(hand + Vector2(-4, 0), Vector2(8, 7)), Color(0.85, 0.9, 0.95, 0.8))
 		for k in 3:
 			ci.draw_rect(Rect2(hand + Vector2(-3 + k * 2.5, 5), Vector2(1.5, 2)), Color("e0b050"))
 	# Ojos: LEDs de enlace (verde fijo y naranja que parpadea con la actividad).
-	ci.draw_rect(Rect2(center + Vector2(-7, -6), Vector2(5, 4)), Color("1a1a1a"))
-	ci.draw_rect(Rect2(center + Vector2(2, -6), Vector2(5, 4)), Color("1a1a1a"))
-	ci.draw_rect(Rect2(center + Vector2(-6, -5), Vector2(3, 2)), Color("40ff70"))
-	ci.draw_rect(Rect2(center + Vector2(3, -5), Vector2(3, 2)), Color("ffa030") if int(ph * 5.0) % 2 == 0 else Color("3a2a10"))
+	var eyes := center + _aim * 1.5
+	ci.draw_rect(Rect2(eyes + Vector2(-7, -6), Vector2(5, 4)), Color("1a1a1a"))
+	ci.draw_rect(Rect2(eyes + Vector2(2, -6), Vector2(5, 4)), Color("1a1a1a"))
+	ci.draw_rect(Rect2(eyes + Vector2(-6, -5), Vector2(3, 2)), Color("40ff70"))
+	ci.draw_rect(Rect2(eyes + Vector2(3, -5), Vector2(3, 2)), Color("ffa030") if int(ph * 5.0) % 2 == 0 else Color("3a2a10"))
 
 
 ## Golem GPU: una tarjeta gráfica que camina: carcasa ancha con dos
 ## ventiladores en el pecho, tira RGB que cambia de color, dientes de contacto
 ## PCIe dorados por mandíbula y patas de heatpipe de cobre.
 static func _golem_gpu(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
-	var bob := sin(ph) * 1.2
+	var bob := _stride(0.0, 1.2) + _rest(ph, 0.4, 0.8)
 	for s in [-1.0, 1.0]:   # patas de heatpipe (curvas de cobre)
 		var hip := p + Vector2(s * 12, -14 + bob)
-		var foot := p + Vector2(s * 14 + sin(ph + s) * 3.0, 0)
+		var foot := p + Vector2(s * 14 + _stride(s, 3.0), 0)
 		ci.draw_polyline(PackedVector2Array([hip, hip.lerp(foot, 0.5) + Vector2(s * 4, 0), foot]), Color("c87a3a"), 3.0, true)
 		ci.draw_rect(Rect2(foot + Vector2(-4, -1), Vector2(8, 3)), Color("3a3a42"))
 	var body := Rect2(p + Vector2(-24, -38 + bob), Vector2(48, 24))
@@ -391,8 +607,8 @@ static func _golem_gpu(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
 	# Mandíbula: los dientes dorados del conector PCIe.
 	for k in 10:
 		ci.draw_rect(Rect2(body.position + Vector2(5 + k * 4, body.size.y), Vector2(2.5, 4)), Color("e0b050"))
-	# Cabeza: el bloque de puertos de vídeo, con dos LEDs por ojos.
-	var head := Rect2(p + Vector2(-9, -49 + bob), Vector2(18, 11))
+	# Cabeza: el bloque de puertos de vídeo, con dos LEDs por ojos; gira hacia el objetivo.
+	var head := Rect2(p + Vector2(-9, -49 + bob) + Vector2(_aim.x * 2.0, _aim.y * 2.0), Vector2(18, 11))
 	ci.draw_rect(head, Color("3a3e48"))
 	ci.draw_rect(Rect2(head.position + Vector2(2, 3), Vector2(6, 4)), Color("0c0d10"))
 	ci.draw_rect(Rect2(head.position + Vector2(10, 3), Vector2(6, 4)), Color("0c0d10"))
@@ -406,20 +622,21 @@ static func _golem_gpu(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
 static func _golem_kernel(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> void:
 	var hover := sin(ph * 0.7) * 3.0
 	var top := p + Vector2(0, -50 + hover)
-	# Cola que se deshace en píxeles.
+	# Cola que se deshace en píxeles (se arrastra hacia atrás al avanzar).
 	for k in 8:
 		var f := fmod(ph * 0.4 + k * 0.125, 1.0)
-		ci.draw_rect(Rect2(p + Vector2(-6 + (k % 4) * 3.5, -10 + f * 10.0 + hover), Vector2(3, 3)), Color(c, 0.7 * (1.0 - f)))
+		ci.draw_rect(Rect2(p + Vector2(-6 + (k % 4) * 3.5 - f * 6.0 * _move, -10 + f * 10.0 + hover), Vector2(3, 3)), Color(c, 0.7 * (1.0 - f)))
 	# Túnica: silueta que se estrecha hacia abajo, con borde que brilla.
+	var drag := -4.0 * _move
 	var robe := PackedVector2Array([top + Vector2(-15, 8), top + Vector2(-8, -2), top + Vector2(8, -2), top + Vector2(15, 8),
-		top + Vector2(11, 30), top + Vector2(5, 40), top + Vector2(0, 36), top + Vector2(-5, 40), top + Vector2(-11, 30)])
+		top + Vector2(11 + drag * 0.5, 30), top + Vector2(5 + drag, 40), top + Vector2(drag, 36), top + Vector2(-5 + drag, 40), top + Vector2(-11 + drag * 0.5, 30)])
 	ci.draw_colored_polygon(robe, Color("1c1028"))
 	ci.draw_polyline(robe + PackedVector2Array([robe[0]]), Color(c, 0.6 + 0.3 * sin(ph * 1.4)), 1.5, true)
-	# Cara: una pantalla con «:(» (el pánico del kernel).
-	var face := Rect2(top + Vector2(-9, -16), Vector2(18, 14))
+	# Cara: una pantalla con «:(» (el pánico del kernel), vuelta hacia el objetivo.
+	var face := Rect2(top + Vector2(-9, -16) + _aim * 1.5, Vector2(18, 14))
 	ci.draw_rect(face, Color("2a1640"))
 	ci.draw_rect(face, Color(c, 0.9), false, 1.0)
-	ci.draw_string(ThemeDB.fallback_font, face.position + Vector2(3, 11), ":(", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("e0d0ff"))
+	_text(ci, face.position + Vector2(3, 11), ":(", 10, Color("e0d0ff"))
 	# Manos espectrales.
 	for s in [-1.0, 1.0]:
 		var hand := top + Vector2(s * 19, 14 + sin(ph + s) * 3.0)
@@ -430,7 +647,7 @@ static func _golem_kernel(ci: CanvasItem, p: Vector2, ph: float, c: Color) -> vo
 	for k in glyphs.size():
 		var a := ph * 0.5 + TAU * k / glyphs.size()
 		var gp := top + Vector2(cos(a) * 24.0, 12.0 + sin(a) * 8.0)
-		ci.draw_string(ThemeDB.fallback_font, gp, glyphs[k], HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(c.lightened(0.4), 0.5 + 0.4 * sin(a)))
+		_text(ci, gp, glyphs[k], 8, Color(c.lightened(0.4), 0.5 + 0.4 * sin(a)))
 	# Gotas de caos.
 	for k in 3:
 		var f := fmod(ph * 0.6 + k * 0.33, 1.0)

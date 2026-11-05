@@ -232,6 +232,7 @@ func _initialize() -> void:
 	_test_quest_item_art()
 	_test_rams_everywhere()
 	_test_prologue_reachable()
+	_test_unit_animation()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -8579,3 +8580,59 @@ func _test_thermal_shock_and_status_resist() -> void:
 	pa.queue_free()
 	pb.queue_free()
 	e2.queue_free()
+
+
+## Motor de animación de invocaciones (T200): la fase de caminar solo avanza al
+## moverse, se voltean hacia lo que atacan y la escala por nodo clave o variante.
+func _test_unit_animation() -> void:
+	_check(is_equal_approx(UnitArt.scale_for("", false, false), 1.0), "escala normal 1")
+	_check(UnitArt.scale_for("", true, false) > 1.2, "Monolito se ve más grande")
+	_check(UnitArt.scale_for("", false, true) < 1.0 and UnitArt.scale_for("trio", false, false) < 1.0, "Microservicios y el Clúster de tres, más pequeños")
+	var c := CharacterData.new(_classes[5], _tree)
+	var em := EnemyManager.new()
+	root.add_child(em)
+	var player: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(player)
+	player.setup(c, em)
+	player.global_position = Vector2(40000, 40000)
+	var sc := SkillController.new()
+	root.add_child(sc)
+	c.inventory.set_board(0, Motherboard.new(_db.skills.skills["daemon_segundo_plano"], 5, []))
+	sc.setup(player, em, c)
+	sc._summon_unit(sc.profile(0), player.global_position, Color.WHITE)
+	_check(sc._units.size() == 1, "hay un daemon para animar")
+	if sc._units.size() == 1:
+		var u: Dictionary = sc._units[0]
+		_check(UnitArt.state_of(u) == "spawn", "al invocarla, aparece")
+		# Quieta en su sitio junto al jugador: la fase de caminar no avanza.
+		u["pos"] = player.global_position + Vector2.from_angle(PI * 0.5 + u["slot"] * 1.4) * 70.0
+		var walk0 := float(u["walk"])
+		var clock0 := float(u["phase"])
+		for k in 10:
+			sc._update_units(0.05)
+		_check(is_equal_approx(float(u["walk"]), walk0) and float(u["phase"]) > clock0, "quieta: la fase de caminar no avanza (el reloj sí)")
+		_check(UnitArt.state_of(u) == "idle", "quieta y ya aparecida: en espera (%s)" % UnitArt.state_of(u))
+		# Lejos de su sitio: camina hacia él y se voltea según la marcha.
+		u["pos"] = player.global_position + Vector2(300, 70)
+		for k in 6:
+			sc._update_units(0.05)
+		_check(float(u["walk"]) > walk0 and float(u["facing"]) < 0.0 and UnitArt.state_of(u) == "walk", "camina hacia la izquierda: fase de caminar y volteada")
+		# Ataca a un enemigo que tiene a la izquierda: queda volteada hacia él.
+		u["pos"] = player.global_position + Vector2(-60, 0)
+		u["facing"] = 1.0
+		u["cd"] = 0.0
+		em.spawn((u["pos"] as Vector2) + Vector2(-20, 0), Rarity.Enemy.NORMAL, -1, "", 1000.0)
+		sc._update_units(0.05)
+		_check(float(u["facing"]) < 0.0 and UnitArt.state_of(u) == "attack" and (u["aim"] as Vector2).x < 0.0, "ataca a la izquierda: volteada, apuntando y en estado de ataque")
+		var a := UnitArt.anim(u)
+		_check(a["state"] == "attack" and float(a["facing"]) < 0.0, "los datos de animación llevan dirección y estado")
+		# Al caer: estado «die» un momento y después desaparece.
+		u["life"] = 0.0
+		sc._update_units(0.05)
+		_check(sc._units.is_empty() and sc._dying_units.size() == 1 and UnitArt.state_of(sc._dying_units[0]) == "die", "al caer, se dibuja muriendo")
+		for k in 10:
+			sc._update_units(0.05)
+		_check(sc._dying_units.is_empty(), "y luego desaparece")
+	sc.queue_free()
+	player.queue_free()
+	em.queue_free()

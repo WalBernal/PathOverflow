@@ -56,6 +56,8 @@ var _drones: Array[Dictionary] = []       # drones que orbitan y disparan (Drone
 ## Invocaciones persistentes (kind "unit"): no caducan, reservan maná y los
 ## enemigos pueden atacarlas (EnemyManager.allies). Ver _update_units.
 var _units: Array[Dictionary] = []
+## Invocaciones que acaban de caer: solo se dibujan (estado «die») hasta UnitArt.DIE_TIME.
+var _dying_units: Array[Dictionary] = []
 const UNIT_LEASH := 900.0
 ## Vida de las torretas desplegadas (fracción de la vida máxima del jugador).
 const TOTEM_LIFE_FRACTION := 0.4
@@ -186,6 +188,7 @@ func _refresh_units() -> void:
 		u["base_reduction"] = float(p["unit_reduction"])
 		u["max_life"] = maxf(1.0, p["unit_life"])
 		u["life"] = u["max_life"] * frac
+		u["scale"] = _unit_scale(p)
 		kept.append(u)
 	_units = kept
 	_update_reservation()
@@ -1727,6 +1730,7 @@ func _summon_unit(p: Dictionary, origin: Vector2, color: Color) -> void:
 		worst["life"] = worst["max_life"]
 		if worst["behavior"] != "orbit":
 			worst["pos"] = origin + Vector2.from_angle(randf() * TAU) * 40.0
+			worst["spawn"] = UnitArt.SPAWN_TIME
 		_effects.append({"type": "ring", "pos": worst["pos"], "radius": 34.0, "time": 0.0, "duration": 0.4, "color": color})
 		return
 	var life: float = maxf(1.0, p["unit_life"])
@@ -1735,13 +1739,21 @@ func _summon_unit(p: Dictionary, origin: Vector2, color: Color) -> void:
 		"radius": float(unit.get("radius", 12.0)), "taunt": float(unit.get("taunt", 0.0)), "reduction": float(p["unit_reduction"]), "base_reduction": float(p["unit_reduction"]),
 		"ab_cd": float(p["unit_ability"].get("cooldown", p["unit_interval"])) * 0.5,
 		"cd": 0.5, "phase": randf() * TAU, "hurt": 0.0, "angle": TAU * mine.size() / maxf(1.0, p["max_units"]),
-		"slot": mine.size(), "color": color}
+		"slot": mine.size(), "color": color,
+		# Animación (UnitArt): fase de caminar, mezcla quieta/caminando, hacia dónde mira y apunta, escala.
+		"walk": 0.0, "move": 0.0, "facing": 1.0 if origin.x >= player.global_position.x else -1.0, "aim": Vector2.RIGHT,
+		"spawn": UnitArt.SPAWN_TIME, "atk": 0.0, "look": 0.0, "scale": _unit_scale(p)}
 	_units.append(u)
 	_effects.append({"type": "ring", "pos": u["pos"], "radius": 40.0 + u["radius"], "time": 0.0, "duration": 0.5, "color": color})
 	_update_reservation()
 
 
 func _update_units(delta: float) -> void:
+	if not _dying_units.is_empty():
+		for d in _dying_units:
+			d["dying"] += delta
+			d["phase"] += delta * 6.0
+		_dying_units = _dying_units.filter(func(d: Dictionary) -> bool: return float(d["dying"]) < UnitArt.DIE_TIME)
 	if _units.is_empty():
 		return
 	if not player.is_alive():
@@ -1751,7 +1763,7 @@ func _update_units(delta: float) -> void:
 	var still: Array[Dictionary] = []
 	for u in _units:
 		u["hurt"] = maxf(0.0, float(u.get("hurt", 0.0)) - delta)
-		u["phase"] += delta * 6.0
+		u["phase"] += delta * 6.0   # reloj de la figura (LEDs, ventiladores); la fase de caminar es u["walk"]
 		u["cd"] -= delta
 		# Auras con alcance: fuera del radio la invocación pelea con sus cifras sin auras.
 		var in_aura := in_aura_range(u["pos"])
@@ -1774,12 +1786,18 @@ func _update_units(delta: float) -> void:
 				_effects.append({"type": "quake", "pos": u["pos"], "radius": boom_radius, "time": 0.0, "duration": 0.5, "color": u["color"]})
 				death_color = u["color"]
 			_effects.append({"type": "burst", "pos": u["pos"], "radius": 36.0 + u["radius"], "time": 0.0, "duration": 0.4, "color": death_color})
+			if u["behavior"] != "orbit":
+				var corpse := u.duplicate()
+				corpse["dying"] = 0.0
+				corpse["move"] = 0.0
+				_dying_units.append(corpse)
 			unit_lost.emit(String(p["name"]))
 			lost = true
 			continue
-		_unit_ability(u, p, delta)
 		if (u["pos"] as Vector2).distance_to(player.global_position) > UNIT_LEASH:
 			u["pos"] = player.global_position + Vector2.from_angle(randf() * TAU) * 60.0   # se ha quedado atrás
+		_unit_ability(u, p, delta)
+		var before: Vector2 = u["pos"]   # tras el salto: lo que cuenta para caminar es el paso
 		var unit: Dictionary = p["unit"]
 		var speed := float(unit.get("speed", 220.0))
 		var reach_range := float(unit.get("range", 450.0))
@@ -1801,6 +1819,7 @@ func _update_units(delta: float) -> void:
 				if i != -1 and enemies.positions[i].distance_to(player.global_position) < reach_range * 1.8:
 					var to := enemies.positions[i] - pos
 					var reach: float = enemies.radii[i] + u["radius"] + 4.0
+					UnitArt.look(u, to)
 					if to.length() > reach:
 						_unit_step(u, enemies.positions[i], speed, delta, reach)
 					elif u["cd"] <= 0.0 and String(p["unit_ability"].get("kind", "")) == "explode":
@@ -1808,6 +1827,7 @@ func _update_units(delta: float) -> void:
 					elif u["cd"] <= 0.0:
 						u["cd"] = p["unit_interval"]
 						_ctx(p)
+						UnitArt.strike(u, to)
 						if u["behavior"] == "tank":
 							if p["stun"] > 0.0:
 								enemies.stun_in_radius(pos, p["radius"], p["stun"])
@@ -1819,6 +1839,8 @@ func _update_units(delta: float) -> void:
 							_effects.append({"type": "burst", "pos": pos + to.normalized() * u["radius"], "radius": 14.0, "time": 0.0, "duration": 0.15, "color": u["color"]})
 				else:
 					_unit_step(u, player.global_position + Vector2.from_angle(PI * 0.5 + u["slot"] * 1.4) * 70.0, speed, delta, 12.0)
+		# Las que orbitan no caminan: solo miran a su objetivo.
+		UnitArt.tick(u, delta, Vector2.ZERO if u["behavior"] == "orbit" else (u["pos"] as Vector2) - before)
 		still.append(u)
 	_units = still
 	if lost:
@@ -1891,6 +1913,7 @@ func _one_unit_ability(u: Dictionary, p: Dictionary, ab: Dictionary, delta: floa
 			if enemies.walk_clamp.is_valid():
 				land = enemies.walk_clamp.call(land, u["radius"])
 			_effects.append({"type": "leap", "pos": pos, "end": land, "time": 0.0, "duration": 0.3, "color": u["color"]})
+			UnitArt.strike(u, land - pos)
 			u["pos"] = land
 			_ctx(p)
 			var leap_radius := float(ab.get("radius", 75.0)) * float(p.get("area_scale", 1.0))
@@ -1904,6 +1927,7 @@ func _one_unit_ability(u: Dictionary, p: Dictionary, ab: Dictionary, delta: floa
 				u["ab_cd"] = 0.5
 				return
 			u["ab_cd"] = float(ab.get("cooldown", 7.0)) / speed
+			UnitArt.strike(u, enemies.positions[t] - pos)
 			var cloud := p.duplicate()
 			cloud["tick"] = 0.5
 			cloud["radius"] = float(ab.get("radius", 95.0)) * float(p.get("area_scale", 1.0))
@@ -1970,12 +1994,20 @@ func _one_unit_ability(u: Dictionary, p: Dictionary, ab: Dictionary, delta: floa
 			u["ab_cd"] = float(ab.get("cooldown", 4.0)) / speed
 			var from := pos + Vector2(0, -float(p["unit"].get("beam_height", 74.0)))
 			var to: Vector2 = from + (enemies.positions[far] - from).normalized() * reach
+			UnitArt.strike(u, enemies.positions[far] - pos)
 			_ctx(p)
 			var bm := float(ab.get("damage_mult", 1.6)) * float(p.get("ability_power", 1.0))
 			enemies.hit_in_segment(from, to, float(ab.get("width", 22.0)) * 0.5, p["min_damage"] * bm, p["max_damage"] * bm, p["crit_chance"], p["crit_multiplier"])
 			Sfx.play("arc", -8.0, 0.8)
 			_effects.append({"type": "beam", "pos": from, "dir": (to - from).normalized(), "radius": float(ab.get("width", 22.0)), "length": reach,
 				"time": 0.0, "duration": 0.3, "color": Color("ff4a3a")})
+
+
+## Escala de dibujo de una invocación: Monolito, Microservicios y el Clúster de tres.
+func _unit_scale(p: Dictionary) -> float:
+	var monolith := character != null and character.stats.get_value(Stat.MONOLITH) > 0.0
+	var micro := character != null and character.stats.get_value(Stat.MICROSERVICES) > 0.0
+	return UnitArt.scale_for(String(p.get("variant", "")), monolith, micro)
 
 
 ## Avanza hacia `goal` hasta quedarse a `stop` de él, sin salirse del terreno.
@@ -1999,6 +2031,7 @@ func _unit_shoot(u: Dictionary, p: Dictionary, reach_range: float) -> void:
 		return
 	u["cd"] = p["unit_interval"]
 	var dir: Vector2 = (enemies.positions[t] - pos).normalized()
+	UnitArt.strike(u, dir)
 	_fire_volley(p, pos, dir, u["color"], {}, reach_range * 1.5)
 	_effects.append({"type": "burst", "pos": pos + dir * 10.0, "radius": 8.0, "time": 0.0, "duration": 0.12, "color": u["color"]})
 
@@ -2666,17 +2699,25 @@ func _draw_auras() -> void:
 
 ## Invocaciones persistentes: cada comportamiento tiene su figura.
 func _draw_units() -> void:
+	for u in _dying_units:
+		var dp: Vector2 = u["pos"]
+		var fade := 1.0 - float(u["dying"]) / UnitArt.DIE_TIME
+		draw_set_transform(dp + Vector2(0, u["radius"] * 0.7), 0.0, Vector2(1.0, 0.4))
+		draw_circle(Vector2.ZERO, u["radius"] * 1.1 * float(u.get("scale", 1.0)), Color(0, 0, 0, 0.35 * fade))
+		draw_set_transform(Vector2.ZERO)
+		UnitArt.draw(self, String(u["skill_id"]), String(u["behavior"]), dp, u["phase"], u["color"], UnitArt.anim(u))
 	for u in _units:
 		var p: Vector2 = u["pos"]
 		var ph: float = u["phase"]
 		var c: Color = u["color"]
 		var hurt: bool = u.get("hurt", 0.0) > 0.0
-		var r: float = u["radius"]
+		var sc := float(u.get("scale", 1.0))
+		var r: float = u["radius"] * sc
 		if u["behavior"] != "orbit":
 			draw_set_transform(p + Vector2(0, r * 0.7), 0.0, Vector2(1.0, 0.4))
 			draw_circle(Vector2.ZERO, r * 1.1, Color(0, 0, 0, 0.35))
 			draw_set_transform(Vector2.ZERO)
-		UnitArt.draw(self, String(u["skill_id"]), String(u["behavior"]), p, ph, c)
+		UnitArt.draw(self, String(u["skill_id"]), String(u["behavior"]), p, ph, c, UnitArt.anim(u))
 		if hurt:
 			draw_circle(p + Vector2(0, -r), r * 1.1, Color(1, 1, 1, 0.35))
 		if u["behavior"] != "orbit":
