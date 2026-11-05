@@ -929,6 +929,8 @@ func _physics_process(delta: float) -> void:
 	# ni torretas, ni proyectiles en vuelo. Solo se apagan los efectos visuales.
 	if enemies.frozen or player.controls_locked:
 		_channel = {}
+		if not _debris.is_empty():
+			UnitArt.update_debris(_debris, delta)   # las piezas de lo que se desarmó no se quedan en el aire
 		_update_effects(delta)
 		queue_redraw()
 		return
@@ -1785,7 +1787,9 @@ func _unit_knockback(u: Dictionary) -> void:
 	var away: Vector2 = (pos - enemies.positions[i]).normalized() if i != -1 else Vector2(-float(u.get("facing", 1.0)), 0.0)
 	if away == Vector2.ZERO:
 		away = Vector2(-float(u.get("facing", 1.0)), 0.0)
-	u["pos"] = pos + away * (UNIT_KNOCKBACK * (0.4 if u["behavior"] == "tank" else 1.0))
+	var to: Vector2 = pos + away * (UNIT_KNOCKBACK * (0.4 if u["behavior"] == "tank" else 1.0))
+	# Sin salirse del terreno: quieta junto a una pared, los golpes la meterían dentro.
+	u["pos"] = enemies.walk_clamp.call(to, u["radius"]) if enemies.walk_clamp.is_valid() else to
 
 
 func _update_units(delta: float) -> void:

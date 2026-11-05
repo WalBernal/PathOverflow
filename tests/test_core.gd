@@ -8703,6 +8703,15 @@ func _test_unit_spawn_death() -> void:
 	u["hurt"] = 0.15
 	sc._update_units(0.016)
 	_check((u["pos"] as Vector2).x < rest.x - 2.0, "y el siguiente golpe, ya recuperada, la vuelve a empujar")
+	# Contra una pared (el terreno acaba 2 px detrás), el retroceso no la mete dentro.
+	for k in 12:
+		sc._update_units(0.016)
+	var wall: float = (u["pos"] as Vector2).x - 2.0
+	em.walk_clamp = func(q: Vector2, _r: float) -> Vector2: return Vector2(maxf(q.x, wall), q.y)
+	u["hurt"] = 0.15
+	sc._update_units(0.016)
+	_check((u["pos"] as Vector2).x >= wall - 0.01, "el retroceso no la saca del terreno (%.1f, pared en %.1f)" % [(u["pos"] as Vector2).x, wall])
+	em.walk_clamp = Callable()
 	# Al caer: piezas y bits que saltan, caen al suelo y se apagan.
 	u["life"] = 0.0
 	sc._update_units(0.016)
@@ -8728,6 +8737,14 @@ func _test_unit_spawn_death() -> void:
 		"ally": {"life": 0.0, "max_life": 10.0}, "profile": {"id": "x"}})
 	sc._update_devices(0.05)
 	_check(sc._devices.is_empty() and sc._debris.size() >= 20, "la torreta que caduca y el contenedor destruido se desarman (%d)" % sc._debris.size())
+	# En una escena (enemigos congelados) las piezas siguen cayendo y se apagan.
+	sc._debris.clear()
+	UnitArt.shatter(sc._debris, Vector2.ZERO, 30.0, [Color.WHITE], 4, 4)
+	em.frozen = true
+	for k in 50:
+		sc._physics_process(0.02)
+	em.frozen = false
+	_check(sc._debris.is_empty(), "en una escena las piezas no se quedan en el aire")
 	# Tope de piezas para el rendimiento.
 	for k in 40:
 		UnitArt.shatter(sc._debris, Vector2.ZERO, 60.0, [Color.WHITE], 10, 10)
