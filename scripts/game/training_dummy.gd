@@ -189,7 +189,7 @@ static func dot_split(em: EnemyManager, i: int) -> Dictionary:
 
 func _draw() -> void:
 	var t := Time.get_ticks_msec() / 1000.0
-	var o := Vector2(sin(t * 60.0) * 3.0, 0.0) * (_shake / 0.18) if _shake > 0.0 else Vector2.ZERO
+	var o := Vector2(sin(t * 60.0) * 3.0, 0.0) * (_shake / 0.18) if _shake > 0.0 and not Accessibility.reduce_motion else Vector2.ZERO
 	# Sombra, patas y cuerpo.
 	draw_set_transform(Vector2(0, 18), 0.0, Vector2(1.0, 0.32))
 	draw_circle(Vector2.ZERO, 38.0, Color(0, 0, 0, 0.35))
@@ -221,4 +221,4 @@ func _draw() -> void:
 		draw_rect(body, Color(1, 1, 1, _flash / 0.12 * 0.45))
 	# Letrero.
 	var font := ThemeDB.fallback_font
-	draw_string(font, Vector2(-40, 36), "PRUEBAS", HORIZONTAL_ALIGNMENT_CENTER, 80, 11, Color("8b949e"))
+	draw_string(font, Vector2(-40, 36), "PRUEBAS", HORIZONTAL_ALIGNMENT_CENTER, 80, Accessibility.world_size(11), Color("8b949e"))

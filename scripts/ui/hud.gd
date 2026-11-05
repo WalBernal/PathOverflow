@@ -140,6 +140,8 @@ func flash(text: String, color := Color("e06c6c"), hold := 2.0) -> void:
 	if color.is_equal_approx(UiStyle.DANGER):
 		Sfx.play("ui_error", -10.0)   # los avisos en rojo son errores (T77)
 	_message.text = text
+	if message_avoid.has_area():
+		_place_message()   # otro largo de texto: quizá ya no pisa el panel del muñeco (T212)
 	_message.add_theme_color_override("font_color", color)
 	_message.modulate.a = 1.0
 	if _message_tween:
@@ -499,14 +501,53 @@ func _xp_rect() -> Rect2:
 	return Rect2(plate.position.x, plate.position.y - 9.0, plate.size.x, 7.0)
 
 
-func _layout() -> void:
-	var r := ORB_RADIUS
-	# Avisos: en el PC, sobre las cajas de estado; en táctil (T147), arriba, porque
-	# abajo caen sobre los botones (y con botones grandes, sobre las habilidades).
+## Rectángulo que los avisos no deben pisar (vacío: ninguno). Lo pone GameUI mientras
+## se ve el panel del muñeco de prácticas (T212): si el texto le cae encima, baja.
+var message_avoid := Rect2()
+
+
+func set_message_avoid(r: Rect2) -> void:
+	if r == message_avoid:
+		return
+	message_avoid = r
+	_place_message()
+
+
+func _place_message() -> void:
 	_message.anchor_top = MESSAGE_TOUCH_AT if touch_layout else 1.0
 	_message.anchor_bottom = _message.anchor_top
 	_message.offset_top = -15.0 if touch_layout else -245.0
 	_message.offset_bottom = 15.0 if touch_layout else -215.0
+	_message.offset_left = 0.0
+	_message.offset_right = 0.0
+	if not message_avoid.has_area() or _message.text == "":
+		return
+	var w := _message.get_minimum_size().x   # el texto va centrado
+	var text := Rect2((size.x - w) * 0.5, _message.anchor_top * size.y + _message.offset_top, w, 30.0)
+	if not text.intersects(message_avoid):
+		return
+	# Primero, un poco a la derecha (si cabe); si no, debajo del panel.
+	var right := message_avoid.end.x + 6.0 - text.position.x
+	if text.end.x + right <= size.x - 14.0:
+		_message.offset_left = right
+		_message.offset_right = right
+	else:
+		var below := message_avoid.end.y + 6.0 - text.position.y
+		_message.offset_top += below
+		_message.offset_bottom += below
+
+
+## Marco del objetivo tal como se dibujó la última vez (vacío si no hay objetivo).
+func target_frame_rect() -> Rect2:
+	var c: Control = _hotspots.get("target")
+	return Rect2(c.position, c.size) if c != null else Rect2()
+
+
+func _layout() -> void:
+	var r := ORB_RADIUS
+	# Avisos: en el PC, sobre las cajas de estado; en táctil (T147), arriba, porque
+	# abajo caen sobre los botones (y con botones grandes, sobre las habilidades).
+	_place_message()
 	_place("life", Rect2(_life_center() - Vector2(r, r), Vector2(r, r) * 2.0))
 	_place("mana", Rect2(_mana_center() - Vector2(r, r), Vector2(r, r) * 2.0))
 	_place("xp", _xp_rect().grow(3.0))

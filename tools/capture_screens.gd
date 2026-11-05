@@ -4463,6 +4463,13 @@ func _capture_training_dummy() -> void:
 				em.apply_ailment(i, "burn", 200.0)
 			em.hit_ailments = {}
 			await _wait(0.2)
+		# Con el muñeco como objetivo (ratón encima o tocado): su marco, con la quemadura,
+		# va arriba al centro y el panel no lo tapa (en el PC baja; en el celular va a la
+		# izquierda); un aviso que caería sobre el panel baja.
+		em.apply_ailment(dummy.index(), "burn", 200.0)
+		ui.hud.set("_target_id", dummy.dummy_id)
+		ui.hud.set("_target_linger", 5.0)
+		ui.hud.flash("Sin maná. Bebe un refresco o espera, como con el compilador.")
 		await _wait(0.3)
 		print("muñeco: %s · escala de interfaz %s · panel %s" % [TrainingPanel.lines(dummy.stats()), (ui.get("_root") as Control).scale, ui.training_panel.visible])
 		_save("212_muneco" if pass_i == 0 else "212_muneco_140_tactil")
