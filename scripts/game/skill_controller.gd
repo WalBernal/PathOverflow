@@ -463,7 +463,7 @@ func _update_aura_fx(delta: float) -> void:
 		var idx := PackedInt32Array()
 		var ids := PackedInt32Array()
 		var seen := {}
-		if not fx_light():   # con muchos enemigos en pantalla, sin marcas
+		if enemies and not fx_light():   # con muchos enemigos en pantalla, sin marcas (y sin ellos, en la vista previa de T211)
 			var old: Dictionary = a["entered"]
 			var center := aura_center(a)
 			var r := float(a["profile"]["aura_radius"])

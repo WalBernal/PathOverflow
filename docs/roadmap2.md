@@ -105,34 +105,34 @@ Origen: R9
 
 Estado de partida: las 62 habilidades tienen icono propio; **29 no tienen efecto visual propio** (solo formas genéricas coloreadas por tipo de daño) y **ninguna tiene sonido propio** (capas compartidas a las que solo cambia el tono según el id).
 
-### [ ] T191 · Ficha de firmas de las 62 habilidades · S 🛑
+### [x] T191 · Ficha de firmas de las 62 habilidades · S 🛑
 Origen: R9
 - Una tabla en `docs/habilidades_y_ram.md` con, por habilidad: forma del efecto al lanzar, en vuelo e impacto, y su sonido (base + capa propia), con el chiste de programador que la inspira. Sin código.
 - Grupos que hoy se ven igual y hay que separar: ring (barrido, stack_overflow, core_dump), cone (flamewar, fuzzing), trail (deploy_continuo, force_push), zap (excepcion_en_cadena, tunel_ssh), cloud (fuga_de_memoria, git_revert), ring amarillo (modo_seguro, hiperthreading), `_shout` (los tres gritos) y las 6 auras.
 
-### [ ] T192 · Sonidos que no encajan · S
+### [x] T192 · Sonidos que no encajan · S
 Origen: R9
 - `Sfx.skill_sound` no contempla los kinds leap_slam, cone, unit, aura, terrain, rain, beam, chain, curse ni channel, y los físicos o sin daño caen al sample `projectile` (`sfx.gd:99-125`). Por eso reinicio_forzado, fuzzing, core_dump, las invocaciones físicas, los drones de apoyo y las auras suenan a disparo.
 - Las auras suenan dos veces (`play_cast` y `aura_on`/`aura_off`, `skill_controller.gd:401`, `:408`, `:1033`).
 - Limpiar lo que no se usa: firmas de `SkillFx.SIGNATURES` iguales a la de por defecto (ping_letal, torreta_ci) o que nunca se disparan (cascada_css); kinds «quake» y «heal» de `signature_layer`; «mine» y «totem» de `skill_sound`.
 - Prueba: ningún kind del catálogo cae al sample por defecto.
 
-### [ ] T193 · Efectos propios, parte 1: cuerpo a cuerpo y movimiento · M
+### [x] T193 · Efectos propios, parte 1: cuerpo a cuerpo y movimiento · M
 Origen: R9
 - Barrido, Despliegue Continuo, Reinicio Forzado, Force Push, Fuzzing, Teletransporte TCP, Túnel SSH y Git Revert, según la ficha de T191.
 - Ejemplos: Teletransporte con un paquete que viaja entre los dos puntos; Git Revert dejando un «fantasma» de la posición anterior; Force Push con una flecha de commit que empuja.
 
-### [ ] T194 · Efectos propios, parte 2: hechizos y proyectiles · M
+### [x] T194 · Efectos propios, parte 2: hechizos y proyectiles · M
 Origen: R9
 - Ping Letal, Fork Bomb, Stack Overflow, Flamewar, Rayo de Producción, Deadlock, Excepción en Cadena, Fuga de Memoria y Core Dump.
 - Firmas de proyectil propias donde hoy se comparte la del tipo de daño (`skill_fx.gd:11-36`). Ejemplos: Stack Overflow con bloques que se apilan y se desbordan; Fork Bomb con copias que se dividen antes de estallar.
 
-### [ ] T195 · Efectos propios, parte 3: buffs, gritos y auras · M
+### [x] T195 · Efectos propios, parte 3: buffs, gritos y auras · M
 Origen: R9
 - Cada aura con su color y su motivo (hoy las 6 son arcos verdes iguales, `skill_controller.gd:2633`): engranajes en Overclock, placas en Blindaje, llaves inglesas en Mantenimiento, etc. Las hostiles, con su propio motivo y no solo un radio rojo.
 - Los tres gritos con onda y texto distintos; Firewall, Modo Seguro e Hiperthreading con efecto propio.
 
-### [ ] T196 · Sonidos propios por habilidad · M
+### [x] T196 · Sonidos propios por habilidad · M
 Origen: R9
 - Una capa de firma propia para cada habilidad (generada con la misma herramienta que los WAV actuales o sintetizada en código), encima de la base por tipo. Primero las 29 sin efecto propio y las 6 auras; luego las demás.
 - Prueba: los 62 ids tienen una entrada propia en `SoundMap` y su archivo existe.
@@ -143,9 +143,17 @@ Origen: R9
 - RAM sin señal visual (multicanal, perforación, encadenamiento, guiado, pipeline): un detalle pequeño en el proyectil.
 - Procs de ascendencia con efecto propio (hoy reutilizan ring, burst, zap, lock y beam; `skill_controller.gd:425-553`, `:820-908`).
 
-### [ ] T198 · Animación del jugador por tipo de habilidad · M
+### [x] T198 · Animación del jugador por tipo de habilidad · M
 Origen: R9
 - Hoy hay tres (attack, shoot, cast; `player.gd:403`). Añadir canalizar, grito, salto, invocar y aura en las hojas del personaje y del alumno, con su cuadro de impacto.
+
+### [ ] T216 · Sonidos que siguen a la habilidad · S
+Origen: R9 (pendiente de la revisión de T196)
+- Lo que la ficha de T191 pide en el sonido y necesita lógica en `skill_controller.gd`: un golpe por cada carga que gasta Core Dump, PASS o FAIL al azar en el Bot de Pruebas, un semitono más por cada vuelta de Bucle Infinito, y Pipe de Datos y Tormenta de Tickets que repitan su capa mientras se canaliza.
+
+### [ ] T217 · La ficha de T191 a salvo de list_skills · S
+Origen: R9 (aviso de T191)
+- `tools/list_skills.gd` reescribe `docs/habilidades_y_ram.md` entero y borraría la sección «Firmas de las habilidades (T191)», escrita a mano. Que conserve lo que va desde esa sección hasta el final, o pasar la ficha a un archivo aparte y enlazarlo.
 
 ### [ ] T199 · Versión 3.8.0 y revisión en el teléfono · S 🛑
 Origen: R9
@@ -157,7 +165,7 @@ Origen: R9
 
 Estado de partida: no hay sprites de invocación; todo se dibuja con primitivas en `UnitArt` y `skill_controller.gd`. Todas miran a la derecha, «caminan» aunque estén quietas, atacan solo con destellos y aparecen y mueren con un anillo.
 
-### [ ] T200 · Motor de animación de unidades · M
+### [x] T200 · Motor de animación de unidades · M
 Origen: R9
 - `UnitArt.draw` recibe dirección y estado (quieto, caminar, atacar, aparecer, herido, morir) además de la fase (`unit_art.gd:8`).
 - La fase de caminar solo avanza al moverse (`skill_controller.gd:1754`); en reposo, una animación de espera propia.
@@ -165,13 +173,13 @@ Origen: R9
 - Escala por unidad, para Monolito, Microservicios y el Clúster de tres.
 - Prueba: una unidad quieta no avanza su fase de caminar; una que ataca a la izquierda queda volteada.
 
-### [ ] T201 · Aparecer y morir · M
+### [x] T201 · Aparecer y morir · M
 Origen: R9
 - Aparición: se «compila» de bits o se ensambla pieza a pieza en ~0,4 s (hoy un anillo, `:1740`). Al relanzar, la que se mueve se desvanece y reaparece en vez de teletransportarse.
 - Muerte: se desarma en piezas y bits que caen (hoy un destello, `:1776-1779`). Incluye Proceso Hijo y Drones de Vigilancia al caducar, y la torreta y el contenedor Docker (hoy desaparecen sin más, `:1633`, `:1692`, `:2032`).
 - Golpe recibido: retroceso y parpadeo, no solo el círculo blanco (`:2680`).
 
-### [ ] T202 · Ataques que se ven · M
+### [x] T202 · Ataques que se ven · M
 Origen: R9
 - Cuerpo a cuerpo con embestida, como `_lunge_to` de los enemigos (`enemy_manager.gd:1666`): Daemon con el tridente, Watchdog con mordida, Bot de Pruebas, golems.
 - A distancia con apuntado y retroceso: Centinela, Torreta CI, Golem GPU, Bot Rastreador.
@@ -227,15 +235,15 @@ Origen: R9
 
 Lo más útil del banco de ideas (abajo). El resto se pasa a tareas cuando el usuario lo elija.
 
-### [ ] T211 · Vista previa animada de la habilidad · M
+### [x] T211 · Vista previa animada de la habilidad · M
 Origen: R9
 - En el tooltip de la habilidad y en la tienda, una miniatura que reproduce el efecto en bucle (el mismo dibujo de `SkillController` en un viewport pequeño).
 
-### [ ] T212 · Muñeco de prácticas en el campamento · S
+### [x] T212 · Muñeco de prácticas en el campamento · S
 Origen: R9
 - Un servidor de pruebas que recibe golpes y muestra DPS, daño por golpe y por tipo durante los últimos 10 s. Sirve para comparar placas y RAM sin salir a una zona.
 
-### [ ] T213 · Inventario más rápido · S
+### [x] T213 · Inventario más rápido · S
 Origen: R9
 - Ordenar con un botón, marcar objetos como «basura» y venderlos todos de una vez en la tienda, y bloquear objetos para que no se vendan por error.
 
@@ -333,3 +341,18 @@ Ideas que no están en la cola. Se pasan a tareas cuando el usuario las elija.
 - 2026-11-04 · T189 · Música del prólogo: dos pistas nuevas en `music.json`, «Mediodía en el malecón» (calle y pasillo: re mayor, 92 bpm, piano y campana, batería suave) y «Algo huele a quemado» (oficina: la menor, 76 bpm, sin batería), compuestas con `generate_zone_music.gd` (sin capa de combate: el prólogo no tiene peleas) y en OGG. Cada sitio pone la suya al entrar (`music_for`), con fundido cruzado y sin cortarse entre la calle y el pasillo; se apaga cuando entra la consola roja. «EL ÚLTIMO COMMIT» suena con un aviso propio, `sting_commit` (`generate_sfx.gd -- t189`: golpe grave y acorde que se va degradando a 8 bits). Los ambientes siguen sonando debajo.
 - 2026-11-04 · T190 · Versión 3.7.0: APK (código 22) y `build/latest.json`, Windows e instalador (Linux y macOS se saltan: faltan sus plantillas); antes/después de título, lista y creador en `docs/capturas/interfaz/190_antes_despues.png` (casi todo lo nuevo es movimiento: las fijas cambian poco) y del prólogo en `docs/capturas/prologo/`; lista `docs/prueba_celular_3.7.md` y README. Sin subir a GitHub: pendiente de la revisión del usuario 🛑.
 - 2026-11-04 · T190 · Subida a GitHub (v3.7.0, Latest) con el visto bueno del usuario, que pide seguir con las fases 40 a 43 hasta acabarlas, con lo independiente en paralelo.
+- 2026-11-04 · — · Fases 40, 41 y 43 en paralelo: un workflow hizo cada grupo de tareas en su worktree y rama (`r9/efectos`, `r9/sonido`, `r9/jugador`, `r9/invocaciones`, `r9/interfaz`), con un segundo agente que revisó cada tarea y corrigió lo que encontró. A mitad, el usuario pidió terminar solo lo empezado y pausar el resto (T197, T203-T205, T214 y la fase 42).
+- 2026-11-04 · T191 · Sección «Firmas de las habilidades (T191)» en `docs/habilidades_y_ram.md`: convenciones (primitivas en la rejilla de 2 px de `SkillFx.GRID`, color de `DAMAGE_COLORS` más un acento, capa de sonido `sig_<id>.wav` a -6 dB con tono fijo), los 9 grupos que se veían o sonaban igual y qué los separa, y las 62 en cinco tablas (al lanzar, en vuelo, impacto, sonido, chiste) repartidas entre T193, T194, T195, T196 y T200-T205.
+- 2026-11-04 · T192 · `Sfx.skill_sound` con dos tablas, `KIND_SOUNDS` (leap_slam a swing, invocaciones a summon, aura a aura_on…) y `DAMAGE_KINDS` (áreas físicas a un `thump` nuevo de `generate_sfx.gd -- t192`), y `has_skill_sound`: Reinicio Forzado, Fuzzing, Core Dump, las invocaciones físicas y las auras ya no suenan a disparo. Cada aura suena una vez (`SoundMap.play_cast` al encenderla). Fuera «mine», «totem», «quake» y «heal». Prueba `_test_skill_sound_kinds`.
+- 2026-11-04 · T193 · Efecto «firma» (`SkillFx.MOVE_FX`, `move_fx`, `draw_move_fx`, `draw_revert_zone`) para las 8 de cuerpo a cuerpo y movimiento: llaves `{ }` del Barrido, pipeline del Despliegue Continuo, pantalla azul «:(» y temblor de Reinicio Forzado, flecha «-f» de Force Push, basura «0x» de Fuzzing, SYN → ACK del Teletransporte, candados del Túnel SSH y diff con fantasma de Git Revert. Marcas por enemigo (10 como mucho) solo al golpear y no en la versión ligera; modo daltónico y Menos destellos (la revisión quitó los blancos puros que quedaban). Herramienta `tools/capture_skill_fx.tscn`, prueba `_test_move_signatures`, captura `docs/capturas/mecanicas/193_firmas.png`.
+- 2026-11-04 · T194 · Las 9 de hechizos y proyectiles por el camino «firma» (`SkillFx.SPELL_FX`): forma de proyectil «sonar» y «Nms» de Ping Letal, 16 copias de Fork Bomb, bloques que se derrumban de Stack Overflow, lenguas de llama y bocadillos TAB/SPC de Flamewar, barra de carga y «500» del Rayo de Producción, candados y relojes de Deadlock, stack trace de Excepción en Cadena, charco de celdas que crece de Fuga de Memoria (`draw_leak_zone`) y volcado hexadecimal de Core Dump con un anillo por tipo de carga. La revisión arregló el destello de crítico con Memoria sin ECC y las lenguas de Flamewar con conos cortos (`_flame_tongue`, `FLAME_MIN_REACH`). Pruebas `_test_spell_signatures` y `_test_flamewar_tongues`, captura `194_firmas.png`.
+- 2026-11-04 · T195 · Buffs, gritos y auras con efecto propio (`SkillFx.BUFF_FX`, `draw_aura`, `_buff_fx`, `_update_aura_fx`): muro de 12 ladrillos con «DENY» de Firewall Personal, hexágono de Modo Seguro, doble con retraso de Hiperthreading, sirena de ¡PROD!, reloj y huellas de ¡DAILY!, anillos que se cierran de ¡ROLLBACK!, y las 6 auras con su color (`AURA_STYLE`, también en modo daltónico) y motivo: engranajes, placas, llaves inglesas, banderitas, trazos hacia atrás con «429» y dientes de sierra con «CVE». Lo del buff sigue al jugador al cambiar de zona (la revisión lo corrigió para el doble y las huellas). Capturas `195_buffs.png` y `195_auras.png`.
+- 2026-11-04 · T196 · 62 capas `sig_<id>.wav` sintetizadas en `generate_sfx.gd -- t196` (una `_sig_<id>` por habilidad según la ficha, volumen eficaz limitado a 0,3 con `_layer_peak`), `SoundMap.SIGNATURES` y `signature(id)`: cada habilidad suena con su base y su firma a -6 dB con tono fijo. La revisión ajustó dos firmas a 0,1-0,5 s. Lo que necesita lógica de juego queda en T216. Prueba `_test_skill_signatures`.
+- 2026-11-04 · T198 · `Player.action_for` elige además aura, grito, invocar, salto y canalizar; poses nuevas en `CharacterAppearance` (`SKILL_POSES`, `impact_fraction`), hoja del oficinista de 36 a 42 columnas (4032 px, bajo `MAX_SIDE`) horneada con `bake_player_sprites.gd` y la del alumno de 20 a 30 columnas; `PlayerSprite.life` con el arco del salto, el estirón del grito y el latido del aura. Herramienta `tools/capture_player_poses.gd`, captura `docs/capturas/personajes/198_poses.png`, prueba `_test_skill_poses`.
+- 2026-11-04 · T200 · `UnitArt.draw` recibe `anim` (dirección, objetivo, estado quieta/caminar/atacar/aparecer/herida/morir, escala): figuras volteadas sin invertir sus textos, fase de caminar solo con lo recorrido (`UnitArt.tick`), respiración en reposo, cañones y cabezas que apuntan (`look`, `strike`), escala por `UnitArt.scale_for` (Monolito ×1,35, Microservicios ×0,8, Clúster de tres ×0,75). La revisión borra las que caían al cambiar de zona. Modo de captura `-- invocaciones`, prueba `_test_unit_animation`.
+- 2026-11-04 · T201 · Las invocaciones se compilan de bits en 0,4 s al aparecer (`UnitArt._compile`), se desvanecen y reaparecen al relanzar o si se quedan atrás (`_unit_warp`), retroceden y parpadean al recibir un golpe (`_unit_knockback`; la revisión evita que una horda las arrastre o las saque del terreno) y se desarman en piezas que rebotan (`UnitArt.shatter`, 160 piezas como mucho), también Proceso Hijo, drones, torreta y contenedor al caducar. Prueba `_test_unit_spawn_death`, captura `docs/capturas/invocaciones/201_aparecer_y_morir.png`.
+- 2026-11-04 · T202 · Ataques que se ven (`UnitArt.attack_offset`): embestida de las de cuerpo a cuerpo (11 px, 7 en tanques) con golpe propio (tridente, mordida, puñetazo, brazo de los golems), retroceso y fogonazo de las de distancia (`_muzzle`), cañón de la Torreta CI que sigue al objetivo y retrocede, salto con el cuerpo en arco (estado «leap», golpe al caer) y latigazo de cable del Golem UTP. La revisión arregló un cambio de zona a medio salto y el latigazo que leía el índice de un objetivo ya muerto. Prueba `_test_unit_attacks`, capturas `202_ataques_*`.
+- 2026-11-04 · T211 · `SkillPreview` (SubViewport de 360×140) repite la habilidad del tooltip de las placas (bolsa, barra, alijo y tienda) con el alumno contra tres servidores de prueba; corre solo mientras se ve. Prueba `_test_skill_preview` (las 62 dibujan algo) y modo de captura `-- vista`.
+- 2026-11-04 · T212 · `TrainingDummy`: un rack «PRUEBAS» en cada campamento que no muere y apunta cada golpe con su tipo y los degenerativos; `TrainingPanel` muestra DPS, golpes, media, máximo, % de críticos y reparto por tipo de los últimos 10 s cerca del muñeco, sin tapar ventanas ni botones (la revisión lo colocó bajo el marco del objetivo en PC y arriba a la izquierda en el celular, y quitó el temblor con «reducir movimiento»). Prueba `_test_training_dummy`, modo de captura `muneco`.
+- 2026-11-04 · T213 · Sobre lo que ya había (ordenar, basura, bloqueado y venta de basura), la marca se ve en el tooltip (`ItemTooltip.mark_line`), el título de la bolsa cuenta la basura (`InventoryPanel.bag_title`) y las ayudas dicen el gesto del control en uso (click derecho, mantener pulsado o X), que cambia en vivo; marcar suena. Pruebas `_test_inventory_quick`, capturas `docs/capturas/interfaz/213_basura_*`.
+- 2026-11-05 · — · Unión de las cinco ramas en `feature/acto-3`: conflictos solo en `tests/test_core.gd`, `tools/capture_screens.gd` (se quedan las dos partes) y `skill_controller.gd` (al encender un aura, el sonido de T192 sin el anillo genérico; al cambiar de zona, los efectos que siguen al jugador de T195 y la limpieza de las piezas de T201). Nuevas T216 y T217 con lo que dejaron pendiente T196 y T191.
