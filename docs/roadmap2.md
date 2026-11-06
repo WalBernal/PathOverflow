@@ -259,7 +259,7 @@ Origen: R9
 Origen: R9
 - Al volver al campamento o cambiar de zona: tiempo, enemigos, botín destacado, experiencia y la muerte más tonta (si la hubo), en el estilo de un informe de build.
 
-### [ ] T215 · Versión 4.1.0 y revisión en el teléfono · S 🛑
+### [x] T215 · Versión 4.1.0 y revisión en el teléfono · S 🛑
 Origen: R9
 
 ---
@@ -379,3 +379,4 @@ Ideas que no están en la cola. Se pasan a tareas cuando el usuario las elija.
 - 2026-11-06 · T219 · En la vista previa del tooltip, los impactos de las lluvias (Cascada de Estilos) caen por turnos sobre los servidores de prueba, un poco desplazados, en vez de al azar dentro del radio: _test_skill_preview ya no falla de vez en cuando (tres vueltas seguidas en verde).
 - 2026-11-06 · T210 · Versión 4.0.0: APK (código 26) y uild/latest.json, Windows e instalador. Trae las seis habilidades nuevas (T207-T209) y, como la 3.8 y la 3.9 no se subieron, también las fases 40 y 41. Lista docs/prueba_celular_4.0.md (siguen valiendo las de la 3.8 y la 3.9) y README; capturas de las nuevas en docs/capturas/habilidades/208_nuevas.png y 209_nuevas.png. Sin subir a GitHub: pendiente de la revisión del usuario 🛑.
 - 2026-11-06 · T214 · Resumen al salir de una zona: ZoneReport (scripts/game/zone_report.gd) apunta la experiencia y el nivel al entrar, los artefactos raros o mejores (los tres mejores) y la muerte más tonta (el enemigo de menor rareza que te mató), y al viajar, si la zona no es segura y estuviste al menos 20 s, ZoneReportPanel (scripts/ui/zone_report_panel.gd) enseña arriba al centro «$ cat informe.log»: «$ build <zona> — OK/FAILED (n muertes) en 3 min 12 s», procesos terminados, experiencia o subida de nivel, DPS medio, artefactos con el color de su rareza (o «nada digno de un commit») y «la muerte más tonta: un «X» normal. Sin afijos. Nada.». Sale cuando se va la tarjeta de carga, dura 8 s y se cierra con un clic o un toque; las líneas largas se parten. Prueba _test_zone_report, modo `-- informe` en capture_screens y capturas docs/capturas/interfaz/214_informe_pc.png y 214_informe_tactil.png.
+- 2026-11-06 · T215 · Versión 4.1.0: APK (código 29; los códigos 27 y 28 se gastaron en dos intentos con -Release, que falla por no haber clave de publicación en este equipo) y build/latest.json, Windows e instalador. Trae el informe al salir de una zona (T214) e incluye la 4.0, la 3.9 y la 3.8, que no se subieron. Lista docs/prueba_celular_4.1.md (siguen valiendo las de la 3.8, la 3.9 y la 4.0) y README. Con esto se acaba la cola del Roadmap 2. Sin subir a GitHub: pendiente de la revisión del usuario 🛑.
