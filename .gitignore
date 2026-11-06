@@ -8,3 +8,8 @@ build/
 
 # Packs de terceros con licencia que prohíbe volver a subirlos (p. ej. Zerie): solo de referencia, fuera de git y del juego
 assets/third_party/
+
+# Kokoro (voces generadas en local): entorno y modelo, fuera del repositorio
+tools/voces/.venv/
+tools/voces/modelo/
+tools/voces/salida/

@@ -1,0 +1,17 @@
+[
+  {"id": "01_rafa_quien", "voz": "em_alex", "velocidad": 0.85, "texto": "¿Quién eres tú.....??? ..... Ah, vienes a ayudarnos....."},
+  {"id": "02_jugador_vengo", "voz": "em_santa", "velocidad": 1.1, "texto": "Eh, no, yo vengo por..."},
+  {"id": "03_rafa_inge_pepe", "voz": "em_alex", "velocidad": 0.88, "texto": "Ah..... eres alumno.... Si buscas al Inge Pepe, llegaste un semestre tarde.... Se jubiló en julio. Bueno..... «jubiló»..... entre comillas.... todavía viene los jueves a dar clases.... porque dice que si se queda en su casa su esposa lo pone a limpiar....."},
+  {"id": "04_jugador_constancia", "voz": "em_santa", "velocidad": 1.05, "texto": "Vengo por mi constancia de servicio social. Hice mis 480 horas: seis meses pelando cables UTP, cambiando HDMI y limpiando las computadoras del centro de cómputo, bajo las órdenes del Inge Pepe. Si no tengo el sello, Servicios Escolares me anula la titulación."},
+  {"id": "05_narrador_suspiro", "voz": "ef_dora", "velocidad": 0.95, "texto": "Rafa suelta un suspiro cansado y teclea con desgana, sin quitar los ojos de la pantalla."},
+  {"id": "06_rafa_libreta", "voz": "em_alex", "velocidad": 0.88, "texto": "Tengo malas noticias, «genio»..... Pepe no usaba base de datos..... Anotaba a los prestadores en una libreta Scribe con pasta de gatitos..... Cuando recogió sus cosas, se llevó la libreta creyendo que era su recetario de cocina....."},
+  {"id": "07a_rafa_puntero_alex", "voz": "em_alex", "velocidad": 0.85, "texto": "Para el sistema escolar de la UAdeO..... tú nunca exististe..... Eres un puntero nulo....."},
+  {"id": "07b_rafa_puntero_santa", "voz": "em_santa", "velocidad": 0.85, "texto": "Para el sistema escolar de la UAdeO..... tú nunca exististe..... Eres un puntero nulo....."},
+  {"id": "07c_rafa_puntero_mezcla", "voz": "em_alex:0.6+em_santa:0.4", "velocidad": 0.85, "texto": "Para el sistema escolar de la UAdeO..... tú nunca exististe..... Eres un puntero nulo....."},
+  {"id": "08_rafa_sice", "voz": "em_alex", "velocidad": 0.95, "texto": "Y para colmo..... se cayó el Sistema Integral de Control Escolar..... el SICE..... Hoy vencían las actas de calificaciones de todo el estado....."},
+  {"id": "09_narrador_tv", "voz": "ef_dora", "velocidad": 0.95, "texto": "La TV del pasillo repite en bucle: «Ingeniería de Software: ¡inscríbete!» y «Hackatón LinceCode 2026». En letras chiquitas: «Premio: 120 ADIS y una constancia con valor curricular.»."},
+  {"id": "10_jugador_tv", "voz": "em_santa", "velocidad": 1.0, "texto": "Constancia con valor curricular... eso me serviría ahora mismo."},
+  {"id": "11_mario_churros", "voz": "em_santa:0.5+em_alex:0.5", "velocidad": 1.15, "texto": "Profe Rafa, ¿va a querer churros...?"},
+  {"id": "12_rafa_no_jales", "voz": "em_alex", "velocidad": 1.2, "texto": "¡NO JALES ESO!..."},
+  {"id": "13_jugadora_vengo", "voz": "ef_dora", "velocidad": 1.1, "texto": "Eh, no, yo vengo por..."}
+]
