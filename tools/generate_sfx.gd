@@ -1610,6 +1610,24 @@ func _sig_golem_kernel() -> PackedFloat32Array:
 	return _seq([[hum, 0.0, 1.6], [_bits(0.06, 1500.0, 0.04), 0.1, 0.5], [_bits(0.05, 3500.0, 0.03), 0.25, 0.4]])
 
 
+# --- Habilidades nuevas (T208): van al final para no cambiar el azar de las de T196 ---
+
+## Ticket Escalado: un sello seco (el juego le sube el tono en cada etapa).
+func _sig_ticket_escalado() -> PackedFloat32Array:
+	return _seq([[_clack(1200.0, 0.02), 0.0, 1.2], [_note(320.0, 260.0, 0.12, 0.06, 1), 0.01, 0.6]])
+
+
+## Lazy Loading: clic suave de «placeholder» y dos puntitos de spinner.
+func _sig_lazy_loading() -> PackedFloat32Array:
+	return _seq([[_blip(900.0, 0.012), 0.0, 0.7], [_blip(1300.0, 0.01), 0.08, 0.5], [_blip(1300.0, 0.01), 0.16, 0.4]])
+
+
+## Descenso de Gradiente: un rodar grave cuyo tono baja (bajando por la pendiente).
+func _sig_descenso_gradiente() -> PackedFloat32Array:
+	var roll := _lowpass(_note(220.0, 110.0, 0.35, 0.25, 2), 700.0)
+	return _seq([[roll, 0.0, 1.2], [_hiss(0.3, 1500.0, 400.0, 0.2), 0.0, 0.5]])
+
+
 # --- Ambientes (en bucle) ---
 
 func _amb_base() -> PackedFloat32Array:

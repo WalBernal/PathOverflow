@@ -29,6 +29,8 @@ const SIGNATURES := {
 	# Láseres de verdad (T203): haz fino y rápido en vez del rayo en zigzag.
 	"robot_centinela": {"projectile": "laser"},
 	"robot_laser": {"projectile": "laser"},
+	# Lazy Loading (T208): la flecha que por fin se cargó.
+	"lazy_loading": {"projectile": "arrow"},
 }
 ## Cada cuánto suelta una partícula de estela un proyectil (s).
 const TRAIL_EVERY := 0.035
@@ -127,6 +129,11 @@ static func draw_projectile(ci: CanvasItem, pos: Vector2, dir: Vector2, color: C
 			ci.draw_colored_polygon(quad.call(2, 6, -4, 4), core)
 			if shape == "tracker" and fmod(time * 4.0, 1.0) < 0.5:
 				ci.draw_colored_polygon(quad.call(-4, -2, -8, -4), Color("ff6a6a"))   # la antena que parpadea
+		"arrow":
+			# Flecha (Lazy Loading, T208): astil claro y punta del color de la habilidad.
+			var wing := dir.orthogonal()
+			ci.draw_line(at - dir * 12.0, at + dir * 4.0, Color(Color("d8d2c0"), 0.95), 2.0)
+			ci.draw_colored_polygon(PackedVector2Array([at + dir * 9.0, at + dir * 3.0 + wing * 3.0, at + dir * 3.0 - wing * 3.0]), color)
 		"laser":
 			# Láser (T203, Centinela y R-2PL): un trazo largo y fino con núcleo claro.
 			ci.draw_line(at - dir * 22.0, at, Color(color, 0.35), 5.0)
@@ -221,12 +228,53 @@ static func _label(ci: CanvasItem, font: Font, at: Vector2, text: String, size: 
 	ci.draw_string(font, _snap(at) - Vector2(w * 0.5, 0), text, HORIZONTAL_ALIGNMENT_CENTER, w, size, col)
 
 
+## --- Habilidades nuevas (T208) ---
+
+## Descenso de Gradiente: orbe de frío con tres curvas de nivel que giran y una «∇»
+## detrás; `grow` (1..2) lo agranda según los enemigos que ha atravesado.
+static func draw_gradient_orb(ci: CanvasItem, pos: Vector2, dir: Vector2, color: Color, grow: float, time: float, light := false) -> void:
+	var r := 7.0 * grow
+	ci.draw_circle(pos, r * 1.6, Color(color, 0.12))
+	if not light:
+		for k in 3:
+			var rr := r * (1.2 + 0.35 * k)
+			var a0 := time * (1.5 - 0.4 * k) + k
+			ci.draw_arc(pos, rr, a0, a0 + PI * 1.3, 12, Color(color, 0.55 - 0.15 * k), 1.5)
+		for k in 2:
+			var back := pos - dir * (r + 8.0 + 10.0 * k)
+			ci.draw_colored_polygon(PackedVector2Array([back + dir.orthogonal() * 3.0, back - dir.orthogonal() * 3.0, back + dir * 4.0]), Color(color, 0.5 - 0.2 * k))
+	ci.draw_circle(pos, r, color)
+	ci.draw_circle(pos - Vector2(r, r) * 0.3, r * 0.35, Color(color.lightened(0.5), 0.8))
+
+
+## Lazy Loading: flecha suspendida que se mece, con un spinner «loading…» que gira.
+static func draw_lazy_arrow(ci: CanvasItem, pos: Vector2, dir: Vector2, color: Color, phase: float, font: Font, light := false) -> void:
+	var at := pos + Vector2(0, sin(phase * 2.0) * 2.0)
+	var side := dir.orthogonal()
+	ci.draw_line(at - dir * 9.0, at + dir * 7.0, Color(Color("d8d2c0"), 0.9), 2.0)
+	ci.draw_colored_polygon(PackedVector2Array([at + dir * 11.0, at + dir * 5.0 + side * 3.0, at + dir * 5.0 - side * 3.0]), color)
+	ci.draw_arc(at, 12.0, phase * 6.0, phase * 6.0 + PI * 1.4, 10, Color(color, 0.7), 1.5)
+	if not light:
+		_label(ci, font, at + Vector2(0, -16), "loading…", 9, Color(color.lightened(0.3), 0.75), 70.0)
+
+
+## Ticket Escalado: la prioridad sobre el enemigo marcado: «P3» gris, «P2» ámbar, «P1» rojo que late.
+static func draw_ticket_mark(ci: CanvasItem, at: Vector2, level: int, time: float, font: Font) -> void:
+	var cols := [Color("8a8a96"), Color("8a8a96"), Color("e8b04a"), Color("e06c6c")]
+	var col: Color = cols[clampi(level, 0, 3)]
+	var pulse := 1.0 + (0.15 * sin(time * 12.0) if level >= 2 else 0.0)
+	var box := Rect2(at - Vector2(13, 8) * pulse, Vector2(26, 15) * pulse)
+	ci.draw_rect(box, Color(0.08, 0.08, 0.1, 0.85))
+	ci.draw_rect(box, col, false, 1.5)
+	_label(ci, font, at + Vector2(0, 4), ["", "P3", "P2", "P1"][clampi(level, 0, 3)], 11, col, 30.0)
+
+
 ## Efectos de ascendencia y de los nodos clave que se disparan solos (T197): cada uno con
 ## su motivo y su etiqueta, en vez del anillo, el destello, el zigzag o el candado genéricos.
 const PROC_LABELS := {
 	"sprint": "sprint!", "profiled": "perf", "botnet": "botnet", "bluescreen": ":(", "pager": "PAGE",
 	"bluegreen": "blue→green", "demo": "DEMO", "green": "✓ green", "kill": "SIGKILL", "stash": "stash pop",
-	"static": "ESD", "nova": "403",
+	"static": "ESD", "nova": "403", "ticket": "INC-1337 escalado",
 }
 
 
@@ -294,6 +342,13 @@ static func draw_proc(ci: CanvasItem, e: Dictionary, font: Font, light := false)
 				var d := Vector2.from_angle(TAU * k / 6.0 + t)
 				var p := pos + d * ring * 0.7
 				ci.draw_polyline(PackedVector2Array([p, p + d * 5.0 + d.orthogonal() * 3.0, p + d * 9.0 - d.orthogonal() * 3.0, p + d * 13.0]), Color(c, 0.85 * a), 1.5)
+		"ticket":   # Ticket Escalado en P1 (T208): la tarjeta se parte en dos y sale volando
+			for s in [-1.0, 1.0]:
+				var half := pos + Vector2(s * (6.0 + 22.0 * t), -6.0 - 10.0 * t)
+				ci.draw_set_transform(half, s * 0.6 * t)
+				ci.draw_rect(Rect2(Vector2(-8, -6), Vector2(16, 12)), Color(Color("e8e0c8"), a))
+				ci.draw_rect(Rect2(Vector2(-6, -3), Vector2(10, 2)), Color(c, a))
+				ci.draw_set_transform(Vector2.ZERO)
 		"nova":
 			var hexa := PackedVector2Array()
 			for k in 7:

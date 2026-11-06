@@ -256,6 +256,7 @@ func _initialize() -> void:
 	_test_units_match_text()
 	_test_rigid_units_art()
 	_test_companions_walk()
+	_test_new_skills_t208()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -633,7 +634,8 @@ func _test_appearance() -> void:
 func _test_skill_data() -> void:
 	var skills := _db.skills
 	_check(skills.skills.size() >= 6 and skills.rams.size() >= 8, "carga de habilidades y RAM")
-	var kinds := ["melee_area", "nova", "projectile", "ground_aoe", "blink", "dash", "cone", "beam", "boomerang", "spin", "trap", "chain", "minion", "degen_area", "barrier", "buff", "curse_area", "dot_projectile", "homing", "drones", "leap_slam", "rain", "unit", "aura", "ssh", "charge", "backflip", "terrain", "channel_beam", "channel_storm"]
+	var kinds := ["melee_area", "nova", "projectile", "ground_aoe", "blink", "dash", "cone", "beam", "boomerang", "spin", "trap", "chain", "minion", "degen_area", "barrier", "buff", "curse_area", "dot_projectile", "homing", "drones", "leap_slam", "rain", "unit", "aura", "ssh", "charge", "backflip", "terrain", "channel_beam", "channel_storm",
+		"ticket", "lazy", "gradient"]   # (T208)
 	for def in skills.skills.values():
 		_check(kinds.has(def["kind"]), "tipo de habilidad desconocido en %s" % def["id"])
 		_check(def.has("attack") or def.has("spell"), "%s necesita 'attack' o 'spell'" % def["id"])
@@ -8368,13 +8370,15 @@ func _test_rams_everywhere() -> void:
 				_check(skills.has(sid), "%s desbloquea %s, que existe" % [cls["id"], sid])
 				kinds[skills.get(sid, {}).get("kind", "")] = true
 				movement = movement or skills.get(sid, {}).get("tags", []).has("movement")
-		_check(unlocks.size() == 5 and choices == 1 and kinds.has("aura") and (kinds.has("unit") or kinds.has("minion")) and movement,
+		# (más la habilidad nueva a nivel 12 de T208/T209 en las clases que la tienen)
+		var extra := unlocks.filter(func(u: Dictionary) -> bool: return int(u.get("level", 0)) == 12).size()
+		_check(unlocks.size() == 5 + extra and extra <= 1 and choices == 1 and kinds.has("aura") and (kinds.has("unit") or kinds.has("minion")) and movement,
 			"%s: 5 desbloqueos (uno a elegir entre dos) con invocación, aura y movimiento" % cls["id"])
 	var lvl := CharacterData.new(_classes[0], _tree)
 	lvl.set_level(12)
-	_check(lvl.due_unlocks().size() == 3, "al nivel 12 el guerrero tiene 3 habilidades por recibir")
+	_check(lvl.due_unlocks().size() == 4, "al nivel 12 el guerrero tiene 4 habilidades por recibir (con Ticket Escalado, T208)")
 	lvl.flags["unlock_aura_blindaje"] = true
-	_check(lvl.due_unlocks().size() == 2, "las ya recibidas no se repiten")
+	_check(lvl.due_unlocks().size() == 3, "las ya recibidas no se repiten")
 	lvl.set_level(16)
 	_check(lvl.due_unlocks().any(func(u: Dictionary) -> bool: return u.has("choice")), "al nivel 16 toca elegir entre dos")
 	lvl.flags["unlock_golem_hardware"] = true   # personaje de antes de la elección
@@ -8632,7 +8636,7 @@ func _test_skill_sound_kinds() -> void:
 ## su archivo existe y dura lo de una capa (0,1-0,5 s, como pide la ficha de T191), y ya no usa la compartida.
 func _test_skill_signatures() -> void:
 	var skills: Dictionary = _db.skills.skills
-	_check(skills.size() == 62 and SoundMap.SIGNATURES.size() == skills.size(), "62 habilidades y 62 firmas (%d y %d)" % [skills.size(), SoundMap.SIGNATURES.size()])
+	_check(skills.size() >= 62 and SoundMap.SIGNATURES.size() == skills.size(), "una firma por habilidad (%d habilidades y %d firmas)" % [skills.size(), SoundMap.SIGNATURES.size()])
 	var names := {}
 	for id in skills:
 		var sig := SoundMap.signature(id)
@@ -9465,3 +9469,64 @@ func _test_companions_walk() -> void:
 		and SkillController.companion_offset(Vector2.DOWN).y < 0.0, "R-2PL: detrás del hombro contrario a donde mira el jugador, por encima")
 	_check(SkillController.companion_visor(Vector2.LEFT) < 0.0 and SkillController.companion_visor(Vector2.RIGHT) > 0.0 and absf(SkillController.companion_visor(Vector2(5, 0))) <= 3.0,
 		"R-2PL: el visor se mueve hacia su objetivo sin salirse de su pantalla")
+
+## T208: Ticket Escalado (P3 → P2 → P1 y estalla), Lazy Loading (las flechas esperan y
+## salen al acercarse alguien) y Descenso de Gradiente (rueda al grupo más denso y crece).
+func _test_new_skills_t208() -> void:
+	var c := _new_character()
+	for id in ["ticket_escalado", "lazy_loading", "descenso_gradiente"]:
+		_check(_db.skills.skills.has(id) and SoundMap.signature(id) != "" and FileAccess.get_file_as_string("res://data/pixel_icons.json").contains("skill:" + id),
+			"%s: datos, sonido propio e icono" % id)
+	var classes: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/classes.json"))["classes"]
+	var unlocked := {}
+	for cl in classes:
+		for u in cl.get("unlocks", []):
+			if int(u.get("level", 0)) == 12:
+				unlocked[String(u.get("skill", ""))] = String(cl["id"])
+	_check(unlocked.get("ticket_escalado") == "guerrero" and unlocked.get("lazy_loading") == "exploradora" and unlocked.get("descenso_gradiente") == "hechicero",
+		"cada una se desbloquea a nivel 12 en su clase")
+	# Ticket: P3, P2 y estalla en P1 con lo acumulado; con Prioridad crítica, al segundo golpe.
+	var m := SkillController.ticket_step({}, 10.0)
+	m = SkillController.ticket_step(m, 12.0)
+	var last := SkillController.ticket_step(m, 8.0)
+	_check(int(m["level"]) == 2 and not m["burst"] and last["burst"] and is_equal_approx(float(last["acc"]), 30.0), "Ticket Escalado: P3, P2 y en P1 estalla con 30 de daño acumulado")
+	_check(SkillController.ticket_step(SkillController.ticket_step({}, 5.0, 1), 5.0, 1)["burst"], "Prioridad crítica: estalla al segundo golpe")
+	# Gradiente: el grupo de tres gana al enemigo suelto.
+	var pts := PackedVector2Array([Vector2(100, 0), Vector2(-150, 0), Vector2(-160, 10), Vector2(-140, -8)])
+	var goal := SkillController.densest_point(pts, Vector2.ZERO, 300.0)
+	_check(goal.x < -100.0, "Descenso de Gradiente: va hacia el grupo, no al suelto (%s)" % goal)
+	_check(SkillController.densest_point(pts, Vector2(2000, 0), 300.0) == Vector2.INF, "sin nadie cerca, sigue recto")
+	# En partida: las flechas esperan y salen cuando alguien se acerca; el orbe crece al atravesar.
+	var em := EnemyManager.new()
+	root.add_child(em)
+	var player: Player = load("res://scenes/game/player.tscn").instantiate()
+	player.character = c
+	root.add_child(player)
+	var sc := SkillController.new()
+	sc.player = player
+	sc.enemies = em
+	sc.character = c
+	root.add_child(sc)
+	player.global_position = Vector2(60000, 60000)
+	var lazy := SkillCalc.compute(Motherboard.new(_db.skills.skills["lazy_loading"], 1, []), c)
+	sc._execute(lazy, player.global_position + Vector2(200, 0))
+	_check(sc._lazies.size() == 3 and sc._projectiles.is_empty(), "Lazy Loading: tres flechas quietas en el aire")
+	sc._update_lazies(0.1)
+	_check(sc._lazies.size() == 3, "sin enemigos cerca, siguen esperando")
+	em.spawn(player.global_position + Vector2(260, 0), Rarity.Enemy.NORMAL, -1, "", 1000.0)
+	sc._update_lazies(0.1)
+	_check(sc._lazies.size() < 3 and not sc._projectiles.is_empty(), "al acercarse un enemigo, salen hacia él")
+	sc._lazies.clear()
+	sc._projectiles.clear()
+	em.clear_all()
+	var grad := SkillCalc.compute(Motherboard.new(_db.skills.skills["descenso_gradiente"], 1, []), c)
+	sc._execute(grad, player.global_position + Vector2(200, 0))
+	for k in 3:
+		var i := em.index_of(em.spawn(player.global_position + Vector2(40 + 6 * k, 0), Rarity.Enemy.NORMAL, -1, "", 1000.0))
+		em.lives[i] *= 100.0
+	for k in 10:
+		sc._update_projectiles(0.05)
+	_check(not sc._projectiles.is_empty() and float(sc._projectiles[0].get("grow", 1.0)) > 1.0, "el orbe crece al atravesar enemigos")
+	sc.free()
+	player.free()
+	em.free()

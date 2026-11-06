@@ -81,6 +81,8 @@ const SIGNATURES := {
 	"watchdog": "sig_watchdog", "bot_rastreador": "sig_bot_rastreador", "golem_silicio": "sig_golem_silicio",
 	"golem_overclock": "sig_golem_overclock", "golem_utp": "sig_golem_utp", "golem_gpu": "sig_golem_gpu",
 	"golem_kernel": "sig_golem_kernel",
+	# Habilidades nuevas (T208)
+	"ticket_escalado": "sig_ticket_escalado", "lazy_loading": "sig_lazy_loading", "descenso_gradiente": "sig_descenso_gradiente",
 }
 ## Volumen de la capa de firma (propia o compartida) respecto a la de tipo.
 const SIGNATURE_DB := -6.0

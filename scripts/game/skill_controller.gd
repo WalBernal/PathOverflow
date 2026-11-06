@@ -47,6 +47,15 @@ var _projectiles: Array[Dictionary] = []
 var _effects: Array[Dictionary] = []      # visuales: anillos y destellos
 var _pending: Array[Dictionary] = []      # explosiones retardadas, rayos y repeticiones
 var _repeat_tags := {}   # id de habilidad → número de la última repetición mostrada («×2»…, T197)
+## Habilidades nuevas (T208). Ticket Escalado: id de enemigo → {level 1..3, acc (daño
+## acumulado), time (lo que le queda), profile}. Lazy Loading: flechas en espera
+## {pos, dir, life, profile, color, phase}.
+var _tickets := {}
+var _lazies: Array[Dictionary] = []
+const TICKET_LEVELS := ["", "P3", "P2", "P1"]
+const TICKET_BURST := 1.5   # el estallido en P1: el daño acumulado de los golpes × esto
+const GRADIENT_STEER_EVERY := 0.25
+const GRADIENT_MAX_GROW := 2.0
 ## Sonidos con retraso (T216): [{name, db, pitch, delay}], los golpes por carga de Core Dump.
 var _sound_queue: Array[Dictionary] = []
 ## Cada cuánto vuelve a sonar la capa de un canalizado mientras se mantiene (T216).
@@ -315,6 +324,8 @@ func on_zone_changed() -> void:
 	_effects.assign(_effects.filter(func(e: Dictionary) -> bool: return e.get("live", false)))
 	_dying_units.clear()   # las que caían se quedan en la zona anterior
 	_debris.clear()
+	_tickets.clear()   # los tickets y las flechas en espera se quedan en la zona anterior (T208)
+	_lazies.clear()
 	_pending.clear()
 	_traps.clear()
 	_devices.clear()
@@ -1173,6 +1184,8 @@ func _physics_process(delta: float) -> void:
 	_update_triggers(delta)
 	_update_pending(delta)
 	_update_sound_queue(delta)
+	_update_tickets(delta)
+	_update_lazies(delta)
 	_update_projectiles(delta)
 	_update_spin(delta)
 	_update_traps(delta)
@@ -1609,6 +1622,12 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 				_traps.pop_front()
 		"chain":
 			_chain(p, origin, target, color)
+		"ticket":   # habilidades nuevas (T208)
+			_ticket_strike(p, origin, target, color)
+		"lazy":
+			_place_lazies(p, origin, target, dir, color)
+		"gradient":
+			_fire_volley(p, origin, dir, color, {"pierce_left": 999, "grow": 1.0, "steer": 0.0})
 		"projectile":
 			if firma:
 				_move_fx(p, origin, origin, dir, color)
@@ -1806,6 +1825,129 @@ func _fire_volley(p: Dictionary, origin: Vector2, dir: Vector2, color: Color, ex
 		}
 		pr.merge(extra, true)
 		_projectiles.append(pr)
+
+
+## --- Habilidades nuevas, tanda 1 (T208) ---
+
+## Ticket Escalado: el siguiente paso de la marca de un enemigo tras un golpe de `dealt`.
+## `start`: 0 abre en P3; 1 (Prioridad crítica) abre en P2. En P1 (nivel 3) estalla.
+static func ticket_step(mark: Dictionary, dealt: float, start := 0) -> Dictionary:
+	var level := (int(mark["level"]) if not mark.is_empty() else start) + 1
+	return {"level": mini(level, 3), "acc": float(mark.get("acc", 0.0)) + dealt, "burst": level >= 3}
+
+
+## Golpe de Ticket Escalado al enemigo más cercano al cursor a su alcance (si no, al más
+## cercano a ti): sube su prioridad y, en P1, estalla con lo acumulado.
+func _ticket_strike(p: Dictionary, origin: Vector2, target: Vector2, color: Color) -> void:
+	var reach := float(p["range"])
+	var i := enemies.nearest_index(origin + (target - origin).limit_length(reach * 0.6), reach)
+	if i == -1:
+		i = enemies.nearest_index(origin, reach)
+	_effects.append({"type": "tag", "pos": origin + (target - origin).limit_length(30.0) + Vector2(-8, -30), "text": "✎",
+		"time": 0.0, "duration": 0.3, "color": color})
+	if i == -1:
+		return
+	var at := enemies.positions[i]
+	var id := enemies.hit_index(i, p["min_damage"], p["max_damage"], p["crit_chance"], p["crit_multiplier"])
+	_leech(p)
+	var mark := ticket_step(_tickets.get(id, {}), enemies.last_damage_dealt, int(p.get("ticket_start", 0)))
+	var sig := SoundMap.signature("ticket_escalado")
+	if sig != "":
+		Sfx.play(sig, SoundMap.SIGNATURE_DB, 1.0 + 0.12 * int(mark["level"]))   # el sello sube de tono por etapa
+	if mark["burst"]:
+		_tickets.erase(id)
+		var acc := float(mark["acc"]) * TICKET_BURST
+		enemies.hit_in_radius(at, float(p["radius"]), acc * 0.9, acc * 1.1, p["crit_chance"], p["crit_multiplier"])
+		_proc("ticket", at, float(p["radius"]), Color("e06c6c"))
+		Sfx.play("thump", -4.0, 0.8)
+		return
+	mark["time"] = float(p["duration"])
+	mark["color"] = color
+	_tickets[id] = mark
+
+
+func _update_tickets(delta: float) -> void:
+	for id in _tickets.keys():
+		_tickets[id]["time"] = float(_tickets[id]["time"]) - delta
+		if float(_tickets[id]["time"]) <= 0.0 or enemies.index_of(id) == -1:
+			_tickets.erase(id)
+
+
+## Lazy Loading: las flechas en un arco delante del punto, perpendicular a donde apuntas.
+func _place_lazies(p: Dictionary, origin: Vector2, target: Vector2, dir: Vector2, color: Color) -> void:
+	var center := origin + (target - origin).limit_length(float(p["range"]))
+	var n := maxi(1, int(p["projectiles"]))
+	for k in n:
+		var off := dir.orthogonal() * (k - (n - 1) / 2.0) * 28.0 - dir * absf(k - (n - 1) / 2.0) * 8.0
+		_lazies.append({"pos": center + off, "dir": dir, "life": float(p["duration"]), "profile": p, "color": color, "phase": randf() * TAU})
+	while _lazies.size() > maxi(n, int(p.get("max_active", 9))):
+		_lazies.pop_front()
+
+
+## Cada flecha espera; en cuanto un enemigo entra en su radio, sale hacia él.
+func _update_lazies(delta: float) -> void:
+	if _lazies.is_empty():
+		return
+	var still: Array[Dictionary] = []
+	for a in _lazies:
+		a["life"] = float(a["life"]) - delta
+		a["phase"] = float(a["phase"]) + delta
+		if a["life"] <= 0.0:
+			continue
+		var p: Dictionary = a["profile"]
+		var t := enemies.nearest_index(a["pos"], float(p["trigger_radius"]))
+		if t == -1:
+			still.append(a)
+			continue
+		var q := p.duplicate()
+		q["projectiles"] = 1
+		var to: Vector2 = (enemies.positions[t] - a["pos"]).normalized()
+		_ctx(q)
+		_fire_volley(q, a["pos"], to, a["color"], {}, float(p["trigger_radius"]) * 2.5)
+		_effects.append({"type": "tag", "pos": a["pos"] + Vector2(-14, -16), "text": "200 OK", "time": 0.0, "duration": 0.45, "color": a["color"]})
+		Sfx.play("lay_whoosh", -10.0, 1.3)
+	_lazies = still
+
+
+## Descenso de Gradiente: hacia dónde rodar desde `from`: el centro del grupo más denso de
+## enemigos a `radius` (el que tiene más vecinos a 90 px). INF si no hay nadie.
+static func densest_point(positions: PackedVector2Array, from: Vector2, radius: float) -> Vector2:
+	var near := PackedVector2Array()
+	for q in positions:
+		if q.distance_to(from) <= radius:
+			near.append(q)
+			if near.size() >= 48:
+				break
+	if near.is_empty():
+		return Vector2.INF
+	var best := Vector2.INF
+	var best_n := 0
+	for a in near:
+		var sum := Vector2.ZERO
+		var n := 0
+		for b in near:
+			if a.distance_to(b) <= 90.0:
+				sum += b
+				n += 1
+		if n > best_n:
+			best_n = n
+			best = sum / n
+	return best
+
+
+## Flechas de Lazy Loading en espera y marcas de Ticket Escalado sobre los enemigos (T208).
+func _draw_new_skills() -> void:
+	var t := Time.get_ticks_msec() / 1000.0
+	var font := ThemeDB.fallback_font
+	var light := fx_light()
+	for a in _lazies:
+		SkillFx.draw_lazy_arrow(self, a["pos"], a["dir"], a["color"], float(a["phase"]), font, light)
+	for id in _tickets:
+		var i := enemies.index_of(id)
+		if i == -1:
+			continue
+		var m: Dictionary = _tickets[id]
+		SkillFx.draw_ticket_mark(self, enemies.positions[i] + Vector2(0, -46), int(m["level"]), t, font)
 
 
 ## Lo que lleva encima un proyectil por sus RAM (T197): "pierce" si aún atraviesa,
@@ -2934,6 +3076,15 @@ func _update_projectiles(delta: float) -> void:
 				var cur: Vector2 = pr["vel"].normalized()
 				var turned := cur.slerp(want, clampf(p["turn_rate"] * delta, 0.0, 1.0))
 				pr["vel"] = turned * pr["vel"].length()
+		if pr.has("grow"):
+			# Descenso de Gradiente (T208): cada 0,25 s gira hacia el grupo más denso.
+			pr["steer"] = float(pr["steer"]) - delta
+			if pr["steer"] <= 0.0:
+				pr["steer"] = GRADIENT_STEER_EVERY
+				var goal := densest_point(enemies.positions, pr["pos"], float(p["seek_range"]))
+				if goal != Vector2.INF and goal.distance_to(pr["pos"]) > 4.0:
+					var want: Vector2 = (goal - pr["pos"]).normalized()
+					pr["vel"] = (pr["vel"] as Vector2).normalized().slerp(want, 0.6) * (pr["vel"] as Vector2).length()
 		var step: Vector2 = pr["vel"] * delta
 		pr["pos"] += step
 		if not pr.get("returning", false):
@@ -2950,11 +3101,13 @@ func _update_projectiles(delta: float) -> void:
 		if pr.get("dot", false):
 			hit = enemies.dot_one(pr["pos"], PROJECTILE_RADIUS, pr["hit_ids"], (p["min_damage"] + p["max_damage"]) / 2.0, p["duration"])
 		else:
-			var dm: float = pr.get("dmg_mult", 1.0)
-			hit = enemies.hit_one(pr["pos"], PROJECTILE_RADIUS, pr["hit_ids"], p["min_damage"] * dm, p["max_damage"] * dm, p["crit_chance"], p["crit_multiplier"])
+			var dm: float = float(pr.get("dmg_mult", 1.0)) * float(pr.get("grow", 1.0))
+			hit = enemies.hit_one(pr["pos"], PROJECTILE_RADIUS * float(pr.get("grow", 1.0)), pr["hit_ids"], p["min_damage"] * dm, p["max_damage"] * dm, p["crit_chance"], p["crit_multiplier"])
 		if hit != -1:
 			_leech(p)
 			pr["hit_ids"][hit] = true
+			if pr.has("grow"):   # el orbe crece con cada enemigo que atraviesa (T208)
+				pr["grow"] = minf(GRADIENT_MAX_GROW, float(pr["grow"]) + float(p.get("grow_rate", 0.1)))
 			var next := enemies.nearest_index(pr["pos"], 260.0, pr["hit_ids"]) if pr.get("chains_left", 0) > 0 else -1
 			if next != -1:
 				# Encadenamiento: rebota hacia otro enemigo en vez de gastar perforación.
@@ -3027,6 +3180,7 @@ func _draw() -> void:
 	_draw_clouds()
 	_draw_devices()
 	_draw_channel()
+	_draw_new_skills()
 	_draw_minions()
 	_draw_units()
 	_draw_companion()
@@ -3198,6 +3352,9 @@ func _draw() -> void:
 		var dir: Vector2 = pr["vel"].normalized()
 		# Cada habilidad con su forma (SkillFx): paquete, esquirla, rayo, bola de fuego, gota…
 		var shape: String = pr["fx"]["projectile"] if pr.has("fx") else ("glitch" if pr.get("dot", false) else "orb")
+		if pr.has("grow"):   # Descenso de Gradiente (T208): el orbe con sus curvas de nivel, según lo que ha crecido
+			SkillFx.draw_gradient_orb(self, pr["pos"], dir, pr["color"], float(pr["grow"]), fx_time + float(pr.get("phase", 0.0)), light)
+			continue
 		SkillFx.draw_projectile(self, pr["pos"], dir, pr["color"], shape, fx_time + float(pr.get("phase", 0.0)), light, Accessibility.reduce_flashes)
 		if not light:
 			SkillFx.draw_projectile_mods(self, pr["pos"], dir, pr["color"], projectile_mods(pr), fx_time + float(pr.get("phase", 0.0)))

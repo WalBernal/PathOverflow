@@ -199,6 +199,10 @@
           "skill": "watchdog"
         },
         {
+          "level": 12,
+          "skill": "ticket_escalado"
+        },
+        {
           "level": 16,
           "choice": [
             "golem_hardware",
@@ -546,6 +550,10 @@
         {
           "level": 10,
           "skill": "bot_rastreador"
+        },
+        {
+          "level": 12,
+          "skill": "lazy_loading"
         },
         {
           "level": 16,
@@ -941,6 +949,10 @@
         {
           "level": 10,
           "skill": "dron_escolta"
+        },
+        {
+          "level": 12,
+          "skill": "descenso_gradiente"
         },
         {
           "level": 16,

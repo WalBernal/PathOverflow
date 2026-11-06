@@ -99,7 +99,7 @@ static func set_loop(wav: AudioStreamWAV, begin := 0) -> void:
 ## cuerpo a cuerpo y saltos, movimientos, buffs, invocaciones, trampas y auras
 ## (el aura suena una sola vez al encenderla, con aura_on).
 const KIND_SOUNDS := {
-	"melee_area": "swing", "spin": "swing", "dash": "swing", "charge": "swing", "leap_slam": "swing",
+	"melee_area": "swing", "spin": "swing", "dash": "swing", "charge": "swing", "leap_slam": "swing", "ticket": "swing",
 	"blink": "blink", "ssh": "blink", "backflip": "blink",
 	"buff": "buff", "barrier": "barrier", "aura": "aura_on",
 	"minion": "summon", "drones": "summon", "unit": "summon",
@@ -111,7 +111,7 @@ const KIND_SOUNDS := {
 const DAMAGE_KINDS := {
 	"projectile": "projectile", "homing": "projectile", "boomerang": "projectile", "dot_projectile": "projectile",
 	"rain": "projectile", "chain": "projectile", "beam": "projectile",
-	"channel_beam": "projectile", "channel_storm": "projectile",
+	"channel_beam": "projectile", "channel_storm": "projectile", "lazy": "projectile", "gradient": "projectile",
 	"ground_aoe": "thump", "nova": "thump", "terrain": "thump", "degen_area": "thump", "curse_area": "thump",
 	"cone": "swing",
 }

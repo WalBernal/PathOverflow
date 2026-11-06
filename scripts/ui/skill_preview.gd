@@ -375,6 +375,13 @@ func _cast_kind(p: Dictionary, origin: Vector2, target: Vector2, device: bool, c
 			_chain(p, origin, target, color)
 		"projectile":
 			_volley(p, origin, dir, color)
+		"ticket":   # habilidades nuevas (T208), en pequeño: el golpe con su prioridad
+			fx.append({"type": "tag", "pos": DUMMIES[0] + Vector2(-8, -46), "text": "P3", "time": 0.0, "duration": 0.8, "color": color})
+			_hit_area(DUMMIES[0], 30.0, p)
+		"lazy":   # las flechas salen hacia el servidor más cercano
+			_volley(p, origin, dir, color)
+		"gradient":
+			_volley(p, origin, dir, color, {"grow": 1.0, "steer": 0.0, "pierce_left": 999})
 		"ground_aoe":
 			var at := origin + (target - origin).limit_length(reach)
 			var delay := clampf(float(p.get("delay", 0.4)), 0.1, 0.9)

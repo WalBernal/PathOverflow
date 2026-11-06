@@ -17,6 +17,29 @@ static func draw(ci: CanvasItem, rect: Rect2, skill_def: Dictionary, dimmed := f
 		if PixelIcons.draw(ci, rect, "skill:" + String(skill_def.get("id", "")), Color(0.45, 0.45, 0.45) if dimmed else Color.WHITE):
 			return
 	match icon.get("shape", ""):
+		"ticket":
+			# Ticket Escalado (T208): tarjeta de ticket con su muesca y la prioridad «P1».
+			var card := Rect2(c - Vector2(r * 0.85, r * 0.6), Vector2(r * 1.7, r * 1.2))
+			ci.draw_rect(card, Color("e8e0c8"))
+			ci.draw_circle(Vector2(card.position.x, c.y), r * 0.18, Color("1a1620"))
+			ci.draw_circle(Vector2(card.end.x, c.y), r * 0.18, Color("1a1620"))
+			ci.draw_rect(Rect2(card.position + Vector2(r * 0.25, r * 0.2), Vector2(r * 0.8, r * 0.16)), Color("8a8270"))
+			ci.draw_rect(Rect2(card.position + Vector2(r * 0.25, r * 0.5), Vector2(r * 0.55, r * 0.14)), Color("8a8270"))
+			ci.draw_rect(Rect2(card.end - Vector2(r * 0.65, r * 0.55), Vector2(r * 0.5, r * 0.4)), color)
+		"lazy":
+			# Lazy Loading (T208): flecha suspendida con un reloj de arena.
+			ci.draw_line(c + Vector2(-r * 0.8, r * 0.5), c + Vector2(r * 0.5, -r * 0.6), UiStyle.TEXT, 2.5, true)
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(r * 0.75, -r * 0.82), c + Vector2(r * 0.2, -r * 0.62), c + Vector2(r * 0.55, -r * 0.25)]), color)
+			var hg := c + Vector2(-r * 0.25, r * 0.15)
+			ci.draw_colored_polygon(PackedVector2Array([hg + Vector2(-r * 0.3, -r * 0.35), hg + Vector2(r * 0.3, -r * 0.35), hg]), Color(color, 0.8))
+			ci.draw_colored_polygon(PackedVector2Array([hg, hg + Vector2(r * 0.3, r * 0.35), hg + Vector2(-r * 0.3, r * 0.35)]), Color(color, 0.5))
+		"gradient":
+			# Descenso de Gradiente (T208): orbe con curvas de nivel y la flecha hacia abajo.
+			for k in 3:
+				ci.draw_arc(c + Vector2(0, r * 0.1), r * (0.35 + 0.25 * k), 0.0, TAU, 16, Color(color, 0.9 - 0.25 * k), 1.5, true)
+			ci.draw_circle(c + Vector2(0, r * 0.1), r * 0.22, color)
+			ci.draw_line(c + Vector2(0, -r * 0.95), c + Vector2(0, -r * 0.3), UiStyle.TEXT, 2.0)
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-r * 0.2, -r * 0.45), c + Vector2(r * 0.2, -r * 0.45), c + Vector2(0, -r * 0.2)]), UiStyle.TEXT)
 		"medic":
 			# Dron con cruz de reparación.
 			for k in 4:
