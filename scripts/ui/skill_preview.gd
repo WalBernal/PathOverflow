@@ -254,6 +254,38 @@ func _cast(p: Dictionary, origin: Vector2, target: Vector2, device: bool) -> voi
 	var radius := maxf(20.0, float(p.get("radius", 60.0)))
 	var reach := float(p.get("range", 400.0))
 	var fx := _sc._effects
+	var fx_before := fx.size()
+	var start := _player.position
+	_cast_kind(p, origin, target, device, color, dir, radius, reach, fx)
+	# Con firma (T193-T195), la misma que en el juego en vez del anillo, la estela o el cono genéricos.
+	var id := String(p.get("id", ""))
+	if not device and SkillFx.has_fx(id):
+		var mine := fx.slice(fx_before)
+		fx.resize(fx_before)
+		var hops := PackedVector2Array()   # los saltos de la cadena, de sus zigzags
+		for e in mine:
+			if String(e["type"]) == "zap":
+				if hops.is_empty():
+					hops.append(e["pos"])
+				hops.append(e["end"])
+			if not (String(e["type"]) in GENERIC_FX):
+				fx.append(e)
+		if SkillFx.BUFF_IDS.has(id):
+			# (sin seguir al jugador: en la vista previa no hay personaje que lleve el buff)
+			var cast := float(SkillFx.BUFF_FX.get(id, 0.4))
+			fx.append(SkillFx.move_fx(id, origin, origin, dir, radius, color, PackedVector2Array(), {"cast": cast, "live": false, "end": -1.0}))
+		else:
+			var end := _player.position if _player.position != start else origin + (target - origin).limit_length(reach)
+			if hops.size() < 2:
+				hops = PackedVector2Array([origin, end])
+			_sc._move_fx(p, origin, end, dir, color, PackedVector2Array(DUMMIES), {"hops": hops})
+
+
+## Efectos genéricos que la firma sustituye en la vista previa (T199).
+const GENERIC_FX := ["ring", "trail", "cone", "leap", "quake", "zap", "lock", "beam", "beam_marker", "marker", "curse"]
+
+
+func _cast_kind(p: Dictionary, origin: Vector2, target: Vector2, device: bool, color: Color, dir: Vector2, radius: float, reach: float, fx: Array) -> void:
 	match String(p.get("kind", "")):
 		"leap_slam":
 			var land := origin + (target - origin).limit_length(reach)
