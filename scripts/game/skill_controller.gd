@@ -112,6 +112,7 @@ func _restore_auras(ids: Array) -> void:
 	for p in _profiles:
 		if not p.is_empty() and p["kind"] == "aura" and String(p["id"]) in ids:
 			var a := {"skill_id": p["id"], "profile": p, "color": DAMAGE_COLORS.get(p["damage_type"], Color.WHITE), "sig": str(p["aura_mods"]), "anchor": Vector2.INF}
+			_aura_fx_state(a, 1.0)   # ya encendida: sin la animación de activarse
 			_auras.append(a)
 			_apply_aura_effect(a)
 	_update_reservation()
@@ -292,7 +293,8 @@ func on_zone_changed() -> void:
 	for a in _auras:
 		a["anchor"] = Vector2.INF   # las auras ancladas se mudan contigo (se fijan al llegar)
 	_projectiles.clear()
-	_effects.clear()
+	# Lo que sigue al jugador mientras dura su buff (T195) se muda con él.
+	_effects.assign(_effects.filter(func(e: Dictionary) -> bool: return e.get("live", false)))
 	_pending.clear()
 	_traps.clear()
 	_devices.clear()
@@ -395,20 +397,169 @@ func _apply_aura_effect(a: Dictionary) -> void:
 func _toggle_aura(p: Dictionary, color: Color) -> void:
 	for k in _auras.size():
 		if _auras[k]["skill_id"] == p["id"]:
+			# Su anillo se desdibuja en sentido contrario donde estaba (T195).
+			var center := aura_center(_auras[k])
+			_effects.append(SkillFx.move_fx("aura_off", center, center, Vector2.RIGHT,
+				float(_auras[k]["profile"].get("aura_radius", 0.0)), SkillFx.aura_tint(String(p["id"]), color)))
 			character.remove_timed_effect("aura:" + String(p["id"]))
 			_auras.remove_at(k)
 			_remember_auras()
 			Sfx.play("aura_off", -6.0)
-			_effects.append({"type": "ring", "pos": player.global_position, "radius": 70.0, "time": 0.0, "duration": 0.4, "color": Color(color, 0.5)})
 			refresh_profiles()
 			return
 	var a := {"skill_id": p["id"], "profile": p, "color": color, "sig": str(p["aura_mods"]), "anchor": player.global_position}
+	_aura_fx_state(a, 0.0)
 	_auras.append(a)
 	_remember_auras()
 	SoundMap.play_cast(p)   # aura_on + su capa de firma: la única vez que suena al encenderla (T192)
-	_effects.append({"type": "ring", "pos": player.global_position, "radius": 90.0, "time": 0.0, "duration": 0.7, "color": color})
 	_apply_aura_effect(a)   # recalcula las stats y, con ello, los perfiles y la reserva
 	_update_reservation()
+
+
+# --- Firmas de buffs, gritos, barrera y auras (T195) ---
+
+## Lo que el dibujo de un aura necesita guardar: cuánto lleva encendida (`on_t`) y, en
+## las hostiles, qué enemigos tiene dentro (hasta SkillFx.AURA_MARKS, por índice y por
+## id) y desde cuándo (`entered`, id → on_t al entrar); se mira cada 0,25 s, no por fotograma.
+func _aura_fx_state(a: Dictionary, on_t: float) -> void:
+	a["on_t"] = on_t
+	a["scan"] = 0.0
+	a["inside"] = PackedInt32Array()
+	a["inside_ids"] = PackedInt32Array()
+	a["entered"] = {}
+
+
+func _update_aura_fx(delta: float) -> void:
+	for a in _auras:
+		if not a.has("on_t"):
+			_aura_fx_state(a, 1.0)
+		a["on_t"] = float(a["on_t"]) + delta
+		if a["profile"].get("aura_enemy", {}).is_empty():
+			continue
+		a["scan"] = float(a["scan"]) - delta
+		if a["scan"] > 0.0:
+			continue
+		a["scan"] = 0.25
+		var idx := PackedInt32Array()
+		var ids := PackedInt32Array()
+		var seen := {}
+		if not fx_light():   # con muchos enemigos en pantalla, sin marcas
+			var old: Dictionary = a["entered"]
+			var center := aura_center(a)
+			var r := float(a["profile"]["aura_radius"])
+			for i in enemies.positions.size():
+				if enemies.positions[i].distance_to(center) <= r:
+					var eid := enemies.ids[i]
+					seen[eid] = old.get(eid, a["on_t"])
+					if idx.size() < SkillFx.AURA_MARKS:
+						idx.append(i)
+						ids.append(eid)
+		a["inside"] = idx
+		a["inside_ids"] = ids
+		a["entered"] = seen
+
+
+## Efecto de lanzamiento de un buff, grito o barrera con firma. Los que siguen al jugador
+## mientras dura el buff ("live") los mueve _update_live; relanzarlo quita el anterior.
+func _buff_fx(p: Dictionary, origin: Vector2, device := false) -> void:
+	var id := String(p["id"])
+	var live := SkillFx.is_live(id) and not device
+	var cast := float(SkillFx.BUFF_FX.get(id, 0.4))
+	if live:
+		_effects.assign(_effects.filter(func(e: Dictionary) -> bool: return not (e["type"] == "firma" and e["firma"] == id)))
+	var extra := {"cast": cast, "live": live, "end": -1.0}
+	if live:
+		extra["duration"] = maxf(cast, float(p.get("duration", cast))) + SkillFx.BUFF_FADE
+	var marks := PackedVector2Array()
+	match id:
+		"rollback_grito":
+			if float(p.get("heal_allies", 0.0)) > 0.0:
+				for u in _units:
+					if marks.size() < SkillFx.MAX_MARKS:
+						marks.append(u["pos"])
+		"hiperthreading":
+			extra["lag"] = origin
+			extra["back"] = Vector2(-4, 0)
+		"daily_standup":
+			var steps := PackedVector2Array()
+			steps.resize(SkillFx.DAILY_STEPS)
+			var times := PackedFloat32Array()
+			times.resize(SkillFx.DAILY_STEPS)
+			times.fill(-9.0)
+			extra.merge({"steps": steps, "step_times": times, "step_n": 0, "step_t": 0.0, "last_step": origin})
+	_move_fx(p, origin, origin, Vector2.RIGHT, DAMAGE_COLORS["none"], marks, extra)
+
+
+func _has_buff(effect_id: String) -> bool:
+	for te in character.timed_effects:
+		if te["id"] == effect_id:
+			return true
+	return false
+
+
+## Lo que sigue al jugador mientras dura el buff: su posición, el doble de Hiperthreading
+## que va con retraso y las huellas de Daily. Se apaga al acabarse el buff o la barrera.
+func _update_live(e: Dictionary, delta: float) -> void:
+	var pos := player.global_position
+	if pos.distance_to(e["pos"]) > 300.0:
+		# Un salto (cambio de zona o teletransporte largo): el doble no cruza el mapa
+		# y las huellas no se quedan pintadas donde ya no está el jugador.
+		if e.has("lag"):
+			e["lag"] = pos
+		if e.has("step_times"):
+			var times: PackedFloat32Array = e["step_times"]
+			times.fill(-9.0)
+			e["step_times"] = times
+			e["last_step"] = pos
+	e["pos"] = pos
+	if float(e["end"]) >= 0.0:
+		return
+	var id := String(e["firma"])
+	var over: bool = not player.is_alive() or float(e["time"]) >= float(e["duration"]) - SkillFx.BUFF_FADE
+	if float(e["time"]) > 0.1:
+		over = over or (player.barrier <= 0.0 if id == "firewall_personal" else not _has_buff("skill:" + id))
+	if over:
+		e["end"] = e["time"]
+		e["duration"] = float(e["time"]) + (0.3 if id == "firewall_personal" else SkillFx.BUFF_FADE)
+		return
+	match id:
+		"hiperthreading":
+			# El segundo hilo: va 0,05 s por detrás y un poco detrás según hacia dónde se mueve.
+			e["lag"] = (e["lag"] as Vector2).lerp(pos, clampf(delta / 0.05, 0.0, 1.0))
+			if player.velocity.length() > 1.0:
+				e["back"] = -player.velocity.normalized() * 4.0
+		"daily_standup":
+			e["step_t"] = float(e["step_t"]) + delta
+			if e["step_t"] >= 0.1:
+				e["step_t"] = 0.0
+				if pos.distance_to(e["last_step"]) > 2.0:
+					var n := int(e["step_n"])
+					var slot := n % SkillFx.DAILY_STEPS
+					var steps: PackedVector2Array = e["steps"]
+					var times: PackedFloat32Array = e["step_times"]
+					steps[slot] = pos + Vector2(3.0 if n % 2 == 0 else -3.0, 2.0)
+					times[slot] = e["time"]
+					e["steps"] = steps
+					e["step_times"] = times
+					e["step_n"] = n + 1
+					e["last_step"] = pos
+
+
+## Al recibir un golpe: el hexágono de Modo Seguro destella y, si la barrera de Firewall lo
+## absorbe, el ladrillo del lado del golpe suelta «DENY» (como mucho uno cada 0,25 s).
+func _buff_fx_hit() -> void:
+	for e in _effects:
+		if e["type"] != "firma" or not e.get("live", false) or float(e["end"]) >= 0.0:
+			continue
+		match String(e["firma"]):
+			"modo_seguro":
+				e["hit"] = e["time"]
+			"firewall_personal":
+				if player.barrier > 0.0 and float(e["time"]) - float(e.get("hit", -9.0)) > 0.25:
+					e["hit"] = e["time"]
+					var i := enemies.nearest_index(player.global_position, 240.0)
+					var d := (enemies.positions[i] - player.global_position).normalized() if i != -1 else Vector2.RIGHT
+					e["hit_dir"] = d if d != Vector2.ZERO else Vector2.RIGHT
 
 
 func profile(index: int) -> Dictionary:
@@ -697,10 +848,13 @@ func _spend_charges(p: Dictionary) -> Dictionary:
 	var q := p.duplicate()
 	var mult := 1.0
 	var mana_per_charge := character.stats.get_value(Stat.CHARGE_SPEND_MANA)
+	var spent := []   # los tipos que se gastaron, para la firma de Core Dump (T194)
+	q["spent"] = spent
 	for t in spend:
 		var n := character.spend_charges(t)
 		if n <= 0:
 			continue
+		spent.append(String(t))
 		if mana_per_charge > 0.0:
 			player.mana = minf(player.max_mana(), player.mana + player.unreserved_mana_max() * mana_per_charge / 100.0 * n)
 		match t:
@@ -713,7 +867,9 @@ func _spend_charges(p: Dictionary) -> Dictionary:
 				if float(q["crit_chance"]) > 0.0:   # Memoria sin ECC: nunca hace críticos
 					q["crit_chance"] = 100.0
 				q["crit_multiplier"] = float(q["crit_multiplier"]) + 20.0 * n
-		_effects.append({"type": "burst", "pos": player.global_position, "radius": 40.0 + 12.0 * n, "time": 0.0, "duration": 0.35, "color": Charges.color(t)})
+		# Con firma (Core Dump, T194) las cargas gastadas son sus anillos: el destello queda oculto.
+		_effects.append({"type": "burst", "pos": player.global_position, "radius": 40.0 + 12.0 * n, "time": 0.0, "duration": 0.35, "color": Charges.color(t),
+			"hidden": String(p["id"]) == "core_dump"})
 	q["min_damage"] = float(q["min_damage"]) * mult
 	q["max_damage"] = float(q["max_damage"]) * mult
 	return q
@@ -750,7 +906,7 @@ func light_allies() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var t := Time.get_ticks_msec() / 1000.0
 	for a in _auras:
-		var c := Accessibility.aura_color(String(a["profile"].get("damage_type", "")), a["color"])
+		var c := SkillFx.aura_tint(String(a["skill_id"]), Accessibility.aura_color(String(a["profile"].get("damage_type", "")), a["color"]))
 		out.append({"pos": aura_center(a), "radius": maxf(140.0, float(a["profile"].get("aura_radius", 0.0)) * 0.6), "color": c, "power": 0.35 + 0.05 * sin(t * 2.0)})
 	for u in _units:
 		out.append({"pos": u["pos"], "radius": 70.0 + float(u["radius"]) * 2.0, "color": u["color"], "power": 0.5})
@@ -779,21 +935,28 @@ const SHOUT_COLOR := Color("e08a50")
 ## Grito (potenciador con etiqueta warcry): sus mods ya llegan a las invocaciones
 ## por las stats (daño y vida de esbirros, velocidad de autómatas); aquí se ve la
 ## onda, destella cada aliado y, si la habilidad cura (heal_allies), los cura.
-func _shout(p: Dictionary, origin: Vector2) -> void:
-	_effects.append({"type": "ring", "pos": origin, "radius": 170.0, "time": 0.0, "duration": 0.5, "color": SHOUT_COLOR})
-	_effects.append({"type": "ring", "pos": origin, "radius": 90.0, "time": 0.0, "duration": 0.35, "color": SHOUT_COLOR})
-	for group in [_units, _minions, _devices]:
-		for a in group:
-			if a.has("pos"):
-				_effects.append({"type": "ring", "pos": a["pos"], "radius": 24.0, "time": 0.0, "duration": 0.45, "color": SHOUT_COLOR})
+func _shout(p: Dictionary, origin: Vector2, device := false) -> void:
+	# Con firma (T195) cada grito tiene su onda, su texto y lo que lleva cada invocación.
+	var firma := SkillFx.has_fx(String(p["id"]))
+	if firma:
+		_buff_fx(p, origin, device)
+	else:
+		_effects.append({"type": "ring", "pos": origin, "radius": 170.0, "time": 0.0, "duration": 0.5, "color": SHOUT_COLOR})
+		_effects.append({"type": "ring", "pos": origin, "radius": 90.0, "time": 0.0, "duration": 0.35, "color": SHOUT_COLOR})
+		for group in [_units, _minions, _devices]:
+			for a in group:
+				if a.has("pos"):
+					_effects.append({"type": "ring", "pos": a["pos"], "radius": 24.0, "time": 0.0, "duration": 0.45, "color": SHOUT_COLOR})
 	if float(p.get("heal_allies", 0.0)) > 0.0:
-		heal_units(float(p["heal_allies"]))
+		heal_units(float(p["heal_allies"]), not firma)
 
 
-func heal_units(fraction: float) -> void:
+## `rings`: el anillo verde de cada curado (sin él con ¡Rollback!, que suelta sus «+»).
+func heal_units(fraction: float, rings := true) -> void:
 	for u in _units:
 		u["life"] = minf(u["max_life"], u["life"] + u["max_life"] * fraction)
-		_effects.append({"type": "ring", "pos": u["pos"], "radius": 30.0, "time": 0.0, "duration": 0.4, "color": Color("6fd36b")})
+		if rings:
+			_effects.append({"type": "ring", "pos": u["pos"], "radius": 30.0, "time": 0.0, "duration": 0.4, "color": Color("6fd36b")})
 	for d in _devices:
 		var hp: Dictionary = d.get("ally", {})
 		if not hp.is_empty():
@@ -820,6 +983,7 @@ func on_enemy_killed(pos: Vector2) -> void:
 func on_player_hit() -> void:
 	_roll_charge("buffer")
 	queue_trigger("on_hit")
+	_buff_fx_hit()
 	var chance := character.stats.get_value(Stat.RETALIATION_NOVA)
 	if chance <= 0.0 or _nova_cooldown > 0.0 or randf() * 100.0 >= chance:
 		return
@@ -1237,6 +1401,9 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 	if dir == Vector2.ZERO:
 		dir = Vector2.RIGHT
 	_ctx(p)
+	# Firma propia de cuerpo a cuerpo y movimiento (T193) o de hechizo (T194): en vez del
+	# anillo, la estela, el cono, el salto, el rayo, el marcador o el zigzag genéricos de su kind.
+	var firma := SkillFx.has_fx(String(p["id"]))
 	match p["kind"]:
 		"leap_slam":
 			# Salto: se mueve con colisión (no atraviesa paredes) y golpea al caer.
@@ -1245,11 +1412,17 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 				player.move_and_collide(land - origin)
 				player.stop_auto_move()
 				land = player.global_position
-			_effects.append({"type": "leap", "pos": origin, "end": land, "time": 0.0, "duration": 0.3, "color": color})
+			if firma:
+				_move_fx(p, origin, land, dir, color)
+				if not device and not Accessibility.reduce_motion:
+					player.camera_shake(3.0, 0.15)
+			else:
+				_effects.append({"type": "leap", "pos": origin, "end": land, "time": 0.0, "duration": 0.3, "color": color})
 			if p["stun"] > 0.0:
 				enemies.stun_in_radius(land, p["radius"], p["stun"])
 			_damage_area(land, p["radius"], p)
-			_effects.append({"type": "quake", "pos": land, "radius": p["radius"], "time": 0.0, "duration": 0.45, "color": color})
+			if not firma:
+				_effects.append({"type": "quake", "pos": land, "radius": p["radius"], "time": 0.0, "duration": 0.45, "color": color})
 		"rain":
 			var center := origin + (target - origin).limit_length(p["range"])
 			var hits: int = maxi(1, p["rain_hits"])
@@ -1264,9 +1437,13 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 		"melee_area", "nova":
 			if p["stun"] > 0.0:
 				enemies.stun_in_radius(origin, p["radius"], p["stun"])
-				_effects.append({"type": "lock", "pos": origin, "radius": p["radius"], "time": 0.0, "duration": 0.6, "color": color})
+				if not firma:
+					_effects.append({"type": "lock", "pos": origin, "radius": p["radius"], "time": 0.0, "duration": 0.6, "color": color})
+			if firma:
+				_move_fx(p, origin, origin, dir, color, _marks_in_radius(origin, p["radius"]), _nova_extra(p))
 			_damage_area(origin, p["radius"], p)
-			_effects.append({"type": "ring", "pos": origin, "radius": p["radius"], "time": 0.0, "duration": 0.25, "color": color})
+			if not firma:
+				_effects.append({"type": "ring", "pos": origin, "radius": p["radius"], "time": 0.0, "duration": 0.25, "color": color})
 		"dash":
 			# Embestida: se mueve con colisión (no atraviesa paredes) y golpea lo que hay en la línea.
 			var offset := (target - origin).limit_length(p["range"])
@@ -1275,18 +1452,30 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 				player.move_and_collide(offset)
 				player.stop_auto_move()
 				end = player.global_position
+			if firma:
+				_move_fx(p, origin, end, dir, color, _marks_in_segment(origin, end, p["width"] * 0.5))
 			enemies.hit_in_segment(origin, end, p["width"] * 0.5, p["min_damage"], p["max_damage"], p["crit_chance"], p["crit_multiplier"])
 			_leech(p)
-			_effects.append({"type": "trail", "pos": origin, "end": end, "radius": p["width"], "time": 0.0, "duration": 0.3, "color": color})
+			if not firma:
+				_effects.append({"type": "trail", "pos": origin, "end": end, "radius": p["width"], "time": 0.0, "duration": 0.3, "color": color})
 		"cone":
 			var half := deg_to_rad(p["angle"]) / 2.0
+			if firma:
+				var ctx: Dictionary = p.get("ailment_ctx", {})
+				_move_fx(p, origin, origin, dir, color, _marks_in_cone(origin, dir, p["radius"], half),
+					{"half": half, "bleed": float(ctx.get("chances", {}).get(Ailments.BLEED, 0.0)) / 100.0})
 			enemies.hit_in_cone(origin, dir, p["radius"], half, p["min_damage"], p["max_damage"], p["crit_chance"], p["crit_multiplier"])
 			_leech(p)
-			_effects.append({"type": "cone", "pos": origin, "dir": dir, "radius": p["radius"], "half": half, "time": 0.0, "duration": 0.35, "color": color})
+			if not firma:
+				_effects.append({"type": "cone", "pos": origin, "dir": dir, "radius": p["radius"], "half": half, "time": 0.0, "duration": 0.35, "color": color})
 		"beam":
-			_pending.append({"type": "beam", "time": p["delay"], "pos": origin, "dir": dir, "profile": p, "color": color})
-			_effects.append({"type": "beam_marker", "pos": origin, "dir": dir, "radius": p["width"], "length": p["range"],
-				"time": 0.0, "duration": p["delay"], "color": color})
+			_pending.append({"type": "beam", "time": p["delay"], "pos": origin, "dir": dir, "profile": p, "color": color, "firma": firma})
+			if firma:
+				_move_fx(p, origin, origin + dir * float(p["range"]), dir, color, PackedVector2Array(),
+					{"radius": float(p["width"]), "length": float(p["range"]), "duration": float(p["delay"])})
+			else:
+				_effects.append({"type": "beam_marker", "pos": origin, "dir": dir, "radius": p["width"], "length": p["range"],
+					"time": 0.0, "duration": p["delay"], "color": color})
 		"boomerang":
 			_fire_volley(p, origin, dir, color, {"pierce_left": 999, "boomerang": true, "returning": false, "spin": 0.0, "homing": false})
 		"spin":
@@ -1302,7 +1491,10 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 		"barrier":
 			if not device:
 				player.add_barrier(p["barrier"], p["duration"])
-			_effects.append({"type": "ring", "pos": origin, "radius": 60.0, "time": 0.0, "duration": 0.5, "color": Color("cfe8ff")})
+			if firma:
+				_buff_fx(p, origin, device)
+			else:
+				_effects.append({"type": "ring", "pos": origin, "radius": 60.0, "time": 0.0, "duration": 0.5, "color": Color("cfe8ff")})
 		"buff":
 			if not device:
 				var mods: Array[Modifier] = []
@@ -1310,7 +1502,9 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 					mods.append(Modifier.from_dict(md, "skill:" + String(p["id"])))
 				character.add_timed_effect("skill:" + String(p["id"]), mods, p["duration"])
 			if p["tags"].has(&"warcry"):
-				_shout(p, origin)
+				_shout(p, origin, device)
+			elif firma:
+				_buff_fx(p, origin, device)
 			else:
 				_effects.append({"type": "ring", "pos": origin, "radius": 45.0, "time": 0.0, "duration": 0.6, "color": Color("e8d070")})
 		"curse_area":
@@ -1330,7 +1524,11 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 				_drones.pop_front()
 		"degen_area":
 			var offset := (target - origin).limit_length(p["range"])
-			_clouds.append({"pos": origin + offset, "life": p["duration"], "next": 0.0, "profile": p, "color": color, "seed": randi()})
+			# Con su firma (T194), la gota que cae y un charco de celdas de memoria que crece.
+			_clouds.append({"pos": origin + offset, "life": p["duration"], "next": 0.0, "profile": p, "color": color, "seed": randi(),
+				"leak": firma, "mb": PackedVector2Array(), "mb_age": 0.5})
+			if firma:
+				_move_fx(p, origin, origin + offset, dir, color)
 		"trap":
 			var offset := (target - origin).limit_length(p["range"])
 			_traps.append({"pos": origin + offset, "armed_in": 0.5, "life": p["duration"], "profile": p, "color": color})
@@ -1339,19 +1537,29 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 		"chain":
 			_chain(p, origin, target, color)
 		"projectile":
+			if firma:
+				_move_fx(p, origin, origin, dir, color)
 			_fire_volley(p, origin, dir, color)
 		"ground_aoe":
 			var offset := (target - origin).limit_length(p["range"])
-			_pending.append({"type": "blast", "time": p["delay"], "pos": origin + offset, "profile": p, "color": color})
-			_effects.append({"type": "marker", "pos": origin + offset, "radius": p["radius"], "time": 0.0, "duration": p["delay"], "color": color})
+			_pending.append({"type": "blast", "time": p["delay"], "pos": origin + offset, "profile": p, "color": color, "firma": firma})
+			if firma:
+				_move_fx(p, origin + offset, origin + offset, dir, color, PackedVector2Array(),
+					{"delay": float(p["delay"]), "duration": float(p["delay"]) + 0.5})
+			else:
+				_effects.append({"type": "marker", "pos": origin + offset, "radius": p["radius"], "time": 0.0, "duration": p["delay"], "color": color})
 		"blink":
 			if device:
 				return
 			var offset := (target - origin).limit_length(p["range"])
-			_effects.append({"type": "ring", "pos": origin, "radius": 30.0, "time": 0.0, "duration": 0.3, "color": color})
+			if not firma:
+				_effects.append({"type": "ring", "pos": origin, "radius": 30.0, "time": 0.0, "duration": 0.3, "color": color})
 			player.global_position = _landing(origin + offset)
 			player.stop_auto_move()
-			_effects.append({"type": "ring", "pos": player.global_position, "radius": 40.0, "time": 0.0, "duration": 0.3, "color": color})
+			if firma:
+				_move_fx(p, origin, player.global_position, dir, color)
+			else:
+				_effects.append({"type": "ring", "pos": player.global_position, "radius": 40.0, "time": 0.0, "duration": 0.3, "color": color})
 		"terrain":
 			# Terreno: aceite, estática o refrigerante en el suelo (ver _update_terrains).
 			var offset := (target - origin).limit_length(p["range"])
@@ -1365,11 +1573,14 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 			if device:
 				return
 			var dest := _landing(origin + (target - origin).limit_length(p["range"]))
-			_ssh_burst(origin, p, color)
+			_ssh_burst(origin, p, color, not firma)
 			player.global_position = dest
 			player.stop_auto_move()
-			_ssh_burst(dest, p, color)
-			_effects.append({"type": "zap", "pos": origin, "end": dest, "time": 0.0, "duration": 0.25, "color": color})
+			_ssh_burst(dest, p, color, not firma)
+			if firma:
+				_move_fx(p, origin, dest, dir, color)
+			else:
+				_effects.append({"type": "zap", "pos": origin, "end": dest, "time": 0.0, "duration": 0.25, "color": color})
 		"charge":
 			# Force Push: carga hasta el primer enemigo en el cono hacia el cursor, lo
 			# arrolla con los de alrededor, los empuja lejos y los aturde un momento.
@@ -1383,21 +1594,31 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 			player.move_and_collide(hit_at - origin)
 			player.stop_auto_move()
 			var end := player.global_position
-			_effects.append({"type": "trail", "pos": origin, "end": end, "radius": 40.0, "time": 0.0, "duration": 0.3, "color": color})
+			if firma:
+				_move_fx(p, origin, end, dir, color, _marks_in_radius(end, p["radius"] + 20.0) if first != -1 else PackedVector2Array(),
+					{"hit": first != -1})
+			else:
+				_effects.append({"type": "trail", "pos": origin, "end": end, "radius": 40.0, "time": 0.0, "duration": 0.3, "color": color})
 			if first != -1:
 				_damage_area(end, p["radius"], p)
 				enemies.push_in_radius(end, p["radius"] + 20.0, float(p["def"].get("push", 2.0)))
 				if p["stun"] > 0.0:
 					enemies.stun_in_radius(end, p["radius"], p["stun"])
-				_effects.append({"type": "quake", "pos": end, "radius": p["radius"], "time": 0.0, "duration": 0.35, "color": color})
+				if not firma:
+					_effects.append({"type": "quake", "pos": end, "radius": p["radius"], "time": 0.0, "duration": 0.35, "color": color})
 		"backflip":
 			# Git Revert: salto hacia atrás (lejos del cursor) que deja una zona helada.
 			if device:
 				return
-			_clouds.append({"pos": origin, "life": p["duration"], "next": 0.0, "profile": p, "color": color, "seed": randi()})
+			# Con su firma (T193), la zona es un diff con el fantasma de donde estabas.
+			_clouds.append({"pos": origin, "life": p["duration"], "next": 0.0, "profile": p, "color": color, "seed": randi(),
+				"revert": firma, "err": Accessibility.aura_color("fire", Color("d9534f"))})
 			player.move_and_collide(-dir * float(p["range"]))
 			player.stop_auto_move()
-			_effects.append({"type": "leap", "pos": origin, "end": player.global_position, "time": 0.0, "duration": 0.25, "color": color})
+			if firma:
+				_move_fx(p, origin, player.global_position, dir, color)
+			else:
+				_effects.append({"type": "leap", "pos": origin, "end": player.global_position, "time": 0.0, "duration": 0.25, "color": color})
 
 
 ## Dónde cae un teletransporte: el punto libre más cercano (sin paredes ni obstáculos).
@@ -1405,9 +1626,77 @@ func _landing(pos: Vector2) -> Vector2:
 	return spot_fixer.call(pos) if spot_fixer.is_valid() else pos
 
 
-func _ssh_burst(pos: Vector2, p: Dictionary, color: Color) -> void:
+func _ssh_burst(pos: Vector2, p: Dictionary, color: Color, ring := true) -> void:
 	_damage_area(pos, p["radius"], p)
-	_effects.append({"type": "ring", "pos": pos, "radius": p["radius"], "time": 0.0, "duration": 0.3, "color": color})
+	if ring:
+		_effects.append({"type": "ring", "pos": pos, "radius": p["radius"], "time": 0.0, "duration": 0.3, "color": color})
+
+
+## Firma de cuerpo a cuerpo o movimiento (T193, SkillFx.move_fx). El color del daño, el
+## verde y el rojo pasan por el modo daltónico como las auras.
+func _move_fx(p: Dictionary, from: Vector2, to: Vector2, dir: Vector2, color: Color, marks := PackedVector2Array(), extra := {}) -> void:
+	var dtype := String(p.get("damage_type", "physical"))
+	var e := SkillFx.move_fx(String(p["id"]), from, to, dir, float(p.get("radius", 0.0)), Accessibility.aura_color(dtype, color), marks, extra)
+	e["ok"] = Accessibility.aura_color("none", e["ok"])
+	e["err"] = Accessibility.aura_color("fire", e["err"])
+	_effects.append(e)
+
+
+## Lo propio de cada nova con firma (T194): cuánto dura el aturdimiento de Deadlock y los
+## anillos de Core Dump (uno del color de cada tipo de carga gastado; crítico con Overclock).
+func _nova_extra(p: Dictionary) -> Dictionary:
+	match String(p["id"]):
+		"deadlock":
+			var stun := float(p["stun"])
+			return {"stun": stun, "duration": maxf(0.65, stun + 0.15)}
+		"core_dump":
+			var spent: Array = p.get("spent", [])
+			var rings := []
+			for t in spent:
+				rings.append(Charges.color(t))
+			# Con Memoria sin ECC el Overclock no da críticos: sin destello.
+			return {"rings": rings, "crit": spent.has("overclock") and float(p["crit_chance"]) >= 100.0}
+	return {}
+
+
+## Dónde están (hasta SkillFx.MAX_MARKS) los enemigos que va a golpear una firma, para
+## sus marcas; se mira antes del golpe, así cuentan también los que mueren. Con muchos
+## enemigos en pantalla (versión ligera) no hay marcas y no se busca nada.
+func _marks_in_radius(center: Vector2, radius: float) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	if fx_light():
+		return out
+	for i in enemies.positions.size():
+		if enemies.positions[i].distance_to(center) <= radius + enemies.radii[i]:
+			out.append(enemies.positions[i])
+			if out.size() >= SkillFx.MAX_MARKS:
+				break
+	return out
+
+
+func _marks_in_cone(origin: Vector2, dir: Vector2, radius: float, half: float) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	if fx_light():
+		return out
+	for i in enemies.positions.size():
+		var to := enemies.positions[i] - origin
+		if to.length() <= radius + enemies.radii[i] and (to.length() < enemies.radii[i] or absf(dir.angle_to(to)) <= half):
+			out.append(enemies.positions[i])
+			if out.size() >= SkillFx.MAX_MARKS:
+				break
+	return out
+
+
+func _marks_in_segment(a: Vector2, b: Vector2, half_width: float) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	if fx_light():
+		return out
+	for i in enemies.positions.size():
+		if Geometry2D.get_closest_point_to_segment(enemies.positions[i], a, b).distance_to(enemies.positions[i]) <= half_width + enemies.radii[i]:
+			out.append(enemies.positions[i])
+			if out.size() >= SkillFx.MAX_MARKS:
+				break
+	return out
 
 
 ## Primer enemigo (el más cercano) dentro de un cono de semiángulo `half` hacia `dir`; -1 si no hay.
@@ -1446,18 +1735,29 @@ func _fire_volley(p: Dictionary, origin: Vector2, dir: Vector2, color: Color, ex
 
 ## Cadena: el enemigo más cercano al cursor (a tiro) y luego salta al más cercano no golpeado.
 func _chain(p: Dictionary, origin: Vector2, target: Vector2, color: Color) -> void:
+	# Con su firma (T194), un solo efecto con todos los saltos en vez de un zigzag por salto.
+	var firma := SkillFx.has_fx(String(p["id"]))
+	var hops := PackedVector2Array([origin])
 	var first := enemies.nearest_index(target, 160.0)
 	if first == -1 or enemies.positions[first].distance_to(origin) > p["range"]:
 		first = enemies.nearest_index(origin, p["range"])
 	if first == -1:
-		_effects.append({"type": "zap", "pos": origin, "end": origin + (target - origin).limit_length(p["range"]), "time": 0.0, "duration": 0.2, "color": color})
+		var miss := origin + (target - origin).limit_length(p["range"])
+		if firma:
+			hops.append(miss)
+			_move_fx(p, origin, miss, (miss - origin).normalized(), color, PackedVector2Array(), {"hops": hops, "miss": true})
+		else:
+			_effects.append({"type": "zap", "pos": origin, "end": miss, "time": 0.0, "duration": 0.2, "color": color})
 		return
 	var hit := {}
 	var from := origin
 	var i := first
 	for k in int(p["chains"]) + 1:
 		var at := enemies.positions[i]
-		_effects.append({"type": "zap", "pos": from, "end": at, "time": -0.06 * k, "duration": 0.3, "color": color})
+		if firma:
+			hops.append(at)
+		else:
+			_effects.append({"type": "zap", "pos": from, "end": at, "time": -0.06 * k, "duration": 0.3, "color": color})
 		var scale := pow(float(p["chain_damage"]), k)
 		hit[enemies.hit_index(i, p["min_damage"] * scale, p["max_damage"] * scale, p["crit_chance"], p["crit_multiplier"])] = true
 		_leech(p)
@@ -1465,6 +1765,9 @@ func _chain(p: Dictionary, origin: Vector2, target: Vector2, color: Color) -> vo
 		i = enemies.nearest_index(at, p["chain_range"], hit)
 		if i == -1:
 			break
+	if firma:
+		_move_fx(p, origin, hops[hops.size() - 1], (hops[1] - origin).normalized(), color, PackedVector2Array(),
+			{"hops": hops, "duration": 0.06 * (hops.size() - 2) + 0.52})
 
 
 func _update_spin(delta: float) -> void:
@@ -2116,6 +2419,12 @@ func _update_clouds(delta: float) -> void:
 			_ctx(p, k)
 			enemies.hit_in_radius(c["pos"], p["radius"], p["min_damage"] * k, p["max_damage"] * k, 0.0, 100.0)
 			_leech(p)
+		if c.get("leak", false):
+			# Burbujas «MB» sobre quien pisa la Fuga de Memoria, una tanda cada 0,5 s (T194).
+			c["mb_age"] = float(c["mb_age"]) + delta
+			if c["mb_age"] >= 0.5:
+				c["mb_age"] = 0.0
+				c["mb"] = _marks_in_radius(c["pos"], p["radius"])
 		if c["life"] > 0.0:
 			still.append(c)
 	_clouds = still
@@ -2305,13 +2614,20 @@ func _update_pending(delta: float) -> void:
 			_damage_area(e["pos"], radius, p)
 			if p["damage_type"] == "fire":
 				_ignite_oil_near(e["pos"], radius)
-			_effects.append({"type": "burst", "pos": e["pos"], "radius": radius, "time": 0.0, "duration": 0.3, "color": e["color"]})
+			# Con firma (Fork Bomb, T194) la explosión la dibuja ella; el «burst» queda oculto
+			# para la luz y las partículas.
+			_effects.append({"type": "burst", "pos": e["pos"], "radius": radius, "time": 0.0, "duration": 0.3, "color": e["color"],
+				"hidden": e.get("firma", false)})
 		elif e["type"] == "beam":
 			var end: Vector2 = e["pos"] + e["dir"] * p["range"]
+			var marks := _marks_in_segment(e["pos"], end, p["width"] * 0.5) if e.get("firma", false) else PackedVector2Array()
 			enemies.hit_in_segment(e["pos"], end, p["width"] * 0.5, p["min_damage"], p["max_damage"], p["crit_chance"], p["crit_multiplier"])
 			_leech(p)
-			_effects.append({"type": "beam", "pos": e["pos"], "dir": e["dir"], "radius": p["width"], "length": p["range"],
-				"time": 0.0, "duration": 0.35, "color": e["color"]})
+			if e.get("firma", false):
+				_move_fx(p, e["pos"], end, e["dir"], e["color"], marks, {"firma": "rayo_produccion_fire", "radius": float(p["width"])})
+			else:
+				_effects.append({"type": "beam", "pos": e["pos"], "dir": e["dir"], "radius": p["width"], "length": p["range"],
+					"time": 0.0, "duration": 0.35, "color": e["color"]})
 		elif player.is_alive():
 			_execute(p, e["target"])
 	_pending = still
@@ -2381,7 +2697,12 @@ func _update_projectiles(delta: float) -> void:
 			if pr.has("fx") and enemies.impact and not light:
 				enemies.impact.skill_impact(pr["pos"], pr["fx"]["impact"], pr["color"], (pr["vel"] as Vector2).normalized())
 			Sfx.play(SoundMap.impact(String(p.get("damage_type", "physical"))), -12.0, randf_range(0.9, 1.1))   # T77
-		if pr.get("boomerang", false) or (pr["distance_left"] > 0.0 and pr["pierce_left"] >= 0):
+		var keep: bool = pr.get("boomerang", false) or (pr["distance_left"] > 0.0 and pr["pierce_left"] >= 0)
+		if hit != -1 and pr.has("fx") and pr["fx"].has("hit_fx") and not light:
+			# Golpe con firma (Ping Letal, T194): su tiempo de respuesta y, si ya no sigue, el eco.
+			_move_fx(p, pr["pos"], pr["pos"], (pr["vel"] as Vector2).normalized(), pr["color"], PackedVector2Array(),
+				{"firma": pr["fx"]["hit_fx"], "ms": randi_range(1, 99), "echo": not keep})
+		if keep:
 			still.append(pr)
 	_projectiles = still
 	_triggering = false
@@ -2400,12 +2721,18 @@ func _cast_fx(p: Dictionary, target: Vector2) -> void:
 	var dir := (target - player.global_position).normalized() if target != player.global_position else Vector2.RIGHT
 	var color: Color = Player.DOT_COLORS.get(String(p["damage_type"]), Color("e8e0d0"))
 	enemies.impact.cast(player.global_position + dir * 16.0 + Vector2(0, -24.0), SkillFx.signature(p)["cast"], color, dir)
+	if _has_buff("skill:hiperthreading"):
+		# Hiperthreading (T195): el segundo hilo suelta su propio destello, un poco detrás.
+		enemies.impact.cast(player.global_position + dir * 10.0 + dir.orthogonal() * 8.0 + Vector2(0, -24.0), SkillFx.signature(p)["cast"], color, dir)
 
 
 func _update_effects(delta: float) -> void:
+	_update_aura_fx(delta)
 	var still: Array[Dictionary] = []
 	for e in _effects:
 		e["time"] += delta
+		if e.get("live", false) and player != null:
+			_update_live(e, delta)
 		if e["time"] < e["duration"]:
 			still.append(e)
 	_effects = still
@@ -2444,12 +2771,18 @@ func _draw() -> void:
 			var a: float = spin["angle"] + TAU * k / 3.0
 			draw_arc(center, p["radius"] * 0.8, a, a + 1.1, 12, Color(c, 0.85), 5.0, true)
 			draw_line(center + Vector2.from_angle(a + 1.1) * p["radius"] * 0.5, center + Vector2.from_angle(a + 1.1) * p["radius"], Color(c, 0.7), 3.0, true)
+	var fx_lite := fx_light()
+	var fx_font := ThemeDB.fallback_font
 	for e in _effects:
 		if e["time"] < 0.0:
 			continue
 		var t: float = e["time"] / e["duration"]
 		var c: Color = e["color"]
 		match e["type"]:
+			"firma":
+				SkillFx.draw_move_fx(self, e, fx_font, fx_lite, Accessibility.reduce_flashes)
+				if e.get("live", false) and not fx_lite:
+					_draw_buff_allies(e)
 			"leap":
 				# Arco del salto: una sombra que recorre el camino y una estela.
 				var a: Vector2 = e["pos"]
@@ -2536,11 +2869,12 @@ func _draw() -> void:
 				draw_circle(e["pos"], r, Color(c, 0.15 * (1.0 - t)))
 				draw_arc(e["pos"], r, 0.0, TAU, 48, Color(c, 0.8 * (1.0 - t)), 3.0, true)
 			"burst":
-				draw_circle(e["pos"], e["radius"] * (0.5 + 0.5 * t), Color(c, 0.45 * (1.0 - t)))
+				if not e.get("hidden", false):
+					draw_circle(e["pos"], e["radius"] * (0.5 + 0.5 * t), Color(c, 0.45 * (1.0 - t)))
 			"marker":
 				draw_arc(e["pos"], e["radius"], 0.0, TAU, 48, Color(c, 0.35 + 0.4 * t), 2.0, true)
 				draw_circle(e["pos"], e["radius"] * t, Color(c, 0.12))
-	var light := fx_light()
+	var light := fx_lite
 	var fx_time := Time.get_ticks_msec() / 1000.0
 	# Sombra de cada proyectil en el suelo (vuelan): primero todas, debajo.
 	for pr in _projectiles:
@@ -2630,39 +2964,83 @@ func _draw_minions() -> void:
 		draw_rect(Rect2(p + Vector2(-10, -26), Vector2(20 * life, 2)), Color("7fd07f"))
 
 
-## Aros girando alrededor del jugador (uno por aura) y una marca sobre cada aliado beneficiado.
+## Color de un aura: el suyo (T195) o, si no tiene estilo, rojo las hostiles y el de su tipo las demás.
+func _aura_tint(a: Dictionary) -> Color:
+	var hostile: bool = not a["profile"].get("aura_enemy", {}).is_empty()
+	var fallback: Color = Color("e06c6c") if hostile else Accessibility.aura_color(String(a["profile"].get("damage_type", "")), a["color"])
+	return SkillFx.aura_tint(String(a["skill_id"]), fallback)
+
+
+## Cada aura con su anillo y su motivo en el borde (T195: engranajes, placas, llaves,
+## banderas, trazos que giran hacia atrás o dientes con mira), unos aros de su color a
+## los pies del jugador (uno por aura) y lo que se ve en los aliados o enemigos de dentro.
 func _draw_auras() -> void:
 	if _auras.is_empty() or not player.is_alive():
 		return
 	var tt := Time.get_ticks_msec() / 1000.0
-	# Alcance: un círculo tenue con el radio de cada aura (las que debilitan, en rojo).
+	var light := fx_light()
+	var dim := Accessibility.reduce_flashes
+	var font := ThemeDB.fallback_font
 	for a in _auras:
 		var ar := float(a["profile"].get("aura_radius", 0.0))
-		if ar > 0.0:
-			var hostile: bool = not a["profile"].get("aura_enemy", {}).is_empty()
-			var rc: Color = Color("e06c6c") if hostile else Accessibility.aura_color(String(a["profile"].get("damage_type", "")), a["color"])
-			var ac := aura_center(a)
-			if bool(a["profile"].get("aura_anchor", false)):
-				# Torre de Señal: una antena en el centro del aura anclada.
-				draw_line(ac, ac + Vector2(0, -34), Color("8a8a96"), 3.0)
-				draw_circle(ac + Vector2(0, -36), 4.0 + sin(Time.get_ticks_msec() / 200.0), rc)
-			draw_set_transform(ac, 0.0, Vector2(1.0, 0.62))
-			draw_circle(Vector2.ZERO, ar, Color(rc, 0.035 if hostile else 0.02))
-			draw_arc(Vector2.ZERO, ar, 0.0, TAU, 64, Color(rc, 0.28), 1.5, true)
-			draw_set_transform(Vector2.ZERO)
-	var k := 0
+		if ar <= 0.0:
+			continue
+		var id := String(a["skill_id"])
+		var hostile: bool = not a["profile"].get("aura_enemy", {}).is_empty()
+		var rc := _aura_tint(a)
+		var ac := aura_center(a)
+		if bool(a["profile"].get("aura_anchor", false)):
+			# Torre de Señal: una antena en el centro del aura anclada.
+			draw_line(ac, ac + Vector2(0, -34), Color("8a8a96"), 3.0)
+			draw_circle(ac + Vector2(0, -36), 4.0 + sin(Time.get_ticks_msec() / 200.0), rc)
+		var on_t := float(a.get("on_t", 1.0))
+		SkillFx.draw_aura(self, id, ac, ar, rc, on_t, tt, hostile)
+		if hostile:
+			var idx: PackedInt32Array = a.get("inside", PackedInt32Array())
+			var ids: PackedInt32Array = a.get("inside_ids", PackedInt32Array())
+			var entered: Dictionary = a.get("entered", {})
+			var aimed := int(on_t / 0.5) % maxi(1, idx.size())
+			for j in idx.size():
+				var i := idx[j]
+				if i >= enemies.positions.size() or enemies.ids[i] != ids[j]:
+					continue   # murió o se movió de sitio en las listas desde la última mirada
+				var h := maxf(30.0, enemies.radii[i] * 2.4 + 12.0)
+				SkillFx.draw_aura_enemy(self, id, enemies.positions[i], h, on_t - float(entered.get(ids[j], -9.0)), tt, rc, j == aimed, font, light)
+		else:
+			var k := 0
+			for u in _units:
+				if u["behavior"] == "orbit" or (u["pos"] as Vector2).distance_to(ac) > ar:
+					continue
+				SkillFx.draw_aura_ally(self, id, u["pos"], float(u["radius"]), k, tt, rc, dim)
+				k += 1
+			if id == "aura_mantenimiento" and player.global_position.distance_to(ac) <= ar:
+				SkillFx.draw_aura_ally(self, id, player.global_position, 12.0, k, tt, rc, dim)
+	var n := 0
 	for a in _auras:
-		var c: Color = Accessibility.aura_color(String(a["profile"].get("damage_type", "")), a["color"])
-		var radius := 54.0 + k * 9.0
+		var c := _aura_tint(a)
+		var radius := 54.0 + n * 9.0
 		draw_set_transform(player.global_position + Vector2(0, 14), 0.0, Vector2(1.0, 0.5))
 		for q in 4:
-			var a0 := tt * (0.9 + k * 0.3) + TAU * q / 4.0
+			var a0 := tt * (0.9 + n * 0.3) + TAU * q / 4.0
 			draw_arc(Vector2.ZERO, radius, a0, a0 + 0.9, 10, Color(c, 0.55), 2.0, true)
 		draw_set_transform(Vector2.ZERO)
-		for u in _units:
-			if u["behavior"] != "orbit":
-				draw_circle((u["pos"] as Vector2) + Vector2(0, u["radius"] * 0.5), 3.0 + sin(tt * 4.0 + k) * 0.6, Color(c, 0.5))
-		k += 1
+		n += 1
+
+
+## Lo que lleva cada invocación mientras dura un grito con firma (T195).
+func _draw_buff_allies(e: Dictionary) -> void:
+	var id := String(e["firma"])
+	if id != "esta_en_produccion" and id != "daily_standup":
+		return
+	var k := 0
+	for u in _units:
+		if u["behavior"] != "orbit" and k < SkillFx.MAX_MARKS:
+			SkillFx.draw_buff_ally(self, e, u["pos"], float(u["radius"]), k, Accessibility.reduce_flashes)
+			k += 1
+	for m in _minions:
+		if k < SkillFx.MAX_MARKS:
+			SkillFx.draw_buff_ally(self, e, m["pos"], 10.0, k, Accessibility.reduce_flashes)
+			k += 1
 
 
 ## Invocaciones persistentes: cada comportamiento tiene su figura.
@@ -2798,6 +3176,15 @@ func _draw_clouds() -> void:
 		var r: float = c["profile"]["radius"]
 		var fade := clampf(c["life"] / 0.4, 0.0, 1.0)
 		var col: Color = c["color"]
+		if c.get("revert", false):
+			SkillFx.draw_revert_zone(self, p, r, col, c["err"], int(c["seed"]), float(c["life"]), fade, fx_light(), Accessibility.reduce_flashes)
+			continue
+		if c.get("leak", false):
+			# Fuga de Memoria (T194): con más de tres charcos a la vez, la rejilla se simplifica.
+			var total: float = c["profile"]["duration"]
+			SkillFx.draw_leak_zone(self, p, r, Accessibility.aura_color("chaos", col), int(c["seed"]), total - float(c["life"]), total, fade,
+				c["mb"], float(c["mb_age"]), ThemeDB.fallback_font, fx_light() or _clouds.size() > 3)
+			continue
 		draw_set_transform(p, 0.0, Vector2(1.0, 0.7))
 		draw_circle(Vector2.ZERO, r, Color(col, 0.18 * fade))
 		draw_circle(Vector2.ZERO, r * 0.7, Color(col, 0.18 * fade))

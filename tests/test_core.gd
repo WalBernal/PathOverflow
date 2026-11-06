@@ -236,6 +236,11 @@ func _initialize() -> void:
 	_test_skill_signatures()
 
 	_test_skill_poses()
+
+	_test_move_signatures()
+	_test_spell_signatures()
+	_test_flamewar_tongues()
+	_test_buff_signatures()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -2124,7 +2129,7 @@ func _test_warcries() -> void:
 		sc._units[0]["life"] = float(sc._units[0]["max_life"]) * 0.5
 		sc._execute(SkillCalc.compute(Motherboard.new(_db.skills.skills["rollback_grito"], 1, []), c), Vector2(50, 0))
 		_check(is_equal_approx(float(sc._units[0]["life"]), float(sc._units[0]["max_life"]) * 0.8), "¡Rollback! cura un 30 %% a las invocaciones")
-	_check(sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "ring" and float(e["radius"]) >= 170.0), "el grito se ve como una onda grande")
+	_check(sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "firma" and String(e["firma"]) in shouts), "el grito se ve con su onda propia (T195)")
 	sc.free()
 	pl.free()
 	em.free()
@@ -3734,8 +3739,8 @@ func _test_enemy_weight() -> void:
 ## Efectos de habilidades con más cuerpo (T74): firma por habilidad y partículas con tope.
 func _test_skill_fx() -> void:
 	var skills: Dictionary = _db.skills.skills
-	_check(SkillFx.signature(skills["ping_letal"])["projectile"] == "bolt" and SkillFx.signature(skills["rafaga_de_paquetes"])["projectile"] == "packet",
-		"el ping es un rayo en zigzag y la ráfaga, paquetes")
+	_check(SkillFx.signature(skills["ping_letal"])["projectile"] == "sonar" and SkillFx.signature(skills["rafaga_de_paquetes"])["projectile"] == "packet",
+		"el ping es un punto de radar (T194) y la ráfaga, paquetes")
 	_check(SkillFx.signature({"id": "nueva", "damage_type": "fire"})["projectile"] == "fireball", "sin firma propia: la de su tipo de daño")
 	var shapes := {}
 	for id in skills:
@@ -8675,3 +8680,238 @@ func _test_skill_poses() -> void:
 	p._tick_anim(0.1)
 	_check(p.anim_state() == "leap" and is_equal_approx(float(p.anim_pose()["t"]), 0.25), "el jugador salta y la pose avanza con la acción")
 	p.free()
+
+## Firmas de cuerpo a cuerpo y movimiento (T193): las ocho habilidades de la ficha de
+## T191 se dibujan con su efecto propio (SkillFx.move_fx) y no con el genérico de su kind.
+func _test_move_signatures() -> void:
+	var skills: Dictionary = _db.skills.skills
+	for id in SkillFx.MOVE_FX:
+		_check(skills.has(id), "la firma %s es de una habilidad que existe" % id)
+	_check(is_equal_approx(SkillFx.hash01(123, 4), SkillFx.hash01(123, 4)) and SkillFx.hash01(123, 4) >= 0.0 and SkillFx.hash01(123, 4) < 1.0,
+		"lo «al azar» de una firma es fijo de un fotograma a otro")
+	var c := _new_character()
+	var em := EnemyManager.new()
+	root.add_child(em)
+	var pl: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(pl)
+	pl.setup(c, em)
+	var sc := SkillController.new()
+	sc.player = pl
+	sc.enemies = em
+	sc.character = c
+	var generic := ["ring", "trail", "cone", "leap", "quake", "zap"]
+	for id in SkillFx.MOVE_FX:
+		em.clear_all()
+		sc._effects.clear()
+		sc._clouds.clear()
+		pl.global_position = Vector2.ZERO
+		for k in 3:
+			var i := em.index_of(em.spawn(Vector2(20 + 20 * k, 6 * k), Rarity.Enemy.NORMAL, em.type_index_of("bug")))
+			em.lives[i] = 1.0e6
+			em.max_lives[i] = 1.0e6
+		var p := SkillCalc.compute(Motherboard.new(skills[id], 5, []), c)
+		sc._execute(p, Vector2(120, 0))
+		var mine := sc._effects.filter(func(e: Dictionary) -> bool: return e["type"] == "firma" and e["firma"] == id)
+		_check(mine.size() == 1, "%s se lanza con su firma propia" % id)
+		_check(not sc._effects.any(func(e: Dictionary) -> bool: return e["type"] in generic), "%s ya no suelta el efecto genérico de su kind" % id)
+		if id in ["barrido", "deploy_continuo", "fuzzing", "force_push"] and mine.size() == 1:
+			var marks: PackedVector2Array = mine[0]["marks"]
+			_check(marks.size() >= 1 and marks.size() <= SkillFx.MAX_MARKS, "%s marca a los enemigos que golpea (%d)" % [id, marks.size()])
+	_check(sc._clouds.size() == 1 and sc._clouds[0].get("revert", false), "Git Revert deja la zona de diff con el fantasma")
+	sc.free()
+	pl.queue_free()
+	em.queue_free()
+
+
+## Firmas de hechizos y proyectiles (T194): las nueve de la ficha de T191 se dibujan con
+## su efecto propio y no con el genérico de su kind (anillo, cono, rayo, zigzag, marcador).
+func _test_spell_signatures() -> void:
+	var skills: Dictionary = _db.skills.skills
+	for id in SkillFx.SPELL_IDS:
+		_check(skills.has(id) and SkillFx.SPELL_FX.has(id) and SkillFx.has_fx(id), "la firma de hechizo %s es de una habilidad que existe" % id)
+	_check(SkillFx.signature({"id": "ping_letal", "damage_type": "lightning"})["projectile"] == "sonar",
+		"Ping Letal vuela con su forma propia (sonar) y no con la del tipo rayo")
+	var c := _new_character()
+	var em := EnemyManager.new()
+	root.add_child(em)
+	var pl: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(pl)
+	pl.setup(c, em)
+	var sc := SkillController.new()
+	sc.player = pl
+	sc.enemies = em
+	sc.character = c
+	var generic := ["ring", "cone", "lock", "zap", "beam", "beam_marker", "marker"]
+	for id in SkillFx.SPELL_IDS:
+		em.clear_all()
+		sc._effects.clear()
+		sc._clouds.clear()
+		sc._pending.clear()
+		sc._projectiles.clear()
+		pl.global_position = Vector2.ZERO
+		for k in 3:
+			var i := em.index_of(em.spawn(Vector2(50 + 30 * k, 4 * k), Rarity.Enemy.NORMAL, em.type_index_of("bug")))
+			em.lives[i] = 1.0e6
+			em.max_lives[i] = 1.0e6
+		var p := SkillCalc.compute(Motherboard.new(skills[id], 5, []), c)
+		if id == "core_dump":
+			c.charges["multihilo"] = 2
+			c.charges["overclock"] = 1
+			p = sc._spend_charges(p)
+		sc._execute(p, Vector2(80, 0))
+		sc._update_pending(2.0)   # el retardo de Fork Bomb y la carga del rayo
+		for k in 20:
+			sc._update_projectiles(0.02)
+		var mine := sc._effects.filter(func(e: Dictionary) -> bool: return e["type"] == "firma" and String(e["firma"]).begins_with(id))
+		_check(mine.size() >= 1, "%s se lanza con su firma propia" % id)
+		_check(not sc._effects.any(func(e: Dictionary) -> bool: return e["type"] in generic), "%s ya no suelta el efecto genérico de su kind" % id)
+		_check(not sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "burst" and float(e["radius"]) >= 40.0 and not e.get("hidden", false)),
+			"%s no tapa su firma con una explosión genérica" % id)
+		var fx := {}
+		for e in mine:
+			fx[String(e["firma"])] = e
+		match id:
+			"ping_letal":
+				_check(fx.has("ping_letal_hit"), "Ping Letal marca el tiempo de respuesta en cada enemigo que atraviesa")
+			"fork_bomb":
+				_check(sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "burst" and e.get("hidden", false)),
+					"Fork Bomb deja su explosión oculta para la luz y las partículas")
+			"rayo_produccion":
+				_check(fx.has("rayo_produccion_fire") and fx["rayo_produccion_fire"]["marks"].size() >= 1, "el Rayo de Producción dispara con su firma y chispea en quien golpea")
+			"excepcion_en_cadena":
+				_check(fx.has(id) and fx[id]["hops"].size() >= 3, "Excepción en Cadena guarda sus saltos (%d)" % (fx[id]["hops"].size() if fx.has(id) else 0))
+			"fuga_de_memoria":
+				_check(sc._clouds.size() == 1 and sc._clouds[0].get("leak", false), "Fuga de Memoria deja el charco de celdas de memoria")
+			"deadlock":
+				_check(fx.has(id) and fx[id]["marks"].size() >= 1 and float(fx[id]["duration"]) >= float(p["stun"]), "Deadlock pone el reloj de arena mientras dura el aturdimiento")
+			"core_dump":
+				_check(fx.has(id) and fx[id]["rings"].size() == 2 and fx[id]["crit"], "Core Dump pone un anillo por tipo de carga gastado y destella con Overclock")
+	sc.free()
+	pl.queue_free()
+	em.queue_free()
+
+
+## Revisión de T194: las lenguas de Flamewar, pegadas a la rejilla, siempre se triangulan
+## (antes, con el cono corto o estrecho, dos puntos coincidían y Godot daba «triangulation failed»).
+func _test_flamewar_tongues() -> void:
+	var bad := 0
+	for sd in 30:
+		for ri in [60.0, 120.0, 200.0]:
+			for hd in [10.0, 30.0, 60.0, 120.0]:
+				var half := deg_to_rad(hd)
+				for ai in 12:
+					var dir := Vector2.from_angle(TAU * ai / 12.0 + 0.13)
+					for si in 26:
+						var reach: float = ri * SkillFx.ramp(si * 0.01, 0.0, 0.25)
+						if reach <= SkillFx.FLAME_MIN_REACH:
+							continue
+						var w := maxf(6.0, reach * sin(half) * 0.4)
+						for k in 3:
+							var d := dir.rotated(lerpf(-half, half, k / 2.0) * 0.66)
+							for layer in 2:
+								var pts := SkillFx._flame_tongue(Vector2(37.3, -11.9), d, reach * (1.0 if layer == 0 else 0.8),
+									w * (1.0 if layer == 0 else 0.55), sd * 7919 + si, k)
+								if Geometry2D.triangulate_polygon(pts).is_empty():
+									bad += 1
+	_check(bad == 0, "las lenguas de llama de Flamewar siempre se pueden dibujar (%d rotas)" % bad)
+
+
+## Firmas de buffs, gritos, barrera y auras (T195): las seis se lanzan con su efecto propio
+## (las que duran, pegado al jugador hasta que se acaba el buff o la barrera) y no con el
+## anillo genérico; cada aura tiene su color, se desdibuja al apagarla y las hostiles
+## saben qué enemigos tienen dentro.
+func _test_buff_signatures() -> void:
+	var skills: Dictionary = _db.skills.skills
+	for id in SkillFx.BUFF_IDS:
+		_check(skills.has(id) and SkillFx.has_fx(id), "la firma de buff %s es de una habilidad que existe" % id)
+	var tints := {}
+	for id in SkillFx.AURA_STYLE:
+		_check(skills.has(id) and String(skills[id]["kind"]) == "aura", "el estilo de aura %s es de un aura que existe" % id)
+		tints[SkillFx.aura_tint(id, Color.BLACK).to_html()] = true
+	_check(tints.size() == SkillFx.AURA_STYLE.size(), "cada aura tiene su color (%d distintos)" % tints.size())
+	var was_cb := Ailments.colorblind
+	Ailments.colorblind = true
+	var cb_tints := {}
+	for id in SkillFx.AURA_STYLE:
+		cb_tints[SkillFx.aura_tint(id, Color.BLACK).to_html()] = true
+	Ailments.colorblind = was_cb
+	_check(cb_tints.size() == SkillFx.AURA_STYLE.size() and cb_tints.keys() != tints.keys(),
+		"en modo daltónico cada aura toma su color seguro y siguen distintas (%d)" % cb_tints.size())
+	var c := _new_character()
+	var em := EnemyManager.new()
+	root.add_child(em)
+	var pl: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(pl)
+	pl.setup(c, em)
+	var sc := SkillController.new()
+	sc.player = pl
+	sc.enemies = em
+	sc.character = c
+	var u := {"pos": Vector2(30, 0), "behavior": "melee", "radius": 10.0, "life": 50.0, "max_life": 100.0, "skill_id": "prueba", "profile": {"reserve": 0.0}}
+	sc._units.append(u)
+	for id in SkillFx.BUFF_IDS:
+		sc._effects.clear()
+		pl.global_position = Vector2.ZERO
+		var p := SkillCalc.compute(Motherboard.new(skills[id], 5, []), c)
+		sc._execute(p, Vector2(80, 0))
+		var mine := sc._effects.filter(func(e: Dictionary) -> bool: return e["type"] == "firma" and e["firma"] == id)
+		_check(mine.size() == 1, "%s se lanza con su firma propia" % id)
+		_check(not sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "ring"), "%s ya no suelta el anillo genérico" % id)
+		if mine.is_empty():
+			continue
+		var e: Dictionary = mine[0]
+		if SkillFx.is_live(id):
+			_check(e["live"] and float(e["duration"]) >= float(p["duration"]), "%s dura lo que su buff" % id)
+			pl.global_position = Vector2(40, 0)
+			sc._update_effects(0.15)
+			_check(e["pos"] == Vector2(40, 0) and float(e["end"]) < 0.0, "%s sigue al jugador mientras dura" % id)
+		match id:
+			"rollback_grito":
+				_check(e["marks"].size() == 1, "¡Rollback! suelta un «+» de la invocación curada")
+			"modo_seguro":
+				sc._buff_fx_hit()
+				_check(float(e.get("hit", -9.0)) == float(e["time"]), "el hexágono de Modo Seguro destella al recibir un golpe")
+				c.remove_timed_effect("skill:modo_seguro")
+				sc._update_effects(0.05)
+				_check(float(e["end"]) >= 0.0, "Modo Seguro se apaga al acabarse el buff")
+				sc._update_effects(0.5)
+				_check(not sc._effects.has(e), "y luego desaparece")
+			"firewall_personal":
+				pl.barrier = 0.0
+				sc._update_effects(0.05)
+				_check(float(e["end"]) >= 0.0, "el muro de Firewall cae al acabarse la barrera")
+			"hiperthreading":
+				pl.global_position = Vector2(100, 0)
+				sc._update_effects(0.01)
+				_check((e["lag"] as Vector2).x < 100.0, "el segundo hilo de Hiperthreading va con retraso")
+				pl.global_position = Vector2(2000, 0)
+				sc._update_effects(0.01)
+				_check(e["lag"] == Vector2(2000, 0), "tras un salto largo (cambio de zona) el segundo hilo no cruza el mapa")
+			"daily_standup":
+				for k in 3:
+					pl.global_position = Vector2(60 + 20 * k, 0)
+					sc._update_effects(0.11)
+				_check(int(e["step_n"]) >= 2, "Daily deja huellas de prisa (%d)" % int(e["step_n"]))
+	# Auras: al activarla empieza su animación; al apagarla, su anillo se desdibuja.
+	sc._effects.clear()
+	pl.global_position = Vector2.ZERO
+	em.clear_all()
+	var i := em.index_of(em.spawn(Vector2(60, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug")))
+	em.lives[i] = 1.0e6
+	em.max_lives[i] = 1.0e6
+	for id in SkillFx.AURA_STYLE:
+		var p := SkillCalc.compute(Motherboard.new(skills[id], 5, []), c)
+		sc._execute(p, Vector2(80, 0))
+		_check(sc.is_aura_active(id) and float(sc._auras[-1]["on_t"]) == 0.0, "%s se activa con su animación" % id)
+		sc._update_effects(0.3)
+		_check(float(sc._auras[-1]["on_t"]) > 0.25, "%s lleva la cuenta de cuánto está encendida" % id)
+		if not p.get("aura_enemy", {}).is_empty():
+			_check(sc._auras[-1]["inside"].size() == 1 and sc._auras[-1]["entered"].has(em.ids[i]), "%s sabe qué enemigo tiene dentro" % id)
+		sc._execute(p, Vector2(80, 0))
+		_check(not sc.is_aura_active(id) and sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "firma" and e["firma"] == "aura_off"),
+			"%s se desdibuja al apagarla" % id)
+		_check(not sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "ring"), "%s ya no suelta anillos genéricos" % id)
+		sc._effects.clear()
+	sc.free()
+	pl.queue_free()
+	em.queue_free()
