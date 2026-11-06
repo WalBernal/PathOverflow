@@ -1,6 +1,6 @@
 class_name LadderPanel
 extends AcceptDialog
-## Pausa → Récords (o Aida): tus mejores marcas y la tabla local de todos los
+## Pausa → Récords (o Aída): tus mejores marcas y la tabla local de todos los
 ## personajes de este equipo, del banco de oleadas y del tiempo contra cada jefe.
 
 var character: CharacterData
@@ -32,7 +32,7 @@ func _init(p_character: CharacterData = null) -> void:
 			box.add_child(UiStyle.label("%s: %s" % [bosses.get(id, id), Ladder.format_time(float(mine["bosses"][id]))], 13))
 	box.add_child(UiStyle.section_header("Tabla local · banco de oleadas"))
 	if board["waves"].is_empty():
-		box.add_child(UiStyle.label("Nadie ha entrado todavía. Aida abre el banco en el campamento.", 13, UiStyle.MUTED))
+		box.add_child(UiStyle.label("Nadie ha entrado todavía. Aída abre el banco en el campamento.", 13, UiStyle.MUTED))
 	for i in board["waves"].size():
 		var e: Dictionary = board["waves"][i]
 		box.add_child(UiStyle.label("%d. %s (%s %d) — %d oleadas en %s · %s" % [i + 1, e["name"], e["class"], int(e["level"]), int(e["waves"]),

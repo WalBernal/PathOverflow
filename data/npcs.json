@@ -4,7 +4,7 @@
   "npcs": {
     "ada": {
       "idle": "sip",
-      "name": "Aida, la Senior",
+      "name": "Aída, la Senior",
       "dialogue": "ada",
       "server": {"body": "tunica_de_seda"},
       "appearance": {
@@ -420,7 +420,7 @@
         "oleadas": {"text": "El banco de oleadas lo armé con lo que sobró de las pruebas de estrés. Te mando a una zona vacía y le suelto tráfico hasta que algo se rompa: tú o el servidor. Cada cinco oleadas sale un jefe. Anoto quién aguanta más, mijo; la tabla está aquí pegada.", "options": [{"text": "Mándame al banco.", "next": "", "action": {"type": "open_waves"}}, {"text": "Enséñame la tabla de récords.", "next": "", "action": {"type": "open_ladder"}}, {"text": "Hoy no.", "next": "hola"}]},
         "incidente": {"text": "Siempre hay un incidente abierto, mijo. Te mando a una zona que ya conoces, pero con todo lo que puede salir mal: más enemigos, que explotan, que no regeneres... Lo que caiga allí es mejor. Para volver, el portal te trae de regreso.", "options": [{"text": "Abre el atlas (mapas y progreso).", "next": "", "action": {"type": "open_atlas"}}, {"text": "Mándame a uno al azar.", "next": "", "action": {"type": "open_incident"}}, {"text": "Hoy no.", "next": "hola"}]},
         "hola": {
-          "text": "Vaya, un recién egresado. Debes ser de la generación de Ojeda, ¿no?. Soy Aida. Llevo aquí desde que El Pepe era jefe de informática, y aún se programaba todo en COBOL.",
+          "text": "Vaya, un recién egresado. Debes ser de la generación de Ojeda, ¿no?. Soy Aída. Llevo aquí desde que El Pepe era jefe de informática, y aún se programaba todo en COBOL.",
           "options": [
             {
               "text": "¿Quién era El Pepe?",
@@ -495,7 +495,7 @@
           "text": "Nacho vende placas y RAM de tu nivel, a cambio de tokens. Los bichos los sueltan. Y si te sobra equipo, el NAS junto al waypoint lo guarda para todos tus personajes. Sí, todos. No preguntes cómo funciona: funciona, y eso aquí es un milagro.",
           "options": [
             {
-              "text": "Gracias, Aida.",
+              "text": "Gracias, Aída.",
               "next": "hola"
             }
           ]
@@ -546,7 +546,7 @@
           "text_touch": "Toma, es un módulo que encaja bien en tu primera placa. \nAbre las habilidades (☰ y luego K) y arrástralo a la ranura de su color, o tócalo y pulsa «Instalar». Si no encaja, es culpa del hardware. Siempre es culpa del hardware...",
           "options": [
             {
-              "text": "Gracias, Aida.",
+              "text": "Gracias, Aída.",
               "next": "",
               "action": {
                 "type": "give_matching_ram",
@@ -573,7 +573,7 @@
           "text": "¿Tu constancia de servicio social? El Pepe nunca registró a nadie. Literal: anotaba a los prestadores en una libreta de gatitos. \nPero cuando salgamos de esto, te la firmo yo misma... si Rafa no pierde el sello.",
           "options": [
             {
-              "text": "Gracias, Aida.",
+              "text": "Gracias, Aída.",
               "next": "hola"
             }
           ]
@@ -592,7 +592,7 @@
         "¡Dime!"
       ],
       "nodes": {
-        "mesa": {"text": "Aida me dejó armar una mesa de crafteo. Bueno, es una mesa con un soldador. Con parches arreglo lo que sea: rehacer afijos, añadir uno, subirle la rareza o fijar el que te guste. Y si quieres, le saco afijos nuevos a tu arma entera. Cobro, eh. Las horas de servicio no dan para comer.", "options": [{"text": "Abre la mesa: quiero usar parches.", "next": "", "action": {"type": "open_crafting"}}, {"text": "Reforja mi arma entera.", "next": "", "action": {"type": "reforge_weapon"}}, {"text": "Mejor no.", "next": "hola"}]},
+        "mesa": {"text": "Aída me dejó armar una mesa de crafteo. Bueno, es una mesa con un soldador. Con parches arreglo lo que sea: rehacer afijos, añadir uno, subirle la rareza o fijar el que te guste. Y si quieres, le saco afijos nuevos a tu arma entera. Cobro, eh. Las horas de servicio no dan para comer.", "options": [{"text": "Abre la mesa: quiero usar parches.", "next": "", "action": {"type": "open_crafting"}}, {"text": "Reforja mi arma entera.", "next": "", "action": {"type": "reforge_weapon"}}, {"text": "Mejor no.", "next": "hola"}]},
         "hola": {
           "text": "¡Hola! Soy Mario, el practicante. Llevo tres meses aquí y todavía no tengo acceso a nada. Pero preparo un café increíble.",
           "options": [
@@ -662,7 +662,7 @@
           "options": []
         },
         "historia2": {
-          "text": "Mi primer día me dieron trabajo hasta para llevar. Al segundo día se cayó el servidor. Desde entonces hago café. Aida dice que es la tarea más \"crítica\" del campamento. Creo que me lo dice para que me sienta bien...",
+          "text": "Mi primer día me dieron trabajo hasta para llevar. Al segundo día se cayó el servidor. Desde entonces hago café. Aída dice que es la tarea más \"crítica\" del campamento. Creo que me lo dice para que me sienta bien...",
           "options": [
             {
               "text": "Seguro que lo dice en serio.",
@@ -684,7 +684,7 @@
           ]
         },
         "mision_oferta": {
-          "text": "Se nos acabó el café. Del todo. Aida dice que ya fueron por una bolsita, pero ya pasó una eternidad... como 3 horas.\nDicen que los bichos sueltan granos al morir... no me preguntes cómo lo sé. ¿Me traes los de unos 40?",
+          "text": "Se nos acabó el café. Del todo. Aída dice que ya fueron por una bolsita, pero ya pasó una eternidad... como 3 horas.\nDicen que los bichos sueltan granos al morir... no me preguntes cómo lo sé. ¿Me traes los de unos 40?",
           "options": [
             {
               "text": "Van 40 bichos en camino.",
@@ -795,7 +795,7 @@
           "options": []
         },
         "reinicio2": {
-          "text": "Cada mañana miro la barra..... 99 %..... Cada noche..... 99 %..... Aida dice que lo deje..... Mario me trae café..... Yo creo que si dejo de mirarla..... llega al 100..... y pasa algo......",
+          "text": "Cada mañana miro la barra..... 99 %..... Cada noche..... 99 %..... Aída dice que lo deje..... Mario me trae café..... Yo creo que si dejo de mirarla..... llega al 100..... y pasa algo......",
           "options": [
             {
               "text": "¿Algo como qué?",
@@ -992,7 +992,7 @@
           "options": []
         },
         "despues2": {
-          "text": "Pregunta por Aida. Es la Senior: lleva aquí desde que El Pepe programaba todo en COBOL y es la única que lee la documentación. Y no te asustes si Rafa habla.... así...... Es normal. Creo.",
+          "text": "Pregunta por Aída. Es la Senior: lleva aquí desde que El Pepe programaba todo en COBOL y es la única que lee la documentación. Y no te asustes si Rafa habla.... así...... Es normal. Creo.",
           "options": [
             {
               "text": "Allá voy.",
@@ -1485,11 +1485,11 @@
           ]
         },
         "pasado": {
-          "text": "Aida y Mario están bien..... creo..... Aida intenta reiniciar el router..... Mario dice que lo «apagó y encendió»..... tres veces..... El dinosaurio sigue saltando cactus......",
+          "text": "Aída y Mario están bien..... creo..... Aída intenta reiniciar el router..... Mario dice que lo «apagó y encendió»..... tres veces..... El dinosaurio sigue saltando cactus......",
           "next": "pasado2"
         },
         "pasado2": {
-          "text": "Mario lleva un récord de 4.211 puntos..... en el juego del dinosaurio..... Aida dice que es lo más productivo que hizo este trimestre..... Yo creo que lo dice con cariño..... no estoy seguro......",
+          "text": "Mario lleva un récord de 4.211 puntos..... en el juego del dinosaurio..... Aída dice que es lo más productivo que hizo este trimestre..... Yo creo que lo dice con cariño..... no estoy seguro......",
           "options": [
             {
               "text": "Ánimo a los dos.",
@@ -2404,7 +2404,7 @@
             {"text": "¿Te vienes conmigo? Cuenta como horas de servicio.", "next": "acompanar", "hides_if_flag": "companion_mario_bios"},
             {"text": "Quédate aquí con Rafa, Mario.", "next": "", "requires_flag": "companion_mario_bios", "action": {"type": "companion", "npc": ""}},
             {"text": "¿Qué te parece la BIOS?", "next": "bios"},
-            {"text": "¿Y Aida?", "next": "aida"},
+            {"text": "¿Y Aída?", "next": "aida"},
             {"text": "¿Sabes algo del Inge Pepe?", "next": "pepe"},
             {"text": "Ánimo, Mario.", "next": ""}
           ]

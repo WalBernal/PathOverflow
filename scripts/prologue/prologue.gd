@@ -7,7 +7,7 @@ extends Control
 ##   4. El Incidente del Viernes a las 6:00 PM: se cae el SICE.
 ##   5. La Elección Forzada: la ventana de contratación (aquí se elige la clase).
 ##   Clímax: la carpeta lila, la descarga, la consola roja, llegan Mario (con el
-##   carrito de frituras) y Aida, y la caída a producción se los lleva a todos.
+##   carrito de frituras) y Aída, y la caída a producción se los lleva a todos.
 ## Al terminar se crea el personaje (nombre y apariencia del creador + la clase
 ## elegida) y se entra al Sandbox. Esc: saltar a la elección de puesto.
 ## Se mueve con A/D o flechas (en el pasillo, también W/S) o con click (destino
@@ -29,7 +29,7 @@ const HALL_DEPTH_SPEED := 0.38
 const INTRO_MIN_READ := 0.6
 ## Velocidad de la máquina de escribir de la introducción (caracteres por segundo).
 const INTRO_CPS := 60.0
-## Segundos que tarda el servidor en tragarse al carrito, Mario, Aida y Rafa.
+## Segundos que tarda el servidor en tragarse al carrito, Mario, Aída y Rafa.
 const ABSORB_TIME := 3.4
 const INTRO_LINES := [
 	"Licenciatura concluida. Promedio: 9.2. Vacantes aplicadas: 147.",
@@ -609,7 +609,7 @@ func _start_console() -> void:
 	Sfx.play("wave", -6.0, 0.7)
 
 
-## Antes de la caída llegan Mario (jalando el carrito de frituras) y Aida.
+## Antes de la caída llegan Mario (jalando el carrito de frituras) y Aída.
 func _start_arrival() -> void:
 	_phase = "arrival"
 	_stage.kneeling = false
@@ -629,7 +629,7 @@ func _update_arrival(delta: float) -> void:
 
 
 ## «Profe Rafa, ¿va a querer churr...?» y el servidor se los traga: primero el
-## carrito, luego Mario, Aida y Rafa, cada uno con su grito, mientras el rack se
+## carrito, luego Mario, Aída y Rafa, cada uno con su grito, mientras el rack se
 ## abre en un vórtice. Después cae el jugador (en la caída).
 func _start_absorb() -> void:
 	_phase = "absorb"

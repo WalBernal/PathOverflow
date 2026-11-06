@@ -2176,7 +2176,7 @@ func _capture_prologue_walk() -> void:
 	print("prólogo: click en Rafa → conversación %s en %.1f s (x %.0f)" % ["sí" if cut.is_playing() else "NO", waited, stage.player_x])
 	await _wait(1.0)
 	_save("39_prologo_rafa")
-	# La absorción: Mario y Aida llegan y el servidor se los traga (y luego al jugador).
+	# La absorción: Mario y Aída llegan y el servidor se los traga (y luego al jugador).
 	cut.call("_finish")
 	stage.rafa_standing = true
 	stage.visitors_x = 112.0
@@ -3169,7 +3169,7 @@ func _audit_hud_overlaps() -> int:
 	var c: CharacterData = gd.create_character("Solapes", &"guerrero", CharacterAppearance.default(), false)
 	c.flags["zone"] = "campamento"
 	c.flags["tutorial_version"] = 3
-	c.flags["tutorial_step"] = 7   # «habla con Aida»: con texto largo y aro
+	c.flags["tutorial_step"] = 7   # «habla con Aída»: con texto largo y aro
 	c.flags["llegada_campamento_vista"] = true
 	var tips_were := TipPanel.enabled()
 	TipPanel.set_enabled(false)
@@ -4555,7 +4555,7 @@ func _capture_training_dummy() -> void:
 	world.queue_free()
 
 
-## Inventario más rápido (T213): bolsa con basura y bloqueados, la tienda de Aida
+## Inventario más rápido (T213): bolsa con basura y bloqueados, la tienda de Aída
 ## abierta y el tooltip de un objeto marcado; con ratón (100 %), dedo (140 %) y mando.
 func _capture_inventory_marks() -> void:
 	var saved_scale: Variant = GameSettings.get_value("interface", "scale", 1.0)

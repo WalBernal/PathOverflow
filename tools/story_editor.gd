@@ -49,7 +49,7 @@ const HIRE_NAMES := {"title": "Título de la ventana", "question": "Pregunta", "
 	"refuse_error": "Error al pulsar «No»", "no_gives_up": "El «No» se rinde"}
 const HINT_NAMES := {"controls": "Controles (abajo)", "skip_again": "Al pulsar Esc", "continue": "Al terminar la introducción"}
 const PROLOGUE_SCENES := {"prologo_rafa": "Rafa y la libreta de gatitos", "prologo_ventanilla": "La caja de trámites", "prologo_tv": "La TV del pasillo",
-	"prologo_incidente": "Se cae el SICE", "prologo_trato": "El trato", "prologo_mario": "Llegan Mario y Aida", "prologo_descarga": "La descarga"}
+	"prologo_incidente": "Se cae el SICE", "prologo_trato": "El trato", "prologo_mario": "Llegan Mario y Aída", "prologo_descarga": "La descarga"}
 const HELP := "[b]Cómo se usa[/b]\n\n1. Elige un personaje a la izquierda.\n2. En el centro está su conversación como un guion: cada [color=#d9a441]tarjeta[/color] es algo que dice él; debajo, las [color=#8ab8ff]respuestas[/color] que puede elegir el jugador y a qué tarjeta llevan.\n3. «＋ tema nuevo» en una respuesta crea la tarjeta a la que lleva. «⚙» abre lo avanzado: cuándo aparece una respuesta y qué hace (dar un objeto, empezar una misión...).\n4. A la derecha, la [color=#6fd36b]vista previa[/color]: pulsa respuestas para recorrer la conversación; la tarjeta se resalta.\n5. Ctrl+Z deshace. Ctrl+S guarda. «Buscar» encuentra cualquier frase.\n6. «Probar el juego» abre el juego con lo guardado; «Generar ejecutable» crea build/PathOverflow.exe.\n\nLos textos admiten [b]negrita[/b], [i]cursiva[/i], [color=#e06c6c]color[/color] con BBCode, y {jugador} se cambia por el nombre del personaje."
 
 var data := {}
@@ -1351,7 +1351,7 @@ func _build_prologue() -> void:
 		_row(sec, PROMPT_NAMES[k], _line(String(prompts.get(k, "")), func(t: String) -> void:
 			prompts[k] = t
 			_touch("prologue")), 260.0)
-	sec = _foldable(_prologue_box, "3. Conversaciones del prólogo (Rafa, la TV, el incidente, Mario y Aida...)")
+	sec = _foldable(_prologue_box, "3. Conversaciones del prólogo (Rafa, la TV, el incidente, Mario y Aída...)")
 	for cid in cutscenes():
 		if String(cid).begins_with("prologo_"):
 			_prologue_scene(sec, String(cid))

@@ -1,5 +1,5 @@
 class_name Ladder
-## Banco de oleadas sin fin y ladder local. Aida te manda a una zona que ya
+## Banco de oleadas sin fin y ladder local. Aída te manda a una zona que ya
 ## conoces, vacía, y desde ahí llegan oleadas cada vez más grandes (cada 5, un
 ## jefe de oleada) hasta que caes o sales por el portal. La zona se arma al vuelo
 ## como los incidentes (id ZONE_ID, no se guarda).

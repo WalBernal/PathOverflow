@@ -39,7 +39,7 @@ static func sell_price(item: Item) -> int:
 	return maxi(1, int(price(item) * SELL_FRACTION))
 
 
-## Puesto de Aida (campamento tras el Acto I): equipo raro del nivel del jugador,
+## Puesto de Aída (campamento tras el Acto I): equipo raro del nivel del jugador,
 ## alguno mágico y dos pociones.
 const GEAR_STOCK_RARE := 4
 const GEAR_STOCK_MAGIC := 3

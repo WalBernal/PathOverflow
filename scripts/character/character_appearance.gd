@@ -323,7 +323,7 @@ static func _draw_gear(ci: CanvasItem, gear: String, u: Callable, head: Vector2,
 		ci.draw_rect(Rect2(center - size * scale * 0.5, size * scale), color)
 	match gear:
 		# --- Objetos de los NPC (T162) ---
-		"cafe":   # Aida: su taza de café (en la mano; se la lleva a la boca)
+		"cafe":   # Aída: su taza de café (en la mano; se la lleva a la boca)
 			box.call(hand + Vector2(0, -1.6) * scale, Vector2(3.4, 3.8), c.call("f4f1ea"))
 			box.call(hand + Vector2(0, -3.2) * scale, Vector2(3.0, 0.8), c.call("5a3a22"))
 			ci.draw_arc(hand + Vector2(side * 2.1, -1.6) * scale, 1.1 * scale, -PI * 0.5, PI * 0.5, 6, c.call("f4f1ea"), 0.7 * scale)

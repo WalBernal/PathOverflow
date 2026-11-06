@@ -1,6 +1,6 @@
 class_name ShopLines
 ## Lo que dicen los comerciantes en su tienda (T71): Nacho, sarcástico y con la
-## gabardina llena de cosas «originales»; Aida, seca y ordenada. Cada momento
+## gabardina llena de cosas «originales»; Aída, seca y ordenada. Cada momento
 ## (entrar, pasar el ratón, comprar, vender…) tiene su lista y sale una al azar.
 
 const LINES := {

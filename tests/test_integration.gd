@@ -185,7 +185,7 @@ func _play_incident(class_def: Dictionary) -> int:
 	await _frames(2)
 	_collect("%s · incidente · al abrir" % class_def["id"])
 	await _play_zone(world, class_def["id"], "incidente")
-	# Banco de oleadas (Ladder) desde el diálogo de Aida, con la tabla abierta y cerrada antes.
+	# Banco de oleadas (Ladder) desde el diálogo de Aída, con la tabla abierta y cerrada antes.
 	world.call("_on_dialogue_action", {"type": "open_ladder"})
 	await _frames(2)
 	for child in (world.get("ui").get("_root") as Control).get_children():

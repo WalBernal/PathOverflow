@@ -764,7 +764,7 @@
         {"effect": "blackout", "time": 1.0},
         {"name": "", "style": "system", "text": "Reinicio: 99 %... 100 %."},
         {"effect": "fade_in", "time": 0.8},
-        {"speaker": "rafa_bios", "text": "Arrancó.... ¡ARRANCÓ! Por primera vez desde 2019.... Aida está viendo el escritorio en el campamento.... Mario, ¡imprime la constancia!"},
+        {"speaker": "rafa_bios", "text": "Arrancó.... ¡ARRANCÓ! Por primera vez desde 2019.... Aída está viendo el escritorio en el campamento.... Mario, ¡imprime la constancia!"},
         {"speaker": "mario_bios", "text": "La impresora se atascó. Hay un trabajo en la cola de 2004. De un usuario llamado «pepe». Un solo archivo: lee_esto_cuando_arranque.txt."},
         {"speaker": "rafa_bios", "text": "........ Claro que sí, Pepe.... claro que sí...."},
         {"name": "", "style": "system", "text": "Acto IV completado. La historia sigue en el Acto V."}
@@ -775,7 +775,7 @@
       "steps": [
         {"effect": "camera", "to": "exit:campamento", "zoom": 1.15, "time": 1.2},
         {"name": "Sistema", "style": "system", "text": "El portal al campamento zumba como un ventilador al que nadie le ha quitado el polvo desde 2011."},
-        {"speaker": "ada", "name": "Aida (por el canal del campamento)", "style": "phone", "expression": "happy", "text": "¿Sigues vivo? Vuelve. Mario ya está escribiendo el post-mortem y aún no sabe si eres tú o el Arquitecto."},
+        {"speaker": "ada", "name": "Aída (por el canal del campamento)", "style": "phone", "expression": "happy", "text": "¿Sigues vivo? Vuelve. Mario ya está escribiendo el post-mortem y aún no sabe si eres tú o el Arquitecto."},
         {"speaker": "kevin", "name": "Mario (de fondo)", "style": "phone", "expression": "surprised", "text": "¡Es un borrador! ¡Los borradores no cuentan!"},
         {"effect": "camera", "to": "player", "zoom": 1.0, "time": 0.8}
       ]

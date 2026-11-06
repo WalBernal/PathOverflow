@@ -2452,7 +2452,7 @@ func _draw_challenge(c: Dictionary) -> void:
 func _draw_prop(p: Dictionary) -> void:
 	match String(p.get("kind", "")):
 		"camp_stall":
-			# Puesto de Aida: mesa con toldo morado, cajas y un letrero.
+			# Puesto de Aída: mesa con toldo morado, cajas y un letrero.
 			var pos: Vector2 = p["pos"]
 			draw_rect(Rect2(pos + Vector2(-50, -6), Vector2(100, 22)), Color("5a3b2a"))
 			for k in 5:
@@ -2461,7 +2461,7 @@ func _draw_prop(p: Dictionary) -> void:
 				draw_line(pos + Vector2(s * 50, -46), pos + Vector2(s * 50, -6), Color("3a2a1e"), 3.0)
 			draw_rect(Rect2(pos + Vector2(-40, -22), Vector2(22, 16)), Color("8a6a40"))
 			draw_rect(Rect2(pos + Vector2(14, -20), Vector2(24, 14)), Color("6a8a9a"))
-			_label(pos + Vector2(-90, -76), "Puesto de Aida", 180, 13, Color("c8a8e8"))
+			_label(pos + Vector2(-90, -76), "Puesto de Aída", 180, 13, Color("c8a8e8"))
 		"camp_workbench":
 			# Mesa de crafteo de Mario: banco con un soldador humeante y un yunque improvisado (una fuente de poder).
 			var pos: Vector2 = p["pos"]

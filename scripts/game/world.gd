@@ -676,7 +676,7 @@ func _check_incident_done() -> void:
 	_mark_dirty()
 
 
-## Mejoras del campamento (se abren al terminar cada acto): puesto de Aida,
+## Mejoras del campamento (se abren al terminar cada acto): puesto de Aída,
 ## mesa de crafteo de Mario y antena de Rafa.
 const CAMP_ANTENNA_SECONDS := 180.0
 var _gear_stock: Array[Item] = []

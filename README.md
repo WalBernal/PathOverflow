@@ -206,7 +206,7 @@ Al crear un personaje (apariencia y nombre; ya no se elige clase en el creador, 
 3. **El Error 404 del Archivo Muerto**: el departamento destrozado (archivadores volcados, CRT beige, el minisplit goteando sobre una torre quemada) y Rafa, que busca tu servicio social con `grep`: el Inge Pepe anotaba a los prestadores en una libreta Scribe de gatitos y se la llevó.
 4. **El Incidente del Viernes a las 6:00 PM**: se cae el SICE; el backend corre en «El Monolito» (2004). Rafa propone un trato.
 5. **La Elección Forzada**: ventana al estilo Windows 98, «Confirmar Contratación de Emergencia», con un desplegable para el **primer puesto (la clase)**. El botón **No** esquiva el ratón sin salir de la ventana (el primer salto, 150 px a la derecha; luego a cualquier hueco) y encoge cada vez; ya diminuto deja de huir, y si se le atina sale `Error 0x80004005` y se convierte en «Pues ya que...», que acepta igual.
-6. **Clímax**: Mario llega jalando un carrito con una bolsa de frituras, Aida con él («Profe Rafa, ¿va a querer churr...?»), y la caída se los lleva a todos. Antes: la carpeta lila «NO TOCAR - CONFIG_PROD» detrás del rack, la descarga, la consola roja (`POST /api/v1/deploy/force --user admin`), la oficina pixelándose (papeles en logs, cables en cobre, la ropa en binario) y el título **EL ÚLTIMO COMMIT**. Despiertas en el Sandbox (escena `llegada_sandbox`).
+6. **Clímax**: Mario llega jalando un carrito con una bolsa de frituras, Aída con él («Profe Rafa, ¿va a querer churr...?»), y la caída se los lleva a todos. Antes: la carpeta lila «NO TOCAR - CONFIG_PROD» detrás del rack, la descarga, la consola roja (`POST /api/v1/deploy/force --user admin`), la oficina pixelándose (papeles en logs, cables en cobre, la ropa en binario) y el título **EL ÚLTIMO COMMIT**. Despiertas en el Sandbox (escena `llegada_sandbox`).
 
 El **pasillo y la oficina** tienen el detalle de la calle (`scripts/prologue/prologue_stage.gd`): aplanado con tramado (más oscuro hacia el fondo del pasillo), baldosas alternas en perspectiva, charcos de luz bajo las lámparas y conos de los fluorescentes, aristas con luz y sombra, la mancha de humedad bajo el minisplit, zócalo y juntas, y sombras al pie de los muebles.
 
@@ -219,7 +219,7 @@ El acto está definido en `data/act1.json` y lo construye `Zone` (`scripts/game/
 | Zona | Nivel | Waypoint | Notas |
 |---|---|---|---|
 | El Sandbox | 1 | | Tutorial: pocos bugs, más botín y B.O.B., el bot de onboarding. Los bugs empiezan al este, lejos de la entrada y de B.O.B. (`keep_away`), y despiertan más cerca (`aggro_range`): primero se habla, luego se pelea |
-| Campamento | 1 | ✔ | Zona segura, punto de reaparición; Aida, Mario y Rafa |
+| Campamento | 1 | ✔ | Zona segura, punto de reaparición; Aída, Mario y Rafa |
 | El Bosque de Cables | 2 | | Iris, la practicante perdida |
 | Las Ruinas del Monolito | 4 | ✔ | |
 | El Pantano de Memory Leaks | 6 | | Tomás, el último QA |
@@ -241,9 +241,9 @@ El acto está definido en `data/act1.json` y lo construye `Zone` (`scripts/game/
 - **Jefe**: al derrotarlo se completa el acto (bandera `act1_complete`), cae botín especial (siempre en suelo alcanzable) y se abre un portal al campamento.
 - **Después del jefe**: el Arquitecto muere en una **escena** (glitch, temblor, sus últimas palabras y la consola del sistema congelándose) y se abre un portal al campamento. Al volver, el campamento culpa al **Inge Pepe**, jefe de informática de toda la vida, recién jubilado (el antecesor de Rafa), y Rafa abre el **puerto 2222** hacia el Kernel. Al cruzarlo se cae **La Red Lince** (pantalla del dinosaurio) y el jugador cae al **Acto II**.
 - **Escenas**: `data/cutscenes.json` (líneas con retrato, consola, efectos de glitch, temblor, fundidos y la página sin conexión). Desde la versión 3.0, con **dirección**: bandas de cine, la cámara se acerca con zoom al NPC o al jefe que habla, los personajes caminan y se giran, y el retrato pone la cara de cada línea (contento, enfadado, triste, sorprendido, preocupado). Click, toque, Espacio o la A del mando avanzan; Esc, la B del mando o el botón «Saltar escena» la saltan entera. Los enemigos se congelan mientras duran.
-- **NPCs y lore** en `data/npcs.json` (en el campamento: Aida la Senior, Mario el Practicante y Rafa el SysAdmin, que escribe con muchos puntos suspensivos...; sus ids internos siguen siendo `ada`, `kevin` y `root` para no romper los guardados): diálogos con opciones, condiciones (`requires_flag`) y acciones (regalos que se dan una sola vez). Dentro del servidor se ven con el estilo del alumno: `server` dice qué llevan puesto (ranura → base de objeto) y el `gear` de su apariencia, qué objeto llevan en la mano (sprites `prop_*` de `WeaponArt`). Cuentan la historia del administrador que hizo `push --force` "por el Monolito".
-- **El campamento evoluciona** al avanzar en la historia (se ve el puesto nuevo en el campamento y se usa hablando con su dueño): tras el Acto I, **el puesto de Aida** (equipo raro y mágico de tu nivel y pociones, expuesto en una mesa con toldo y con sus propias frases, más secas que las de Nacho; Nacho sigue con las placas y la RAM); tras el Acto II, **la mesa de crafteo de Mario** (reforja el arma equipada entera por fichas, o usa **parches** sobre cualquier objeto equipado normal, mágico o raro: *refactor* rehace los afijos no fijados, *feature* añade uno, *versión mayor* sube la rareza de normal a mágico y de mágico a raro, y *hotfix* fija un afijo para que sobreviva al siguiente refactor. Los parches caen de élites (12 %) y únicos (60 %) y Mario los vende; se guardan en `flags.patches`); y tras el Acto III, **la antena de Rafa** (rellena las pociones y da 3 minutos de +15 % de daño y +5 % de velocidad).
-- **Tutorial** (`data/tutorial.json`, versión 2): 12 pasos. Empieza en el Sandbox (moverse, atacar, matar, recoger, equipar, pociones, pasivas) y sigue en el campamento (Aida, RAM, Mario, salir al Bosque). Los personajes con el tutorial antiguo continúan donde corresponde.
+- **NPCs y lore** en `data/npcs.json` (en el campamento: Aída la Senior, Mario el Practicante y Rafa el SysAdmin, que escribe con muchos puntos suspensivos...; sus ids internos siguen siendo `ada`, `kevin` y `root` para no romper los guardados): diálogos con opciones, condiciones (`requires_flag`) y acciones (regalos que se dan una sola vez). Dentro del servidor se ven con el estilo del alumno: `server` dice qué llevan puesto (ranura → base de objeto) y el `gear` de su apariencia, qué objeto llevan en la mano (sprites `prop_*` de `WeaponArt`). Cuentan la historia del administrador que hizo `push --force` "por el Monolito".
+- **El campamento evoluciona** al avanzar en la historia (se ve el puesto nuevo en el campamento y se usa hablando con su dueño): tras el Acto I, **el puesto de Aída** (equipo raro y mágico de tu nivel y pociones, expuesto en una mesa con toldo y con sus propias frases, más secas que las de Nacho; Nacho sigue con las placas y la RAM); tras el Acto II, **la mesa de crafteo de Mario** (reforja el arma equipada entera por fichas, o usa **parches** sobre cualquier objeto equipado normal, mágico o raro: *refactor* rehace los afijos no fijados, *feature* añade uno, *versión mayor* sube la rareza de normal a mágico y de mágico a raro, y *hotfix* fija un afijo para que sobreviva al siguiente refactor. Los parches caen de élites (12 %) y únicos (60 %) y Mario los vende; se guardan en `flags.patches`); y tras el Acto III, **la antena de Rafa** (rellena las pociones y da 3 minutos de +15 % de daño y +5 % de velocidad).
+- **Tutorial** (`data/tutorial.json`, versión 2): 12 pasos. Empieza en el Sandbox (moverse, atacar, matar, recoger, equipar, pociones, pasivas) y sigue en el campamento (Aída, RAM, Mario, salir al Bosque). Los personajes con el tutorial antiguo continúan donde corresponde.
 - **Consejos de primera vez** (`data/tips.json`, `TipPanel`): un aviso corto, arriba en el centro, la primera vez que aparece cada mecánica: la esquiva (al recibir el primer golpe), las cargas, un golpe pesado a la vista, los terrenos y cada mecánica de arena de jefe (losas, zonas seguras, adds que canalizan). Se guardan por personaje (`tip_seen_<id>`) y se apagan en Pausa → Interfaz → «Consejos de mecánicas».
 
 ## Acto II: Kernel Panic
@@ -335,7 +335,7 @@ El **registro de misiones** está debajo del minimapa (L para plegarlo): la prin
 
 | Misión | Quién | Qué |
 |---|---|---|
-| El Último Commit (principal) | — | Recorrer el acto, derrotar al Arquitecto, hablar con Aida y con Rafa |
+| El Último Commit (principal) | — | Recorrer el acto, derrotar al Arquitecto, hablar con Aída y con Rafa |
 | Kernel Panic (principal) | — | Empieza al acabar la anterior; preparada para el Acto II |
 | Bichos en el cableado | Iris (Bosque) | Eliminar 25 enemigos en el Bosque de Cables |
 | Reporte de incidencias | Tomás (Pantano) | Eliminar 3 enemigos especiales o élite en el Pantano |
@@ -345,7 +345,7 @@ El **registro de misiones** está debajo del minimapa (L para plegarlo): la prin
 - Tipos de paso: hablar, llegar a una zona, bandera, eliminar (con zona y rareza mínima), recoger un objeto de misión y entregar.
 - Las misiones se aceptan y se entregan en los diálogos (acciones `start_quest` y `quest_advance`). Sobre los NPCs aparece un **!** amarillo si ofrecen misión y un **?** verde si tienes algo que entregarles.
 - Recompensas: experiencia y objetos (`give_random` con rareza, RAM que encaja, placas…).
-- Los personajes de antes se ponen al día solos: si ya mataron al jefe, la principal salta a "cuéntaselo a Aida".
+- Los personajes de antes se ponen al día solos: si ya mataron al jefe, la principal salta a "cuéntaselo a Aída".
 
 ## Diálogos con voz
 
@@ -472,11 +472,11 @@ El personaje es un recién egresado que se enfrenta al mundo laboral: cada clase
 
 ## Atlas de incidentes
 
-En el puesto de Aida (campamento, tras el Acto I) se pide un **incidente**: una zona de combate al azar que ya puedes jugar, a tu nivel, con 2 o 3 modificadores que la ponen difícil a cambio de **más botín** (cada uno suma): *Pico de tráfico* (+50 % de grupos), *Procesos zombi* (todos explotan al morir), *Hilos desbocados* (todos veloces), *Firewall mal configurado* (todos blindados), *Escalada de privilegios* (el doble de élites), *Fuga de memoria* (no regeneras vida) y *Configuración por defecto* (−20 a tus resistencias). Se vuelve por un portal al campamento. La zona se arma al vuelo (`Incidents`) y no se guarda: si sales del juego dentro, vuelves al campamento.
+En el puesto de Aída (campamento, tras el Acto I) se pide un **incidente**: una zona de combate al azar que ya puedes jugar, a tu nivel, con 2 o 3 modificadores que la ponen difícil a cambio de **más botín** (cada uno suma): *Pico de tráfico* (+50 % de grupos), *Procesos zombi* (todos explotan al morir), *Hilos desbocados* (todos veloces), *Firewall mal configurado* (todos blindados), *Escalada de privilegios* (el doble de élites), *Fuga de memoria* (no regeneras vida) y *Configuración por defecto* (−20 a tus resistencias). Se vuelve por un portal al campamento. La zona se arma al vuelo (`Incidents`) y no se guarda: si sales del juego dentro, vuelves al campamento.
 
 - **Completar un incidente** (limpiar la zona) lo marca en el **atlas**, suelta tres objetos y un **mapa**. Cada tres zonas distintas completadas sube el **nivel del atlas** (hasta 10): los incidentes salen 2 niveles más altos y con un 10 % más de botín por nivel.
 - **Mapas**: incidentes guardados (zona + modificadores; tres modificadores desde el nivel 3 del atlas). Caen al completar incidentes y, un 15 % de las veces, de los élites de dentro. Caben 12.
-- **Pantalla del atlas** (puesto de Aida → «Abre el atlas»): nivel y lo que falta para el siguiente, zonas completadas por acto, tus mapas con su botón «Abrir» y el incidente al azar (`Atlas`, `AtlasPanel`; se guarda en `flags.atlas`).
+- **Pantalla del atlas** (puesto de Aída → «Abre el atlas»): nivel y lo que falta para el siguiente, zonas completadas por acto, tus mapas con su botón «Abrir» y el incidente al azar (`Atlas`, `AtlasPanel`; se guarda en `flags.atlas`).
 
 ## Lore coleccionable
 
@@ -488,7 +488,7 @@ Hay **10 logros** (`scripts/game/achievements.gd`): tu primer enemigo, cada jefe
 
 ## Banco de oleadas y récords
 
-Desde el **puesto de Aida** (tras el Acto I) se abre el **banco de oleadas sin fin** (`scripts/game/ladder.gd`): una zona que ya conoces, vacía, donde llegan oleadas cada vez más grandes y fuertes (más especiales y élites, +1 nivel de área cada 5) con un **jefe de oleada** cada 5, que deja botín. Dura hasta que caes o sales por el portal. Se anotan tus récords (más oleadas, luego menos tiempo) y tu **mejor tiempo contra cada jefe de acto** (desde que entras a su zona). Además hay una **tabla local** con el top 10 de todos los personajes de este equipo (`user://ladder.json`). Se ve en **Pausa → Récords** o con Aida.
+Desde el **puesto de Aída** (tras el Acto I) se abre el **banco de oleadas sin fin** (`scripts/game/ladder.gd`): una zona que ya conoces, vacía, donde llegan oleadas cada vez más grandes y fuertes (más especiales y élites, +1 nivel de área cada 5) con un **jefe de oleada** cada 5, que deja botín. Dura hasta que caes o sales por el portal. Se anotan tus récords (más oleadas, luego menos tiempo) y tu **mejor tiempo contra cada jefe de acto** (desde que entras a su zona). Además hay una **tabla local** con el top 10 de todos los personajes de este equipo (`user://ladder.json`). Se ve en **Pausa → Récords** o con Aída.
 
 Las **pruebas de estrés** y el banco de oleadas tienen su música, **Prueba de carga** (`estres` en `data/music.json`, 138 BPM, con capa de combate): entra al empezar y, al acabar, perder o salir, vuelve la de la zona.
 

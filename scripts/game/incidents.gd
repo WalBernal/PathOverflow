@@ -2,7 +2,7 @@ class_name Incidents
 ## Atlas de incidentes (parte 1): una zona de combate al azar que ya puedes jugar,
 ## de tu nivel, con 2-3 modificadores que la ponen difícil (más enemigos, que
 ## explotan, sin regeneración...) a cambio de más botín. Se abre desde el puesto de
-## Aida y se vuelve por un portal al campamento del acto. La zona se arma al vuelo
+## Aída y se vuelve por un portal al campamento del acto. La zona se arma al vuelo
 ## (id ZONE_ID, no se guarda: si sales del juego dentro, vuelves al campamento).
 
 const ZONE_ID := "incidente"

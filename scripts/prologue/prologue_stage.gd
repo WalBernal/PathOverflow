@@ -68,7 +68,7 @@ var player_look: Dictionary = CharacterAppearance.default()
 var rafa_look: Dictionary = CharacterAppearance.default()
 var mario_look: Dictionary = CharacterAppearance.default()
 var aida_look: Dictionary = CharacterAppearance.default()
-## Mario (con el carrito de frituras) y Aida entrando a la oficina: x de Mario (< -100 = no están).
+## Mario (con el carrito de frituras) y Aída entrando a la oficina: x de Mario (< -100 = no están).
 var visitors_x := -999.0
 var visitors_walk := -1.0
 ## Ropa formal (0) → ropa del mundo digital (1).
@@ -79,7 +79,7 @@ var time := 0.0
 var flicker := 0.0
 var rack_shake := 0.0
 var dissolve := 0.0
-## Absorción por el servidor: 0 → 1 (Mario, Aida, el carrito y Rafa, por turnos)
+## Absorción por el servidor: 0 → 1 (Mario, Aída, el carrito y Rafa, por turnos)
 ## y, aparte, la del jugador (en la caída).
 var absorb := 0.0
 var player_pull := 0.0
@@ -1059,16 +1059,16 @@ func _draw_office_front() -> void:
 			draw_string(_font, pos, lines[int(p["x"]) % lines.size()], HORIZONTAL_ALIGNMENT_LEFT, -1, 6,
 				Color(1.0, 0.85, 0.3, 0.9) if int(p["x"]) % 2 == 0 else Color(0.4, 1.0, 0.6, 0.9))
 
-# --- Mario y Aida llegan con el carrito ---
+# --- Mario y Aída llegan con el carrito ---
 
 ## Mario jala un carrito plegable negro con una bolsa de basura llena de
-## frituras; Aida camina a su lado.
+## frituras; Aída camina a su lado.
 func _draw_visitors() -> void:
 	if visitors_x < -100.0:
 		return
 	var mx := visitors_x
 	var feet_y := FLOOR_Y + 4.0
-	# El carrito es lo primero que se traga el servidor (luego Mario y Aida).
+	# El carrito es lo primero que se traga el servidor (luego Mario y Aída).
 	var cp := pull_of("cart")
 	if cp >= 1.0:
 		_draw_visitor_people(mx, feet_y)
@@ -1100,7 +1100,7 @@ func _draw_visitors() -> void:
 	_draw_visitor_people(mx, feet_y)
 
 
-## Mario y Aida (y, si el servidor ya tira de ellos, volando hacia él).
+## Mario y Aída (y, si el servidor ya tira de ellos, volando hacia él).
 func _draw_visitor_people(mx: float, feet_y: float) -> void:
 	for who in ["mario", "aida"]:
 		var home := Vector2(mx, feet_y) if who == "mario" else Vector2(mx + 20, feet_y + 2)

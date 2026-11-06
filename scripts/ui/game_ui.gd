@@ -442,13 +442,13 @@ func _build_act_banner() -> PanelContainer:
 	title.name = "Title"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title)
-	var text := UiStyle.label("El Arquitecto del Monolito ha sido terminado (kill -9).\nEl Servidor Principal sigue caído, pero ahora es culpa de otro.\nSe ha abierto un portal al campamento: ve a contárselo a Aida.", 16)
+	var text := UiStyle.label("El Arquitecto del Monolito ha sido terminado (kill -9).\nEl Servidor Principal sigue caído, pero ahora es culpa de otro.\nSe ha abierto un portal al campamento: ve a contárselo a Aída.", 16)
 	text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(text)
 	return panel
 
 
-## Tienda de Nacho, o el puesto de Aida con vendor "aida" (con el inventario al lado para vender).
+## Tienda de Nacho, o el puesto de Aída con vendor "aida" (con el inventario al lado para vender).
 func open_shop(stock: Array[Item], vendor := "nacho") -> void:
 	dialogue_box.close()
 	_open_trade_panel(shop_panel)
@@ -1136,7 +1136,7 @@ func open_achievements() -> void:
 	show_popup(panel)
 
 
-## Récords del banco de oleadas y de los jefes (pausa o Aida).
+## Récords del banco de oleadas y de los jefes (pausa o Aída).
 func open_ladder() -> void:
 	var panel := LadderPanel.new(GameData.current_character)
 	_root.add_child(panel)

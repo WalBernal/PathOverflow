@@ -2723,7 +2723,7 @@ func _test_dialogue_decisions() -> void:
 	_check(Companions.current(c) == "" and not c.timed_effects.any(func(e: Dictionary) -> bool: return String(e["id"]).begins_with("companion:")), "al despedirlo se va su bono")
 
 
-## Campamento que evoluciona (T36): puesto de Aida, mesa de Mario y antena de Rafa,
+## Campamento que evoluciona (T36): puesto de Aída, mesa de Mario y antena de Rafa,
 ## cada uno al terminar un acto.
 func _test_camp_upgrades() -> void:
 	var camp: Dictionary = DataLoader.load_json("res://data/act1.json")["zones"].filter(func(z: Dictionary) -> bool: return z["id"] == "campamento")[0]
@@ -2741,7 +2741,7 @@ func _test_camp_upgrades() -> void:
 	var gen := ItemGenerator.new(_db)
 	var stock := Economy.generate_gear_stock(gen, 20)
 	_check(stock.size() >= Economy.GEAR_STOCK_RARE + Economy.GEAR_STOCK_MAGIC and stock.any(func(it: Item) -> bool: return it.rarity == Rarity.Item.RARE),
-		"el puesto de Aida vende equipo raro y mágico")
+		"el puesto de Aída vende equipo raro y mágico")
 	var weapon := gen.generate(20, Rarity.Item.RARE, "espada_oxidada")
 	_check(Economy.can_reforge(weapon) and Economy.reforge_price(weapon) > 0, "un arma rara se puede reforjar y tiene precio")
 	_check(not Economy.can_reforge(gen.generate(20, Rarity.Item.UNIQUE)), "los únicos no se reforjan")
@@ -3085,10 +3085,10 @@ func _test_ladder() -> void:
 	_check(loaded["waves"].size() == Ladder.TOP_SIZE and int(loaded["waves"][0]["waves"]) == 12 and loaded["bosses"]["daemon"].size() == 2, "la tabla se guarda en disco")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	_check(Ladder.format_time(125.4) == "2:05", "tiempo en m:ss")
-	# Aida abre el banco y la tabla.
+	# Aída abre el banco y la tabla.
 	var npcs: Dictionary = DataLoader.load_json("res://data/npcs.json")
 	var text := JSON.stringify(npcs)
-	_check(text.contains("\"open_waves\"") and text.contains("\"open_ladder\""), "Aida abre el banco de oleadas y los récords")
+	_check(text.contains("\"open_waves\"") and text.contains("\"open_ladder\""), "Aída abre el banco de oleadas y los récords")
 
 
 ## Árbol de deuda técnica (T47): cada nodo, bono y penalización.
@@ -3650,7 +3650,7 @@ func _test_shop_stock() -> void:
 	panel.free()
 
 
-## Tienda de Nacho, parte 2 (T71): la gabardina, sus frases y el puesto de Aida.
+## Tienda de Nacho, parte 2 (T71): la gabardina, sus frases y el puesto de Aída.
 func _test_shop_coat() -> void:
 	for vendor in ["nacho", "aida"]:
 		for event in ["enter", "hover", "buy", "sell", "broke", "full", "refresh"]:
@@ -3680,9 +3680,9 @@ func _test_shop_coat() -> void:
 	_check(panel.last_line in ShopLines.LINES["nacho"]["refresh"] and not panel.contraband_open, "al renovar comenta la caja nueva, no vuelve a saludar")
 	panel.filter = "ram"
 	panel.open(Economy.generate_gear_stock(gen, 12), "aida")
-	_check(panel.vendor == "aida" and panel.last_line in ShopLines.LINES["aida"]["enter"], "Aida tiene su propio saludo")
-	_check(not panel._filter_row.visible and not panel._pockets_box.visible and not panel._refresh_button.visible, "el puesto de Aida: sin filtros, bolsillos ni bodega")
-	_check(panel._grid.get_child_count() == panel.stock.size() and panel._grid.get_child(0).get_child(0) is ItemCell, "Aida enseña todo en la mesa, sin ganchos")
+	_check(panel.vendor == "aida" and panel.last_line in ShopLines.LINES["aida"]["enter"], "Aída tiene su propio saludo")
+	_check(not panel._filter_row.visible and not panel._pockets_box.visible and not panel._refresh_button.visible, "el puesto de Aída: sin filtros, bolsillos ni bodega")
+	_check(panel._grid.get_child_count() == panel.stock.size() and panel._grid.get_child(0).get_child(0) is ItemCell, "Aída enseña todo en la mesa, sin ganchos")
 	panel.free()
 
 
@@ -5861,7 +5861,7 @@ func _test_player_sheet() -> void:
 		npc_sheets[data] = npc_id
 	_check(npc_bad.is_empty(), "cada NPC del servidor con su equipo, su objeto y su propio look: %s" % [npc_bad])
 	var prop_layer := WeaponArt.layer("prop_cafe", StudentHero.CELL, StudentHero.GRIP)
-	_check(prop_layer != null and prop_layer.get_pixelv(StudentHero.GRIP).a > 0.0, "la taza de Aida, en la mano")
+	_check(prop_layer != null and prop_layer.get_pixelv(StudentHero.GRIP).a > 0.0, "la taza de Aída, en la mano")
 	# T182: de lado es un perfil de verdad: un solo ojo y las piernas cambian en cada paso.
 	var profile := StudentProfile.body(StudentHero.look_of(red, {}))
 	_check(count_color.call(profile, "ffffff") == 1 and count_color.call(front, "ffffff") == 2, "de perfil se ve un solo ojo")

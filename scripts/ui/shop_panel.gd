@@ -3,7 +3,7 @@ extends PanelContainer
 ## Tienda de un comerciante, como escena (T71). Nacho abre la gabardina: las placas,
 ## la RAM y las pociones cuelgan de ganchos en el forro, la oferta del día va en el
 ## bolsillo de dentro y el contrabando en un bolsillo secreto que se abre aparte;
-## suelta frases sarcásticas al entrar, al mirar, al comprar o vender. Aida
+## suelta frases sarcásticas al entrar, al mirar, al comprar o vender. Aída
 ## (vendor "aida") usa el mismo marco con su puesto ordenado, sin gabardina.
 ## Click en un artículo: comprarlo (va a la bolsa). Filtros por tipo y por
 ## atributo. Arrastrar un objeto de la bolsa a "Vender" lo vende; los botones de
@@ -23,7 +23,7 @@ const FILTER_NAMES := {"todo": "Todo", "str": "Placas FUE", "dex": "Placas DES",
 const VOICE_PITCH := {"nacho": 0.95, "aida": 0.9}
 const VENDOR_TITLES := {
 	"nacho": ["Nacho · La gabardina", "Hardware «original» del nivel de tu personaje  ·  I o Esc para cerrar"],
-	"aida": ["Aida · Puesto de equipo", "Equipo revisado del nivel de tu personaje  ·  I o Esc para cerrar"],
+	"aida": ["Aída · Puesto de equipo", "Equipo revisado del nivel de tu personaje  ·  I o Esc para cerrar"],
 }
 ## Entre dos frases al pasar el ratón, al menos esto (ms): que no hable sin parar.
 const HOVER_LINE_GAP_MS := 4000
@@ -230,7 +230,7 @@ func _apply_vendor() -> void:
 	_lining_caption.add_theme_color_override("font_color", Color("c9a7d0") if nacho else Color("a8c9a0"))
 
 
-## Forro de la gabardina (morado con el borde del abrigo) o tapete del puesto de Aida.
+## Forro de la gabardina (morado con el borde del abrigo) o tapete del puesto de Aída.
 static func lining_style(p_vendor: String) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	var nacho := p_vendor != "aida"

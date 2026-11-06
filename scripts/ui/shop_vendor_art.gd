@@ -2,7 +2,7 @@ class_name ShopVendorArt
 extends Control
 ## El comerciante dibujado en la tienda (T71), en pixel art a mano: Nacho con su
 ## gabardina (cerrada, entreabierta y abierta de par en par, con la mercancía
-## colgando del forro) o Aida detrás de su puesto ordenado. Al abrir la tienda
+## colgando del forro) o Aída detrás de su puesto ordenado. Al abrir la tienda
 ## pasa por los tres cuadros y suena la tela; al hablar mueve la boca.
 
 const PX := 4.0
@@ -27,7 +27,7 @@ const WOOD := Color("6b4a2b")
 const FELT := Color("2f5d3a")
 
 var vendor := "nacho"
-## 0 = gabardina cerrada, 1 = entreabierta, 2 = abierta (Aida: la mano baja, a media altura, arriba).
+## 0 = gabardina cerrada, 1 = entreabierta, 2 = abierta (Aída: la mano baja, a media altura, arriba).
 var frame := 2:
 	set(v):
 		frame = clampi(v, 0, FRAMES - 1)
@@ -171,7 +171,7 @@ func _draw_nacho() -> void:
 
 
 func _draw_aida() -> void:
-	# Toldo de rayas, Aida con coleta y gafas, y la mesa con el equipo bien puesto.
+	# Toldo de rayas, Aída con coleta y gafas, y la mesa con el equipo bien puesto.
 	for k in 13:
 		_px(k * 2, 0, 2, 3, Color("c94c4c") if k % 2 == 0 else Color("e8e0d0"))
 	_px(0, 3, 26, 1, Color("8a3030"))

@@ -22,7 +22,7 @@ const AFFIXES := [["+38 % de daño físico", "magic"], ["+12 % de velocidad de a
 	["+18 % de resistencia al rayo", "magic"]]
 const DIALOGUE := "¿Otra vez tú? Bien. El servidor no se depura solo. Tómate un café y luego baja a los racks: algo se está comiendo la memoria."
 const OPTIONS := ["¿Qué hay en los racks?", "Dame ese café.", "Adiós."]
-const LOG := [["INFO", "Recogiste: Botas de seguridad"], ["WARN", "Memoria al 18 %"], ["OK", "Zona limpia: 14/14"], ["INFO", "Aida quiere hablar contigo"]]
+const LOG := [["INFO", "Recogiste: Botas de seguridad"], ["WARN", "Memoria al 18 %"], ["OK", "Zona limpia: 14/14"], ["INFO", "Aída quiere hablar contigo"]]
 
 var variant := "a":
 	set(value):
@@ -223,7 +223,7 @@ func _hud_a(r: Rect2) -> void:
 	_txt(Vector2(x, r.position.y + 136), "TODO.md", 14, _c("accent"))
 	for k in 3:
 		var done := k == 0
-		_txt(Vector2(x, r.position.y + 162 + k * 24), "- [%s] %s" % ["x" if done else " ", ["Habla con Aida", "Limpia la zona  9/14", "Baja a los racks"][k]],
+		_txt(Vector2(x, r.position.y + 162 + k * 24), "- [%s] %s" % ["x" if done else " ", ["Habla con Aída", "Limpia la zona  9/14", "Baja a los racks"][k]],
 			14, _c("muted") if done else _c("text"))
 	# Teclas de habilidad.
 	var kx := r.position.x + 560
@@ -344,7 +344,7 @@ func _minimap_b(r: Rect2) -> void:
 
 func _dialogue_b(r: Rect2) -> void:
 	_box(r, _c("panel"), _c("border"), 10)
-	# El retrato: Aida en pixel art (T178) en un círculo.
+	# El retrato: Aída en pixel art (T178) en un círculo.
 	var face := Vector2(r.position.x + 70, r.position.y + 78)
 	draw_circle(face, 52.0, _c("panel2"))
 	draw_arc(face, 52.0, 0, TAU, 64, _c("accent"), 2.0)
@@ -355,7 +355,7 @@ func _dialogue_b(r: Rect2) -> void:
 			var tex := StudentHero.texture(nl[0], nl[1])
 			var cell := Vector2(StudentHero.CELL)
 			draw_texture_rect_region(tex, Rect2(face - Vector2(cell.x, cell.y * 1.08), cell * 2.0), Rect2(Vector2.ZERO, cell))
-	_txt(Vector2(r.position.x + 140, r.position.y + 34), "Aida, la Senior", 18, _c("text"), false)
+	_txt(Vector2(r.position.x + 140, r.position.y + 34), "Aída, la Senior", 18, _c("text"), false)
 	_box(Rect2(r.position.x + 290, r.position.y + 18, 86, 22), Color(_c("ai"), 0.2), Color(0, 0, 0, 0), 11)
 	_txt(Vector2(r.position.x + 302, r.position.y + 34), "mentora", 13, _c("ai"), false)
 	draw_multiline_string(_sans, Vector2(r.position.x + 140, r.position.y + 66), DIALOGUE, HORIZONTAL_ALIGNMENT_LEFT, r.size.x - 170, 16, -1, _c("text"))
@@ -405,7 +405,7 @@ func _hud_b(r: Rect2) -> void:
 	for k in 3:
 		var p := mid.position + Vector2(20 + k * 186, 214)
 		_box(Rect2(p, Vector2(16, 16)), _c("ok") if k == 0 else Color(0, 0, 0, 0), _c("ok") if k == 0 else _c("muted"), 4)
-		_txt(p + Vector2(24, 13), ["Habla con Aida", "Zona 9/14", "Baja a los racks"][k], 13, _c("muted") if k == 0 else _c("text"), false)
+		_txt(p + Vector2(24, 13), ["Habla con Aída", "Zona 9/14", "Baja a los racks"][k], 13, _c("muted") if k == 0 else _c("text"), false)
 	# Sucesos como tarjetas con un punto de color.
 	var ev := Rect2(r.position + Vector2(1040, 0), Vector2(480, r.size.y))
 	_card_b(ev, "Sucesos")

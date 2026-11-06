@@ -12,17 +12,17 @@ Pruebas descartadas: Kokoro (local) — no convenció (2026-11-06).
 | El recién egresado (jugador) | `player` | Voz joven. Hace falta en versión de hombre y de mujer (según el personaje creado). |
 | Rafa, el SysAdmin | `root`, `rafa_terminal`, `rafa_bios` | Adulto de 45 años que todavía se expresa como joven. |
 | Mario, el Practicante | `kevin`, `mario_bios` | Alumno joven que se quiere meter en todo, ruidoso, de voz aguda. |
-| Aida, la Senior | `ada` | Adulta de 50 años, entusiasta, voz seria con un toque sutil de sensualidad. |
+| Aída, la Senior | `ada` | Adulta de 50 años, entusiasta, voz seria con un toque sutil de sensualidad. |
 | M. Páez, el Inge | `m_paez`, `paez_bios` | Adulto de 40 años, súper entusiasta y alegre. |
 | Narrador | (pasos `style: system`) | Narrador clásico de juego (estilo Pokémon): tono neutral, claro y que no aburra. |
 
 ## Indicaciones para diseñar cada voz
 
-- **Recién egresado (hombre)**: «Young Mexican man, about 23, fresh university graduate. Clear, slightly nervous but hopeful voice, natural and casual, light Mexican Spanish accent.»
-- **Recién egresada (mujer)**: «Young Mexican woman, about 23, fresh university graduate. Clear, slightly nervous but hopeful voice, natural and casual, light Mexican Spanish accent.»
-- **Rafa**: «Mexican man in his mid forties who still talks like a young guy: relaxed, casual slang, tired and sarcastic sysadmin, slightly raspy mid-low voice, dry humor, drawn-out pauses.»
-- **Mario**: «Energetic Mexican college student, about 19, loud and eager to join everything, high-pitched youthful male voice, fast and enthusiastic.»
-- **Aida**: «Mexican woman around 50, senior engineer. Serious, confident, warm low voice with a subtle, elegant sensual touch; enthusiastic underneath, never exaggerated.»
+- **Recién egresado (hombre)**: «Very young Mexican man, about 20, just graduated: youthful boyish voice, light and bright, slightly higher pitch, a bit nervous but hopeful, natural and casual. Latin American Spanish with a Mexican accent.»
+- **Recién egresada (mujer)**: «Very young Mexican woman, about 20, just graduated: youthful girlish voice, light and bright, a bit nervous but hopeful, natural and casual. Latin American Spanish with a Mexican accent.»
+- **Rafa**: «Man from Mazatlan, Sinaloa, in his mid forties, who still talks like a young guy: relaxed and casual, a tired and sarcastic sysadmin, slightly raspy mid-low voice, dry humor, drawn-out pauses. Speaks Latin American Spanish with a strong northern Mexican accent and intonation, seseo, like a Mexican from Sinaloa; never Castilian or Spain Spanish.» Variante B: «Mexican guy in his forties from northern Mexico, chill and laid-back like a young man, tired sarcastic tech guy, mid-low slightly husky voice, sing-song northern Mexican intonation, Mexican slang, unhurried. Mexican Spanish from Sinaloa, not Spain.»
+- **Mario**: «Mexican teenage boy, about 17, a first-year student who wants to join everything: loud, very high-pitched bright teenage voice that still sounds like a kid, fast and super enthusiastic. Latin American Spanish with a Mexican accent.»
+- **Aída**: «Mexican woman around 50, senior engineer. Serious, confident, warm low voice with a subtle, elegant sensual touch; enthusiastic underneath, never exaggerated.»
 - **M. Páez**: «Mexican man around 40, super enthusiastic and cheerful engineering teacher, bright upbeat mid-range voice, always smiling when he talks.»
 - **Narrador**: «Neutral Latin American Spanish narrator for a video game, like a classic RPG narrator: clear, warm, engaging and well-paced, never monotone, not theatrical.»
 
@@ -38,3 +38,7 @@ tono de `npcs.json`.
   a personas reales.
 - En los créditos: «Voces generadas con IA» y la herramienta usada.
 - Si falta el audio de una línea, el juego usa la voz de Windows o los pitidos, como hoy.
+
+## Historial
+
+- 2026-11-06 · Qwen3-TTS VoiceDesign (local): Aída y M. Páez aprobadas a la primera. Rafa sonaba a español de España: se pide acento del norte de México (Sinaloa) y se prueba una variante B. Egresado, egresada y Mario, más jóvenes.
