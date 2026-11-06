@@ -122,6 +122,11 @@ static func apply_variant(p: Dictionary, board: Motherboard) -> Dictionary:
 			p[key] = maxi(0, int(p[key]) + int(v["add"][key])) if p[key] is int else float(p[key]) + float(v["add"][key])
 			if key in ["max_units", "drone_count"]:
 				p["dps"] = float(p["dps"]) * float(p[key]) / maxf(1.0, float(p[key]) - float(v["add"][key]))
+	# "set" fija una cifra pase lo que pase (T218): Unicast es un solo proyectil aunque la
+	# placa sume proyectiles por nivel o por RAM.
+	for key in v.get("set", {}):
+		if p.has(key):
+			p[key] = int(v["set"][key]) if p[key] is int else float(v["set"][key])
 	if v.has("abilities"):
 		p["unit_abilities"] = v["abilities"]
 	p["variant"] = v["id"]

@@ -1,5 +1,5 @@
 {
-  "_doc": "Variantes de habilidad: se eligen en el menú K (botón de la placa) desde 'min_level' de la placa. 'mult' multiplica cifras del perfil (damage = daño y DPS; aura_effect = bonos del aura), 'add' suma (projectiles, max_units, repeats, chains, pierce...), 'abilities' cambia las habilidades de una invocación.",
+  "_doc": "Variantes de habilidad: se eligen en el menú K (botón de la placa) desde 'min_level' de la placa. 'mult' multiplica cifras del perfil (damage = daño y DPS; aura_effect = bonos del aura), 'add' suma (projectiles, max_units, repeats, chains, pierce...), 'set' fija una cifra después de todo lo demás (Unicast: un solo proyectil aunque la placa sume por nivel), 'abilities' cambia las habilidades de una invocación.",
   "variants": {
     "barrido": [
       {"id": "torbellino", "name": "Barrido amplio", "min_level": 10,
@@ -15,7 +15,7 @@
         "add": {"projectiles": 3}, "mult": {"damage": 0.65}},
       {"id": "unicast", "name": "Unicast", "min_level": 15,
         "description": "Un solo proyectil que atraviesa a 3 enemigos y hace el triple de daño.",
-        "add": {"projectiles": -2, "pierce": 3}, "mult": {"damage": 3.0}}
+        "set": {"projectiles": 1}, "add": {"pierce": 3}, "mult": {"damage": 3.0}}
     ],
     "ping_letal": [
       {"id": "ping_flood", "name": "Ping flood", "min_level": 10,

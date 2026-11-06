@@ -252,6 +252,7 @@ func _initialize() -> void:
 	_test_variant_signals()
 	_test_skill_sound_logic()
 	_test_list_skills_keeps_manual()
+	_test_unicast_single()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -9394,3 +9395,17 @@ func _test_list_skills_keeps_manual() -> void:
 	_check(out.begins_with("# Generado") and out.ends_with(manual) and not out.contains("# Viejo"), "la ficha se conserva y lo generado se renueva")
 	_check(tool.with_manual("# Generado\n", "# Sin ficha\n") == "# Generado\n", "sin ficha, solo lo generado")
 	_check(FileAccess.get_file_as_string("res://docs/habilidades_y_ram.md").contains(tool.MANUAL_FROM), "la ficha de T191 sigue en el documento")
+
+## T218: Unicast es un solo proyectil a cualquier nivel de la placa (antes, a nivel 20 disparaba 3).
+func _test_unicast_single() -> void:
+	var c := _new_character()
+	for level in [15, 20, 30]:
+		var board := Motherboard.new(_db.skills.skills["rafaga_de_paquetes"], level, [])
+		var base := SkillCalc.compute(board, c)
+		board.variant = "unicast"
+		var p := SkillCalc.compute(board, c)
+		_check(int(p["projectiles"]) == 1 and int(p["pierce"]) >= 3 and int(base["projectiles"]) >= 3,
+			"Unicast a nivel %d: un proyectil que atraviesa (%d proyectiles, %d de perforación; la base, %d)" % [level, p["projectiles"], p["pierce"], base["projectiles"]])
+	var plain := Motherboard.new(_db.skills.skills["rafaga_de_paquetes"], 20, [])
+	plain.variant = "abanico"
+	_check(int(SkillCalc.compute(plain, c)["projectiles"]) > 3, "Broadcast sigue sumando proyectiles")
