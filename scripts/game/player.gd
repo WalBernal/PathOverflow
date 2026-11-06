@@ -325,15 +325,18 @@ func _update_sprite(feet: Vector2, tint: Color) -> void:
 	_sprite.set_pose(_facing, pose, _walk_phase if is_alive() else -1.0)
 	_sprite.tint = Color(tint, 0.6) if tint.a > 0.0 else Color(0, 0, 0, 0)
 	_under.queue_redraw()
-	# El brillo de las manos al lanzar o canalizar (las hojas no lo traen).
+	# El brillo de las manos al lanzar o canalizar (las hojas no lo traen). T198: al
+	# invocar, más grande y en el suelo delante; con el aura, en las dos manos.
 	var state: String = pose["state"]
-	if pose.has("glow") and state in ["cast", "channel"]:
+	if pose.has("glow") and state in CharacterAppearance.GLOW_POSES:
 		var g: Color = pose["glow"]
-		var side := -1.0 if _facing.x < -0.3 else 1.0
-		var hand := feet + Vector2(side * -10.0, -9.0) * HeroSprite.HERO_SCALE   # (la mano del arma del alumno)
-		var pulse := 0.75 + 0.25 * sin(float(pose["time"]) * 9.0) if state == "channel" else minf(1.0, float(pose["t"]) * 2.5)
-		draw_circle(hand, 4.5 * PLAYER_SPRITE_SCALE * pulse, Color(g, 0.35))
-		draw_circle(hand, 2.4 * PLAYER_SPRITE_SCALE * pulse, Color(g.lightened(0.4), 0.8))
+		var pulse := 0.75 + 0.25 * sin(float(pose["time"]) * 9.0) if state in ["channel", "aura"] else minf(1.0, float(pose["t"]) * 2.5)
+		var lift := float(PlayerSprite.life(pose, -1.0)[1]) * HeroSprite.HERO_SCALE
+		for hand in HeroSprite.glow_points(state, _facing):
+			var at: Vector2 = feet + Vector2(0.0, lift) + Vector2(hand) * HeroSprite.HERO_SCALE
+			var big := 1.4 if state == "summon" else 1.0
+			draw_circle(at, 4.5 * PLAYER_SPRITE_SCALE * pulse * big, Color(g, 0.35))
+			draw_circle(at, 2.4 * PLAYER_SPRITE_SCALE * pulse * big, Color(g.lightened(0.4), 0.8))
 
 
 ## Cuándo empezó cada estado activo (segundos del reloj), para animar su entrada.
@@ -385,7 +388,7 @@ func face(direction: Vector2) -> void:
 		_facing = direction.normalized()
 
 
-## Empieza la animación de una habilidad: `kind` es "attack", "shoot" o "cast".
+## Empieza la animación de una habilidad: `kind` es una de las de action_for.
 func play_action(kind: String, length: float, glow := Color.WHITE) -> void:
 	_action = kind
 	_action_time = 0.0
@@ -399,9 +402,24 @@ func keep_channeling(glow := Color.WHITE) -> void:
 	_glow = glow
 
 
-## Animación de una habilidad por sus etiquetas: cuerpo a cuerpo, ataque a distancia o hechizo.
+## Animación de una habilidad por sus etiquetas y su tipo: aura, grito, invocar
+## (invocaciones, drones y torretas), salto, canalizar (T198), cuerpo a cuerpo, ataque a
+## distancia o hechizo.
+const LEAP_KINDS := ["leap_slam", "leap", "backflip"]
+
+
 static func action_for(p: Dictionary) -> String:
 	var tags: Array = p.get("tags", [])
+	if "aura" in tags:
+		return "aura"
+	if "warcry" in tags:
+		return "shout"
+	if "minion" in tags or "automaton" in tags:
+		return "summon"
+	if String(p.get("kind", "")) in LEAP_KINDS:
+		return "leap"
+	if "channel" in tags:
+		return "channel"
 	if "attack" in tags:
 		return "attack" if "melee" in tags else "shoot"
 	return "cast"
@@ -435,7 +453,7 @@ func anim_pose() -> Dictionary:
 			t = 1.0 - _dodge_time / DODGE_TIME
 		"hurt":
 			t = 1.0 - _flinch / FLINCH_TIME
-		"attack", "shoot", "cast":
+		"attack", "shoot", "cast", "shout", "leap", "summon", "aura":
 			t = _action_time / _action_length
 	var weapon := CharacterAppearance.weapon_kind(character.inventory.equipped("weapon")) if character else ""
 	return {"state": state, "t": clampf(t, 0.0, 1.0), "time": _anim_time, "weapon": weapon, "glow": _glow}

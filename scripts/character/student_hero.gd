@@ -15,8 +15,11 @@ class_name StudentHero
 const DIR := "res://assets/sprites/hero/"
 const CELL := Vector2i(60, 56)
 const FEET := Vector2i(29, 49)
-const ORDER := ["idle", "walk", "attack", "cast", "hurt", "dead", "dodge"]
-const FRAMES := {"idle": 4, "walk": 4, "attack": 4, "cast": 2, "hurt": 2, "dead": 2, "dodge": 2}
+## T198: canalizar, grito, salto, invocar y aura (Player.action_for), de dos cuadros:
+## anticipación y cuadro de impacto (30 columnas = 1800 px de ancho).
+const ORDER := ["idle", "walk", "attack", "cast", "hurt", "dead", "dodge", "channel", "shout", "leap", "summon", "aura"]
+const FRAMES := {"idle": 4, "walk": 4, "attack": 4, "cast": 2, "hurt": 2, "dead": 2, "dodge": 2,
+	"channel": 2, "shout": 2, "leap": 2, "summon": 2, "aura": 2}
 ## Filas de la plantilla: dónde empiezan las piernas y el centro (para los pasos).
 const LEGS_Y := 43
 const CENTER_X := 28
@@ -78,7 +81,7 @@ static func column_for(state: String, t: float, time := 0.0, walk_phase := -1.0)
 			anim = "walk"
 		"limp":
 			anim = "dead"
-		"channel", "type":
+		"type":
 			anim = "cast"
 		"shoot":
 			anim = "attack"
@@ -94,7 +97,9 @@ static func column_for(state: String, t: float, time := 0.0, walk_phase := -1.0)
 		"idle":
 			k = posmod(int(floor(time * 3.0)), n)
 		"cast":
-			k = posmod(int(floor(time * 4.0)), n) if state in ["channel", "type"] else clampi(int(t * n), 0, n - 1)
+			k = posmod(int(floor(time * 4.0)), n) if state == "type" else clampi(int(t * n), 0, n - 1)
+		"channel":   # mientras dura, alternan sus dos cuadros
+			k = posmod(int(floor(time * 5.0)), n)
 		_:
 			k = clampi(int(t * n), 0, n - 1)
 	return first_column(anim) + k
@@ -741,6 +746,23 @@ static func frame(body: Image, weapon: Image, anim: String, k: int) -> Image:
 			bob = [0, 1][k]
 		"dead", "dodge":
 			bob = [1, 2][k]
+		# T198, por tipo de habilidad: el primer cuadro anticipa y el segundo es el impacto.
+		"channel":   # el arma en alto, temblando un poco
+			bob = [-1, 0][k]
+			swing = 1
+		"shout":   # encogido tomando aire; crecido y con el arma en alto al gritar
+			bob = [1, -2][k]
+			swing = [0, 1][k]
+		"leap":   # agachado con el arma en alto; al caer, más abajo y el arma al suelo
+			bob = [2, 3][k]
+			swing = [1, 3][k]
+			shift = [0, 1][k]
+		"summon":   # alza el arma y la clava en el suelo, delante
+			bob = [-1, 2][k]
+			swing = [1, 3][k]
+		"aura":   # se yergue y alza el arma
+			bob = [0, -2][k]
+			swing = [0, 1][k]
 	# Cuerpo de las piernas para arriba, con su balanceo; piernas, cada una con su paso.
 	for y in CELL.y:
 		for x in CELL.x:

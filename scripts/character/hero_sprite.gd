@@ -63,6 +63,29 @@ func set_pose(facing: Vector2, pose: Dictionary, walk_phase := -1.0) -> void:
 	queue_redraw()
 
 
+## Dónde brillan las manos (píxeles de la hoja desde los pies, sin HERO_SCALE) en las
+## poses con brillo (CharacterAppearance.GLOW_POSES; las hojas no lo traen): la mano del
+## arma (la del lado izquierdo de la lámina), al invocar abajo y delante, y con el aura
+## las dos (T198). De lado, las manos del perfil (StudentProfile), delante.
+static func glow_points(state: String, facing: Vector2) -> Array[Vector2]:
+	var d: Array = StudentHero.dir_for(facing)
+	if int(d[0]) == StudentHero.Dir.SIDE:
+		var ahead := -1.0 if bool(d[1]) else 1.0
+		match state:
+			"summon":
+				return [Vector2(ahead * 10.0, -2.0)]
+			"aura":
+				return [Vector2(ahead * 8.0, -19.0), Vector2(ahead * 3.0, -21.0)]
+		return [Vector2(ahead * 8.0, -18.0)]
+	var side := -1.0 if facing.x < -0.3 else 1.0
+	match state:
+		"summon":
+			return [Vector2(side * -9.0, -3.0)]
+		"aura":
+			return [Vector2(-11.0, -11.0), Vector2(11.0, -11.0)]
+	return [Vector2(side * -10.0, -9.0)]
+
+
 func _draw() -> void:
 	if _texture == null:
 		return

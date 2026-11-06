@@ -116,6 +116,8 @@ func cells() -> Dictionary:
 const BREATH := 0.02
 const STEP_HOP := 1.6
 const HIT_STRETCH := 0.07
+## Altura del salto (T198), en píxeles de hoja: en el aire antes del cuadro de impacto.
+const LEAP_HEIGHT := 9.0
 
 
 static func life(pose: Dictionary, walk_phase: float) -> Array:
@@ -137,6 +139,26 @@ static func life(pose: Dictionary, walk_phase: float) -> Array:
 		"cast":
 			var k := sin(PI * clampf(float(pose.get("t", 0.0)), 0.0, 1.0))
 			return [Vector2(1.0 - 0.02 * k, 1.0 + 0.03 * k), 0.0]
+		# T198: el salto sube en arco y aplasta al caer (en el cuadro de impacto), el grito
+		# se encoge y luego se estira, invocar se inclina y el aura late despacio.
+		"leap":
+			var t := clampf(float(pose.get("t", 0.0)), 0.0, 1.0)
+			var imp := CharacterAppearance.impact_fraction(state, "")
+			var air := sin(PI * clampf((t - 0.05) / (imp - 0.05), 0.0, 1.0)) if t < imp else 0.0
+			var d := (t - imp) / 0.1
+			var k := exp(-d * d) if t >= imp else 0.0
+			return [Vector2(1.0 + 0.1 * k, 1.0 - 0.08 * k), -LEAP_HEIGHT * air]
+		"shout":
+			var t := clampf(float(pose.get("t", 0.0)), 0.0, 1.0)
+			var d := (t - CharacterAppearance.impact_fraction(state, "")) / 0.15
+			var k := exp(-d * d)
+			return [Vector2(1.0 - 0.03 * k, 1.0 + 0.06 * k), 0.0] if t >= 0.5 else [Vector2(1.03, 0.97), 0.0]
+		"summon":
+			var k := sin(PI * clampf(float(pose.get("t", 0.0)), 0.0, 1.0))
+			return [Vector2(1.0 + 0.02 * k, 1.0 - 0.03 * k), 0.0]
+		"aura":
+			var s := sin(time * 3.0)
+			return [Vector2(1.0 + 0.015 * s, 1.0 + 0.02 * s), 0.0]
 	return [Vector2.ONE, 0.0]
 
 
