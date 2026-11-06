@@ -1,0 +1,164 @@
+{
+  "voces": {
+    "rafa": {
+      "ref": "referencias/rafa.wav",
+      "ref_texto": "Para el sistema escolar de la UAdeO..... tú nunca exististe..... Eres un puntero nulo....."
+    },
+    "aida": {
+      "ref": "referencias/aida.wav",
+      "ref_texto": "Vaya, un recién egresado. Debes ser de la generación de Ojeda, ¿no? Soy Aída. Llevo aquí desde que El Pepe era jefe de informática, y aún se programaba todo en COBOL."
+    },
+    "paez": {
+      "ref": "referencias/paez.wav",
+      "ref_texto": "¡Ah, otro del departamento! Soy M. Páez, el Inge. Estaba calificando exámenes de álgebra lineal en el laboratorio cuando la pantalla empezó a parpadear... y aparecí aquí. Con mis lentes, mi taza y sin mi Kindle. Eso último es lo grave."
+    },
+    "egresado": {
+      "ref": "referencias/egresado.wav",
+      "ref_texto": "Vengo por mi constancia de servicio social. Hice mis 480 horas: seis meses pelando cables UTP, cambiando HDMI y limpiando las computadoras del centro de cómputo, bajo las órdenes del Inge Pepe. Si no tengo el sello, Servicios Escolares me anula la titulación."
+    },
+    "egresada": {
+      "ref": "referencias/egresada.wav",
+      "ref_texto": "Eh, no, yo vengo por..."
+    },
+    "mario": {
+      "ref": "referencias/mario.wav",
+      "ref_texto": "¡Profe Rafa! ¿Va a querer churros...?"
+    },
+    "narrador": {
+      "ref": "referencias/narrador.wav",
+      "ref_texto": "Rafa suelta un suspiro cansado y teclea con desgana, sin quitar los ojos de la pantalla."
+    }
+  },
+  "lineas": [
+    {
+      "id": "prologo_rafa_00",
+      "voz": "rafa",
+      "texto": "¿Quién eres tú.....??? ..... Ah, vienes a ayudarnos....."
+    },
+    {
+      "id": "prologo_rafa_01_m",
+      "voz": "egresado",
+      "texto": "Eh, no, yo vengo por..."
+    },
+    {
+      "id": "prologo_rafa_01_f",
+      "voz": "egresada",
+      "texto": "Eh, no, yo vengo por..."
+    },
+    {
+      "id": "prologo_rafa_02",
+      "voz": "rafa",
+      "texto": "Ah..... eres alumno.... Si buscas al Inge Pepe, llegaste un semestre tarde.... Se jubiló en julio. Bueno..... «jubiló»..... entre comillas.... todavía viene los jueves a dar clases.... porque dice que si se queda en su casa su esposa lo pone a limpiar....."
+    },
+    {
+      "id": "prologo_rafa_03_m",
+      "voz": "egresado",
+      "texto": "Vengo por mi constancia de servicio social. Hice mis 480 horas: seis meses pelando cables UTP, cambiando HDMI y limpiando las computadoras del centro de cómputo, bajo las órdenes del Inge Pepe. Si no tengo el sello, Servicios Escolares me anula la titulación."
+    },
+    {
+      "id": "prologo_rafa_03_f",
+      "voz": "egresada",
+      "texto": "Vengo por mi constancia de servicio social. Hice mis 480 horas: seis meses pelando cables UTP, cambiando HDMI y limpiando las computadoras del centro de cómputo, bajo las órdenes del Inge Pepe. Si no tengo el sello, Servicios Escolares me anula la titulación."
+    },
+    {
+      "id": "prologo_rafa_04",
+      "voz": "narrador",
+      "texto": "Rafa suelta un suspiro cansado y teclea con desgana, sin quitar los ojos de la pantalla."
+    },
+    {
+      "id": "prologo_rafa_07",
+      "voz": "rafa",
+      "texto": "Tengo malas noticias, «genio»..... Pepe no usaba base de datos..... Anotaba a los prestadores en una libreta Scribe con pasta de gatitos..... Cuando recogió sus cosas, se llevó la libreta creyendo que era su recetario de cocina....."
+    },
+    {
+      "id": "prologo_rafa_08",
+      "voz": "rafa",
+      "texto": "Para el sistema escolar de la UAdeO..... tú nunca exististe..... Eres un puntero nulo....."
+    },
+    {
+      "id": "prologo_incidente_04",
+      "voz": "rafa",
+      "texto": "Y para colmo..... se cayó el Sistema Integral de Control Escolar..... el SICE..... Hoy vencían las actas de calificaciones de todo el estado....."
+    },
+    {
+      "id": "prologo_incidente_05",
+      "voz": "rafa",
+      "texto": "Si la plataforma no sube en media hora..... el Rector va a venir personalmente a ver qué pasa..... Y no tengo ni el diagrama de red....."
+    },
+    {
+      "id": "prologo_incidente_06",
+      "voz": "rafa",
+      "texto": "Todo el backend de la universidad corre sobre un servidor ensamblado en 2004..... que Pepe bautizó como «El Monolito»..... La única copia de la documentación física..... está perdida en este basurero....."
+    },
+    {
+      "id": "prologo_incidente_07",
+      "voz": "narrador",
+      "texto": "Rafa te mide con la mirada: la camisa planchada, el portafolio y la desesperación de alguien que necesita con urgencia un renglón en su currículum."
+    },
+    {
+      "id": "prologo_incidente_08",
+      "voz": "rafa",
+      "texto": "Hagamos un trato..... El sistema está caído y no me deja emitirte una constancia..... parece que la tabla está bloqueada por transacciones huérfanas....."
+    },
+    {
+      "id": "prologo_incidente_09",
+      "voz": "rafa",
+      "texto": "Si me ayudas a..... desenterrar la documentación..... y a levantar el servidor antes de que colapse la máquina virtual..... te libero el servicio."
+    },
+    {
+      "id": "prologo_incidente_10",
+      "voz": "rafa",
+      "texto": "Es más..... te doy experiencia comprobable..... y una carta de recomendación firmada por mí..... para que el mercado laboral te tome en serio..... espero....."
+    },
+    {
+      "id": "prologo_trato_00",
+      "voz": "narrador",
+      "texto": "Rafa asiente con una media sonrisa amarga."
+    },
+    {
+      "id": "prologo_trato_01",
+      "voz": "rafa",
+      "texto": "Bienvenido a bordo..... Ahora ponte a buscar detrás del rack negro..... Hay una carpeta lila que dice «NO TOCAR - CONFIG_PROD»....."
+    },
+    {
+      "id": "prologo_tv_00",
+      "voz": "narrador",
+      "texto": "La TV del pasillo repite en bucle: «Ingeniería de Software: ¡inscríbete!» y «Hackatón LinceCode 2026». En letras chiquitas: «Premio: 120 ADIS y una constancia con valor curricular.»."
+    },
+    {
+      "id": "prologo_tv_01_m",
+      "voz": "egresado",
+      "texto": "Constancia con valor curricular... eso me serviría ahora mismo."
+    },
+    {
+      "id": "prologo_tv_01_f",
+      "voz": "egresada",
+      "texto": "Constancia con valor curricular... eso me serviría ahora mismo."
+    },
+    {
+      "id": "prologo_mario_00",
+      "voz": "mario",
+      "texto": "Profe Rafa, ¿va a querer churros...?"
+    },
+    {
+      "id": "prologo_ventanilla_00",
+      "voz": "narrador",
+      "texto": "La ventanilla de cobro dice «Regreso en 15 minutos». El polvo del letrero dice «desde 2019»."
+    },
+    {
+      "id": "prologo_descarga_00",
+      "voz": "narrador",
+      "texto": "Te arrodillas entre el polvo y los cables calientes, detrás del viejo servidor, que tiembla con violencia."
+    },
+    {
+      "id": "prologo_descarga_01",
+      "voz": "narrador",
+      "texto": "Jalas una maraña de cables de corriente puenteados... y ahí está: una carpeta lila."
+    },
+    {
+      "id": "prologo_descarga_03",
+      "voz": "rafa",
+      "texto": "¡NO JALES ESO!..."
+    }
+  ]
+}

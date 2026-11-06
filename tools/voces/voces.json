@@ -1,0 +1,19 @@
+{
+  "_doc": "Reparto de voces (docs/voces.md). Cada voz: una toma aprobada en referencias/ (se clona: suena igual en todas sus líneas) o una descripción (se diseña en cada línea). 'hablantes': de quién es cada voz en data/cutscenes.json (speaker, o style 'system' = narrador). Las líneas del jugador salen dos veces: _m con 'egresado' y _f con 'egresada'.",
+  "voces": {
+    "rafa": {"ref": "referencias/rafa.wav", "ref_texto": "Para el sistema escolar de la UAdeO..... tú nunca exististe..... Eres un puntero nulo....."},
+    "aida": {"ref": "referencias/aida.wav", "ref_texto": "Vaya, un recién egresado. Debes ser de la generación de Ojeda, ¿no? Soy Aída. Llevo aquí desde que El Pepe era jefe de informática, y aún se programaba todo en COBOL."},
+    "paez": {"ref": "referencias/paez.wav", "ref_texto": "¡Ah, otro del departamento! Soy M. Páez, el Inge. Estaba calificando exámenes de álgebra lineal en el laboratorio cuando la pantalla empezó a parpadear... y aparecí aquí. Con mis lentes, mi taza y sin mi Kindle. Eso último es lo grave."},
+    "egresado": {"ref": "referencias/egresado.wav", "ref_texto": "Vengo por mi constancia de servicio social. Hice mis 480 horas: seis meses pelando cables UTP, cambiando HDMI y limpiando las computadoras del centro de cómputo, bajo las órdenes del Inge Pepe. Si no tengo el sello, Servicios Escolares me anula la titulación."},
+    "egresada": {"ref": "referencias/egresada.wav", "ref_texto": "Eh, no, yo vengo por..."},
+    "mario": {"ref": "referencias/mario.wav", "ref_texto": "¡Profe Rafa! ¿Va a querer churros...?"},
+    "narrador": {"ref": "referencias/narrador.wav", "ref_texto": "Rafa suelta un suspiro cansado y teclea con desgana, sin quitar los ojos de la pantalla."}
+  },
+  "hablantes": {
+    "root": "rafa", "rafa_terminal": "rafa", "rafa_bios": "rafa",
+    "kevin": "mario", "mario_bios": "mario",
+    "ada": "aida",
+    "m_paez": "paez", "paez_bios": "paez",
+    "system": "narrador"
+  }
+}

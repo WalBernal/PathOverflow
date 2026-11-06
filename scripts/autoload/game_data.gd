@@ -57,6 +57,9 @@ func _ready() -> void:
 	var cutscene_data = DataLoader.load_json(CUTSCENES_PATH)
 	if cutscene_data is Dictionary:
 		cutscenes = cutscene_data.get("cutscenes", {})
+		for id in cutscenes:   # la escena sabe su id (el de sus voces grabadas, VoiceLines)
+			if cutscenes[id] is Dictionary:
+				cutscenes[id]["id"] = id
 	var music_data = DataLoader.load_json("res://data/music.json")
 	if music_data is Dictionary:
 		music = music_data

@@ -259,6 +259,7 @@ func _initialize() -> void:
 	_test_new_skills_t208()
 	_test_new_skills_t209()
 	_test_zone_report()
+	_test_voice_lines()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -9622,3 +9623,34 @@ func _test_zone_report() -> void:
 	_check(ZoneReportPanel.alpha_at(-0.5) == 0.0 and ZoneReportPanel.alpha_at(1.0) == 1.0 and ZoneReportPanel.alpha_at(ZoneReportPanel.SHOW_TIME) == 0.0,
 		"el panel espera a la tarjeta de carga, se queda y se apaga")
 	_check(ZoneReportPanel.color_for("loot:%d" % Rarity.Item.UNIQUE) == Rarity.item_color(Rarity.Item.UNIQUE), "cada artefacto con el color de su rareza")
+
+## Voces grabadas del prólogo: el id de cada línea (escena + paso, y _m/_f si habla el
+## jugador), la voz del personaje en su aspecto y que cada línea hablada tenga su audio.
+func _test_voice_lines() -> void:
+	var vl: GDScript = load("res://scripts/core/voice_lines.gd")
+	_check(vl.cutscene_id("prologo_rafa", 2) == "prologo_rafa_02" and vl.cutscene_id("prologo_tv", 1, 0) == "prologo_tv_01_m"
+		and vl.cutscene_id("prologo_tv", 1, 1) == "prologo_tv_01_f", "voces: id de línea por escena y paso, con la voz del jugador")
+	_check(int(CharacterAppearance.default()["voice"]) == 0 and int(CharacterAppearance.sanitize({})["voice"]) == 0
+		and int(CharacterAppearance.sanitize({"voice": 1})["voice"]) == 1 and int(CharacterAppearance.sanitize({"voice": 7})["voice"]) == 1,
+		"voces: el aspecto guarda la voz (los guardados viejos, masculina)")
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 404
+	var a := CharacterAppearance.random(rng)
+	rng.seed = 404
+	var b := CharacterAppearance.random(rng)
+	_check(a == b and a.has("voice"), "voces: el aspecto aleatorio también elige voz (y es reproducible)")
+	var scenes: Dictionary = DataLoader.load_json("res://data/cutscenes.json")["cutscenes"]
+	var missing: Array = []
+	for scene in scenes:
+		if not String(scene).begins_with("prologo_"):
+			continue
+		var steps: Array = scenes[scene]["steps"]
+		for i in steps.size():
+			var s: Dictionary = steps[i]
+			if s.has("effect") or not s.has("text") or String(s.get("style", "")) == "console":
+				continue
+			var ids: Array = [vl.cutscene_id(scene, i, 0), vl.cutscene_id(scene, i, 1)] if String(s.get("speaker", "")) == "player" else [vl.cutscene_id(scene, i)]
+			for id in ids:
+				if not ResourceLoader.exists(vl.path_for(id)):
+					missing.append(id)
+	_check(missing.is_empty(), "voces: cada línea hablada del prólogo tiene su audio (faltan: %s)" % ", ".join(missing))

@@ -30,6 +30,8 @@ const BEARD_NAMES := ["Sin barba", "Barba de tres días", "Barba completa", "Big
 ## que los llevaban, 4 y 5, cargan sin accesorio.)
 const ACCESSORY_NAMES := ["Nada", "Lentes", "Lentes de sol", "Audífonos"]
 const HEIGHT_NAMES := ["Baja", "Media", "Alta"]
+## Voz del personaje en los diálogos grabados (tools/voces): 0 = la del egresado, 1 = la de la egresada.
+const VOICE_NAMES := ["Masculina", "Femenina"]
 const HEIGHT_VALUES := [0.9, 1.0, 1.08]
 ## Opcionales (sobre todo para NPCs): "height" (0,8-1,15, estatura) y
 ## "hair_streaks" (color de las canas o mechas).
@@ -48,6 +50,7 @@ static func default() -> Dictionary:
 		"hair": 1,
 		"beard": 0,
 		"accessory": 0,
+		"voice": 0,
 		"skin_tone": SKIN_TONES[3],
 		"hair_color": HAIR_COLORS[1],
 		"outfit_color": OUTFIT_COLORS[0],
@@ -69,6 +72,7 @@ static func random(rng: RandomNumberGenerator) -> Dictionary:
 		"accent_color": pick.call(ACCENT_COLORS),
 		"eye_color": pick.call(EYE_COLORS),
 		"height": HEIGHT_VALUES[rng.randi_range(0, HEIGHT_VALUES.size() - 1)],
+		"voice": rng.randi_range(0, VOICE_NAMES.size() - 1),   # al final: no cambia el azar de lo demás
 	}
 
 
@@ -81,6 +85,7 @@ static func sanitize(d: Dictionary) -> Dictionary:
 	result["beard"] = clampi(int(d.get("beard", 0)), 0, BEARD_NAMES.size() - 1)
 	var acc := int(d.get("accessory", 0))
 	result["accessory"] = acc if acc >= 0 and acc < ACCESSORY_NAMES.size() else 0
+	result["voice"] = clampi(int(d.get("voice", 0)), 0, VOICE_NAMES.size() - 1)
 	for key in ["skin_tone", "hair_color", "outfit_color", "eye_color"]:
 		var value := String(d.get(key, ""))
 		if Color.html_is_valid(value):

@@ -256,6 +256,7 @@ func _build() -> void:
 	options.add_child(_option_row("Peinado", "hair", CharacterAppearance.HAIR_NAMES))
 	options.add_child(_option_row("Barba", "beard", CharacterAppearance.BEARD_NAMES))
 	options.add_child(_option_row("Accesorio", "accessory", CharacterAppearance.ACCESSORY_NAMES))
+	options.add_child(_option_row("Voz", "voice", CharacterAppearance.VOICE_NAMES))
 	for entry in [["Tono de piel", "skin_tone", CharacterAppearance.SKIN_TONES],
 			["Color de pelo", "hair_color", CharacterAppearance.HAIR_COLORS],
 			["Color de ojos", "eye_color", CharacterAppearance.EYE_COLORS],
@@ -389,6 +390,7 @@ func _refresh_appearance() -> void:
 	_option_labels["hair"].text = CharacterAppearance.HAIR_NAMES[_appearance["hair"]]
 	_option_labels["beard"].text = CharacterAppearance.BEARD_NAMES[_appearance["beard"]]
 	_option_labels["accessory"].text = CharacterAppearance.ACCESSORY_NAMES[_appearance["accessory"]]
+	_option_labels["voice"].text = CharacterAppearance.VOICE_NAMES[_appearance["voice"]]
 	_selected_swatches.clear()
 	for key in _swatch_rows:
 		for b: Button in _swatch_rows[key]:

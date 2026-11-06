@@ -61,6 +61,9 @@ var _total := 0
 var _blip: AudioStreamPlayer
 var _voice_age := 0.0
 var _voice: Dictionary = {}
+## Id de la escena (GameData.cutscenes) y del audio grabado de la línea actual (VoiceLines).
+var _scene_id := ""
+var _line_id := ""
 var _pitch := 1.0
 var _rate := 1.0
 var _read_left := 0.0       # cuenta atrás para pasar sola a la siguiente
@@ -144,6 +147,7 @@ func _ready() -> void:
 
 func play(data: Dictionary, on_done: Callable) -> void:
 	_steps = data.get("steps", [])
+	_scene_id = String(data.get("id", ""))
 	_on_done = on_done
 	_index = -1
 	_black = 0.0
@@ -250,6 +254,10 @@ func _show_line(step: Dictionary) -> void:
 		_portrait.glitch = 0.6 if style == "phone" or npc.get("terminal", false) else 0.0
 		_portrait.expression = String(step.get("expression", ""))   # la cara de esta línea (T129)
 	_voice = npc.get("voice", {})
+	var player_voice := -1
+	if String(step.get("speaker", "")) == "player":
+		player_voice = int(CharacterAppearance.sanitize(npc.get("appearance", {})).get("voice", 0))
+	_line_id = VoiceLines.cutscene_id(_scene_id, _index, player_voice) if _scene_id != "" else ""
 	_pitch = float(npc.get("voice", {}).get("pitch", 0.7 if style == "boss" else 1.0))
 	_rate = float(npc.get("voice", {}).get("rate", 0.9 if style == "boss" else 1.0))
 	var text: String = String(step.get("text", "")).replace("{jugador}", String(speakers.get("player", {}).get("name", "tú")))
@@ -274,7 +282,16 @@ func _show_line(step: Dictionary) -> void:
 func _speak(style: String) -> void:
 	_stop_voice()
 	_cps = CHARS_PER_SECOND
-	if style == "console" or not DialogueBox.narrator_enabled():
+	if style == "console":
+		return
+	# Voz grabada (VoiceLines): el texto avanza a su ritmo y la línea espera a que acabe.
+	var length := VoiceLines.play(_line_id)
+	if length > 0.0:
+		_voice_age = 0.0
+		_narrating = true
+		_cps = maxf(CHARS_PER_SECOND * 0.4, _total / maxf(0.5, length * 0.92))
+		return
+	if not DialogueBox.narrator_enabled():
 		return
 	if not DialogueBox.speak(_text.get_parsed_text(), _pitch, _rate, _voice):
 		return   # la voz sigue con la línea anterior: esta va sin voz
@@ -285,8 +302,14 @@ func _speak(style: String) -> void:
 
 func _stop_voice() -> void:
 	if _narrating:
+		VoiceLines.stop()
 		DialogueBox.stop_speaking()
 		_narrating = false
+
+
+## ¿Sigue hablando la línea actual (grabada o con la voz del sistema)?
+func _voice_busy() -> bool:
+	return VoiceLines.is_playing() or DialogueBox.voice_busy()
 	_reposition.call_deferred()
 
 
@@ -391,7 +414,7 @@ func _process(delta: float) -> void:
 		_place(String(m["who"]), from.lerp(to, k), to - from)
 		if k >= 1.0:
 			_movers.erase(m)
-	_portrait.talking = _box.visible and (_shown < _total or (_narrating and DialogueBox.voice_busy()))
+	_portrait.talking = _box.visible and (_shown < _total or (_narrating and _voice_busy()))
 	if _box.visible and _shown < _total:
 		var before := int(_shown)
 		_shown = minf(_total, _shown + _cps * delta)
@@ -406,7 +429,7 @@ func _process(delta: float) -> void:
 	elif _input_step.is_empty() and (_dino or (_box.visible and _shown >= _total)):
 		# Lectura automática: espera a la voz (si habla) y luego el tiempo de lectura.
 		_voice_age += delta
-		if _narrating and (_voice_age < DialogueBox.VOICE_GRACE or DialogueBox.voice_busy()):
+		if _narrating and (_voice_age < DialogueBox.VOICE_GRACE or _voice_busy()):
 			_read_left = maxf(_read_left, 0.6)
 		else:
 			_narrating = false

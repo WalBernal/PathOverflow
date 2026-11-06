@@ -43,3 +43,19 @@ tono de `npcs.json`.
 
 - 2026-11-06 · Qwen3-TTS VoiceDesign (local): Aída y M. Páez aprobadas a la primera. Rafa sonaba a español de España: se pide acento del norte de México (Sinaloa) y se prueba una variante B. Egresado, egresada y Mario, más jóvenes.
 - 2026-11-06 · El usuario prefiere acento neutro, no mexicano marcado ni castellano: Rafa, egresado, egresada y Mario pasan a «Neutral Latin American Spanish accent». Rafa regenerado entero; del egresado solo las líneas 02 y 04.
+
+## Cómo se generan y llegan al juego
+
+Todo en local (Qwen3-TTS, Apache 2.0; ~8 GB en `tools/voces/modelo/`, fuera de git):
+
+1. `tools/voces/voces.json`: el reparto. Cada voz es una toma aprobada en `tools/voces/referencias/`
+   (se clona con el modelo Base y suena igual en todas sus líneas) o una descripción.
+2. `exportar_escenas.py prologo_ tools/voces/lineas_prologo.json`: saca las líneas de
+   `data/cutscenes.json` con el id del juego (`<escena>_<paso>`, y `_m`/`_f` las del jugador).
+3. `generar_qwen.py tools/voces/lineas_prologo.json tools/voces/salida_prologo`: genera los .wav.
+4. `al_juego.py tools/voces/salida_prologo`: los deja en `audio/voces/*.ogg` al mismo volumen.
+5. Godot `--import`. En el juego, `VoiceLines` los reproduce en las escenas; si una línea no
+   tiene audio, se usa la voz del sistema como antes. La voz del jugador se elige en el creador
+   («Voz: Masculina/Femenina»; los guardados viejos, masculina).
+
+Hecho: el prólogo (26 audios, 3 min 17 s, 1,4 MB).

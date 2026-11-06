@@ -233,6 +233,10 @@ func _run() -> void:
 		await _capture_unit_attacks()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("voces"):
+		await _check_prologue_voices()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("escalas"):
 		await _capture_prologue_scales()
 		get_tree().quit()
@@ -2682,6 +2686,32 @@ func _capture_tutorial_start() -> void:
 		nearest = minf(nearest, em.positions[k].distance_to(player.global_position))
 	print("tutorial: %d enemigos, el más cercano a %.0f px; vida %d/%d" % [em.count(), nearest, player.life, player.max_life()])
 	world.set("_since_save", -9999.0)
+
+
+## Voces grabadas en el prólogo de verdad: la conversación con Rafa, con voz masculina y
+## femenina; cada línea hablada debe sonar con su audio (VoiceLines) y no con la del sistema.
+func _check_prologue_voices() -> void:
+	for voice in [0, 1]:
+		var gd: Node = get_node("/root/GameData")
+		var look := CharacterAppearance.default()
+		look["voice"] = voice
+		gd.set("pending_creation", {"name": "Prueba", "appearance": look})
+		var p: Node = load("res://scenes/prologue/prologue.tscn").instantiate()
+		_swap(p)
+		await _wait(0.5)
+		p.set("_intro_chars", 99999.0)
+		p.set("_phase", "walk")
+		p.set("_fade", 0.0)
+		var cut: CutscenePlayer = p.get("_cutscene")
+		p.call("_play", "prologo_rafa", Callable())
+		for k in 4:
+			await _wait(0.4)
+			print("voces (%s) línea %s: %s · sonando %s" % [CharacterAppearance.VOICE_NAMES[voice], cut.get("_index"), cut.get("_line_id"), VoiceLines.is_playing()])
+			if k == 1:
+				_save("voces_prologo_%d" % voice)
+			cut.call("_next")
+		cut.call("_finish")
+	VoiceLines.stop()
 
 
 ## Escalas del prólogo: la calle con los autos junto al jugador y el pasillo con el
