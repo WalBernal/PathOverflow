@@ -66,10 +66,22 @@ func _initialize() -> void:
 		return "%s|%d" % [RamModule.family_of(a["id"]), int(a.get("tier", 2))] < "%s|%d" % [RamModule.family_of(b["id"]), int(b.get("tier", 2))])
 	for r in rams:
 		_ram(md, RamModule.new(r), db)
+	var old := FileAccess.get_file_as_string(OUT) if FileAccess.file_exists(OUT) else ""
 	var f := FileAccess.open(OUT, FileAccess.WRITE)
-	f.store_string("\n".join(md) + "\n")
+	f.store_string(with_manual("\n".join(md) + "\n", old))
 	print("Escrito %s (%d habilidades, %d RAM)" % [OUT, db.skills.skills.size(), rams.size()])
 	quit()
+
+
+## Lo escrito a mano al final del documento, desde la ficha de T191, no se genera: se
+## conserva tal cual al regenerar (T217). Antes se perdía la ficha entera.
+const MANUAL_FROM := "## Firmas de las habilidades (T191)"
+
+static func with_manual(generated: String, old: String) -> String:
+	var at := old.find(MANUAL_FROM)
+	if at == -1:
+		return generated
+	return generated + "\n" + old.substr(at)
 
 
 func _skill(md: PackedStringArray, s: Dictionary, p: Dictionary, unlocks: Dictionary, starters: Dictionary) -> void:

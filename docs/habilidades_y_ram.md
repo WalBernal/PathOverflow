@@ -23,7 +23,7 @@ Gira con el arma y golpea todo alrededor. Refactorización a la vieja escuela.
 Escondes una bomba en el suelo. Explota cuando un enemigo cumple la condición: acercarse. Hasta 3 a la vez.
 
 - **Etiquetas:** hechizo, área, caos, trampa, duración
-- **Cifras:** maná 9, enfriamiento 0.8 s, daño 23-37, radio 110, dura 20.0 s
+- **Cifras:** maná 9, enfriamiento 0.8 s, daño 12-20, radio 110, dura 20.0 s
 - **Estados extra:** envenenado 25 %
 - **Hito (niveles 10, 20, 30):** +1 bomba a la vez
 - **Inicial de:** Ingeniera de Prompts
@@ -47,7 +47,7 @@ while (true) { girar(); } Golpeas a tu alrededor sin parar durante unos segundos
 Cargas el suelo de electricidad estática: daño de rayo por segundo a quien lo pise y alguna electrocución. Encima de un charco de refrigerante se vuelve superconductor.
 
 - **Etiquetas:** hechizo, área, rayo, elemental, degenerativo, duración
-- **Cifras:** maná 10, daño 6-10 por segundo, radio 120, dura 5.0 s
+- **Cifras:** maná 10, daño 5-9 por segundo, radio 120, dura 5.0 s
 - **Estados extra:** electrocutado 25 %
 - **Hito (niveles 10, 20, 30):** +10 % de área
 
@@ -113,7 +113,7 @@ Todos los procesos a tu alrededor se quedan esperando a otro proceso que les esp
 Tiras el aceite del ventilador en el suelo: los enemigos resbalan y van más lentos. Si algo en llamas lo toca (un enemigo quemándose, un proyectil o una explosión de fuego), estalla y el suelo queda ardiendo.
 
 - **Etiquetas:** hechizo, área, fuego, elemental, duración
-- **Cifras:** maná 9, enfriamiento 1.0 s, daño 9-14 por segundo, radio 110, dura 7.0 s
+- **Cifras:** maná 9, enfriamiento 1.0 s, daño 5-8 por segundo, radio 110, dura 7.0 s
 - **Hito (niveles 10, 20, 30):** +10 % de área
 
 ### Despliegue Continuo
@@ -158,7 +158,7 @@ Levantas un firewall a tu alrededor: una barrera que absorbe daño antes que tu 
 Un cono de fuego delante de ti. Como un hilo de comentarios sobre tabuladores contra espacios.
 
 - **Etiquetas:** hechizo, área, fuego, elemental
-- **Cifras:** maná 8, daño 11-20, radio 210
+- **Cifras:** maná 8, daño 9-17, radio 210
 - **Estados extra:** quemado 20 %
 - **Hito (niveles 10, 20, 30):** +10 % de área
 - **Inicial de:** Desarrollador Full Stack
@@ -181,7 +181,7 @@ Cargas contra el primer enemigo hacia el cursor y lo arrollas con todo lo de alr
 Marca un punto y deja que se replique hasta explotar. :(){ :|:& };:
 
 - **Etiquetas:** hechizo, área, fuego, elemental
-- **Cifras:** maná 9, daño 13-23, radio 85
+- **Cifras:** maná 9, daño 12-20, radio 85
 - **Estados extra:** quemado 15 %
 - **Hito (niveles 10, 20, 30):** +10 % de área
 - **Inicial de:** Científico de Datos
@@ -193,7 +193,7 @@ Marca un punto y deja que se replique hasta explotar. :(){ :|:& };:
 Deja un charco de memoria sin liberar que corroe a quien lo pisa. Daño por segundo mientras estén dentro.
 
 - **Etiquetas:** hechizo, área, caos, degenerativo, duración
-- **Cifras:** maná 10, daño 9-13 por segundo, radio 115, dura 4.5 s
+- **Cifras:** maná 10, daño 6-8 por segundo, radio 115, dura 4.5 s
 - **Hito (niveles 10, 20, 30):** +10 % de área
 
 ### Fuzzing
@@ -265,6 +265,17 @@ Un rayo que atraviesa enemigos. 64 bytes de puro dolor, tiempo de respuesta: el 
 - **Hito (niveles 10, 20, 30):** +1 proyectil
 - **Inicial de:** Científico de Datos
 
+### Pipe de Datos
+
+*channel_beam* · Inteligencia (DDR5) · daño: rayo · hechizo
+
+Canalizado: mantén pulsada la tecla para abrir un flujo continuo de datos que electrocuta todo lo que cruza. Gasta maná por segundo y no te deja moverte; apunta con el cursor o el stick.
+
+- **Etiquetas:** hechizo, canalizado, rayo, elemental
+- **Cifras:** maná 9, daño 4-7
+- **Estados extra:** electrocutado 6 %
+- **Hito (niveles 10, 20, 30):** +10 % de daño
+
 ### Ransomware
 
 *maldición en área* · Inteligencia (DDR5) · daño: caos · hechizo
@@ -317,7 +328,7 @@ Lanzas tu arma y vuelve a tus manos, golpeando a la ida y a la vuelta. Como un g
 Lanza varios paquetes afilados en abanico. Algunos llegan. Es UDP.
 
 - **Etiquetas:** ataque, proyectil, físico
-- **Cifras:** maná 6, daño 2-5, 3 proyectiles
+- **Cifras:** maná 6, daño 2-6, 3 proyectiles
 - **Estados extra:** sangrando 5 %
 - **Hito (niveles 10, 20, 30):** +1 proyectil
 - **Inicial de:** Desarrolladora Frontend
@@ -345,6 +356,17 @@ Te reenvía hacia el cursor. Con confirmación de entrega, a diferencia de ese c
 - **Hito (niveles 10, 20, 30):** +10 % de daño
 - **Inicial de:** Desarrolladora Frontend
 
+### Tormenta de Tickets
+
+*channel_storm* · Inteligencia (DDR5) · daño: frío · hechizo
+
+Canalizado: mientras la mantienes, una tormenta de tickets sin resolver crece donde apuntas (hasta el triple de tamaño y el doble de daño en 3 s) y sigue al cursor. Gasta maná por segundo.
+
+- **Etiquetas:** hechizo, canalizado, área, frío, elemental
+- **Cifras:** maná 10, daño 5-9, radio 90
+- **Estados extra:** helado 10 %
+- **Hito (niveles 10, 20, 30):** +10 % de área
+
 ### Torreta de Integración Continua
 
 *proyectiles teledirigidos* · Inteligencia (DDR5) · daño: rayo · hechizo
@@ -368,6 +390,36 @@ Abres un túnel hasta el cursor y apareces al otro lado. El handshake suelta una
 - **Estados extra:** electrocutado 20 %
 - **Hito (niveles 10, 20, 30):** +10 % de área
 - **Se desbloquea con:** Ingeniera de Prompts (nv. 8), Científico de Datos (nv. 8)
+
+### ¡Daily en cinco minutos!
+
+*potenciador* · Destreza (DDR4) · daño: sin daño · hechizo
+
+Grito: la reunión diaria empieza ya y nadie quiere llegar tarde. Tú y tus invocaciones se mueven y actúan mucho más rápido.
+
+- **Etiquetas:** hechizo, potenciador, grito, duración
+- **Cifras:** maná 10, enfriamiento 16.0 s, dura 6.0 s
+- **Hito (niveles 10, 20, 30):** +1 s de duración
+
+### ¡Está en producción!
+
+*potenciador* · Fuerza (DDR3) · daño: sin daño · hechizo
+
+Grito: alguien rompió producción y todo el equipo se pone las pilas. Más daño para ti y mucho más para tus invocaciones, que además van más rápido.
+
+- **Etiquetas:** hechizo, potenciador, grito, duración
+- **Cifras:** maná 12, enfriamiento 15.0 s, dura 6.0 s
+- **Hito (niveles 10, 20, 30):** +1 s de duración
+
+### ¡Rollback!
+
+*potenciador* · Inteligencia (DDR5) · daño: sin daño · hechizo
+
+Grito: vuelta a la última versión que funcionaba. Cura a tus invocaciones y les da a todos más armadura; ellas, además, más vida.
+
+- **Etiquetas:** hechizo, potenciador, grito, defensa, duración
+- **Cifras:** maná 14, enfriamiento 18.0 s, dura 6.0 s
+- **Hito (niveles 10, 20, 30):** +1 s de duración
 
 ## Invocaciones
 
@@ -471,7 +523,7 @@ Un dron con el botiquín de IT: orbita a tu alrededor y repara cada pocos segund
 Tres drones orbitan a tu alrededor y disparan rayos en línea recta al enemigo más cercano (con Guiado por Láser, teledirigidos).
 
 - **Etiquetas:** hechizo, proyectil, rayo, elemental, duración, autómata
-- **Cifras:** maná 16, enfriamiento 6.0 s, daño 4-8, 1 proyectil, dura 10.0 s
+- **Cifras:** maná 16, enfriamiento 6.0 s, daño 3-6, 1 proyectil, dura 10.0 s
 - **Estados extra:** electrocutado 5 %
 - **Hito (niveles 10, 20, 30):** +1 dron
 - **Invoca:** 3 drones que te orbitan 10 s y disparan cada 1.0 s al enemigo más cercano
@@ -578,7 +630,7 @@ Despiertas un mainframe de los 80 con piernas. Es una sola invocación, enorme y
 Una bomba con ruedas que persigue al enemigo más cercano y explota al morir (y a veces antes). Cuando estalla, la vuelves a lanzar. Persistente.
 
 - **Etiquetas:** hechizo, esbirro, autómata, persistente, área, fuego, elemental
-- **Cifras:** reserva 10 % del maná, enfriamiento 1.0 s, daño 18-30, radio 95
+- **Cifras:** reserva 10 % del maná, enfriamiento 1.0 s, daño 11-18, radio 95
 - **Estados extra:** quemado 30 %
 - **Hito (niveles 10, 20, 30):** +25 % de daño y área de la explosión
 - **Comportamiento:** cuerpo a cuerpo: persigue al enemigo más cercano; hasta 2 a la vez; vida 55; ataca cada 1.4 s; alcance 480
@@ -592,7 +644,7 @@ Una bomba con ruedas que persigue al enemigo más cercano y explota al morir (y 
 fork() y dos procesos hijos salen a pelear por ti durante un rato. No los has documentado, pero obedecen.
 
 - **Etiquetas:** hechizo, esbirro, duración, físico, autómata
-- **Cifras:** maná 14, enfriamiento 1.0 s, daño 6-11, dura 14.0 s
+- **Cifras:** maná 14, enfriamiento 1.0 s, daño 2-4, dura 14.0 s
 - **Hito (niveles 10, 20, 30):** +1 esbirro
 - **Invoca:** 2 esbirros que duran 14 s y golpean cada 0.9 s
 - **Se desbloquea con:** Ingeniera de Prompts (nv. 16, a elegir), Científico de Datos (nv. 24)
@@ -617,7 +669,7 @@ Montas un robot centinela que te sigue y dispara láseres al enemigo más cercan
 Un perro guardián que reinicia todo lo que se cuelga: muerde a los enemigos cercanos (sangran) y salta sobre el más lejano cada pocos segundos. Persistente: reserva maná.
 
 - **Etiquetas:** hechizo, esbirro, autómata, persistente, cuerpo a cuerpo, físico
-- **Cifras:** reserva 13 % del maná, enfriamiento 1.0 s, daño 7-12
+- **Cifras:** reserva 13 % del maná, enfriamiento 1.0 s, daño 6-10
 - **Estados extra:** sangrando 20 %
 - **Hito (niveles 10, 20, 30):** +1 invocación a la vez
 - **Comportamiento:** cuerpo a cuerpo: persigue al enemigo más cercano; hasta 2 a la vez; vida 110; ataca cada 0.8 s; alcance 480
@@ -716,7 +768,7 @@ La habilidad toma la mitad de su costo de tu vida en vez del maná, y pega más 
 
 - **Efectos:** 15% más de Daño; El 50 % del costo se paga con vida; Consumo de maná ×1.00
 - **Etiquetas:** nunca con: aura, persistente
-- **Funciona con (30):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Túnel SSH
+- **Funciona con (32):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Túnel SSH
 
 ### RAM de Alto Voltaje Menor
 
@@ -726,7 +778,7 @@ Un voltio más. La garantía todavía aplica.
 
 - **Efectos:** 15% más de Daño elemental; Consumo de maná ×1.20
 - **Etiquetas:** con alguna de: hechizo; que además sea: elemental; nunca con: movimiento, potenciador
-- **Funciona con (17):** Campo de Estática, Charco de Refrigerante, Deadlock, Derrame de Aceite, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Golem GPU, Golem de Overclock, Mina Rodante, Ping Letal, Rayo de Producción, Robot Centinela, Stack Overflow, Torreta de Integración Continua
+- **Funciona con (19):** Campo de Estática, Charco de Refrigerante, Deadlock, Derrame de Aceite, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Golem GPU, Golem de Overclock, Mina Rodante, Ping Letal, Pipe de Datos, Rayo de Producción, Robot Centinela, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua
 
 ### RAM de Alto Voltaje
 
@@ -736,7 +788,7 @@ Más voltios para tus hechizos elementales. La garantía no cubre esto.
 
 - **Efectos:** 30% más de Daño elemental; Consumo de maná ×1.40
 - **Etiquetas:** con alguna de: hechizo; que además sea: elemental; nunca con: movimiento, potenciador
-- **Funciona con (17):** Campo de Estática, Charco de Refrigerante, Deadlock, Derrame de Aceite, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Golem GPU, Golem de Overclock, Mina Rodante, Ping Letal, Rayo de Producción, Robot Centinela, Stack Overflow, Torreta de Integración Continua
+- **Funciona con (19):** Campo de Estática, Charco de Refrigerante, Deadlock, Derrame de Aceite, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Golem GPU, Golem de Overclock, Mina Rodante, Ping Letal, Pipe de Datos, Rayo de Producción, Robot Centinela, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua
 
 ### RAM de Alto Voltaje Mayor
 
@@ -746,7 +798,7 @@ Voltaje de planta industrial: mucho más daño elemental de hechizos.
 
 - **Efectos:** 45% más de Daño elemental; Consumo de maná ×1.60
 - **Etiquetas:** con alguna de: hechizo; que además sea: elemental; nunca con: movimiento, potenciador
-- **Funciona con (17):** Campo de Estática, Charco de Refrigerante, Deadlock, Derrame de Aceite, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Golem GPU, Golem de Overclock, Mina Rodante, Ping Letal, Rayo de Producción, Robot Centinela, Stack Overflow, Torreta de Integración Continua
+- **Funciona con (19):** Campo de Estática, Charco de Refrigerante, Deadlock, Derrame de Aceite, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Golem GPU, Golem de Overclock, Mina Rodante, Ping Letal, Pipe de Datos, Rayo de Producción, Robot Centinela, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua
 
 ### Amplificador de Aura
 
@@ -765,8 +817,8 @@ Sube el volumen de tu aura: sus bonificaciones son mucho más potentes. Reserva 
 if (critico) lanzar_habilidad(): cada crítico de tus otras habilidades lanza esta sola hacia el enemigo más cercano (como mucho cada 0,5 s y pagando su maná; sus propios críticos no cuentan). Ya no se puede lanzar a mano. 10 % menos de daño.
 
 - **Efectos:** 10% menos de Daño; Se lanza sola con los críticos de tus otras habilidades (cada 0.5 s como mucho) (no con su tecla); Consumo de maná ×1.40
-- **Etiquetas:** nunca con: aura, persistente, movimiento
-- **Funciona con (30):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Firewall Personal, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Hiperthreading, Modo Seguro, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua
+- **Etiquetas:** nunca con: canalizado, aura, persistente, movimiento
+- **Funciona con (33):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Firewall Personal, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Hiperthreading, Modo Seguro, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, ¡Daily en cinco minutos!, ¡Está en producción!, ¡Rollback!
 
 ### Bypass de Firewall
 
@@ -786,7 +838,7 @@ Un poco más de caché: +20 % de área.
 
 - **Efectos:** 20% de aumento de Área de efecto; Consumo de maná ×1.15
 - **Etiquetas:** con alguna de: área
-- **Funciona con (27):** Agente IA, Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Deadlock, Derrame de Aceite, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem del Silicio, Mainframe Titán, Mina Rodante, Ransomware, Rayo de Producción, Reinicio Forzado, Stack Overflow, Túnel SSH
+- **Funciona con (28):** Agente IA, Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Deadlock, Derrame de Aceite, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem del Silicio, Mainframe Titán, Mina Rodante, Ransomware, Rayo de Producción, Reinicio Forzado, Stack Overflow, Tormenta de Tickets, Túnel SSH
 
 ### Caché L3 Ampliada
 
@@ -796,7 +848,7 @@ Más espacio para todo. Sobre todo para explosiones.
 
 - **Efectos:** 40% de aumento de Área de efecto; Consumo de maná ×1.30
 - **Etiquetas:** con alguna de: área
-- **Funciona con (27):** Agente IA, Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Deadlock, Derrame de Aceite, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem del Silicio, Mainframe Titán, Mina Rodante, Ransomware, Rayo de Producción, Reinicio Forzado, Stack Overflow, Túnel SSH
+- **Funciona con (28):** Agente IA, Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Deadlock, Derrame de Aceite, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem del Silicio, Mainframe Titán, Mina Rodante, Ransomware, Rayo de Producción, Reinicio Forzado, Stack Overflow, Tormenta de Tickets, Túnel SSH
 
 ### Caché L3 Masiva
 
@@ -806,7 +858,7 @@ Caché de servidor: +65 % de área.
 
 - **Efectos:** 65% de aumento de Área de efecto; Consumo de maná ×1.45
 - **Etiquetas:** con alguna de: área
-- **Funciona con (27):** Agente IA, Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Deadlock, Derrame de Aceite, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem del Silicio, Mainframe Titán, Mina Rodante, Ransomware, Rayo de Producción, Reinicio Forzado, Stack Overflow, Túnel SSH
+- **Funciona con (28):** Agente IA, Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Deadlock, Derrame de Aceite, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem del Silicio, Mainframe Titán, Mina Rodante, Ransomware, Rayo de Producción, Reinicio Forzado, Stack Overflow, Tormenta de Tickets, Túnel SSH
 
 ### Callback onKill()
 
@@ -815,8 +867,8 @@ Caché de servidor: +65 % de área.
 onKill(() => lanzar_habilidad()): cada vez que matas a un enemigo con otra habilidad, esta se lanza sola hacia el más cercano (como mucho cada 0,4 s y pagando su maná; lo que mata ella no cuenta). Ya no se puede lanzar a mano. 10 % menos de daño.
 
 - **Efectos:** 10% menos de Daño; Se lanza sola al matar con otra habilidad (cada 0.4 s como mucho) (no con su tecla); Consumo de maná ×1.40
-- **Etiquetas:** nunca con: aura, persistente, movimiento
-- **Funciona con (30):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Firewall Personal, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Hiperthreading, Modo Seguro, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua
+- **Etiquetas:** nunca con: canalizado, aura, persistente, movimiento
+- **Funciona con (33):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Firewall Personal, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Hiperthreading, Modo Seguro, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, ¡Daily en cinco minutos!, ¡Está en producción!, ¡Rollback!
 
 ### Carcasa Reforzada
 
@@ -836,7 +888,17 @@ Chapa de servidor atornillada a tus esbirros: mucha más vida y algo más de da�
 
 - **Efectos:** 50% más de Daño; 10% de aumento de Velocidad de ataque; 10% de aumento de Velocidad de lanzamiento; Desventaja fuerte: piensa bien dónde la instalas; Consumo de maná ×2.00
 - **Etiquetas:** nunca con: aura, persistente
-- **Funciona con (30):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Túnel SSH
+- **Funciona con (32):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Túnel SSH
+
+### Contenedor Docker
+
+*DDR4* · grado normal · cae desde el nivel 1
+
+Empaquetas la habilidad en un contenedor que se queda corriendo donde lo pongas y la lanza sola contra el enemigo más cercano. No caduca: reserva maná mientras siga en pie; relanzarla lo mueve.
+
+- **Efectos:** 35% menos de Daño; La usa un contenedor que no caduca contra el enemigo más cercano (1 por habilidad); Reserva un 20 % del maná mientras siga en pie; Consumo de maná ×1.00
+- **Etiquetas:** nunca con: canalizado, movimiento, trampa, mina, tótem, esbirro, potenciador, aura, persistente, autómata
+- **Funciona con (23):** Barrido, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Paquete Rastreador, Ping Letal, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow
 
 ### Corrupción de Datos
 
@@ -846,7 +908,7 @@ Convierte el daño elemental (fuego, frío o rayo) de la habilidad en daño de c
 
 - **Efectos:** Convierte el daño de fuego o de frío o de rayo en daño de caos (le afectan los aumentos de ambos); Consumo de maná ×1.20
 - **Etiquetas:** cualquier habilidad
-- **Funciona con (20):** Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Deadlock, Derrame de Aceite, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Git Revert, Golem GPU, Golem de Overclock, Mina Rodante, Ping Letal, Rayo de Producción, Robot Centinela, Stack Overflow, Torreta de Integración Continua, Túnel SSH
+- **Funciona con (22):** Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Deadlock, Derrame de Aceite, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Git Revert, Golem GPU, Golem de Overclock, Mina Rodante, Ping Letal, Pipe de Datos, Rayo de Producción, Robot Centinela, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Túnel SSH
 
 ### Cron Job
 
@@ -855,8 +917,8 @@ Convierte el daño elemental (fuego, frío o rayo) de la habilidad en daño de c
 */2 * * * * lanzar_habilidad: cada 2 s, si hay un enemigo cerca, la habilidad se lanza sola hacia el más cercano (pagando su maná). Ya no se puede lanzar a mano. 20 % menos de daño.
 
 - **Efectos:** 20% menos de Daño; Se lanza sola cada 2.0 s si hay un enemigo cerca (no con su tecla); Consumo de maná ×1.30
-- **Etiquetas:** nunca con: aura, persistente, movimiento
-- **Funciona con (30):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Firewall Personal, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Hiperthreading, Modo Seguro, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua
+- **Etiquetas:** nunca con: canalizado, aura, persistente, movimiento
+- **Funciona con (33):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Firewall Personal, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Hiperthreading, Modo Seguro, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, ¡Daily en cinco minutos!, ¡Está en producción!, ¡Rollback!
 
 ### Detonador de Mina
 
@@ -865,7 +927,7 @@ Convierte el daño elemental (fuego, frío o rayo) de la habilidad en daño de c
 Entierras una mina casi invisible que tarda en armarse, pero ejecuta la habilidad con más fuerza al pasar un enemigo. Hasta 5 a la vez.
 
 - **Efectos:** 20% más de Daño; Se entierra como mina: tarda en armarse, se activa al pasar un enemigo (máx. 5); Consumo de maná ×1.35
-- **Etiquetas:** nunca con: movimiento, trampa, mina, tótem, esbirro, potenciador, aura, persistente, autómata
+- **Etiquetas:** nunca con: canalizado, movimiento, trampa, mina, tótem, esbirro, potenciador, aura, persistente, autómata
 - **Funciona con (23):** Barrido, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Paquete Rastreador, Ping Letal, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow
 
 ### Disipador de Calor
@@ -876,7 +938,7 @@ Concentra la potencia en menos espacio. Como meter todo el backend en un solo ar
 
 - **Efectos:** 30% más de Daño; 25% menos de área; Consumo de maná ×1.40
 - **Etiquetas:** con alguna de: área
-- **Funciona con (27):** Agente IA, Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Deadlock, Derrame de Aceite, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem del Silicio, Mainframe Titán, Mina Rodante, Ransomware, Rayo de Producción, Reinicio Forzado, Stack Overflow, Túnel SSH
+- **Funciona con (28):** Agente IA, Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Deadlock, Derrame de Aceite, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem del Silicio, Mainframe Titán, Mina Rodante, Ransomware, Rayo de Producción, Reinicio Forzado, Stack Overflow, Tormenta de Tickets, Túnel SSH
 
 ### Disparador de Trampa
 
@@ -885,7 +947,7 @@ Concentra la potencia en menos espacio. Como meter todo el backend en un solo ar
 La habilidad ya no se lanza: tiras una trampa que la ejecuta cuando un enemigo pasa cerca. Hasta 3 a la vez.
 
 - **Efectos:** 10% más de Daño; Se lanza como trampa: se activa al acercarse un enemigo (máx. 3); Consumo de maná ×1.30
-- **Etiquetas:** nunca con: movimiento, trampa, mina, tótem, esbirro, potenciador, aura, persistente, autómata
+- **Etiquetas:** nunca con: canalizado, movimiento, trampa, mina, tótem, esbirro, potenciador, aura, persistente, autómata
 - **Funciona con (23):** Barrido, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Paquete Rastreador, Ping Letal, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow
 
 ### RAM ECC Menor
@@ -896,7 +958,7 @@ Corrige errores de memoria... algunos. Un poco más de crítico.
 
 - **Efectos:** 30% de aumento de Probabilidad de crítico; +10% de Multiplicador de crítico; Consumo de maná ×1.10
 - **Etiquetas:** nunca con: movimiento, potenciador, degenerativo
-- **Funciona con (37):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Cascada de Estilos, Core Dump, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (39):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Cascada de Estilos, Core Dump, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### RAM ECC
 
@@ -906,7 +968,7 @@ Corrige errores de memoria. Y provoca errores críticos en tus enemigos.
 
 - **Efectos:** 60% de aumento de Probabilidad de crítico; +20% de Multiplicador de crítico; Consumo de maná ×1.20
 - **Etiquetas:** nunca con: movimiento, potenciador, degenerativo
-- **Funciona con (37):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Cascada de Estilos, Core Dump, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (39):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Cascada de Estilos, Core Dump, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### RAM ECC Mayor
 
@@ -916,7 +978,7 @@ Corrección de errores de grado servidor: muchísimo más crítico.
 
 - **Efectos:** 96% de aumento de Probabilidad de crítico; +32% de Multiplicador de crítico; Consumo de maná ×1.35
 - **Etiquetas:** nunca con: movimiento, potenciador, degenerativo
-- **Funciona con (37):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Cascada de Estilos, Core Dump, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (39):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Cascada de Estilos, Core Dump, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Enlace de Aura
 
@@ -936,7 +998,7 @@ Si el enemigo ya tiene un estado (quemado, helado, envenenado...), le haces much
 
 - **Efectos:** 30% más de Daño contra enemigos con estados alterados; Consumo de maná ×1.30
 - **Etiquetas:** nunca con: movimiento, potenciador
-- **Funciona con (42):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (44):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Firmware Autónomo
 
@@ -966,7 +1028,7 @@ Rompe en sectores: hace sangrar. Versión de primer despliegue: poca probabilida
 
 - **Efectos:** +15% de Probabilidad de hacer sangrar; 2% más de Daño físico; Consumo de maná ×1.10
 - **Etiquetas:** nunca con: movimiento, potenciador
-- **Funciona con (42):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (44):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Fragmentación de Disco
 
@@ -976,7 +1038,7 @@ Rompes a los enemigos en sectores dispersos. Sangran, y el doble si intentan hui
 
 - **Efectos:** +30% de Probabilidad de hacer sangrar; 5% más de Daño físico; Consumo de maná ×1.25
 - **Etiquetas:** nunca con: movimiento, potenciador
-- **Funciona con (42):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (44):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Fragmentación de Disco Mayor
 
@@ -986,7 +1048,7 @@ Rompe en sectores: hace sangrar. Versión de servidor de producción: mucha prob
 
 - **Efectos:** +45% de Probabilidad de hacer sangrar; 7% más de Daño físico; Consumo de maná ×1.40
 - **Etiquetas:** nunca con: movimiento, potenciador
-- **Funciona con (42):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (44):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Algoritmo de Fuerza Bruta
 
@@ -1006,7 +1068,7 @@ Un store centralizado para tus estados alterados: duran más y hacen más daño.
 
 - **Efectos:** 30% más de Daño y efecto de estados alterados; 30% de aumento de Duración de estados alterados; Consumo de maná ×1.30
 - **Etiquetas:** nunca con: movimiento, potenciador
-- **Funciona con (42):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (44):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Gestor de Memoria Eficiente
 
@@ -1045,8 +1107,8 @@ Teledirigido y además más rápido: +15 % de velocidad de proyectiles.
 Un hook que corre antes de cada git stash: al esquivar, la habilidad se lanza sola hacia el enemigo más cercano (como mucho cada 0,6 s y pagando su maná). Ya no se puede lanzar a mano.
 
 - **Efectos:** Se lanza sola al esquivar (cada 0.6 s como mucho) (no con su tecla); Consumo de maná ×1.30
-- **Etiquetas:** nunca con: aura, persistente, movimiento
-- **Funciona con (30):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Firewall Personal, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Hiperthreading, Modo Seguro, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua
+- **Etiquetas:** nunca con: canalizado, aura, persistente, movimiento
+- **Funciona con (33):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Firewall Personal, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Hiperthreading, Modo Seguro, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, ¡Daily en cinco minutos!, ¡Está en producción!, ¡Rollback!
 
 ### Hotfix en Caliente
 
@@ -1056,7 +1118,7 @@ Todo el costo se paga con vida: nada de maná. A cambio, 35 % más de daño. Par
 
 - **Efectos:** 35% más de Daño; El 100 % del costo se paga con vida; Consumo de maná ×1.20
 - **Etiquetas:** nunca con: aura, persistente
-- **Funciona con (30):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Túnel SSH
+- **Funciona con (32):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Túnel SSH
 
 ### Inyección de Malware Menor
 
@@ -1066,7 +1128,7 @@ Instala un regalito: envenena. Versión de primer despliegue: poca probabilidad.
 
 - **Efectos:** +15% de Probabilidad de envenenar; 7% de aumento de Daño y efecto de estados alterados; Consumo de maná ×1.10
 - **Etiquetas:** nunca con: movimiento, potenciador
-- **Funciona con (42):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (44):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Inyección de Malware
 
@@ -1076,7 +1138,7 @@ Cada golpe instala un pequeño regalo. El veneno se acumula hasta 10 veces.
 
 - **Efectos:** +30% de Probabilidad de envenenar; 15% de aumento de Daño y efecto de estados alterados; Consumo de maná ×1.30
 - **Etiquetas:** nunca con: movimiento, potenciador
-- **Funciona con (42):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (44):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Inyección de Malware Mayor
 
@@ -1086,7 +1148,7 @@ Instala un regalito: envenena. Versión de servidor de producción: mucha probab
 
 - **Efectos:** +45% de Probabilidad de envenenar; 22% de aumento de Daño y efecto de estados alterados; Consumo de maná ×1.40
 - **Etiquetas:** nunca con: movimiento, potenciador
-- **Funciona con (42):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (44):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Manejador de Excepciones
 
@@ -1095,8 +1157,8 @@ Instala un regalito: envenena. Versión de servidor de producción: mucha probab
 try { recibir_golpe() } catch { lanzar_habilidad() }: al recibir un golpe, la habilidad se lanza sola hacia el enemigo más cercano (como mucho cada 0,8 s y pagando su maná). Ya no se puede lanzar a mano. 15 % menos de daño.
 
 - **Efectos:** 15% menos de Daño; Se lanza sola al recibir un golpe (cada 0.8 s como mucho) (no con su tecla); Consumo de maná ×1.30
-- **Etiquetas:** nunca con: aura, persistente, movimiento
-- **Funciona con (30):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Firewall Personal, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Hiperthreading, Modo Seguro, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua
+- **Etiquetas:** nunca con: canalizado, aura, persistente, movimiento
+- **Funciona con (33):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Firewall Personal, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Hiperthreading, Modo Seguro, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, ¡Daily en cinco minutos!, ¡Está en producción!, ¡Rollback!
 
 ### Memoria sin ECC
 
@@ -1106,7 +1168,7 @@ try { recibir_golpe() } catch { lanzar_habilidad() }: al recibir un golpe, la ha
 
 - **Efectos:** 70% más de Daño; 100% menos de Probabilidad de crítico; Desventaja fuerte: piensa bien dónde la instalas; Consumo de maná ×1.20
 - **Etiquetas:** nunca con: aura, persistente
-- **Funciona con (30):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Túnel SSH
+- **Funciona con (32):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Túnel SSH
 
 ### RAM Multicanal Menor
 
@@ -1156,7 +1218,7 @@ Un pequeño empujón: 10 % más de velocidad de ataque y de lanzamiento.
 
 - **Efectos:** 10% más de Velocidad de ataque; 10% más de Velocidad de lanzamiento; Consumo de maná ×1.15
 - **Etiquetas:** nunca con: aura
-- **Funciona con (51):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Cortafuegos, Dron Escolta, Dron de Mantenimiento, Drones de Vigilancia, Excepción en Cadena, Firewall Personal, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Hiperthreading, Mainframe Titán, Mina Rodante, Modo Seguro, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Teletransporte TCP, Torreta de Integración Continua, Túnel SSH, Watchdog
+- **Funciona con (56):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Cortafuegos, Dron Escolta, Dron de Mantenimiento, Drones de Vigilancia, Excepción en Cadena, Firewall Personal, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Hiperthreading, Mainframe Titán, Mina Rodante, Modo Seguro, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Teletransporte TCP, Tormenta de Tickets, Torreta de Integración Continua, Túnel SSH, Watchdog, ¡Daily en cinco minutos!, ¡Está en producción!, ¡Rollback!
 
 ### RAM con Overclock
 
@@ -1166,7 +1228,7 @@ Más rápido. Más caliente. Más caro. Lo de siempre.
 
 - **Efectos:** 20% más de Velocidad de ataque; 20% más de Velocidad de lanzamiento; Consumo de maná ×1.30
 - **Etiquetas:** nunca con: aura
-- **Funciona con (51):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Cortafuegos, Dron Escolta, Dron de Mantenimiento, Drones de Vigilancia, Excepción en Cadena, Firewall Personal, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Hiperthreading, Mainframe Titán, Mina Rodante, Modo Seguro, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Teletransporte TCP, Torreta de Integración Continua, Túnel SSH, Watchdog
+- **Funciona con (56):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Cortafuegos, Dron Escolta, Dron de Mantenimiento, Drones de Vigilancia, Excepción en Cadena, Firewall Personal, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Hiperthreading, Mainframe Titán, Mina Rodante, Modo Seguro, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Teletransporte TCP, Tormenta de Tickets, Torreta de Integración Continua, Túnel SSH, Watchdog, ¡Daily en cinco minutos!, ¡Está en producción!, ¡Rollback!
 
 ### RAM con Overclock Extremo
 
@@ -1176,7 +1238,7 @@ Voltaje al límite: 32 % más de velocidad de ataque y de lanzamiento.
 
 - **Efectos:** 32% más de Velocidad de ataque; 32% más de Velocidad de lanzamiento; Consumo de maná ×1.50
 - **Etiquetas:** nunca con: aura
-- **Funciona con (51):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Cortafuegos, Dron Escolta, Dron de Mantenimiento, Drones de Vigilancia, Excepción en Cadena, Firewall Personal, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Hiperthreading, Mainframe Titán, Mina Rodante, Modo Seguro, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Teletransporte TCP, Torreta de Integración Continua, Túnel SSH, Watchdog
+- **Funciona con (56):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Cortafuegos, Dron Escolta, Dron de Mantenimiento, Drones de Vigilancia, Excepción en Cadena, Firewall Personal, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Hiperthreading, Mainframe Titán, Mina Rodante, Modo Seguro, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Teletransporte TCP, Tormenta de Tickets, Torreta de Integración Continua, Túnel SSH, Watchdog, ¡Daily en cinco minutos!, ¡Está en producción!, ¡Rollback!
 
 ### Pasta Térmica Menor
 
@@ -1186,7 +1248,7 @@ Cada golpe tiene probabilidad de prender fuego. Versión de primer despliegue: p
 
 - **Efectos:** +15% de Probabilidad de quemar; 5% más de Daño de fuego; Consumo de maná ×1.10
 - **Etiquetas:** nunca con: movimiento, potenciador
-- **Funciona con (42):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (44):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Pasta Térmica Caducada
 
@@ -1196,7 +1258,7 @@ Ya no disipa nada: todo lo que tocas sale ardiendo. Probabilidad de quemar y alg
 
 - **Efectos:** +30% de Probabilidad de quemar; 10% más de Daño de fuego; Consumo de maná ×1.25
 - **Etiquetas:** nunca con: movimiento, potenciador
-- **Funciona con (42):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (44):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Pasta Térmica Mayor
 
@@ -1206,7 +1268,7 @@ Cada golpe tiene probabilidad de prender fuego. Versión de servidor de producci
 
 - **Efectos:** +45% de Probabilidad de quemar; 15% más de Daño de fuego; Consumo de maná ×1.40
 - **Etiquetas:** nunca con: movimiento, potenciador
-- **Funciona con (42):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (44):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Pico de Overclock
 
@@ -1216,7 +1278,7 @@ Al usar la habilidad gasta todas tus cargas de Overclock: si había al menos una
 
 - **Efectos:** Gasta tus cargas de Overclock: crítico seguro y +20 % de multiplicador de crítico por carga; Consumo de maná ×1.10
 - **Etiquetas:** nunca con: aura, persistente
-- **Funciona con (29):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Túnel SSH
+- **Funciona con (31):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Túnel SSH
 
 ### Pipeline Menor
 
@@ -1226,7 +1288,7 @@ Repite la habilidad una vez con más penalización (en invocaciones, atacan el d
 
 - **Efectos:** 40% menos de Daño; La habilidad se repite 1 vez más; Consumo de maná ×1.40
 - **Etiquetas:** nunca con: movimiento, potenciador, aura
-- **Funciona con (44):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Cortafuegos, Dron Escolta, Dron de Mantenimiento, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (46):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Cortafuegos, Dron Escolta, Dron de Mantenimiento, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Ejecución en Pipeline
 
@@ -1236,7 +1298,7 @@ Lanza la habilidad dos veces seguidas. En invocaciones, drones y esbirros, ataca
 
 - **Efectos:** 30% menos de Daño; La habilidad se repite 1 vez más; Consumo de maná ×1.50
 - **Etiquetas:** nunca con: movimiento, potenciador, aura
-- **Funciona con (44):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Cortafuegos, Dron Escolta, Dron de Mantenimiento, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (46):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Cortafuegos, Dron Escolta, Dron de Mantenimiento, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Pipeline Superescalar
 
@@ -1246,7 +1308,7 @@ Repite la habilidad dos veces más con la mitad de daño (en invocaciones, ataca
 
 - **Efectos:** 50% menos de Daño; La habilidad se repite 2 vez más; Consumo de maná ×1.80
 - **Etiquetas:** nunca con: movimiento, potenciador, aura
-- **Funciona con (44):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Cortafuegos, Dron Escolta, Dron de Mantenimiento, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (46):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Cortafuegos, Dron Escolta, Dron de Mantenimiento, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Propagación de Excepciones Menor
 
@@ -1326,7 +1388,7 @@ Al usar la habilidad gasta todas tus cargas de Multihilos: 15 % más de daño po
 
 - **Efectos:** Gasta tus cargas de Multihilos: 15 % más de daño por carga; Consumo de maná ×1.10
 - **Etiquetas:** nunca con: aura, persistente
-- **Funciona con (29):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Túnel SSH
+- **Funciona con (31):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Túnel SSH
 
 ### Redundancia de Invocaciones
 
@@ -1346,7 +1408,7 @@ Gotea refrigerante: hiela. Versión de primer despliegue: poca probabilidad.
 
 - **Efectos:** +15% de Probabilidad de helar; +4% de Probabilidad de congelar; Consumo de maná ×1.10
 - **Etiquetas:** nunca con: movimiento, potenciador
-- **Funciona con (42):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (44):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Refrigeración Líquida con Fugas
 
@@ -1356,7 +1418,7 @@ Gotea refrigerante sobre los enemigos: los hiela y, a veces, los congela del tod
 
 - **Efectos:** +30% de Probabilidad de helar; +10% de Probabilidad de congelar; Consumo de maná ×1.25
 - **Etiquetas:** nunca con: movimiento, potenciador
-- **Funciona con (42):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (44):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Refrigeración Líquida Mayor
 
@@ -1366,7 +1428,7 @@ Gotea refrigerante: hiela. Versión de servidor de producción: mucha probabilid
 
 - **Efectos:** +45% de Probabilidad de helar; +16% de Probabilidad de congelar; Consumo de maná ×1.40
 - **Etiquetas:** nunca con: movimiento, potenciador
-- **Funciona con (42):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (44):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Sensor de Precisión
 
@@ -1385,7 +1447,7 @@ Calibra a tus autómatas: más probabilidad de crítico y de multiplicador.
 Despliega una torreta que usa la habilidad sola contra el enemigo más cercano durante 8 segundos.
 
 - **Efectos:** 25% menos de Daño; La usa una torreta durante 8 s contra el enemigo más cercano; Consumo de maná ×1.50
-- **Etiquetas:** nunca con: movimiento, trampa, mina, tótem, esbirro, potenciador, aura, persistente, autómata
+- **Etiquetas:** nunca con: canalizado, movimiento, trampa, mina, tótem, esbirro, potenciador, aura, persistente, autómata
 - **Funciona con (23):** Barrido, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Paquete Rastreador, Ping Letal, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow
 
 ### Fuente Sobrealimentada
@@ -1416,7 +1478,7 @@ Convierte el daño de frío o de rayo de la habilidad en daño de fuego. Escala 
 
 - **Efectos:** Convierte el daño de frío o de rayo en daño de fuego (le afectan los aumentos de ambos); Consumo de maná ×1.15
 - **Etiquetas:** cualquier habilidad
-- **Funciona con (14):** Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Deadlock, Drones de Vigilancia, Excepción en Cadena, Git Revert, Golem GPU, Ping Letal, Rayo de Producción, Robot Centinela, Stack Overflow, Torreta de Integración Continua, Túnel SSH
+- **Funciona con (16):** Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Deadlock, Drones de Vigilancia, Excepción en Cadena, Git Revert, Golem GPU, Ping Letal, Pipe de Datos, Rayo de Producción, Robot Centinela, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Túnel SSH
 
 ### Sobretensión Menor
 
@@ -1426,7 +1488,7 @@ Picos de voltaje: electrocuta. Versión de primer despliegue: poca probabilidad.
 
 - **Efectos:** +15% de Probabilidad de electrocutar; 7% de aumento de Daño de rayo; Consumo de maná ×1.10
 - **Etiquetas:** nunca con: movimiento, potenciador
-- **Funciona con (42):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (44):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Módulo de Sobretensión
 
@@ -1436,7 +1498,7 @@ Picos de voltaje en cada golpe. Los enemigos electrocutados reciben más daño d
 
 - **Efectos:** +30% de Probabilidad de electrocutar; 15% de aumento de Daño de rayo; Consumo de maná ×1.25
 - **Etiquetas:** nunca con: movimiento, potenciador
-- **Funciona con (42):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (44):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Sobretensión Mayor
 
@@ -1446,7 +1508,7 @@ Picos de voltaje: electrocuta. Versión de servidor de producción: mucha probab
 
 - **Efectos:** +45% de Probabilidad de electrocutar; 22% de aumento de Daño de rayo; Consumo de maná ×1.40
 - **Etiquetas:** nunca con: movimiento, potenciador
-- **Funciona con (42):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (44):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Memoria Swap Vampírica Menor
 
@@ -1456,7 +1518,7 @@ Un mordisco de vida del disco ajeno.
 
 - **Efectos:** +2% de Robo de vida; Consumo de maná ×1.10
 - **Etiquetas:** nunca con: movimiento, potenciador
-- **Funciona con (42):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (44):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Memoria Swap Vampírica
 
@@ -1466,7 +1528,7 @@ Toma prestada vida del disco duro ajeno. Sin devolverla, claro.
 
 - **Efectos:** +3% de Robo de vida; Consumo de maná ×1.20
 - **Etiquetas:** nunca con: movimiento, potenciador
-- **Funciona con (42):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (44):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Memoria Swap Vampírica Mayor
 
@@ -1476,7 +1538,7 @@ Se alimenta del disco entero: mucho robo de vida.
 
 - **Efectos:** +6% de Robo de vida; Consumo de maná ×1.30
 - **Etiquetas:** nunca con: movimiento, potenciador
-- **Funciona con (42):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Watchdog
+- **Funciona con (44):** Agente IA, Barrido, Bomba Lógica, Bot Rastreador de Bugs, Bot de Pruebas, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Daemon en Segundo Plano, Deadlock, Derrame de Aceite, Despliegue Continuo, Dron Escolta, Drones de Vigilancia, Excepción en Cadena, Flamewar, Fork Bomb, Fuga de Memoria, Fuzzing, Golem GPU, Golem UTP, Golem de Hardware Reciclado, Golem de Kernel, Golem de Overclock, Golem del Silicio, Mainframe Titán, Mina Rodante, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Robot Centinela, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Watchdog
 
 ### Torre de Señal
 
@@ -1506,7 +1568,7 @@ Convierte el daño físico de la habilidad en daño de rayo. Le siguen afectando
 
 - **Efectos:** 60% más de Daño; 30% menos de Velocidad de ataque; 30% menos de Velocidad de lanzamiento; Desventaja fuerte: piensa bien dónde la instalas; Consumo de maná ×1.20
 - **Etiquetas:** nunca con: aura, persistente
-- **Funciona con (30):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Túnel SSH
+- **Funciona con (32):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Core Dump, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Túnel SSH
 
 ### Volcado de Buffer
 
@@ -1516,7 +1578,8 @@ Al usar la habilidad gasta todas tus cargas de Buffer: te cura un 6 % de vida y 
 
 - **Efectos:** Gasta tus cargas de Buffer: 6 % de vida y 10 % más de daño por carga; Consumo de maná ×1.10
 - **Etiquetas:** nunca con: aura, persistente
-- **Funciona con (29):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Paquete Rastreador, Ping Letal, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Torreta de Integración Continua, Túnel SSH
+- **Funciona con (31):** Barrido, Bomba Lógica, Bucle Infinito, Campo de Estática, Cascada de Estilos, Charco de Refrigerante, Corrupción de Datos, Deadlock, Derrame de Aceite, Despliegue Continuo, Drones de Vigilancia, Excepción en Cadena, Flamewar, Force Push, Fork Bomb, Fuga de Memoria, Fuzzing, Git Revert, Paquete Rastreador, Ping Letal, Pipe de Datos, Proceso Hijo, Ransomware, Rayo de Producción, Reinicio Forzado, Rollback, Ráfaga de Paquetes, Stack Overflow, Tormenta de Tickets, Torreta de Integración Continua, Túnel SSH
+
 
 ## Firmas de las habilidades (T191)
 

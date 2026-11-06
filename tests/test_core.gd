@@ -251,6 +251,7 @@ func _initialize() -> void:
 	_test_inventory_quick()
 	_test_variant_signals()
 	_test_skill_sound_logic()
+	_test_list_skills_keeps_manual()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -9384,3 +9385,12 @@ func _test_skill_sound_logic() -> void:
 		and is_equal_approx(SkillController.loop_pitch(5), 1.0) and is_equal_approx(SkillController.loop_pitch(1), pow(2.0, 1.0 / 12.0)),
 		"Bucle Infinito: un semitono más por vuelta hasta cuatro y vuelve a empezar")
 	_check(SkillController.test_verdict(0.1) == "PASS" and SkillController.test_verdict(0.95) == "FAIL", "Bot de Pruebas: PASS o FAIL según la tirada")
+
+## T217: regenerar docs/habilidades_y_ram.md conserva la ficha escrita a mano de T191.
+func _test_list_skills_keeps_manual() -> void:
+	var tool: GDScript = load("res://tools/list_skills.gd")
+	var manual := "%s\n\n| id | ... |\n" % tool.MANUAL_FROM
+	var out: String = tool.with_manual("# Generado\n", "# Viejo\n\n" + manual)
+	_check(out.begins_with("# Generado") and out.ends_with(manual) and not out.contains("# Viejo"), "la ficha se conserva y lo generado se renueva")
+	_check(tool.with_manual("# Generado\n", "# Sin ficha\n") == "# Generado\n", "sin ficha, solo lo generado")
+	_check(FileAccess.get_file_as_string("res://docs/habilidades_y_ram.md").contains(tool.MANUAL_FROM), "la ficha de T191 sigue en el documento")
