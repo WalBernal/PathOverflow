@@ -90,6 +90,7 @@
         1400
       ],
       "safe": true,
+      "training_dummy": [420, 1000],
       "entries": {
         "from_tutorial": [
           190,

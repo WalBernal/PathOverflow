@@ -12,6 +12,9 @@ const STACK_WINDOW := 0.35
 const STACK_WINDOW_TOUCH := 0.7
 const TOUCH_SIZE := 1.35
 const MAX_NUMBERS := 60
+## Una cifra que no deja de apilarse (el muñeco de prácticas, T212) se queda en lo alto
+## de su salto en vez de seguir cayendo (la parábola de offset_at tiene su cima ahí).
+const STACK_PEAK := 0.58
 ## Pausa → Interfaz (T152): «todos», «criticos» (solo los críticos) o «no». Lo guardado
 ## antes como sí/no vale igual.
 const MODES := ["todos", "criticos", "no"]
@@ -106,7 +109,7 @@ func _draw() -> void:
 		var side := 1.0 if int(n["id"]) % 2 == 0 else -1.0
 		var s := scale_at(age, n["crit"], n["stack"], still)
 		var size := Accessibility.world_size(roundi(15.0 * s * (TOUCH_SIZE if Touch.shown() else 1.0)))
-		var p: Vector2 = n["pos"] + Vector2(0, -34) + offset_at(_time - float(n["born"]), side, still)
+		var p: Vector2 = n["pos"] + Vector2(0, -34) + offset_at(minf(_time - float(n["born"]), STACK_PEAK), side, still)
 		var text := label(n["amount"]) + ("!" if n["crit"] else "")
 		var color := Color("ffd84a") if n["crit"] else Color("f2ece0")
 		color.a = alpha_at(age)

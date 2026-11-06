@@ -84,6 +84,7 @@
         1400
       ],
       "safe": true,
+      "training_dummy": [1560, 1180],
       "entries": {
         "from_brecha": [
           190,

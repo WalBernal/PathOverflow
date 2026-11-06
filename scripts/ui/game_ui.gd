@@ -61,6 +61,9 @@ static var ui_relayouts := 0
 var _waypoint_panel: WaypointPanel
 var _zone_banner: Label
 var event_log: EventLog
+## Cifras del muñeco de prácticas del campamento (T212).
+var training_panel: TrainingPanel
+const TRAINING_PANEL_Y := 56.0
 var _act_banner: PanelContainer
 var _pause_panel: Control
 var _root: Control
@@ -271,6 +274,15 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	event_log = EventLog.new()   # registro de sucesos, a la izquierda (T128)
 	event_log.position = Vector2(14, EVENT_LOG_Y)
 	_root.add_child(event_log)
+
+	training_panel = TrainingPanel.new()   # muñeco de prácticas (T212): arriba al centro
+	training_panel.visible = false
+	_root.add_child(training_panel)
+	training_panel.anchor_left = 0.5
+	training_panel.anchor_right = 0.5
+	training_panel.offset_left = -TrainingPanel.WIDTH * 0.5
+	training_panel.offset_right = TrainingPanel.WIDTH * 0.5
+	training_panel.offset_top = TRAINING_PANEL_Y
 
 	_act_banner = _build_act_banner()
 	_root.add_child(_act_banner)
@@ -1199,8 +1211,25 @@ func _update_minimap() -> void:
 	quest_tracker.max_height = QuestTracker.room(tracker_rect, hud.touch_obstacles()) if quest_tracker.compact else INF
 	if quest_tracker.max_height < QuestTracker.FOLDED_MIN:
 		quest_tracker.visible = false   # ni plegado cabe (botones muy grandes): los botones mandan
-	if event_log:   # el registro de sucesos, igual: fuera si una ventana se le encima (T128)
-		event_log.visible = not tree_screen.visible and not cutscene.visible and not _overlaps_any(_rect_in_root(event_log), windows)
+	if training_panel:   # el del muñeco (T212): cerca de él y sin nada encima
+		var show := training_panel.wanted and training_panel.dummy != null and not tree_screen.visible \
+			and not cutscene.visible and not get_tree().paused
+		if show:   # (lejos del muñeco, sin medir nada: es cada fotograma)
+			var panel_rect := _place_training_panel()
+			var others := windows.duplicate()
+			for w: Control in [inventory_panel, tips, dialogue_box, quest_tracker, minimap, touch_buttons]:
+				if w != null and w.visible:
+					others.append(_rect_in_root(w))
+			for r: Rect2 in hud.touch_obstacles():
+				others.append(r)
+			show = not _overlaps_any(panel_rect, others)
+		training_panel.visible = show
+		# Los avisos (en el celular, arriba) bajan bajo el panel en vez de quedar tapados.
+		hud.set_message_avoid(_rect_in_root(training_panel) if show else Rect2())
+	if event_log:   # el registro de sucesos, igual: fuera si una ventana se le encima (T128), o el panel del muñeco (T212)
+		var log_rect := _rect_in_root(event_log)
+		event_log.visible = not tree_screen.visible and not cutscene.visible and not _overlaps_any(log_rect, windows) \
+			and not (training_panel != null and training_panel.visible and log_rect.intersects(_rect_in_root(training_panel)))
 
 
 
@@ -1245,6 +1274,29 @@ func _fit_trade_panels() -> void:
 
 ## Rectángulo de un control en las coordenadas de _root (todas las ventanas
 ## comparten su escala; get_global_rect() mezcla posición escalada y tamaño sin escalar).
+## Sitio del panel del muñeco (T212); devuelve su rectángulo. En el PC, arriba al
+## centro y debajo del marco del objetivo (que al pegarle muestra sus estados). En el
+## celular, arriba a la izquierda, donde el registro de sucesos: al centro, con la
+## interfaz al 140 %, bajaba tanto que tapaba al muñeco y sus cifras.
+func _place_training_panel() -> Rect2:
+	var w := TrainingPanel.WIDTH
+	var touch := Touch.shown()
+	var anchor := 0.0 if touch else 0.5
+	var left := 14.0 if touch else -w * 0.5
+	var top := event_log.position.y if touch and event_log else TRAINING_PANEL_Y
+	var target := hud.target_frame_rect()
+	if not touch and target.has_area():
+		top = maxf(top, target.end.y + 6.0)
+	if training_panel.anchor_left != anchor or training_panel.offset_left != left:
+		training_panel.anchor_left = anchor
+		training_panel.anchor_right = anchor
+		training_panel.offset_left = left
+		training_panel.offset_right = left + w
+	if training_panel.offset_top != top:
+		training_panel.offset_top = top
+	return Rect2(_root.size.x * anchor + left, top, w, training_panel.size.y)
+
+
 func _rect_in_root(c: Control) -> Rect2:
 	return (_root.get_global_transform().affine_inverse() * c.get_global_transform()) * Rect2(Vector2.ZERO, c.size)
 
@@ -1269,7 +1321,7 @@ func _on_drop_to_ground(location: Dictionary) -> void:
 		return
 	var held := ItemTransfer.get_at(_character.inventory, location)
 	if held and held.locked:
-		hud.flash("Está bloqueado: no se tira. Click derecho en la bolsa para quitarle el candado.", UiStyle.ACCENT)
+		hud.flash("Está bloqueado: no se tira. %s en la bolsa para quitarle el candado." % InventoryPanel.mark_gesture(), UiStyle.ACCENT)
 		return
 	var item := ItemTransfer.take(_character, location)
 	if item:

@@ -245,6 +245,10 @@ func _initialize() -> void:
 	_test_unit_animation()
 	_test_unit_spawn_death()
 	_test_unit_attacks()
+
+	_test_skill_preview()
+	_test_training_dummy()
+	_test_inventory_quick()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -9189,3 +9193,144 @@ func _test_unit_attacks() -> void:
 	sc.queue_free()
 	player.queue_free()
 	em.queue_free()
+
+## T211: la vista previa del tooltip de cada habilidad muestra algo del dibujo de
+## SkillController y, si hace daño, golpea a algún servidor de prueba en cada vuelta;
+## al acabar la vuelta empieza otra sola. Con una RAM de torreta, la torreta dispara.
+func _test_skill_preview() -> void:
+	var c := _new_character()
+	var gen := ItemGenerator.new(_db, 4)
+	var preview := SkillPreview.new()
+	root.add_child(preview)
+	var blind := PackedStringArray()
+	var harmless := PackedStringArray()
+	for id in _db.skills.skills:
+		var p := SkillCalc.compute(gen.generate_motherboard(10, id), c)
+		preview.play(p)
+		var seen := 0
+		var hits := 0
+		var t := 0.0
+		while t < SkillPreview.cycle_seconds(p) - 0.1:
+			preview.step(0.05)
+			t += 0.05
+			seen = maxi(seen, preview.visible_things())
+			hits = maxi(hits, preview.hits)
+		if seen == 0:
+			blind.append(id)
+		if hits == 0 and float(p["max_damage"]) > 0.0:
+			harmless.append("%s (%s)" % [id, p["kind"]])
+	_check(blind.is_empty(), "vista previa: toda habilidad dibuja algo (sin nada: %s)" % ", ".join(blind))
+	_check(harmless.is_empty(), "vista previa: las que hacen daño golpean a un servidor (no golpean: %s)" % ", ".join(harmless))
+	var p := SkillCalc.compute(gen.generate_motherboard(10, "rafaga_de_paquetes"), c)
+	preview.play(p)
+	for k in 28:   # 1,4 s: casi al final de la vuelta
+		preview.step(0.05)
+	var mid := preview.hits
+	for k in 7:    # 0,35 s más: ya empezó otra
+		preview.step(0.05)
+	_check(mid > 0 and preview.playing() and preview.hits < mid, "vista previa: al acabar la vuelta vuelve a empezar (%d golpes al final de una, %d al empezar la otra)" % [mid, preview.hits])
+	var turret := p.duplicate()
+	turret["deploy"] = "totem"
+	preview.play(turret)
+	var shots := 0
+	for k in 60:
+		preview.step(0.05)
+		shots = maxi(shots, preview.hits)
+	_check(shots > 0 and SkillPreview.cycle_seconds(turret) == SkillPreview.LONG_CYCLE, "vista previa: la torreta desplegada dispara sola")
+	preview.stop()
+	_check(not preview.playing() and preview.visible_things() == 0, "vista previa: al cerrar el tooltip se limpia")
+	_check(SkillPreview.start_position({"kind": "nova", "radius": 135.0}).x > SkillPreview.START.x
+		and SkillPreview.start_position({"kind": "projectile"}) == SkillPreview.START, "vista previa: la nova empieza cerca de los servidores; el proyectil, lejos")
+	preview.free()
+
+## T212: el muñeco de prácticas mide los golpes con su tipo y los degenerativos, no
+## muere ni se mueve, olvida lo de hace más de 10 s; el panel resume DPS, daño por
+## golpe y reparto por tipo; los cuatro campamentos tienen el suyo.
+func _test_training_dummy() -> void:
+	var list: Array[Dictionary] = [
+		{"t": 0.0, "amount": 100.0, "type": "fire", "hit": true, "crit": true},
+		{"t": 1.0, "amount": 50.0, "type": "cold", "hit": true, "crit": false},
+		{"t": 2.0, "amount": 50.0, "type": "fire", "hit": false, "crit": false}]
+	var s := TrainingDummy.summarize(list, 4.0, 0.0)
+	_check(is_equal_approx(s["dps"], 50.0) and s["hits"] == 2 and is_equal_approx(s["per_hit"], 75.0)
+		and is_equal_approx(s["max_hit"], 100.0) and is_equal_approx(s["crit_rate"], 0.5) and is_equal_approx(s["dot_dps"], 12.5),
+		"muñeco: 200 de daño en 4 s son 50 DPS, golpes de 75 de media (máx 100, 50 %% críticos) y 12,5/s de degenerativos (%s)" % s)
+	_check(s["types"][0][0] == "fire" and is_equal_approx(s["types"][0][2], 0.75) and s["types"][1][0] == "cold",
+		"muñeco: el reparto por tipo va de más a menos (fuego 75 %%, frío 25 %%)")
+	_check(is_equal_approx(TrainingDummy.summarize(list, 0.2, 0.0)["dps"], 200.0), "muñeco: al empezar cuenta al menos 1 s (sin DPS absurdos)")
+	_check(TrainingPanel.lines({})[0].begins_with("Golpéame"), "muñeco: sin golpes, el panel invita a pegarle")
+	var em := EnemyManager.new()
+	var dummy := TrainingDummy.new()
+	dummy.setup(em, Vector2(300, 200))
+	var i := dummy.index()
+	_check(i != -1 and em.speeds[i] == 0.0 and em.resist_of(i, "fire") == 0.0 and em.names[i] == TrainingDummy.NAME,
+		"muñeco: es un enemigo quieto, sin resistencias y con su nombre")
+	em.hit_ailments = {"type": "fire"}
+	em.hit_index(i, 40.0, 40.0, 0.0, 150.0)
+	em.hit_ailments = {"type": "lightning"}
+	em.hit_index(i, 1.0e9, 1.0e9, 0.0, 150.0)   # un golpe de más: lo vuelve a poner
+	em.hit_ailments = {}
+	dummy._process(0.1)
+	i = dummy.index()
+	var by := {}
+	for e in dummy.events:
+		by[e["type"]] = float(by.get(e["type"], 0.0)) + float(e["amount"])
+	_check(i != -1 and is_equal_approx(float(by.get("fire", 0.0)), 40.0) and em.lives[i] == TrainingDummy.LIFE and em.positions[i] == Vector2(300, 200),
+		"muñeco: apunta el golpe de fuego, se rellena la vida y sigue en su sitio aunque le peguen de más (%s)" % by)
+	dummy.events.clear()
+	em.burn_dps[i] = 20.0
+	em.burn_time[i] = 4.0
+	em.bleed_dps[i] = 10.0
+	em.bleed_time[i] = 4.0
+	for k in 10:
+		dummy._physics_process(0.05)
+	var dot := TrainingDummy.summarize(dummy.events, dummy.now + 0.5, dummy.now)
+	_check(dot["hits"] == 0 and is_equal_approx(float(dot["total"]), 15.0) and dot["types"][0][0] == "fire",
+		"muñeco: en 0,5 s una quemadura de 20/s y un sangrado de 10/s son 15 de daño, fuego primero (%s)" % dot)
+	dummy.advance(TrainingDummy.WINDOW + 1.0)
+	_check(dummy.events.is_empty() and dummy.stats()["dps"] == 0.0, "muñeco: lo de hace más de 10 s se olvida")
+	for act in ["act1", "act2", "act3", "act4"]:
+		var data: Dictionary = DataLoader.load_json("res://data/%s.json" % act)
+		var town := String(data.get("town", ""))
+		for z in data.get("zones", []):
+			if z.get("safe", false):
+				_check(z.get("training_dummy") is Array and (z["training_dummy"] as Array).size() == 2,
+					"muñeco: el campamento %s (%s) tiene su servidor de pruebas" % [z["id"], town])
+	dummy.free()
+	em.free()
+
+
+## Inventario más rápido (T213): la marca se ve en el tooltip y en el título de la
+## bolsa, y la ayuda dice el gesto del ratón, el dedo o el mando.
+func _test_inventory_quick() -> void:
+	_check(InventoryPanel.mark_gesture_for(false, false) == "Click derecho" and InventoryPanel.mark_gesture_for(true, false) == "Mantén pulsado"
+		and InventoryPanel.mark_gesture_for(true, true) == "X", "marcas: el gesto según ratón, dedo o mando")
+	for args in [[false, false], [true, false], [false, true]]:
+		var h := InventoryPanel.help_text(args[0], args[1])
+		_check(h.contains(InventoryPanel.mark_gesture_for(args[0], args[1]) + ": basura / bloqueado / sin marca"),
+			"marcas: la ayuda del inventario dice cómo marcar (%s)" % [args])
+	var gen := ItemGenerator.new(_db, 213)
+	var c := CharacterData.new(_classes[0], _tree)
+	var sword := gen.generate(10, Rarity.Item.RARE, "espada_oxidada")
+	_check(ItemTooltip.mark_line(sword, "X") == "" and not ItemTooltip.build_text(sword, c, false).contains("Bloqueado"),
+		"marcas: sin marca, el tooltip no dice nada")
+	sword.junk = true
+	_check(ItemTooltip.build_text(sword, c, false).contains("Basura") and ItemTooltip.mark_line(sword, "X").contains("X: bloquear"),
+		"marcas: la basura se ve en el tooltip con cómo bloquearla")
+	sword.junk = false
+	sword.locked = true
+	_check(ItemTooltip.mark_line(sword, "Mantén pulsado").contains("no se vende ni se tira"), "marcas: lo bloqueado avisa en el tooltip")
+	var board := gen.generate_motherboard(10)
+	board.junk = true
+	_check(ItemTooltip.build_text(board, c, false).ends_with(ItemTooltip.mark_line(board, InventoryPanel.mark_gesture())),
+		"marcas: también en las placas (debajo de la vista previa)")
+	var inv := Inventory.new()
+	inv.bag[0] = sword
+	inv.bag[5] = board
+	_check(InventoryPanel.bag_title(inv) == "Bolsa  (2 / %d)  ·  1 de basura" % Inventory.BAG_SIZE, "marcas: el título de la bolsa cuenta la basura")
+	board.junk = false
+	_check(InventoryPanel.bag_title(inv) == "Bolsa  (2 / %d)" % Inventory.BAG_SIZE, "marcas: sin basura, solo la ocupación")
+	_check(InventoryPanel.gesture_in_sentence("X") == "X" and InventoryPanel.gesture_in_sentence("Click derecho") == "click derecho",
+		"marcas: en mitad de una frase el botón del mando sigue en mayúscula")
+	_check(InventoryPanel.help_text(true, false).contains("Otra vez: equipar"),
+		"marcas: la ayuda con el dedo dice que el primer toque solo enseña el objeto")

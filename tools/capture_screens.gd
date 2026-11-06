@@ -78,6 +78,14 @@ func _run() -> void:
 		await _capture_class_gear()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("muneco"):
+		await _capture_training_dummy()
+		get_tree().quit()
+		return
+	if OS.get_cmdline_user_args().has("basura"):
+		await _capture_inventory_marks()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("tamano"):
 		await _capture_world_size()
 		get_tree().quit()
@@ -223,6 +231,10 @@ func _run() -> void:
 		await _capture_unit_states()
 		await _capture_unit_life()
 		await _capture_unit_attacks()
+		get_tree().quit()
+		return
+	if OS.get_cmdline_user_args().has("vista"):
+		await _capture_skill_preview()
 		get_tree().quit()
 		return
 	if OS.get_cmdline_user_args().has("habilidades"):
@@ -4419,6 +4431,114 @@ func _capture_zone_seeds() -> void:
 		usec / 1000.0 / maxf(1.0, rows.size() * 5.0), slowest / 1000.0])
 
 
+## Muñeco de prácticas (T212): el servidor de pruebas del campamento recibiendo la
+## habilidad 1 de verdad, golpes de fuego y rayo y una quemadura; con la interfaz al
+## 100 % y luego al 140 % con los controles táctiles.
+func _capture_training_dummy() -> void:
+	var saved_scale: Variant = GameSettings.get_value("interface", "scale", 1.0)
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Pruebas", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.flags["llegada_campamento_vista"] = true
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	gd.current_character = c
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var ui: GameUI = world.get("ui")
+	if ui.cutscene.visible:
+		ui.cutscene.call("_finish")
+	var dummy: TrainingDummy = world.get("training_dummy")
+	var player: Player = world.get("player")
+	var em: EnemyManager = world.get("enemies")
+	var skills: SkillController = world.get("skills")
+	GameSettings.set_value("interface", "scale", 1.0)
+	ui.apply_ui_scale()
+	for pass_i in 2:
+		if pass_i == 1:
+			GameSettings.set_value("interface", "scale", 1.4)
+			Touch.force = true
+			ui.apply_ui_scale()
+			dummy.events.clear()
+		player.global_position = dummy.spot + Vector2(-90, 20)
+		for k in 14:
+			skills.try_use(0)
+			var i := dummy.index()
+			em.hit_ailments = {"type": ["fire", "lightning"][k % 2]}
+			em.hit_index(i, 30.0, 60.0, 20.0, 150.0)
+			if k == 3:
+				em.apply_ailment(i, "burn", 200.0)
+			em.hit_ailments = {}
+			await _wait(0.2)
+		# Con el muñeco como objetivo (ratón encima o tocado): su marco, con la quemadura,
+		# va arriba al centro y el panel no lo tapa (en el PC baja; en el celular va a la
+		# izquierda); un aviso que caería sobre el panel baja.
+		em.apply_ailment(dummy.index(), "burn", 200.0)
+		ui.hud.set("_target_id", dummy.dummy_id)
+		ui.hud.set("_target_linger", 5.0)
+		ui.hud.flash("Sin maná. Bebe un refresco o espera, como con el compilador.")
+		await _wait(0.3)
+		print("muñeco: %s · escala de interfaz %s · panel %s" % [TrainingPanel.lines(dummy.stats()), (ui.get("_root") as Control).scale, ui.training_panel.visible])
+		_save("212_muneco" if pass_i == 0 else "212_muneco_140_tactil")
+	Touch.force = false
+	GameSettings.set_value("interface", "scale", saved_scale)
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
+
+
+## Inventario más rápido (T213): bolsa con basura y bloqueados, la tienda de Aida
+## abierta y el tooltip de un objeto marcado; con ratón (100 %), dedo (140 %) y mando.
+func _capture_inventory_marks() -> void:
+	var saved_scale: Variant = GameSettings.get_value("interface", "scale", 1.0)
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Basura", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.flags["llegada_campamento_vista"] = true
+	c.level = 12
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	gd.current_character = c
+	var gen := ItemGenerator.new(gd.get("items"))
+	for k in 18:
+		var it := gen.generate(12, [Rarity.Item.NORMAL, Rarity.Item.MAGIC, Rarity.Item.RARE][k % 3])
+		it.junk = k % 4 == 1
+		it.locked = k % 5 == 3 and not it.junk
+		c.inventory.add_item(it)
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(1.0)
+	var ui: GameUI = world.get("ui")
+	if ui.cutscene.visible:
+		ui.cutscene.call("_finish")
+	for pass_i in 3:
+		Touch.force = pass_i == 1
+		Gamepad.active = pass_i == 2
+		GameSettings.set_value("interface", "scale", 1.4 if pass_i == 1 else 1.0)
+		ui.apply_ui_scale()
+		ui.open_shop(Economy.generate_gear_stock(gen, c.level), "aida")
+		ui.inventory_panel.visible = true
+		await _wait(0.4)
+		var cells: Array = ui.inventory_panel.get("_bag_cells")
+		var cell: ItemCell = cells.filter(func(x: ItemCell) -> bool: return x.item != null and x.item.junk)[0]
+		ui.item_tooltip.show_item(cell.item, c, false)
+		ui.item_tooltip.global_position = cell.get_global_rect().end + Vector2(8, 8)
+		await _wait(0.3)
+		_save(["213_basura_pc", "213_basura_140_tactil", "213_basura_mando"][pass_i])
+		ui.close_trade_panels()
+	Touch.force = false
+	Gamepad.active = false
+	GameSettings.set_value("interface", "scale", saved_scale)
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
+
+
 func _save(name: String) -> void:
 	get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path(OUT + name + ".png"))
 	print("captura: ", name)
@@ -4556,3 +4676,88 @@ func _capture_unit_attacks() -> void:
 		_swap(sheet)
 		await _wait(0.5)
 		_save("202_ataques_%d" % (page + 1))
+
+## Vista previa animada de la habilidad (T211): el muestrario de las 62 (cuatro hojas de
+## 20, a 0,3 y a 1,2 s de empezar), y el tooltip de una placa en la tienda, con la interfaz al 140 %
+## y en el celular.
+func _capture_skill_preview() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Vista", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "campamento"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	var skills: Dictionary = gd.get("items").skills.skills
+	var ids: Array = skills.keys()
+	var sheet := Control.new()
+	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sheet.draw.connect(func() -> void: sheet.draw_rect(Rect2(Vector2.ZERO, sheet.size), Color("0e1116")))
+	_swap(sheet)
+	for page in ceili(ids.size() / 20.0):
+		for child in sheet.get_children():
+			child.queue_free()
+		var grid := GridContainer.new()
+		grid.columns = 4
+		grid.position = Vector2(16, 8)
+		grid.add_theme_constant_override("h_separation", 24)
+		grid.add_theme_constant_override("v_separation", 2)
+		sheet.add_child(grid)
+		for k in range(page * 20, mini(ids.size(), page * 20 + 20)):
+			var box := VBoxContainer.new()
+			box.add_theme_constant_override("separation", 0)
+			var name := Label.new()
+			name.text = "%s · %s" % [skills[ids[k]]["name"], skills[ids[k]]["kind"]]
+			name.add_theme_font_size_override("font_size", 12)
+			box.add_child(name)
+			var preview := SkillPreview.new()
+			box.add_child(preview)
+			grid.add_child(box)
+			preview.play(SkillCalc.compute(Motherboard.new(skills[ids[k]], 10, []), c), c)
+		await _wait(0.3)
+		_save("211_muestrario_%d_a" % (page + 1))
+		await _wait(0.9)
+		_save("211_muestrario_%d_b" % (page + 1))
+	gd.current_character = c
+	var tips_were := TipPanel.enabled()
+	TipPanel.set_enabled(false)
+	var world: Node = load("res://scenes/game/world.tscn").instantiate()
+	_swap(world)
+	world.set("_since_save", -9999.0)
+	await _wait(3.6)
+	var ui: GameUI = world.get("ui")
+	while ui.cutscene.is_playing():   # la llegada al campamento
+		ui.cutscene.skip()
+		await _wait(0.3)
+	ui.open_shop(Economy.generate_stock(ItemGenerator.new(gd.get("items")), c.level))
+	await _wait(0.5)
+	for shot in [["rafaga_de_paquetes", 0.45], ["stack_overflow", 0.2], ["golem_hardware", 2.2], ["tormenta_tickets", 1.4]]:
+		get_viewport().warp_mouse(Vector2(620, 70))
+		ui.item_tooltip.show_item(Motherboard.new(skills[shot[0]], 10, ["DDR3", "DDR4"]), c, false)
+		await _wait(float(shot[1]))
+		_save("211_tienda_%s" % shot[0])
+		ui.item_tooltip.hide()
+	var saved_scale := float(GameSettings.get_value("interface", "scale", 1.0))
+	GameSettings.set_value("interface", "scale", 1.4)
+	ui.apply_ui_scale()
+	await _wait(0.4)
+	get_viewport().warp_mouse(Vector2(560, 40))
+	ui.item_tooltip.show_item(Motherboard.new(skills["excepcion_en_cadena"], 10, ["DDR3"]), c, true)
+	await _wait(0.3)
+	_save("211_interfaz_140")
+	ui.item_tooltip.hide()
+	GameSettings.set_value("interface", "scale", saved_scale)
+	ui.close_trade_panels()
+	# En el celular: tocar una placa de la bolsa abre el tooltip con la vista previa.
+	Touch.force = true
+	get_window().size = Vector2i(2400, 1080)
+	ui.apply_ui_scale()
+	ui.call("_on_menu_requested", "inventory")
+	await _wait(0.5)
+	get_viewport().warp_mouse(Vector2(900, 120))
+	ui.item_tooltip.show_item(Motherboard.new(skills["campo_estatica"], 10, ["DDR3"]), c, false)
+	await _wait(1.0)
+	_save("211_tactil")
+	ui.item_tooltip.hide()
+	Touch.force = false
+	get_window().size = Vector2i(1600, 900)
+	TipPanel.set_enabled(tips_were)
+	world.queue_free()
