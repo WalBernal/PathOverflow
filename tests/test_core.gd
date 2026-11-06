@@ -250,6 +250,7 @@ func _initialize() -> void:
 	_test_training_dummy()
 	_test_inventory_quick()
 	_test_variant_signals()
+	_test_skill_sound_logic()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -9371,3 +9372,15 @@ func _test_variant_signals() -> void:
 	_check(SkillController.projectile_mods({"pierce_left": 0, "chains_left": 0}).is_empty(), "sin RAM, el proyectil va limpio")
 	for kind in ["sprint", "profiled", "botnet", "bluescreen", "pager", "bluegreen", "demo", "green", "kill", "stash", "static", "nova"]:
 		_check(String(SkillFx.PROC_LABELS.get(kind, "")) != "", "el proc %s tiene su etiqueta" % kind)
+
+## T216: los sonidos que siguen a la habilidad: golpes por carga de Core Dump, semitono
+## por vuelta de Bucle Infinito y PASS o FAIL del Bot de Pruebas.
+func _test_skill_sound_logic() -> void:
+	var hits := SkillController.charge_hits(["buffer", "multihilo", "overclock"])
+	_check(hits.size() == 3 and float(hits[0][0]) < float(hits[2][0]) and float(hits[0][1]) < float(hits[2][1]),
+		"Core Dump: un golpe por carga, cada uno después y más agudo")
+	_check(SkillController.charge_hits([]).is_empty(), "sin cargas, sin golpes")
+	_check(is_equal_approx(SkillController.loop_pitch(0), 1.0) and SkillController.loop_pitch(4) > SkillController.loop_pitch(1)
+		and is_equal_approx(SkillController.loop_pitch(5), 1.0) and is_equal_approx(SkillController.loop_pitch(1), pow(2.0, 1.0 / 12.0)),
+		"Bucle Infinito: un semitono más por vuelta hasta cuatro y vuelve a empezar")
+	_check(SkillController.test_verdict(0.1) == "PASS" and SkillController.test_verdict(0.95) == "FAIL", "Bot de Pruebas: PASS o FAIL según la tirada")

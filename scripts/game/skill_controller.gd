@@ -47,6 +47,12 @@ var _projectiles: Array[Dictionary] = []
 var _effects: Array[Dictionary] = []      # visuales: anillos y destellos
 var _pending: Array[Dictionary] = []      # explosiones retardadas, rayos y repeticiones
 var _repeat_tags := {}   # id de habilidad → número de la última repetición mostrada («×2»…, T197)
+## Sonidos con retraso (T216): [{name, db, pitch, delay}], los golpes por carga de Core Dump.
+var _sound_queue: Array[Dictionary] = []
+## Cada cuánto vuelve a sonar la capa de un canalizado mientras se mantiene (T216).
+const CHANNEL_SOUND_EVERY := 0.5
+## Probabilidad de que el Bot de Pruebas caiga en verde (T216).
+const TEST_PASS_CHANCE := 0.7
 var _spins: Array[Dictionary] = []        # giros activos (Bucle Infinito; también de torretas)
 var _traps: Array[Dictionary] = []        # trampas en el suelo (Bomba Lógica)
 ## Trampas, minas y torretas de las RAM de despliegue: ejecutan la habilidad solas.
@@ -724,6 +730,39 @@ func _fire_signature(stat: StringName) -> void:
 			Sfx.play("fire", -8.0)
 
 
+## Golpes de Core Dump por las cargas gastadas (T216): [retraso, tono] de cada una, con
+## 0,05 s entre golpes y cada uno un poco más agudo.
+static func charge_hits(spent: Array) -> Array:
+	var out := []
+	for k in spent.size():
+		out.append([0.05 * (k + 1), 1.0 + 0.12 * k])
+	return out
+
+
+## Tono de la vuelta `tick` de Bucle Infinito (T216): un semitono más por vuelta hasta
+## cuatro, y vuelve a empezar.
+static func loop_pitch(tick: int) -> float:
+	return pow(2.0, float(posmod(tick, 5)) / 12.0)
+
+
+## PASS o FAIL del Bot de Pruebas al caer (T216), con una tirada de 0 a 1.
+static func test_verdict(roll: float) -> String:
+	return "PASS" if roll < TEST_PASS_CHANCE else "FAIL"
+
+
+func _update_sound_queue(delta: float) -> void:
+	if _sound_queue.is_empty():
+		return
+	var still: Array[Dictionary] = []
+	for s in _sound_queue:
+		s["delay"] = float(s["delay"]) - delta
+		if s["delay"] > 0.0:
+			still.append(s)
+		else:
+			Sfx.play(String(s["name"]), float(s["db"]), float(s["pitch"]))
+	_sound_queue = still
+
+
 ## Efecto propio de un proc de ascendencia o de nodo clave (T197; lo dibuja SkillFx.draw_proc).
 func _proc(kind: String, pos: Vector2, radius: float, color: Color, extra := {}) -> void:
 	var e := {"type": "proc", "kind": kind, "pos": pos, "radius": radius, "time": 0.0, "duration": 0.45, "color": color}
@@ -897,6 +936,9 @@ func _spend_charges(p: Dictionary) -> Dictionary:
 		# Con firma (Core Dump, T194) las cargas gastadas son sus anillos: el destello queda oculto.
 		_effects.append({"type": "burst", "pos": player.global_position, "radius": 40.0 + 12.0 * n, "time": 0.0, "duration": 0.35, "color": Charges.color(t),
 			"hidden": String(p["id"]) == "core_dump"})
+	if String(p["id"]) == "core_dump":   # un golpe por cada carga volcada, cada vez más agudo (T216)
+		for h in charge_hits(spent):
+			_sound_queue.append({"name": "thump", "db": -6.0, "pitch": h[1], "delay": h[0]})
 	q["min_damage"] = float(q["min_damage"]) * mult
 	q["max_damage"] = float(q["max_damage"]) * mult
 	return q
@@ -1130,6 +1172,7 @@ func _physics_process(delta: float) -> void:
 	character.set_condition(Stat.COND_ALLIES, _units.size() + _minions.size() + _drones.size() >= 3)
 	_update_triggers(delta)
 	_update_pending(delta)
+	_update_sound_queue(delta)
 	_update_projectiles(delta)
 	_update_spin(delta)
 	_update_traps(delta)
@@ -1829,6 +1872,10 @@ func _update_spin(delta: float) -> void:
 			spin["next_tick"] = p["tick"]
 			_ctx(p)
 			_damage_area(_spin_center(spin), p["radius"], p)
+			spin["ticks"] = int(spin.get("ticks", 0)) + 1
+			var sig := SoundMap.signature(String(p["id"]))
+			if sig != "" and own:   # su whoosh en cada vuelta, un semitono más cada vez (T216)
+				Sfx.play(sig, SoundMap.SIGNATURE_DB - 2.0, loop_pitch(int(spin["ticks"])))
 		still.append(spin)
 	_spins = still
 
@@ -1889,6 +1936,11 @@ func _update_channel(delta: float, held: bool, target: Vector2) -> void:
 	player.life -= life_cost
 	_channel["time"] += delta
 	_channel["aim"] = target
+	# Su capa vuelve a sonar mientras se canaliza (T216): el zumbido del Pipe, el «ding» de los tickets.
+	if int(_channel["time"] / CHANNEL_SOUND_EVERY) > int((_channel["time"] - delta) / CHANNEL_SOUND_EVERY):
+		var sig := SoundMap.signature(String(p["id"]))
+		if sig != "":
+			Sfx.play(sig, SoundMap.SIGNATURE_DB - 4.0)
 	_busy = maxf(_busy, 0.05)
 	player.action_lock = maxf(player.action_lock, 0.05)
 	var origin := player.global_position
@@ -2454,6 +2506,12 @@ func _unit_leap_step(u: Dictionary, p: Dictionary, delta: float) -> void:
 	enemies.hit_in_radius(land, leap_radius, p["min_damage"] * leap_mult,
 		p["max_damage"] * leap_mult, p["crit_chance"], p["crit_multiplier"])
 	_effects.append({"type": "quake", "pos": land, "radius": leap_radius, "time": 0.0, "duration": 0.4, "color": u["color"]})
+	if String(p["id"]) == "bot_pruebas":   # al caer, el resultado del test (T216): bip agudo PASS, grave FAIL
+		var verdict := test_verdict(randf())
+		var ok := verdict == "PASS"
+		Sfx.play(SoundMap.signature("bot_pruebas"), SoundMap.SIGNATURE_DB, 1.0 if ok else 0.25)
+		_effects.append({"type": "tag", "pos": land + Vector2(-14, -40), "text": verdict, "time": 0.0, "duration": 0.6,
+			"color": Accessibility.aura_color("ok" if ok else "err", Color("6fd36b") if ok else Color("e06c6c"))})
 
 
 ## Escala de dibujo de una invocación: Monolito, Microservicios y el Clúster de tres.
