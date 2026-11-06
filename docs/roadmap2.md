@@ -218,17 +218,17 @@ Origen: R9
 
 ## Fase 42 — Habilidades nuevas (versión 4.0.0)
 
-### [ ] T207 · Elegir las habilidades nuevas · S 🛑
+### [x] T207 · Elegir las habilidades nuevas · S 🛑
 Origen: R9
 - Revisar con el usuario el **catálogo de habilidades sugeridas** (abajo) y escoger de 6 a 9. Escribir su diseño (cifras, tags, variante, icono, efecto y sonido) en `docs/habilidades_y_ram.md` y partir la implementación en tareas T208+.
 
-### [ ] T208 · Habilidades nuevas, tanda 1 · M
+### [ ] T208 · Habilidades nuevas, tanda 1: Ticket Escalado, Lazy Loading y Descenso de Gradiente · M
 Origen: R9
-- Las tres primeras elegidas en T207, con icono, efecto, sonido, animación y prueba de lógica.
+- Las tres de golpe y proyectil del diseño de T207 (`docs/habilidades_y_ram.md`, «Habilidades nuevas (T207)»): datos en `skills.json` y `variants.json`, sus kinds nuevos (`ticket`, `lazy`, `gradient`) en `SkillController`, icono en `pixel_icons.json`, firma en SkillFx, capa de sonido (`generate_sfx.gd -- t208`), desbloqueo a nivel 12 de su clase, vista previa del tooltip y prueba de lógica de cada una.
 
-### [ ] T209 · Habilidades nuevas, tanda 2 · M
+### [ ] T209 · Habilidades nuevas, tanda 2: Breakpoint, Inyección de Prompt y Despliegue Canario · M
 Origen: R9
-- Las siguientes tres.
+- Las tres de zona, control e invocación del diseño de T207, igual que T208 (kinds `breakpoint`, `charm`, `canary`; sonido `generate_sfx.gd -- t209`). Breakpoint necesita frenar los proyectiles enemigos en `EnemyManager`; Inyección de Prompt, que un enemigo pelee de tu lado sin dejar de ser suyo el botín.
 
 ### [ ] T210 · Versión 4.0.0 y revisión en el teléfono · S 🛑
 Origen: R9
@@ -369,3 +369,4 @@ Ideas que no están en la cola. Se pasan a tareas cuando el usuario las elija.
 - 2026-11-05 · T204 · Arte propio para las invocaciones rígidas: el Proceso Hijo es un procesito con patas que andan solo al moverse, cabeza de ventana de terminal y ojos «> _» que parpadean (antes, una caja quieta); los Drones de Vigilancia usan el dron de las invocaciones (UnitArt._drone) con su cámara que barre y el piloto rojo de grabación; la Torreta CI tiene su propio dibujo (_draw_ci_turret: trípode, cabezal redondo con placa «CI» y piloto del build verde, ámbar al disparar) y deja de compartirlo con la RAM Servidor Torreta, que sigue siendo un mini servidor; el contenedor Docker sube del suelo y se le abre la tapa mientras se arma (container_open) y su carga sale después. El cañón que apunta y retrocede ya venía de T202. Prueba _test_rigid_units_art, capturas docs/capturas/invocaciones/204_*.png.
 - 2026-11-05 · T205 · Acompañantes y R-2PL: Mario, M. Páez y Eugenio caminan con su zancada (CompanionFollower.walk_step, la fase avanza con lo recorrido), miran de espaldas, de perfil o de frente según la marcha y, quietos, respiran mirando hacia donde mira el jugador; el R-2PL va detrás del hombro contrario a donde mira el jugador (companion_offset), se inclina al moverse y mueve el visor hacia su objetivo (companion_visor). Prueba _test_companions_walk. Sin captura (los acompañantes no salen en los modos de captura).
 - 2026-11-06 · T206 · Versión 3.9.0: APK (código 25) y uild/latest.json, Windows e instalador. Como la 3.8.0 no se llegó a subir, esta la incluye (fases 40 y 41 completas, y T211-T213 de la 43). Capturas de las invocaciones en todos sus estados, al aparecer y morir y al atacar en docs/capturas/invocaciones/206_*.png; lista docs/prueba_celular_3.9.md (y sigue valiendo la de la 3.8) y README. Sin subir a GitHub: pendiente de la revisión del usuario 🛑.
+- 2026-11-06 · T207 · El usuario eligió del catálogo Ticket Escalado, Breakpoint, Lazy Loading, Inyección de Prompt, Descenso de Gradiente y Despliegue Canario (una por clase menos Full Stack). Diseño en docs/habilidades_y_ram.md, «Habilidades nuevas (T207)», tras la ficha de T191 (así list_skills.gd lo conserva): kind, tags, cifras, desbloqueo a nivel 12 de su clase, una variante cada una e icono, efecto y sonido con su chiste. T208 hará las tres de golpe y proyectil y T209 las de zona, control e invocación.

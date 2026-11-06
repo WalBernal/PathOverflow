@@ -1700,3 +1700,39 @@ Los cuerpos ya los dibuja `UnitArt`; aquí «al lanzar» es cómo **aparecen** (
 | golem_gpu | Golem GPU | Los ventiladores arrancan (las aspas aceleran) y el RGB recorre el arcoíris. | Rayo trazado en línea con píxeles que rebotan en los enemigos. | Los ventiladores se paran y el RGB se apaga. | lightning (T192: summon) + `sig_golem_gpu`: pitido de bobina (seno de 8 kHz muy bajo) y ventilador. | Ray tracing, literalmente. |
 | golem_kernel | Golem de Kernel | Líneas de «panic» que se condensan en el espectro. | Aura de corrupción con franjas de glitch. | Se deshace en un volcado de texto que cae. | chaos (T192: summon) + `sig_golem_kernel`: zumbido grave de 55 Hz con glitch. | *Kernel panic*. |
 
+
+
+## Habilidades nuevas (T207)
+
+Elegidas por el usuario del catálogo de `docs/roadmap2.md` (3, 6, 7, 10, 13 y 17). Cada una trae una mecánica que el juego no tenía. Una por clase: se desbloquea a nivel 12 (los desbloqueos de ahora son a 5, 8, 10, 16 y 24) y además cae como placa base como las demás. Cifras de una placa de nivel 1; crecen como las demás con `damage_growth`. Iconos en `pixel_icons.json` (clave `skill:<id>`) con el glifo indicado; efecto en el camino «firma» de SkillFx; sonido = base de su tipo + capa `sig_<id>.wav` (`generate_sfx.gd -- t208`/`t209`).
+
+| id | Nombre | Clase | kind / tags | Cifras | Mecánica nueva |
+|---|---|---|---|---|---|
+| ticket_escalado | Ticket Escalado | Técnico de Soporte (str) | `ticket` (nuevo) · attack, melee, duration, physical | 1,1 de efectividad; marca 6 s; P1 estalla en 90 px con el daño acumulado de los tres golpes + 50 %; maná 6 | Marca con etapas: cada golpe suyo sobre el mismo enemigo sube la prioridad P3 → P2 → P1 y en P1 estalla. |
+| breakpoint | Breakpoint | Tester QA (dex) | `breakpoint` (nuevo) · spell, area, duration | círculo de 140 px a 450 de alcance, 3 s; enemigos dentro a un 15 % de su velocidad y sus proyectiles a un 10 %; sin daño; maná 18, enfriamiento 9 s | Detener el tiempo, también los proyectiles enemigos. |
+| lazy_loading | Lazy Loading | Desarrolladora Frontend (dex) | `lazy` (nuevo) · attack, projectile, physical, duration | 3 flechas en abanico alrededor del punto (450 de alcance), esperan hasta 6 s; salen hacia el primer enemigo a 160 px a 900 px/s; 0,9 de efectividad; maná 8 | Proyectiles en espera: se quedan suspendidos hasta que algo se acerca. |
+| inyeccion_prompt | Inyección de Prompt | Ingeniera de Prompts (int) | `charm` (nuevo) · spell, chaos, minion, duration | el enemigo normal o mágico más cercano al cursor (a 400 px) pelea de tu lado 8 s; al acabarse «se cuelga» y estalla en caos (90 px, [10, 16]); no funciona en raros, únicos ni jefes; maná 20, enfriamiento 10 s | Control mental. |
+| descenso_gradiente | Descenso de Gradiente | Científico de Datos (int) | `gradient` (nuevo) · spell, projectile, cold, area | orbe de [14, 22] que rueda a 220 px/s durante 3 s y cada 0,25 s gira hacia el centro del grupo más denso a 300 px; atraviesa y crece un 10 % por enemigo (hasta el doble); maná 12 | Busca aglomeraciones. |
+| despliegue_canario | Despliegue Canario | Ingeniero DevOps (int) | `canary` (nuevo) · spell, minion, automaton, duration | un canario de 40 de vida; si aguanta 5 s se promueve a 3 bots de [4, 7] que duran 15 s; si cae antes, «rollback» y nada; hasta 1 canario y 6 bots; maná 16, enfriamiento 6 s | Invocación que evoluciona. |
+
+### Variantes (desde nivel 12)
+
+| Habilidad | Variante | Cambio |
+|---|---|---|
+| Ticket Escalado | Prioridad crítica | empieza en P2 (estalla al segundo golpe), 30 % menos de daño |
+| Breakpoint | Breakpoint condicional | 30 % menos de radio, +1,5 s, los de dentro reciben un 15 % más de daño |
+| Lazy Loading | Precarga | 5 flechas, 30 % menos de daño, salen a 220 px |
+| Inyección de Prompt | Jailbreak | dura 4 s pero también funciona en raros; el estallido hace el doble |
+| Descenso de Gradiente | Tasa de aprendizaje alta | 60 % más rápido, crece el doble de deprisa, 20 % menos de daño |
+| Despliegue Canario | Rollout progresivo | se promueve a los 3 s, pero en 2 bots |
+
+### Firmas
+
+| id | Icono | Al lanzar | En juego | Final | Sonido (capa) | Chiste |
+|---|---|---|---|---|---|---|
+| ticket_escalado | tarjeta de ticket | golpe con un sello | «P3», «P2», «P1» sobre el enemigo, de gris a ámbar a rojo | tarjeta «INC-####» que se rompe y onda roja | sello que sube un tono por etapa; en P1 una alarma corta | Los tickets que nadie mira hasta que son P1. |
+| breakpoint | punto rojo en un margen | punto rojo de breakpoint en el centro | círculo de trazos con «PAUSED» y «⏸» sobre cada enemigo; los proyectiles congelados con un halo | el círculo se cierra con «▶ continue» | clic seco y un zumbido grave que se corta al final | Depurar en producción. |
+| lazy_loading | flecha con reloj de arena | flechas que aparecen en el aire | cada flecha con un spinner «loading…» que gira | al salir, «200 OK» pequeño y estela rápida | clic suave al colocarlas; whoosh al salir | Las imágenes que cargan cuando ya no hacen falta. |
+| inyeccion_prompt | bocadillo con «>» | línea de texto «ignora tus instrucciones» que vuela al enemigo | el enemigo con tinte morado y «{prompt}» encima, contador de segundos | «ERROR: context overflow» y estallido de glifos | tecleo rápido y un «bip» de aceptado; al estallar, glitch | Prompt injection. |
+| descenso_gradiente | orbe con flecha hacia abajo | orbe que aparece con curvas de nivel | orbe con anillos de curvas de nivel y una estela de «∇» | se desvanece en el mínimo local con «loss: 0.0…» | rodar grave con el tono bajando; al tragar un enemigo, un clic | Bajar hasta el mínimo (local). |
+| despliegue_canario | canario en una jaula | canario amarillo con una barra de rollout | barra 1 % → 100 % sobre él | al promoverse, «✓ rollout» y tres bots; si cae, «rollback» rojo | pío; fanfarria corta al promoverse; zumbido descendente si cae | Desplegar al 1 % antes que a todos. |
