@@ -218,6 +218,13 @@ func _run() -> void:
 		await _benchmark()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("invocaciones"):
+		await _capture_unit_art()
+		await _capture_unit_states()
+		await _capture_unit_life()
+		await _capture_unit_attacks()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("habilidades"):
 		await _capture_unit_art()
 		await _capture_skills_with_rams()
@@ -4415,3 +4422,137 @@ func _capture_zone_seeds() -> void:
 func _save(name: String) -> void:
 	get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path(OUT + name + ".png"))
 	print("captura: ", name)
+
+
+## Motor de animación de invocaciones (T200): cada una en sus estados (quieta,
+## caminando a un lado y al otro, atacando a la izquierda, apareciendo, herida y
+## muriendo) y con las escalas de Monolito, Microservicios y el Clúster de tres.
+func _capture_unit_states() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var skills: Dictionary = gd.get("items").skills.skills
+	var units: Array = []
+	for id in skills:
+		if skills[id]["kind"] == "unit":
+			units.append(skills[id])
+	var cols := [["quieta", {"state": "idle"}], ["camina →", {"state": "walk", "move": 1.0, "walk": 1.2}],
+		["camina ←", {"state": "walk", "move": 1.0, "walk": 2.8, "facing": -1.0, "aim": Vector2.LEFT}],
+		["ataca ←", {"state": "attack", "t": 0.5, "facing": -1.0, "aim": Vector2(-1, -0.4), "focus": true}],
+		["apunta ↘", {"state": "idle", "aim": Vector2(1, 0.5), "focus": true}],
+		["aparece", {"state": "spawn", "t": 0.45}], ["herida", {"state": "hurt", "t": 0.5}], ["muere", {"state": "die", "t": 0.5}],
+		["Monolito", {"state": "idle", "scale": UnitArt.SCALE_MONOLITH}], ["Microserv.", {"state": "idle", "scale": UnitArt.SCALE_MICROSERVICES}],
+		["Clúster", {"state": "idle", "scale": UnitArt.SCALE_TRIO}]]
+	var half := 6
+	for page in ceili(units.size() / float(half)):
+		var part := units.slice(page * half, mini(units.size(), (page + 1) * half))
+		var sheet := Control.new()
+		sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+		sheet.draw.connect(func() -> void:
+			sheet.draw_rect(Rect2(Vector2.ZERO, sheet.size), Color("1d2a26"))
+			var font := sheet.get_theme_default_font()
+			for k in cols.size():
+				sheet.draw_string(font, Vector2(150 + k * 130, 28), cols[k][0], HORIZONTAL_ALIGNMENT_CENTER, 120, 13)
+			for i in part.size():
+				var y := 150.0 + i * 140.0
+				var col := Color(part[i].get("icon", {}).get("color", "c8c8c8"))
+				sheet.draw_string(font, Vector2(8, y - 20), part[i]["name"], HORIZONTAL_ALIGNMENT_LEFT, 140, 12)
+				for k in cols.size():
+					var a: Dictionary = {"facing": 1.0, "aim": Vector2.RIGHT, "t": 0.0, "walk": 0.0, "move": 0.0, "scale": 1.0}
+					a.merge(cols[k][1], true)
+					UnitArt.draw(sheet, part[i]["id"], part[i]["unit"]["behavior"], Vector2(210 + k * 130, y), 2.0, col, a))
+		_swap(sheet)
+		await _wait(0.5)
+		_save("200_invocaciones_estados_%d" % (page + 1))
+
+## Aparecer y morir (T201): compilación de bits, desvanecerse al relanzar, golpe
+## recibido y desarmarse en piezas (también torreta, contenedor, Proceso Hijo y dron).
+func _capture_unit_life() -> void:
+	seed(201)
+	var gd: Node = get_node("/root/GameData")
+	var skills: Dictionary = gd.get("items").skills.skills
+	var units: Array = []
+	for id in skills:
+		if skills[id]["kind"] == "unit" and units.size() < 5:
+			units.append(skills[id])
+	var cols := [["compila 25 %", {"state": "spawn", "t": 0.25}], ["compila 60 %", {"state": "spawn", "t": 0.6}],
+		["se va (relanza)", {"state": "warp", "t": 0.5}], ["golpe", {"state": "hurt", "t": 0.5}],
+		["se desarma", {"state": "die", "t": 0.4}], ["piezas 0,15 s", {}], ["piezas 0,5 s", {}]]
+	# Piezas simuladas de cada figura a los 0,15 s y a los 0,5 s.
+	var debris: Array = []
+	for i in units.size():
+		for k in [5, 6]:
+			var arr: Array = []
+			var feet := Vector2(150 + k * 150, 130.0 + i * 128.0)
+			var u := {"radius": float(units[i]["unit"].get("radius", 12.0)), "behavior": units[i]["unit"]["behavior"], "scale": 1.5}
+			UnitArt.shatter(arr, feet, UnitArt.figure_height(u), UnitArt.debris_colors(units[i]["id"], Color(units[i].get("icon", {}).get("color", "c8c8c8"))), 12, 12)
+			for f in (8 if k == 5 else 25):
+				UnitArt.update_debris(arr, 0.02)
+			debris.append_array(arr)
+	var devices: Array = []
+	var dev_keys := ["proceso_hijo", "dron", "torreta", "contenedor"]
+	for k in dev_keys.size():
+		var arr: Array = []
+		UnitArt.shatter(arr, Vector2(260 + k * 300, 860), 40.0, UnitArt.debris_colors(dev_keys[k], Color("6fd36b")), 8, 8, 30.0 if dev_keys[k] == "dron" else 0.0)
+		for f in 10:
+			UnitArt.update_debris(arr, 0.02)
+		devices.append_array(arr)
+	var sheet := Control.new()
+	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sheet.draw.connect(func() -> void:
+		sheet.draw_rect(Rect2(Vector2.ZERO, sheet.size), Color("1d2a26"))
+		var font := sheet.get_theme_default_font()
+		for k in cols.size():
+			sheet.draw_string(font, Vector2(90 + k * 150, 28), cols[k][0], HORIZONTAL_ALIGNMENT_CENTER, 120, 13)
+		for i in units.size():
+			var y := 130.0 + i * 128.0
+			var col := Color(units[i].get("icon", {}).get("color", "c8c8c8"))
+			sheet.draw_string(font, Vector2(8, y - 20), units[i]["name"], HORIZONTAL_ALIGNMENT_LEFT, 140, 12)
+			for k in 5:
+				var a: Dictionary = {"facing": 1.0, "aim": Vector2.RIGHT, "t": 0.0, "walk": 0.0, "move": 0.0, "scale": 1.5}
+				a.merge(cols[k][1], true)
+				var u := {"radius": float(units[i]["unit"].get("radius", 12.0)), "behavior": units[i]["unit"]["behavior"], "scale": 1.5}
+				a["height"] = UnitArt.figure_height(u)
+				a["lift"] = u["radius"] * 2.0 if u["behavior"] == "orbit" else 0.0
+				UnitArt.draw(sheet, units[i]["id"], units[i]["unit"]["behavior"], Vector2(150 + k * 150, y), 2.0, col, a)
+		UnitArt.draw_debris(sheet, debris)
+		sheet.draw_string(font, Vector2(8, 770), "Proceso Hijo · Dron de Vigilancia · Torreta CI · Contenedor Docker (0,2 s)", HORIZONTAL_ALIGNMENT_LEFT, -1, 13)
+		UnitArt.draw_debris(sheet, devices))
+	_swap(sheet)
+	await _wait(0.5)
+	_save("201_aparecer_y_morir")
+
+## Ataques que se ven (T202): embestida de las de cuerpo a cuerpo (tridente,
+## mordida, puñetazo, golpe de golem), retroceso y fogonazo de las de distancia,
+## y el salto con el cuerpo en arco.
+func _capture_unit_attacks() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var skills: Dictionary = gd.get("items").skills.skills
+	var units: Array = []
+	for id in skills:
+		if skills[id]["kind"] == "unit":
+			units.append(skills[id])
+	var cols := [["quieta", {"state": "idle"}], ["ataca 10 %", {"state": "attack", "t": 0.1}], ["ataca 33 %", {"state": "attack", "t": 0.33}],
+		["ataca 60 %", {"state": "attack", "t": 0.6}], ["ataca ←", {"state": "attack", "t": 0.3, "facing": -1.0, "aim": Vector2(-1, 0.3)}],
+		["salta 20 %", {"state": "leap", "t": 0.2, "hop": 40.0}], ["salta 50 %", {"state": "leap", "t": 0.5, "hop": 60.0}], ["salta 85 %", {"state": "leap", "t": 0.85, "hop": 27.0}]]
+	var half := 6
+	for page in ceili(units.size() / float(half)):
+		var part := units.slice(page * half, mini(units.size(), (page + 1) * half))
+		var sheet := Control.new()
+		sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+		sheet.draw.connect(func() -> void:
+			sheet.draw_rect(Rect2(Vector2.ZERO, sheet.size), Color("1d2a26"))
+			var font := sheet.get_theme_default_font()
+			for k in cols.size():
+				sheet.draw_string(font, Vector2(150 + k * 140, 28), cols[k][0], HORIZONTAL_ALIGNMENT_CENTER, 120, 13)
+			for i in part.size():
+				var y := 175.0 + i * 140.0
+				var col := Color(part[i].get("icon", {}).get("color", "c8c8c8"))
+				sheet.draw_string(font, Vector2(8, y - 20), part[i]["name"], HORIZONTAL_ALIGNMENT_LEFT, 140, 12)
+				for k in cols.size():
+					var a: Dictionary = {"facing": 1.0, "aim": Vector2.RIGHT, "t": 0.0, "walk": 0.0, "move": 0.0, "scale": 1.3, "focus": true}
+					a.merge(cols[k][1], true)
+					var x := 210.0 + k * 140.0
+					sheet.draw_line(Vector2(x - 40, y + 2), Vector2(x + 40, y + 2), Color(1, 1, 1, 0.12), 1.0)   # suelo
+					UnitArt.draw(sheet, part[i]["id"], part[i]["unit"]["behavior"], Vector2(x, y), 2.0, col, a))
+		_swap(sheet)
+		await _wait(0.5)
+		_save("202_ataques_%d" % (page + 1))

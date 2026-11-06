@@ -56,7 +56,13 @@ var _drones: Array[Dictionary] = []       # drones que orbitan y disparan (Drone
 ## Invocaciones persistentes (kind "unit"): no caducan, reservan maná y los
 ## enemigos pueden atacarlas (EnemyManager.allies). Ver _update_units.
 var _units: Array[Dictionary] = []
+## Invocaciones que acaban de caer: solo se dibujan (estado «die») hasta UnitArt.DIE_TIME.
+var _dying_units: Array[Dictionary] = []
+## Piezas y bits de las invocaciones, esbirros, drones y torretas que se desarman (UnitArt.shatter).
+var _debris: Array = []
 const UNIT_LEASH := 900.0
+## Píxeles que retrocede una invocación al recibir un golpe.
+const UNIT_KNOCKBACK := 7.0
 ## Vida de las torretas desplegadas (fracción de la vida máxima del jugador).
 const TOTEM_LIFE_FRACTION := 0.4
 ## Auras activas: [{skill_id, profile, color, sig}]. Reservan maná y dan bonificaciones a los aliados.
@@ -81,6 +87,10 @@ const DEVICE_RULES := {
 }
 ## Dispositivos que disparan solos (los demás se activan al pisarlos).
 const TURRET_DEVICES := ["totem", "container"]
+## Segundos que dura el retroceso del cañón de la torreta al disparar.
+const TURRET_KICK := 0.18
+## Claves de un salto en curso de una invocación (_unit_leap_step).
+const LEAP_KEYS := ["leap_to", "leap_from", "leap_t", "leap_hit"]
 const MINION_SPEED := 240.0
 const MINION_SEARCH := 450.0
 var _mana_warning_cooldown := 0.0
@@ -187,6 +197,7 @@ func _refresh_units() -> void:
 		u["base_reduction"] = float(p["unit_reduction"])
 		u["max_life"] = maxf(1.0, p["unit_life"])
 		u["life"] = u["max_life"] * frac
+		u["scale"] = _unit_scale(p)
 		kept.append(u)
 	_units = kept
 	_update_reservation()
@@ -295,6 +306,8 @@ func on_zone_changed() -> void:
 	_projectiles.clear()
 	# Lo que sigue al jugador mientras dura su buff (T195) se muda con él.
 	_effects.assign(_effects.filter(func(e: Dictionary) -> bool: return e.get("live", false)))
+	_dying_units.clear()   # las que caían se quedan en la zona anterior
+	_debris.clear()
 	_pending.clear()
 	_traps.clear()
 	_devices.clear()
@@ -311,6 +324,11 @@ func on_zone_changed() -> void:
 		k += 1
 	for u in _units:
 		u["pos"] = player.global_position + Vector2.from_angle(TAU * k / maxf(1.0, _units.size() + _minions.size())) * 55.0
+		# A medio salto o desvaneciéndose: no termina en la zona anterior.
+		for key in LEAP_KEYS:
+			u.erase(key)
+		if u.has("warp_to"):
+			u["warp_to"] = u["pos"]
 		k += 1
 	_companion = {}
 
@@ -318,6 +336,8 @@ func on_zone_changed() -> void:
 ## Quita todas las invocaciones persistentes (al morir).
 func clear_units() -> void:
 	_units.clear()
+	_dying_units.clear()
+	_debris.clear()
 	_update_reservation()
 	_sync_golem_buffs()
 
@@ -1082,6 +1102,8 @@ func _physics_process(delta: float) -> void:
 	# ni torretas, ni proyectiles en vuelo. Solo se apagan los efectos visuales.
 	if enemies.frozen or player.controls_locked:
 		_channel = {}
+		if not _debris.is_empty():
+			UnitArt.update_debris(_debris, delta)   # las piezas de lo que se desarmó no se quedan en el aire
 		_update_effects(delta)
 		queue_redraw()
 		return
@@ -1923,6 +1945,7 @@ func _deploy(p: Dictionary, target: Vector2) -> void:
 	var same: Array = _devices.filter(func(d: Dictionary) -> bool: return d["kind"] == kind and (kind != "container" or d["profile"]["id"] == p["id"]))
 	if same.size() > int(rules["max"]) + (0 if kind == "container" else int(p.get("extra_devices", 0))):
 		_devices.erase(same[0])
+		_shatter_device(same[0])
 	if kind == "container":
 		_update_reservation()
 
@@ -1934,11 +1957,14 @@ func _update_devices(delta: float) -> void:
 	for d in _devices:
 		d["life"] -= delta
 		d["armed_in"] -= delta
+		if d.has("kick"):
+			d["kick"] = maxf(0.0, float(d["kick"]) - delta)
 		if d["life"] <= 0.0:
+			_shatter_device(d)   # caduca: la torreta se desarma
 			continue
 		if d.has("ally"):
 			if float(d["ally"]["life"]) <= 0.0:
-				_effects.append({"type": "burst", "pos": d["pos"], "radius": 34.0, "time": 0.0, "duration": 0.4, "color": Color("ff7a4a")})
+				_shatter_device(d)
 				continue   # la destruyeron
 			proxies.append(d["ally"])
 		var rules: Dictionary = DEVICE_RULES[d["kind"]]
@@ -1963,8 +1989,11 @@ func _update_devices(delta: float) -> void:
 		var i := enemies.nearest_index(d["pos"], rules["trigger"])
 		if d["kind"] in TURRET_DEVICES:
 			d["next_use"] -= delta
+			if i != -1:
+				d["aim"] = (enemies.positions[i] - (d["pos"] as Vector2)).normalized()   # el cañón sigue al objetivo
 			if i != -1 and d["next_use"] <= 0.0:
 				d["next_use"] = d["interval"]
+				d["kick"] = TURRET_KICK   # retroceso del cañón
 				_execute(d["profile"], enemies.positions[i], d["pos"])
 			still.append(d)
 		elif i != -1:
@@ -1985,6 +2014,15 @@ func _update_devices(delta: float) -> void:
 	enemies.allies = allies
 
 
+## Torreta o contenedor que caduca, cae o se retira: se desarma en piezas y bits
+## (las trampas y minas no: se quedan como estaban).
+func _shatter_device(d: Dictionary) -> void:
+	if not d["kind"] in TURRET_DEVICES:
+		return
+	var key := "torreta" if d["kind"] == "totem" else "contenedor"
+	UnitArt.shatter(_debris, d["pos"], 34.0, UnitArt.debris_colors(key, d["color"]), 7, 7)
+
+
 # --- Esbirros ---
 
 func _update_minions(delta: float) -> void:
@@ -1994,6 +2032,8 @@ func _update_minions(delta: float) -> void:
 		m["cd"] -= delta
 		m["phase"] += delta * 8.0
 		if m["life"] <= 0.0:
+			# Proceso Hijo que termina: se desarma.
+			UnitArt.shatter(_debris, m["pos"] + Vector2(0, 6), 26.0, UnitArt.debris_colors("proceso_hijo", m["color"]), 4, 5)
 			continue
 		var p: Dictionary = m["profile"]
 		var pos: Vector2 = m["pos"]
@@ -2030,8 +2070,10 @@ func _summon_unit(p: Dictionary, origin: Vector2, color: Color) -> void:
 				worst = u
 		worst["life"] = worst["max_life"]
 		if worst["behavior"] != "orbit":
-			worst["pos"] = origin + Vector2.from_angle(randf() * TAU) * 40.0
-		_effects.append({"type": "ring", "pos": worst["pos"], "radius": 34.0, "time": 0.0, "duration": 0.4, "color": color})
+			# Se desvanece en bits donde está y reaparece compilándose junto al jugador.
+			_unit_warp(worst, origin + Vector2.from_angle(randf() * TAU) * 40.0)
+		else:
+			worst["spawn"] = UnitArt.SPAWN_TIME
 		return
 	var life: float = maxf(1.0, p["unit_life"])
 	var u := {"skill_id": p["id"], "profile": p, "behavior": String(unit.get("behavior", "melee")),
@@ -2039,13 +2081,45 @@ func _summon_unit(p: Dictionary, origin: Vector2, color: Color) -> void:
 		"radius": float(unit.get("radius", 12.0)), "taunt": float(unit.get("taunt", 0.0)), "reduction": float(p["unit_reduction"]), "base_reduction": float(p["unit_reduction"]),
 		"ab_cd": float(p["unit_ability"].get("cooldown", p["unit_interval"])) * 0.5,
 		"cd": 0.5, "phase": randf() * TAU, "hurt": 0.0, "angle": TAU * mine.size() / maxf(1.0, p["max_units"]),
-		"slot": mine.size(), "color": color}
-	_units.append(u)
-	_effects.append({"type": "ring", "pos": u["pos"], "radius": 40.0 + u["radius"], "time": 0.0, "duration": 0.5, "color": color})
+		"slot": mine.size(), "color": color,
+		# Animación (UnitArt): fase de caminar, mezcla quieta/caminando, hacia dónde mira y apunta, escala.
+		"walk": 0.0, "move": 0.0, "facing": 1.0 if origin.x >= player.global_position.x else -1.0, "aim": Vector2.RIGHT,
+		"spawn": UnitArt.SPAWN_TIME, "atk": 0.0, "look": 0.0, "scale": _unit_scale(p)}
+	_units.append(u)   # aparece compilándose de bits (estado «spawn» de UnitArt)
 	_update_reservation()
 
 
+## Lleva una invocación a `to` sin teletransportarla de golpe: se desvanece en
+## bits (UnitArt.WARP_TIME) y reaparece allí compilándose.
+func _unit_warp(u: Dictionary, to: Vector2) -> void:
+	if not u.has("warp_to"):
+		u["warp"] = UnitArt.WARP_TIME
+	u["warp_to"] = to
+	for key in LEAP_KEYS:
+		u.erase(key)   # si estaba saltando, el salto se pierde
+
+
+## Retroceso al recibir un golpe: se aparta unos píxeles del enemigo más cercano
+## (los tanques, menos).
+func _unit_knockback(u: Dictionary) -> void:
+	var pos: Vector2 = u["pos"]
+	var i := enemies.nearest_index(pos, 160.0)
+	var away: Vector2 = (pos - enemies.positions[i]).normalized() if i != -1 else Vector2(-float(u.get("facing", 1.0)), 0.0)
+	if away == Vector2.ZERO:
+		away = Vector2(-float(u.get("facing", 1.0)), 0.0)
+	var to: Vector2 = pos + away * (UNIT_KNOCKBACK * (0.4 if u["behavior"] == "tank" else 1.0))
+	# Sin salirse del terreno: quieta junto a una pared, los golpes la meterían dentro.
+	u["pos"] = enemies.walk_clamp.call(to, u["radius"]) if enemies.walk_clamp.is_valid() else to
+
+
 func _update_units(delta: float) -> void:
+	if not _debris.is_empty():
+		UnitArt.update_debris(_debris, delta)
+	if not _dying_units.is_empty():
+		for d in _dying_units:
+			d["dying"] += delta
+			d["phase"] += delta * 6.0
+		_dying_units.assign(_dying_units.filter(func(d: Dictionary) -> bool: return float(d["dying"]) < UnitArt.DIE_TIME))
 	if _units.is_empty():
 		return
 	if not player.is_alive():
@@ -2054,8 +2128,16 @@ func _update_units(delta: float) -> void:
 	var lost := false
 	var still: Array[Dictionary] = []
 	for u in _units:
-		u["hurt"] = maxf(0.0, float(u.get("hurt", 0.0)) - delta)
-		u["phase"] += delta * 6.0
+		# Golpe nuevo (EnemyManager vuelve a poner «hurt» arriba): retrocede. Solo si
+		# ya acabó el retroceso anterior: rodeada por una horda, cada golpe la empujaría
+		# 7 px y se deslizaría sin parar.
+		var hurt := float(u.get("hurt", 0.0))
+		var hurt_last := float(u.get("hurt_last", 0.0))
+		if hurt > hurt_last + 0.001 and hurt_last <= 0.0 and u["behavior"] != "orbit" and not u.has("warp_to") and not u.has("leap_to"):
+			_unit_knockback(u)
+		u["hurt"] = maxf(0.0, hurt - delta)
+		u["hurt_last"] = u["hurt"]
+		u["phase"] += delta * 6.0   # reloj de la figura (LEDs, ventiladores); la fase de caminar es u["walk"]
 		u["cd"] -= delta
 		# Auras con alcance: fuera del radio la invocación pelea con sus cifras sin auras.
 		var in_aura := in_aura_range(u["pos"])
@@ -2065,7 +2147,6 @@ func _update_units(delta: float) -> void:
 		if in_aura and _aura_regen > 0.0 and u["behavior"] != "orbit":
 			u["life"] = minf(u["max_life"], u["life"] + u["max_life"] * _aura_regen / 100.0 * delta)
 		if u["life"] <= 0.0:
-			var death_color := Color("ff7a4a")
 			if String(p["unit_ability"].get("kind", "")) == "explode":
 				# Mina Rodante: explota al caer.
 				var boom_radius: float = float(p["unit_ability"].get("radius", 90.0)) * float(p.get("area_scale", 1.0)) * sqrt(float(p.get("ability_power", 1.0)))
@@ -2076,14 +2157,50 @@ func _update_units(delta: float) -> void:
 				_damage_area(u["pos"], boom_radius, boom_p)
 				Sfx.play("mine", -4.0)
 				_effects.append({"type": "quake", "pos": u["pos"], "radius": boom_radius, "time": 0.0, "duration": 0.5, "color": u["color"]})
-				death_color = u["color"]
-			_effects.append({"type": "burst", "pos": u["pos"], "radius": 36.0 + u["radius"], "time": 0.0, "duration": 0.4, "color": death_color})
+				_effects.append({"type": "burst", "pos": u["pos"], "radius": 36.0 + u["radius"], "time": 0.0, "duration": 0.4, "color": u["color"]})
+			# Se desarma: piezas de su figura y bits que saltan y caen al suelo.
+			var orbit: bool = u["behavior"] == "orbit"
+			var height := UnitArt.figure_height(u)
+			var big := clampf(height / 30.0, 1.0, 3.0)
+			UnitArt.shatter(_debris, (u["pos"] as Vector2) + (Vector2(0, 30) if orbit else Vector2.ZERO), height,
+				UnitArt.debris_colors(String(u["skill_id"]), u["color"]), int(6 * big), int(6 * big), 26.0 if orbit else 0.0)
+			if not orbit:
+				var corpse := u.duplicate()
+				corpse["dying"] = 0.0
+				corpse["move"] = 0.0
+				corpse.erase("warp")
+				for key in LEAP_KEYS:
+					corpse.erase(key)   # cae donde estaba, no en el aire
+				_dying_units.append(corpse)
 			unit_lost.emit(String(p["name"]))
 			lost = true
 			continue
-		_unit_ability(u, p, delta)
+		if u.has("warp_to"):
+			# Desvaneciéndose: no pelea ni camina; al terminar aparece en su sitio nuevo.
+			u["warp"] = float(u["warp"]) - delta
+			if u["warp"] <= 0.0:
+				u["pos"] = u["warp_to"]
+				u.erase("warp_to")
+				u["warp"] = 0.0
+				u["spawn"] = UnitArt.SPAWN_TIME
+				u["move"] = 0.0
+			UnitArt.tick(u, delta, Vector2.ZERO)
+			still.append(u)
+			continue
+		if u.has("leap_to"):
+			# En el aire: ni pelea ni camina hasta caer.
+			_unit_leap_step(u, p, delta)
+			UnitArt.tick(u, delta, Vector2.ZERO)
+			still.append(u)
+			continue
 		if (u["pos"] as Vector2).distance_to(player.global_position) > UNIT_LEASH:
-			u["pos"] = player.global_position + Vector2.from_angle(randf() * TAU) * 60.0   # se ha quedado atrás
+			_unit_warp(u, player.global_position + Vector2.from_angle(randf() * TAU) * 60.0)   # se ha quedado atrás
+		_unit_ability(u, p, delta)
+		if u.has("leap_to"):
+			UnitArt.tick(u, delta, Vector2.ZERO)   # acaba de despegar: este fotograma no camina
+			still.append(u)
+			continue
+		var before: Vector2 = u["pos"]
 		var unit: Dictionary = p["unit"]
 		var speed := float(unit.get("speed", 220.0))
 		var reach_range := float(unit.get("range", 450.0))
@@ -2105,6 +2222,7 @@ func _update_units(delta: float) -> void:
 				if i != -1 and enemies.positions[i].distance_to(player.global_position) < reach_range * 1.8:
 					var to := enemies.positions[i] - pos
 					var reach: float = enemies.radii[i] + u["radius"] + 4.0
+					UnitArt.look(u, to)
 					if to.length() > reach:
 						_unit_step(u, enemies.positions[i], speed, delta, reach)
 					elif u["cd"] <= 0.0 and String(p["unit_ability"].get("kind", "")) == "explode":
@@ -2112,17 +2230,27 @@ func _update_units(delta: float) -> void:
 					elif u["cd"] <= 0.0:
 						u["cd"] = p["unit_interval"]
 						_ctx(p)
+						UnitArt.strike(u, to)
 						if u["behavior"] == "tank":
 							if p["stun"] > 0.0:
 								enemies.stun_in_radius(pos, p["radius"], p["stun"])
+							# Tras el golpe, `i` ya no vale: si el objetivo muere, otro ocupa su hueco
+							# (o el índice se sale de la lista). Por eso el latigazo apunta a pos + to.
 							_damage_area(pos, p["radius"], p)
-							_effects.append({"type": "quake", "pos": pos, "radius": p["radius"], "time": 0.0, "duration": 0.35, "color": u["color"]})
+							if u["skill_id"] == "golem_utp":
+								# Golem UTP: un latigazo de cable que restalla sobre el objetivo.
+								_effects.append({"type": "whip", "pos": pos + Vector2(float(u["facing"]) * 16.0, -30.0) * float(u.get("scale", 1.0)),
+									"end": pos + to, "time": 0.0, "duration": 0.3, "color": u["color"]})
+							else:
+								_effects.append({"type": "quake", "pos": pos, "radius": p["radius"], "time": 0.0, "duration": 0.35, "color": u["color"]})
 						else:
 							enemies.hit_index(i, p["min_damage"], p["max_damage"], p["crit_chance"], p["crit_multiplier"])
 							_leech(p)
 							_effects.append({"type": "burst", "pos": pos + to.normalized() * u["radius"], "radius": 14.0, "time": 0.0, "duration": 0.15, "color": u["color"]})
 				else:
 					_unit_step(u, player.global_position + Vector2.from_angle(PI * 0.5 + u["slot"] * 1.4) * 70.0, speed, delta, 12.0)
+		# Las que orbitan no caminan: solo miran a su objetivo.
+		UnitArt.tick(u, delta, Vector2.ZERO if u["behavior"] == "orbit" else (u["pos"] as Vector2) - before)
 		still.append(u)
 	_units = still
 	if lost:
@@ -2194,20 +2322,22 @@ func _one_unit_ability(u: Dictionary, p: Dictionary, ab: Dictionary, delta: floa
 			var land: Vector2 = enemies.positions[best] - (enemies.positions[best] - pos).normalized() * 18.0
 			if enemies.walk_clamp.is_valid():
 				land = enemies.walk_clamp.call(land, u["radius"])
-			_effects.append({"type": "leap", "pos": pos, "end": land, "time": 0.0, "duration": 0.3, "color": u["color"]})
-			u["pos"] = land
-			_ctx(p)
-			var leap_radius := float(ab.get("radius", 75.0)) * float(p.get("area_scale", 1.0))
-			var leap_mult := float(ab.get("damage_mult", 1.5)) * float(p.get("ability_power", 1.0))
-			enemies.hit_in_radius(land, leap_radius, p["min_damage"] * leap_mult,
-				p["max_damage"] * leap_mult, p["crit_chance"], p["crit_multiplier"])
-			_effects.append({"type": "quake", "pos": land, "radius": leap_radius, "time": 0.0, "duration": 0.4, "color": u["color"]})
+			# Salta con el cuerpo en arco (UnitArt, estado «leap»): el golpe llega al caer
+			# (_unit_leap_step). Al despegar, una nube de polvo.
+			UnitArt.look(u, land - pos)
+			u["leap_from"] = pos
+			u["leap_to"] = land
+			u["leap_t"] = 0.0
+			u["leap_arc"] = UnitArt.leap_arc(pos.distance_to(land))
+			u["leap_hit"] = [float(ab.get("radius", 75.0)), float(ab.get("damage_mult", 1.5))]
+			_effects.append({"type": "burst", "pos": pos, "radius": 14.0 + u["radius"], "time": 0.0, "duration": 0.25, "color": Color(0.75, 0.7, 0.6, 0.8)})
 		"venom":
 			var t := enemies.nearest_index(pos, float(p["unit"].get("range", 520.0)))
 			if t == -1:
 				u["ab_cd"] = 0.5
 				return
 			u["ab_cd"] = float(ab.get("cooldown", 7.0)) / speed
+			UnitArt.strike(u, enemies.positions[t] - pos)
 			var cloud := p.duplicate()
 			cloud["tick"] = 0.5
 			cloud["radius"] = float(ab.get("radius", 95.0)) * float(p.get("area_scale", 1.0))
@@ -2274,12 +2404,40 @@ func _one_unit_ability(u: Dictionary, p: Dictionary, ab: Dictionary, delta: floa
 			u["ab_cd"] = float(ab.get("cooldown", 4.0)) / speed
 			var from := pos + Vector2(0, -float(p["unit"].get("beam_height", 74.0)))
 			var to: Vector2 = from + (enemies.positions[far] - from).normalized() * reach
+			UnitArt.strike(u, enemies.positions[far] - pos)
 			_ctx(p)
 			var bm := float(ab.get("damage_mult", 1.6)) * float(p.get("ability_power", 1.0))
 			enemies.hit_in_segment(from, to, float(ab.get("width", 22.0)) * 0.5, p["min_damage"] * bm, p["max_damage"] * bm, p["crit_chance"], p["crit_multiplier"])
 			Sfx.play("arc", -8.0, 0.8)
 			_effects.append({"type": "beam", "pos": from, "dir": (to - from).normalized(), "radius": float(ab.get("width", 22.0)), "length": reach,
 				"time": 0.0, "duration": 0.3, "color": Color("ff4a3a")})
+
+
+## Avanza un salto en arco (UnitArt.LEAP_TIME): los pies van de leap_from a
+## leap_to (la altura la pone UnitArt) y al caer golpea el suelo alrededor.
+func _unit_leap_step(u: Dictionary, p: Dictionary, delta: float) -> void:
+	u["leap_t"] = float(u["leap_t"]) + delta
+	var s := clampf(float(u["leap_t"]) / UnitArt.LEAP_TIME, 0.0, 1.0)
+	var land: Vector2 = u["leap_to"]
+	u["pos"] = (u["leap_from"] as Vector2).lerp(land, s)
+	if s < 1.0:
+		return
+	var hit: Array = u["leap_hit"]
+	for key in LEAP_KEYS:
+		u.erase(key)
+	_ctx(p)
+	var leap_radius := float(hit[0]) * float(p.get("area_scale", 1.0))
+	var leap_mult := float(hit[1]) * float(p.get("ability_power", 1.0))
+	enemies.hit_in_radius(land, leap_radius, p["min_damage"] * leap_mult,
+		p["max_damage"] * leap_mult, p["crit_chance"], p["crit_multiplier"])
+	_effects.append({"type": "quake", "pos": land, "radius": leap_radius, "time": 0.0, "duration": 0.4, "color": u["color"]})
+
+
+## Escala de dibujo de una invocación: Monolito, Microservicios y el Clúster de tres.
+func _unit_scale(p: Dictionary) -> float:
+	var monolith := character != null and character.stats.get_value(Stat.MONOLITH) > 0.0
+	var micro := character != null and character.stats.get_value(Stat.MICROSERVICES) > 0.0
+	return UnitArt.scale_for(String(p.get("variant", "")), monolith, micro)
 
 
 ## Avanza hacia `goal` hasta quedarse a `stop` de él, sin salirse del terreno.
@@ -2303,8 +2461,12 @@ func _unit_shoot(u: Dictionary, p: Dictionary, reach_range: float) -> void:
 		return
 	u["cd"] = p["unit_interval"]
 	var dir: Vector2 = (enemies.positions[t] - pos).normalized()
+	UnitArt.strike(u, dir)
+	# Sigue apuntando a ese objetivo hasta el siguiente disparo (no se voltea hacia la marcha entre tiro y tiro).
+	u["look"] = clampf(float(p["unit_interval"]) + 0.1, UnitArt.LOOK_TIME, 1.5)
 	_fire_volley(p, pos, dir, u["color"], {}, reach_range * 1.5)
-	_effects.append({"type": "burst", "pos": pos + dir * 10.0, "radius": 8.0, "time": 0.0, "duration": 0.12, "color": u["color"]})
+	if not String(u["skill_id"]) in UnitArt.MUZZLE_FIGURES:   # las que tienen cañón ya dibujan su fogonazo
+		_effects.append({"type": "burst", "pos": pos + dir * 10.0, "radius": 8.0, "time": 0.0, "duration": 0.12, "color": u["color"]})
 
 
 # --- Lluvia de impactos (Cascada de Estilos) ---
@@ -2334,6 +2496,8 @@ func _update_drones(delta: float) -> void:
 		d["next"] -= delta
 		d["angle"] += delta * 1.6
 		if d["life"] <= 0.0 or not player.is_alive():
+			# Dron de Vigilancia que caduca: sus piezas caen desde donde volaba hasta su sombra.
+			UnitArt.shatter(_debris, _drone_pos(d) + Vector2(0, 30), 8.0, UnitArt.debris_colors("dron", d["color"]), 3, 3, 26.0)
 			continue
 		var p: Dictionary = d["profile"]
 		var pos := _drone_pos(d)
@@ -2803,6 +2967,26 @@ func _draw() -> void:
 					cable.append(a2.lerp(b2, s) + side * sin(s * TAU * 1.5 + t * 8.0) * 6.0 * (1.0 - s))
 				draw_polyline(cable, Color(c, 0.9 * (1.0 - t)), 3.0, true)
 				draw_rect(Rect2(b2 - Vector2(3, 3), Vector2(6, 6)), Color(0.9, 0.9, 0.9, 1.0 - t))   # el RJ45
+			"whip":
+				# Latigazo del Golem UTP: el cable se despliega en curva, restalla sobre el
+				# objetivo (chispas) y se recoge.
+				var a3: Vector2 = e["pos"]
+				var b3: Vector2 = e["end"]
+				var reach := minf(1.0, t / 0.35)
+				var back := clampf((t - 0.35) / 0.65, 0.0, 1.0)
+				var tip := a3.lerp(b3, reach * (1.0 - back * 0.85))
+				var side3 := (b3 - a3).orthogonal().normalized()
+				var lash := PackedVector2Array()
+				for k in 12:
+					var s := k / 11.0
+					lash.append(a3.lerp(tip, s) + side3 * (sin(s * PI) * 16.0 * (1.0 - reach) + sin(s * TAU - t * 18.0) * 3.0 * s))
+				draw_polyline(lash, Color(c, 0.95 * (1.0 - back)), 3.0, true)
+				draw_rect(Rect2(tip - Vector2(3, 3), Vector2(6, 6)), Color(0.9, 0.9, 0.9, 1.0 - back))
+				if t > 0.3 and t < 0.65:
+					var crack := 1.0 - (t - 0.3) / 0.35
+					for k in 5:
+						var d3 := Vector2.from_angle(TAU * k / 5.0 + 0.3)
+						draw_line(b3 + d3 * 3.0, b3 + d3 * (6.0 + 8.0 * (1.0 - crack)), Color(1.0, 0.9, 0.5, crack), 1.5, true)
 			"quake":
 				# Golpe al suelo: anillo que se expande y grietas.
 				var r: float = e["radius"]
@@ -2930,6 +3114,18 @@ func _draw_devices() -> void:
 					draw_circle(p + Vector2(6, -22 + k * 8), 2.0, c if on else Color("1a2a1a"))
 				draw_line(p + Vector2(0, -30), p + Vector2(0, -42), Color("8a8a8a"), 2.0)
 				draw_circle(p + Vector2(0, -43), 3.0, c)
+				# Cañón que apunta al objetivo, retrocede al disparar y escupe un fogonazo.
+				var aim: Vector2 = d.get("aim", Vector2.RIGHT)
+				var kick := float(d.get("kick", 0.0)) / TURRET_KICK
+				var pivot := p + Vector2(0, -18)
+				var muzzle := pivot + aim * (16.0 - 5.0 * kick)
+				draw_circle(pivot, 5.0, Color("4a4f5c"))
+				draw_line(pivot, muzzle, Color("3a3f4a"), 5.0)
+				draw_line(pivot, muzzle, Color("6e7480"), 2.0)
+				if kick > 0.5:
+					var f := (kick - 0.5) * 2.0
+					draw_circle(muzzle + aim * 3.0, 2.0 + 4.0 * f, Color(1.0, 0.95, 0.7, 0.85 * f))
+					draw_line(muzzle, muzzle + aim * (6.0 + 8.0 * f), Color(c.lightened(0.4), 0.9 * f), 2.0)
 			"container":
 				# Contenedor: una caja azul con el logo de la ballena y su carga apilada.
 				draw_arc(p, 30.0, 0.0, TAU, 32, Color(c, 0.35), 1.5, true)
@@ -3045,23 +3241,37 @@ func _draw_buff_allies(e: Dictionary) -> void:
 
 ## Invocaciones persistentes: cada comportamiento tiene su figura.
 func _draw_units() -> void:
+	if not _debris.is_empty():
+		UnitArt.draw_debris(self, _debris)   # en el suelo, debajo de las que siguen en pie
+	for u in _dying_units:
+		var dp: Vector2 = u["pos"]
+		var fade := 1.0 - float(u["dying"]) / UnitArt.DIE_TIME
+		draw_set_transform(dp + Vector2(0, u["radius"] * 0.7), 0.0, Vector2(1.0, 0.4))
+		draw_circle(Vector2.ZERO, u["radius"] * 1.1 * float(u.get("scale", 1.0)), Color(0, 0, 0, 0.35 * fade))
+		draw_set_transform(Vector2.ZERO)
+		UnitArt.draw(self, String(u["skill_id"]), String(u["behavior"]), dp, u["phase"], u["color"], UnitArt.anim(u))
 	for u in _units:
 		var p: Vector2 = u["pos"]
 		var ph: float = u["phase"]
 		var c: Color = u["color"]
 		var hurt: bool = u.get("hurt", 0.0) > 0.0
-		var r: float = u["radius"]
+		var sc := float(u.get("scale", 1.0))
+		var r: float = u["radius"] * sc
+		var hop := UnitArt.leap_height(u)   # saltando: la sombra se queda en el suelo y encoge
 		if u["behavior"] != "orbit":
-			draw_set_transform(p + Vector2(0, r * 0.7), 0.0, Vector2(1.0, 0.4))
+			draw_set_transform(p + Vector2(0, r * 0.7), 0.0, Vector2(1.0, 0.4) * (1.0 - 0.4 * hop / UnitArt.LEAP_ARC_MAX))
 			draw_circle(Vector2.ZERO, r * 1.1, Color(0, 0, 0, 0.35))
 			draw_set_transform(Vector2.ZERO)
-		UnitArt.draw(self, String(u["skill_id"]), String(u["behavior"]), p, ph, c)
-		if hurt:
-			draw_circle(p + Vector2(0, -r), r * 1.1, Color(1, 1, 1, 0.35))
+		# Herida: retrocede (UnitArt) y parpadea; sin parpadeos (accesibilidad), un velo blanco.
+		var blink := hurt and Accessibility.can_blink()
+		if not blink or int(float(u["hurt"]) * 30.0) % 2 == 0:
+			UnitArt.draw(self, String(u["skill_id"]), String(u["behavior"]), p, ph, c, UnitArt.anim(u))
+		if hurt and not blink:
+			draw_circle(p + Vector2(0, -r), r * 1.1, Color(1, 1, 1, 0.25))
 		if u["behavior"] != "orbit":
 			# Barra de vida con el símbolo de persistente.
 			var w := maxf(24.0, r * 2.2)
-			var top := p + Vector2(-w / 2.0, -r * 2.6 - 14.0)
+			var top := p + Vector2(-w / 2.0, -r * 2.6 - 14.0 - hop)
 			draw_rect(Rect2(top - Vector2(1, 1), Vector2(w + 2.0, 5.0)), Color(0, 0, 0, 0.75))
 			draw_rect(Rect2(top, Vector2(w * clampf(u["life"] / u["max_life"], 0.0, 1.0), 3.0)), Color("6fd36b"))
 			if u["taunt"] > 0.0:

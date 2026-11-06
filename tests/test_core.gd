@@ -241,6 +241,10 @@ func _initialize() -> void:
 	_test_spell_signatures()
 	_test_flamewar_tongues()
 	_test_buff_signatures()
+
+	_test_unit_animation()
+	_test_unit_spawn_death()
+	_test_unit_attacks()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -8914,4 +8918,274 @@ func _test_buff_signatures() -> void:
 		sc._effects.clear()
 	sc.free()
 	pl.queue_free()
+
+## Motor de animación de invocaciones (T200): la fase de caminar solo avanza al
+## moverse, se voltean hacia lo que atacan y la escala por nodo clave o variante.
+func _test_unit_animation() -> void:
+	_check(is_equal_approx(UnitArt.scale_for("", false, false), 1.0), "escala normal 1")
+	_check(UnitArt.scale_for("", true, false) > 1.2, "Monolito se ve más grande")
+	_check(UnitArt.scale_for("", false, true) < 1.0 and UnitArt.scale_for("trio", false, false) < 1.0, "Microservicios y el Clúster de tres, más pequeños")
+	var c := CharacterData.new(_classes[5], _tree)
+	var em := EnemyManager.new()
+	root.add_child(em)
+	var player: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(player)
+	player.setup(c, em)
+	player.global_position = Vector2(40000, 40000)
+	var sc := SkillController.new()
+	root.add_child(sc)
+	c.inventory.set_board(0, Motherboard.new(_db.skills.skills["daemon_segundo_plano"], 5, []))
+	sc.setup(player, em, c)
+	sc._summon_unit(sc.profile(0), player.global_position, Color.WHITE)
+	_check(sc._units.size() == 1, "hay un daemon para animar")
+	if sc._units.size() == 1:
+		var u: Dictionary = sc._units[0]
+		_check(UnitArt.state_of(u) == "spawn", "al invocarla, aparece")
+		# Quieta en su sitio junto al jugador: la fase de caminar no avanza.
+		u["pos"] = player.global_position + Vector2.from_angle(PI * 0.5 + u["slot"] * 1.4) * 70.0
+		var walk0 := float(u["walk"])
+		var clock0 := float(u["phase"])
+		for k in 10:
+			sc._update_units(0.05)
+		_check(is_equal_approx(float(u["walk"]), walk0) and float(u["phase"]) > clock0, "quieta: la fase de caminar no avanza (el reloj sí)")
+		_check(UnitArt.state_of(u) == "idle", "quieta y ya aparecida: en espera (%s)" % UnitArt.state_of(u))
+		# Lejos de su sitio: camina hacia él y se voltea según la marcha.
+		u["pos"] = player.global_position + Vector2(300, 70)
+		for k in 6:
+			sc._update_units(0.05)
+		_check(float(u["walk"]) > walk0 and float(u["facing"]) < 0.0 and UnitArt.state_of(u) == "walk", "camina hacia la izquierda: fase de caminar y volteada")
+		# Ataca a un enemigo que tiene a la izquierda: queda volteada hacia él.
+		u["pos"] = player.global_position + Vector2(-60, 0)
+		u["facing"] = 1.0
+		u["cd"] = 0.0
+		em.spawn((u["pos"] as Vector2) + Vector2(-20, 0), Rarity.Enemy.NORMAL, -1, "", 1000.0)
+		sc._update_units(0.05)
+		_check(float(u["facing"]) < 0.0 and UnitArt.state_of(u) == "attack" and (u["aim"] as Vector2).x < 0.0, "ataca a la izquierda: volteada, apuntando y en estado de ataque")
+		var a := UnitArt.anim(u)
+		_check(a["state"] == "attack" and float(a["facing"]) < 0.0, "los datos de animación llevan dirección y estado")
+		# Al caer: estado «die» un momento y después desaparece.
+		u["life"] = 0.0
+		sc._update_units(0.05)
+		_check(sc._units.is_empty() and sc._dying_units.size() == 1 and UnitArt.state_of(sc._dying_units[0]) == "die", "al caer, se dibuja muriendo")
+		for k in 10:
+			sc._update_units(0.05)
+		_check(sc._dying_units.is_empty(), "y luego desaparece")
+		# Al morir el jugador no quedan cuerpos cayendo.
+		sc._dying_units.append({"dying": 0.0})
+		sc.clear_units()
+		_check(sc._dying_units.is_empty(), "clear_units también quita las que caían")
+	sc.queue_free()
+	player.queue_free()
+	em.queue_free()
+
+## Aparecer y morir (T201): al relanzar se desvanece y reaparece compilándose en
+## vez de teletransportarse, al recibir un golpe retrocede, y al caer (también
+## esbirros, drones y torretas) se desarma en piezas que caen y se apagan.
+func _test_unit_spawn_death() -> void:
+	var c := CharacterData.new(_classes[5], _tree)
+	var em := EnemyManager.new()
+	root.add_child(em)
+	var player: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(player)
+	player.setup(c, em)
+	player.global_position = Vector2(50000, 50000)
+	var sc := SkillController.new()
+	root.add_child(sc)
+	c.inventory.set_board(0, Motherboard.new(_db.skills.skills["daemon_segundo_plano"], 5, []))
+	sc.setup(player, em, c)
+	var p := sc.profile(0)
+	for k in int(p["max_units"]):
+		sc._summon_unit(p, player.global_position, Color.WHITE)
+	_check(not sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "ring"), "aparece compilándose, sin el anillo de antes")
+	var u: Dictionary = sc._units[0]
+	for k in 10:
+		sc._update_units(0.05)
+	# Relanzar con todas en pie: la más dañada se desvanece donde está y reaparece junto al jugador.
+	u["pos"] = player.global_position + Vector2(400, 0)
+	u["life"] = 1.0
+	for o in sc._units:
+		if o != u:
+			o["life"] = o["max_life"]
+	var far: Vector2 = u["pos"]
+	sc._summon_unit(p, player.global_position, Color.WHITE)
+	_check(UnitArt.state_of(u) == "warp" and u["pos"] == far, "al relanzar, primero se desvanece donde estaba")
+	sc._update_units(0.1)
+	_check(u["pos"] == far, "mientras se desvanece no se teletransporta")
+	sc._update_units(0.15)
+	_check((u["pos"] as Vector2).distance_to(player.global_position) < 80.0 and UnitArt.state_of(u) == "spawn", "luego reaparece junto al jugador compilándose")
+	var a := UnitArt.anim(u)
+	_check(float(a["height"]) > 10.0, "la compilación sabe el alto de la figura")
+	# Golpe: retrocede alejándose del enemigo.
+	for k in 10:
+		sc._update_units(0.05)
+	u["pos"] = player.global_position + Vector2(-60, 0)
+	u["cd"] = 5.0   # al lado del enemigo y sin atacar: solo cuenta el retroceso
+	em.spawn((u["pos"] as Vector2) + Vector2(20, 0), Rarity.Enemy.NORMAL, -1, "", 1000.0)
+	var before: Vector2 = u["pos"]
+	u["hurt"] = 0.15
+	sc._update_units(0.016)
+	_check((u["pos"] as Vector2).x < before.x - 5.0, "al recibir un golpe retrocede (%.1f → %.1f)" % [before.x, (u["pos"] as Vector2).x])
+	_check(float(u["hurt"]) > 0.0 and UnitArt.anim(u)["state"] == "hurt", "y queda herida un momento")
+	# Golpes seguidos (una horda) mientras aún retrocede: no la empujan más.
+	var mid: Vector2 = u["pos"]
+	for k in 5:
+		u["hurt"] = 0.15
+		sc._update_units(0.016)
+	_check((u["pos"] as Vector2).x > mid.x - 3.0, "los golpes seguidos no la arrastran (%.1f → %.1f)" % [mid.x, (u["pos"] as Vector2).x])
+	# Acabado el retroceso, el siguiente golpe sí la vuelve a empujar.
+	for k in 12:
+		sc._update_units(0.016)
+	var rest: Vector2 = u["pos"]
+	u["hurt"] = 0.15
+	sc._update_units(0.016)
+	_check((u["pos"] as Vector2).x < rest.x - 2.0, "y el siguiente golpe, ya recuperada, la vuelve a empujar")
+	# Contra una pared (el terreno acaba 2 px detrás), el retroceso no la mete dentro.
+	for k in 12:
+		sc._update_units(0.016)
+	var wall: float = (u["pos"] as Vector2).x - 2.0
+	em.walk_clamp = func(q: Vector2, _r: float) -> Vector2: return Vector2(maxf(q.x, wall), q.y)
+	u["hurt"] = 0.15
+	sc._update_units(0.016)
+	_check((u["pos"] as Vector2).x >= wall - 0.01, "el retroceso no la saca del terreno (%.1f, pared en %.1f)" % [(u["pos"] as Vector2).x, wall])
+	em.walk_clamp = Callable()
+	# Al caer: piezas y bits que saltan, caen al suelo y se apagan.
+	u["life"] = 0.0
+	sc._update_units(0.016)
+	_check(sc._debris.size() >= 8, "al caer se desarma en piezas y bits (%d)" % sc._debris.size())
+	_check(sc._debris.any(func(d: Dictionary) -> bool: return d["bit"]) and sc._debris.any(func(d: Dictionary) -> bool: return not d["bit"]), "hay piezas y bits")
+	for k in 40:
+		UnitArt.update_debris(sc._debris, 0.02)
+	_check(sc._debris.all(func(d: Dictionary) -> bool: return float(d["h"]) == 0.0), "las piezas acaban en el suelo")
+	for k in 20:
+		sc._update_units(0.05)
+	_check(sc._debris.is_empty(), "y se apagan")
+	# Proceso Hijo, Drones de Vigilancia y torretas también se desarman al caducar.
+	sc._minions.append({"life": 0.01, "cd": 1.0, "phase": 0.0, "pos": Vector2.ZERO, "color": Color.WHITE, "profile": {}})
+	sc._update_minions(0.05)
+	_check(not sc._debris.is_empty(), "el Proceso Hijo se desarma al terminar")
+	sc._debris.clear()
+	sc._drones.append({"life": 0.01, "next": 1.0, "angle": 0.0, "color": Color.WHITE, "profile": {}})
+	sc._update_drones(0.05)
+	_check(not sc._debris.is_empty(), "el dron de vigilancia se desarma al caducar")
+	sc._debris.clear()
+	sc._devices.append({"kind": "totem", "pos": Vector2.ZERO, "life": 0.01, "armed_in": 0.0, "color": Color.WHITE})
+	sc._devices.append({"kind": "container", "pos": Vector2(100, 0), "life": 9.0, "armed_in": 0.0, "color": Color.WHITE,
+		"ally": {"life": 0.0, "max_life": 10.0}, "profile": {"id": "x"}})
+	sc._update_devices(0.05)
+	_check(sc._devices.is_empty() and sc._debris.size() >= 20, "la torreta que caduca y el contenedor destruido se desarman (%d)" % sc._debris.size())
+	# En una escena (enemigos congelados) las piezas siguen cayendo y se apagan.
+	sc._debris.clear()
+	UnitArt.shatter(sc._debris, Vector2.ZERO, 30.0, [Color.WHITE], 4, 4)
+	em.frozen = true
+	for k in 50:
+		sc._physics_process(0.02)
+	em.frozen = false
+	_check(sc._debris.is_empty(), "en una escena las piezas no se quedan en el aire")
+	# Tope de piezas para el rendimiento.
+	for k in 40:
+		UnitArt.shatter(sc._debris, Vector2.ZERO, 60.0, [Color.WHITE], 10, 10)
+	_check(sc._debris.size() == UnitArt.DEBRIS_MAX, "nunca más de %d piezas a la vez" % UnitArt.DEBRIS_MAX)
+	sc.clear_units()
+	_check(sc._debris.is_empty(), "clear_units también quita las piezas")
+	sc.queue_free()
+	player.queue_free()
+	em.queue_free()
+
+## Ataques que se ven (T202): las de cuerpo a cuerpo embisten hacia el objetivo y
+## las de distancia retroceden; el salto lleva el cuerpo en arco y golpea al caer;
+## el Golem UTP restalla un cable y la Torreta CI apunta y retrocede.
+func _test_unit_attacks() -> void:
+	var lunge := UnitArt.attack_offset("melee", 0.3, Vector2.LEFT)
+	var recoil := UnitArt.attack_offset("ranged", 0.15, Vector2.LEFT)
+	_check(lunge.x < -5.0 and recoil.x > 1.0, "cuerpo a cuerpo embiste hacia el objetivo y a distancia retrocede (%.1f, %.1f)" % [lunge.x, recoil.x])
+	_check(UnitArt.attack_offset("melee", 1.0, Vector2.LEFT).length() < 0.01, "y al acabar el ataque vuelve a su sitio")
+	_check(UnitArt.attack_offset("tank", 0.3, Vector2.RIGHT).x < lunge.length(), "los tanques embisten menos")
+	var c := CharacterData.new(_classes[5], _tree)
+	var em := EnemyManager.new()
+	root.add_child(em)
+	var player: Player = load("res://scenes/game/player.tscn").instantiate()
+	root.add_child(player)
+	player.setup(c, em)
+	player.global_position = Vector2(60000, 60000)
+	var sc := SkillController.new()
+	root.add_child(sc)
+	# Salto del Bot de Pruebas: despega, sube en arco y golpea al caer.
+	c.inventory.set_board(0, Motherboard.new(_db.skills.skills["bot_pruebas"], 5, []))
+	sc.setup(player, em, c)
+	sc._summon_unit(sc.profile(0), player.global_position, Color.WHITE)
+	_check(sc._units.size() == 1, "hay un Bot de Pruebas")
+	if sc._units.size() == 1:
+		var u: Dictionary = sc._units[0]
+		u["spawn"] = 0.0
+		u["pos"] = player.global_position
+		em.spawn(player.global_position + Vector2(300, 0), Rarity.Enemy.NORMAL, -1, "", 1000.0)
+		u["ab_cds"] = [0.0]
+		u["cd"] = 5.0
+		var start: Vector2 = u["pos"]
+		sc._update_units(0.016)
+		_check(u.has("leap_to") and (u["pos"] as Vector2).distance_to(start) < 1.0, "al saltar despega desde donde está, sin teletransportarse")
+		sc._update_units(UnitArt.LEAP_TIME * 0.5)
+		_check(UnitArt.state_of(u) == "leap" and UnitArt.leap_height(u) > UnitArt.LEAP_ARC_MIN * 0.8, "a mitad del salto va por el aire (%.0f px)" % UnitArt.leap_height(u))
+		_check(float(UnitArt.anim(u)["hop"]) > 0.0, "y el dibujo lo sabe")
+		var mid_x := (u["pos"] as Vector2).x
+		_check(mid_x > start.x + 60.0, "avanza en arco hacia el objetivo")
+		var quakes := sc._effects.filter(func(e: Dictionary) -> bool: return e["type"] == "quake").size()
+		sc._update_units(UnitArt.LEAP_TIME * 0.6)
+		_check(not u.has("leap_to") and (u["pos"] as Vector2).x > start.x + 200.0, "cae junto al objetivo")
+		_check(sc._effects.filter(func(e: Dictionary) -> bool: return e["type"] == "quake").size() > quakes, "y golpea el suelo al caer")
+		# Cambio de zona a medio salto: llega con el jugador y no acaba el salto en la zona anterior.
+		em.clear_all()
+		u["ab_cds"] = [99.0]
+		u["leap_from"] = start
+		u["leap_to"] = start + Vector2(5000, 0)
+		u["leap_t"] = 0.1
+		u["leap_hit"] = [75.0, 1.5]
+		sc.on_zone_changed()
+		sc._update_units(UnitArt.LEAP_TIME)
+		var gap := (u["pos"] as Vector2).distance_to(player.global_position)
+		_check(not u.has("leap_to") and gap < 120.0, "al cambiar de zona a medio salto llega con el jugador (%.0f px)" % gap)
+		sc.clear_units()
+	em.clear_all()
+	sc._effects.clear()
+	# Latigazo del Golem UTP.
+	c.inventory.set_board(0, Motherboard.new(_db.skills.skills["golem_utp"], 5, []))
+	sc._summon_unit(sc.profile(0), player.global_position, Color.WHITE)
+	if sc._units.size() == 1:
+		var g: Dictionary = sc._units[0]
+		g["spawn"] = 0.0
+		g["pos"] = player.global_position
+		g["ab_cds"] = [9.0, 9.0]
+		g["cd"] = 0.0
+		em.spawn(player.global_position + Vector2(25, 0), Rarity.Enemy.NORMAL, -1, "", 1000.0)
+		sc._update_units(0.016)
+		_check(sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "whip"), "el Golem UTP ataca con un latigazo de cable")
+		_check(not sc._effects.any(func(e: Dictionary) -> bool: return e["type"] == "quake"), "no con el anillo del tanque")
+		# Si el golpe mata al objetivo (el último de la lista), el latigazo sigue
+		# yendo a donde estaba y no lee un índice que ya no existe.
+		em.clear_all()
+		sc._effects.clear()
+		g["cd"] = 0.0
+		var target := player.global_position + Vector2(25, 0)
+		em.spawn(target, Rarity.Enemy.NORMAL, -1, "", 1.0)
+		em.lives[0] = 0.01
+		var errors_before: int = _script_errors.errors.size()
+		sc._update_units(0.016)
+		var whips := sc._effects.filter(func(e: Dictionary) -> bool: return e["type"] == "whip")
+		_check(em.positions.is_empty() and whips.size() == 1 and (whips[0]["end"] as Vector2).distance_to(target) < 1.0
+			and _script_errors.errors.size() == errors_before, "el latigazo que mata a su objetivo restalla donde estaba")
+		_check(sc._units.size() == 1, "y el golem sigue en la lista")
+		sc.clear_units()
+	em.clear_all()
+	# Torreta CI: el cañón apunta al objetivo y retrocede al disparar.
+	c.inventory.set_board(0, Motherboard.new(_db.skills.skills["torreta_ci"], 5, []))
+	sc._deploy(sc.profile(0), player.global_position + Vector2(40, 0))
+	_check(sc._devices.size() == 1, "hay una torreta")
+	if sc._devices.size() == 1:
+		var d: Dictionary = sc._devices[0]
+		d["armed_in"] = 0.0
+		em.spawn((d["pos"] as Vector2) + Vector2(0, 150), Rarity.Enemy.NORMAL, -1, "", 1000.0)
+		sc._update_devices(0.016)
+		_check((d.get("aim", Vector2.ZERO) as Vector2).y > 0.9 and float(d.get("kick", 0.0)) > 0.0, "la torreta apunta hacia abajo y su cañón retrocede al disparar")
+	sc.queue_free()
+	player.queue_free()
 	em.queue_free()
