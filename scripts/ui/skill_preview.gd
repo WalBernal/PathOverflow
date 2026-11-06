@@ -303,7 +303,9 @@ func _cast_kind(p: Dictionary, origin: Vector2, target: Vector2, device: bool, c
 			fx.append({"type": "marker", "pos": center, "radius": radius, "time": 0.0, "duration": span + 0.2, "color": color})
 			for k in n:
 				_after(span * k / n, func() -> void:
-					var spot := center + Vector2.from_angle(randf() * TAU) * sqrt(randf()) * radius
+					# Sin azar (T219): cada impacto cae sobre un servidor, por turnos, un poco desplazado
+					# (antes caían al azar en el radio y alguna vuelta no tocaban a ninguno).
+					var spot: Vector2 = DUMMIES[k % DUMMIES.size()] + Vector2.from_angle(k * 2.4) * 10.0
 					_sc._effects.append({"type": "streak", "pos": spot, "radius": impact, "time": 0.0, "duration": 0.16, "color": color})
 					_after(0.16, func() -> void: _blast(spot, impact, p, color)))
 		"unit":
