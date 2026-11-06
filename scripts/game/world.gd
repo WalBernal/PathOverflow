@@ -354,10 +354,14 @@ func _quit_game() -> void:
 	get_tree().quit()
 
 
-## Apunta la visita a la zona que termina (telemetría local).
-func _close_visit() -> void:
+## Apunta la visita a la zona que termina (telemetría local) y, al cambiar de zona,
+## enseña su informe si fue una zona de combate con algo que contar (T214).
+func _close_visit(report := false) -> void:
 	if zone and not _visit.is_empty():
-		Telemetry.write(Telemetry.finish(_visit, character, enemies), character)
+		var record := Telemetry.finish(_visit, character, enemies)
+		Telemetry.write(record, character)
+		if report and ui and ui.zone_report and ZoneReport.worth_showing(record, zone.safe):
+			ui.zone_report.show_report(ZoneReport.lines(record, _visit, zone.zone_name, character.experience, character.level))
 	_visit = {}
 
 
@@ -381,7 +385,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 		_fail_challenge("Has salido de la zona: la prueba de estrés se cancela.")
 	if not _waves.is_empty():
 		_end_waves("Sales del banco de oleadas.")
-	_close_visit()
+	_close_visit(true)
 	_shop_refreshes = 0
 	if zone:
 		_store_instance()   # antes de olvidar a los gemelos: no se guardan (ver _spawn_race_condition)
@@ -465,6 +469,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 		_spawn_zone_enemies()   # en la arena del jefe, siempre: vuelve a la fase 1 con toda la vida
 	_place_training_dummy()
 	_visit = Telemetry.begin(character, enemies, zone.id, enemies.area_level)
+	ZoneReport.begin(_visit, character)   # y lo que necesita el informe al salir (T214)
 	skills.on_zone_changed()
 
 	character.flags["zone"] = zone.id
@@ -1167,6 +1172,7 @@ func _on_player_died() -> void:
 	if not _waves.is_empty():
 		_end_waves("Caíste en el banco de oleadas.")
 	character.flags["stat_deaths"] = int(character.flags.get("stat_deaths", 0)) + 1
+	ZoneReport.note_death(_visit, enemies.last_hitter)   # para «la muerte más tonta» del informe (T214)
 	if zone and Nemesis.record(character, enemies.last_hitter, zone.id, String(GameData.act_of_zone(zone.id).get("id", "")), Time.get_ticks_msec()):
 		ui.hud.flash("%s te recordará. Y tú a él: ahora es tu némesis." % Nemesis.current(character).get("name", "Ese élite"), Color("e0503a"))
 	ui.show_death()
@@ -1686,6 +1692,7 @@ func _grant_board(skill_id: String) -> void:
 ## Pistas la primera vez que se recoge una placa base o un módulo RAM.
 func _on_item_picked_up(item: Item) -> void:
 	SoundMap.play_pickup(item)   # según el material (T77)
+	ZoneReport.note_loot(_visit, item)   # los artefactos del informe de la zona (T214)
 	if item is Motherboard and not character.flags.has("hint_board"):
 		character.flags["hint_board"] = true
 		ui.hud.flash("¡Una placa base! Es una habilidad: instálala en la barra con K.", UiStyle.ACCENT)

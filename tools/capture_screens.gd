@@ -233,6 +233,10 @@ func _run() -> void:
 		await _capture_unit_attacks()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("informe"):
+		await _capture_zone_report()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("vista"):
 		await _capture_skill_preview()
 		get_tree().quit()
@@ -2674,6 +2678,35 @@ func _capture_tutorial_start() -> void:
 		nearest = minf(nearest, em.positions[k].distance_to(player.global_position))
 	print("tutorial: %d enemigos, el más cercano a %.0f px; vida %d/%d" % [em.count(), nearest, player.life, player.max_life()])
 	world.set("_since_save", -9999.0)
+
+
+## Informe al salir de una zona (T214), con datos de ejemplo, en el PC y en el celular al 140 %.
+func _capture_zone_report() -> void:
+	var gd: Node = get_node("/root/GameData")
+	var c: CharacterData = gd.create_character("Informe", &"guerrero", CharacterAppearance.default(), false)
+	c.flags["zone"] = "zona1"
+	c.flags["tutorial_step"] = 99
+	c.flags["tutorial_seen_done"] = true
+	c.level = 8
+	gd.current_character = c
+	var visit := {}
+	ZoneReport.begin(visit, c)
+	visit["loot"] = [{"name": "Teclado Mecánico del Caos", "rarity": Rarity.Item.UNIQUE}, {"name": "Chaqueta de Hilo Dental", "rarity": Rarity.Item.RARE}]
+	ZoneReport.note_death(visit, {"name": "Bug de Sintaxis", "rarity": Rarity.Enemy.NORMAL})
+	var lines := ZoneReport.lines({"seconds": 192.0, "kills": 132, "deaths": 1, "dps": 340}, visit, "El Bosque de Cables", c.experience + 1250, c.level)
+	for touch in [false, true]:
+		Touch.force = touch
+		var world: Node = load(GameData.WORLD_SCENE).instantiate()
+		_swap(world)
+		world.set("_since_save", -9999.0)
+		await _wait(1.2)
+		var ui: GameUI = world.get("ui")
+		if ui.cutscene.visible:
+			ui.cutscene.call("_finish")
+		ui.zone_report.show_report(lines)
+		await _wait(ZoneReportPanel.DELAY + 0.6)
+		_save("214_informe_%s" % ("tactil" if touch else "pc"))
+	Touch.force = false
 
 
 func _swap(node: Node) -> void:

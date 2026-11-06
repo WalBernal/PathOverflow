@@ -258,6 +258,7 @@ func _initialize() -> void:
 	_test_companions_walk()
 	_test_new_skills_t208()
 	_test_new_skills_t209()
+	_test_zone_report()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -9591,3 +9592,33 @@ func _test_new_skills_t209() -> void:
 	sc.free()
 	player.free()
 	em.free()
+
+## T214: informe al salir de una zona: tiempo, enemigos, experiencia, artefactos y la
+## muerte más tonta; solo en zonas de combate y visitas de más de 20 s.
+func _test_zone_report() -> void:
+	var c := _new_character()
+	var visit := {}
+	ZoneReport.begin(visit, c)
+	var gen := ItemGenerator.new(_db, 214)
+	var junk := gen.generate(1, Rarity.Item.NORMAL)
+	var rare := gen.generate(1, Rarity.Item.RARE)
+	var unique := gen.generate(1, Rarity.Item.UNIQUE)
+	for it in [junk, rare, unique]:
+		ZoneReport.note_loot(visit, it)
+	var loot: Array = visit["loot"]
+	_check(loot.size() == 2 and int(loot[0]["rarity"]) == Rarity.Item.UNIQUE, "solo el botín raro o mejor, el mejor primero")
+	ZoneReport.note_death(visit, {"name": "Jefe", "rarity": Rarity.Enemy.UNIQUE})
+	ZoneReport.note_death(visit, {"name": "Bug", "rarity": Rarity.Enemy.NORMAL})
+	ZoneReport.note_death(visit, {"name": "Élite", "rarity": Rarity.Enemy.ELITE})
+	_check(visit["death"]["name"] == "Bug", "se queda la muerte más tonta (la del enemigo más flojo)")
+	c.experience += 500
+	var record := {"seconds": 192.0, "kills": 132, "deaths": 2, "dps": 340}
+	var text := ZoneReport.lines(record, visit, "Bosque", c.experience, c.level)
+	var joined := " ".join(text.map(func(l: Array) -> String: return String(l[0])))
+	_check(String(text[0][0]).contains("FAILED (2 muertes)") and String(text[0][0]).contains("3 min 12 s") and joined.contains("procesos terminados: 132")
+		and joined.contains("+500") and joined.contains("Bug") and joined.contains("DPS medio en combate: 340"), "el informe: estado, tiempo, enemigos, experiencia, DPS y la muerte")
+	_check(ZoneReport.worth_showing(record, false) and not ZoneReport.worth_showing(record, true) and not ZoneReport.worth_showing({"seconds": 5.0}, false),
+		"solo en zonas de combate y visitas de más de 20 s")
+	_check(ZoneReportPanel.alpha_at(-0.5) == 0.0 and ZoneReportPanel.alpha_at(1.0) == 1.0 and ZoneReportPanel.alpha_at(ZoneReportPanel.SHOW_TIME) == 0.0,
+		"el panel espera a la tarjeta de carga, se queda y se apaga")
+	_check(ZoneReportPanel.color_for("loot:%d" % Rarity.Item.UNIQUE) == Rarity.item_color(Rarity.Item.UNIQUE), "cada artefacto con el color de su rareza")

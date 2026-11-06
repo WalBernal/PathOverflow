@@ -63,6 +63,7 @@ var _zone_banner: Label
 var event_log: EventLog
 ## Cifras del muñeco de prácticas del campamento (T212).
 var training_panel: TrainingPanel
+var zone_report: ZoneReportPanel
 const TRAINING_PANEL_Y := 56.0
 var _act_banner: PanelContainer
 var _pause_panel: Control
@@ -283,6 +284,14 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	training_panel.offset_left = -TrainingPanel.WIDTH * 0.5
 	training_panel.offset_right = TrainingPanel.WIDTH * 0.5
 	training_panel.offset_top = TRAINING_PANEL_Y
+
+	zone_report = ZoneReportPanel.new()   # informe al salir de una zona (T214): arriba al centro
+	_root.add_child(zone_report)
+	zone_report.anchor_left = 0.5
+	zone_report.anchor_right = 0.5
+	zone_report.offset_left = -ZoneReportPanel.WIDTH * 0.5
+	zone_report.offset_right = ZoneReportPanel.WIDTH * 0.5
+	zone_report.offset_top = TRAINING_PANEL_Y
 
 	_act_banner = _build_act_banner()
 	_root.add_child(_act_banner)
