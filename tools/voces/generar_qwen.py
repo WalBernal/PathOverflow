@@ -20,6 +20,7 @@ from qwen_tts import Qwen3TTSModel
 
 AQUI = Path(__file__).resolve().parent
 MODELO = AQUI / "modelo" / "qwen-voicedesign"
+MODELO_BASE = AQUI / "modelo" / "qwen-base"   # para clonar las tomas aprobadas (referencias/)
 
 
 def limpiar(texto: str) -> str:
@@ -35,24 +36,36 @@ def main() -> None:
     datos = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
     salida = Path(sys.argv[2])
     salida.mkdir(parents=True, exist_ok=True)
-    torch.manual_seed(7)
-    modelo = Qwen3TTSModel.from_pretrained(str(MODELO), device_map="cuda:0", dtype=torch.bfloat16)
     solo = set(sys.argv[3].split(",")) if len(sys.argv) > 3 else None
-    for e in datos["lineas"]:
-        if solo and e["id"] not in solo:
+    lineas = [e for e in datos["lineas"] if not solo or e["id"] in solo]
+    # Una voz es una descripción (se diseña en cada línea) o {"ref", "ref_texto", ...}: una
+    # toma aprobada que se clona con el modelo Base, para que suene igual en todas sus líneas.
+    disenar = [e for e in lineas if isinstance(datos["voces"][e["voz"]], str)]
+    clonar = [e for e in lineas if not isinstance(datos["voces"][e["voz"]], str)]
+    for grupo, carpeta in ((disenar, MODELO), (clonar, MODELO_BASE)):
+        if not grupo:
             continue
-        instr = datos["voces"][e["voz"]]
-        if e.get("tono"):
-            instr += " In this line: " + e["tono"] + "."
-        texto = limpiar(e["texto"])
-        t0 = time.time()
-        # Tope de duración según el texto (12 tokens por segundo; al menos ~9 letras por
-        # segundo): sin él, una frase corta que acaba en «...» puede seguir murmurando.
-        tope = int(max(4.0, len(texto) / 9.0) * 12) + 24
-        wavs, sr = modelo.generate_voice_design(text=texto, instruct=instr, language="Spanish", max_new_tokens=tope)
-        audio = np.asarray(wavs[0], dtype=np.float32)
-        sf.write(str(salida / f"{e['id']}.wav"), audio, sr, subtype="PCM_16")
-        print(f"{e['id']}: {len(audio) / sr:.1f} s en {time.time() - t0:.1f} s · {e['voz']}", flush=True)
+        torch.manual_seed(7)
+        modelo = Qwen3TTSModel.from_pretrained(str(carpeta), device_map="cuda:0", dtype=torch.bfloat16)
+        for e in grupo:
+            voz = datos["voces"][e["voz"]]
+            texto = limpiar(e["texto"])
+            t0 = time.time()
+            # Tope de duración según el texto (12 tokens por segundo; al menos ~9 letras por
+            # segundo): sin él, una frase corta que acaba en «...» puede seguir murmurando.
+            tope = int(max(4.0, len(texto) / 9.0) * 12) + 24
+            if isinstance(voz, str):
+                instr = voz + (" In this line: " + e["tono"] + "." if e.get("tono") else "")
+                wavs, sr = modelo.generate_voice_design(text=texto, instruct=instr, language="Spanish", max_new_tokens=tope)
+            else:
+                wavs, sr = modelo.generate_voice_clone(text=texto, language="Spanish", ref_audio=str(AQUI / voz["ref"]),
+                    ref_text=limpiar(voz["ref_texto"]), max_new_tokens=tope)
+            audio = np.asarray(wavs[0], dtype=np.float32)
+            sf.write(str(salida / f"{e['id']}.wav"), audio, sr, subtype="PCM_16")
+            modo = "diseño" if isinstance(voz, str) else "clon"
+            print(f"{e['id']}: {len(audio) / sr:.1f} s en {time.time() - t0:.1f} s · {e['voz']} ({modo})", flush=True)
+        del modelo
+        torch.cuda.empty_cache()
     # La muestra: todas las líneas de la carpeta seguidas, con una pausa entre cada una.
     partes = []
     for f in sorted(salida.glob("*.wav")):

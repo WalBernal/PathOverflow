@@ -2,11 +2,16 @@
   "voces": {
     "egresado": "Very young man, about 20, just graduated: youthful boyish voice, light and bright, slightly higher pitch, a bit nervous but hopeful, natural and casual. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
     "egresada": "Very young woman, about 20, just graduated: youthful girlish voice, light and bright, a bit nervous but hopeful, natural and casual. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
-    "rafa": "Man in his mid forties who still talks like a young guy: relaxed and casual, a tired and sarcastic sysadmin, slightly raspy mid-low voice, dry humor, drawn-out pauses. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
+    "rafa": {
+      "ref": "referencias/rafa.wav",
+      "ref_texto": "Para el sistema escolar de la UAdeO..... tú nunca exististe..... Eres un puntero nulo.....",
+      "nota": "Toma aprobada: línea 07 (acento neutro)."
+    },
     "mario": "Teenage boy, about 17, a first-year student who wants to join everything: loud, very high-pitched bright teenage voice that still sounds like a kid, fast and super enthusiastic. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
     "aida": "Mexican woman around 50, senior engineer. Serious, confident, warm low voice with a subtle, elegant sensual touch; enthusiastic underneath, never exaggerated. Mexican Spanish accent.",
     "paez": "Mexican man around 40, super enthusiastic and cheerful engineering teacher, bright upbeat mid-range voice, always smiling when he talks. Mexican Spanish accent.",
-    "narrador": "Neutral Latin American Spanish narrator for a video game, like a classic RPG narrator: clear, warm, engaging and well-paced, never monotone, not theatrical."
+    "narrador": "Neutral Latin American Spanish narrator for a video game, like a classic RPG narrator: clear, warm, engaging and well-paced, never monotone, not theatrical.",
+    "rafa_descripcion": "Man in his mid forties who still talks like a young guy: relaxed and casual, a tired and sarcastic sysadmin, slightly raspy mid-low voice, dry humor, drawn-out pauses. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional."
   },
   "lineas": [
     {
