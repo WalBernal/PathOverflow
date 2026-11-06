@@ -420,7 +420,7 @@
         "oleadas": {"text": "El banco de oleadas lo armé con lo que sobró de las pruebas de estrés. Te mando a una zona vacía y le suelto tráfico hasta que algo se rompa: tú o el servidor. Cada cinco oleadas sale un jefe. Anoto quién aguanta más, mijo; la tabla está aquí pegada.", "options": [{"text": "Mándame al banco.", "next": "", "action": {"type": "open_waves"}}, {"text": "Enséñame la tabla de récords.", "next": "", "action": {"type": "open_ladder"}}, {"text": "Hoy no.", "next": "hola"}]},
         "incidente": {"text": "Siempre hay un incidente abierto, mijo. Te mando a una zona que ya conoces, pero con todo lo que puede salir mal: más enemigos, que explotan, que no regeneres... Lo que caiga allí es mejor. Para volver, el portal te trae de regreso.", "options": [{"text": "Abre el atlas (mapas y progreso).", "next": "", "action": {"type": "open_atlas"}}, {"text": "Mándame a uno al azar.", "next": "", "action": {"type": "open_incident"}}, {"text": "Hoy no.", "next": "hola"}]},
         "hola": {
-          "text": "Vaya, un recién egresado. Debes ser de la generación de Ojeda, ¿no?. Soy Aida. Llevo aquí desde que El Pepe era jefe de informática, y aún seprogramaba todo en COBOL.",
+          "text": "Vaya, un recién egresado. Debes ser de la generación de Ojeda, ¿no?. Soy Aida. Llevo aquí desde que El Pepe era jefe de informática, y aún se programaba todo en COBOL.",
           "options": [
             {
               "text": "¿Quién era El Pepe?",

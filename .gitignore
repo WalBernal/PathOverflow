@@ -13,3 +13,5 @@ assets/third_party/
 tools/voces/.venv/
 tools/voces/modelo/
 tools/voces/salida/
+tools/voces/.venv-qwen/
+tools/voces/salida_qwen/
