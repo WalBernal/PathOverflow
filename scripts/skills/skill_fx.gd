@@ -24,6 +24,11 @@ const SIGNATURES := {
 	"ping_letal": {"projectile": "sonar", "cast": "spark", "hit_fx": "ping_letal_hit"},
 	"torreta_ci": {"projectile": "bolt"},
 	"cascada_css": {"projectile": "shard"},
+	# Dardos envenenados, como dice su texto (T203), en vez de la gota de caos genérica.
+	"bot_rastreador": {"projectile": "dart", "trail": "drips"},
+	# Láseres de verdad (T203): haz fino y rápido en vez del rayo en zigzag.
+	"robot_centinela": {"projectile": "laser"},
+	"robot_laser": {"projectile": "laser"},
 }
 ## Cada cuánto suelta una partícula de estela un proyectil (s).
 const TRAIL_EVERY := 0.035
@@ -122,6 +127,20 @@ static func draw_projectile(ci: CanvasItem, pos: Vector2, dir: Vector2, color: C
 			ci.draw_colored_polygon(quad.call(2, 6, -4, 4), core)
 			if shape == "tracker" and fmod(time * 4.0, 1.0) < 0.5:
 				ci.draw_colored_polygon(quad.call(-4, -2, -8, -4), Color("ff6a6a"))   # la antena que parpadea
+		"laser":
+			# Láser (T203, Centinela y R-2PL): un trazo largo y fino con núcleo claro.
+			ci.draw_line(at - dir * 22.0, at, Color(color, 0.35), 5.0)
+			ci.draw_line(at - dir * 22.0, at, color, 2.0)
+			ci.draw_line(at - dir * 16.0, at, core if dim else Color(1, 1, 1, 0.9), 1.0)
+		"dart":
+			# Dardo del Bot Rastreador de Bugs (T203): astil fino, punta y plumas, y una gota de veneno.
+			var across := dir.orthogonal()
+			ci.draw_line(at - dir * 10.0, at + dir * 4.0, Color(Color("b8b2a4"), 0.95), 2.0)
+			ci.draw_colored_polygon(PackedVector2Array([at + dir * 8.0, at + dir * 3.0 + across * 2.5, at + dir * 3.0 - across * 2.5]), color)
+			for s in [-1.0, 1.0]:
+				ci.draw_line(at - dir * 10.0, at - dir * 6.0 + across * 3.5 * s, Color(color, 0.8), 1.5)
+			if not light:
+				ci.draw_rect(Rect2(_snap(at + dir * 6.0 + Vector2(0, 2 + fmod(time * 3.0, 1.0) * 3.0)), Vector2(2, 2)), Color(color, 0.8))
 		"sonar":
 			# Ping (T194): un punto con dos arcos de radar delante que se redibujan cada 0,1 s.
 			var pulse := 0.0 if dim else float(int(time * 10.0) % 2) * 2.0

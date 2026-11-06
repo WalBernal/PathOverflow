@@ -253,6 +253,7 @@ func _initialize() -> void:
 	_test_skill_sound_logic()
 	_test_list_skills_keeps_manual()
 	_test_unicast_single()
+	_test_units_match_text()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -9409,3 +9410,33 @@ func _test_unicast_single() -> void:
 	var plain := Motherboard.new(_db.skills.skills["rafaga_de_paquetes"], 20, [])
 	plain.variant = "abanico"
 	_check(int(SkillCalc.compute(plain, c)["projectiles"]) > 3, "Broadcast sigue sumando proyectiles")
+
+## T203: las invocaciones hacen lo que dice su texto: el Golem blindado provoca el doble,
+## Monolito agranda y Microservicios y el Clúster de tres achican, el Bot Rastreador dispara
+## dardos, Centinela y R-2PL disparan láseres, y el R-2PL vale lo mismo en los dos datos.
+func _test_units_match_text() -> void:
+	var c := _new_character()
+	var def: Dictionary = _db.skills.skills["golem_hardware"]
+	var unit: Dictionary = def.get("unit", {})
+	var board := Motherboard.new(def, 20, [])
+	var base := SkillCalc.compute(board, c)
+	board.variant = "blindado"
+	var armored := SkillCalc.compute(board, c)
+	_check(float(unit.get("taunt", 0.0)) > 0.0 and is_equal_approx(SkillController.unit_taunt(unit, armored), 2.0 * SkillController.unit_taunt(unit, base)),
+		"Golem blindado: el doble de provocación (%.0f frente a %.0f)" % [SkillController.unit_taunt(unit, armored), SkillController.unit_taunt(unit, base)])
+	_check(UnitArt.scale_for("", true, false) > 1.0 and UnitArt.scale_for("", false, true) < 1.0 and UnitArt.scale_for("trio", false, false) < 1.0,
+		"Monolito agranda; Microservicios y el Clúster de tres achican")
+	_check(SkillFx.signature({"id": "bot_rastreador", "damage_type": "chaos"})["projectile"] == "dart", "el Bot Rastreador dispara dardos, no la gota de caos")
+	_check(SkillFx.signature({"id": "robot_centinela", "damage_type": "lightning"})["projectile"] == "laser"
+		and SkillFx.signature(CompanionRobot.LASER)["projectile"] == "laser", "Centinela y R-2PL disparan láseres")
+	var classes: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/classes.json"))["classes"]
+	var trees: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/ascendancy_trees.json"))
+	var in_classes := -1
+	for cl in classes:
+		for a in cl.get("ascendancies", []):
+			for n in a.get("passives", []):
+				if String(n.get("name", "")) == "Robot de compañía R-2PL":
+					for m in n["mods"]:
+						if String(m["stat"]) == "minion_damage":
+							in_classes = int(m["value"])
+	_check(in_classes == 20 and JSON.stringify(trees).contains("minion_damage increased 20"), "R-2PL: +20 % de daño de esbirros en los dos datos")

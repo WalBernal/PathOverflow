@@ -1681,7 +1681,7 @@
           "add": {"max_units": 2}, "mult": {"unit_life": 0.45, "damage": 0.5}},
         {"id": "blindado", "name": "Golem blindado", "min_level": 15,
           "description": "Más lento y más duro: 60 % más de vida, el doble de provocación y 25 % menos de daño.",
-          "mult": {"unit_life": 1.6, "damage": 0.75, "unit_interval": 1.2}}
+          "mult": {"unit_life": 1.6, "damage": 0.75, "unit_interval": 1.2}, "set": {"taunt_mult": 2.0}}
       ]
     },
     {

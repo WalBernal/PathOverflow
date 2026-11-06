@@ -2153,7 +2153,7 @@ func _summon_unit(p: Dictionary, origin: Vector2, color: Color) -> void:
 	var life: float = maxf(1.0, p["unit_life"])
 	var u := {"skill_id": p["id"], "profile": p, "behavior": String(unit.get("behavior", "melee")),
 		"pos": origin + Vector2.from_angle(randf() * TAU) * 45.0, "life": life, "max_life": life,
-		"radius": float(unit.get("radius", 12.0)), "taunt": float(unit.get("taunt", 0.0)), "reduction": float(p["unit_reduction"]), "base_reduction": float(p["unit_reduction"]),
+		"radius": float(unit.get("radius", 12.0)), "taunt": unit_taunt(unit, p), "reduction": float(p["unit_reduction"]), "base_reduction": float(p["unit_reduction"]),
 		"ab_cd": float(p["unit_ability"].get("cooldown", p["unit_interval"])) * 0.5,
 		"cd": 0.5, "phase": randf() * TAU, "hurt": 0.0, "angle": TAU * mine.size() / maxf(1.0, p["max_units"]),
 		"slot": mine.size(), "color": color,
@@ -2514,6 +2514,12 @@ func _unit_leap_step(u: Dictionary, p: Dictionary, delta: float) -> void:
 			"color": Accessibility.aura_color("ok" if ok else "err", Color("6fd36b") if ok else Color("e06c6c"))})
 
 
+## Radio de provocación de una invocación: el de su figura, multiplicado si su variante
+## lo pide (Golem blindado: el doble, T203).
+static func unit_taunt(unit: Dictionary, p: Dictionary) -> float:
+	return float(unit.get("taunt", 0.0)) * float(p.get("taunt_mult", 1.0))
+
+
 ## Escala de dibujo de una invocación: Monolito, Microservicios y el Clúster de tres.
 func _unit_scale(p: Dictionary) -> float:
 	var monolith := character != null and character.stats.get_value(Stat.MONOLITH) > 0.0
@@ -2623,8 +2629,9 @@ func _update_companion(delta: float) -> void:
 		else:
 			_companion["laser"] = 0.2
 	if _companion["emp"] <= 0.0:
-		if enemies.nearest_index(player.global_position, float(_companion_emp["radius"])) != -1:
-			_execute(_companion_emp, player.global_position, player.global_position)
+		# El pulso sale del robot, no del jugador (T203).
+		if enemies.nearest_index(pos, float(_companion_emp["radius"])) != -1:
+			_execute(_companion_emp, pos, pos)
 			_companion["emp"] = CompanionRobot.EMP_INTERVAL
 			Sfx.play("lightning", -6.0, 0.8)
 		else:

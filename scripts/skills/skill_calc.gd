@@ -124,9 +124,9 @@ static func apply_variant(p: Dictionary, board: Motherboard) -> Dictionary:
 				p["dps"] = float(p["dps"]) * float(p[key]) / maxf(1.0, float(p[key]) - float(v["add"][key]))
 	# "set" fija una cifra pase lo que pase (T218): Unicast es un solo proyectil aunque la
 	# placa sume proyectiles por nivel o por RAM.
+	# (también cifras que el perfil no trae, como "taunt_mult" del Golem blindado, T203)
 	for key in v.get("set", {}):
-		if p.has(key):
-			p[key] = int(v["set"][key]) if p[key] is int else float(v["set"][key])
+		p[key] = int(v["set"][key]) if p.has(key) and p[key] is int else float(v["set"][key])
 	if v.has("abilities"):
 		p["unit_abilities"] = v["abilities"]
 	p["variant"] = v["id"]

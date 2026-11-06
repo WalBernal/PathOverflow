@@ -1010,7 +1010,7 @@
                 {
                   "stat": "minion_damage",
                   "type": "increased",
-                  "value": 40
+                  "value": 20
                 }
               ]
             },
