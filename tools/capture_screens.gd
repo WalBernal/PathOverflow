@@ -233,6 +233,10 @@ func _run() -> void:
 		await _capture_unit_attacks()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("escalas"):
+		await _capture_prologue_scales()
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("informe"):
 		await _capture_zone_report()
 		get_tree().quit()
@@ -2678,6 +2682,34 @@ func _capture_tutorial_start() -> void:
 		nearest = minf(nearest, em.positions[k].distance_to(player.global_position))
 	print("tutorial: %d enemigos, el más cercano a %.0f px; vida %d/%d" % [em.count(), nearest, player.life, player.max_life()])
 	world.set("_since_save", -9999.0)
+
+
+## Escalas del prólogo: la calle con los autos junto al jugador y el pasillo con el
+## jugador cerca, a media distancia y al fondo (frente a la caja y la TV).
+func _capture_prologue_scales() -> void:
+	var gd: Node = get_node("/root/GameData")
+	gd.set("pending_creation", {"name": "Prueba", "appearance": CharacterAppearance.default()})
+	var p: Node = load("res://scenes/prologue/prologue.tscn").instantiate()
+	_swap(p)
+	await _wait(0.5)
+	p.set("_intro_chars", 99999.0)
+	p.set("_phase", "walk")
+	p.set("_fade", 0.0)
+	var stage: PrologueStage = p.get("_stage")
+	stage.player_x = 250.0
+	stage.cam_x = 60.0
+	for k in 2:
+		stage.time = 3.0 + k * 4.0
+		await _wait(0.1)
+		_save("escala_calle_%d" % k)
+	p.call("_go_room", "pasillo", 0.0)
+	await _wait(0.9)
+	for d in [0.0, 0.5, 0.96]:
+		stage.player_depth = d
+		stage.player_lat = 0.15
+		stage.player_facing = Vector2.UP
+		await _wait(0.15)
+		_save("escala_pasillo_%d" % int(d * 100))
 
 
 ## Informe al salir de una zona (T214), con datos de ejemplo, en el PC y en el celular al 140 %.

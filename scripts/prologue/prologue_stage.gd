@@ -122,8 +122,10 @@ static func hall_from_screen(p: Vector2) -> Vector2:
 	return Vector2(clampf((p.x - 200.0) / lerpf(185.0, 88.0, depth), -0.85, 0.85), depth)
 
 
+## Escala del jugador en el pasillo: al fondo (~47 px) queda a la medida de la caja de
+## trámites, la TV y las puertas; cerca, más grande, sin salirse de la pantalla.
 static func hall_scale(depth: float) -> float:
-	return lerpf(1.3, 0.62, depth)
+	return lerpf(1.6, 1.12, depth)
 
 
 func width() -> float:
@@ -296,8 +298,8 @@ static func loop_x(base: float, speed: float, t: float, span: float) -> float:
 
 ## Autos de la avenida en bucle: [x de salida, velocidad (signo = sentido), y de las
 ## ruedas, color]. El carril de atrás va hacia la izquierda.
-const TRAFFIC := [[40.0, -26.0, 183.0, "5a7a9a"], [420.0, -31.0, 183.0, "e8e4d8"],
-	[200.0, 38.0, 189.0, "c03a3a"], [600.0, 34.0, 189.0, "2a2a2e"]]
+const TRAFFIC := [[40.0, -58.0, 183.0, "5a7a9a"], [420.0, -66.0, 183.0, "e8e4d8"],
+	[200.0, 84.0, 189.0, "c03a3a"], [600.0, 74.0, 189.0, "2a2a2e"]]
 ## Peatones en la banqueta de la escuela: [x de salida, velocidad, semilla del aspecto].
 const WALKERS := [[120.0, 11.0, 7], [520.0, -9.0, 31]]
 
@@ -325,20 +327,44 @@ func _draw_street_life(w: float) -> void:
 			draw_rect(Rect2(gx, 214 + (k % 4) * 2.5, 2, 1), Color(1, 1, 0.92, 0.9))
 
 
-## Auto de perfil, en pixel art: carrocería, cabina con cristal y ruedas que giran.
+## Escala de los autos según el carril (el de delante, un poco más grande): con 2,2 un
+## sedán mide ~62 px de largo y ~26 de alto, a la medida del jugador (~44 px).
+static func car_scale(wheel_y: float) -> float:
+	return 2.3 if wheel_y >= 186.0 else 2.1
+
+
+## Auto de perfil, en pixel art: sedán dibujado en unidades locales (ruedas en y = 0,
+## 30 de largo) y escalado con car_scale; mira hacia donde va.
 func _draw_car(x: float, wheel_y: float, col: Color, left: bool) -> void:
 	var dir := -1.0 if left else 1.0
-	var body := Rect2(x - 13, wheel_y - 7, 26, 5)
-	draw_rect(body, col)
-	draw_rect(Rect2(body.position, Vector2(body.size.x, 1)), col.lightened(0.25))
-	var cab := Rect2(x - 7 - dir * 1.0, wheel_y - 11, 13, 4)
-	draw_rect(cab, col)
-	draw_rect(cab.grow(-1), Color("6a8a9a"))
-	draw_rect(Rect2(x + dir * 12.0 - 1.0, wheel_y - 6, 2, 1), Color("fff2a0"))   # faro
-	for wx in [x - 8.0, x + 8.0]:
-		draw_circle(Vector2(wx, wheel_y - 1), 2.2, Color("1e1e22"))
-		var spin := time * 9.0 * dir
-		draw_line(Vector2(wx, wheel_y - 1), Vector2(wx, wheel_y - 1) + Vector2.from_angle(spin) * 1.6, Color("8a8a8a"), 1.0)
+	var s := car_scale(wheel_y)
+	var base := Vector2(-roundf(cam_x), 0)
+	draw_set_transform(base + Vector2(x, wheel_y), 0.0, Vector2(s * dir, s))
+	var dark := col.darkened(0.35)
+	draw_rect(Rect2(-15, -0.6, 30, 1.4), Color(0, 0, 0, 0.22))   # sombra
+	# Cabina: techo, parabrisas inclinados y las ventanas con su poste.
+	draw_colored_polygon(PackedVector2Array([Vector2(-9, -7), Vector2(-6, -11.5), Vector2(5, -11.5), Vector2(9.5, -7)]), col)
+	draw_colored_polygon(PackedVector2Array([Vector2(-7.8, -7.3), Vector2(-5.5, -10.6), Vector2(-0.6, -10.6), Vector2(-0.6, -7.3)]), Color("6f92a6"))
+	draw_colored_polygon(PackedVector2Array([Vector2(0.6, -7.3), Vector2(0.6, -10.6), Vector2(4.6, -10.6), Vector2(8.2, -7.3)]), Color("8fb2c4"))
+	draw_line(Vector2(-4.5, -10.2), Vector2(-6.2, -7.6), Color(1, 1, 1, 0.45), 0.6)   # brillo del cristal
+	draw_rect(Rect2(-6, -11.8, 11, 0.6), col.lightened(0.25))
+	# Carrocería: cofre y cajuela, franja baja más oscura, puerta y manija.
+	draw_rect(Rect2(-14.5, -7, 29, 5), col)
+	draw_rect(Rect2(-14.5, -7, 29, 0.7), col.lightened(0.3))
+	draw_rect(Rect2(-14.5, -3.2, 29, 1.2), dark)
+	draw_line(Vector2(0, -7), Vector2(0, -3.2), dark, 0.4)
+	draw_rect(Rect2(1.4, -5.8, 1.6, 0.5), dark)
+	draw_rect(Rect2(-5.6, -5.8, 1.6, 0.5), dark)
+	draw_rect(Rect2(13.6, -6.2, 1.2, 1.2), Color("fff2a0"))   # faro
+	draw_rect(Rect2(-14.8, -6.2, 1, 1.2), Color("d83a3a"))   # calavera
+	draw_rect(Rect2(14.2, -2.6, 0.8, 1), Color("b8b8b8"))   # defensas
+	draw_rect(Rect2(-15, -2.6, 0.8, 1), Color("b8b8b8"))
+	# Ruedas con su rin, que giran según la velocidad.
+	for wx in [-8.5, 8.5]:
+		draw_circle(Vector2(wx, -1.6), 2.6, Color("1e1e22"))
+		draw_circle(Vector2(wx, -1.6), 1.3, Color("9a9aa0"))
+		draw_line(Vector2(wx, -1.6), Vector2(wx, -1.6) + Vector2.from_angle(time * 9.0) * 1.2, Color("4a4a50"), 0.5)
+	draw_set_transform(base)
 
 
 ## Calle lateral que baja hacia el fondo (separa la escuela de la torre): el muro
@@ -684,19 +710,37 @@ func _draw_hall_life(back: Rect2) -> void:
 		var x := 200.0 + sin(time * 0.25 + j * 2.1) * half
 		var y := lerpf(14.0, 40.0, lamp / 4.0) + fposmod(j * 17.0 + time * (2.0 + j % 3), 150.0)
 		draw_rect(Rect2(x, y, 1, 1), Color(1, 0.98, 0.85, 0.35 + 0.25 * sin(time * 2.0 + j)))
-	var door := Rect2(back.end.x - 28, HALL_FAR_Y - 30, 20, 30)
+	# La puerta del fondo, en la pared derecha junto a la esquina (en perspectiva y a
+	# tamaño de persona: antes era una puertita de 30 px pegada bajo la TV).
+	var d0 := hall_side_door(0.0)
+	var d1 := hall_side_door(1.0)
 	var t := fmod(time, HALL_CYCLE)
 	var open := hall_door_open(t)
-	draw_rect(door, Color("2a241c"))   # el hueco oscuro
-	var panel_w := door.size.x * (1.0 - 0.8 * open)   # la hoja gira hacia dentro
-	draw_rect(Rect2(door.position, Vector2(panel_w, door.size.y)), Color("8a6a4a"))
-	draw_rect(Rect2(door.position, Vector2(panel_w, door.size.y)), Color("5a442e"), false, 1.0)
-	if panel_w > 6.0:
-		draw_rect(Rect2(door.position.x + panel_w - 4, door.position.y + 15, 2, 2), Color("d9c070"))
-	if t < HALL_WALK:   # alguien cruza el fondo, de la caja hacia la puerta
+	draw_colored_polygon(PackedVector2Array([d0[0], d1[0], d1[1], d0[1]]), Color("2a241c"))   # el hueco oscuro
+	var k_leaf := 1.0 - 0.85 * open   # la hoja gira hacia dentro
+	var e0: Vector2 = d0[0].lerp(d1[0], k_leaf)
+	var e1: Vector2 = d0[1].lerp(d1[1], k_leaf)
+	draw_colored_polygon(PackedVector2Array([d0[0], e0, e1, d0[1]]), Color("8a6a4a"))
+	draw_polyline(PackedVector2Array([d0[0], d1[0], d1[1], d0[1], d0[0]]), Color("5a442e"), 1.0)
+	if k_leaf > 0.5:
+		draw_rect(Rect2(e0.lerp(e1, 0.55) + Vector2(-3, 0), Vector2(2, 2)), Color("d9c070"))
+	if t < HALL_WALK:   # alguien cruza el fondo, de la caja hacia la puerta, y sale por ella
 		var k := t / HALL_WALK
-		var fx := lerpf(back.position.x - 6.0, door.get_center().x, k)
-		CharacterAppearance.draw(self, Vector2(fx, HALL_FAR_Y), 0.42, _hall_look, Vector2.RIGHT, Color(0, 0, 0, 0), fmod(t * 2.6 * PI, TAU))
+		var goal_feet: Vector2 = d0[1].lerp(d1[1], 0.5) + Vector2(0, -1)
+		var start := Vector2(back.position.x - 6.0, HALL_FAR_Y)
+		var feet := start.lerp(goal_feet, k)
+		var sc := hall_scale(1.0) * lerpf(1.0, 1.06, k)
+		CharacterAppearance.draw(self, feet, sc, _hall_look, Vector2.RIGHT, Color(0, 0, 0, 0), fmod(t * 2.6 * PI, TAU))
+
+
+## La puerta del fondo del pasillo, en la pared derecha: `u` 0 = el canto junto a la
+## esquina, 1 = el otro canto; devuelve [arriba, abajo] de ese canto, sobre la pared en
+## perspectiva (que va de la esquina (290, 40-150) a (400, 0) arriba y (410, 225) abajo).
+static func hall_side_door(u: float) -> Array:
+	var x := lerpf(HALL_BACK_RIGHT + 4.0, HALL_BACK_RIGHT + 24.0, u)
+	var top := 40.0 - (x - HALL_BACK_RIGHT) * 40.0 / 110.0
+	var bottom := HALL_FAR_Y + (x - HALL_BACK_RIGHT) * 75.0 / 120.0
+	return [Vector2(x, bottom - (bottom - top) * 0.62), Vector2(x, bottom)]
 
 
 ## Pasillo con el detalle de la calle: aplanado con tramado en las paredes (más
