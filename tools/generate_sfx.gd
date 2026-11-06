@@ -62,6 +62,21 @@ func _t78_stingers() -> Dictionary:
 
 
 func _initialize() -> void:
+	if OS.get_cmdline_user_args().has("t196"):
+		rng.seed = 196
+		var t196 := _t196_sigs()
+		for name in t196:
+			var s: PackedFloat32Array = t196[name].call()
+			_save(SFX_DIR + name + ".wav", s, _layer_peak(s))
+		print("Capas de firma de T196 generadas: %d" % t196.size())
+		quit()
+		return
+	if OS.get_cmdline_user_args().has("t192"):
+		rng.seed = 192
+		_save(SFX_DIR + "thump.wav", _thump())
+		print("Sonido de T192 generado: thump")
+		quit()
+		return
 	if OS.get_cmdline_user_args().has("t189"):
 		rng.seed = 189
 		_save(SFX_DIR + "sting_commit.wav", _sting_commit(), 0.85)
@@ -153,6 +168,15 @@ func _initialize() -> void:
 	for name in positional:
 		_save(AMB_DIR + name + ".wav", _loopable(positional[name].call()), 0.8)
 		ambients[name] = positional[name]
+	rng.seed = 192
+	_save(SFX_DIR + "thump.wav", _thump())
+	late_sfx["thump"] = _thump
+	rng.seed = 196
+	var t196 := _t196_sigs()
+	for name in t196:
+		var s: PackedFloat32Array = t196[name].call()
+		_save(SFX_DIR + name + ".wav", s, _layer_peak(s))
+		late_sfx[name] = t196[name]
 	print("Sonidos generados: %d efectos y %d ambientes" % [sfx.size() + late_sfx.size(), ambients.size()])
 	quit()
 
@@ -609,6 +633,23 @@ func _explosion() -> PackedFloat32Array:
 	return b
 
 
+## Golpe de área física (T192: Core Dump y las áreas sin elemento): un bombo grave
+## que cae de 85 a 35 Hz, con un crujido de ruido filtrado al principio y un rebote
+## sordo 60 ms después. Más corto y seco que la explosión, sin la cola de fuego.
+func _thump() -> PackedFloat32Array:
+	var b := _buf(0.45)
+	var f := 0.0
+	var ph := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		ph += lerpf(85.0, 35.0, minf(1.0, t / 0.3)) / RATE
+		f = _lp(f, _noise(), 700.0 * exp(-t * 8.0) + 120.0)
+		var body := sin(TAU * ph) * _env(t, 0.002, 0.12)
+		var rebound := sin(TAU * 60.0 * (t - 0.06)) * 0.4 * _env(t - 0.06, 0.003, 0.05) if t > 0.06 else 0.0
+		b[i] = body + rebound + f * 1.4 * _env(t, 0.001, 0.05)
+	return b
+
+
 func _blink() -> PackedFloat32Array:
 	var b := _buf(0.22)
 	var ph := 0.0
@@ -1002,6 +1043,571 @@ func _glitch_burst() -> PackedFloat32Array:
 		ph += hz / RATE
 		b[i] = (_sq(ph) * 0.5 + (_noise() if rng.randf() < 0.1 else 0.0)) * _env(t, 0.002, 0.18)
 	return b
+
+
+# --- T196: capa de firma de cada habilidad ---
+# Una función _sig_<id> por habilidad, según la columna de sonido de la ficha de
+# T191 (docs/habilidades_y_ram.md). SoundMap.SIGNATURES las pone a -6 dB sobre la
+# base de su tipo. Se generan todas las funciones que empiezan por _sig_.
+
+## Capas de firma: {"sig_<id>": callable}, sacadas de los métodos _sig_<id>.
+func _t196_sigs() -> Dictionary:
+	var out := {}
+	for m in get_method_list():
+		var name := String(m["name"])
+		if name.begins_with("_sig_"):
+			out[name.substr(1)] = Callable(self, name)
+	return out
+
+
+## Pico al guardar una capa de firma: 0.9, salvo que así su volumen eficaz pase
+## de 0.3 (cuadradas llenas, sirenas), para que ninguna tape a la base de su tipo.
+func _layer_peak(s: PackedFloat32Array) -> float:
+	var peak := 0.001
+	var sum := 0.0
+	for v in s:
+		peak = maxf(peak, absf(v))
+		sum += v * v
+	var rms := sqrt(sum / maxi(1, s.size())) / peak * 0.9
+	return 0.9 * minf(1.0, 0.3 / maxf(rms, 0.001))
+
+
+## Nota de `dur` s que se desliza de `f0` a `f1` Hz: onda 0 seno, 1 cuadrada, 2 sierra.
+func _note(f0: float, f1: float, dur: float, decay: float, wave := 0) -> PackedFloat32Array:
+	var b := _buf(dur)
+	var ph := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		ph += lerpf(f0, f1, t / dur) / RATE
+		var v := sin(TAU * ph)
+		if wave == 1:
+			v = _sq(ph) * 0.5
+		elif wave == 2:
+			v = _saw(ph) * 0.5
+		b[i] = v * _env(t, 0.002, decay) * minf(1.0, (dur - t) / 0.003)
+	return b
+
+
+## Ruido filtrado de `dur` s con el corte de `c0` a `c1` Hz, con el volumen
+## compensado (un paso bajo grave casi no se oiría al lado de una nota).
+func _hiss(dur: float, c0: float, c1: float, decay: float, attack := 0.001) -> PackedFloat32Array:
+	var b := _buf(dur)
+	var f := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		var cut := lerpf(c0, c1, t / dur)
+		var a := clampf(TAU * cut / RATE, 0.001, 1.0)
+		f = _lp(f, _noise(), cut)
+		b[i] = f * sqrt((2.0 - a) / a) * 0.5 * _env(t, attack, decay) * minf(1.0, (dur - t) / 0.003)
+	return b
+
+
+## Ruido retenido: `hz` valores al azar por segundo (bits, volcados, datos rotos).
+func _bits(dur: float, hz: float, decay: float) -> PackedFloat32Array:
+	var b := _buf(dur)
+	var hold := maxi(1, int(RATE / hz))
+	var v := 0.0
+	for i in b.size():
+		if i % hold == 0:
+			v = rng.randf_range(-1.0, 1.0)
+		b[i] = v * 0.6 * _env(float(i) / RATE, 0.002, decay)
+	return b
+
+
+## Trémolo: el volumen de `src` sube y baja de `hz0` a `hz1` veces por segundo.
+func _trem(src: PackedFloat32Array, hz0: float, hz1: float, depth := 0.8) -> PackedFloat32Array:
+	var ph := 0.0
+	for i in src.size():
+		ph += lerpf(hz0, hz1, float(i) / src.size()) / RATE
+		src[i] *= 1.0 - depth * (0.5 + 0.5 * sin(TAU * ph))
+	return src
+
+
+## Paso bajo sobre un sonido ya hecho (cuadradas y sierras apagadas).
+func _lowpass(src: PackedFloat32Array, cut: float) -> PackedFloat32Array:
+	var f := 0.0
+	for i in src.size():
+		f = _lp(f, src[i], cut)
+		src[i] = f
+	return src
+
+
+## Junta trozos: [[sonido, segundo en que empieza, ganancia (1 si no está)], ...].
+func _seq(parts: Array) -> PackedFloat32Array:
+	var b := PackedFloat32Array()
+	for p in parts:
+		var src: PackedFloat32Array = p[0]
+		var start := int(float(p[1]) * RATE)
+		var gain := float(p[2]) if p.size() > 2 else 1.0
+		if b.size() < start + src.size():
+			var old := b.size()
+			b.resize(start + src.size())
+			for i in range(old, b.size()):
+				b[i] = 0.0
+		for i in src.size():
+			b[start + i] += src[i] * gain
+	return b
+
+
+## Clic cuadrado corto de `hz`.
+func _blip(hz: float, dur := 0.015) -> PackedFloat32Array:
+	return _note(hz, hz, dur, dur * 0.6, 1)
+
+
+## Clac seco: ruido filtrado a `cut` de pocos milisegundos.
+func _clack(cut: float, dur := 0.01) -> PackedFloat32Array:
+	return _hiss(dur, cut, cut, dur * 0.4)
+
+
+# Cuerpo a cuerpo y movimiento
+
+## Refactorizar: aire que barre de 400 a 2400 Hz y la llave que se cierra.
+func _sig_barrido() -> PackedFloat32Array:
+	return _seq([[_hiss(0.2, 400.0, 2400.0, 0.2, 0.02), 0.0], [_blip(1800.0), 0.2, 0.7]])
+
+
+## Pipeline: tres pitidos cuadrados que suben (etapas en verde).
+func _sig_deploy_continuo() -> PackedFloat32Array:
+	return _seq([[_blip(660.0, 0.035), 0.0], [_blip(880.0, 0.035), 0.06], [_blip(1320.0, 0.035), 0.12]])
+
+
+## Reinicio a patadas: relé, disco que se para y el pitido del POST.
+func _sig_reinicio_forzado() -> PackedFloat32Array:
+	return _seq([[_clack(4000.0, 0.005), 0.0], [_note(120.0, 40.0, 0.25, 0.12), 0.005], [_blip(1000.0, 0.08), 0.27, 0.6]])
+
+
+## git push --force: empujón de ruido grave, sierra que baja y un clic seco.
+func _sig_force_push() -> PackedFloat32Array:
+	return _seq([[_hiss(0.2, 300.0, 300.0, 0.18, 0.005), 0.0], [_note(220.0, 110.0, 0.2, 0.15, 2), 0.0, 0.8], [_clack(5000.0), 0.2, 0.8]])
+
+
+## Entradas aleatorias: tres golpes de ruido, cada uno con un tono al azar.
+func _sig_fuzzing() -> PackedFloat32Array:
+	var parts := []
+	for k in 3:
+		var hz := rng.randf_range(300.0, 2000.0)
+		parts.append([_hiss(0.03, 3000.0, 3000.0, 0.02), k * 0.08, 0.7])
+		parts.append([_note(hz, hz, 0.03, 0.02, 1), k * 0.08, 0.6])
+	return _seq(parts)
+
+
+## SYN, trino de módem y ACK.
+func _sig_teleport_tcp() -> PackedFloat32Array:
+	var modem := _buf(0.09)
+	var ph := 0.0
+	for i in modem.size():
+		ph += (1800.0 if int(float(i) / RATE / 0.01) % 2 == 0 else 2400.0) / RATE
+		modem[i] = sin(TAU * ph) * sin(PI * float(i) / modem.size())
+	return _seq([[_blip(1200.0, 0.03), 0.0], [modem, 0.04, 0.2], [_blip(1600.0, 0.03), 0.15]])
+
+
+## Túnel cifrado: clic metálico, zumbido de 60 Hz y otro clic.
+func _sig_tunel_ssh() -> PackedFloat32Array:
+	var hum := _lowpass(_note(60.0, 60.0, 0.15, 1.0, 1), 600.0)
+	return _seq([[_clack(3000.0), 0.0], [hum, 0.01, 1.6], [_clack(3000.0), 0.17]])
+
+
+## Deshacer: el arpegio del buff al revés (sol-mi-do) y una campanita.
+func _sig_git_revert() -> PackedFloat32Array:
+	return _seq([[_arpeggio([783.99, 659.25, 523.25], 0.065, 0.06), 0.0, 0.6], [_note(1568.0, 1568.0, 0.25, 0.1), 0.2, 0.5]])
+
+
+# Hechizos y proyectiles
+
+## Ping: seno de 1760 Hz y su eco más bajo.
+func _sig_ping_letal() -> PackedFloat32Array:
+	var ping := _note(1760.0, 1760.0, 0.3, 0.09)
+	return _seq([[ping, 0.0], [ping, 0.12, 0.25]])
+
+
+## :(){ :|:& };: — clics que se duplican cada cuarto (1, 2, 4 y 8).
+func _sig_fork_bomb() -> PackedFloat32Array:
+	var parts := []
+	for q in 4:
+		var n := 1 << q
+		for k in n:
+			parts.append([_blip(900.0, 0.006), q * 0.12 + k * 0.12 / n, 0.8])
+	return _seq(parts)
+
+
+## Push, push, push... y la pila se desborda hacia abajo.
+func _sig_stack_overflow() -> PackedFloat32Array:
+	var parts := []
+	var notes := [440.0, 523.25, 659.25, 783.99, 990.0]
+	for k in notes.size():
+		parts.append([_blip(notes[k], 0.025), k * 0.03])
+	parts.append([_note(990.0, 160.0, 0.15, 0.12, 1), 0.15])
+	return _seq(parts)
+
+
+## Tabuladores contra espacios: dos sierras que discuten a destiempo.
+func _sig_flamewar() -> PackedFloat32Array:
+	var a := _trem(_note(300.0, 290.0, 0.25, 0.2, 2), 18.0, 18.0, 0.9)
+	var b := _trem(_note(340.0, 355.0, 0.25, 0.2, 2), 18.0, 18.0, 0.9)
+	return _lowpass(_seq([[a, 0.0], [b, 0.028]]), 2500.0)
+
+
+## Carga que sube y la sirena de producción al disparar.
+func _sig_rayo_produccion() -> PackedFloat32Array:
+	var parts := [[_note(200.0, 1200.0, 0.2, 1.0), 0.0, 0.6]]
+	for k in 4:
+		parts.append([_blip(800.0 if k % 2 == 0 else 600.0, 0.06), 0.2 + k * 0.06, 0.8])
+	return _seq(parts)
+
+
+## Dos procesos que se esperan: tonos disonantes alternos que se cortan en seco.
+func _sig_deadlock() -> PackedFloat32Array:
+	var parts := []
+	for k in 6:
+		var hz := 440.0 if k % 2 == 0 else 466.16
+		parts.append([_note(hz, hz, 0.05, 1.0, 1), k * 0.05])
+	return _seq(parts)
+
+
+## Uncaught: las dos notas del error.
+func _sig_excepcion_en_cadena() -> PackedFloat32Array:
+	return _seq([[_note(880.0, 880.0, 0.06, 0.1, 1), 0.0], [_note(660.0, 660.0, 0.06, 0.1, 1), 0.06]])
+
+
+## Goteo de memoria sobre un borboteo.
+func _sig_fuga_de_memoria() -> PackedFloat32Array:
+	var parts := [[_trem(_hiss(0.35, 500.0, 500.0, 0.25, 0.03), 12.0, 7.0, 0.7), 0.0, 0.5]]
+	for k in 3:
+		parts.append([_note(600.0, 300.0, 0.04, 0.03), k * 0.1])
+	return _seq(parts)
+
+
+## Segmentation fault: ráfaga de bits y el golpe grave del volcado.
+func _sig_core_dump() -> PackedFloat32Array:
+	return _seq([[_bits(0.2, 2000.0, 0.12), 0.0, 0.8], [_note(60.0, 50.0, 0.05, 0.04), 0.18, 1.2]])
+
+
+# Buffs, gritos, barrera y auras
+
+## Muro de ladrillos: seis clacs y un chime grave.
+func _sig_firewall_personal() -> PackedFloat32Array:
+	var parts := []
+	for k in 6:
+		parts.append([_clack(1500.0, 0.008), k * 0.02, 0.9])
+	parts.append([_note(330.0, 330.0, 0.3, 0.12), 0.12, 0.6])
+	return _seq(parts)
+
+
+## Modo seguro: acorde grave y apagado.
+func _sig_modo_seguro() -> PackedFloat32Array:
+	var chord := _seq([[_note(220.0, 220.0, 0.4, 0.25, 1), 0.0], [_note(261.63, 261.63, 0.4, 0.25, 1), 0.0]])
+	return _lowpass(chord, 500.0)
+
+
+## Dos hilos: el mismo arpegio dos veces, desfasado 20 ms.
+func _sig_hiperthreading() -> PackedFloat32Array:
+	var arp := _arpeggio([523.25, 659.25, 783.99], 0.05, 0.05)
+	return _seq([[arp, 0.0], [arp, 0.02, 0.8]])
+
+
+## ¡PROD!: sirena de dos tonos, dos ciclos.
+func _sig_esta_en_produccion() -> PackedFloat32Array:
+	var parts := []
+	for k in 4:
+		var hz := 960.0 if k % 2 == 0 else 770.0
+		parts.append([_note(hz, hz, 0.125, 1.0, 1), k * 0.125])
+	return _lowpass(_seq(parts), 3000.0)
+
+
+## Daily: tic-tac que se acelera y el «ding» del calendario.
+func _sig_daily_standup() -> PackedFloat32Array:
+	var parts := []
+	var at := 0.0
+	for k in 4:
+		parts.append([_clack(2000.0 if k % 2 == 0 else 1500.0, 0.006), at])
+		at += 0.08 - k * 0.015
+	var ding := _seq([[_note(1320.0, 1320.0, 0.25, 0.1), 0.0], [_note(2640.0, 2640.0, 0.25, 0.06), 0.0, 0.4]])
+	parts.append([ding, at + 0.02, 0.7])
+	return _seq(parts)
+
+
+## Volver atrás: ruido con la envolvente al revés y un arpegio que baja.
+func _sig_rollback_grito() -> PackedFloat32Array:
+	var rev := _hiss(0.3, 1500.0, 4000.0, 1.0)
+	for i in rev.size():
+		rev[i] *= float(i) / rev.size()
+	# Arpegio de 0,195 s (4 × 0,03 + 3 × 0,025) para no pasar de los 0,5 s de la ficha.
+	return _seq([[rev, 0.0], [_arpeggio([1046.5, 783.99, 659.25, 523.25], 0.03, 0.025), 0.3, 0.6]])
+
+
+## Overclock: ventilador que acelera.
+func _sig_aura_overclock() -> PackedFloat32Array:
+	return _trem(_hiss(0.35, 800.0, 800.0, 0.3, 0.05), 10.0, 30.0, 0.85)
+
+
+## N+2: dos clanks de placa.
+func _sig_aura_blindaje() -> PackedFloat32Array:
+	var clank := _seq([[_hiss(0.1, 2000.0, 2000.0, 0.03), 0.0, 0.6], [_note(420.0, 420.0, 0.1, 0.05), 0.0]])
+	return _seq([[clank, 0.0], [clank, 0.12]])
+
+
+## Mantenimiento: carraca de seis clics y un chime.
+func _sig_aura_mantenimiento() -> PackedFloat32Array:
+	var parts := []
+	for k in 6:
+		parts.append([_blip(3000.0, 0.006), k * 0.025, 0.7])
+	parts.append([_note(1568.0, 1568.0, 0.3, 0.1), 0.16, 0.5])
+	return _seq(parts)
+
+
+## Mando: fanfarria de dos notas cuadradas.
+func _sig_aura_mando() -> PackedFloat32Array:
+	return _seq([[_note(783.99, 783.99, 0.1, 0.1, 1), 0.0], [_note(1046.5, 1046.5, 0.22, 0.12, 1), 0.1]])
+
+
+## 429: tres bips graves y apagados.
+func _sig_aura_throttling() -> PackedFloat32Array:
+	var bip := _lowpass(_note(220.0, 220.0, 0.06, 0.05, 1), 700.0)
+	return _seq([[bip, 0.0], [bip, 0.15], [bip, 0.3]])
+
+
+## CVE: alerta de dos tonos y el escáner que barre.
+func _sig_aura_exposicion() -> PackedFloat32Array:
+	return _seq([[_blip(1200.0, 0.04), 0.0], [_blip(900.0, 0.04), 0.04], [_note(900.0, 2400.0, 0.2, 0.15), 0.09, 0.5]])
+
+
+# Con efecto visual propio
+
+## UDP: cinco clics de paquete, y faltan uno o dos.
+func _sig_rafaga_de_paquetes() -> PackedFloat32Array:
+	var lost := [rng.randi_range(1, 4)]
+	if rng.randf() < 0.5:
+		lost.append(rng.randi_range(0, 4))
+	var parts := []
+	for k in 5:
+		if k not in lost:
+			parts.append([_blip(1400.0, 0.008), k * 0.02])
+	parts.append([_buf(0.1), 0.0])   # dura lo mismo aunque falte el último
+	return _seq(parts)
+
+
+## La tubería: zumbido cuadrado de 120 Hz apagado.
+func _sig_pipe_de_datos() -> PackedFloat32Array:
+	return _lowpass(_note(120.0, 120.0, 0.3, 0.2, 1), 900.0)
+
+
+## Papeles que vuelan y el «ding» de un ticket nuevo.
+func _sig_tormenta_tickets() -> PackedFloat32Array:
+	var parts := []
+	for k in 3:
+		parts.append([_hiss(0.02, 4000.0, 4000.0, 0.012), k * 0.04 + rng.randf_range(0.0, 0.015), 0.8])
+	parts.append([_note(1568.0, 1568.0, 0.25, 0.08), 0.15, 0.6])
+	return _seq(parts)
+
+
+## Ida y vuelta: aire que sube de tono y vuelve a bajar.
+func _sig_rollback() -> PackedFloat32Array:
+	var b := _buf(0.4)
+	var f := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		var cut := 500.0 + 2500.0 * sin(PI * t / 0.4)
+		f = _lp(f, _noise(), cut)
+		b[i] = f * sqrt(RATE / (TAU * cut)) * 0.5 * (0.4 + 0.6 * absf(sin(TAU * t / 0.4)))
+	return b
+
+
+## while (true): cuatro vueltas cortas, un semitono más arriba cada una.
+func _sig_bucle_infinito() -> PackedFloat32Array:
+	var parts := []
+	for k in 4:
+		var c := 1200.0 * pow(2.0, k / 12.0)
+		parts.append([_hiss(0.08, c, c * 1.6, 0.05, 0.01), k * 0.09])
+	return _seq(parts)
+
+
+## Tic-tac de la bomba al ponerla.
+func _sig_bomba_logica() -> PackedFloat32Array:
+	return _seq([[_clack(2000.0, 0.008), 0.0], [_clack(1500.0, 0.008), 0.12]])
+
+
+## Rescate: candado que se cierra y la caja registradora.
+func _sig_ransomware() -> PackedFloat32Array:
+	return _seq([[_clack(3000.0), 0.0], [_blip(2500.0, 0.01), 0.005, 0.5],
+		[_note(1568.0, 1568.0, 0.25, 0.08), 0.1, 0.6], [_note(2093.0, 2093.0, 0.25, 0.08), 0.1, 0.5]])
+
+
+## Datos rotos: trozos de 15 ms a frecuencias al azar.
+func _sig_corrupcion_datos() -> PackedFloat32Array:
+	var parts := []
+	for k in 10:
+		var hz := rng.randf_range(50.0, 4000.0)
+		parts.append([_note(hz, hz, 0.015, 1.0, 1), k * 0.015])
+	return _seq(parts)
+
+
+## Tracking: dos pips de radar.
+func _sig_paquete_rastreador() -> PackedFloat32Array:
+	var pip := _note(2000.0, 2000.0, 0.03, 0.015)
+	return _seq([[pip, 0.0], [pip, 0.08]])
+
+
+## Servo de la torreta y el clic de bloqueo.
+func _sig_torreta_ci() -> PackedFloat32Array:
+	return _seq([[_lowpass(_note(300.0, 500.0, 0.15, 0.2, 2), 2000.0), 0.0], [_clack(4000.0), 0.16]])
+
+
+## Glug, glug: dos burbujas graves con vibrato.
+func _sig_derrame_aceite() -> PackedFloat32Array:
+	var glug := _buf(0.1)
+	var ph := 0.0
+	for i in glug.size():
+		var t := float(i) / RATE
+		ph += (180.0 + 60.0 * t / 0.1 + 15.0 * sin(TAU * 30.0 * t)) / RATE
+		glug[i] = sin(TAU * ph) * _env(t, 0.005, 0.04)
+	return _seq([[glug, 0.0], [glug, 0.15]])
+
+
+## Estática: crepitar de picos al azar.
+func _sig_campo_estatica() -> PackedFloat32Array:
+	var parts := [[_hiss(0.3, 6000.0, 6000.0, 0.1), 0.0, 0.15]]
+	for k in 14:
+		var at := rng.randf_range(0.0, 0.28)
+		parts.append([_clack(rng.randf_range(3000.0, 8000.0), 0.004), at, 1.0 - at / 0.3])
+	return _seq(parts)
+
+
+## Refrigerante: chorro y gorgoteo.
+func _sig_charco_refrigerante() -> PackedFloat32Array:
+	var parts := [[_hiss(0.3, 1200.0, 1200.0, 0.2, 0.02), 0.0, 0.7]]
+	for k in 3:
+		parts.append([_note(300.0 + k * 80.0, 500.0 + k * 80.0, 0.04, 0.02), 0.12 + k * 0.05, 0.5])
+	return _seq(parts)
+
+
+## Cascada: cinco clics que bajan (un !important tras otro).
+func _sig_cascada_css() -> PackedFloat32Array:
+	var parts := []
+	var notes := [1568.0, 1396.9, 1174.7, 987.77, 783.99]
+	for k in notes.size():
+		parts.append([_blip(notes[k], 0.02), k * 0.05])
+	return _seq(parts)
+
+
+# Invocaciones
+
+## fork(): dos clics iguales.
+func _sig_proceso_hijo() -> PackedFloat32Array:
+	return _seq([[_blip(1000.0), 0.0], [_blip(1000.0), 0.04], [_buf(0.1), 0.0]])   # 0,1 s como mínimo, como las demás
+
+
+## Hélice de los drones.
+func _sig_drones_vigilancia() -> PackedFloat32Array:
+	return _lowpass(_trem(_note(180.0, 180.0, 0.4, 0.3, 2), 25.0, 25.0, 0.8), 2000.0)
+
+
+## Servo y el «bip-bup» del centinela.
+func _sig_robot_centinela() -> PackedFloat32Array:
+	return _seq([[_lowpass(_note(300.0, 450.0, 0.1, 0.2, 2), 2000.0), 0.0],
+		[_note(880.0, 880.0, 0.06, 0.08, 1), 0.11], [_note(1320.0, 1320.0, 0.06, 0.08, 1), 0.17]])
+
+
+## Daemon: batido grave de dos sierras.
+func _sig_daemon_segundo_plano() -> PackedFloat32Array:
+	return _lowpass(_seq([[_note(110.0, 110.0, 0.3, 0.2, 2), 0.0], [_note(116.0, 116.0, 0.3, 0.2, 2), 0.0]]), 1200.0)
+
+
+## Rotor del dron y el chasquido de la bengala.
+func _sig_dron_escolta() -> PackedFloat32Array:
+	var rotor := _lowpass(_trem(_note(150.0, 160.0, 0.25, 0.3, 2), 30.0, 30.0, 0.8), 1800.0)
+	return _seq([[rotor, 0.0], [_hiss(0.15, 5000.0, 2000.0, 0.05), 0.2, 0.9]])
+
+
+## Golem de chatarra: clanks y un ventilador viejo que arranca.
+func _sig_golem_hardware() -> PackedFloat32Array:
+	var clank := _seq([[_hiss(0.08, 2000.0, 2000.0, 0.03), 0.0, 0.6], [_note(350.0, 350.0, 0.08, 0.04), 0.0]])
+	var fan := _trem(_hiss(0.35, 200.0, 1500.0, 1.0, 0.1), 6.0, 25.0, 0.6)
+	return _seq([[clank, 0.0], [clank, 0.1, 0.8], [fan, 0.15, 0.6]])
+
+
+## Mainframe: zumbido de 50 Hz y cinta.
+func _sig_mainframe_titan() -> PackedFloat32Array:
+	var hum := _lowpass(_note(50.0, 50.0, 0.5, 0.4, 1), 400.0)
+	return _seq([[hum, 0.0, 1.5], [_trem(_hiss(0.5, 2500.0, 2500.0, 0.4, 0.05), 8.0, 8.0, 0.9), 0.0, 0.4]])
+
+
+## Dron médico: chime suave de dos notas que suben.
+func _sig_dron_medico() -> PackedFloat32Array:
+	return _seq([[_note(1046.5, 1046.5, 0.2, 0.08), 0.0], [_note(1318.5, 1318.5, 0.3, 0.1), 0.08]])
+
+
+## Cortafuegos portátil: clac de ladrillo y chime.
+func _sig_dron_escudo() -> PackedFloat32Array:
+	return _seq([[_clack(1500.0, 0.012), 0.0], [_note(659.25, 659.25, 0.3, 0.1), 0.03, 0.6]])
+
+
+## Tests: el bip de PASS... y el de FAIL.
+func _sig_bot_pruebas() -> PackedFloat32Array:
+	return _seq([[_note(1320.0, 1320.0, 0.07, 0.06, 1), 0.0], [_note(330.0, 330.0, 0.12, 0.08, 1), 0.1]])
+
+
+## Mina: tic-tac rápido y chirrido de ruedas.
+func _sig_mina_rodante() -> PackedFloat32Array:
+	var parts := []
+	for k in 6:
+		parts.append([_clack(2000.0 if k % 2 == 0 else 1500.0, 0.005), k * 0.04])
+	var squeak := _buf(0.15)
+	var ph := 0.0
+	for i in squeak.size():
+		var t := float(i) / RATE
+		ph += (2200.0 + 150.0 * sin(TAU * 40.0 * t)) / RATE
+		squeak[i] = sin(TAU * ph) * sin(PI * t / 0.15)
+	parts.append([squeak, 0.25, 0.4])
+	return _seq(parts)
+
+
+## Agente IA: cuatro notas al azar de una pentatónica (muy seguro) y un glitch.
+func _sig_agente_ia() -> PackedFloat32Array:
+	var scale := [523.25, 587.33, 659.25, 783.99, 880.0, 1046.5]
+	var notes := []
+	for k in 4:
+		notes.append(scale[rng.randi_range(0, scale.size() - 1)])
+	return _seq([[_arpeggio(notes, 0.06, 0.04), 0.0, 0.7], [_bits(0.05, 3000.0, 0.03), 0.26, 0.8]])
+
+
+## Watchdog: ladrido corto (sierra que cae con la boca de un paso bajo).
+func _sig_watchdog() -> PackedFloat32Array:
+	var bark := _seq([[_note(400.0, 280.0, 0.14, 0.06, 2), 0.0], [_hiss(0.06, 2500.0, 1200.0, 0.03), 0.0, 0.4]])
+	return _lowpass(bark, 1600.0)
+
+
+## Bot de bugs: zumbido de insecto.
+func _sig_bot_rastreador() -> PackedFloat32Array:
+	return _lowpass(_trem(_note(220.0, 230.0, 0.2, 0.2, 2), 60.0, 60.0, 0.7), 2500.0)
+
+
+## Golem de silicio: golpe de cristal y un chime agudo.
+func _sig_golem_silicio() -> PackedFloat32Array:
+	return _seq([[_hit_crystal(), 0.0], [_note(3136.0, 3136.0, 0.25, 0.08), 0.08, 0.5]])
+
+
+## Golem de overclock: ventilador que se acelera y chisporroteo.
+func _sig_golem_overclock() -> PackedFloat32Array:
+	var crackle := _buf(0.35)
+	for i in crackle.size():
+		crackle[i] = _noise() if rng.randf() < 0.02 else 0.0
+	return _seq([[_trem(_hiss(0.35, 600.0, 1200.0, 0.3, 0.05), 8.0, 32.0, 0.85), 0.0], [crackle, 0.0, 0.5]])
+
+
+## Golem UTP: latigazo y el clic del RJ45.
+func _sig_golem_utp() -> PackedFloat32Array:
+	return _seq([[_clack(6000.0, 0.003), 0.0], [_note(2000.0, 500.0, 0.06, 0.04, 2), 0.002], [_blip(2500.0, 0.008), 0.12, 0.8]])
+
+
+## Golem GPU: pitido de bobina muy bajo sobre los ventiladores.
+func _sig_golem_gpu() -> PackedFloat32Array:
+	return _seq([[_trem(_hiss(0.4, 900.0, 900.0, 0.4, 0.05), 20.0, 20.0, 0.5), 0.0], [_note(8000.0, 8000.0, 0.4, 0.4), 0.0, 0.12]])
+
+
+## Golem de kernel: zumbido grave de 55 Hz con glitch.
+func _sig_golem_kernel() -> PackedFloat32Array:
+	var hum := _lowpass(_note(55.0, 55.0, 0.4, 0.3, 2), 500.0)
+	return _seq([[hum, 0.0, 1.6], [_bits(0.06, 1500.0, 0.04), 0.1, 0.5], [_bits(0.05, 3500.0, 0.03), 0.25, 0.4]])
 
 
 # --- Ambientes (en bucle) ---

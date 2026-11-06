@@ -1,8 +1,9 @@
 class_name SoundMap
 ## Qué suena para cada cosa (T77). Cada habilidad lanza dos capas: la de su tipo
-## (Sfx.skill_sound) y una de firma (clic digital, aire, zumbido, campana o golpe
-## grave), con un tono propio sacado de su id, así que dos habilidades del mismo
-## tipo no suenan igual; además una pequeña variación al azar en cada uso. Los
+## (Sfx.skill_sound), con un tono propio sacado de su id, y su firma: desde T196 un
+## sonido propio por habilidad (SIGNATURES); las que no lo tengan, una capa
+## compartida (clic digital, aire, zumbido, campana o golpe grave) con ese mismo
+## tono. Además, una pequeña variación al azar en cada uso. Los
 ## impactos suenan según el daño; recoger y equipar, según el material del objeto;
 ## los únicos y los conjuntos tienen su caída; los pasos dependen del suelo.
 
@@ -31,7 +32,7 @@ static func skill_pitch(id: String) -> float:
 static func signature_layer(p: Dictionary) -> String:
 	var tags: Array = p.get("tags", [])
 	var kind := String(p.get("kind", ""))
-	if kind in ["ground_aoe", "nova", "quake", "leap_slam", "melee_area", "charge"] and not ("spell" in tags and String(p.get("damage_type", "")) == "cold"):
+	if kind in ["ground_aoe", "nova", "leap_slam", "melee_area", "charge"] and not ("spell" in tags and String(p.get("damage_type", "")) == "cold"):
 		return "lay_thump"
 	if "melee" in tags:
 		return "lay_whoosh"
@@ -42,17 +43,66 @@ static func signature_layer(p: Dictionary) -> String:
 			return "lay_chime"
 		"physical":
 			return "lay_click"
-	return "lay_chime" if kind in ["buff", "aura", "barrier", "heal"] else ""
+	return "lay_chime" if kind in ["buff", "aura", "barrier"] else ""
+
+
+## Volumen de la capa de tipo cuando no va a 0 dB (el encendido de un aura, como antes de T192).
+const BASE_VOLUME := {"aura_on": -4.0}
+
+## Capa de firma propia de cada habilidad (T196): assets/audio/sfx/<valor>.wav,
+## sintetizada por tools/generate_sfx.gd (-- t196) según la columna de sonido de
+## la ficha de T191 (docs/habilidades_y_ram.md). Va a SIGNATURE_DB con tono fijo
+## (solo el ±JITTER de siempre) en lugar de la capa compartida de signature_layer.
+const SIGNATURES := {
+	# Cuerpo a cuerpo y movimiento
+	"barrido": "sig_barrido", "deploy_continuo": "sig_deploy_continuo", "reinicio_forzado": "sig_reinicio_forzado",
+	"force_push": "sig_force_push", "fuzzing": "sig_fuzzing", "teleport_tcp": "sig_teleport_tcp",
+	"tunel_ssh": "sig_tunel_ssh", "git_revert": "sig_git_revert",
+	# Hechizos y proyectiles
+	"ping_letal": "sig_ping_letal", "fork_bomb": "sig_fork_bomb", "stack_overflow": "sig_stack_overflow",
+	"flamewar": "sig_flamewar", "rayo_produccion": "sig_rayo_produccion", "deadlock": "sig_deadlock",
+	"excepcion_en_cadena": "sig_excepcion_en_cadena", "fuga_de_memoria": "sig_fuga_de_memoria", "core_dump": "sig_core_dump",
+	# Buffs, gritos, barrera y auras
+	"firewall_personal": "sig_firewall_personal", "modo_seguro": "sig_modo_seguro", "hiperthreading": "sig_hiperthreading",
+	"esta_en_produccion": "sig_esta_en_produccion", "daily_standup": "sig_daily_standup", "rollback_grito": "sig_rollback_grito",
+	"aura_overclock": "sig_aura_overclock", "aura_blindaje": "sig_aura_blindaje", "aura_mantenimiento": "sig_aura_mantenimiento",
+	"aura_mando": "sig_aura_mando", "aura_throttling": "sig_aura_throttling", "aura_exposicion": "sig_aura_exposicion",
+	# Con efecto visual propio
+	"rafaga_de_paquetes": "sig_rafaga_de_paquetes", "pipe_de_datos": "sig_pipe_de_datos", "tormenta_tickets": "sig_tormenta_tickets",
+	"rollback": "sig_rollback", "bucle_infinito": "sig_bucle_infinito", "bomba_logica": "sig_bomba_logica",
+	"ransomware": "sig_ransomware", "corrupcion_datos": "sig_corrupcion_datos", "paquete_rastreador": "sig_paquete_rastreador",
+	"torreta_ci": "sig_torreta_ci", "derrame_aceite": "sig_derrame_aceite", "campo_estatica": "sig_campo_estatica",
+	"charco_refrigerante": "sig_charco_refrigerante", "cascada_css": "sig_cascada_css",
+	# Invocaciones
+	"proceso_hijo": "sig_proceso_hijo", "drones_vigilancia": "sig_drones_vigilancia", "robot_centinela": "sig_robot_centinela",
+	"daemon_segundo_plano": "sig_daemon_segundo_plano", "dron_escolta": "sig_dron_escolta", "golem_hardware": "sig_golem_hardware",
+	"mainframe_titan": "sig_mainframe_titan", "dron_medico": "sig_dron_medico", "dron_escudo": "sig_dron_escudo",
+	"bot_pruebas": "sig_bot_pruebas", "mina_rodante": "sig_mina_rodante", "agente_ia": "sig_agente_ia",
+	"watchdog": "sig_watchdog", "bot_rastreador": "sig_bot_rastreador", "golem_silicio": "sig_golem_silicio",
+	"golem_overclock": "sig_golem_overclock", "golem_utp": "sig_golem_utp", "golem_gpu": "sig_golem_gpu",
+	"golem_kernel": "sig_golem_kernel",
+}
+## Volumen de la capa de firma (propia o compartida) respecto a la de tipo.
+const SIGNATURE_DB := -6.0
+
+
+## Capa de firma propia de la habilidad `id` ("" si no tiene).
+static func signature(id: String) -> String:
+	return String(SIGNATURES.get(id, ""))
 
 
 ## Capas al lanzar: [[sonido, volumen dB, tono]].
 static func cast_layers(p: Dictionary) -> Array:
 	var pitch := skill_pitch(String(p.get("id", "")))
 	var base := Sfx.skill_sound("trap" if String(p.get("deploy", "")) != "" else String(p.get("kind", "")), String(p.get("damage_type", "")))
-	var layers: Array = [[base, 0.0, pitch]]
-	var sig := signature_layer(p)
-	if sig != "":
-		layers.append([sig, -6.0, pitch * 1.05])
+	var layers: Array = [[base, float(BASE_VOLUME.get(base, 0.0)), pitch]]
+	var own := signature(String(p.get("id", "")))
+	if own != "":
+		layers.append([own, SIGNATURE_DB, 1.0])
+	else:
+		var sig := signature_layer(p)
+		if sig != "":
+			layers.append([sig, SIGNATURE_DB, pitch * 1.05])
 	return layers
 
 
