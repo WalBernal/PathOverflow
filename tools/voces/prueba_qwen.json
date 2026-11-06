@@ -1,30 +1,89 @@
 {
   "voces": {
-    "egresado": "Very young Mexican man, about 20, just graduated: youthful boyish voice, light and bright, slightly higher pitch, a bit nervous but hopeful, natural and casual. Latin American Spanish with a Mexican accent.",
-    "egresada": "Very young Mexican woman, about 20, just graduated: youthful girlish voice, light and bright, a bit nervous but hopeful, natural and casual. Latin American Spanish with a Mexican accent.",
-    "rafa": "Man from Mazatlan, Sinaloa, in his mid forties, who still talks like a young guy: relaxed and casual, a tired and sarcastic sysadmin, slightly raspy mid-low voice, dry humor, drawn-out pauses. Speaks Latin American Spanish with a strong northern Mexican accent and intonation, seseo, like a Mexican from Sinaloa; never Castilian or Spain Spanish.",
-    "rafa_b": "Mexican guy in his forties from northern Mexico, chill and laid-back like a young man, tired sarcastic tech guy, mid-low slightly husky voice, sing-song northern Mexican intonation, Mexican slang, unhurried. Mexican Spanish from Sinaloa, not Spain.",
-    "mario": "Mexican teenage boy, about 17, a first-year student who wants to join everything: loud, very high-pitched bright teenage voice that still sounds like a kid, fast and super enthusiastic. Latin American Spanish with a Mexican accent.",
+    "egresado": "Very young man, about 20, just graduated: youthful boyish voice, light and bright, slightly higher pitch, a bit nervous but hopeful, natural and casual. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
+    "egresada": "Very young woman, about 20, just graduated: youthful girlish voice, light and bright, a bit nervous but hopeful, natural and casual. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
+    "rafa": "Man in his mid forties who still talks like a young guy: relaxed and casual, a tired and sarcastic sysadmin, slightly raspy mid-low voice, dry humor, drawn-out pauses. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
+    "mario": "Teenage boy, about 17, a first-year student who wants to join everything: loud, very high-pitched bright teenage voice that still sounds like a kid, fast and super enthusiastic. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
     "aida": "Mexican woman around 50, senior engineer. Serious, confident, warm low voice with a subtle, elegant sensual touch; enthusiastic underneath, never exaggerated. Mexican Spanish accent.",
     "paez": "Mexican man around 40, super enthusiastic and cheerful engineering teacher, bright upbeat mid-range voice, always smiling when he talks. Mexican Spanish accent.",
     "narrador": "Neutral Latin American Spanish narrator for a video game, like a classic RPG narrator: clear, warm, engaging and well-paced, never monotone, not theatrical."
   },
   "lineas": [
-    {"id": "01_rafa_quien", "voz": "rafa", "texto": "¿Quién eres tú.....??? ..... Ah, vienes a ayudarnos....."},
-    {"id": "02_egresado_vengo", "voz": "egresado", "texto": "Eh, no, yo vengo por..."},
-    {"id": "03_rafa_inge_pepe", "voz": "rafa", "texto": "Ah..... eres alumno.... Si buscas al Inge Pepe, llegaste un semestre tarde.... Se jubiló en julio. Bueno..... «jubiló»..... entre comillas.... todavía viene los jueves a dar clases.... porque dice que si se queda en su casa su esposa lo pone a limpiar....."},
-    {"id": "04_egresado_constancia", "voz": "egresado", "texto": "Vengo por mi constancia de servicio social. Hice mis 480 horas: seis meses pelando cables UTP, cambiando HDMI y limpiando las computadoras del centro de cómputo, bajo las órdenes del Inge Pepe. Si no tengo el sello, Servicios Escolares me anula la titulación."},
-    {"id": "05_narrador_suspiro", "voz": "narrador", "texto": "Rafa suelta un suspiro cansado y teclea con desgana, sin quitar los ojos de la pantalla."},
-    {"id": "06_rafa_libreta", "voz": "rafa", "texto": "Tengo malas noticias, «genio»..... Pepe no usaba base de datos..... Anotaba a los prestadores en una libreta Scribe con pasta de gatitos..... Cuando recogió sus cosas, se llevó la libreta creyendo que era su recetario de cocina....."},
-    {"id": "07b_rafa_puntero_b", "voz": "rafa_b", "texto": "Para el sistema escolar de la UAdeO..... tú nunca exististe..... Eres un puntero nulo....."},
-    {"id": "07_rafa_puntero", "voz": "rafa", "texto": "Para el sistema escolar de la UAdeO..... tú nunca exististe..... Eres un puntero nulo....."},
-    {"id": "08_rafa_sice", "voz": "rafa", "texto": "Y para colmo..... se cayó el Sistema Integral de Control Escolar..... el SICE..... Hoy vencían las actas de calificaciones de todo el estado....."},
-    {"id": "09_narrador_tv", "voz": "narrador", "texto": "La TV del pasillo repite en bucle: «Ingeniería de Software: ¡inscríbete!» y «Hackatón LinceCode 2026». En letras chiquitas: «Premio: 120 ADIS y una constancia con valor curricular.»."},
-    {"id": "10_egresado_tv", "voz": "egresado", "texto": "Constancia con valor curricular... eso me serviría ahora mismo."},
-    {"id": "11_mario_churros", "voz": "mario", "texto": "¡Profe Rafa! ¿Va a querer churros...?"},
-    {"id": "12_rafa_no_jales", "voz": "rafa", "texto": "¡NO JALES ESO!...", "tono": "shouting in panic"},
-    {"id": "13_egresada_vengo", "voz": "egresada", "texto": "Eh, no, yo vengo por..."},
-    {"id": "14_aida_muestra", "voz": "aida", "texto": "Vaya, un recién egresado. Debes ser de la generación de Ojeda, ¿no? Soy Aída. Llevo aquí desde que El Pepe era jefe de informática, y aún se programaba todo en COBOL."},
-    {"id": "15_paez_muestra", "voz": "paez", "texto": "¡Ah, otro del departamento! Soy M. Páez, el Inge. Estaba calificando exámenes de álgebra lineal en el laboratorio cuando la pantalla empezó a parpadear... y aparecí aquí. Con mis lentes, mi taza y sin mi Kindle. Eso último es lo grave."}
+    {
+      "id": "01_rafa_quien",
+      "voz": "rafa",
+      "texto": "¿Quién eres tú.....??? ..... Ah, vienes a ayudarnos....."
+    },
+    {
+      "id": "02_egresado_vengo",
+      "voz": "egresado",
+      "texto": "Eh, no, yo vengo por..."
+    },
+    {
+      "id": "03_rafa_inge_pepe",
+      "voz": "rafa",
+      "texto": "Ah..... eres alumno.... Si buscas al Inge Pepe, llegaste un semestre tarde.... Se jubiló en julio. Bueno..... «jubiló»..... entre comillas.... todavía viene los jueves a dar clases.... porque dice que si se queda en su casa su esposa lo pone a limpiar....."
+    },
+    {
+      "id": "04_egresado_constancia",
+      "voz": "egresado",
+      "texto": "Vengo por mi constancia de servicio social. Hice mis 480 horas: seis meses pelando cables UTP, cambiando HDMI y limpiando las computadoras del centro de cómputo, bajo las órdenes del Inge Pepe. Si no tengo el sello, Servicios Escolares me anula la titulación."
+    },
+    {
+      "id": "05_narrador_suspiro",
+      "voz": "narrador",
+      "texto": "Rafa suelta un suspiro cansado y teclea con desgana, sin quitar los ojos de la pantalla."
+    },
+    {
+      "id": "06_rafa_libreta",
+      "voz": "rafa",
+      "texto": "Tengo malas noticias, «genio»..... Pepe no usaba base de datos..... Anotaba a los prestadores en una libreta Scribe con pasta de gatitos..... Cuando recogió sus cosas, se llevó la libreta creyendo que era su recetario de cocina....."
+    },
+    {
+      "id": "07_rafa_puntero",
+      "voz": "rafa",
+      "texto": "Para el sistema escolar de la UAdeO..... tú nunca exististe..... Eres un puntero nulo....."
+    },
+    {
+      "id": "08_rafa_sice",
+      "voz": "rafa",
+      "texto": "Y para colmo..... se cayó el Sistema Integral de Control Escolar..... el SICE..... Hoy vencían las actas de calificaciones de todo el estado....."
+    },
+    {
+      "id": "09_narrador_tv",
+      "voz": "narrador",
+      "texto": "La TV del pasillo repite en bucle: «Ingeniería de Software: ¡inscríbete!» y «Hackatón LinceCode 2026». En letras chiquitas: «Premio: 120 ADIS y una constancia con valor curricular.»."
+    },
+    {
+      "id": "10_egresado_tv",
+      "voz": "egresado",
+      "texto": "Constancia con valor curricular... eso me serviría ahora mismo."
+    },
+    {
+      "id": "11_mario_churros",
+      "voz": "mario",
+      "texto": "¡Profe Rafa! ¿Va a querer churros...?"
+    },
+    {
+      "id": "12_rafa_no_jales",
+      "voz": "rafa",
+      "texto": "¡NO JALES ESO!...",
+      "tono": "shouting in panic"
+    },
+    {
+      "id": "13_egresada_vengo",
+      "voz": "egresada",
+      "texto": "Eh, no, yo vengo por..."
+    },
+    {
+      "id": "14_aida_muestra",
+      "voz": "aida",
+      "texto": "Vaya, un recién egresado. Debes ser de la generación de Ojeda, ¿no? Soy Aída. Llevo aquí desde que El Pepe era jefe de informática, y aún se programaba todo en COBOL."
+    },
+    {
+      "id": "15_paez_muestra",
+      "voz": "paez",
+      "texto": "¡Ah, otro del departamento! Soy M. Páez, el Inge. Estaba calificando exámenes de álgebra lineal en el laboratorio cuando la pantalla empezó a parpadear... y aparecí aquí. Con mis lentes, mi taza y sin mi Kindle. Eso último es lo grave."
+    }
   ]
 }

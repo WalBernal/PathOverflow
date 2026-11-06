@@ -3,7 +3,7 @@
 Cómo debe sonar cada personaje cuando sus diálogos se generen como audio (en vez de la voz de
 Windows). La descripción es del usuario; la «indicación» es la versión lista para pegar en una
 herramienta que diseña voces a partir de texto (p. ej. Voice Design de ElevenLabs), donde el
-inglés funciona mejor. Todas en español de México, con acento neutro del noroeste (Mazatlán).
+inglés funciona mejor. Todas con acento latinoamericano neutro: ni castellano ni regional marcado (Aída y M. Páez se quedan como están, ya aprobadas).
 
 Pruebas descartadas: Kokoro (local) — no convenció (2026-11-06).
 
@@ -18,10 +18,10 @@ Pruebas descartadas: Kokoro (local) — no convenció (2026-11-06).
 
 ## Indicaciones para diseñar cada voz
 
-- **Recién egresado (hombre)**: «Very young Mexican man, about 20, just graduated: youthful boyish voice, light and bright, slightly higher pitch, a bit nervous but hopeful, natural and casual. Latin American Spanish with a Mexican accent.»
-- **Recién egresada (mujer)**: «Very young Mexican woman, about 20, just graduated: youthful girlish voice, light and bright, a bit nervous but hopeful, natural and casual. Latin American Spanish with a Mexican accent.»
-- **Rafa**: «Man from Mazatlan, Sinaloa, in his mid forties, who still talks like a young guy: relaxed and casual, a tired and sarcastic sysadmin, slightly raspy mid-low voice, dry humor, drawn-out pauses. Speaks Latin American Spanish with a strong northern Mexican accent and intonation, seseo, like a Mexican from Sinaloa; never Castilian or Spain Spanish.» Variante B: «Mexican guy in his forties from northern Mexico, chill and laid-back like a young man, tired sarcastic tech guy, mid-low slightly husky voice, sing-song northern Mexican intonation, Mexican slang, unhurried. Mexican Spanish from Sinaloa, not Spain.»
-- **Mario**: «Mexican teenage boy, about 17, a first-year student who wants to join everything: loud, very high-pitched bright teenage voice that still sounds like a kid, fast and super enthusiastic. Latin American Spanish with a Mexican accent.»
+- **Recién egresado (hombre)**: «Very young man, about 20, just graduated: youthful boyish voice, light and bright, slightly higher pitch, a bit nervous but hopeful, natural and casual. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.»
+- **Recién egresada (mujer)**: «Very young woman, about 20, just graduated: youthful girlish voice, light and bright, a bit nervous but hopeful, natural and casual. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.»
+- **Rafa**: «Man in his mid forties who still talks like a young guy: relaxed and casual, a tired and sarcastic sysadmin, slightly raspy mid-low voice, dry humor, drawn-out pauses. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.»
+- **Mario**: «Teenage boy, about 17, a first-year student who wants to join everything: loud, very high-pitched bright teenage voice that still sounds like a kid, fast and super enthusiastic. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.»
 - **Aída**: «Mexican woman around 50, senior engineer. Serious, confident, warm low voice with a subtle, elegant sensual touch; enthusiastic underneath, never exaggerated.»
 - **M. Páez**: «Mexican man around 40, super enthusiastic and cheerful engineering teacher, bright upbeat mid-range voice, always smiling when he talks.»
 - **Narrador**: «Neutral Latin American Spanish narrator for a video game, like a classic RPG narrator: clear, warm, engaging and well-paced, never monotone, not theatrical.»
@@ -42,3 +42,4 @@ tono de `npcs.json`.
 ## Historial
 
 - 2026-11-06 · Qwen3-TTS VoiceDesign (local): Aída y M. Páez aprobadas a la primera. Rafa sonaba a español de España: se pide acento del norte de México (Sinaloa) y se prueba una variante B. Egresado, egresada y Mario, más jóvenes.
+- 2026-11-06 · El usuario prefiere acento neutro, no mexicano marcado ni castellano: Rafa, egresado, egresada y Mario pasan a «Neutral Latin American Spanish accent». Rafa regenerado entero; del egresado solo las líneas 02 y 04.
