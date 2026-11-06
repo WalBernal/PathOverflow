@@ -46,6 +46,7 @@ var _profiles: Array = []         # perfil de SkillCalc por ranura ({} si vacía
 var _projectiles: Array[Dictionary] = []
 var _effects: Array[Dictionary] = []      # visuales: anillos y destellos
 var _pending: Array[Dictionary] = []      # explosiones retardadas, rayos y repeticiones
+var _repeat_tags := {}   # id de habilidad → número de la última repetición mostrada («×2»…, T197)
 var _spins: Array[Dictionary] = []        # giros activos (Bucle Infinito; también de torretas)
 var _traps: Array[Dictionary] = []        # trampas en el suelo (Bomba Lógica)
 ## Trampas, minas y torretas de las RAM de despliegue: ejecutan la habilidad solas.
@@ -674,7 +675,7 @@ func _fire_signature(stat: StringName) -> void:
 			character.add_timed_effect("asc:sprint", [Modifier.new(Stat.MOVEMENT_SPEED, Modifier.Type.INCREASED, 30.0, [], "asc:sprint"),
 				Modifier.new(Stat.ATTACK_SPEED, Modifier.Type.INCREASED, 30.0, [], "asc:sprint")] as Array[Modifier], SPRINT_TIME)
 			_sig_pending.append({"time": SPRINT_TIME, "kind": "demo", "dmg": dmg})
-			_effects.append({"type": "ring", "pos": pos, "radius": 40.0, "time": 0.0, "duration": 0.4, "color": c})
+			_proc("sprint", pos, 40.0, c)
 			Sfx.play("buff", -8.0)
 		Stat.PROFILED_SHOT:
 			var far := -1
@@ -686,7 +687,7 @@ func _fire_signature(stat: StringName) -> void:
 					far = k
 			var end := pos + (enemies.positions[far] - pos).normalized() * float(s["range"])
 			enemies.hit_in_segment(pos, end, 14.0, dmg * 0.9, dmg * 1.1, 30.0, 175.0)
-			_effects.append({"type": "beam", "pos": pos, "dir": (end - pos).normalized(), "radius": 8.0, "length": s["range"], "time": 0.0, "duration": 0.3, "color": c})
+			_proc("profiled", pos, 8.0, c, {"end": end, "duration": 0.35})
 			Sfx.play("projectile", -6.0)
 		Stat.BOTNET:
 			var hit := {}
@@ -697,14 +698,14 @@ func _fire_signature(stat: StringName) -> void:
 					break
 				var to: Vector2 = enemies.positions[i]
 				hit[enemies.ids[i]] = true
-				_effects.append({"type": "zap", "pos": from, "end": to, "time": 0.0, "duration": 0.25, "color": c})
+				_proc("botnet", from, 0.0, c, {"end": to, "duration": 0.3})
 				enemies.hit_index(i, dmg * 0.9, dmg * 1.1, 5.0, 150.0)
 				from = to
 			Sfx.play("chaos", -8.0)
 		Stat.BLUE_SCREEN:
 			enemies.stun_in_radius(pos, s["range"], 1.0)
 			enemies.hit_in_radius(pos, s["range"], dmg * 0.9, dmg * 1.1, 5.0, 150.0)
-			_effects.append({"type": "lock", "pos": pos, "radius": s["range"], "time": 0.0, "duration": 0.8, "color": c})
+			_proc("bluescreen", pos, s["range"], c, {"duration": 0.8})
 			Sfx.play("cold", -6.0)
 		Stat.PAGER_STRIKE:
 			var near: Array[int] = []
@@ -713,15 +714,21 @@ func _fire_signature(stat: StringName) -> void:
 					near.append(k)
 			var at: Vector2 = enemies.positions[near.pick_random()]
 			enemies.hit_in_radius(at, 60.0, dmg * 0.9, dmg * 1.1, 5.0, 150.0)
-			_effects.append({"type": "zap", "pos": at + Vector2(randf_range(-30, 30), -260), "end": at, "time": 0.0, "duration": 0.3, "color": c})
-			_effects.append({"type": "ring", "pos": at, "radius": 60.0, "time": 0.0, "duration": 0.3, "color": c})
+			_proc("pager", at, 60.0, c)
 			Sfx.play("arc", -8.0)
 		Stat.BLUE_GREEN:
 			enemies.hit_in_radius(pos, SIG_NOVA_RADIUS, dmg * 0.9, dmg * 1.1, 5.0, 150.0)
-			_effects.append({"type": "ring", "pos": pos, "radius": SIG_NOVA_RADIUS, "time": 0.0, "duration": 0.35, "color": Color("4a9ae0")})
+			_proc("bluegreen", pos, SIG_NOVA_RADIUS, Color("4a9ae0"))
 			var cold_dmg := dmg / character.stats.total_multiplier(Stat.FIRE_DAMAGE) * character.stats.total_multiplier(Stat.COLD_DAMAGE)
 			_sig_pending.append({"time": 0.45, "kind": "green", "dmg": cold_dmg})
 			Sfx.play("fire", -8.0)
+
+
+## Efecto propio de un proc de ascendencia o de nodo clave (T197; lo dibuja SkillFx.draw_proc).
+func _proc(kind: String, pos: Vector2, radius: float, color: Color, extra := {}) -> void:
+	var e := {"type": "proc", "kind": kind, "pos": pos, "radius": radius, "time": 0.0, "duration": 0.45, "color": color}
+	e.merge(extra, true)
+	_effects.append(e)
 
 
 func _update_fire_walls(delta: float) -> void:
@@ -751,8 +758,8 @@ func _update_sig_pending(delta: float) -> void:
 		enemies.hit_ailments = {}
 		enemies.hit_in_radius(pos, SIG_NOVA_RADIUS, e["dmg"] * 0.9, e["dmg"] * 1.1, 5.0, 150.0)
 		var c := Color("e8d9b0") if e["kind"] == "demo" else Color("6fd36b")
-		_effects.append({"type": "burst", "pos": pos, "radius": SIG_NOVA_RADIUS, "time": 0.0, "duration": 0.35, "color": c})
-		_effects.append({"type": "ring", "pos": pos, "radius": SIG_NOVA_RADIUS, "time": 0.0, "duration": 0.4, "color": c})
+		_effects.append({"type": "burst", "pos": pos, "radius": SIG_NOVA_RADIUS, "time": 0.0, "duration": 0.35, "color": c, "hidden": true})
+		_proc(String(e["kind"]), pos, SIG_NOVA_RADIUS, c)
 	_sig_pending = still
 
 
@@ -1013,8 +1020,8 @@ func on_player_hit() -> void:
 	enemies.hit_in_radius(pos, NOVA_RADIUS, dmg * 0.9, dmg * 1.1, 0.0, 150.0)
 	enemies.stun_in_radius(pos, NOVA_RADIUS, 0.8)
 	Sfx.play("shatter", -6.0)
-	_effects.append({"type": "ring", "pos": pos, "radius": NOVA_RADIUS, "time": 0.0, "duration": 0.45, "color": Color("9fe0ff")})
-	_effects.append({"type": "burst", "pos": pos, "radius": NOVA_RADIUS * 0.8, "time": 0.0, "duration": 0.35, "color": Color("d8f4ff")})
+	_proc("nova", pos, NOVA_RADIUS, Color("9fe0ff"))
+	_effects.append({"type": "burst", "pos": pos, "radius": NOVA_RADIUS * 0.8, "time": 0.0, "duration": 0.35, "color": Color("d8f4ff"), "hidden": true})
 
 
 ## "git stash pop": explosiones que dejan las esquivas, {pos, time} (estallan al llegar a 0).
@@ -1061,8 +1068,8 @@ func _update_stash_pops(delta: float) -> void:
 		enemies.hit_ailments = {}
 		enemies.hit_in_radius(s["pos"], STASH_POP_RADIUS, dmg * 0.9, dmg * 1.1, 5.0, 150.0)
 		Sfx.play("mine", -6.0, randf_range(0.95, 1.05))
-		_effects.append({"type": "burst", "pos": s["pos"], "radius": STASH_POP_RADIUS, "time": 0.0, "duration": 0.35, "color": Color("ff9a3a")})
-		_effects.append({"type": "ring", "pos": s["pos"], "radius": STASH_POP_RADIUS, "time": 0.0, "duration": 0.4, "color": Color("ffd060")})
+		_effects.append({"type": "burst", "pos": s["pos"], "radius": STASH_POP_RADIUS, "time": 0.0, "duration": 0.35, "color": Color("ff9a3a"), "hidden": true})
+		_proc("stash", s["pos"], STASH_POP_RADIUS, Color("ffd060"))
 	_stash_pops = still
 
 
@@ -1077,8 +1084,8 @@ func _update_ascendancy_procs(delta: float) -> void:
 		var dmg := 4.0 * character.level + 12.0
 		enemies.hit_in_radius(pos, EXPLOSION_RADIUS, dmg * 0.9, dmg * 1.1, 5.0, 150.0)
 		Sfx.play("mine", -8.0, randf_range(0.9, 1.1))
-		_effects.append({"type": "burst", "pos": pos, "radius": EXPLOSION_RADIUS, "time": 0.0, "duration": 0.35, "color": Color("ff9a3a")})
-		_effects.append({"type": "ring", "pos": pos, "radius": EXPLOSION_RADIUS, "time": 0.0, "duration": 0.4, "color": Color("ffd060")})
+		_effects.append({"type": "burst", "pos": pos, "radius": EXPLOSION_RADIUS, "time": 0.0, "duration": 0.35, "color": Color("ff9a3a"), "hidden": true})
+		_proc("kill", pos, EXPLOSION_RADIUS, Color("ffd060"))
 	var pulse := character.stats.get_value(Stat.STATIC_PULSE)
 	if pulse <= 0.0 or not player.is_alive():
 		return
@@ -1089,7 +1096,7 @@ func _update_ascendancy_procs(delta: float) -> void:
 	var pos := player.global_position
 	if enemies.hit_in_radius(pos, PULSE_RADIUS, pulse * character.level * 0.9, pulse * character.level * 1.1, 5.0, 150.0) > 0:
 		Sfx.play("arc", -10.0)
-	_effects.append({"type": "ring", "pos": pos, "radius": PULSE_RADIUS, "time": 0.0, "duration": 0.5, "color": Color("8ad8ff")})
+	_proc("static", pos, PULSE_RADIUS, Color("8ad8ff"), {"duration": 0.5})
 
 
 func _physics_process(delta: float) -> void:
@@ -1231,6 +1238,7 @@ func try_use(index: int) -> bool:
 	if p["kind"] in SkillCalc.AUTOMATON_KINDS or p["kind"] == "aura":
 		skill_used.emit(index)
 		return true   # en invocaciones la repetición ya va en su ritmo de ataque
+	_repeat_tags[p["id"]] = 1   # cuenta las repeticiones de este lanzamiento (T197)
 	for r in int(p["repeats"]):
 		_pending.append({"type": "repeat", "time": impact + REPEAT_DELAY * (r + 1), "profile": p, "target": target})
 	skill_used.emit(index)
@@ -1418,7 +1426,7 @@ func active_summaries() -> Array[Dictionary]:
 func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 	var device := from != Vector2.INF
 	var origin := from if device else player.global_position
-	var color: Color = DAMAGE_COLORS.get(p["damage_type"], Color.WHITE)
+	var color: Color = SkillCalc.tinted(DAMAGE_COLORS.get(p["damage_type"], Color.WHITE), p)   # con el matiz de su variante (T197)
 	var dir := (target - origin).normalized()
 	if dir == Vector2.ZERO:
 		dir = Vector2.RIGHT
@@ -1740,6 +1748,8 @@ func _first_enemy_in_cone(origin: Vector2, dir: Vector2, reach: float, half: flo
 func _fire_volley(p: Dictionary, origin: Vector2, dir: Vector2, color: Color, extra := {}, reach := -1.0) -> void:
 	var count: int = maxi(1, int(p.get("projectiles", 1)))
 	var spread := deg_to_rad(float(p.get("spread_degrees", 0.0)))
+	if count > 1:   # los canales del abanico (Multicanal, T197): una raya por proyectil al salir
+		_effects.append({"type": "fan", "pos": origin, "dir": dir, "spread": spread, "count": count, "time": 0.0, "duration": 0.2, "color": color})
 	for k in count:
 		var angle := 0.0 if count == 1 else lerpf(-spread / 2.0, spread / 2.0, float(k) / (count - 1))
 		var pr := {
@@ -1753,6 +1763,19 @@ func _fire_volley(p: Dictionary, origin: Vector2, dir: Vector2, color: Color, ex
 		}
 		pr.merge(extra, true)
 		_projectiles.append(pr)
+
+
+## Lo que lleva encima un proyectil por sus RAM (T197): "pierce" si aún atraviesa,
+## "chain" si aún encadena y "homing" si es teledirigido. Se dibuja pequeño detrás o delante.
+static func projectile_mods(pr: Dictionary) -> PackedStringArray:
+	var out := PackedStringArray()
+	if int(pr.get("pierce_left", 0)) > 0:
+		out.append("pierce")
+	if int(pr.get("chains_left", 0)) > 0:
+		out.append("chain")
+	if bool(pr.get("homing", false)):
+		out.append("homing")
+	return out
 
 
 ## Cadena: el enemigo más cercano al cursor (a tiro) y luego salta al más cercano no golpeado.
@@ -1833,7 +1856,7 @@ func _start_channel(index: int, p: Dictionary, target: Vector2) -> void:
 	var origin := player.global_position
 	_channel = {"index": index, "profile": p, "time": 0.0, "next_tick": 0.0, "aim": target,
 		"center": origin + (target - origin).limit_length(p["range"]),
-		"color": DAMAGE_COLORS.get(p["damage_type"], Color.WHITE)}
+		"color": SkillCalc.tinted(DAMAGE_COLORS.get(p["damage_type"], Color.WHITE), p)}
 
 
 ## De 0 a 1 en CHANNEL_RAMP segundos: la tormenta pasa de ×0,5 a ×1,5 de radio y de ×1 a ×2 de daño.
@@ -1935,7 +1958,7 @@ func _deploy(p: Dictionary, target: Vector2) -> void:
 	var device := {"kind": kind, "pos": dpos, "armed_in": rules["armed"],
 		"life": life, "total": life, "profile": inner, "next_use": 0.0,
 		"interval": _device_interval(p),
-		"color": DAMAGE_COLORS.get(p["damage_type"], Color.WHITE)}
+		"color": SkillCalc.tinted(DAMAGE_COLORS.get(p["damage_type"], Color.WHITE), p)}
 	if kind in TURRET_DEVICES:
 		# Las torretas tienen vida propia: los cazadores de invocaciones van a por ellas.
 		var hp := player.max_life() * TOTEM_LIFE_FRACTION
@@ -2794,6 +2817,10 @@ func _update_pending(delta: float) -> void:
 					"time": 0.0, "duration": 0.35, "color": e["color"]})
 		elif player.is_alive():
 			_execute(p, e["target"])
+			if e["type"] == "repeat":   # la repetición del Pipeline se ve (T197): «×2», «×3»…
+				_repeat_tags[p["id"]] = int(_repeat_tags.get(p["id"], 1)) + 1
+				_effects.append({"type": "tag", "pos": player.global_position + Vector2(14, -58), "text": "×%d" % _repeat_tags[p["id"]],
+					"time": 0.0, "duration": 0.5, "color": SkillCalc.tinted(DAMAGE_COLORS.get(p["damage_type"], Color.WHITE), p)})
 	_pending = still
 	_triggering = false
 
@@ -2947,6 +2974,21 @@ func _draw() -> void:
 				SkillFx.draw_move_fx(self, e, fx_font, fx_lite, Accessibility.reduce_flashes)
 				if e.get("live", false) and not fx_lite:
 					_draw_buff_allies(e)
+			"proc":
+				SkillFx.draw_proc(self, e, fx_font, fx_lite)
+			"fan":
+				# Multicanal (T197): rayas cortas por cada canal del abanico, que se abren y se apagan.
+				var n: int = e["count"]
+				for k in n:
+					var ang := 0.0 if n == 1 else lerpf(-e["spread"] / 2.0, e["spread"] / 2.0, float(k) / (n - 1))
+					var d: Vector2 = (e["dir"] as Vector2).rotated(ang)
+					draw_line(e["pos"] + d * (10.0 + 14.0 * t), e["pos"] + d * (22.0 + 18.0 * t), Color(c, 0.7 * (1.0 - t)), 2.0)
+			"tag":
+				# Pipeline (T197): «×2», «×3» que sube y se apaga sobre el jugador.
+				if not fx_lite:
+					var at: Vector2 = e["pos"] + Vector2(0, -10.0 * t)
+					draw_string_outline(fx_font, at, e["text"], HORIZONTAL_ALIGNMENT_LEFT, -1, 12, 3, Color(0, 0, 0, 0.6 * (1.0 - t)))
+					draw_string(fx_font, at, e["text"], HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(c.lightened(0.3), 1.0 - t))
 			"leap":
 				# Arco del salto: una sombra que recorre el camino y una estela.
 				var a: Vector2 = e["pos"]
@@ -3077,6 +3119,8 @@ func _draw() -> void:
 		# Cada habilidad con su forma (SkillFx): paquete, esquirla, rayo, bola de fuego, gota…
 		var shape: String = pr["fx"]["projectile"] if pr.has("fx") else ("glitch" if pr.get("dot", false) else "orb")
 		SkillFx.draw_projectile(self, pr["pos"], dir, pr["color"], shape, fx_time + float(pr.get("phase", 0.0)), light, Accessibility.reduce_flashes)
+		if not light:
+			SkillFx.draw_projectile_mods(self, pr["pos"], dir, pr["color"], projectile_mods(pr), fx_time + float(pr.get("phase", 0.0)))
 
 
 func _draw_devices() -> void:
@@ -3164,7 +3208,7 @@ func _draw_minions() -> void:
 func _aura_tint(a: Dictionary) -> Color:
 	var hostile: bool = not a["profile"].get("aura_enemy", {}).is_empty()
 	var fallback: Color = Color("e06c6c") if hostile else Accessibility.aura_color(String(a["profile"].get("damage_type", "")), a["color"])
-	return SkillFx.aura_tint(String(a["skill_id"]), fallback)
+	return SkillCalc.tinted(SkillFx.aura_tint(String(a["skill_id"]), fallback), a["profile"])   # y el matiz de su variante (T197)
 
 
 ## Cada aura con su anillo y su motivo en el borde (T195: engranajes, placas, llaves,

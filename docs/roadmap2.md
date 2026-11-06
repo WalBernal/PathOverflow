@@ -137,7 +137,7 @@ Origen: R9
 - Una capa de firma propia para cada habilidad (generada con la misma herramienta que los WAV actuales o sintetizada en código), encima de la base por tipo. Primero las 29 sin efecto propio y las 6 auras; luego las demás.
 - Prueba: los 62 ids tienen una entrada propia en `SoundMap` y su archivo existe.
 
-### [ ] T197 · Variantes, RAM y ascendencias con señal · M
+### [x] T197 · Variantes, RAM y ascendencias con señal · M
 Origen: R9
 - Las 24 variantes cambian al menos el matiz o un detalle del efecto (Unicast, Ping flood, Bomba de racimo, Titán de asedio… hoy se ven y suenan como la base).
 - RAM sin señal visual (multicanal, perforación, encadenamiento, guiado, pipeline): un detalle pequeño en el proyectil.
@@ -154,6 +154,10 @@ Origen: R9 (pendiente de la revisión de T196)
 ### [ ] T217 · La ficha de T191 a salvo de list_skills · S
 Origen: R9 (aviso de T191)
 - `tools/list_skills.gd` reescribe `docs/habilidades_y_ram.md` entero y borraría la sección «Firmas de las habilidades (T191)», escrita a mano. Que conserve lo que va desde esa sección hasta el final, o pasar la ficha a un archivo aparte y enlazarlo.
+
+### [ ] T218 · Unicast, de verdad un solo proyectil · S
+Origen: R9 (visto al capturar T197)
+- La variante Unicast de Ráfaga de Paquetes resta 2 proyectiles, pero la placa suma proyectiles por nivel: a nivel 20 dispara 3, no «un solo proyectil» como dice. Que la variante fije el número (p. ej. un "set" en `SkillCalc.apply_variant`) y revisar si otras variantes con "add" negativo tienen el mismo problema. Prueba con la placa a nivel 1 y 20.
 
 ### [ ] T199 · Versión 3.8.0 y revisión en el teléfono · S 🛑
 Origen: R9
@@ -356,3 +360,4 @@ Ideas que no están en la cola. Se pasan a tareas cuando el usuario las elija.
 - 2026-11-04 · T212 · `TrainingDummy`: un rack «PRUEBAS» en cada campamento que no muere y apunta cada golpe con su tipo y los degenerativos; `TrainingPanel` muestra DPS, golpes, media, máximo, % de críticos y reparto por tipo de los últimos 10 s cerca del muñeco, sin tapar ventanas ni botones (la revisión lo colocó bajo el marco del objetivo en PC y arriba a la izquierda en el celular, y quitó el temblor con «reducir movimiento»). Prueba `_test_training_dummy`, modo de captura `muneco`.
 - 2026-11-04 · T213 · Sobre lo que ya había (ordenar, basura, bloqueado y venta de basura), la marca se ve en el tooltip (`ItemTooltip.mark_line`), el título de la bolsa cuenta la basura (`InventoryPanel.bag_title`) y las ayudas dicen el gesto del control en uso (click derecho, mantener pulsado o X), que cambia en vivo; marcar suena. Pruebas `_test_inventory_quick`, capturas `docs/capturas/interfaz/213_basura_*`.
 - 2026-11-05 · — · Unión de las cinco ramas en `feature/acto-3`: conflictos solo en `tests/test_core.gd`, `tools/capture_screens.gd` (se quedan las dos partes) y `skill_controller.gd` (al encender un aura, el sonido de T192 sin el anillo genérico; al cambiar de zona, los efectos que siguen al jugador de T195 y la limpieza de las piezas de T201). Nuevas T216 y T217 con lo que dejaron pendiente T196 y T191.
+- 2026-11-05 · T197 · Variantes, RAM y ascendencias con señal. Cada variante lleva matiz y tono (`SkillCalc.variant_look`: la que pega más, cálido `ff8a3d` y un 12 % más grave; la que reparte o aligera, frío `6fd3ff` y más aguda; o lo que fije su «fx») que pasan al color de lanzamiento, proyectiles, drones, esbirros y auras (`SkillCalc.tinted`, mezcla del 40 %) y al tono de la base y la firma (`SoundMap.cast_layers`). RAM: abanico de rayas al salir con Multicanal (efecto «fan»), «×2», «×3» sobre el jugador en cada repetición del Pipeline (efecto «tag») y, en el proyectil, «»» si perfora, eslabones si encadena y una mira que late si va guiado (`SkillController.projectile_mods`, `SkillFx.draw_projectile_mods`, no en la versión ligera). Los procs de ascendencia y nodos clave tienen efecto propio (`SkillFx.draw_proc`, `_proc`, `PROC_LABELS`): sprint!, regla «perf» con sus ms, enlaces de botnet, pantalla azul «:(», buscapersonas «PAGE», blue→green, sello DEMO, ✓ green, esquirlas «SIGKILL», caja de «stash pop», chispas «ESD» y hexágono «403»; sus destellos genéricos quedan ocultos (solo luz y partículas). Prueba `_test_variant_signals` (las 20 variantes de `variants.json` con matiz y tono propios) y la de Botnet adaptada; modo `-- procs` de `tools/capture_skill_fx.tscn` y captura `docs/capturas/mecanicas/197_senales.png`. Al capturar se vio que Unicast dispara 3 proyectiles a nivel 20: queda como T218.

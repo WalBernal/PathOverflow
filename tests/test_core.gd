@@ -249,6 +249,7 @@ func _initialize() -> void:
 	_test_skill_preview()
 	_test_training_dummy()
 	_test_inventory_quick()
+	_test_variant_signals()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -2300,7 +2301,7 @@ func _test_class_signatures() -> void:
 	em.spawn(Vector2(370, 0), Rarity.Enemy.NORMAL, em.type_index_of("bug"))
 	sc._effects.clear()
 	sc._fire_signature(Stat.BOTNET)
-	_check(sc._effects.filter(func(e: Dictionary) -> bool: return e["type"] == "zap").size() >= 3, "Botnet salta entre varios enemigos")
+	_check(sc._effects.filter(func(e: Dictionary) -> bool: return e["type"] == "proc" and e["kind"] == "botnet").size() >= 3, "Botnet salta entre varios enemigos (con su enlace propio, T197)")
 	sc._fire_signature(Stat.SPRINT_DEMO)
 	_check(c.timed_effects.any(func(e: Dictionary) -> bool: return e["id"] == "asc:sprint") and sc._sig_pending.size() == 1, "Sprint: acelera y deja la demo para el final")
 	sc.free()
@@ -9339,3 +9340,34 @@ func _test_inventory_quick() -> void:
 		"marcas: en mitad de una frase el botón del mando sigue en mayúscula")
 	_check(InventoryPanel.help_text(true, false).contains("Otra vez: equipar"),
 		"marcas: la ayuda con el dedo dice que el primer toque solo enseña el objeto")
+
+
+## T197: las variantes se ven y se oyen distintas de la base, las RAM dejan su señal en
+## el proyectil y los procs de ascendencia tienen su efecto propio.
+func _test_variant_signals() -> void:
+	var c := _new_character()
+	var gen := ItemGenerator.new(_db, 197)
+	var heavy := SkillCalc.variant_look({"mult": {"damage": 3.0}})
+	var light := SkillCalc.variant_look({"mult": {"damage": 0.55}})
+	_check(heavy["tint"] != light["tint"] and float(heavy["pitch"]) < 1.0 and float(light["pitch"]) > 1.0,
+		"la variante que pega más suena grave y en cálido; la que reparte, aguda y en frío")
+	_check(SkillCalc.variant_look({"fx": {"tint": "ff00ff", "pitch": 0.7}})["tint"] == "ff00ff", "una variante puede fijar su matiz con «fx»")
+	var catalog: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/skills/variants.json"))["variants"]
+	var count := 0
+	for skill_id in catalog:
+		for v in catalog[skill_id]:
+			var board := gen.generate_motherboard(20, skill_id)
+			board.variant = String(v["id"])
+			var base := SkillCalc._compute_base(board, c)
+			var p := SkillCalc.compute(board, c)
+			var tint := SkillCalc.tinted(Color.WHITE, p)
+			var shifted := float(SoundMap.cast_layers(p)[0][2]) != float(SoundMap.cast_layers(base)[0][2])
+			_check(p.has("variant_tint") and tint != Color.WHITE and shifted, "%s / %s: matiz y tono propios" % [skill_id, v["id"]])
+			count += 1
+	_check(count >= 20, "todas las variantes del catálogo probadas (%d)" % count)
+	_check(SkillCalc.tinted(Color.RED, {}) == Color.RED, "sin variante, el color de siempre")
+	var mods := SkillController.projectile_mods({"pierce_left": 2, "chains_left": 1, "homing": true})
+	_check(mods.has("pierce") and mods.has("chain") and mods.has("homing"), "perforar, encadenar y guiado dejan su señal en el proyectil")
+	_check(SkillController.projectile_mods({"pierce_left": 0, "chains_left": 0}).is_empty(), "sin RAM, el proyectil va limpio")
+	for kind in ["sprint", "profiled", "botnet", "bluescreen", "pager", "bluegreen", "demo", "green", "kill", "stash", "static", "nova"]:
+		_check(String(SkillFx.PROC_LABELS.get(kind, "")) != "", "el proc %s tiene su etiqueta" % kind)

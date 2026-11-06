@@ -54,6 +54,9 @@ func _run() -> void:
 	if OS.get_cmdline_user_args().has("buffs"):
 		await _run_buffs(world, c, items, skills, player, em, home)
 		return
+	if OS.get_cmdline_user_args().has("procs"):
+		await _run_procs(c, items, skills, player, em, home)
+		return
 	var spells := OS.get_cmdline_user_args().has("hechizos")
 	var ids: Array = SPELL_IDS if spells else IDS
 	var sheet := Image.create(CROP.x * 4, CROP.y * 2 * ceili(ids.size() / 4.0), false, Image.FORMAT_RGBA8)
@@ -150,6 +153,49 @@ func _run_buffs(world: Node, c: CharacterData, items: ItemDatabase, skills: Skil
 		sheet.save_png(ProjectSettings.globalize_path(OUT + file + ".png"))
 		print("captura: ", file)
 	world.set("_since_save", -9999.0)
+	get_tree().quit()
+
+
+## Procs de ascendencia, señales de las RAM y una variante (T197): una hoja en
+## user://capturas/197_senales.png. Los procs se piden directos a SkillController._proc.
+func _run_procs(c: CharacterData, items: ItemDatabase, skills: SkillController, player: Player, em: EnemyManager, home: Vector2) -> void:
+	var kinds: Array = SkillFx.PROC_LABELS.keys()
+	var shots: Array = kinds + ["ram", "variante"]
+	var cols := 4
+	var sheet := Image.create(CROP.x * cols, CROP.y * ceili(shots.size() / float(cols)), false, Image.FORMAT_RGBA8)
+	for n in shots.size():
+		var kind: String = shots[n]
+		em.clear_all()
+		skills.get("_effects").clear()
+		skills.get("_projectiles").clear()
+		player.global_position = home
+		await _wait(0.25)
+		var from := player.get_global_transform_with_canvas().origin
+		var at := home + Vector2(60, -20)
+		if kind == "ram":   # Multicanal + perforación + encadenamiento + guiado
+			var p := SkillCalc.compute(Motherboard.new(items.skills.skills["rafaga_de_paquetes"], 10, []), c)
+			p["projectiles"] = 3
+			p["pierce"] = 2
+			p["projectile_chains"] = 1
+			p["homing"] = true
+			p["projectile_speed"] = 260.0
+			skills.call("_execute", p, home + Vector2(220, 0))
+		elif kind == "variante":   # Unicast: el matiz frío o cálido de la variante
+			var board := Motherboard.new(items.skills.skills["rafaga_de_paquetes"], 20, [])
+			board.variant = "unicast"
+			skills.call("_execute", SkillCalc.compute(board, c), home + Vector2(220, 0))
+		elif kind in ["profiled", "botnet"]:
+			skills.call("_proc", kind, home, 8.0, Color("e8d070"), {"end": home + Vector2(200, -30), "duration": 0.6})
+		else:
+			skills.call("_proc", kind, at, 70.0, Color("8ad8ff") if kind in ["static", "nova", "bluescreen"] else Color("ffd060"), {"duration": 0.6})
+		await _wait(0.2)
+		var shot := get_viewport().get_texture().get_image()
+		var rect := Rect2i(Vector2i(from) + Vector2i(60, -20) - CROP / 2, CROP).intersection(Rect2i(Vector2i.ZERO, shot.get_size()))
+		shot.convert(Image.FORMAT_RGBA8)
+		sheet.blit_rect(shot, rect, Vector2i((n % cols) * CROP.x, (n / cols) * CROP.y))
+		print("señal: %s" % kind)
+	sheet.save_png(ProjectSettings.globalize_path(OUT + "197_senales.png"))
+	print("captura: 197_senales")
 	get_tree().quit()
 
 

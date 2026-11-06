@@ -93,12 +93,14 @@ static func signature(id: String) -> String:
 
 ## Capas al lanzar: [[sonido, volumen dB, tono]].
 static func cast_layers(p: Dictionary) -> Array:
-	var pitch := skill_pitch(String(p.get("id", "")))
+	# Una variante suena más grave o más aguda que la base (T197).
+	var shift := float(p.get("variant_pitch", 1.0))
+	var pitch := skill_pitch(String(p.get("id", ""))) * shift
 	var base := Sfx.skill_sound("trap" if String(p.get("deploy", "")) != "" else String(p.get("kind", "")), String(p.get("damage_type", "")))
 	var layers: Array = [[base, float(BASE_VOLUME.get(base, 0.0)), pitch]]
 	var own := signature(String(p.get("id", "")))
 	if own != "":
-		layers.append([own, SIGNATURE_DB, 1.0])
+		layers.append([own, SIGNATURE_DB, shift])
 	else:
 		var sig := signature_layer(p)
 		if sig != "":

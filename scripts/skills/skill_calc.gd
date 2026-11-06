@@ -125,7 +125,31 @@ static func apply_variant(p: Dictionary, board: Motherboard) -> Dictionary:
 	if v.has("abilities"):
 		p["unit_abilities"] = v["abilities"]
 	p["variant"] = v["id"]
+	var look := variant_look(v)   # T197: la variante se ve y se oye distinta de la base
+	p["variant_tint"] = look["tint"]
+	p["variant_pitch"] = look["pitch"]
 	return p
+
+
+## Matiz y tono de una variante (T197): «fx» en sus datos o, si no lo tiene, según su
+## peso: la que pega más (daño, efecto del aura o vida de la invocación) tira a cálido y
+## suena más grave; la que reparte o aligera, a frío y más aguda.
+const VARIANT_HEAVY := {"tint": "ff8a3d", "pitch": 0.88}
+const VARIANT_LIGHT := {"tint": "6fd3ff", "pitch": 1.12}
+const VARIANT_TINT_MIX := 0.4
+
+static func variant_look(v: Dictionary) -> Dictionary:
+	if v.has("fx"):
+		return {"tint": String(v["fx"].get("tint", VARIANT_LIGHT["tint"])), "pitch": float(v["fx"].get("pitch", 1.0))}
+	var m: Dictionary = v.get("mult", {})
+	var power := float(m.get("damage", 1.0)) * float(m.get("aura_effect", 1.0)) * float(m.get("unit_life", 1.0))
+	return (VARIANT_HEAVY if power > 1.0 else VARIANT_LIGHT).duplicate()
+
+
+## Color de una habilidad: el de su tipo de daño, con el matiz de su variante si la tiene.
+static func tinted(base: Color, p: Dictionary) -> Color:
+	var tint := String(p.get("variant_tint", ""))
+	return base if tint == "" else base.lerp(Color(tint), VARIANT_TINT_MIX)
 
 
 ## "Efecto de aura" de una variante: escala los bonos del aura (con los mismos topes que en el cálculo base).

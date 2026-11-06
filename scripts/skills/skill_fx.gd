@@ -43,6 +43,29 @@ static func _snap(v: Vector2) -> Vector2:
 
 ## Dibuja un proyectil con su forma. `light`: versión simple (muchos enemigos);
 ## `dim`: sin núcleos blancos (Menos destellos).
+## Señal de las RAM sobre un proyectil (T197), en pequeño para no tapar su forma:
+## "pierce" dos «»» detrás (atraviesa), "chain" dos eslabones detrás (encadena) y
+## "homing" una mira que late delante (va guiado).
+static func draw_projectile_mods(ci: CanvasItem, pos: Vector2, dir: Vector2, color: Color, mods: PackedStringArray, time: float) -> void:
+	if mods.is_empty():
+		return
+	var side := dir.orthogonal()
+	var soft := Color(color.lightened(0.35), 0.75)
+	if mods.has("pierce"):
+		for k in 2:
+			var tip := pos - dir * (13.0 + k * 5.0)
+			ci.draw_polyline(PackedVector2Array([tip - dir * 3.0 + side * 3.0, tip, tip - dir * 3.0 - side * 3.0]), soft, 1.5)
+	if mods.has("chain"):
+		var back := pos - dir * (26.0 if mods.has("pierce") else 14.0)
+		ci.draw_arc(back, 2.5, 0.0, TAU, 8, soft, 1.0)
+		ci.draw_arc(back - dir * 4.0, 2.5, 0.0, TAU, 8, soft, 1.0)
+	if mods.has("homing"):
+		var ahead := pos + dir * 14.0
+		var r := 3.0 + 0.8 * sin(time * 8.0)
+		ci.draw_arc(ahead, r, 0.0, TAU, 10, Color(soft, 0.6), 1.0)
+		ci.draw_line(ahead - side * (r + 2.0), ahead + side * (r + 2.0), Color(soft, 0.6), 1.0)
+
+
 static func draw_projectile(ci: CanvasItem, pos: Vector2, dir: Vector2, color: Color, shape: String, time: float, light := false, dim := false) -> void:
 	var at := _snap(pos)
 	var core := color.lightened(0.25) if dim else color.lightened(0.6)
@@ -177,6 +200,88 @@ static func ramp(s: float, from: float, to: float) -> float:
 ## Texto centrado en `at`; `w`: ancho de la caja (los de 2× largos necesitan más).
 static func _label(ci: CanvasItem, font: Font, at: Vector2, text: String, size: int, col: Color, w := 60.0) -> void:
 	ci.draw_string(font, _snap(at) - Vector2(w * 0.5, 0), text, HORIZONTAL_ALIGNMENT_CENTER, w, size, col)
+
+
+## Efectos de ascendencia y de los nodos clave que se disparan solos (T197): cada uno con
+## su motivo y su etiqueta, en vez del anillo, el destello, el zigzag o el candado genéricos.
+const PROC_LABELS := {
+	"sprint": "sprint!", "profiled": "perf", "botnet": "botnet", "bluescreen": ":(", "pager": "PAGE",
+	"bluegreen": "blue→green", "demo": "DEMO", "green": "✓ green", "kill": "SIGKILL", "stash": "stash pop",
+	"static": "ESD", "nova": "403",
+}
+
+
+static func draw_proc(ci: CanvasItem, e: Dictionary, font: Font, light := false) -> void:
+	var t := clampf(float(e["time"]) / float(e["duration"]), 0.0, 1.0)
+	var a := 1.0 - t
+	var pos: Vector2 = e["pos"]
+	var r := float(e.get("radius", 40.0))
+	var c: Color = e["color"]
+	var kind := String(e["kind"])
+	var ring := r * (0.55 + 0.45 * t)
+	if kind in ["profiled", "botnet"]:
+		var end: Vector2 = e["end"]
+		var d := (end - pos).normalized()
+		var length := pos.distance_to(end)
+		if kind == "profiled":   # perfil: una regla con marcas cada 24 px
+			ci.draw_line(pos, end, Color(c, 0.85 * a), 3.0)
+			for k in int(length / 24.0):
+				var p := pos + d * (24.0 * (k + 1))
+				ci.draw_line(p - d.orthogonal() * 5.0, p + d.orthogonal() * 5.0, Color(c, 0.7 * a), 1.0)
+		else:   # botnet: enlace punteado entre dos nodos
+			for k in int(length / 10.0):
+				ci.draw_rect(Rect2(pos + d * (10.0 * k + 3.0) - Vector2(1, 1), Vector2(3, 3)), Color(c, 0.85 * a))
+			for p in [pos, end]:
+				ci.draw_rect(Rect2(p - Vector2(4, 4), Vector2(8, 8)), Color(c, 0.9 * a), false, 1.5)
+		if not light and kind == "profiled":
+			_label(ci, font, end + Vector2(0, -10), "%dms" % (17 + int(length) % 83), 11, Color(c.lightened(0.3), a))
+		return
+	# Anillo de trazos que se abre (todos los de área).
+	for k in 16:
+		var ang := TAU * k / 16.0 + t * 0.6
+		ci.draw_arc(pos, ring, ang, ang + TAU / 16.0 * 0.6, 3, Color(c, 0.7 * a), 2.0)
+	match kind:
+		"sprint":
+			for k in 6:
+				var y := -30.0 + k * 7.0
+				var x := -18.0 - 14.0 * t - (k % 2) * 6.0
+				ci.draw_line(pos + Vector2(x, y), pos + Vector2(x - 14.0, y), Color(c, 0.7 * a), 1.5)
+		"bluescreen":
+			ci.draw_circle(pos, ring, Color(0.15, 0.35, 0.85, 0.22 * a))
+		"pager":
+			var drop := pos + Vector2(0, -70.0 * (1.0 - minf(1.0, t * 3.0)))
+			ci.draw_rect(Rect2(drop - Vector2(9, 14), Vector2(18, 12)), Color(0.1, 0.1, 0.12, 0.9 * a))
+			ci.draw_rect(Rect2(drop - Vector2(7, 12), Vector2(14, 5)), Color(c, 0.9 * a))
+		"bluegreen":
+			ci.draw_arc(pos, ring * 0.8, PI * 0.5, PI * 1.5, 16, Color(Color("4a9ae0"), 0.8 * a), 3.0)
+			ci.draw_arc(pos, ring * 0.8, -PI * 0.5, PI * 0.5, 16, Color(Color("6fd36b"), 0.8 * a), 3.0)
+		"demo":
+			ci.draw_rect(Rect2(pos + Vector2(-24, -30 - 8.0 * t), Vector2(48, 16)), Color(c, 0.8 * a), false, 2.0)
+		"green":
+			for k in 3:
+				var p := pos + Vector2.from_angle(TAU * k / 3.0 - PI / 2.0) * ring * 0.6
+				ci.draw_polyline(PackedVector2Array([p + Vector2(-4, 0), p + Vector2(-1, 3), p + Vector2(5, -4)]), Color(c, 0.9 * a), 2.0)
+		"kill":
+			for k in 8:
+				var d := Vector2.from_angle(TAU * k / 8.0 + 0.3)
+				ci.draw_line(pos + d * ring * 0.4, pos + d * ring * (0.55 + 0.3 * t), Color(c, 0.85 * a), 2.0)
+		"stash":
+			var box := Rect2(pos - Vector2(10, 8), Vector2(20, 14))
+			ci.draw_rect(box, Color(c, 0.8 * a), false, 2.0)
+			var lid := -0.9 * minf(1.0, t * 2.5)   # la tapa se abre
+			ci.draw_line(box.position, box.position + Vector2.from_angle(lid) * 20.0, Color(c, 0.9 * a), 2.0)
+		"static":
+			for k in 6:
+				var d := Vector2.from_angle(TAU * k / 6.0 + t)
+				var p := pos + d * ring * 0.7
+				ci.draw_polyline(PackedVector2Array([p, p + d * 5.0 + d.orthogonal() * 3.0, p + d * 9.0 - d.orthogonal() * 3.0, p + d * 13.0]), Color(c, 0.85 * a), 1.5)
+		"nova":
+			var hexa := PackedVector2Array()
+			for k in 7:
+				hexa.append(pos + Vector2.from_angle(TAU * k / 6.0) * ring * 0.85)
+			ci.draw_polyline(hexa, Color(c, 0.8 * a), 2.0)
+	if not light:
+		_label(ci, font, pos + Vector2(0, -ring * 0.35 - 12.0 * t), String(PROC_LABELS.get(kind, "")), 12 if kind != "bluescreen" else 18, Color(c.lightened(0.3), a), 90.0)
 
 
 static func draw_move_fx(ci: CanvasItem, e: Dictionary, font: Font, light := false, dim := false) -> void:
