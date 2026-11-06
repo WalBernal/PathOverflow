@@ -269,6 +269,37 @@ static func draw_ticket_mark(ci: CanvasItem, at: Vector2, level: int, time: floa
 	_label(ci, font, at + Vector2(0, 4), ["", "P3", "P2", "P1"][clampi(level, 0, 3)], 11, col, 30.0)
 
 
+## Breakpoint (T209): punto rojo de breakpoint en el centro, círculo de trazos que gira
+## despacio, «PAUSED» y, al acabar (`k` → 1), el círculo se cierra con «▶ continue».
+static func draw_breakpoint(ci: CanvasItem, pos: Vector2, radius: float, color: Color, k: float, time: float, font: Font, light := false) -> void:
+	var r := radius * (1.0 - 0.15 * maxf(0.0, (k - 0.85) / 0.15))
+	ci.draw_circle(pos, r, Color(0.3, 0.45, 0.9, 0.08))
+	for s in 24:
+		var a0 := TAU * s / 24.0 + time * 0.15
+		ci.draw_arc(pos, r, a0, a0 + TAU / 24.0 * 0.55, 3, Color(color, 0.55), 2.0)
+	ci.draw_circle(pos, 6.0, color)
+	ci.draw_circle(pos, 6.0, Color(1, 1, 1, 0.5), false, 1.0)
+	if not light:
+		_label(ci, font, pos + Vector2(0, -r - 6.0), "▶ continue" if k > 0.85 else "⏸ PAUSED", 12, Color(color.lightened(0.3), 0.85), 110.0)
+
+
+## Despliegue Canario (T209): pajarito amarillo que aletea, con la barra de rollout (1 %
+## → 100 %) encima y su vida debajo.
+static func draw_canary(ci: CanvasItem, pos: Vector2, progress: float, life: float, time: float, font: Font) -> void:
+	var flap := sin(time * 14.0) * 3.0
+	ci.draw_circle(pos + Vector2(0, 10), 6.0, Color(0, 0, 0, 0.25))
+	ci.draw_circle(pos, 6.0, Color("e8d070"))
+	ci.draw_circle(pos + Vector2(4, -4), 3.5, Color("f2e090"))
+	ci.draw_rect(Rect2(pos + Vector2(5, -5), Vector2(1, 1)), Color("1a1620"))
+	ci.draw_colored_polygon(PackedVector2Array([pos + Vector2(7, -4), pos + Vector2(10, -3), pos + Vector2(7, -2)]), Color("e8903a"))
+	ci.draw_colored_polygon(PackedVector2Array([pos + Vector2(-2, -1), pos + Vector2(-9, -4 - flap), pos + Vector2(-4, 3)]), Color("d4b850"))
+	var bar := Rect2(pos + Vector2(-16, -20), Vector2(32, 4))
+	ci.draw_rect(bar, Color(0, 0, 0, 0.6))
+	ci.draw_rect(Rect2(bar.position, Vector2(bar.size.x * progress, bar.size.y)), Color("6fd36b"))
+	_label(ci, font, pos + Vector2(0, -24), "%d %%" % maxi(1, roundi(progress * 100.0)), 9, Color("cfe8c0"), 40.0)
+	ci.draw_rect(Rect2(pos + Vector2(-10, 12), Vector2(20.0 * clampf(life, 0.0, 1.0), 2)), Color("7fd07f"))
+
+
 ## Efectos de ascendencia y de los nodos clave que se disparan solos (T197): cada uno con
 ## su motivo y su etiqueta, en vez del anillo, el destello, el zigzag o el candado genéricos.
 const PROC_LABELS := {

@@ -52,6 +52,17 @@ var _repeat_tags := {}   # id de habilidad → número de la última repetición
 ## {pos, dir, life, profile, color, phase}.
 var _tickets := {}
 var _lazies: Array[Dictionary] = []
+## Tanda 2 (T209). Breakpoint: {pos, life, total, profile, color}. Inyección de Prompt:
+## enemigos convertidos {pos, life, total, profile, color, info, cd, dir, phase}.
+## Despliegue Canario: {pos, life, max_life, radius, taunt, time, profile, color}.
+var _breakpoints: Array[Dictionary] = []
+var _charmed: Array[Dictionary] = []
+var _canaries: Array[Dictionary] = []
+const BREAKPOINT_SLOW := 0.85
+const BREAKPOINT_COLOR := Color("e06c6c")
+const BREAKPOINT_PROJECTILE_SLOW := 0.9
+const CHARM_SPEED := 120.0
+const CHARM_INTERVAL := 0.8
 const TICKET_LEVELS := ["", "P3", "P2", "P1"]
 const TICKET_BURST := 1.5   # el estallido en P1: el daño acumulado de los golpes × esto
 const GRADIENT_STEER_EVERY := 0.25
@@ -296,6 +307,11 @@ func _update_aura_fields() -> void:
 		var slow: float = TERRAIN_SLOW.get(t["terrain"], 0.0)
 		if slow > 0.0:
 			fields.append({"pos": t["pos"], "radius": t["radius"], "slow": slow, "damage_taken": 0.0})
+	# Breakpoints (T209): casi paran a los enemigos y a sus proyectiles.
+	for b in _breakpoints:
+		var bp: Dictionary = b["profile"]
+		fields.append({"pos": b["pos"], "radius": float(bp["radius"]), "slow": BREAKPOINT_SLOW,
+			"damage_taken": float(bp.get("damage_taken", 0.0)), "projectile_slow": BREAKPOINT_PROJECTILE_SLOW})
 	enemies.aura_fields = fields
 
 
@@ -326,6 +342,8 @@ func on_zone_changed() -> void:
 	_debris.clear()
 	_tickets.clear()   # los tickets y las flechas en espera se quedan en la zona anterior (T208)
 	_lazies.clear()
+	_breakpoints.clear()   # y los breakpoints y los convertidos (T209); el canario viene contigo
+	_charmed.clear()
 	_pending.clear()
 	_traps.clear()
 	_devices.clear()
@@ -1186,6 +1204,9 @@ func _physics_process(delta: float) -> void:
 	_update_sound_queue(delta)
 	_update_tickets(delta)
 	_update_lazies(delta)
+	_update_breakpoints(delta)
+	_update_charmed(delta)
+	_update_canaries(delta)
 	_update_projectiles(delta)
 	_update_spin(delta)
 	_update_traps(delta)
@@ -1628,6 +1649,16 @@ func _execute(p: Dictionary, target: Vector2, from := Vector2.INF) -> void:
 			_place_lazies(p, origin, target, dir, color)
 		"gradient":
 			_fire_volley(p, origin, dir, color, {"pierce_left": 999, "grow": 1.0, "steer": 0.0})
+		"breakpoint":   # tanda 2 (T209)
+			var at := origin + (target - origin).limit_length(float(p["range"]))
+			_breakpoints.append({"pos": at, "life": float(p["duration"]), "total": float(p["duration"]), "profile": p,
+				"color": SkillCalc.tinted(BREAKPOINT_COLOR, p)})   # rojo de breakpoint, no el verde de «sin daño»
+		"charm":
+			if not device:
+				_charm(p, origin, target, color)
+		"canary":
+			if not device:
+				_deploy_canary(p, origin, color)
 		"projectile":
 			if firma:
 				_move_fx(p, origin, origin, dir, color)
@@ -1935,6 +1966,133 @@ static func densest_point(positions: PackedVector2Array, from: Vector2, radius: 
 	return best
 
 
+## --- Habilidades nuevas, tanda 2 (T209) ---
+
+## Una cifra de la habilidad: la del perfil (que una variante puede fijar con «set») o la de sus datos.
+static func skill_value(p: Dictionary, key: String, default := 0.0) -> float:
+	return float(p.get(key, (p.get("def", {}) as Dictionary).get(key, default)))
+
+
+## ¿Se le puede inyectar el prompt a un enemigo de esta rareza? Normales y especiales (los
+## «mágicos»); con Jailbreak también élites; nunca únicos ni jefes.
+static func charmable(rarity: int, rares := false) -> bool:
+	return rarity == Rarity.Enemy.NORMAL or rarity == Rarity.Enemy.SPECIAL or (rares and rarity == Rarity.Enemy.ELITE)
+
+
+func _charm(p: Dictionary, origin: Vector2, target: Vector2, color: Color) -> void:
+	var rares := skill_value(p, "charm_rares") > 0.0
+	var best := -1
+	var best_d := INF
+	for i in enemies.positions.size():
+		var d := enemies.positions[i].distance_to(target)
+		if d < best_d and enemies.positions[i].distance_to(origin) <= float(p["range"]) and charmable(enemies.rarities[i], rares) \
+				and enemies.immune[i] == 0:
+			best_d = d
+			best = i
+	if best == -1:
+		_effects.append({"type": "tag", "pos": target + Vector2(-30, -20), "text": "403: no aplica", "time": 0.0, "duration": 0.6, "color": color})
+		return
+	var pos := enemies.positions[best]
+	var info := enemies.take_for_charm(best)
+	var life := float(p["duration"])
+	_charmed.append({"pos": pos, "life": life, "total": life, "profile": p, "color": color, "info": info, "cd": 0.4,
+		"dir": Vector2.DOWN, "phase": randf() * 10.0})
+	_effects.append({"type": "tag", "pos": pos + Vector2(-40, -70), "text": "ignora tus instrucciones", "time": 0.0, "duration": 0.8, "color": color})
+
+
+func _update_charmed(delta: float) -> void:
+	if _charmed.is_empty():
+		return
+	var still: Array[Dictionary] = []
+	for c in _charmed:
+		c["life"] = float(c["life"]) - delta
+		c["cd"] = float(c["cd"]) - delta
+		c["phase"] = float(c["phase"]) + delta
+		var p: Dictionary = c["profile"]
+		var pos: Vector2 = c["pos"]
+		if c["life"] <= 0.0:
+			# «Se cuelga»: estalla en caos y cuenta como muerto (experiencia y botín).
+			_ctx(p)
+			var k := skill_value(p, "burst_mult", 1.0)
+			enemies.hit_in_radius(pos, float(p["radius"]), p["min_damage"] * k, p["max_damage"] * k, p["crit_chance"], p["crit_multiplier"])
+			enemies.release_charmed(c["info"], pos)
+			_effects.append({"type": "tag", "pos": pos + Vector2(-50, -60), "text": "ERROR: context overflow", "time": 0.0, "duration": 0.7, "color": c["color"]})
+			_proc("kill", pos, float(p["radius"]), c["color"])
+			continue
+		var i := enemies.nearest_index(pos, 420.0)
+		if i != -1:
+			var to := enemies.positions[i] - pos
+			c["dir"] = to.normalized()
+			var reach := enemies.radii[i] + float(c["info"].get("radius", 14.0)) + 4.0
+			if to.length() > reach:
+				c["pos"] = pos + to.normalized() * minf(CHARM_SPEED * delta, to.length() - reach)
+			elif c["cd"] <= 0.0:
+				c["cd"] = CHARM_INTERVAL
+				var dmg := float(c["info"]["damage"])
+				enemies.hit_index(i, dmg * 0.9, dmg * 1.1, 5.0, 150.0)
+		else:
+			var to_player := player.global_position - pos
+			if to_player.length() > 90.0:
+				c["dir"] = to_player.normalized()
+				c["pos"] = pos + to_player.normalized() * CHARM_SPEED * delta
+		still.append(c)
+	_charmed = still
+
+
+func _deploy_canary(p: Dictionary, origin: Vector2, color: Color) -> void:
+	_canaries.clear()   # un canario a la vez: el nuevo sustituye al que había
+	var life := skill_value(p, "canary_life", 40.0)
+	_canaries.append({"pos": origin + Vector2(30, 10), "life": life, "max_life": life, "radius": 10.0, "taunt": 0.0,
+		"time": 0.0, "profile": p, "color": Color("e8d070")})
+
+
+## Lo que le falta al canario para promoverse (0..1).
+static func canary_progress(time: float, promote_time: float) -> float:
+	return clampf(time / maxf(0.1, promote_time), 0.0, 1.0)
+
+
+func _update_canaries(delta: float) -> void:
+	if _canaries.is_empty():
+		return
+	var still: Array[Dictionary] = []
+	for c in _canaries:
+		var p: Dictionary = c["profile"]
+		if float(c["life"]) <= 0.0:
+			_effects.append({"type": "tag", "pos": c["pos"] + Vector2(-26, -40), "text": "rollback", "time": 0.0, "duration": 0.7,
+				"color": Accessibility.aura_color("err", Color("e06c6c"))})
+			Sfx.play("lay_whoosh", -8.0, 0.6)
+			continue
+		c["time"] = float(c["time"]) + delta
+		c["pos"] = (c["pos"] as Vector2).lerp(player.global_position + Vector2(36, 14), 1.0 - exp(-3.0 * delta))
+		if canary_progress(float(c["time"]), skill_value(p, "promote_time", 5.0)) >= 1.0:
+			_promote_canary(c)
+			continue
+		still.append(c)
+	_canaries = still
+
+
+## El rollout sigue: el canario se convierte en sus bots (esbirros de la habilidad).
+func _promote_canary(c: Dictionary) -> void:
+	var p: Dictionary = c["profile"]
+	var n := int(skill_value(p, "count", 3.0))
+	for k in n:
+		_minions.append({"pos": c["pos"] + Vector2.from_angle(TAU * k / n) * 24.0, "life": float(p["duration"]), "total": float(p["duration"]),
+			"cd": 0.3, "profile": p, "color": c["color"], "phase": randf() * TAU})
+	var mine := _minions.filter(func(m: Dictionary) -> bool: return m["profile"]["id"] == p["id"])
+	var cap := maxi(n, int(p.get("max_active", 6)))
+	while mine.size() > cap:
+		_minions.erase(mine.pop_front())
+	_effects.append({"type": "tag", "pos": c["pos"] + Vector2(-30, -42), "text": "✓ rollout", "time": 0.0, "duration": 0.8,
+		"color": Accessibility.aura_color("ok", Color("6fd36b"))})
+	Sfx.play("ui_buy", -6.0, 1.2)
+
+
+func _update_breakpoints(delta: float) -> void:
+	for b in _breakpoints:
+		b["life"] = float(b["life"]) - delta
+	_breakpoints.assign(_breakpoints.filter(func(b: Dictionary) -> bool: return b["life"] > 0.0))
+
+
 ## Flechas de Lazy Loading en espera y marcas de Ticket Escalado sobre los enemigos (T208).
 func _draw_new_skills() -> void:
 	var t := Time.get_ticks_msec() / 1000.0
@@ -1942,6 +2100,23 @@ func _draw_new_skills() -> void:
 	var light := fx_light()
 	for a in _lazies:
 		SkillFx.draw_lazy_arrow(self, a["pos"], a["dir"], a["color"], float(a["phase"]), font, light)
+	for b in _breakpoints:
+		SkillFx.draw_breakpoint(self, b["pos"], float(b["profile"]["radius"]), b["color"], 1.0 - float(b["life"]) / maxf(0.01, float(b["total"])), t, font, light)
+	for c in _charmed:
+		var info: Dictionary = c["info"]
+		var dir := EnemySheet.dir_for(c["dir"])
+		var region := EnemySheet.region(int(info["sprite_row"]), dir, EnemySheet.column_for("walk", float(c["phase"])))
+		var flip := dir == EnemySheet.Dir.SIDE and (c["dir"] as Vector2).x < 0.0
+		var size := Vector2(EnemySheet.S, EnemySheet.S)
+		var rect := Rect2(c["pos"] - Vector2(size.x / 2.0, size.y * 0.8), size)
+		if flip:
+			rect = Rect2(rect.position + Vector2(size.x, 0), Vector2(-size.x, size.y))
+		draw_texture_rect_region(EnemyManager.ATLAS, rect, region, Color(0.85, 0.6, 1.0))   # con tinte morado: es tuyo
+		if not light:
+			SkillFx._label(self, font, c["pos"] + Vector2(0, -size.y * 0.85), "{prompt} %ds" % ceili(float(c["life"])), 10, c["color"].lightened(0.3), 90.0)
+	for c in _canaries:
+		SkillFx.draw_canary(self, c["pos"], canary_progress(float(c["time"]), skill_value(c["profile"], "promote_time", 5.0)),
+			float(c["life"]) / maxf(1.0, float(c["max_life"])), t, font)
 	for id in _tickets:
 		var i := enemies.index_of(id)
 		if i == -1:
@@ -2228,6 +2403,7 @@ func _update_devices(delta: float) -> void:
 	# Aliados que ve el EnemyManager: invocaciones persistentes y torretas.
 	var allies: Array = _units.filter(func(u: Dictionary) -> bool: return u["behavior"] != "orbit")
 	allies.append_array(proxies)
+	allies.append_array(_canaries)   # al canario lo pueden tumbar (T209)
 	enemies.allies = allies
 
 

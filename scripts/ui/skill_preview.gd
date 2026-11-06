@@ -26,7 +26,7 @@ const LONG_CYCLE := 3.4
 const QUICK_KINDS := ["melee_area", "nova", "cone", "chain", "dash", "blink", "ssh", "charge", "leap_slam",
 	"barrier", "buff", "curse_area", "backflip"]
 const LONG_KINDS := ["unit", "aura", "drones", "minion", "degen_area", "terrain", "trap", "spin",
-	"channel_beam", "channel_storm", "rain", "curse_area"]
+	"channel_beam", "channel_storm", "rain", "curse_area", "canary", "breakpoint"]
 ## Las que golpean alrededor del personaje: empieza cerca de los servidores.
 const CLOSE_KINDS := ["melee_area", "nova", "cone", "spin", "barrier", "buff", "aura", "backflip"]
 ## Las que lo mueven: empieza a su alcance para que llegue.
@@ -167,7 +167,7 @@ func _setup_hero(character: CharacterData) -> void:
 
 func _clear() -> void:
 	for list: Array in [_sc._effects, _sc._projectiles, _sc._spins, _sc._traps, _sc._devices, _sc._minions,
-			_sc._clouds, _sc._drones, _sc._units, _sc._auras, _sc._terrains]:
+			_sc._clouds, _sc._drones, _sc._units, _sc._auras, _sc._terrains, _sc._breakpoints, _sc._canaries, _sc._lazies]:
 		list.clear()
 	_sc._channel = {}
 	_later.clear()
@@ -240,7 +240,8 @@ func step(delta: float) -> void:
 func visible_things() -> int:
 	var n := _sc._effects.size() + _sc._projectiles.size() + _sc._spins.size() + _sc._traps.size() \
 		+ _sc._devices.size() + _sc._minions.size() + _sc._clouds.size() + _sc._drones.size() \
-		+ _sc._units.size() + _sc._auras.size() + _sc._terrains.size()
+		+ _sc._units.size() + _sc._auras.size() + _sc._terrains.size() \
+		+ _sc._breakpoints.size() + _sc._canaries.size() + _sc._lazies.size()   # (habilidades nuevas, T208-T209)
 	return n + (0 if _sc._channel.is_empty() else 1)
 
 
@@ -382,6 +383,23 @@ func _cast_kind(p: Dictionary, origin: Vector2, target: Vector2, device: bool, c
 			_volley(p, origin, dir, color)
 		"gradient":
 			_volley(p, origin, dir, color, {"grow": 1.0, "steer": 0.0, "pierce_left": 999})
+		"breakpoint":   # tanda 2 (T209), en pequeño: el círculo sobre los servidores
+			_sc._breakpoints.append({"pos": DUMMIES[0], "life": _cycle - 0.3, "total": _cycle - 0.3, "profile": _with_radius(p, 70.0), "color": SkillController.BREAKPOINT_COLOR})
+		"charm":
+			fx.append({"type": "tag", "pos": DUMMIES[0] + Vector2(-40, -50), "text": "{prompt}", "time": 0.0, "duration": 1.0, "color": color})
+			_hit_area(DUMMIES[0], 40.0, p)
+		"canary":
+			# El canario al 1 % y, en la vista previa (más corta que su rollout), sus bots al poco.
+			if not device:
+				var bird := {"pos": origin + Vector2(30, 10), "life": 40.0, "max_life": 40.0, "radius": 10.0, "taunt": 0.0,
+					"time": 0.0, "profile": p, "color": Color("e8d070")}
+				_sc._canaries.append(bird)
+				_after(0.8, func() -> void:
+					_sc._canaries.erase(bird)
+					var n := int(SkillController.skill_value(p, "count", 3.0))
+					for k in n:
+						_sc._minions.append({"pos": bird["pos"] + Vector2.from_angle(TAU * k / n) * 24.0, "life": _cycle, "total": _cycle,
+							"cd": 0.3, "profile": p, "color": bird["color"], "phase": randf() * TAU}))
 		"ground_aoe":
 			var at := origin + (target - origin).limit_length(reach)
 			var delay := clampf(float(p.get("delay", 0.4)), 0.1, 0.9)

@@ -33,6 +33,28 @@ static func draw(ci: CanvasItem, rect: Rect2, skill_def: Dictionary, dimmed := f
 			var hg := c + Vector2(-r * 0.25, r * 0.15)
 			ci.draw_colored_polygon(PackedVector2Array([hg + Vector2(-r * 0.3, -r * 0.35), hg + Vector2(r * 0.3, -r * 0.35), hg]), Color(color, 0.8))
 			ci.draw_colored_polygon(PackedVector2Array([hg, hg + Vector2(r * 0.3, r * 0.35), hg + Vector2(-r * 0.3, r * 0.35)]), Color(color, 0.5))
+		"breakpoint":
+			# Breakpoint (T209): margen de un editor con líneas y el punto rojo.
+			ci.draw_rect(Rect2(c - Vector2(r * 0.9, r * 0.8), Vector2(r * 0.45, r * 1.6)), Color("2a2f3a"))
+			for k in 4:
+				ci.draw_rect(Rect2(c + Vector2(-r * 0.3, -r * 0.7 + k * r * 0.42), Vector2(r * (1.0 - 0.2 * (k % 2)), r * 0.14)), Color(UiStyle.TEXT, 0.7))
+			ci.draw_circle(c + Vector2(-r * 0.67, -r * 0.07), r * 0.2, color)
+		"prompt":
+			# Inyección de Prompt (T209): bocadillo con «>_».
+			ci.draw_rect(Rect2(c - Vector2(r * 0.85, r * 0.6), Vector2(r * 1.7, r * 1.05)), Color("2a1f3a"))
+			ci.draw_rect(Rect2(c - Vector2(r * 0.85, r * 0.6), Vector2(r * 1.7, r * 1.05)), color, false, 2.0)
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-r * 0.4, r * 0.45), c + Vector2(-r * 0.05, r * 0.45), c + Vector2(-r * 0.5, r * 0.85)]), color)
+			ci.draw_polyline(PackedVector2Array([c + Vector2(-r * 0.5, -r * 0.35), c + Vector2(-r * 0.2, -r * 0.1), c + Vector2(-r * 0.5, r * 0.15)]), UiStyle.TEXT, 2.0)
+			ci.draw_rect(Rect2(c + Vector2(0, r * 0.1), Vector2(r * 0.45, r * 0.12)), UiStyle.TEXT)
+		"canary":
+			# Despliegue Canario (T209): canario amarillo en su jaula.
+			ci.draw_arc(c + Vector2(0, r * 0.1), r * 0.85, PI, TAU, 12, Color("8a8a96"), 2.0, true)
+			for k in 5:
+				var x := c.x - r * 0.8 + k * r * 0.4
+				ci.draw_line(Vector2(x, c.y + r * 0.1 - (r * 0.85 if k in [1, 2, 3] else r * 0.4)), Vector2(x, c.y + r * 0.85), Color("8a8a96"), 1.5)
+			ci.draw_circle(c + Vector2(0, r * 0.35), r * 0.38, color)
+			ci.draw_circle(c + Vector2(r * 0.25, r * 0.05), r * 0.22, color.lightened(0.2))
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(r * 0.45, r * 0.02), c + Vector2(r * 0.65, r * 0.1), c + Vector2(r * 0.45, r * 0.18)]), Color("e8903a"))
 		"gradient":
 			# Descenso de Gradiente (T208): orbe con curvas de nivel y la flecha hacia abajo.
 			for k in 3:

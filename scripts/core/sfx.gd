@@ -101,8 +101,8 @@ static func set_loop(wav: AudioStreamWAV, begin := 0) -> void:
 const KIND_SOUNDS := {
 	"melee_area": "swing", "spin": "swing", "dash": "swing", "charge": "swing", "leap_slam": "swing", "ticket": "swing",
 	"blink": "blink", "ssh": "blink", "backflip": "blink",
-	"buff": "buff", "barrier": "barrier", "aura": "aura_on",
-	"minion": "summon", "drones": "summon", "unit": "summon",
+	"buff": "buff", "barrier": "barrier", "aura": "aura_on", "breakpoint": "barrier",
+	"minion": "summon", "drones": "summon", "unit": "summon", "canary": "summon", "charm": "summon",
 	"trap": "trap",
 }
 ## Tipos que suenan a su daño (fuego, frío, rayo o caos) → lo que suenan si son

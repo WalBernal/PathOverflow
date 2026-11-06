@@ -378,6 +378,10 @@
           "skill": "bot_pruebas"
         },
         {
+          "level": 12,
+          "skill": "breakpoint"
+        },
+        {
           "level": 16,
           "choice": [
             "watchdog",
@@ -730,6 +734,10 @@
         {
           "level": 10,
           "skill": "agente_ia"
+        },
+        {
+          "level": 12,
+          "skill": "inyeccion_prompt"
         },
         {
           "level": 16,
@@ -1153,6 +1161,10 @@
         {
           "level": 10,
           "skill": "dron_medico"
+        },
+        {
+          "level": 12,
+          "skill": "despliegue_canario"
         },
         {
           "level": 16,

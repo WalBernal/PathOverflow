@@ -257,6 +257,7 @@ func _initialize() -> void:
 	_test_rigid_units_art()
 	_test_companions_walk()
 	_test_new_skills_t208()
+	_test_new_skills_t209()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -635,7 +636,7 @@ func _test_skill_data() -> void:
 	var skills := _db.skills
 	_check(skills.skills.size() >= 6 and skills.rams.size() >= 8, "carga de habilidades y RAM")
 	var kinds := ["melee_area", "nova", "projectile", "ground_aoe", "blink", "dash", "cone", "beam", "boomerang", "spin", "trap", "chain", "minion", "degen_area", "barrier", "buff", "curse_area", "dot_projectile", "homing", "drones", "leap_slam", "rain", "unit", "aura", "ssh", "charge", "backflip", "terrain", "channel_beam", "channel_storm",
-		"ticket", "lazy", "gradient"]   # (T208)
+		"ticket", "lazy", "gradient", "breakpoint", "charm", "canary"]   # (T208, T209)
 	for def in skills.skills.values():
 		_check(kinds.has(def["kind"]), "tipo de habilidad desconocido en %s" % def["id"])
 		_check(def.has("attack") or def.has("spell"), "%s necesita 'attack' o 'spell'" % def["id"])
@@ -9527,6 +9528,66 @@ func _test_new_skills_t208() -> void:
 	for k in 10:
 		sc._update_projectiles(0.05)
 	_check(not sc._projectiles.is_empty() and float(sc._projectiles[0].get("grow", 1.0)) > 1.0, "el orbe crece al atravesar enemigos")
+	sc.free()
+	player.free()
+	em.free()
+
+## T209: Breakpoint (frena enemigos y sus proyectiles), Inyección de Prompt (un enemigo
+## pelea de tu lado y al acabar cuenta como muerto) y Despliegue Canario (se promueve a bots).
+func _test_new_skills_t209() -> void:
+	var c := _new_character()
+	for id in ["breakpoint", "inyeccion_prompt", "despliegue_canario"]:
+		_check(_db.skills.skills.has(id) and SoundMap.signature(id) != "" and FileAccess.get_file_as_string("res://data/pixel_icons.json").contains("skill:" + id),
+			"%s: datos, sonido propio e icono" % id)
+	_check(SkillController.charmable(Rarity.Enemy.NORMAL) and SkillController.charmable(Rarity.Enemy.SPECIAL) and not SkillController.charmable(Rarity.Enemy.ELITE)
+		and SkillController.charmable(Rarity.Enemy.ELITE, true) and not SkillController.charmable(Rarity.Enemy.UNIQUE, true), "Inyección de Prompt: normales y especiales; élites con Jailbreak; nunca únicos")
+	_check(SkillController.canary_progress(2.5, 5.0) == 0.5 and SkillController.canary_progress(9.0, 5.0) == 1.0, "Canario: su rollout va de 0 a 1")
+	var em := EnemyManager.new()
+	root.add_child(em)
+	var player: Player = load("res://scenes/game/player.tscn").instantiate()
+	player.character = c
+	root.add_child(player)
+	var sc := SkillController.new()
+	sc.player = player
+	sc.enemies = em
+	sc.character = c
+	root.add_child(sc)
+	var home := Vector2(70000, 70000)
+	player.global_position = home
+	# Breakpoint: los de dentro, casi quietos; los proyectiles enemigos, también.
+	var bp := SkillCalc.compute(Motherboard.new(_db.skills.skills["breakpoint"], 1, []), c)
+	sc._execute(bp, home + Vector2(200, 0))
+	sc._update_aura_fields()
+	var i := em.index_of(em.spawn(home + Vector2(200, 0), Rarity.Enemy.NORMAL, -1, "", 1000.0))
+	_check(i != -1 and em._aura_effect(i, "slow") >= 0.8, "Breakpoint: los de dentro casi se paran")
+	_check(em.projectile_slow_at(home + Vector2(200, 0)) >= 0.85 and em.projectile_slow_at(home + Vector2(800, 0)) == 0.0, "y sus proyectiles también, solo dentro")
+	em.clear_all()
+	sc._breakpoints.clear()
+	sc._update_aura_fields()
+	# Inyección de Prompt: el enemigo sale de su bando, pelea y al acabar cuenta como muerto.
+	var killed := []
+	em.enemy_killed.connect(func(r: int, xp: int, pos: Vector2, type_id: String) -> void: killed.append(xp))
+	var target := em.spawn(home + Vector2(150, 0), Rarity.Enemy.NORMAL, -1, "", 1000.0)
+	var boss := em.spawn(home + Vector2(150, 40), Rarity.Enemy.UNIQUE, -1, "", 1000.0)
+	var charm := SkillCalc.compute(Motherboard.new(_db.skills.skills["inyeccion_prompt"], 1, []), c)
+	sc._execute(charm, home + Vector2(150, 0))
+	_check(sc._charmed.size() == 1 and em.index_of(target) == -1 and em.index_of(boss) != -1, "Inyección de Prompt: el normal se pasa a tu lado; el único no")
+	sc._update_charmed(float(charm["duration"]) + 0.1)
+	_check(sc._charmed.is_empty() and killed.size() == 1, "al acabar se cuelga y cuenta como muerto (experiencia y botín)")
+	em.clear_all()
+	# Canario: si aguanta, se promueve a sus bots; si cae, rollback.
+	var canary := SkillCalc.compute(Motherboard.new(_db.skills.skills["despliegue_canario"], 1, []), c)
+	sc._execute(canary, home)
+	_check(sc._canaries.size() == 1, "Despliegue Canario: un canario al 1 %")
+	for k in 60:
+		sc._update_canaries(0.1)
+	var bots := sc._minions.filter(func(m: Dictionary) -> bool: return m["profile"]["id"] == "despliegue_canario")
+	_check(sc._canaries.is_empty() and bots.size() == 3, "si aguanta 5 s, se convierte en tres bots (%d)" % bots.size())
+	sc._minions.clear()
+	sc._execute(canary, home)
+	sc._canaries[0]["life"] = 0.0
+	sc._update_canaries(0.1)
+	_check(sc._canaries.is_empty() and sc._minions.is_empty(), "si cae antes, rollback y nada")
 	sc.free()
 	player.free()
 	em.free()

@@ -237,6 +237,16 @@ var corpses: Array[Dictionary] = []
 var _corpse_mm: MultiMesh
 
 
+## Cuánto se frena un proyectil enemigo en `pos` (0..1): el "projectile_slow" de los campos
+## que lo alcanzan (Breakpoint, T209).
+func projectile_slow_at(pos: Vector2) -> float:
+	var best := 0.0
+	for f in aura_fields:
+		if f.has("projectile_slow") and pos.distance_to(f["pos"]) <= float(f["radius"]):
+			best = maxf(best, float(f["projectile_slow"]))
+	return best
+
+
 ## Efecto ("slow" o "damage_taken") de las auras que alcanzan al enemigo i.
 func _aura_effect(i: int, key: String) -> float:
 	var best := 0.0
@@ -2074,8 +2084,10 @@ func _update_projectiles(delta: float) -> void:
 			var vel: Vector2 = pr["vel"]
 			var turn := clampf(vel.angle_to(want), -float(pr["homing"]) * delta, float(pr["homing"]) * delta)
 			pr["vel"] = vel.rotated(turn)
-		pr["pos"] += pr["vel"] * delta
-		pr["life"] -= delta
+		# Dentro de un Breakpoint (T209) el proyectil casi se para (y su vida también).
+		var tempo := 1.0 - projectile_slow_at(pr["pos"])
+		pr["pos"] += pr["vel"] * delta * tempo
+		pr["life"] -= delta * tempo
 		var p: Vector2 = pr["pos"]
 		var gone: bool = pr["life"] <= 0.0
 		if not gone and player and player.is_alive() and p.distance_to(player.global_position) <= pr["radius"] + Player.RADIUS:
@@ -3233,6 +3245,29 @@ func _death_feedback(i: int) -> void:
 
 
 ## Borrado O(1): el último enemigo ocupa el hueco.
+## Inyección de Prompt (T209): saca al enemigo i de su bando sin matarlo y devuelve lo que
+## hace falta para que pelee del lado del jugador y, al acabar, darlo por muerto con
+## release_charmed (su experiencia y su botín no se pierden).
+func take_for_charm(i: int) -> Dictionary:
+	var types_list := enemy_types()
+	var t: Dictionary = types_list[types[i]] if types[i] < types_list.size() else {}
+	var info := {"type": types[i], "rarity": rarities[i], "damage": damages[i], "name": names[i],
+		"sprite_row": int(t.get("sprite_row", 0)), "type_id": String(t.get("id", "")), "radius": radii[i]}
+	boss_phases.erase(ids[i])
+	phase_shield.erase(ids[i])
+	_remove(i)
+	return info
+
+
+## El enemigo convertido «se cuelga» y cae: cuenta como muerto (experiencia y botín).
+func release_charmed(info: Dictionary, pos: Vector2) -> void:
+	var rarity := int(info["rarity"])
+	var types_list := enemy_types()
+	var type_mult: float = types_list[int(info["type"])].get("xp_mult", 1.0) if int(info["type"]) < types_list.size() else 1.0
+	var xp := int(BASE_EXPERIENCE * Rarity.ENEMY_INFO[rarity].xp_mult * type_mult * (1.0 + 0.15 * (area_level - 1)))
+	enemy_killed.emit(rarity, xp, pos, String(info["type_id"]))
+
+
 func _remove(i: int) -> void:
 	var last := positions.size() - 1
 	abilities.erase(ids[i])

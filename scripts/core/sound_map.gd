@@ -83,6 +83,7 @@ const SIGNATURES := {
 	"golem_kernel": "sig_golem_kernel",
 	# Habilidades nuevas (T208)
 	"ticket_escalado": "sig_ticket_escalado", "lazy_loading": "sig_lazy_loading", "descenso_gradiente": "sig_descenso_gradiente",
+	"breakpoint": "sig_breakpoint", "inyeccion_prompt": "sig_inyeccion_prompt", "despliegue_canario": "sig_despliegue_canario",
 }
 ## Volumen de la capa de firma (propia o compartida) respecto a la de tipo.
 const SIGNATURE_DB := -6.0

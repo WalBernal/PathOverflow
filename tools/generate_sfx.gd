@@ -1622,6 +1622,25 @@ func _sig_lazy_loading() -> PackedFloat32Array:
 	return _seq([[_blip(900.0, 0.012), 0.0, 0.7], [_blip(1300.0, 0.01), 0.08, 0.5], [_blip(1300.0, 0.01), 0.16, 0.4]])
 
 
+## Breakpoint (T209): un clic seco y un zumbido grave que se queda.
+func _sig_breakpoint() -> PackedFloat32Array:
+	return _seq([[_clack(2400.0, 0.012), 0.0, 1.2], [_lowpass(_note(90.0, 85.0, 0.3, 0.25, 1), 400.0), 0.02, 0.9]])
+
+
+## Inyección de Prompt (T209): tecleo rápido y un bip de «aceptado».
+func _sig_inyeccion_prompt() -> PackedFloat32Array:
+	var parts := []
+	for k in 5:
+		parts.append([_clack(3000.0 + 300.0 * k, 0.008), 0.03 * k, 0.7])
+	parts.append([_blip(1400.0, 0.05), 0.18, 0.8])
+	return _seq(parts)
+
+
+## Despliegue Canario (T209): un pío corto que sube.
+func _sig_despliegue_canario() -> PackedFloat32Array:
+	return _seq([[_note(2200.0, 3200.0, 0.08, 0.06), 0.0, 0.8], [_note(2600.0, 3600.0, 0.06, 0.05), 0.1, 0.6]])
+
+
 ## Descenso de Gradiente: un rodar grave cuyo tono baja (bajando por la pendiente).
 func _sig_descenso_gradiente() -> PackedFloat32Array:
 	var roll := _lowpass(_note(220.0, 110.0, 0.35, 0.25, 2), 700.0)
