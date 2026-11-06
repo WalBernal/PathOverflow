@@ -562,6 +562,13 @@ static func _drone(ci: CanvasItem, skill_id: String, p: Vector2, ph: float, c: C
 		ci.draw_line(p + arm - Vector2.from_angle(ph * 9.0 + k) * 4.0, p + arm + Vector2.from_angle(ph * 9.0 + k) * 4.0, Color(0.9, 0.9, 1.0, 0.5), 1.0)
 	ci.draw_circle(p, 5.5, Color("3a3f4a"))
 	match skill_id:
+		"drones_vigilancia":
+			# Cámara de vigilancia (T204): lente que barre y el piloto rojo de grabación.
+			var look := Vector2(cos(ph * 0.8) * 1.5, 1.0)
+			ci.draw_circle(p + look, 3.0, Color("101418"))
+			ci.draw_circle(p + look, 1.5, c)
+			if fmod(ph, 1.2) < 0.6:
+				ci.draw_rect(Rect2(p + Vector2(3, -5), Vector2(2, 2)), Color("e04a3a"))
 		"dron_medico":
 			ci.draw_rect(Rect2(p + Vector2(-1.5, -4), Vector2(3, 8)), c)
 			ci.draw_rect(Rect2(p + Vector2(-4, -1.5), Vector2(8, 3)), c)

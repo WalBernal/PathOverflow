@@ -254,6 +254,7 @@ func _initialize() -> void:
 	_test_list_skills_keeps_manual()
 	_test_unicast_single()
 	_test_units_match_text()
+	_test_rigid_units_art()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -9440,3 +9441,14 @@ func _test_units_match_text() -> void:
 						if String(m["stat"]) == "minion_damage":
 							in_classes = int(m["value"])
 	_check(in_classes == 20 and JSON.stringify(trees).contains("minion_damage increased 20"), "R-2PL: +20 % de daño de esbirros en los dos datos")
+
+## T204: el contenedor se abre mientras se arma y luego se queda abierto; los Drones de
+## Vigilancia usan el mismo dron que las invocaciones (con su cámara).
+func _test_rigid_units_art() -> void:
+	_check(SkillController.container_open(0.5, 0.5) == 0.0 and is_equal_approx(SkillController.container_open(0.25, 0.5), 0.5)
+		and SkillController.container_open(0.0, 0.5) == 1.0 and SkillController.container_open(-3.0, 0.5) == 1.0,
+		"el contenedor se abre al desplegarse y se queda abierto")
+	var src := FileAccess.get_file_as_string("res://scripts/game/skill_controller.gd")
+	_check(src.contains("UnitArt._drone(self, \"drones_vigilancia\"") and FileAccess.get_file_as_string("res://scripts/skills/unit_art.gd").contains("\"drones_vigilancia\":"),
+		"los Drones de Vigilancia se dibujan con el dron de las invocaciones y su cámara")
+	_check(src.contains("_draw_ci_turret("), "la Torreta CI tiene su propio dibujo, distinto de la RAM Servidor Torreta")

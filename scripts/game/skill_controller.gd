@@ -3011,13 +3011,8 @@ func _draw() -> void:
 	_draw_units()
 	_draw_companion()
 	for d in _drones:
-		var dp := _drone_pos(d)
-		draw_circle(dp + Vector2(0, 30), 5.0, Color(0, 0, 0, 0.25))
-		draw_rect(Rect2(dp - Vector2(7, 3), Vector2(14, 6)), Color("3a3f4a"))
-		for s in [-1.0, 1.0]:
-			draw_line(dp + Vector2(s * 7, -1), dp + Vector2(s * 13, -4), Color("8a8a96"), 1.5)
-			draw_circle(dp + Vector2(s * 13, -4), 3.5 + sin(Time.get_ticks_msec() / 30.0) * 0.5, Color(0.8, 0.8, 0.9, 0.35))
-		draw_circle(dp, 2.0, d["color"])
+		# El mismo dron que las invocaciones (T204), con su cámara de vigilancia.
+		UnitArt._drone(self, "drones_vigilancia", _drone_pos(d), float(d["angle"]) * 2.0, d["color"])
 	for spin in _spins:
 		var p: Dictionary = spin["profile"]
 		var c: Color = spin["color"]
@@ -3216,13 +3211,16 @@ func _draw_devices() -> void:
 				# Torreta: un mini servidor con antena y un aro de alcance.
 				var life: float = d["life"] / maxf(0.1, d["total"])
 				draw_arc(p, 30.0, -PI / 2.0, -PI / 2.0 + TAU * life, 32, Color(c, 0.7), 2.0, true)
-				draw_rect(Rect2(p + Vector2(-11, -30), Vector2(22, 32)), Color("23262e"))
-				draw_rect(Rect2(p + Vector2(-11, -30), Vector2(22, 32)), Color("4a4f5c"), false, 2.0)
-				for k in 3:
-					var on := fmod(t * 3.0 + k, 2.0) < 1.0
-					draw_circle(p + Vector2(6, -22 + k * 8), 2.0, c if on else Color("1a2a1a"))
-				draw_line(p + Vector2(0, -30), p + Vector2(0, -42), Color("8a8a8a"), 2.0)
-				draw_circle(p + Vector2(0, -43), 3.0, c)
+				if String(d["profile"].get("id", "")) == "torreta_ci":
+					_draw_ci_turret(p, c, t, float(d.get("kick", 0.0)) / TURRET_KICK)
+				else:   # la RAM Servidor Torreta: un mini servidor con antena
+					draw_rect(Rect2(p + Vector2(-11, -30), Vector2(22, 32)), Color("23262e"))
+					draw_rect(Rect2(p + Vector2(-11, -30), Vector2(22, 32)), Color("4a4f5c"), false, 2.0)
+					for k in 3:
+						var on := fmod(t * 3.0 + k, 2.0) < 1.0
+						draw_circle(p + Vector2(6, -22 + k * 8), 2.0, c if on else Color("1a2a1a"))
+					draw_line(p + Vector2(0, -30), p + Vector2(0, -42), Color("8a8a8a"), 2.0)
+					draw_circle(p + Vector2(0, -43), 3.0, c)
 				# Cañón que apunta al objetivo, retrocede al disparar y escupe un fogonazo.
 				var aim: Vector2 = d.get("aim", Vector2.RIGHT)
 				var kick := float(d.get("kick", 0.0)) / TURRET_KICK
@@ -3236,16 +3234,22 @@ func _draw_devices() -> void:
 					draw_circle(muzzle + aim * 3.0, 2.0 + 4.0 * f, Color(1.0, 0.95, 0.7, 0.85 * f))
 					draw_line(muzzle, muzzle + aim * (6.0 + 8.0 * f), Color(c.lightened(0.4), 0.9 * f), 2.0)
 			"container":
-				# Contenedor: una caja azul con el logo de la ballena y su carga apilada.
+				# Contenedor: una caja azul con el logo de la ballena y su carga apilada. Al
+				# desplegarse sube del suelo y se le abre la tapa (T204); la carga sale después.
+				var open := container_open(float(d["armed_in"]), float(DEVICE_RULES["container"]["armed"]))
+				var h := 24.0 * (0.35 + 0.65 * minf(1.0, open * 1.6))
 				draw_arc(p, 30.0, 0.0, TAU, 32, Color(c, 0.35), 1.5, true)
-				draw_rect(Rect2(p + Vector2(-16, -22), Vector2(32, 24)), Color("1d63a8"))
-				draw_rect(Rect2(p + Vector2(-16, -22), Vector2(32, 24)), Color("8ac4f0"), false, 2.0)
+				draw_rect(Rect2(p + Vector2(-16, 2 - h), Vector2(32, h)), Color("1d63a8"))
+				draw_rect(Rect2(p + Vector2(-16, 2 - h), Vector2(32, h)), Color("8ac4f0"), false, 2.0)
 				for k in 3:
-					draw_line(p + Vector2(-10 + k * 10, -20), p + Vector2(-10 + k * 10, 0), Color("174f86"), 2.0)
-				for k in 3:
-					var on := fmod(t * 2.0 + k * 0.4, 1.2) < 0.6
-					draw_rect(Rect2(p + Vector2(-9 + k * 6, -32), Vector2(5, 5)), c if on else Color("8ac4f0"))
-				draw_circle(p + Vector2(0, -10), 3.0, Color.WHITE)
+					draw_line(p + Vector2(-10 + k * 10, 4 - h), p + Vector2(-10 + k * 10, 0), Color("174f86"), 2.0)
+				var hinge := p + Vector2(-16, 2 - h)
+				draw_line(hinge, hinge + Vector2.from_angle(-1.25 * open) * 32.0, Color("8ac4f0"), 3.0)   # la tapa
+				if open >= 1.0:
+					for k in 3:
+						var on := fmod(t * 2.0 + k * 0.4, 1.2) < 0.6
+						draw_rect(Rect2(p + Vector2(-9 + k * 6, -32), Vector2(5, 5)), c if on else Color("8ac4f0"))
+				draw_circle(p + Vector2(0, 2 - h * 0.5), 3.0, Color.WHITE)
 		if String(d["kind"]) in TURRET_DEVICES:
 			var hp: Dictionary = d.get("ally", {})
 			if not hp.is_empty() and float(hp["life"]) < float(hp["max_life"]):
@@ -3254,19 +3258,51 @@ func _draw_devices() -> void:
 				draw_rect(Rect2(p + Vector2(-14, -52), Vector2(28.0 * clampf(hp["life"] / hp["max_life"], 0.0, 1.0), 4)), Color("6fd36b"))
 
 
+## Cuánto se ha abierto el contenedor al desplegarse (0..1, T204): mientras se arma.
+static func container_open(armed_in: float, armed_time: float) -> float:
+	return clampf(1.0 - armed_in / maxf(0.01, armed_time), 0.0, 1.0)
+
+
+## Torreta de Integración Continua (T204), ya no igual que la RAM Servidor Torreta: trípode,
+## cabezal redondo con su placa «CI», cañón que apunta y retrocede, y el piloto del build:
+## verde («✓ passing») en reposo y ámbar un momento al disparar.
+func _draw_ci_turret(p: Vector2, c: Color, t: float, kick: float) -> void:
+	for s in [-1.0, 0.0, 1.0]:
+		draw_line(p + Vector2(0, -8), p + Vector2(s * 12.0, 2), Color("5a5f6c"), 2.0)
+	var head := p + Vector2(0, -18)
+	draw_circle(head, 10.0, Color("23262e"))
+	draw_arc(head, 10.0, 0.0, TAU, 20, Color("4a4f5c"), 2.0, true)
+	draw_rect(Rect2(head + Vector2(-6, -4), Vector2(12, 7)), Color("2b3a2f"))
+	draw_string(ThemeDB.fallback_font, head + Vector2(-5, 2), "CI", HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("7fe08a"))
+	var lit := Accessibility.aura_color("ok", Color("5cb85c")) if kick <= 0.5 else Color("e8b04a")
+	draw_circle(head + Vector2(0, -12), 2.5 + 0.5 * sin(t * 4.0), lit)
+
+
+## Proceso Hijo (T204): un procesito con patas, cabeza de ventana de terminal con su PID,
+## ojos «> _» que parpadean y las piernas que se mueven al andar (no una caja quieta).
 func _draw_minions() -> void:
+	var font := ThemeDB.fallback_font
 	for m in _minions:
 		var p: Vector2 = m["pos"]
-		var bob := sin(m["phase"]) * 1.5
+		var moved := (p - Vector2(m.get("last", p))).length()
+		m["last"] = p
+		m["walk"] = float(m.get("walk", 0.0)) + moved * 0.35
+		var stride := sin(float(m["walk"])) * 3.0 if moved > 0.2 else 0.0
+		var bob := absf(stride) * 0.4
 		draw_set_transform(p + Vector2(0, 8), 0.0, Vector2(1.0, 0.4))
-		draw_circle(Vector2.ZERO, 9.0, Color(0, 0, 0, 0.35))
+		draw_circle(Vector2.ZERO, 8.0, Color(0, 0, 0, 0.35))
 		draw_set_transform(Vector2.ZERO)
-		draw_rect(Rect2(p + Vector2(-6, -8 + bob), Vector2(12, 14)), Color("2f4a3a"))
-		draw_rect(Rect2(p + Vector2(-8, -20 + bob), Vector2(16, 12)), Color("b8b8b0"))
-		draw_rect(Rect2(p + Vector2(-6, -18 + bob), Vector2(12, 8)), Color("10200f"))
-		draw_string(ThemeDB.fallback_font, p + Vector2(-5, -11 + bob), ">_", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("3cff6a"))
+		for s in [-1.0, 1.0]:   # patas
+			draw_line(p + Vector2(s * 3.0, -2 - bob), p + Vector2(s * 3.0 + stride * s, 7), Color("2f4a3a"), 2.0)
+		draw_rect(Rect2(p + Vector2(-5, -8 - bob), Vector2(10, 7)), Color("2f4a3a"))   # cuerpo
+		var head := Rect2(p + Vector2(-8, -20 - bob), Vector2(16, 12))
+		draw_rect(head, Color("10200f"))
+		draw_rect(head, Color("b8b8b0"), false, 1.5)
+		draw_rect(Rect2(head.position, Vector2(head.size.x, 3)), Color("b8b8b0"))   # barra de la ventana
+		var blink := fmod(float(m["phase"]), 3.0) < 0.15
+		draw_string(font, head.position + Vector2(2, 10), "-  -" if blink else ">  _", HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("3cff6a"))
 		var life: float = m["life"] / maxf(0.1, m["total"])
-		draw_rect(Rect2(p + Vector2(-10, -26), Vector2(20 * life, 2)), Color("7fd07f"))
+		draw_rect(Rect2(p + Vector2(-10, -26 - bob), Vector2(20 * life, 2)), Color("7fd07f"))
 
 
 ## Color de un aura: el suyo (T195) o, si no tiene estilo, rojo las hostiles y el de su tipo las demás.
