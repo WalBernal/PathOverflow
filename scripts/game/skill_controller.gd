@@ -2615,8 +2615,12 @@ func _update_companion(delta: float) -> void:
 	if _companion.is_empty():
 		_companion = {"pos": player.global_position + Vector2(-40, -40), "laser": 0.6, "emp": 3.0, "bob": 0.0}
 		_effects.append({"type": "ring", "pos": _companion["pos"], "radius": 30.0, "time": 0.0, "duration": 0.4, "color": Color("7fd0e8")})
-	var goal := player.global_position + Vector2(-44, -46)
-	_companion["pos"] = (_companion["pos"] as Vector2).lerp(goal, 1.0 - exp(-4.0 * delta))
+	# Detrás del hombro contrario a donde mira el jugador (T205), y se inclina al moverse.
+	var goal := player.global_position + companion_offset(player.facing_direction())
+	var before: Vector2 = _companion["pos"]
+	_companion["pos"] = before.lerp(goal, 1.0 - exp(-4.0 * delta))
+	var vx := ((_companion["pos"] as Vector2).x - before.x) / maxf(delta, 0.001)
+	_companion["tilt"] = lerpf(float(_companion.get("tilt", 0.0)), clampf(vx * 0.004, -0.35, 0.35), 1.0 - exp(-8.0 * delta))
 	_companion["bob"] += delta
 	_companion["laser"] -= delta
 	_companion["emp"] -= delta
@@ -2624,6 +2628,7 @@ func _update_companion(delta: float) -> void:
 	if _companion["laser"] <= 0.0:
 		var t := enemies.nearest_index(pos, float(_companion_laser["seek_range"]))
 		if t != -1:
+			_companion["aim"] = (enemies.positions[t] - pos).normalized()   # el visor mira a su objetivo (T205)
 			_execute(_companion_laser, enemies.positions[t], pos)
 			_companion["laser"] = CompanionRobot.LASER_INTERVAL / maxf(0.1, float(_companion_laser["automaton_speed"]))
 		else:
@@ -2642,18 +2647,33 @@ func _draw_companion() -> void:
 	if _companion.is_empty():
 		return
 	var p: Vector2 = _companion["pos"] + Vector2(0, sin(_companion["bob"] * 3.0) * 3.0)
-	draw_circle(p + Vector2(0, 40), 7.0, Color(0, 0, 0, 0.25))
+	draw_circle(_companion["pos"] + Vector2(0, 40), 7.0, Color(0, 0, 0, 0.25))
+	# Inclinado según cómo se mueve (T205): el cuerpo gira en torno a su centro.
+	draw_set_transform(p, float(_companion.get("tilt", 0.0)))
 	for s in [-1.0, 1.0]:   # propulsores
-		draw_circle(p + Vector2(s * 7, 9), 3.0 + sin(_companion["bob"] * 20.0 + s) * 0.8, Color(0.5, 0.85, 1.0, 0.5))
-	draw_rect(Rect2(p - Vector2(11, 8), Vector2(22, 16)), Color("6e7480"))
-	draw_rect(Rect2(p - Vector2(11, 8), Vector2(22, 16)), Color("3a3f4a"), false, 1.5)
-	draw_rect(Rect2(p - Vector2(8, 5), Vector2(16, 7)), Color("15181e"))
+		draw_circle(Vector2(s * 7, 9), 3.0 + sin(_companion["bob"] * 20.0 + s) * 0.8, Color(0.5, 0.85, 1.0, 0.5))
+	draw_rect(Rect2(-Vector2(11, 8), Vector2(22, 16)), Color("6e7480"))
+	draw_rect(Rect2(-Vector2(11, 8), Vector2(22, 16)), Color("3a3f4a"), false, 1.5)
+	draw_rect(Rect2(-Vector2(8, 5), Vector2(16, 7)), Color("15181e"))
 	var eye := 0.6 + 0.4 * sin(_companion["bob"] * 4.0)
-	draw_rect(Rect2(p - Vector2(5, 3), Vector2(10, 3)), Color(0.4, 0.95, 1.0, eye))
-	draw_line(p + Vector2(0, -8), p + Vector2(0, -14), Color("3a3f4a"), 1.5)
-	draw_circle(p + Vector2(0, -15), 2.0, Color("ff5a4a") if _companion["emp"] < 1.0 else Color("e8d070"))
+	var look := companion_visor((_companion.get("aim", player.facing_direction()) as Vector2))
+	draw_rect(Rect2(Vector2(-5 + look, -3), Vector2(10, 3)), Color(0.4, 0.95, 1.0, eye))   # el visor, hacia su objetivo
+	draw_line(Vector2(0, -8), Vector2(0, -14), Color("3a3f4a"), 1.5)
+	draw_circle(Vector2(0, -15), 2.0, Color("ff5a4a") if _companion["emp"] < 1.0 else Color("e8d070"))
+	draw_set_transform(Vector2.ZERO)
 	var font := ThemeDB.fallback_font
 	draw_string(font, p + Vector2(-20, 22), "R-2PL", HORIZONTAL_ALIGNMENT_CENTER, 40, 9, Color(0.75, 0.9, 1.0, 0.7))
+
+
+## Dónde va el R-2PL respecto al jugador (T205): detrás del hombro contrario a donde
+## mira (si mira a la izquierda, a su derecha), un poco por encima.
+static func companion_offset(facing: Vector2) -> Vector2:
+	return Vector2(44.0 if facing.x < -0.2 else -44.0, -46.0)
+
+
+## Cuánto se desplaza el visor del R-2PL dentro de su pantalla (±3 px) hacia `aim`.
+static func companion_visor(aim: Vector2) -> float:
+	return clampf(aim.x, -1.0, 1.0) * 3.0
 
 
 # --- Charcos degenerativos ---

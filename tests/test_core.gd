@@ -255,6 +255,7 @@ func _initialize() -> void:
 	_test_unicast_single()
 	_test_units_match_text()
 	_test_rigid_units_art()
+	_test_companions_walk()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -9452,3 +9453,15 @@ func _test_rigid_units_art() -> void:
 	_check(src.contains("UnitArt._drone(self, \"drones_vigilancia\"") and FileAccess.get_file_as_string("res://scripts/skills/unit_art.gd").contains("\"drones_vigilancia\":"),
 		"los Drones de Vigilancia se dibujan con el dron de las invocaciones y su cámara")
 	_check(src.contains("_draw_ci_turret("), "la Torreta CI tiene su propio dibujo, distinto de la RAM Servidor Torreta")
+
+## T205: los acompañantes caminan con su zancada (la fase avanza con lo recorrido) y el
+## R-2PL va detrás del hombro contrario a donde miras, con el visor hacia su objetivo.
+func _test_companions_walk() -> void:
+	var follower: GDScript = load("res://scripts/game/companion_follower.gd")
+	var a: float = follower.walk_step(-1.0, 7.0)
+	var b: float = follower.walk_step(a, 7.0)
+	_check(a > 0.0 and b > a and follower.walk_step(0.0, 0.0) == 0.0, "acompañante: la zancada avanza al andar y empieza aunque estuviera quieto")
+	_check(SkillController.companion_offset(Vector2.RIGHT).x < 0.0 and SkillController.companion_offset(Vector2.LEFT).x > 0.0
+		and SkillController.companion_offset(Vector2.DOWN).y < 0.0, "R-2PL: detrás del hombro contrario a donde mira el jugador, por encima")
+	_check(SkillController.companion_visor(Vector2.LEFT) < 0.0 and SkillController.companion_visor(Vector2.RIGHT) > 0.0 and absf(SkillController.companion_visor(Vector2(5, 0))) <= 3.0,
+		"R-2PL: el visor se mueve hacia su objetivo sin salirse de su pantalla")
