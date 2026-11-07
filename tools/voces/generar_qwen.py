@@ -37,7 +37,9 @@ def main() -> None:
     salida = Path(sys.argv[2])
     salida.mkdir(parents=True, exist_ok=True)
     solo = set(sys.argv[3].split(",")) if len(sys.argv) > 3 else None
-    lineas = [e for e in datos["lineas"] if not solo or e["id"] in solo]
+    # Sin lista de ids, se salta lo ya generado: si se corta, basta con volver a lanzarlo.
+    lineas = [e for e in datos["lineas"] if (e["id"] in solo if solo else not (salida / f"{e['id']}.wav").exists())]
+    print(f"{len(lineas)} líneas por generar", flush=True)
     # Una voz es una descripción (se diseña en cada línea) o {"ref", "ref_texto", ...}: una
     # toma aprobada que se clona con el modelo Base, para que suene igual en todas sus líneas.
     disenar = [e for e in lineas if isinstance(datos["voces"][e["voz"]], str)]
@@ -66,9 +68,13 @@ def main() -> None:
             print(f"{e['id']}: {len(audio) / sr:.1f} s en {time.time() - t0:.1f} s · {e['voz']} ({modo})", flush=True)
         del modelo
         torch.cuda.empty_cache()
-    # La muestra: todas las líneas de la carpeta seguidas, con una pausa entre cada una.
+    # La muestra: todas las líneas de la carpeta seguidas, con una pausa entre cada una
+    # (solo en las pruebas: con cientos de líneas sería un archivo enorme).
+    archivos = [f for f in sorted(salida.glob("*.wav")) if not f.name.startswith("muestra")]
+    if len(archivos) > 60:
+        return
     partes = []
-    for f in sorted(salida.glob("*.wav")):
+    for f in archivos:
         if f.name.startswith("muestra"):
             continue
         audio, sr = sf.read(str(f), dtype="float32")

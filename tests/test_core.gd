@@ -261,6 +261,7 @@ func _initialize() -> void:
 	_test_zone_report()
 	_test_voice_lines()
 	_test_npc_voice_ids()
+	_test_all_voice_lines()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -9680,3 +9681,42 @@ func _test_npc_voice_ids() -> void:
 				dupes += 1
 			ids[id] = true
 	_check(dupes == 0 and ids.size() > 200, "voces de NPC: cada línea tiene un id único (%d líneas)" % ids.size())
+
+## Voces de los actos (T222): cada línea hablada de todas las escenas (salvo la consola)
+## y de todos los diálogos de NPC tiene su audio grabado.
+func _test_all_voice_lines() -> void:
+	var vl: GDScript = load("res://scripts/core/voice_lines.gd")
+	var missing: Array = []
+	var scenes: Dictionary = DataLoader.load_json("res://data/cutscenes.json")["cutscenes"]
+	for scene in scenes:
+		var steps: Array = scenes[scene]["steps"]
+		for i in steps.size():
+			var s: Dictionary = steps[i]
+			if s.has("effect") or s.has("input") or String(s.get("text", "")) == "" or String(s.get("style", "")) == "console":
+				continue
+			var ids: Array = [vl.cutscene_id(scene, i, 0), vl.cutscene_id(scene, i, 1)] if String(s.get("speaker", "")) == "player" else [vl.cutscene_id(scene, i)]
+			for id in ids:
+				if not ResourceLoader.exists(vl.path_for(id)):
+					missing.append(id)
+	var dialogues: Dictionary = DataLoader.load_json("res://data/npcs.json")["dialogues"]
+	for did in dialogues:
+		var d: Dictionary = dialogues[did]
+		var ids: Array = []
+		for node_id in d.get("nodes", {}):
+			var node: Dictionary = d["nodes"][node_id]
+			ids.append(vl.npc_id(did, node_id))
+			if node.has("text_touch"):
+				ids.append(vl.npc_id(did, node_id + "_tactil"))
+			if node.get("again") is Array:
+				for k in (node["again"] as Array).size():
+					ids.append(vl.npc_id(did, node_id + "_otra", k))
+			elif node.has("again"):
+				ids.append(vl.npc_id(did, node_id + "_otra"))
+		for k in (d.get("menu", []) as Array).size():
+			ids.append(vl.npc_id(did, "_menu", k))
+		for k in (d.get("greeting_again", []) as Array).size():
+			ids.append(vl.npc_id(did, "_saludo", k))
+		for id in ids:
+			if not ResourceLoader.exists(vl.path_for(id)):
+				missing.append(id)
+	_check(missing.is_empty(), "voces: cada línea hablada de escenas y NPC tiene su audio (faltan %d: %s)" % [missing.size(), ", ".join(missing.slice(0, 8))])

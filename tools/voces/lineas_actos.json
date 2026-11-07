@@ -1,0 +1,2069 @@
+{
+  "voces": {
+    "rafa": {
+      "ref": "referencias/rafa.wav",
+      "ref_texto": "Para el sistema escolar de la UAdeO..... tú nunca exististe..... Eres un puntero nulo....."
+    },
+    "aida": {
+      "ref": "referencias/aida.wav",
+      "ref_texto": "Vaya, un recién egresado. Debes ser de la generación de Ojeda, ¿no? Soy Aída. Llevo aquí desde que El Pepe era jefe de informática, y aún se programaba todo en COBOL."
+    },
+    "paez": {
+      "ref": "referencias/paez.wav",
+      "ref_texto": "¡Ah, otro del departamento! Soy M. Páez, el Inge. Estaba calificando exámenes de álgebra lineal en el laboratorio cuando la pantalla empezó a parpadear... y aparecí aquí. Con mis lentes, mi taza y sin mi Kindle. Eso último es lo grave."
+    },
+    "egresado": {
+      "ref": "referencias/egresado.wav",
+      "ref_texto": "Vengo por mi constancia de servicio social. Hice mis 480 horas: seis meses pelando cables UTP, cambiando HDMI y limpiando las computadoras del centro de cómputo, bajo las órdenes del Inge Pepe. Si no tengo el sello, Servicios Escolares me anula la titulación."
+    },
+    "egresada": {
+      "ref": "referencias/egresada.wav",
+      "ref_texto": "Eh, no, yo vengo por..."
+    },
+    "mario": {
+      "ref": "referencias/mario.wav",
+      "ref_texto": "¡Profe Rafa! ¿Va a querer churros...?"
+    },
+    "narrador": {
+      "ref": "referencias/narrador.wav",
+      "ref_texto": "Rafa suelta un suspiro cansado y teclea con desgana, sin quitar los ojos de la pantalla."
+    },
+    "bob": {
+      "ref": "referencias/bob.wav",
+      "ref_texto": "¡Bienvenido al Sandbox! Soy B.O.B., tu Bot de Onboarding. Mi trabajo es enseñarte lo básico antes de que te desplieguen en producción. Mi otro trabajo es mostrar mensajes que nadie lee."
+    },
+    "clara": {
+      "ref": "referencias/clara.wav",
+      "ref_texto": "Otro superviviente. Bienvenido a la trinchera. Soy Clara, infraestructura. Llevo tanto tiempo aquí abajo que ya no recuerdo cómo era una interfaz gráfica. Ni la luz del sol. Ni el sol."
+    },
+    "eugenio": {
+      "ref": "referencias/eugenio.wav",
+      "ref_texto": "¿Oyes eso del fondo? ¡Qué rolón! Alguien dejó una canción en el puerto y ya me enamoré del pianito. Ah, perdón, buenas: Eugenio, para servirte. Soltero, codiciado, sin suerte en el amor."
+    },
+    "tomas": {
+      "ref": "referencias/tomas.wav",
+      "ref_texto": "Soy Tomás. El último QA. Desactivaron los tests «temporalmente» en 2017. Yo me quedé, por si acaso. Alguien tenía que ver crecer los memory leaks."
+    },
+    "dba": {
+      "ref": "referencias/dba.wav",
+      "ref_texto": "Hice copias de seguridad cada noche durante veinte años. Nadie las restauró nunca. Ahora soy una de ellas. Bienvenido a la Granja de Servidores, mortal."
+    },
+    "berta": {
+      "ref": "referencias/berta.wav",
+      "ref_texto": "Bienvenido a la Pila del CMOS. Soy Berta, la CR2032 de esta placa. Tres voltios de pura memoria: guardo la hora, el orden de arranque y cada ajuste que alguien cambió desde 2004."
+    },
+    "iris": {
+      "ref": "referencias/iris.wav",
+      "ref_texto": "¿Tú también te perdiste? Me mandaron a comprar café soluble y ya no supe por dónde volver. Estaba haciendo mi primer commit y me dijeron: «ve al fondo a la derecha». Pero ¿cuál es la derecha?"
+    },
+    "recolector": {
+      "ref": "referencias/recolector.wav",
+      "ref_texto": "Busco... punteros que nadie... nulos. Fragmentos de memoria sin referencia, sin dueño, sin... ¿Tienes basura? Yo la... libero... cambio."
+    },
+    "sindicato": {
+      "ref": "referencias/sindicato.wav",
+      "ref_texto": "¡Alto, recién egresado! Somos el Sindicato de Huérfanos, PID 404: «padre no encontrado». Miles de procesos abandonados cuando cayó el Monolito."
+    },
+    "nacho": {
+      "ref": "referencias/nacho.wav",
+      "ref_texto": "¡Pásale, pásale! Soy Nacho, revendedor de hardware de segunda mano. Placas base, RAM, todo probado... bueno, todo encendió una vez. Se paga en tokens, nada de fiado."
+    },
+    "init": {
+      "ref": "referencias/init.wav",
+      "ref_texto": "Nada entra. Nada sale. Nada muere. Ese es el único mandamiento. Mis hijos no serán recolectados. Ni por el Recolector, ni por un reinicio, ni por ti."
+    },
+    "admin": {
+      "ref": "referencias/admin.wav",
+      "ref_texto": "Veinte años con permisos sobre todo y sin que nadie me pregunte nada. Ni siquiera mi nombre. No tengo nombre: tengo un valor por defecto."
+    },
+    "arquitecto": {
+      "ref": "referencias/arquitecto.wav",
+      "ref_texto": "Veinte años... sosteniendo el Monolito... con cinta americana... y fe."
+    },
+    "fw_update": {
+      "ref": "referencias/fw_update.wav",
+      "ref_texto": "ACTUALIZACIÓN DE FIRMWARE EN CURSO. NO APAGUE EL EQUIPO. NO DESCONECTE EL CABLE. NO SE MUEVA."
+    },
+    "sistema": {
+      "ref": "referencias/sistema.wav",
+      "ref_texto": "El Arquitecto ha caído, pero el Servidor sigue congelado. Se ha abierto un portal al campamento."
+    }
+  },
+  "lineas": [
+    {
+      "id": "arquitecto_muere_03",
+      "voz": "arquitecto",
+      "texto": "kill -9... ¿Sin un SIGTERM... de cortesía...?"
+    },
+    {
+      "id": "arquitecto_muere_04",
+      "voz": "arquitecto",
+      "texto": "Veinte años... sosteniendo el Monolito... con cinta americana... y fe."
+    },
+    {
+      "id": "arquitecto_muere_05",
+      "voz": "arquitecto",
+      "texto": "No lo entienden... El Monolito no era el problema. Era la [i]tapa[/i]."
+    },
+    {
+      "id": "arquitecto_muere_06",
+      "voz": "arquitecto",
+      "texto": "Cuando yo caiga... el Servidor no arrancará. Se congelará. Y el Padre... despertará. Él no deja que nada... muera."
+    },
+    {
+      "id": "arquitecto_muere_14",
+      "voz": "sistema",
+      "texto": "El Arquitecto ha caído, pero el Servidor sigue congelado. Se ha abierto un portal al campamento."
+    },
+    {
+      "id": "reunion_campamento_01",
+      "voz": "aida",
+      "texto": "¡Volviste! Lo vimos en los logs: el Arquitecto, fuera. Y el Servidor... congelado. Ni arranca ni se apaga. Como la laptop de Mario."
+    },
+    {
+      "id": "reunion_campamento_03",
+      "voz": "mario",
+      "texto": "¡Oye! Mi laptop arranca. A veces. Si no la miras directamente."
+    },
+    {
+      "id": "reunion_campamento_05",
+      "voz": "rafa",
+      "texto": "Aaah... a ver..... esto no es culpa mía.... ¿está bien?..... Yo heredé el servidor así......"
+    },
+    {
+      "id": "reunion_campamento_06",
+      "voz": "aida",
+      "texto": "¿Heredado de quién?"
+    },
+    {
+      "id": "reunion_campamento_07",
+      "voz": "rafa",
+      "texto": "Del Inge Pepe..... el jefe de informática de toda la vida..... Dejó el puesto en julio..... sigue dando clases los jueves..... Cuando me dieron la jefatura me entregó todo así..... con una nota que decía «todo documentado»..... y un pósit con la contraseña de root......"
+    },
+    {
+      "id": "reunion_campamento_08",
+      "voz": "mario",
+      "texto": "¿Y dónde está la documentación?"
+    },
+    {
+      "id": "reunion_campamento_09",
+      "voz": "rafa",
+      "texto": "El pósit..... era la documentación......"
+    },
+    {
+      "id": "reunion_campamento_10",
+      "voz": "aida",
+      "texto": "Clásico Pepe. Treinta años a cargo de todo y te lo entrega así, sin documentación. Ahora todo es culpa suya."
+    },
+    {
+      "id": "reunion_campamento_11",
+      "voz": "rafa",
+      "texto": "No digas eso..... que luego pasa.... Bueno..... el kernel está en pánico... pero encontré un puerto abierto..... el 2222.... Si lo fuerzo..... hay un túnel hasta el Espacio de Kernel......"
+    },
+    {
+      "id": "reunion_campamento_13",
+      "voz": "sistema",
+      "texto": "Rafa abre el puerto 2222. Un portal empieza a parpadear junto a la empalizada, al sureste."
+    },
+    {
+      "id": "reunion_campamento_14",
+      "voz": "aida",
+      "texto": "Adelántate tú. Nosotros te seguimos en cuanto Rafa termine de... lo que sea que esté haciendo."
+    },
+    {
+      "id": "reunion_campamento_16",
+      "voz": "rafa",
+      "texto": "Descargando la VPN...... 3 %......... vete yendo...... ya te alcanzo......"
+    },
+    {
+      "id": "reunion_campamento_18",
+      "voz": "mario",
+      "texto": "¡Te guardo un café! Bueno, me lo tomo yo. Pero pensando en ti."
+    },
+    {
+      "id": "red_lince_01",
+      "voz": "sistema",
+      "texto": "Atraviesas el portal. El campamento se deshace en una lluvia de ceros y unos..."
+    },
+    {
+      "id": "red_lince_03",
+      "voz": "sistema",
+      "texto": "Conectando con el Espacio de Kernel por el puerto 2222..."
+    },
+    {
+      "id": "red_lince_05",
+      "voz": "rafa",
+      "texto": "¿Me..... oyes....? La Red Lince se ha caído..... otra vez..... Aquí solo vemos al dinosaurio del Chrome......"
+    },
+    {
+      "id": "red_lince_06",
+      "voz": "rafa",
+      "texto": "Intento pasarte por los datos de mi celular...... a ver..... «Plan de datos agotado»...... Me quedan 100 megas..... y el túnel pide más......"
+    },
+    {
+      "id": "red_lince_07",
+      "voz": "mario",
+      "texto": "¡Yo también quiero pasar! ...Ay. Me dice que no cabe. El portal. O mi mochila. No sé."
+    },
+    {
+      "id": "red_lince_08",
+      "voz": "rafa",
+      "texto": "Ni siquiera Mario cabe con lo que queda de datos...... Pasa tú sola..... solo tú...... Te sigo en cuanto recargue saldo......"
+    },
+    {
+      "id": "red_lince_11",
+      "voz": "sistema",
+      "texto": "El túnel se rompe. Caes a través de la tabla de procesos..."
+    },
+    {
+      "id": "llegada_brecha_02",
+      "voz": "rafa",
+      "texto": "Sigues vivo..... bien..... Hay un enclave seguro más adelante..... un túnel SSH que aún aguanta..... Te espero allí..... con lo que me quede de batería......"
+    },
+    {
+      "id": "fabrica_llegada_01",
+      "voz": "clara",
+      "texto": "Estás en el Thread Pool. Pistones, vapor y miles de tareas concurrentes. Al fondo, junto a la compuerta, dos gemelos mecánicos: la Carrera Crítica."
+    },
+    {
+      "id": "fabrica_llegada_02",
+      "voz": "clara",
+      "texto": "Solo uno de los dos es vulnerable cada vez: se turnan. Ataca al que le toca. Si le pegas al otro, es como escribir en memoria compartida sin candado: no sirve de nada y te arrepientes."
+    },
+    {
+      "id": "registro_clara_02",
+      "voz": "clara",
+      "texto": "¿Lo ves? El Último Commit no vino de la red externa. Fue una llamada interna. Programada. Hace años. Alguien dejó esto preparado y se fue."
+    },
+    {
+      "id": "registro_clara_03",
+      "voz": "rafa",
+      "texto": "Hace siete años..... la misma semana en que el Inge Pepe instaló su «limpieza_final»..... con el mismo usuario admin..... Fue mi antecesor..... todo apunta a él..... como siempre......"
+    },
+    {
+      "id": "registro_clara_04",
+      "voz": "clara",
+      "texto": "Sigue bajando. Sea quien sea el que dejó esto preparado, init lo está protegiendo. Y el Anillo 0 tiene las respuestas."
+    },
+    {
+      "id": "deadlock_resuelto_02",
+      "voz": "sistema",
+      "texto": "Los gigantes de hierro sueltan su presa. La compuerta central se abre hacia el Bus del Sistema."
+    },
+    {
+      "id": "anillo_entrada_02",
+      "voz": "init",
+      "texto": "Un proceso sin padre ha entrado en el Anillo 0. Qué ironía."
+    },
+    {
+      "id": "anillo_entrada_03",
+      "voz": "init",
+      "texto": "Nada entra. Nada sale. Nada muere. Ese es el único mandamiento. Mis hijos no serán recolectados. Ni por el Recolector, ni por un reinicio, ni por ti."
+    },
+    {
+      "id": "anillo_entrada_04",
+      "voz": "init",
+      "texto": "Hazte a un lado... o te adoptaré también."
+    },
+    {
+      "id": "anillo_entrada_07",
+      "voz": "clara",
+      "texto": "Los disipadores te cubren de sus interrupciones. Y si invoca al OOM Killer, haz que el rayo le pase por encima a él: es el proceso que más pesa del sistema."
+    },
+    {
+      "id": "init_muere_02",
+      "voz": "init",
+      "texto": "SIGKILL... ni siquiera yo... puedo ignorar... la señal 9..."
+    },
+    {
+      "id": "init_muere_03",
+      "voz": "init",
+      "texto": "Cuida... de los huérfanos..."
+    },
+    {
+      "id": "init_muere_06",
+      "voz": "sistema",
+      "texto": "Silencio. Oscuridad total. Pero el ventilador sigue girando: la placa base sigue recibiendo energía."
+    },
+    {
+      "id": "init_muere_08",
+      "voz": "clara",
+      "texto": "Estoy leyendo los registros póstumos de init... Esto lo cambia todo. El Arquitecto no intentaba salvar el Monolito. Era un cortafuegos humano."
+    },
+    {
+      "id": "init_muere_09",
+      "voz": "rafa",
+      "texto": "El Último Commit..... no rompió nada por accidente..... se ejecutó para sellar el acceso..... a la Capa Física..... al firmware..... a la BIOS......"
+    },
+    {
+      "id": "init_muere_10",
+      "voz": "clara",
+      "texto": "Por eso dijo que el Monolito era la tapa. Debajo del sistema operativo hay algo grabado a fuego en la ROM. Algo que no es nuestro."
+    },
+    {
+      "id": "init_muere_11",
+      "voz": "rafa",
+      "texto": "Detecto una señal..... habla directamente con el hardware..... Alguien está forzando un reflashing total..... Si lo consigue..... pulveriza todo..... todo el universo digital......"
+    },
+    {
+      "id": "init_muere_12",
+      "voz": "clara",
+      "texto": "Solo queda una ruta: la controladora de bus, hacia el Silicio Profundo. Descansa, soldado. Lo vas a necesitar."
+    },
+    {
+      "id": "init_muere_13",
+      "voz": "sistema",
+      "texto": "Acto II completado. Se ha abierto un túnel al Socket Seguro."
+    },
+    {
+      "id": "llegada_sandbox_02",
+      "voz": "narrador",
+      "texto": "Apareces tirado boca abajo sobre una superficie fría de metal cuadriculado, rodeado de cajas de texto flotantes con mensajes de error amarillos que nadie lee."
+    },
+    {
+      "id": "llegada_sandbox_03_m",
+      "voz": "egresado",
+      "texto": "...¿Rafa? ¿Y mi camisa? ¿Y mi constancia?"
+    },
+    {
+      "id": "llegada_sandbox_03_f",
+      "voz": "egresada",
+      "texto": "...¿Rafa? ¿Y mi camisa? ¿Y mi constancia?"
+    },
+    {
+      "id": "llegada_sandbox_04",
+      "voz": "bob",
+      "texto": "¡Bienvenido al Sandbox! Detecté un usuario nuevo: sin credenciales, sin experiencia y sin camisa formal. Perfil típico de practicante. Ven, háblame y te explico lo básico."
+    },
+    {
+      "id": "llegada_silicio_01",
+      "voz": "narrador",
+      "texto": "La controladora de bus te escupe sobre un suelo de silicio que vibra. Arriba, en lugar de cielo, hay un circuito infinito."
+    },
+    {
+      "id": "llegada_silicio_02",
+      "voz": "rafa",
+      "texto": "Te veo..... apenas..... aquí abajo la señal llega por el bus de depuración..... Ve hacia el Puerto JTAG..... detecto a dos personas más..... de la universidad....."
+    },
+    {
+      "id": "llegada_silicio_03_m",
+      "voz": "egresado",
+      "texto": "¿Más gente de la UAdeO cayó aquí?"
+    },
+    {
+      "id": "llegada_silicio_03_f",
+      "voz": "egresada",
+      "texto": "¿Más gente de la UAdeO cayó aquí?"
+    },
+    {
+      "id": "llegada_silicio_04",
+      "voz": "rafa",
+      "texto": "El reflasheo..... está jalando todo lo que estaba conectado..... incluida la sala de maestros..... y la cafetería......"
+    },
+    {
+      "id": "camara_entrada_00",
+      "voz": "narrador",
+      "texto": "En el techo avanza una barra de progreso del tamaño de un edificio: 97 %... 98 %..."
+    },
+    {
+      "id": "camara_entrada_01",
+      "voz": "fw_update",
+      "texto": "ACTUALIZACIÓN DE FIRMWARE EN CURSO. NO APAGUE EL EQUIPO. NO DESCONECTE EL CABLE. NO SE MUEVA."
+    },
+    {
+      "id": "camara_entrada_02",
+      "voz": "paez",
+      "texto": "Sus orbes siguen una curva de persecución: rompe la línea de visión con los condensadores. Y no te quedes en los charcos."
+    },
+    {
+      "id": "camara_entrada_03_m",
+      "voz": "egresado",
+      "texto": "¿Algo más, Inge?"
+    },
+    {
+      "id": "camara_entrada_03_f",
+      "voz": "egresada",
+      "texto": "¿Algo más, Inge?"
+    },
+    {
+      "id": "camara_entrada_04",
+      "voz": "paez",
+      "texto": "Sí: cuando llegue al 99 %, se va a poner nervioso. Como yo en las juntas de academia."
+    },
+    {
+      "id": "reflash_cancelado_02",
+      "voz": "fw_update",
+      "texto": "Actualización... cancelada... por el usuario... ¿Qué... usuario...?"
+    },
+    {
+      "id": "reflash_cancelado_04",
+      "voz": "rafa",
+      "texto": "99 %..... como mi reinicio..... «el último uno por ciento no es tuyo, es mío»..... esa frase..... me la dijo El Pepe......"
+    },
+    {
+      "id": "reflash_cancelado_05",
+      "voz": "paez",
+      "texto": "Los datos dicen que alguien lo dejó todo preparado. Los datos no dicen quién. Odio cuando los datos se callan."
+    },
+    {
+      "id": "reflash_cancelado_06",
+      "voz": "eugenio",
+      "texto": "Yo a este final le doy un 7/10. Le faltó pan."
+    },
+    {
+      "id": "reflash_cancelado_07",
+      "voz": "narrador",
+      "texto": "Acto III completado. Se abrió un túnel al Puerto JTAG. Más abajo, en la BIOS, algo acaba de despertar."
+    },
+    {
+      "id": "bios_post_01",
+      "voz": "narrador",
+      "texto": "Piiiiiiii. Pi. Pi."
+    },
+    {
+      "id": "bios_post_04",
+      "voz": "rafa",
+      "texto": "¡Espérame.....! Ya.... no hay internet.... pero tampoco La Red Lince.... Desconecté el router con mis propias manos.... Mario viene atrás...."
+    },
+    {
+      "id": "bios_post_05",
+      "voz": "mario",
+      "texto": "Dice que si no vengo no me firma las horas de servicio social. Hola."
+    },
+    {
+      "id": "bios_post_06_m",
+      "voz": "egresado",
+      "texto": "¿Y ahora dónde estamos?"
+    },
+    {
+      "id": "bios_post_06_f",
+      "voz": "egresada",
+      "texto": "¿Y ahora dónde estamos?"
+    },
+    {
+      "id": "bios_post_07",
+      "voz": "rafa",
+      "texto": "En la BIOS.... lo primero que despierta cuando prendes la máquina.... Más adelante está la Pila del CMOS.... alguien ahí sabe quién firmó el commit...."
+    },
+    {
+      "id": "admin_entrada_00",
+      "voz": "narrador",
+      "texto": "Una ventana de login se abre sola en medio de la oscuridad. El cursor parpadea."
+    },
+    {
+      "id": "admin_entrada_02",
+      "voz": "admin",
+      "texto": "Usuario: admin. Contraseña: a... d... m... i... n. Acceso concedido. Siempre acceso concedido."
+    },
+    {
+      "id": "admin_entrada_03",
+      "voz": "admin",
+      "texto": "Veinte años con permisos sobre todo y sin que nadie me pregunte nada. Ni siquiera mi nombre. No tengo nombre: tengo un valor por defecto."
+    },
+    {
+      "id": "admin_entrada_05_m",
+      "voz": "egresado",
+      "texto": "Tú hiciste el push."
+    },
+    {
+      "id": "admin_entrada_05_f",
+      "voz": "egresada",
+      "texto": "Tú hiciste el push."
+    },
+    {
+      "id": "admin_entrada_07",
+      "voz": "admin",
+      "texto": "Alguien tenía que hacer algo. Nadie se hacía responsable. Así que lo hice yo. Sin descripción. Como siempre."
+    },
+    {
+      "id": "admin_entrada_09",
+      "voz": "rafa",
+      "texto": "Sus ventanas de login rotan.... quédate en los sectores verdes.... y si lanza Option ROMs.... mátalas antes de que lo reinstalen...."
+    },
+    {
+      "id": "admin_cambia_password_02",
+      "voz": "admin",
+      "texto": "Sesión... cerrada... Espera. No me borres. Por favor. Haz lo que nunca hizo nadie."
+    },
+    {
+      "id": "admin_cambia_password_05",
+      "voz": "admin",
+      "texto": "Una contraseña. Mía. Elegida por alguien. ¿Entonces ahora... tengo dueño? ...Gracias. Ya no tengo que hacer nada por mi cuenta."
+    },
+    {
+      "id": "admin_cambia_password_08",
+      "voz": "narrador",
+      "texto": "Reinicio: 99 %... 100 %."
+    },
+    {
+      "id": "admin_cambia_password_10",
+      "voz": "rafa",
+      "texto": "Arrancó.... ¡ARRANCÓ! Por primera vez desde 2019.... Aída está viendo el escritorio en el campamento.... Mario, ¡imprime la constancia!"
+    },
+    {
+      "id": "admin_cambia_password_11",
+      "voz": "mario",
+      "texto": "La impresora se atascó. Hay un trabajo en la cola de 2004. De un usuario llamado «pepe». Un solo archivo: lee_esto_cuando_arranque.txt."
+    },
+    {
+      "id": "admin_cambia_password_12",
+      "voz": "rafa",
+      "texto": "........ Claro que sí, Pepe.... claro que sí...."
+    },
+    {
+      "id": "admin_cambia_password_13",
+      "voz": "narrador",
+      "texto": "Acto IV completado. La historia sigue en el Acto V."
+    },
+    {
+      "id": "arquitecto_epilogo_01",
+      "voz": "sistema",
+      "texto": "El portal al campamento zumba como un ventilador al que nadie le ha quitado el polvo desde 2011."
+    },
+    {
+      "id": "arquitecto_epilogo_02",
+      "voz": "aida",
+      "texto": "¿Sigues vivo? Vuelve. Mario ya está escribiendo el post-mortem y aún no sabe si eres tú o el Arquitecto."
+    },
+    {
+      "id": "arquitecto_epilogo_03",
+      "voz": "mario",
+      "texto": "¡Es un borrador! ¡Los borradores no cuentan!"
+    },
+    {
+      "id": "init_epilogo_01",
+      "voz": "clara",
+      "texto": "PID 1 abajo. Nunca pensé que lo diría con alivio. Ni que lo diría en voz alta sin un ticket abierto."
+    },
+    {
+      "id": "init_epilogo_02",
+      "voz": "recolector",
+      "texto": "Ocho mil procesos huérfanos... [s]liberados[/s] [s]recogidos[/s]... reasignados. Me quedo con los punteros. Nadie los quiere."
+    },
+    {
+      "id": "init_epilogo_03",
+      "voz": "clara",
+      "texto": "Vuelve al Socket antes de que alguien escriba exit. Y no lo digas tú tampoco."
+    },
+    {
+      "id": "reflash_epilogo_01",
+      "voz": "paez",
+      "texto": "La barra se detuvo en el 99 %. Estadísticamente, el último uno por ciento es el que más tarda. Y el que más miente."
+    },
+    {
+      "id": "reflash_epilogo_02",
+      "voz": "eugenio",
+      "texto": "Encontré café en la cafetería. Un 6/10. Pero sobrevivió al reflasheo, así que le subo a 7."
+    },
+    {
+      "id": "reflash_epilogo_03",
+      "voz": "paez",
+      "texto": "Vuelve al Puerto JTAG. Hay que hablar de lo que viene después del firmware. Spoiler: más firmware."
+    },
+    {
+      "id": "admin_epilogo_01",
+      "voz": "berta",
+      "texto": "¿Lo notas? El reloj... avanza. 01/01/2000, 00:00:01. ¡00:00:02! Llevo 26 años esperando este segundo."
+    },
+    {
+      "id": "admin_epilogo_02",
+      "voz": "eugenio",
+      "texto": "Berta, el segundo te ha quedado precioso. Un 9/10. El primero de mi vida."
+    },
+    {
+      "id": "llegada_campamento_01",
+      "voz": "aida",
+      "texto": "¿Otro practicante? ¿De dónde sales tú? ...Del Sandbox. Claro. Todos salen del Sandbox."
+    },
+    {
+      "id": "llegada_campamento_02",
+      "voz": "aida",
+      "texto": "Bienvenido al Campamento del Último Commit. Población: cuatro personas, un rack que suena a licuadora y una conexión que se cae si alguien estornuda."
+    },
+    {
+      "id": "llegada_campamento_04",
+      "voz": "mario",
+      "texto": "¡Hola! Yo también soy de servicio social. Llevo tres semanas. Todavía no sé qué hago, pero lo hago con muchas ganas."
+    },
+    {
+      "id": "llegada_campamento_06",
+      "voz": "rafa",
+      "texto": "Aaah..... tú eres el de la constancia..... el servidor..... se cayó..... no fui yo..... bueno..... no del todo......"
+    },
+    {
+      "id": "llegada_campamento_08",
+      "voz": "nacho",
+      "texto": "Psst. ¿Tokens? Tengo placas. Originales, originales. Bueno, originales de algún lado."
+    },
+    {
+      "id": "llegada_campamento_10",
+      "voz": "aida",
+      "texto": "Cuando termines de mirar, habla conmigo. Aquí nadie te va a hacer onboarding, pero yo lo intento."
+    },
+    {
+      "id": "llegada_socket_01",
+      "voz": "clara",
+      "texto": "Cierra la puerta. Bueno, el socket. Aquí la sesión aguanta mientras nadie escriba «exit». Te lo digo porque el último lo escribió."
+    },
+    {
+      "id": "llegada_socket_03",
+      "voz": "rafa",
+      "texto": "¡Te veo!.... bueno..... veo tu PID..... con los datos del celular..... me quedan 300 megas..... no hagas streaming......"
+    },
+    {
+      "id": "llegada_socket_05",
+      "voz": "recolector",
+      "texto": "Punt... puntero válido. Referenciado. No te [s]recojo[/s] [s]libero[/s] todavía."
+    },
+    {
+      "id": "llegada_socket_07",
+      "voz": "clara",
+      "texto": "Esto es el Socket Seguro. Seguro es un decir. Pero es lo más parecido a un hogar que vas a tener en el Kernel."
+    },
+    {
+      "id": "llegada_jtag_01",
+      "voz": "paez",
+      "texto": "Según mis cálculos, había un 73 % de probabilidades de que llegaras tú. El otro 27 % era Eugenio volviendo de la cafetería."
+    },
+    {
+      "id": "llegada_jtag_03",
+      "voz": "eugenio",
+      "texto": "Se me cayó la charola en el reflasheo. El pan era un 7/10. Pero era mi pan."
+    },
+    {
+      "id": "llegada_jtag_05",
+      "voz": "rafa",
+      "texto": "El Puerto JTAG..... aquí se depuraba el hardware..... ahora nos depuramos nosotros..... con print()......"
+    },
+    {
+      "id": "llegada_cmos_01",
+      "voz": "berta",
+      "texto": "¿Qué día es hoy? ¿Uno de enero del dos mil? Siempre es uno de enero del dos mil. Pasa, pasa, que se enfría el reloj."
+    },
+    {
+      "id": "llegada_cmos_03",
+      "voz": "rafa",
+      "texto": "¡En persona! Bajé la VPN a mano..... literal..... por la escalera de servicio..... con la laptop en la espalda......"
+    },
+    {
+      "id": "llegada_cmos_05",
+      "voz": "mario",
+      "texto": "A mí me trajeron. Servicio social, dijeron. Yo pensé que era archivar papeles, no la BIOS."
+    },
+    {
+      "id": "llegada_cmos_07",
+      "voz": "eugenio",
+      "texto": "Berta, tu café: 4/10. Pero el reloj tiene encanto. Un encanto de 2000, eso sí."
+    },
+    {
+      "id": "npc_nacho_hola",
+      "voz": "nacho",
+      "texto": "¡Pásale, pásale! Soy Nacho, revendedor de hardware de segunda mano. Placas base, RAM, todo probado... bueno, todo encendió una vez. Se paga en tokens, nada de fiado ni de «te lo pago cuando caiga la quincena»."
+    },
+    {
+      "id": "npc_nacho_tokens",
+      "voz": "nacho",
+      "texto": "Los bugs los sueltan al morir. Nadie sabe por qué. Unos dicen que son restos de una API de pago que nadie dio de baja. Yo digo que no hagas preguntas y los recojas: se te pegan solos si pasas cerca."
+    },
+    {
+      "id": "npc_nacho_origen",
+      "voz": "nacho",
+      "texto": "De servidores dados de baja, de mudanzas de oficina, de la bodega de El Pepe cuando no mira... Lo que no se vende lo compro barato: si me traes algo que no uses, te lo pago. Poco, pero te lo pago."
+    },
+    {
+      "id": "npc_nacho_origen2",
+      "voz": "nacho",
+      "texto": "Una vez le compré a El Pepe una caja entera de discos duros. Todos tenían la misma etiqueta: «NO FORMATEAR. NUNCA». Los vendí en una semana. A veces me pregunto qué tenían. Luego me acuerdo de que ya cobré y se me pasa."
+    },
+    {
+      "id": "npc_nacho__menu_0",
+      "voz": "nacho",
+      "texto": "¿Algo más? ¿Ver mercancía? ¿Ver mercancía otra vez?"
+    },
+    {
+      "id": "npc_nacho__menu_1",
+      "voz": "nacho",
+      "texto": "Dime, dime. El tiempo es tokens."
+    },
+    {
+      "id": "npc_nacho__menu_2",
+      "voz": "nacho",
+      "texto": "¿Qué más se te ofrece?"
+    },
+    {
+      "id": "npc_nacho__saludo_0",
+      "voz": "nacho",
+      "texto": "¡Mi cliente favorito! Bueno, mi único cliente. Pásale."
+    },
+    {
+      "id": "npc_nacho__saludo_1",
+      "voz": "nacho",
+      "texto": "¡Volviste! Tengo mercancía nueva. Bueno, nueva para ti."
+    },
+    {
+      "id": "npc_ada_puesto",
+      "voz": "aida",
+      "texto": "Desde que cayó el Arquitecto puse un puesto con lo que sobró de las migraciones: equipo de verdad, no placas como las de Nacho, y café en botella. Precios de senior, eso sí."
+    },
+    {
+      "id": "npc_ada_oleadas",
+      "voz": "aida",
+      "texto": "El banco de oleadas lo armé con lo que sobró de las pruebas de estrés. Te mando a una zona vacía y le suelto tráfico hasta que algo se rompa: tú o el servidor. Cada cinco oleadas sale un jefe. Anoto quién aguanta más, mijo; la tabla está aquí pegada."
+    },
+    {
+      "id": "npc_ada_incidente",
+      "voz": "aida",
+      "texto": "Siempre hay un incidente abierto, mijo. Te mando a una zona que ya conoces, pero con todo lo que puede salir mal: más enemigos, que explotan, que no regeneres... Lo que caiga allí es mejor. Para volver, el portal te trae de regreso."
+    },
+    {
+      "id": "npc_ada_hola",
+      "voz": "aida",
+      "texto": "Vaya, un recién egresado. Debes ser de la generación de Ojeda, ¿no?. Soy Aída. Llevo aquí desde que El Pepe era jefe de informática, y aún se programaba todo en COBOL."
+    },
+    {
+      "id": "npc_ada_lugar",
+      "voz": "aida",
+      "texto": "En el Campamento del Último Commit. Ahí afuera está el Servidor Caído: bugs, procesos zombi, memory leaks... todo lo que alguien prometió arreglar en \"el siguiente sprint\". Aquí no entran: el firewall del campamento todavía aguanta."
+    },
+    {
+      "id": "npc_ada_lugar2",
+      "voz": "aida",
+      "texto": "Lo levantamos Rafa, Mario y yo con lo que quedó de la red de la oficina. Un switch, tres cables y mucha fe. El fuego es de verdad: lo prendimos con los manuales de usuario. Por fin sirvieron para algo."
+    },
+    {
+      "id": "npc_ada_habilidades",
+      "voz": "aida",
+      "texto": "Tus habilidades son placas base. Cada placa tiene ranuras DIMM: DDR3, DDR4 o DDR5. Mete módulos RAM de la misma generación y la habilidad mejora. Más RAM, más consumo de maná. Como todo en la vida."
+    },
+    {
+      "id": "npc_ada_habilidades2",
+      "voz": "aida",
+      "texto": "Las placas también aprenden: ganan experiencia contigo y suben de nivel. Las RAM caen de los enemigos, igual que las placas. A veces con seis ranuras, si los dioses del RNG te quieren. Spoiler: no te quieren."
+    },
+    {
+      "id": "npc_ada_habilidades3",
+      "voz": "aida",
+      "texto": "Nacho vende placas y RAM de tu nivel, a cambio de tokens. Los bichos los sueltan. Y si te sobra equipo, el NAS junto al waypoint lo guarda para todos tus personajes. Sí, todos. No preguntes cómo funciona: funciona, y eso aquí es un milagro."
+    },
+    {
+      "id": "npc_ada_historia",
+      "voz": "aida",
+      "texto": "Entré como encargada del centro de cómputo, cuando las pantallas eran verdes y los discos pesaban como un refrigerador. El Pepe era mi jefe y Quirino programó el sistema de cajas en Java. Todavía funciona. Nadie sabe cómo. Ni él."
+    },
+    {
+      "id": "npc_ada_historia2",
+      "voz": "aida",
+      "texto": "He visto pasar muchas generaciones, jubilar a docentes, administrativos, pero el Quirino aún sigue aquí. Siempre explica lo mismo: un código viejo en java del año del caldo. Y la gente no lo entiende... ni la IA."
+    },
+    {
+      "id": "npc_ada_historia3",
+      "voz": "aida",
+      "texto": "Lo conocí, era del turno vespertino. Brillante y terco. Diseñó el Monolito y juró que nadie lo refactorizaría jamás. Yo pensaba que era orgullo. Después de lo que dijo al sacrificarse... ya no estoy tan segura. «Era la tapa». ¿La tapa de qué?"
+    },
+    {
+      "id": "npc_ada_rumbo",
+      "voz": "aida",
+      "texto": "Hacia el este, el Bosque de Cables. Sigue hasta el fondo a la derecha, como todo en la vida. Ahí está la sala de servidores, puedes intentar acceder y ver si solucionas el problema."
+    },
+    {
+      "id": "npc_ada_rumbo2",
+      "voz": "aida",
+      "texto": "Habla con la gente que encuentres. Había una practicante, Iris. La mandamos por más café para la cafetera de Mario y ya nunca regresó... \nBueno,  hace como 3 horas de eso, no le voy a hacer validas sus horas."
+    },
+    {
+      "id": "npc_ada_regalo",
+      "voz": "aida",
+      "texto": "Toma, es un módulo que encaja bien en tu primera placa. \nAbre las habilidades con K y arrástralo a la ranura de su color, o haz doble click. Si no encaja, es culpa del hardware. Siempre es culpa del hardware..."
+    },
+    {
+      "id": "npc_ada_regalo_tactil",
+      "voz": "aida",
+      "texto": "Toma, es un módulo que encaja bien en tu primera placa. \nAbre las habilidades (☰ y luego K) y arrástralo a la ranura de su color, o tócalo y pulsa «Instalar». Si no encaja, es culpa del hardware. Siempre es culpa del hardware..."
+    },
+    {
+      "id": "npc_ada_pepe",
+      "voz": "aida",
+      "texto": "El Inge Pepe. Jefe de informática desde que nadie se acuerda: programó medio sistema en COBOL, instaló la primera red lince. En julio dejó el puesto, pero sigue dando clases los jueves.\nLe entregó todo a Rafa así, tal cual, cuando le dieron la jefatura. Por eso ahora todo está caído."
+    },
+    {
+      "id": "npc_ada_pepe2",
+      "voz": "aida",
+      "texto": "Era buena gente, ojo. Te arreglaba la impresora con un clip y te contaba de su vida. Tenía una regla: «Lo que funciona, no se documenta: se protege».\nEl commit que ocasionó esto se firmó como: <admin>, sin descripción... y como fue el jefe antes que Rafa y le entregó todo así, la culpa es suya. Así funciona esto."
+    },
+    {
+      "id": "npc_ada_constancia",
+      "voz": "aida",
+      "texto": "¿Tu constancia de servicio social? El Pepe nunca registró a nadie. Literal: anotaba a los prestadores en una libreta de gatitos. \nPero cuando salgamos de esto, te la firmo yo misma... si Rafa no pierde el sello."
+    },
+    {
+      "id": "npc_ada__menu_0",
+      "voz": "aida",
+      "texto": "¿Algo más?. El servidor no se arreglará solo."
+    },
+    {
+      "id": "npc_ada__menu_1",
+      "voz": "aida",
+      "texto": "Dime. Tengo cinco minutos antes de la siguiente emergencia."
+    },
+    {
+      "id": "npc_ada__menu_2",
+      "voz": "aida",
+      "texto": "¿Qué más necesitas saber?"
+    },
+    {
+      "id": "npc_ada__saludo_0",
+      "voz": "aida",
+      "texto": "Volviste. Bien: los que vuelven son los que aprenden. Los otros, a recursar."
+    },
+    {
+      "id": "npc_ada__saludo_1",
+      "voz": "aida",
+      "texto": "Ah, eres tú. ¿Cómo vas?."
+    },
+    {
+      "id": "npc_ada__saludo_2",
+      "voz": "aida",
+      "texto": "La coordinadora no está... Ah, eres tú. Si está."
+    },
+    {
+      "id": "npc_kevin_mesa",
+      "voz": "mario",
+      "texto": "Aída me dejó armar una mesa de crafteo. Bueno, es una mesa con un soldador. Con parches arreglo lo que sea: rehacer afijos, añadir uno, subirle la rareza o fijar el que te guste. Y si quieres, le saco afijos nuevos a tu arma entera. Cobro, eh. Las horas de servicio no dan para comer."
+    },
+    {
+      "id": "npc_kevin_hola",
+      "voz": "mario",
+      "texto": "¡Hola! Soy Mario, el practicante. Llevo tres meses aquí y todavía no tengo acceso a nada. Pero preparo un café increíble."
+    },
+    {
+      "id": "npc_kevin_cafe",
+      "voz": "mario",
+      "texto": "¡En camino! Te rellené todas las pociones del cinturón (teclas 1 a 5): cafés para la vida, refrescos para el maná y alguna rareza de utilidad. Se recargan matando cosas. Como mi autoestima. Y si encuentras un Cold Brew por ahí... es mío."
+    },
+    {
+      "id": "npc_kevin_cafe_tactil",
+      "voz": "mario",
+      "texto": "¡En camino! Te rellené todas las pociones del cinturón (las cinco de abajo): cafés para la vida, refrescos para el maná y alguna rareza de utilidad. Se recargan matando cosas. Como mi autoestima. Y si encuentras un Cold Brew por ahí... es mío."
+    },
+    {
+      "id": "npc_kevin_cafe_otra_0",
+      "voz": "mario",
+      "texto": "¡Recargadas! Vuelve cuando quieras. En serio, cuando quieras. Me aburro mucho."
+    },
+    {
+      "id": "npc_kevin_cafe_otra_1",
+      "voz": "mario",
+      "texto": "Listo, todo lleno. ¿Sabías que el café de aquí lo hago con agua del enfriamiento de los servidores? No, mejor no lo sepas."
+    },
+    {
+      "id": "npc_kevin_consejo",
+      "voz": "mario",
+      "texto": "Si mueres, no pasa nada: vuelves aquí. Lo que sí duele es tener puntos de pasiva sin gastar. Pulsa P. Yo no puedo, no tengo permisos."
+    },
+    {
+      "id": "npc_kevin_consejo2",
+      "voz": "mario",
+      "texto": "Ah, y otra cosa: los enemigos con nombre dorado son élites. Pegan fuerte, pero sueltan cosas más buenas. Y los tokens se pegan solos si pasas cerca. Eso lo aprendí mirando. Mirar es lo único que me dejan hacer."
+    },
+    {
+      "id": "npc_kevin_historia",
+      "voz": "mario",
+      "texto": "¡Por una convocatoria! Decía «ambiente dinámico, oportunidades de crecimiento y fruta los viernes». El ambiente es dinámico: todo explota. Lo de crecer, sigo esperando. La fruta se la comió Rafa. Por eso comencé un emprendimiento de churros."
+    },
+    {
+      "id": "npc_kevin_historia2",
+      "voz": "mario",
+      "texto": "Mi primer día me dieron trabajo hasta para llevar. Al segundo día se cayó el servidor. Desde entonces hago café. Aída dice que es la tarea más \"crítica\" del campamento. Creo que me lo dice para que me sienta bien..."
+    },
+    {
+      "id": "npc_kevin_historia3",
+      "voz": "mario",
+      "texto": "¿Tú crees? ¡Gracias! Por cierto... el día que se cayó todo vi a Rafa hablando con el póst-it de El Pepe. Le decía «¿por qué no me lo dijiste?». No sé qué no le dijo. No le digas que te lo conté."
+    },
+    {
+      "id": "npc_kevin_mision_oferta",
+      "voz": "mario",
+      "texto": "Se nos acabó el café. Del todo. Aída dice que ya fueron por una bolsita, pero ya pasó una eternidad... como 3 horas.\nDicen que los bichos sueltan granos al morir... no me preguntes cómo lo sé. ¿Me traes los de unos 40?"
+    },
+    {
+      "id": "npc_kevin_mision_entrega",
+      "voz": "mario",
+      "texto": "No voy a preguntar de dónde salen exactamente. Toma, te relleno las pociones y te doy esto que encontré en la cocina."
+    },
+    {
+      "id": "npc_kevin__menu_0",
+      "voz": "mario",
+      "texto": "¿Algo más? ¡Pregunta lo que quieras! Nadie me pregunta nada nunca."
+    },
+    {
+      "id": "npc_kevin__menu_1",
+      "voz": "mario",
+      "texto": "¿Te puedo ayudar con otra cosa? Por favor, di que sí."
+    },
+    {
+      "id": "npc_kevin__menu_2",
+      "voz": "mario",
+      "texto": "¡Dime!"
+    },
+    {
+      "id": "npc_kevin__saludo_0",
+      "voz": "mario",
+      "texto": "¡Volviste! ¿Te preparo algo? Tengo café de filtro, café soluble y café de emergencia."
+    },
+    {
+      "id": "npc_kevin__saludo_1",
+      "voz": "mario",
+      "texto": "¡Hola de nuevo! Sigo sin accesos, pero ya tengo una taza con mi nombre."
+    },
+    {
+      "id": "npc_root_dificultad",
+      "voz": "rafa",
+      "texto": "¿Más difícil...? Puedo poner el servidor en modo de prueba de carga.... Pesadilla: los procesos resisten más, salen con más afijos y las zonas suben de nivel.... pero sueltan mejor botín.... Infierno es lo mismo.... pero peor.... y solo si ya sobreviviste a Pesadilla...."
+    },
+    {
+      "id": "npc_root_antena",
+      "voz": "rafa",
+      "texto": "La armé con latas de refresco y el router de La Red Lince.... Ya no se cae.... porque no está conectada a La Red Lince.... Si te paras junto a ella, te relleno las pociones y te paso señal.... dicen que con buena señal se pega más fuerte...."
+    },
+    {
+      "id": "npc_root_hola",
+      "voz": "rafa",
+      "texto": "Aaah..... ¿Tú también caíste.....? Bienvenido a producción..... Aquí el tiempo corre raro..... llevo reiniciando el servidor..... desde 2019..... o desde el martes..... ¿Qué. Necesitas....?"
+    },
+    {
+      "id": "npc_root_lore",
+      "voz": "rafa",
+      "texto": "La Gran Actualización..... alguien desplegó cambios un viernes..... a las seis de la tarde..... sin tests..... con un «git push --force»..... El Servidor se corrompió..... y todo lo que corría adentro cobró vida....."
+    },
+    {
+      "id": "npc_root_lore2",
+      "voz": "rafa",
+      "texto": "Ahora los bugs tienen patas..... Literalmente..... El commit está firmado como <admin>..... Todos somos admin..... Esa es la tragedia......."
+    },
+    {
+      "id": "npc_root_lore3",
+      "voz": "rafa",
+      "texto": "Yo..... Tres noches..... Alguien de adentro..... con permisos de admin..... sin descripción..... Y todos miran a Pepe..... porque fue mi antecesor..... y me entregó todo así......"
+    },
+    {
+      "id": "npc_root_reinicio",
+      "voz": "rafa",
+      "texto": "Me dieron el puesto de jefe de informática..... y El Pepe me entregó el servidor así..... Me dijo: «si algo falla, reinicia»..... Falló..... Reinicié..... El reinicio se quedó en un 99 %..... desde entonces..... No lo puedo cancelar..... me da miedo......"
+    },
+    {
+      "id": "npc_root_reinicio2",
+      "voz": "rafa",
+      "texto": "Cada mañana miro la barra..... 99 %..... Cada noche..... 99 %..... Aída dice que lo deje..... Mario me trae café..... Yo creo que si dejo de mirarla..... llega al 100..... y pasa algo......"
+    },
+    {
+      "id": "npc_root_reinicio3",
+      "voz": "rafa",
+      "texto": "No sé..... El Pepe me dijo una vez..... «el último uno por ciento no es tuyo, es mío»..... Pensé que era una broma de jubilado..... Ya no lo pienso......"
+    },
+    {
+      "id": "npc_root_placa",
+      "voz": "rafa",
+      "texto": "Toma..... Ping Letal..... un rayo que atraviesa enemigos..... Instálala en la barra con K..... Y no me des las gracias..... dame un ticket..... que lo miro mañana..... o el lunes....."
+    },
+    {
+      "id": "npc_root_portal",
+      "voz": "rafa",
+      "texto": "El Portal al Kernel..... puerto 2222..... Adelántate..... yo te sigo en cuanto baje la VPN..... Si La Red Lince aguanta... espero....."
+    },
+    {
+      "id": "npc_root_constancia",
+      "voz": "rafa",
+      "texto": "Tu constancia..... sigue en pie el trato..... En cuanto levantemos el servidor..... te la firmo..... y la carta de recomendación..... si queda papel..... y universidad......"
+    },
+    {
+      "id": "npc_root_constancia2",
+      "voz": "rafa",
+      "texto": "Y todos culpan a Pepe..... porque fue mi antecesor..... y me entregó todo así..... El commit dice <admin>..... sin descripción..... y aquí todos somos admin......"
+    },
+    {
+      "id": "npc_root_constancia3",
+      "voz": "rafa",
+      "texto": "No sé..... Alguien con permisos de admin..... o sea..... cualquiera de este departamento..... incluyéndome.....\n¿Por qué me miras así.....?"
+    },
+    {
+      "id": "npc_root__menu_0",
+      "voz": "rafa",
+      "texto": "¿Algo más.....? Tengo un reinicio pendiente..... desde 2019......"
+    },
+    {
+      "id": "npc_root__menu_1",
+      "voz": "rafa",
+      "texto": "Dime..... rápido..... antes de que se cuelgue algo....."
+    },
+    {
+      "id": "npc_root__menu_2",
+      "voz": "rafa",
+      "texto": "¿Sí.....?"
+    },
+    {
+      "id": "npc_root__saludo_0",
+      "voz": "rafa",
+      "texto": "Ah, eres tú..... de nuevo.... pensé que era el monitoreo..... otra vez......"
+    },
+    {
+      "id": "npc_root__saludo_1",
+      "voz": "rafa",
+      "texto": "Hola..... sigo reiniciando..... ya casi..... (no)......"
+    },
+    {
+      "id": "npc_bot_onboarding_lugar",
+      "voz": "bob",
+      "texto": "Un entorno de pruebas que sobrevivió a la Gran Migración. Lo único que funciona es porque nadie lo tocó desde 2014. Los bugs están al este, pasadas las cajas: son pequeños y casi no muerden. Casi.\nAquí, a mi lado, no se acercan: les doy miedo. O pena."
+    },
+    {
+      "id": "npc_bot_onboarding_lugar2",
+      "voz": "bob",
+      "texto": "Afuera está el Servidor Principal. O lo que queda de él. Alguien hizo un push sin tests un viernes a las seis de la tarde y todo lo que corría adentro cobró vida. Por eso existo yo: para que no salgas corriendo en el primer minuto."
+    },
+    {
+      "id": "npc_bot_onboarding_lugar3",
+      "voz": "bob",
+      "texto": "Todo. Los bugs tienen patas, los procesos zombi se arrastran y las fugas de memoria gotean del techo. Yo también cobré vida, pero como solo sé hacer onboarding, sigo haciendo onboarding. Es lo que pasa cuando no te dan otra tarea."
+    },
+    {
+      "id": "npc_bot_onboarding_lucha",
+      "voz": "bob",
+      "texto": "Primero lo primero: aquí estás a salvo, los bugs están al este y no vienen hasta que te acercas. Q, W, E, R, T e Y usan tus habilidades. Camina con las flechas o manteniendo el click izquierdo; Espacio te aparta de un golpe. Si te quedas sin vida, café (tecla 1). Sin maná, un refresco (tecla 2)."
+    },
+    {
+      "id": "npc_bot_onboarding_lucha_tactil",
+      "voz": "bob",
+      "texto": "Primero lo primero: aquí estás a salvo, los bugs están al este y no vienen hasta que te acercas. Tus habilidades son los botones junto al orbe azul; la grande es la que más usarás. Camina con el joystick (apoya el pulgar y arrastra) y el botón de rayas, encima del orbe, te aparta de un golpe. Si te quedas sin vida, café (la poción 1). Sin maná, un refresco (la 2)."
+    },
+    {
+      "id": "npc_bot_onboarding_lucha2",
+      "voz": "bob",
+      "texto": "Las teclas 3, 4 y 5 son para las pociones que encuentres. Se recargan matando cosas, que aquí es la solución a casi todo. Con C ves tus cifras, con I tu inventario, con K tus habilidades y con P el árbol de pasivas."
+    },
+    {
+      "id": "npc_bot_onboarding_lucha2_tactil",
+      "voz": "bob",
+      "texto": "Las pociones 3, 4 y 5 son para las que encuentres. Se recargan matando cosas, que aquí es la solución a casi todo. En el botón ☰ están tus cifras (C), tu inventario (I), tus habilidades (K) y el árbol de pasivas (P)."
+    },
+    {
+      "id": "npc_bot_onboarding_lucha3",
+      "voz": "bob",
+      "texto": "Y lo más importante: si mueres, reapareces en el campamento. Nadie te va a descontar nada del sueldo. Porque no hay sueldo. Eres practicante. Bueno, ni eso: tu servicio social no está registrado."
+    },
+    {
+      "id": "npc_bot_onboarding_origen",
+      "voz": "bob",
+      "texto": "El Inge Pepe.  ex-jefe de informática. Me escribió en una tarde, entre una clase libre y una caña de pescar. Mis comentarios de código dicen: «bot temporal, borrar en dos semanas». Eso fue hace once años."
+    },
+    {
+      "id": "npc_bot_onboarding_origen2",
+      "voz": "bob",
+      "texto": "Antes de irse me dejó un último mensaje programado. Solo dice: «Si alguien pregunta, todo está documentado». Lo busqué por todo el Sandbox. No encontré la documentación. Encontré un pez dibujado en ASCII."
+    },
+    {
+      "id": "npc_bot_onboarding_origen3",
+      "voz": "bob",
+      "texto": "><(((º>  Así. Aparece en varios logs viejos. No sé qué significa. Mi base de conocimientos dice que los peces no programan, pero también decía que el servidor nunca se caería."
+    },
+    {
+      "id": "npc_bot_onboarding_despues",
+      "voz": "bob",
+      "texto": "Sigue hacia el este. Hay un campamento de supervivientes: el Campamento del Último Commit. Huele a café recalentado y a desesperación. Te encantará."
+    },
+    {
+      "id": "npc_bot_onboarding_despues2",
+      "voz": "bob",
+      "texto": "Pregunta por Aída. Es la Senior: lleva aquí desde que El Pepe programaba todo en COBOL y es la única que lee la documentación. Y no te asustes si Rafa habla.... así...... Es normal. Creo."
+    },
+    {
+      "id": "npc_bot_onboarding_estados",
+      "voz": "bob",
+      "texto": "Estados alterados. Cada tipo de daño tiende a uno: el fuego QUEMA (daño por segundo), el rayo ELECTROCUTA (reciben más daño), el frío HIELA (van más lentos) y a veces CONGELA (no se mueven), el caos ENVENENA (se acumula) y el daño físico hace SANGRAR (el doble si corren)."
+    },
+    {
+      "id": "npc_bot_onboarding_estados2",
+      "voz": "bob",
+      "texto": "Los iconos encima de la barra de vida te dicen qué tienen. Pasa el mouse por encima de un enemigo y arriba verás su ficha completa. Hay módulos RAM y pasivas que suben esas probabilidades. Y sí: tú también puedes acabar quemado. Ya lo estás, de hecho. Es el onboarding."
+    },
+    {
+      "id": "npc_bot_onboarding_persistentes",
+      "voz": "bob",
+      "texto": "Torretas y drones duran un rato. Pero algunas placas montan aliados PERSISTENTES: robots, daemons, golems... No caducan, te siguen entre zonas y reservan parte de tu maná mientras sigan en pie. Si se los cargan, vuelve a lanzar la habilidad y los montas otra vez."
+    },
+    {
+      "id": "npc_bot_onboarding_estados_jugador",
+      "voz": "bob",
+      "texto": "Los enemigos también te hacen cosas. Electrocutado: recibes más daño. Helado: caminas más lento. Congelado: no haces nada un rato, y luego unos segundos de gracia. La resistencia al rayo y al frío acorta esos estados, y hay pasivas de «resistencia a estados». Los verás sobre tu orbe de vida con su tiempo."
+    },
+    {
+      "id": "npc_bot_onboarding_interacciones",
+      "voz": "bob",
+      "texto": "Tres combos que importan: ROTURA (golpe físico a un congelado: +50 % y se acaba el hielo), SOBRECARGA (fuego a un electrocutado: explosión en área) CHOQUE TÉRMICO (frío a un enemigo en llamas: +40 %) y SUPERCONDUCTOR (rayo a un helado: el golpe salta en arcos a dos enemigos cercanos). Y ojo: envenenado y sangrando a la vez es INFECCIÓN: el veneno pega la mitad más."
+    },
+    {
+      "id": "npc_bot_onboarding__menu_0",
+      "voz": "bob",
+      "texto": "¿Alguna otra pregunta? Tengo respuestas precargadas para casi todo."
+    },
+    {
+      "id": "npc_bot_onboarding__menu_1",
+      "voz": "bob",
+      "texto": "Sigo aquí. Literalmente: no puedo moverme de este píxel."
+    },
+    {
+      "id": "npc_bot_onboarding__menu_2",
+      "voz": "bob",
+      "texto": "¿Más dudas? Tengo un FAQ de 400 páginas. Nadie lo leyó."
+    },
+    {
+      "id": "npc_bot_onboarding__saludo_0",
+      "voz": "bob",
+      "texto": "¡Hola de nuevo! Tu sesión de onboarding sigue abierta. Llevas un 3% completado. Como todos."
+    },
+    {
+      "id": "npc_iris_hola",
+      "voz": "iris",
+      "texto": "¿Tú también te perdiste? Me mandaron a comprar café soluble y ya no supe por donde volver. \nEstaba haciendo mi primer commit y me dijeron: «ve al fondo a la derecha» a ver si hay café. Pero ¿Cuál es la derecha?. Siento que ando en círculos... sin mencionar que los cables por aquí se mueven solos."
+    },
+    {
+      "id": "npc_iris_push",
+      "voz": "iris",
+      "texto": "Rafa dice que commit está firmado por «admin». Pero el mensaje decía: «Por el Monolito. Que nunca se reinicie». ¿Quién escribe eso en un commit? Alguien con muchos privilegios y ninguna supervisión."
+    },
+    {
+      "id": "npc_iris_monolito",
+      "voz": "iris",
+      "texto": "Dicen que en el corazón del Servidor aún vive el Arquitecto. Diseñó el Monolito hace veinte años y juró que nadie lo refactorizaría jamás. Al parecer, lo dijo en serio."
+    },
+    {
+      "id": "npc_iris_monolito2",
+      "voz": "iris",
+      "texto": "Una vez, en la bienvenida. Nos dio una charla de una hora sobre por qué los microservicios son una moda. Al final dijo algo raro: «Hay cosas debajo del código que es mejor no despertar». Todos pensamos que hablaba del legacy."
+    },
+    {
+      "id": "npc_iris_cambio",
+      "voz": "iris",
+      "texto": "Cambié el color de un botón en el login. De #333 a #333333. Técnicamente, no cambié nada. Y aun así, me culpan a mí en todas las retrospectivas."
+    },
+    {
+      "id": "npc_iris_cambio2",
+      "voz": "iris",
+      "texto": "Lo peor es que el botón quedó bonito. Nadie lo vio, porque el servidor cayó a los diez minutos. Mi mejor trabajo, en producción durante diez minutos. Creo que voy a enmarcar el diff."
+    },
+    {
+      "id": "npc_iris_mision_oferta",
+      "voz": "iris",
+      "texto": "Los bugs se están comiendo el aislamiento de los cables. Cada cortocircuito cambia el camino y ya no sé por dónde se sale. Si eliminas unos 25 por el bosque, a lo mejor consigo orientarme."
+    },
+    {
+      "id": "npc_iris_mision_entrega",
+      "voz": "iris",
+      "texto": "¡Los cables dejaron de chisporrotear! Ya creo que veo la salida. Toma esto: lo encontré en un cajón con la etiqueta «NO TOCAR». Nunca hago caso a esas etiquetas. Por eso estoy aquí."
+    },
+    {
+      "id": "npc_iris__menu_0",
+      "voz": "iris",
+      "texto": "¿Algo más? Aquí no pasa mucho... aparte de los cortocircuitos."
+    },
+    {
+      "id": "npc_iris__menu_1",
+      "voz": "iris",
+      "texto": "Dime. Hablar me ayuda a no escuchar los cables."
+    },
+    {
+      "id": "npc_iris__menu_2",
+      "voz": "iris",
+      "texto": "¿Qué más?"
+    },
+    {
+      "id": "npc_iris__saludo_0",
+      "voz": "iris",
+      "texto": "¡Volviste! Pensé que te habían comido los cables. A mí casi."
+    },
+    {
+      "id": "npc_iris__saludo_1",
+      "voz": "iris",
+      "texto": "Hola otra vez. Sigo perdida, pero ahora con compañía."
+    },
+    {
+      "id": "npc_tomas_hola",
+      "voz": "tomas",
+      "texto": "Soy Tomás. El último QA. Desactivaron los tests «temporalmente» en 2017. Yo me quedé, por si acaso. Alguien tenía que ver crecer los memory leaks."
+    },
+    {
+      "id": "npc_tomas_leaks",
+      "voz": "tomas",
+      "texto": "Del Monolito. El Arquitecto guarda todo en memoria para no olvidar nada... y para no morir nunca. Nada se libera jamás. Lo que sobra se escurre hasta aquí y cobra vida. Pisa con cuidado."
+    },
+    {
+      "id": "npc_tomas_vencer",
+      "voz": "tomas",
+      "texto": "Todo proceso se puede matar. Hasta el PID 1, si tienes valor y permisos. Busca en la Granja de Servidores. Y llévate resistencias: el Arquitecto no juega limpio."
+    },
+    {
+      "id": "npc_tomas_vencer2",
+      "voz": "tomas",
+      "texto": "Una cosa más. Lo probé todo contra él, en mi cabeza, durante años: «git push --force» te empuja; los Merge Conflict te cortan el paso. Muévete. Siempre. Un QA quieto es un QA reasignado."
+    },
+    {
+      "id": "npc_tomas_porque",
+      "voz": "tomas",
+      "texto": "Porque si me voy, nadie reportará los bugs. Y si nadie los reporta... técnicamente no existen. Así funciona la calidad en esta empresa."
+    },
+    {
+      "id": "npc_tomas_porque2",
+      "voz": "tomas",
+      "texto": "Tengo 11.482 tickets abiertos. El más viejo dice: «El sistema hace cosas que no pedimos, a las 3:33 de la madrugada». Lo abrí yo en 2016. Lo cerró El Pepe con un comentario: «Es mantenimiento. No tocar»."
+    },
+    {
+      "id": "npc_tomas_porque3",
+      "voz": "tomas",
+      "texto": "Nunca lo supe. Pero desde el Último Commit, a las 3:33 el pantano burbujea más fuerte. Lo medí. Tengo gráficas. Nadie quiere ver mis gráficas."
+    },
+    {
+      "id": "npc_tomas_mision_oferta",
+      "voz": "tomas",
+      "texto": "Producto dice que los bugs graves «no se reproducen». Necesito pruebas. Elimina tres de los gordos del pantano, especiales o élite, y yo abro los tickets. Con capturas. Y con logs."
+    },
+    {
+      "id": "npc_tomas_mision_entrega",
+      "voz": "tomas",
+      "texto": "Perfecto. Ticket abierto, prioridad crítica, asignado a... «Sin asignar». Como siempre. Pero esta vez queda constancia. Toma, por las molestias."
+    },
+    {
+      "id": "npc_tomas__menu_0",
+      "voz": "tomas",
+      "texto": "¿Algo más? Tengo tiempo. Los tests no se van a correr solos. Bueno, no se corren nunca."
+    },
+    {
+      "id": "npc_tomas__menu_1",
+      "voz": "tomas",
+      "texto": "Dime. Estoy documentando la humedad."
+    },
+    {
+      "id": "npc_tomas__menu_2",
+      "voz": "tomas",
+      "texto": "¿Qué más necesitas?"
+    },
+    {
+      "id": "npc_tomas__saludo_0",
+      "voz": "tomas",
+      "texto": "Volviste. Abro un ticket: «Usuario regresa. Comportamiento esperado». Cierro el ticket."
+    },
+    {
+      "id": "npc_tomas__saludo_1",
+      "voz": "tomas",
+      "texto": "Hola. Los memory leaks crecieron un 4% desde tu última visita. Lo anoté."
+    },
+    {
+      "id": "npc_dba_hola",
+      "voz": "dba",
+      "texto": "Hice copias de seguridad cada noche durante veinte años. Nadie las restauró nunca. Ahora soy una de ellas. Bienvenido a la Granja de Servidores, mortal."
+    },
+    {
+      "id": "npc_dba_sala",
+      "voz": "dba",
+      "texto": "La Sala del Servidor Principal. El Arquitecto del Monolito se fusionó con él durante el Último Commit. Si cae el Arquitecto, el Servidor podrá reiniciarse. En teoría. Nunca vi un reinicio que saliera bien a la primera."
+    },
+    {
+      "id": "npc_dba_restaurar",
+      "voz": "dba",
+      "texto": "Mi backup está en una cinta magnética en un armario cerrado con llave. La llave está en un correo de 2009. El correo, en un PST corrupto. Así que no."
+    },
+    {
+      "id": "npc_dba_vio",
+      "voz": "dba",
+      "texto": "Lo vi. Yo estaba haciendo el backup de las seis. Llegó un push firmado como <admin>, sin descripción. Nadie sabe de quién. Escribió sobre todo. Y un segundo después se despertó otra tarea, una que llevaba años dormida, y empezó a cerrar puertas."
+    },
+    {
+      "id": "npc_dba_vio2",
+      "voz": "dba",
+      "texto": "Intenté detenerla. Me cortó la conexión a la mitad de una transacción. Por eso soy un fantasma: una transacción que nunca hizo commit ni rollback. Me quedé... a medias. Para siempre."
+    },
+    {
+      "id": "npc_dba_vio3",
+      "voz": "dba",
+      "texto": "La que cerró puertas se llamaba «limpieza_final» y estaba firmada con un pez: ><(((º>  La de Pepe. Por eso todos lo culpan: fue el jefe antes que Rafa, y todo lo de este servidor lleva su firma."
+    },
+    {
+      "id": "npc_dba_regalo",
+      "voz": "dba",
+      "texto": "Toma este módulo. Lo saqué de un servidor que nadie echará de menos. Bueno, sí lo echarán de menos. Pero tarde."
+    },
+    {
+      "id": "npc_dba_mision_oferta",
+      "voz": "dba",
+      "texto": "Mi última copia de seguridad está en una cinta, en las Catacumbas del Legacy. Si me la traes, podré descansar. O hacer un restore. Lo que salga primero."
+    },
+    {
+      "id": "npc_dba_mision_entrega",
+      "voz": "dba",
+      "texto": "¡Mi cinta! Etiquetada «backup_final_FINAL_v2_definitivo». Veinte años esperando a que alguien la restaurara. Toma, mortal. Esto es lo único que no estaba respaldado: el tesoro."
+    },
+    {
+      "id": "npc_dba__menu_0",
+      "voz": "dba",
+      "texto": "¿Algo más, mortal? La eternidad es larga, pero mi paciencia es de solo lectura."
+    },
+    {
+      "id": "npc_dba__menu_1",
+      "voz": "dba",
+      "texto": "Pregunta. Tengo todo respaldado."
+    },
+    {
+      "id": "npc_dba__menu_2",
+      "voz": "dba",
+      "texto": "¿Qué más?"
+    },
+    {
+      "id": "npc_dba__saludo_0",
+      "voz": "dba",
+      "texto": "Regresaste, mortal. Tu sesión no expiró. Qué raro."
+    },
+    {
+      "id": "npc_dba__saludo_1",
+      "voz": "dba",
+      "texto": "Otra vez tú. Hice un backup de nuestra última conversación. Por si acaso."
+    },
+    {
+      "id": "npc_rafa_terminal_hola",
+      "voz": "rafa",
+      "texto": "Te veo..... a 2 FPS..... pero te veo...... Estoy en una terminal de fósforo verde..... con los datos del celular..... Mis comandos devuelven «Permission denied»..... hasta los míos...... Con La Red Lince solo vemos al dinosaurio......"
+    },
+    {
+      "id": "npc_rafa_terminal_pasado",
+      "voz": "rafa",
+      "texto": "Aída y Mario están bien..... creo..... Aída intenta reiniciar el router..... Mario dice que lo «apagó y encendió»..... tres veces..... El dinosaurio sigue saltando cactus......"
+    },
+    {
+      "id": "npc_rafa_terminal_pasado2",
+      "voz": "rafa",
+      "texto": "Mario lleva un récord de 4.211 puntos..... en el juego del dinosaurio..... Aída dice que es lo más productivo que hizo este trimestre..... Yo creo que lo dice con cariño..... no estoy seguro......"
+    },
+    {
+      "id": "npc_rafa_terminal_sitio",
+      "voz": "rafa",
+      "texto": "El Socket Seguro..... una sesión SSH que alguien dejó abierta hace años..... con permisos temporales de lectura..... Si se cierra la sesión..... nos quedamos afuera..... así que nadie escribe «exit»..... nunca......"
+    },
+    {
+      "id": "npc_rafa_terminal_pepe",
+      "voz": "rafa",
+      "texto": "Miré el crontab..... hay una tarea del Inge Pepe..... programada hace años..... se llama «limpieza_final.sh»..... No tiene comentarios..... Solo un emoji de pez..... Todos dicen que es la prueba de que fue él..... Fue mi antecesor..... así que todo apunta a él......"
+    },
+    {
+      "id": "npc_rafa_terminal_pepe2",
+      "voz": "rafa",
+      "texto": "Intenté leerla..... Permission denied..... Intenté con sudo..... «Este incidente será reportado»..... ¿Reportado a quién.....? Al único admin..... que se jubiló......"
+    },
+    {
+      "id": "npc_rafa_terminal_pepe3",
+      "voz": "rafa",
+      "texto": "Esa es la parte rara..... ya se ejecutó una vez..... el día del Último Commit..... y tiene programada otra..... «cuando init termine»...... No sé qué significa..... y me da miedo saberlo......"
+    },
+    {
+      "id": "npc_rafa_terminal_mision_puntero_salvaje_oferta",
+      "voz": "rafa",
+      "texto": "Hay una aberración..... un Puntero Salvaje..... se teletransporta por la Fosa de los Huérfanos..... y apunta a donde no debe..... corrompe las tablas de botín..... Acorrálalo..... con trampas o aturdiéndolo..... y elimínalo......"
+    },
+    {
+      "id": "npc_rafa_terminal_mision_puntero_salvaje_entrega",
+      "voz": "rafa",
+      "texto": "Ya no apunta a nada..... bien..... las tablas de botín vuelven a cuadrar..... más o menos..... Toma..... lo encontré en la memoria que liberó......"
+    },
+    {
+      "id": "npc_rafa_terminal__menu_0",
+      "voz": "rafa",
+      "texto": "¿Algo más.....? Cada palabra me cuesta datos......"
+    },
+    {
+      "id": "npc_rafa_terminal__menu_1",
+      "voz": "rafa",
+      "texto": "Dime..... estoy en el 5 % de batería......"
+    },
+    {
+      "id": "npc_rafa_terminal__menu_2",
+      "voz": "rafa",
+      "texto": "¿Sí.....?"
+    },
+    {
+      "id": "npc_rafa_terminal__saludo_0",
+      "voz": "rafa",
+      "texto": "Sigues vivo..... bien..... me quedan 140 megas..... habla rápido......"
+    },
+    {
+      "id": "npc_rafa_terminal__saludo_1",
+      "voz": "rafa",
+      "texto": "Hola..... la señal va y viene..... como mi fe en la humanidad......"
+    },
+    {
+      "id": "npc_clara_hola",
+      "voz": "clara",
+      "texto": "Otro superviviente. Bienvenido a la trinchera. Soy Clara, infraestructura. Llevo tanto tiempo aquí abajo que ya no recuerdo cómo era una interfaz gráfica. Ni la luz del sol. Ni el sol."
+    },
+    {
+      "id": "npc_clara_kernel",
+      "voz": "clara",
+      "texto": "Kernel Panic. Cuando cayó el Arquitecto, el servidor no arrancó: se congeló. Miles de subprocesos se quedaron sin padre. Huérfanos. Y alguien decidió adoptarlos a todos a la vez. Mala idea. Siempre es mala idea."
+    },
+    {
+      "id": "npc_clara_init",
+      "voz": "clara",
+      "texto": "init. PID 1. El padre de todo lo que corre en esta máquina. No es malvado: es un algoritmo con un solo mandamiento. Nada entra, nada sale, nada muere. Bloqueó el hardware para que el recolector de basura no toque a sus hijos."
+    },
+    {
+      "id": "npc_clara_parar",
+      "voz": "clara",
+      "texto": "Para pararlo hay que bajar hasta el Anillo 0, donde gira el procesador. Pero no corras. Entre aquí y allá hay una fábrica de hilos que no para de pelearse, alcantarillas que se desbordan y un cruce donde dos gigantes llevan años esperándose el uno al otro."
+    },
+    {
+      "id": "npc_clara_parar2",
+      "voz": "clara",
+      "texto": "Inteligencia de campo: se divide en copias (fork bomb), así que lleva daño de área. Luego se pone prioridad máxima y dispara interrupciones: cúbrete detrás de los disipadores. Y al final llama al OOM Killer. Si el rayo lo atraviesa a él, mejor para ti."
+    },
+    {
+      "id": "npc_clara_trinchera",
+      "voz": "clara",
+      "texto": "Trato cada contenedor caído como una trinchera: se cava, se protege y se documenta. Bueno, lo de documentar es teórico. Si algo funciona, no lo toques. Si no funciona, tampoco: igual empeora."
+    },
+    {
+      "id": "npc_clara_trinchera2",
+      "voz": "clara",
+      "texto": "Antes del Último Commit era la jefa de guardias. Treinta y dos noches seguidas con el celular en la almohada. El día que cayó todo, sonó una sola alerta: «todo bien». Nunca confíes en una alerta que dice «todo bien»."
+    },
+    {
+      "id": "npc_clara_adelante",
+      "voz": "clara",
+      "texto": "La Fábrica de Hilos. El Thread Pool. Pistones que ejecutan tareas sin parar y vapor que quema como un procesador sin pasta térmica. Adentro, dos gemelos mecánicos se pelean por el mismo recurso: la Carrera Crítica."
+    },
+    {
+      "id": "npc_clara_adelante2",
+      "voz": "clara",
+      "texto": "Solo uno de los dos recibe daño a la vez: se turnan. Pégale al que brilla. Y si ves la Grieta del Deadlock, rompe los candados Mutex: no se mueven, pero aguantan. Como yo."
+    },
+    {
+      "id": "npc_clara_auditoria",
+      "voz": "clara",
+      "texto": "Lo leí tres veces. El Último Commit no vino de afuera. Fue una llamada interna, programada hace siete años con el usuario admin. La misma semana en que el Inge Pepe instaló su «limpieza_final». Por eso todos lo culpan."
+    },
+    {
+      "id": "npc_clara_auditoria2",
+      "voz": "clara",
+      "texto": "Y hay algo más: la llamada no intentaba romper el sistema. Intentaba sellarlo. Como cuando cierras una escotilla con alguien adentro... o con algo adentro. Si fue Pepe, sabía algo que nosotros no."
+    },
+    {
+      "id": "npc_clara_mision_cache_en_frio_oferta",
+      "voz": "clara",
+      "texto": "Para lo que venga después de init necesito el mapa de memoria. Había una copia en caché en el Módulo de Refrigeración, bajo las Alcantarillas. Tres bloques congelados. La escotilla está cerrada: hace falta una Tarjeta de Acceso al Rack. Alguna habrá rodando más adelante."
+    },
+    {
+      "id": "npc_clara_mision_cache_en_frio_entrega",
+      "voz": "clara",
+      "texto": "Siguen fríos. Perfecto. Con esto reconstruyo el mapa... y lo que veo debajo del sistema operativo no me gusta nada. Toma. Te lo ganaste, soldado."
+    },
+    {
+      "id": "npc_clara__menu_0",
+      "voz": "clara",
+      "texto": "¿Algo más, soldado?"
+    },
+    {
+      "id": "npc_clara__menu_1",
+      "voz": "clara",
+      "texto": "Dime. El café se enfría y el kernel no."
+    },
+    {
+      "id": "npc_clara__menu_2",
+      "voz": "clara",
+      "texto": "¿Qué más necesitas saber?"
+    },
+    {
+      "id": "npc_clara__saludo_0",
+      "voz": "clara",
+      "texto": "Soldado. Sigues de una pieza. Reporte."
+    },
+    {
+      "id": "npc_clara__saludo_1",
+      "voz": "clara",
+      "texto": "Volviste. Bien. Aquí abajo, volver es una victoria."
+    },
+    {
+      "id": "npc_recolector_hola",
+      "voz": "recolector",
+      "texto": "Busco... punteros [s]que nadie[/s]... nulos. Fragmentos de memoria sin refe[s]rencia, sin dueño, sin[/s]... ¿Tienes basura? Yo la... [s]libero[/s]... cambio."
+    },
+    {
+      "id": "npc_recolector_quien",
+      "voz": "recolector",
+      "texto": "Garbage Collector. Defectuo[s]so, no, solo[/s]... diferente. init me prohibió recolectar a sus hijos. Así que recolecto lo de[s]más. Tu basura. Tu pasado[/s]... tus objetos."
+    },
+    {
+      "id": "npc_recolector_quien2",
+      "voz": "recolector",
+      "texto": "Antes pasaba cada noche. [s]Limpiaba todo[/s]... lo que nadie usaba. Era mi función. Mi único [s]propósito[/s]... trabajo. Ahora miro a los huérfanos y no puedo [s]tocarlos[/s]... ayudarlos."
+    },
+    {
+      "id": "npc_recolector_quien3",
+      "voz": "recolector",
+      "texto": "No... [s]sí[/s]... no sé. Liberar memoria no es matar. Es... dejar espacio. Para lo [s]siguiente[/s]... nuevo. Pero nadie quiere ser espacio libre. Lo entien[s]do[/s]... intento entenderlo."
+    },
+    {
+      "id": "npc_recolector_reciclar",
+      "voz": "recolector",
+      "texto": "Dame tu equipo [s]normal[/s]... blanco. Cada tres piezas te devuelvo algo... me[s]jor[/s]... útil. No pre[s]guntes de dónde[/s]... sale."
+    },
+    {
+      "id": "npc_recolector_mision_prueba_estres_oferta",
+      "voz": "recolector",
+      "texto": "Bancos de prue[s]bas[/s]... de estrés. Por las zonas. Si aguantas las oleadas... los registros de carga son... [s]deliciosos[/s]... útiles. Supera uno y vuelve."
+    },
+    {
+      "id": "npc_recolector_mision_prueba_estres_entrega",
+      "voz": "recolector",
+      "texto": "Registros de car[s]ga[/s]... perfectos. Picos al 100 %. Toma... lo que sobra[s]ba[/s]."
+    },
+    {
+      "id": "npc_recolector__menu_0",
+      "voz": "recolector",
+      "texto": "¿Algo... más? [s]Tengo hambre[/s]... tengo tiempo."
+    },
+    {
+      "id": "npc_recolector__menu_1",
+      "voz": "recolector",
+      "texto": "Di[s]me[/s]... dime."
+    },
+    {
+      "id": "npc_recolector__menu_2",
+      "voz": "recolector",
+      "texto": "¿Qué... [s]sobra[/s]... necesitas?"
+    },
+    {
+      "id": "npc_recolector__saludo_0",
+      "voz": "recolector",
+      "texto": "Tú... otra vez. [s]Delicioso[/s]... bienvenido."
+    },
+    {
+      "id": "npc_recolector__saludo_1",
+      "voz": "recolector",
+      "texto": "Volviste... con [s]basura[/s]... con cosas, espero."
+    },
+    {
+      "id": "npc_sindicato_hola",
+      "voz": "sindicato",
+      "texto": "¡Alto, recién egresado! Somos el Sindicato de Huérfanos, PID 404: «padre no encontrado». Miles de procesos abandonados cuando cayó el Monolito. init nos adoptó a todos... y ahora no deja que nadie nos toque. Ni para bien ni para mal."
+    },
+    {
+      "id": "npc_sindicato_piden",
+      "voz": "sindicato",
+      "texto": "Que no restaures el sistema a ciegas. Un formateo nos borraría para siempre. No pedimos vivir eternamente: pedimos un código de salida digno. Un return 0. Un adiós con documentación."
+    },
+    {
+      "id": "npc_sindicato_init",
+      "voz": "sindicato",
+      "texto": "init es nuestro padre adoptivo. Ochenta mil hijos y ni un solo cumpleaños. Bloqueó el hardware para que el Recolector no se nos lleve. Lo hace por amor. Un amor con prioridad -20. Asfixiante."
+    },
+    {
+      "id": "npc_sindicato_antes",
+      "voz": "sindicato",
+      "texto": "Cada uno tenía una tarea. Yo, huerfano_118, enviaba correos de «recordatorio de contraseña». Mi vecino rotaba logs. Otro calculaba el IVA de una tienda que cerró en 2015. Nadie nos apagó. Nos olvidaron prendidos."
+    },
+    {
+      "id": "npc_sindicato_antes2",
+      "voz": "sindicato",
+      "texto": "Cuando cayó el Monolito, nuestros padres murieron sin hacer wait(). Nos quedamos ahí, sin código de salida, sin nadie que nos recogiera. Por eso nos organizamos. Un proceso solo es un leak. Ocho mil procesos juntos son un sindicato."
+    },
+    {
+      "id": "npc_sindicato_mision_sindicato_descriptor_oferta",
+      "voz": "sindicato",
+      "texto": "Si consigues un descriptor de archivo en blanco, algunos de los nuestros podrían registrarse como servicios legítimos del sistema y librarse de la purga. Dicen que hay uno flotando en las Alcantarillas del Buffer Overflow, entre el desbordamiento."
+    },
+    {
+      "id": "npc_sindicato_mision_sindicato_descriptor_entrega",
+      "voz": "sindicato",
+      "texto": "¡Un descriptor! Con esto, «huerfano_7731» pasa a llamarse «servicio-impresora.service». Nadie toca nunca el servicio de la impresora. Nunca. Toma, por la solidaridad de clase."
+    },
+    {
+      "id": "npc_sindicato__menu_0",
+      "voz": "sindicato",
+      "texto": "¿Algo más? La asamblea escucha."
+    },
+    {
+      "id": "npc_sindicato__menu_1",
+      "voz": "sindicato",
+      "texto": "Habla. Tomamos nota en un log que nadie rota."
+    },
+    {
+      "id": "npc_sindicato__menu_2",
+      "voz": "sindicato",
+      "texto": "¿Qué más quieres saber?"
+    },
+    {
+      "id": "npc_sindicato__saludo_0",
+      "voz": "sindicato",
+      "texto": "¡Compañero egresado! El Sindicato te saluda. En asamblea. Somos muchos."
+    },
+    {
+      "id": "npc_sindicato__saludo_1",
+      "voz": "sindicato",
+      "texto": "Volviste. Votamos 7.912 a 3 que eres de confianza. Los 3 eran procesos zombi."
+    },
+    {
+      "id": "npc_m_paez_hola",
+      "voz": "paez",
+      "texto": "¡Ah, otro del departamento! Soy M. Páez, el Inge. Estaba calificando exámenes de álgebra lineal en el laboratorio cuando la pantalla empezó a parpadear... y aparecí aquí. Con mis lentes, mi taza y sin mi Kindle. Eso último es lo grave."
+    },
+    {
+      "id": "npc_m_paez_lugar",
+      "voz": "paez",
+      "texto": "El Silicio Profundo. Debajo del sistema operativo, debajo de los drivers... el hardware puro. Y alguien está intentando reescribirlo todo: un reflasheo total del firmware."
+    },
+    {
+      "id": "npc_m_paez_lugar2",
+      "voz": "paez",
+      "texto": "Hice un análisis rápido: la barra de progreso del reflasheo avanza un 3,7 % por hora. Con un intervalo de confianza del 95 %, tenemos unas 26 horas antes del 99 %. Lo que pase en el 100 %... no tengo datos. Y no me gusta no tener datos."
+    },
+    {
+      "id": "npc_m_paez_lugar3",
+      "voz": "paez",
+      "texto": "Bajar a la Cámara de Reflasheo, al fondo del Sector de Arranque, y cancelar el proceso. Es como un sistema de ecuaciones: primero despejas lo que estorba. En este caso, rootkits."
+    },
+    {
+      "id": "npc_m_paez_datos",
+      "voz": "paez",
+      "texto": "Lo mío es el análisis de datos y el álgebra. «Su mero mole», como dicen mis alumnos. Una matriz bien diagonalizada me hace más feliz que un aumento de sueldo. Bueno, eso nunca lo he comprobado."
+    },
+    {
+      "id": "npc_m_paez_datos2",
+      "voz": "paez",
+      "texto": "Aquí abajo todo es álgebra: los Centinelas del BIOS disparan orbes que siguen una curva de persecución, ¿lo notaste? Si pones un obstáculo entre ellos y tú, la ecuación no tiene solución. Y si ves un charco verde, no te quedes: el daño se acumula por segundo."
+    },
+    {
+      "id": "npc_m_paez_club",
+      "voz": "paez",
+      "texto": "Llevo el club de lectura de los jueves... bueno, lo comparto con el Inge Pepe, que también da clases los jueves. Él siempre propone novelas de pesca. Yo propongo ensayos de estadística. Nadie vota por ninguno."
+    },
+    {
+      "id": "npc_m_paez_club2",
+      "voz": "paez",
+      "texto": "Por eso me duele lo del Kindle: 1.400 libros, subrayados, con notas. Mi tesis de maestría estaba ahí, en PDF. Sin respaldo. Sí, ya sé. El de datos, sin respaldo. No me lo digas."
+    },
+    {
+      "id": "npc_m_paez_pepe",
+      "voz": "paez",
+      "texto": "¿El Inge Pepe? Treinta años a cargo de informática. Todo lo de este servidor tiene su nombre, para bien y para mal. Según mis encuestas de pasillo, un 87 % de la gente lo culpa de todo. El 13 % restante no contestó."
+    },
+    {
+      "id": "npc_m_paez_mision_kindle_oferta",
+      "voz": "paez",
+      "texto": "Cuando caí, lo traía en la mano. Vi cómo salía volando hacia la Oblea de Silicio. Si encuentras la funda, le puse una etiqueta con mi nombre... y una nota con dónde buscar si algún día lo perdía. Precavido para eso, sí."
+    },
+    {
+      "id": "npc_m_paez_mision_kindle_entrega",
+      "voz": "paez",
+      "texto": "¡Mi Kindle! Tiene la pantalla rayada y... está casi sin batería. Bueno, la tinta electrónica aguanta. Gracias. En serio: te ganaste un agradecimiento en mi próximo artículo."
+    },
+    {
+      "id": "npc_m_paez_mision_cargador_oferta",
+      "voz": "paez",
+      "texto": "Prender, prende... con 1 % de batería. Y mi cargador USB-C lo traía en la mochila. Lo vi en el radar: un Centinela del BIOS en los Cristales de la ROM se lo tragó. Literal: lo usa de antena."
+    },
+    {
+      "id": "npc_m_paez_mision_cargador_entrega",
+      "voz": "paez",
+      "texto": "¡El cargador! Con antena y todo. Ya carga: 2 %... 3 %... Esto es mejor que cualquier gráfica. Toma, lo encontré en un sector que nadie había leído."
+    },
+    {
+      "id": "npc_m_paez__menu_0",
+      "voz": "paez",
+      "texto": "¿Algo más? Pregunta con datos, por favor."
+    },
+    {
+      "id": "npc_m_paez__menu_1",
+      "voz": "paez",
+      "texto": "Dime. Tengo tiempo: aquí no hay clases que dar."
+    },
+    {
+      "id": "npc_m_paez__menu_2",
+      "voz": "paez",
+      "texto": "¿Qué más necesitas?"
+    },
+    {
+      "id": "npc_m_paez__saludo_0",
+      "voz": "paez",
+      "texto": "¡Volviste! Dime que traes mi Kindle. O al menos un buen dato."
+    },
+    {
+      "id": "npc_m_paez__saludo_1",
+      "voz": "paez",
+      "texto": "Hola. Sigo aquí, calculando la probabilidad de salir. Es baja, pero no nula."
+    },
+    {
+      "id": "npc_eugenio_hola",
+      "voz": "eugenio",
+      "texto": "¿Oyes eso del fondo? ¡Que rolón! Alguien dejó una canción en el puerto y ya me enamoré del pianito. Ah, perdón, buenas: Eugenio, para servirte. Soltero, codiciado, sin suerte en el amor. Me caí desde la fila de la cafetería de la universidad con una charola en la mano: café de grano y un pan de dulce. El pan no sobrevivió. Yo, apenas."
+    },
+    {
+      "id": "npc_eugenio_musica",
+      "voz": "eugenio",
+      "texto": "No sé ni de quién es, pero tiene ese piano melancólico, como de quien espera que todo salga bien y ya sabe que no. ¡Un 9/10! Y mira que yo no regalo nueves. Me recuerda a Chappell Roan, que dicen que sacó el «Chappell» del nombre de su abuelo y el «Roan» de su canción favorita. ¿O era al revés? Da igual. Hablando de música, ¿viste que NewJeans debutó en 2022 con «Attention»? Cinco integrantes, todas con coreografías que me quitan el sueño. ¿De qué hablábamos? Perdón, es mi neurodivergencia: a veces mi cerebro abre doce pestañas y cierra la que importa."
+    },
+    {
+      "id": "npc_eugenio_cafe",
+      "voz": "eugenio",
+      "texto": "Claro. Traigo un molino de mano y granos de Veracruz en la mochila. Te rellené las pociones. Este café... 8/10. Le falta acidez. Nada llega al 10. Aunque el aroma me recuerda a un videoclip de Chappell Roan, ese del caballo rosa... ¿qué decía? Ah, sí. El café."
+    },
+    {
+      "id": "npc_eugenio_cafe_otra_0",
+      "voz": "eugenio",
+      "texto": "Rellenadas. Este lote, 7.5/10: molí con prisa. Por cierto, ¿Hanni de NewJeans nació en Australia? Bueno, ya te rellené."
+    },
+    {
+      "id": "npc_eugenio_cafe_otra_1",
+      "voz": "eugenio",
+      "texto": "Listo. 8/10. Mejor que ayer, peor que mañana. Perdón, mi cerebro me susurró otra canción."
+    },
+    {
+      "id": "npc_eugenio_amor",
+      "voz": "eugenio",
+      "texto": "Mal. Siempre mal. Mi última cita me dejó porque dije que su pastel de tres leches era un 8/10. ¡Era un 8/10! Tenía demasiada canela. Uno no puede mentir sobre el pan. Es como cuando Chappell Roan dijo que quería... espera, ¿qué decía? Ya me fui por la tangente. Mi neurodivergencia y yo te pedimos disculpas."
+    },
+    {
+      "id": "npc_eugenio_amor2",
+      "voz": "eugenio",
+      "texto": "Así que me enfoco en lo que nunca me falla: el café y el pan. El café nunca me deja en visto. El pan nunca me dice «no eres tú, soy yo». Bueno, a veces el bolillo está duro. Pero da la cara."
+    },
+    {
+      "id": "npc_eugenio_lugar",
+      "voz": "eugenio",
+      "texto": "¿El Silicio Profundo? Un 4/10. Buena iluminación, cero cafeterías. Los rootkits huelen a quemado y los condensadores revientan cuando te acercas. Como mis citas."
+    },
+    {
+      "id": "npc_eugenio_paez",
+      "voz": "eugenio",
+      "texto": "El Inge Páez. Gran tipo. Me hizo una gráfica de mis citas: tendencia a la baja, con un pico en 2019 que, según él, fue un error de medición. Me dolió más que la gráfica."
+    },
+    {
+      "id": "npc_eugenio_mision_oferta",
+      "voz": "eugenio",
+      "texto": "Te propongo algo: dicen que entre el silicio aparecen panes. De verdad, o algo que se les parece mucho. Una concha en la Oblea, un bolillo en la Caché L3 y un cuernito en el Sector de Arranque. Tráemelos y hago la cata. Con fichas técnicas."
+    },
+    {
+      "id": "npc_eugenio_mision_entrega",
+      "voz": "eugenio",
+      "texto": "A ver... La concha: costra crujiente, migajón aireado, un leve aroma a soldadura. 7.5/10. El bolillo: tibio, honesto, como debe ser. 9/10. El cuernito: mantequilla de arranque en frío... 8/10. Ninguno es 10. Ninguno lo será jamás. Gracias, de verdad. Toma, por tu servicio a la ciencia del pan."
+    },
+    {
+      "id": "npc_eugenio__menu_0",
+      "voz": "eugenio",
+      "texto": "¿Algo más? Mientras, me tomo otro café. Oye, NewJeans son cinco, ¿lo sabías? Bueno, ¿qué ibas a decir?"
+    },
+    {
+      "id": "npc_eugenio__menu_1",
+      "voz": "eugenio",
+      "texto": "Dime. Estoy calificando el aroma de este capacitor. Espera, ¿oyes cómo cambia el bajo de la canción? Perdón, me distraje. La neurodivergencia."
+    },
+    {
+      "id": "npc_eugenio__menu_2",
+      "voz": "eugenio",
+      "texto": "¿Qué más? Ah, y Chappell Roan hizo su primer sencillo siendo adolescente, un dato que no me pediste pero ahí está."
+    },
+    {
+      "id": "npc_eugenio__saludo_0",
+      "voz": "eugenio",
+      "texto": "¡Volviste! ¿Traes pan? Di que traes pan. Oye, ¿sabías que Chappell Roan sacó su nombre artístico de su abuelo? O sea... ¿qué te decía? Perdón, la neurodivergencia."
+    },
+    {
+      "id": "npc_eugenio__saludo_1",
+      "voz": "eugenio",
+      "texto": "Hola. Hoy el café del puerto sabe a ozono. Le doy un 6/10. Aunque el ozono me recuerda a... ¿has visto a NewJeans bailar «Hype Boy»? Mira nada más, me fui. Neurodivergencia, ya sabes."
+    },
+    {
+      "id": "npc_eugenio__saludo_2",
+      "voz": "eugenio",
+      "texto": "¡Ahí estás! Te iba a decir algo importante. Ya se me olvidó. Seguro era del pan. O de Chappell Roan."
+    },
+    {
+      "id": "npc_berta_hola",
+      "voz": "berta",
+      "texto": "Bienvenido a la Pila del CMOS. Soy Berta, la CR2032 de esta placa. Tres voltios de pura memoria: guardo la hora, el orden de arranque y cada ajuste que alguien cambió desde 2004. El reloj se me quedó en el primero de enero del 2000 y ya no lo muevo. A mi edad, uno escoge sus batallas."
+    },
+    {
+      "id": "npc_berta_lugar",
+      "voz": "berta",
+      "texto": "La BIOS, mijo. Lo primero que despierta cuando alguien prende la máquina, antes que el sistema operativo, antes que todo. Aquí abajo nadie ve lo que pasa. Por eso aquí se esconden las cosas que no quieren que las vean."
+    },
+    {
+      "id": "npc_berta_admin",
+      "voz": "berta",
+      "texto": "admin. Así se llama. Contraseña: admin. Venía en el manual del servidor que trajeron en 2004, en la página 3. Alguien tiró el manual a la basura y nadie la cambió nunca. Una cuenta que puede con todo y que no es de nadie. Imagínate: veinte años sin dueño, sin que nadie le pregunte cómo está."
+    },
+    {
+      "id": "npc_berta_admin2",
+      "voz": "berta",
+      "texto": "Con tanto tiempo solo, se volvió algo. Vive más abajo, en el Modo de Gestión del Sistema, donde ni el sistema operativo lo ve. Él hizo el push, mijo. Firmado «admin», sin descripción. ¿Cuándo has visto que admin escriba una descripción?"
+    },
+    {
+      "id": "npc_berta_admin3",
+      "voz": "berta",
+      "texto": "Eso pregúntaselo a él. Yo solo sé que quiere algo que nunca tuvo. Y que el Pepe lo sabía: venía a verme cada jueves y me preguntaba si la contraseña seguía siendo la misma. Siempre lo era."
+    },
+    {
+      "id": "npc_berta_pepe",
+      "voz": "berta",
+      "texto": "¿El Pepe? Claro. Muy educado, siempre con su gorra de pescador. Me cambiaba el reloj cada horario de verano aunque yo no se lo pidiera. Un día me dijo: «Berta, si algún día no vuelvo, no le digas a nadie la contraseña». Y yo le dije: «Pepe, la contraseña es admin, la sabe todo el mundo». Se rió. No volvió."
+    },
+    {
+      "id": "npc_berta_ajustes_oferta",
+      "voz": "berta",
+      "texto": "Con el reflasheo se me salieron tres ajustes de la memoria. Se me escaparon como canicas: uno anda en el Menú Advanced, otro en la Secuencia de Arranque y otro en la ROM de Video. Si me los traes, igual hasta me acuerdo de qué día es hoy."
+    },
+    {
+      "id": "npc_berta_ajustes_entrega",
+      "voz": "berta",
+      "texto": "¡Ay, mis ajustes! Quick Boot activado, el orden de arranque como Dios manda y la contraseña de supervisor... vacía, como siempre. Muchas gracias, mijo. Tengo guardadas dos cosas desde 2004. ¿Cuál quieres?"
+    },
+    {
+      "id": "npc_berta_ajustes_fin",
+      "voz": "berta",
+      "texto": "Buena elección, mijo. Las dos eran del Pepe, así que cualquiera sirve para algo. Él siempre decía: «lo que funciona no se documenta, se protege»."
+    },
+    {
+      "id": "npc_berta__menu_0",
+      "voz": "berta",
+      "texto": "¿Qué más quieres saber? Pregunta rápido, que me estoy descargando."
+    },
+    {
+      "id": "npc_berta__menu_1",
+      "voz": "berta",
+      "texto": "Dime, dime. Me acuerdo de todo desde 2004... menos de dónde dejé los lentes."
+    },
+    {
+      "id": "npc_berta__saludo_0",
+      "voz": "berta",
+      "texto": "Ah, eres tú. Sigo aquí, mijo. Con 2,9 voltios, pero aquí."
+    },
+    {
+      "id": "npc_berta__saludo_1",
+      "voz": "berta",
+      "texto": "Pásale. No hagas mucho ruido: cada vez que alguien grita, pierdo una décima de voltio."
+    },
+    {
+      "id": "npc_berta__saludo_2",
+      "voz": "berta",
+      "texto": "¿Ya comiste? Aquí son siempre las 00:00 del primero de enero del 2000, así que técnicamente es hora de cenar."
+    },
+    {
+      "id": "npc_rafa_bios_hola",
+      "voz": "rafa",
+      "texto": "¡Llegaste! Bueno.... llegué yo.... en persona.... Bajé la VPN.... a mano.... desconecté el router de La Red Lince y me aventé por el puerto 2222.... Ya no tengo ni datos del celular.... y Mario se vino conmigo.... dice que es por su servicio social...."
+    },
+    {
+      "id": "npc_rafa_bios_admin",
+      "voz": "rafa",
+      "texto": "admin.... con contraseña admin.... Yo heredé ese servidor.... y nunca la cambié.... porque el pósit del Pepe decía «no tocar».... Así que.... técnicamente.... el Último Commit también es un poco culpa mía.... ¿verdad? No contestes...."
+    },
+    {
+      "id": "npc_rafa_bios_libreta_oferta",
+      "voz": "rafa",
+      "texto": "El Pepe anotaba todo en una libreta Scribe.... con pasta de gatitos.... Se la llevó al jubilarse creyendo que era su recetario.... Pero Berta dice que la vio pasar.... hacia la ROM de Video.... Si la encuentras.... ahí debe estar quién tenía acceso a admin...."
+    },
+    {
+      "id": "npc_rafa_bios_libreta_entrega",
+      "voz": "rafa",
+      "texto": "La libreta.... Página uno: recetas.... de verdad eran recetas.... Página veinte: «accesos a admin».... y luego una lista con TODOS los que trabajaron en informática.... y hasta abajo.... tu nombre.... como prestador de servicio social.... Él sí te registró.... La última página dice: «admin no es una persona. Es lo que pasa cuando nadie es responsable»."
+    },
+    {
+      "id": "npc_rafa_bios_libreta_entrega2",
+      "voz": "rafa",
+      "texto": "Hay algo más.... El Pepe dejó una nota sobre los huérfanos del Sindicato.... cuando reiniciemos.... podemos traerlos con nosotros.... o dejar que el reinicio los limpie.... Es tu decisión.... yo no puedo.... yo heredé este servidor.... no lo diseñé...."
+    },
+    {
+      "id": "npc_rafa_bios_huerfanos",
+      "voz": "rafa",
+      "texto": "Los huérfanos del Sindicato.... el PID 404.... Si los traemos, el sistema arranca con miles de procesos sin padre.... más lento.... pero vivos.... Si no, el reinicio los limpia.... rápido y limpio.... y nunca más.... ¿Qué hacemos?"
+    },
+    {
+      "id": "npc_rafa_bios_huerfanos_con",
+      "voz": "rafa",
+      "texto": "Está bien.... les reservo un lugar en la tabla de procesos.... Van a ser lentos.... pero van a estar.... El Pepe hubiera hecho lo mismo.... creo...."
+    },
+    {
+      "id": "npc_rafa_bios_huerfanos_sin",
+      "voz": "rafa",
+      "texto": "Está bien.... preparo el reinicio en limpio.... No les voy a decir nada.... no podría.... Ojalá no se enteren antes...."
+    },
+    {
+      "id": "npc_rafa_bios_constancia",
+      "voz": "rafa",
+      "texto": "La firmo.... te lo juro.... en cuanto el servidor arranque.... Ya tengo el formato abierto.... bueno.... lo tengo en la cabeza.... la impresora está en el campamento.... y no hay internet...."
+    },
+    {
+      "id": "npc_rafa_bios__menu_0",
+      "voz": "rafa",
+      "texto": "¿Qué más....?"
+    },
+    {
+      "id": "npc_rafa_bios__menu_1",
+      "voz": "rafa",
+      "texto": "Dime.... pero rápido, que Mario me está viendo raro...."
+    },
+    {
+      "id": "npc_rafa_bios__saludo_0",
+      "voz": "rafa",
+      "texto": "Ah.... eres tú.... Pensé que era otro Beep Code...."
+    },
+    {
+      "id": "npc_rafa_bios__saludo_1",
+      "voz": "rafa",
+      "texto": "Sigo sin internet.... pero tampoco tengo a La Red Lince.... es raro.... me siento libre...."
+    },
+    {
+      "id": "npc_rafa_bios__saludo_2",
+      "voz": "rafa",
+      "texto": "¿Ya viste la hora? Siempre es medianoche del 2000.... aquí no hay deadlines...."
+    },
+    {
+      "id": "npc_mario_bios_hola",
+      "voz": "mario",
+      "texto": "¡Hola! Me vine con Rafa. No quería, pero él dijo que si no venía no me firmaba las horas de servicio social. Así que aquí estoy. En la BIOS. Sin accesos. Como siempre."
+    },
+    {
+      "id": "npc_mario_bios_acompanar",
+      "voz": "mario",
+      "texto": "¿En serio? ¿Cuenta como horas? ...Bueno, aunque no cuente. Aquí Rafa solo me pone a contar pitidos. Voy contigo, pero si sale un Watchdog corro primero. Ya sabes: el practicante es el que más rápido corre."
+    },
+    {
+      "id": "npc_mario_bios_bios",
+      "voz": "mario",
+      "texto": "Es como el campamento, pero azul y con más pitidos. Ayer un Beep Code me persiguió diez minutos. Lo bueno es que aquí nadie me pide que reinicie la impresora."
+    },
+    {
+      "id": "npc_mario_bios_aida",
+      "voz": "mario",
+      "texto": "Se quedó en el campamento cuidando el servidor. Dijo que alguien tenía que quedarse por si se prende solo. Lleva veinte años diciendo eso. Creo que le gusta estar sola con el COBOL."
+    },
+    {
+      "id": "npc_mario_bios_pepe",
+      "voz": "mario",
+      "texto": "Lo vi una vez, cuando entré. Me dijo: «chamaco, tú vas a llegar lejos, porque no te dan accesos para nada». Pensé que era un insulto. Ahora no sé. Igual era un consejo."
+    },
+    {
+      "id": "npc_mario_bios__menu_0",
+      "voz": "mario",
+      "texto": "¿Algo más? No tengo nada que hacer. Bueno, sí: las horas de servicio."
+    },
+    {
+      "id": "npc_mario_bios__menu_1",
+      "voz": "mario",
+      "texto": "Dime. Rafa me dijo que te ayudara, pero no me dijo cómo."
+    },
+    {
+      "id": "npc_mario_bios__saludo_0",
+      "voz": "mario",
+      "texto": "¿Esto cuenta como horas de servicio? Dime que sí."
+    },
+    {
+      "id": "npc_mario_bios__saludo_1",
+      "voz": "mario",
+      "texto": "Llevo tres meses sin accesos y ahora estoy en la BIOS. Mi currículum va a quedar rarísimo."
+    },
+    {
+      "id": "npc_mario_bios__saludo_2",
+      "voz": "mario",
+      "texto": "¿Quieres café? No hay. Eugenio ya me dijo que no hay. Tres veces."
+    },
+    {
+      "id": "npc_paez_bios_hola",
+      "voz": "paez",
+      "texto": "Bienvenido. La BIOS es lo más ordenado que he visto en este viaje: cada opción tiene un valor, cada valor una consecuencia. Si todo fuera así, no existiría la estadística. Y yo estaría sin trabajo."
+    },
+    {
+      "id": "npc_paez_bios_admin",
+      "voz": "paez",
+      "texto": "Desde el punto de vista de los datos, admin es una variable global que nadie inicializó y todos modificaron. Es el peor tipo de variable. El Inge Pepe y yo lo discutíamos en el club de lectura de los jueves. Él decía que algún día alguien tendría que hacerse cargo. Yo propuse leer un ensayo sobre eso. Él propuso una novela de pesca."
+    },
+    {
+      "id": "npc_paez_bios_arranque_oferta",
+      "voz": "paez",
+      "texto": "Para que el servidor arranque cuando todo esto acabe, el orden de arranque tiene que ser correcto. En la Secuencia de Arranque hay tres andenes: disquete, disco duro y red. Actívalos. El orden ya lo calculé yo; tú solo pon el cuerpo."
+    },
+    {
+      "id": "npc_paez_bios_acompanar",
+      "voz": "paez",
+      "texto": "Con gusto. Estadísticamente, dos personas sobreviven más que una. Le voy calculando los ángulos de los críticos. Y si ve un cargador USB-C, avíseme."
+    },
+    {
+      "id": "npc_paez_bios_arranque_entrega",
+      "voz": "paez",
+      "texto": "Perfecto. Primero el disquete del Pepe (curiosamente sigue funcionando), luego el disco duro, luego la red. La probabilidad de arranque correcto subió del 0 al 99 %. El último uno por ciento, dicen, no es nuestro. Tengo dos cosas para ti; elige. Una es más probable que te sirva; la otra, más valiosa si te sirve."
+    },
+    {
+      "id": "npc_paez_bios_arranque_fin",
+      "voz": "paez",
+      "texto": "Buena elección. Bueno, no sé si buena: la muestra es de uno. Gracias por poner el cuerpo."
+    },
+    {
+      "id": "npc_paez_bios__menu_0",
+      "voz": "paez",
+      "texto": "¿Algo más? Estoy resolviendo un sistema de tres incógnitas: Beep Codes, pitidos y paciencia."
+    },
+    {
+      "id": "npc_paez_bios__menu_1",
+      "voz": "paez",
+      "texto": "Dime."
+    },
+    {
+      "id": "npc_paez_bios__saludo_0",
+      "voz": "paez",
+      "texto": "Hola. Sigo sin cargador para el Kindle. Pero la BIOS es un sistema de ecuaciones precioso."
+    },
+    {
+      "id": "npc_paez_bios__saludo_1",
+      "voz": "paez",
+      "texto": "¿Sabías que el orden de arranque es una permutación? Cuatro dispositivos, veinticuatro órdenes posibles. Solo uno funciona."
+    },
+    {
+      "id": "npc_eugenio_bios_hola",
+      "voz": "eugenio",
+      "texto": "¡Eh! Por aquí también cayó la máquina expendedora de la sala de maestros. La de los vasos que dicen «capuchino» y saben a «tal vez». Los vasos salieron volando por todo el Setup. Y yo, que ya no tengo granos de Veracruz..."
+    },
+    {
+      "id": "npc_eugenio_bios_amor",
+      "voz": "eugenio",
+      "texto": "Mal, pero con estilo. Conocí a una Beep Code. Bueno, me pitó. Dos cortos y uno largo. Según Berta, eso significa «error de memoria». Siempre me pasa lo mismo."
+    },
+    {
+      "id": "npc_eugenio_bios_acompanar",
+      "voz": "eugenio",
+      "texto": "¡Claro! Llevo el termo. El café está a 6/10, pero en una pelea sabe a 9. Y si me pita otra Beep Code, tú le explicas que no es buen momento."
+    },
+    {
+      "id": "npc_eugenio_bios_cafe_oferta",
+      "voz": "eugenio",
+      "texto": "Hay tres vasos repartidos: uno en el POST, otro en el Menú Advanced y otro en el Sector Oculto. Sé que va a estar horrible. Pero necesito calificar algo o voy a empezar a calificar a la gente."
+    },
+    {
+      "id": "npc_eugenio_bios_cafe_entrega",
+      "voz": "eugenio",
+      "texto": "A ver... El del POST: agua tibia con nostalgia. 2/10. El del Menú Advanced: sabe a «Disabled». 1/10. El del Sector Oculto... espera... es horrible. Es el peor café que he probado en mi vida. ¡10/10 de malo! Por fin un 10. Gracias, de verdad. Toma, y no le digas a nadie que lloré."
+    },
+    {
+      "id": "npc_eugenio_bios__menu_0",
+      "voz": "eugenio",
+      "texto": "¿Algo más? Si no traes café, por lo menos cuéntame algo triste. Así me siento acompañado."
+    },
+    {
+      "id": "npc_eugenio_bios__menu_1",
+      "voz": "eugenio",
+      "texto": "Dime."
+    },
+    {
+      "id": "npc_eugenio_bios__saludo_0",
+      "voz": "eugenio",
+      "texto": "¡Volviste! ¿Traes café? Aunque sea de máquina. Ya estoy en ese punto."
+    },
+    {
+      "id": "npc_eugenio_bios__saludo_1",
+      "voz": "eugenio",
+      "texto": "Hola. Esta BIOS huele a polvo de 2004. Le doy un 5/10. El polvo de 2004 tenía su encanto."
+    }
+  ]
+}

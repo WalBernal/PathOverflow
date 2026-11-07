@@ -50,4 +50,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    # libsndfile desborda la pila de 1 MB del hilo principal de Windows al codificar
+    # Vorbis de algunas líneas (el proceso muere con 0xC00000FD): en un hilo con 64 MB.
+    import threading
+    threading.stack_size(64 * 1024 * 1024)
+    hilo = threading.Thread(target=main)
+    hilo.start()
+    hilo.join()
