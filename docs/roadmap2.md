@@ -264,6 +264,79 @@ Origen: R9
 
 ---
 
+## Fase 44 — Voz y narrativa (versión 4.3.0)
+
+Prioridad del usuario (06-11-2026). Sigue al prólogo con voz de la 4.2: mismas herramientas (`tools/voces/`, Qwen3-TTS en local), mismo reparto (`tools/voces/voces.json`) y mismas reglas (`docs/voces.md`: acento latinoamericano neutro, tomas aprobadas por el usuario, «Voces generadas con IA» en los créditos). En el juego, `VoiceLines` reproduce el audio si existe y, si no, queda la voz del sistema.
+
+### [ ] T220 · Reparto de los personajes que faltan · S 🛑
+Origen: usuario
+- Descripción y una toma de prueba de cada voz que falta: B.O.B., Clara, Eugenio, Tomás, el Fantasma del DBA, Berta, Iris, el Recolector, el Sindicato de Huérfanos, Nacho y los jefes (init, admin, el Arquitecto del Monolito, fw_update.exe). Propuesta inicial en `docs/voces.md`; también la voz «Sistema» de las escenas.
+- Con el visto bueno del usuario, cada toma aprobada pasa a `tools/voces/referencias/` y a `voces.json` (hablantes de cada id de `npcs.json`).
+
+### [ ] T221 · Voces en la ventana de diálogo de los NPC · M
+Origen: usuario
+- Ids estables para las líneas de `npcs.json` (diálogo, nodo y, en saludos y menús con variantes, su número), en `VoiceLines` y en un exportador como `exportar_escenas.py`. Las opciones del jugador no se leen en voz alta.
+- `DialogueBox` reproduce el audio como `CutscenePlayer`: el texto avanza a su ritmo, el retrato habla mientras suena y la voz se corta al avanzar o cerrar. Respeta el ajuste del narrador y su volumen.
+- Prueba: el id de una línea no cambia si se añade otro NPC o nodo; con y sin audio, la línea se muestra igual.
+
+### [ ] T222 · Generar las voces de los actos · M
+Origen: usuario
+- Las ~436 líneas de escenas y NPC de los actos I-IV (unos 65 min), clonadas de las tomas aprobadas, en `audio/voces/`. En segundo plano; revisar duraciones raras (líneas desbocadas o cortadas) y regenerar esas.
+- Prueba: cada línea hablada de escenas y NPC tiene su audio (como la del prólogo). Medir cuánto crece el APK.
+
+### [ ] T223 · Frases de combate con la voz del personaje · M
+Origen: usuario (idea 2)
+- Frases cortas grabadas con la voz elegida en el creador (egresado o egresada) para subir de nivel, morir, usar un frasco, quedarse con poca vida y sin maná («¡Compila!», «Segfault...», «Necesito más RAM»). Varias por momento, sin repetir la misma dos veces seguidas y con un mínimo de segundos entre frases.
+- Sustituyen al murmullo sintetizado (`Barks`) del jugador; el de los NPC se queda. Respetan el ajuste de murmullos y el volumen de voz.
+
+### [ ] T224 · Jefes que hablan durante el combate · M
+Origen: usuario (idea 3)
+- Cada jefe dice una frase al empezar, al cambiar de fase y al quedarse con poca vida («kill -9 a ti también»), con su voz y un subtítulo breve sobre la barra de vida que no tapa el combate ni detiene el juego.
+- Prueba: cada jefe tiene sus frases y cada fase dispara la suya una sola vez.
+
+### [ ] T225 · Diario del egresado · S
+Origen: usuario (idea 4)
+- Una pestaña en la hoja de personaje con lo que pasó en cada acto (las escenas vistas, en resumen y con humor) y un «¿dónde me quedé?» con el objetivo actual, para volver tras semanas sin jugar.
+
+### [ ] T226 · Versión 4.3.0 y revisión en el teléfono · S 🛑
+Origen: usuario
+
+---
+
+## Fase 45 — Equipar sin pasos de más (versión 4.4.0)
+
+### [ ] T227 · Autoequipar en ranuras libres · S
+Origen: usuario
+- Al recoger un objeto equipable cuya ranura está **vacía** y cuyos requisitos cumples, se equipa solo (`Inventory.add_item` / `equip_from_bag`, `world.gd` al recoger). Anillos en el primer hueco libre; armas a dos manos solo si las dos manos están libres. Nunca sustituye algo ya equipado.
+- Aviso en el registro («Equipado: Chaqueta de Hilo Dental») con su sonido de equipar, y un ajuste en Pausa → Juego para desactivarlo.
+- Prueba: equipa en ranura vacía, no toca la ocupada, respeta requisitos y anillos.
+
+---
+
+## Fase 46 — Habilidades y RAM, fáciles en el móvil y claras en PC (versión 4.4.0)
+
+El menú de habilidades (`skills_panel.gd`) hoy depende de arrastrar y soltar, doble click y click derecho, y de un texto de ayuda largo: en el celular cuesta y en PC no siempre se entiende qué RAM sirve dónde.
+
+### [ ] T228 · Diagnóstico y propuesta de la pantalla nueva · S 🛑
+Origen: usuario
+- Capturas de hoy en PC y celular (con 6 placas, RAM instaladas y la bolsa llena) y una lista de los puntos donde se atasca alguien nuevo.
+- Dos propuestas de pantalla (maqueta en captura, como en T165): flujo de **tocar para elegir y tocar para colocar**, objetivos grandes, qué ranuras admiten la RAM elegida y qué hace cada RAM con esa placa en una frase. El usuario elige antes de implementar.
+
+### [ ] T229 · Pantalla nueva de habilidades: flujo táctil · M
+Origen: usuario
+- La propuesta elegida en T228 para el celular: seleccionar placa o RAM con un toque y colocar con otro, botones visibles para quitar, mover de tecla y comparar (sin gestos ocultos), objetivos de 48 px como mínimo y vista de la placa elegida con sus ranuras en grande.
+- Filtro «RAM que encajan» y sugerencia de dónde rinde mejor cada RAM. Prueba con `Touch.force` en 2400×1080.
+
+### [ ] T230 · Pantalla nueva de habilidades: claridad en PC · M
+Origen: usuario
+- La misma pantalla con ratón: arrastrar y soltar sigue funcionando, al pasar por encima se resaltan las ranuras válidas y se ve el cambio de DPS, coste y área antes de soltar; atajos de teclado a la vista.
+- Ayuda corta por pasos en lugar del párrafo actual. Prueba de que todo lo que se hacía con arrastrar, doble click o click derecho se puede hacer también con botones.
+
+### [ ] T231 · Versión 4.4.0 y revisión en el teléfono · S 🛑
+Origen: usuario
+
+---
+
 ## Catálogo de habilidades sugeridas
 
 Para elegir en T207. Cada una trae algo que hoy no existe en el juego (la **novedad**), para que no sea otra versión de lo que ya hay.
@@ -383,3 +456,4 @@ Ideas que no están en la cola. Se pasan a tareas cuando el usuario las elija.
 - 2026-11-06 · — · Escalas del prólogo (pedido del usuario): los autos de la avenida pasan de 26 px a ~62 px de largo (car_scale 2,1-2,3 por carril), redibujados con cabina, ventanas, defensas, faros y rines, y más rápidos en proporción; en el pasillo el jugador va de 1,6× cerca a 1,12× al fondo (antes 1,3-0,62, al fondo medía la mitad que la puerta) y quien cruza al fondo sale por una puerta de tamaño persona en la pared derecha (hall_side_door) en vez de la puertita de 30 px bajo la TV. Modo `-- escalas` en capture_screens; capturas docs/capturas/estetica/prologo_escala_*.png.
 - 2026-11-06 · — · Versión 4.2.0 (APK código 31; los códigos 30 y 31 son de esta tanda): voces grabadas del prólogo (VoiceLines, opción «Voz» en el creador, 26 audios con Qwen3-TTS), escalas del prólogo y Aída con tilde. Subida a GitHub con el visto bueno del usuario para descargarla en el celular.
 - 2026-11-06 · — · Pedido del usuario: B.O.B. en el sandbox con su aspecto de la miniatura (sin el casco ni la armadura de hierro de server); el creador de personaje ya no se sale por la derecha en PC y tableta (UiStyle.apply_ui_scale no amplía más de lo que cabe a lo ancho, content_min_size; el subtítulo con ajuste de línea); en la absorción el jugador se agacha al abrirse el vórtice, gatea hacia la salida desde los 2 s (inclinado, CRAWL_LEAN) y el vórtice lo agarra igual. Modos `-- creador` y `-- absorcion` en capture_screens.
+- 2026-11-06 · — · El usuario abre tres fases nuevas: 44 Voz y narrativa (T220-T226: reparto que falta, voces en los diálogos de NPC, voces de los actos, frases de combate, jefes que hablan y diario del egresado), 45 Autoequipar en ranuras libres (T227) y 46 Habilidades y RAM fáciles en el móvil y claras en PC (T228-T231).
