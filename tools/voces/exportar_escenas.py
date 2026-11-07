@@ -17,6 +17,8 @@ RAIZ = AQUI.parent.parent
 
 def main() -> None:
     prefijo, destino = sys.argv[1], Path(sys.argv[2])
+    if prefijo == "*":   # todas las escenas
+        prefijo = ""
     reparto = json.loads((AQUI / "voces.json").read_text(encoding="utf-8"))
     hablantes = reparto["hablantes"]
     escenas = json.loads((RAIZ / "data" / "cutscenes.json").read_text(encoding="utf-8"))["cutscenes"]
@@ -32,7 +34,10 @@ def main() -> None:
                 continue   # la terminal se lee en pantalla, no en voz alta
             base = f"{nombre}_{i:02d}"
             quien = paso.get("speaker", "") or estilo
-            if quien == "player":
+            por_nombre = reparto.get("nombres", {}).get(f"{estilo}:{paso.get('name', '')}")
+            if not paso.get("speaker") and por_nombre:   # jefes y avisos del «Sistema»
+                lineas.append({"id": base, "voz": por_nombre, "texto": paso["text"]})
+            elif quien == "player":
                 lineas.append({"id": base + "_m", "voz": "egresado", "texto": paso["text"]})
                 lineas.append({"id": base + "_f", "voz": "egresada", "texto": paso["text"]})
             elif quien in hablantes:

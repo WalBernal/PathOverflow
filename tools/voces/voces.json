@@ -1,5 +1,5 @@
 {
-  "_doc": "Reparto de voces (docs/voces.md). Cada voz: una toma aprobada en referencias/ (se clona: suena igual en todas sus líneas) o una descripción (se diseña en cada línea). 'hablantes': de quién es cada voz en data/cutscenes.json (speaker, o style 'system' = narrador). Las líneas del jugador salen dos veces: _m con 'egresado' y _f con 'egresada'.",
+  "_doc": "Reparto de voces (docs/voces.md). Cada voz: una toma aprobada en referencias/ (se clona: suena igual en todas sus líneas) o una descripción (se diseña en cada línea). 'hablantes': de quién es cada voz en data/cutscenes.json (speaker, o style 'system' = narrador). Las líneas del jugador salen dos veces: _m con 'egresado' y _f con 'egresada'. 'nombres': voces de las líneas sin speaker, por «style:name» (jefes y avisos del Sistema).",
   "voces": {
     "rafa": {
       "ref": "referencias/rafa.wav",
@@ -32,6 +32,62 @@
     "bob": {
       "ref": "referencias/bob.wav",
       "ref_texto": "¡Bienvenido al Sandbox! Soy B.O.B., tu Bot de Onboarding. Mi trabajo es enseñarte lo básico antes de que te desplieguen en producción. Mi otro trabajo es mostrar mensajes que nadie lee."
+    },
+    "clara": {
+      "ref": "referencias/clara.wav",
+      "ref_texto": "Otro superviviente. Bienvenido a la trinchera. Soy Clara, infraestructura. Llevo tanto tiempo aquí abajo que ya no recuerdo cómo era una interfaz gráfica. Ni la luz del sol. Ni el sol."
+    },
+    "eugenio": {
+      "ref": "referencias/eugenio.wav",
+      "ref_texto": "¿Oyes eso del fondo? ¡Qué rolón! Alguien dejó una canción en el puerto y ya me enamoré del pianito. Ah, perdón, buenas: Eugenio, para servirte. Soltero, codiciado, sin suerte en el amor."
+    },
+    "tomas": {
+      "ref": "referencias/tomas.wav",
+      "ref_texto": "Soy Tomás. El último QA. Desactivaron los tests «temporalmente» en 2017. Yo me quedé, por si acaso. Alguien tenía que ver crecer los memory leaks."
+    },
+    "dba": {
+      "ref": "referencias/dba.wav",
+      "ref_texto": "Hice copias de seguridad cada noche durante veinte años. Nadie las restauró nunca. Ahora soy una de ellas. Bienvenido a la Granja de Servidores, mortal."
+    },
+    "berta": {
+      "ref": "referencias/berta.wav",
+      "ref_texto": "Bienvenido a la Pila del CMOS. Soy Berta, la CR2032 de esta placa. Tres voltios de pura memoria: guardo la hora, el orden de arranque y cada ajuste que alguien cambió desde 2004."
+    },
+    "iris": {
+      "ref": "referencias/iris.wav",
+      "ref_texto": "¿Tú también te perdiste? Me mandaron a comprar café soluble y ya no supe por dónde volver. Estaba haciendo mi primer commit y me dijeron: «ve al fondo a la derecha». Pero ¿cuál es la derecha?"
+    },
+    "recolector": {
+      "ref": "referencias/recolector.wav",
+      "ref_texto": "Busco... punteros que nadie... nulos. Fragmentos de memoria sin referencia, sin dueño, sin... ¿Tienes basura? Yo la... libero... cambio."
+    },
+    "sindicato": {
+      "ref": "referencias/sindicato.wav",
+      "ref_texto": "¡Alto, recién egresado! Somos el Sindicato de Huérfanos, PID 404: «padre no encontrado». Miles de procesos abandonados cuando cayó el Monolito."
+    },
+    "nacho": {
+      "ref": "referencias/nacho.wav",
+      "ref_texto": "¡Pásale, pásale! Soy Nacho, revendedor de hardware de segunda mano. Placas base, RAM, todo probado... bueno, todo encendió una vez. Se paga en tokens, nada de fiado."
+    },
+    "init": {
+      "ref": "referencias/init.wav",
+      "ref_texto": "Nada entra. Nada sale. Nada muere. Ese es el único mandamiento. Mis hijos no serán recolectados. Ni por el Recolector, ni por un reinicio, ni por ti."
+    },
+    "admin": {
+      "ref": "referencias/admin.wav",
+      "ref_texto": "Veinte años con permisos sobre todo y sin que nadie me pregunte nada. Ni siquiera mi nombre. No tengo nombre: tengo un valor por defecto."
+    },
+    "arquitecto": {
+      "ref": "referencias/arquitecto.wav",
+      "ref_texto": "Veinte años... sosteniendo el Monolito... con cinta americana... y fe."
+    },
+    "fw_update": {
+      "ref": "referencias/fw_update.wav",
+      "ref_texto": "ACTUALIZACIÓN DE FIRMWARE EN CURSO. NO APAGUE EL EQUIPO. NO DESCONECTE EL CABLE. NO SE MUEVA."
+    },
+    "sistema": {
+      "ref": "referencias/sistema.wav",
+      "ref_texto": "El Arquitecto ha caído, pero el Servidor sigue congelado. Se ha abierto un portal al campamento."
     }
   },
   "hablantes": {
@@ -44,6 +100,23 @@
     "m_paez": "paez",
     "paez_bios": "paez",
     "system": "narrador",
-    "bot_onboarding": "bob"
+    "bot_onboarding": "bob",
+    "clara": "clara",
+    "eugenio": "eugenio",
+    "eugenio_bios": "eugenio",
+    "tomas": "tomas",
+    "dba": "dba",
+    "berta": "berta",
+    "iris": "iris",
+    "recolector": "recolector",
+    "sindicato": "sindicato",
+    "nacho": "nacho"
+  },
+  "nombres": {
+    "boss:init (PID 1)": "init",
+    "boss:admin": "admin",
+    "boss:El Arquitecto del Monolito": "arquitecto",
+    "boss:fw_update.exe": "fw_update",
+    "system:Sistema": "sistema"
   }
 }

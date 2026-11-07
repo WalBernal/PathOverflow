@@ -26,7 +26,7 @@ Pruebas descartadas: Kokoro (local) — no convenció (2026-11-06).
 - **M. Páez**: «Mexican man around 40, super enthusiastic and cheerful engineering teacher, bright upbeat mid-range voice, always smiling when he talks.»
 - **Narrador**: «Neutral Latin American Spanish narrator for a video game, like a classic RPG narrator: clear, warm, engaging and well-paced, never monotone, not theatrical.»
 
-## Propuesta T220 (pendiente del visto bueno)
+## Reparto de T220 (aprobado: tomas elegidas por el usuario en tools/voces/referencias/)
 
 Dos tomas de prueba de cada una (A y B) en `tools/voces/salida_reparto/`.
 
@@ -73,3 +73,4 @@ Todo en local (Qwen3-TTS, Apache 2.0; ~8 GB en `tools/voces/modelo/`, fuera de g
    («Voz: Masculina/Femenina»; los guardados viejos, masculina).
 
 Hecho: el prólogo (26 audios, 3 min 17 s, 1,4 MB).- 2026-11-06 · B.O.B.: la primera propuesta sonaba con acento inglés; se rehízo como robotito divertido y algo chillón, y el usuario aprobó la toma D (acento neutro). Referencia: tools/voces/referencias/bob.wav.
+- 2026-11-06 · T220 aprobado: Clara A, Eugenio A, Tomás B, DBA B, Berta B, Iris B, Recolector A, Sindicato B, Nacho A, init A, admin B, Arquitecto B, fw_update B, Sistema B.
