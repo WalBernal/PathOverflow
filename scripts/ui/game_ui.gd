@@ -580,16 +580,15 @@ func _build_pause_menu() -> Control:
 	columns.add_child(right)
 	right.add_child(UiStyle.section_header("Diálogos"))
 	var narrator := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
+	# Voces grabadas (T220-T224): suenan en cualquier dispositivo; la voz del sistema
+	# solo cubre las líneas sin grabar, así que el botón ya no depende de ella.
+	narrator.tooltip_text = "Voces generadas con IA (Qwen3-TTS, en local) a partir de una ficha de casting.\nLas líneas sin grabar usan la voz del sistema, si tiene una en español."
 	var refresh_narrator := func() -> void:
-		if not DialogueBox.narrator_available():
-			narrator.text = "Narrador: sin voz en español"
-			narrator.disabled = true
-			narrator.tooltip_text = "Instala una voz en español en el sistema (Windows: Configuración → Hora e idioma → Voz)."
-		else:
-			narrator.text = "Narrador (voz): " + ("sí" if DialogueBox.narrator_enabled() else "no")
+		narrator.text = "Voces de los diálogos: " + ("sí" if VoiceLines.enabled() else "no")
 	refresh_narrator.call()
 	narrator.pressed.connect(func() -> void:
-		GameSettings.set_value("dialogue", "narrator", not DialogueBox.narrator_enabled())
+		GameSettings.set_value("dialogue", "narrator", not VoiceLines.enabled())
+		VoiceLines.stop()
 		refresh_narrator.call())
 	right.add_child(narrator)
 	var blips := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)

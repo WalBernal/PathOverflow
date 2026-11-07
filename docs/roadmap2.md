@@ -298,7 +298,7 @@ Origen: usuario (idea 3)
 Origen: usuario (idea 4)
 - Una pestaña en la hoja de personaje con lo que pasó en cada acto (las escenas vistas, en resumen y con humor) y un «¿dónde me quedé?» con el objetivo actual, para volver tras semanas sin jugar.
 
-### [ ] T226 · Versión 4.3.0 y revisión en el teléfono · S 🛑
+### [x] T226 · Versión 4.3.0 y revisión en el teléfono · S 🛑
 Origen: usuario
 
 ---
@@ -463,3 +463,4 @@ Ideas que no están en la cola. Se pasan a tareas cuando el usuario las elija.
 - 2026-11-07 · T223 · Frases de combate con la voz del personaje: PlayerLines (15 frases en 5 momentos: subir de nivel «¡Compila!», morir «Segfault...», frasco «Limpiando la caché.», poca vida «¡Necesito un hotfix!» y sin maná «Necesito más RAM.»), grabadas con la voz del egresado y de la egresada (30 audios jugador_*). Nunca la misma dos veces seguidas, 4 s entre frases y pausa propia para frascos, maná y poca vida; subir de nivel y morir no esperan. Sustituyen al murmullo del jugador (si falta el audio, el murmullo); respetan el ajuste de murmullos y el volumen de voz. Prueba _test_player_lines y modo `-- frases`.
 - 2026-11-07 · T224 · Jefes que hablan durante el combate: BossLines con cuatro frases por jefe (el Arquitecto, init, fw_update.exe y admin): al despertar, al entrar en cada fase y con poca vida (15 %), cada una una sola vez por zona, con la voz aprobada de cada jefe (16 audios jefe_*) y un subtítulo de 4,5 s bajo la barra del jefe (HUD.boss_say) que no detiene el juego. Prueba _test_boss_lines, modo `-- jefe_voz` (probado en la arena del Arquitecto) y captura docs/capturas/interfaz/224_jefe_habla.png.
 - 2026-11-07 · T225 · Diario del egresado: pestaña «Diario» en la hoja de personaje (C), junto a «Ficha», con «¿Dónde me quedé?» (zona y objetivo actual, o una pista si no hay misión) y un resumen con humor de cada acto (data/diario.json, 22 entradas). Cada escena vista se apunta en character.flags.cutscenes_seen (Journal.mark_seen en world.play_cutscene); en partidas de antes, los actos completos se ven enteros. Prueba _test_journal, modo `-- diario` y captura docs/capturas/interfaz/225_diario.png.
+- 2026-11-07 · T226 · Versión 4.3.0: APK (código 33, 74 MB por las voces) y build/latest.json, Windows e instalador (201 MB). Trae la fase 44 completa (voces de escenas y NPC, frases de combate, jefes que hablan y diario del egresado) y los arreglos de B.O.B., el creador y la absorción. En Pausa, el botón «Narrador» pasa a «Voces de los diálogos» y ya no se desactiva sin voz del sistema en español; su tooltip avisa de que las voces son generadas con IA. Lista docs/prueba_celular_4.3.md y README. Sin subir a GitHub: pendiente de la revisión del usuario 🛑.
