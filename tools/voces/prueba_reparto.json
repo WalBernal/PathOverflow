@@ -1,6 +1,6 @@
 {
   "voces": {
-    "bob": "Friendly upbeat onboarding robot assistant: androgynous synthetic voice with a light metallic, slightly digital timbre, cheerful and helpful like a tutorial guide, clear and quick. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
+    "bob": "Funny cartoonish little robot mascot for a game tutorial: playful, goofy and super cheerful, a bit squeaky and high-pitched, bouncy energetic delivery with a light digital buzz, never serious. Native Spanish speaker with a neutral Latin American Spanish accent: no English accent at all, clear and standard, not Castilian or Spain Spanish, not strongly regional.",
     "clara": "Woman around 38, infrastructure team lead: firm, dry and practical, weary after years in the trenches, clear confident mid-range voice, a little sarcastic. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
     "eugenio": "Man around 35, a self-proclaimed eligible bachelor: flirty, theatrical and dramatic, warm smooth voice, playful and a bit cheesy, upbeat. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
     "tomas": "Man around 32, the last QA tester: exhausted, paranoid and melancholic, low quiet voice, flat delivery with dry humor. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
@@ -17,16 +17,6 @@
     "sistema": "Clean synthetic operating system announcer: calm neutral voice, crisp and clear like a computer notification. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional."
   },
   "lineas": [
-    {
-      "id": "01a_bob",
-      "voz": "bob",
-      "texto": "¡Bienvenido al Sandbox! Soy B.O.B., tu Bot de Onboarding. Mi trabajo es enseñarte lo básico antes de que te desplieguen en producción. Mi otro trabajo es mostrar mensajes que nadie lee."
-    },
-    {
-      "id": "01b_bob",
-      "voz": "bob",
-      "texto": "¡Bienvenido al Sandbox! Soy B.O.B., tu Bot de Onboarding. Mi trabajo es enseñarte lo básico antes de que te desplieguen en producción. Mi otro trabajo es mostrar mensajes que nadie lee."
-    },
     {
       "id": "02a_clara",
       "voz": "clara",
@@ -166,6 +156,21 @@
       "id": "15b_sistema",
       "voz": "sistema",
       "texto": "El Arquitecto ha caído, pero el Servidor sigue congelado. Se ha abierto un portal al campamento."
+    },
+    {
+      "id": "01c_bob",
+      "voz": "bob",
+      "texto": "¡Bienvenido al Sandbox! Soy B.O.B., tu Bot de Onboarding. Mi trabajo es enseñarte lo básico antes de que te desplieguen en producción. Mi otro trabajo es mostrar mensajes que nadie lee."
+    },
+    {
+      "id": "01d_bob",
+      "voz": "bob",
+      "texto": "¡Bienvenido al Sandbox! Soy B.O.B., tu Bot de Onboarding. Mi trabajo es enseñarte lo básico antes de que te desplieguen en producción. Mi otro trabajo es mostrar mensajes que nadie lee."
+    },
+    {
+      "id": "01e_bob",
+      "voz": "bob",
+      "texto": "¡Bienvenido al Sandbox! Soy B.O.B., tu Bot de Onboarding. Mi trabajo es enseñarte lo básico antes de que te desplieguen en producción. Mi otro trabajo es mostrar mensajes que nadie lee."
     }
   ]
 }
