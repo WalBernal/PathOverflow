@@ -2647,6 +2647,22 @@ func _capture_skills_today() -> void:
 				panel.call("_on_bag_clicked", i)
 		await _wait(0.4)
 		_save("228_hoy_%s_ram_elegida" % ("tactil" if touch else "pc"))
+		panel.set("_tab", "all")
+		panel.call("_rebuild")
+		await _wait(0.4)
+		_save("228_hoy_%s_todas" % ("tactil" if touch else "pc"))
+		# Instalar con un toque desde «Todas las RAM» (la Pasta en el Dron Escolta, que tiene ranura libre).
+		var before: Variant = c.inventory.boards[3].rams[3]
+		for i in Inventory.BAG_SIZE:
+			var it: Variant = c.inventory.bag[i]
+			if it is RamModule and (it as RamModule).family() == "pasta_termica":
+				var v := SkillAdvice.verdict(it, c.inventory.boards[3], c)
+				panel.call("_install", i, 3, int(v["slot"]))
+				break
+		await _wait(0.3)
+		print("habilidades %s: panel %s (escala %.1f) · instalar con un toque: ranura 4 del Dron Escolta %s → %s" % ["tactil" if touch else "pc", panel.size,
+			panel.get_global_transform().get_scale().x, "vacía" if before == null else "ocupada", (c.inventory.boards[3].rams[3] as RamModule).display_name() if c.inventory.boards[3].rams[3] else "vacía"])
+		_save("228_hoy_%s_instalada" % ("tactil" if touch else "pc"))
 	Touch.force = false
 
 

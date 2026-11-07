@@ -50,3 +50,7 @@ bolsa con placas y RAM sueltas): `docs/capturas/interfaz/228_hoy_pc.png`,
 **A como pantalla principal, con el veredicto de B** al tocar una RAM en la pestaña «Todas»
 (o recién recogida): A sirve para montar una placa y B para decidir dónde va cada RAM nueva.
 Lo que elija el usuario se implementa en T229 (flujo táctil) y T230 (claridad en PC).
+
+## Elección
+
+2026-11-07: el usuario eligió **A con el veredicto de B** (la recomendación).

@@ -266,6 +266,7 @@ func _initialize() -> void:
 	_test_boss_lines()
 	_test_journal()
 	_test_auto_equip()
+	_test_skill_advice()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -9827,3 +9828,33 @@ func _test_auto_equip() -> void:
 		c.inventory.add_item(r)
 	var slots := [c.inventory.auto_equip(r1, true), c.inventory.auto_equip(r2, true), c.inventory.auto_equip(r3, true)]
 	_check(slots == ["ring_left", "ring_right", ""], "autoequipar: anillos al primer hueco libre, el tercero a la bolsa (%s)" % [slots])
+
+## Consejos de la pantalla de habilidades (T229): ranura libre con su mejora, cambio
+## (la ranura de su generación que más DPS deja), sin ranuras y «no le sirve».
+func _test_skill_advice() -> void:
+	var c := _new_character()
+	var skills: Dictionary = _db.skills.skills
+	var rams: Dictionary = _db.skills.rams
+	var pasta := RamModule.new(rams["pasta_termica"])
+	var gen := pasta.generation()
+	var other := "DDR4" if gen != "DDR4" else "DDR5"
+	var board := Motherboard.new(skills["rafaga_de_paquetes"], 10, [gen, other])
+	var v: Dictionary = SkillAdvice.verdict(pasta, board, c)
+	_check(String(v["kind"]) == SkillAdvice.FREE and int(v["slot"]) == 0 and not is_nan(float(v["delta"])) and SkillAdvice.good(v),
+		"consejo: ranura libre de su generación, con la mejora de DPS (%s)" % [v])
+	board.install(RamModule.new(rams["pasta_termica"]), 0)
+	v = SkillAdvice.verdict(RamModule.new(rams["pasta_termica"]), board, c)
+	_check(String(v["kind"]) == SkillAdvice.SWAP and int(v["slot"]) == 0, "consejo: sin ranura libre, propone cambiar la de su generación")
+	var only_other := Motherboard.new(skills["rafaga_de_paquetes"], 10, [other])
+	_check(String(SkillAdvice.verdict(pasta, only_other, c)["kind"]) == SkillAdvice.NO_SLOT, "consejo: sin ranuras de su generación")
+	var useless := false
+	for rid in rams:
+		var r := RamModule.new(rams[rid])
+		for sid in ["golem_hardware", "aura_mando"]:
+			if skills.has(sid) and not r.supports(skills[sid]):
+				useless = String(SkillAdvice.verdict(r, Motherboard.new(skills[sid], 5, [r.generation()]), c)["kind"]) == SkillAdvice.USELESS
+				break
+		if useless:
+			break
+	_check(useless, "consejo: «no le sirve» cuando la habilidad no admite esa RAM")
+	_check(SkillAdvice.short_effect(pasta).length() < String(pasta.def["description"]).length() + 1, "consejo: el efecto en una frase")
