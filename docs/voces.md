@@ -72,4 +72,4 @@ Todo en local (Qwen3-TTS, Apache 2.0; ~8 GB en `tools/voces/modelo/`, fuera de g
    tiene audio, se usa la voz del sistema como antes. La voz del jugador se elige en el creador
    («Voz: Masculina/Femenina»; los guardados viejos, masculina).
 
-Hecho: el prólogo (26 audios, 3 min 17 s, 1,4 MB).
+Hecho: el prólogo (26 audios, 3 min 17 s, 1,4 MB).- 2026-11-06 · B.O.B.: la primera propuesta sonaba con acento inglés; se rehízo como robotito divertido y algo chillón, y el usuario aprobó la toma D (acento neutro). Referencia: tools/voces/referencias/bob.wav.
