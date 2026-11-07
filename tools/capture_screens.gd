@@ -233,6 +233,37 @@ func _run() -> void:
 		await _capture_unit_attacks()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("dialogo_voz"):
+		var gd: Node = get_node("/root/GameData")
+		var c: CharacterData = gd.create_character("Voces", &"guerrero", CharacterAppearance.default(), false)
+		c.flags["zone"] = "tutorial"
+		c.flags["tutorial_step"] = 99
+		c.flags["tutorial_seen_done"] = true
+		gd.current_character = c
+		var world: Node = load(GameData.WORLD_SCENE).instantiate()
+		_swap(world)
+		world.set("_since_save", -9999.0)
+		await _wait(1.2)
+		var ui: GameUI = world.get("ui")
+		if ui.cutscene.visible:
+			ui.cutscene.call("_finish")
+		var npc: Dictionary = {}
+		for n in (world.get("zone") as Zone).npcs:
+			if String(n["id"]) == "bot_onboarding":
+				npc = n
+		var dialogue: Dictionary = (world.get("zone") as Zone).dialogues.get(npc.get("dialogue", ""), {})
+		world.call("_on_npc_interacted", npc)
+		await _wait(0.6)
+		var box: DialogueBox = ui.dialogue_box
+		print("diálogo B.O.B.: línea %s · sonando %s · retrato habla %s" % [box.get("_line_id"), VoiceLines.is_playing(), box.get("_portrait").talking])
+		_save("dialogo_voz_bob")
+		box.call("_show_node", String(dialogue.get("start", "")))   # ya visitado: una frase del menú
+		await _wait(0.3)
+		print("diálogo B.O.B. (menú): línea %s · sonando %s" % [box.get("_line_id"), VoiceLines.is_playing()])
+		box.close()
+		print("diálogo cerrado: sonando %s" % VoiceLines.is_playing())
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("absorcion"):
 		var gd: Node = get_node("/root/GameData")
 		gd.set("pending_creation", {"name": "Prueba", "appearance": CharacterAppearance.default()})

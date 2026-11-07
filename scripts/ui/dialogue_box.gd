@@ -38,6 +38,8 @@ const QUEST_COLOR := Color("ffd84a")
 var character: CharacterData
 var npc: Dictionary = {}
 var _dialogue: Dictionary = {}
+## Id de la voz grabada de la línea actual (VoiceLines.npc_id; "" si no tiene).
+var _line_id := ""
 var _dialogue_id := ""
 var _node_id := ""
 var _visited_now := {}
@@ -223,9 +225,14 @@ func was_seen(node_id: String) -> bool:
 	return _seen_nodes().has(node_id)
 
 
-func _pick(value: Variant) -> String:
+## Una de la lista (o el texto tal cual) y, en `_line_id`, el id de su voz grabada
+## (VoiceLines.npc_id con `part`; -1 en el índice si no es una lista).
+func _pick(value: Variant, part := "") -> String:
 	if value is Array and not value.is_empty():
-		return String(value[_rng.randi_range(0, value.size() - 1)])
+		var i := _rng.randi_range(0, value.size() - 1)
+		_line_id = VoiceLines.npc_id(_dialogue_id, part, i) if part != "" else ""
+		return String(value[i])
+	_line_id = VoiceLines.npc_id(_dialogue_id, part) if part != "" else ""
 	return String(value)
 
 
@@ -233,13 +240,16 @@ func _pick(value: Variant) -> String:
 func _text_for(node_id: String, node: Dictionary) -> String:
 	var start: String = _dialogue.get("start", "")
 	if node_id == start and _visited_now.has(start):
-		return _pick(_dialogue.get("menu", DEFAULT_MENU))
+		return _pick(_dialogue.get("menu", DEFAULT_MENU), "_menu" if _dialogue.has("menu") else "")
 	if was_seen(node_id):
 		if node.has("again"):
-			return _pick(node["again"])
+			return _pick(node["again"], node_id + "_otra")
 		if node_id == start and _dialogue.has("menu"):
-			return _pick(_dialogue.get("greeting_again", _dialogue["menu"]))
-	return Touch.text(node)   # con su versión para el dedo, si la tiene (T138)
+			return _pick(_dialogue.get("greeting_again", _dialogue["menu"]), "_saludo" if _dialogue.has("greeting_again") else "_menu")
+	# Con su versión para el dedo, si la tiene (T138).
+	var touch := Touch.text(node) != String(node.get("text", ""))
+	_line_id = VoiceLines.npc_id(_dialogue_id, node_id + ("_tactil" if touch else ""))
+	return Touch.text(node)
 
 
 func _show_node(node_id: String) -> void:
@@ -256,6 +266,15 @@ func _show_node(node_id: String) -> void:
 	_shown = 0.0
 	_text.visible_characters = 0
 	_stop_voice()
+	# Voz grabada (VoiceLines, T221): el texto avanza a su ritmo y el retrato habla mientras suena.
+	var length := VoiceLines.play(_line_id)
+	if length > 0.0:
+		_narrating = true
+		_voice_age = 0.0
+		_cps = maxf(CHARS_PER_SECOND * 0.4, _total / maxf(0.5, length * 0.92))
+		_build_options(node)
+		_reposition.call_deferred()
+		return
 	_narrating = narrator_enabled() and speak(_text.get_parsed_text(), _pitch, _rate, npc.get("voice", {}))
 	if not _narrating:   # sin narrador: un murmullo corto con la voz del NPC (Barks)
 		Barks.play(Barks.kind_for(_text.get_parsed_text(), _visited_now.size() == 1), bark_pitch(npc))
@@ -327,13 +346,13 @@ func _show_options() -> void:
 func _process(delta: float) -> void:
 	if not visible:
 		return
-	_portrait.talking = is_typing() or (_narrating and voice_busy())
+	_portrait.talking = is_typing() or (_narrating and _line_busy())
 	if _shown >= _total:
 		_show_options()
 		return
 	if _narrating:
 		_voice_age += delta
-		if _voice_age > VOICE_GRACE and not voice_busy():
+		if _voice_age > VOICE_GRACE and not _line_busy():
 			_narrating = false   # la voz terminó: el texto la alcanza de golpe
 			_finish_text()
 			return
@@ -392,8 +411,14 @@ func _finish_text() -> void:
 
 func _stop_voice() -> void:
 	if _narrating:
+		VoiceLines.stop()
 		stop_speaking()
 		_narrating = false
+
+
+## ¿Sigue sonando la línea (grabada o con la voz del sistema)?
+func _line_busy() -> bool:
+	return VoiceLines.is_playing() or voice_busy()
 
 
 ## Centrada abajo, por encima del HUD (se recalcula porque la altura cambia con el texto).

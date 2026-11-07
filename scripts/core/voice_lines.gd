@@ -21,6 +21,17 @@ static func cutscene_id(scene: String, index: int, player_voice := -1) -> String
 	return id
 
 
+## Id de una línea de los diálogos de NPC (npcs.json → dialogues): `part` es el id del
+## nodo (su texto), "<nodo>_tactil" (su versión para el dedo), "<nodo>_otra" (sus textos
+## al releerlo), "_menu" o "_saludo" (las frases del menú y de bienvenida al volver);
+## `index`, cuál de la lista. No cambia si se añaden otros NPC o nodos.
+static func npc_id(dialogue: String, part: String, index := -1) -> String:
+	var id := "npc_%s_%s" % [dialogue, part]
+	if index >= 0:
+		id += "_%d" % index
+	return id
+
+
 static func path_for(id: String) -> String:
 	return DIR + id + ".ogg"
 

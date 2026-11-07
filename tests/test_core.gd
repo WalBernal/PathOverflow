@@ -260,6 +260,7 @@ func _initialize() -> void:
 	_test_new_skills_t209()
 	_test_zone_report()
 	_test_voice_lines()
+	_test_npc_voice_ids()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -9654,3 +9655,28 @@ func _test_voice_lines() -> void:
 				if not ResourceLoader.exists(vl.path_for(id)):
 					missing.append(id)
 	_check(missing.is_empty(), "voces: cada línea hablada del prólogo tiene su audio (faltan: %s)" % ", ".join(missing))
+
+## Voces de los diálogos de NPC (T221): el id de cada línea depende solo de su diálogo,
+## su nodo y su posición en la lista, así que no cambia al añadir otros NPC o nodos.
+func _test_npc_voice_ids() -> void:
+	var vl: GDScript = load("res://scripts/core/voice_lines.gd")
+	_check(vl.npc_id("ada", "hola") == "npc_ada_hola" and vl.npc_id("ada", "_menu", 2) == "npc_ada__menu_2"
+		and vl.npc_id("ada", "hola_tactil") == "npc_ada_hola_tactil" and vl.npc_id("ada", "pepe_otra", 0) == "npc_ada_pepe_otra_0",
+		"voces de NPC: id por diálogo, nodo y variante")
+	var data: Dictionary = DataLoader.load_json("res://data/npcs.json")
+	var ids := {}
+	var dupes := 0
+	for did in data["dialogues"]:
+		var d: Dictionary = data["dialogues"][did]
+		var parts: Array = []
+		for node_id in d.get("nodes", {}):
+			parts.append(vl.npc_id(did, node_id))
+		for i in (d.get("menu", []) as Array).size():
+			parts.append(vl.npc_id(did, "_menu", i))
+		for i in (d.get("greeting_again", []) as Array).size():
+			parts.append(vl.npc_id(did, "_saludo", i))
+		for id in parts:
+			if ids.has(id):
+				dupes += 1
+			ids[id] = true
+	_check(dupes == 0 and ids.size() > 200, "voces de NPC: cada línea tiene un id único (%d líneas)" % ids.size())
