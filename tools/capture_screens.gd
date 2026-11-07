@@ -233,6 +233,31 @@ func _run() -> void:
 		await _capture_unit_attacks()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("diario"):
+		var gd: Node = get_node("/root/GameData")
+		var c: CharacterData = gd.create_character("Diario", &"guerrero", CharacterAppearance.default(), false)
+		c.flags["zone"] = "zona1"
+		c.flags["tutorial_step"] = 99
+		c.flags["tutorial_seen_done"] = true
+		c.flags["act1_complete"] = true
+		Journal.mark_seen(c.flags, "llegada_brecha")
+		Journal.mark_seen(c.flags, "llegada_socket")
+		c.level = 14
+		gd.current_character = c
+		var world: Node = load(GameData.WORLD_SCENE).instantiate()
+		_swap(world)
+		world.set("_since_save", -9999.0)
+		await _wait(1.2)
+		var ui: GameUI = world.get("ui")
+		if ui.cutscene.visible:
+			ui.cutscene.call("_finish")
+		ui.call("_on_menu_requested", "character")
+		await _wait(0.3)
+		ui.character_sheet.call("_show_tab", true)
+		await _wait(0.4)
+		_save("225_diario")
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("jefe_voz"):
 		var gd: Node = get_node("/root/GameData")
 		var c: CharacterData = gd.create_character("Jefe", &"guerrero", CharacterAppearance.default(), false)

@@ -264,6 +264,7 @@ func _initialize() -> void:
 	_test_all_voice_lines()
 	_test_player_lines()
 	_test_boss_lines()
+	_test_journal()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -9777,3 +9778,26 @@ func _test_boss_lines() -> void:
 				data_types.append(String(z["boss"]["type"]))
 	_check(missing.is_empty() and data_types.all(func(t: String) -> bool: return bl.has_boss(t)),
 		"jefes: los cuatro jefes de los actos tienen sus frases y su voz (faltan: %s)" % ", ".join(missing))
+
+## Diario del egresado (T225): una entrada se ve al ver su escena o al completar su
+## acto (partidas de antes); el prólogo siempre; cada entrada apunta a una escena real.
+func _test_journal() -> void:
+	var j: GDScript = load("res://scripts/quests/journal.gd")
+	var flags := {}
+	var acts: Array = j.visible_acts(flags)
+	_check(acts.size() == 1 and String(acts[0]["title"]).begins_with("Prólogo"), "diario: sin jugar, solo el prólogo")
+	j.mark_seen(flags, "llegada_sandbox")
+	acts = j.visible_acts(flags)
+	_check(acts.size() == 2 and (acts[1]["lines"] as Array).size() == 1, "diario: al ver una escena aparece su entrada (y solo esa)")
+	flags["act2_complete"] = true
+	var act2: Array = j.visible_acts(flags).filter(func(a: Dictionary) -> bool: return String(a["title"]).begins_with("Acto II"))
+	_check(act2.size() == 1 and (act2[0]["lines"] as Array).size() == 7, "diario: un acto completo se ve entero aunque no se registraran sus escenas")
+	var scenes: Dictionary = DataLoader.load_json("res://data/cutscenes.json")["cutscenes"]
+	var bad: Array = []
+	for act in j.data()["acts"]:
+		for e in act["entries"]:
+			if e.has("cutscene") and not scenes.has(String(e["cutscene"])):
+				bad.append(e["cutscene"])
+	_check(bad.is_empty(), "diario: cada entrada apunta a una escena que existe (%s)" % ", ".join(bad))
+	_check(j.where("El Bosque de Cables", "Derrota al Arquitecto").contains("Bosque") and j.where("", "").contains("Sin misión"),
+		"diario: «¿dónde me quedé?» con zona y objetivo, o una pista si no hay misión")

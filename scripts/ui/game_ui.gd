@@ -162,6 +162,7 @@ func setup(player: Player, enemies: EnemyManager, character: CharacterData, loot
 	_root.add_child(character_sheet)
 	character_sheet.position = Vector2(10, 34)
 	character_sheet.setup(character, player, skills)
+	character_sheet.goal_provider = func() -> String: return quests.short_goal() if quests else ""
 	character_sheet.close_requested.connect(func() -> void: _on_menu_requested("character"))
 	character_sheet.passives_requested.connect(func() -> void: _on_menu_requested("passives"))
 

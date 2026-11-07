@@ -649,6 +649,7 @@ func play_cutscene(id: String) -> void:
 		return
 	player.stop_auto_move()
 	enemies.frozen = true
+	Journal.mark_seen(character.flags, id)   # para el diario del egresado (T225)
 	ui.play_cutscene(data, func() -> void: _on_cutscene_finished(data.get("on_finish", {})))
 
 

@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "_doc": "Diario del egresado (T225): lo que pasó en cada acto, en resumen y con humor. Cada entrada se ve cuando se vio su escena (cutscene, character.flags.cutscenes_seen) o cuando el acto ya está completo (flag <acto>_complete: partidas de antes del diario). Las del prólogo, siempre.",
+  "acts": [
+    {
+      "id": "prologo",
+      "title": "Prólogo · La constancia",
+      "always": true,
+      "entries": [
+        {"text": "Fui a la UAdeO por mi constancia de servicio social. Rafa me informó que, para el sistema, nunca existí: soy un puntero nulo."},
+        {"text": "Se cayó el SICE, apareció un trato, una carpeta lila que decía «NO TOCAR» y... la toqué. El Monolito se tragó a todos. A mí también."}
+      ]
+    },
+    {
+      "id": "act1",
+      "title": "Acto I · El Último Commit",
+      "entries": [
+        {"cutscene": "llegada_sandbox", "text": "Desperté en un Sandbox con B.O.B., un bot de onboarding que enseña lo básico y muestra mensajes que nadie lee."},
+        {"cutscene": "llegada_campamento", "text": "Llegué al campamento de supervivientes: otros practicantes que también cayeron. Nadie trae café."},
+        {"cutscene": "arquitecto_muere", "text": "Derroté al Arquitecto del Monolito. Antes de caer dijo que el Monolito no era el problema: era la tapa. Qué tranquilizador."},
+        {"cutscene": "reunion_campamento", "text": "Reunión en el campamento: el Servidor sigue congelado. Rafa abrió el puerto 2222 «por si acaso»."},
+        {"cutscene": "red_lince", "text": "Crucé el portal. El campamento se deshizo en ceros y unos y caí por la tabla de procesos."}
+      ]
+    },
+    {
+      "id": "act2",
+      "title": "Acto II · Kernel Panic",
+      "entries": [
+        {"cutscene": "llegada_brecha", "text": "Aterricé en el Espacio de Kernel. Privilegios elevados, nervios también."},
+        {"cutscene": "llegada_socket", "text": "Encontré refugio en el Socket Seguro: la sesión aguanta mientras nadie cierre la puerta."},
+        {"cutscene": "fabrica_llegada", "text": "El Thread Pool: pistones, vapor y miles de tareas concurrentes peleando por el mismo recurso."},
+        {"cutscene": "registro_clara", "text": "Leí el registro de Clara: alguien interno desplegó un viernes a las 18:00. Clásico."},
+        {"cutscene": "deadlock_resuelto", "text": "Rompí el deadlock: los gigantes de hierro soltaron su presa y se abrió el Bus del Sistema."},
+        {"cutscene": "anillo_entrada", "text": "En el Anillo 0, init (PID 1) me quiso adoptar. Le dije que ya tenía padres. Más o menos."},
+        {"cutscene": "init_muere", "text": "init cayó. Me pidió que cuidara de los huérfanos. El ventilador sigue girando."}
+      ]
+    },
+    {
+      "id": "act3",
+      "title": "Acto III · El Silicio Profundo",
+      "entries": [
+        {"cutscene": "llegada_silicio", "text": "La controladora de bus me escupió sobre un suelo de silicio que vibra. Bonito, si te gustan los temblores."},
+        {"cutscene": "llegada_jtag", "text": "En el puerto JTAG alguien ya había calculado que llegaría yo. Un 73 % de probabilidad, dijo."},
+        {"cutscene": "camara_entrada", "text": "Una barra de progreso del tamaño de un edificio: fw_update.exe y su Gran Reflasheo. No se mueva, decía."},
+        {"cutscene": "reflash_cancelado", "text": "Cancelé la actualización. fw_update.exe preguntó qué usuario la canceló. Yo, el puntero nulo."}
+      ]
+    },
+    {
+      "id": "act4",
+      "title": "Acto IV · El Setup de la BIOS",
+      "entries": [
+        {"cutscene": "bios_post", "text": "Piiii. Pi. Pi. Llegué a la BIOS: aquí siempre es uno de enero del 2000."},
+        {"cutscene": "llegada_cmos", "text": "Conocí a Berta, la pila CR2032: guarda la hora y cada ajuste que alguien cambió desde 2004."},
+        {"cutscene": "admin_entrada", "text": "Una ventana de login se abrió sola: admin, contraseña admin. Veinte años con acceso a todo y sin nombre."},
+        {"cutscene": "admin_cambia_password", "text": "Le puse una contraseña a admin. Por primera vez, alguien eligió algo por él. El reloj volvió a avanzar."}
+      ]
+    }
+  ]
+}

@@ -45,6 +45,34 @@ var _passive_button: Button
 var _quote: Label
 var _refresh_timer := 0.0
 var _rng := RandomNumberGenerator.new()
+## Diario del egresado (T225): pestaña, texto y de dónde sale el objetivo actual.
+var _tab_sheet: Button
+var _tab_journal: Button
+var _sheet_scroll: Control
+var _journal_scroll: Control
+var _journal: RichTextLabel
+var goal_provider: Callable
+
+
+func _show_tab(journal: bool) -> void:
+	_sheet_scroll.visible = not journal
+	_journal_scroll.visible = journal
+	_tab_sheet.modulate = Color(1, 1, 1, 0.55 if journal else 1.0)
+	_tab_journal.modulate = Color(1, 1, 1, 1.0 if journal else 0.55)
+	if journal:
+		_refresh_journal()
+	else:
+		(_sheet_scroll as FitScroll).fit.call_deferred()
+
+
+func _refresh_journal() -> void:
+	if character == null:
+		return
+	var zone_id := String(character.flags.get("zone", ""))
+	var zone_name := String(GameData.zones.get(zone_id, {}).get("name", ""))
+	var goal := String(goal_provider.call()) if goal_provider.is_valid() else ""
+	_journal.text = Journal.bbcode(character.flags, zone_name, goal)
+	(_journal_scroll as FitScroll).fit.call_deferred()
 
 
 func setup(p_character: CharacterData, p_player: Player, p_skills: SkillController) -> void:
@@ -56,7 +84,10 @@ func setup(p_character: CharacterData, p_player: Player, p_skills: SkillControll
 	visibility_changed.connect(func() -> void:
 		if visible:
 			_quote.text = QUOTES[_rng.randi_range(0, QUOTES.size() - 1)]
-			_refresh())
+			_refresh()
+			if _journal_scroll.visible:
+				_refresh_journal())
+	_show_tab(false)
 
 
 func _ready() -> void:
@@ -68,8 +99,29 @@ func _ready() -> void:
 	box.add_theme_constant_override("separation", 10)
 	add_child(box)
 	box.add_child(UiStyle.window_header("Personaje", "Tus cifras, sin maquillaje  ·  C para cerrar", func() -> void: close_requested.emit()))
+	# Pestañas (T225): la ficha de siempre y el diario del egresado.
+	var tabs := HBoxContainer.new()
+	tabs.add_theme_constant_override("separation", 8)
+	box.add_child(tabs)
+	_tab_sheet = UiStyle.button("Ficha", _show_tab.bind(false), 140)
+	_tab_journal = UiStyle.button("Diario", _show_tab.bind(true), 140)
+	_tab_journal.tooltip_text = "Lo que ha pasado hasta ahora y dónde te quedaste."
+	tabs.add_child(_tab_sheet)
+	tabs.add_child(_tab_journal)
+	_journal_scroll = FitScroll.new(self)
+	_journal_scroll.visible = false
+	_journal = RichTextLabel.new()
+	_journal.bbcode_enabled = true
+	_journal.fit_content = true
+	_journal.custom_minimum_size = Vector2(WIDTH - 40.0, 0)
+	_journal.add_theme_font_size_override("normal_font_size", 15)
+	_journal.add_theme_font_size_override("bold_font_size", 17)
+	_journal.add_theme_constant_override("line_separation", 4)
+	_journal_scroll.add_child(_journal)   # antes de entrar al árbol: FitScroll sigue su tamaño
+	box.add_child(_journal_scroll)
 	# El resto se desplaza si no cabe (interfaz grande en pantallas bajas).
 	var scroll := FitScroll.new(self)
+	_sheet_scroll = scroll
 	box.add_child(scroll)
 	box = VBoxContainer.new()
 	box.add_theme_constant_override("separation", 10)
