@@ -31,6 +31,9 @@ var _center: VBoxContainer
 var _right: VBoxContainer
 var _help: Label
 var _compact := false
+## La placa elegida: sus casillas de ranura y la línea de cifras (para la vista previa).
+var _slot_cells: Array = []
+var _stats: Label
 
 
 static func _big() -> bool:
@@ -89,6 +92,33 @@ func _ready() -> void:
 		_rebuild()
 
 
+## Atajos de PC (T230), solo con el menú abierto: 1-6 eligen placa (y no beben
+## refrescos), Supr quita la RAM de la ranura elegida, Tab cambia de pestaña.
+const SHORTCUTS := "Atajos: 1-6 placa · Supr quitar RAM · Tab pestaña · clic derecho quitar · arrastrar y soltar"
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not is_visible_in_tree() or character == null:
+		return
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo:
+		return
+	var n := key.keycode - KEY_1
+	if n >= 0 and n < Inventory.HOTBAR_SIZE:
+		_on_board_tapped(n)
+		get_viewport().set_input_as_handled()
+	elif key.keycode == KEY_DELETE or key.keycode == KEY_BACKSPACE:
+		var board := _board()
+		if board and _sel_slot != -1 and board.rams[_sel_slot] != null:
+			drop_into_bag({"kind": "dimm", "board": _sel_board, "dimm": _sel_slot})
+		get_viewport().set_input_as_handled()
+	elif key.keycode == KEY_TAB:
+		var tabs := ["fits", "all", "boards"]
+		_tab = tabs[(tabs.find(_tab) + 1) % tabs.size()]
+		_rebuild()
+		get_viewport().set_input_as_handled()
+
+
 func _clear(c: Control) -> void:
 	for ch in c.get_children():
 		c.remove_child(ch)
@@ -106,6 +136,7 @@ func _rebuild() -> void:
 	_clear(_left)
 	_clear(_center)
 	_clear(_right)
+	_slot_cells.clear()
 	# Sin sitio para las tres columnas (interfaz grande en PC), las placas van compactas.
 	_compact = is_inside_tree() and get_parent_area_size().x > 0.0 and get_parent_area_size().x < 1250.0
 	_left.custom_minimum_size.x = 104.0 if _compact else 250.0
@@ -133,7 +164,7 @@ func _update_help() -> void:
 		_help.text = "%s elegida: toca una ranura %s de la placa, o «Instalar» en la lista." % [ram.display_name(), ram.generation()]
 		_help.add_theme_color_override("font_color", OK_COLOR)
 	else:
-		_help.text = STEPS + ("" if _big() else "      ·  PC: también puedes arrastrar y soltar")
+		_help.text = STEPS + ("" if _big() else "\n" + SHORTCUTS)
 		_help.add_theme_color_override("font_color", UiStyle.MUTED)
 
 
@@ -338,11 +369,8 @@ func _slot_card(board: Motherboard, d: int, ram_sel: RamModule) -> Control:
 	var tile := minf(_tile(), _slot_w(board) - 34.0)   # con muchas ranuras, casillas más chicas
 	cell.custom_minimum_size = Vector2(tile, tile)
 	cell.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	cell.selected = d == _sel_slot
-	cell.warning = ram != null and not ram.supports(board.skill_def)
-	if ram_sel != null and ram == null and ram_sel.generation() == gen:
-		cell.selected = ram_sel.supports(board.skill_def)   # verde: aquí funciona
-		cell.warning = not cell.selected                   # encaja pero no haría nada
+	_mark_slot(cell, board, d, ram_sel)
+	_slot_cells.append(cell)
 	col_box.add_child(cell)
 	var name_text := ram.display_name() if ram else "libre"
 	var name_label := UiStyle.label(name_text.trim_suffix(" (%s)" % gen), 11, UiStyle.TEXT if ram else UiStyle.MUTED)
@@ -360,8 +388,29 @@ func _slot_card(board: Motherboard, d: int, ram_sel: RamModule) -> Control:
 	return card
 
 
+## Verde: ahí funciona `ram_sel` (o la que hay); rojo: encaja pero no haría nada.
+func _mark_slot(cell: ItemCell, board: Motherboard, d: int, ram_sel: RamModule) -> void:
+	var ram: RamModule = board.rams[d]
+	cell.selected = d == _sel_slot
+	cell.warning = ram != null and not ram.supports(board.skill_def)
+	if ram_sel != null and ram_sel.generation() == String(board.slots[d]) and (ram == null or d == int(SkillAdvice.verdict(ram_sel, board, character)["slot"])):
+		cell.selected = ram_sel.supports(board.skill_def)
+		cell.warning = not cell.selected
+	cell.queue_redraw()
+
+
 ## "DPS ~120 · maná 14 · 3 proyectiles · RAM activas 2/3" (y, con una RAM elegida, el cambio).
 func _stats_label(board: Motherboard) -> Label:
+	_stats = UiStyle.label("", 12)
+	_stats.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stats.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # si no, ensancha la columna central
+	_stats.custom_minimum_size.x = 320
+	_set_stats(board, _selected())
+	return _stats
+
+
+## Rellena la línea de cifras con lo que cambiaría `ram` (la elegida o la que está bajo el ratón).
+func _set_stats(board: Motherboard, ram: RamModule) -> void:
 	var p := SkillCalc.compute(board, character)
 	var parts := PackedStringArray()
 	if p["dps"] > 0.0:
@@ -373,8 +422,8 @@ func _stats_label(board: Motherboard) -> Label:
 	if p["projectiles"] > 1:
 		parts.append("%d proyectiles%s" % [p["projectiles"], " teledirigidos" if p["homing"] else ""])
 	var installed := 0
-	for ram in board.rams:
-		if ram != null:
+	for r in board.rams:
+		if r != null:
 			installed += 1
 	if installed > 0:
 		parts.append("RAM activas %d/%d" % [board.active_supports().size(), installed])
@@ -382,16 +431,25 @@ func _stats_label(board: Motherboard) -> Label:
 	if SkillController.trigger_text(p) != "":
 		text += "\nAUTO: se lanza sola " + SkillController.trigger_text(p)
 	var color := Color("b8ab90")
-	var ram := _selected()
 	if ram:
 		var v := SkillAdvice.verdict(ram, board, character)
 		text += "\nCon %s: %s" % [ram.def.get("name", "la RAM"), v["text"]]
 		color = OK_COLOR if SkillAdvice.good(v) else (SWAP_COLOR if String(v["kind"]) == SkillAdvice.SWAP else BAD_COLOR)
-	var l := UiStyle.label(text, 12, color)
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # si no, ensancha la columna central
-	l.custom_minimum_size.x = 320
-	return l
+	_stats.text = text
+	_stats.add_theme_color_override("font_color", color)
+
+
+## PC (T230): al pasar el ratón por una RAM, la placa elegida muestra dónde iría y
+## cuánto cambiaría, sin reconstruir la pantalla. null = volver a la RAM elegida.
+func _preview(ram: RamModule) -> void:
+	var board := _board()
+	if board == null or _stats == null or not is_instance_valid(_stats):
+		return
+	var shown: RamModule = ram if ram else _selected()
+	for d in mini(_slot_cells.size(), board.slots.size()):
+		if is_instance_valid(_slot_cells[d]):
+			_mark_slot(_slot_cells[d], board, d, shown)
+	_set_stats(board, shown)
 
 
 static func _short(v: float) -> String:
@@ -598,7 +656,9 @@ func _make_cell(location: Dictionary) -> ItemCell:
 		if inside and c.item and not _big():
 			_tooltip.show_item(c.item, character, false)
 		else:
-			_tooltip.hide())
+			_tooltip.hide()
+		if not _big() and c.location.get("kind", "") == "bag" and c.item is RamModule:
+			_preview(c.item as RamModule if inside else null))
 	cell.dropped.connect(func(target: ItemCell, payload: Dictionary) -> void: _move(payload["from"], target.location))
 	cell.released_outside.connect(func(c: ItemCell) -> void: drop_to_ground.emit(c.location))
 	return cell

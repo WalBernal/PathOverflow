@@ -327,8 +327,9 @@ Origen: usuario
 - La propuesta elegida en T228 para el celular: seleccionar placa o RAM con un toque y colocar con otro, botones visibles para quitar, mover de tecla y comparar (sin gestos ocultos), objetivos de 48 px como mínimo y vista de la placa elegida con sus ranuras en grande.
 - Filtro «RAM que encajan» y sugerencia de dónde rinde mejor cada RAM. Prueba con `Touch.force` en 2400×1080.
 
-### [ ] T230 · Pantalla nueva de habilidades: claridad en PC · M
+### [~] T230 · Pantalla nueva de habilidades: claridad en PC · M
 Origen: usuario
+- En pausa (2026-11-07, a petición del usuario). Hecho sin commit: vista previa al pasar el ratón por una RAM (ranuras en verde y cambio de DPS, SkillsPanel._preview) y atajos 1-6 / Supr / Tab con la línea de atajos en la ayuda. Falta: el modo `-- habilidades_pc` de capture_screens que comprueba cada acción con su botón o atajo (se quitó a medio escribir), pruebas cortas y commit.
 - La misma pantalla con ratón: arrastrar y soltar sigue funcionando, al pasar por encima se resaltan las ranuras válidas y se ve el cambio de DPS, coste y área antes de soltar; atajos de teclado a la vista.
 - Ayuda corta por pasos en lugar del párrafo actual. Prueba de que todo lo que se hacía con arrastrar, doble click o click derecho se puede hacer también con botones.
 
