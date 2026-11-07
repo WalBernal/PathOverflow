@@ -265,6 +265,7 @@ func _initialize() -> void:
 	_test_player_lines()
 	_test_boss_lines()
 	_test_journal()
+	_test_auto_equip()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -9801,3 +9802,28 @@ func _test_journal() -> void:
 	_check(bad.is_empty(), "diario: cada entrada apunta a una escena que existe (%s)" % ", ".join(bad))
 	_check(j.where("El Bosque de Cables", "Derrota al Arquitecto").contains("Bosque") and j.where("", "").contains("Sin misión"),
 		"diario: «¿dónde me quedé?» con zona y objetivo, o una pista si no hay misión")
+
+## Autoequipar (T227): al recoger, equipa en la ranura vacía si cumples requisitos;
+## nunca toca lo ocupado; los anillos van al primer hueco; las pociones no.
+func _test_auto_equip() -> void:
+	var c := _new_character()
+	var gen := ItemGenerator.new(_db, 21)
+	var axe := gen.generate(1, Rarity.Item.NORMAL, "hacha_de_lenador")
+	c.inventory.add_item(axe)
+	_check(c.inventory.auto_equip(axe, c.can_equip(axe)) == "weapon" and c.inventory.equipped("weapon") == axe and c.inventory.bag.find(axe) == -1,
+		"autoequipar: el arma va a la ranura vacía y sale de la bolsa")
+	var axe2 := gen.generate(1, Rarity.Item.NORMAL, "hacha_de_lenador")
+	c.inventory.add_item(axe2)
+	_check(c.inventory.auto_equip(axe2, true) == "" and c.inventory.equipped("weapon") == axe, "autoequipar: nunca sustituye lo que ya llevas")
+	var fresh := _new_character()
+	var high := gen.generate(40, Rarity.Item.NORMAL, "hacha_de_guerra")
+	fresh.inventory.add_item(high)
+	_check(fresh.inventory.auto_equip(high, fresh.can_equip(high)) == "" and fresh.inventory.equipped("weapon") == null and fresh.inventory.bag.has(high),
+		"autoequipar: si no cumples los requisitos, se queda en la bolsa")
+	var r1 := gen.generate(1, Rarity.Item.NORMAL, "anillo_de_rubi")
+	var r2 := gen.generate(1, Rarity.Item.NORMAL, "anillo_de_zafiro")
+	var r3 := gen.generate(1, Rarity.Item.NORMAL, "anillo_de_rubi")
+	for r in [r1, r2, r3]:
+		c.inventory.add_item(r)
+	var slots := [c.inventory.auto_equip(r1, true), c.inventory.auto_equip(r2, true), c.inventory.auto_equip(r3, true)]
+	_check(slots == ["ring_left", "ring_right", ""], "autoequipar: anillos al primer hueco libre, el tercero a la bolsa (%s)" % [slots])

@@ -130,6 +130,35 @@ func target_slot_for(item: Item) -> String:
 	return "ring_left"
 
 
+## Ranura libre donde se equiparía solo al recogerlo (T227), o "" si no hay: solo
+## equipo, y solo si su ranura está vacía (los anillos, la primera de las dos libre).
+## Nunca sustituye lo que ya llevas.
+func free_slot_for(item: Item) -> String:
+	if item == null or not item.is_equipment():
+		return ""
+	var s := item.slot()
+	if s == "ring":
+		for r in ["ring_left", "ring_right"]:
+			if not equipment.has(r):
+				return r
+		return ""
+	return "" if equipment.has(s) or not s in EQUIP_SLOTS else s
+
+
+## Equipa el objeto recién guardado en la bolsa si su ranura está libre (T227).
+## `allowed`: si el personaje cumple sus requisitos. Devuelve la ranura, o "".
+func auto_equip(item: Item, allowed: bool) -> String:
+	var slot := free_slot_for(item)
+	var index := bag.find(item)
+	if slot == "" or index == -1 or not allowed:
+		return ""
+	bag[index] = null
+	equipment[slot] = item
+	SoundMap.play_equip(item)
+	changed.emit()
+	return slot
+
+
 func set_equipped(slot: String, item: Item) -> void:
 	equipment[slot] = item
 	changed.emit()

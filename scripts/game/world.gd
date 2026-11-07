@@ -1741,6 +1741,10 @@ func _grant_board(skill_id: String) -> void:
 func _on_item_picked_up(item: Item) -> void:
 	SoundMap.play_pickup(item)   # según el material (T77)
 	ZoneReport.note_loot(_visit, item)   # los artefactos del informe de la zona (T214)
+	# Autoequipar (T227): a una ranura vacía, si cumples sus requisitos (se desactiva en Pausa).
+	if bool(GameSettings.get_value("gameplay", "auto_equip", true)):
+		if character.inventory.auto_equip(item, character.can_equip(item)) != "":
+			ui.event_log.add("Equipado: %s" % item.display_name(), Rarity.item_color(item.rarity))
 	if item is Motherboard and not character.flags.has("hint_board"):
 		character.flags["hint_board"] = true
 		ui.hud.flash("¡Una placa base! Es una habilidad: instálala en la barra con K.", UiStyle.ACCENT)

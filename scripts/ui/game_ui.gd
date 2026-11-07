@@ -799,6 +799,16 @@ func _build_pause_menu() -> Control:
 		GameSettings.set_value("combat", "auto_attack", SkillController.auto_attack)
 		auto.text = "Auto-ataque: " + ("sí" if SkillController.auto_attack else "no"))
 	sound.add_child(auto)
+	# Autoequipar (T227): lo recogido va a su ranura si está vacía y cumples los requisitos.
+	var auto_equip := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
+	var auto_equip_text := func() -> String:
+		return "Autoequipar en ranuras vacías: " + ("sí" if bool(GameSettings.get_value("gameplay", "auto_equip", true)) else "no")
+	auto_equip.text = auto_equip_text.call()
+	auto_equip.tooltip_text = "Al recoger equipo cuya ranura está vacía y cumples sus requisitos, te lo pones solo.\nNunca cambia lo que ya llevas."
+	auto_equip.pressed.connect(func() -> void:
+		GameSettings.set_value("gameplay", "auto_equip", not bool(GameSettings.get_value("gameplay", "auto_equip", true)))
+		auto_equip.text = auto_equip_text.call())
+	sound.add_child(auto_equip)
 	var move_names := {"hold": "mantener", "toggle": "alternar", "click": "clic para ir"}
 	var move := UiStyle.button("", func() -> void: pass, PAUSE_BUTTON_W)
 	move.text = "Moverse con el ratón: " + move_names.get(Player.mouse_move, "mantener")

@@ -305,7 +305,7 @@ Origen: usuario
 
 ## Fase 45 — Equipar sin pasos de más (versión 4.4.0)
 
-### [ ] T227 · Autoequipar en ranuras libres · S
+### [x] T227 · Autoequipar en ranuras libres · S
 Origen: usuario
 - Al recoger un objeto equipable cuya ranura está **vacía** y cuyos requisitos cumples, se equipa solo (`Inventory.add_item` / `equip_from_bag`, `world.gd` al recoger). Anillos en el primer hueco libre; armas a dos manos solo si las dos manos están libres. Nunca sustituye algo ya equipado.
 - Aviso en el registro («Equipado: Chaqueta de Hilo Dental») con su sonido de equipar, y un ajuste en Pausa → Juego para desactivarlo.
@@ -465,3 +465,4 @@ Ideas que no están en la cola. Se pasan a tareas cuando el usuario las elija.
 - 2026-11-07 · T225 · Diario del egresado: pestaña «Diario» en la hoja de personaje (C), junto a «Ficha», con «¿Dónde me quedé?» (zona y objetivo actual, o una pista si no hay misión) y un resumen con humor de cada acto (data/diario.json, 22 entradas). Cada escena vista se apunta en character.flags.cutscenes_seen (Journal.mark_seen en world.play_cutscene); en partidas de antes, los actos completos se ven enteros. Prueba _test_journal, modo `-- diario` y captura docs/capturas/interfaz/225_diario.png.
 - 2026-11-07 · T226 · Versión 4.3.0: APK (código 33, 74 MB por las voces) y build/latest.json, Windows e instalador (201 MB). Trae la fase 44 completa (voces de escenas y NPC, frases de combate, jefes que hablan y diario del egresado) y los arreglos de B.O.B., el creador y la absorción. En Pausa, el botón «Narrador» pasa a «Voces de los diálogos» y ya no se desactiva sin voz del sistema en español; su tooltip avisa de que las voces son generadas con IA. Lista docs/prueba_celular_4.3.md y README. Sin subir a GitHub: pendiente de la revisión del usuario 🛑.
 - 2026-11-07 · — · Versión 4.3.0 subida a GitHub con el visto bueno del usuario (release v4.3.0, la última, con el APK y latest.json).
+- 2026-11-07 · T227 · Autoequipar en ranuras libres: al recoger equipo cuya ranura está vacía y cumples sus requisitos, se equipa solo (Inventory.free_slot_for / auto_equip desde world._on_item_picked_up), con su sonido de equipar y «Equipado: …» en el registro con el color de su rareza. Nunca sustituye lo que ya llevas; los anillos van al primer hueco libre (no hay ranura de mano secundaria, así que lo de las armas a dos manos no aplica). Ajuste en Pausa → Combate «Autoequipar en ranuras vacías» (sí por defecto). Prueba _test_auto_equip.
