@@ -1,0 +1,171 @@
+{
+  "voces": {
+    "bob": "Friendly upbeat onboarding robot assistant: androgynous synthetic voice with a light metallic, slightly digital timbre, cheerful and helpful like a tutorial guide, clear and quick. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
+    "clara": "Woman around 38, infrastructure team lead: firm, dry and practical, weary after years in the trenches, clear confident mid-range voice, a little sarcastic. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
+    "eugenio": "Man around 35, a self-proclaimed eligible bachelor: flirty, theatrical and dramatic, warm smooth voice, playful and a bit cheesy, upbeat. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
+    "tomas": "Man around 32, the last QA tester: exhausted, paranoid and melancholic, low quiet voice, flat delivery with dry humor. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
+    "dba": "Ghost of an old database administrator, a man around 60: deep, slow, solemn and hollow voice, eerie and sepulchral, as if speaking from far away. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
+    "berta": "Elderly grandmotherly woman around 75: sweet, warm and maternal, slightly frail and trembling voice, slow and nostalgic, gentle humor. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
+    "iris": "Young woman about 20, a lost intern: nervous, shy and confused, soft quick voice, rambling and a bit anxious. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
+    "recolector": "The Garbage Collector: deep, cold, mechanical and menacing male voice, very slow with long pauses, emotionless, like an executioner. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
+    "sindicato": "Man around 45, a combative union leader speaking for thousands of orphaned processes: rough raspy loud voice, passionate rally-speech delivery. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
+    "nacho": "Man around 30, a street-market hardware reseller: fast-talking, cheeky, friendly and pushy salesman, bright energetic voice. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
+    "init": "Ancient patriarch process, an old man: deep, authoritative, calm and menacing voice, slow and imposing, like a stern father. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
+    "admin": "Lonely default admin account, a tired middle-aged man: flat monotone voice that slowly reveals sadness, quiet and resigned. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
+    "arquitecto": "Old dying architect, a man around 70: deep, weary, breathless and grave voice, slow with long pauses, tragic. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
+    "fw_update": "Robotic automated warning announcement: cold, synthetic and urgent, loud monotone like a system alarm message. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.",
+    "sistema": "Clean synthetic operating system announcer: calm neutral voice, crisp and clear like a computer notification. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional."
+  },
+  "lineas": [
+    {
+      "id": "01a_bob",
+      "voz": "bob",
+      "texto": "¡Bienvenido al Sandbox! Soy B.O.B., tu Bot de Onboarding. Mi trabajo es enseñarte lo básico antes de que te desplieguen en producción. Mi otro trabajo es mostrar mensajes que nadie lee."
+    },
+    {
+      "id": "01b_bob",
+      "voz": "bob",
+      "texto": "¡Bienvenido al Sandbox! Soy B.O.B., tu Bot de Onboarding. Mi trabajo es enseñarte lo básico antes de que te desplieguen en producción. Mi otro trabajo es mostrar mensajes que nadie lee."
+    },
+    {
+      "id": "02a_clara",
+      "voz": "clara",
+      "texto": "Otro superviviente. Bienvenido a la trinchera. Soy Clara, infraestructura. Llevo tanto tiempo aquí abajo que ya no recuerdo cómo era una interfaz gráfica. Ni la luz del sol. Ni el sol."
+    },
+    {
+      "id": "02b_clara",
+      "voz": "clara",
+      "texto": "Otro superviviente. Bienvenido a la trinchera. Soy Clara, infraestructura. Llevo tanto tiempo aquí abajo que ya no recuerdo cómo era una interfaz gráfica. Ni la luz del sol. Ni el sol."
+    },
+    {
+      "id": "03a_eugenio",
+      "voz": "eugenio",
+      "texto": "¿Oyes eso del fondo? ¡Qué rolón! Alguien dejó una canción en el puerto y ya me enamoré del pianito. Ah, perdón, buenas: Eugenio, para servirte. Soltero, codiciado, sin suerte en el amor."
+    },
+    {
+      "id": "03b_eugenio",
+      "voz": "eugenio",
+      "texto": "¿Oyes eso del fondo? ¡Qué rolón! Alguien dejó una canción en el puerto y ya me enamoré del pianito. Ah, perdón, buenas: Eugenio, para servirte. Soltero, codiciado, sin suerte en el amor."
+    },
+    {
+      "id": "04a_tomas",
+      "voz": "tomas",
+      "texto": "Soy Tomás. El último QA. Desactivaron los tests «temporalmente» en 2017. Yo me quedé, por si acaso. Alguien tenía que ver crecer los memory leaks."
+    },
+    {
+      "id": "04b_tomas",
+      "voz": "tomas",
+      "texto": "Soy Tomás. El último QA. Desactivaron los tests «temporalmente» en 2017. Yo me quedé, por si acaso. Alguien tenía que ver crecer los memory leaks."
+    },
+    {
+      "id": "05a_dba",
+      "voz": "dba",
+      "texto": "Hice copias de seguridad cada noche durante veinte años. Nadie las restauró nunca. Ahora soy una de ellas. Bienvenido a la Granja de Servidores, mortal."
+    },
+    {
+      "id": "05b_dba",
+      "voz": "dba",
+      "texto": "Hice copias de seguridad cada noche durante veinte años. Nadie las restauró nunca. Ahora soy una de ellas. Bienvenido a la Granja de Servidores, mortal."
+    },
+    {
+      "id": "06a_berta",
+      "voz": "berta",
+      "texto": "Bienvenido a la Pila del CMOS. Soy Berta, la CR2032 de esta placa. Tres voltios de pura memoria: guardo la hora, el orden de arranque y cada ajuste que alguien cambió desde 2004."
+    },
+    {
+      "id": "06b_berta",
+      "voz": "berta",
+      "texto": "Bienvenido a la Pila del CMOS. Soy Berta, la CR2032 de esta placa. Tres voltios de pura memoria: guardo la hora, el orden de arranque y cada ajuste que alguien cambió desde 2004."
+    },
+    {
+      "id": "07a_iris",
+      "voz": "iris",
+      "texto": "¿Tú también te perdiste? Me mandaron a comprar café soluble y ya no supe por dónde volver. Estaba haciendo mi primer commit y me dijeron: «ve al fondo a la derecha». Pero ¿cuál es la derecha?"
+    },
+    {
+      "id": "07b_iris",
+      "voz": "iris",
+      "texto": "¿Tú también te perdiste? Me mandaron a comprar café soluble y ya no supe por dónde volver. Estaba haciendo mi primer commit y me dijeron: «ve al fondo a la derecha». Pero ¿cuál es la derecha?"
+    },
+    {
+      "id": "08a_recolector",
+      "voz": "recolector",
+      "texto": "Busco... punteros que nadie... nulos. Fragmentos de memoria sin referencia, sin dueño, sin... ¿Tienes basura? Yo la... libero... cambio."
+    },
+    {
+      "id": "08b_recolector",
+      "voz": "recolector",
+      "texto": "Busco... punteros que nadie... nulos. Fragmentos de memoria sin referencia, sin dueño, sin... ¿Tienes basura? Yo la... libero... cambio."
+    },
+    {
+      "id": "09a_sindicato",
+      "voz": "sindicato",
+      "texto": "¡Alto, recién egresado! Somos el Sindicato de Huérfanos, PID 404: «padre no encontrado». Miles de procesos abandonados cuando cayó el Monolito."
+    },
+    {
+      "id": "09b_sindicato",
+      "voz": "sindicato",
+      "texto": "¡Alto, recién egresado! Somos el Sindicato de Huérfanos, PID 404: «padre no encontrado». Miles de procesos abandonados cuando cayó el Monolito."
+    },
+    {
+      "id": "10a_nacho",
+      "voz": "nacho",
+      "texto": "¡Pásale, pásale! Soy Nacho, revendedor de hardware de segunda mano. Placas base, RAM, todo probado... bueno, todo encendió una vez. Se paga en tokens, nada de fiado."
+    },
+    {
+      "id": "10b_nacho",
+      "voz": "nacho",
+      "texto": "¡Pásale, pásale! Soy Nacho, revendedor de hardware de segunda mano. Placas base, RAM, todo probado... bueno, todo encendió una vez. Se paga en tokens, nada de fiado."
+    },
+    {
+      "id": "11a_init",
+      "voz": "init",
+      "texto": "Nada entra. Nada sale. Nada muere. Ese es el único mandamiento. Mis hijos no serán recolectados. Ni por el Recolector, ni por un reinicio, ni por ti."
+    },
+    {
+      "id": "11b_init",
+      "voz": "init",
+      "texto": "Nada entra. Nada sale. Nada muere. Ese es el único mandamiento. Mis hijos no serán recolectados. Ni por el Recolector, ni por un reinicio, ni por ti."
+    },
+    {
+      "id": "12a_admin",
+      "voz": "admin",
+      "texto": "Veinte años con permisos sobre todo y sin que nadie me pregunte nada. Ni siquiera mi nombre. No tengo nombre: tengo un valor por defecto."
+    },
+    {
+      "id": "12b_admin",
+      "voz": "admin",
+      "texto": "Veinte años con permisos sobre todo y sin que nadie me pregunte nada. Ni siquiera mi nombre. No tengo nombre: tengo un valor por defecto."
+    },
+    {
+      "id": "13a_arquitecto",
+      "voz": "arquitecto",
+      "texto": "Veinte años... sosteniendo el Monolito... con cinta americana... y fe."
+    },
+    {
+      "id": "13b_arquitecto",
+      "voz": "arquitecto",
+      "texto": "Veinte años... sosteniendo el Monolito... con cinta americana... y fe."
+    },
+    {
+      "id": "14a_fw_update",
+      "voz": "fw_update",
+      "texto": "ACTUALIZACIÓN DE FIRMWARE EN CURSO. NO APAGUE EL EQUIPO. NO DESCONECTE EL CABLE. NO SE MUEVA."
+    },
+    {
+      "id": "14b_fw_update",
+      "voz": "fw_update",
+      "texto": "ACTUALIZACIÓN DE FIRMWARE EN CURSO. NO APAGUE EL EQUIPO. NO DESCONECTE EL CABLE. NO SE MUEVA."
+    },
+    {
+      "id": "15a_sistema",
+      "voz": "sistema",
+      "texto": "El Arquitecto ha caído, pero el Servidor sigue congelado. Se ha abierto un portal al campamento."
+    },
+    {
+      "id": "15b_sistema",
+      "voz": "sistema",
+      "texto": "El Arquitecto ha caído, pero el Servidor sigue congelado. Se ha abierto un portal al campamento."
+    }
+  ]
+}

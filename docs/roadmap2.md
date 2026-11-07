@@ -268,7 +268,7 @@ Origen: R9
 
 Prioridad del usuario (06-11-2026). Sigue al prólogo con voz de la 4.2: mismas herramientas (`tools/voces/`, Qwen3-TTS en local), mismo reparto (`tools/voces/voces.json`) y mismas reglas (`docs/voces.md`: acento latinoamericano neutro, tomas aprobadas por el usuario, «Voces generadas con IA» en los créditos). En el juego, `VoiceLines` reproduce el audio si existe y, si no, queda la voz del sistema.
 
-### [ ] T220 · Reparto de los personajes que faltan · S 🛑
+### [~] T220 · Reparto de los personajes que faltan · S 🛑
 Origen: usuario
 - Descripción y una toma de prueba de cada voz que falta: B.O.B., Clara, Eugenio, Tomás, el Fantasma del DBA, Berta, Iris, el Recolector, el Sindicato de Huérfanos, Nacho y los jefes (init, admin, el Arquitecto del Monolito, fw_update.exe). Propuesta inicial en `docs/voces.md`; también la voz «Sistema» de las escenas.
 - Con el visto bueno del usuario, cada toma aprobada pasa a `tools/voces/referencias/` y a `voces.json` (hablantes de cada id de `npcs.json`).

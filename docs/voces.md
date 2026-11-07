@@ -26,11 +26,25 @@ Pruebas descartadas: Kokoro (local) — no convenció (2026-11-06).
 - **M. Páez**: «Mexican man around 40, super enthusiastic and cheerful engineering teacher, bright upbeat mid-range voice, always smiling when he talks.»
 - **Narrador**: «Neutral Latin American Spanish narrator for a video game, like a classic RPG narrator: clear, warm, engaging and well-paced, never monotone, not theatrical.»
 
-## Pendientes de descripción
+## Propuesta T220 (pendiente del visto bueno)
 
-Nacho, B.O.B. (bot), Iris, Tomás, el Fantasma del DBA, Clara, El Recolector, el Sindicato de
-Huérfanos, Eugenio y Berta (la pila CR2032). Mientras tanto conservan la voz de Windows con su
-tono de `npcs.json`.
+Dos tomas de prueba de cada una (A y B) en `tools/voces/salida_reparto/`.
+
+- **B.O.B. (bot_onboarding)**: «Friendly upbeat onboarding robot assistant: androgynous synthetic voice with a light metallic, slightly digital timbre, cheerful and helpful like a tutorial guide, clear and quick. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.»
+- **Clara (clara)**: «Woman around 38, infrastructure team lead: firm, dry and practical, weary after years in the trenches, clear confident mid-range voice, a little sarcastic. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.»
+- **Eugenio (eugenio, eugenio_bios)**: «Man around 35, a self-proclaimed eligible bachelor: flirty, theatrical and dramatic, warm smooth voice, playful and a bit cheesy, upbeat. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.»
+- **Tomás (tomas)**: «Man around 32, the last QA tester: exhausted, paranoid and melancholic, low quiet voice, flat delivery with dry humor. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.»
+- **El Fantasma del DBA (dba)**: «Ghost of an old database administrator, a man around 60: deep, slow, solemn and hollow voice, eerie and sepulchral, as if speaking from far away. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.»
+- **Berta, la pila CR2032 (berta)**: «Elderly grandmotherly woman around 75: sweet, warm and maternal, slightly frail and trembling voice, slow and nostalgic, gentle humor. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.»
+- **Iris (iris)**: «Young woman about 20, a lost intern: nervous, shy and confused, soft quick voice, rambling and a bit anxious. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.»
+- **El Recolector (recolector)**: «The Garbage Collector: deep, cold, mechanical and menacing male voice, very slow with long pauses, emotionless, like an executioner. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.»
+- **Sindicato de Huérfanos (sindicato)**: «Man around 45, a combative union leader speaking for thousands of orphaned processes: rough raspy loud voice, passionate rally-speech delivery. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.»
+- **Nacho (nacho)**: «Man around 30, a street-market hardware reseller: fast-talking, cheeky, friendly and pushy salesman, bright energetic voice. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.»
+- **init (PID 1), jefe**: «Ancient patriarch process, an old man: deep, authoritative, calm and menacing voice, slow and imposing, like a stern father. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.»
+- **admin, jefe**: «Lonely default admin account, a tired middle-aged man: flat monotone voice that slowly reveals sadness, quiet and resigned. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.»
+- **El Arquitecto del Monolito, jefe**: «Old dying architect, a man around 70: deep, weary, breathless and grave voice, slow with long pauses, tragic. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.»
+- **fw_update.exe, jefe**: «Robotic automated warning announcement: cold, synthetic and urgent, loud monotone like a system alarm message. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.»
+- **«Sistema» (avisos de las escenas)**: «Clean synthetic operating system announcer: calm neutral voice, crisp and clear like a computer notification. Neutral Latin American Spanish accent: clear and standard, not Castilian or Spain Spanish, not strongly regional.»
 
 ## Reglas
 
