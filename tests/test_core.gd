@@ -263,6 +263,7 @@ func _initialize() -> void:
 	_test_npc_voice_ids()
 	_test_all_voice_lines()
 	_test_player_lines()
+	_test_boss_lines()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -9749,3 +9750,30 @@ func _test_player_lines() -> void:
 				if not ResourceLoader.exists(vl.path_for(pl.id_for(moment, i, voice))):
 					missing.append(pl.id_for(moment, i, voice))
 	_check(missing.is_empty(), "frases del personaje: cada una con la voz del egresado y la egresada (faltan: %s)" % ", ".join(missing))
+
+## Jefes que hablan (T224): despiertan con una frase, cada fase dispara la suya una
+## sola vez, con poca vida una última; cada frase tiene su audio.
+func _test_boss_lines() -> void:
+	var bl: GDScript = load("res://scripts/core/boss_lines.gd")
+	var vl: GDScript = load("res://scripts/core/voice_lines.gd")
+	var said := {}
+	var order: Array = []
+	for step in [[0, 1.0], [0, 0.9], [1, 0.65], [1, 0.6], [2, 0.3], [0, 0.2], [0, 0.1], [0, 0.05]]:
+		var m: String = bl.due("init", said, step[0], step[1])
+		if m != "":
+			said[m] = true
+			order.append(m)
+	_check(order == ["start", "fase1", "fase2", "low"], "jefes: despiertan, cada fase una vez y poca vida al final (%s)" % [order])
+	_check(bl.due("goblin", {}, 0, 0.1) == "" and bl.moments("admin") == ["start", "fase1", "fase2", "low"], "jefes: solo hablan los que tienen frases")
+	var missing: Array = []
+	for boss in bl.LINES:
+		for m in bl.moments(boss):
+			if bl.text_for(boss, m) == "" or not ResourceLoader.exists(vl.path_for(bl.id_for(boss, m))):
+				missing.append(bl.id_for(boss, m))
+	var data_types := []
+	for f in ["res://data/act1.json", "res://data/act2.json", "res://data/act3.json", "res://data/act4.json"]:
+		for z in DataLoader.load_json(f).get("zones", []):
+			if z.has("boss"):
+				data_types.append(String(z["boss"]["type"]))
+	_check(missing.is_empty() and data_types.all(func(t: String) -> bool: return bl.has_boss(t)),
+		"jefes: los cuatro jefes de los actos tienen sus frases y su voz (faltan: %s)" % ", ".join(missing))

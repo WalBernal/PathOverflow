@@ -1,0 +1,174 @@
+{
+  "voces": {
+    "rafa": {
+      "ref": "referencias/rafa.wav",
+      "ref_texto": "Para el sistema escolar de la UAdeO..... tú nunca exististe..... Eres un puntero nulo....."
+    },
+    "aida": {
+      "ref": "referencias/aida.wav",
+      "ref_texto": "Vaya, un recién egresado. Debes ser de la generación de Ojeda, ¿no? Soy Aída. Llevo aquí desde que El Pepe era jefe de informática, y aún se programaba todo en COBOL."
+    },
+    "paez": {
+      "ref": "referencias/paez.wav",
+      "ref_texto": "¡Ah, otro del departamento! Soy M. Páez, el Inge. Estaba calificando exámenes de álgebra lineal en el laboratorio cuando la pantalla empezó a parpadear... y aparecí aquí. Con mis lentes, mi taza y sin mi Kindle. Eso último es lo grave."
+    },
+    "egresado": {
+      "ref": "referencias/egresado.wav",
+      "ref_texto": "Vengo por mi constancia de servicio social. Hice mis 480 horas: seis meses pelando cables UTP, cambiando HDMI y limpiando las computadoras del centro de cómputo, bajo las órdenes del Inge Pepe. Si no tengo el sello, Servicios Escolares me anula la titulación."
+    },
+    "egresada": {
+      "ref": "referencias/egresada.wav",
+      "ref_texto": "Eh, no, yo vengo por..."
+    },
+    "mario": {
+      "ref": "referencias/mario.wav",
+      "ref_texto": "¡Profe Rafa! ¿Va a querer churros...?"
+    },
+    "narrador": {
+      "ref": "referencias/narrador.wav",
+      "ref_texto": "Rafa suelta un suspiro cansado y teclea con desgana, sin quitar los ojos de la pantalla."
+    },
+    "bob": {
+      "ref": "referencias/bob.wav",
+      "ref_texto": "¡Bienvenido al Sandbox! Soy B.O.B., tu Bot de Onboarding. Mi trabajo es enseñarte lo básico antes de que te desplieguen en producción. Mi otro trabajo es mostrar mensajes que nadie lee."
+    },
+    "clara": {
+      "ref": "referencias/clara.wav",
+      "ref_texto": "Otro superviviente. Bienvenido a la trinchera. Soy Clara, infraestructura. Llevo tanto tiempo aquí abajo que ya no recuerdo cómo era una interfaz gráfica. Ni la luz del sol. Ni el sol."
+    },
+    "eugenio": {
+      "ref": "referencias/eugenio.wav",
+      "ref_texto": "¿Oyes eso del fondo? ¡Qué rolón! Alguien dejó una canción en el puerto y ya me enamoré del pianito. Ah, perdón, buenas: Eugenio, para servirte. Soltero, codiciado, sin suerte en el amor."
+    },
+    "tomas": {
+      "ref": "referencias/tomas.wav",
+      "ref_texto": "Soy Tomás. El último QA. Desactivaron los tests «temporalmente» en 2017. Yo me quedé, por si acaso. Alguien tenía que ver crecer los memory leaks."
+    },
+    "dba": {
+      "ref": "referencias/dba.wav",
+      "ref_texto": "Hice copias de seguridad cada noche durante veinte años. Nadie las restauró nunca. Ahora soy una de ellas. Bienvenido a la Granja de Servidores, mortal."
+    },
+    "berta": {
+      "ref": "referencias/berta.wav",
+      "ref_texto": "Bienvenido a la Pila del CMOS. Soy Berta, la CR2032 de esta placa. Tres voltios de pura memoria: guardo la hora, el orden de arranque y cada ajuste que alguien cambió desde 2004."
+    },
+    "iris": {
+      "ref": "referencias/iris.wav",
+      "ref_texto": "¿Tú también te perdiste? Me mandaron a comprar café soluble y ya no supe por dónde volver. Estaba haciendo mi primer commit y me dijeron: «ve al fondo a la derecha». Pero ¿cuál es la derecha?"
+    },
+    "recolector": {
+      "ref": "referencias/recolector.wav",
+      "ref_texto": "Busco... punteros que nadie... nulos. Fragmentos de memoria sin referencia, sin dueño, sin... ¿Tienes basura? Yo la... libero... cambio."
+    },
+    "sindicato": {
+      "ref": "referencias/sindicato.wav",
+      "ref_texto": "¡Alto, recién egresado! Somos el Sindicato de Huérfanos, PID 404: «padre no encontrado». Miles de procesos abandonados cuando cayó el Monolito."
+    },
+    "nacho": {
+      "ref": "referencias/nacho.wav",
+      "ref_texto": "¡Pásale, pásale! Soy Nacho, revendedor de hardware de segunda mano. Placas base, RAM, todo probado... bueno, todo encendió una vez. Se paga en tokens, nada de fiado."
+    },
+    "init": {
+      "ref": "referencias/init.wav",
+      "ref_texto": "Nada entra. Nada sale. Nada muere. Ese es el único mandamiento. Mis hijos no serán recolectados. Ni por el Recolector, ni por un reinicio, ni por ti."
+    },
+    "admin": {
+      "ref": "referencias/admin.wav",
+      "ref_texto": "Veinte años con permisos sobre todo y sin que nadie me pregunte nada. Ni siquiera mi nombre. No tengo nombre: tengo un valor por defecto."
+    },
+    "arquitecto": {
+      "ref": "referencias/arquitecto.wav",
+      "ref_texto": "Veinte años... sosteniendo el Monolito... con cinta americana... y fe."
+    },
+    "fw_update": {
+      "ref": "referencias/fw_update.wav",
+      "ref_texto": "ACTUALIZACIÓN DE FIRMWARE EN CURSO. NO APAGUE EL EQUIPO. NO DESCONECTE EL CABLE. NO SE MUEVA."
+    },
+    "sistema": {
+      "ref": "referencias/sistema.wav",
+      "ref_texto": "El Arquitecto ha caído, pero el Servidor sigue congelado. Se ha abierto un portal al campamento."
+    }
+  },
+  "lineas": [
+    {
+      "id": "jefe_daemon_start",
+      "voz": "arquitecto",
+      "texto": "¿Otro refactor? Llevo veinte años diciendo que esto no se toca."
+    },
+    {
+      "id": "jefe_daemon_fase1",
+      "voz": "arquitecto",
+      "texto": "Si tanto quieres refactorizar... ¡empieza por ti!"
+    },
+    {
+      "id": "jefe_daemon_fase2",
+      "voz": "arquitecto",
+      "texto": "Cada parche que puse... ¡te lo cobro ahora, con intereses!"
+    },
+    {
+      "id": "jefe_daemon_low",
+      "voz": "arquitecto",
+      "texto": "No... sin mí... el Monolito... se cae..."
+    },
+    {
+      "id": "jefe_init_start",
+      "voz": "init",
+      "texto": "Proceso huérfano detectado. Procedo a adoptarte... a la fuerza."
+    },
+    {
+      "id": "jefe_init_fase1",
+      "voz": "init",
+      "texto": "fork... fork... fork... ¡Hijos míos, despierten!"
+    },
+    {
+      "id": "jefe_init_fase2",
+      "voz": "init",
+      "texto": "Memoria insuficiente. Alguien tiene que morir... y no seré yo."
+    },
+    {
+      "id": "jefe_init_low",
+      "voz": "init",
+      "texto": "Soy el PID 1... no pueden... matarme..."
+    },
+    {
+      "id": "jefe_fw_update_start",
+      "voz": "fw_update",
+      "texto": "Descargando actualización. No apague el equipo. No se mueva. No respire."
+    },
+    {
+      "id": "jefe_fw_update_fase1",
+      "voz": "fw_update",
+      "texto": "Borrando sectores. Los suyos incluidos."
+    },
+    {
+      "id": "jefe_fw_update_fase2",
+      "voz": "fw_update",
+      "texto": "Noventa y nueve por ciento. Noventa y nueve por ciento. Noventa y nueve por ciento."
+    },
+    {
+      "id": "jefe_fw_update_low",
+      "voz": "fw_update",
+      "texto": "Error... de escritura... ¿Reintentar... o cancelar...?"
+    },
+    {
+      "id": "jefe_admin_start",
+      "voz": "admin",
+      "texto": "Acceso concedido. Como siempre. A todos. Incluido tú."
+    },
+    {
+      "id": "jefe_admin_fase1",
+      "voz": "admin",
+      "texto": "sudo. sudo. sudo. Nadie me ha dicho que no en veinte años."
+    },
+    {
+      "id": "jefe_admin_fase2",
+      "voz": "admin",
+      "texto": "Me quedo. Siempre me quedo. Soy el valor por defecto."
+    },
+    {
+      "id": "jefe_admin_low",
+      "voz": "admin",
+      "texto": "Nadie... me cambió... la contraseña..."
+    }
+  ]
+}

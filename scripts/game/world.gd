@@ -107,11 +107,13 @@ func _ready() -> void:
 	tree_exiting.connect(func() -> void:
 		Engine.time_scale = 1.0
 		MusicPlayer.set_combat(false))
-	enemies.phase_started.connect(func(_id: int, phase_name: String, text: String, color: Color) -> void:
+	enemies.phase_started.connect(func(id: int, phase_name: String, text: String, color: Color) -> void:
 		ui.hud.flash("%s\n%s" % [phase_name, text], color)
 		Sfx.play("wave")
 		_boss_phase += 1
-		MusicPlayer.set_intensity(_boss_phase))
+		MusicPlayer.set_intensity(_boss_phase)
+		var bp: Dictionary = enemies.boss_phases.get(id, {})
+		_boss_talk(id, int(bp.get("next", 0)) + 1))
 	skills = SkillController.new()
 	add_child(skills)
 	skills.setup(player, enemies, character)
@@ -212,6 +214,39 @@ func _update_low_life_bark(delta: float) -> void:
 	_was_low = low
 
 
+## Lo que ya dijo cada jefe (T224): id del enemigo → {momento: true}.
+var _boss_said := {}
+
+
+## El jefe habla si le toca (al despertar, al entrar en la fase `phase` o con poca
+## vida): su voz grabada y un subtítulo bajo su barra. Nunca durante una escena.
+func _boss_talk(id: int, phase := 0) -> void:
+	var i := enemies.index_of(id)
+	if i == -1 or ui.cutscene.visible:
+		return
+	var types := EnemyManager.enemy_types()
+	var boss_type := String((types[enemies.types[i]] as Dictionary).get("id", "")) if enemies.types[i] < types.size() else ""
+	if not _boss_said.has(id):
+		_boss_said[id] = {}
+	var said: Dictionary = _boss_said[id]
+	var moment := BossLines.due(boss_type, said, phase, enemies.lives[i] / enemies.max_lives[i])
+	if moment == "":
+		return
+	said[moment] = true
+	VoiceLines.play(BossLines.id_for(boss_type, moment))
+	ui.hud.boss_say(BossLines.text_for(boss_type, moment))
+
+
+## Despertar y poca vida del jefe (las fases llegan con phase_started).
+func _update_boss_talk() -> void:
+	var info := enemies.boss_info()
+	if info.is_empty() or player == null:
+		return
+	if (info["pos"] as Vector2).distance_to(player.global_position) > 1300.0 and float(info["frac"]) >= 0.999:
+		return   # aún no ha despertado (como la barra del HUD)
+	_boss_talk(int(info["id"]))
+
+
 ## Frase de combate con la voz del personaje (T223); sin audio, el murmullo de siempre.
 func _player_line(moment: String, bark := "") -> void:
 	var voice := int(CharacterAppearance.sanitize(character.appearance).get("voice", 0))
@@ -286,6 +321,7 @@ func _process(delta: float) -> void:
 	_check_expiring(delta)
 	_update_waves(delta)
 	_update_low_life_bark(delta)
+	_update_boss_talk()
 	_update_training_panel()
 	if not _event_fights.is_empty():
 		_update_event_fights()
@@ -498,6 +534,7 @@ func travel_to(zone_id: String, entry := "") -> void:
 	Sfx.ambient(String(zone.def.get("style", "ruins")))
 	Sfx.play("portal", -8.0)
 	_boss_phase = 0
+	_boss_said.clear()   # en cada zona los jefes vuelven a hablar (T224)
 	MusicPlayer.set_intensity(0)
 	MusicPlayer.play_zone(String(zone.def.get("incident", {}).get("from", zone.id)))   # el incidente suena como su zona
 	_check_zone_cutscene.call_deferred()

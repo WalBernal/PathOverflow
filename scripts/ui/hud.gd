@@ -901,7 +901,31 @@ func _draw_boss_bar(font: Font) -> bool:
 		var cx := bar.position.x + bar.size.x * mid
 		draw_string(font, Vector2(cx - 12.0, box.end.y - 6.0), roman[k % roman.size()], HORIZONTAL_ALIGNMENT_CENTER, 24.0, 11,
 			TEXT_COLOR if k == idx else MUTED.darkened(0.2))
+	# Lo que dice el jefe (T224): un subtítulo breve bajo la barra que se apaga solo.
+	var say_alpha := boss_say_alpha(Time.get_ticks_msec() / 1000.0 - _boss_say_at)
+	if say_alpha > 0.0 and _boss_say_text != "":
+		var y := box.end.y + 22.0
+		draw_string_outline(font, Vector2(box.position.x, y), "«%s»" % _boss_say_text, HORIZONTAL_ALIGNMENT_CENTER, box.size.x, 15, 5, Color(0, 0, 0, say_alpha))
+		draw_string(font, Vector2(box.position.x, y), "«%s»" % _boss_say_text, HORIZONTAL_ALIGNMENT_CENTER, box.size.x, 15, Color(boss_color, say_alpha))
 	return true
+
+
+## Subtítulo del jefe (T224).
+const BOSS_SAY_TIME := 4.5
+var _boss_say_text := ""
+var _boss_say_at := -999.0
+
+
+func boss_say(text: String) -> void:
+	_boss_say_text = text
+	_boss_say_at = Time.get_ticks_msec() / 1000.0
+
+
+## Opacidad del subtítulo a los `t` s: entra rápido, se queda y se apaga en 0,6 s.
+static func boss_say_alpha(t: float) -> float:
+	if t < 0.0 or t > BOSS_SAY_TIME:
+		return 0.0
+	return minf(t / 0.15, 1.0) * clampf((BOSS_SAY_TIME - t) / 0.6, 0.0, 1.0)
 
 
 ## Barra de estados del jugador sobre el orbe de vida: debuffs (borde rojo: quemado, helado,

@@ -233,6 +233,36 @@ func _run() -> void:
 		await _capture_unit_attacks()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("jefe_voz"):
+		var gd: Node = get_node("/root/GameData")
+		var c: CharacterData = gd.create_character("Jefe", &"guerrero", CharacterAppearance.default(), false)
+		c.flags["zone"] = "jefe"
+		c.flags["tutorial_step"] = 99
+		c.flags["tutorial_seen_done"] = true
+		c.level = 12
+		gd.current_character = c
+		var world: Node = load(GameData.WORLD_SCENE).instantiate()
+		_swap(world)
+		world.set("_since_save", -9999.0)
+		await _wait(1.5)
+		var ui: GameUI = world.get("ui")
+		if ui.cutscene.visible:
+			ui.cutscene.call("_finish")
+		var en: EnemyManager = world.get("enemies")
+		var player: Player = world.get("player")
+		var info := en.boss_info()
+		player.global_position = (info["pos"] as Vector2) + Vector2(-260, 0)
+		player.set("invulnerable_for_tests", true)
+		await _wait(0.5)
+		print("jefe: despierta · dicho %s · sonando %s" % [world.get("_boss_said"), VoiceLines.is_playing()])
+		_save("224_jefe_habla")
+		var i := en.index_of(int(info["id"]))
+		for frac in [0.6, 0.3, 0.1]:
+			en.lives[i] = en.max_lives[i] * frac
+			await _wait(0.6)
+			print("jefe al %d %%: dicho %s" % [int(frac * 100), (world.get("_boss_said") as Dictionary).values()])
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("frases"):
 		var gd: Node = get_node("/root/GameData")
 		var look := CharacterAppearance.default()
