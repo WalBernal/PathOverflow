@@ -233,6 +233,26 @@ func _run() -> void:
 		await _capture_unit_attacks()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("frases"):
+		var gd: Node = get_node("/root/GameData")
+		var look := CharacterAppearance.default()
+		look["voice"] = 1
+		var c: CharacterData = gd.create_character("Frases", &"guerrero", look, false)
+		c.flags["zone"] = "zona1"
+		c.flags["tutorial_step"] = 99
+		c.flags["tutorial_seen_done"] = true
+		gd.current_character = c
+		var world: Node = load(GameData.WORLD_SCENE).instantiate()
+		_swap(world)
+		world.set("_since_save", -9999.0)
+		await _wait(1.2)
+		for moment in ["level", "flask", "flask", "death"]:
+			world.call("_player_line", moment, "")
+			await _wait(0.2)
+			var p: AudioStreamPlayer = PlayerLines._player
+			print("frase %s: sonando %s · %s" % [moment, p != null and p.playing, p.stream.resource_path.get_file() if p and p.stream else "-"])
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("dialogo_voz"):
 		var gd: Node = get_node("/root/GameData")
 		var c: CharacterData = gd.create_character("Voces", &"guerrero", CharacterAppearance.default(), false)

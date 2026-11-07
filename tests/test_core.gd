@@ -262,6 +262,7 @@ func _initialize() -> void:
 	_test_voice_lines()
 	_test_npc_voice_ids()
 	_test_all_voice_lines()
+	_test_player_lines()
 	OS.remove_logger(_script_errors)
 	for e in _script_errors.errors:
 		_check(false, "SCRIPT ERROR durante las pruebas: " + e)
@@ -9720,3 +9721,31 @@ func _test_all_voice_lines() -> void:
 			if not ResourceLoader.exists(vl.path_for(id)):
 				missing.append(id)
 	_check(missing.is_empty(), "voces: cada línea hablada de escenas y NPC tiene su audio (faltan %d: %s)" % [missing.size(), ", ".join(missing.slice(0, 8))])
+
+## Frases de combate del personaje (T223): nunca la misma dos veces seguidas, pausas
+## mínimas (salvo subir de nivel y morir) y audio de cada frase con las dos voces.
+func _test_player_lines() -> void:
+	var pl: GDScript = load("res://scripts/core/player_lines.gd")
+	var vl: GDScript = load("res://scripts/core/voice_lines.gd")
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var repeats := 0
+	var last := -1
+	var seen := {}
+	for k in 200:
+		var i: int = pl.pick(3, last, rng)
+		if i == last:
+			repeats += 1
+		seen[i] = true
+		last = i
+	_check(repeats == 0 and seen.size() == 3, "frases del personaje: nunca la misma dos veces seguidas y salen todas")
+	_check(not pl.allowed("flask", 5.0, {"flask": 0.0}, 0.0) and pl.allowed("flask", 9.0, {"flask": 0.0}, 0.0)
+		and not pl.allowed("no_mana", 2.0, {}, 0.0) and pl.allowed("level", 0.1, {"level": 0.0}, 0.0) and pl.allowed("death", 0.1, {}, 0.0),
+		"frases del personaje: pausas entre frases; subir de nivel y morir no esperan")
+	var missing: Array = []
+	for moment in pl.LINES:
+		for i in (pl.LINES[moment] as Array).size():
+			for voice in [0, 1]:
+				if not ResourceLoader.exists(vl.path_for(pl.id_for(moment, i, voice))):
+					missing.append(pl.id_for(moment, i, voice))
+	_check(missing.is_empty(), "frases del personaje: cada una con la voz del egresado y la egresada (faltan: %s)" % ", ".join(missing))

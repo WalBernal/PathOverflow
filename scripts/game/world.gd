@@ -156,6 +156,8 @@ func _ready() -> void:
 		if not player.is_alive():
 			respawn())
 	player.died.connect(_on_player_died)
+	player.flask_used.connect(func(_i: int) -> void: _player_line("flask"))
+	skills.not_enough_mana.connect(func() -> void: _player_line("no_mana"))
 	ui.return_to_menu_requested.connect(_return_to_menu)
 	ui.quit_requested.connect(_quit_game)
 	ui.dialogue_action.connect(_on_dialogue_action)
@@ -206,8 +208,15 @@ func _update_low_life_bark(delta: float) -> void:
 	var low := player.is_alive() and player.life < player.max_life() * LOW_LIFE_BARK
 	if low and not _was_low and _low_life_wait <= 0.0:
 		_low_life_wait = LOW_LIFE_BARK_COOLDOWN
-		Barks.play("hurt", player_voice_pitch())
+		_player_line("low_life", "hurt")
 	_was_low = low
+
+
+## Frase de combate con la voz del personaje (T223); sin audio, el murmullo de siempre.
+func _player_line(moment: String, bark := "") -> void:
+	var voice := int(CharacterAppearance.sanitize(character.appearance).get("voice", 0))
+	if not PlayerLines.play(moment, voice) and bark != "":
+		Barks.play(bark, player_voice_pitch())
 
 
 ## Tono de la voz del personaje según su complexión (más grave cuanto más ancho).
@@ -1172,6 +1181,7 @@ func _on_player_died() -> void:
 	if not _waves.is_empty():
 		_end_waves("Caíste en el banco de oleadas.")
 	character.flags["stat_deaths"] = int(character.flags.get("stat_deaths", 0)) + 1
+	_player_line("death")
 	ZoneReport.note_death(_visit, enemies.last_hitter)   # para «la muerte más tonta» del informe (T214)
 	if zone and Nemesis.record(character, enemies.last_hitter, zone.id, String(GameData.act_of_zone(zone.id).get("id", "")), Time.get_ticks_msec()):
 		ui.hud.flash("%s te recordará. Y tú a él: ahora es tu némesis." % Nemesis.current(character).get("name", "Ese élite"), Color("e0503a"))
@@ -1645,7 +1655,7 @@ func _on_leveled_up(new_level: int) -> void:
 	Haptics.pulse("level")
 	if not SoundMap.stinger("level"):   # el aviso de música; sin música, el efecto de siempre
 		Sfx.play("level_up")
-	Barks.play("level", player_voice_pitch())
+	_player_line("level", "level")
 	ui.hud.attention["passives"] = true   # punto nuevo: «!» en el botón P
 	if new_level == CharacterData.ASCENDANCY_LEVEL:
 		ui.hud.flash("¡Nivel %d! Ya puedes elegir tu ascendencia: abre el árbol (P) y pulsa el medallón junto a tu clase." % new_level, Color("ffd84a"))
