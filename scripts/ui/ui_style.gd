@@ -394,12 +394,34 @@ static func apply_ui_scale(root: Control) -> void:
 		var m := safe_margins(root.get_viewport())
 		var view := root.get_viewport().get_visible_rect().size - Vector2(m.x + m.z, m.y + m.w)
 		var s := minf(chosen, maxf(1.0, view.y / 560.0))
+		# Y nunca más ancho de lo que cabe: el creador de personaje pide ~1285 px y, ampliado
+		# según el alto, se salía por la derecha en PC y tableta. (Solo el ancho: el alto
+		# mínimo de los textos con ajuste de línea no es fiable antes de maquetar, y del
+		# alto ya se ocupa la regla de los 560 px.)
+		var need := content_min_size(root)
+		if need.x > 0.0:
+			s = minf(s, view.x / need.x)
 		root.set_anchors_preset(Control.PRESET_TOP_LEFT)
 		root.position = Vector2(m.x, m.y)
 		root.scale = Vector2(s, s)
 		root.size = view / s
 	root.get_viewport().size_changed.connect(fit)
 	fit.call()
+
+
+## Lo mínimo que necesita una pantalla a escala 1: el suyo propio y el de cada hijo que
+## la llena (anclado a los bordes), con sus márgenes. (El alto solo es fiable ya maquetada.)
+static func content_min_size(root: Control) -> Vector2:
+	var need := root.get_combined_minimum_size()
+	for child in root.get_children():
+		var c := child as Control
+		if c == null or not c.visible or c.top_level:
+			continue
+		if is_equal_approx(c.anchor_left, 0.0) and is_equal_approx(c.anchor_right, 1.0):
+			need.x = maxf(need.x, c.get_combined_minimum_size().x + c.offset_left - c.offset_right)
+		if is_equal_approx(c.anchor_top, 0.0) and is_equal_approx(c.anchor_bottom, 1.0):
+			need.y = maxf(need.y, c.get_combined_minimum_size().y + c.offset_top - c.offset_bottom)
+	return need
 
 
 ## Pruebas y capturas (T142): como si la pantalla tuviera esta zona segura, en

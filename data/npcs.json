@@ -85,7 +85,7 @@
     "bot_onboarding": {
       "name": "B.O.B., Bot de Onboarding",
       "dialogue": "bot_onboarding",
-      "server": {"helmet": "casco_de_hierro", "body": "cota_de_placas", "boots": "botas_de_hierro"},
+      "server": {},
       "appearance": {
         "gear": "pantalla",
         "body": 1,

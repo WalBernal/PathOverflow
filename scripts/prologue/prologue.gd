@@ -31,6 +31,11 @@ const INTRO_MIN_READ := 0.6
 const INTRO_CPS := 60.0
 ## Segundos que tarda el servidor en tragarse al carrito, Mario, Aída y Rafa.
 const ABSORB_TIME := 3.4
+## Durante la absorción: el jugador se agacha a los CROUCH_AT s y gatea hacia la salida
+## desde CRAWL_AT (a CRAWL_SPEED px/s) hasta que el vórtice lo agarra en la caída.
+const CROUCH_AT := 0.4
+const CRAWL_AT := 2.0
+const CRAWL_SPEED := 13.0
 const INTRO_LINES := [
 	"Licenciatura concluida. Promedio: 9.2. Vacantes aplicadas: 147.",
 	"",
@@ -645,6 +650,12 @@ func _start_absorb() -> void:
 func _update_absorb(delta: float) -> void:
 	_absorb_time += delta
 	_stage.absorb = clampf(_absorb_time / ABSORB_TIME, 0.0, 1.0)
+	# El jugador no se queda de pie mirando: se agacha en cuanto se abre el vórtice y,
+	# cuando ya van Aída y Rafa, gatea hacia la salida (que no le sirve de nada).
+	if _absorb_time >= CROUCH_AT:
+		_stage.kneeling = true
+	if _absorb_time >= CRAWL_AT:
+		_crawl(delta)
 	_stage.rack_shake = 1.6
 	_glitch = maxf(_glitch, 0.25 + 0.45 * _stage.absorb)
 	# Cada uno grita al empezar a volar hacia el servidor.
@@ -655,6 +666,14 @@ func _update_absorb(delta: float) -> void:
 			_glitch = maxf(_glitch, 0.9)
 	if _absorb_time >= ABSORB_TIME + 0.4:
 		_start_fall()
+
+
+## Gatea hacia la salida (a la izquierda, lejos del rack), despacio y a gatas.
+func _crawl(delta: float) -> void:
+	_stage.kneeling = true
+	_stage.player_facing = Vector2.LEFT
+	_stage.player_x = maxf(WALK_LIMITS["oficina"].x, _stage.player_x - CRAWL_SPEED * delta)
+	_stage.walk_phase = fmod(maxf(_stage.walk_phase, 0.0) + delta * 1.8 * PI, TAU)
 
 
 ## La oficina se pixela: papeles en logs, cables en cobre y la ropa en binario.
@@ -670,10 +689,15 @@ func _update_fall(delta: float) -> void:
 	var t := clampf(_fall_time / 5.0, 0.0, 1.0)
 	_stage.dissolve = t
 	_stage.outfit_shift = clampf((_fall_time - 1.0) / 2.5, 0.0, 1.0)
-	_stage.kneeling = _fall_time < 1.0
 	_glitch = maxf(_glitch, 0.3 + 0.6 * t)
-	# El último: el vórtice arrastra al jugador mientras su ropa se vuelve binario.
+	# El último: el vórtice arrastra al jugador mientras su ropa se vuelve binario. Sigue
+	# gateando hasta que lo agarra; entonces se lo lleva (aún agachado al despegar).
 	_stage.player_pull = clampf((_fall_time - 0.8) / 2.8, 0.0, 1.0)
+	_stage.kneeling = _stage.player_pull < 0.12
+	if _stage.player_pull <= 0.0:
+		_crawl(delta)
+	else:
+		_stage.walk_phase = -1.0
 	if not _absorb_cues.has("player") and _stage.player_pull > 0.02:
 		_absorb_cues["player"] = true
 		Sfx.play("scream_m", 0.0, 1.12)

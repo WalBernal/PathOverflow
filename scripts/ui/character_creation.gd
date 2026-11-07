@@ -153,9 +153,15 @@ func _build() -> void:
 	header.add_child(logo)
 	var titles := VBoxContainer.new()
 	titles.alignment = BoxContainer.ALIGNMENT_CENTER
+	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(titles)
 	titles.add_child(UiStyle.label("Recién egresado", 36, UiStyle.ACCENT))
-	titles.add_child(UiStyle.label("$ git init personaje  —  elige cara y un nombre que no dé vergüenza en los logs. El puesto ya te lo darán... más o menos.", 15, UiStyle.MUTED))
+	# Con ajuste de línea: de una sola línea, ensanchaba toda la pantalla y la columna de
+	# Apariencia (con sus botones «>» y «Comenzar») se salía por la derecha en PC y tableta.
+	var subtitle := UiStyle.label("$ git init personaje  —  elige cara y un nombre que no dé vergüenza en los logs. El puesto ya te lo darán... más o menos.", 15, UiStyle.MUTED)
+	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	subtitle.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	titles.add_child(subtitle)
 
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 16)

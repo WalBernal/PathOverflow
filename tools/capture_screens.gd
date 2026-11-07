@@ -233,6 +233,40 @@ func _run() -> void:
 		await _capture_unit_attacks()
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("absorcion"):
+		var gd: Node = get_node("/root/GameData")
+		gd.set("pending_creation", {"name": "Prueba", "appearance": CharacterAppearance.default()})
+		var p: Node = load("res://scenes/prologue/prologue.tscn").instantiate()
+		_swap(p)
+		await _wait(0.5)
+		p.set("_intro_chars", 99999.0)
+		p.set("_fade", 0.0)
+		p.call("_go_room", "oficina", 300.0)
+		var stage: PrologueStage = p.get("_stage")
+		stage.rafa_standing = true
+		stage.visitors_x = 112.0
+		stage.player_x = 300.0
+		p.call("_start_absorb")
+		var t := 0.0
+		for shot in [0.8, 2.6, 3.6, 4.4, 5.0]:
+			await _wait(shot - t)
+			t = shot
+			print("absorción %.1f s: fase %s · agachado %s · gateando %s · x %.0f · arrastre %.2f" % [shot, p.get("_phase"), stage.kneeling, stage.walk_phase >= 0.0, stage.player_x, stage.player_pull])
+			_save("absorcion_%02d" % int(shot * 10))
+		get_tree().quit()
+		return
+	if OS.get_cmdline_user_args().has("creador"):
+		for s in [[Vector2i(1600, 900), false, "pc"], [Vector2i(1280, 720), false, "portatil"], [Vector2i(2048, 1536), true, "tableta"], [Vector2i(2560, 1600), true, "tableta1610"]]:
+			Touch.force = s[1]
+			get_window().size = s[0]
+			var cc: Control = load(GameData.CREATION_SCENE).instantiate()
+			_swap(cc)
+			await _wait(1.2)
+			_save("creador_%s" % s[2])
+			print("creador %s: escala %.2f · mínimo %s · vista %s" % [s[2], cc.scale.x, UiStyle.content_min_size(cc), cc.get_viewport().get_visible_rect().size])
+		Touch.force = false
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("voces"):
 		await _check_prologue_voices()
 		get_tree().quit()

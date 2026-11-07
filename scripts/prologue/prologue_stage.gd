@@ -74,6 +74,8 @@ var visitors_walk := -1.0
 ## Ropa formal (0) → ropa del mundo digital (1).
 var outfit_shift := 0.0
 var kneeling := false
+## Inclinación (rad) del jugador al gatear hacia la salida durante la absorción.
+const CRAWL_LEAN := 0.42
 var rafa_standing := false
 var time := 0.0
 var flicker := 0.0
@@ -223,7 +225,15 @@ func _draw_player() -> void:
 		_draw_scream(feet, player_pull, "¡¿QUÉ PASA?!")
 	# Quieto, respira (T187); antes se quedaba congelado a media zancada.
 	var pose := {} if walk_phase >= 0.0 or player_pull > 0.0 else {"state": "idle", "time": time}
-	CharacterAppearance.draw(self, feet, sc, look, player_facing, Color(0, 0, 0, 0), walk_phase, pose)
+	if kneeling and walk_phase >= 0.0 and player_pull <= 0.0:
+		# Gateando hacia la salida: el cuerpo inclinado hacia donde va y un vaivén al avanzar.
+		var lean := CRAWL_LEAN * (-1.0 if player_facing.x < 0.0 else 1.0)
+		var bob := Vector2(0, -absf(sin(walk_phase)) * 1.2)
+		draw_set_transform(Vector2(-roundf(cam_x), 0) + feet + bob, lean)
+		CharacterAppearance.draw(self, Vector2.ZERO, sc, look, player_facing, Color(0, 0, 0, 0), walk_phase, pose)
+		draw_set_transform(Vector2(-roundf(cam_x), 0))
+	else:
+		CharacterAppearance.draw(self, feet, sc, look, player_facing, Color(0, 0, 0, 0), walk_phase, pose)
 	if outfit_shift < 0.5:
 		# Marcas de sudor y el portafolio de plástico bajo el brazo (de espaldas no se ven).
 		var hs := float(look.get("height", 1.0))
