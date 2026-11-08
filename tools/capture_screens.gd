@@ -3,7 +3,7 @@ extends Node
 ## interfaz sin jugar). No guarda personajes ni toca el alijo.
 ##
 ## Uso:  Godot_v4.7.2-stable_win64_console.exe --path . res://tools/capture_screens.tscn
-## Solo las de combate (estados, HUD, iconos, tutorial): aÃ±ade  -- combate
+## Solo las de combate (estados, HUD, iconos, tutorial): añade  -- combate
 
 const OUT := "user://capturas/"
 const MENU_SCENES := {
@@ -17,14 +17,14 @@ var _current: Node
 
 func _ready() -> void:
 	get_window().size = Vector2i(1600, 900)
-	LoadingCard.enabled = false   # la pantalla de carga taparÃ­a las capturas
+	LoadingCard.enabled = false   # la pantalla de carga taparía las capturas
 	BossIntro.enabled = OS.get_cmdline_user_args().has("jefes")   # la entrada de jefe, solo donde se quiere ver
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT))
-	# Como en el celular (T106): con  --rendering-method mobile  delante, ademÃ¡s el renderizador.
+	# Como en el celular (T106): con  --rendering-method mobile  delante, además el renderizador.
 	if OS.get_cmdline_user_args().has("movil"):
 		GameSettings.force_mobile = true
 		GraphicsQuality.level = int(GameSettings.MOBILE_DEFAULTS["graphics/quality"])
-	print("renderizador: ", RenderingServer.get_current_rendering_method(), " Â· mÃ³vil: ", GameSettings.is_mobile())
+	print("renderizador: ", RenderingServer.get_current_rendering_method(), " · móvil: ", GameSettings.is_mobile())
 	_run.call_deferred()
 
 
@@ -116,7 +116,7 @@ func _run() -> void:
 		get_tree().quit()
 		return
 	if OS.get_cmdline_user_args().has("actualizacion"):
-		# Aviso de actualizaciÃ³n (T140) en el tÃ­tulo, con un latest.json de mentira.
+		# Aviso de actualización (T140) en el título, con un latest.json de mentira.
 		Touch.force = true
 		get_window().size = Vector2i(2400, 1080)
 		var title: Node = load("res://scenes/menu/title_screen.tscn").instantiate()
@@ -130,7 +130,7 @@ func _run() -> void:
 		get_tree().quit()
 		return
 	if OS.get_cmdline_user_args().has("continuar"):
-		# Â«ContinuarÂ» de un toque en el tÃ­tulo (T154), con los personajes de este equipo.
+		# «Continuar» de un toque en el título (T154), con los personajes de este equipo.
 		for touch in [true, false]:
 			Touch.force = touch
 			get_window().size = Vector2i(2400, 1080) if touch else Vector2i(1600, 900)
@@ -155,7 +155,7 @@ func _run() -> void:
 		return
 	if OS.get_cmdline_user_args().has("ventanas") and OS.get_cmdline_user_args().has("tactil"):
 		var missed := await _audit_windows_touch()
-		print("ventanas tÃ¡ctil: %d botones sin respuesta" % missed)
+		print("ventanas táctil: %d botones sin respuesta" % missed)
 		get_tree().quit(1 if missed > 0 else 0)
 		return
 	if OS.get_cmdline_user_args().has("usar") and OS.get_cmdline_user_args().has("tactil"):
@@ -319,7 +319,7 @@ func _run() -> void:
 		player.global_position = (info["pos"] as Vector2) + Vector2(-260, 0)
 		player.set("invulnerable_for_tests", true)
 		await _wait(0.5)
-		print("jefe: despierta Â· dicho %s Â· sonando %s" % [world.get("_boss_said"), VoiceLines.is_playing()])
+		print("jefe: despierta · dicho %s · sonando %s" % [world.get("_boss_said"), VoiceLines.is_playing()])
 		_save("224_jefe_habla")
 		var i := en.index_of(int(info["id"]))
 		for frac in [0.6, 0.3, 0.1]:
@@ -345,7 +345,7 @@ func _run() -> void:
 			world.call("_player_line", moment, "")
 			await _wait(0.2)
 			var p: AudioStreamPlayer = PlayerLines._player
-			print("frase %s: sonando %s Â· %s" % [moment, p != null and p.playing, p.stream.resource_path.get_file() if p and p.stream else "-"])
+			print("frase %s: sonando %s · %s" % [moment, p != null and p.playing, p.stream.resource_path.get_file() if p and p.stream else "-"])
 		get_tree().quit()
 		return
 	if OS.get_cmdline_user_args().has("dialogo_voz"):
@@ -370,13 +370,13 @@ func _run() -> void:
 		world.call("_on_npc_interacted", npc)
 		await _wait(0.6)
 		var box: DialogueBox = ui.dialogue_box
-		print("diÃ¡logo B.O.B.: lÃ­nea %s Â· sonando %s Â· retrato habla %s" % [box.get("_line_id"), VoiceLines.is_playing(), box.get("_portrait").talking])
+		print("diálogo B.O.B.: línea %s · sonando %s · retrato habla %s" % [box.get("_line_id"), VoiceLines.is_playing(), box.get("_portrait").talking])
 		_save("dialogo_voz_bob")
-		box.call("_show_node", String(dialogue.get("start", "")))   # ya visitado: una frase del menÃº
+		box.call("_show_node", String(dialogue.get("start", "")))   # ya visitado: una frase del menú
 		await _wait(0.3)
-		print("diÃ¡logo B.O.B. (menÃº): lÃ­nea %s Â· sonando %s" % [box.get("_line_id"), VoiceLines.is_playing()])
+		print("diálogo B.O.B. (menú): línea %s · sonando %s" % [box.get("_line_id"), VoiceLines.is_playing()])
 		box.close()
-		print("diÃ¡logo cerrado: sonando %s" % VoiceLines.is_playing())
+		print("diálogo cerrado: sonando %s" % VoiceLines.is_playing())
 		get_tree().quit()
 		return
 	if OS.get_cmdline_user_args().has("absorcion"):
@@ -397,7 +397,7 @@ func _run() -> void:
 		for shot in [0.8, 2.6, 3.6, 4.4, 5.0]:
 			await _wait(shot - t)
 			t = shot
-			print("absorciÃ³n %.1f s: fase %s Â· agachado %s Â· gateando %s Â· x %.0f Â· arrastre %.2f" % [shot, p.get("_phase"), stage.kneeling, stage.walk_phase >= 0.0, stage.player_x, stage.player_pull])
+			print("absorción %.1f s: fase %s · agachado %s · gateando %s · x %.0f · arrastre %.2f" % [shot, p.get("_phase"), stage.kneeling, stage.walk_phase >= 0.0, stage.player_x, stage.player_pull])
 			_save("absorcion_%02d" % int(shot * 10))
 		get_tree().quit()
 		return
@@ -409,7 +409,7 @@ func _run() -> void:
 			_swap(cc)
 			await _wait(1.2)
 			_save("creador_%s" % s[2])
-			print("creador %s: escala %.2f Â· mÃ­nimo %s Â· vista %s" % [s[2], cc.scale.x, UiStyle.content_min_size(cc), cc.get_viewport().get_visible_rect().size])
+			print("creador %s: escala %.2f · mínimo %s · vista %s" % [s[2], cc.scale.x, UiStyle.content_min_size(cc), cc.get_viewport().get_visible_rect().size])
 		Touch.force = false
 		get_tree().quit()
 		return
@@ -609,7 +609,7 @@ func _capture_appearances() -> void:
 	_save("00_apariencias")
 
 
-## El prÃ³logo, paso a paso (sin crear el personaje al final).
+## El prólogo, paso a paso (sin crear el personaje al final).
 func _capture_prologue() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var look := CharacterAppearance.default()
@@ -717,8 +717,8 @@ func _capture_game() -> void:
 	world.set("_since_save", -9999.0)
 
 
-## Ascendencias: el muestrario de las 14 ilustraciones, la elecciÃ³n (dos discos)
-## y el Ã¡rbol de 20 nodos con varios asignados y la ayuda de un nodo.
+## Ascendencias: el muestrario de las 14 ilustraciones, la elección (dos discos)
+## y el árbol de 20 nodos con varios asignados y la ayuda de un nodo.
 func _capture_ascendancy() -> void:
 	var grid := Control.new()
 	grid.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -745,11 +745,11 @@ func _capture_ascendancy() -> void:
 	var world: Node = load("res://scenes/game/world.tscn").instantiate()
 	_swap(world)
 	world.set("_since_save", -9999.0)
-	await _wait(4.0)   # que se vaya el tÃ­tulo de la zona
+	await _wait(4.0)   # que se vaya el título de la zona
 	var ui: Node = world.get("ui")
 	var choice: Variant = ui.get("_choice_panel")
 	if choice is Node and is_instance_valid(choice):
-		(choice as Node).queue_free()   # la elecciÃ³n de habilidad del nivel 16
+		(choice as Node).queue_free()   # la elección de habilidad del nivel 16
 	get_tree().paused = false
 	ui.call("_on_menu_requested", "passives")
 	await _wait(0.4)
@@ -771,8 +771,8 @@ func _capture_ascendancy() -> void:
 	world.set("_since_save", -9999.0)
 
 
-## Roadmap 2.0: eventos de zona, cargas en el HUD, variante en K, Mainframe TitÃ¡n
-## y ranuras de chip en el Ã¡rbol.
+## Roadmap 2.0: eventos de zona, cargas en el HUD, variante en K, Mainframe Titán
+## y ranuras de chip en el árbol.
 func _capture_roadmap2() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("Roadmap2", &"templario", CharacterAppearance.default(), false)
@@ -814,7 +814,7 @@ func _capture_roadmap2() -> void:
 	skills.call("_execute", skills.call("profile", 2), player.global_position)
 	skills.call("_execute", skills.call("profile", 3), player.global_position)
 	print("eventos: ", zone.events.events.map(func(e: Dictionary) -> String: return "%s@%s" % [e["kind"], str(Vector2i(e["pos"]))]))
-	# Junto a un evento visible (santuario, datos huÃ©rfanos o deploy).
+	# Junto a un evento visible (santuario, datos huérfanos o deploy).
 	for e in zone.events.events:
 		if e["kind"] != "ambush":
 			player.global_position = zone.free_spot_near(e["pos"] + Vector2(-140, 60))
@@ -878,8 +878,8 @@ func _capture_golems_in_world() -> void:
 		em.lives[em.index_of(id)] *= 40.0
 	await _wait(2.0)
 	_save("102_golems_peleando")
-	print("mÃºsica: ", MusicPlayer.current_track(), " Â· capa de combate: ", MusicPlayer.combat_layer())
-	# Modo daltÃ³nico: avisos rayados en el suelo.
+	print("música: ", MusicPlayer.current_track(), " · capa de combate: ", MusicPlayer.combat_layer())
+	# Modo daltónico: avisos rayados en el suelo.
 	var saved_cb := Ailments.colorblind
 	Ailments.colorblind = true
 	var elite := em.spawn(player.global_position + Vector2(0, -160), Rarity.Enemy.ELITE, em.type_index_of("bug"))
@@ -894,7 +894,7 @@ func _capture_golems_in_world() -> void:
 	world.set("_since_save", -9999.0)
 
 
-## Mapa grande (Tab), catÃ¡logo de hardware (B), ventana del filtro de botÃ­n,
+## Mapa grande (Tab), catálogo de hardware (B), ventana del filtro de botín,
 ## Shift mostrando lo filtrado y la barra con Q W E R T Y.
 func _capture_windows() -> void:
 	var saved_scale: Variant = GameSettings.get_value("interface", "scale", 1.0)
@@ -935,7 +935,7 @@ func _capture_windows() -> void:
 	await _wait(0.3)
 	_save("95_catalogo_ram")
 	ui.toggle_catalog()
-	# BotÃ­n en el suelo con un filtro estricto; luego Â«con ShiftÂ».
+	# Botín en el suelo con un filtro estricto; luego «con Shift».
 	var loot: LootManager = world.get("loot")
 	var gen := ItemGenerator.new(items)
 	var p := player.global_position
@@ -955,7 +955,7 @@ func _capture_windows() -> void:
 	_save("98_suelo_con_shift")
 	Input.action_release(&"show_all_loot")
 	loot.clear_all()
-	# Roles: guardiÃ¡n con su aura, sanador curando, francotirador apuntando y un enjambre.
+	# Roles: guardián con su aura, sanador curando, francotirador apuntando y un enjambre.
 	var em: EnemyManager = world.get("enemies")
 	em.clear_all()
 	em.roll_affixes = false
@@ -987,8 +987,8 @@ func _capture_windows() -> void:
 	world.set("_since_save", -9999.0)
 
 
-## RAM de activaciÃ³n: Fork Bomb con Cron Job en la barra (Â«AUTOÂ» y su enfriamiento)
-## lanzÃ¡ndose sola entre enemigos, y el menÃº K con la lÃ­nea de quÃ© la activa.
+## RAM de activación: Fork Bomb con Cron Job en la barra («AUTO» y su enfriamiento)
+## lanzándose sola entre enemigos, y el menú K con la línea de qué la activa.
 func _capture_triggers() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var items: ItemDatabase = gd.get("items")
@@ -1004,7 +1004,7 @@ func _capture_triggers() -> void:
 	var world: Node = load("res://scenes/game/world.tscn").instantiate()
 	_swap(world)
 	world.set("_since_save", -9999.0)
-	await _wait(3.5)   # que pase el tÃ­tulo de la zona
+	await _wait(3.5)   # que pase el título de la zona
 	var player: Player = world.get("player")
 	player.invulnerable = true
 	var em: EnemyManager = world.get("enemies")
@@ -1019,7 +1019,7 @@ func _capture_triggers() -> void:
 	world.set("_since_save", -9999.0)
 
 
-## MaestrÃ­a del Ã¡rbol: la del Ingeniero DevOps asignada, con la segunda opciÃ³n
+## Maestría del árbol: la del Ingeniero DevOps asignada, con la segunda opción
 ## elegida y su tooltip (las tres opciones, la elegida encendida).
 func _capture_mastery() -> void:
 	var gd: Node = get_node("/root/GameData")
@@ -1033,7 +1033,7 @@ func _capture_mastery() -> void:
 	var best := 999
 	for n: PassiveNode in c.passives.tree.nodes.values():
 		if n.is_mastery() and c.passives.find_path(n.id).size() > 0 and c.passives.find_path(n.id).size() < best:
-			best = c.passives.find_path(n.id).size()   # la maestrÃ­a mÃ¡s cercana a su inicio (Ã¡rbol 2.0)
+			best = c.passives.find_path(n.id).size()   # la maestría más cercana a su inicio (árbol 2.0)
 			mastery = n.id
 	c.passives.allocate_path(mastery, 99)
 	c.passives.set_mastery_choice(mastery, 1)
@@ -1045,7 +1045,7 @@ func _capture_mastery() -> void:
 	if ui.call("is_choosing"):
 		ui.call("_on_choice_picked", "golem_hardware", func(_s: String) -> void: pass)
 	get_tree().paused = false
-	await _wait(2.5)   # que pase el tÃ­tulo de la zona
+	await _wait(2.5)   # que pase el título de la zona
 	ui.call("_on_menu_requested", "passives")
 	await _wait(0.6)
 	var screen: Node = ui.get("tree_screen")
@@ -1067,7 +1067,7 @@ func _capture_mastery() -> void:
 	screen.get("_plan_button").button_pressed = true
 	await _wait(0.5)
 	_save("131_arbol_plan")
-	# T85: aplicar el plan: las lÃ­neas reciÃ©n asignadas se iluminan.
+	# T85: aplicar el plan: las líneas recién asignadas se iluminan.
 	screen.call("apply_plan")
 	await _wait(0.12)
 	_save("132_arbol_lineas_iluminadas")
@@ -1075,8 +1075,8 @@ func _capture_mastery() -> void:
 	world.set("_since_save", -9999.0)
 
 
-## MecÃ¡nicas de arena: losas agrietÃ¡ndose y un agujero, zonas seguras que giran
-## y dos adds canalizando hacia el jefe (tambiÃ©n en modo daltÃ³nico).
+## Mecánicas de arena: losas agrietándose y un agujero, zonas seguras que giran
+## y dos adds canalizando hacia el jefe (también en modo daltónico).
 func _capture_arena() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("Arena", &"guerrero", CharacterAppearance.default(), false)
@@ -1093,7 +1093,7 @@ func _capture_arena() -> void:
 	if ui.is_choosing():
 		ui.call("_on_choice_picked", "golem_hardware", func(_s: String) -> void: pass)
 	get_tree().paused = false
-	await _wait(2.5)   # que pase el tÃ­tulo de la zona
+	await _wait(2.5)   # que pase el título de la zona
 	var player: Player = world.get("player")
 	var em: EnemyManager = world.get("enemies")
 	player.invulnerable = true
@@ -1116,7 +1116,7 @@ func _capture_arena() -> void:
 	await _wait(0.2)
 	_save("128_mecanicas_arena_daltonico")
 	Ailments.colorblind = was_cb
-	# En la arena de verdad: el Arquitecto, con poca vida, lanza su Hotfix en ProducciÃ³n.
+	# En la arena de verdad: el Arquitecto, con poca vida, lanza su Hotfix en Producción.
 	world.call("travel_to", "jefe", "")
 	world.set("_since_save", -9999.0)
 	await _wait(1.0)
@@ -1139,8 +1139,8 @@ func _capture_arena() -> void:
 	world.set("_since_save", -9999.0)
 
 
-## Terrenos: aceite, estÃ¡tica, refrigerante, aceite ardiendo y superconductor,
-## con y sin el modo daltÃ³nico (patrÃ³n propio por tipo).
+## Terrenos: aceite, estática, refrigerante, aceite ardiendo y superconductor,
+## con y sin el modo daltónico (patrón propio por tipo).
 func _capture_terrains() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var items: ItemDatabase = gd.get("items")
@@ -1167,7 +1167,7 @@ func _capture_terrains() -> void:
 	var spots := {"derrame_aceite": Vector2(-420, -120), "campo_estatica": Vector2(-130, -160), "charco_refrigerante": Vector2(160, -160)}
 	for sid in spots:
 		skills.call("_execute", SkillCalc.compute(Motherboard.new(items.skills.skills[sid], 5, []), c), p + spots[sid])
-	# Un segundo aceite, prendido; y estÃ¡tica + refrigerante encimados (superconductor).
+	# Un segundo aceite, prendido; y estática + refrigerante encimados (superconductor).
 	skills.call("_execute", SkillCalc.compute(Motherboard.new(items.skills.skills["derrame_aceite"], 5, []), c), p + Vector2(420, -100))
 	skills.call("_ignite_oil_near", p + Vector2(420, -100), 10.0)
 	skills.call("_execute", SkillCalc.compute(Motherboard.new(items.skills.skills["campo_estatica"], 5, []), c), p + Vector2(0, 170))
@@ -1234,8 +1234,8 @@ func _capture_windows_160(scale := 1.6) -> void:
 	world.set("_since_save", -9999.0)
 
 
-## Fase "SensaciÃ³n": catacumbas oscuras con antorchas, proyectiles de fuego y
-## rayo que alumbran y enemigos muriendo de cada tipo de daÃ±o.
+## Fase "Sensación": catacumbas oscuras con antorchas, proyectiles de fuego y
+## rayo que alumbran y enemigos muriendo de cada tipo de daño.
 func _capture_feel() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var items: ItemDatabase = gd.get("items")
@@ -1286,7 +1286,7 @@ func _capture_feel() -> void:
 	em.hit_ailments = {}
 	await _wait(0.15)
 	_save("92_muertes_con_estilo")
-	# T73: muertes fÃ­sicas por material (chatarra, aÃ±icos, carne, bits) y los cuerpos que quedan.
+	# T73: muertes físicas por material (chatarra, añicos, carne, bits) y los cuerpos que quedan.
 	var by_material := {}
 	for k in EnemyManager.enemy_types().size():
 		by_material[String(EnemyManager.enemy_types()[k].get("material", "digital"))] = k
@@ -1300,13 +1300,13 @@ func _capture_feel() -> void:
 	await _wait(0.12)
 	_save("93_muertes_por_material")
 	await _wait(1.2)
-	print("cadÃ¡veres: %d" % em.corpses.size())
+	print("cadáveres: %d" % em.corpses.size())
 	_save("94_cadaveres")
 	world.set("_since_save", -9999.0)
 
 
 ## Roadmap 2.0, segunda tanda: golpe pesado de un raro con su frase, esquiva con
-## siluetas, casilla de esquiva y cargas en la barra, comparaciÃ³n de objetos y pausa.
+## siluetas, casilla de esquiva y cargas en la barra, comparación de objetos y pausa.
 func _capture_roadmap2b() -> void:
 	var saved_scale: Variant = GameSettings.get_value("interface", "scale", 1.0)
 	GameSettings.set_value("interface", "scale", 1.0)
@@ -1359,7 +1359,7 @@ func _capture_roadmap2b() -> void:
 	img.resize(img.get_width() * 2, img.get_height() * 2, Image.INTERPOLATE_NEAREST)
 	img.save_png(ProjectSettings.globalize_path(OUT + "81_barra_esquiva_cargas.png"))
 	print("captura: 81_barra_esquiva_cargas (", hud.get("_hotspots")["dodge"].get_global_rect(), ")")
-	# ComparaciÃ³n lado a lado: un arma nueva frente a la equipada.
+	# Comparación lado a lado: un arma nueva frente a la equipada.
 	var gen := ItemGenerator.new(items)
 	var weapon: Item = null
 	for k in 40:
@@ -1382,7 +1382,7 @@ func _capture_roadmap2b() -> void:
 
 
 ## Acto I: cada zona con el jugador en el centro y junto a un portal.
-## T172: muertes de cada familia y tipo de daÃ±o, golpes y botÃ­n con los motivos de datos.
+## T172: muertes de cada familia y tipo de daño, golpes y botín con los motivos de datos.
 func _capture_fx_t172() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("Efectos", &"guerrero", CharacterAppearance.default(), false)
@@ -1411,7 +1411,7 @@ func _capture_fx_t172() -> void:
 	world.set("_since_save", -9999.0)
 
 
-## T171: enemigos a 64 px junto al hÃ©roe, en zonas del acto I y del III.
+## T171: enemigos a 64 px junto al héroe, en zonas del acto I y del III.
 func _capture_enemies_t171() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("Enemigos", &"guerrero", CharacterAppearance.default(), false)
@@ -1462,7 +1462,7 @@ func _capture_act1(zone_ids: Array =["tutorial", "campamento", "zona1", "zona2",
 		var zone: Zone = world.get("zone")
 		var enemies: EnemyManager = world.get("enemies")
 		print("%s: %dx%d, %d enemigos" % [zid, zone.rect.size.x, zone.rect.size.y, enemies.positions.size()])
-		await _wait(3.2)   # que pase el tÃ­tulo de la zona
+		await _wait(3.2)   # que pase el título de la zona
 		player.global_position = zone.free_spot_near(zone.rect.get_center())
 		await _wait(0.6)
 		_save("60_zona_%s" % zid)
@@ -1474,10 +1474,10 @@ func _capture_act1(zone_ids: Array =["tutorial", "campamento", "zona1", "zona2",
 	world.set("_since_save", -9999.0)
 
 
-## Ingeniero DevOps con la ascendencia de robÃ³tica: torreta, drones y robot de compaÃ±Ã­a.
+## Ingeniero DevOps con la ascendencia de robótica: torreta, drones y robot de compañía.
 func _capture_robotics() -> void:
 	var gd: Node = get_node("/root/GameData")
-	var c: CharacterData = gd.create_character("RobÃ³tica", &"templario", CharacterAppearance.default(), false)
+	var c: CharacterData = gd.create_character("Robótica", &"templario", CharacterAppearance.default(), false)
 	c.flags["zone"] = "zona1"
 	c.flags["tutorial_step"] = 99
 	c.flags["tutorial_seen_done"] = true
@@ -1498,7 +1498,7 @@ func _capture_robotics() -> void:
 	world.set("_since_save", -9999.0)
 
 
-## Acto III: el Puerto JTAG con M. PÃ¡ez y Eugenio, combate en la Oblea y el jefe.
+## Acto III: el Puerto JTAG con M. Páez y Eugenio, combate en la Oblea y el jefe.
 func _capture_act3() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("Silicio", &"hechicero", CharacterAppearance.default(), false)
@@ -1544,7 +1544,7 @@ func _capture_act3() -> void:
 	world.set("_since_save", -9999.0)
 
 
-## Ãrbol pasivo: el sector del templario (automatizaciÃ³n y legiÃ³n), el del hechicero (rayo) y el conjunto.
+## Árbol pasivo: el sector del templario (automatización y legión), el del hechicero (rayo) y el conjunto.
 func _capture_tree_sectors() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("Arbol", &"templario", CharacterAppearance.default(), false)
@@ -1577,7 +1577,7 @@ func _capture_tree_sectors() -> void:
 	world.set("_since_save", -9999.0)
 
 
-## Escena del tÃºnel del acto I (red_lince): debe verse el dinosaurio aunque la pantalla estÃ© en negro.
+## Escena del túnel del acto I (red_lince): debe verse el dinosaurio aunque la pantalla esté en negro.
 func _capture_tunnel_dino() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("Tunel", &"guerrero", CharacterAppearance.default(), false)
@@ -1633,8 +1633,8 @@ func _capture_player_states() -> void:
 	world.set("_since_save", -9999.0)
 
 
-## Ãrbol 2.0 (T88): la disposiciÃ³n de data/passive_tree_v2_layout.json en la vista del
-## Ã¡rbol: entero, una regiÃ³n de cerca y el centro.
+## Árbol 2.0 (T88): la disposición de data/passive_tree_v2_layout.json en la vista del
+## árbol: entero, una región de cerca y el centro.
 func _capture_tree_v2() -> void:
 	var tree := PassiveTree.load_from_json("res://data/passive_tree.json")
 	var alloc := PassiveAllocation.new(tree, tree.get_start_node_for_class(&"guerrero"))
@@ -1652,14 +1652,14 @@ func _capture_tree_v2() -> void:
 		view.zoom = shot[2]
 		view.center_on(shot[1])
 		await _wait(0.4)
-		print("dibujo del Ã¡rbol (%s, zoom %.2f): %.2f ms" % [shot[0], shot[2], view.last_draw_ms])
+		print("dibujo del árbol (%s, zoom %.2f): %.2f ms" % [shot[0], shot[2], view.last_draw_ms])
 		_save(shot[0])
 
 
 ## NPC por capas en el campamento y la entrada de un jefe (T103).
 func _capture_npcs_and_boss() -> void:
 	var gd: Node = get_node("/root/GameData")
-	var c: CharacterData = gd.create_character("CÃ¡mara", &"guerrero", CharacterAppearance.default(), false)
+	var c: CharacterData = gd.create_character("Cámara", &"guerrero", CharacterAppearance.default(), false)
 	c.flags["zone"] = "campamento"
 	c.flags["tutorial_step"] = 99
 	c.flags["tutorial_seen_done"] = true
@@ -1678,7 +1678,7 @@ func _capture_npcs_and_boss() -> void:
 		_save("103_npc_hablando")
 		world.set_process(true)
 	var intro := BossIntro.new()
-	intro.boss_name = "La ReuniÃ³n Que Pudo Ser Un Email"
+	intro.boss_name = "La Reunión Que Pudo Ser Un Email"
 	var em: EnemyManager = world.get("enemies")
 	var row := 0
 	var types := EnemyManager.enemy_types()
@@ -1757,7 +1757,7 @@ func _capture_class_gear() -> void:
 	_save("161_equipos")
 
 
-## Peinados y accesorios del alumno (T180): la hoja a resoluciÃ³n real
+## Peinados y accesorios del alumno (T180): la hoja a resolución real
 ## (assets/sprites/hero/catalogo.png: arriba los 11 peinados, abajo los accesorios) y
 ## ampliada con sus nombres. Todos con el mismo pelo, piel y ropa para compararlos.
 func _capture_hero_catalog() -> void:
@@ -1776,7 +1776,7 @@ func _capture_hero_catalog() -> void:
 		var a := base.duplicate()
 		a["accessory"] = acc
 		cells.append([CharacterAppearance.ACCESSORY_NAMES[acc], a])
-	# Hoja a resoluciÃ³n real: una fila de peinados y otra de accesorios.
+	# Hoja a resolución real: una fila de peinados y otra de accesorios.
 	var native := Image.create_empty(StudentHero.CELL.x * hair_count, StudentHero.CELL.y * 2, false, Image.FORMAT_RGBA8)
 	native.fill(Color(0, 0, 0, 0))
 	var zoom := 3.9
@@ -1872,7 +1872,7 @@ func _capture_weapons() -> void:
 
 
 ## El alumno del estilo del usuario (T176, StudentHero): arriba, apariencias del
-## creador (peinados, colores, barba, lentes, audÃ­fonos); abajo, el mismo alumno con
+## creador (peinados, colores, barba, lentes, audífonos); abajo, el mismo alumno con
 ## cada conjunto de equipo; de izquierda a derecha, reposo, pasos y el tajo.
 func _capture_students(sheet: Control) -> void:
 	var rows := [
@@ -1885,7 +1885,7 @@ func _capture_students(sheet: Control) -> void:
 		[{"hair": 6, "hair_color": "6b3d80", "skin_tone": "a8714f", "outfit_color": "2b4a8a"}, {"helmet": "capucha_de_cuero", "body": "chaleco_de_cuero", "boots": "botas_de_cuero"}, "dagger"],
 		[{"hair": 3, "hair_color": "d96a9a", "skin_tone": "e0ac8a", "outfit_color": "1d5a66"}, {"body": "chaqueta_de_conferencias"}, "sword"],
 	]
-	# [animaciÃ³n, cuadro, direcciÃ³n (0 frente, 1 espaldas, 2 lado)] (T181: las tres direcciones)
+	# [animación, cuadro, dirección (0 frente, 1 espaldas, 2 lado)] (T181: las tres direcciones)
 	var frames := [["idle", 0, 0], ["idle", 0, 2], ["idle", 0, 1], ["walk", 0, 2], ["walk", 2, 2], ["walk", 0, 1], ["attack", 1, 2], ["attack", 2, 0]]
 	var zoom := 2.0
 	for ri in rows.size():
@@ -1908,7 +1908,7 @@ func _capture_students(sheet: Control) -> void:
 
 
 ## El tema del panel de datos (T166) en las ventanas de verdad: inventario con
-## habilidades, la hoja de personaje y un diÃ¡logo.
+## habilidades, la hoja de personaje y un diálogo.
 func _capture_theme() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("Tema", &"guerrero", CharacterAppearance.default(), false)
@@ -1942,7 +1942,7 @@ func _capture_theme() -> void:
 	_save("166_dialogo")
 
 
-## Las dos propuestas de interfaz de ingenierÃ­a (T165): inventario, descripciÃ³n, diÃ¡logo y HUD.
+## Las dos propuestas de interfaz de ingeniería (T165): inventario, descripción, diálogo y HUD.
 func _capture_ui_proposals() -> void:
 	var mock := UiProposals.new()
 	mock.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -1954,7 +1954,7 @@ func _capture_ui_proposals() -> void:
 
 
 ## NPC con su objeto y su reposo (T162): cada uno de frente y, debajo, de lado, en dos
-## momentos (para ver el gesto de reposo: teclear, beber cafÃ©...).
+## momentos (para ver el gesto de reposo: teclear, beber café...).
 func _capture_npc_identity() -> void:
 	var sheet := Control.new()
 	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -1968,7 +1968,7 @@ func _capture_npc_identity() -> void:
 		if not seen.has(person) and not db[id].get("terminal", false):
 			seen[person] = true
 			ids.append(id)
-	# T178: arriba, el oficinista (prÃ³logo) de frente; debajo, dentro del servidor (el
+	# T178: arriba, el oficinista (prólogo) de frente; debajo, dentro del servidor (el
 	# estilo del alumno con su equipo y su objeto) de frente y de lado.
 	var cols := 8
 	var rows := 3
@@ -1983,7 +1983,7 @@ func _capture_npc_identity() -> void:
 				sp.set("sprite_scale", 2.2 / PlayerSheet.BAKE_SCALE)
 			else:
 				sp = HeroSprite.new()
-				sp.scale = Vector2.ONE   # (set_pose lo cambia con la respiraciÃ³n)
+				sp.scale = Vector2.ONE   # (set_pose lo cambia con la respiración)
 			sheet.add_child(sp)
 			sp.set("appearance", CharacterAppearance.sanitize(npc.get("appearance", {})) if row == 0 else nl[0])
 			if npc.get("ghost", false):
@@ -2001,8 +2001,8 @@ func _capture_npc_identity() -> void:
 	_save("178_npcs")
 
 
-## Pantallas con el tema del panel de datos (T168), en el PC (1600Ã—900) y en tÃ¡ctil
-## (2400Ã—1080): tÃ­tulo, personajes, creador, pausa, carga a mitad y al 100 % y muerte.
+## Pantallas con el tema del panel de datos (T168), en el PC (1600×900) y en táctil
+## (2400×1080): título, personajes, creador, pausa, carga a mitad y al 100 % y muerte.
 func _capture_screens_t168() -> void:
 	for touch in [false, true]:
 		var tag := "tactil" if touch else "pc"
@@ -2054,7 +2054,7 @@ func _capture_screens_t168() -> void:
 	get_window().size = Vector2i(1600, 900)
 
 
-## Pantallas de T96: tÃ­tulo con la ciudad de servidores, selecciÃ³n de personaje con
+## Pantallas de T96: título con la ciudad de servidores, selección de personaje con
 ## pedestal y pose, pantallas de carga de varias zonas y el barrido a medias.
 func _capture_screens_t96() -> void:
 	_swap(load("res://scenes/menu/title_screen.tscn").instantiate())
@@ -2090,7 +2090,7 @@ func _capture_screens_t96() -> void:
 	_save("96_barrido")
 
 
-## Arte del Ã¡rbol 2.0 (T94): fondo con parallax, marcos, medallones, minimapa y el pulso.
+## Arte del árbol 2.0 (T94): fondo con parallax, marcos, medallones, minimapa y el pulso.
 func _capture_tree_art() -> void:
 	var tree := PassiveTree.load_from_json("res://data/passive_tree.json")
 	var alloc := PassiveAllocation.new(tree, tree.get_start_node_for_class(&"guerrero"))
@@ -2104,7 +2104,7 @@ func _capture_tree_art() -> void:
 	for cid in colors:
 		regions[tree.get_start_node_for_class(StringName(cid))] = Color(colors[cid])
 	view.region_colors = regions
-	# Una build pequeÃ±a: hasta la maestrÃ­a mÃ¡s cercana y un notable mÃ¡s allÃ¡.
+	# Una build pequeña: hasta la maestría más cercana y un notable más allá.
 	var targets: Array = tree.nodes.values().filter(func(n: PassiveNode) -> bool: return n.is_mastery())
 	targets.sort_custom(func(a: PassiveNode, b: PassiveNode) -> bool: return alloc.find_path(a.id).size() < alloc.find_path(b.id).size() if alloc.find_path(a.id).size() > 0 and alloc.find_path(b.id).size() > 0 else alloc.find_path(a.id).size() > 0)
 	var mastery: PassiveNode = targets[0]
@@ -2114,7 +2114,7 @@ func _capture_tree_art() -> void:
 		view.zoom = shot[2]
 		view.center_on(shot[1])
 		await _wait(0.4)
-		print("dibujo del Ã¡rbol (%s, zoom %.2f): %.2f ms" % [shot[0], shot[2], view.last_draw_ms])
+		print("dibujo del árbol (%s, zoom %.2f): %.2f ms" % [shot[0], shot[2], view.last_draw_ms])
 		_save(shot[0])
 	# El pulso a mitad de camino: asignar un notable a varios pasos y capturar enseguida.
 	var far_notable: PassiveNode = null
@@ -2172,7 +2172,7 @@ func _capture_poses() -> void:
 	_save("74_proyectiles")
 
 
-## M. PÃ¡ez: retrato grande, sprite del juego y su aspecto lado a lado con otros NPC.
+## M. Páez: retrato grande, sprite del juego y su aspecto lado a lado con otros NPC.
 func _capture_paez() -> void:
 	var look: Dictionary = CharacterAppearance.sanitize(Zone.npc_database()["npcs"]["m_paez"]["appearance"])
 	var sheet := Control.new()
@@ -2190,7 +2190,7 @@ func _capture_paez() -> void:
 	_save("19_paez")
 
 
-## Jefe del acto I con fases, afijos en un Ã©lite con resistencias, y auras activas.
+## Jefe del acto I con fases, afijos en un élite con resistencias, y auras activas.
 func _capture_boss_and_affixes() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("Jefe", &"templario", CharacterAppearance.default(), false)
@@ -2263,7 +2263,7 @@ func _capture_icons() -> void:
 	_save("16_iconos")
 
 
-## Objetos de misiÃ³n del suelo: a tamaÃ±o real (abajo) y ampliados (arriba).
+## Objetos de misión del suelo: a tamaño real (abajo) y ampliados (arriba).
 func _capture_quest_items() -> void:
 	var kinds := ["tape", "log", "descriptor", "ice_cache", "kindle_case", "kindle", "concha", "bolillo", "cuernito"]
 	var sheet := Control.new()
@@ -2285,7 +2285,7 @@ func _capture_quest_items() -> void:
 
 ## Habilidades con 4-5 RAM, disparando de verdad: abanicos de proyectiles,
 ## drones e invocaciones con Multicanal, teledirigidos y Pipeline. Imprime por
-## cada una las RAM activas y cuÃ¡ntos proyectiles salen.
+## cada una las RAM activas y cuántos proyectiles salen.
 const RAM_BUILDS := [
 	["rafaga_de_paquetes", ["multicanal_mayor", "puntero_salvaje", "propagacion_excepciones", "ecc", "pipeline"]],
 	["drones_vigilancia", ["multicanal", "pipeline", "firmware_autonomo", "ecc", "sobretension"]],
@@ -2296,7 +2296,7 @@ const RAM_BUILDS := [
 ]
 
 
-## PrÃ³logo: la calle con el personaje caminando hasta el final (Â¿se sale de la
+## Prólogo: la calle con el personaje caminando hasta el final (¿se sale de la
 ## pantalla?), el pasillo y la oficina.
 func _capture_prologue_walk() -> void:
 	var gd: Node = get_node("/root/GameData")
@@ -2317,7 +2317,7 @@ func _capture_prologue_walk() -> void:
 		Input.action_release(&"move_right")
 		await _wait(0.6)
 		var screen_x := stage.player_x - stage.cam_x
-		print("prÃ³logo calle: player_x %.0f cam_x %.0f â†’ en pantalla x %.0f de 400 %s" % [stage.player_x, stage.cam_x, screen_x, "OK" if screen_x > 12.0 and screen_x < 388.0 else "FUERA"])
+		print("prólogo calle: player_x %.0f cam_x %.0f → en pantalla x %.0f de 400 %s" % [stage.player_x, stage.cam_x, screen_x, "OK" if screen_x > 12.0 and screen_x < 388.0 else "FUERA"])
 		_save("36_prologo_calle_%d" % int(minf(x, 999.0)))
 	# Click en la entrada desde lejos: camina y entra solo.
 	p.call("_go_room", "calle", 120.0)
@@ -2327,7 +2327,7 @@ func _capture_prologue_walk() -> void:
 	while stage.room != "pasillo" and waited < 12.0:
 		await get_tree().process_frame
 		waited += get_process_delta_time()
-	print("prÃ³logo: click en la entrada â†’ %s en %.1f s" % [stage.room, waited])
+	print("prólogo: click en la entrada → %s en %.1f s" % [stage.room, waited])
 	await _wait(0.9)
 	# Pasillo: velocidad lateral en pantalla (debe parecerse a la de la calle, 56 px/s).
 	var x0 := PrologueStage.hall_to_screen(stage.player_lat, stage.player_depth).x
@@ -2335,9 +2335,9 @@ func _capture_prologue_walk() -> void:
 	await _wait(1.0)
 	Input.action_release(&"move_right")
 	var x1 := PrologueStage.hall_to_screen(stage.player_lat, stage.player_depth).x
-	print("prÃ³logo pasillo: %.0f px/s de lado" % (x1 - x0))
+	print("prólogo pasillo: %.0f px/s de lado" % (x1 - x0))
 	_save("37_prologo_pasillo")
-	# Click en la puerta de InformÃ¡tica (donde se dibuja): camina y entra.
+	# Click en la puerta de Informática (donde se dibuja): camina y entra.
 	var door: Dictionary = p.call("_hotspot_under", Vector2(85, 120))
 	p.set("_target", p.call("_hotspot_pos", door) if not door.is_empty() else Vector2.INF)
 	p.set("_pending_action", String(door.get("action", "")))
@@ -2345,10 +2345,10 @@ func _capture_prologue_walk() -> void:
 	while stage.room != "oficina" and waited < 12.0:
 		await get_tree().process_frame
 		waited += get_process_delta_time()
-	print("prÃ³logo: click en la puerta de InformÃ¡tica â†’ %s en %.1f s" % [stage.room, waited])
+	print("prólogo: click en la puerta de Informática → %s en %.1f s" % [stage.room, waited])
 	await _wait(0.9)
 	_save("38_prologo_oficina")
-	# Click sobre Rafa: camina hasta el escritorio y empieza la conversaciÃ³n.
+	# Click sobre Rafa: camina hasta el escritorio y empieza la conversación.
 	var rafa: Dictionary = p.call("_hotspot_under", Vector2(314, 170))
 	p.set("_target", p.call("_hotspot_pos", rafa) if not rafa.is_empty() else Vector2.INF)
 	p.set("_pending_action", String(rafa.get("action", "")))
@@ -2357,10 +2357,10 @@ func _capture_prologue_walk() -> void:
 	while not cut.is_playing() and waited < 12.0:
 		await get_tree().process_frame
 		waited += get_process_delta_time()
-	print("prÃ³logo: click en Rafa â†’ conversaciÃ³n %s en %.1f s (x %.0f)" % ["sÃ­" if cut.is_playing() else "NO", waited, stage.player_x])
+	print("prólogo: click en Rafa → conversación %s en %.1f s (x %.0f)" % ["sí" if cut.is_playing() else "NO", waited, stage.player_x])
 	await _wait(1.0)
 	_save("39_prologo_rafa")
-	# La absorciÃ³n: Mario y AÃ­da llegan y el servidor se los traga (y luego al jugador).
+	# La absorción: Mario y Aída llegan y el servidor se los traga (y luego al jugador).
 	cut.call("_finish")
 	stage.rafa_standing = true
 	stage.visitors_x = 112.0
@@ -2369,11 +2369,11 @@ func _capture_prologue_walk() -> void:
 	for shot in [[1.0, "40_absorcion_mario"], [1.0, "41_absorcion_aida_rafa"], [2.3, "42_caida_jugador"]]:
 		await _wait(shot[0])
 		_save(shot[1])
-	print("prÃ³logo: absorciÃ³n %.2f, jugador %.2f, fase %s" % [stage.absorb, stage.player_pull, p.get("_phase")])
+	print("prólogo: absorción %.2f, jugador %.2f, fase %s" % [stage.absorb, stage.player_pull, p.get("_phase")])
 
 
-## Lo nuevo de combate: elecciÃ³n de habilidad al nivel 16, aura anclada (Torre de
-## SeÃ±al), torreta atacada por un cazador, una Ã©lite con combinaciÃ³n y el HUD al 140 %.
+## Lo nuevo de combate: elección de habilidad al nivel 16, aura anclada (Torre de
+## Señal), torreta atacada por un cazador, una élite con combinación y el HUD al 140 %.
 func _capture_combat2() -> void:
 	var saved_scale: Variant = GameSettings.get_value("interface", "scale", 1.0)
 	GameSettings.set_value("interface", "scale", 1.0)
@@ -2447,7 +2447,7 @@ func _capture_combat2() -> void:
 
 
 ## Rendimiento: 150 y 300 enemigos (con afijos y estados) contra 6 invocaciones,
-## drones y auras. Imprime la media y el peor fotograma, y la simulaciÃ³n de enemigos.
+## drones y auras. Imprime la media y el peor fotograma, y la simulación de enemigos.
 func _benchmark() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var items: ItemDatabase = gd.get("items")
@@ -2467,7 +2467,7 @@ func _benchmark() -> void:
 	var skills: SkillController = world.get("skills")
 	var player: Player = world.get("player")
 	var em: EnemyManager = world.get("enemies")
-	# A nivel 40 sale la elecciÃ³n de habilidad (que pausa el juego): la primera.
+	# A nivel 40 sale la elección de habilidad (que pausa el juego): la primera.
 	var bench_ui: GameUI = world.get("ui")
 	if bench_ui.is_choosing():
 		for b in (bench_ui.get("_choice_panel") as Node).find_children("*", "Button", true, false):
@@ -2519,11 +2519,11 @@ func _benchmark() -> void:
 			mm_ms += float(mm.get("last_draw_ms"))
 			calls += Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)
 		print("  _draw de enemigos %.2f ms, _draw del minimapa %.2f ms, llamadas de dibujo %.0f" % [draw_ms / frames, mm_ms / frames, calls / frames])
-		print("rendimiento %d enemigos (%d vivos, %d en cÃ¡mara): fotograma medio %.2f ms (%.0f FPS), peor %.2f ms, simulaciÃ³n de enemigos %.2f ms, invocaciones %d, proyectiles %d" % [
+		print("rendimiento %d enemigos (%d vivos, %d en cámara): fotograma medio %.2f ms (%.0f FPS), peor %.2f ms, simulación de enemigos %.2f ms, invocaciones %d, proyectiles %d" % [
 			n, em.count(), em.last_drawn_count, total / frames, 1000.0 / (total / frames), worst, sim / frames, skills.get("_units").size(), skills.get("_projectiles").size()])
 		if n == 300:
 			_save("32_rendimiento_300")
-	# Calidad grÃ¡fica (T98): cada nivel con los 300 enemigos, explosiones incluidas.
+	# Calidad gráfica (T98): cada nivel con los 300 enemigos, explosiones incluidas.
 	var saved_quality := GraphicsQuality.level
 	var fx: BigFx = world.get("big_fx")
 	for q in [0, 1, 2]:
@@ -2539,10 +2539,10 @@ func _benchmark() -> void:
 			await get_tree().process_frame
 			frames_q += 1
 			peak = maxi(peak, fx.live_particles())
-		print("calidad %s: %.2f ms por fotograma, partÃ­culas vivas como mucho %d, luces %d" % [GraphicsQuality.name_of(q), 3000.0 / frames_q, peak, (world.get("post") as WorldPost).last_lights.size()])
+		print("calidad %s: %.2f ms por fotograma, partículas vivas como mucho %d, luces %d" % [GraphicsQuality.name_of(q), 3000.0 / frames_q, peak, (world.get("post") as WorldPost).last_lights.size()])
 		_save("98_calidad_%s" % GraphicsQuality.name_of(q))
 	GraphicsQuality.level = saved_quality
-	# QuÃ© cuesta: se oculta una capa cada vez (con 300 enemigos).
+	# Qué cuesta: se oculta una capa cada vez (con 300 enemigos).
 	var ui: GameUI = world.get("ui")
 	var zone_node: Node = world.get("zone")
 	for layer in ["enemigos", "habilidades", "interfaz", "zona", "nada"]:
@@ -2564,7 +2564,7 @@ func _benchmark() -> void:
 	world.set("_since_save", -9999.0)
 
 
-## Todas las invocaciones persistentes, ampliadas (arriba) y a tamaÃ±o real (abajo).
+## Todas las invocaciones persistentes, ampliadas (arriba) y a tamaño real (abajo).
 func _capture_unit_art() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var skills: Dictionary = gd.get("items").skills.skills
@@ -2577,7 +2577,7 @@ func _capture_unit_art() -> void:
 	sheet.draw.connect(func() -> void:
 		sheet.draw_rect(Rect2(Vector2.ZERO, sheet.size), Color("1d2a26"))
 		var font := sheet.get_theme_default_font()
-		# Dos filas: ampliadas Ã—2.5 y, al lado de cada una, a tamaÃ±o real.
+		# Dos filas: ampliadas ×2.5 y, al lado de cada una, a tamaño real.
 		var per_row := ceili(units.size() / 2.0)
 		for i in units.size():
 			var x := 70.0 + (i % per_row) * (1480.0 / per_row)
@@ -2593,8 +2593,8 @@ func _capture_unit_art() -> void:
 	_save("31_invocaciones")
 
 
-## MenÃº de habilidades de hoy (T228): seis placas con su RAM, una ranura libre y la
-## bolsa con placas y RAM sueltas, en PC (1600Ã—900) y en el celular (2400Ã—1080).
+## Menú de habilidades de hoy (T228): seis placas con su RAM, una ranura libre y la
+## bolsa con placas y RAM sueltas, en PC (1600×900) y en el celular (2400×1080).
 func _capture_skills_today() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var items: ItemDatabase = gd.get("items")
@@ -2628,7 +2628,7 @@ func _capture_skills_today() -> void:
 		var ui: GameUI = world.get("ui")
 		if ui.cutscene.visible:
 			ui.cutscene.call("_finish")
-		for k in 8:   # las elecciones de habilidad por nivel tapan el menÃº
+		for k in 8:   # las elecciones de habilidad por nivel tapan el menú
 			if not ui.is_choosing():
 				break
 			ui.call("_on_choice_picked", "golem_hardware", func(_s: String) -> void: pass)
@@ -2710,7 +2710,7 @@ func _capture_skills_with_rams() -> void:
 		else:
 			skills.call("_execute", prof, p + Vector2(300, 0))
 		var fired: int = skills.get("_projectiles").size() - before
-		print("%s: activas %s Â· proyectiles %d (salieron %d) Â· abanico %.0fÂ° Â· teledirigido %s Â· daÃ±o %.0f-%.0f" % [
+		print("%s: activas %s · proyectiles %d (salieron %d) · abanico %.0f° · teledirigido %s · daño %.0f-%.0f" % [
 			RAM_BUILDS[i][0], str(board.active_supports().size()) if board else "?", prof["projectiles"], fired,
 			prof["spread_degrees"], prof["homing"], prof["min_damage"], prof["max_damage"]])
 		if i == 0:
@@ -2722,7 +2722,7 @@ func _capture_skills_with_rams() -> void:
 	for pr in skills.get("_projectiles"):
 		shots += 1
 	print("proyectiles en vuelo tras 2.5 s: %d" % shots)
-	# MenÃº K: RAM y placas sueltas en la bolsa, una RAM seleccionada.
+	# Menú K: RAM y placas sueltas en la bolsa, una RAM seleccionada.
 	for rid in ["pipeline", "multicanal_menor", "ecc_mayor", "pasta_termica", "guiado_laser", "carcasa_reforzada", "fuerza_bruta", "sobretension_menor"]:
 		c.inventory.add_item(RamModule.new(items.skills.rams[rid]))
 	c.inventory.add_item(Motherboard.new(items.skills.skills["ping_letal"], 7, ["DDR5", "DDR4"]))
@@ -2742,7 +2742,7 @@ func _capture_skills_with_rams() -> void:
 
 
 ## Minimapa ampliado en tres sitios: el jefe del acto I con enemigos de cada
-## rareza, la Oblea (objetos de misiÃ³n) y el puerto JTAG (NPCs).
+## rareza, la Oblea (objetos de misión) y el puerto JTAG (NPCs).
 func _capture_minimap() -> void:
 	var gd: Node = get_node("/root/GameData")
 	for cfg in [["jefe", "boss"], ["oblea", "quest"], ["puerto_jtag", "npcs"]]:
@@ -2792,7 +2792,7 @@ func _capture_minimap() -> void:
 		world.set("_since_save", -9999.0)
 
 
-## El botÃ³n Â«NoÂ» de la contrataciÃ³n tras muchos esquives: pequeÃ±o pero legible.
+## El botón «No» de la contratación tras muchos esquives: pequeño pero legible.
 func _capture_hire_no() -> void:
 	get_tree().paused = false   # (el minimapa de antes deja el juego en pausa: la ventana entra con tweens)
 	var p: Node = load("res://scenes/prologue/prologue.tscn").instantiate()
@@ -2810,8 +2810,8 @@ func _capture_hire_no() -> void:
 	_save("27_contratacion_pues_ya_que")
 
 
-## Objetos de misiÃ³n en la Oblea, el menÃº de pausa y la interfaz al 120 % con el
-## modo daltÃ³nico. Deja los ajustes del jugador como estaban.
+## Objetos de misión en la Oblea, el menú de pausa y la interfaz al 120 % con el
+## modo daltónico. Deja los ajustes del jugador como estaban.
 func _capture_interface() -> void:
 	var saved_scale: Variant = GameSettings.get_value("interface", "scale", 1.0)
 	var saved_cb: bool = Ailments.colorblind
@@ -2922,7 +2922,7 @@ func _capture_combat_hud() -> void:
 	world.set("_since_save", -9999.0)
 
 
-## Tutorial reciÃ©n llegado: los bugs estÃ¡n lejos, B.O.B. al lado.
+## Tutorial recién llegado: los bugs están lejos, B.O.B. al lado.
 func _capture_tutorial_start() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("Tutorial", &"guerrero", CharacterAppearance.default(), false)
@@ -2937,12 +2937,12 @@ func _capture_tutorial_start() -> void:
 	var nearest := INF
 	for k in em.count():
 		nearest = minf(nearest, em.positions[k].distance_to(player.global_position))
-	print("tutorial: %d enemigos, el mÃ¡s cercano a %.0f px; vida %d/%d" % [em.count(), nearest, player.life, player.max_life()])
+	print("tutorial: %d enemigos, el más cercano a %.0f px; vida %d/%d" % [em.count(), nearest, player.life, player.max_life()])
 	world.set("_since_save", -9999.0)
 
 
-## Voces grabadas en el prÃ³logo de verdad: la conversaciÃ³n con Rafa, con voz masculina y
-## femenina; cada lÃ­nea hablada debe sonar con su audio (VoiceLines) y no con la del sistema.
+## Voces grabadas en el prólogo de verdad: la conversación con Rafa, con voz masculina y
+## femenina; cada línea hablada debe sonar con su audio (VoiceLines) y no con la del sistema.
 func _check_prologue_voices() -> void:
 	for voice in [0, 1]:
 		var gd: Node = get_node("/root/GameData")
@@ -2959,7 +2959,7 @@ func _check_prologue_voices() -> void:
 		p.call("_play", "prologo_rafa", Callable())
 		for k in 4:
 			await _wait(0.4)
-			print("voces (%s) lÃ­nea %s: %s Â· sonando %s" % [CharacterAppearance.VOICE_NAMES[voice], cut.get("_index"), cut.get("_line_id"), VoiceLines.is_playing()])
+			print("voces (%s) línea %s: %s · sonando %s" % [CharacterAppearance.VOICE_NAMES[voice], cut.get("_index"), cut.get("_line_id"), VoiceLines.is_playing()])
 			if k == 1:
 				_save("voces_prologo_%d" % voice)
 			cut.call("_next")
@@ -2967,7 +2967,7 @@ func _check_prologue_voices() -> void:
 	VoiceLines.stop()
 
 
-## Escalas del prÃ³logo: la calle con los autos junto al jugador y el pasillo con el
+## Escalas del prólogo: la calle con los autos junto al jugador y el pasillo con el
 ## jugador cerca, a media distancia y al fondo (frente a la caja y la TV).
 func _capture_prologue_scales() -> void:
 	var gd: Node = get_node("/root/GameData")
@@ -3006,7 +3006,7 @@ func _capture_zone_report() -> void:
 	gd.current_character = c
 	var visit := {}
 	ZoneReport.begin(visit, c)
-	visit["loot"] = [{"name": "Teclado MecÃ¡nico del Caos", "rarity": Rarity.Item.UNIQUE}, {"name": "Chaqueta de Hilo Dental", "rarity": Rarity.Item.RARE}]
+	visit["loot"] = [{"name": "Teclado Mecánico del Caos", "rarity": Rarity.Item.UNIQUE}, {"name": "Chaqueta de Hilo Dental", "rarity": Rarity.Item.RARE}]
 	ZoneReport.note_death(visit, {"name": "Bug de Sintaxis", "rarity": Rarity.Enemy.NORMAL})
 	var lines := ZoneReport.lines({"seconds": 192.0, "kills": 132, "deaths": 1, "dps": 340}, visit, "El Bosque de Cables", c.experience + 1250, c.level)
 	for touch in [false, true]:
@@ -3035,8 +3035,8 @@ func _wait(seconds: float) -> Signal:
 	return get_tree().create_timer(seconds).timeout
 
 
-## Controles tÃ¡ctiles (T107): un dedo en el joystick (toques simulados, con su clic
-## emulado) y la mira del apuntado automÃ¡tico; luego un toque en el mundo para ir ahÃ­.
+## Controles táctiles (T107): un dedo en el joystick (toques simulados, con su clic
+## emulado) y la mira del apuntado automático; luego un toque en el mundo para ir ahí.
 func _capture_touch() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("Pulgar", &"exploradora", CharacterAppearance.default(), false)
@@ -3066,7 +3066,7 @@ func _capture_touch() -> void:
 		await get_tree().process_frame
 		_drag(0, origin + Vector2(12.0 * (k + 1), -4.0 * (k + 1)))
 	await _wait(0.8)
-	print("tactil: joystick %s, el jugador se moviÃ³ %s (por el toque, no hacia el dedo)" % [Touch.stick, player.global_position - before])
+	print("tactil: joystick %s, el jugador se movió %s (por el toque, no hacia el dedo)" % [Touch.stick, player.global_position - before])
 	_save("107_joystick")
 	_touch(0, origin + Vector2(96, -32), false)
 	await _wait(0.3)
@@ -3077,9 +3077,9 @@ func _capture_touch() -> void:
 	await get_tree().process_frame
 	_touch(0, tap, false)
 	await _wait(1.0)
-	print("tactil: tras tocar el mundo (-60, 220) mÃ¡s allÃ¡, el jugador se moviÃ³ %s" % (player.global_position - at))
+	print("tactil: tras tocar el mundo (-60, 220) más allá, el jugador se movió %s" % (player.global_position - at))
 	_save("107_tocar_mundo")
-	# Botones (T108): mantener la habilidad 1 arrastrando para apuntar, la esquiva y una pociÃ³n.
+	# Botones (T108): mantener la habilidad 1 arrastrando para apuntar, la esquiva y una poción.
 	var hud: Hud = ui.hud
 	var to_screen := func(p: Vector2) -> Vector2: return hud.get_global_transform_with_canvas() * p
 	var used := [0]
@@ -3090,7 +3090,7 @@ func _capture_touch() -> void:
 		await get_tree().process_frame
 		_drag(1, skill_at + Vector2(-9.0 * (k + 1), -6.0 * (k + 1)))
 	await _wait(1.2)
-	print("tactil: manteniendo la habilidad 1 (apuntado a mano %s) se lanzÃ³ %d veces" % [Touch.aim_dir, used[0]])
+	print("tactil: manteniendo la habilidad 1 (apuntado a mano %s) se lanzó %d veces" % [Touch.aim_dir, used[0]])
 	_save("108_botones")
 	_touch(1, skill_at, false)
 	await _wait(0.2)
@@ -3110,7 +3110,7 @@ func _capture_touch() -> void:
 	await get_tree().process_frame
 	_touch(3, flask_at, false)
 	await _wait(0.2)
-	print("tactil: pociÃ³n 1 tocada, cargas %s -> %s" % [flask_before, player.flask_at(0).charges if player.flask_at(0) else -1.0])
+	print("tactil: poción 1 tocada, cargas %s -> %s" % [flask_before, player.flask_at(0).charges if player.flask_at(0) else -1.0])
 	# Con la interfaz al 140 % (lo que trae el celular por defecto), que nada se pise.
 	var scale_was: Variant = GameSettings.get_value("interface", "scale", 1.0)
 	GameSettings.set_value("interface", "scale", 1.4)
@@ -3120,7 +3120,7 @@ func _capture_touch() -> void:
 	var top_slot := INF
 	for i in SkillController.ACTIONS.size():
 		top_slot = minf(top_slot, (hud.get_global_transform_with_canvas() * hud.call("_slot_rect", i).position).y)
-	print("tactil 140 %%: misiones hasta y=%.0f, la habilidad mÃ¡s alta empieza en y=%.0f" % [tracker_end, top_slot])
+	print("tactil 140 %%: misiones hasta y=%.0f, la habilidad más alta empieza en y=%.0f" % [tracker_end, top_slot])
 	_save("108_botones_140")
 	GameSettings.set_value("interface", "scale", scale_was)
 	ui.apply_ui_scale()
@@ -3129,9 +3129,9 @@ func _capture_touch() -> void:
 	world.queue_free()
 
 
-## Interfaz tÃ¡ctil (T109) a resoluciÃ³n de telÃ©fono (2400Ã—1080 y 1600Ã—720, 20:9) con la
-## interfaz al 140 %: partida, inventario con un objeto tocado (tooltip y botÃ³n de
-## acciÃ³n), habilidades, hoja de personaje, Ã¡rbol pasivo (con zoom de dos dedos), mapa
+## Interfaz táctil (T109) a resolución de teléfono (2400×1080 y 1600×720, 20:9) con la
+## interfaz al 140 %: partida, inventario con un objeto tocado (tooltip y botón de
+## acción), habilidades, hoja de personaje, árbol pasivo (con zoom de dos dedos), mapa
 ## y pausa. De paso comprueba tocar, mantener, arrastrar y el segundo toque.
 func _capture_phone() -> void:
 	var gd: Node = get_node("/root/GameData")
@@ -3165,7 +3165,7 @@ func _capture_phone() -> void:
 		ui.apply_ui_scale()
 		await _wait(0.3)
 		_save("109_%s_partida" % tag)
-		# Inventario: tocar un objeto de la bolsa enseÃ±a el tooltip y el botÃ³n; el segundo toque equipa.
+		# Inventario: tocar un objeto de la bolsa enseña el tooltip y el botón; el segundo toque equipa.
 		ui.call("_on_menu_requested", "inventory")
 		await _wait(0.4)
 		var cell: ItemCell = null
@@ -3180,7 +3180,7 @@ func _capture_phone() -> void:
 			_touch(0, at, false)
 			await _wait(0.4)
 			var action: Button = ui.touch_pointer.get("_action")
-			print("telefono %s: tocar un objeto â†’ tooltip %s, botÃ³n Â«%sÂ» %s" % [tag, ui.item_tooltip.visible, action.text, action.visible])
+			print("telefono %s: tocar un objeto → tooltip %s, botón «%s» %s" % [tag, ui.item_tooltip.visible, action.text, action.visible])
 			_save("109_%s_inventario" % tag)
 			# Mantener = clic derecho (marca de basura) y lo vuelve a quitar.
 			var item := cell.item
@@ -3191,7 +3191,7 @@ func _capture_phone() -> void:
 			print("telefono %s: mantener â†’ marca %s" % [tag, "basura" if item.junk else ("bloqueado" if item.locked else "ninguna")])
 			while item.junk or item.locked:
 				Item.cycle_mark(item)
-			# Arrastrar el objeto a otra casilla vacÃ­a de la bolsa.
+			# Arrastrar el objeto a otra casilla vacía de la bolsa.
 			var empty: ItemCell = null
 			var shown_rect: Rect2 = (ui.inventory_panel.get("_scroll") as Control).get_global_rect()
 			for cc in ui.inventory_panel.find_children("*", "ItemCell", true, false):
@@ -3208,9 +3208,9 @@ func _capture_phone() -> void:
 				await get_tree().process_frame
 				_touch(0, to, false)
 				await _wait(0.3)
-				print("telefono %s: arrastrar â†’ el objeto estÃ¡ ahora en la casilla de destino: %s (bolsa %d â†’ %d, destino %s)" % [tag, empty.item == item,
+				print("telefono %s: arrastrar → el objeto está ahora en la casilla de destino: %s (bolsa %d → %d, destino %s)" % [tag, empty.item == item,
 					int(cell.location["index"]), c.inventory.bag.find(item), empty.location])
-				# Dos toques en el mismo objeto: el segundo hace la acciÃ³n (equipar).
+				# Dos toques en el mismo objeto: el segundo hace la acción (equipar).
 				for k in 2:
 					_touch(0, to, true)
 					await _wait(0.1)
@@ -3241,7 +3241,7 @@ func _capture_phone() -> void:
 		_touch(1, mid + Vector2(180, 0), false)
 		_touch(0, mid - Vector2(180, 0), false)
 		await _wait(0.3)
-		print("telefono %s: dos dedos en el Ã¡rbol â†’ zoom %.2f â†’ %.2f" % [tag, zoom_before, view.zoom])
+		print("telefono %s: dos dedos en el árbol → zoom %.2f → %.2f" % [tag, zoom_before, view.zoom])
 		_save("109_%s_arbol" % tag)
 		ui.call("_on_menu_requested", "passives")
 		await _wait(0.3)
@@ -3263,11 +3263,11 @@ func _capture_phone() -> void:
 
 
 ## `p` en coordenadas del lienzo; el toque llega en las de la ventana (otra cosa a
-## resoluciÃ³n de telÃ©fono, donde el lienzo se estira).
-## Ataque automÃ¡tico (T151): con enemigos cerca, 2 s caminando con el joystick sin
-## tocar nada mÃ¡s, con el interruptor apagado y encendido (se enciende tocÃ¡ndolo).
-## HUD del panel de datos (T167): en la zona 1 con enemigos, en el PC (1600Ã—900) y en
-## tÃ¡ctil a 2400Ã—1080; con algo de daÃ±o, manÃ¡ gastado y unos sucesos en el registro.
+## resolución de teléfono, donde el lienzo se estira).
+## Ataque automático (T151): con enemigos cerca, 2 s caminando con el joystick sin
+## tocar nada más, con el interruptor apagado y encendido (se enciende tocándolo).
+## HUD del panel de datos (T167): en la zona 1 con enemigos, en el PC (1600×900) y en
+## táctil a 2400×1080; con algo de daño, maná gastado y unos sucesos en el registro.
 func _capture_hud_theme() -> void:
 	for touch in [false, true]:
 		var gd: Node = get_node("/root/GameData")
@@ -3306,8 +3306,8 @@ func _capture_hud_theme() -> void:
 	get_window().size = Vector2i(1600, 900)
 
 
-## TamaÃ±o del mundo (T156): el campamento y la zona 1 con unos enemigos, a 2400Ã—1080
-## en tÃ¡ctil, con la cÃ¡mara al 100, 130 y 140 %. Deja la opciÃ³n como estaba.
+## Tamaño del mundo (T156): el campamento y la zona 1 con unos enemigos, a 2400×1080
+## en táctil, con la cámara al 100, 130 y 140 %. Deja la opción como estaba.
 func _capture_world_size() -> void:
 	var before := GraphicsQuality.world_zoom_choice()
 	var gd: Node = get_node("/root/GameData")
@@ -3391,14 +3391,14 @@ func _capture_touch_auto() -> void:
 		await _wait(2.0)
 		_save("151_auto_%s" % ("encendido" if on else "apagado"))
 		_touch(0, start + Vector2(48, 0), false)
-		print("auto %s (interruptor %s): caminando 2 s, la habilidad 1 saliÃ³ %d veces" % ["encendido" if on else "apagado", SkillController.touch_auto, casts[0]])
+		print("auto %s (interruptor %s): caminando 2 s, la habilidad 1 salió %d veces" % ["encendido" if on else "apagado", SkillController.touch_auto, casts[0]])
 	SkillController.touch_auto = false
 	Touch.force = false
 	world.queue_free()
 
 
 ## Joystick a gusto (T149): en cada modo, apoyar el pulgar y arrastrarlo 300 px a la
-## derecha (mÃ¡s que el radio): cuÃ¡nto se inclina, dÃ³nde queda la base y cuÃ¡nto camina.
+## derecha (más que el radio): cuánto se inclina, dónde queda la base y cuánto camina.
 func _capture_stick_modes() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("Pulgar", &"guerrero", CharacterAppearance.default(), false)
@@ -3431,7 +3431,7 @@ func _capture_stick_modes() -> void:
 			_drag(0, start + Vector2(20.0 * (k + 1), 0))
 		await _wait(0.6)
 		var origin: Vector2 = tc.get("_origin")
-		print("joystick %s: inclinado %s, base en %s (el dedo empezÃ³ en %s), caminÃ³ %.0f px" % [mode, Touch.stick.round(),
+		print("joystick %s: inclinado %s, base en %s (el dedo empezó en %s), caminó %.0f px" % [mode, Touch.stick.round(),
 			(tc.get_global_transform_with_canvas() * origin).round(), start.round(), player.global_position.distance_to(before)])
 		_save("149_joystick_%s" % mode)
 		_touch(0, start + Vector2(300, 0), false)
@@ -3442,17 +3442,17 @@ func _capture_stick_modes() -> void:
 
 
 ## Comprobador de solapes del HUD (T147): en partida, con 5 misiones, el tutorial a la
-## vista, un aviso en pantalla y algo que recoger cerca, recoge el rectÃ¡ngulo de cada
-## cosa (botones tÃ¡ctiles uno a uno, orbes, pociones, â˜°, minimapa, Mapa/II, registro
+## vista, un aviso en pantalla y algo que recoger cerca, recoge el rectángulo de cada
+## cosa (botones táctiles uno a uno, orbes, pociones, ☰, minimapa, Mapa/II, registro
 ## de misiones, registro de sucesos, tutorial y aviso) y cuenta las parejas que se pisan,
-## en tÃ¡ctil (esquina y arcos, diestro y zurdo, botones al 100 % y al 130 %) a 2400Ã—1080 y
-## 1600Ã—720 con la interfaz al 140 %, y en el PC a 1600Ã—900 al 100 %.
+## en táctil (esquina y arcos, diestro y zurdo, botones al 100 % y al 130 %) a 2400×1080 y
+## 1600×720 con la interfaz al 140 %, y en el PC a 1600×900 al 100 %.
 func _audit_hud_overlaps() -> int:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("Solapes", &"guerrero", CharacterAppearance.default(), false)
 	c.flags["zone"] = "campamento"
 	c.flags["tutorial_version"] = 3
-	c.flags["tutorial_step"] = 7   # Â«habla con AÃ­daÂ»: con texto largo y aro
+	c.flags["tutorial_step"] = 7   # «habla con Aída»: con texto largo y aro
 	c.flags["llegada_campamento_vista"] = true
 	var tips_were := TipPanel.enabled()
 	TipPanel.set_enabled(false)
@@ -3525,7 +3525,7 @@ func _audit_hud_overlaps() -> int:
 	return total
 
 
-## RectÃ¡ngulos (en el lienzo) de lo que se ve del HUD y la interfaz de partida.
+## Rectángulos (en el lienzo) de lo que se ve del HUD y la interfaz de partida.
 func _hud_rects(ui: GameUI) -> Dictionary:
 	var out := {}
 	var hud := ui.hud
@@ -3535,7 +3535,7 @@ func _hud_rects(ui: GameUI) -> Dictionary:
 	var mana: Vector2 = hud.call("_mana_center")
 	var orb := Vector2.ONE * Hud.ORB_RADIUS
 	out["orbe de vida"] = conv.call(Rect2(life - orb, orb * 2.0))
-	out["orbe de manÃ¡"] = conv.call(Rect2(mana - orb, orb * 2.0))
+	out["orbe de maná"] = conv.call(Rect2(mana - orb, orb * 2.0))
 	if hud.touch_layout:
 		for k: String in hud.touch_rects():
 			out[k] = conv.call(hud.touch_rects()[k])
@@ -3556,8 +3556,8 @@ func _hud_rects(ui: GameUI) -> Dictionary:
 	return out
 
 
-## Registro de misiones en el celular (T146): con 6 misiones a 2400Ã—1080 y 1600Ã—720 y la
-## interfaz al 140 %, en las dos distribuciones: no pisa ningÃºn botÃ³n; tocar la cabecera
+## Registro de misiones en el celular (T146): con 6 misiones a 2400×1080 y 1600×720 y la
+## interfaz al 140 %, en las dos distribuciones: no pisa ningún botón; tocar la cabecera
 ## pasa de resumen a todas y a plegado; en una pelea se pliega.
 func _capture_quest_tracker() -> void:
 	var gd: Node = get_node("/root/GameData")
@@ -3607,12 +3607,12 @@ func _capture_quest_tracker() -> void:
 				if tracker.visible and r.intersects(oc):
 					hits.append(str(oc.position.round()))
 			var tag := "%dx%d_%s" % [res.x, res.y, lay]
-			print("misiones %s: %d activas, se ve Â«%sÂ» (pidiÃ³ Â«todasÂ»), de y=%.0f a y=%.0f, %s" % [tag, quests.active_ids().size(),
+			print("misiones %s: %d activas, se ve «%s» (pidió «todas»), de y=%.0f a y=%.0f, %s" % [tag, quests.active_ids().size(),
 				["resumen", "todas", "plegado"][tracker.shown_view], r.position.y, r.end.y, "no pisa nada" if hits.is_empty() else "PISA " + ", ".join(hits)])
 			_save("146_%s" % tag)
 	tracker.in_combat = true
 	await _wait(0.2)
-	print("misiones: en pelea se ve Â«%sÂ»" % ["resumen", "todas", "plegado"][tracker.shown_view])
+	print("misiones: en pelea se ve «%s»" % ["resumen", "todas", "plegado"][tracker.shown_view])
 	tracker.in_combat = false
 	Touch.layout = layout_was
 	get_window().size = Vector2i(1600, 900)
@@ -3622,11 +3622,11 @@ func _capture_quest_tracker() -> void:
 	world.queue_free()
 
 
-## Ãrbol de pasivas con el dedo (fallo visto en el celular): abrirlo desde el â˜° y
-## cerrarlo tocando Â«CerrarÂ», a 2400Ã—1080 con la interfaz al 140 %.
+## Árbol de pasivas con el dedo (fallo visto en el celular): abrirlo desde el ☰ y
+## cerrarlo tocando «Cerrar», a 2400×1080 con la interfaz al 140 %.
 func _capture_tree_close() -> void:
 	var gd: Node = get_node("/root/GameData")
-	var c: CharacterData = gd.create_character("Ãrbol", &"guerrero", CharacterAppearance.default(), false)
+	var c: CharacterData = gd.create_character("Árbol", &"guerrero", CharacterAppearance.default(), false)
 	c.flags["zone"] = "campamento"
 	c.flags["tutorial_step"] = 99
 	c.flags["tutorial_seen_done"] = true
@@ -3649,21 +3649,21 @@ func _capture_tree_close() -> void:
 	await _wait(0.6)
 	var close: Button = ui.tree_screen.get("_close_button")
 	var at := _canvas_point(close, close.size / 2.0)
-	print("Ã¡rbol: abierto %s, Â«CerrarÂ» visible %s en %s (pantalla %s)" % [ui.tree_screen.visible, close.is_visible_in_tree(), at.round(), get_viewport().get_visible_rect().size])
+	print("árbol: abierto %s, «Cerrar» visible %s en %s (pantalla %s)" % [ui.tree_screen.visible, close.is_visible_in_tree(), at.round(), get_viewport().get_visible_rect().size])
 	_save("fix_arbol_abierto")
 	_touch(0, at, true)
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_touch(0, at, false)
 	await _wait(0.5)
-	print("Ã¡rbol: tras tocar Â«CerrarÂ», abierto %s" % ui.tree_screen.visible)
+	print("árbol: tras tocar «Cerrar», abierto %s" % ui.tree_screen.visible)
 	get_window().size = Vector2i(1600, 900)
 	GameSettings.set_value("interface", "scale", scale_was)
 	Touch.force = false
 	world.queue_free()
 
 
-## Muesca y tooltips en el celular (T142): a 2400Ã—1080 con la interfaz al 140 % y una
+## Muesca y tooltips en el celular (T142): a 2400×1080 con la interfaz al 140 % y una
 ## muesca simulada de 120 px a la izquierda (y 40 px de esquinas a la derecha): la
 ## interfaz se aparta; un tooltip comparando con lo equipado va apilado y cabe en alto.
 func _capture_safe_area() -> void:
@@ -3728,8 +3728,8 @@ func _capture_safe_area() -> void:
 	world.queue_free()
 
 
-## BotÃ³n AtrÃ¡s y app en segundo plano (T141): en el menÃº pregunta antes de salir; en
-## partida, AtrÃ¡s cierra el inventario y luego abre la pausa; salir de la app guarda y pausa.
+## Botón Atrás y app en segundo plano (T141): en el menú pregunta antes de salir; en
+## partida, Atrás cierra el inventario y luego abre la pausa; salir de la app guarda y pausa.
 func _capture_back_button() -> void:
 	var gd: Node = get_node("/root/GameData")
 	Touch.force = true
@@ -3739,10 +3739,10 @@ func _capture_back_button() -> void:
 	menu.call("ask_quit")
 	await _wait(0.4)
 	var dialog: ConfirmationDialog = menu.get("_quit_dialog")
-	print("atrÃ¡s en el menÃº: Â«%sÂ» %s" % [dialog.dialog_text, "a la vista" if dialog.visible else "NO SE VE"])
+	print("atrás en el menú: «%s» %s" % [dialog.dialog_text, "a la vista" if dialog.visible else "NO SE VE"])
 	_save("141_menu_salir")
 	dialog.hide()
-	var c: CharacterData = gd.create_character("AtrÃ¡s", &"guerrero", CharacterAppearance.default(), false)
+	var c: CharacterData = gd.create_character("Atrás", &"guerrero", CharacterAppearance.default(), false)
 	c.flags["zone"] = "campamento"
 	c.flags["tutorial_step"] = 99
 	c.flags["tutorial_seen_done"] = true
@@ -3762,7 +3762,7 @@ func _capture_back_button() -> void:
 	gd.call("go_back")
 	await _wait(0.3)
 	var pause_open: bool = (ui.get("_pause_panel") as Control).visible
-	print("atrÃ¡s en partida: cierra el inventario %s, luego abre la pausa %s" % [inv_closed, pause_open])
+	print("atrás en partida: cierra el inventario %s, luego abre la pausa %s" % [inv_closed, pause_open])
 	gd.call("go_back")
 	await _wait(0.3)
 	await _wait(1.1)
@@ -3770,15 +3770,15 @@ func _capture_back_button() -> void:
 	world.call("app_left")
 	var since_after: float = world.get("_since_save")
 	await _wait(0.3)
-	print("salir de la app: guardado %s (%.1f s â†’ %.1f s desde el Ãºltimo), pausa abierta %s" % [since_after < since_before, since_before, since_after,
+	print("salir de la app: guardado %s (%.1f s → %.1f s desde el último), pausa abierta %s" % [since_after < since_before, since_before, since_after,
 		(ui.get("_pause_panel") as Control).visible])
 	_save("141_app_en_segundo_plano")
 	Touch.force = false
 	world.queue_free()
 
 
-## Tutorial con el dedo (T138): el texto tÃ¡ctil de varios pasos y el aro Â«Â¡AquÃ­!Â»
-## sobre su botÃ³n (la habilidad grande, el â˜°, la pociÃ³n 1).
+## Tutorial con el dedo (T138): el texto táctil de varios pasos y el aro «¡Aquí!»
+## sobre su botón (la habilidad grande, el ☰, la poción 1).
 func _capture_touch_tutorial() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("Pulgar", &"guerrero", CharacterAppearance.default(), false)
@@ -3808,7 +3808,7 @@ func _capture_touch_tutorial() -> void:
 		ui.tutorial.call("_refresh")
 		await _wait(0.5)
 		var r: Rect2 = ui.hud.tutorial_rect(ui.hud.tutorial_point)
-		print("tutorial %s: Â«%sâ€¦Â», aro en %s sobre %s" % [step[0], text.get_parsed_text().substr(0, 60), ui.hud.tutorial_point, r])
+		print("tutorial %s: «%s…», aro en %s sobre %s" % [step[0], text.get_parsed_text().substr(0, 60), ui.hud.tutorial_point, r])
 		_save("138_tutorial_%s" % step[0])
 	get_window().size = Vector2i(1600, 900)
 	GameSettings.set_value("interface", "scale", scale_was)
@@ -3817,8 +3817,8 @@ func _capture_touch_tutorial() -> void:
 	world.queue_free()
 
 
-## Editor de disposiciÃ³n tÃ¡ctil (T137) con toques simulados: arrastrar la habilidad 1,
-## agrandar la esquiva, bajar la opacidad, Â«ListoÂ» (se guarda) y Â«RestaurarÂ».
+## Editor de disposición táctil (T137) con toques simulados: arrastrar la habilidad 1,
+## agrandar la esquiva, bajar la opacidad, «Listo» (se guarda) y «Restaurar».
 func _capture_touch_editor() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("Pulgar", &"guerrero", CharacterAppearance.default(), false)
@@ -3868,7 +3868,7 @@ func _capture_touch_editor() -> void:
 	_touch(0, dodge_at, false)
 	await _wait(0.2)
 	for b: Button in ed.find_children("*", "Button", true, false):
-		if b.text == "MÃ¡s grande":
+		if b.text == "Más grande":
 			for k in 2:
 				b.pressed.emit()
 		elif b.text.begins_with("Opacidad"):
@@ -3897,9 +3897,9 @@ func _capture_touch_editor() -> void:
 	world.queue_free()
 
 
-## Distribuciones de los botones tÃ¡ctiles (T136) a 2400Ã—1080 y 1600Ã—720 con la
+## Distribuciones de los botones táctiles (T136) a 2400×1080 y 1600×720 con la
 ## interfaz al 140 %: esquina, arcos, esquina al 120 % y esquina zurda (con el â˜°
-## abierto). Mira que ningÃºn botÃ³n pise a otro, ni a las misiones, ni se salga.
+## abierto). Mira que ningún botón pise a otro, ni a las misiones, ni se salga.
 func _capture_touch_layouts() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("Pulgar", &"guerrero", CharacterAppearance.default(), false)
@@ -3947,10 +3947,10 @@ func _capture_touch_layouts() -> void:
 			rects["esquiva"] = hud.call("_dodge_rect")
 			rects["usar"] = hud.use_rect()
 			for i in Inventory.FLASK_SLOTS:
-				rects["pociÃ³n %d" % (i + 1)] = hud.call("_flask_rect", i)
+				rects["poción %d" % (i + 1)] = hud.call("_flask_rect", i)
 			rects["â˜°"] = Rect2((hud.get("_menu_toggle") as Control).position, (hud.get("_menu_toggle") as Control).size)
 			rects["orbe de vida"] = Rect2(hud.call("_life_center") - Vector2.ONE * Hud.ORB_RADIUS, Vector2.ONE * Hud.ORB_RADIUS * 2.0)
-			rects["orbe de manÃ¡"] = Rect2(hud.call("_mana_center") - Vector2.ONE * Hud.ORB_RADIUS, Vector2.ONE * Hud.ORB_RADIUS * 2.0)
+			rects["orbe de maná"] = Rect2(hud.call("_mana_center") - Vector2.ONE * Hud.ORB_RADIUS, Vector2.ONE * Hud.ORB_RADIUS * 2.0)
 			var problems: Array[String] = []
 			var keys := rects.keys()
 			var view := Rect2(Vector2.ZERO, hud.size)
@@ -3978,10 +3978,10 @@ func _capture_touch_layouts() -> void:
 	world.queue_free()
 
 
-## RevisiÃ³n de las ventanas con el dedo (T135): en cada menÃº y ventana que no maneja
-## TouchPointer (tÃ­tulo, menÃº, creaciÃ³n, pausa y sus ventanas, catÃ¡logo, filtro, mapa,
-## muerte), un toque simulado sobre cada botÃ³n visible tiene que llegarle (button_down).
-## Antes de levantar el dedo el botÃ³n se desactiva, asÃ­ no hace nada. Devuelve cuÃ¡ntos fallaron.
+## Revisión de las ventanas con el dedo (T135): en cada menú y ventana que no maneja
+## TouchPointer (título, menú, creación, pausa y sus ventanas, catálogo, filtro, mapa,
+## muerte), un toque simulado sobre cada botón visible tiene que llegarle (button_down).
+## Antes de levantar el dedo el botón se desactiva, así no hace nada. Devuelve cuántos fallaron.
 func _audit_windows_touch() -> int:
 	var gd: Node = get_node("/root/GameData")
 	var tips_were := TipPanel.enabled()
@@ -3992,7 +3992,7 @@ func _audit_windows_touch() -> int:
 	get_window().size = Vector2i(2400, 1080)
 	await _wait(0.4)
 	var missed := 0
-	# Pantallas de menÃº (con su escala de interfaz).
+	# Pantallas de menú (con su escala de interfaz).
 	for path in ["res://scenes/menu/title_screen.tscn", "res://scenes/menu/main_menu.tscn", "res://scenes/menu/character_creation.tscn"]:
 		var menu: Node = load(path).instantiate()
 		_swap(menu)
@@ -4040,7 +4040,7 @@ func _audit_windows_touch() -> int:
 		_touch(0, start + Vector2(2, -140), false)
 		await _wait(0.3)
 		var moved_ok := bag_scroll.scroll_vertical > before_scroll and c.inventory.bag.has(item) and first.item == item
-		print("ventanas tÃ¡ctil Â· bolsa: arrastrar hacia arriba desplaza %d â†’ %d, el objeto sigue en su casilla: %s" % [before_scroll, bag_scroll.scroll_vertical, first.item == item])
+		print("ventanas táctil · bolsa: arrastrar hacia arriba desplaza %d → %d, el objeto sigue en su casilla: %s" % [before_scroll, bag_scroll.scroll_vertical, first.item == item])
 		if not moved_ok:
 			missed += 1
 		_save("135_bolsa_desplazada")
@@ -4063,11 +4063,11 @@ func _audit_windows_touch() -> int:
 	await _wait(0.2)
 	ui.toggle_loot_filter()
 	await _wait(0.5)
-	missed += await _tap_audit(ui.loot_filter_panel, "filtro de botÃ­n")
+	missed += await _tap_audit(ui.loot_filter_panel, "filtro de botín")
 	ui.toggle_loot_filter()
 	ui.toggle_catalog()
 	await _wait(0.5)
-	missed += await _tap_audit(ui.catalog, "catÃ¡logo")
+	missed += await _tap_audit(ui.catalog, "catálogo")
 	ui.toggle_catalog()
 	ui.world_map.toggle()
 	await _wait(0.4)
@@ -4086,7 +4086,7 @@ func _audit_windows_touch() -> int:
 	return missed
 
 
-## Toca cada botÃ³n visible de `root` y mira si se entera. Imprime los que no.
+## Toca cada botón visible de `root` y mira si se entera. Imprime los que no.
 func _tap_audit(root: Node, tag: String) -> int:
 	_save("135_" + tag.replace(" ", "_"))
 	var screen := get_viewport().get_visible_rect()
@@ -4110,7 +4110,7 @@ func _tap_audit(root: Node, tag: String) -> int:
 		_touch(0, center, false)
 		await get_tree().process_frame
 		if not is_instance_valid(b):
-			ok += 1 if heard[0] else 0   # la ventana se rehÃ­zo al tocarlo
+			ok += 1 if heard[0] else 0   # la ventana se rehízo al tocarlo
 			continue
 		b.disabled = false
 		if b is OptionButton:
@@ -4122,14 +4122,14 @@ func _tap_audit(root: Node, tag: String) -> int:
 			ok += 1
 		else:
 			var under := get_viewport().gui_get_hovered_control()
-			bad.append("Â«%sÂ» (%s) en %s, encima: %s" % [b.text if "text" in b else b.name, b.get_class(), center.round(), under.get_path() if under else "nada"])
-	print("ventanas tÃ¡ctil Â· %s: %d responden, %d fuera de la vista%s" % [tag, ok, skipped, "" if bad.is_empty() else ", NO responden:"])
+			bad.append("«%s» (%s) en %s, encima: %s" % [b.text if "text" in b else b.name, b.get_class(), center.round(), under.get_path() if under else "nada"])
+	print("ventanas táctil · %s: %d responden, %d fuera de la vista%s" % [tag, ok, skipped, "" if bad.is_empty() else ", NO responden:"])
 	for line in bad:
 		print("    " + line)
 	return bad.size()
 
 
-## Â¿Queda `p` fuera de algÃºn ScrollContainer que contiene a `c`?
+## ¿Queda `p` fuera de algún ScrollContainer que contiene a `c`?
 func _clipped(c: Control, p: Vector2) -> bool:
 	var n := c.get_parent()
 	while n:
@@ -4142,7 +4142,7 @@ func _clipped(c: Control, p: Vector2) -> bool:
 
 
 ## `local` de `c` en coordenadas del lienzo de la ventana del juego (lo que espera
-## _touch), tambiÃ©n dentro de una ventana emergente incrustada.
+## _touch), también dentro de una ventana emergente incrustada.
 func _canvas_point(c: Control, local: Vector2) -> Vector2:
 	var p := c.get_global_transform_with_canvas() * local
 	var vp := c.get_viewport()
@@ -4150,9 +4150,9 @@ func _canvas_point(c: Control, local: Vector2) -> Vector2:
 		p = Vector2((vp as Window).position) + p * (vp as Window).content_scale_factor
 	return p
 
-## BotÃ³n de usar (T134) a resoluciÃ³n de telÃ©fono con la interfaz al 140 %: con botÃ­n
-## cerca, tocar recoge el mÃ¡s raro y mantener el resto; junto a un NPC, Â«HablarÂ»;
-## tocar la etiqueta de un objeto lejano va hasta Ã©l (antes iba al toque anterior).
+## Botón de usar (T134) a resolución de teléfono con la interfaz al 140 %: con botín
+## cerca, tocar recoge el más raro y mantener el resto; junto a un NPC, «Hablar»;
+## tocar la etiqueta de un objeto lejano va hasta él (antes iba al toque anterior).
 func _capture_touch_use() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("Pulgar", &"guerrero", CharacterAppearance.default(), false)
@@ -4195,7 +4195,7 @@ func _capture_touch_use() -> void:
 	await _wait(1.0)
 	var hud: Hud = ui.hud
 	var to_screen := func(q: Vector2) -> Vector2: return hud.get_global_transform_with_canvas() * q
-	print("usar: botÃ³n %s Â«%sÂ» (%s)" % ["visible" if not hud.use_now.is_empty() else "OCULTO", hud.use_now.get("text", ""),
+	print("usar: botón %s «%s» (%s)" % ["visible" if not hud.use_now.is_empty() else "OCULTO", hud.use_now.get("text", ""),
 		(hud.use_now.get("item") as Item).display_name() if hud.use_now.has("item") else "-"])
 	_save("134_usar_boton")
 	var use_at: Vector2 = to_screen.call(hud.use_rect().get_center())
@@ -4225,20 +4225,20 @@ func _capture_touch_use() -> void:
 	_touch(0, label_at, false)
 	await _wait(2.5)
 	print("usar: tocar la etiqueta lejana â†’ en la bolsa: %s" % c.inventory.bag.has(far))
-	# En el campamento, junto a un NPC: Â«HablarÂ» y tocar abre la conversaciÃ³n.
+	# En el campamento, junto a un NPC: «Hablar» y tocar abre la conversación.
 	world.call("travel_to", "campamento", "waypoint")
 	await _wait(1.5)
 	var zone: Zone = world.get("zone")
 	player.global_position = zone.npc_position(zone.npcs[0]) + Vector2(0, 90)
 	await _wait(0.4)
-	print("usar: junto a %s â†’ botÃ³n Â«%sÂ»" % [zone.npcs[0]["name"], hud.use_now.get("text", "")])
+	print("usar: junto a %s → botón «%s»" % [zone.npcs[0]["name"], hud.use_now.get("text", "")])
 	_save("134_usar_npc")
 	use_at = to_screen.call(hud.use_rect().get_center())
 	_touch(1, use_at, true)
 	await get_tree().process_frame
 	_touch(1, use_at, false)
 	await _wait(1.5)
-	print("usar: tocar â†’ conversaciÃ³n abierta: %s" % ui.dialogue_box.visible)
+	print("usar: tocar → conversación abierta: %s" % ui.dialogue_box.visible)
 	get_window().size = Vector2i(1600, 900)
 	LootFilter.rules().merge(rules_were, true)
 	LootFilter.set_rule("weapon", String(rules_were["weapon"]))
@@ -4248,9 +4248,9 @@ func _capture_touch_use() -> void:
 	world.queue_free()
 
 
-## Filtro de botÃ­n con el dedo (T133), a resoluciÃ³n de telÃ©fono con la interfaz al
+## Filtro de botín con el dedo (T133), a resolución de teléfono con la interfaz al
 ## 140 % y el inventario abierto debajo: tocar gemas cambia la regla, la ventana
-## cabe en la pantalla y no es mÃ¡s grande que las demÃ¡s.
+## cabe en la pantalla y no es más grande que las demás.
 func _capture_loot_filter_touch() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("Filtro", &"guerrero", CharacterAppearance.default(), false)
@@ -4290,7 +4290,7 @@ func _capture_loot_filter_touch() -> void:
 		var screen := get_viewport().get_visible_rect()
 		var rect := panel.get_global_rect()
 		print("filtro %s: ventana %s (pantalla %s, cabe: %s; inventario %s)" % [tag, rect, screen.size, screen.encloses(rect), inv_rect])
-		# Tocar la gema Â«RaroÂ» de las armas y luego Â«MostrarÂ»/Â«OcultarÂ» de las pociones.
+		# Tocar la gema «Raro» de las armas y luego «Mostrar»/«Ocultar» de las pociones.
 		var rows: Array = ui.loot_filter_panel.get("_rows")
 		var gem_at := func(row: Control, k: int) -> Vector2:
 			return row.get_global_transform_with_canvas() * Vector2(190.0 + k * (LootFilterPanel.GEM.x + 4.0) + LootFilterPanel.GEM.x / 2.0, 3.0 + LootFilterPanel.GEM.y / 2.0)
@@ -4317,8 +4317,8 @@ func _capture_loot_filter_touch() -> void:
 	world.queue_free()
 
 
-## PrÃ³logo con el dedo (T132): joystick en la calle y el pasillo, tocar la entrada
-## para ir, el botÃ³n de usar junto a Rafa y tocar para pasar la conversaciÃ³n.
+## Prólogo con el dedo (T132): joystick en la calle y el pasillo, tocar la entrada
+## para ir, el botón de usar junto a Rafa y tocar para pasar la conversación.
 func _capture_prologue_touch() -> void:
 	var gd: Node = get_node("/root/GameData")
 	gd.set("pending_creation", {"name": "Prueba", "appearance": CharacterAppearance.default()})
@@ -4326,13 +4326,13 @@ func _capture_prologue_touch() -> void:
 	var p: Node = load("res://scenes/prologue/prologue.tscn").instantiate()
 	_swap(p)
 	await _wait(0.5)
-	# Tocar pasa la introducciÃ³n (dos toques: completa el texto y sigue).
+	# Tocar pasa la introducción (dos toques: completa el texto y sigue).
 	for k in 2:
 		_touch(0, Vector2(1200, 300), true)
 		await get_tree().process_frame
 		_touch(0, Vector2(1200, 300), false)
 		await _wait(0.8)
-	print("prÃ³logo tÃ¡ctil: tras tocar dos veces, fase %s" % p.get("_phase"))
+	print("prólogo táctil: tras tocar dos veces, fase %s" % p.get("_phase"))
 	p.set("_fade", 0.0)
 	var stage: PrologueStage = p.get("_stage")
 	var x0 := stage.player_x
@@ -4342,12 +4342,12 @@ func _capture_prologue_touch() -> void:
 		await get_tree().process_frame
 		_drag(0, origin + Vector2(16.0 * (k + 1), 0))
 	await _wait(1.0)
-	print("prÃ³logo tÃ¡ctil: joystick %s, de x %.0f a %.0f" % [Touch.stick, x0, stage.player_x])
+	print("prólogo táctil: joystick %s, de x %.0f a %.0f" % [Touch.stick, x0, stage.player_x])
 	_save("132_prologo_joystick")
 	_touch(0, origin + Vector2(96, 0), false)
 	await _wait(0.2)
 	# Tocar la entrada de la UAdeO (a la derecha del escenario): camina y entra.
-	# (primero hacia el borde derecho, porque desde el principio la entrada aÃºn no se ve)
+	# (primero hacia el borde derecho, porque desde el principio la entrada aún no se ve)
 	var rect: Rect2 = p.call("_screen_rect")
 	var to_screen := func(stage_p: Vector2) -> Vector2:
 		return (p as Control).get_global_transform_with_canvas() * (rect.position + stage_p / Vector2(400, 225) * rect.size)
@@ -4356,7 +4356,7 @@ func _capture_prologue_touch() -> void:
 	await get_tree().process_frame
 	_touch(0, tap, false)
 	await _wait(3.5)
-	print("prÃ³logo tÃ¡ctil: tocar a la derecha â†’ x %.0f" % stage.player_x)
+	print("prólogo táctil: tocar a la derecha → x %.0f" % stage.player_x)
 	tap = to_screen.call(Vector2(PrologueStage.ENTRANCE_X - stage.cam_x, PrologueStage.FLOOR_Y - 20.0))
 	_touch(0, tap, true)
 	await get_tree().process_frame
@@ -4365,7 +4365,7 @@ func _capture_prologue_touch() -> void:
 	while stage.room != "pasillo" and waited < 14.0:
 		await get_tree().process_frame
 		waited += get_process_delta_time()
-	print("prÃ³logo tÃ¡ctil: tocar la entrada â†’ %s en %.1f s" % [stage.room, waited])
+	print("prólogo táctil: tocar la entrada → %s en %.1f s" % [stage.room, waited])
 	await _wait(1.0)
 	# Pasillo: joystick hacia arriba = al fondo.
 	var depth0 := stage.player_depth
@@ -4375,13 +4375,13 @@ func _capture_prologue_touch() -> void:
 		_drag(0, origin + Vector2(0, -16.0 * (k + 1)))
 	await _wait(0.8)
 	_touch(0, origin + Vector2(0, -96), false)
-	print("prÃ³logo tÃ¡ctil: pasillo, profundidad %.2f â†’ %.2f" % [depth0, stage.player_depth])
+	print("prólogo táctil: pasillo, profundidad %.2f → %.2f" % [depth0, stage.player_depth])
 	_save("132_prologo_pasillo")
-	# Oficina, junto a Rafa: el botÃ³n de usar.
+	# Oficina, junto a Rafa: el botón de usar.
 	p.call("_go_room", "oficina", float(PrologueStage.HOTSPOTS["oficina"][0]["x"]))
 	await _wait(0.3)
 	var use: Button = p.get("_touch_use")
-	print("prÃ³logo tÃ¡ctil: junto a Rafa, botÃ³n %s Â«%sÂ» de %s" % ["visible" if use.visible else "OCULTO", use.text, use.size])
+	print("prólogo táctil: junto a Rafa, botón %s «%s» de %s" % ["visible" if use.visible else "OCULTO", use.text, use.size])
 	_save("132_prologo_usar")
 	var at := use.get_global_rect().get_center()
 	_touch(0, at, true)
@@ -4389,7 +4389,7 @@ func _capture_prologue_touch() -> void:
 	_touch(0, at, false)
 	await _wait(0.6)
 	var cut: CutscenePlayer = p.get("_cutscene")
-	print("prÃ³logo tÃ¡ctil: tocar el botÃ³n â†’ conversaciÃ³n %s" % ("sÃ­" if cut.is_playing() else "NO"))
+	print("prólogo táctil: tocar el botón → conversación %s" % ("sí" if cut.is_playing() else "NO"))
 	_save("132_prologo_rafa")
 	var line0: int = cut.get("_index") if cut.get("_index") != null else -1
 	for k in 3:
@@ -4397,7 +4397,7 @@ func _capture_prologue_touch() -> void:
 		await get_tree().process_frame
 		_touch(0, Vector2(800, 300), false)
 		await _wait(0.5)
-	print("prÃ³logo tÃ¡ctil: tres toques en la conversaciÃ³n, lÃ­nea %s â†’ %s" % [line0, cut.get("_index")])
+	print("prólogo táctil: tres toques en la conversación, línea %s → %s" % [line0, cut.get("_index")])
 	Touch.force = false
 	p.queue_free()
 
@@ -4446,7 +4446,7 @@ func _capture_arrivals() -> void:
 	world.queue_free()
 
 
-## Escenas con direcciÃ³n (T129): la reuniÃ³n del campamento con la cÃ¡mara sobre Ada (zoom
+## Escenas con dirección (T129): la reunión del campamento con la cámara sobre Ada (zoom
 ## y bandas de cine) y luego sobre Rafa.
 func _capture_cutscene_direction() -> void:
 	var gd: Node = get_node("/root/GameData")
@@ -4477,7 +4477,7 @@ func _capture_cutscene_direction() -> void:
 	world.queue_free()
 
 
-## HUD de la zona y registro de sucesos (T128): el rÃ³tulo con la mecÃ¡nica al entrar y el
+## HUD de la zona y registro de sucesos (T128): el rótulo con la mecánica al entrar y el
 ## registro con unos cuantos sucesos.
 func _capture_event_log() -> void:
 	var gd: Node = get_node("/root/GameData")
@@ -4495,10 +4495,10 @@ func _capture_event_log() -> void:
 	await _wait(1.0)
 	var ui: GameUI = world.get("ui")
 	ui.log_event("Waypoint descubierto: Las Ruinas del Monolito", Color("5cd0ff"))
-	ui.log_event("Ha caÃ­do: Bucle Infinito, anillo de Commit", Rarity.item_color(Rarity.Item.RARE))
-	ui.log_event("MecÃ¡nica completada en El Bosque de Cables: CachÃ© caliente", Color("ffd24a"))
-	ui.log_event("Ha caÃ­do: El Ãšltimo Merge", Rarity.item_color(Rarity.Item.UNIQUE))
-	ui.log_event("El Bosque de Cables caduca en 1:00 (con botÃ­n en el suelo)", Color("ff9a4a"))
+	ui.log_event("Ha caído: Bucle Infinito, anillo de Commit", Rarity.item_color(Rarity.Item.RARE))
+	ui.log_event("Mecánica completada en El Bosque de Cables: Caché caliente", Color("ffd24a"))
+	ui.log_event("Ha caído: El Último Merge", Rarity.item_color(Rarity.Item.UNIQUE))
+	ui.log_event("El Bosque de Cables caduca en 1:00 (con botín en el suelo)", Color("ff9a4a"))
 	world.call("travel_to", "zona2", "")
 	(world.get("enemies") as EnemyManager).clear_all()
 	await _wait(1.2)
@@ -4508,7 +4508,7 @@ func _capture_event_log() -> void:
 
 
 ## Comparar placas y RAM (T127): el tooltip de una placa mejor de la que llevas (con la tuya
-## al lado) y el de una RAM con lo que harÃ­a en tus placas.
+## al lado) y el de una RAM con lo que haría en tus placas.
 func _capture_board_compare() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("Comparar", &"guerrero", CharacterAppearance.default(), false)
@@ -4556,18 +4556,18 @@ func _capture_waypoint_map() -> void:
 	c.flags["zone"] = "socket_seguro"
 	c.flags["waypoints"] = ["campamento", "zona2", "zona4", "zona5", "socket_seguro", "fabrica"]
 	c.flags["visited"] = ["tutorial", "campamento", "zona1", "zona2", "zona3", "zona4", "zona5", "jefe", "socket_seguro", "brecha_503", "fabrica"]
-	c.level = 15   # sin la elecciÃ³n de habilidad del nivel 16 delante
+	c.level = 15   # sin la elección de habilidad del nivel 16 delante
 	var tips_were := TipPanel.enabled()
 	TipPanel.set_enabled(false)
 	gd.current_character = c
 	var world: Node = load("res://scenes/game/world.tscn").instantiate()
 	_swap(world)
 	world.set("_since_save", -9999.0)
-	await _wait(3.6)   # que pase el rÃ³tulo de la zona
+	await _wait(3.6)   # que pase el rótulo de la zona
 	var ui: GameUI = world.get("ui")
 	if ui.cutscene.visible:
 		ui.cutscene.call("_finish")
-	ui.open_waypoints("socket_seguro", {"fabrica": 452.0, "zona4": 121.0}, {"fabrica": "Merge conflict", "zona4": "ApagÃ³n del CPD"})
+	ui.open_waypoints("socket_seguro", {"fabrica": 452.0, "zona4": 121.0}, {"fabrica": "Merge conflict", "zona4": "Apagón del CPD"})
 	await _wait(0.6)
 	_save("126_waypoints_acto2")
 	var panel: WaypointPanel = ui.get("_waypoint_panel")
@@ -4578,8 +4578,8 @@ func _capture_waypoint_map() -> void:
 	world.queue_free()
 
 
-## Profundidad (T124): el jugador detrÃ¡s de algo alto (translÃºcido), manchas en el suelo
-## y el fondo con parallax mÃ¡s allÃ¡ del borde (agua, abismo, vacÃ­o).
+## Profundidad (T124): el jugador detrás de algo alto (translúcido), manchas en el suelo
+## y el fondo con parallax más allá del borde (agua, abismo, vacío).
 func _capture_depth() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("Profundidad", &"guerrero", CharacterAppearance.default(), false)
@@ -4610,7 +4610,7 @@ func _capture_depth() -> void:
 			if Zone.TALL_OBSTACLES.has(o["kind"]):
 				tall = o
 				break
-		if not tall.is_empty():   # justo detrÃ¡s de lo alto
+		if not tall.is_empty():   # justo detrás de lo alto
 			player.global_position = (tall["pos"] as Vector2) + Vector2(0, -float(tall["radius"]) * 1.1)
 		else:   # junto al borde, para ver el fondo
 			player.global_position = zone.free_spot_near(zone.rect.position + Vector2(260, zone.rect.size.y * 0.5))
@@ -4622,7 +4622,7 @@ func _capture_depth() -> void:
 	world.queue_free()
 
 
-## Salas temÃ¡ticas (T123): una foto de cada sala que salga en unas cuantas zonas.
+## Salas temáticas (T123): una foto de cada sala que salga en unas cuantas zonas.
 func _capture_set_pieces() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var c: CharacterData = gd.create_character("Salas", &"guerrero", CharacterAppearance.default(), false)
@@ -4641,7 +4641,7 @@ func _capture_set_pieces() -> void:
 	player.set("invulnerable", true)
 	var seen := {}
 	for zid in ["zona5", "zona4", "fosa", "oblea", "zona3", "zona2", "post", "alcantarillas", "zona5", "post", "zona5", "post"]:
-		(world.get("instances") as ZoneInstances).forget(zid)   # repetir zona = otra instancia (por si falta el rack caÃ­do)
+		(world.get("instances") as ZoneInstances).forget(zid)   # repetir zona = otra instancia (por si falta el rack caído)
 		world.call("travel_to", zid, "")
 		world.set("_since_save", -9999.0)
 		var zone: Zone = world.get("zone")
@@ -4649,7 +4649,7 @@ func _capture_set_pieces() -> void:
 		await _wait(0.3)
 		var ui: GameUI = world.get("ui")
 		if ui.cutscene.visible:
-			ui.cutscene.call("_finish")   # la escena al entrar (el POST) taparÃ­a la foto
+			ui.cutscene.call("_finish")   # la escena al entrar (el POST) taparía la foto
 		for sp in zone.layout.set_pieces:
 			if seen.has(sp["kind"]):
 				continue
@@ -4663,11 +4663,11 @@ func _capture_set_pieces() -> void:
 	world.queue_free()
 
 
-## MecÃ¡nicas de zona (T121): el barrido del Garbage Collector (aviso y pasada), el
-## apagÃ³n con una luz encendida y el ticket urgente con sus marcados.
+## Mecánicas de zona (T121): el barrido del Garbage Collector (aviso y pasada), el
+## apagón con una luz encendida y el ticket urgente con sus marcados.
 func _capture_mechanics() -> void:
 	var gd: Node = get_node("/root/GameData")
-	var c: CharacterData = gd.create_character("MecÃ¡nicas", &"guerrero", CharacterAppearance.default(), false)
+	var c: CharacterData = gd.create_character("Mecánicas", &"guerrero", CharacterAppearance.default(), false)
 	c.flags["zone"] = "campamento"
 	c.flags["tutorial_step"] = 99
 	c.flags["tutorial_seen_done"] = true
@@ -4747,7 +4747,7 @@ func _capture_zone_seeds() -> void:
 				fails += 1
 			templates[l.template] = int(templates.get(l.template, 0)) + 1
 			notes.append("%s%s%s %dx%d %.0f%%%s" % [l.template, "" if l.shape == "normal" else " " + l.shape, " rodeo" if not l.detour.is_empty() else "",
-				l.width, l.height, l.floor_fraction() * 100.0, (" Â¡" + problem + "!") if problem != "" else ""])
+				l.width, l.height, l.floor_fraction() * 100.0, (" ¡" + problem + "!") if problem != "" else ""])
 			imgs.append(l.draw_image(PX, Color(style["ground"]), Color(style["outside"])))
 		var w := GAP
 		var h := 0
@@ -4775,13 +4775,13 @@ func _capture_zone_seeds() -> void:
 		sheet.blit_rect(r, Rect2i(Vector2i.ZERO, r.get_size()), Vector2i(0, y))
 		y += r.get_height()
 	sheet.save_png(ProjectSettings.globalize_path(OUT + "114_semillas_todas.png"))
-	print("Zonas: %d Â· disposiciones: %d Â· fallos de garantÃ­a: %d Â· plantillas: %s Â· %.0f ms de media, %.0f ms la mÃ¡s lenta" % [rows.size(), rows.size() * 5, fails, templates,
+	print("Zonas: %d · disposiciones: %d · fallos de garantía: %d · plantillas: %s · %.0f ms de media, %.0f ms la más lenta" % [rows.size(), rows.size() * 5, fails, templates,
 		usec / 1000.0 / maxf(1.0, rows.size() * 5.0), slowest / 1000.0])
 
 
-## MuÃ±eco de prÃ¡cticas (T212): el servidor de pruebas del campamento recibiendo la
+## Muñeco de prácticas (T212): el servidor de pruebas del campamento recibiendo la
 ## habilidad 1 de verdad, golpes de fuego y rayo y una quemadura; con la interfaz al
-## 100 % y luego al 140 % con los controles tÃ¡ctiles.
+## 100 % y luego al 140 % con los controles táctiles.
 func _capture_training_dummy() -> void:
 	var saved_scale: Variant = GameSettings.get_value("interface", "scale", 1.0)
 	var gd: Node = get_node("/root/GameData")
@@ -4822,15 +4822,15 @@ func _capture_training_dummy() -> void:
 				em.apply_ailment(i, "burn", 200.0)
 			em.hit_ailments = {}
 			await _wait(0.2)
-		# Con el muÃ±eco como objetivo (ratÃ³n encima o tocado): su marco, con la quemadura,
+		# Con el muñeco como objetivo (ratón encima o tocado): su marco, con la quemadura,
 		# va arriba al centro y el panel no lo tapa (en el PC baja; en el celular va a la
-		# izquierda); un aviso que caerÃ­a sobre el panel baja.
+		# izquierda); un aviso que caería sobre el panel baja.
 		em.apply_ailment(dummy.index(), "burn", 200.0)
 		ui.hud.set("_target_id", dummy.dummy_id)
 		ui.hud.set("_target_linger", 5.0)
-		ui.hud.flash("Sin manÃ¡. Bebe un refresco o espera, como con el compilador.")
+		ui.hud.flash("Sin maná. Bebe un refresco o espera, como con el compilador.")
 		await _wait(0.3)
-		print("muÃ±eco: %s Â· escala de interfaz %s Â· panel %s" % [TrainingPanel.lines(dummy.stats()), (ui.get("_root") as Control).scale, ui.training_panel.visible])
+		print("muñeco: %s · escala de interfaz %s · panel %s" % [TrainingPanel.lines(dummy.stats()), (ui.get("_root") as Control).scale, ui.training_panel.visible])
 		_save("212_muneco" if pass_i == 0 else "212_muneco_140_tactil")
 	Touch.force = false
 	GameSettings.set_value("interface", "scale", saved_scale)
@@ -4838,8 +4838,8 @@ func _capture_training_dummy() -> void:
 	world.queue_free()
 
 
-## Inventario mÃ¡s rÃ¡pido (T213): bolsa con basura y bloqueados, la tienda de AÃ­da
-## abierta y el tooltip de un objeto marcado; con ratÃ³n (100 %), dedo (140 %) y mando.
+## Inventario más rápido (T213): bolsa con basura y bloqueados, la tienda de Aída
+## abierta y el tooltip de un objeto marcado; con ratón (100 %), dedo (140 %) y mando.
 func _capture_inventory_marks() -> void:
 	var saved_scale: Variant = GameSettings.get_value("interface", "scale", 1.0)
 	var gd: Node = get_node("/root/GameData")
@@ -4892,9 +4892,9 @@ func _save(name: String) -> void:
 	print("captura: ", name)
 
 
-## Motor de animaciÃ³n de invocaciones (T200): cada una en sus estados (quieta,
+## Motor de animación de invocaciones (T200): cada una en sus estados (quieta,
 ## caminando a un lado y al otro, atacando a la izquierda, apareciendo, herida y
-## muriendo) y con las escalas de Monolito, Microservicios y el ClÃºster de tres.
+## muriendo) y con las escalas de Monolito, Microservicios y el Clúster de tres.
 func _capture_unit_states() -> void:
 	var gd: Node = get_node("/root/GameData")
 	var skills: Dictionary = gd.get("items").skills.skills
@@ -4908,7 +4908,7 @@ func _capture_unit_states() -> void:
 		["apunta â†˜", {"state": "idle", "aim": Vector2(1, 0.5), "focus": true}],
 		["aparece", {"state": "spawn", "t": 0.45}], ["herida", {"state": "hurt", "t": 0.5}], ["muere", {"state": "die", "t": 0.5}],
 		["Monolito", {"state": "idle", "scale": UnitArt.SCALE_MONOLITH}], ["Microserv.", {"state": "idle", "scale": UnitArt.SCALE_MICROSERVICES}],
-		["ClÃºster", {"state": "idle", "scale": UnitArt.SCALE_TRIO}]]
+		["Clúster", {"state": "idle", "scale": UnitArt.SCALE_TRIO}]]
 	var half := 6
 	for page in ceili(units.size() / float(half)):
 		var part := units.slice(page * half, mini(units.size(), (page + 1) * half))
@@ -4931,8 +4931,8 @@ func _capture_unit_states() -> void:
 		await _wait(0.5)
 		_save("200_invocaciones_estados_%d" % (page + 1))
 
-## Aparecer y morir (T201): compilaciÃ³n de bits, desvanecerse al relanzar, golpe
-## recibido y desarmarse en piezas (tambiÃ©n torreta, contenedor, Proceso Hijo y dron).
+## Aparecer y morir (T201): compilación de bits, desvanecerse al relanzar, golpe
+## recibido y desarmarse en piezas (también torreta, contenedor, Proceso Hijo y dron).
 func _capture_unit_life() -> void:
 	seed(201)
 	var gd: Node = get_node("/root/GameData")
@@ -4982,14 +4982,14 @@ func _capture_unit_life() -> void:
 				a["lift"] = u["radius"] * 2.0 if u["behavior"] == "orbit" else 0.0
 				UnitArt.draw(sheet, units[i]["id"], units[i]["unit"]["behavior"], Vector2(150 + k * 150, y), 2.0, col, a)
 		UnitArt.draw_debris(sheet, debris)
-		sheet.draw_string(font, Vector2(8, 770), "Proceso Hijo Â· Dron de Vigilancia Â· Torreta CI Â· Contenedor Docker (0,2 s)", HORIZONTAL_ALIGNMENT_LEFT, -1, 13)
+		sheet.draw_string(font, Vector2(8, 770), "Proceso Hijo · Dron de Vigilancia · Torreta CI · Contenedor Docker (0,2 s)", HORIZONTAL_ALIGNMENT_LEFT, -1, 13)
 		UnitArt.draw_debris(sheet, devices))
 	_swap(sheet)
 	await _wait(0.5)
 	_save("201_aparecer_y_morir")
 
 ## Ataques que se ven (T202): embestida de las de cuerpo a cuerpo (tridente,
-## mordida, puÃ±etazo, golpe de golem), retroceso y fogonazo de las de distancia,
+## mordida, puñetazo, golpe de golem), retroceso y fogonazo de las de distancia,
 ## y el salto con el cuerpo en arco.
 func _capture_unit_attacks() -> void:
 	var gd: Node = get_node("/root/GameData")
@@ -5053,7 +5053,7 @@ func _capture_skill_preview() -> void:
 			var box := VBoxContainer.new()
 			box.add_theme_constant_override("separation", 0)
 			var name := Label.new()
-			name.text = "%s Â· %s" % [skills[ids[k]]["name"], skills[ids[k]]["kind"]]
+			name.text = "%s · %s" % [skills[ids[k]]["name"], skills[ids[k]]["kind"]]
 			name.add_theme_font_size_override("font_size", 12)
 			box.add_child(name)
 			var preview := SkillPreview.new()
