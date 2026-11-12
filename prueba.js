@@ -81,7 +81,7 @@ async function main() {
   await open.close();
 
   // --- Solo con cuenta ---
-  const closed = start({ port: 47250, authUrl: 'http://127.0.0.1:47251/', authKey: 'clave-publica', quiet: true });
+  const closed = start({ port: 47250, authUrl: 'http://127.0.0.1:47251/', authKey: 'clave-publica', quiet: true, staleMs: 300 });
   await sleep(100);
   check(closed.withAuth, 'con dirección y clave pública, pide cuenta');
   h = client(47250, 'sala=SUDO-7&rol=anfitrion&v=5.4.0', good('ana'));
@@ -103,7 +103,37 @@ async function main() {
   let threw = false;
   try { start({ port: 47259, authUrl: 'http://x', authKey: 'sb_secret_abc', quiet: true }); } catch { threw = true; }
   check(threw, 'con una clave secreta en vez de la pública, no arranca');
-  h.ws.close();
+  // --- Reconectar (T272) ---
+  // La misma cuenta, con su conexión de antes viva: no. Callada un rato (se le cayó la red): la nueva la sustituye.
+  const luisAgain = client(47250, 'sala=SUDO-7&rol=invitado&v=5.4.0', good('luis'));
+  check(await luisAgain.until(() => luisAgain.said('no')) && luisAgain.said('no').motivo === 'repetida', 'un invitado con su conexión viva no puede entrar otra vez');
+  const oldId = g.said('hola').id;
+  await sleep(450);   // (el repetidor de la prueba da una conexión por colgada a los 300 ms de silencio)
+  h.ws.send(JSON.stringify({ t: 'vivo' }));   // el anfitrión sigue ahí
+  const luisBack = client(47250, 'sala=SUDO-7&rol=invitado&v=5.4.0', good('luis'));
+  check(await luisBack.until(() => luisBack.said('hola')) && luisBack.said('hola').id !== oldId && luisBack.said('hola').peers.length === 1, 'el invitado que vuelve tras un corte entra, y su conexión vieja ya no cuenta');
+  check(await g.until(() => g.closed) && await h.until(() => h.texts.some((m) => m.t === 'sale' && m.id === oldId) && h.texts.some((m) => m.t === 'entra' && m.id === luisBack.said('hola').id)),
+    'la conexión vieja se cierra y el anfitrión ve salir a una y entrar a la otra');
+  h.data.length = 0;
+  luisBack.send(1, 'de vuelta');
+  check(await h.until(() => h.data.length === 1) && h.data[0].subarray(4).toString() === 'de vuelta', 'y lo que manda al volver llega');
+  // El anfitrión colgado: mandaba señales de vida y deja de mandarlas; otro reabre la sala con el mismo código.
+  const early = client(47250, 'sala=SUDO-7&rol=anfitrion&v=5.4.0', good('eva'));
+  check(await early.until(() => early.said('no')) && early.said('no').motivo === 'ocupada', 'con el anfitrión vivo, nadie le quita la sala');
+  await sleep(450);
+  const heir = client(47250, 'sala=SUDO-7&rol=anfitrion&v=5.4.0', good('luis2'));
+  check(await heir.until(() => heir.said('hola')) && heir.said('hola').id === 1 && heir.said('hola').peers.length === 0, 'si el anfitrión se quedó colgado, otro reabre la sala con el mismo código');
+  check(await h.until(() => h.closed) && await luisBack.until(() => luisBack.said('fin') && luisBack.closed), 'y la sala vieja se cierra para todos');
+  const follower = client(47250, 'sala=SUDO-7&rol=invitado&v=5.4.0', good('luis'));
+  check(await follower.until(() => follower.said('hola')) && follower.said('hola').peers[0] === 1, 'los demás entran en la sala reabierta con el mismo código');
+  // Un anfitrión de una versión que no manda señales de vida no pierde la sala por estar callado.
+  const quiet = client(47250, 'sala=GREP-9&rol=anfitrion&v=5.4.0', good('paco'));
+  await quiet.until(() => quiet.said('hola'));
+  await sleep(450);
+  const thief = client(47250, 'sala=GREP-9&rol=anfitrion&v=5.4.0', good('rita'));
+  check(await thief.until(() => thief.said('no')) && thief.said('no').motivo === 'ocupada' && !quiet.closed, 'un anfitrión callado que nunca mandó señales de vida conserva su sala');
+  quiet.ws.close();
+  heir.ws.close();
   await sleep(100);
   await closed.close();
   await new Promise((r) => { accounts.closeAllConnections?.(); accounts.close(r); });

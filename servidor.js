@@ -21,7 +21,10 @@
 //     Si se va el anfitrión, la sala se cierra para todos ({"t":"fin"}).
 //   - Si no se puede entrar: {"t":"no","motivo":…} y se cierra. Motivos: "sala" (no existe o
 //     código mal escrito), "llena", "version", "ocupada" (ya hay una con ese código),
-//     "cuenta" (sin sesión válida), "repetida" (esa cuenta ya está en la sala).
+//     "cuenta" (sin sesión válida), "repetida" (esa cuenta ya está en la sala y su conexión sigue viva).
+//   - Reconectar (T272): los clientes mandan cada pocos segundos el texto {"t":"vivo"}. Si una cuenta vuelve a
+//     entrar y su conexión de antes lleva un rato callada, la nueva la sustituye; y si quien se quedó colgado es
+//     el anfitrión, otro puede reabrir la sala con el mismo código.
 //   - Datos: tramas binarias. Los 4 primeros bytes (entero con signo, little-endian) son el
 //     destino (0 = todos los demás); el servidor los cambia por el id de quien lo envía y
 //     reenvía el resto tal cual.
@@ -45,6 +48,8 @@ function start(options = {}) {
   const authUrl = String(options.authUrl ?? process.env.NUBE_URL ?? '').replace(/\/+$/, '');
   const authKey = String(options.authKey ?? process.env.NUBE_CLAVE_PUBLICA ?? '');
   const withAuth = authUrl !== '' && authKey !== '';
+  // Cuánto silencio hace falta para dar una conexión por colgada cuando alguien viene a ocupar su sitio (T272).
+  const staleMs = Number(options.staleMs ?? 8000);
   if (/^sb_secret_|service_role/.test(authKey)) throw new Error('NUBE_CLAVE_PUBLICA es una clave secreta: aquí va la pública.');
 
   /** @type {Map<string, {version: string, peers: Map<number, any>}>} */
@@ -105,7 +110,14 @@ function start(options = {}) {
   function admit(conn) {
     let room = rooms.get(conn.code);
     if (conn.role === 'anfitrion') {
-      if (room) return refuse(conn, 'ocupada');
+      if (room) {
+        // Reconectar (T272): si el anfitrión de esa sala se quedó colgado (mandaba señales de
+        // vida y lleva un rato sin mandar nada), la sala se cierra y quien llega la reabre.
+        const host = room.peers.get(1);
+        if (!host || !host.keeps || Date.now() - host.last <= staleMs) return refuse(conn, 'ocupada');
+        close(host);
+        room = undefined;
+      }
       if (rooms.size >= MAX_ROOMS) return refuse(conn, 'llena');
       room = { version: conn.version, peers: new Map() };
       rooms.set(conn.code, room);
@@ -113,8 +125,13 @@ function start(options = {}) {
     } else {
       if (!room) return refuse(conn, 'sala');
       if (room.version !== conn.version) return refuse(conn, 'version');
+      // La misma cuenta otra vez: si su conexión de antes sigue viva, no entra; si lleva un
+      // rato callada (se le cayó la red y vuelve, T272), la nueva la sustituye.
+      if (conn.user !== '') for (const other of [...room.peers.values()]) if (other.user === conn.user) {
+        if (other.id === 1 || Date.now() - other.last <= staleMs) return refuse(conn, 'repetida');
+        close(other);
+      }
       if (room.peers.size >= MAX_PLAYERS) return refuse(conn, 'llena');
-      if (conn.user !== '') for (const other of room.peers.values()) if (other.user === conn.user) return refuse(conn, 'repetida');
       conn.id = nextGuest++;
       if (nextGuest > 0x7ffffff0) nextGuest = 2;
     }
@@ -158,6 +175,7 @@ function start(options = {}) {
         const op = conn.partsOp;
         conn.parts = []; conn.partsOp = 0;
         if (op === 0x2) { if (conn.admitted) relay(conn, whole); }
+        else if (conn.admitted) { conn.keeps = true; }   // señal de vida ({"t":"vivo"}): solo cuenta que llegó
         else if (withAuth && !conn.admitted) {
           // El saludo: {"token":"…"}.
           let token = '';
