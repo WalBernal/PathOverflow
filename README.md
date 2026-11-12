@@ -26,7 +26,9 @@ mensaje, 256 KB/s por conexión, y fuera quien lleve un minuto sin decir nada.
 
 Desde el 11-11-2026: `https://path-overflow-repetidor.onrender.com` (Render, plan gratis, región Ohio). En el juego:
 `wss://path-overflow-repetidor.onrender.com`. Se duerme tras 15 minutos sin tráfico y tarda cerca de un minuto en
-despertar. Probarlo: `tools/prueba_dos_juegos.ps1 -Segundos 34 -RepetidorUrl wss://path-overflow-repetidor.onrender.com`.
+despertar. Desde ese mismo día **pide cuenta** (ver «Solo con cuenta»), así que la prueba automática de dos juegos
+(`tools/prueba_dos_juegos.ps1 -RepetidorUrl …`), que no inicia sesión, ya no entra en él: esa se hace con `-Repetidor`
+(uno local sin cuentas).
 
 ## Desplegarlo en Render
 
@@ -51,6 +53,10 @@ cuenta iniciada (lo comprueba con el servicio de cuentas; no guarda ni registra 
 
 En Render: el servicio → **Environment** → añadir las dos → guardar (vuelve a desplegar solo). La página del repetidor
 pasa a decir «Solo con cuenta.». Sin ellas entra cualquiera que conozca un código: sirve para probar en un equipo.
+
+Puestas en el servicio de Render el 11-11-2026. Comprobado desde fuera: la página dice «Solo con cuenta.» y quien
+llega sin sesión o con una inventada recibe `{"t":"no","motivo":"cuenta"}`. Falta por comprobar que entra una cuenta
+de verdad (se verá al jugar por internet con dos dispositivos).
 
 ## Que no se duerma
 
