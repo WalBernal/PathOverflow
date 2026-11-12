@@ -39,5 +39,27 @@ En render.com: **New → Web Service** → el repositorio → rama `repetidor` �
 La dirección que da (`https://….onrender.com`) se usa en el juego como `wss://….onrender.com`. Abrirla en el
 navegador enseña «Repetidor de Path Overflow: 0 sala(s).» (y lo despierta si dormía).
 
-**Todavía no** (T263): pedir sesión iniciada para entrar, la guía de despliegue paso a paso y la pantalla del juego
-con el código de sala.
+## Solo con cuenta (T263)
+
+Con dos variables de entorno puestas en el servicio, el repetidor solo deja entrar a quien tenga la sesión de su
+cuenta iniciada (lo comprueba con el servicio de cuentas; no guarda ni registra nada):
+
+| Variable | Valor |
+|---|---|
+| `NUBE_URL` | La dirección del proyecto de cuentas (la misma de `nube.cfg`) |
+| `NUBE_CLAVE_PUBLICA` | Su clave **pública** (`sb_publishable_…`, la misma de `nube.cfg`). Nunca la secreta: con una secreta no arranca |
+
+En Render: el servicio → **Environment** → añadir las dos → guardar (vuelve a desplegar solo). La página del repetidor
+pasa a decir «Solo con cuenta.». Sin ellas entra cualquiera que conozca un código: sirve para probar en un equipo.
+
+## Que no se duerma
+
+El plan gratis de Render se duerme tras 15 minutos sin tráfico. Desde el 11-11-2026 un monitor de UptimeRobot (en la
+cuenta del usuario) pide `https://path-overflow-repetidor.onrender.com/` cada 5 minutos. Ojo: así el servicio gasta
+unas 730 de las 750 horas gratis al mes del espacio de trabajo de Render, que se comparten entre todos sus servicios
+gratis: si hay otro despierto a la vez, se acaban antes de fin de mes.
+
+## Probarlo
+
+`node tools/repetidor/prueba.js` (Node 22 o más) lo arranca con un servicio de cuentas de mentira y comprueba quién
+entra, quién no y a quién llega cada mensaje. Va dentro de `tools/run_checks.ps1` como «repetidor».
