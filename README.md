@@ -22,5 +22,16 @@ Para jugar a mano por él (dos ventanas en el mismo PC): arranca el repetidor y 
 El protocolo está explicado al principio de `servidor.js`. Límites: 4 jugadores por sala, 200 salas, 512 KB por
 mensaje, 256 KB/s por conexión, y fuera quien lleve un minuto sin decir nada.
 
+## Desplegarlo en Render
+
+La rama `repetidor` del repositorio contiene **solo esta carpeta** (se saca con
+`git subtree split --prefix=tools/repetidor -b repetidor`), para que Render no vuelva a desplegar —y cortar las
+partidas en curso— cada vez que cambia el juego.
+
+En render.com: **New → Web Service** → el repositorio → rama `repetidor` → Runtime **Node** → Build Command
+`npm install` → Start Command `npm start` → Instance Type **Free**. No hace falta ninguna variable: Render pone `PORT`.
+La dirección que da (`https://….onrender.com`) se usa en el juego como `wss://….onrender.com`. Abrirla en el
+navegador enseña «Repetidor de Path Overflow: 0 sala(s).» (y lo despierta si dormía).
+
 **Todavía no** (T263): pedir sesión iniciada para entrar, la guía de despliegue paso a paso y la pantalla del juego
 con el código de sala.

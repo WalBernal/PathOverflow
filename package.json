@@ -1,0 +1,13 @@
+{
+  "name": "path-overflow-repetidor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Repetidor de partidas por internet de Path Overflow (reenvía mensajes dentro de cada sala; no guarda nada).",
+  "main": "servidor.js",
+  "scripts": {
+    "start": "node servidor.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
