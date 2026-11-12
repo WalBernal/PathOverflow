@@ -22,6 +22,12 @@ Para jugar a mano por él (dos ventanas en el mismo PC): arranca el repetidor y 
 El protocolo está explicado al principio de `servidor.js`. Límites: 4 jugadores por sala, 200 salas, 512 KB por
 mensaje, 256 KB/s por conexión, y fuera quien lleve un minuto sin decir nada.
 
+## Dónde está
+
+Desde el 11-11-2026: `https://path-overflow-repetidor.onrender.com` (Render, plan gratis, región Ohio). En el juego:
+`wss://path-overflow-repetidor.onrender.com`. Se duerme tras 15 minutos sin tráfico y tarda cerca de un minuto en
+despertar. Probarlo: `tools/prueba_dos_juegos.ps1 -Segundos 34 -RepetidorUrl wss://path-overflow-repetidor.onrender.com`.
+
 ## Desplegarlo en Render
 
 La rama `repetidor` del repositorio contiene **solo esta carpeta** (se saca con
